@@ -185,7 +185,7 @@ export type WorkspaceMemberGetProfileResponseDto = {
      */
     deletedBy?: UserMetaResponseDto;
     /**
-     * Date when the user joined the workspace
+     * Timestamp the member joined the workspace
      */
     joinedAt: string;
     role: RoleGetResponseDto;
@@ -502,7 +502,7 @@ export type WorkspaceMemberGetResponseDto = {
     user: UserShortResponseDto;
     role: RoleListResponseDto;
     /**
-     * Date when the user joined the workspace
+     * Timestamp the member joined the workspace
      */
     joinedAt: string;
 };
@@ -550,70 +550,9 @@ export type WorkspaceMemberListResponseDto = {
     user: UserShortResponseDto;
     role: RoleListResponseDto;
     /**
-     * Date when the user joined the workspace
+     * Timestamp the member joined the workspace
      */
     joinedAt: string;
-};
-
-export type PlanResponseDto = {
-    /**
-     * Alias id of api key
-     */
-    id: string;
-    /**
-     * Date created at
-     */
-    createdAt: string;
-    /**
-     * created by
-     */
-    createdBy?: UserMetaResponseDto;
-    /**
-     * Date updated at
-     */
-    updatedAt: string;
-    /**
-     * updated by
-     */
-    updatedBy?: UserMetaResponseDto;
-    /**
-     * Flag for deleted
-     */
-    deleted: boolean;
-    /**
-     * Date delete at
-     */
-    deletedAt?: string;
-    /**
-     * Delete by
-     */
-    deletedBy?: UserMetaResponseDto;
-    name: string;
-    slug: string;
-    description?: string;
-    tokenQuota: number;
-    billingCycle: string;
-    price: number;
-    currency: string;
-    isActive: boolean;
-    /**
-     * A plan the product depends on — cannot be archived
-     */
-    isSystem: boolean;
-    /**
-     * Workspaces currently on this plan. Only the admin list computes it — single-plan and public responses omit it.
-     */
-    subscriptionCount?: number;
-    isPublic: boolean;
-    sortOrder: number;
-    features?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Whether the payment provider catalog matches this plan
-     */
-    syncStatus: string;
-    syncError?: string;
 };
 
 export type HelloResponseDto = {
@@ -1128,59 +1067,59 @@ export type FacebookActivityListResponseDto = {
      */
     deletedBy?: UserMetaResponseDto;
     /**
-     * Facebook Page ID
+     * Page the events belong to
      */
     pageId: string;
     /**
-     * Sender ID (User PSID)
+     * Sender PSID
      */
     senderId: string;
     /**
-     * Recipient ID (Page ID or User PSID)
-     */
-    recipientId?: string;
-    /**
-     * Type of Facebook messaging event
+     * Messaging event kind
      */
     eventType: 'message' | 'echo' | 'postback' | 'account_linking' | 'delivery' | 'read' | 'referral' | 'unknown';
     /**
-     * Facebook Message ID
+     * Recipient id
+     */
+    recipientId?: string;
+    /**
+     * Message id
      */
     messageId?: string;
     /**
-     * Message text content
+     * Message body
      */
     messageText?: string;
     /**
-     * Event-specific payload data
+     * Event payload
      */
     eventPayload?: {
         [key: string]: unknown;
     };
     /**
-     * Full webhook payload for debugging
+     * Raw webhook body
      */
     webhookPayload?: {
         [key: string]: unknown;
     };
     /**
-     * Whether the activity has been processed
-     */
-    processed?: boolean;
-    /**
-     * Error message if processing failed
-     */
-    processingError?: string;
-    /**
-     * When the activity was processed
-     */
-    processedAt?: string;
-    /**
-     * Additional metadata
+     * Extra metadata
      */
     metadata?: {
         [key: string]: unknown;
     };
+    /**
+     * Whether processing already finished
+     */
+    processed?: boolean;
+    /**
+     * Why the last processing attempt failed
+     */
+    processingError?: string;
+    /**
+     * When processing finished
+     */
+    processedAt?: string;
 };
 
 export type CustomerSystemSetFieldRequestDto = {
@@ -1337,101 +1276,6 @@ export type NotificationUnreadDto = {
      * The number of unread notifications
      */
     count: number;
-};
-
-export type PlanCreateRequestDto = {
-    name: string;
-    slug: string;
-    description?: string;
-    tokenQuota: number;
-    billingCycle?: 'MONTHLY' | 'YEARLY';
-    /**
-     * Price in the currency minor unit
-     */
-    price?: number;
-    currency?: 'USD' | 'VND';
-    isActive?: boolean;
-    /**
-     * Listed on the public pricing page
-     */
-    isPublic?: boolean;
-    sortOrder?: number;
-    features?: {
-        [key: string]: unknown;
-    };
-};
-
-export type PlanUpdateRequestDto = {
-    name?: string;
-    slug?: string;
-    description?: string;
-    tokenQuota?: number;
-    billingCycle?: 'MONTHLY' | 'YEARLY';
-    /**
-     * Price in the currency minor unit
-     */
-    price?: number;
-    currency?: 'USD' | 'VND';
-    isActive?: boolean;
-    /**
-     * Listed on the public pricing page
-     */
-    isPublic?: boolean;
-    sortOrder?: number;
-    features?: {
-        [key: string]: unknown;
-    };
-};
-
-export type SubscriptionAssignRequestDto = {
-    planId: string;
-};
-
-export type TokenCreditGrantRequestDto = {
-    amount: number;
-    note?: string;
-};
-
-export type TokenUsageRecordResponseDto = {
-    /**
-     * Alias id of api key
-     */
-    id: string;
-    /**
-     * Date created at
-     */
-    createdAt: string;
-    /**
-     * created by
-     */
-    createdBy?: UserMetaResponseDto;
-    /**
-     * Date updated at
-     */
-    updatedAt: string;
-    /**
-     * updated by
-     */
-    updatedBy?: UserMetaResponseDto;
-    /**
-     * Flag for deleted
-     */
-    deleted: boolean;
-    /**
-     * Date delete at
-     */
-    deletedAt?: string;
-    /**
-     * Delete by
-     */
-    deletedBy?: UserMetaResponseDto;
-    source: string;
-    platform?: string;
-    model?: string;
-    inputTokens: number;
-    outputTokens: number;
-    totalTokens: number;
-    conversationId?: string;
 };
 
 export type ApiKeyListResponseDto = {
@@ -2070,14 +1914,32 @@ export type AccountListResponseDto = {
      * Date updated at
      */
     updatedAt: string;
+    /**
+     * Public profile URL of the channel on its platform
+     */
     link: string;
+    /**
+     * Display name shown in the inbox
+     */
     name: string;
+    /**
+     * URL-safe identifier; reads accept it in place of the id
+     */
     slug: string;
+    /**
+     * Avatar URL of the channel
+     */
     avatar: string;
+    /**
+     * BLOCKED means the platform token stopped working
+     */
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+    /**
+     * Which platform this channel belongs to
+     */
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET';
     /**
-     * Workspace ID
+     * Workspace that owns the channel
      */
     workspace: string;
     /**
@@ -2127,14 +1989,32 @@ export type AccountGetDetailResponseDto = {
      * Delete by
      */
     deletedBy?: UserMetaResponseDto;
+    /**
+     * Public profile URL of the channel on its platform
+     */
     link: string;
+    /**
+     * Display name shown in the inbox
+     */
     name: string;
+    /**
+     * URL-safe identifier; reads accept it in place of the id
+     */
     slug: string;
+    /**
+     * Avatar URL of the channel
+     */
     avatar: string;
+    /**
+     * BLOCKED means the platform token stopped working
+     */
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+    /**
+     * Which platform this channel belongs to
+     */
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET';
     /**
-     * Workspace ID
+     * Workspace that owns the channel
      */
     workspace: string;
     /**
@@ -2152,32 +2032,83 @@ export type AccountGetDetailResponseDto = {
 };
 
 export type AccountCreateRequestDto = {
+    /**
+     * Public profile URL of the channel on its platform
+     */
     link: string;
+    /**
+     * Display name shown in the inbox
+     */
     name: string;
+    /**
+     * Platform token. Stored encrypted — an already enveloped value is kept as-is.
+     */
     accessToken: string;
+    /**
+     * Which platform this channel belongs to
+     */
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET';
+    /**
+     * Avatar URL of the channel
+     */
     avatar: string;
+    /**
+     * URL-safe identifier; the account is also readable by it
+     */
     slug: string;
+    /**
+     * Defaults to ACTIVE when omitted
+     */
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
     /**
-     * Workspace ID
+     * Workspace that owns the channel
      */
     workspace: string;
+    /**
+     * User credited with linking the channel
+     */
     addedBy: string;
+    /**
+     * Ids of the stored cookies used to reach the platform
+     */
     cookies: Array<string>;
+    /**
+     * Ids of the proxies requests to the platform go through
+     */
     proxies: Array<string>;
 };
 
 export type AccountUpdateRequestDto = {
+    /**
+     * Public profile URL of the channel on its platform
+     */
     link: string;
+    /**
+     * Display name shown in the inbox
+     */
     name: string;
+    /**
+     * Platform token. Stored encrypted — an already enveloped value is kept as-is.
+     */
     accessToken: string;
+    /**
+     * Which platform this channel belongs to
+     */
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET';
+    /**
+     * Avatar URL of the channel
+     */
     avatar: string;
+    /**
+     * URL-safe identifier; the account is also readable by it
+     */
     slug: string;
+    /**
+     * Defaults to ACTIVE when omitted
+     */
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
     /**
-     * Workspace ID
+     * Workspace that owns the channel
      */
     workspace: string;
 };
@@ -3651,54 +3582,6 @@ export type CloneChatbotRequestDto = {
     cloneRags?: boolean;
 };
 
-export type TokenUsageSummaryResponseDto = {
-    planName: string;
-    status: string;
-    /**
-     * Percent of period quota used
-     */
-    usedPercent: number;
-    periodEnd: string;
-    /**
-     * Whether top-up credit is available beyond the quota
-     */
-    hasCredit: boolean;
-    /**
-     * Warn when the remaining quota drops below this percent of the period
-     */
-    lowBalanceThreshold?: number;
-    /**
-     * Absolute counts — non-production environments only
-     */
-    debug?: {
-        [key: string]: unknown;
-    };
-};
-
-export type TokenUsageBreakdownRowDto = {
-    /**
-     * Chatbot name, platform, or the literal "unknown"
-     */
-    label: string;
-    id?: string;
-    /**
-     * Share of the window total
-     */
-    sharePercent: number;
-    messages: number;
-    /**
-     * Absolute count — non-production environments only
-     */
-    tokens?: number;
-};
-
-export type TokenUsageSettingsRequestDto = {
-    /**
-     * Warn when the remaining quota drops below this percent. Null clears the override.
-     */
-    lowBalanceThreshold?: number;
-};
-
 export type RoleCreateWorkspaceRequestDto = {
     /**
      * Permission list of role
@@ -4254,14 +4137,32 @@ export type AccountGetResponseDto = {
      * Delete by
      */
     deletedBy?: UserMetaResponseDto;
+    /**
+     * Public profile URL of the channel on its platform
+     */
     link: string;
+    /**
+     * Display name shown in the inbox
+     */
     name: string;
+    /**
+     * URL-safe identifier; reads accept it in place of the id
+     */
     slug: string;
+    /**
+     * Avatar URL of the channel
+     */
     avatar: string;
+    /**
+     * BLOCKED means the platform token stopped working
+     */
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+    /**
+     * Which platform this channel belongs to
+     */
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET';
     /**
-     * Workspace ID
+     * Workspace that owns the channel
      */
     workspace: string;
 };
@@ -5215,47 +5116,6 @@ export type RequestCreateDto = {
      * ID of the user making the request
      */
     reason?: string;
-};
-
-export type TestHelpersControllerConfirmEmailV1Data = {
-    body?: never;
-    path: {
-        userId: string;
-    };
-    query?: never;
-    url: '/api/v1/test-helpers/confirm-email/{userId}';
-};
-
-export type TestHelpersControllerConfirmEmailV1Responses = {
-    204: void;
-};
-
-export type TestHelpersControllerConfirmEmailV1Response = TestHelpersControllerConfirmEmailV1Responses[keyof TestHelpersControllerConfirmEmailV1Responses];
-
-export type TestHelpersControllerGetResetPasswordTokenV1Data = {
-    body?: never;
-    path: {
-        email: string;
-    };
-    query?: never;
-    url: '/api/v1/test-helpers/reset-password-token/{email}';
-};
-
-export type TestHelpersControllerGetResetPasswordTokenV1Responses = {
-    200: unknown;
-};
-
-export type TestHelpersControllerGetInviteTokenV1Data = {
-    body?: never;
-    path: {
-        workspaceId: string;
-    };
-    query?: never;
-    url: '/api/v1/test-helpers/invite-token/{workspaceId}';
-};
-
-export type TestHelpersControllerGetInviteTokenV1Responses = {
-    200: unknown;
 };
 
 export type WorkspaceControllerProfileV1Data = {
@@ -6412,51 +6272,6 @@ export type WorkspaceMemberControllerGetMemberRolesV1Data = {
 export type WorkspaceMemberControllerGetMemberRolesV1Responses = {
     200: unknown;
 };
-
-export type PlanPublicControllerListV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/public/plan/list';
-};
-
-export type PlanPublicControllerListV1Errors = {
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type PlanPublicControllerListV1Error = PlanPublicControllerListV1Errors[keyof PlanPublicControllerListV1Errors];
-
-export type PlanPublicControllerListV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: PlanResponseDto;
-    };
-};
-
-export type PlanPublicControllerListV1Response = PlanPublicControllerListV1Responses[keyof PlanPublicControllerListV1Responses];
 
 export type HelloPublicControllerHelloData = {
     body?: never;
@@ -8685,7 +8500,7 @@ export type FacebookActivityControllerListByPageIdV1Data = {
     };
     path: {
         /**
-         * Facebook Page ID
+         * Facebook Page the webhook events were delivered to
          */
         pageId: string;
     };
@@ -8775,7 +8590,7 @@ export type FacebookActivityControllerListBySenderIdV1Data = {
     };
     path: {
         /**
-         * Facebook Sender ID (User PSID)
+         * Page scoped id (PSID) of the person the events came from
          */
         senderId: string;
     };
@@ -10386,1017 +10201,6 @@ export type NotificationSharedControllerUnreadV1Responses = {
 };
 
 export type NotificationSharedControllerUnreadV1Response = NotificationSharedControllerUnreadV1Responses[keyof NotificationSharedControllerUnreadV1Responses];
-
-export type PlanAdminControllerListV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        /**
-         * Filter by lifecycle state
-         */
-        isActive?: boolean;
-        /**
-         * Comma-separated ENUM_PLAN_SYNC_STATUS values
-         */
-        syncStatus?: string;
-        /**
-         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
-         */
-        search?: string;
-        /**
-         * Data per page, max 100
-         */
-        perPage?: number;
-        /**
-         * page number, max 20
-         */
-        page?: number;
-        /**
-         * Order by base on _metadata.pagination.availableOrderBy
-         */
-        orderBy?: string;
-        /**
-         * Order direction base on _metadata.pagination.availableOrderDirection
-         */
-        orderDirection?: 'ASC' | 'DESC';
-    };
-    url: '/api/v1/admin/plan/list';
-};
-
-export type PlanAdminControllerListV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type PlanAdminControllerListV1Error = PlanAdminControllerListV1Errors[keyof PlanAdminControllerListV1Errors];
-
-export type PlanAdminControllerListV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponsePagingDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: Array<PlanResponseDto>;
-    };
-};
-
-export type PlanAdminControllerListV1Response = PlanAdminControllerListV1Responses[keyof PlanAdminControllerListV1Responses];
-
-export type PlanAdminControllerCreateV1Data = {
-    body: PlanCreateRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/admin/plan';
-};
-
-export type PlanAdminControllerCreateV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type PlanAdminControllerCreateV1Error = PlanAdminControllerCreateV1Errors[keyof PlanAdminControllerCreateV1Errors];
-
-export type PlanAdminControllerCreateV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: PlanResponseDto;
-    };
-};
-
-export type PlanAdminControllerCreateV1Response = PlanAdminControllerCreateV1Responses[keyof PlanAdminControllerCreateV1Responses];
-
-export type PlanAdminControllerArchiveV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/admin/plan/{id}';
-};
-
-export type PlanAdminControllerArchiveV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type PlanAdminControllerArchiveV1Error = PlanAdminControllerArchiveV1Errors[keyof PlanAdminControllerArchiveV1Errors];
-
-export type PlanAdminControllerArchiveV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: PlanResponseDto;
-    };
-};
-
-export type PlanAdminControllerArchiveV1Response = PlanAdminControllerArchiveV1Responses[keyof PlanAdminControllerArchiveV1Responses];
-
-export type PlanAdminControllerUpdateV1Data = {
-    body: PlanUpdateRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/admin/plan/{id}';
-};
-
-export type PlanAdminControllerUpdateV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type PlanAdminControllerUpdateV1Error = PlanAdminControllerUpdateV1Errors[keyof PlanAdminControllerUpdateV1Errors];
-
-export type PlanAdminControllerUpdateV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: PlanResponseDto;
-    };
-};
-
-export type PlanAdminControllerUpdateV1Response = PlanAdminControllerUpdateV1Responses[keyof PlanAdminControllerUpdateV1Responses];
-
-export type PlanAdminControllerSyncV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/admin/plan/{id}/sync';
-};
-
-export type PlanAdminControllerSyncV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type PlanAdminControllerSyncV1Error = PlanAdminControllerSyncV1Errors[keyof PlanAdminControllerSyncV1Errors];
-
-export type PlanAdminControllerSyncV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: PlanResponseDto;
-    };
-};
-
-export type PlanAdminControllerSyncV1Response = PlanAdminControllerSyncV1Responses[keyof PlanAdminControllerSyncV1Responses];
-
-export type SubscriptionAdminControllerGetV1Data = {
-    body?: never;
-    path: {
-        workspace: string;
-    };
-    query?: never;
-    url: '/api/v1/admin/subscription/{workspace}';
-};
-
-export type SubscriptionAdminControllerGetV1Responses = {
-    200: unknown;
-};
-
-export type SubscriptionAdminControllerAssignV1Data = {
-    body: SubscriptionAssignRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path: {
-        workspace: string;
-    };
-    query?: never;
-    url: '/api/v1/admin/subscription/{workspace}/assign';
-};
-
-export type SubscriptionAdminControllerAssignV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type SubscriptionAdminControllerAssignV1Error = SubscriptionAdminControllerAssignV1Errors[keyof SubscriptionAdminControllerAssignV1Errors];
-
-export type SubscriptionAdminControllerAssignV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type SubscriptionAdminControllerAssignV1Response = SubscriptionAdminControllerAssignV1Responses[keyof SubscriptionAdminControllerAssignV1Responses];
-
-export type SubscriptionAdminControllerCreditV1Data = {
-    body: TokenCreditGrantRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path: {
-        workspace: string;
-    };
-    query?: never;
-    url: '/api/v1/admin/subscription/{workspace}/credit';
-};
-
-export type SubscriptionAdminControllerCreditV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type SubscriptionAdminControllerCreditV1Error = SubscriptionAdminControllerCreditV1Errors[keyof SubscriptionAdminControllerCreditV1Errors];
-
-export type SubscriptionAdminControllerCreditV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type SubscriptionAdminControllerCreditV1Response = SubscriptionAdminControllerCreditV1Responses[keyof SubscriptionAdminControllerCreditV1Responses];
-
-export type TokenUsageAdminControllerListV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        /**
-         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
-         */
-        search?: string;
-        /**
-         * Data per page, max 100
-         */
-        perPage?: number;
-        /**
-         * page number, max 20
-         */
-        page?: number;
-        /**
-         * Order by base on _metadata.pagination.availableOrderBy
-         */
-        orderBy?: string;
-        /**
-         * Order direction base on _metadata.pagination.availableOrderDirection
-         */
-        orderDirection?: 'ASC' | 'DESC';
-    };
-    url: '/api/v1/admin/token-usage/list';
-};
-
-export type TokenUsageAdminControllerListV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerListV1Error = TokenUsageAdminControllerListV1Errors[keyof TokenUsageAdminControllerListV1Errors];
-
-export type TokenUsageAdminControllerListV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponsePagingDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: Array<TokenUsageRecordResponseDto>;
-    };
-};
-
-export type TokenUsageAdminControllerListV1Response = TokenUsageAdminControllerListV1Responses[keyof TokenUsageAdminControllerListV1Responses];
-
-export type TokenUsageAdminControllerByWorkspaceV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-    };
-    url: '/api/v1/admin/token-usage/aggregate/by-workspace';
-};
-
-export type TokenUsageAdminControllerByWorkspaceV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerByWorkspaceV1Error = TokenUsageAdminControllerByWorkspaceV1Errors[keyof TokenUsageAdminControllerByWorkspaceV1Errors];
-
-export type TokenUsageAdminControllerByWorkspaceV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerByWorkspaceV1Response = TokenUsageAdminControllerByWorkspaceV1Responses[keyof TokenUsageAdminControllerByWorkspaceV1Responses];
-
-export type TokenUsageAdminControllerByChatbotV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-    };
-    url: '/api/v1/admin/token-usage/aggregate/by-chatbot';
-};
-
-export type TokenUsageAdminControllerByChatbotV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerByChatbotV1Error = TokenUsageAdminControllerByChatbotV1Errors[keyof TokenUsageAdminControllerByChatbotV1Errors];
-
-export type TokenUsageAdminControllerByChatbotV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerByChatbotV1Response = TokenUsageAdminControllerByChatbotV1Responses[keyof TokenUsageAdminControllerByChatbotV1Responses];
-
-export type TokenUsageAdminControllerByPlatformV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-    };
-    url: '/api/v1/admin/token-usage/aggregate/by-platform';
-};
-
-export type TokenUsageAdminControllerByPlatformV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerByPlatformV1Error = TokenUsageAdminControllerByPlatformV1Errors[keyof TokenUsageAdminControllerByPlatformV1Errors];
-
-export type TokenUsageAdminControllerByPlatformV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerByPlatformV1Response = TokenUsageAdminControllerByPlatformV1Responses[keyof TokenUsageAdminControllerByPlatformV1Responses];
-
-export type TokenUsageAdminControllerByDayV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-    };
-    url: '/api/v1/admin/token-usage/aggregate/by-day';
-};
-
-export type TokenUsageAdminControllerByDayV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerByDayV1Error = TokenUsageAdminControllerByDayV1Errors[keyof TokenUsageAdminControllerByDayV1Errors];
-
-export type TokenUsageAdminControllerByDayV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageAdminControllerByDayV1Response = TokenUsageAdminControllerByDayV1Responses[keyof TokenUsageAdminControllerByDayV1Responses];
 
 export type ApiKeyAdminControllerListV1Data = {
     body?: never;
@@ -14050,9 +12854,21 @@ export type AccountAdminControllerListV1Data = {
     };
     path?: never;
     query?: {
+        /**
+         * Keep only accounts in this state
+         */
         status?: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+        /**
+         * Keep only channels of this platform
+         */
         type?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET';
+        /**
+         * Keep only the children of this parent account
+         */
         account?: string;
+        /**
+         * Keep only accounts owned by this workspace
+         */
         workspace?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
@@ -16605,8 +15421,17 @@ export type AccountControllerListV1Data = {
         workspace: string;
     };
     query?: {
+        /**
+         * Keep only accounts in this state
+         */
         status?: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+        /**
+         * Keep only channels of this platform
+         */
         type?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET';
+        /**
+         * Keep only the children of this parent account
+         */
         account?: string;
         chatbot?: string;
         /**
@@ -17521,7 +16346,7 @@ export type ChatbotControllerFindAllV1Data = {
     };
     query?: {
         /**
-         * The ID of the account to filter chatbots by.
+         * Account ID used to filter the chatbot list.
          */
         account?: string;
         /**
@@ -18802,522 +17627,6 @@ export type ChatbotControllerCloneV1Responses = {
 };
 
 export type ChatbotControllerCloneV1Response = ChatbotControllerCloneV1Responses[keyof ChatbotControllerCloneV1Responses];
-
-export type TokenUsageWorkspaceControllerSummaryV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/workspace/token-usage/{workspace}/summary';
-};
-
-export type TokenUsageWorkspaceControllerSummaryV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageWorkspaceControllerSummaryV1Error = TokenUsageWorkspaceControllerSummaryV1Errors[keyof TokenUsageWorkspaceControllerSummaryV1Errors];
-
-export type TokenUsageWorkspaceControllerSummaryV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: TokenUsageSummaryResponseDto;
-    };
-};
-
-export type TokenUsageWorkspaceControllerSummaryV1Response = TokenUsageWorkspaceControllerSummaryV1Responses[keyof TokenUsageWorkspaceControllerSummaryV1Responses];
-
-export type TokenUsageWorkspaceControllerTrendV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-    };
-    url: '/api/v1/workspace/token-usage/{workspace}/trend';
-};
-
-export type TokenUsageWorkspaceControllerTrendV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageWorkspaceControllerTrendV1Error = TokenUsageWorkspaceControllerTrendV1Errors[keyof TokenUsageWorkspaceControllerTrendV1Errors];
-
-export type TokenUsageWorkspaceControllerTrendV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageWorkspaceControllerTrendV1Response = TokenUsageWorkspaceControllerTrendV1Responses[keyof TokenUsageWorkspaceControllerTrendV1Responses];
-
-export type TokenUsageWorkspaceControllerByChatbotV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-    };
-    url: '/api/v1/workspace/token-usage/{workspace}/by-chatbot';
-};
-
-export type TokenUsageWorkspaceControllerByChatbotV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageWorkspaceControllerByChatbotV1Error = TokenUsageWorkspaceControllerByChatbotV1Errors[keyof TokenUsageWorkspaceControllerByChatbotV1Errors];
-
-export type TokenUsageWorkspaceControllerByChatbotV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: TokenUsageBreakdownRowDto;
-    };
-};
-
-export type TokenUsageWorkspaceControllerByChatbotV1Response = TokenUsageWorkspaceControllerByChatbotV1Responses[keyof TokenUsageWorkspaceControllerByChatbotV1Responses];
-
-export type TokenUsageWorkspaceControllerByPlatformV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-    };
-    url: '/api/v1/workspace/token-usage/{workspace}/by-platform';
-};
-
-export type TokenUsageWorkspaceControllerByPlatformV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageWorkspaceControllerByPlatformV1Error = TokenUsageWorkspaceControllerByPlatformV1Errors[keyof TokenUsageWorkspaceControllerByPlatformV1Errors];
-
-export type TokenUsageWorkspaceControllerByPlatformV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: TokenUsageBreakdownRowDto;
-    };
-};
-
-export type TokenUsageWorkspaceControllerByPlatformV1Response = TokenUsageWorkspaceControllerByPlatformV1Responses[keyof TokenUsageWorkspaceControllerByPlatformV1Responses];
-
-export type TokenUsageWorkspaceControllerListV1Data = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-        /**
-         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
-         */
-        search?: string;
-        /**
-         * Data per page, max 100
-         */
-        perPage?: number;
-        /**
-         * page number, max 20
-         */
-        page?: number;
-        /**
-         * Order by base on _metadata.pagination.availableOrderBy
-         */
-        orderBy?: string;
-        /**
-         * Order direction base on _metadata.pagination.availableOrderDirection
-         */
-        orderDirection?: 'ASC' | 'DESC';
-    };
-    url: '/api/v1/workspace/token-usage/{workspace}/list';
-};
-
-export type TokenUsageWorkspaceControllerListV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageWorkspaceControllerListV1Error = TokenUsageWorkspaceControllerListV1Errors[keyof TokenUsageWorkspaceControllerListV1Errors];
-
-export type TokenUsageWorkspaceControllerListV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponsePagingDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: Array<TokenUsageRecordResponseDto>;
-    };
-};
-
-export type TokenUsageWorkspaceControllerListV1Response = TokenUsageWorkspaceControllerListV1Responses[keyof TokenUsageWorkspaceControllerListV1Responses];
-
-export type TokenUsageWorkspaceControllerExportV1Data = {
-    body?: never;
-    path?: never;
-    query?: {
-        from?: string;
-        to?: string;
-        chatbotId?: string;
-        platform?: string;
-    };
-    url: '/api/v1/workspace/token-usage/{workspace}/export';
-};
-
-export type TokenUsageWorkspaceControllerExportV1Responses = {
-    200: unknown;
-};
-
-export type TokenUsageWorkspaceControllerSettingsV1Data = {
-    body: TokenUsageSettingsRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/workspace/token-usage/{workspace}/settings';
-};
-
-export type TokenUsageWorkspaceControllerSettingsV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageWorkspaceControllerSettingsV1Error = TokenUsageWorkspaceControllerSettingsV1Errors[keyof TokenUsageWorkspaceControllerSettingsV1Errors];
-
-export type TokenUsageWorkspaceControllerSettingsV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type TokenUsageWorkspaceControllerSettingsV1Response = TokenUsageWorkspaceControllerSettingsV1Responses[keyof TokenUsageWorkspaceControllerSettingsV1Responses];
 
 export type RoleWorkspaceControllerListV1Data = {
     body?: never;
