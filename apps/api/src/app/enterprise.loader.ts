@@ -39,3 +39,24 @@ export function loadEnterpriseConfigs(): ConfigFactory[] {
     const configs = requireFromHere(join(dir, 'index')).default;
     return Array.isArray(configs) ? configs : [configs];
 }
+
+// Enterprise seed module lives at src/ee/migration/ee-migration.module.ts
+// (default build output: dist/ee/migration/ee-migration.module.js). Seeding
+// an open-engine install must always work, so absence never throws here,
+// even when ECCHO_EDITION=enterprise — unlike loadEnterpriseModules().
+export function loadEnterpriseSeedModules(): DynamicModule[] {
+    const migrationModulePath = join(
+        EE_DIR,
+        'migration',
+        'ee-migration.module'
+    );
+    if (
+        !existsSync(`${migrationModulePath}.js`) &&
+        !existsSync(`${migrationModulePath}.ts`)
+    ) {
+        return [];
+    }
+    const requireFromHere = createRequire(__filename);
+    const { EeMigrationModule } = requireFromHere(migrationModulePath);
+    return [EeMigrationModule];
+}

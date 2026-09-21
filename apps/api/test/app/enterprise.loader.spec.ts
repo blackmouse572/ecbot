@@ -70,3 +70,28 @@ describe('loadEnterpriseConfigs', () => {
         });
     });
 });
+
+describe('loadEnterpriseSeedModules', () => {
+    const originalEnv = process.env;
+
+    afterEach(() => {
+        process.env = originalEnv;
+        jest.resetAllMocks();
+    });
+
+    // Same createRequire escape-hatch as loadEnterpriseConfigs above: the
+    // present-overlay path is covered by the boot check in the task report,
+    // not here. Seeding an open-engine install must always work, so this
+    // never throws — even when ECCHO_EDITION=enterprise.
+    it('returns [] when ee/migration/ee-migration.module is absent, even when ECCHO_EDITION=enterprise', () => {
+        mockedExistsSync.mockReturnValue(false);
+        process.env = { ...originalEnv, ECCHO_EDITION: 'enterprise' };
+
+        jest.isolateModules(() => {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const loader = require('@app/app/enterprise.loader');
+
+            expect(loader.loadEnterpriseSeedModules()).toEqual([]);
+        });
+    });
+});

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": [
+        "VITE_API_KEY",
+        "VITE_API_KEY_SECRET",
+        "VITE_API_URL",
+        "VITE_FACEBOOK_APP_ID",
+        "VITE_FACEBOOK_REDIRECT_URI",
+        "VITE_TURNSTILE_SITE_KEY"
+      ]
+    }
+  }
+}

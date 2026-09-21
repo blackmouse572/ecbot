@@ -98,6 +98,10 @@ docker-compose.rag-test.yml
 # Enterprise overlay (private, materialised only for the enterprise build)
 apps/api/src/ee/
 apps/app/src/ee/
+apps/api/test/ee/
+
+# Hosted-edition wrangler configs, copied in by the enterprise overlay at build time
+apps/*/wrangler.json
 
 # SDD scratch workspaces (superpowers:subagent-driven-development)
 .superpowers/
