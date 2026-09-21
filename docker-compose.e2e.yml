@@ -1,9 +1,25 @@
 # docker-compose.e2e.yml
 # Thin override for E2E testing — apply on top of docker-compose.yml:
 #   docker compose -f docker-compose.yml -f docker-compose.e2e.yml up --wait
+#
+# `api` and `postgres` here stand in for the base file's `apis` and `database`:
+# a test database, E2E helpers on, no source bind mount. They are new service
+# names rather than overrides, so the originals have to be parked on a profile
+# nothing requests — otherwise both pairs claim host 8080 and 5432 and the
+# stack never starts. Compose has no way to delete a service, hence the
+# `!reset` on the dependencies that pointed at the parked pair.
 name: eccho-e2e
 
 services:
+  apis:
+    # !override, not a plain value: profile lists are concatenated on merge, so
+    # without it `apis` keeps the base file's `full` and starts anyway.
+    profiles: !override [replaced-by-api]
+    depends_on: !reset null
+
+  database:
+    profiles: [replaced-by-postgres]
+
   api:
     build:
       context: .
@@ -18,6 +34,11 @@ services:
       NODE_ENV: test
       E2E_TEST_HELPERS: "true"
       E2E_TEST_KEY: ${E2E_TEST_KEY}
+      # `.env`'s HTTP_HOST=localhost is right for running the API natively but
+      # binds loopback only inside a container — the published port cannot
+      # reach it, and neither can the healthcheck. Same class of override as
+      # REDIS_HOST / AUTH_JWT_JWKS_URI below.
+      HTTP_HOST: 0.0.0.0
       DATABASE_URL: postgresql://postgres:password@postgres:5432/eccho_test
       REDIS_HOST: redis
       AUTH_JWT_JWKS_URI: http://jwks-server/.well-known/jwks.json
@@ -31,7 +52,19 @@ services:
       jwks-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/health/database"]
+      # `/api/public/health/ready` is the unauthenticated readiness probe;
+      # `/v1/health/database` never existed — that route is API-key protected
+      # and lives at `/api/system/health/database`. node:22-alpine ships no
+      # curl, and `localhost` resolves to ::1 first inside the container while
+      # the server listens on 0.0.0.0 — the pitfall the base file documents on
+      # jwks-server.
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:8080/api/public/health/ready', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
       interval: 5s
       timeout: 5s
       retries: 15
@@ -41,10 +74,25 @@ services:
     environment:
       AI_CASSETTE_MODE: ${AI_CASSETTE_MODE:-none}
       VCR_CASSETTE_DIR: /cassettes
+      POSTGRES_URL: postgresql+asyncpg://postgres:password@postgres:5432/eccho_test
+      API_BASE_URL: http://api:8080
     volumes:
       - ./e2e/cassettes:/cassettes:ro
+    depends_on: !override
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      # Same as the base file's probe — python:3.12-slim has no curl — only
+      # with the shorter interval E2E wants.
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -52,7 +100,7 @@ services:
 
   jwks-server:
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/.well-known/jwks.json"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/.well-known/jwks.json"]
       interval: 3s
       timeout: 3s
       retries: 10
@@ -80,3 +128,8 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
+
+  app:
+    depends_on: !override
+      api:
+        condition: service_healthy

@@ -12,25 +12,34 @@ import { Migration } from '@mikro-orm/migrations';
  *
  * `is_system` makes that protection explicit rather than a rule someone has to
  * remember; `PlanService.archive` refuses on it.
+ *
+ * `plans` is the enterprise overlay's table, so the whole body is guarded on it
+ * existing: in the open engine there is nothing to protect and this is a no-op,
+ * while the hosted edition (where the table is created before this runs) is
+ * unaffected.
  */
 export class Migration20260914120000_protect_system_plan extends Migration {
     override async up(): Promise<void> {
-        this.addSql(
-            `alter table "plans" add column "is_system" boolean not null default false;`
-        );
-        this.addSql(
-            `comment on column "plans"."is_system" is 'A plan the product depends on — cannot be archived';`
-        );
+        this.addSql(`
+            do $$
+            begin
+                if to_regclass('public.plans') is not null then
+                    alter table "plans" add column if not exists "is_system" boolean not null default false;
+                    comment on column "plans"."is_system" is 'A plan the product depends on — cannot be archived';
 
-        // Restore and protect the bootstrap tier in one step: marking it
-        // system while leaving it archived would lock in the broken state,
-        // since archive is exactly the operation now forbidden.
-        this.addSql(
-            `update "plans" set "is_system" = true, "is_active" = true where "slug" = 'free';`
-        );
+                    -- Restore and protect the bootstrap tier in one step:
+                    -- marking it system while leaving it archived would lock in
+                    -- the broken state, since archive is exactly the operation
+                    -- now forbidden.
+                    update "plans" set "is_system" = true, "is_active" = true where "slug" = 'free';
+                end if;
+            end $$;
+        `);
     }
 
     override async down(): Promise<void> {
-        this.addSql(`alter table "plans" drop column if exists "is_system";`);
+        this.addSql(
+            `alter table if exists "plans" drop column if exists "is_system";`
+        );
     }
 }

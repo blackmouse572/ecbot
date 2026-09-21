@@ -3,10 +3,22 @@ import { Migrator } from '@mikro-orm/migrations'; // or `@mikro-orm/migrations-m
 import { MikroOrmModuleOptions } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { config } from 'dotenv';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import slugify from 'slugify';
 
 // Load environment variables
 config();
+
+// The enterprise overlay materialises src/ee (and dist/ee) only in the hosted
+// build. In the open engine those paths do not exist, so the globs below stay
+// off and migration commands never see hosted entities — that is what keeps
+// `migration:check` honest here. When the overlay is linked the globs switch on
+// and the snapshot switches with them, so the two editions never diff against
+// each other's schema.
+const hasEnterpriseOverlayTs = existsSync(join(__dirname, 'src/ee'));
+const hasEnterpriseOverlayJs = existsSync(join(__dirname, 'dist/ee'));
+const hasEnterpriseOverlay = hasEnterpriseOverlayTs || hasEnterpriseOverlayJs;
 
 const getMikroOrmConfig = (): MikroOrmModuleOptions => {
     const isProduction = process.env.NODE_ENV === 'production';
@@ -33,14 +45,27 @@ const getMikroOrmConfig = (): MikroOrmModuleOptions => {
         clientUrl: clientUrl,
 
         // Entity discovery (CLI only; runtime uses autoLoadEntities). Scoped to
-        // common+modules so a future src/ee/ tree stays invisible to migration commands.
-        entities: ['dist/{common,modules}/**/*.entity.js'],
-        entitiesTs: ['src/{common,modules}/**/*.entity.ts'],
+        // common+modules so the src/ee/ tree stays invisible to migration
+        // commands unless the enterprise overlay is actually linked.
+        entities: [
+            'dist/{common,modules}/**/*.entity.js',
+            ...(hasEnterpriseOverlayJs ? ['dist/ee/**/*.entity.js'] : []),
+        ],
+        entitiesTs: [
+            'src/{common,modules}/**/*.entity.ts',
+            ...(hasEnterpriseOverlayTs ? ['src/ee/**/*.entity.ts'] : []),
+        ],
 
         // Migration settings
         migrations: {
             path: './migrations',
             pathTs: './migrations',
+            // Pinned rather than derived from the database name, so a scratch
+            // database does not silently write a second snapshot. The overlay
+            // gets its own file because its schema is a superset of this one.
+            snapshotName: hasEnterpriseOverlay
+                ? '.snapshot-ee'
+                : '.snapshot-neondb',
             tableName: 'mikro_orm_migrations',
             fileName: (timestamp: string, name) =>
                 `${timestamp}_${slugify(name || 'migration', { lower: true, trim: true, replacement: '_' })}`,

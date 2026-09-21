@@ -3,7 +3,7 @@ import { request } from "@playwright/test";
 import { API_URL, AI_URL } from "../config";
 
 const SERVICES = [
-  { name: "API", url: `${API_URL}/v1/health/database` },
+  { name: "API", url: `${API_URL}/api/public/health/ready` },
   { name: "AI", url: `${AI_URL}/health` },
 ];
 

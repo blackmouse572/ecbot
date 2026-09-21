@@ -238,17 +238,20 @@ services:
           memory: 128M
 
   cloud-tasks-emulator:
-    image: ghcr.io/aertje/cloud-tasks-emulator:latest
+    # Pinned by digest: `latest` renamed -queue to -initial-queue, and the
+    # emulator exits 2 on an unknown flag, so whether this container lived
+    # depended on how stale your local pull was.
+    image: ghcr.io/aertje/cloud-tasks-emulator@sha256:a625499a689597d1c14efe33224c59e5e5a1e6b9bfbdfc52e978fad307c52ed3
     hostname: cloud-tasks-emulator
     command:
       - -host=0.0.0.0
       - -port=8123
-      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/email
-      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/sms
-      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/followup
-      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/knowledge-ingest
-      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/customer-tag-classifier
-      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/session
+      - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/email
+      - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/sms
+      - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/followup
+      - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/knowledge-ingest
+      - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/customer-tag-classifier
+      - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/session
     ports:
       - "8123:8123"
     networks:
