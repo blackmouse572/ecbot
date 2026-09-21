@@ -2,6 +2,7 @@ import { NotificationModule } from '@app/modules/notification/notification.modul
 import { VerificationModule } from '@app/modules/verification/verification.module';
 import { Module } from '@nestjs/common';
 import { CommandModule } from 'nestjs-command';
+import { loadEnterpriseSeedModules } from 'src/app/enterprise.loader';
 import { CommonModule } from 'src/common/common.module';
 import { MigrationAccountTokenReencryptSeed } from 'src/migration/seeds/migration.account-token-reencrypt.seed';
 import { MigrationApiKeySeed } from 'src/migration/seeds/migration.api-key.seed';
@@ -44,6 +45,9 @@ import { MigrationUserSeed } from './seeds/migration.user.seed';
         NotificationModule,
         AwsModule,
         SkillModule,
+
+        // Enterprise overlay (absent in the public/OSS build)
+        ...loadEnterpriseSeedModules(),
     ],
     providers: [
         MigrationAccountTokenReencryptSeed,

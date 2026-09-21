@@ -35,7 +35,14 @@ import { useEnsureWorkspace, useWorkspaceList } from "@/hooks/api/workspace";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useWorkspaceAbilities } from "@/modules/auth";
 import { ROUTES } from "@/routes";
+import { enterpriseNavItems } from "@/routes/enterprise.nav";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
+
+// The type of the nested nav entries used in the workspace nav group below
+// (e.g. the `items` under the agents/chatbot entry) — exported so the
+// enterprise overlay (apps/app/src/routes/enterprise.nav.ts) can type its
+// contributed items against the exact same shape.
+export type WorkspaceNavItem = NonNullable<INavItem["items"]>[number];
 
 export const MainLayout = () => {
   const { t } = useTranslation();
@@ -361,6 +368,7 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
             subject: "CHATBOT",
           },
         },
+        ...enterpriseNavItems({ t, baseUrl }),
       ],
     },
   ];
