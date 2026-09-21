@@ -1,5 +1,14 @@
 # Ecbot
 
+<p>
+  <a href="./LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/github/license/blackmouse572/ecbot?color=2563eb"></a>
+  <a href="https://github.com/blackmouse572/ecbot/actions/workflows/test-api.yml"><img alt="API tests" src="https://img.shields.io/github/actions/workflow/status/blackmouse572/ecbot/test-api.yml?branch=main&label=api%20tests"></a>
+  <a href="https://github.com/blackmouse572/ecbot/actions/workflows/test-ai.yml"><img alt="AI tests" src="https://img.shields.io/github/actions/workflow/status/blackmouse572/ecbot/test-ai.yml?branch=main&label=ai%20tests"></a>
+  <a href="https://github.com/blackmouse572/ecbot/actions/workflows/lint-api.yml"><img alt="Lint" src="https://img.shields.io/github/actions/workflow/status/blackmouse572/ecbot/lint-api.yml?branch=main&label=lint"></a>
+  <a href="./CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-16a34a"></a>
+  <a href="https://github.com/blackmouse572/ecbot/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/blackmouse572/ecbot?style=flat"></a>
+</p>
+
 Build one AI agent — persona, knowledge, tools, behaviour — and run it across every messaging channel your customers actually use. Operators watch the conversations and step in whenever they want.
 
 Ecbot is a multi-platform AI agent platform for conversational commerce and customer service. It is the same engine that runs Ecbot Cloud, open-sourced in full.
@@ -19,14 +28,19 @@ Ecbot is a multi-platform AI agent platform for conversational commerce and cust
 
 Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three slots are open and specced — they are the best place to start contributing.
 
-## What you need to run it yourself
+## Features
 
-Ecbot self-hosted is the complete engine, uncrippled. Two things are yours to supply:
+- **One agent, every channel.** Define persona, knowledge, tools and behaviour once; the same agent answers on Facebook Messenger, Zalo OA, Telegram, your website widget and a REST API channel. Instagram, TikTok Shop and Shopee are open adapter slots.
+- **Operator inbox with human handoff.** Every conversation is visible to operators, who can take over at any time; the agent hands off on its own by keyword or when its confidence drops below a threshold you set.
+- **Knowledge base with RAG.** Upload files and pages; embeddings live next to the relational data in one Postgres (pgvector), and retrieval is scoped per agent.
+- **Tools and MCP.** Give agents tools from the marketplace (Composio), a hosted MCP server, or any MCP URL you operate; tool calls run inside the conversation.
+- **Guardrails.** Input and output guardrails with custom instructions and escalation to a human when a message is blocked.
+- **Follow-ups and customer context.** Rule-based follow-up messages, customer profiles and automatic tagging so the agent knows who it is talking to.
+- **Workspaces, roles and audit.** Multi-workspace tenancy with role-based permissions, invitations, API keys and an activity log.
+- **Streaming and queues.** Token streaming from the AI service to the channel, BullMQ background jobs, and a queue dashboard.
+- **English and Vietnamese** out of the box, in the operator UI and API responses.
 
-- **An LLM key.** Ecbot routes through [OpenRouter](https://openrouter.ai). Set `OPENROUTER_API_KEY` and you pay the provider directly.
-- **Platform app registrations.** Connecting a Facebook Page, Zalo OA, or TikTok Shop requires *your own* app on that platform, approved for messaging permissions. Meta App Review and Zalo OA partner approval take weeks. Telegram, the website widget, and the REST API channel need no approval — start there.
-
-Ecbot Cloud exists because those two are tedious, not because the code is different.
+Ecbot self-hosted is the complete engine, uncrippled — the same code that runs Ecbot Cloud. Two things are yours to supply: an LLM key (Ecbot routes through [OpenRouter](https://openrouter.ai); set `OPENROUTER_API_KEY` and pay the provider directly) and, for Facebook, Zalo or TikTok, your own platform app approved for messaging permissions. Telegram, the website widget and the REST API channel need no approval — start there.
 
 ## Quick start
 
