@@ -1,5 +1,7 @@
 # Ecbot
 
+<p align="center"><img src=".github/assets/banner.png" alt="Ecbot — AI Agent framework for business" width="100%"></p>
+
 <p>
   <a href="./LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/github/license/blackmouse572/ecbot?color=2563eb"></a>
   <a href="https://github.com/blackmouse572/ecbot/actions/workflows/test-api.yml"><img alt="API tests" src="https://img.shields.io/github/actions/workflow/status/blackmouse572/ecbot/test-api.yml?branch=main&label=api%20tests"></a>

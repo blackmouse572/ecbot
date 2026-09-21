@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ecbot banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Wix+Madefor+Display:wght@800&family=Wix+Madefor+Text:wght@500&display=block" rel="stylesheet">
+<style>
+  /* Figma frame "Cover" 54:3270 — 1200x600, dark theme tokens */
+  :root {
+    --fg-base: #f4f4f5;
+    --fg-subtle: #a1a1aa;
+    --fg-muted: #71717a;
+    --bg-subtle: #18181b;
+    --bg-base: #212124;
+    --bg-component: #27272a;
+    --bg-field: #ffffff0a;
+    --btn-neutral: #ffffff0a;
+    --border-base: #ffffff1a;
+    --border-strong: #ffffff29;
+    --alpha-400: #ffffff3d;
+    --ring: 0 1px 2px 0 rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg-subtle); }
+  body { width: 1200px; height: 600px; overflow: hidden; }
+
+  .cover {
+    position: relative;
+    width: 1200px;
+    height: 600px;
+    overflow: hidden;
+    background: var(--bg-subtle);
+    font-family: Inter, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- glow ellipses (54:3272 / 54:3273) ---- */
+  .glow { position: absolute; display: block; }
+  .glow-top { left: 263px; top: -755.625px; width: 673.75px; height: 822.5px; }
+  .glow-bottom { left: 8.75px; top: 260px; width: 1191.25px; height: 756.25px; }
+
+  /* ---- app screenshot mock (54:3274, 900x640 @150,318.125) ---- */
+  .mock {
+    position: absolute;
+    left: 150px;
+    top: 318.125px;
+    width: 900px;
+    height: 640px;
+    /* inset ring, not a border: keeps the 1440x1024 mock aligned to Figma's x/y */
+    box-shadow: inset 0 0 0 1px var(--border-base);
+    border-radius: 7.5px;
+    overflow: hidden;
+    background: var(--bg-subtle);
+  }
+  .mock-scale {
+    width: 1440px;
+    height: 1024px;
+    transform: scale(0.625);
+    transform-origin: top left;
+  }
+  .main-layout { display: flex; width: 1440px; height: 694px; }
+
+  /* ---- sidebar (54:3276) ---- */
+  .sidebar {
+    width: 220px;
+    flex: none;
+    height: 694px;
+    background: var(--bg-subtle);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sb-header { padding: 12px; }
+  .sb-headrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 8px 2px 2px;
+    border-radius: 6px;
+  }
+  .sb-iconbox { flex: 1 0 0; min-width: 0; height: 24px; display: flex; align-items: center; }
+  .logo-h { display: flex; align-items: center; justify-content: center; gap: 8px; height: 24px; }
+  .sb-ws {
+    font-size: 13px; line-height: 20px; font-weight: 500; color: var(--fg-base); white-space: nowrap;
+  }
+  .divider { padding: 0 12px; }
+  .divider i {
+    display: block; height: 1px;
+    background-image: repeating-linear-gradient(90deg, var(--border-strong) 0 1px, transparent 1px 4px);
+  }
+  .sb-menu { padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+
+  .si {
+    display: flex; align-items: center; gap: 8px;
+    padding: 2px 8px 2px 2px; border-radius: 6px; height: 28px; flex: none;
+  }
+  .si .ib { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .si .ib img { width: 15px; height: 15px; display: block; }
+  .si .lbl { flex: 1 0 0; min-width: 0; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--fg-subtle); }
+  .si .trail { font-size: 13px; line-height: 20px; font-weight: 400; color: var(--fg-muted); text-align: right; white-space: nowrap; }
+
+  .sub {
+    position: relative; display: flex; align-items: center; gap: 8px;
+    padding: 4px 8px 4px 34px; border-radius: 6px; height: 28.8px; flex: none; overflow: hidden;
+  }
+  .sub .lbl { flex: 1 0 0; min-width: 0; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--fg-muted); white-space: nowrap; }
+  .sub .tree { position: absolute; left: 14.69px; top: 0; width: 0.62px; height: 28px; }
+
+  .sub-last { position: relative; display: flex; align-items: center; padding-bottom: 8px; border-radius: 6px; height: 36.8px; flex: none; }
+  .sub-last .inner {
+    flex: 1 0 0; min-width: 0; display: flex; align-items: center; gap: 8px;
+    padding: 4px 8px 4px 34px; border-radius: 6px; overflow: hidden;
+  }
+  .sub-last .lbl { flex: 1 0 0; min-width: 0; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--fg-muted); white-space: nowrap; }
+  .sub-last .tree { position: absolute; left: 14.5px; top: 0; width: 15.5px; height: 15.5px; }
+
+  /* ---- container (54:3277) ---- */
+  .container-col { width: 1220px; flex: none; height: 694px; display: flex; flex-direction: column; }
+  .hdr-item {
+    height: 56px; flex: none; padding: 16px;
+    border-bottom: 1px solid var(--border-strong);
+    display: flex; flex-direction: column; align-items: flex-start;
+  }
+  .hdr-row { display: flex; align-items: flex-start; justify-content: space-between; width: 1188px; }
+  .hdr-start { display: flex; gap: 20px; align-items: center; width: 768.5px; }
+  .iconbtn-sm {
+    width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center;
+    background: var(--btn-neutral); border-radius: 6px; box-shadow: var(--ring); overflow: hidden;
+  }
+  .iconbtn-sm img { width: 15px; height: 15px; display: block; }
+  .crumb { font-size: 12px; line-height: 20px; font-weight: 500; color: var(--fg-muted); white-space: nowrap; }
+
+  .frame1 { flex: 1 0 0; padding: 10px; }
+  .table { width: 1200px; }
+
+  /* ---- table menu (54:3282) ---- */
+  .t-menu { height: 60.8px; display: flex; align-items: center; gap: 8px; padding: 16px 24px; }
+  .t-title { flex: 1 0 0; min-width: 0; font-size: 18px; line-height: 28px; font-weight: 500; color: var(--fg-base); }
+  .t-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 4px 8px; border-radius: 6px; background: var(--btn-neutral); box-shadow: var(--ring);
+    font-size: 13px; line-height: 20px; font-weight: 500; color: var(--fg-base); white-space: nowrap;
+  }
+  .iconbtn {
+    display: flex; align-items: center; justify-content: center; padding: 6.5px;
+    border-radius: 6px; background: var(--btn-neutral); box-shadow: var(--ring); flex: none;
+  }
+  .iconbtn img { width: 15px; height: 15px; display: block; }
+
+  /* ---- table filter (54:3283) ---- */
+  .t-filter {
+    height: 60.8px; display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border: 1px solid var(--border-base);
+  }
+  .search {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 160px; height: 28px; padding: 0 8px; border-radius: 6px;
+    background: var(--bg-field); box-shadow: var(--ring); overflow: hidden;
+  }
+  .search img { width: 15px; height: 15px; flex: none; display: block; }
+  .search span { flex: 1 0 0; min-width: 0; font-size: 13px; line-height: 20px; font-weight: 400; color: var(--fg-muted); }
+
+  /* ---- rows frame (54:3284) ---- */
+  .t-body { height: 384px; padding: 0 4px; }
+  .t-head, .t-row { height: 48px; display: flex; align-items: center; gap: 12px; }
+  .t-head { background: var(--bg-component); padding-left: 24px; padding-right: 64px; justify-content: center; }
+  .t-row { background: var(--bg-base); padding: 0 24px; justify-content: center; }
+  .cell { flex: 1 0 0; min-width: 0; height: 100%; display: flex; align-items: center; overflow: hidden; }
+  .cell.end { justify-content: flex-end; }
+  .cell.fixed { flex: none; }
+  .cbx { width: 20px; height: 20px; flex: none; position: relative; }
+  .cbx i {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 14px; height: 14px; border-radius: 3px; background: var(--bg-component); box-shadow: var(--ring);
+  }
+  .th { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--fg-subtle); white-space: nowrap; }
+  .td { font-size: 13px; line-height: 20px; font-weight: 400; color: var(--fg-base); white-space: nowrap; }
+  .td.sub { font-size: 13px; line-height: 20px; font-weight: 400; color: var(--fg-subtle); }
+  .status { display: flex; align-items: center; gap: 4px; }
+  .status .sq { width: 15px; height: 15px; flex: none; position: relative; overflow: hidden; }
+  .status .sq i {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 8px; height: 8px; border-radius: 2px; border: 0.5px solid var(--alpha-400);
+  }
+  .profile { flex: 1 0 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 0 1px; overflow: hidden; }
+  .badge {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    height: 28px; padding: 0 10px 0 4px; border-radius: 999px;
+    background: var(--bg-component); box-shadow: var(--ring); overflow: hidden;
+  }
+  .badge .av {
+    display: flex; align-items: center; padding: 2px; border-radius: 999px;
+    background: var(--bg-base); box-shadow: var(--ring); overflow: hidden; flex: none;
+  }
+  .badge .av i { position: relative; display: block; width: 16px; height: 16px; border-radius: 999px; overflow: hidden; }
+  .badge .av i img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 999px; }
+  .badge span { font-size: 12px; line-height: 20px; font-weight: 500; color: var(--fg-subtle); white-space: nowrap; }
+  .rowbtn { display: flex; align-items: center; justify-content: center; padding: 6.5px; border-radius: 6px; flex: none; }
+  .rowbtn img { width: 15px; height: 15px; display: block; }
+
+  /* ---- logo lock-up (666:57188) ---- */
+  .logo-lg {
+    position: absolute; left: 557.5px; top: 54px; width: 85px; height: 85px;
+    border-radius: 21.25px; overflow: hidden;
+    border: 0.531px solid rgba(10, 13, 18, 0.12);
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(10, 13, 18, 0.2) 100%),
+      linear-gradient(90deg, #fff 0%, #fff 100%);
+    box-shadow:
+      0 2.656px 2.656px -0.25px rgba(10, 13, 18, 0.13),
+      0 2.656px 7.969px 0 rgba(10, 13, 18, 0.1),
+      0 2.656px 5.313px 0 rgba(10, 13, 18, 0.06);
+  }
+  .logo-lg .backdrop { position: absolute; left: 15.84px; top: 21.15px; width: 55.13px; height: 42.5px; }
+  .logo-lg .backdrop img { position: absolute; left: -3.26%; top: -4.23%; width: 103.26%; height: 108.46%; }
+  .logo-lg .icon {
+    position: absolute; inset: 0; border-radius: 21.25px; overflow: hidden;
+    border: 0.311px solid rgba(10, 13, 18, 0.12);
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(160, 160, 160, 0.2) 68.162%, rgba(116, 116, 116, 0.2) 100%),
+      linear-gradient(90deg, #fff 0%, #fff 100%);
+  }
+  .logo-lg .shade { position: absolute; left: calc(50% - 0.147px); top: 29.84px; width: 91.16px; height: 98.48px; transform: translateX(-50%) rotate(180deg); }
+  .logo-lg .shade img { position: absolute; left: -2.57%; top: -1.79%; width: 105.14%; height: 104.77%; }
+  .logo-lg .face {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 58.62px; height: 58.62px; display: flex; flex-direction: column; align-items: center; gap: 6.49px;
+  }
+  .logo-lg .eyes { position: relative; width: 48.22px; height: 33.65px; flex: none; }
+  .logo-lg .eyes img { position: absolute; left: -5.11%; top: -5.57%; width: 110.22%; height: 114.63%; }
+  .logo-lg .smilewrap { width: 100%; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 0.586px 1.231px rgba(0, 0, 0, 0.25)); }
+  .logo-lg .smile { position: relative; width: 52.01px; height: 18.48px; flex: none; }
+  .logo-lg .smile img { position: absolute; left: 1.67%; top: 6.25%; width: 96.66%; height: 94.15%; }
+
+  /* sidebar mini logo (15px, same component) */
+  .logo-sm {
+    position: relative; width: 15px; height: 15px; flex: none;
+    border-radius: 6px; overflow: hidden;
+    border: 0.15px solid rgba(10, 13, 18, 0.12);
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(10, 13, 18, 0.2) 100%),
+      linear-gradient(90deg, #fff 0%, #fff 100%);
+    box-shadow:
+      0 0.75px 0.75px -0.375px rgba(10, 13, 18, 0.13),
+      0 0.75px 2.25px 0 rgba(10, 13, 18, 0.1),
+      0 0.75px 1.5px 0 rgba(10, 13, 18, 0.06);
+  }
+  .logo-sm .backdrop { position: absolute; left: 2.66px; top: 3.6px; width: 9.73px; height: 7.5px; }
+  .logo-sm .backdrop img { position: absolute; left: -3.26%; top: -4.23%; width: 103.26%; height: 108.46%; }
+  .logo-sm .icon {
+    position: absolute; inset: 0; border-radius: 4.552px; overflow: hidden;
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(160, 160, 160, 0.2) 68.162%, rgba(116, 116, 116, 0.2) 100%),
+      linear-gradient(90deg, #fff 0%, #fff 100%);
+  }
+  .logo-sm .shade { position: absolute; left: calc(50% - 0.03px); top: 5.27px; width: 16.086px; height: 17.379px; transform: translateX(-50%) rotate(180deg); }
+  .logo-sm .shade img { position: absolute; left: -2.57%; top: -1.79%; width: 105.14%; height: 104.77%; }
+  .logo-sm .face {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 10.345px; height: 10.345px; display: flex; flex-direction: column; align-items: center; gap: 1.146px;
+  }
+  .logo-sm .eyes { position: relative; width: 8.51px; height: 5.938px; flex: none; }
+  .logo-sm .eyes img { position: absolute; left: -5.11%; top: -5.57%; width: 110.22%; height: 114.63%; }
+  .logo-sm .smilewrap { width: 100%; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 0.103px 0.217px rgba(0, 0, 0, 0.25)); }
+  .logo-sm .smile { position: relative; width: 9.179px; height: 3.261px; flex: none; }
+  .logo-sm .smile img { position: absolute; left: 1.67%; top: 6.25%; width: 96.66%; height: 94.15%; }
+
+  /* ---- wordmark ---- */
+  .title {
+    position: absolute; left: 293px; top: 173px; width: 614px; height: 60px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Wix Madefor Display", Inter, -apple-system, sans-serif;
+    font-weight: 800; font-size: 73px; line-height: 60px; letter-spacing: -2.19px;
+    color: var(--fg-base);
+  }
+  .tagline {
+    position: absolute; left: 293px; top: 244px; width: 614px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Wix Madefor Text", Inter, -apple-system, sans-serif;
+    font-weight: 500; font-size: 24px; line-height: normal; letter-spacing: -0.72px;
+    color: #fff; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+  <img class="glow glow-top" src="glow-top.svg" alt="">
+  <img class="glow glow-bottom" src="glow-bottom.svg" alt="">
+
+  <div class="mock">
+    <div class="mock-scale">
+      <div class="main-layout">
+
+        <!-- Sidebar 54:3276 -->
+        <div class="sidebar">
+          <div class="sb-header">
+            <div class="sb-headrow">
+              <div class="sb-iconbox">
+                <div class="logo-h">
+                  <div class="logo-sm">
+                    <div class="backdrop"><img src="logo-sm-frame3.svg" alt=""></div>
+                    <div class="icon">
+                      <div class="shade"><img src="logo-sm-ellipse7.svg" alt=""></div>
+                      <div class="face">
+                        <div class="eyes"><img src="logo-sm-eyes.svg" alt=""></div>
+                        <div class="smilewrap"><div class="smile"><img src="logo-sm-smile.svg" alt=""></div></div>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="sb-ws">My workspace</p>
+                </div>
+              </div>
+              <img src="ic-ellipsis-horizontal.svg" alt="" style="width:15px;height:15px;flex:none;display:block">
+            </div>
+          </div>
+
+          <div class="divider"><i></i></div>
+
+          <div class="sb-menu">
+            <div class="si"><div class="ib"><img src="ic-search.svg" alt=""></div><p class="lbl">Search</p><p class="trail">&#8984;K</p></div>
+            <div class="si"><div class="ib"><img src="ic-house.svg" alt=""></div><p class="lbl">Dashboard</p></div>
+            <div class="si"><div class="ib"><img src="ic-squares-plus.svg" alt=""></div><p class="lbl">Channels</p></div>
+            <div class="si"><div class="ib"><img src="ic-chat-bubble.svg" alt=""></div><p class="lbl">Conversation</p><p class="trail">20</p></div>
+            <div class="sub"><p class="lbl">What is the newest op...</p><img class="tree" src="tree-line.svg" alt=""></div>
+            <div class="sub"><p class="lbl">Look good to me &#128516;</p><img class="tree" src="tree-line.svg" alt=""></div>
+            <div class="sub-last"><div class="inner"><p class="lbl">Based on what you n...</p></div><img class="tree" src="tree-elbow.svg" alt=""></div>
+            <div class="si"><div class="ib"><img src="ic-bolt.svg" alt=""></div><p class="lbl">Agents</p></div>
+            <div class="sub"><p class="lbl">Knowledge Base</p><img class="tree" src="tree-line.svg" alt=""></div>
+            <div class="sub"><p class="lbl">Tools</p><img class="tree" src="tree-line.svg" alt=""></div>
+            <div class="sub"><p class="lbl">Skills</p><img class="tree" src="tree-line.svg" alt=""></div>
+            <div class="sub-last"><div class="inner"><p class="lbl">Followups</p></div><img class="tree" src="tree-elbow.svg" alt=""></div>
+            <div class="si"><div class="ib"><img src="ic-face-smile.svg" alt=""></div><p class="lbl">Customers</p></div>
+            <div class="sub"><p class="lbl">Tags</p><img class="tree" src="tree-line.svg" alt=""></div>
+            <div class="sub-last"><div class="inner"><p class="lbl">Duplicate profiles</p></div><img class="tree" src="tree-elbow.svg" alt=""></div>
+          </div>
+        </div>
+
+        <!-- Container 54:3277 -->
+        <div class="container-col">
+          <div class="hdr-item">
+            <div class="hdr-row">
+              <div class="hdr-start">
+                <div class="iconbtn-sm"><img src="ic-sidebar-left.svg" alt=""></div>
+                <p class="crumb">Accounts</p>
+              </div>
+              <div class="iconbtn-sm"><img src="ic-bell-alert.svg" alt=""></div>
+            </div>
+          </div>
+
+          <div class="frame1">
+            <div class="table">
+              <!-- Table Menu 54:3282 -->
+              <div class="t-menu">
+                <p class="t-title">Channel</p>
+                <div class="t-actions">
+                  <div class="iconbtn"><img src="ic-arrow-down-tray.svg" alt=""></div>
+                  <div class="btn">Import</div>
+                  <div class="btn">Create</div>
+                </div>
+              </div>
+
+              <!-- Table Filter 54:3283 -->
+              <div class="t-filter">
+                <div class="btn">Add filter</div>
+                <div class="t-actions">
+                  <div class="search"><img src="ic-magnifying-glass.svg" alt=""><span>Search by name</span></div>
+                  <div class="iconbtn"><img src="ic-descending-sorting.svg" alt=""></div>
+                </div>
+              </div>
+
+              <!-- Frame 2 54:3284 -->
+              <div class="t-body">
+                <div class="t-head">
+                  <div class="cell fixed"><div class="cbx"><i></i></div></div>
+                  <div class="cell"><p class="th">Link</p></div>
+                  <div class="cell"><p class="th">Status</p></div>
+                  <div class="cell"><p class="th">Profile</p></div>
+                  <div class="cell end"><p class="th">Last updated at</p></div>
+                </div>
+                <div class="t-row">
+                  <div class="cell fixed"><div class="cbx"><i></i></div></div>
+                  <div class="cell"><p class="td">https://something.com</p></div>
+                  <div class="cell status"><div class="sq"><i style="background:#10b981"></i></div><p class="td">Synced</p></div>
+                  <div class="profile">
+                    <div class="badge">
+                      <div class="av"><i><img src="avatar-a.png" alt=""><img src="avatar-b.png" alt=""><img src="avatar-a.png" alt=""></i></div>
+                      <span>Ludvig Rask</span>
+                    </div>
+                  </div>
+                  <div class="cell end"><p class="td sub">12 mins ago</p></div>
+                  <div class="cell fixed end"><div class="rowbtn"><img src="ic-ellipsis-horizontal-row.svg" alt=""></div></div>
+                </div>
+                <div class="t-row">
+                  <div class="cell fixed"><div class="cbx"><i></i></div></div>
+                  <div class="cell"><p class="td">https://something.com</p></div>
+                  <div class="cell status"><div class="sq"><i style="background:#60a5fa"></i></div><p class="td">Proccessing</p></div>
+                  <div class="profile">
+                    <div class="badge">
+                      <div class="av"><i><img src="avatar-a.png" alt=""><img src="avatar-b.png" alt=""><img src="avatar-a.png" alt=""></i></div>
+                      <span>Ludvig Rask</span>
+                    </div>
+                  </div>
+                  <div class="cell end"><p class="td sub">12 mins ago</p></div>
+                  <div class="cell fixed end"><div class="rowbtn"><img src="ic-ellipsis-horizontal-row.svg" alt=""></div></div>
+                </div>
+                <div class="t-row">
+                  <div class="cell fixed"><div class="cbx"><i></i></div></div>
+                  <div class="cell"><p class="td">https://something.com</p></div>
+                  <div class="cell status"><div class="sq"><i style="background:#f43f5e"></i></div><p class="td">Banned</p></div>
+                  <div class="profile">
+                    <div class="badge">
+                      <div class="av"><i><img src="avatar-a.png" alt=""><img src="avatar-b.png" alt=""><img src="avatar-a.png" alt=""></i></div>
+                      <span>Ludvig Rask</span>
+                    </div>
+                  </div>
+                  <div class="cell end"><p class="td sub">12 mins ago</p></div>
+                  <div class="cell fixed end"><div class="rowbtn"><img src="ic-ellipsis-horizontal-row.svg" alt=""></div></div>
+                </div>
+                <div class="t-row">
+                  <div class="cell fixed"><div class="cbx"><i></i></div></div>
+                  <div class="cell"><p class="td">https://something.com</p></div>
+                  <div class="cell status"><div class="sq"><i style="background:#a78bfa"></i></div><p class="td">Checkpoint</p></div>
+                  <div class="profile">
+                    <div class="badge">
+                      <div class="av"><i><img src="avatar-a.png" alt=""><img src="avatar-b.png" alt=""><img src="avatar-a.png" alt=""></i></div>
+                      <span>Ludvig Rask</span>
+                    </div>
+                  </div>
+                  <div class="cell end"><p class="td sub">12 mins ago</p></div>
+                  <div class="cell fixed end"><div class="rowbtn"><img src="ic-ellipsis-horizontal-row.svg" alt=""></div></div>
+                </div>
+                <div class="t-row">
+                  <div class="cell fixed"><div class="cbx"><i></i></div></div>
+                  <div class="cell"><p class="td">https://something.com</p></div>
+                  <div class="cell status"><div class="sq"><i style="background:#10b981"></i></div><p class="td">Synced</p></div>
+                  <div class="profile">
+                    <div class="badge">
+                      <div class="av"><i><img src="avatar-a.png" alt=""><img src="avatar-b.png" alt=""><img src="avatar-a.png" alt=""></i></div>
+                      <span>Ludvig Rask</span>
+                    </div>
+                  </div>
+                  <div class="cell end"><p class="td sub">12 mins ago</p></div>
+                  <div class="cell fixed end"><div class="rowbtn"><img src="ic-ellipsis-horizontal-row.svg" alt=""></div></div>
+                </div>
+                <div class="t-row">
+                  <div class="cell fixed"><div class="cbx"><i></i></div></div>
+                  <div class="cell"><p class="td">https://something.com</p></div>
+                  <div class="cell status"><div class="sq"><i style="background:#60a5fa"></i></div><p class="td">Proccessing</p></div>
+                  <div class="profile">
+                    <div class="badge">
+                      <div class="av"><i><img src="avatar-a.png" alt=""><img src="avatar-b.png" alt=""><img src="avatar-a.png" alt=""></i></div>
+                      <span>Ludvig Rask</span>
+                    </div>
+                  </div>
+                  <div class="cell end"><p class="td sub">12 mins ago</p></div>
+                  <div class="cell fixed end"><div class="rowbtn"><img src="ic-ellipsis-horizontal-row.svg" alt=""></div></div>
+                </div>
+                <div class="t-row">
+                  <div class="cell fixed"><div class="cbx"><i></i></div></div>
+                  <div class="cell"><p class="td">https://something.com</p></div>
+                  <div class="cell status"><div class="sq"><i style="background:#f43f5e"></i></div><p class="td">Banned</p></div>
+                  <div class="profile">
+                    <div class="badge">
+                      <div class="av"><i><img src="avatar-a.png" alt=""><img src="avatar-b.png" alt=""><img src="avatar-a.png" alt=""></i></div>
+                      <span>Ludvig Rask</span>
+                    </div>
+                  </div>
+                  <div class="cell end"><p class="td sub">12 mins ago</p></div>
+                  <div class="cell fixed end"><div class="rowbtn"><img src="ic-ellipsis-horizontal-row.svg" alt=""></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Logo lock-up 666:57188 -->
+  <div class="logo-lg">
+    <div class="backdrop"><img src="logo-lg-frame3.svg" alt=""></div>
+    <div class="icon">
+      <div class="shade"><img src="logo-lg-ellipse7.svg" alt=""></div>
+      <div class="face">
+        <div class="eyes"><img src="logo-lg-eyes.svg" alt=""></div>
+        <div class="smilewrap"><div class="smile"><img src="logo-lg-smile.svg" alt=""></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="title">ECBOT</div>
+  <div class="tagline">AI Agent framework for business</div>
+</div>
+</body>
+</html>

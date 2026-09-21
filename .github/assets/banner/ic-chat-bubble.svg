@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="9.375" height="9.375" viewBox="0 0 9.375 9.375" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="chat-bubble-left-right" clip-path="url(#clip0_966_127647)">
+<path id="Vector" d="M4.82639 3.15972H7.88194C8.34194 3.15972 8.71528 3.53306 8.71528 3.99306V6.49306C8.71528 6.95306 8.34194 7.32639 7.88194 7.32639H7.60417V8.71528L6.07639 7.32639H4.82639C4.36639 7.32639 3.99306 6.95306 3.99306 6.49306V3.99306C3.99306 3.53306 4.36639 3.15972 4.82639 3.15972Z" stroke="#F4F4F5" stroke-width="0.9375" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M6.31917 1.77083C6.19583 1.29194 5.76083 0.9375 5.24306 0.9375H1.77083C1.15694 0.9375 0.659722 1.43472 0.659722 2.04861V4.82694C0.659722 5.44028 1.1575 5.93806 1.77083 5.9375V7.60417L2.60417 6.69528" stroke="#F4F4F5" stroke-width="0.9375" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_966_127647">
+<rect width="9.375" height="9.375" fill="white"/>
+</clipPath>
+</defs>
+</svg>
