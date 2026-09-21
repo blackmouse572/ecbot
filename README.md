@@ -15,16 +15,16 @@ Ecbot is a multi-platform AI agent platform for conversational commerce and cust
 
 ## Channels
 
-| Channel | Status |
-| --- | --- |
-| Facebook Messenger | Shipped |
-| Zalo OA | Shipped |
-| Telegram | Shipped |
-| Website widget | Shipped |
-| REST API channel | Shipped |
-| Instagram | Roadmap — [adapter slot open](../../issues) |
-| TikTok Shop | Roadmap — [adapter slot open](../../issues) |
-| Shopee | Roadmap — [adapter slot open](../../issues) |
+| Channel            | Status                                      |
+| ------------------ | ------------------------------------------- |
+| Facebook Messenger | Shipped                                     |
+| Zalo OA            | Shipped                                     |
+| Telegram           | Shipped                                     |
+| Website widget     | Shipped                                     |
+| REST API channel   | Shipped                                     |
+| Instagram          | Roadmap — [adapter slot open](../../issues) |
+| TikTok Shop        | Roadmap — [adapter slot open](../../issues) |
+| Shopee             | Roadmap — [adapter slot open](../../issues) |
 
 Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three slots are open and specced — they are the best place to start contributing.
 
@@ -92,13 +92,13 @@ pnpm dev:app                          # api + app
 pnpm --filter ai dev                  # AI service, in a second shell
 ```
 
-| | |
-| --- | --- |
-| App | http://localhost:5173 |
-| API | http://localhost:8080 |
+|                    |                            |
+| ------------------ | -------------------------- |
+| App                | http://localhost:5173      |
+| API                | http://localhost:8080      |
 | API docs (Swagger) | http://localhost:8080/docs |
-| AI service | http://localhost:8000 |
-| Queue dashboard | http://localhost:3010 |
+| AI service         | http://localhost:8000      |
+| Queue dashboard    | http://localhost:3010      |
 
 To run the apps in containers too, use the Compose profiles: `docker compose --profile app up` for api + app, `--profile full` to include the AI service.
 
