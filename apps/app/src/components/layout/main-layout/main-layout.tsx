@@ -4,7 +4,6 @@ import {
   BellAlert,
   ChatBubbleLeftRight,
   CogSixTooth,
-  CurrencyDollar,
   CursorArrowRays,
   EllipsisHorizontal,
   SquaresPlus,
@@ -360,15 +359,6 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
           ability: {
             action: "read",
             subject: "CHATBOT",
-          },
-        },
-        {
-          label: t("usage.domain"),
-          to: `${baseUrl}/${ROUTES.Usage}`,
-          icon: <CurrencyDollar />,
-          ability: {
-            action: "read",
-            subject: "TOKEN_USAGE",
           },
         },
       ],

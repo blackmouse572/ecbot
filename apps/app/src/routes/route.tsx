@@ -242,14 +242,6 @@ function getRouteMaps(): RouteObject[] {
               lazy: () => import("./followups/followups-list"),
             },
             {
-              path: ROUTES.Usage,
-              handle: {
-                breadcrumb: () => t("usage.title"),
-              },
-              ErrorBoundary: ErrorBoundary,
-              lazy: () => import("./usage/usage-overview"),
-            },
-            {
               path: ROUTES.KnowledgeBase,
               handle: {
                 breadcrumb: () => t("knowledgeBase.title"),

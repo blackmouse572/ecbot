@@ -44,5 +44,4 @@ export const ROUTES = {
   Tools: "tools",
   Skills: "skills",
   Followups: "followups",
-  Usage: "usage",
 } as const;

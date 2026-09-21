@@ -48,7 +48,6 @@ exports[`route map — public table > matches the path list captured from main b
   "/:workspaceSlug/tools/new",
   "/:workspaceSlug/tools/new/http",
   "/:workspaceSlug/tools/new/mcp",
-  "/:workspaceSlug/usage",
   "/auth/:platform/callback",
   "/forgot-password",
   "/join",
