@@ -1,0 +1,5 @@
+export enum ENUM_TOOL_INVOCATION_STATUS {
+    SUCCESS = 'SUCCESS',
+    ERROR = 'ERROR',
+    TIMEOUT = 'TIMEOUT',
+}

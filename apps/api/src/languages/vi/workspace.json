@@ -1,0 +1,49 @@
+{
+    "create": "Không gian làm việc đã được tạo thành công! 🎉",
+    "update": "Không gian làm việc đã được cập nhật mượt mà như ý muốn.",
+    "delete": "Không gian làm việc đã biến mất khỏi vũ trụ số thành công.",
+    "details": "Chi tiết không gian làm việc đã được lấy thành công.",
+    "error": {
+        "notFound": "Ôi không! Không tìm thấy không gian làm việc nào cả.",
+        "nameExist": "Tên này đã có chủ rồi! Hãy nghĩ ra cái tên độc đáo hơn nhé.",
+        "userNotOwner": "Bạn không phải là chủ nhân của không gian này đâu nhé!",
+        "createFailed": "Tạo không gian làm việc thất bại. Có vẻ máy tính đang có tâm trạng.",
+        "updateFailed": "Cập nhật thất bại. Thử lại xem sao?",
+        "deleteForbidden": "Bạn không được phép xóa không gian này. Quyền hạn không đủ!",
+        "memberExist": "Thành viên này đã có mặt trong không gian rồi nhé.",
+        "memberNotFound": "Không tìm thấy thành viên này trong không gian làm việc.",
+        "exist": "Người dùng này đã là chủ sở hữu của một không gian khác rồi.",
+        "missingWorkspaceId": "Thiếu thông tin user hoặc workspaceId trong request.",
+        "invalidInvitationCode": "Mã mời không hợp lệ. Có thể đã hết hạn hoặc sai rồi."
+    },
+    "owner": {
+        "inviteMember": {
+            "success": "Lời mời đã được gửi thành công! Chờ phản hồi nhé."
+        }
+    },
+    "member": {
+        "join": {
+            "invalid": "Link mời không hợp lệ hoặc đã hết hạn. Thử liên hệ lại người gửi xem?",
+            "success": "Chào mừng bạn đã gia nhập không gian làm việc! 🎊",
+            "error": "Tham gia không gian làm việc thất bại. Có gì đó không ổn..."
+        },
+        "leave": {
+            "success": "Bạn đã rời khỏi không gian làm việc thành công. Tạm biệt! 👋",
+            "error": "Rời khỏi không gian làm việc thất bại. Hình như bạn bị 'dính' rồi."
+        },
+        "list": "Danh sách thành viên đã được lấy thành công.",
+        "remove": {
+            "success": "Thành viên đã được loại bỏ thành công.",
+            "error": "Loại bỏ thành viên thất bại. Thử lại xem sao?"
+        },
+        "details": {
+            "success": "Thông tin chi tiết thành viên đã được lấy thành công."
+        },
+        "errors": {
+            "notFound": "Không tìm thấy thành viên này trong không gian làm việc."
+        },
+        "assign": {
+            "success": "Đã gán vai trò mới cho thành viên thành công!"
+        }
+    }
+}

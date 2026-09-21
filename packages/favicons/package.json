@@ -1,0 +1,9 @@
+{
+  "name": "@repo/favicons",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./sync": "./sync.mjs"
+  }
+}

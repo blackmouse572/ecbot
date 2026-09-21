@@ -1,0 +1,12 @@
+{
+    "list": "Sessions retrieved successfully.",
+    "revoke": "Session revoked successfully.",
+    "bulkRevoke": "All sessions for the user were revoked successfully.",
+    "task": {
+        "processed": "Session task processed successfully."
+    },
+    "error": {
+        "notFound": "Sorry, we couldn't find the session.",
+        "forbiddenRevoke": "You cannot revoke your current session."
+    }
+}

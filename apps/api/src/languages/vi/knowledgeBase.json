@@ -1,0 +1,13 @@
+{
+    "list": "Danh sách các cơ sở kiến thức được lấy thành công.",
+    "get": "Cơ sở kiến thức được lấy thành công.",
+    "create": "Cơ sở kiến thức được tạo thành công.",
+    "update": "Cơ sở kiến thức được cập nhật thành công.",
+    "delete": "Cơ sở kiến thức được xóa thành công.",
+    "task": {
+        "processed": "Xử lý tác vụ nạp dữ liệu kiến thức thành công."
+    },
+    "error": {
+        "notFound": "Không tìm thấy cơ sở kiến thức."
+    }
+}

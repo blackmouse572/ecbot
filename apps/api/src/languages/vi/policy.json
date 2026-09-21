@@ -1,0 +1,6 @@
+{
+    "error": {
+        "abilityForbidden": "Xin lỗi, bạn không có quyền cần thiết để thực hiện hành động này.",
+        "roleForbidden": "Xin lỗi, vai trò của bạn không được quyền truy cập vào tài nguyên này."
+    }
+}

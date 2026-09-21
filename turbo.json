@@ -1,0 +1,192 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "tui",
+  "globalEnv": ["NODE_ENV", "TURBO_DEFAULT"],
+  "tasks": {
+    "generate:keys": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^generate:keys"]
+    },
+    "generate:client": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^generate:client"]
+    },
+    "migration:create": {
+      "cache": false,
+      "persistent": false
+    },
+    "migration:up": {
+      "cache": false,
+      "persistent": false
+    },
+    "migration:down": {
+      "cache": false,
+      "persistent": false
+    },
+    "migration:list": {
+      "cache": false,
+      "persistent": false
+    },
+    "migration:check": {
+      "cache": false,
+      "persistent": false
+    },
+    "migration:pending": {
+      "cache": false,
+      "persistent": false
+    },
+    "migration:fresh": {
+      "cache": false,
+      "persistent": false
+    },
+    "schema:create": {
+      "cache": false,
+      "persistent": false
+    },
+    "schema:drop": {
+      "cache": false,
+      "persistent": false
+    },
+    "schema:update": {
+      "cache": false,
+      "persistent": false
+    },
+    "schema:fresh": {
+      "cache": false,
+      "persistent": false
+    },
+    "seeder:run": {
+      "cache": false,
+      "persistent": false
+    },
+    "seeder:create": {
+      "cache": false,
+      "persistent": false
+    },
+    "database:import": {
+      "cache": false,
+      "persistent": false
+    },
+    "cache:clear": {
+      "cache": false,
+      "persistent": false
+    },
+    "generate-entities": {
+      "cache": false,
+      "persistent": false
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "app#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": [
+        "VITE_API_KEY",
+        "VITE_API_KEY_SECRET",
+        "VITE_API_URL",
+        "VITE_FACEBOOK_APP_ID",
+        "VITE_FACEBOOK_REDIRECT_URI",
+        "VITE_TURNSTILE_SITE_KEY"
+      ]
+    },
+    "admin#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_API_KEY", "VITE_API_KEY_SECRET", "VITE_API_URL", "VITE_TURNSTILE_SITE_KEY"]
+    },
+    "web#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["out/**"],
+      "env": [
+        "NEXT_PUBLIC_API_KEY",
+        "NEXT_PUBLIC_API_KEY_SECRET",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+        "NEXT_PUBLIC_SITE_URL"
+      ]
+    },
+    "api#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": [
+        "APP_NAME",
+        "APP_ENV",
+        "APP_LANGUAGE",
+        "APP_TIMEZONE",
+        "HOME_URL",
+        "HOME_NAME",
+        "HTTP_HOST",
+        "HTTP_PORT",
+        "DEBUG_ENABLE",
+        "DEBUG_LEVEL",
+        "DEBUG_INTO_FILE",
+        "DEBUG_PRETTIER",
+        "MIDDLEWARE_CORS_ORIGIN",
+        "URL_VERSIONING_ENABLE",
+        "URL_VERSION",
+        "DATABASE_URL",
+        "DATABASE_DEBUG",
+        "AUTH_JWT_ISSUER",
+        "AUTH_JWT_AUDIENCE",
+        "AUTH_JWT_JWKS_URI",
+        "AUTH_JWT_ACCESS_TOKEN_KID",
+        "AUTH_JWT_ACCESS_TOKEN_PRIVATE_KEY_PATH",
+        "AUTH_JWT_ACCESS_TOKEN_PUBLIC_KEY_PATH",
+        "AUTH_JWT_ACCESS_TOKEN_EXPIRED",
+        "AUTH_JWT_REFRESH_TOKEN_KID",
+        "AUTH_JWT_REFRESH_TOKEN_PRIVATE_KEY_PATH",
+        "AUTH_JWT_REFRESH_TOKEN_PUBLIC_KEY_PATH",
+        "AUTH_JWT_REFRESH_TOKEN_EXPIRED",
+        "AUTH_SOCIAL_GOOGLE_CLIENT_ID",
+        "AUTH_SOCIAL_GOOGLE_CLIENT_SECRET",
+        "AUTH_SOCIAL_APPLE_CLIENT_ID",
+        "AUTH_SOCIAL_APPLE_SIGN_IN_CLIENT_ID",
+        "AWS_S3_PUBLIC_CREDENTIAL_KEY",
+        "AWS_S3_PUBLIC_CREDENTIAL_SECRET",
+        "AWS_S3_PUBLIC_REGION",
+        "AWS_S3_PUBLIC_BUCKET",
+        "AWS_S3_PUBLIC_CDN",
+        "AWS_S3_PRIVATE_CREDENTIAL_KEY",
+        "AWS_S3_PRIVATE_CREDENTIAL_SECRET",
+        "AWS_S3_PRIVATE_REGION",
+        "AWS_S3_PRIVATE_BUCKET",
+        "AWS_SES_CREDENTIAL_KEY",
+        "AWS_SES_CREDENTIAL_SECRET",
+        "AWS_SES_REGION",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "REDIS_USERNAME",
+        "REDIS_PASSWORD",
+        "SENTRY_DSN",
+        "RESEND_API_KEY",
+        "EMAIL_PROVIDER",
+        "WORK_SPACE_INVITATION_TOKEN_SECRET_KEY",
+        "WORK_SPACE_INVITATION_TOKEN_EXPIRED"
+      ]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^test:api", "^lint"]
+    },
+    "start:prod": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^start:prod"]
+    }
+  }
+}

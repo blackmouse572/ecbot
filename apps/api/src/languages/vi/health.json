@@ -1,0 +1,5 @@
+{
+    "check": "Kiểm tra sức khỏe hoàn tất. Tất cả hệ thống đang hoạt động bình thường. 💪",
+    "live": "Dịch vụ đang hoạt động.",
+    "ready": "Dịch vụ đã sẵn sàng. Database và Redis đều kết nối được."
+}

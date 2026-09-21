@@ -1,0 +1,23 @@
+{
+	"extends": "@repo/typescript-config/nextjs.json",
+	"compilerOptions": {
+		// This package ships TypeScript source, so a consumer's toolchain reads
+		// *this* tsconfig when transforming these files. The inherited
+		// `jsx: "preserve"` (from the nextjs base) leaves esbuild on the classic
+		// runtime, which throws "React is not defined" at render in every file
+		// that doesn't import React by hand — most of them.
+		//
+		// The app *builds* happen to be immune (they use @vitejs/plugin-react-swc,
+		// which forces the automatic runtime and ignores this file), but the
+		// Vitest runs are not: neither this package's nor apps/admin's vitest
+		// config registers a React plugin, so esbuild does the transform there.
+		"jsx": "react-jsx",
+		"baseUrl": ".",
+		"paths": {
+			"@repo/*": ["../*"],
+			"@repo/ui/*": ["./*"]
+		}
+	},
+	"include": ["**/*.ts", "**/*.tsx"],
+	"exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,49 @@
+import {
+    applyDecorators,
+    createParamDecorator,
+    ExecutionContext,
+    UseGuards,
+} from '@nestjs/common';
+import { IRequestApp } from 'src/common/request/interfaces/request.interface';
+import { AuthJwtAccessGuard } from 'src/modules/auth/guards/jwt/auth.jwt.access.guard';
+import { AuthJwtRefreshGuard } from 'src/modules/auth/guards/jwt/auth.jwt.refresh.guard';
+import { IAuthJwtAccessTokenPayload } from 'src/modules/auth/interfaces/auth.interface';
+
+export const AuthJwtPayload = createParamDecorator(
+    <T = IAuthJwtAccessTokenPayload>(
+        data: string,
+        ctx: ExecutionContext
+    ): T => {
+        const { user } = ctx
+            .switchToHttp()
+            .getRequest<IRequestApp & { user: T }>();
+        return data ? user[data] : user;
+    }
+);
+
+export const AuthJwtToken = createParamDecorator(
+    (_: unknown, ctx: ExecutionContext): string => {
+        // Extract the JWT token from the cookie or authorization header
+        const { cookies } = ctx.switchToHttp().getRequest<IRequestApp>();
+        // get config service
+        const refreshToken = cookies['refreshToken'] as string | undefined;
+        if (refreshToken) {
+            return refreshToken;
+        }
+
+        // If not found in cookies, check the authorization header
+        const { headers } = ctx.switchToHttp().getRequest<IRequestApp>();
+        const { authorization } = headers;
+        const authorizations: string[] = authorization?.split(' ') ?? [];
+
+        return authorizations.length >= 2 ? authorizations[1] : undefined;
+    }
+);
+
+export function AuthJwtAccessProtected(): MethodDecorator {
+    return applyDecorators(UseGuards(AuthJwtAccessGuard));
+}
+
+export function AuthJwtRefreshProtected(): MethodDecorator {
+    return applyDecorators(UseGuards(AuthJwtRefreshGuard));
+}

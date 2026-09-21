@@ -1,0 +1,5 @@
+export enum ENUM_MCP_PROVIDER {
+    COMPOSIO = 'COMPOSIO',
+    ECCHO = 'ECCHO',
+    OPERATOR = 'OPERATOR',
+}

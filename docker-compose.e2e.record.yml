@@ -1,0 +1,29 @@
+# docker-compose.e2e.record.yml
+# Recording override — layer ON TOP of base + e2e to (re)record AI cassettes.
+#
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f docker-compose.e2e.yml \
+#     -f docker-compose.e2e.record.yml \
+#     up -d --build --wait
+#
+# vs. the replay override (docker-compose.e2e.yml) this flips two things on the
+# AI service:
+#   1. AI_CASSETTE_MODE=new_episodes  → vcrpy records any cassette it doesn't have
+#      (replay uses "none", which errors on a missing cassette).
+#   2. cassettes mounted read-write   → the replay override mounts :ro; vcrpy must
+#      be able to WRITE new .yaml files here.
+#
+# A real provider key is required. The E2E chatbot is pinned to DeepSeek
+# (see e2e/fixtures/chatbot.fixture.ts), so DEEPSEEK_API_KEY must be set. Sensitive
+# request headers are scrubbed before write (apps/ai/middlewares/cassette_middleware.py).
+name: eccho-e2e
+
+services:
+  ai:
+    environment:
+      AI_CASSETTE_MODE: new_episodes
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?set DEEPSEEK_API_KEY to record cassettes}
+    volumes:
+      # Same target as the e2e override (/cassettes) but WITHOUT :ro so vcrpy can write.
+      - ./e2e/cassettes:/cassettes

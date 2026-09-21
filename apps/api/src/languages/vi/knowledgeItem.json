@@ -1,0 +1,13 @@
+{
+    "list": "Danh sách các mục kiến thức được lấy thành công.",
+    "get": "Mục kiến thức được lấy thành công.",
+    "create": "Mục kiến thức được tạo thành công.",
+    "update": "Mục kiến thức được cập nhật thành công.",
+    "delete": "Mục kiến thức được xóa thành công.",
+    "batchDelete": "Đã xóa các knowledge item.",
+    "batchProcess": "Đã đưa các knowledge item vào hàng đợi xử lý.",
+    "error": {
+        "notFound": "Không tìm thấy mục kiến thức.",
+        "processing": "Item này đang được xử lý."
+    }
+}

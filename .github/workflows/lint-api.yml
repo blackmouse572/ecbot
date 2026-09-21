@@ -1,0 +1,42 @@
+name: Lint API
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/api/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/api/**"
+
+jobs:
+  lint:
+    name: Lint API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint API
+        run: |
+          echo "Running API linter..."
+          pnpm run lint --filter api
+
+      - name: Type-check API
+        run: pnpm run check-types --filter api

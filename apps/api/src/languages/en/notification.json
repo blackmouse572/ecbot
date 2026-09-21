@@ -1,0 +1,50 @@
+{
+    "list": "All notifications",
+    "unreadList": "Unread notifications",
+    "markedAsRead": "Notification marked as read successfully",
+    "markedAllAsUnread": "Notification marked as unread successfully",
+    "markedAllAsRead": "All notifications marked as read successfully",
+    "unreadCount": "Unread notifications count",
+    "invitation": {
+        "title": "Workspace Invitation",
+        "message": "You have been invited to join the \"{workspaceName}\" workspace.",
+        "accept": "Accept invitation"
+    },
+    "activity": {
+        "title": "Activity Notification",
+        "message": "There is a new activity in your workspace.",
+        "actionText": "View workspace"
+    },
+    "accountBlocked": {
+        "title": "Account Connection Blocked",
+        "message": "Your connected account \"{accountName}\" has been disconnected. Reconnect it to keep it working.",
+        "actionText": "Reconnect account"
+    },
+    "requests": {
+        "joinWorkspace": {
+            "title": "Join workspace request",
+            "message": "You have a new request to join the workspace from {requestorName}."
+        },
+        "action": {
+            "view": "View request"
+        }
+    },
+    "error": {
+        "notFound": "Notification not found"
+    },
+    "lowTokenBalance": {
+        "title": "Token quota running low",
+        "message": "Workspace \"{workspaceName}\" has used {usedPercent}% of its token quota for this period.",
+        "actionText": "View usage"
+    },
+    "tokenCredited": {
+        "title": "Tokens added",
+        "message": "{amount} tokens were added to workspace \"{workspaceName}\".",
+        "actionText": "View usage"
+    },
+    "workspaceNoPlan": {
+        "title": "Workspace needs attention",
+        "message": "Workspace \"{workspaceName}\" was created without a billing plan, so its chatbots will not reply yet. Contact support to finish setup.",
+        "actionText": "Contact support"
+    }
+}

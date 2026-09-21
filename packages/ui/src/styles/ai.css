@@ -1,0 +1,111 @@
+/* ============================================================================
+   AI chat utilities — shimmer (streaming/loading text) + scroll-fade (edge
+   fade hints). Lives with the @repo/ui common/ai components that consume it
+   (Attachment, MessageScroller, BuildingLoader). Any app rendering those
+   components must import this file, e.g. `@import "@repo/ui/styles/ai.css";`.
+
+   Uses Medusa's `--fg-*` design-token CSS vars, so the host app must provide
+   the Medusa UI theme (which every @repo/ui consumer already does).
+   ========================================================================== */
+
+/* Interpolatable scroll-progress vars for the scroll-aware vertical fade.
+   Guarded by @supports below; absent support ⇒ no mask ⇒ crisp edges. */
+@property --sf-t {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --sf-b {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes shimmer-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@layer utilities {
+  /* Sweeping highlight across text — for short "generating…" / streaming
+     labels. Adapts to light/dark via medusa's --fg-* CSS vars. */
+  .shimmer {
+    background-image: linear-gradient(
+      90deg,
+      var(--fg-muted) 0%,
+      var(--fg-muted) 35%,
+      var(--fg-base) 50%,
+      var(--fg-muted) 65%,
+      var(--fg-muted) 100%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer-sweep var(--shimmer-duration, 2s) linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shimmer {
+      animation: none;
+    }
+  }
+
+  /* Horizontal edge fade for scrollable rows (e.g. attachment groups). */
+  .scroll-fade-x {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 1rem,
+      black calc(100% - 1rem),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 1rem,
+      black calc(100% - 1rem),
+      transparent 100%
+    );
+  }
+
+  /* Scroll-aware vertical fade: fades the top edge once scrolled down and the
+     bottom edge while more content sits below — keeping the newest message
+     crisp. Chromium-only (scroll-driven animations); no-ops elsewhere. */
+  @supports (animation-timeline: scroll()) {
+    .scroll-fade-y {
+      --sf-size: 2rem;
+      mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, calc(1 - var(--sf-t))) 0,
+        black var(--sf-size),
+        black calc(100% - var(--sf-size)),
+        rgba(0, 0, 0, calc(1 - var(--sf-b))) 100%
+      );
+      animation:
+        sf-track-top linear both,
+        sf-track-bottom linear both;
+      animation-timeline: scroll(self), scroll(self);
+      animation-range:
+        0 var(--sf-size),
+        calc(100% - var(--sf-size)) 100%;
+    }
+    @keyframes sf-track-top {
+      to {
+        --sf-t: 1;
+      }
+    }
+    @keyframes sf-track-bottom {
+      from {
+        --sf-b: 1;
+      }
+      to {
+        --sf-b: 0;
+      }
+    }
+  }
+}

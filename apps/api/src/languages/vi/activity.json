@@ -1,0 +1,24 @@
+{
+    "list": "Chào mừng! Đây là lịch sử hoạt động của bạn.",
+    "user": {
+        "createByAdmin": "Chào mừng! Tài khoản của bạn đã được thiết lập thành công bởi đội ngũ quản trị.",
+        "updateByAdmin": "Chi tiết tài khoản của bạn đã được cập nhật bởi đội ngũ quản trị.",
+        "inactiveByAdmin": "Tài khoản của bạn đã tạm thời bị vô hiệu hóa bởi đội ngũ quản trị.",
+        "activeByAdmin": "Tin tốt! Tài khoản của bạn đã được kích hoạt lại bởi đội ngũ quản trị.",
+        "blockedByAdmin": "Quyền truy cập tài khoản của bạn đã tạm thời bị hạn chế bởi đội ngũ quản trị.",
+        "changePassword": "Tuyệt vời! Mật khẩu của bạn đã được cập nhật thành công.",
+        "uploadProfile": "Hoàn hảo! Ảnh đại diện mới của bạn đã được tải lên.",
+        "signUp": "Chào mừng! Tài khoản của bạn đã được tạo thành công."
+    },
+    "workspace": {
+        "createByAdmin": "Chào mừng! Không gian làm việc \"{workSpaceName}\" đã được tạo thành công bởi đội ngũ quản trị.",
+        "updateByAdmin": "Chi tiết không gian làm việc \"{workSpaceName}\" đã được cập nhật bởi đội ngũ quản trị.",
+        "inactiveByAdmin": "Không gian làm việc \"{workspaceName}\" đã tạm thời bị vô hiệu hóa bởi đội ngũ quản trị.",
+        "activeByAdmin": "Tin tốt! Không gian làm việc \"{workspaceName}\" đã được kích hoạt lại bởi đội ngũ quản trị.",
+        "blockedByAdmin": "Quyền truy cập vào không gian làm việc \"{workspaceName}\" đã tạm thời bị hạn chế bởi đội ngũ quản trị.",
+        "createByUser": "Chào mừng! Bạn đã tạo thành công không gian làm việc \"{workspaceName}\". Chúc mừng nhé!",
+        "updateByUser": "Thông tin không gian làm việc \"{workspaceName}\" đã được cập nhật bởi {username}",
+        "joinByMember": "Người dùng {username} đã chấp nhận lời mời tham gia không gian làm việc \"{workspaceName}\".",
+        "requestAccepted": "Yêu cầu tham gia không gian làm việc \"{workspaceName}\" từ \"{requestor}\" đã được {username} chấp nhận."
+    }
+}

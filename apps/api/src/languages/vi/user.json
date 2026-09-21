@@ -1,0 +1,26 @@
+{
+    "list": "Danh sách người dùng đã được lấy thành công.",
+    "get": "Thông tin người dùng đã được tải về thành công.",
+    "create": "Người dùng mới đã được tạo thành công! Thêm một thành viên mới.",
+    "updateStatus": "Trạng thái người dùng đã được cập nhật thành {status}.",
+    "profile": "Hồ sơ người dùng đã được lấy thành công.",
+    "updateProfile": "Hồ sơ người dùng đã được cập nhật thành công. Đẹp trai/xinh gái hơn rồi!",
+    "uploadPhotoProfile": "Yêu cầu tải ảnh đại diện thành công.",
+    "updatePhotoProfile": "Ảnh đại diện đã được tải lên thành công. Trông bạn rất photogenic!",
+    "deleteSelf": "Người dùng đã được xóa thành công. Tạm biệt!",
+    "updateMobileNumber": "Số điện thoại đã được cập nhật thành công.",
+    "updateClaimUsername": "Tên người dùng đã được claim thành công! Bây giờ nó là của bạn rồi.",
+    "error": {
+        "mobileNumberExist": "Số điện thoại này đã tồn tại rồi. Thử số khác xem?",
+        "emailExist": "Email này đã có chủ rồi. Bạn có nhớ nhầm không?",
+        "blocked": "Người dùng này đã bị chặn. Có vấn đề gì đó...",
+        "deleted": "Người dùng này đã bị xóa. Biến mất khỏi hệ thống!",
+        "inactive": "Người dùng này đang không hoạt động. Có thể đang ngủ?",
+        "mobileNumberNotAllowed": "Số điện thoại này không được phép sử dụng.",
+        "blockedInvalid": "Trạng thái chặn không hợp lệ.",
+        "notFound": "Xin lỗi, chúng tôi không tìm thấy người dùng bạn yêu cầu. Họ có thể đã biến mất!",
+        "statusInvalid": "Trạng thái người dùng không hợp lệ.",
+        "usernameExist": "Tên người dùng này đã được sử dụng rồi. Hãy nghĩ ra cái tên độc đáo hơn!",
+        "emailNotVerified": "Email chưa được xác minh. Kiểm tra hộp thư xem?"
+    }
+}

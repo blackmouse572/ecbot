@@ -1,0 +1,11 @@
+{
+    "meta": "Đã lấy cấu hình widget.",
+    "messages": "Đã lấy tin nhắn.",
+    "sendMessage": "Đã nhận tin nhắn.",
+    "error": {
+        "notFound": "Khung chat không khả dụng. Widget key có thể sai hoặc đã bị thu hồi.",
+        "originNotAllowed": "Khung chat chưa được bật cho website này.",
+        "rateLimited": "Bạn đã gửi khá nhiều tin nhắn. Vui lòng đợi một chút rồi thử lại.",
+        "noChatbotAttached": "Widget này chưa được gắn chatbot nào."
+    }
+}

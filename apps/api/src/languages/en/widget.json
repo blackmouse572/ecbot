@@ -1,0 +1,11 @@
+{
+    "meta": "Widget configuration retrieved.",
+    "messages": "Messages retrieved.",
+    "sendMessage": "Message received.",
+    "error": {
+        "notFound": "This chat widget is unavailable. The key may be wrong or revoked.",
+        "originNotAllowed": "This chat widget is not enabled for this site.",
+        "rateLimited": "You've sent a lot of messages. Please wait a moment before trying again.",
+        "noChatbotAttached": "This widget has no chatbot connected yet."
+    }
+}

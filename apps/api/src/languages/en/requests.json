@@ -1,0 +1,26 @@
+{
+  "create":{
+   "success":"Request created successfully",
+   "error":"Failed to create request"
+  },
+  "workspace":{
+    "sameWithRequestor":"You can't send a request to yourself.",
+    "isNotInPending":"This request is not in pending status.",
+    "requestAccepted":"Request to join workspace {workspaceName} from {username} has been accepted",
+    "approveTitle":"Request to join workspace approved",
+    "approveMessage":"Your request to join the workspace \"{workspaceName}\" has been approved."
+  },
+  "approve":{
+    "success":"Request approved successfully"
+  },
+  "list":{
+    "success":"Join requests retrieved successfully"
+  },
+  "error":{
+    "notFound":"Request not found",
+    "notAllowed":"You are not allowed to perform this action",
+    "invalidStatus":"Invalid request status",
+    "invalidType":"Invalid request type",
+    "duplicated":  "You have a pending request to this user with the same type"
+  }
+}

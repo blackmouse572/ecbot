@@ -1,0 +1,39 @@
+name: Check Knowledge File Type Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/api/src/common/file/enums/file.enum.ts"
+      - "apps/api/src/modules/knowledge-base/controllers/knowledge-item.workspace.controller.ts"
+      - "apps/app/src/routes/knowledge-base/knowledge-item-create/components/schema.ts"
+      - "apps/app/src/routes/knowledge-base/knowledge-item-create/components/forms/file-form.tsx"
+      - "apps/ai/src/eccho_ai/llm/retrievers/text_processing.py"
+      - "scripts/check-knowledge-file-type-sync.mjs"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/api/src/common/file/enums/file.enum.ts"
+      - "apps/api/src/modules/knowledge-base/controllers/knowledge-item.workspace.controller.ts"
+      - "apps/app/src/routes/knowledge-base/knowledge-item-create/components/schema.ts"
+      - "apps/app/src/routes/knowledge-base/knowledge-item-create/components/forms/file-form.tsx"
+      - "apps/ai/src/eccho_ai/llm/retrievers/text_processing.py"
+      - "scripts/check-knowledge-file-type-sync.mjs"
+
+jobs:
+  check:
+    name: Check Knowledge File Type Sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check file type sync across apps/api, apps/app, apps/ai
+        run: node scripts/check-knowledge-file-type-sync.mjs

@@ -1,0 +1,14 @@
+{
+    "getEmail": "Vui lòng kiểm tra email để xem mã xác minh.",
+    "getMobileNumber": "Vui lòng kiểm tra điện thoại di động để xem mã xác minh.",
+    "resendEmail": "Mã xác minh đã được gửi lại đến email của bạn.",
+    "resendMobileNumber": "Mã xác minh đã được gửi lại đến điện thoại di động của bạn.",
+    "verifyEmail": "Email đã được xác minh thành công.",
+    "verifyMobileNumber": "Điện thoại di động đã được xác minh thành công.",
+    "error": {
+        "notFound": "Không tìm thấy xác minh.",
+        "otpNotMatch": "Mã xác minh không khớp.",
+        "userEmailVerified": "Email này đã được xác minh rồi.",
+        "userMobileNumberVerified": "Số điện thoại di động này đã được xác minh rồi."
+    }
+}

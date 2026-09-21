@@ -1,0 +1,9 @@
+{
+    "list": "RAGs retrieved successfully.",
+    "create": "RAG created successfully.",
+    "update": "RAG updated successfully.",
+    "delete": "RAG deleted successfully.",
+    "errors": {
+        "notFound": "RAG not found."
+    }
+}

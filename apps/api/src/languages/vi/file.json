@@ -1,0 +1,8 @@
+{
+    "error": {
+        "validationDto": "Dữ liệu được cung cấp không đáp ứng tiêu chí xác thực.",
+        "mimeInvalid": "Loại MIME của tệp không hợp lệ.",
+        "requiredParseFirst": "Vui lòng phân tích dữ liệu trước khi tiếp tục.",
+        "required": "Trường này là bắt buộc và không được để trống."
+    }
+}

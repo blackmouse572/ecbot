@@ -1,0 +1,43 @@
+{
+    "list": {
+        "success": "Đã lấy danh sách skill"
+    },
+    "get": {
+        "success": "Đã lấy skill",
+        "error": {
+            "notFound": "Không tìm thấy skill"
+        }
+    },
+    "create": {
+        "success": "Tạo skill thành công"
+    },
+    "clone": {
+        "success": "Đã sao chép template về workspace"
+    },
+    "update": {
+        "success": "Đã cập nhật skill"
+    },
+    "delete": {
+        "success": "Đã xóa skill"
+    },
+    "attach": {
+        "success": "Đã gắn skill vào chatbot",
+        "error": {
+            "notAttached": "Skill chưa được gắn vào chatbot này"
+        }
+    },
+    "toggle": {
+        "success": "Đã cập nhật skill trên chatbot"
+    },
+    "detach": {
+        "success": "Đã gỡ skill khỏi chatbot"
+    },
+    "chatbot": {
+        "list": {
+            "success": "Đã lấy danh sách skill của chatbot"
+        }
+    },
+    "batchDelete": {
+        "success": "Đã xóa các skill."
+    }
+}

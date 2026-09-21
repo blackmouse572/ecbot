@@ -1,0 +1,24 @@
+{
+    "list": "Welcome! Here's your activity history.",
+    "user": {
+        "createByAdmin": "Welcome! Your account has been successfully set up by our admin team.",
+        "updateByAdmin": "Your account details have been updated by our admin team.",
+        "inactiveByAdmin": "Your account has been temporarily deactivated by our admin team.",
+        "activeByAdmin": "Great news! Your account has been reactivated by our admin team.",
+        "blockedByAdmin": "Your account access has been temporarily restricted by our admin team.",
+        "changePassword": "Great! Your password has been successfully updated.",
+        "uploadProfile": "Perfect! Your new profile picture has been uploaded.",
+        "signUp": "Welcome! Your account has been successfully created."
+    },
+    "workspace":{
+        "createByAdmin": "Welcome! The workspace \"{workSpaceName}\" has been successfully created by our admin team.",
+        "updateByAdmin": "The workspace \"{workSpaceName}\" details have been updated by our admin team.",
+        "inactiveByAdmin": "The workspace \"{workspaceName}\" has been temporarily deactivated by our admin team.",
+        "activeByAdmin": "Great news! The workspace \"{workspaceName}\" has been reactivated by our admin team.",
+        "blockedByAdmin": "Access to the workspace \"{workspaceName}\" has been temporarily restricted by our admin team.",
+        "createByUser": "Welcome! You have successfully created the workspace \"{workspaceName}\".",
+        "updateByUser": "Workspace \"{workspaceName}\"'s information has been updated by {username}",
+        "joinByMember": "User {username} has accepted the invitation to the workspace \"{workspaceName}\".",
+        "requestAccepted": "The request to join the workspace \"{workspaceName}\" from \"{requestor}\" has been accepted by {username}."
+    }
+}

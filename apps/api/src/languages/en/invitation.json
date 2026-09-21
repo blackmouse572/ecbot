@@ -1,0 +1,15 @@
+{
+    "list": "List of invitations",
+    "detail": "Invitation details",
+    "updateRole": "Update invitation role",
+    "regenerate": "Regenerate invitation link",
+    "revoke": "Revoke invitation",
+    "error": {
+        "notFound": "Invitation not found",
+        "alreadyUsed": "Invitation link has already been used",
+        "expired": "Invitation link has expired",
+        "cannotRevokeNonPending": "Cannot revoke non-pending invitation",
+        "cannotRegenerateNonPending": "Cannot regenerate non-pending invitation",
+        "cannotUpdateNonPending": "Cannot update non-pending invitation"
+    }
+}

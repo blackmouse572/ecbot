@@ -1,0 +1,5 @@
+{
+    "check": "Health check complete. All systems are functioning normally.",
+    "live": "Service is live.",
+    "ready": "Service is ready. Database and Redis are reachable."
+}

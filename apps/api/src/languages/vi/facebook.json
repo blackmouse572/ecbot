@@ -1,0 +1,12 @@
+{
+    "facebook": {
+        "error": {
+            "webhookRegistrationFailed": "Đăng ký webhook thất bại"
+        }
+    },
+    "facebook-activity": {
+        "list": "Hoạt động Facebook đã được lấy thành công",
+        "listByPageId": "Hoạt động Facebook theo ID trang đã được lấy thành công",
+        "listBySenderId": "Hoạt động Facebook theo ID người gửi đã được lấy thành công"
+    }
+}

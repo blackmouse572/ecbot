@@ -1,0 +1,10 @@
+{
+    "list": "List of knowledge folder retrieved successfully.",
+    "get": "Knowledge folder retrieved successfully.",
+    "create": "Knowledge folder created successfully.",
+    "update": "Knowledge folder updated successfully.",
+    "delete": "Knowledge folder deleted successfully.",
+    "error": {
+        "notFound": "Knowledge folder not found."
+    }
+}

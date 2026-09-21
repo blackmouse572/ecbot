@@ -1,0 +1,42 @@
+name: Lint App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/app/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/app/**"
+
+jobs:
+  lint:
+    name: Lint App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint App
+        run: |
+          echo "Running App linter..."
+          pnpm run lint --filter app
+
+      - name: Type-check App
+        run: pnpm run check-types --filter app

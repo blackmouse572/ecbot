@@ -1,0 +1,50 @@
+{
+    "list": "Tất cả thông báo",
+    "unreadList": "Thông báo chưa đọc",
+    "markedAsRead": "Thông báo đã được đánh dấu là đã đọc thành công",
+    "markedAllAsUnread": "Thông báo đã được đánh dấu là chưa đọc thành công",
+    "markedAllAsRead": "Tất cả thông báo đã được đánh dấu là đã đọc thành công",
+    "unreadCount": "Số lượng thông báo chưa đọc",
+    "invitation": {
+        "title": "Lời mời tham gia không gian làm việc",
+        "message": "Bạn đã được mời tham gia không gian làm việc \"{workspaceName}\".",
+        "accept": "Chấp nhận lời mời"
+    },
+    "activity": {
+        "title": "Thông báo hoạt động",
+        "message": "Có hoạt động mới trong không gian làm việc của bạn.",
+        "actionText": "Xem không gian làm việc"
+    },
+    "accountBlocked": {
+        "title": "Kết nối tài khoản đã bị chặn",
+        "message": "Tài khoản đã kết nối \"{accountName}\" đã bị ngắt kết nối. Hãy kết nối lại để tiếp tục sử dụng.",
+        "actionText": "Kết nối lại tài khoản"
+    },
+    "requests": {
+        "joinWorkspace": {
+            "title": "Yêu cầu tham gia không gian làm việc",
+            "message": "Bạn có yêu cầu mới để tham gia không gian làm việc từ {requestorName}."
+        },
+        "action": {
+            "view": "Xem yêu cầu"
+        }
+    },
+    "error": {
+        "notFound": "Không tìm thấy thông báo"
+    },
+    "lowTokenBalance": {
+        "title": "Token quota sắp hết",
+        "message": "Workspace \"{workspaceName}\" đã dùng {usedPercent}% token quota của kỳ này.",
+        "actionText": "Xem usage"
+    },
+    "tokenCredited": {
+        "title": "Đã cộng token",
+        "message": "Workspace \"{workspaceName}\" vừa được cộng {amount} token.",
+        "actionText": "Xem usage"
+    },
+    "workspaceNoPlan": {
+        "title": "Workspace cần được xử lý",
+        "message": "Workspace \"{workspaceName}\" được tạo mà chưa có billing plan nên chatbot chưa trả lời được. Liên hệ support để hoàn tất.",
+        "actionText": "Liên hệ support"
+    }
+}

@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "github-mcp": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp"
+    },
+    "origin-ui": {
+      "command": "npx",
+      "args": ["--yes", "github:kelvinchng/origin-ui-mcp"],
+      "env": {}
+    }
+  }
+}

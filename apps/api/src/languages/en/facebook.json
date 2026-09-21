@@ -1,0 +1,12 @@
+{
+    "facebook": {
+        "error": {
+            "webhookRegistrationFailed": "Failed to register webhook"
+        }
+    },
+    "facebook-activity": {
+        "list": "Fetched the Facebook activities successfully",
+        "listByPageId": "Fetched the Facebook activities for this page successfully",
+        "listBySenderId": "Fetched the Facebook activities for this sender successfully"
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "create": "Workspace create successfully.",
+    "update": "Workspace updated successfully.",
+    "delete": "Workspace deleted successfully.",
+    "details": "Workspace details retrieved successfully.",
+    "error": {
+        "notFound": "Workspace not found.",
+        "nameExist": "Workspace name already exists.",
+        "userNotOwner": "This user is not the owner of the workspace.",
+        "createFailed": "Failed to create workspace.",
+        "updateFailed": "Failed to update workspace.",
+        "deleteForbidden": "You are not allowed to delete this workspace.",
+        "memberExist": "Member has been in the workspace.",
+        "memberNotFound": "Member not found in workspace.",
+        "exist": "This user is already an owner of a workspace.",
+        "missingWorkspaceId": "User or workspaceId is missing in the request param",
+        "invalidInvitationCode": "Invalid invitation code."
+    },
+    "owner": {
+        "inviteMember": {
+            "success": "Invitation sent successfully."
+        }
+    },
+    "member": {
+        "join": {
+            "invalid": "The invitation link is invalid or has expired.",
+            "success": "You have successfully joined the workspace.",
+            "error": "Failed to join the workspace."
+        },
+        "leave": {
+            "success": "You have successfully left the workspace.",
+            "error": "Failed to leave the workspace."
+        },
+        "list": "Fetched the workspace members successfully.",
+        "remove": {
+            "success": "You have successfully removed the member from the workspace.",
+            "error": "Failed to remove the member from the workspace."
+        },
+        "details": {
+            "success": "Workspace member details retrieved successfully."
+        },
+        "errors": {
+            "notFound": "Workspace member not found."
+        },
+        "assign": {
+            "success": "Assigned member with new role"
+        }
+    }
+}

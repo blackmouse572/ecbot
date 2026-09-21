@@ -1,0 +1,13 @@
+{
+    "summary": "Lấy tổng quan token usage thành công.",
+    "trend": "Lấy biểu đồ token usage thành công.",
+    "byChatbot": "Lấy token usage theo chatbot thành công.",
+    "byPlatform": "Lấy token usage theo platform thành công.",
+    "byWorkspace": "Lấy token usage theo workspace thành công.",
+    "list": "Lấy danh sách bản ghi token usage thành công.",
+    "settings": "Cập nhật cấu hình token usage thành công.",
+    "error": {
+        "quotaExhausted": "Workspace này đã dùng hết token quota.",
+        "rawUsageNotAvailable": "Môi trường này không hiển thị số token tuyệt đối."
+    }
+}

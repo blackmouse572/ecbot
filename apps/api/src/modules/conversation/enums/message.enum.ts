@@ -1,0 +1,16 @@
+export enum ENUM_MESSAGE_DIRECTION {
+    INBOUND = 'INBOUND',
+    OUTBOUND = 'OUTBOUND',
+}
+
+export enum ENUM_MESSAGE_AUTHOR {
+    USER = 'USER',
+    BOT = 'BOT',
+    OPERATOR = 'OPERATOR',
+}
+
+export enum ENUM_MESSAGE_STATUS {
+    PENDING = 'PENDING',
+    SENT = 'SENT',
+    FAILED = 'FAILED',
+}

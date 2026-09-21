@@ -1,0 +1,94 @@
+{
+    "create": {
+        "success": "Tool created successfully"
+    },
+    "get": {
+        "success": "Tool retrieved",
+        "error": {
+            "notFound": "Tool not found"
+        }
+    },
+    "list": {
+        "success": "Tools retrieved"
+    },
+    "update": {
+        "success": "Tool updated",
+        "error": {
+            "notFound": "Tool not found"
+        }
+    },
+    "delete": {
+        "success": "Tool deleted",
+        "error": {
+            "notFound": "Tool not found",
+            "referenced": "Tool is enabled on one or more chatbots; disable it first"
+        }
+    },
+    "execute": {
+        "success": "Tool executed",
+        "error": {
+            "notFound": "Tool not found",
+            "executionFailed": "Tool execution failed"
+        }
+    },
+    "enable": {
+        "success": "Tool enabled on chatbot",
+        "error": {
+            "notFound": "Tool not found in workspace",
+            "notActive": "Only active tools can be added to a chatbot"
+        }
+    },
+    "disable": {
+        "success": "Tool disabled on chatbot",
+        "error": {
+            "notFound": "Tool not enabled on this chatbot"
+        }
+    },
+    "updateActions": {
+        "success": "Tool actions updated",
+        "error": {
+            "notFound": "Tool not enabled on this chatbot"
+        }
+    },
+    "invocations": {
+        "list": {
+            "success": "Tool invocations retrieved"
+        }
+    },
+    "chatbot": {
+        "list": {
+            "success": "Chatbot tools retrieved"
+        }
+    },
+    "marketplace": {
+        "catalog": {
+            "success": "Marketplace catalog retrieved"
+        },
+        "categories": {
+            "success": "Marketplace categories retrieved"
+        },
+        "install": {
+            "success": "Composio install initiated"
+        },
+        "complete": {
+            "success": "Composio install complete"
+        }
+    },
+    "discover": {
+        "success": "MCP discovery complete",
+        "error": {
+            "notFound": "Tool not found",
+            "notMcp": "Discovery is only available for MCP tools",
+            "connectionFailed": "Could not connect to the MCP server. Check the server URL and credentials."
+        }
+    },
+    "test": {
+        "success": "Tool test complete",
+        "error": {
+            "notHttp": "Test is only available for HTTP tools"
+        }
+    },
+    "batchDelete": {
+        "success": "Tools deleted successfully."
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "sendMessage": "Message accepted. The reply will be delivered to your callback URL.",
+    "error": {
+        "accountNotFound": "We couldn't find an API channel with that accountKey in this workspace.",
+        "unprocessableMessage": "This message couldn't be processed. Check accountKey, senderId and text.",
+        "rateLimited": "Too many messages for this channel. Please slow down and retry shortly."
+    }
+}

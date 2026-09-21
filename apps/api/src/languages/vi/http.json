@@ -1,0 +1,66 @@
+{
+    "success": {
+        "ok": "OK",
+        "created": "Đã tạo",
+        "accepted": "Đã chấp nhận",
+        "noContent": "Không có nội dung"
+    },
+    "redirection": {
+        "movePermanently": "Chuyển hướng vĩnh viễn",
+        "found": "Đã tìm thấy",
+        "notModified": "Không thay đổi",
+        "temporaryRedirect": "Chuyển hướng tạm thời",
+        "permanentRedirect": "Chuyển hướng vĩnh viễn"
+    },
+    "clientError": {
+        "badRequest": "Yêu cầu không hợp lệ",
+        "unauthorized": "Chưa được ủy quyền",
+        "forbidden": "Bị cấm",
+        "notFound": "Không tìm thấy",
+        "methodNotAllowed": "Phương thức không được phép",
+        "notAcceptable": "Không thể chấp nhận",
+        "payloadToLarge": "Dữ liệu quá lớn",
+        "uriToLarge": "URI quá dài",
+        "unsupportedMediaType": "Loại media không được hỗ trợ",
+        "unprocessableEntity": "Thực thể không thể xử lý",
+        "tooManyRequest": "Quá nhiều yêu cầu",
+        "requestTimeOut": "Hết thời gian chờ"
+    },
+    "serverError": {
+        "internalServerError": "Lỗi máy chủ nội bộ",
+        "notImplemented": "Chưa được triển khai",
+        "badGateway": "Gateway xấu",
+        "serviceUnavailable": "Dịch vụ không khả dụng",
+        "gatewayTimeout": "Gateway hết thời gian chờ"
+    },
+
+    "200": "OK",
+
+    "201": "Đã tạo",
+    "202": "Đã chấp nhận",
+    "204": "Không có nội dung",
+
+    "301": "Chuyển hướng vĩnh viễn",
+    "302": "Đã tìm thấy",
+    "304": "Không thay đổi",
+    "307": "Chuyển hướng tạm thời",
+    "308": "Chuyển hướng vĩnh viễn",
+
+    "400": "Yêu cầu không hợp lệ",
+    "401": "Chưa được ủy quyền",
+    "403": "Bị cấm",
+    "404": "Không tìm thấy",
+    "405": "Phương thức không được phép",
+    "406": "Không thể chấp nhận",
+    "413": "Dữ liệu quá lớn",
+    "414": "URI quá dài",
+    "415": "Loại media không được hỗ trợ",
+    "422": "Thực thể không thể xử lý",
+    "429": "Quá nhiều yêu cầu",
+
+    "500": "Lỗi máy chủ nội bộ",
+    "501": "Chưa được triển khai",
+    "502": "Gateway xấu",
+    "503": "Dịch vụ không khả dụng",
+    "504": "Gateway hết thời gian chờ"
+}

@@ -1,0 +1,82 @@
+# docker-compose.e2e.yml
+# Thin override for E2E testing — apply on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.e2e.yml up --wait
+name: eccho-e2e
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./apps/api/.env
+    volumes:
+      - ./apps/api/keys:/app/keys
+    environment:
+      NODE_ENV: test
+      E2E_TEST_HELPERS: "true"
+      E2E_TEST_KEY: ${E2E_TEST_KEY}
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/eccho_test
+      REDIS_HOST: redis
+      AUTH_JWT_JWKS_URI: http://jwks-server/.well-known/jwks.json
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jwks-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/health/database"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+  ai:
+    environment:
+      AI_CASSETTE_MODE: ${AI_CASSETTE_MODE:-none}
+      VCR_CASSETTE_DIR: /cassettes
+    volumes:
+      - ./e2e/cassettes:/cassettes:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  jwks-server:
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/.well-known/jwks.json"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eccho_test
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10

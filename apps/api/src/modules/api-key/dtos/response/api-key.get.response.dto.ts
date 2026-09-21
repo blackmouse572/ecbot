@@ -1,0 +1,53 @@
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
+import { DatabaseDto } from 'src/common/database/dtos/database.dto';
+import { ENUM_API_KEY_TYPE } from 'src/modules/api-key/enums/api-key.enum';
+
+export class ApiKeyGetResponseDto extends DatabaseDto {
+    @ApiHideProperty()
+    @Exclude()
+    hash: string;
+
+    @ApiProperty({
+        description: 'Active flag of api key',
+        example: true,
+        required: true,
+    })
+    isActive: boolean;
+
+    @ApiProperty({
+        description: 'Api Key start date',
+        example: new Date('2026-03-26T20:29:42.654Z'),
+        required: false,
+    })
+    startDate?: Date;
+
+    @ApiProperty({
+        description: 'Api Key end date',
+        example: new Date('2027-06-09T23:47:57.166Z'),
+        required: false,
+    })
+    endDate?: Date;
+
+    @ApiProperty({
+        description: 'Alias name of api key',
+        example: 'Forward Infrastructure Technician',
+        required: true,
+    })
+    name: string;
+
+    @ApiProperty({
+        description: 'Type of api key',
+        example: ENUM_API_KEY_TYPE.DEFAULT,
+        enum: ENUM_API_KEY_TYPE,
+        required: true,
+    })
+    type: ENUM_API_KEY_TYPE;
+
+    @ApiProperty({
+        description: 'Unique key of api key',
+        example: 'GpZdMacOfKnbePW',
+        required: true,
+    })
+    key: string;
+}

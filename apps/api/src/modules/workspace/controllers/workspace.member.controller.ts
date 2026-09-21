@@ -1,0 +1,544 @@
+import { PaginationQuery } from '@app/common/pagination/decorators/pagination.decorator';
+import { PaginationListDto } from '@app/common/pagination/dtos/pagination.list.dto';
+import { PaginationService } from '@app/common/pagination/services/pagination.service';
+import {
+    Response,
+    ResponsePaging,
+} from '@app/common/response/decorators/response.decorator';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
+import { ActivityService } from '@app/modules/activity/services/activity.service';
+import {
+    AuthJwtAccessProtected,
+    AuthJwtPayload,
+} from '@app/modules/auth/decorators/auth.jwt.decorator';
+import { InvitationService } from '@app/modules/invitation/services/invitation.service';
+import {
+    ENUM_POLICY_ROLE_TYPE,
+    ENUM_POLICY_SUBJECT,
+} from '@app/modules/policy/enums/policy.enum';
+import { ENUM_ROLE_STATUS_CODE_ERROR } from '@app/modules/role/enums/role.status-code.enum';
+import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
+import { RoleService } from '@app/modules/role/services/role.service';
+import { USER_DEFAULT_AVAILABLE_SEARCH } from '@app/modules/user/constants/user.list.constant';
+import { UserProtected } from '@app/modules/user/decorators/user.decorator';
+import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
+import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
+import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
+import { UserService } from '@app/modules/user/services/user.service';
+import { EntityManager } from '@mikro-orm/postgresql';
+import {
+    BadRequestException,
+    Body,
+    ConflictException,
+    Controller,
+    Delete,
+    Get,
+    InternalServerErrorException,
+    Logger,
+    NotFoundException,
+    Param,
+    Post,
+    Query,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import {
+    WorkspaceMemberOrOwnerProtected,
+    WorkspaceOwnerProtected,
+    WorkspacePayload,
+} from '../decorators/workspace.decorator';
+import {
+    WorkspaceCreateJoinRequestDoc,
+    WorkspaceFindByInvitationCodeDoc,
+} from '../docs/workspace.invitation-code.doc';
+import { WorkspaceMemberAcceptInvitationDoc } from '../docs/workspace.member.doc';
+import {
+    GetInvitableUserListDoc,
+    WorkspaceAssignRoleToMemberDoc,
+    WorkSpaceOwnerGetMemberDetailsDoc,
+    WorkSpaceOwnerMembersListDoc,
+    WorkSpaceOwnerMemberRemoveDoc,
+} from '../docs/workspace.owner.doc';
+import { WorkspaceJoinRequestDto } from '../dtos/request/workspace.join-request.request.dto';
+import { WorkspaceMemberGetResponseDto } from '../dtos/response/workspace-member.get.response.dto';
+import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
+import { IWorkspaceMemberWithUserDoc } from '../interfaces/workspace-member.interface';
+import { WorkspaceEntity } from '../repository/entities/workspace.entity';
+import { WorkspaceMemberService } from '../services/workspace.member.service';
+import { WorkspaceOwnerService } from '../services/workspace.owner.service';
+import { WorkspaceRequestService } from '../services/workspace.request.service';
+
+@ApiTags('modules.member.workspace')
+@Controller({
+    version: '1',
+    path: 'workspace/member',
+})
+export class WorkspaceMemberController {
+    private readonly logger = new Logger();
+
+    constructor(
+        private readonly em: EntityManager,
+        private readonly userService: UserService,
+        private readonly workSpaceMemberService: WorkspaceMemberService,
+        private readonly workSpaceService: WorkspaceOwnerService,
+        private readonly roleService: RoleService,
+        private readonly paginationService: PaginationService,
+        private readonly activityService: ActivityService,
+        private readonly invitationService: InvitationService,
+        private readonly workspaceRequestService: WorkspaceRequestService
+    ) {}
+
+    @WorkspaceCreateJoinRequestDoc()
+    @Response('workspace.member.joinRequest.success')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Post('/join/:invitationcode')
+    async createJoinRequestByInvitationCode(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Param('invitationcode') invitationCode: string,
+        @Body() body: WorkspaceJoinRequestDto
+    ) {
+        // Find workspace by invitation code
+        const workspace =
+            await this.workSpaceMemberService.findWorkspaceByInvitationCode(
+                invitationCode
+            );
+
+        // Check if user is already a member
+        const isUserAlreadyMember =
+            await this.workSpaceMemberService.isUserMemberOfWorkspace(
+                workspace.id,
+                user.id
+            );
+
+        if (isUserAlreadyMember) {
+            throw new ConflictException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_EXIST,
+                message: 'workspace.error.memberExist',
+            });
+        }
+
+        // Create join workspace request
+        const request =
+            await this.workspaceRequestService.createJoinWorkspaceRequest(
+                user,
+                workspace.owner.id,
+                invitationCode,
+                body.reason
+            );
+
+        return { data: { requestId: request.id } };
+    }
+
+    @WorkspaceFindByInvitationCodeDoc()
+    @Response('workspace.findByInvitationCode.success')
+    @Get('/token/:invitationcode')
+    async findWorkspaceByInvitationCode(
+        @Param('invitationcode') invitationCode: string
+    ): Promise<{ data: WorkspaceMemberGetResponseDto }> {
+        // Find workspace by invitation code
+        const workspace =
+            await this.workSpaceMemberService.findWorkspaceByInvitationCode(
+                invitationCode
+            );
+
+        const data = this.workSpaceMemberService.mapDetail(
+            workspace as unknown as IWorkspaceMemberWithUserDoc
+        );
+        return { data };
+    }
+
+    @WorkspaceMemberAcceptInvitationDoc()
+    @Response('workspace.member.join.success')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Post('/join')
+    async joinWorkspace(@Query('token') token: string) {
+        const { workspaceId, invitedEmail, roleId } =
+            await this.workSpaceMemberService.verifyInvitationToken(token);
+
+        const user = await this.userService.findOneByEmail(invitedEmail);
+        const invitation = await this.invitationService.findOneByToken(token);
+
+        if (!user) {
+            throw new NotFoundException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'user.error.notFound',
+            });
+        }
+
+        if (user.email !== invitedEmail) {
+            throw new ConflictException({
+                statusCode:
+                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
+                message: 'workspace.error.invitationLinkInvalid',
+            });
+        }
+
+        const workspace = await this.workSpaceService.findOneById(workspaceId);
+
+        const isUserAlreadyMember =
+            await this.workSpaceMemberService.isUserMemberOfWorkspace(
+                workspaceId,
+                user.id
+            );
+
+        if (workspace && isUserAlreadyMember) {
+            throw new ConflictException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_EXIST,
+                message: 'workspace.error.memberExist',
+            });
+        }
+        const em = this.em.fork();
+        await em.begin();
+        try {
+            // Join the workspace
+            await this.workSpaceMemberService.joinWorkspace(
+                workspaceId,
+                user.id,
+                { em }
+            );
+
+            // Auto-assign role if specified in the invitation
+            if (roleId) {
+                try {
+                    await this.workSpaceMemberService.assignRoleToMember(
+                        workspaceId,
+                        user.id,
+                        invitation.role.id ?? roleId
+                    );
+                } catch (err) {
+                    await em.rollback();
+                    throw err;
+                }
+            }
+
+            if (!roleId) {
+                await this.assignDefaultRole(workspaceId, workspace, user);
+            }
+
+            await this.activityService.createByUserWithWorkspace(
+                user,
+                workspace,
+                {
+                    action: ENUM_ACTIVITY_ACTION.JOIN_WORKSPACE,
+                    subject: ENUM_POLICY_SUBJECT.WORKSPACE,
+                    metadata: {
+                        id: workspace.id,
+                        name: workspace.name,
+                        old: {
+                            username: user.username,
+                        },
+                        new: {
+                            username: user.username,
+                            roleId: roleId || null,
+                        },
+                    },
+                }
+            );
+            await this.invitationService.accept(invitation.id, user.id);
+            await em.commit();
+            return;
+        } catch (e) {
+            this.logger.error(
+                `Failed for user ${user.id}[${user.email}] to join workspace ${workspace.id}[${workspace.name}] due to: ${e.message}`
+            );
+            await em.rollback();
+            throw new InternalServerErrorException({
+                statusCode:
+                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
+                message: 'workspace.member.join.failed',
+            });
+        }
+    }
+
+    // No roleId on the invitation: fall back to the workspace's default
+    // member role. Silently a no-op if that role doesn't exist.
+    private async assignDefaultRole(
+        workspaceId: string,
+        workspace: WorkspaceEntity,
+        user: UserEntity
+    ): Promise<void> {
+        const memberRole = await this.roleService.findOne({
+            workspace: workspaceId,
+            type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+            isActive: true,
+        });
+
+        if (!memberRole) {
+            return;
+        }
+
+        try {
+            await this.workSpaceMemberService.assignRoleToMember(
+                workspaceId,
+                user.id,
+                memberRole.id
+            );
+        } catch (err) {
+            this.logger.error(
+                `Default role assignment failed for ${user.email} (${user.id}) joining ${workspace.name} (${workspace.id}): ${err.message}`
+            );
+            const failure = new BadRequestException({
+                statusCode:
+                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
+                message: 'workspace.member.join.failed',
+            });
+            throw failure;
+        }
+    }
+
+    @ResponsePaging('workspace.member.list')
+    @WorkSpaceOwnerMembersListDoc()
+    @WorkspaceMemberOrOwnerProtected()
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Get('/:workspace/members')
+    async members(
+        @AuthJwtPayload('user') _userId: string,
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @PaginationQuery({
+            availableSearch: USER_DEFAULT_AVAILABLE_SEARCH,
+        })
+        { _search, _limit, _offset, _order }: PaginationListDto
+    ) {
+        const find: Record<string, any> = {
+            ..._search,
+            workspace: workspace.id,
+        };
+        const members = await this.workSpaceMemberService.findAll(find, {
+            paging: {
+                limit: _limit,
+                offset: _offset,
+            },
+            order: _order,
+            // Populate user + role: the list DTO maps the member's role (and its
+            // permission count) and the user profile; without this the role
+            // reference is unloaded and serialization throws.
+            populate: ['user', 'role'],
+        });
+        const total: number = await this.workSpaceMemberService.getTotal(find);
+        const totalPage: number = this.paginationService.totalPage(
+            total,
+            _limit
+        );
+        const data = this.workSpaceMemberService.mapList(members);
+        return { data, _pagination: { total, totalPage } };
+    }
+
+    @Response('workspace.member.details')
+    @WorkSpaceOwnerGetMemberDetailsDoc()
+    @WorkspaceMemberOrOwnerProtected()
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Get('/:workspace/members/:user')
+    async memberDetails(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('user') userId: string
+    ) {
+        const member = await this.workSpaceMemberService.findOne(
+            {
+                workspace: workspace.id,
+                $or: [{ user: userId }, { id: userId }],
+            },
+            // Populate user + role so the detail DTO (which maps the role and its
+            // permission count) does not throw on an unloaded reference.
+            { populate: ['user', 'role'] }
+        );
+        if (!member) {
+            throw new NotFoundException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
+                message: 'workspace.error.memberNotFound',
+            });
+        }
+
+        const data = this.workSpaceMemberService.mapDetail(
+            member as unknown as IWorkspaceMemberWithUserDoc
+        );
+        return { data };
+    }
+
+    @ResponsePaging('workspace.member.list')
+    @GetInvitableUserListDoc()
+    @WorkspaceMemberOrOwnerProtected()
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Get('/:workspace/invitable')
+    async getAvailableInviteMembers(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @PaginationQuery({
+            availableSearch: USER_DEFAULT_AVAILABLE_SEARCH,
+        })
+        { _search, _limit, _offset, _order }: PaginationListDto
+    ) {
+        // Extract user IDs of current members. findAll must be awaited (a
+        // Promise cannot be used as a $nin operand) and must populate `user`.
+        const currentMembers = await this.workSpaceMemberService.findAll(
+            { workspace: workspace.id },
+            { populate: ['user'] }
+        );
+        const memberIds = currentMembers.map(member => (member as any).user.id);
+        const find: Record<string, any> = {
+            ..._search,
+            id: { $nin: memberIds },
+        };
+        const invitableUsers = await this.userService.findAllWithRoleAndCountry(
+            find,
+            {
+                paging: {
+                    limit: _limit,
+                    offset: _offset,
+                },
+                order: _order,
+            }
+        );
+        const totalInvitable = await this.countInvitableUsers(find);
+        const totalPage: number = this.paginationService.totalPage(
+            totalInvitable,
+            _limit
+        );
+
+        return {
+            data: invitableUsers.map(user => this.userService.mapShort(user)),
+            _pagination: { total: totalInvitable, totalPage },
+        };
+    }
+
+    private countInvitableUsers(find: Record<string, any>): Promise<number> {
+        return this.userService.getTotalWithRoleAndCountry(find);
+    }
+
+    @Response('workspace.member.remove.success')
+    @WorkSpaceOwnerMemberRemoveDoc()
+    @WorkspaceOwnerProtected()
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Delete('/:workspace/members/:user')
+    async deleteMember(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @WorkspacePayload() _workspace: WorkspaceEntity,
+        @Param('user') userIdToDelete: string
+    ) {
+        const member = (await this.workSpaceMemberService.findOne({
+            workspace: _workspace.id,
+            id: userIdToDelete,
+        })) as unknown as IWorkspaceMemberWithUserDoc;
+        if (!member) {
+            throw new NotFoundException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'workspace.error.memberNotFound',
+            });
+        }
+        await this.workSpaceMemberService.delete(member as any);
+        await this.activityService.createByUserWithWorkspace(user, _workspace, {
+            action: ENUM_ACTIVITY_ACTION.REMOVE_MEMBER,
+            subject: ENUM_POLICY_SUBJECT.WORKSPACE,
+            metadata: {
+                _id: member.user.id,
+                name: member.user.name || member.user.email,
+            },
+        });
+    }
+
+    @WorkspaceAssignRoleToMemberDoc()
+    @Response('workspace.member.role.assign.success')
+    @WorkspaceOwnerProtected()
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Post('/:workspace/member/:member/role/:role')
+    async assignRoleToMember(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('member') memberId: string,
+        @Param('role') roleId: string
+    ) {
+        // Verify the member is part of the workspace
+        const member = await this.workSpaceMemberService.findOne({
+            workspace: workspace.id,
+            id: memberId,
+        });
+
+        const role = await this.roleService.findOne({
+            workspace: workspace.id,
+            id: roleId,
+        });
+
+        if (!member) {
+            throw new NotFoundException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
+                message: 'workspace.error.memberNotFound',
+            });
+        }
+
+        if (!role) {
+            throw new NotFoundException({
+                statusCode: ENUM_ROLE_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'role.error.notFound',
+            });
+        }
+
+        const data = await this.workSpaceMemberService.updateRole(member, role);
+
+        return { data };
+    }
+
+    @Response('workspace.member.role.remove.success')
+    @WorkspaceOwnerProtected()
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Delete('/:workspace/member/:memberId/role/:roleId')
+    async removeRoleFromMember(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('memberId') memberId: string,
+        @Param('roleId') roleId: string
+    ): Promise<void> {
+        // Verify the member is part of the workspace
+        const isMember =
+            await this.workSpaceMemberService.isUserMemberOfWorkspace(
+                workspace.id,
+                memberId
+            );
+
+        if (!isMember) {
+            throw new NotFoundException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
+                message: 'workspace.error.memberNotFound',
+            });
+        }
+
+        await this.workSpaceMemberService.removeRoleFromMember(
+            workspace.id,
+            memberId,
+            roleId
+        );
+    }
+
+    @Response('workspace.member.roles.get.success')
+    @WorkspaceOwnerProtected()
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Get('/:workspace/member/:memberId/roles')
+    async getMemberRoles(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('memberId') memberId: string
+    ): Promise<{ data: RoleEntity[] }> {
+        // Verify the member is part of the workspace
+        const isMember =
+            await this.workSpaceMemberService.isUserMemberOfWorkspace(
+                workspace.id,
+                memberId
+            );
+
+        if (!isMember) {
+            throw new NotFoundException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
+                message: 'workspace.error.memberNotFound',
+            });
+        }
+
+        const roles = await this.workSpaceMemberService.getMemberWorkspaceRoles(
+            workspace.id,
+            memberId
+        );
+
+        return { data: roles };
+    }
+}

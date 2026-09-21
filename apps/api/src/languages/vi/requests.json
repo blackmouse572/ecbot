@@ -1,0 +1,26 @@
+{
+    "create": {
+        "success": "Yêu cầu đã được tạo thành công",
+        "error": "Tạo yêu cầu thất bại"
+    },
+    "workspace": {
+        "sameWithRequestor": "Bạn không thể gửi yêu cầu cho chính mình đâu.",
+        "isNotInPending": "Yêu cầu này không ở trạng thái chờ xử lý.",
+        "requestAccepted": "Yêu cầu tham gia không gian làm việc {workspaceName} từ {username} đã được chấp nhận",
+        "approveTitle": "Yêu cầu tham gia không gian làm việc đã được phê duyệt",
+        "approveMessage": "Yêu cầu tham gia không gian làm việc \"{workspaceName}\" của bạn đã được phê duyệt."
+    },
+    "approve": {
+        "success": "Yêu cầu đã được phê duyệt thành công"
+    },
+    "list": {
+        "success": "Lấy danh sách yêu cầu tham gia thành công"
+    },
+    "error": {
+        "notFound": "Không tìm thấy yêu cầu",
+        "notAllowed": "Bạn không được phép thực hiện hành động này",
+        "invalidStatus": "Trạng thái yêu cầu không hợp lệ",
+        "invalidType": "Loại yêu cầu không hợp lệ",
+        "duplicated": "Bạn đã có một yêu cầu đang chờ xử lý cho người dùng này với cùng loại"
+    }
+}

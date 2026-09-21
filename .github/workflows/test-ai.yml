@@ -1,0 +1,42 @@
+name: Test AI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/ai/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/ai/**"
+
+jobs:
+  test:
+    name: Test AI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/ai
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/ai/uv.lock"
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # Unit lane only: integration tests (marked `integration`) need a live
+      # Postgres / full app environment and are excluded here. To run them,
+      # provide RAG_POSTGRES_URL / POSTGRES_URL and drop the marker filter.
+      - name: Test AI
+        run: uv run pytest -m "not integration"

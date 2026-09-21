@@ -1,0 +1,19 @@
+[[services]]
+name = "web api"
+prefix = "/web-server"
+[[services.environments]]
+environment = "development"
+url = "http://localhost:5001"
+[[services.environments]]
+environment = "production"
+url = "https://monorepo-demo-web.fly.dev"
+
+[[services]]
+name = "Translator"
+prefix = "/yoda"
+[[services.environments]]
+environment = "development"
+url = "https://api.funtranslations.com/translate/yoda"
+[[services.environments]]
+environment = "production"
+url = "https://api.funtranslations.com/translate/yoda"

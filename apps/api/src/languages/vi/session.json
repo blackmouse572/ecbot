@@ -1,0 +1,12 @@
+{
+    "list": "Phiên đã được lấy thành công.",
+    "revoke": "Phiên đã được thu hồi thành công.",
+    "bulkRevoke": "Đã thu hồi tất cả phiên của người dùng thành công.",
+    "task": {
+        "processed": "Xử lý tác vụ phiên thành công."
+    },
+    "error": {
+        "notFound": "Xin lỗi, chúng tôi không thể tìm thấy phiên.",
+        "forbiddenRevoke": "Bạn không thể thu hồi phiên hiện tại của mình."
+    }
+}

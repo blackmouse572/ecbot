@@ -1,0 +1,39 @@
+name: SecurePR Scan
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          format: table
+          output: trivy-results.txt
+          exit-code: 0
+
+      - name: Install Semgrep
+        run: pip install semgrep==1.177.0
+
+      - name: Run Semgrep
+        run: semgrep scan --config p/default --output semgrep-results.txt
+
+      - name: Generate PR summary
+        run: |
+          chmod +x .github/summary-generator.sh
+          .github/summary-generator.sh
+
+      - name: Upload scan report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: secure-scan-report
+          path: summary.md

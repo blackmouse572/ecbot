@@ -1,0 +1,103 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# ==============================================
+# Node JS
+# ==============================================
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+build
+dist
+
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# AI worktrees
+**/.claude/worktrees/
+
+# Misc
+.DS_Store
+*.pem
+
+# ==============================================
+# Python
+# ==============================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Distribution / build files
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+PKG-INFO
+EGG-INFO
+
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+bin/
+lib/
+include/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+
+# Data and logs
+*.log
+tmp/
+.ipynb_checkpoints/
+docker-compose.rag-test.yml
+.pnpm-store/
+# Local git worktrees (superpowers:using-git-worktrees)
+.worktrees/
+
+# wrangler local state
+.wrangler/
+
+# Enterprise overlay (private, materialised only for the enterprise build)
+apps/api/src/ee/
+apps/app/src/ee/
+
+# SDD scratch workspaces (superpowers:subagent-driven-development)
+.superpowers/

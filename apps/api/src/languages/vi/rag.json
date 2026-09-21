@@ -1,0 +1,9 @@
+{
+    "list": "RAG đã được lấy thành công.",
+    "create": "RAG đã được tạo thành công.",
+    "update": "RAG đã được cập nhật thành công.",
+    "delete": "RAG đã được xóa thành công.",
+    "errors": {
+        "notFound": "Không tìm thấy RAG."
+    }
+}

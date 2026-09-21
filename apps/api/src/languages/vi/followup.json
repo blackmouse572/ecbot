@@ -1,0 +1,9 @@
+{
+    "workspace": {
+        "list": "Lấy danh sách follow-up thành công.",
+        "cancel": "Hủy follow-up thành công."
+    },
+    "task": {
+        "processed": "Xử lý tác vụ follow-up thành công."
+    }
+}

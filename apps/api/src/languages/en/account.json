@@ -1,0 +1,27 @@
+{
+    "list": "Accounts retrieved successfully.",
+    "get": "Account details fetched successfully.",
+    "create": "New account created successfully.",
+    "update": "Account updated successfully.",
+    "delete": "Account deleted successfully.",
+    "inactive": "Account marked as inactive.",
+    "active": "Account marked as active.",
+    "sync": "Sync Account successfully.",
+    "deleteSync": "Delete Sync Account successfully.",
+    "batchDeleteSync": "Accounts unlinked successfully.",
+    "error": {
+        "isActiveInvalid": "Invalid active status for this account.",
+        "notFound": "Sorry, we couldn't find the requested account.",
+        "statusAlreadySet": "Account status is already set to this value.",
+        "invalidStatus": "The provided status is invalid.",
+        "notAnApiChannel": "This account is not an API channel, so it has no signing secret to rotate.",
+        "invalidAllowedOrigin": "One of the allowed sites is not a valid URL. Use the full address, e.g. https://shop.example.com.",
+        "apiChannelCallbackUrlMissing": "This API channel has no callback URL configured, so replies cannot be delivered.",
+        "notAWebsiteWidget": "This account is not a website widget, so it has no allowed-origins list to update."
+    },
+    "provisionApiChannel": "API channel created. Copy the signing secret now — it won't be shown again.",
+    "rotateApiChannelSecret": "A new signing secret has been issued. The previous one no longer works.",
+    "provisionWebsiteWidget": "Website widget created. Paste the embed snippet on your site to go live.",
+    "updateCallbackUrl": "Callback URL updated.",
+    "updateAllowedOrigins": "Allowed origins updated."
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@repo/e2e",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "test": "playwright test --project=regression",
+    "test:smoke": "playwright test --project=smoke",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.20.1",
+    "dotenv": "^16.6.1",
+    "typescript": "^5.9.3"
+  }
+}

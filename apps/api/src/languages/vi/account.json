@@ -1,0 +1,27 @@
+{
+    "list": "Tài khoản đã được lấy thành công.",
+    "get": "Chi tiết tài khoản đã được tải về thành công.",
+    "create": "Tài khoản mới đã được tạo thành công! Chào mừng thành viên mới.",
+    "update": "Tài khoản đã được cập nhật thành công.",
+    "delete": "Tài khoản đã được xóa thành công. Tạm biệt!",
+    "inactive": "Tài khoản đã được đánh dấu không hoạt động.",
+    "active": "Tài khoản đã được đánh dấu hoạt động. Sẵn sàng làm việc!",
+    "sync": "Đồng bộ tài khoản thành công.",
+    "deleteSync": "Xóa đồng bộ tài khoản thành công.",
+    "batchDeleteSync": "Đã hủy liên kết các tài khoản.",
+    "error": {
+        "isActiveInvalid": "Trạng thái hoạt động không hợp lệ cho tài khoản này.",
+        "notFound": "Xin lỗi, chúng tôi không thể tìm thấy tài khoản được yêu cầu.",
+        "statusAlreadySet": "Trạng thái tài khoản đã được đặt thành giá trị này rồi.",
+        "invalidStatus": "Trạng thái được cung cấp không hợp lệ.",
+        "notAnApiChannel": "Tài khoản này không phải API channel nên không có signing secret để xoay.",
+        "invalidAllowedOrigin": "Một trong các website được phép không phải URL hợp lệ. Hãy nhập đầy đủ, vd: https://shop.example.com.",
+        "apiChannelCallbackUrlMissing": "API channel này chưa cấu hình callback URL nên không gửi được câu trả lời.",
+        "notAWebsiteWidget": "Tài khoản này không phải website widget nên không có danh sách website được phép để cập nhật."
+    },
+    "provisionApiChannel": "Đã tạo API channel. Hãy sao chép signing secret ngay — nó sẽ không hiển thị lại.",
+    "rotateApiChannelSecret": "Đã cấp signing secret mới. Secret cũ không còn dùng được.",
+    "provisionWebsiteWidget": "Đã tạo website widget. Dán đoạn mã nhúng lên website để bắt đầu.",
+    "updateCallbackUrl": "Đã cập nhật callback URL.",
+    "updateAllowedOrigins": "Đã cập nhật danh sách website được phép."
+}

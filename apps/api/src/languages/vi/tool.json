@@ -1,0 +1,94 @@
+{
+    "create": {
+        "success": "Tạo công cụ thành công"
+    },
+    "get": {
+        "success": "Lấy thông tin công cụ",
+        "error": {
+            "notFound": "Không tìm thấy công cụ"
+        }
+    },
+    "list": {
+        "success": "Lấy danh sách công cụ"
+    },
+    "update": {
+        "success": "Cập nhật công cụ thành công",
+        "error": {
+            "notFound": "Không tìm thấy công cụ"
+        }
+    },
+    "delete": {
+        "success": "Xóa công cụ thành công",
+        "error": {
+            "notFound": "Không tìm thấy công cụ",
+            "referenced": "Công cụ đang được sử dụng bởi chatbot; hãy tắt trước khi xóa"
+        }
+    },
+    "execute": {
+        "success": "Thực thi công cụ thành công",
+        "error": {
+            "notFound": "Không tìm thấy công cụ",
+            "executionFailed": "Thực thi công cụ thất bại"
+        }
+    },
+    "enable": {
+        "success": "Đã bật công cụ cho chatbot",
+        "error": {
+            "notFound": "Không tìm thấy công cụ trong workspace",
+            "notActive": "Chỉ có thể thêm công cụ đang hoạt động vào chatbot"
+        }
+    },
+    "disable": {
+        "success": "Đã tắt công cụ trên chatbot",
+        "error": {
+            "notFound": "Công cụ chưa được bật trên chatbot này"
+        }
+    },
+    "updateActions": {
+        "success": "Đã cập nhật hành động của công cụ",
+        "error": {
+            "notFound": "Công cụ chưa được bật trên chatbot này"
+        }
+    },
+    "invocations": {
+        "list": {
+            "success": "Đã lấy danh sách lượt gọi công cụ"
+        }
+    },
+    "chatbot": {
+        "list": {
+            "success": "Đã lấy danh sách công cụ của chatbot"
+        }
+    },
+    "marketplace": {
+        "catalog": {
+            "success": "Đã lấy danh mục marketplace"
+        },
+        "categories": {
+            "success": "Đã lấy danh mục thể loại marketplace"
+        },
+        "install": {
+            "success": "Đã khởi tạo cài đặt Composio"
+        },
+        "complete": {
+            "success": "Đã hoàn tất cài đặt Composio"
+        }
+    },
+    "discover": {
+        "success": "Khám phá MCP hoàn tất",
+        "error": {
+            "notFound": "Không tìm thấy công cụ",
+            "notMcp": "Khám phá chỉ khả dụng cho công cụ MCP",
+            "connectionFailed": "Không thể kết nối đến máy chủ MCP. Kiểm tra URL và thông tin xác thực."
+        }
+    },
+    "test": {
+        "success": "Kiểm tra công cụ hoàn tất",
+        "error": {
+            "notHttp": "Kiểm tra chỉ khả dụng cho công cụ HTTP"
+        }
+    },
+    "batchDelete": {
+        "success": "Đã xóa các tool."
+    }
+}

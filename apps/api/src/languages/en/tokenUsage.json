@@ -1,0 +1,13 @@
+{
+    "summary": "Token usage summary retrieved successfully.",
+    "trend": "Token usage trend retrieved successfully.",
+    "byChatbot": "Token usage by chatbot retrieved successfully.",
+    "byPlatform": "Token usage by platform retrieved successfully.",
+    "byWorkspace": "Token usage by workspace retrieved successfully.",
+    "list": "Token usage records retrieved successfully.",
+    "settings": "Token usage settings updated successfully.",
+    "error": {
+        "quotaExhausted": "This workspace has used up its token quota.",
+        "rawUsageNotAvailable": "Raw token counts are not exposed in this environment."
+    }
+}

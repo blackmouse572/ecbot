@@ -1,0 +1,184 @@
+import {
+    ENUM_FOLLOWUP_PROCESS,
+    ENUM_FOLLOWUP_STATUS,
+} from '@app/modules/platform/constants/followup.constant';
+import { IFollowupJob } from '@app/modules/platform/interfaces/followup.interface';
+import { FollowupService } from '@app/modules/platform/services/followup.service';
+import { followupRow, makeFollowupRepository } from './followup.fixtures';
+
+const jobData: IFollowupJob = {
+    conversationId: 'conv-1',
+    chatbotId: 'cb-1',
+    userId: 'psid-1',
+    providerId: 'acc-1',
+    customerId: 'cust-1',
+    contactPointId: 'cp-1',
+    prompt: 'check payment',
+    reason: 'payment_check',
+};
+
+function buildService(rows: any[] = []) {
+    const cloudTasksClient = {
+        enqueue: jest.fn().mockResolvedValue(undefined),
+        deleteTask: jest.fn().mockResolvedValue(undefined),
+    };
+    const followupRepository = makeFollowupRepository(rows);
+
+    return {
+        service: new FollowupService(
+            cloudTasksClient as any,
+            followupRepository as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any
+        ),
+        cloudTasksClient,
+        followupRepository,
+    };
+}
+
+describe('FollowupService', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it('schedule() persists a SCHEDULED row and enqueues a Cloud Task carrying its id', async () => {
+        const { service, cloudTasksClient, followupRepository } =
+            buildService();
+
+        const id = await service.schedule(jobData, 30);
+
+        expect(followupRepository.rows).toEqual([
+            expect.objectContaining({
+                id,
+                prompt: 'check payment',
+                reason: 'payment_check',
+                status: ENUM_FOLLOWUP_STATUS.SCHEDULED,
+            }),
+        ]);
+        expect(cloudTasksClient.enqueue).toHaveBeenCalledWith(
+            'followup',
+            ENUM_FOLLOWUP_PROCESS.FIRE,
+            { ...jobData, followupId: id },
+            {
+                taskName: `followup-${id}`,
+                scheduleTime: expect.any(Date),
+            }
+        );
+    });
+
+    it('schedule() preserves triggerMessageId on both the row and the payload', async () => {
+        const { service, cloudTasksClient, followupRepository } =
+            buildService();
+
+        await service.schedule({ ...jobData, triggerMessageId: 'msg-9' }, 30);
+
+        expect(followupRepository.rows[0].triggerMessageId).toBe('msg-9');
+        expect(cloudTasksClient.enqueue).toHaveBeenCalledWith(
+            'followup',
+            ENUM_FOLLOWUP_PROCESS.FIRE,
+            expect.objectContaining({ triggerMessageId: 'msg-9' }),
+            expect.anything()
+        );
+    });
+
+    it('schedule() drops the row when the enqueue fails so nothing shows as pending', async () => {
+        const { service, cloudTasksClient, followupRepository } =
+            buildService();
+        const error = new Error('cloud tasks down');
+        cloudTasksClient.enqueue.mockRejectedValue(error);
+
+        await expect(service.schedule(jobData, 30)).rejects.toBe(error);
+        expect(followupRepository.rows).toEqual([]);
+    });
+
+    it('cancel() deletes the Cloud Task and records CANCELLED', async () => {
+        const rows = [followupRow({ id: 'f-1' })];
+        const { service, cloudTasksClient } = buildService(rows);
+
+        expect(await service.cancel('f-1')).toBe(true);
+        expect(cloudTasksClient.deleteTask).toHaveBeenCalledWith(
+            'followup',
+            'followup-f-1'
+        );
+        expect(rows[0].status).toBe(ENUM_FOLLOWUP_STATUS.CANCELLED);
+        expect(rows[0].cancelledAt).toBeInstanceOf(Date);
+    });
+
+    it('cancel() returns false when no followup exists', async () => {
+        const { service, cloudTasksClient } = buildService([
+            followupRow({ id: 'other' }),
+        ]);
+
+        expect(await service.cancel('f-1')).toBe(false);
+        expect(cloudTasksClient.deleteTask).not.toHaveBeenCalled();
+    });
+
+    it('cancel() returns false once the followup has already fired', async () => {
+        const { service, cloudTasksClient } = buildService([
+            followupRow({
+                id: 'f-1',
+                status: ENUM_FOLLOWUP_STATUS.COMPLETED,
+            }),
+        ]);
+
+        expect(await service.cancel('f-1')).toBe(false);
+        expect(cloudTasksClient.deleteTask).not.toHaveBeenCalled();
+    });
+
+    it('cancel() still works while a failed followup is awaiting retry', async () => {
+        const rows = [
+            followupRow({ id: 'f-1', status: ENUM_FOLLOWUP_STATUS.FAILED }),
+        ];
+        const { service, cloudTasksClient } = buildService(rows);
+
+        expect(await service.cancel('f-1')).toBe(true);
+        expect(cloudTasksClient.deleteTask).toHaveBeenCalledWith(
+            'followup',
+            'followup-f-1'
+        );
+        expect(rows[0].status).toBe(ENUM_FOLLOWUP_STATUS.CANCELLED);
+    });
+
+    it('cancel() treats a delete race as a successful cancellation', async () => {
+        const { service, cloudTasksClient } = buildService([
+            followupRow({ id: 'f-1' }),
+        ]);
+        cloudTasksClient.deleteTask.mockRejectedValue(
+            Object.assign(new Error('task disappeared'), { code: 5 })
+        );
+
+        expect(await service.cancel('f-1')).toBe(true);
+    });
+
+    it('findScheduledByConversation() + mapPending() return only pending followups with remaining minutes', async () => {
+        const now = 1_000_000_000_000;
+        jest.spyOn(Date, 'now').mockReturnValue(now);
+        const { service } = buildService([
+            followupRow({
+                id: 'f-1',
+                reason: 'payment_check',
+                scheduledAt: new Date(now + 20 * 60_000),
+            }),
+            followupRow({
+                id: 'f-done',
+                status: ENUM_FOLLOWUP_STATUS.COMPLETED,
+                scheduledAt: new Date(now + 5 * 60_000),
+            }),
+            followupRow({
+                id: 'f-2',
+                conversation: { id: 'other', senderName: 'Bob' },
+                scheduledAt: new Date(now + 60_000),
+            }),
+        ]);
+
+        const followups = await service.findScheduledByConversation('conv-1');
+
+        expect(service.mapPending(followups)).toEqual([
+            { followupId: 'f-1', reason: 'payment_check', firesInMinutes: 20 },
+        ]);
+    });
+});

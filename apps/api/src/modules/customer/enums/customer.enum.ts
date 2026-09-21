@@ -1,0 +1,10 @@
+export enum ENUM_CUSTOMER_MERGE_SUGGESTION_STATUS {
+    PENDING = 'PENDING',
+    DISMISSED = 'DISMISSED',
+    MERGED = 'MERGED',
+}
+
+export enum ENUM_CUSTOMER_MERGE_FIELD {
+    PHONE = 'phone',
+    EMAIL = 'email',
+}

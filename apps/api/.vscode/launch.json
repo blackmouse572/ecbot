@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Nest Framework",
+            "args": ["${workspaceFolder}/apps/api/src/main.ts"],
+            "runtimeExecutable": "pnpm",
+            "runtimeArgs": ["nest", "start", "--watch"],
+            "sourceMaps": true,
+            "envFile": "${workspaceFolder}/apps/api/.env",
+            "cwd": "${workspaceRoot}/apps/api",
+            "console": "integratedTerminal",
+            "restart": true,
+
+            "autoAttachChildProcesses": true
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+Ecbot
+Copyright (c) 2025-2026 Ecbot
+
+This product is licensed under the GNU Affero General Public License v3.0.
+See the LICENSE file for the full terms.
+
+================================================================================
+Third-party components
+================================================================================
+
+apps/api
+--------
+Derived from ack-nestjs-boilerplate
+  https://github.com/andrechristikan/ack-nestjs-boilerplate
+  Copyright (c) 2020 Andrechristikan
+  Licensed under the MIT License.
+
+The MIT License continues to apply to the portions of apps/api originating
+from that project. The full MIT text is retained at apps/api/LICENSE.md.
+Modifications and additions made by Ecbot are licensed under the AGPL-3.0
+terms in LICENSE.
+
+Other dependencies
+------------------
+This project depends on third-party packages declared in package.json and
+pyproject.toml manifests, each governed by its own licence. Those packages
+are not redistributed in this repository.

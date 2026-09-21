@@ -1,0 +1,37 @@
+{
+    "list": "Chatbot đã được lấy thành công.",
+    "get": "Chi tiết chatbot đã được tải về thành công.",
+    "models": "Danh sách model chatbot đã được lấy thành công.",
+    "create": "Chatbot mới đã được tạo thành công! Chào em bot.",
+    "update": "Chatbot đã được cập nhật thành công.",
+    "delete": "Chatbot đã được xóa thành công. Tạm biệt bot!",
+    "admin": {
+        "list": "Admin: Tất cả chatbot đã được lấy thành công.",
+        "get": "Admin: Chi tiết chatbot đã được tải về thành công.",
+        "update": "Admin: Chatbot đã được cập nhật thành công.",
+        "delete": "Admin: Chatbot đã được xóa thành công."
+    },
+    "error": {
+        "notFound": "Xin lỗi, chúng tôi không thể tìm thấy chatbot được yêu cầu.",
+        "accountIsLinked": "Có một tài khoản đã được gán cho chatbot khác rồi.",
+        "invalidWorkspace": "Chatbot không thuộc về không gian làm việc hiện tại.",
+        "accountLinkFailed": "Liên kết tài khoản với chatbot thất bại.",
+        "accountUnlinkFailed": "Hủy liên kết tài khoản với chatbot thất bại.",
+        "aiBackendUnavailable": "Backend AI hiện không khả dụng. Vui lòng thử lại sau.",
+        "shareLinkInvalid": "Link preview này không hợp lệ.",
+        "shareLinkExpired": "Link preview này đã hết hạn.",
+        "shareLinkNotConfigured": "Máy chủ chưa được cấu hình để chia sẻ preview.",
+        "previewNotAvailable": "Chatbot này hiện không khả dụng để xem thử.",
+        "previewSessionLimit": "Bạn đã đạt giới hạn tin nhắn cho phiên preview này. Vui lòng thử lại sau."
+    },
+    "active": "Chatbot đã được kích hoạt thành công.",
+    "inactive": "Chatbot đã được vô hiệu hóa thành công.",
+    "archive": "Chatbot đã được lưu trữ thành công.",
+    "unarchive": "Chatbot đã được bỏ lưu trữ thành công.",
+    "linkAccount": "Tài khoản đã được liên kết với chatbot thành công.",
+    "unlinkAccount": "Tài khoản đã được hủy liên kết với chatbot thành công.",
+    "shareLink": "Link chia sẻ preview đã được tạo thành công.",
+    "preview": "Đã tải preview chatbot thành công.",
+    "batchDelete": "Đã xóa các chatbot",
+    "batchStatus": "Đã cập nhật trạng thái chatbot"
+}

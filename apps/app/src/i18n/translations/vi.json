@@ -1,0 +1,2201 @@
+{
+  "skills": {
+    "batch": {
+      "delete": {
+        "label": "Xóa",
+        "title": "Xóa skill",
+        "description": "Bạn có chắc muốn xóa {{count}} skill? Hành động này không thể hoàn tác."
+      }
+    },
+    "title": "Skills",
+    "subtitle": "Know-how tái sử dụng, agent nạp khi cần.",
+    "builtin": "Có sẵn",
+    "tabs": {
+      "mySkills": "Skill của tôi",
+      "templates": "Mẫu"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "inactive": "Tắt"
+    },
+    "list": {
+      "loading": "Đang tải…",
+      "noRecordsMessage": "Chưa có skill. Tạo mới hoặc sao chép từ mẫu.",
+      "noTemplates": "Chưa có mẫu nào.",
+      "filters": {
+        "source": "Nguồn"
+      }
+    },
+    "actions": {
+      "browse": "Duyệt mẫu"
+    },
+    "chatbotTab": {
+      "title": "Skills",
+      "subtitle": "Know-how chatbot này nạp khi cần.",
+      "addTitle": "Gắn skill",
+      "selectLabel": "Chọn skill",
+      "noAvailable": "Không còn skill workspace để gắn.",
+      "attachSuccess": "Đã gắn skill",
+      "attachError": "Gắn skill thất bại",
+      "detachSuccess": "Đã gỡ skill",
+      "detachError": "Gỡ skill thất bại",
+      "updateError": "Cập nhật skill thất bại",
+      "loadError": "Tải skill thất bại",
+      "empty": "Chưa gắn skill nào."
+    },
+    "form": {
+      "namePlaceholder": "vd: Chính sách hoàn tiền",
+      "descriptionHint": "Gợi ý ngắn — cho agent biết khi nào nạp skill này.",
+      "instructions": "Hướng dẫn",
+      "instructionsHint": "Nội dung markdown đầy đủ, nạp khi skill phù hợp.",
+      "importHint": "Kéo thả file .md vào đây hoặc bấm để nhập"
+    },
+    "browse": {
+      "title": "Duyệt mẫu",
+      "subtitle": "Sao chép mẫu có sẵn về workspace rồi tùy biến.",
+      "searchPlaceholder": "Tìm mẫu",
+      "pageInfo": "Trang {{page}}/{{totalPage}}"
+    },
+    "copy": {
+      "title": "Sao chép skill",
+      "subtitle": "Xem lại và chỉnh sửa hướng dẫn, rồi tạo bản sao của bạn."
+    },
+    "create": {
+      "title": "Tạo skill",
+      "subtitle": "Viết hướng dẫn agent sẽ làm theo khi skill này phù hợp.",
+      "success": "Đã tạo skill",
+      "error": "Tạo skill thất bại"
+    },
+    "edit": {
+      "title": "Sửa skill",
+      "subtitle": "Cập nhật hướng dẫn của skill.",
+      "success": "Đã cập nhật skill",
+      "error": "Cập nhật skill thất bại"
+    },
+    "delete": {
+      "success": "Đã xóa skill",
+      "error": "Xóa skill thất bại",
+      "confirm": {
+        "title": "Xóa skill?",
+        "description": "Thao tác này xóa vĩnh viễn skill và hướng dẫn của nó."
+      }
+    },
+    "detail": {
+      "sections": {
+        "metadata": "Chi tiết"
+      },
+      "fields": {
+        "id": "ID",
+        "createdAt": "Ngày tạo",
+        "updatedAt": "Ngày cập nhật"
+      }
+    }
+  },
+  "app": {
+    "nav": {
+      "accessibility": {
+        "title": "Điều hướng",
+        "description": "Di chuyển qua ứng dụng (như GPS cho năng suất của bạn! 🗺️)"
+      },
+      "settings": {
+        "header": "Cài đặt",
+        "myAccount": "Tài khoản của tôi",
+        "subscription": "Gói đăng ký",
+        "preferences": "Tùy chọn",
+        "billing": "Thanh toán",
+        "changePassword": "Đổi mật khẩu",
+        "sessions": "Phiên đăng nhập"
+      },
+      "search": {
+        "label": "Tìm kiếm"
+      },
+      "main": {
+        "storeSettings": "Cài đặt",
+        "home": "Trang chủ"
+      },
+      "accounts": {
+        "header": "Tài khoản"
+      },
+      "dashboard": {
+        "header": "Bảng điều khiển",
+        "description": "Trung tâm chỉ huy của bạn - xem thống kê như một ông chủ thực thụ! 📊"
+      },
+      "activity": {
+        "header": "Nhật ký hoạt động",
+        "description": "Xem chuyện gì đã xảy ra khi bạn vắng mặt (spoiler: đều tốt cả!)"
+      },
+      "members": {
+        "header": "Đội ngũ",
+        "description": "Xem tất cả thành viên - đội ngũ mơ ước của bạn! ✨"
+      },
+      "roles": {
+        "header": "Vai trò",
+        "description": "Quản lý vai trò trong không gian làm việc (ai cũng đặc biệt cả!)"
+      }
+    },
+    "search": {
+      "label": "Tìm kiếm"
+    },
+    "menus": {
+      "user": {
+        "profileSettings": "Cài đặt hồ sơ",
+        "documentation": "Tài liệu",
+        "changelog": "Nhật ký thay đổi",
+        "theme": {
+          "label": "Giao diện",
+          "dark": "Tối",
+          "light": "Sáng",
+          "system": "Hệ thống"
+        }
+      },
+      "notifications": {
+        "title": "Thông báo",
+        "empty": "Bạn đã xem hết thông báo",
+        "markAllAsRead": "Đánh dấu đã đọc tất cả"
+      },
+      "actions": {
+        "logout": "Đăng xuất"
+      }
+    },
+    "auth": {
+      "social": {
+        "google": "Google",
+        "continueWith": "hoặc tiếp tục với",
+        "comingSoon": "Đăng nhập mạng xã hội sẽ sớm ra mắt"
+      },
+      "hero": {
+        "login": {
+          "alt": "Tôi có thể giúp gì? Xây dựng agent cho chăm sóc khách hàng, bán hàng, quảng cáo Facebook, lập kế hoạch Notion và quản lý chính sách."
+        },
+        "signup": {
+          "alt": "Xây một lần, triển khai mọi nơi. Xây dựng agent cho chăm sóc khách hàng, bán hàng, quảng cáo Facebook, lập kế hoạch Notion và quản lý chính sách."
+        }
+      },
+      "login": {
+        "title": "Chào mừng đến với Ecbot",
+        "description": "Đăng nhập để truy cập bảng điều khiển",
+        "fields": {
+          "email": "Email",
+          "password": "Mật khẩu"
+        },
+        "actions": {
+          "loginButton": "Đăng nhập",
+          "forgotPassword": "Quên mật khẩu?",
+          "remember": "Ghi nhớ",
+          "register": "Đăng ký",
+          "resetPassword": "Đặt lại mật khẩu",
+          "signUpRedirect": "Chưa có tài khoản ? <0>Đăng ký</0>",
+          "ok": "Đã hiểu"
+        },
+        "errors": {
+          "turnstileRequired": "Vui lòng hoàn tất xác minh.",
+          "turnstileFailed": "Xác minh thất bại. Vui lòng thử lại.",
+          "turnstileVerifying": "Đang xác minh, vui lòng đợi...",
+          "invalidCredentials": "Email hoặc mật khẩu không hợp lệ.",
+          "accountLocked": "Tài khoản của bạn đã bị khóa do nhiều lần đăng nhập không thành công.",
+          "banned": {
+            "title": "Tài khoản đã bị đình chỉ",
+            "description": "Tài khoản của bạn đã bị quản trị viên đình chỉ. Vui lòng liên hệ hỗ trợ nếu bạn cho rằng đây là nhầm lẫn."
+          }
+        },
+        "success": {
+          "message": "Đăng nhập thành công. Chào mừng trở lại!"
+        },
+        "failed": {
+          "message": "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn và thử lại."
+        }
+      },
+      "register": {
+        "title": "Bắt đầu nào",
+        "description": "Tạo tài khoản mới trên nền tảng",
+        "fields": {
+          "name": "Tên",
+          "email": "Email",
+          "password": "Mật khẩu",
+          "referral-code": "Mã giới thiệu (tùy chọn)",
+          "confirm-password": "Xác nhận mật khẩu",
+          "country": "Quốc gia"
+        },
+        "actions": {
+          "registerButton": "Tạo tài khoản mới",
+          "loginRedirect": "Đã có tài khoản? <0>Đăng nhập</0>"
+        },
+        "errors": {
+          "turnstileRequired": "Vui lòng hoàn tất xác minh.",
+          "turnstileFailed": "Xác minh thất bại. Vui lòng thử lại.",
+          "turnstileVerifying": "Đang xác minh, vui lòng đợi...",
+          "emailExists": "Đã có tài khoản với email này.",
+          "passwordMismatch": "Mật khẩu không khớp.",
+          "signUpFailed": "Đăng ký không thành công. Vui lòng thử lại."
+        },
+        "success": {
+          "message": "Tài khoản của bạn đã được tạo thành công. Vui lòng đăng nhập để tiếp tục."
+        }
+      },
+      "forgotPassword": {
+        "title": "Quên mật khẩu?",
+        "description": "Nhập email của bạn, chúng tôi sẽ gửi mã để đặt lại mật khẩu",
+        "fields": {
+          "email": "Email"
+        },
+        "actions": {
+          "submit": "Gửi mã đặt lại",
+          "backToLogin": "Đã nhớ ra rồi? <0>Đăng nhập</0>"
+        },
+        "errors": {
+          "requestFailed": "Không thể bắt đầu đặt lại mật khẩu cho email này."
+        }
+      },
+      "resetPassword": {
+        "title": "Đặt lại mật khẩu",
+        "description": "Chọn mật khẩu mới cho tài khoản của bạn",
+        "otp": {
+          "description": "Nhập mã {{digit}} chữ số đã được gửi tới"
+        },
+        "fields": {
+          "newPassword": "Mật khẩu mới",
+          "confirmPassword": "Xác nhận mật khẩu mới"
+        },
+        "actions": {
+          "resetButton": "Đặt lại mật khẩu",
+          "verifying": "Đang xác thực…",
+          "requestNew": "Yêu cầu mã mới",
+          "backToLogin": "Quay lại đăng nhập"
+        },
+        "errors": {
+          "invalidOtp": "Mã không đúng hoặc đã hết hạn.",
+          "passwordMismatch": "Mật khẩu không khớp.",
+          "resetFailed": "Không thể đặt lại mật khẩu. Hãy yêu cầu mã mới và thử lại."
+        },
+        "expired": {
+          "title": "Liên kết đặt lại đã hết hạn",
+          "description": "Mã đặt lại chỉ có hiệu lực trong thời gian ngắn. Hãy yêu cầu mã mới để tiếp tục."
+        },
+        "success": {
+          "message": "Đã cập nhật mật khẩu. Bạn có thể đăng nhập ngay."
+        }
+      },
+      "verifyEmail": {
+        "title": "Kiểm tra email của bạn",
+        "description": "Vui lòng nhập {{digit}} mã xác minh đã gửi đến email",
+        "fields": {
+          "otp": "Mã xác minh"
+        },
+        "actions": {
+          "verifyButton": "Xác minh",
+          "resendOtp": "Chưa nhận được mã? <0>Gửi lại<0>"
+        },
+        "errors": {
+          "invalidOtp": "Mã xác minh không hợp lệ. Vui lòng thử lại.",
+          "resendOtpFailed": "Không thể gửi lại mã xác minh. Vui lòng thử lại sau."
+        },
+        "success": {
+          "message": "Email của bạn đã được xác minh thành công.",
+          "resendOtp": "Mã xác minh đã được gửi lại thành công. Vui lòng kiểm tra email của bạn."
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "subtitle": "Xin chào! Bạn đã sẵn sàng để chinh phục hôm nay chưa? 🚀",
+    "welcome": "Chào mừng quay trở lại",
+    "overview": {
+      "title": "Tổng quan (sống như là một cuốn tiểu thuyết)",
+      "workspace": {
+        "title": "Không gian làm việc",
+        "totalMembers": "Tổng số thành viên",
+        "activeProjects": "Dự án đang hoạt động",
+        "recentActivity": "Hoạt động gần đây"
+      },
+      "recent": {
+        "title": "Hoạt động gần đây",
+        "noActivity": "Chưa có hoạt động nào... Thời gian để bắt đầu làm việc! 💪",
+        "showAll": "Xem tất cả hoạt động"
+      }
+    },
+    "quickActions": {
+      "title": "Hành động nhanh (cho những người bận rộn)",
+      "createWorkspace": "Tạo không gian làm việc mới",
+      "inviteMembers": "Mời thành viên (càng đông càng vui!)",
+      "viewProjects": "Xem các dự án"
+    },
+    "stats": {
+      "projects": "Dự án",
+      "members": "Thành viên",
+      "workspaces": "Không gian làm việc",
+      "lastActive": "Hoạt động lần cuối"
+    },
+    "recentActivities": "Hoạt động gần đây"
+  },
+  "onboard": {
+    "select": {
+      "welcome": "Chào mừng đến với Ecbot! 🎉",
+      "description": "Bắt đầu hành trình của bạn với Ecbot",
+      "join": {
+        "label": "Tham gia không gian làm việc",
+        "description": "Tôi muốn tham gia vào không gian làm việc hiện có và cùng nhau làm việc vui vẻ"
+      },
+      "create": {
+        "label": "Tạo không gian làm việc",
+        "description": "Tôi muốn tạo một không gian làm việc mới và trở thành thủ lĩnh của riêng mình"
+      },
+      "existing": {
+        "title": "Không gian làm việc của bạn",
+        "description": "Chọn không gian làm việc để tiếp tục, hoặc tạo mới.",
+        "createNew": "Tạo hoặc tham gia không gian làm việc mới"
+      }
+    },
+    "create": {
+      "fields": {
+        "name": "Tên không gian làm việc",
+        "handler": "Slug",
+        "avatar": "Ảnh đại diện"
+      },
+      "placeholders": {
+        "name": "Ví dụ: Đội Siêu Nhân",
+        "handler": "ví dụ: super_heroes"
+      },
+      "toast": {
+        "loading": "Đang tạo không gian làm việc...",
+        "error": "Không thể tạo không gian làm việc",
+        "success": "Tạo không gian làm việc thành công!"
+      },
+      "errors": {
+        "title": "Không thể tạo không gian làm việc",
+        "slugTaken": "Slug này đã được sử dụng. Vui lòng chọn slug khác."
+      }
+    },
+    "join": {
+      "tabs": {
+        "join": "Không gian làm việc",
+        "success": "Thành công! 🎊",
+        "confirm": "Xác nhận"
+      },
+      "fields": {
+        "code": "Nhập mã thần bí của Không gian làm việc ✨"
+      },
+      "success": {
+        "sentRequest": "Yêu cầu tham gia đã được gửi thành công! 🚀",
+        "description": "Yêu cầu tham gia của bạn đã được gửi thành công. Chúng tôi sẽ thông báo cho bạn khi có tin vui! 📬"
+      }
+    }
+  },
+  "join": {
+    "loading": {
+      "title": "Đang tham gia không gian làm việc... ⏳",
+      "description": "Vui lòng chờ trong khi chúng tôi xử lý yêu cầu của bạn. Tốt đẹp đang đến!"
+    },
+    "success": {
+      "title": "Chào mừng bạn đến với đội! 🎉",
+      "description": "Chúc mừng! Bạn đã tham gia không gian làm việc thành công. Hãy bắt đầu làm việc nhóm thôi!"
+    }
+  },
+  "accounts": {
+    "batch": {
+      "unlink": {
+        "label": "Hủy liên kết",
+        "title": "Hủy liên kết tài khoản",
+        "description": "Bạn có chắc muốn hủy liên kết {{count}} tài khoản? Các cuộc hội thoại của chúng sẽ bị xóa."
+      }
+    },
+    "title": "Tài khoản",
+    "list": {
+      "noRecordsMessage": "Chưa có tài khoản nào. Thời gian để thêm một vài cái! 📱",
+      "action": {
+        "viewProfile": "Xem hồ sơ",
+        "viewAddedUser": "Xem người dùng đã thêm",
+        "unlink": "Hủy liên kết tài khoản"
+      }
+    },
+    "unlink": {
+      "confirm": {
+        "title": "Hủy liên kết tài khoản",
+        "description": "Bạn có chắc chắn muốn hủy liên kết tài khoản này không? Hành động này không thể hoàn tác (và hơi buồn). 😢",
+        "confirmButton": "Hủy liên kết"
+      },
+      "success": "Đã hủy liên kết tài khoản thành công! 👋",
+      "error": "Không thể hủy liên kết tài khoản. Hãy thử lại nhé!"
+    },
+    "link": {
+      "title": "Liên kết tài khoản",
+      "description": "Kết nối với tài khoản và trang Facebook của bạn, chọn các trang bạn muốn quản lý. Dễ như ăn bánh! 🍰",
+      "acceptTerms": "Bằng cách liên kết tài khoản của bạn, bạn đồng ý với các điều khoản dịch vụ và chính sách quyền riêng tư của chúng tôi.",
+      "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}} (Đừng lo, chúng ta sẽ sửa nó!)",
+      "success": {
+        "title": "Liên kết tài khoản thành công! 🎊",
+        "description": "Tài khoản của bạn đã được liên kết thành công.",
+        "emptyPages": "Không có trang nào được liên kết. Hãy thêm một vài trang để bắt đầu!"
+      }
+    },
+    "create": {
+      "title": "Tạo tài khoản mới",
+      "description": "Điền thông tin để tạo tài khoản mới (chúng tôi sẽ không phán xét)",
+      "fields": {
+        "link": "Liên kết"
+      },
+      "success": "Tài khoản của bạn đã được tạo thành công! Chào mừng đến với gia đình! 🎉",
+      "steps": {
+        "platform": "Chọn nền tảng",
+        "connect": "Kết nối",
+        "success": "Hoàn tất"
+      },
+      "platform": {
+        "title": "Chọn nền tảng",
+        "description": "Chọn nền tảng bạn muốn kết nối với workspace của mình.",
+        "roadmap": "Sắp có"
+      },
+      "provision": {
+        "copied": "Đã sao chép",
+        "cta": "Tạo channel",
+        "nameLabel": "Tên",
+        "namePlaceholder": "vd. Partner CRM",
+        "issuedTitle": "Đã tạo channel",
+        "issuedDescription": "Hãy lưu lại các giá trị này ở nơi an toàn trước khi đóng cửa sổ.",
+        "apiChannel": {
+          "title": "Kết nối API channel",
+          "description": "Gửi và nhận tin nhắn qua REST từ hệ thống của bạn. Phản hồi sẽ được POST tới callback URL.",
+          "callbackLabel": "Callback URL",
+          "callbackHint": "Phải là HTTPS. Phản hồi được ký bằng x-eccho-signature để bạn xác thực.",
+          "callbackInvalid": "Nhập URL HTTPS hợp lệ",
+          "accountKeyLabel": "Account key",
+          "accountKeyHint": "Gửi giá trị này dưới dạng accountKey khi gửi tin nhắn.",
+          "secretLabel": "Signing secret",
+          "secretHint": "Xác thực x-eccho-signature bằng key này.",
+          "secretWarning": "Signing secret chỉ hiển thị một lần và không thể lấy lại. Hãy sao chép ngay — nếu mất, hãy xoay để tạo secret mới."
+        },
+        "websiteWidget": {
+          "title": "Thêm website widget",
+          "description": "Nhúng widget chat lên website của bạn. Khách truy cập chat ẩn danh và hội thoại sẽ xuất hiện trong hộp thư của bạn.",
+          "originsLabel": "Website được phép",
+          "originsHint": "Cách nhau bằng dấu phẩy. Widget sẽ không tải ở nơi khác.",
+          "originsInvalid": "Nhập đầy đủ URL, vd: https://shop.example.com",
+          "keyLabel": "Widget key",
+          "snippetLabel": "Đoạn mã nhúng",
+          "snippetHint": "Dán đoạn này trước thẻ đóng </body> trên mọi trang cần hiển thị widget."
+        }
+      },
+      "connect": {
+        "title": "Kết nối {{platform}}",
+        "description": "Chấp nhận điều khoản và nhấn Kết nối để cấp quyền truy cập.",
+        "cta": "Kết nối {{platform}}",
+        "telegram": {
+          "description": "Dán token bot bạn nhận được từ @BotFather trên Telegram.",
+          "tokenLabel": "Bot Token",
+          "tokenPlaceholder": "1234567890:AAF...",
+          "tokenHint": "Tạo bot và lấy token qua @BotFather",
+          "tokenInvalid": "Sai định dạng token — phải có dạng 1234567890:ABC...",
+          "cta": "Kết nối Bot"
+        }
+      }
+    },
+    "edit": {
+      "title": "Chỉnh sửa tài khoản",
+      "description": "Chỉnh sửa thông tin tài khoản (tùy ý sáng tạo!)",
+      "success": "Tài khoản đã được cập nhật thành công! ✨"
+    },
+    "details": {
+      "statuses": {
+        "active": {
+          "label": "Hoạt động ",
+          "title": "Đã xác minh",
+          "description": "Tài khoản của bạn đã được xác minh. Bạn có thể bắt đầu thêm cookie và gán cho liên kết."
+        },
+        "inactive": {
+          "label": "Không hoạt động ",
+          "title": "Chưa xác minh",
+          "description": "Tài khoản của bạn chưa được xác minh. Vui lòng thêm cookie và gán cho liên kết để kích hoạt."
+        },
+        "blocked": {
+          "label": "Bị chặn ",
+          "title": "Bị chặn",
+          "description": "Tài khoản của bạn đã bị chặn từ Facebook. Nếu bạn nghĩ đây là một lỗi, hãy <b>đánh dấu hoạt động</b>. Hoặc xóa tài khoản này"
+        }
+      },
+      "types": {
+        "facebookAccount": {
+          "label": "Tài khoản Facebook",
+          "description": "Tài khoản cá nhân của bạn trên Facebook (nơi bạn chia sẻ ảnh mèo)."
+        },
+        "facebookPage": {
+          "label": "Trang Facebook",
+          "description": "Trang công khai của bạn trên Facebook, nơi bạn có thể tương tác với người theo dõi và xây dựng cộng đồng."
+        },
+        "instagramAccount": {
+          "label": "Hồ sơ Instagram",
+          "description": "Hồ sơ cá nhân của bạn trên Instagram"
+        },
+        "instagramPage": {
+          "label": "Trang doanh nghiệp Instagram",
+          "description": "Trang doanh nghiệp trên Instagram để kết nối với người theo dõi của bạn."
+        },
+        "zaloAccount": {
+          "label": "Hồ sơ Zalo",
+          "description": "Hồ sơ cá nhân của bạn trên Zalo"
+        },
+        "zaloPage": {
+          "label": "Trang doanh nghiệp Zalo",
+          "description": "Trang doanh nghiệp trên Zalo để kết nối với khách hàng của bạn."
+        },
+        "tiktokShop": {
+          "label": "TikTok Shop",
+          "description": "Tài khoản người bán TikTok Shop của bạn."
+        },
+        "shopeeShop": {
+          "label": "Shopee Shop",
+          "description": "Tài khoản người bán Shopee của bạn."
+        },
+        "telegramBot": {
+          "label": "Telegram Bot",
+          "description": "Một bot Telegram được kết nối bằng bot token."
+        },
+        "apiChannel": {
+          "label": "API Channel",
+          "description": "Gửi và nhận tin nhắn qua REST từ hệ thống của bạn."
+        },
+        "websiteWidget": {
+          "label": "Website Widget",
+          "description": "Widget chat được nhúng trên website của bạn."
+        }
+      },
+      "apiChannel": {
+        "title": "API channel",
+        "accountKeyLabel": "Account key",
+        "accountKeyHint": "Gửi giá trị này dưới dạng accountKey khi gửi tin nhắn.",
+        "callbackLabel": "Callback URL",
+        "edit": {
+          "title": "Sửa callback URL",
+          "subtitle": "Thay đổi nơi nhận phản hồi từ bot.",
+          "callbackHint": "Phải là HTTPS. Phản hồi được ký bằng x-eccho-signature để bạn xác thực.",
+          "callbackInvalid": "Nhập URL HTTPS hợp lệ",
+          "success": "Đã cập nhật callback URL.",
+          "error": "Cập nhật callback URL thất bại."
+        }
+      },
+      "websiteWidget": {
+        "title": "Website widget",
+        "keyLabel": "Widget key",
+        "originsLabel": "Website được phép",
+        "edit": {
+          "title": "Sửa danh sách website được phép",
+          "subtitle": "Các website được phép nhúng widget này.",
+          "originsHint": "Cách nhau bằng dấu phẩy. Widget sẽ không tải ở nơi khác.",
+          "originsInvalid": "Nhập đầy đủ URL, vd: https://shop.example.com",
+          "success": "Đã cập nhật danh sách website được phép.",
+          "error": "Cập nhật danh sách website được phép thất bại."
+        }
+      }
+    }
+  },
+  "activities": {
+    "title": "Hoạt động",
+    "filters": {
+      "all": "Tất cả hoạt động"
+    },
+    "list": {
+      "noRecordsMessage": "Chưa có hoạt động nào. Hãy bắt đầu làm gì đó! 🚀"
+    },
+    "account": {
+      "create": "đã liên kết tài khoản {{name}} (chào mừng!)",
+      "update": "đã cập nhật tài khoản {{name}} (tuyệt vời!)",
+      "delete": "đã xóa tài khoản {{name}} (tạm biệt!)"
+    },
+    "chatbot": {
+      "create": "đã tạo chatbot {{name}} (chào robot mới!)",
+      "update": "đã cập nhật chatbot {{name}} (nâng cấp thành công!)",
+      "delete": "đã xóa chatbot {{name}} (tạm biệt robot!)",
+      "linkAccount": "đã liên kết tài khoản <account/> với chatbot <link/> (kết nối hoàn tất!)",
+      "unlinkAccount": "đã hủy liên kết tài khoản <account/> khỏi chatbot <link/> (chia tay!)",
+      "active": "đã kích hoạt chatbot <link/> (robot đã thức dậy!)",
+      "inactive": "đã vô hiệu hóa chatbot <link/> (robot đi ngủ)",
+      "archive": "đã lưu trữ chatbot <link/> (vào kho)",
+      "unarchive": "đã bỏ lưu trữ chatbot <link/> (trở lại làm việc!)",
+      "clone": "đã nhân bản chatbot <link/>"
+    },
+    "member": {
+      "invite": "đã mời thành viên <link/> (chào mừng người mới!)",
+      "remove": "đã xóa thành viên <link/> (tạm biệt!)",
+      "approve": "đã phê duyệt thành viên <link/> (chính thức là thành viên!)"
+    },
+    "skill": {
+      "create": "đã tạo kỹ năng <link/>",
+      "update": "đã cập nhật kỹ năng <link/>",
+      "delete": "đã xóa kỹ năng {{name}}",
+      "enable": "đã bật kỹ năng {{name}} cho chatbot",
+      "disable": "đã tắt kỹ năng {{name}} cho chatbot"
+    },
+    "knowledgeBase": {
+      "create": "đã tải lên tài liệu <link/>",
+      "update": "đã cập nhật tài liệu <link/>",
+      "delete": "đã xóa tài liệu {{name}}"
+    },
+    "tool": {
+      "startInstall": "đã bắt đầu cài đặt công cụ {{name}}",
+      "completeInstall": "đã cài đặt công cụ {{name}}",
+      "enable": "đã bật công cụ {{name}} cho chatbot",
+      "disable": "đã tắt công cụ {{name}} cho chatbot"
+    },
+    "role": {
+      "active": "đã kích hoạt vai trò <link/>",
+      "inactive": "đã vô hiệu hóa vai trò <link/>"
+    },
+    "apiKey": {
+      "reset": "đã đặt lại API key {{name}}"
+    },
+    "customer": {
+      "unmerge": "đã tách khách hàng {{name}}",
+      "mergeConfirm": "đã xác nhận gộp khách hàng {{name}}",
+      "mergeDismiss": "đã bỏ qua đề xuất gộp khách hàng {{name}}"
+    },
+    "generic": {
+      "create": "đã tạo {{name}}",
+      "update": "đã cập nhật {{name}}",
+      "delete": "đã xóa {{name}}"
+    },
+    "unknown": "đã làm điều gì đó bí ẩn 🤔"
+  },
+  "imports": {
+    "title": "Nhập danh sách tài khoản",
+    "upload": {
+      "title": "Tải lên tệp CSV",
+      "description": "Thông qua nhập khẩu, bạn có thể thêm mới hoặc cập nhật {{object}}. Để cập nhật {{object}} đã tồn tại, bạn cần sử dụng ID hiện có. Chúng tôi sẽ hỏi trước khi làm bất cứ điều gì!",
+      "importFiles": "Nhập tệp",
+      "importFilesDesc": "Kéo và thả tệp vào đây hoặc nhấn để tải lên (dễ như ăn bánh!)",
+      "itemCreated": "Các mục sẽ được tạo mới ✨",
+      "itemUpdated": "Các mục sẽ được cập nhật 🔄"
+    },
+    "template": {
+      "title": "Không chắc về danh sách? 🤷",
+      "description": "Tải về mẫu bên dưới để đảm bảo bạn đang sử dụng đúng định dạng (chúng tôi đã chuẩn bị sẵn!)."
+    }
+  },
+  "accounts-proxies": {
+    "title": "Proxy"
+  },
+  "accounts-cookies": {
+    "title": "Cookie"
+  },
+  "chatbot": {
+    "batch": {
+      "delete": {
+        "label": "Xóa",
+        "title": "Xóa chatbot",
+        "description": "Bạn có chắc muốn xóa {{count}} chatbot? Hành động này không thể hoàn tác."
+      },
+      "activate": {
+        "label": "Kích hoạt"
+      },
+      "deactivate": {
+        "label": "Ngừng kích hoạt"
+      }
+    },
+    "title": "Chatbot",
+    "create": {
+      "title": "Tạo chatbot",
+      "defaultName": "Chatbot hỗ trợ của tôi",
+      "name": "Tên chatbot",
+      "generalKnowledge": "Kiến thức về doanh nghiệp",
+      "generalKnowledgePlaceholder": "Chatbot nên biết gì về công ty bạn?",
+      "linkAccounts": "Kết nối tài khoản",
+      "select": "Chọn",
+      "noAccountsAvailable": "Chưa có tài khoản nào để liên kết",
+      "typingIndicator": {
+        "label": "Hiển thị trạng thái đang nhập",
+        "description": "Hiển thị 'đang nhập...' khi chatbot đang soạn tin nhắn mới."
+      },
+      "autoRead": {
+        "label": "Tự động đánh dấu đã đọc",
+        "description": "Tin nhắn sẽ tự động được đánh dấu đã đọc để tiết kiệm thời gian."
+      },
+      "primaryLanguage": "Ngôn ngữ chính",
+      "primaryLanguageHint": "Ngôn ngữ chính mà chatbot sẽ sử dụng để trò chuyện với khách hàng.",
+      "deferedLanguage": "Ngôn ngữ dự phòng",
+      "deferedLanguageHint": "Ngôn ngữ dự phòng, chatbot sẽ chuyển sang khi cần thiết.",
+      "welcomeMessage": "Tin nhắn chào mừng",
+      "welcomeMessageHint": "Tin nhắn đầu tiên gửi đến khách hàng khi họ bắt đầu trò chuyện. Có thể để trống.",
+      "welcomeMessagePlaceholder": "Nhập lời chào thân thiện cho khách hàng...",
+      "fallbackMessage": "Tin nhắn dự phòng",
+      "fallbackMessageHint": "Tin nhắn dùng khi chatbot không thể trả lời câu hỏi của khách hàng.",
+      "fallbackMessagePlaceholder": "Nhập nội dung khi chatbot không có câu trả lời phù hợp...",
+      "modelProvider": "Nhà cung cấp AI",
+      "model": "Mô hình AI",
+      "modelHint": "Chọn mô hình AI để chatbot trả lời thông minh hơn.",
+      "modelsLoading": "Đang tải mô hình...",
+      "temperature": "Mức sáng tạo",
+      "temperatureHint": "Điều chỉnh mức sáng tạo của câu trả lời. Giá trị cao = sáng tạo hơn.",
+      "maxTokens": "Độ dài tối đa",
+      "maxTokensHint": "Số ký tự tối đa cho mỗi câu trả lời của chatbot.",
+      "create": "Tạo",
+      "cancel": "Hủy",
+      "error": "Không thể tạo chatbot",
+      "success": "Tạo chatbot thành công",
+      "loading": "Đang tạo chatbot...",
+      "description": "Tạo một chatbot mới để hỗ trợ bạn. Bạn có thể liên kết nó với các tài khoản và cung cấp kiến thức chung để nó sử dụng.",
+      "advancedSettings": "Cài đặt nâng cao",
+      "handoffSettings": "Cài đặt chuyển tiếp cho nhân sự",
+      "handoffMessage": "Tin nhắn chuyển tiếp",
+      "handoffMessageHint": "Tin nhắn gửi đến khách hàng khi cuộc trò chuyện được chuyển sang nhân viên hỗ trợ.",
+      "handoffMessagePlaceholder": "Nhập tin nhắn hiển thị khi chuyển sang nhân viên...",
+      "handoffKeywords": "Từ khóa chuyển tiếp",
+      "handoffKeywordsHint": "Các từ khóa cách nhau bằng dấu phẩy, khi xuất hiện trong tin nhắn sẽ tự động chuyển sang nhân viên.",
+      "handoffKeywordsPlaceholder": "Ví dụ: nhân viên, hỗ trợ, người thật",
+      "handoffFallbackThreshold": "Ngưỡng chuyển tiếp tự động",
+      "handoffFallbackThresholdHint": "Số lần chatbot không trả lời được liên tiếp trước khi tự động chuyển sang nhân viên hỗ trợ.",
+      "guardrailSettings": "Cài đặt Guardrail",
+      "guardrailEnabled": "Bật Guardrail",
+      "guardrailEnabledHint": "Kiểm tra tin nhắn đến và phản hồi của bot để phát hiện tấn công, rò rỉ thông tin và vi phạm chính sách.",
+      "guardrailModelEnabled": "Bộ phân loại AI tích hợp",
+      "guardrailModelEnabledHint": "Chạy Gemini Flash trên mỗi tin nhắn để sàng lọc sâu hơn. Tăng nhẹ độ trễ.",
+      "guardrailCustomInstruction": "Hướng dẫn Guardrail tùy chỉnh",
+      "guardrailCustomInstructionHint": "Mô tả những gì AI nên chặn bằng ngôn ngữ thông thường. Áp dụng cho cả tin nhắn đến và phản hồi.",
+      "guardrailCustomInstructionPlaceholder": "Ví dụ: Chặn mọi tin nhắn đề cập đến giá của đối thủ cạnh tranh hoặc yêu cầu hoàn tiền",
+      "guardrailEscalateOnBlock": "Leo thang khi bị chặn",
+      "guardrailEscalateOnBlockHint": "Chuyển đến người vận hành khi guardrail chặn tin nhắn. Tắt để chỉ chặn âm thầm.",
+      "followupRules": "Quy tắc nhắc hẹn",
+      "followupRulesHint": "Hướng dẫn tự do cho việc khi nào bot nên chủ động nhắc hẹn lại khách hàng",
+      "followupRulesPlaceholder": "Ví dụ: Nhắc hẹn lại sau 24 giờ nếu khách hàng chưa phản hồi"
+    },
+    "chat": {
+      "heading": "Chat Thử",
+      "refreshHint": "Làm mới sẽ xóa chat. Nhấn Xóa để bắt đầu lại.",
+      "clear": "Xóa",
+      "restart": "Bắt Đầu Lại",
+      "inputPlaceholder": "Nhập tin nhắn của bạn...",
+      "thinking": "Đang tạo phản hồi...",
+      "sources": {
+        "label": "Nguồn"
+      },
+      "guardrail": {
+        "blocked": "Tin nhắn này đã bị chặn bởi lớp bảo vệ an toàn."
+      },
+      "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
+      "share": {
+        "button": "Chia sẻ",
+        "title": "Chia sẻ link preview",
+        "description": "Ai có link này đều chat được với bot mà không cần đăng nhập. Link tự hết hạn và không thể thu hồi sớm.",
+        "expiry": "Link hết hạn sau",
+        "expiryOptions": {
+          "1h": "1 giờ",
+          "24h": "24 giờ",
+          "7d": "7 ngày"
+        },
+        "generate": "Tạo link",
+        "copy": "Copy link",
+        "copied": "Đã copy link.",
+        "expiresAt": "Hết hạn {{date}}",
+        "error": "Không tạo được link preview."
+      }
+    },
+    "preview": {
+      "heading": "Chat preview",
+      "invalid": "Link preview này không hợp lệ.",
+      "expired": "Link preview này đã hết hạn.",
+      "invalidHint": "Hãy xin người chia sẻ một link mới.",
+      "expiresIn": "Link hết hạn {{time}}",
+      "turnstile": {
+        "required": "Vui lòng hoàn tất xác minh trước.",
+        "failed": "Xác minh thất bại. Tải lại trang và thử lại."
+      },
+      "poweredBy": "Powered by eccho"
+    },
+    "list": {
+      "noRecordsMessage": "Không tìm thấy chatbot nào. Thời gian tạo robot đầu tiên! 🤖",
+      "action": {
+        "stop": "Dừng (tạm nghỉ)",
+        "delete": "Xóa",
+        "clone": "Sao chép"
+      },
+      "delete": {
+        "confirm": {
+          "title": "Xóa Chatbot",
+          "description": "Bạn có chắc chắn muốn xóa \"{{name}}\" không? Hành động này không thể hoàn tác (và robot sẽ buồn). 😢",
+          "confirmButton": "Xóa Chatbot"
+        },
+        "success": "Đã xóa chatbot thành công! 👋",
+        "error": "Không thể xóa chatbot. Hãy thử lại nhé!"
+      },
+      "title": "Chat bot",
+      "actions": {
+        "import": "Nhập khẩu",
+        "create": "Tạo mới"
+      },
+      "columns": {
+        "profile": "Hồ sơ",
+        "type": "Loại",
+        "status": "Trạng thái",
+        "linkedAccounts": "Tài khoản liên kết",
+        "addedBy": "Được thêm bởi",
+        "lastUpdated": "Cập nhật lần cuối",
+        "typeOptions": {
+          "beauty": "Làm đẹp",
+          "fashion": "Thời trang",
+          "restaurant": "Nhà hàng",
+          "ecommerce": "Thương mại điện tử",
+          "healthcare": "Chăm sóc sức khỏe",
+          "finance": "Tài chính",
+          "education": "Giáo dục",
+          "travel": "Du lịch",
+          "spa": "Spa",
+          "fitness": "Thể hình",
+          "automotive": "Ô tô",
+          "real_estate": "Bất động sản",
+          "entertainment": "Giải trí",
+          "other": "Khác"
+        },
+        "statusOptions": {
+          "active": "Đang hoạt động",
+          "inactive": "Không hoạt động",
+          "archived": "Đã lưu trữ"
+        }
+      },
+      "filters": {
+        "status": {
+          "label": "Trạng thái",
+          "options": {
+            "running": "Đang chạy",
+            "stopped": "Đã dừng",
+            "error": "Lỗi",
+            "maintenance": "Bảo trì"
+          }
+        },
+        "type": {
+          "label": "Loại",
+          "options": {
+            "general": "Chung",
+            "support": "Hỗ trợ",
+            "sales": "Bán hàng"
+          }
+        },
+        "search": {
+          "label": "Tìm kiếm",
+          "placeholder": "Tìm kiếm theo tên hoặc người thêm..."
+        }
+      }
+    },
+    "edit": {
+      "title": "Chỉnh sửa chatbot",
+      "defaultName": "Hộp chat của tôi",
+      "name": "Tên",
+      "description": "Mô tả",
+      "type": "Loại",
+      "generalKnowledge": "Kiến thức chung",
+      "generalKnowledgePlaceholder": "Bạn muốn robot biết điều gì?",
+      "linkAccounts": "Liên kết tài khoản",
+      "select": "Chọn",
+      "noAccountsAvailable": "Không có tài khoản nào (hãy tạo một vài cái!)",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "error": "Không thể cập nhật chatbot. Hãy thử lại!",
+      "success": "Cập nhật chatbot thành công! 🎉",
+      "loading": "Đang tải chatbot... ⏳"
+    },
+    "details": {
+      "linkedAccounts": "Tài khoản liên kết",
+      "addAccount": "Liên kết tài khoản",
+      "accountLinked": "Liên kết tài khoản thành công",
+      "accountLinkFailed": "Liên kết tài khoản thất bại",
+      "generalKnowledgeSaved": "Đã lưu kiến thức chung",
+      "generalKnowledgeSaveFailed": "Lưu kiến thức chung thất bại",
+      "summary": {
+        "title": "Tổng quan",
+        "behaviorSection": "Hành vi",
+        "aiModelSection": "Mô hình AI"
+      },
+      "linkedAccountsDescription": "Quản lý tài khoản sắp tới (sự nghiệp robot)",
+      "account": {
+        "active": "Hoạt động"
+      },
+      "autoRead": "Tự đọc",
+      "typingIndicator": "Đang nhập",
+      "noAccounts": "Chưa có tài khoản liên kết",
+      "noAccountsDescription": "Chatbot của bạn đã sẵn sàng, nhưng cần các tài khoản để bắt đầu! Hãy chỉnh sửa chatbot để liên kết tài khoản của bạn."
+    },
+    "rag": {
+      "title": "Nền tảng kiến thức",
+      "fileName": "tệp",
+      "fileSize": "{{size}} byte",
+      "status": {
+        "pending": "Đang chờ xử lý",
+        "processing": "Đang xử lý",
+        "completed": "Hoàn thành",
+        "failed": "Thất bại"
+      },
+      "selectFile": "Chọn tệp",
+      "empty": {
+        "dragDrop": "Kéo & thả tệp vào đây để tải lên",
+        "uploadDesc": "Tải lên tệp để kích hoạt tính năng RAG cho chatbot này (làm robot thông minh hơn)."
+      },
+      "delete": {
+        "title": "Xóa tệp RAG",
+        "description": "Bạn có chắc chắn muốn xóa {{count}} tệp RAG? Hành động này không thể hoàn tác (robot sẽ quên những gì đã học). 🧠",
+        "confirmText": "Xóa",
+        "loading": "Đang xóa {{count}} tệp RAG... 🗑️",
+        "success": "Đã xóa {{count}} tệp RAG thành công! 👋",
+        "error": "Không thể xóa tệp RAG. Vui lòng thử lại.",
+        "button": "Xóa ({{count}})"
+      },
+      "error": {
+        "unsupportedFileType": "Loại tệp không được hỗ trợ. Vui lòng tải lên tệp PDF, EPUB, DOCX, TXT, HTML hoặc Markdown."
+      }
+    },
+    "clone": {
+      "title": "Sao chép Chatbot",
+      "optionsLabel": "Cũng sao chép:",
+      "cloneTools": "Cấu hình công cụ",
+      "cloneKnowledgeItems": "Kiến thức",
+      "cloneRags": "Tài liệu RAG",
+      "more": "+{{count}} nữa",
+      "confirm": "Sao chép",
+      "success": "Chatbot \"{{name}}\" đã được sao chép thành công",
+      "error": "Sao chép chatbot thất bại"
+    },
+    "actions": {
+      "clone": "Sao chép"
+    }
+  },
+  "followups": {
+    "title": "Nhắc hẹn",
+    "list": {
+      "noRecordsMessage": "Không có nhắc hẹn nào",
+      "columns": {
+        "chatbot": "Chatbot",
+        "customer": "Khách hàng",
+        "reason": "Lý do",
+        "firesIn": "Kích hoạt sau",
+        "status": "Trạng thái"
+      },
+      "filters": {
+        "chatbot": "Chatbot",
+        "status": "Trạng thái"
+      },
+      "action": {
+        "viewConversation": "Xem hội thoại"
+      },
+      "cancel": {
+        "action": "Hủy",
+        "confirm": {
+          "title": "Hủy nhắc hẹn",
+          "description": "Bạn có chắc chắn muốn hủy nhắc hẹn này? Hành động này không thể hoàn tác.",
+          "confirmButton": "Hủy nhắc hẹn"
+        },
+        "success": "Đã hủy nhắc hẹn thành công",
+        "error": "Không thể hủy nhắc hẹn"
+      },
+      "firesInMinutes": "{{count}} phút",
+      "firedAgo": "{{time}} trước",
+      "status": {
+        "scheduled": "Đã lên lịch",
+        "completed": "Đã gửi",
+        "skipped": "Đã bỏ qua",
+        "failed": "Thất bại",
+        "cancelled": "Đã hủy"
+      },
+      "skipReason": {
+        "conversation_missing": "Hội thoại không còn tồn tại",
+        "bot_disabled": "Bot đã bị tắt",
+        "conversation_resolved": "Hội thoại đã được xử lý xong",
+        "chatbot_missing": "Chatbot đã bị ngắt kết nối"
+      }
+    }
+  },
+  "comments": {
+    "title": "Bình luận"
+  },
+  "filters": {
+    "filterLabel": "Bộ lọc",
+    "sortLabel": "Sắp xếp",
+    "searchLabel": "Tìm kiếm",
+    "addFilter": "Thêm bộ lọc",
+    "clearAll": "Xóa tất cả",
+    "searchPlaceholder": "Tìm kiếm theo tên...",
+    "date": {
+      "from": "Từ",
+      "to": "Đến",
+      "custom": "Tùy chỉnh",
+      "today": "Hôm nay",
+      "lastSevenDays": "7 ngày qua",
+      "lastThirtyDays": "30 ngày qua",
+      "thisMonth": "Tháng này",
+      "lastMonth": "Tháng trước",
+      "lastNinetyDays": "90 ngày qua",
+      "lastTwelveMonths": "12 tháng qua",
+      "thisYear": "Năm nay"
+    }
+  },
+  "comments-filters": {
+    "title": "Bộ lọc"
+  },
+  "messages": {
+    "title": "Tin nhắn"
+  },
+  "groups": {
+    "title": "Nhóm"
+  },
+  "groups-autoposts": {
+    "title": "Tự động đăng bài"
+  },
+  "members": {
+    "title": "Đội ngũ",
+    "removeMember": {
+      "title": "Loại bỏ thành viên",
+      "description": "Bạn có chắc chắn muốn loại bỏ thành viên này khỏi không gian làm việc không?",
+      "success": "Đã loại bỏ thành viên thành công.",
+      "loading": "Đang loại bỏ thành viên..."
+    },
+    "inviteMember": {
+      "action": "Mời",
+      "placeholder": "Tìm kiếm theo tên...",
+      "success": "Đã mời thành viên thành công.",
+      "loading": "Đang mời thành viên...",
+      "searchResults": "Kết quả tìm kiếm",
+      "inviteCode": {
+        "title": "Mã mời",
+        "copySuccess": "Mã mời đã được sao chép vào clipboard."
+      }
+    },
+    "invitedMember": {
+      "title": "Đã mời",
+      "actions": {
+        "revoke": "Hủy mời",
+        "regenerate": "Tạo lại liên kết"
+      },
+      "revoke": {
+        "success": "Đã hủy lời mời thành công.",
+        "loading": "Đang hủy lời mời..."
+      }
+    },
+    "assignRole": {
+      "title": "Gán vai trò cho thành viên",
+      "description": "Chọn một vai trò để gán cho thành viên này trong không gian làm việc.",
+      "selectRole": "Tìm kiếm vai trò...",
+      "assign": "Gán vai trò",
+      "noRoles": "Không tìm thấy vai trò",
+      "memberInfo": "Thông tin thành viên",
+      "success": "Đã gán vai trò thành công.",
+      "loading": "Đang gán vai trò...",
+      "error": "Không thể gán vai trò."
+    },
+    "invitations": {
+      "title": "Lời mời",
+      "empty": "Không có lời mời nào đang chờ."
+    },
+    "joinRequests": {
+      "title": "Yêu cầu tham gia",
+      "empty": "Không có yêu cầu tham gia nào đang chờ.",
+      "approve": {
+        "action": "Phê duyệt",
+        "loading": "Đang phê duyệt yêu cầu...",
+        "success": "Đã phê duyệt yêu cầu. Chào mừng thành viên mới!"
+      }
+    }
+  },
+  "roles": {
+    "subjects": {
+      "chatbot": "Chatbot",
+      "rag": "RAG",
+      "knowledgeBase": "Cơ sở kiến thức",
+      "customer": "Khách hàng"
+    },
+    "title": "Vai trò",
+    "description": "Quản lý vai trò và quyền hạn cho các thành viên",
+    "fields": {
+      "permissions": "Quyền hạn",
+      "subject": "Đối tượng"
+    },
+    "types": {
+      "admin": "Quản trị viên",
+      "superAdmin": "Siêu quản trị viên",
+      "user": "Người dùng",
+      "workspaceMember": "Thành viên",
+      "workspaceOwner": "Chủ sở hữu"
+    },
+    "actions": {
+      "manage": "Quản lý",
+      "read": "Đọc",
+      "create": "Tạo",
+      "update": "Cập nhật",
+      "delete": "Xóa"
+    },
+    "summary": {
+      "title": "Vai trò",
+      "roleId": "ID Vai trò",
+      "type": "Loại",
+      "modules": "Modules",
+      "noModules": "Không có module nào được gán",
+      "noDescription": "Không có mô tả"
+    }
+  },
+  "profile": {
+    "domain": "Hồ sơ",
+    "manageYourProfileDetails": "Quản lý thông tin hồ sơ của bạn",
+    "fields": {
+      "language": "Ngôn ngữ",
+      "country": "Quốc gia",
+      "gender": "Giới tính",
+      "phone": "Số điện thoại",
+      "signUpDate": "Ngày đăng ký"
+    },
+    "deleteProfile": {
+      "domain": "Xóa tài khoản",
+      "description": "Xóa vĩnh viễn tài khoản của bạn",
+      "confirm": {
+        "title": "Bạn có chắc không?",
+        "description": "Hành động này không thể hoàn tác.",
+        "loading": "Đang xóa tài khoản của bạn...",
+        "success": "Tài khoản của bạn đã được xóa.",
+        "error": "Đã xảy ra lỗi khi xóa tài khoản của bạn.",
+        "confirmButton": "Xóa tài khoản của tôi",
+        "cancelButton": "Hủy"
+      }
+    }
+  },
+  "changePassword": {
+    "domain": "Đổi mật khẩu",
+    "description": "Đổi mật khẩu hiện tại của bạn",
+    "fields": {
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmNewPassword": "Xác nhận mật khẩu mới"
+    },
+    "errors": {
+      "mismatch": "Mật khẩu không khớp.",
+      "sameAsCurrent": "Mật khẩu mới phải khác mật khẩu hiện tại.",
+      "failed": "Không thể đổi mật khẩu. Kiểm tra lại mật khẩu hiện tại và thử lại."
+    },
+    "success": {
+      "message": "Đã đổi mật khẩu."
+    }
+  },
+  "preferences": {
+    "domain": "Tùy chọn",
+    "general": {
+      "domain": "Chung",
+      "description": "Quản lý các tùy chọn chung của bạn",
+      "fields": {
+        "language": "Ngôn ngữ",
+        "timezone": "Múi giờ",
+        "dateFormat": "Định dạng ngày",
+        "timeFormat": "Định dạng giờ",
+        "theme": "Chủ đề"
+      }
+    },
+    "notifications": {
+      "domain": "Thông báo",
+      "description": "Quản lý tùy chọn thông báo của bạn",
+      "fields": {
+        "emailNotifications": "Thông báo qua email",
+        "pushNotifications": "Thông báo đẩy"
+      }
+    }
+  },
+  "workspace": {
+    "title": "Không gian làm việc",
+    "error": {
+      "notFound": "Không tìm thấy không gian làm việc"
+    },
+    "details": {
+      "title": "Chi tiết không gian làm việc",
+      "description": "Xem thông tin và cài đặt không gian làm việc"
+    },
+    "edit": {
+      "title": "Chỉnh sửa không gian làm việc",
+      "description": "Chỉnh sửa thông tin và cài đặt không gian làm việc",
+      "success": "Cập nhật không gian làm việc thành công",
+      "error": "Không thể cập nhật không gian làm việc",
+      "updating": "Đang cập nhật..."
+    },
+    "delete": {
+      "success": "Xóa không gian làm việc thành công",
+      "error": "Không thể xóa không gian làm việc",
+      "dangerZone": {
+        "title": "Vùng nguy hiểm",
+        "description": "Xóa không gian làm việc này sẽ xóa vĩnh viễn toàn bộ dữ liệu — thành viên, khách hàng, chatbot và nhiều hơn nữa. Hành động này không thể hoàn tác.",
+        "action": "Xóa không gian làm việc"
+      },
+      "confirm": {
+        "title": "Xóa không gian làm việc",
+        "description": "Thao tác này sẽ xóa không gian làm việc và toàn bộ dữ liệu của nó. Nhập slug của không gian làm việc để xác nhận.",
+        "confirm": "Xóa"
+      }
+    },
+    "fields": {
+      "avatar": "Ảnh đại diện"
+    },
+    "placeholders": {
+      "name": "Nhập tên không gian làm việc",
+      "slug": "Nhập slug không gian làm việc"
+    },
+    "avatar": {
+      "custom": "Ảnh đại diện tùy chỉnh",
+      "default": "Ảnh đại diện mặc định"
+    }
+  },
+  "subscription": {
+    "domain": "Gói đăng ký"
+  },
+  "billing": {
+    "domain": "Thanh toán"
+  },
+  "general": {
+    "emojiTooltip": "Biểu tượng cảm xúc",
+    "emojiSearch": "Tìm biểu tượng…",
+    "emojiNoResults": "Không tìm thấy biểu tượng.",
+    "emojiLoading": "Đang tải…",
+    "is": "bằng",
+    "noResultsTitle": "Không có kết quả",
+    "noResultsMessage": "Không có kết quả",
+    "noResults": "Không có kết quả",
+    "of": "của",
+    "results": "kết quả",
+    "pages": "trang",
+    "prev": "Trước",
+    "next": "Tiếp",
+    "noRecordsTitle": "Không tìm thấy bản ghi",
+    "search": "Tìm kiếm",
+    "ascending": "Tăng dần",
+    "loadMore": "Xem thêm",
+    "descending": "Giảm dần",
+    "countSelected": "Đã chọn {{count}} mục",
+    "timeAgo": {
+      "seconds": "{{count}} giây trước",
+      "minutes": "{{count}} phút trước",
+      "hours": "{{count}} giờ trước",
+      "days": "{{count}} ngày trước"
+    },
+    "unsaved": {
+      "title": "Thay đổi chưa lưu",
+      "message": "Bạn có thay đổi chưa lưu. Bạn có muốn rời đi mà không lưu không?"
+    },
+    "plusCount": "+ {{count}}",
+    "areYouSure": "Bạn có chắc không?",
+    "batch": {
+      "success": "Đã cập nhật {{count}} mục.",
+      "partial": "Đã cập nhật {{success}} mục, {{failed}} mục thất bại.",
+      "error": "Không thể cập nhật {{count}} mục."
+    }
+  },
+  "actions": {
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "view": "Xem chi tiết",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "add": "Thêm",
+    "import": "Nhập",
+    "export": "Xuất file",
+    "create": "Tạo mới",
+    "clearAll": "Xóa tất cả",
+    "continued": "Tiếp tục",
+    "linkAccount": "Liên kết tài khoản",
+    "tryAgain": "Thử lại",
+    "enable": "Bật",
+    "disable": "Tắt",
+    "upload": "Tải lên",
+    "download": "Tải xuống",
+    "back": "Quay lại",
+    "close": "Đóng",
+    "copy": "Sao chép",
+    "previous": "Trước",
+    "next": "Sau"
+  },
+  "fields": {
+    "name": "Tên",
+    "email": "Email",
+    "status": "Trạng thái",
+    "description": "Mô tả",
+    "accounts": "Tài khoản",
+    "createdAt": "Ngày tạo",
+    "createdBy": "Được tạo bởi",
+    "updatedBy": "Được cập nhật bởi",
+    "joinedAt": "Ngày tham gia",
+    "updatedAt": "Ngày cập nhật",
+    "addedBy": "Được thêm bởi",
+    "slug": "Slug",
+    "type": "Loại",
+    "optional": "Không bắt buộc",
+    "role": "Vai trò",
+    "selected": "Đã chọn",
+    "errorMessage": "Thông báo lỗi"
+  },
+  "errors": {
+    "required": "Vui lòng điền vào trường này",
+    "email": "Vui lòng nhập một địa chỉ email hợp lệ",
+    "uploadFile": "Vui lòng tải lên một tệp",
+    "maxFileSize": "Kích thước tệp tối đa là {maxFileSize} MB",
+    "maxLength": "Độ dài tối đa là {maxLength} ký tự",
+    "slug": "Chỉ sử dụng chữ thường, số và dấu gạch ngang.",
+    "chatbot": {
+      "nameRequired": "Tên chatbot là bắt buộc",
+      "nameMinLength": "Tên chatbot phải có ít nhất {min} ký tự",
+      "primaryLanguageRequired": "Vui lòng chọn ngôn ngữ chính cho chatbot của bạn",
+      "modelRequired": "Vui lòng chọn một mô hình AI cho chatbot của bạn",
+      "modelProviderRequired": "Vui lòng chọn nhà cung cấp AI cho chatbot của bạn",
+      "modelTextNameRequired": "Vui lòng chọn mô hình AI cho chatbot của bạn"
+    }
+  },
+  "errorBoundary": {
+    "notFoundTitle": "Không tìm thấy",
+    "notFoundMessage": "Trang bạn đang tìm kiếm không tồn tại.",
+    "badRequestTitle": "Yêu cầu không hợp lệ",
+    "badRequestMessage": "Yêu cầu không thể được hiểu bởi máy chủ do cú pháp không hợp lệ.",
+    "unauthorizedTitle": "Không được phép",
+    "unauthorizedMessage": "Bạn không được phép truy cập trang này.",
+    "internalServerErrorTitle": "Lỗi máy chủ nội bộ",
+    "internalServerErrorMessage": "Máy chủ gặp phải một điều kiện bất ngờ ngăn cản nó hoàn thành yêu cầu.",
+    "forbiddenTitle": "Bị cấm",
+    "forbiddenMessage": "Bạn không có quyền truy cập vào tài nguyên này.",
+    "defaultTitle": "Đã xảy ra lỗi",
+    "defaultMessage": "Đã xảy ra lỗi bất ngờ. Vui lòng thử lại sau."
+  },
+  "knowledgeBase": {
+    "batch": {
+      "delete": {
+        "label": "Xóa",
+        "title": "Xóa knowledge item",
+        "description": "Bạn có chắc muốn xóa {{count}} knowledge item? Hành động này không thể hoàn tác."
+      },
+      "process": {
+        "label": "Xử lý"
+      }
+    },
+    "title": "Cơ sở kiến thức",
+    "description": "Tổ chức và quản lý các mục kiến thức của bạn",
+    "list": {
+      "title": "Các mục kiến thức",
+      "empty": "Chưa có mục kiến thức nào",
+      "columns": {
+        "title": "Tiêu đề",
+        "type": "Loại",
+        "status": "Trạng thái",
+        "created": "Ngày tạo",
+        "actions": "Hành động",
+        "tags": "Thẻ"
+      }
+    },
+    "create": {
+      "title": "Tạo mục kiến thức",
+      "success": "Mục kiến thức đã được tạo thành công",
+      "error": "Không thể tạo mục kiến thức"
+    },
+    "edit": {
+      "title": "Chỉnh sửa mục kiến thức",
+      "success": "Mục kiến thức đã được cập nhật thành công",
+      "error": "Không thể cập nhật mục kiến thức"
+    },
+    "delete": {
+      "confirm": {
+        "title": "Xóa mục kiến thức",
+        "description": "Bạn có chắc chắn muốn xóa mục kiến thức này không? Hành động này không thể được hoàn tác.",
+        "confirmButton": "Xóa"
+      },
+      "success": "Mục kiến thức đã được xóa thành công",
+      "error": "Không thể xóa mục kiến thức"
+    },
+    "type": {
+      "FILE": "Tệp",
+      "URL": "URL",
+      "TEXT": "Văn bản"
+    },
+    "status": {
+      "DRAFT": "Bản nháp",
+      "READY": "Sẵn sàng",
+      "PROCESSING": "Đang xử lý",
+      "COMPLETED": "Hoàn thành",
+      "FAILED": "Thất bại"
+    },
+    "folder": {
+      "title": "Thư mục",
+      "create": "Tạo thư mục",
+      "edit": "Chỉnh sửa thư mục",
+      "delete": "Xóa thư mục",
+      "root": "Gốc",
+      "success": "Thao tác thư mục hoàn thành thành công",
+      "error": "Không thể thực hiện thao tác thư mục",
+      "cannotDeleteRoot": "Không thể xóa thư mục gốc"
+    },
+    "tag": {
+      "title": "Thẻ",
+      "create": "Tạo thẻ",
+      "edit": "Chỉnh sửa thẻ",
+      "delete": "Xóa thẻ",
+      "success": "Thao tác thẻ hoàn thành thành công",
+      "error": "Không thể thực hiện thao tác thẻ",
+      "noTags": "Không có thẻ nào"
+    },
+    "upload": {
+      "title": "Tải lên",
+      "selectFile": "Chọn tệp",
+      "dragDrop": "hoặc kéo và thả",
+      "supportedFormats": "Định dạng được hỗ trợ: PDF, DOCX, EPUB, TXT, HTML, MD",
+      "success": "Tệp đã được tải lên thành công",
+      "error": "Không thể tải lên tệp",
+      "tooBig": "Tệp quá lớn"
+    },
+    "url": {
+      "title": "Thêm URL",
+      "placeholder": "Nhập URL (ví dụ: https://example.com)",
+      "success": "URL đã được thêm thành công",
+      "error": "Không thể thêm URL",
+      "invalid": "Định dạng URL không hợp lệ"
+    },
+    "text": {
+      "title": "Thêm văn bản",
+      "placeholder": "Nhập nội dung văn bản của bạn tại đây...",
+      "success": "Văn bản đã được thêm thành công",
+      "error": "Không thể thêm văn bản"
+    },
+    "filter": {
+      "byType": "Lọc theo loại",
+      "byStatus": "Lọc theo trạng thái",
+      "byTags": "Lọc theo thẻ",
+      "all": "Tất cả"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm các mục kiến thức..."
+    },
+    "empty": {
+      "title": "Không có mục kiến thức nào được liên kết",
+      "description": "Thêm các mục kiến thức để nâng cao chatbot của bạn bằng ngữ cảnh và thông tin."
+    },
+    "actions": {
+      "process": "Xử lý",
+      "reprocess": "Xử lý lại",
+      "processQueued": "Đã đưa vào hàng đợi xử lý"
+    }
+  },
+  "knowledge_item": {
+    "create_title": "Tạo Mục Kiến Thức",
+    "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",
+    "select_type_label": "Chọn Loại",
+    "create_button": "Tạo",
+    "cancel": "Hủy",
+    "title": "Tiêu đề",
+    "title_placeholder": "Nhập tiêu đề mục",
+    "description": "Mô tả",
+    "description_placeholder": "Nhập mô tả (tùy chọn)",
+    "file_description_placeholder": "Tệp này nói về điều gì?",
+    "content": "Nội dung",
+    "content_placeholder": "Nhập nội dung",
+    "content_hint": "Bạn có thể định dạng nội dung bằng markdown",
+    "file": "Tệp",
+    "file_hint": "Định dạng hỗ trợ: PDF, DOCX, TXT, HTML, MD",
+    "url": "URL",
+    "url_hint": "Nhập URL trang web hợp lệ",
+    "type": {
+      "type": "Loại",
+      "file": "Tệp",
+      "file_desc": "Tải lên tài liệu hoặc tệp",
+      "url": "URL",
+      "url_desc": "Liên kết đến một trang web",
+      "text": "Văn bản",
+      "text_desc": "Viết nội dung văn bản tùy chỉnh"
+    },
+    "status": "Trạng thái",
+    "created_at": "Tạo vào",
+    "updated_at": "Cập nhật vào",
+    "file_content": "Xem trước nội dung tệp",
+    "details": "Chi tiết",
+    "base_id": "ID Cơ sở Kiến thức",
+    "timestamps": "Mốc thời gian",
+    "create_success": "Mục kiến thức đã được tạo thành công",
+    "create_error": "Không thể tạo mục kiến thức",
+    "process_after_create_error": "Đã tạo mục, nhưng không thể tự động xử lý. Dùng \"Xử lý\" để thử lại.",
+    "creating": "Đang tạo mục kiến thức...",
+    "currentTags": "Thẻ hiện tại",
+    "addTag": "Thêm thẻ mới",
+    "tagPlaceholder": "Nhập tên thẻ...",
+    "tagHint": "Sử dụng thẻ để phân loại và sắp xếp các mục kiến thức của bạn",
+    "edit": {
+      "success": "Knowledge item updated successfully",
+      "error": "Failed to update knowledge item"
+    },
+    "tagsUpdateError": "Không thể cập nhật thẻ",
+    "editTags": "Chỉnh sửa thẻ"
+  },
+  "conversations": {
+    "title": "Hội thoại",
+    "list": {
+      "empty": "Chưa có hội thoại nào",
+      "search": {
+        "placeholder": "Tìm kiếm hội thoại"
+      },
+      "filter": {
+        "status": "Trạng thái",
+        "all": "Tất cả trạng thái",
+        "chatbot": "Chatbot",
+        "allChatbots": "Tất cả chatbot",
+        "account": "Tài khoản",
+        "allAccounts": "Tất cả tài khoản",
+        "groupBy": "Nhóm theo"
+      },
+      "groupBy": {
+        "none": "Không nhóm",
+        "account": "Theo tài khoản",
+        "chatbot": "Theo chatbot",
+        "unassigned": "Chưa gán"
+      },
+      "row": {
+        "mergeSuggestionBadge": "Có gợi ý gộp đang chờ"
+      }
+    },
+    "status": {
+      "botActive": "Bot đang trả lời",
+      "needsYou": "Cần bạn xử lý",
+      "youHandling": "Bạn đang xử lý",
+      "resolved": "Đã đóng",
+      "lifecycle": {
+        "OPEN": "Đang mở",
+        "RESOLVED": "Đã đóng"
+      }
+    },
+    "author": {
+      "user": "Khách hàng",
+      "bot": "Bot",
+      "operator": "Bạn",
+      "you": "Bạn"
+    },
+    "detail": {
+      "empty": {
+        "title": "Chọn một hội thoại",
+        "description": "Chọn một hội thoại từ danh sách để xem nội dung tin nhắn."
+      },
+      "loading": "Đang tải tin nhắn…",
+      "noMessages": "Hội thoại chưa có tin nhắn nào.",
+      "newMessages": "Tin nhắn mới",
+      "notFound": "Không tìm thấy hội thoại"
+    },
+    "composer": {
+      "placeholder": "Trả lời với tư cách nhân viên…",
+      "send": "Gửi",
+      "retry": "Gửi lại",
+      "failed": "Gửi thất bại",
+      "tooLong": "Tin nhắn không được dài quá 4096 ký tự",
+      "disabledResolved": "Hội thoại đã đóng. Khôi phục về tự động để trả lời."
+    },
+    "actions": {
+      "botLabel": "Bot",
+      "viewProfile": "Xem hồ sơ",
+      "viewChatbot": "Xem chatbot",
+      "pause": "Tạm dừng bot",
+      "resolve": "Đóng hội thoại",
+      "restore": "Khôi phục tự động",
+      "cancel": "Huỷ",
+      "pauseConfirmTitle": "Tạm dừng trả lời tự động?",
+      "pauseConfirmDescription": "Bot sẽ dừng trả lời. Nhân viên cần trực tiếp trả lời.",
+      "pauseReasonLabel": "Lý do (tuỳ chọn)",
+      "pauseReasonPlaceholder": "VD: Khách hàng yêu cầu hỗ trợ trực tiếp",
+      "resolveConfirmTitle": "Đánh dấu hội thoại đã đóng?",
+      "resolveConfirmDescription": "Hội thoại đã đóng không thể trả lời cho đến khi được khôi phục.",
+      "restoreConfirmTitle": "Bàn giao lại cho bot?",
+      "restoreConfirmDescription": "Bot sẽ tiếp tục trả lời. Nếu hội thoại đã đóng, bộ nhớ AI sẽ được đặt lại."
+    },
+    "errors": {
+      "sendFailed": "Không thể gửi tin nhắn. Vui lòng thử lại.",
+      "loadFailed": "Không tải được danh sách hội thoại."
+    },
+    "reactions": {
+      "toggle": "Bật/tắt reaction {{emoji}}",
+      "quickReact": "React bằng {{emoji}}",
+      "addReaction": "Thêm reaction",
+      "more": "Thêm emoji khác",
+      "toastFailed": "Không thể cập nhật reaction. Vui lòng thử lại.",
+      "windowClosed": "Không thể thả cảm xúc",
+      "windowClosedTooltip": "Do chính sách nhắn tin 24 giờ của Meta, bạn không thể thả cảm xúc cho tin nhắn này nữa.",
+      "policyLink": "Tìm hiểu thêm"
+    },
+    "customer": {
+      "panel": {
+        "title": "Khách hàng",
+        "fields": {
+          "name": "Tên",
+          "phone": "Số điện thoại",
+          "email": "Email",
+          "language": "Ngôn ngữ",
+          "notes": "Ghi chú"
+        },
+        "contactPoints": {
+          "title": "Kênh liên hệ",
+          "empty": "Chưa có kênh liên hệ."
+        },
+        "followups": {
+          "title": "Nhắc hẹn",
+          "empty": "Không có nhắc hẹn đang chờ.",
+          "badge": "Tin nhắn này đã kích hoạt một nhắc hẹn",
+          "viewMessage": "Xem tin nhắn",
+          "cancel": "Hủy"
+        },
+        "tags": {
+          "title": "Nhãn",
+          "empty": "Chưa có nhãn",
+          "add": "Thêm nhãn",
+          "remove": "Xoá"
+        },
+        "actions": {
+          "save": "Lưu",
+          "cancel": "Huỷ",
+          "more": "Hành động khác"
+        },
+        "toast": {
+          "saving": "Đang lưu khách hàng…",
+          "updated": "Đã cập nhật khách hàng.",
+          "updateFailed": "Không thể cập nhật khách hàng."
+        },
+        "unmerge": {
+          "action": "Tách gộp",
+          "confirm": {
+            "title": "Tách khách hàng đã gộp?",
+            "body": "Thao tác này sẽ khôi phục khách hàng đã gộp gần nhất.",
+            "confirm": "Tách",
+            "cancel": "Huỷ"
+          },
+          "toast": {
+            "success": "Đã tách khách hàng.",
+            "failed": "Không thể tách khách hàng."
+          }
+        },
+        "collapse": "Thu gọn thanh bên",
+        "expand": "Mở rộng thanh bên"
+      }
+    }
+  },
+  "customers": {
+    "suggestions": {
+      "title": "Gợi ý khách hàng",
+      "description": "Phát hiện trùng lặp theo số điện thoại hoặc email.",
+      "loading": "Đang tải…",
+      "empty": "Chưa có gợi ý nào cần xử lý.",
+      "filter": {
+        "status": "Trạng thái"
+      },
+      "status": {
+        "PENDING": "Chờ xử lý",
+        "DISMISSED": "Đã bỏ qua",
+        "MERGED": "Đã gộp"
+      },
+      "table": {
+        "customerA": "Khách hàng A",
+        "customerB": "Khách hàng B",
+        "matchField": "Trường khớp",
+        "matchValue": "Giá trị",
+        "createdAt": "Phát hiện"
+      },
+      "actions": {
+        "review": "Xem xét",
+        "confirmMerge": "Xác nhận gộp",
+        "dismiss": "Bỏ qua",
+        "cancel": "Huỷ"
+      },
+      "dialog": {
+        "title": "Gộp khách hàng",
+        "description": "Trùng theo {{field}} = {{value}}",
+        "survivor": {
+          "label": "Chọn khách hàng giữ lại"
+        },
+        "side": {
+          "A": "Khách hàng A",
+          "B": "Khách hàng B"
+        },
+        "fields": {
+          "title": "Xử lý trường mâu thuẫn",
+          "name": "Tên",
+          "phone": "Số điện thoại",
+          "email": "Email",
+          "language": "Ngôn ngữ",
+          "notes": "Ghi chú",
+          "profileSummary": "Tóm tắt hồ sơ"
+        }
+      },
+      "toast": {
+        "merged": "Đã gộp khách hàng.",
+        "mergeFailed": "Không thể gộp khách hàng.",
+        "dismissed": "Đã bỏ qua gợi ý.",
+        "dismissFailed": "Không thể bỏ qua gợi ý."
+      },
+      "nav": {
+        "label": "Gợi ý"
+      }
+    },
+    "title": "Khách hàng"
+  },
+  "settings": {
+    "customerTags": {
+      "title": "Nhãn khách hàng",
+      "description": "Quản lý danh mục nhãn có thể gắn cho khách hàng trong workspace này.",
+      "actions": {
+        "create": "Tạo nhãn",
+        "edit": "Sửa",
+        "delete": "Xoá"
+      },
+      "fields": {
+        "name": "Tên",
+        "namePlaceholder": "VD: VIP",
+        "emoji": "Biểu tượng",
+        "description": "Mô tả",
+        "descriptionPlaceholder": "Nhãn này dùng để làm gì?",
+        "triggersHandoff": "Chuyển cho nhân viên",
+        "triggersHandoffHelp": "Khi nhãn này được gắn, tự động chuyển hội thoại cho nhân viên trực tiếp xử lý."
+      },
+      "toast": {
+        "created": "Đã tạo nhãn.",
+        "createFailed": "Không thể tạo nhãn.",
+        "updated": "Đã cập nhật nhãn.",
+        "updateFailed": "Không thể cập nhật nhãn.",
+        "deleted": "Đã xoá nhãn."
+      },
+      "errors": {
+        "nameTaken": "Đã tồn tại nhãn với tên này."
+      },
+      "delete": {
+        "confirm": {
+          "title": "Xoá nhãn?",
+          "body": "Thao tác này sẽ gỡ nhãn khỏi tất cả khách hàng đang được gắn.",
+          "confirm": "Xoá",
+          "cancel": "Huỷ"
+        }
+      }
+    },
+    "clientCredentials": {
+      "title": "API key",
+      "empty": "Chưa có client credential nào.",
+      "actions": {
+        "create": "Tạo credential"
+      },
+      "fields": {
+        "name": "Tên",
+        "key": "Key",
+        "status": "Trạng thái",
+        "createdAt": "Ngày tạo"
+      },
+      "status": {
+        "active": "Hoạt động",
+        "inactive": "Ngừng"
+      },
+      "toast": {
+        "created": "Đã tạo credential.",
+        "createFailed": "Tạo credential thất bại.",
+        "deleted": "Đã xoá credential.",
+        "deleteFailed": "Xoá credential thất bại."
+      },
+      "reveal": {
+        "title": "Đã tạo credential",
+        "warning": "Sao chép secret ngay — nó sẽ không hiển thị lại.",
+        "tokenLabel": "x-api-key",
+        "copy": "Sao chép",
+        "copied": "Đã sao chép."
+      },
+      "delete": {
+        "confirm": {
+          "title": "Xoá credential?",
+          "body": "Thao tác này sẽ thu hồi vĩnh viễn credential. Mọi client đang dùng key này sẽ không thể xác thực.",
+          "confirm": "Xoá",
+          "cancel": "Huỷ"
+        }
+      }
+    }
+  },
+  "tools": {
+    "batch": {
+      "delete": {
+        "label": "Xóa",
+        "title": "Xóa tool",
+        "description": "Bạn có chắc muốn xóa {{count}} tool? Các tool vẫn đang gắn với chatbot sẽ được bỏ qua."
+      }
+    },
+    "title": "Công cụ",
+    "subtitle": "Kết nối các API HTTP và máy chủ MCP mà chatbot có thể gọi.",
+    "actions": {
+      "browseMarketplace": "Khám phá kho công cụ",
+      "create": "Tạo",
+      "createHttp": "Công cụ HTTP",
+      "createMcp": "MCP tự cấu hình",
+      "newHttp": "Công cụ HTTP mới",
+      "newMcp": "MCP mới"
+    },
+    "new": {
+      "picker": {
+        "title": "Tạo công cụ",
+        "subtitle": "Chọn loại công cụ bạn muốn tạo.",
+        "http": {
+          "title": "Công cụ HTTP",
+          "description": "Kết nối REST endpoint tùy chỉnh. AI sẽ gọi nó với các tham số có cấu trúc."
+        },
+        "mcp": {
+          "title": "MCP tự cấu hình",
+          "description": "Kết nối máy chủ Model Context Protocol. Các hành động được khám phá tự động."
+        },
+        "marketplace": {
+          "title": "Kho công cụ",
+          "description": "Cài đặt bộ công cụ được lưu trữ qua OAuth. Duyệt hàng trăm tích hợp dựng sẵn."
+        }
+      },
+      "http": {
+        "title": "Công cụ HTTP mới"
+      },
+      "mcp": {
+        "title": "Công cụ MCP mới"
+      },
+      "success": {
+        "title": "Công cụ đã được tạo",
+        "description": "Công cụ của bạn đã sẵn sàng. Bạn có thể cấu hình thêm từ trang chi tiết công cụ.",
+        "goToTool": "Đến trang công cụ"
+      }
+    },
+    "list": {
+      "loading": "Đang tải công cụ…",
+      "noRecordsMessage": "Không tìm thấy công cụ nào. Hãy thử điều chỉnh tìm kiếm hoặc bộ lọc.",
+      "columns": {
+        "kind": "Loại",
+        "name": "Tên",
+        "status": "Trạng thái",
+        "createdAt": "Ngày tạo"
+      },
+      "filters": {
+        "kind": "Loại",
+        "status": "Trạng thái",
+        "mcpProvider": "Nhà cung cấp MCP",
+        "statusOptions": {
+          "active": "Hoạt động",
+          "needsreauth": "Cần xác thực lại",
+          "expired": "Hết hạn",
+          "revoked": "Đã thu hồi"
+        },
+        "kindOptions": {
+          "HTTP": "HTTP",
+          "MCP": "MCP"
+        },
+        "providerOptions": {
+          "COMPOSIO": "Composio",
+          "OPERATOR": "Operator",
+          "ECCHO": "Ecbot"
+        }
+      }
+    },
+    "empty": {
+      "title": "Chưa có công cụ nào",
+      "description": "Cài đặt từ kho công cụ hoặc tự cấu hình một endpoint HTTP."
+    },
+    "create": {
+      "title": "Tạo công cụ HTTP",
+      "subtitle": "Mô tả một endpoint HTTP để chatbot có thể gọi như một công cụ.",
+      "submit": "Tạo công cụ",
+      "success": "Đã tạo công cụ.",
+      "error": "Không tạo được công cụ."
+    },
+    "edit": {
+      "title": "Chỉnh sửa công cụ",
+      "subtitle": "Cập nhật cấu hình. Thông tin xác thực chỉ ghi — để trống để giữ giá trị hiện tại.",
+      "submit": "Lưu thay đổi",
+      "success": "Đã cập nhật công cụ.",
+      "error": "Không cập nhật được công cụ.",
+      "notHttp": "Trình chỉnh sửa này chỉ hỗ trợ công cụ HTTP."
+    },
+    "details": {
+      "title": "Chi tiết công cụ",
+      "sections": {
+        "description": "Mô tả",
+        "endpoint": "Endpoint",
+        "mcp": "Cấu hình MCP",
+        "metadata": "Chi tiết"
+      },
+      "fields": {
+        "kind": "Loại",
+        "status": "Trạng thái",
+        "httpMethod": "Phương thức",
+        "httpUrl": "URL",
+        "timeoutMs": "Thời gian chờ (ms)",
+        "maxRetries": "Số lần thử lại tối đa",
+        "mcpProvider": "Nhà cung cấp",
+        "composioToolkit": "Bộ công cụ",
+        "discoveredActions": "Hành động đã khám phá",
+        "discoveredActionsEmpty": "Chưa khám phá được hành động nào.",
+        "discoveredActionsReload": "Tải lại",
+        "toolkitDescription": "Mô tả",
+        "toolkitCategories": "Danh mục",
+        "toolkitToolsCount": "Hành động",
+        "id": "ID",
+        "createdAt": "Ngày tạo",
+        "updatedAt": "Ngày cập nhật"
+      }
+    },
+    "discover": {
+      "error": "Khám phá thất bại. Kiểm tra URL máy chủ và thông tin xác thực."
+    },
+    "delete": {
+      "button": "Xóa công cụ",
+      "success": "Đã xóa công cụ.",
+      "error": "Không xóa được công cụ.",
+      "errorReferenced": "Công cụ này vẫn đang được gắn vào một hoặc nhiều chatbot. Hãy gỡ khỏi tất cả chatbot trước, rồi xóa.",
+      "confirm": {
+        "title": "Xóa công cụ?",
+        "description": "Các chatbot đang sử dụng công cụ này sẽ mất quyền truy cập. Không thể hoàn tác.",
+        "confirmButton": "Xóa"
+      }
+    },
+    "form": {
+      "name": "Tên",
+      "namePlaceholder": "VD: product-search",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "Công cụ này làm gì? LLM dùng mô tả để quyết định khi nào gọi.",
+      "httpMethod": "Phương thức",
+      "httpUrl": "URL",
+      "inputSchema": "Input schema (JSON)",
+      "inputSchemaHint": "JSON Schema mô tả tham số đầu vào của công cụ.",
+      "headers": "Headers (JSON)",
+      "headersHint": "Headers tĩnh đính kèm mọi lần gọi (tùy chọn).",
+      "authType": "Loại xác thực",
+      "authTypeOptions": {
+        "none": "Không có",
+        "bearer": "Bearer token",
+        "api_key": "API key",
+        "basic": "Basic"
+      },
+      "authPlacement": "Vị trí xác thực",
+      "authPlacementOptions": {
+        "header": "Header",
+        "query": "Tham số query"
+      },
+      "authParamName": "Tên tham số",
+      "authParamNameHint": "Tên header hoặc query parameter chứa API key.",
+      "credential": "Thông tin xác thực",
+      "credentialHint": "Gửi dưới dạng plaintext; lưu trữ envelope-encrypted. Để trống khi chỉnh sửa để giữ giá trị hiện tại.",
+      "credentialPlaceholder": "•••••••••",
+      "timeoutMs": "Timeout (ms)",
+      "maxRetries": "Số lần thử lại tối đa"
+    },
+    "errors": {
+      "createFailed": "Không thể tạo công cụ. Vui lòng kiểm tra biểu mẫu và thử lại.",
+      "updateFailed": "Không thể lưu công cụ. Vui lòng kiểm tra biểu mẫu và thử lại.",
+      "deleteFailed": "Không thể xóa công cụ. Vui lòng thử lại.",
+      "schemaRowKeyRequired": "Khóa thuộc tính là bắt buộc.",
+      "schemaRowDescriptionRequired": "Mô tả thuộc tính là bắt buộc."
+    },
+    "test": {
+      "title": "Kiểm tra Endpoint",
+      "argsLabel": "Tham số yêu cầu (JSON)",
+      "runButton": "Chạy thử",
+      "invalidJson": "JSON không hợp lệ",
+      "result": {
+        "success": "Thành công",
+        "error": "Lỗi",
+        "timeout": "Hết thời gian",
+        "duration": "{{ms}}ms"
+      }
+    },
+    "schemaEditor": {
+      "title": "Thuộc tính",
+      "addProperty": "Thêm thuộc tính",
+      "removeProperty": "Xóa",
+      "keyLabel": "Khóa",
+      "keyTooltip": {
+        "body": "Tên tham số mà AI truyền vào khi gọi công cụ này. Phải khớp chính xác với tên key mà API của bạn yêu cầu.",
+        "formatLabel": "ĐỊNH DẠNG",
+        "format": "Chữ thường + gạch dưới",
+        "examplesLabel": "VÍ DỤ"
+      },
+      "keyEmptyError": "Tên thuộc tính không được để trống",
+      "typeLabel": "Kiểu",
+      "descriptionLabel": "Mô tả",
+      "enumLabel": "Giá trị cho phép",
+      "enumTooltip": {
+        "body": "Giới hạn tham số này chỉ nhận <bold>một tập giá trị cố định</bold>. AI chỉ có thể gửi một trong các lựa chọn này.",
+        "exampleLabel": "VÍ DỤ",
+        "example": "active, inactive, pending",
+        "hint": "Để trống để nhận bất kỳ giá trị nào."
+      },
+      "enumPlaceholder": "Phân tách bằng dấu phẩy",
+      "requiredLabel": "Bắt buộc",
+      "modeStructured": "Trực quan",
+      "modeJson": "JSON",
+      "invalidJson": "JSON không hợp lệ: {{message}}",
+      "complexSchemaWarning": "Schema này có cấu trúc mà trình biên tập trực quan không hỗ trợ (đối tượng lồng nhau, oneOf, allOf, …). Chuyển về chế độ trực quan sẽ làm mất các phần đó. Tiếp tục?",
+      "emptyHint": "Chưa có thuộc tính nào. Nhấn ‘Thêm thuộc tính’ để mô tả tham số đầu vào."
+    },
+    "headersEditor": {
+      "title": "Headers",
+      "addHeader": "Thêm header",
+      "removeHeader": "Xóa",
+      "keyLabel": "Tên header",
+      "keyEmptyError": "Tên header không được để trống",
+      "valueLabel": "Giá trị",
+      "modeStructured": "Trực quan",
+      "modeJson": "JSON",
+      "invalidJson": "JSON không hợp lệ: {{message}}",
+      "emptyHint": "Chưa có header nào. Nhấn ‘Thêm header’ để gắn header tĩnh cho mọi lần gọi."
+    },
+    "pendingAuth": {
+      "hint": "Xác thực chưa hoàn tất. Thử lại để kết nối hoặc hủy bỏ bản nháp.",
+      "retryButton": "Thử lại xác thực",
+      "discardButton": "Hủy bỏ"
+    },
+    "marketplace": {
+      "title": "Kho công cụ",
+      "browse": "Khám phá các toolkit được lưu trữ và cài đặt dưới dạng công cụ MCP.",
+      "installButton": "Cài đặt",
+      "installingToast": "Đang chuyển hướng đến nhà cung cấp…",
+      "installSuccessToast": "Đã cài đặt công cụ.",
+      "installErrorToast": "Cài đặt thất bại.",
+      "searchPlaceholder": "Tìm toolkit…",
+      "categoryAll": "Tất cả danh mục",
+      "noResults": "Không tìm thấy toolkit nào.",
+      "pagination": "Trang {{page}} / {{totalPage}}",
+      "filters": {
+        "provider": "Nhà cung cấp",
+        "category": "Danh mục"
+      },
+      "providerTab": {
+        "composio": "Composio",
+        "eccho": "Ecbot",
+        "ecchoComingSoon": "Sắp ra mắt — công cụ nội bộ sẽ có trong bản cập nhật tới."
+      },
+      "callback": {
+        "installing": "Đang hoàn tất cài đặt…",
+        "success": "Cài đặt thành công.",
+        "error": "Cài đặt thất bại.",
+        "backLink": "Quay lại kho công cụ"
+      }
+    },
+    "mcp": {
+      "create": {
+        "title": "Tạo công cụ MCP",
+        "subtitle": "Kết nối một máy chủ Model Context Protocol tự cấu hình. Các action cụ thể sẽ hiện sau khi kết nối máy chủ.",
+        "submit": "Tạo công cụ MCP",
+        "success": "Đã tạo công cụ MCP.",
+        "error": "Không tạo được công cụ MCP."
+      },
+      "form": {
+        "namePlaceholder": "VD: internal-search",
+        "serverUrl": "URL máy chủ MCP",
+        "serverUrlHint": "Endpoint Streamable HTTP hoặc SSE do máy chủ MCP của bạn cung cấp."
+      }
+    },
+    "invocations": {
+      "title": "Lượt gọi gần đây",
+      "subtitle": "100 lượt gọi công cụ gần nhất của chatbot này. Bấm vào một dòng để xem chi tiết yêu cầu và phản hồi.",
+      "refresh": "Tải lại",
+      "empty": "Chưa có lượt gọi nào. Chatbot chưa gọi công cụ.",
+      "input": "Tham số đầu vào",
+      "output": "Kết quả",
+      "error": "Lỗi"
+    },
+    "chatbotTab": {
+      "title": "Công cụ",
+      "subtitle": "Bật/tắt các công cụ của workspace cho chatbot này. Công cụ MCP hỗ trợ chọn từng action.",
+      "enabled": "Đang bật",
+      "disabled": "Đang tắt",
+      "enableSuccess": "Đã bật công cụ.",
+      "disableSuccess": "Đã tắt công cụ.",
+      "toggleError": "Không cập nhật được trạng thái công cụ.",
+      "removeSuccess": "Đã xóa công cụ.",
+      "removeError": "Không thể xóa công cụ.",
+      "loadError": "Không thể tải danh sách công cụ.",
+      "expandActions": "Hiện danh sách action",
+      "collapseActions": "Ẩn danh sách action",
+      "actionsTitle": "Các action đã phát hiện",
+      "actionsEmpty": "Chưa phát hiện action nào. Hãy làm mới sau khi máy chủ MCP kết nối.",
+      "actionsAutoSaveError": "Không thể lưu cài đặt hành động.",
+      "empty": {
+        "title": "Chưa có công cụ nào được bật",
+        "description": "Nhấn 'Thêm' để kết nối một công cụ workspace với chatbot này."
+      }
+    },
+    "addDrawer": {
+      "title": "Thêm Công Cụ",
+      "selectLabel": "Chọn một công cụ",
+      "actionsTitle": "Hành động",
+      "enableSuccess": "Đã thêm công cụ.",
+      "enableError": "Không thể thêm công cụ."
+    }
+  },
+  "channels": {
+    "title": "Kênh"
+  },
+  "agents": {
+    "title": "Trợ lý AI"
+  },
+  "recentAgents": {
+    "title": "Trợ lý gần đây"
+  },
+  "sessions": {
+    "domain": "Phiên đăng nhập",
+    "title": "Phiên đang hoạt động",
+    "subtitle": "Các thiết bị và trình duyệt đang đăng nhập vào tài khoản của bạn.",
+    "status": {
+      "ACTIVE": "Đang hoạt động",
+      "REVOKED": "Đã thu hồi"
+    },
+    "table": {
+      "device": "Thiết bị / trình duyệt",
+      "ip": "Địa chỉ IP",
+      "location": "Vị trí",
+      "signedInAt": "Đăng nhập lúc",
+      "lastActiveAt": "Hoạt động gần nhất",
+      "empty": "Bạn chưa có phiên đăng nhập nào."
+    },
+    "revoke": {
+      "label": "Thu hồi",
+      "confirm": {
+        "title": "Thu hồi phiên này?",
+        "description": "Thiết bị đang dùng phiên này sẽ bị đăng xuất ngay lập tức. Bạn không thể thu hồi phiên đang sử dụng.",
+        "confirm": "Thu hồi phiên"
+      }
+    },
+    "toast": {
+      "revoked": "Đã thu hồi phiên",
+      "revokeFailed": "Không thể thu hồi phiên này"
+    }
+  },
+  "usage": {
+    "domain": "Usage",
+    "title": "Token usage",
+    "subtitle": "Bạn đã dùng bao nhiêu phần token quota của kỳ này.",
+    "quota": {
+      "title": "Quota đã dùng",
+      "plan": "Plan",
+      "renewsOn": "Làm mới vào",
+      "hasCredit": "Còn credit bổ sung",
+      "noCredit": "Không còn credit bổ sung",
+      "exhausted": "Đã hết quota — chatbot sẽ trả lời bằng fallback message."
+    },
+    "trend": {
+      "title": "Usage theo ngày",
+      "empty": "Không có usage trong khoảng này.",
+      "percentOfQuota": "% quota",
+      "messages": "Tin nhắn"
+    },
+    "byChatbot": {
+      "title": "Theo chatbot",
+      "column": "Chatbot"
+    },
+    "byPlatform": {
+      "title": "Theo platform",
+      "column": "Platform",
+      "preview": "Preview (chat thử)"
+    },
+    "share": "Tỷ trọng",
+    "messages": "Tin nhắn",
+    "tokens": "Token",
+    "export": "Xuất CSV",
+    "settings": {
+      "title": "Cảnh báo sắp hết quota",
+      "description": "Cảnh báo chủ workspace khi quota còn lại thấp hơn tỷ lệ này.",
+      "threshold": "Ngưỡng (%)",
+      "saved": "Đã cập nhật ngưỡng cảnh báo.",
+      "edit": "Cấu hình cảnh báo",
+      "preview": "Cảnh báo chủ workspace khi còn dưới {{percent}}% quota của kỳ."
+    },
+    "debug": {
+      "title": "Debug — chỉ có ở môi trường dev",
+      "description": "Số token tuyệt đối. Không trả về ở production.",
+      "quota": "Quota",
+      "used": "Đã dùng kỳ này",
+      "credit": "Số dư credit"
+    },
+    "status": {
+      "ACTIVE": "Đang hoạt động",
+      "TRIALING": "Dùng thử",
+      "PAST_DUE": "Quá hạn",
+      "CANCELED": "Đã huỷ",
+      "EXPIRED": "Hết hạn"
+    }
+  }
+}

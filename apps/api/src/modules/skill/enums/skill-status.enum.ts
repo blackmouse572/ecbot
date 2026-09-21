@@ -1,0 +1,4 @@
+export enum ENUM_SKILL_STATUS {
+    ACTIVE = 'ACTIVE',
+    INACTIVE = 'INACTIVE',
+}

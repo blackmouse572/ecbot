@@ -1,0 +1,10 @@
+{
+    "list": "Danh sách cài đặt đã được lấy thành công.",
+    "get": "Chi tiết cài đặt đã được tải về thành công.",
+    "update": "Cài đặt đã được cập nhật thành công.",
+    "core": "Cài đặt cốt lõi đã được cập nhật thành công.",
+    "error": {
+        "valueNotAllowed": "Giá trị bạn cung cấp không được phép cho cài đặt này.",
+        "notFound": "Xin lỗi, chúng tôi không thể tìm thấy cài đặt bạn yêu cầu."
+    }
+}

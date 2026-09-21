@@ -1,0 +1,4 @@
+export enum ENUM_CONVERSATION_STATUS {
+    OPEN = 'OPEN',
+    RESOLVED = 'RESOLVED',
+}

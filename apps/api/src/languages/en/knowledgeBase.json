@@ -1,0 +1,13 @@
+{
+    "list": "List of knowledge bases retrieved successfully.",
+    "get": "Knowledge base retrieved successfully.",
+    "create": "Knowledge base created successfully.",
+    "update": "Knowledge base updated successfully.",
+    "delete": "Knowledge base deleted successfully.",
+    "task": {
+        "processed": "Knowledge ingest task processed successfully."
+    },
+    "error": {
+        "notFound": "Knowledge base not found."
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "testTimeout": 30000,
+    "rootDir": "../",
+    "modulePaths": ["."],
+    "testEnvironment": "node",
+    "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
+    "moduleNameMapper": {
+        "^@app/(.*)$": "<rootDir>/src/$1"
+    },
+    "collectCoverage": false,
+    "maxWorkers": 1,
+    "moduleFileExtensions": ["js", "ts", "tsx", "jsx", "json"],
+    "transform": {
+        "^.+\\.(t|j)sx?$": [
+            "@swc/jest",
+            {
+                "sourceMaps": true
+            }
+        ]
+    },
+    "modulePathIgnorePatterns": ["<rootDir>/dist"]
+}

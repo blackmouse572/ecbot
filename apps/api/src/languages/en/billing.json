@@ -1,0 +1,23 @@
+{
+    "plan": {
+        "list": "Plans retrieved successfully.",
+        "get": "Plan retrieved successfully.",
+        "create": "Plan created successfully.",
+        "update": "Plan updated successfully.",
+        "archive": "Plan archived successfully.",
+        "sync": "Plan synced to the payment provider successfully."
+    },
+    "subscription": {
+        "get": "Subscription retrieved successfully.",
+        "assign": "Plan assigned to the workspace successfully.",
+        "credit": "Tokens credited to the workspace successfully."
+    },
+    "error": {
+        "planNotFound": "Plan not found.",
+        "planSlugExist": "A plan with this slug already exists.",
+        "planSyncFailed": "Plan saved, but syncing it to the payment provider failed.",
+        "subscriptionNotFound": "This workspace has no subscription.",
+        "unsupportedPaymentProvider": "Payment provider is not supported.",
+        "planIsSystem": "This is a system plan and cannot be archived."
+    }
+}

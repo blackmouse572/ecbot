@@ -1,0 +1,30 @@
+{
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "[plaintext]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false
+  },
+  "files.associations": {
+    "*.service.ts": "typescript"
+  },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+  "i18n-ally.sourceLanguage": "en",
+  "i18n-ally.localesPaths": ["apps/app/src/providers/i18n/translations"],
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.sortKeys": true,
+  "i18n-ally.keepFulfilled": true,
+  "i18n-ally.enabledFrameworks": [
+    "react",
+    "react-i18next"
+  ],
+  "python-envs.defaultEnvManager": "ms-python.python:poetry",
+  "python-envs.defaultPackageManager": "ms-python.python:poetry"
+}

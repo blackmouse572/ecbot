@@ -1,0 +1,13 @@
+{
+    "list": "List of knowledge items retrieved successfully.",
+    "get": "Knowledge item retrieved successfully.",
+    "create": "Knowledge item created successfully.",
+    "update": "Knowledge item updated successfully.",
+    "delete": "Knowledge item deleted successfully.",
+    "batchDelete": "Knowledge items deleted successfully.",
+    "batchProcess": "Knowledge items queued for processing.",
+    "error": {
+        "notFound": "Knowledge item not found.",
+        "processing": "This item is already being processed."
+    }
+}

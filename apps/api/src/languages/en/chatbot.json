@@ -1,0 +1,37 @@
+{
+    "list": "Chatbots retrieved successfully.",
+    "get": "Chatbot details fetched successfully.",
+    "models": "Chatbot models retrieved successfully.",
+    "create": "New chatbot created successfully.",
+    "update": "Chatbot updated successfully.",
+    "delete": "Chatbot deleted successfully.",
+    "admin": {
+        "list": "Admin: All chatbots retrieved successfully.",
+        "get": "Admin: Chatbot details fetched successfully.",
+        "update": "Admin: Chatbot updated successfully.",
+        "delete": "Admin: Chatbot deleted successfully."
+    },
+    "error": {
+        "notFound": "Sorry, we couldn't find the requested chatbot.",
+        "accountIsLinked": "There is an account is already assigned to another chatbot.",
+        "invalidWorkspace": "Chatbot does not belong to the current workspace.",
+        "accountLinkFailed": "Failed to link account to chatbot.",
+        "accountUnlinkFailed": "Failed to unlink account from chatbot.",
+        "aiBackendUnavailable": "The AI backend is currently unavailable. Please try again later.",
+        "shareLinkInvalid": "This preview link is not valid.",
+        "shareLinkExpired": "This preview link has expired.",
+        "shareLinkNotConfigured": "Preview sharing is not configured on this server.",
+        "previewNotAvailable": "This chatbot is not available for preview.",
+        "previewSessionLimit": "You've reached the message limit for this preview. Please try again later."
+    },
+    "active": "Chatbot activated successfully.",
+    "inactive": "Chatbot deactivated successfully.",
+    "archive": "Chatbot archived successfully.",
+    "unarchive": "Chatbot unarchived successfully.",
+    "linkAccount": "Account linked to chatbot successfully.",
+    "unlinkAccount": "Account unlinked from chatbot successfully.",
+    "shareLink": "Preview share link created successfully.",
+    "preview": "Chatbot preview loaded successfully.",
+    "batchDelete": "Chatbots deleted",
+    "batchStatus": "Chatbot status updated"
+}

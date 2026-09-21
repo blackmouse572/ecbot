@@ -1,0 +1,9 @@
+{
+    "workspace": {
+        "list": "Follow-ups retrieved successfully.",
+        "cancel": "Follow-up cancelled successfully."
+    },
+    "task": {
+        "processed": "Follow-up task processed successfully."
+    }
+}

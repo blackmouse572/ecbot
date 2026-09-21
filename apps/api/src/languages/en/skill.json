@@ -1,0 +1,43 @@
+{
+    "list": {
+        "success": "Skills retrieved"
+    },
+    "get": {
+        "success": "Skill retrieved",
+        "error": {
+            "notFound": "Skill not found"
+        }
+    },
+    "create": {
+        "success": "Skill created successfully"
+    },
+    "clone": {
+        "success": "Template cloned to workspace"
+    },
+    "update": {
+        "success": "Skill updated"
+    },
+    "delete": {
+        "success": "Skill deleted"
+    },
+    "attach": {
+        "success": "Skill attached to chatbot",
+        "error": {
+            "notAttached": "Skill is not attached to this chatbot"
+        }
+    },
+    "toggle": {
+        "success": "Skill updated on chatbot"
+    },
+    "detach": {
+        "success": "Skill detached from chatbot"
+    },
+    "chatbot": {
+        "list": {
+            "success": "Chatbot skills retrieved"
+        }
+    },
+    "batchDelete": {
+        "success": "Skills deleted successfully."
+    }
+}

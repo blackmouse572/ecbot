@@ -1,0 +1,6 @@
+export enum ENUM_TOOL_STATUS {
+    ACTIVE = 'ACTIVE',
+    NEEDS_REAUTH = 'NEEDS_REAUTH',
+    EXPIRED = 'EXPIRED',
+    REVOKED = 'REVOKED',
+}

@@ -1,0 +1,15 @@
+{
+    "list": "Danh sách lời mời",
+    "detail": "Chi tiết lời mời",
+    "updateRole": "Cập nhật vai trò lời mời",
+    "regenerate": "Tạo lại link mời",
+    "revoke": "Thu hồi lời mời",
+    "error": {
+        "notFound": "Không tìm thấy lời mời",
+        "alreadyUsed": "Link mời đã được sử dụng rồi",
+        "expired": "Link mời đã hết hạn",
+        "cannotRevokeNonPending": "Không thể thu hồi lời mời không ở trạng thái chờ",
+        "cannotRegenerateNonPending": "Không thể tạo lại lời mời không ở trạng thái chờ",
+        "cannotUpdateNonPending": "Không thể cập nhật lời mời không ở trạng thái chờ"
+    }
+}

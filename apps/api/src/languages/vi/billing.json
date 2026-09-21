@@ -1,0 +1,23 @@
+{
+    "plan": {
+        "list": "Lấy danh sách plan thành công.",
+        "get": "Lấy thông tin plan thành công.",
+        "create": "Tạo plan thành công.",
+        "update": "Cập nhật plan thành công.",
+        "archive": "Lưu trữ plan thành công.",
+        "sync": "Đồng bộ plan sang cổng thanh toán thành công."
+    },
+    "subscription": {
+        "get": "Lấy thông tin subscription thành công.",
+        "assign": "Gán plan cho workspace thành công.",
+        "credit": "Nạp token cho workspace thành công."
+    },
+    "error": {
+        "planNotFound": "Không tìm thấy plan.",
+        "planSlugExist": "Slug plan này đã tồn tại.",
+        "planSyncFailed": "Đã lưu plan nhưng đồng bộ sang cổng thanh toán thất bại.",
+        "subscriptionNotFound": "Workspace này chưa có subscription.",
+        "unsupportedPaymentProvider": "Cổng thanh toán không được hỗ trợ.",
+        "planIsSystem": "Đây là plan hệ thống, không thể lưu trữ."
+    }
+}

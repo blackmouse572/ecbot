@@ -1,0 +1,8 @@
+{
+    "sendMessage": "Đã nhận tin nhắn. Câu trả lời sẽ được gửi tới callback URL của bạn.",
+    "error": {
+        "accountNotFound": "Không tìm thấy API channel với accountKey này trong workspace.",
+        "unprocessableMessage": "Không xử lý được tin nhắn này. Hãy kiểm tra accountKey, senderId và text.",
+        "rateLimited": "Gửi quá nhiều tin nhắn cho kênh này. Vui lòng chậm lại và thử lại sau."
+    }
+}

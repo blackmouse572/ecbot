@@ -1,0 +1,1 @@
+This is an E2E test document used for RAG ingestion verification. It contains sample content about eccho chatbot platform.

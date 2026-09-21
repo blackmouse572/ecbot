@@ -1,0 +1,15 @@
+{
+    "list": "Danh sách vai trò đã được lấy thành công.",
+    "get": "Chi tiết vai trò đã được tải về thành công.",
+    "create": "Vai trò mới đã được tạo thành công.",
+    "update": "Vai trò đã được cập nhật thành công.",
+    "delete": "Vai trò đã được xóa thành công.",
+    "inactive": "Vai trò đã được đánh dấu không hoạt động.",
+    "active": "Vai trò đã được đánh dấu hoạt động.",
+    "error": {
+        "exist": "Một vai trò với tên này đã tồn tại rồi.",
+        "used": "Vai trò này hiện đang được sử dụng và không thể xóa.",
+        "isActiveInvalid": "Trạng thái hoạt động không hợp lệ cho vai trò.",
+        "notFound": "Xin lỗi, chúng tôi không thể tìm thấy vai trò được yêu cầu."
+    }
+}

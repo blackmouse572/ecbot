@@ -1,0 +1,268 @@
+# Three usage modes:
+#   docker compose up                    infra only (redis/jwks/cloud-tasks) — dev runs api/app natively
+#   docker compose --profile app up      infra + apis + app — functional testing, no ai
+#   docker compose --profile full up     everything — full test / deploy parity
+# Services with no `profiles:` key are always on; profiles only add more.
+
+services:
+  # Main API service
+  apis:
+    profiles: [app, full]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    hostname: apis
+    ports:
+      - 8080:8080
+    volumes:
+      # Whole-dir bind mount only — individual per-file mounts on top of an
+      # already-mounted dir risk Docker creating a phantom empty directory
+      # if a key file is briefly missing at container creation.
+      - ./apps/api/keys:/app/keys
+      - ./apps/api/src/:/app/src/
+      - ./apps/api/.env:/app/.env
+    restart: on-failure
+    env_file:
+      - ./apps/api/.env
+    # .env's REDIS_HOST/AUTH_JWT_JWKS_URI/AI_BACKEND_URL point at
+    # "localhost"/"0.0.0.0", which is correct for running the API natively
+    # (docker ports map to host), but wrong from inside this very container
+    # — that address there is the container itself, not the redis/
+    # jwks-server/ai services. ioredis then retries a refused connection
+    # forever instead of erroring, which reads as the whole request
+    # hanging. Override just for this container.
+    environment:
+      REDIS_HOST: redis
+      AUTH_JWT_JWKS_URI: http://jwks-server:80/.well-known/jwks.json
+      AI_BACKEND_URL: http://ai:8000
+      # Same reason as REDIS_HOST above: .env points DATABASE_URL at
+      # localhost, which from inside this container is the container itself.
+      # Only applies to the containerised api (`--profile app`); running the
+      # api natively uses .env as-is, hosted Postgres included.
+      DATABASE_URL: postgresql://postgres:password@db:5432/eccho
+    networks:
+      - app-network
+    # ai is intentionally NOT a hard dependency — apis must still boot under
+    # `--profile app` (no ai in scope). Chatbot streaming degrades gracefully
+    # (5040) if ai isn't up; everything else doesn't need it.
+    depends_on:
+      redis:
+        condition: service_healthy
+      jwks-server:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  # Frontend SPA (Vite + React) — local docker testing only;
+  # production deploys via Cloudflare Workers/wrangler, not this image
+  app:
+    profiles: [app, full]
+    build:
+      context: .
+      dockerfile: apps/app/Dockerfile
+    hostname: app
+    ports:
+      - 5173:4173
+    restart: on-failure
+    networks:
+      - app-network
+    depends_on:
+      - apis
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  # AI Service
+  ai:
+    profiles: [full]
+    build:
+      context: ./apps/ai
+      dockerfile: Dockerfile
+    hostname: ai
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./apps/ai/.env
+    # Container-local overrides for the same localhost pitfall as `apis`.
+    environment:
+      POSTGRES_URL: postgresql+asyncpg://postgres:password@db:5432/eccho
+      API_BASE_URL: http://apis:8080
+    networks:
+      - app-network
+    restart: on-failure
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "1"
+          memory: 1G
+    healthcheck:
+      # python:3.12-slim has no curl binary — use the stdlib instead.
+      # 127.0.0.1, not localhost: same ::1-vs-0.0.0.0 pitfall as jwks-server.
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Database (PostgreSQL + pgvector). Relational data and embeddings share one
+  # database (apps/ai queries the same instance), so the plain `postgres` image
+  # is not enough — the vector extension must be available for
+  # 20260424000000_create_knowledge_item_chunks to create it.
+  # Credentials match apps/api/.env.example so a fresh `cp .env.example .env`
+  # works unchanged. Point DATABASE_URL elsewhere to use a hosted Postgres.
+  database:
+    image: pgvector/pgvector:pg17
+    hostname: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eccho
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eccho"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # JWKS Server for token validation
+  jwks-server:
+    image: nginx:alpine
+    hostname: jwks-server
+    ports:
+      - "3011:80"
+    volumes:
+      # - ./apps/api/keys/jwks.json:/usr/share/nginx/html/.well-known/jwks.json
+      # - ./apps/api/ci/jwks-server/jwks.conf:/etc/nginx/conf.d/default.conf
+      - ./apps/api/keys:/usr/share/nginx/html/.well-known
+      - ./apps/api/ci/jwks-server/jwks.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+    healthcheck:
+      # 127.0.0.1, not localhost — localhost resolves to ::1 first inside the
+      # container, but nginx only listens on 0.0.0.0, so wget got "connection
+      # refused" and the service always showed unhealthy despite working fine.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/.well-known/jwks.json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Redis for caching and queues
+  redis:
+    image: redis:latest
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+
+  # Bull dashboard for queue monitoring
+  redis-bullboard:
+    image: deadly0/bull-board:3.2.6
+    hostname: redis-bullboard
+    ports:
+      - 3010:3000
+    networks:
+      - app-network
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BULL_PREFIX=bull
+      - USER_LOGIN=admin
+      - USER_PASSWORD=admin123
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 128M
+
+  cloud-tasks-emulator:
+    image: ghcr.io/aertje/cloud-tasks-emulator:latest
+    hostname: cloud-tasks-emulator
+    command:
+      - -host=0.0.0.0
+      - -port=8123
+      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/email
+      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/sms
+      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/followup
+      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/knowledge-ingest
+      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/customer-tag-classifier
+      - -queue=projects/eccho-dev/locations/asia-southeast1/queues/session
+    ports:
+      - "8123:8123"
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 128M
+
+volumes:
+  redis_data:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge

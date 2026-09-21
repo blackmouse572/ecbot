@@ -1,0 +1,2168 @@
+{
+  "skills": {
+    "batch": {
+      "delete": {
+        "label": "Delete",
+        "title": "Delete skill(s)",
+        "description": "Are you sure you want to delete {{count}} skill(s)? This action cannot be undone."
+      }
+    },
+    "title": "Skills",
+    "subtitle": "Reusable know-how the agent loads on demand.",
+    "builtin": "Builtin",
+    "tabs": {
+      "mySkills": "My skills",
+      "templates": "Templates"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "list": {
+      "loading": "Loading…",
+      "noRecordsMessage": "No skills yet. Create one or clone a template.",
+      "noTemplates": "No templates available.",
+      "filters": {
+        "source": "Source"
+      }
+    },
+    "actions": {
+      "browse": "Browse templates"
+    },
+    "chatbotTab": {
+      "title": "Skills",
+      "subtitle": "Know-how this chatbot can load on demand.",
+      "addTitle": "Attach a skill",
+      "selectLabel": "Select a skill",
+      "noAvailable": "No more workspace skills to attach.",
+      "attachSuccess": "Skill attached",
+      "attachError": "Failed to attach skill",
+      "detachSuccess": "Skill detached",
+      "detachError": "Failed to detach skill",
+      "updateError": "Failed to update skill",
+      "loadError": "Failed to load skills",
+      "empty": "No skills attached yet."
+    },
+    "form": {
+      "namePlaceholder": "e.g. Refund policy",
+      "descriptionHint": "Short trigger hint — tells the agent when to load this skill.",
+      "instructions": "Instructions",
+      "instructionsHint": "Full markdown instructions loaded when the skill applies.",
+      "importHint": "Drop a .md file here or click to import"
+    },
+    "browse": {
+      "title": "Browse templates",
+      "subtitle": "Copy a builtin template into your workspace, then customize it.",
+      "searchPlaceholder": "Search templates",
+      "pageInfo": "Page {{page}} of {{totalPage}}"
+    },
+    "copy": {
+      "title": "Copy skill",
+      "subtitle": "Review and edit the instructions, then create your own copy."
+    },
+    "create": {
+      "title": "Create skill",
+      "subtitle": "Write instructions the agent will follow when this skill applies.",
+      "success": "Skill created",
+      "error": "Failed to create skill"
+    },
+    "edit": {
+      "title": "Edit skill",
+      "subtitle": "Update the skill's instructions.",
+      "success": "Skill updated",
+      "error": "Failed to update skill"
+    },
+    "delete": {
+      "success": "Skill deleted",
+      "error": "Failed to delete skill",
+      "confirm": {
+        "title": "Delete skill?",
+        "description": "This permanently deletes the skill and its instructions."
+      }
+    },
+    "detail": {
+      "sections": {
+        "metadata": "Details"
+      },
+      "fields": {
+        "id": "ID",
+        "createdAt": "Created",
+        "updatedAt": "Updated"
+      }
+    }
+  },
+  "app": {
+    "nav": {
+      "accessibility": {
+        "title": "Navigation",
+        "description": "Navigate through the application."
+      },
+      "settings": {
+        "header": "Settings",
+        "myAccount": "My Account",
+        "subscription": "Subscription",
+        "preferences": "Preferences",
+        "billing": "Billing",
+        "changePassword": "Change Password",
+        "sessions": "Sessions"
+      },
+      "search": {
+        "label": "Search"
+      },
+      "main": {
+        "storeSettings": "Settings",
+        "home": "Home"
+      },
+      "accounts": {
+        "header": "Accounts"
+      },
+      "dashboard": {
+        "header": "Dashboard",
+        "description": "View dashboard statistics and recent activity."
+      },
+      "activity": {
+        "header": "Activity",
+        "description": "View recent activity."
+      },
+      "members": {
+        "header": "Team",
+        "description": "View workspace members."
+      },
+      "roles": {
+        "header": "Roles",
+        "description": "Manage workspace roles."
+      }
+    },
+    "search": {
+      "label": "Search"
+    },
+    "menus": {
+      "user": {
+        "profileSettings": "Profile Settings",
+        "documentation": "Documentation",
+        "changelog": "What's New",
+        "theme": {
+          "label": "Theme",
+          "dark": "Dark",
+          "light": "Light",
+          "system": "System"
+        }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "empty": "You're all caught up",
+        "markAllAsRead": "Mark all as read"
+      },
+      "actions": {
+        "logout": "Log Out"
+      }
+    },
+    "auth": {
+      "social": {
+        "google": "Google",
+        "continueWith": "or continue with",
+        "comingSoon": "Social sign-in is coming soon"
+      },
+      "hero": {
+        "login": {
+          "alt": "What can i help with? Build agents for customer service, sales, Facebook ads, Notion planning and policy management."
+        },
+        "signup": {
+          "alt": "Built once, deploy anywhere. Build agents for customer service, sales, Facebook ads, Notion planning and policy management."
+        }
+      },
+      "login": {
+        "title": "Welcome to Ecbot",
+        "description": "Sign in to access the dashboard",
+        "fields": {
+          "email": "Email",
+          "password": "Password"
+        },
+        "actions": {
+          "loginButton": "Login",
+          "forgotPassword": "Forgot password?",
+          "remember": "Remember",
+          "register": "Create Account",
+          "resetPassword": "Reset Password",
+          "signUpRedirect": "Don't have account ? <0>Sign up</0>",
+          "ok": "OK"
+        },
+        "errors": {
+          "turnstileRequired": "Please complete the verification.",
+          "turnstileFailed": "Verification failed. Please try again.",
+          "turnstileVerifying": "Verifying, please wait...",
+          "invalidCredentials": "Invalid email or password.",
+          "accountLocked": "Account is locked. Contact support.",
+          "banned": {
+            "title": "Account Suspended",
+            "description": "Your account has been suspended by an administrator. Contact support if you believe this is a mistake."
+          }
+        },
+        "success": {
+          "message": "Successfully logged in. Redirecting..."
+        },
+        "failed": {
+          "message": "Login failed. Please try again."
+        }
+      },
+      "register": {
+        "title": "Getting started",
+        "description": "Create new account on platform",
+        "fields": {
+          "name": "Full Name",
+          "email": "Email",
+          "password": "Password",
+          "referral-code": "Referral Code (optional)",
+          "confirm-password": "Confirm Password",
+          "country": "Country"
+        },
+        "actions": {
+          "registerButton": "Create new account",
+          "loginRedirect": "Already have account? <0>Login</0>"
+        },
+        "errors": {
+          "turnstileRequired": "Please complete the verification.",
+          "turnstileFailed": "Verification failed. Please try again.",
+          "turnstileVerifying": "Verifying, please wait...",
+          "emailExists": "Email already registered. Please sign in.",
+          "passwordMismatch": "Passwords do not match.",
+          "signUpFailed": "Registration failed. Please try again."
+        },
+        "success": {
+          "message": "Account created. Please verify your email."
+        }
+      },
+      "forgotPassword": {
+        "title": "Forgot your password?",
+        "description": "Enter your email and we'll send you a code to reset it",
+        "fields": {
+          "email": "Email"
+        },
+        "actions": {
+          "submit": "Send reset code",
+          "backToLogin": "Remembered it? <0>Login</0>"
+        },
+        "errors": {
+          "requestFailed": "Could not start a password reset for that email."
+        }
+      },
+      "resetPassword": {
+        "title": "Reset your password",
+        "description": "Choose a new password for your account",
+        "otp": {
+          "description": "Enter the {{digit}}-digit code we sent to"
+        },
+        "fields": {
+          "newPassword": "New password",
+          "confirmPassword": "Confirm new password"
+        },
+        "actions": {
+          "resetButton": "Reset password",
+          "verifying": "Verifying…",
+          "requestNew": "Request a new code",
+          "backToLogin": "Back to login"
+        },
+        "errors": {
+          "invalidOtp": "That code is not correct or has expired.",
+          "passwordMismatch": "Passwords do not match.",
+          "resetFailed": "Could not reset your password. Request a new code and try again."
+        },
+        "expired": {
+          "title": "This reset link has expired",
+          "description": "Reset codes are only valid for a short time. Request a new one to continue."
+        },
+        "success": {
+          "message": "Password updated. You can sign in with it now."
+        }
+      },
+      "verifyEmail": {
+        "title": "Verify Email",
+        "description": "A {{digit}}-digit verification code has been sent to",
+        "fields": {
+          "otp": "Code"
+        },
+        "actions": {
+          "verifyButton": "Verify",
+          "resendOtp": "Didn't receive it? <0>Resend</0>"
+        },
+        "errors": {
+          "invalidOtp": "Invalid verification code.",
+          "resendOtpFailed": "Failed to resend code. Try again."
+        },
+        "success": {
+          "message": "Email verified successfully.",
+          "resendOtp": "Verification code sent."
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "recentActivities": "Recent Activity"
+  },
+  "onboard": {
+    "select": {
+      "welcome": "Setup",
+      "description": "Choose an option to get started.",
+      "join": {
+        "label": "Join Workspace",
+        "description": "Join an existing workspace."
+      },
+      "create": {
+        "label": "Create Workspace",
+        "description": "Create a new workspace to get started."
+      },
+      "existing": {
+        "title": "Your Workspaces",
+        "description": "Select a workspace to continue, or create a new one.",
+        "createNew": "Create or join a new workspace"
+      }
+    },
+    "create": {
+      "fields": {
+        "name": "Workspace Name",
+        "handler": "Workspace ID",
+        "avatar": "Avatar"
+      },
+      "placeholders": {
+        "name": "My Workspace",
+        "handler": "my-workspace-handle"
+      },
+      "toast": {
+        "loading": "Creating workspace...",
+        "error": "Failed to create workspace",
+        "success": "Workspace created!"
+      },
+      "errors": {
+        "title": "Could not create workspace",
+        "slugTaken": "This slug is already taken. Please choose a different one."
+      }
+    },
+    "join": {
+      "tabs": {
+        "join": "Find Workspace",
+        "success": "Almost There!",
+        "confirm": "Confirm"
+      },
+      "fields": {
+        "code": "Enter workspace invitation code"
+      },
+      "success": {
+        "sentRequest": "Join request sent successfully!",
+        "description": "Your request has been sent to the workspace owner."
+      },
+      "joinWorkspace": "Join Workspace"
+    }
+  },
+  "join": {
+    "loading": {
+      "title": "Joining the workspace",
+      "description": "Please wait while we process your request."
+    },
+    "success": {
+      "title": "Workspace joined",
+      "description": "Congratulations! You have successfully joined the workspace."
+    }
+  },
+  "accounts": {
+    "batch": {
+      "unlink": {
+        "label": "Unlink",
+        "title": "Unlink account(s)",
+        "description": "Are you sure you want to unlink {{count}} account(s)? Their conversations will be removed."
+      }
+    },
+    "title": "Accounts",
+    "list": {
+      "noRecordsMessage": "No accounts found",
+      "action": {
+        "viewProfile": "View Profile",
+        "unlink": "Unlink Account"
+      }
+    },
+    "unlink": {
+      "confirm": {
+        "title": "Unlink Account",
+        "description": "Are you sure you want to unlink this account? This action cannot be undone.",
+        "confirmButton": "Unlink"
+      },
+      "success": "Account unlinked successfully",
+      "error": "Failed to unlink account"
+    },
+    "link": {
+      "title": "Link Account",
+      "description": "Connect to your Facebook account and pages, select the pages you want to manage.",
+      "acceptTerms": "By linking your account, you agree to our terms of service and privacy policy.",
+      "error": "An error occurred while linking your account. {{error}}",
+      "success": {
+        "title": "Account Linked",
+        "description": "Your account has been successfully linked.",
+        "emptyPages": "No pages linked."
+      }
+    },
+    "create": {
+      "title": "Create Account",
+      "description": "Create a new account",
+      "fields": {
+        "link": "Link"
+      },
+      "success": "Account added, please wait for the account to be synced.",
+      "steps": {
+        "platform": "Select Platform",
+        "connect": "Connect",
+        "success": "Done"
+      },
+      "platform": {
+        "title": "Choose a platform",
+        "description": "Select the platform you want to connect to your workspace.",
+        "roadmap": "Roadmap"
+      },
+      "provision": {
+        "copied": "Copied",
+        "cta": "Create channel",
+        "nameLabel": "Name",
+        "namePlaceholder": "e.g. Partner CRM",
+        "issuedTitle": "Channel created",
+        "issuedDescription": "Keep these values somewhere safe before you close this window.",
+        "apiChannel": {
+          "title": "Connect an API channel",
+          "description": "Send and receive messages over REST from your own system. Replies are POSTed to your callback URL.",
+          "callbackLabel": "Callback URL",
+          "callbackHint": "Must be HTTPS. Replies are signed with x-eccho-signature so you can verify them.",
+          "callbackInvalid": "Enter an HTTPS URL",
+          "accountKeyLabel": "Account key",
+          "accountKeyHint": "Send this as accountKey when you post a message.",
+          "secretLabel": "Signing secret",
+          "secretHint": "Verify x-eccho-signature with this key.",
+          "secretWarning": "The signing secret is shown once and cannot be retrieved again. Copy it now — if you lose it, rotate for a new one."
+        },
+        "websiteWidget": {
+          "title": "Add a website widget",
+          "description": "Embed a chat widget on your site. Visitors chat anonymously and their conversations appear in your inbox.",
+          "originsLabel": "Allowed sites",
+          "originsHint": "Comma-separated. The widget refuses to load anywhere else.",
+          "originsInvalid": "Enter full URLs, e.g. https://shop.example.com",
+          "keyLabel": "Widget key",
+          "snippetLabel": "Embed snippet",
+          "snippetHint": "Paste this before the closing </body> tag on every page that should show the widget."
+        }
+      },
+      "connect": {
+        "title": "Connect {{platform}}",
+        "description": "Accept the terms and click Connect to authorize access.",
+        "cta": "Connect {{platform}}",
+        "telegram": {
+          "description": "Paste the bot token you received from @BotFather on Telegram.",
+          "tokenLabel": "Bot Token",
+          "tokenPlaceholder": "1234567890:AAF...",
+          "tokenHint": "Create a bot and get the token via @BotFather",
+          "tokenInvalid": "Invalid token format — expected 1234567890:ABC...",
+          "cta": "Connect Bot"
+        }
+      }
+    },
+    "edit": {
+      "title": "Edit Account",
+      "description": "Edit account details",
+      "success": "Account updated successfully."
+    },
+    "details": {
+      "statuses": {
+        "active": {
+          "label": "Active",
+          "title": "Account had been synced",
+          "description": "We have verified this account. You can start to add cookies and assign to link."
+        },
+        "inactive": {
+          "label": "Inactive",
+          "title": "Account not verified",
+          "description": "Your account has not been verified"
+        },
+        "blocked": {
+          "label": "Banned",
+          "title": "Banned",
+          "description": "Seem like this account had been banned from Facebook. You can delete this account.If you believe this is a mistake, mark as resolved"
+        }
+      },
+      "types": {
+        "facebookAccount": {
+          "label": "Facebook Account",
+          "description": "Personal account on Facebook"
+        },
+        "facebookPage": {
+          "label": "Facebook Page",
+          "description": "Your public page on Facebook where you can interact with followers."
+        },
+        "instagramAccount": {
+          "label": "Instagram Profile",
+          "description": "Your personal profile on Instagram"
+        },
+        "instagramPage": {
+          "label": "Instagram Business Page",
+          "description": "A business page on Instagram for engaging with your followers."
+        },
+        "zaloAccount": {
+          "label": "Zalo Profile",
+          "description": "Your personal profile on Zalo"
+        },
+        "zaloPage": {
+          "label": "Zalo Business Page",
+          "description": "A business page on Zalo for engaging with your followers."
+        },
+        "tiktokShop": {
+          "label": "TikTok Shop",
+          "description": "Your TikTok Shop seller account."
+        },
+        "shopeeShop": {
+          "label": "Shopee Shop",
+          "description": "Your Shopee seller account."
+        },
+        "telegramBot": {
+          "label": "Telegram Bot",
+          "description": "A Telegram bot connected with its bot token."
+        },
+        "apiChannel": {
+          "label": "API Channel",
+          "description": "Send and receive messages over REST from your own system."
+        },
+        "websiteWidget": {
+          "label": "Website Widget",
+          "description": "A chat widget embedded on your website."
+        }
+      },
+      "apiChannel": {
+        "title": "API channel",
+        "accountKeyLabel": "Account key",
+        "accountKeyHint": "Send this as accountKey when you post a message.",
+        "callbackLabel": "Callback URL",
+        "edit": {
+          "title": "Edit callback URL",
+          "subtitle": "Change where bot replies are POSTed.",
+          "callbackHint": "Must be HTTPS. Replies are signed with x-eccho-signature so you can verify them.",
+          "callbackInvalid": "Enter an HTTPS URL",
+          "success": "Callback URL updated.",
+          "error": "Failed to update callback URL."
+        }
+      },
+      "websiteWidget": {
+        "title": "Website widget",
+        "keyLabel": "Widget key",
+        "originsLabel": "Allowed sites",
+        "edit": {
+          "title": "Edit allowed sites",
+          "subtitle": "Sites allowed to embed this widget.",
+          "originsHint": "Comma-separated. The widget refuses to load anywhere else.",
+          "originsInvalid": "Enter full URLs, e.g. https://shop.example.com",
+          "success": "Allowed sites updated.",
+          "error": "Failed to update allowed sites."
+        }
+      }
+    },
+    "imports": {
+      "title": "Import account list",
+      "upload": {
+        "title": "Upload a CSV file",
+        "description": "Though import you can add or update {{object}}s, To update existing {{object}}s you must use the existing ID. You will be asked for confirmation before import.",
+        "importFiles": "Import files",
+        "importFilesDesc": "Drag and drop files here or click to upload",
+        "itemCreated": "Items will be created",
+        "itemUpdated": "Items will be updated"
+      },
+      "template": {
+        "title": "Unsure about the list?",
+        "description": "Download the template below to ensure you are following the correct format."
+      }
+    }
+  },
+  "accounts-proxies": {
+    "title": "Proxies"
+  },
+  "accounts-cookies": {
+    "title": "Cookies"
+  },
+  "activities": {
+    "title": "Activities",
+    "filters": {
+      "all": "All Activities"
+    },
+    "list": {
+      "noRecordsMessage": "No activities found"
+    },
+    "account": {
+      "create": "has linked account {{name}}",
+      "update": "has updated account {{name}}",
+      "delete": "has deleted account {{name}}"
+    },
+    "chatbot": {
+      "create": "has created chatbot <link/>",
+      "update": "has updated chatbot <link/>",
+      "delete": "has deleted chatbot <link/>",
+      "linkAccount": "has linked account <account/> to chatbot <link/>",
+      "unlinkAccount": "has unlinked account <account/> from chatbot <link/>",
+      "active": "has activated chatbot <link/>",
+      "inactive": "has deactivated chatbot <link/>",
+      "archive": "has archived chatbot <link/>",
+      "unarchive": "has unarchived chatbot <link/>",
+      "clone": "has cloned chatbot <link/>"
+    },
+    "member": {
+      "invite": "has invited member <link/>",
+      "remove": "has removed member <link/>",
+      "approve": "has approved member <link/>"
+    },
+    "skill": {
+      "create": "has created skill <link/>",
+      "update": "has updated skill <link/>",
+      "delete": "has deleted skill {{name}}",
+      "enable": "has enabled skill {{name}} for a chatbot",
+      "disable": "has disabled skill {{name}} for a chatbot"
+    },
+    "knowledgeBase": {
+      "create": "has uploaded document <link/>",
+      "update": "has updated document <link/>",
+      "delete": "has deleted document {{name}}"
+    },
+    "tool": {
+      "startInstall": "has started installing tool {{name}}",
+      "completeInstall": "has installed tool {{name}}",
+      "enable": "has enabled tool {{name}} for a chatbot",
+      "disable": "has disabled tool {{name}} for a chatbot"
+    },
+    "role": {
+      "active": "has activated role <link/>",
+      "inactive": "has deactivated role <link/>"
+    },
+    "apiKey": {
+      "reset": "has reset API key {{name}}"
+    },
+    "customer": {
+      "unmerge": "has unmerged customer {{name}}",
+      "mergeConfirm": "has confirmed merging customer {{name}}",
+      "mergeDismiss": "has dismissed merge suggestion for customer {{name}}"
+    },
+    "generic": {
+      "create": "has created {{name}}",
+      "update": "has updated {{name}}",
+      "delete": "has deleted {{name}}"
+    },
+    "unknown": "has done something"
+  },
+  "chatbot": {
+    "batch": {
+      "delete": {
+        "label": "Delete",
+        "title": "Delete chatbot(s)",
+        "description": "Are you sure you want to delete {{count}} chatbot(s)? This action cannot be undone."
+      },
+      "activate": {
+        "label": "Activate"
+      },
+      "deactivate": {
+        "label": "Deactivate"
+      }
+    },
+    "title": "Chatbot",
+    "create": {
+      "title": "Create chatbot",
+      "defaultName": "My assistance chatbot",
+      "name": "Chatbot Name",
+      "generalKnowledge": "General Knowledge",
+      "generalKnowledgePlaceholder": "What should your chatbot know about your business?",
+      "linkAccounts": "Link Accounts",
+      "select": "Select",
+      "noAccountsAvailable": "No accounts available",
+      "typingIndicator": {
+        "label": "Show typing indicator",
+        "description": "Display 'typing...' when a new message is being prepared."
+      },
+      "autoRead": {
+        "label": "Auto-mark as read",
+        "description": "Automatically mark messages as read to save time."
+      },
+      "primaryLanguage": "Primary Language",
+      "primaryLanguageHint": "The main language your chatbot will use to communicate with users.",
+      "deferedLanguage": "Fallback Language",
+      "deferedLanguageHint": "A backup language your chatbot can switch to if needed.",
+      "welcomeMessage": "Welcome Message",
+      "welcomeMessageHint": "The first message your chatbot will greet users with. This is optional.",
+      "welcomeMessagePlaceholder": "Enter a welcome message for your chatbot...",
+      "fallbackMessage": "Fallback Message",
+      "fallbackMessageHint": "Message shown when the chatbot cannot answer a user's question.",
+      "fallbackMessagePlaceholder": "Enter a fallback message when the bot cannot answer...",
+      "modelProvider": "AI Provider",
+      "model": "AI Model",
+      "modelHint": "Choose the AI model that powers your chatbot's responses.",
+      "modelsLoading": "Loading models...",
+      "temperature": "Temperature",
+      "temperatureHint": "Controls how creative or focused the chatbot's answers are. Higher values = more creative.",
+      "maxTokens": "Max Tokens",
+      "maxTokensHint": "The maximum length of each chatbot response.",
+      "create": "Create",
+      "cancel": "Cancel",
+      "error": "Failed to create chatbot",
+      "success": "Chatbot created successfully",
+      "loading": "Creating chatbot...",
+      "description": "Create a new chatbot to assist you with your tasks. You can link it to your accounts and provide general knowledge for it to use.",
+      "advancedSettings": "Advanced Settings",
+      "handoffSettings": "Handoff Settings",
+      "handoffMessage": "Handoff Message",
+      "handoffMessageHint": "Message sent to the user when the conversation is handed off to a human agent.",
+      "handoffMessagePlaceholder": "Enter the message shown when handing off to a human...",
+      "handoffKeywords": "Handoff Keywords",
+      "handoffKeywordsHint": "Comma-separated keywords that immediately trigger a handoff when detected in a user message.",
+      "handoffKeywordsPlaceholder": "e.g. human, agent, support",
+      "handoffFallbackThreshold": "Fallback Handoff Threshold",
+      "handoffFallbackThresholdHint": "Number of consecutive unanswered messages before automatically handing off to a human agent.",
+      "guardrailSettings": "Guardrail Settings",
+      "guardrailEnabled": "Enable Guardrails",
+      "guardrailEnabledHint": "Screen inbound messages and bot replies for attacks, leaks, and policy violations.",
+      "guardrailModelEnabled": "Built-in AI Classifier",
+      "guardrailModelEnabledHint": "Run Gemini Flash on every message for deeper screening. Adds slight latency.",
+      "guardrailCustomInstruction": "Custom Guardrail Instruction",
+      "guardrailCustomInstructionHint": "Describe what the AI should block, in plain language. Applied to both inbound messages and replies.",
+      "guardrailCustomInstructionPlaceholder": "e.g. Block any message mentioning competitor pricing or asking for refunds",
+      "guardrailEscalateOnBlock": "Escalate on Block",
+      "guardrailEscalateOnBlockHint": "Hand off to a human operator when a guardrail blocks a message. Disable for silent blocks only.",
+      "followupRules": "Follow-up rules",
+      "followupRulesHint": "Free-text guidance for when the bot should proactively follow up",
+      "followupRulesPlaceholder": "e.g. Follow up after 24 hours if the customer has not responded"
+    },
+    "details": {
+      "title": "Chatbot Details",
+      "summary": {
+        "title": "Summary",
+        "behaviorSection": "Behavior",
+        "aiModelSection": "AI Model"
+      },
+      "linkedAccounts": "Linked Accounts",
+      "addAccount": "Link account",
+      "accountLinked": "Account linked successfully",
+      "accountLinkFailed": "Failed to link account",
+      "generalKnowledgeSaved": "General knowledge saved",
+      "generalKnowledgeSaveFailed": "Failed to save general knowledge",
+      "typingIndicator": "Typing Indicator",
+      "autoRead": "Auto Read",
+      "generalKnowledge": "General knowledge",
+      "account": {
+        "active": "Active"
+      },
+      "noAccounts": "No Linked Accounts Yet",
+      "noAccountsDescription": "Your chatbot is ready to go, but needs accounts to get started! Edit the chatbot to link your accounts."
+    },
+    "edit": {
+      "title": "Edit chatbot",
+      "name": "Name",
+      "description": "Description",
+      "type": "Type",
+      "generalKnowledge": "General knowledge",
+      "generalKnowledgePlaceholder": "What would you like to post?",
+      "linkAccounts": "Link accounts",
+      "select": "Select",
+      "noAccountsAvailable": "No accounts available",
+      "save": "Save",
+      "cancel": "Cancel",
+      "error": "Failed to update chatbot",
+      "success": "Chatbot updated successfully",
+      "loading": "Loading chatbot..."
+    },
+    "chat": {
+      "heading": "Test Chat",
+      "refreshHint": "Refresh clears chat. Use Clear to start over.",
+      "clear": "Clear",
+      "restart": "Restart Chat",
+      "inputPlaceholder": "Type your message...",
+      "thinking": "Generating response...",
+      "sources": {
+        "label": "Sources"
+      },
+      "guardrail": {
+        "blocked": "This message was blocked by a safety guardrail."
+      },
+      "error": "Something went wrong. Please try again.",
+      "share": {
+        "button": "Share",
+        "title": "Share a preview link",
+        "description": "Anyone with this link can chat with the bot without signing in. It expires automatically and cannot be revoked early.",
+        "expiry": "Link expires in",
+        "expiryOptions": {
+          "1h": "1 hour",
+          "24h": "24 hours",
+          "7d": "7 days"
+        },
+        "generate": "Create link",
+        "copy": "Copy link",
+        "copied": "Link copied.",
+        "expiresAt": "Expires {{date}}",
+        "error": "Could not create the preview link."
+      }
+    },
+    "preview": {
+      "heading": "Chat preview",
+      "invalid": "This preview link is not valid.",
+      "expired": "This preview link has expired.",
+      "invalidHint": "Ask whoever shared it with you for a new link.",
+      "expiresIn": "Link expires {{time}}",
+      "turnstile": {
+        "required": "Please complete the verification first.",
+        "failed": "Verification failed. Reload the page and try again."
+      },
+      "poweredBy": "Powered by eccho"
+    },
+    "list": {
+      "noRecordsMessage": "No chatbots found",
+      "action": {
+        "stop": "Stop",
+        "delete": "Delete",
+        "clone": "Clone"
+      },
+      "delete": {
+        "confirm": {
+          "title": "Delete Chatbot",
+          "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+          "confirmButton": "Delete Chatbot"
+        },
+        "success": "Chatbot deleted successfully",
+        "error": "Failed to delete chatbot"
+      },
+      "title": "Chatbot",
+      "actions": {
+        "import": "Import",
+        "create": "Create"
+      },
+      "columns": {
+        "profile": "Profile",
+        "type": "Type",
+        "status": "Status",
+        "linkedAccounts": "Linked Accounts",
+        "addedBy": "Added By",
+        "lastUpdated": "Last updated at",
+        "typeOptions": {
+          "beauty": "Beauty",
+          "fashion": "Fashion",
+          "restaurant": "Restaurant",
+          "ecommerce": "E-commerce",
+          "healthcare": "Healthcare",
+          "finance": "Finance",
+          "education": "Education",
+          "travel": "Travel",
+          "spa": "Spa",
+          "fitness": "Fitness",
+          "automotive": "Automotive",
+          "real_estate": "Real Estate",
+          "entertainment": "Entertainment",
+          "other": "Other"
+        },
+        "statusOptions": {
+          "active": "Active",
+          "inactive": "Inactive",
+          "archived": "Archived"
+        }
+      },
+      "filters": {
+        "status": {
+          "label": "Status",
+          "options": {
+            "running": "Running",
+            "stopped": "Stopped",
+            "error": "Error",
+            "maintenance": "Maintenance"
+          }
+        },
+        "type": {
+          "label": "Type",
+          "options": {
+            "general": "General",
+            "support": "Support",
+            "sales": "Sales"
+          }
+        },
+        "search": {
+          "label": "Search",
+          "placeholder": "Search by name or added by..."
+        }
+      }
+    },
+    "rag": {
+      "title": "Knowledge Base",
+      "fileName": "file",
+      "fileSize": "{{size}} bytes",
+      "status": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "selectFile": "Select file",
+      "empty": {
+        "dragDrop": "Drag & drop files here to upload",
+        "uploadDesc": "Upload files to enable RAG capabilities for this chatbot."
+      },
+      "delete": {
+        "title": "Delete RAG file(s)",
+        "description": "Are you sure you want to delete {{count}} RAG file(s)? This action cannot be undone.",
+        "confirmText": "Delete",
+        "loading": "Deleting {{count}} RAG file(s)...",
+        "success": "Deleted {{count}} RAG file(s).",
+        "error": "Failed to delete RAG file(s). Please try again.",
+        "button": "Delete ({{count}})"
+      },
+      "error": {
+        "unsupportedFileType": "File type is not supported. Please upload PDF, EPUB, DOCX, TXT, HTML, or Markdown files."
+      }
+    },
+    "clone": {
+      "title": "Clone Chatbot",
+      "optionsLabel": "Also clone:",
+      "cloneTools": "Tool configurations",
+      "cloneKnowledgeItems": "Knowledge items",
+      "cloneRags": "RAG documents",
+      "more": "+{{count}} more",
+      "confirm": "Clone",
+      "success": "Chatbot \"{{name}}\" cloned successfully",
+      "error": "Failed to clone chatbot"
+    },
+    "actions": {
+      "clone": "Clone"
+    }
+  },
+  "followups": {
+    "title": "Followups",
+    "list": {
+      "noRecordsMessage": "No followups found",
+      "columns": {
+        "chatbot": "Chatbot",
+        "customer": "Customer",
+        "reason": "Reason",
+        "firesIn": "Fires in",
+        "status": "Status"
+      },
+      "filters": {
+        "chatbot": "Chatbot",
+        "status": "Status"
+      },
+      "action": {
+        "viewConversation": "View conversation"
+      },
+      "cancel": {
+        "action": "Cancel",
+        "confirm": {
+          "title": "Cancel Followup",
+          "description": "Are you sure you want to cancel this followup? This action cannot be undone.",
+          "confirmButton": "Cancel Followup"
+        },
+        "success": "Followup cancelled successfully",
+        "error": "Failed to cancel followup"
+      },
+      "firesInMinutes": "{{count}}m",
+      "firedAgo": "{{time}} ago",
+      "status": {
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "skipped": "Skipped",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      },
+      "skipReason": {
+        "conversation_missing": "Conversation no longer exists",
+        "bot_disabled": "Bot was turned off",
+        "conversation_resolved": "Conversation was resolved",
+        "chatbot_missing": "Chatbot was disconnected"
+      }
+    }
+  },
+  "comments": {
+    "title": "Comments"
+  },
+  "comments-filters": {
+    "title": "Filters"
+  },
+  "messages": {
+    "title": "Messages"
+  },
+  "groups": {
+    "title": "Groups"
+  },
+  "groups-autoposts": {
+    "title": "Autoposts"
+  },
+  "members": {
+    "title": "The Team",
+    "removeMember": {
+      "title": "Say Goodbye to Member",
+      "description": "Are you sure you want to remove this team member? They'll miss the fun!",
+      "success": "Member has left the building!",
+      "loading": "Saying goodbye..."
+    },
+    "inviteMember": {
+      "action": "Invite Member",
+      "placeholder": "Search by name...",
+      "success": "Invitation sent!  They're going to love it here.",
+      "loading": "Sending invitation magic...",
+      "searchResults": "People found",
+      "inviteCode": {
+        "title": "Secret Invitation Code",
+        "copySuccess": "Code copied! Share the magic"
+      }
+    },
+    "invitedMember": {
+      "title": "Invited",
+      "actions": {
+        "revoke": "Revoke invitation",
+        "regenerate": "Regenerate link"
+      },
+      "revoke": {
+        "success": "Invitation revoked successfully.",
+        "loading": "Revoking invitation..."
+      }
+    },
+    "assignRole": {
+      "title": "Assign Role to Member",
+      "description": "Select a role to assign to this member in the workspace.",
+      "selectRole": "Search for a role...",
+      "assign": "Assign Role",
+      "noRoles": "No roles found",
+      "memberInfo": "Member Information",
+      "success": "Role assigned successfully.",
+      "loading": "Assigning role...",
+      "error": "Failed to assign role."
+    },
+    "invitations": {
+      "title": "Invitations",
+      "empty": "No pending invitations."
+    },
+    "joinRequests": {
+      "title": "Join requests",
+      "empty": "No pending join requests.",
+      "approve": {
+        "action": "Approve",
+        "loading": "Approving request...",
+        "success": "Request approved. Welcome aboard!"
+      }
+    }
+  },
+  "roles": {
+    "subjects": {
+      "chatbot": "Chatbot",
+      "rag": "RAG",
+      "knowledgeBase": "Knowledge Base",
+      "customer": "Customer"
+    },
+    "title": "Roles",
+    "description": "Manage roles and permissions for members",
+    "fields": {
+      "permissions": "Permissions"
+    },
+    "types": {
+      "admin": "Admin",
+      "superAdmin": "Super admin",
+      "user": "User",
+      "workspaceMember": "Workspace member",
+      "workspaceOwner": "Workspace owner"
+    },
+    "actions": {
+      "manage": "Manage",
+      "read": "Read",
+      "create": "Create",
+      "update": "Update",
+      "delete": "Delete"
+    },
+    "summary": {
+      "title": "Role",
+      "roleId": "Role ID",
+      "type": "Type",
+      "modules": "Modules",
+      "noModules": "No modules assigned",
+      "noDescription": "No description"
+    }
+  },
+  "profile": {
+    "domain": "Profile",
+    "manageYourProfileDetails": "Manage your profile details",
+    "fields": {
+      "language": "Language",
+      "country": "Country",
+      "gender": "Gender",
+      "phone": "Phone",
+      "signUpDate": "Sign Up Date"
+    },
+    "deleteProfile": {
+      "domain": "Delete account",
+      "description": "Permanently delete your account",
+      "confirm": {
+        "title": "Are you sure?",
+        "description": "This action cannot be undone.",
+        "loading": "Deleting your account...",
+        "success": "Your account has been deleted.",
+        "error": "An error occurred while deleting your account.",
+        "confirmButton": "Delete my account",
+        "cancelButton": "Cancel"
+      }
+    }
+  },
+  "changePassword": {
+    "domain": "Change Password",
+    "description": "Change your current password",
+    "fields": {
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password"
+    },
+    "errors": {
+      "mismatch": "Passwords do not match.",
+      "sameAsCurrent": "New password must be different from the current one.",
+      "failed": "Could not change your password. Check your current password and try again."
+    },
+    "success": {
+      "message": "Password changed."
+    }
+  },
+  "preferences": {
+    "domain": "Preferences",
+    "general": {
+      "domain": "General",
+      "description": "Manage your general preferences",
+      "fields": {
+        "language": "Language",
+        "theme": "Theme"
+      }
+    },
+    "notifications": {
+      "domain": "Notifications",
+      "description": "Manage your notification preferences",
+      "fields": {
+        "emailNotifications": "Email Notifications",
+        "pushNotifications": "Push Notifications"
+      }
+    }
+  },
+  "workspace": {
+    "title": "Workspace",
+    "error": {
+      "notFound": "Workspace not found"
+    },
+    "details": {
+      "title": "Workspace Details",
+      "description": "View workspace information and settings"
+    },
+    "edit": {
+      "title": "Edit Workspace",
+      "description": "Edit workspace details and settings",
+      "success": "Workspace updated successfully",
+      "error": "Failed to update workspace",
+      "updating": "Updating..."
+    },
+    "delete": {
+      "success": "Workspace deleted successfully",
+      "error": "Failed to delete workspace",
+      "dangerZone": {
+        "title": "Danger zone",
+        "description": "Deleting this workspace permanently removes all of its data — members, customers, chatbots and more. This cannot be undone.",
+        "action": "Delete workspace"
+      },
+      "confirm": {
+        "title": "Delete workspace",
+        "description": "This will delete the workspace and all of its data. Type the workspace slug to confirm.",
+        "confirm": "Delete"
+      }
+    },
+    "fields": {
+      "avatar": "Avatar"
+    },
+    "placeholders": {
+      "name": "Enter workspace name",
+      "slug": "Enter workspace slug"
+    },
+    "avatar": {
+      "custom": "Custom avatar",
+      "default": "Default avatar"
+    }
+  },
+  "subscription": {
+    "domain": "Subscription"
+  },
+  "billing": {
+    "domain": "Billing"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "save": "Save",
+    "add": "Add",
+    "cancel": "Cancel",
+    "import": "Import",
+    "export": "Export",
+    "create": "Create",
+    "clearAll": "Clear all",
+    "continued": "Continue",
+    "linkAccount": "Connect Account",
+    "tryAgain": "Try Again",
+    "enable": "Enable",
+    "disable": "Disable",
+    "upload": "Upload",
+    "download": "Download",
+    "back": "Go Back",
+    "close": "Close",
+    "copy": "Copy",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "general": {
+    "emojiTooltip": "Emoji",
+    "emojiSearch": "Search emoji…",
+    "emojiNoResults": "No emoji found.",
+    "emojiLoading": "Loading…",
+    "is": "equals",
+    "of": "of",
+    "results": "results",
+    "noResultsTitle": "No Results",
+    "noResultsMessage": "No results found",
+    "pages": "pages",
+    "prev": "Previous",
+    "next": "Next",
+    "noRecordsTitle": "No Records Found",
+    "search": "Search",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "countSelected": "{{count}} items selected",
+    "loadMore": "Load More",
+    "timeAgo": {
+      "seconds": "{{count}} seconds ago",
+      "minutes": "{{count}} mins ago",
+      "hours": "{{count}} hours ago",
+      "days": "{{count}} days ago"
+    },
+    "unsaved": {
+      "title": "Unsaved Changes",
+      "message": "You have unsaved changes. Do you want to leave without saving?"
+    },
+    "plusCount": "+ {{count}}",
+    "areYouSure": "Are you sure?",
+    "batch": {
+      "success": "{{count}} item(s) updated.",
+      "partial": "{{success}} item(s) updated, {{failed}} failed.",
+      "error": "Could not update {{count}} item(s)."
+    }
+  },
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "status": "Status",
+    "description": "Description",
+    "accounts": "Accounts",
+    "createdAt": "Created At",
+    "createdBy": "Created By",
+    "updatedBy": "Updated By",
+    "joinedAt": "Joined At",
+    "updatedAt": "Updated At",
+    "addedBy": "Added By",
+    "slug": "Slug",
+    "type": "Type",
+    "optional": "Optional",
+    "role": "Role",
+    "selected": "Selected",
+    "errorMessage": "Error Message"
+  },
+  "filters": {
+    "filterLabel": "Filter",
+    "sortLabel": "Sort",
+    "searchLabel": "Search",
+    "addFilter": "Add Filter",
+    "clearAll": "Clear all",
+    "searchPlaceholder": "Search by name",
+    "date": {
+      "from": "From",
+      "to": "To",
+      "custom": "Custom",
+      "today": "Today",
+      "lastSevenDays": "Last 7 Days",
+      "lastThirtyDays": "Last 30 Days",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "lastNinetyDays": "Last 90 Days",
+      "lastTwelveMonths": "Last 12 Months",
+      "thisYear": "This Year"
+    }
+  },
+  "errors": {
+    "required": "Please fill out this field",
+    "email": "That doesn't look like an email address",
+    "uploadFile": "Don't forget to upload a file!",
+    "maxFileSize": "File size should be under {maxFileSize} MB",
+    "maxLength": "Let's keep it shorter - maximum {maxLength} characters please",
+    "slug": "Only lowercase letters, numbers, and hyphens allowed here - keep it clean!",
+    "chatbot": {
+      "nameRequired": "Your chatbot needs a name - give it some personality!",
+      "nameMinLength": "Chatbot name must be at least {min} characters.",
+      "primaryLanguageRequired": "Please select a primary language for your chatbot",
+      "modelRequired": "Please select an AI model for your chatbot",
+      "modelProviderRequired": "Please select an AI provider for your chatbot",
+      "modelTextNameRequired": "Please select an AI model for your chatbot"
+    }
+  },
+  "errorBoundary": {
+    "notFoundTitle": "Page Not Found",
+    "notFoundMessage": "The page you are looking for does not exist.",
+    "badRequestTitle": "Bad Request",
+    "badRequestMessage": "The request could not be understood by the server due to malformed syntax.",
+    "unauthorizedTitle": "Unauthorized",
+    "unauthorizedMessage": "You are not authorized to access this page.",
+    "internalServerErrorTitle": "Internal Server Error",
+    "internalServerErrorMessage": "The server encountered an unexpected condition that prevented it from fulfilling the request.",
+    "forbiddenTitle": "Forbidden",
+    "forbiddenMessage": "You do not have permission to access this resource.",
+    "defaultTitle": "An error occurred",
+    "defaultMessage": "An unexpected error occurred. Please try again later."
+  },
+  "knowledgeBase": {
+    "batch": {
+      "delete": {
+        "label": "Delete",
+        "title": "Delete knowledge item(s)",
+        "description": "Are you sure you want to delete {{count}} knowledge item(s)? This action cannot be undone."
+      },
+      "process": {
+        "label": "Process"
+      }
+    },
+    "title": "Knowledge Base",
+    "description": "Organize and manage your knowledge items",
+    "list": {
+      "title": "Knowledge Items",
+      "empty": "No knowledge items yet",
+      "columns": {
+        "title": "Title",
+        "type": "Type",
+        "status": "Status",
+        "tags": "Tags",
+        "created": "Created",
+        "actions": "Actions"
+      }
+    },
+    "create": {
+      "title": "Create Knowledge Item",
+      "success": "Knowledge item created successfully",
+      "error": "Failed to create knowledge item"
+    },
+    "edit": {
+      "title": "Edit Knowledge Item",
+      "success": "Knowledge item updated successfully",
+      "error": "Failed to update knowledge item"
+    },
+    "delete": {
+      "confirm": {
+        "title": "Delete Knowledge Item",
+        "description": "Are you sure you want to delete this knowledge item? This action cannot be undone.",
+        "confirmButton": "Delete"
+      },
+      "success": "Knowledge item deleted successfully",
+      "error": "Failed to delete knowledge item"
+    },
+    "type": {
+      "FILE": "File",
+      "URL": "URL",
+      "TEXT": "Text"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "READY": "Ready",
+      "PROCESSING": "Processing",
+      "COMPLETED": "Completed",
+      "FAILED": "Failed"
+    },
+    "folder": {
+      "title": "Folders",
+      "create": "Create Folder",
+      "edit": "Edit Folder",
+      "delete": "Delete Folder",
+      "root": "Root",
+      "success": "Folder operation completed successfully",
+      "error": "Failed to perform folder operation",
+      "cannotDeleteRoot": "Cannot delete the root folder"
+    },
+    "tag": {
+      "title": "Tags",
+      "create": "Create Tag",
+      "edit": "Edit Tag",
+      "delete": "Delete Tag",
+      "success": "Tag operation completed successfully",
+      "error": "Failed to perform tag operation",
+      "noTags": "No tags available"
+    },
+    "upload": {
+      "title": "Upload",
+      "selectFile": "Select a file",
+      "dragDrop": "or drag and drop",
+      "supportedFormats": "Supported formats: PDF, DOCX, EPUB, TXT, HTML, MD",
+      "success": "File uploaded successfully",
+      "error": "Failed to upload file",
+      "tooBig": "File is too large"
+    },
+    "url": {
+      "title": "Add URL",
+      "placeholder": "Enter URL (e.g., https://example.com)",
+      "success": "URL added successfully",
+      "error": "Failed to add URL",
+      "invalid": "Invalid URL format"
+    },
+    "text": {
+      "title": "Add Text",
+      "placeholder": "Enter your text content here...",
+      "success": "Text added successfully",
+      "error": "Failed to add text"
+    },
+    "filter": {
+      "byType": "Filter by Type",
+      "byStatus": "Filter by Status",
+      "byTags": "Filter by Tags",
+      "all": "All"
+    },
+    "search": {
+      "placeholder": "Search knowledge items..."
+    },
+    "empty": {
+      "title": "No knowledge items linked",
+      "description": "Add knowledge items to enhance your chatbot with context and information."
+    },
+    "actions": {
+      "process": "Process",
+      "reprocess": "Re-process",
+      "processQueued": "Queued for processing"
+    }
+  },
+  "knowledge_item": {
+    "create_title": "Create Knowledge Item",
+    "create_description": "Add a new knowledge item to your knowledge base. Choose from text, URL, or file sources.",
+    "select_type_label": "Select Type",
+    "create_button": "Create",
+    "cancel": "Cancel",
+    "title_placeholder": "Enter item title",
+    "description": "Description",
+    "description_placeholder": "Enter description (optional)",
+    "file_description_placeholder": "What is this file about?",
+    "content": "Content",
+    "content_placeholder": "Enter content",
+    "content_hint": "You can format your content using markdown",
+    "file": "File",
+    "file_hint": "Supported formats: PDF, DOCX, TXT, HTML, MD",
+    "url": "URL",
+    "url_hint": "Enter a valid web page URL",
+    "type": {
+      "type": "Type",
+      "file": "File",
+      "file_desc": "Upload a document or file",
+      "url": "URL",
+      "url_desc": "Link to a web page",
+      "text": "Text",
+      "text_desc": "Write custom text content"
+    },
+    "status": "Status",
+    "created_at": "Created At",
+    "updated_at": "Updated At",
+    "file_content": "File content preview",
+    "details": "Details",
+    "base_id": "Knowledge Base ID",
+    "timestamps": "Timestamps",
+    "create_success": "Knowledge item created successfully",
+    "create_error": "Failed to create knowledge item",
+    "process_after_create_error": "Item created, but processing couldn't start automatically. Use \"Process\" to retry.",
+    "creating": "Creating knowledge item...",
+    "title": "Title",
+    "currentTags": "Current Tags",
+    "addTag": "Add New Tag",
+    "tagPlaceholder": "Enter tag name...",
+    "tagHint": "Use tags to categorize and organize your knowledge items",
+    "tagsUpdateError": "Failed to update tags",
+    "editTags": "Edit Tags",
+    "edit": {
+      "success": "Knowledge item updated successfully",
+      "error": "Failed to update knowledge item"
+    }
+  },
+  "conversations": {
+    "title": "Conversations",
+    "list": {
+      "empty": "No conversations yet",
+      "search": {
+        "placeholder": "Search conversations"
+      },
+      "filter": {
+        "status": "Status",
+        "all": "All statuses",
+        "chatbot": "Chatbot",
+        "allChatbots": "All chatbots",
+        "account": "Account",
+        "allAccounts": "All accounts",
+        "groupBy": "Group by"
+      },
+      "groupBy": {
+        "none": "No grouping",
+        "account": "By account",
+        "chatbot": "By chatbot",
+        "unassigned": "Unassigned"
+      },
+      "row": {
+        "mergeSuggestionBadge": "Pending merge suggestion"
+      }
+    },
+    "status": {
+      "botActive": "Bot active",
+      "needsYou": "Needs you",
+      "youHandling": "You're handling",
+      "resolved": "Resolved",
+      "lifecycle": {
+        "OPEN": "Open",
+        "RESOLVED": "Resolved"
+      }
+    },
+    "author": {
+      "user": "Customer",
+      "bot": "Bot",
+      "operator": "You",
+      "you": "You"
+    },
+    "detail": {
+      "empty": {
+        "title": "Select a conversation",
+        "description": "Pick a conversation from the list to view the message thread."
+      },
+      "loading": "Loading messages…",
+      "noMessages": "No messages in this conversation yet.",
+      "newMessages": "New messages",
+      "notFound": "Conversation not found"
+    },
+    "composer": {
+      "placeholder": "Reply as operator…",
+      "send": "Send",
+      "retry": "Retry",
+      "failed": "Failed to send",
+      "tooLong": "Message must be 4096 characters or fewer",
+      "disabledResolved": "This conversation is resolved. Restore it to auto to reply."
+    },
+    "actions": {
+      "botLabel": "Bot",
+      "viewProfile": "View profile",
+      "viewChatbot": "View chatbot",
+      "pause": "Pause bot",
+      "resolve": "Resolve",
+      "restore": "Restore to auto",
+      "cancel": "Cancel",
+      "pauseConfirmTitle": "Pause automated replies?",
+      "pauseConfirmDescription": "The bot will stop responding. An operator will need to reply manually.",
+      "pauseReasonLabel": "Reason (optional)",
+      "pauseReasonPlaceholder": "e.g. Customer requested human support",
+      "resolveConfirmTitle": "Mark conversation as resolved?",
+      "resolveConfirmDescription": "Resolved conversations cannot receive operator replies until restored.",
+      "restoreConfirmTitle": "Hand back to the bot?",
+      "restoreConfirmDescription": "Bot will resume answering. If the conversation was resolved, the AI memory will be reset."
+    },
+    "errors": {
+      "sendFailed": "Couldn't send your message. Try again.",
+      "loadFailed": "Failed to load conversations."
+    },
+    "reactions": {
+      "toggle": "Toggle {{emoji}} reaction",
+      "quickReact": "React with {{emoji}}",
+      "addReaction": "Add reaction",
+      "more": "More emoji",
+      "toastFailed": "Couldn't update the reaction. Try again.",
+      "windowClosed": "Reactions unavailable",
+      "windowClosedTooltip": "Due to Meta’s 24-hour messaging policy, you can no longer react to this message.",
+      "policyLink": "Learn more"
+    },
+    "customer": {
+      "panel": {
+        "title": "Customer",
+        "fields": {
+          "name": "Name",
+          "phone": "Phone",
+          "email": "Email",
+          "language": "Language",
+          "notes": "Notes"
+        },
+        "contactPoints": {
+          "title": "Contact points",
+          "empty": "No contact points yet."
+        },
+        "followups": {
+          "title": "Followups",
+          "empty": "No pending followups.",
+          "badge": "This message triggered a followup",
+          "viewMessage": "View message",
+          "cancel": "Cancel"
+        },
+        "tags": {
+          "title": "Tags",
+          "empty": "No tags yet",
+          "add": "Add tag",
+          "remove": "Remove"
+        },
+        "actions": {
+          "save": "Save",
+          "cancel": "Cancel",
+          "more": "More actions"
+        },
+        "toast": {
+          "saving": "Saving customer…",
+          "updated": "Customer updated.",
+          "updateFailed": "Failed to update customer."
+        },
+        "unmerge": {
+          "action": "Unmerge",
+          "confirm": {
+            "title": "Unmerge customer?",
+            "body": "This will restore the most recent merged customer and reverse the merge.",
+            "confirm": "Unmerge",
+            "cancel": "Cancel"
+          },
+          "toast": {
+            "success": "Customer unmerged.",
+            "failed": "Failed to unmerge customer."
+          }
+        },
+        "collapse": "Collapse sidebar",
+        "expand": "Expand sidebar"
+      }
+    }
+  },
+  "customers": {
+    "suggestions": {
+      "title": "Customer suggestions",
+      "description": "Possible duplicate customers detected by matching phone or email.",
+      "loading": "Loading…",
+      "empty": "No suggestions to review.",
+      "filter": {
+        "status": "Status"
+      },
+      "status": {
+        "PENDING": "Pending",
+        "DISMISSED": "Dismissed",
+        "MERGED": "Merged"
+      },
+      "table": {
+        "customerA": "Customer A",
+        "customerB": "Customer B",
+        "matchField": "Match",
+        "matchValue": "Value",
+        "createdAt": "Detected"
+      },
+      "actions": {
+        "review": "Review",
+        "confirmMerge": "Confirm merge",
+        "dismiss": "Dismiss",
+        "cancel": "Cancel"
+      },
+      "dialog": {
+        "title": "Merge customers",
+        "description": "Matched by {{field}} = {{value}}",
+        "survivor": {
+          "label": "Pick the customer to keep"
+        },
+        "side": {
+          "A": "Customer A",
+          "B": "Customer B"
+        },
+        "fields": {
+          "title": "Resolve conflicting fields",
+          "name": "Name",
+          "phone": "Phone",
+          "email": "Email",
+          "language": "Language",
+          "notes": "Notes",
+          "profileSummary": "Profile summary"
+        }
+      },
+      "toast": {
+        "merged": "Customers merged.",
+        "mergeFailed": "Failed to merge customers.",
+        "dismissed": "Suggestion dismissed.",
+        "dismissFailed": "Failed to dismiss suggestion."
+      },
+      "nav": {
+        "label": "Suggestion"
+      }
+    },
+    "title": "Customers"
+  },
+  "settings": {
+    "customerTags": {
+      "title": "Customer tags",
+      "description": "Manage the catalog of tags that can be applied to customers in this workspace.",
+      "actions": {
+        "create": "Create tag",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "e.g. VIP",
+        "emoji": "Emoji",
+        "description": "Description",
+        "descriptionPlaceholder": "What is this tag used for?",
+        "triggersHandoff": "Triggers handoff",
+        "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator."
+      },
+      "toast": {
+        "created": "Tag created.",
+        "createFailed": "Failed to create tag.",
+        "updated": "Tag updated.",
+        "updateFailed": "Failed to update tag.",
+        "deleted": "Tag deleted."
+      },
+      "errors": {
+        "nameTaken": "A tag with this name already exists."
+      },
+      "delete": {
+        "confirm": {
+          "title": "Delete tag?",
+          "body": "This will remove the tag from all customers it was applied to.",
+          "confirm": "Delete",
+          "cancel": "Cancel"
+        }
+      }
+    },
+    "clientCredentials": {
+      "title": "API key",
+      "empty": "No client credentials yet.",
+      "actions": {
+        "create": "Create credential"
+      },
+      "fields": {
+        "name": "Name",
+        "key": "Key",
+        "status": "Status",
+        "createdAt": "Created"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "toast": {
+        "created": "Credential created.",
+        "createFailed": "Failed to create credential.",
+        "deleted": "Credential deleted.",
+        "deleteFailed": "Failed to delete credential."
+      },
+      "reveal": {
+        "title": "Credential created",
+        "warning": "Copy the secret now — it won't be shown again.",
+        "tokenLabel": "x-api-key",
+        "copy": "Copy",
+        "copied": "Copied to clipboard."
+      },
+      "delete": {
+        "confirm": {
+          "title": "Delete credential?",
+          "body": "This permanently revokes the credential. Any client using this key will be unable to authenticate.",
+          "confirm": "Delete",
+          "cancel": "Cancel"
+        }
+      }
+    }
+  },
+  "tools": {
+    "batch": {
+      "delete": {
+        "label": "Delete",
+        "title": "Delete tool(s)",
+        "description": "Are you sure you want to delete {{count}} tool(s)? Tools still attached to a chatbot will be skipped."
+      }
+    },
+    "title": "Tools",
+    "subtitle": "Connect HTTP APIs and MCP servers your chatbot can call.",
+    "actions": {
+      "browseMarketplace": "Browse marketplace",
+      "create": "Create",
+      "createHttp": "HTTP Tool",
+      "createMcp": "Custom MCP",
+      "newHttp": "New HTTP tool",
+      "newMcp": "New MCP"
+    },
+    "new": {
+      "picker": {
+        "title": "Create a tool",
+        "subtitle": "Choose the type of tool you want to create.",
+        "http": {
+          "title": "HTTP Tool",
+          "description": "Connect a custom REST endpoint. The AI calls it with structured arguments."
+        },
+        "mcp": {
+          "title": "Custom MCP",
+          "description": "Connect a Model Context Protocol server. Actions are discovered automatically."
+        },
+        "marketplace": {
+          "title": "Marketplace",
+          "description": "Install a hosted toolkit via OAuth. Browse hundreds of pre-built integrations."
+        }
+      },
+      "http": {
+        "title": "New HTTP tool"
+      },
+      "mcp": {
+        "title": "New MCP tool"
+      },
+      "success": {
+        "title": "Tool created",
+        "description": "Your tool is ready. You can configure it further from the tool detail page.",
+        "goToTool": "Go to tool"
+      }
+    },
+    "list": {
+      "loading": "Loading tools…",
+      "noRecordsMessage": "No tools found. Try adjusting your search or filters.",
+      "columns": {
+        "kind": "Kind",
+        "name": "Name",
+        "status": "Status",
+        "createdAt": "Created"
+      },
+      "filters": {
+        "kind": "Kind",
+        "status": "Status",
+        "mcpProvider": "MCP Provider",
+        "statusOptions": {
+          "active": "Active",
+          "needsreauth": "Needs Reauth",
+          "expired": "Expired",
+          "revoked": "Revoked"
+        },
+        "kindOptions": {
+          "HTTP": "HTTP",
+          "MCP": "MCP"
+        },
+        "providerOptions": {
+          "COMPOSIO": "Composio",
+          "OPERATOR": "Operator",
+          "ECCHO": "Ecbot"
+        }
+      }
+    },
+    "empty": {
+      "title": "No tools yet",
+      "description": "Install one from the marketplace or wire up your own HTTP endpoint."
+    },
+    "create": {
+      "title": "New HTTP tool",
+      "subtitle": "Describe an HTTP endpoint the chatbot can call as a tool.",
+      "submit": "Create tool",
+      "success": "Tool created.",
+      "error": "Failed to create tool."
+    },
+    "edit": {
+      "title": "Edit tool",
+      "subtitle": "Update the tool configuration. Credentials are write-only — leave the field empty to keep the existing value.",
+      "submit": "Save changes",
+      "success": "Tool updated.",
+      "error": "Failed to update tool.",
+      "notHttp": "This editor only supports HTTP tools."
+    },
+    "details": {
+      "title": "Tool details",
+      "sections": {
+        "description": "Description",
+        "endpoint": "Endpoint",
+        "mcp": "MCP Configuration",
+        "metadata": "Details"
+      },
+      "fields": {
+        "kind": "Kind",
+        "status": "Status",
+        "httpMethod": "Method",
+        "httpUrl": "URL",
+        "timeoutMs": "Timeout (ms)",
+        "maxRetries": "Max retries",
+        "mcpProvider": "Provider",
+        "composioToolkit": "Toolkit",
+        "discoveredActions": "Discovered Actions",
+        "discoveredActionsEmpty": "No actions discovered yet.",
+        "discoveredActionsReload": "Reload",
+        "toolkitDescription": "Description",
+        "toolkitCategories": "Categories",
+        "toolkitToolsCount": "Actions",
+        "id": "ID",
+        "createdAt": "Created",
+        "updatedAt": "Updated"
+      }
+    },
+    "discover": {
+      "error": "Discovery failed. Check the server URL and credentials."
+    },
+    "delete": {
+      "button": "Delete tool",
+      "success": "Tool deleted.",
+      "error": "Failed to delete tool.",
+      "errorReferenced": "This tool is still attached to one or more chatbots. Remove it from all chatbots first, then delete.",
+      "confirm": {
+        "title": "Delete tool?",
+        "description": "Chatbots using this tool will lose access. This cannot be undone.",
+        "confirmButton": "Delete"
+      }
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "e.g. product-search",
+      "description": "Description",
+      "descriptionPlaceholder": "What does this tool do? The LLM reads this to decide when to call it.",
+      "httpMethod": "Method",
+      "httpUrl": "URL",
+      "inputSchema": "Input schema (JSON)",
+      "inputSchemaHint": "JSON Schema describing the tool arguments.",
+      "headers": "Headers (JSON)",
+      "headersHint": "Optional static headers attached to every call.",
+      "authType": "Auth type",
+      "authTypeOptions": {
+        "none": "None",
+        "bearer": "Bearer token",
+        "api_key": "API key",
+        "basic": "Basic"
+      },
+      "authPlacement": "Auth placement",
+      "authPlacementOptions": {
+        "header": "Header",
+        "query": "Query parameter"
+      },
+      "authParamName": "Parameter name",
+      "authParamNameHint": "Header or query parameter that carries the API key.",
+      "credential": "Credential",
+      "credentialHint": "Plaintext on submit; stored envelope-encrypted. Leave empty on edit to keep the existing value.",
+      "credentialPlaceholder": "•••••••••",
+      "timeoutMs": "Timeout (ms)",
+      "maxRetries": "Max retries"
+    },
+    "errors": {
+      "createFailed": "Could not create the tool. Please check the form and try again.",
+      "updateFailed": "Could not save the tool. Please check the form and try again.",
+      "deleteFailed": "Could not delete the tool. Please try again.",
+      "schemaRowKeyRequired": "Property key is required.",
+      "schemaRowDescriptionRequired": "Property description is required."
+    },
+    "test": {
+      "title": "Test Endpoint",
+      "argsLabel": "Request args (JSON)",
+      "runButton": "Run Test",
+      "invalidJson": "Invalid JSON",
+      "result": {
+        "success": "Success",
+        "error": "Error",
+        "timeout": "Timeout",
+        "duration": "{{ms}}ms"
+      }
+    },
+    "schemaEditor": {
+      "title": "Properties",
+      "addProperty": "Add property",
+      "removeProperty": "Remove",
+      "keyLabel": "Key",
+      "keyTooltip": {
+        "body": "The parameter name the AI passes when invoking this tool. Must match exactly what your API expects.",
+        "formatLabel": "FORMAT",
+        "format": "Lowercase + underscores",
+        "examplesLabel": "EXAMPLES"
+      },
+      "keyEmptyError": "Property key cannot be empty",
+      "typeLabel": "Type",
+      "descriptionLabel": "Description",
+      "enumLabel": "Allowed values",
+      "enumTooltip": {
+        "body": "Restrict this parameter to a <bold>fixed set of accepted values</bold>. The AI can only send one of these options.",
+        "exampleLabel": "EXAMPLE",
+        "example": "active, inactive, pending",
+        "hint": "Leave blank to accept any value."
+      },
+      "enumPlaceholder": "Comma-separated values",
+      "requiredLabel": "Required",
+      "modeStructured": "Structured",
+      "modeJson": "JSON",
+      "invalidJson": "Invalid JSON: {{message}}",
+      "complexSchemaWarning": "This schema uses features the structured editor can’t display (nested objects, oneOf, allOf, …). Switching back to structured mode will lose those parts. Continue?",
+      "emptyHint": "No properties yet. Click ‘Add property’ to describe the tool arguments."
+    },
+    "headersEditor": {
+      "title": "Headers",
+      "addHeader": "Add header",
+      "removeHeader": "Remove",
+      "keyLabel": "Header name",
+      "keyEmptyError": "Header name cannot be empty",
+      "valueLabel": "Value",
+      "modeStructured": "Structured",
+      "modeJson": "JSON",
+      "invalidJson": "Invalid JSON: {{message}}",
+      "emptyHint": "No headers yet. Click ‘Add header’ to attach a static header to every call."
+    },
+    "pendingAuth": {
+      "hint": "Authentication not completed. Retry to connect or discard this draft.",
+      "retryButton": "Retry auth",
+      "discardButton": "Discard"
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "browse": "Browse hosted toolkits and install them as MCP tools.",
+      "installButton": "Install",
+      "installingToast": "Redirecting to provider…",
+      "installSuccessToast": "Tool installed.",
+      "installErrorToast": "Install failed.",
+      "searchPlaceholder": "Search toolkits…",
+      "categoryAll": "All categories",
+      "noResults": "No toolkits found.",
+      "pagination": "Page {{page}} of {{totalPage}}",
+      "filters": {
+        "provider": "Provider",
+        "category": "Category"
+      },
+      "providerTab": {
+        "composio": "Composio",
+        "eccho": "Ecbot",
+        "ecchoComingSoon": "Coming soon — first-party tools land in a follow-up."
+      },
+      "callback": {
+        "installing": "Finishing install…",
+        "success": "Installed successfully.",
+        "error": "Install failed.",
+        "backLink": "Back to marketplace"
+      }
+    },
+    "mcp": {
+      "create": {
+        "title": "New MCP tool",
+        "subtitle": "Connect a custom Model Context Protocol server. Per-action toggles appear after the server is reached.",
+        "submit": "Create MCP tool",
+        "success": "MCP tool created.",
+        "error": "Failed to create MCP tool."
+      },
+      "form": {
+        "namePlaceholder": "e.g. internal-search",
+        "serverUrl": "MCP server URL",
+        "serverUrlHint": "Streamable HTTP or SSE endpoint exposed by your MCP server."
+      }
+    },
+    "invocations": {
+      "title": "Recent invocations",
+      "subtitle": "Last 100 tool calls for this chatbot. Click a row to inspect the request and response.",
+      "refresh": "Refresh",
+      "empty": "No invocations yet. The chatbot hasn't called any tools.",
+      "input": "Input args",
+      "output": "Output",
+      "error": "Error"
+    },
+    "chatbotTab": {
+      "title": "Tools",
+      "subtitle": "Enable workspace tools on this chatbot. MCP tools support per-action toggles.",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enableSuccess": "Tool enabled.",
+      "disableSuccess": "Tool disabled.",
+      "toggleError": "Failed to update tool.",
+      "removeSuccess": "Tool removed.",
+      "removeError": "Failed to remove tool.",
+      "loadError": "Failed to load tools.",
+      "expandActions": "Show actions",
+      "collapseActions": "Hide actions",
+      "actionsTitle": "Discovered actions",
+      "actionsEmpty": "No actions discovered yet. Refresh after the MCP server connects.",
+      "actionsAutoSaveError": "Failed to save action settings.",
+      "empty": {
+        "title": "No tools enabled",
+        "description": "Click 'Add' to connect a workspace tool to this chatbot."
+      }
+    },
+    "addDrawer": {
+      "title": "Add Tool",
+      "selectLabel": "Select a tool",
+      "actionsTitle": "Actions",
+      "enableSuccess": "Tool added.",
+      "enableError": "Failed to add tool."
+    }
+  },
+  "channels": {
+    "title": "Channels"
+  },
+  "agents": {
+    "title": "Agents"
+  },
+  "recentAgents": {
+    "title": "Recent agents"
+  },
+  "sessions": {
+    "domain": "Sessions",
+    "title": "Active sessions",
+    "subtitle": "Devices and browsers currently signed in to your account.",
+    "status": {
+      "ACTIVE": "Active",
+      "REVOKED": "Revoked"
+    },
+    "table": {
+      "device": "Device / browser",
+      "ip": "IP address",
+      "location": "Location",
+      "signedInAt": "Signed in",
+      "lastActiveAt": "Last active",
+      "empty": "You have no sessions yet."
+    },
+    "revoke": {
+      "label": "Revoke",
+      "confirm": {
+        "title": "Revoke this session?",
+        "description": "The device using this session will be signed out immediately. You cannot revoke the session you are currently using.",
+        "confirm": "Revoke session"
+      }
+    },
+    "toast": {
+      "revoked": "Session revoked",
+      "revokeFailed": "Could not revoke this session"
+    }
+  },
+  "usage": {
+    "domain": "Usage",
+    "title": "Token usage",
+    "subtitle": "How much of this period's token quota you have used.",
+    "quota": {
+      "title": "Quota used",
+      "plan": "Plan",
+      "renewsOn": "Renews on",
+      "hasCredit": "Extra credit available",
+      "noCredit": "No extra credit",
+      "exhausted": "Quota used up — chatbots will reply with their fallback message."
+    },
+    "trend": {
+      "title": "Daily usage",
+      "empty": "No usage recorded in this range.",
+      "percentOfQuota": "% of quota",
+      "messages": "Messages"
+    },
+    "byChatbot": {
+      "title": "By chatbot",
+      "column": "Chatbot"
+    },
+    "byPlatform": {
+      "title": "By platform",
+      "column": "Platform",
+      "preview": "Preview (test chat)"
+    },
+    "share": "Share",
+    "messages": "Messages",
+    "tokens": "Tokens",
+    "export": "Export CSV",
+    "settings": {
+      "title": "Low-balance alert",
+      "description": "Warn the workspace owner when the remaining quota drops below this percent.",
+      "threshold": "Threshold (%)",
+      "saved": "Alert threshold updated.",
+      "edit": "Alert settings",
+      "preview": "Warn the owner when less than {{percent}}% of the period quota is left."
+    },
+    "debug": {
+      "title": "Debug — development only",
+      "description": "Absolute token counts. Not served in production.",
+      "quota": "Quota",
+      "used": "Used this period",
+      "credit": "Credit balance"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "TRIALING": "Trial",
+      "PAST_DUE": "Past due",
+      "CANCELED": "Canceled",
+      "EXPIRED": "Expired"
+    }
+  }
+}

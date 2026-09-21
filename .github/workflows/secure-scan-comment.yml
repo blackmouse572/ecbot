@@ -1,0 +1,120 @@
+name: SecurePR Comment
+
+on:
+  workflow_run:
+    workflows: ["SecurePR Scan"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  actions: read
+  contents: read
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+    steps:
+      - name: Download scan report artifact
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            const match = artifacts.data.artifacts.find(
+              (artifact) => artifact.name === "secure-scan-report"
+            );
+            if (!match) {
+              core.setFailed("secure-scan-report artifact not found");
+              return;
+            }
+            const download = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: match.id,
+              archive_format: "zip",
+            });
+            const fs = require("fs");
+            fs.writeFileSync(
+              `${process.env.GITHUB_WORKSPACE}/secure-scan-report.zip`,
+              Buffer.from(download.data)
+            );
+
+      # -j junks paths: a fork controls the archive, so nothing may escape the dir.
+      - name: Unzip scan report
+        run: unzip -o -j secure-scan-report.zip -d secure-scan-report
+
+      - name: Upsert PR comment
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const fs = require("fs");
+            const run = context.payload.workflow_run;
+
+            // Resolve the PR from the trusted workflow_run payload. The artifact is
+            // written by the PR head's own code and can name any PR in the repo.
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              head: `${run.head_repository.owner.login}:${run.head_branch}`,
+            });
+            const pr = prs.data.find((candidate) => candidate.head.sha === run.head_sha);
+            if (!pr) {
+              core.setFailed(
+                `No open PR found for ${run.head_repository.owner.login}:${run.head_branch} at ${run.head_sha}`
+              );
+              return;
+            }
+
+            // summary.md is attacker-influenced. unzip restores symlinks, so refuse
+            // anything that is not a regular file before reading it.
+            const summaryPath = "secure-scan-report/summary.md";
+            if (!fs.existsSync(summaryPath) || !fs.lstatSync(summaryPath).isFile()) {
+              core.setFailed("summary.md is missing or is not a regular file");
+              return;
+            }
+            const MAX_BYTES = 60000;
+            const raw = fs.readFileSync(summaryPath);
+            let summary = raw.subarray(0, MAX_BYTES).toString("utf8");
+            if (raw.length > MAX_BYTES) {
+              summary += "\n\n_Report truncated at 60 000 bytes._";
+            }
+
+            // The summary is only ever used as a comment body — never in a URL,
+            // a filename, or any other API parameter.
+            const header = "## 🔒 SecurePR Scan Report";
+            const rest = summary.startsWith(header) ? summary.slice(header.length) : summary;
+            const body = `${header}\n\n**Scan run conclusion:** ${run.conclusion}\n${rest}`;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+            const existing = comments.find(
+              (comment) =>
+                comment.user &&
+                comment.user.login === "github-actions[bot]" &&
+                comment.body &&
+                comment.body.startsWith(header)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body,
+              });
+            }

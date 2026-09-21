@@ -1,0 +1,6 @@
+export enum ENUM_RAG_STATUS_CODE_ERROR {
+    NOT_FOUND = 8100,
+    EXIST = 8101,
+    FORBIDDEN = 8105,
+    EXCEED_LIMIT = 8106,
+}
