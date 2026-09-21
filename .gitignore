@@ -100,6 +100,10 @@ apps/api/src/ee/
 apps/app/src/ee/
 apps/api/test/ee/
 
+# Hosted-edition migration + schema snapshot, copied in by the enterprise overlay
+apps/api/migrations/*_create_billing_and_token_usage.ts
+apps/api/migrations/.snapshot-ee.json
+
 # Hosted-edition wrangler configs, copied in by the enterprise overlay at build time
 apps/*/wrangler.json
 
