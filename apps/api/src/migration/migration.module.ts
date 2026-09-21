@@ -6,7 +6,6 @@ import { CommonModule } from 'src/common/common.module';
 import { MigrationAccountTokenReencryptSeed } from 'src/migration/seeds/migration.account-token-reencrypt.seed';
 import { MigrationApiKeySeed } from 'src/migration/seeds/migration.api-key.seed';
 import { MigrationCountrySeed } from 'src/migration/seeds/migration.country.seed';
-import { MigrationPlanSeed } from 'src/migration/seeds/migration.plan.seed';
 import { MigrationRoleSeed } from 'src/migration/seeds/migration.role.seed';
 import { MigrationSkillSeed } from 'src/migration/seeds/migration.skill.seed';
 import { MigrationSkillSmoke } from 'src/migration/seeds/migration.skill.smoke';
@@ -14,7 +13,6 @@ import { MigrationTemplateSeed } from 'src/migration/seeds/migration.template.se
 import { AccountRepositoryModule } from 'src/modules/account/repository/account.repository.module';
 import { ActivityModule } from 'src/modules/activity/activity.module';
 import { AwsModule } from 'src/modules/aws/aws.module';
-import { BillingRepositoryModule } from 'src/modules/billing/repository/billing.repository.module';
 import { SkillModule } from 'src/modules/skill/skill.module';
 import { ApiKeyModule } from 'src/modules/api-key/api-key.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
@@ -46,7 +44,6 @@ import { MigrationUserSeed } from './seeds/migration.user.seed';
         NotificationModule,
         AwsModule,
         SkillModule,
-        BillingRepositoryModule,
     ],
     providers: [
         MigrationAccountTokenReencryptSeed,
@@ -54,7 +51,6 @@ import { MigrationUserSeed } from './seeds/migration.user.seed';
         MigrationCountrySeed,
         MigrationUserSeed,
         MigrationRoleSeed,
-        MigrationPlanSeed,
         MigrationTemplateSeed,
         MigrationSkillSeed,
         MigrationSkillSmoke,

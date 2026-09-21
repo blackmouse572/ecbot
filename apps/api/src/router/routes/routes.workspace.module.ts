@@ -30,9 +30,6 @@ import { ToolModule } from '@app/modules/tool/tool.module';
 import { ChatbotSkillWorkspaceController } from '@app/modules/skill/controllers/chatbot-skill.workspace.controller';
 import { SkillWorkspaceController } from '@app/modules/skill/controllers/skill.workspace.controller';
 import { SkillModule } from '@app/modules/skill/skill.module';
-import { TokenUsageWorkspaceController } from '@app/modules/token-usage/controllers/token-usage.workspace.controller';
-import { TokenUsageModule } from '@app/modules/token-usage/token-usage.module';
-import { BillingModule } from '@app/modules/billing/billing.module';
 import { ChatbotRepositoryModule } from '@app/modules/chatbot/repository/chatbot.repository.module';
 import { WorkSpaceModule } from '@app/modules/workspace/workspace.module';
 import { Module } from '@nestjs/common';
@@ -58,7 +55,6 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
 
 @Module({
     controllers: [
-        TokenUsageWorkspaceController,
         RoleWorkspaceController,
         ActivityWorkspaceController,
         InvitationWorkspaceController,
@@ -113,8 +109,6 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         CustomerModule,
         NavCountModule,
         PlatformModule,
-        TokenUsageModule,
-        BillingModule,
         ChatbotRepositoryModule,
     ],
 })

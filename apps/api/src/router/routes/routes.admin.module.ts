@@ -1,11 +1,6 @@
 import { AccountModule } from '@app/modules/account/account.module';
 import { AccountAdminController } from '@app/modules/account/controllers/account.admin.controller';
 import { AwsModule } from '@app/modules/aws/aws.module';
-import { BillingModule } from '@app/modules/billing/billing.module';
-import { PlanAdminController } from '@app/modules/billing/controllers/plan.admin.controller';
-import { SubscriptionAdminController } from '@app/modules/billing/controllers/subscription.admin.controller';
-import { TokenUsageAdminController } from '@app/modules/token-usage/controllers/token-usage.admin.controller';
-import { TokenUsageModule } from '@app/modules/token-usage/token-usage.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { ChatbotAdminController } from '@app/modules/chatbot/controllers/chatbot.admin.controller';
 import { RAGAdminController } from '@app/modules/rag/controllers/rag.admin.controller';
@@ -40,9 +35,6 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
 
 @Module({
     controllers: [
-        PlanAdminController,
-        SubscriptionAdminController,
-        TokenUsageAdminController,
         ApiKeyAdminController,
         RoleAdminController,
         UserAdminController,
@@ -80,8 +72,6 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         SkillModule,
         WaitlistModule,
         CloudTasksQueueModule,
-        BillingModule,
-        TokenUsageModule,
     ],
 })
 export class RoutesAdminModule {}

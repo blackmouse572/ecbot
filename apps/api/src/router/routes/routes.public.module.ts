@@ -30,12 +30,9 @@ import { VerificationModule } from 'src/modules/verification/verification.module
 import { WaitlistPublicController } from 'src/modules/waitlist/controllers/waitlist.public.controller';
 import { WaitlistModule } from 'src/modules/waitlist/waitlist.module';
 import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
-import { BillingModule } from '@app/modules/billing/billing.module';
-import { PlanPublicController } from '@app/modules/billing/controllers/plan.public.controller';
 
 @Module({
     controllers: [
-        PlanPublicController,
         HelloPublicController,
         AuthPublicController,
         ResetPasswordPublicController,
@@ -71,7 +68,6 @@ import { PlanPublicController } from '@app/modules/billing/controllers/plan.publ
         WaitlistModule,
         ChatbotModule,
         CloudTasksQueueModule,
-        BillingModule,
     ],
 })
 export class RoutesPublicModule {}
