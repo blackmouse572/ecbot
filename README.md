@@ -17,16 +17,16 @@ Ecbot is a multi-platform AI agent platform for conversational commerce and cust
 
 ## Channels
 
-| Channel            | Status                                      |
-| ------------------ | ------------------------------------------- |
-| Facebook Messenger | Shipped                                     |
-| Zalo OA            | Shipped                                     |
-| Telegram           | Shipped                                     |
-| Website widget     | Shipped                                     |
-| REST API channel   | Shipped                                     |
-| Instagram          | Roadmap — [adapter slot open](../../issues) |
-| TikTok Shop        | Roadmap — [adapter slot open](../../issues) |
-| Shopee             | Roadmap — [adapter slot open](../../issues) |
+| Channel            | Status                                                                          |
+| ------------------ | ------------------------------------------------------------------------------- |
+| Facebook Messenger | Shipped                                                                         |
+| Zalo OA            | Shipped                                                                         |
+| Telegram           | Shipped                                                                         |
+| Website widget     | Shipped                                                                         |
+| REST API channel   | Shipped                                                                         |
+| Instagram          | Roadmap — [adapter slot open](https://github.com/blackmouse572/ecbot/issues/22) |
+| TikTok Shop        | Roadmap — [adapter slot open](https://github.com/blackmouse572/ecbot/issues/23) |
+| Shopee             | Roadmap — [adapter slot open](https://github.com/blackmouse572/ecbot/issues/24) |
 
 Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three slots are open and specced — they are the best place to start contributing.
 
