@@ -15,6 +15,7 @@ Database seeding — the custom `nestjs-command` seed classes that populate init
   - [From Project Root (Turborepo)](#from-project-root-turborepo)
   - [From API Directory](#from-api-directory)
 - [Configuration](#configuration)
+- [The Schema Snapshot](#the-schema-snapshot)
 - [Creating Migrations](#creating-migrations)
   - [Automatic Migration Generation](#automatic-migration-generation)
   - [Manual Migration Creation](#manual-migration-creation)
@@ -110,6 +111,26 @@ export default defineConfig({
 ```
 
 Connection is a single `DATABASE_URL` (not per-field host/port/user/password variables). `DATABASE_SSL=true` adds `rejectUnauthorized: false` to the driver options for managed Postgres providers that use self-signed certificates.
+
+# The Schema Snapshot
+
+`apps/api/migrations/.snapshot-neondb.json` is the **`from` side of every migration diff**: `migration:create` and `migration:check` compare the entities against this file, never against your database. It is **hand-maintained** — patch the entries you changed, never regenerate it.
+
+**`migration:up` rewrites it.** After running migrations MikroORM introspects the database it just migrated and overwrites the snapshot with the result. On a database that has drifted (hosted-edition tables, a half-migrated dev database, tables `apps/ai` created) the rewritten file no longer describes the open engine's schema. So:
+
+```bash
+pnpm migration:up
+git checkout apps/api/migrations/.snapshot-neondb.json   # before committing anything else
+```
+
+Rules:
+
+- **Never commit a regenerated snapshot.** When a migration of yours changes a table, edit that table's entry in the JSON by hand (a small script is fine) and check `git diff --stat` shows only the entries you meant to touch.
+- **Keep MikroORM's formatting.** The file is generated output, not source — it is in `.prettierignore` so a formatter run cannot make it differ from what `migration:up` writes.
+- **Entities, migrations and the snapshot must agree.** `migration:check` on a database built purely from `migration:up` has to print `No changes required`; `schema:update --dump` has to print `Schema is up-to-date`.
+- **Tables with no entity are configured, not snapshotted.** `apps/ai` creates `rag_documents` / `rag_document_chunks` with raw SQL, so they are listed in `schemaGenerator.skipTables` in `mikro-orm.config.ts` and the schema diff ignores them. Add any new raw-SQL table there — do not hand-add it to the snapshot.
+
+CI enforces this in `.github/workflows/test-api.yml`: it migrates an empty Postgres, runs `migration:check`, then `git diff --exit-code -- apps/api/migrations/`. A dirty tree there means the three sides have drifted.
 
 # Creating Migrations
 

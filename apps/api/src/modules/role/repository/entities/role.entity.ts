@@ -20,7 +20,8 @@ export const RoleTableName = 'roles';
 @Index({ properties: ['type'] })
 @Index({ properties: ['isActive'] })
 export class RoleEntity extends DatabaseEntityBase {
-    @Property({ type: 'varchar', length: 30 })
+    // Holds `Owner - <workspace name>` and workspaces.name is varchar(255).
+    @Property({ type: 'varchar', length: 300 })
     name: string;
 
     @Property({ type: 'varchar', length: 500, nullable: true })
