@@ -1,0 +1,44 @@
+name: Bug report
+description: Something in the engine behaves wrongly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you saw, what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Steps on the standard `docker compose up` stack (see SUPPORT.md). Include the channel (Messenger, Zalo, Telegram, widget, API) when relevant.
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or tag
+      description: "`git rev-parse --short HEAD`"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it runs
+      options:
+        - Self-hosted (docker compose)
+        - Self-hosted (other)
+        - Ecbot Cloud
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant `api` / `ai` / browser console output. Redact tokens and keys.
+      render: text
