@@ -16,6 +16,24 @@ jobs:
   test:
     name: Test API
     runs-on: ubuntu-latest
+
+    services:
+      # Same image as the e2e lane: the migrations create the `vector`
+      # extension themselves, so plain postgres is not enough.
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: eccho_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,3 +60,23 @@ jobs:
 
       - name: Test API
         run: pnpm run test:api
+
+      # `migration:up` rewrites .snapshot-neondb.json from the database it just
+      # migrated, so on an empty database the committed snapshot and the
+      # migrations must produce the same schema. `migration:check` then compares
+      # the entities against that snapshot.
+      - name: Migrate a clean database
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/eccho_ci
+          DATABASE_SSL: "false"
+        run: |
+          pnpm migration:up
+          pnpm migration:check
+
+      - name: Schema snapshot must be unchanged
+        run: |
+          git diff --exit-code -- apps/api/migrations/ || {
+            echo "::error::migration:up rewrote apps/api/migrations/.snapshot-neondb.json — entities, migrations and the snapshot disagree. See apps/api/docs/migration.md."
+            exit 1
+          }

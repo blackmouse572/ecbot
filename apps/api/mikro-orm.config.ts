@@ -108,6 +108,22 @@ const getMikroOrmConfig = (): MikroOrmModuleOptions => {
                   idleTimeoutMillis: 60000,
               },
 
+        // Tables that exist in some databases but have no entity here:
+        // `rag_documents` / `rag_document_chunks` are raw SQL owned by apps/ai
+        // (it moved them to the `rag` schema, older installs still have the
+        // public copies), and `chat_sessions`, `chat_session_messages`,
+        // `chatbots_accounts` are leftovers of entities that were removed.
+        // Without this the schema diff proposes dropping them on every run.
+        schemaGenerator: {
+            skipTables: [
+                'rag_documents',
+                'rag_document_chunks',
+                'chat_sessions',
+                'chat_session_messages',
+                'chatbots_accounts',
+            ],
+        },
+
         // Schema settings
         allowGlobalContext: true,
         forceEntityConstructor: true,

@@ -1,2 +1,5 @@
 templates/*
 *.gen.ts
+# Written by MikroORM (`migration:up`) — keep its native formatting so the
+# CI snapshot guard can diff it byte for byte.
+apps/api/migrations/.snapshot-*.json
