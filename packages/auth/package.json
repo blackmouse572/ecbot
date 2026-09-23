@@ -10,18 +10,18 @@
     "@casl/ability": "^6.8.1",
     "@casl/react": "^5.0.1",
     "@hookform/resolvers": "5.9.1",
-    "@marsidev/react-turnstile": "^1.6.0",
-    "@medusajs/ui": "^4.2.1",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "@marsidev/react-turnstile": "^1.6.1",
+    "@medusajs/ui": "^4.2.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-hook-form": "7.88.0",
-    "zod": "4.2.0"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@repo/client": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@repo/ui": "workspace:*",
-    "@types/react": "19.1.0",
+    "@types/react": "19.3.0",
     "typescript": "^5.9.3"
   },
   "exports": {
