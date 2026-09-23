@@ -41,6 +41,8 @@ export const createHttpToolSchema = z.object({
 });
 
 export type HttpToolFormData = z.infer<typeof createHttpToolSchema>;
+// What the fields hold before coercion — `useForm`'s TFieldValues.
+export type HttpToolFormInput = z.input<typeof createHttpToolSchema>;
 
 export const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 export const AUTH_TYPES = ["none", "bearer", "api_key", "basic"] as const;

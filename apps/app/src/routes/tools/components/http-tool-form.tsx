@@ -4,7 +4,7 @@ import { useState, type FC, type ReactNode } from "react";
 import type { ToolTestResult } from "@/hooks/api/tools";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { zodV4Resolver } from "@repo/ui/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { HeadersEditor, type HeadersEditorMode } from "./headers-editor";
 import {
   JsonSchemaEditor,
@@ -17,6 +17,7 @@ import {
   createHttpToolSchema,
   HTTP_METHODS,
   type HttpToolFormData,
+  type HttpToolFormInput,
 } from "./http-tool-schema";
 
 export type HttpToolFormProps = {
@@ -62,10 +63,11 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const form = useForm<HttpToolFormData>({
-    resolver: zodV4Resolver<typeof createHttpToolSchema, HttpToolFormData>(
-      createHttpToolSchema,
-    ),
+  // Three generics because the schema coerces: `timeoutMs`/`maxRetries` are
+  // `unknown` going in and `number` coming out, so the field values and the
+  // submitted payload are different types.
+  const form = useForm<HttpToolFormInput, unknown, HttpToolFormData>({
+    resolver: zodResolver(createHttpToolSchema),
     defaultValues: { ...DEFAULT_VALUES, ...defaultValues },
   });
 
@@ -97,9 +99,16 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
       setTestArgsError(t("tools.test.invalidJson"));
       return;
     }
+    // getValues() yields the raw input type, so the config has to be parsed
+    // into the same coerced payload a submit would send. Validate first so an
+    // incomplete form surfaces inline field errors instead of a failed call.
+    if (!(await form.trigger())) return;
+    const config = createHttpToolSchema.safeParse(form.getValues());
+    if (!config.success) return;
+
     setIsTesting(true);
     try {
-      const result = await onTest(form.getValues(), parsedArgs);
+      const result = await onTest(config.data, parsedArgs);
       setTestResult(result);
     } catch (err) {
       const msg =

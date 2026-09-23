@@ -46,6 +46,8 @@ export const createChatbotSchema = z.object({
 });
 
 export type ChatbotFormData = z.infer<typeof createChatbotSchema>;
+// What the fields hold before coercion and defaults — `useForm`'s TFieldValues.
+export type ChatbotFormInput = z.input<typeof createChatbotSchema>;
 
 export type ChatbotCreateFormData = ChatbotFormData;
 export type ChatbotEditFormData = ChatbotFormData;
