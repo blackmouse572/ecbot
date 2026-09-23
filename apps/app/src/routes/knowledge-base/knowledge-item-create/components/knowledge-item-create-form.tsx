@@ -2,11 +2,10 @@ import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, toast } from "@medusajs/ui";
-import type { KnowledgeItemCreateRequestDto } from "@repo/client";
 import { ChipGroup, Form } from "@repo/ui/common-components";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useMemo, useState, type FC } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 import {
@@ -16,7 +15,12 @@ import {
 import { FileForm, TextForm, UrlForm } from "./forms";
 import { KnowledgeItemTypeSelector } from "./knowledge-item-type-selector/index";
 import { KnowledgeItemTypeEnum } from "./knowledge-item-type-selector/knowledge-item-type-selector";
-import { createFileSchema, createTextSchema, createUrlSchema } from "./schema";
+import {
+  createFileSchema,
+  createTextSchema,
+  createUrlSchema,
+  type KnowledgeItemCreateFormValues,
+} from "./schema";
 import { KnowledgeItemEditTag } from "../../knowledge-item-edit/components/knowledge-item-edit-tags";
 
 interface KnowledgeItemCreateFormProps {
@@ -50,8 +54,10 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
     }
   }, [selectedType]);
 
-  const form = useForm<KnowledgeItemCreateRequestDto>({
-    resolver: zodResolver(schema) as A,
+  const form = useForm<KnowledgeItemCreateFormValues>({
+    // The schema swaps with the selected type, so it can't be tied to the
+    // form's static shape — this is the one place that gap is bridged.
+    resolver: zodResolver(schema) as Resolver<KnowledgeItemCreateFormValues>,
     defaultValues: {
       title: "",
       content: "",
@@ -76,10 +82,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
       setUploadProgress(0);
 
       // Extract file from data for FILE type
-      const fileData =
-        selectedType === "FILE" && "file" in data
-          ? (data as A).file
-          : undefined;
+      const fileData = selectedType === "FILE" ? data.file : undefined;
       const formData = {
         ...data,
         type: selectedType,
@@ -235,7 +238,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                   />
                   {selectedType === "FILE" && (
                     <FileForm
-                      form={form as A}
+                      form={form}
                       isLoading={isLoading}
                       uploadProgress={uploadProgress}
                     />

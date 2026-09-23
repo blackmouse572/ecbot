@@ -2,9 +2,9 @@ import { Badge, Button, Input, Select, Textarea } from "@medusajs/ui";
 import { Form } from "@repo/ui/common-components";
 import { useState, type FC, type ReactNode } from "react";
 import type { ToolTestResult } from "@/hooks/api/tools";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldPath } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { zodV4Resolver } from "@repo/ui/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { HeadersEditor, type HeadersEditorMode } from "./headers-editor";
 import {
   JsonSchemaEditor,
@@ -16,7 +16,9 @@ import {
   AUTH_TYPES,
   createHttpToolSchema,
   HTTP_METHODS,
+  httpToolTestSchema,
   type HttpToolFormData,
+  type HttpToolFormInput,
 } from "./http-tool-schema";
 
 export type HttpToolFormProps = {
@@ -34,6 +36,12 @@ export type HttpToolFormProps = {
   id?: string;
   hideActions?: boolean;
 };
+
+// Everything an execution needs: the schema's own keys minus the metadata.
+// Derived rather than listed so a new field can't be forgotten here.
+const HTTP_REQUEST_FIELDS = Object.keys(createHttpToolSchema.shape).filter(
+  (key) => key !== "name" && key !== "description",
+) as FieldPath<HttpToolFormInput>[];
 
 const DEFAULT_VALUES: HttpToolFormData = {
   name: "",
@@ -62,10 +70,11 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const form = useForm<HttpToolFormData>({
-    resolver: zodV4Resolver<typeof createHttpToolSchema, HttpToolFormData>(
-      createHttpToolSchema,
-    ),
+  // Three generics because the schema coerces: `timeoutMs`/`maxRetries` are
+  // `unknown` going in and `number` coming out, so the field values and the
+  // submitted payload are different types.
+  const form = useForm<HttpToolFormInput, unknown, HttpToolFormData>({
+    resolver: zodResolver(createHttpToolSchema),
     defaultValues: { ...DEFAULT_VALUES, ...defaultValues },
   });
 
@@ -75,6 +84,9 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
     useState<HeadersEditorMode>("structured");
 
   // Test panel state
+  // `trigger()` does not set `isSubmitted`, so the row editors need their own
+  // signal to start showing per-row errors after a test attempt.
+  const [testAttempted, setTestAttempted] = useState(false);
   const [testArgsText, setTestArgsText] = useState("{}");
   const [testArgsError, setTestArgsError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<ToolTestResult | null>(null);
@@ -97,9 +109,21 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
       setTestArgsError(t("tools.test.invalidJson"));
       return;
     }
+    // getValues() yields the raw input type, so the config has to be parsed
+    // into the same coerced payload a submit would send. `httpToolTestSchema`
+    // relaxes name/description — an unnamed draft is still testable.
+    setTestAttempted(true);
+    const config = httpToolTestSchema.safeParse(form.getValues());
+    if (!config.success) {
+      // Surface the offending fields inline rather than failing silently —
+      // scoped to the request, so a blank name doesn't light up too.
+      await form.trigger(HTTP_REQUEST_FIELDS);
+      return;
+    }
+
     setIsTesting(true);
     try {
-      const result = await onTest(form.getValues(), parsedArgs);
+      const result = await onTest(config.data, parsedArgs);
       setTestResult(result);
     } catch (err) {
       const msg =
@@ -217,7 +241,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                 onRowsChange={field.onChange}
                 mode={schemaMode}
                 onModeChange={setSchemaMode}
-                showErrors={form.formState.isSubmitted}
+                showErrors={form.formState.isSubmitted || testAttempted}
               />
               <Form.ErrorMessage />
             </Form.Item>
@@ -236,7 +260,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                 onChange={field.onChange}
                 mode={headersMode}
                 onModeChange={setHeadersMode}
-                showErrors={form.formState.isSubmitted}
+                showErrors={form.formState.isSubmitted || testAttempted}
               />
               <Form.ErrorMessage />
             </Form.Item>

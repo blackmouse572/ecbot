@@ -193,5 +193,46 @@ describe("ChatbotForm model select", () => {
     const payload = onSubmit.mock.calls[0]?.[0];
     expect(payload).not.toHaveProperty("modelProvider");
     expect(payload.modelTextName).toBe("google/gemini-2.5-flash");
+    // handleSubmit hands over the parsed output, so the coerced field is a
+    // number here even though the input held a string.
+    expect(typeof payload.modelTemperature).toBe("number");
+  });
+
+  // A resolver that can't read zod 4's errors rethrows instead of populating
+  // formState, leaving the field unmarked and the form silently unsubmittable.
+  it("marks the field invalid and blocks submit when name is empty", async () => {
+    mockedUseChatbotModels.mockReturnValue({
+      models: [
+        {
+          id: "google/gemini-2.5-flash",
+          name: "Gemini 2.5 Flash",
+          provider: "google",
+          contextLength: null,
+        },
+      ],
+      isLoading: false,
+    } as A);
+
+    const onSubmit = vi.fn(async () => {});
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(
+      <ChatbotForm
+        {...baseProps}
+        onSubmit={onSubmit}
+        defaultValues={CHATBOT_FORM_DEFAULTS}
+      />,
+    );
+
+    // The defaults seed a generated name, so clear it to get invalid input.
+    await user.clear(screen.getByPlaceholderText("Enter chatbot name"));
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() =>
+      expect(screen.getByPlaceholderText("Enter chatbot name")).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      ),
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

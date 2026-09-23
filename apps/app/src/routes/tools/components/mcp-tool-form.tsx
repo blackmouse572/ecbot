@@ -3,7 +3,7 @@ import { Form } from "@repo/ui/common-components";
 import type { FC, ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { zodV4Resolver } from "@repo/ui/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   MCP_AUTH_PLACEMENTS,
   MCP_AUTH_TYPES,
@@ -45,9 +45,7 @@ export const McpToolForm: FC<McpToolFormProps> = ({
   const { t } = useTranslation();
 
   const form = useForm<McpToolFormData>({
-    resolver: zodV4Resolver<typeof createMcpToolSchema, McpToolFormData>(
-      createMcpToolSchema,
-    ),
+    resolver: zodResolver(createMcpToolSchema),
     defaultValues: { ...DEFAULT_VALUES, ...defaultValues },
   });
 
