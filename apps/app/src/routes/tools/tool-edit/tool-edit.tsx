@@ -1,7 +1,7 @@
 import { RouteDrawer } from "@/components/modals";
 import { useGetTool, useUpdateTool } from "@/hooks/api/tools";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { zodV4Resolver } from "@repo/ui/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Input, Textarea, Text, toast } from "@medusajs/ui";
 import { Form } from "@repo/ui/common-components";
 import { Helmet } from "react-helmet-async";
@@ -156,7 +156,7 @@ function McpToolEditForm({
 }: McpToolEditFormProps) {
   const { t } = useTranslation();
   const form = useForm<McpEditFormData>({
-    resolver: zodV4Resolver(mcpEditSchema),
+    resolver: zodResolver(mcpEditSchema),
     defaultValues: { name: tool.name, description: tool.description ?? "" },
   });
 

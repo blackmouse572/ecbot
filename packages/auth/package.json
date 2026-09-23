@@ -4,17 +4,17 @@
   "version": "0.0.0",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "check-types": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@casl/ability": "^6.8.1",
     "@casl/react": "^5.0.1",
-    "@hookform/resolvers": "3.4.2",
+    "@hookform/resolvers": "5.9.1",
     "@marsidev/react-turnstile": "^1.6.0",
     "@medusajs/ui": "^4.2.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-hook-form": "7.49.1",
+    "react-hook-form": "7.88.0",
     "zod": "4.2.0"
   },
   "devDependencies": {
