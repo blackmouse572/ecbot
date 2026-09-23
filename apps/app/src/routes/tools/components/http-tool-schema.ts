@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import i18n from "@/i18n";
+import { blankToUndefined } from "@/libs/validations";
 
 const httpAuthSchema = z
   .object({
@@ -36,8 +37,27 @@ export const createHttpToolSchema = z.object({
   headers: z.record(z.string(), z.string()).optional(),
   auth: httpAuthSchema,
   credential: z.string().optional(),
-  timeoutMs: z.coerce.number().int().positive().optional(),
-  maxRetries: z.coerce.number().int().min(0).max(3).optional(),
+  // Preprocessed so clearing the field means "unset" — without it an emptied
+  // Timeout coerces to 0 and sticks on a `.positive()` error, and an emptied
+  // Max retries silently submits 0.
+  timeoutMs: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().int().positive().optional(),
+  ),
+  maxRetries: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().int().min(0).max(3).optional(),
+  ),
+});
+
+/**
+ * The same schema with the metadata relaxed. `name`/`description` are needed
+ * to save a tool, not to issue its request, so the test panel validates
+ * against this and an unnamed draft stays testable.
+ */
+export const httpToolTestSchema = createHttpToolSchema.extend({
+  name: z.string(),
+  description: z.string(),
 });
 
 export type HttpToolFormData = z.infer<typeof createHttpToolSchema>;

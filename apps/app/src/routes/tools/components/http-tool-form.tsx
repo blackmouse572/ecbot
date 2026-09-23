@@ -2,7 +2,7 @@ import { Badge, Button, Input, Select, Textarea } from "@medusajs/ui";
 import { Form } from "@repo/ui/common-components";
 import { useState, type FC, type ReactNode } from "react";
 import type { ToolTestResult } from "@/hooks/api/tools";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldPath } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { HeadersEditor, type HeadersEditorMode } from "./headers-editor";
@@ -16,6 +16,7 @@ import {
   AUTH_TYPES,
   createHttpToolSchema,
   HTTP_METHODS,
+  httpToolTestSchema,
   type HttpToolFormData,
   type HttpToolFormInput,
 } from "./http-tool-schema";
@@ -35,6 +36,12 @@ export type HttpToolFormProps = {
   id?: string;
   hideActions?: boolean;
 };
+
+// Everything an execution needs: the schema's own keys minus the metadata.
+// Derived rather than listed so a new field can't be forgotten here.
+const HTTP_REQUEST_FIELDS = Object.keys(createHttpToolSchema.shape).filter(
+  (key) => key !== "name" && key !== "description",
+) as FieldPath<HttpToolFormInput>[];
 
 const DEFAULT_VALUES: HttpToolFormData = {
   name: "",
@@ -77,6 +84,9 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
     useState<HeadersEditorMode>("structured");
 
   // Test panel state
+  // `trigger()` does not set `isSubmitted`, so the row editors need their own
+  // signal to start showing per-row errors after a test attempt.
+  const [testAttempted, setTestAttempted] = useState(false);
   const [testArgsText, setTestArgsText] = useState("{}");
   const [testArgsError, setTestArgsError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<ToolTestResult | null>(null);
@@ -100,11 +110,16 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
       return;
     }
     // getValues() yields the raw input type, so the config has to be parsed
-    // into the same coerced payload a submit would send. Validate first so an
-    // incomplete form surfaces inline field errors instead of a failed call.
-    if (!(await form.trigger())) return;
-    const config = createHttpToolSchema.safeParse(form.getValues());
-    if (!config.success) return;
+    // into the same coerced payload a submit would send. `httpToolTestSchema`
+    // relaxes name/description — an unnamed draft is still testable.
+    setTestAttempted(true);
+    const config = httpToolTestSchema.safeParse(form.getValues());
+    if (!config.success) {
+      // Surface the offending fields inline rather than failing silently —
+      // scoped to the request, so a blank name doesn't light up too.
+      await form.trigger(HTTP_REQUEST_FIELDS);
+      return;
+    }
 
     setIsTesting(true);
     try {
@@ -226,7 +241,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                 onRowsChange={field.onChange}
                 mode={schemaMode}
                 onModeChange={setSchemaMode}
-                showErrors={form.formState.isSubmitted}
+                showErrors={form.formState.isSubmitted || testAttempted}
               />
               <Form.ErrorMessage />
             </Form.Item>
@@ -245,7 +260,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                 onChange={field.onChange}
                 mode={headersMode}
                 onModeChange={setHeadersMode}
-                showErrors={form.formState.isSubmitted}
+                showErrors={form.formState.isSubmitted || testAttempted}
               />
               <Form.ErrorMessage />
             </Form.Item>

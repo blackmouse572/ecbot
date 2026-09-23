@@ -1,16 +1,10 @@
+import { blankToUndefined } from "@/libs/validations";
 import { t } from "i18next";
 import { z } from "zod/v4";
 
-/**
- * An optional positive integer that a cleared input returns to "unset".
- *
- * `z.coerce.number()` maps `""` to `0` (Number("") === 0), which then fails
- * `.positive()` — so typing a value and deleting it left the field stuck on a
- * validation error with no way back to empty, contradicting the "leave empty
- * for no limit" hint.
- */
+/** An optional positive integer that a cleared input returns to "unset". */
 const optionalPositiveInt = z.preprocess(
-  (value) => (value === "" || value === null ? undefined : value),
+  blankToUndefined,
   z.coerce.number().int().positive().optional(),
 );
 
@@ -33,7 +27,12 @@ export const createChatbotSchema = z.object({
     .string()
     .min(1, t("errors.chatbot.modelTextNameRequired"))
     .default("google/gemini-2.5-flash"),
-  modelTemperature: z.coerce.number().min(0).max(2).default(1.0),
+  // Preprocessed for the same reason as `optionalPositiveInt`: without it a
+  // cleared Temperature coerces to 0 rather than falling back to the default.
+  modelTemperature: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().min(0).max(2).default(1.0),
+  ),
   maxTokens: optionalPositiveInt,
   handoffMessage: z.string().max(1000).nullish(),
   handoffKeywords: z.array(z.string()).nullish().default([]),
