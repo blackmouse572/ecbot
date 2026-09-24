@@ -1,3 +1,4 @@
+import { createProfile } from "@repo/agent-blueprint";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -7,6 +8,7 @@ import { AgentBuilder } from "./agent-builder";
 const create = vi.fn();
 const update = vi.fn();
 const suggest = vi.fn();
+const chatbot = vi.fn();
 
 // `to-chatbot-payload.ts` pulls in `../../constants`, which imports `@/i18n`
 // and initializes it with the real translation resources. Mocking
@@ -22,7 +24,7 @@ vi.mock("@/hooks/api", () => ({
   useCreateChatbot: () => ({ mutateAsync: create }),
   useUpdateChatbot: () => ({ mutateAsync: update }),
   useToggleChatbotActivate: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useChatbot: () => ({ chatbot: undefined }),
+  useChatbot: (...args: unknown[]) => chatbot(...args),
 }));
 vi.mock("@/hooks/api/agent-builder", () => ({
   useAgentBuilderSuggest: () => ({ mutateAsync: suggest, isPending: false }),
@@ -48,6 +50,7 @@ describe("AgentBuilder", () => {
     create.mockReset().mockResolvedValue({ data: { data: { id: "bot-1" } } });
     update.mockReset().mockResolvedValue({});
     suggest.mockReset();
+    chatbot.mockReset().mockReturnValue({ chatbot: undefined });
   });
 
   it("starts from a template and asks the first question", async () => {
@@ -95,5 +98,45 @@ describe("AgentBuilder", () => {
     await answerCurrent();
     await userEvent.click(screen.getByTitle("agentBuilder.ui.editAnswer"));
     expect(screen.getByRole("group", { name: "agentBuilder.questions.businessType.title" })).toBeInTheDocument();
+  });
+
+  it("keeps a local answer through a hydrate refetch (e.g. after an autosave)", async () => {
+    const original = createProfile("beauty", "en");
+    original.businessName = "Lotus";
+    const bot = (profile: typeof original) => ({
+      id: "bot-9",
+      status: "inactive",
+      extraInstructions: "",
+      agentProfile: profile,
+    });
+
+    chatbot.mockReturnValue({ chatbot: bot(original) });
+
+    const route = "/ws/chatbot/create?chatbotId=bot-9";
+    const { rerender } = render(
+      <MemoryRouter initialEntries={[route]}>
+        <AgentBuilder />
+      </MemoryRouter>,
+    );
+
+    // Edit the (already-hydrated) businessName answer locally.
+    await userEvent.click(screen.getByText("Lotus"));
+    const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+    await userEvent.clear(input);
+    await userEvent.type(input, "Lotus Spa");
+    await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+    expect(screen.getByText("Lotus Spa")).toBeInTheDocument();
+
+    // Simulate the refetch every debounced autosave triggers (same chatbot
+    // id, a new object reference, still the last-saved server snapshot).
+    chatbot.mockReturnValue({ chatbot: bot({ ...original }) });
+    rerender(
+      <MemoryRouter initialEntries={[route]}>
+        <AgentBuilder />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Lotus Spa")).toBeInTheDocument();
+    expect(screen.queryByText("Lotus")).not.toBeInTheDocument();
   });
 });

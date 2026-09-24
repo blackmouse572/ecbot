@@ -28,12 +28,19 @@ export function useAgentBuilder({ hydrateFrom }: { hydrateFrom?: ChatbotGetDetai
   const [saveError, setSaveError] = useState(false);
   const creating = useRef(false);
   const lastSaved = useRef("");
+  // Hydrate a given chatbot id only once: `hydrateFrom` is refetched (a new
+  // object reference with the same id) after every autosave, and re-running
+  // "hydrate" on each refetch would replace in-progress local answers with
+  // the last-saved server snapshot.
+  const hydratedId = useRef<string | null>(null);
 
   const extraInstructions = hydrateFrom?.extraInstructions ?? "";
   const base = useMemo(() => (hydrateFrom ? baseFrom(hydrateFrom) : undefined), [hydrateFrom]);
 
   useEffect(() => {
     if (!hydrateFrom?.agentProfile) return;
+    if (hydratedId.current === hydrateFrom.id) return;
+    hydratedId.current = hydrateFrom.id;
     const profile = hydrateFrom.agentProfile as unknown as AgentProfile;
     lastSaved.current = JSON.stringify(toChatbotPayload(profile, extraInstructions, base));
     dispatch({ type: "hydrate", profile, chatbotId: hydrateFrom.id, finished: hydrateFrom.status === "active" });
