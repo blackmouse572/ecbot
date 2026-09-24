@@ -9,6 +9,8 @@ const create = vi.fn();
 const update = vi.fn();
 const suggest = vi.fn();
 const chatbot = vi.fn();
+const activate = vi.fn();
+const toastError = vi.fn();
 
 // `to-chatbot-payload.ts` pulls in `../../constants`, which imports `@/i18n`
 // and initializes it with the real translation resources. Mocking
@@ -23,9 +25,13 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/hooks/api", () => ({
   useCreateChatbot: () => ({ mutateAsync: create }),
   useUpdateChatbot: () => ({ mutateAsync: update }),
-  useToggleChatbotActivate: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useToggleChatbotActivate: () => ({ mutateAsync: activate, isPending: false }),
   useChatbot: (...args: unknown[]) => chatbot(...args),
 }));
+vi.mock("@medusajs/ui", async () => {
+  const actual = await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
+  return { ...actual, toast: { ...actual.toast, error: (...args: unknown[]) => toastError(...args) } };
+});
 vi.mock("@/hooks/api/agent-builder", () => ({
   useAgentBuilderSuggest: () => ({ mutateAsync: suggest, isPending: false }),
 }));
@@ -51,6 +57,8 @@ describe("AgentBuilder", () => {
     update.mockReset().mockResolvedValue({});
     suggest.mockReset();
     chatbot.mockReset().mockReturnValue({ chatbot: undefined });
+    activate.mockReset().mockResolvedValue({});
+    toastError.mockReset();
   });
 
   it("starts from a template and asks the first question", async () => {
@@ -207,6 +215,16 @@ describe("AgentBuilder", () => {
       expect(update).not.toHaveBeenCalled();
     });
 
+    it("keeps the builder open and shows an error when activating fails", async () => {
+      activate.mockRejectedValue(new Error("down"));
+      chatbot.mockReturnValue({ chatbot: bot() });
+      render(tree());
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.finish" }));
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith("chatbot.edit.error"));
+      expect(screen.queryByText("agentBuilder.ui.finished")).toBeNull();
+      expect(screen.getByRole("button", { name: "agentBuilder.ui.finish" })).toBeDefined();
+    });
+
     it("flushes the pending autosave on unmount", async () => {
       chatbot.mockReturnValue({ chatbot: bot() });
       const { unmount } = render(tree());
@@ -216,4 +234,23 @@ describe("AgentBuilder", () => {
       expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-9", body: { agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }) } });
     });
   });
+
+  it(
+    "starts fresh when the chatbot has no builder profile, so the draft never takes its accounts",
+    async () => {
+      chatbot.mockReturnValue({
+        chatbot: { id: "legacy-1", name: "Legacy bot", status: "active", accounts: [{ id: "acc-1" }], welcomeMessage: "Hi" },
+      });
+      render(
+        <MemoryRouter initialEntries={["/ws/chatbot/create?chatbotId=legacy-1"]}>
+          <AgentBuilder />
+        </MemoryRouter>,
+      );
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
+      for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
+      await waitFor(() => expect(create).toHaveBeenCalledOnce());
+      expect(create.mock.calls[0][0]).toMatchObject({ accounts: [], name: "Lotus" });
+    },
+    15000,
+  );
 });

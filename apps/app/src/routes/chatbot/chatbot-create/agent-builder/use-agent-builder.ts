@@ -4,6 +4,7 @@ import {
 import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto } from "@repo/client";
 import { useCreateChatbot, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
 import { useAgentBuilderSuggest } from "@/hooks/api/agent-builder";
+import { toast } from "@medusajs/ui";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { builderReducer, initialBuilderState, isDraftReady } from "./builder-state";
@@ -26,8 +27,11 @@ function baseFrom(chatbot: ChatbotGetDetailResponseDto): Partial<ChatbotCreateRe
   return { ...(editable as Partial<ChatbotCreateRequestDto>), accounts: (chatbot.accounts ?? []).map((a) => a.id) };
 }
 
-export function useAgentBuilder({ hydrateFrom }: { hydrateFrom?: ChatbotGetDetailResponseDto }) {
-  const { i18n } = useTranslation();
+export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: ChatbotGetDetailResponseDto }) {
+  // A chatbot made without the builder has no profile to resume: start fresh
+  // instead, so the new draft never takes over its accounts or settings.
+  const hydrateFrom = source?.agentProfile ? source : undefined;
+  const { t, i18n } = useTranslation();
   const language = i18n.language?.startsWith("vi") ? "vi" : "en";
   const [state, dispatch] = useReducer(builderReducer, initialBuilderState);
   const suggest = useAgentBuilderSuggest();
@@ -139,8 +143,12 @@ export function useAgentBuilder({ hydrateFrom }: { hydrateFrom?: ChatbotGetDetai
 
   const finish = async () => {
     if (!state.chatbotId) return;
-    await activate.mutateAsync({ id: state.chatbotId, active: true });
-    dispatch({ type: "finished" });
+    try {
+      await activate.mutateAsync({ id: state.chatbotId, active: true });
+      dispatch({ type: "finished" });
+    } catch {
+      toast.error(t("chatbot.edit.error"));
+    }
   };
 
   return {
