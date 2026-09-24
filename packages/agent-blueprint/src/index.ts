@@ -3,3 +3,4 @@ export * from "./compile-prompt";
 export * from "./libraries";
 export * from "./presets";
 export * from "./profile";
+export * from "./questions";
