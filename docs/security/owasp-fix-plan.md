@@ -369,9 +369,11 @@ Commit: `fix(api,edge,ui): constant-time token checks and no remote chat images`
 
 ## Deploy notes
 
+Full rollout steps (pre-merge checks, deploy order, user-visible effects): [owasp-rollout.md](./owasp-rollout.md).
+
 - Set `API_INTERNAL_TOKEN` on both apps/api and apps/ai before deploying (apps/ai returns 503 without it).
 - `HOME_URL` must be set on apps/api (reset and invitation links).
-- apps/api and apps/ai deploy together (follow-up cancel contract).
+- apps/api first, then apps/ai straight after (follow-up cancel contract; see the runbook).
 - New env: `APP_TRUST_PROXY_HOPS` (default 1), `CHAT_MODEL_TIMEOUT_SECONDS` (default 60).
 
 ## Checked, no change needed
