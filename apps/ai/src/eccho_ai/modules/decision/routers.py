@@ -28,8 +28,13 @@ Judge only from the state. Do not explain.
 
 
 def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
+    # Field names are positional (q0, q1, ...), never the question id itself:
+    # a question id can be anything the caller likes, including a pydantic
+    # reserved name like "model_config", which would break `create_model` if
+    # used directly as a field name.
     fields: dict[str, Any] = {}
-    for index, (qid, q) in enumerate(questions.items()):
+    for index, q in enumerate(questions.values()):
+        field_name = f"q{index}"
         if q.type == "choice":
             options = tuple((q.criteria or {}).keys())
             answer = create_model(
@@ -37,20 +42,21 @@ def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
                 choice=(Literal[options], ...),  # type: ignore[valid-type]
                 confidence=(float, Field(ge=0, le=1)),
             )
-            fields[qid] = (answer, ...)
+            fields[field_name] = (answer, ...)
         else:
-            fields[qid] = (float, Field(ge=0, le=1))
+            fields[field_name] = (float, Field(ge=0, le=1))
     return create_model("DecisionAnswers", **fields)
 
 
 def _format_questions(questions: dict[str, DecisionQuestion]) -> str:
     lines: list[str] = []
-    for qid, q in questions.items():
+    for index, (qid, q) in enumerate(questions.items()):
+        field_name = f"q{index}"
         if q.type == "choice":
             options = "\n".join(f"    - {key}: {text}" for key, text in (q.criteria or {}).items())
-            lines.append(f"- {qid} (choice): {q.instructions}\n  options:\n{options}")
+            lines.append(f"- {field_name} ({qid}, choice): {q.instructions}\n  options:\n{options}")
         else:
-            lines.append(f"- {qid} (noul, probability of yes): {q.instructions}")
+            lines.append(f"- {field_name} ({qid}, noul, probability of yes): {q.instructions}")
     return "\n".join(lines)
 
 
@@ -63,9 +69,13 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
     if not req.questions:
         return AppResponse(data=DecisionResponse())
 
-    llm = build_chat_model(model_text_name=AppVars.DECISION_MODEL, temperature=0.0)
-    structured = llm.with_structured_output(_output_model(req.questions))
+    # Everything that can fail (building the model, the structured call, and
+    # assembling the answers) lives in one try: the builder must work without
+    # suggestions, so any failure here degrades to empty answers with HTTP 200
+    # rather than bubbling up as a 400/500 through main.py's global handlers.
     try:
+        llm = build_chat_model(model_text_name=AppVars.DECISION_MODEL, temperature=0.0)
+        structured = llm.with_structured_output(_output_model(req.questions))
         result = _as_dict(
             await structured.ainvoke(
                 [
@@ -74,18 +84,19 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
                 ]
             )
         )
+
+        answers: dict[str, dict[str, Any]] = {}
+        for index, (qid, q) in enumerate(req.questions.items()):
+            value = result.get(f"q{index}")
+            if value is None:
+                continue
+            if q.type == "choice":
+                v = _as_dict(value)
+                answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
+            else:
+                answers[qid] = {"type": "noul", "noul": value}
     except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
         logger.warning("decision.system_one failed err=%s", exc)
         return AppResponse(data=DecisionResponse())
 
-    answers: dict[str, dict[str, Any]] = {}
-    for qid, q in req.questions.items():
-        value = result.get(qid)
-        if value is None:
-            continue
-        if q.type == "choice":
-            v = _as_dict(value)
-            answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
-        else:
-            answers[qid] = {"type": "noul", "noul": value}
     return AppResponse(data=DecisionResponse(answers=answers))
