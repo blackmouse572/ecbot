@@ -26,4 +26,9 @@ describe("toChatbotPayload", () => {
     expect(toChatbotPayload({ ...profile, agentName: "" }, "").name).toBe("Lotus");
     expect(toChatbotPayload({ ...profile, agentName: "", businessName: "" }, "").name).toBe("Agent");
   });
+
+  it("keeps the chatbot's existing fallback language, defaulting to the primary language when there is none", () => {
+    expect(toChatbotPayload(profile, "", { deferedLanguage: "en" } as never).deferedLanguage).toBe("en");
+    expect(toChatbotPayload(profile, "").deferedLanguage).toBe("vi");
+  });
 });

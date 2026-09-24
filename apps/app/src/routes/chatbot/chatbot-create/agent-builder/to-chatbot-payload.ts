@@ -30,7 +30,7 @@ export function toChatbotPayload(
     name: profile.agentName.trim() || profile.businessName.trim() || "Agent",
     type: profile.businessType as ChatbotCreateRequestDto["type"],
     primaryLanguage: language,
-    deferedLanguage: language,
+    deferedLanguage: base.deferedLanguage ?? language,
     welcomeMessage: profile.greeting,
     agentProfile: profile as unknown as Record<string, unknown>,
     extraInstructions,
