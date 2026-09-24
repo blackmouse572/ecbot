@@ -8,7 +8,7 @@ import {
     UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import {
     AdapterCapabilities,
     OutboundMessage,
@@ -121,10 +121,24 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
         const mode = url.searchParams.get('hub.mode');
         const token = url.searchParams.get('hub.verify_token');
         const challenge = url.searchParams.get('hub.challenge');
-        if (mode === 'subscribe' && token === this.verifyToken) {
+        if (
+            mode === 'subscribe' &&
+            token !== null &&
+            this.verifyToken &&
+            this.constantTimeEquals(token, this.verifyToken)
+        ) {
             return new Response(challenge ?? '', { status: 200 });
         }
         return new Response('Forbidden', { status: 403 });
+    }
+
+    // Hash both to fixed length before timingSafeEqual — avoids a RangeError
+    // on mismatched lengths and eliminates the length/content timing leak a
+    // plain `===` compare has (mirrors TelegramPlatformAdapter.verifySignature).
+    private constantTimeEquals(a: string, b: string): boolean {
+        const ah = createHash('sha256').update(a).digest();
+        const bh = createHash('sha256').update(b).digest();
+        return timingSafeEqual(ah, bh);
     }
 
     verifySignature(

