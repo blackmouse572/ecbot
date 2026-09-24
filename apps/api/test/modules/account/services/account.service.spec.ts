@@ -221,6 +221,45 @@ describe('AccountService - syncAccount', () => {
         expect(result.pages).toEqual([]);
     });
 
+    // One WhatsApp signup can connect several numbers of the same business.
+    it('links each additional account from the same login alongside the first', async () => {
+        const second = {
+            accessToken: 'raw-second-token',
+            externalId: 'ext-456',
+            name: 'Second Number',
+            link: 'https://example.com/ext-456',
+        };
+        mockPlatformService.getTokenAndProfile.mockResolvedValueOnce({
+            ...mockOAuthResult,
+            additionalAccounts: [second],
+        });
+        const secondAccount = {
+            ...mockUpsertedAccount,
+            id: 'account-uuid-2',
+            externalId: 'ext-456',
+        };
+        mockAccountRepository.upsert
+            .mockResolvedValueOnce(mockUpsertedAccount)
+            .mockResolvedValueOnce(secondAccount);
+
+        const result = await service.syncAccount(
+            'auth-code',
+            ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS,
+            'ws-1',
+            'user-1'
+        );
+
+        expect(mockAccountRepository.upsert).toHaveBeenCalledTimes(2);
+        const secondUpsert = mockAccountRepository.upsert.mock.calls[1][0];
+        expect(secondUpsert).toMatchObject({
+            externalId: 'ext-456',
+            name: 'Second Number',
+            accessToken: 'enveloped:raw-second-token',
+            type: ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS,
+        });
+        expect(result.pages.map(p => p.id)).toEqual(['account-uuid-2']);
+    });
+
     it('excludes accessToken from the returned account', async () => {
         const result = await service.syncAccount(
             'auth-code',

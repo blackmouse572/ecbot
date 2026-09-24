@@ -173,6 +173,7 @@ export class MessageProcessorService implements OnModuleInit {
                     account,
                     event.senderId
                 );
+                const senderName = profile.name ?? event.senderName;
                 const avatarBase64 = profile.avatar
                     ? await fetchAsBase64(profile.avatar)
                     : undefined;
@@ -180,7 +181,7 @@ export class MessageProcessorService implements OnModuleInit {
                 await this.conversationService.updateSenderProfile(
                     conversation.id,
                     {
-                        senderName: profile.name,
+                        senderName,
                         senderAvatar: avatarBase64 ?? null,
                         senderProfileFetchedAt: fetchedAt,
                     }
@@ -188,16 +189,16 @@ export class MessageProcessorService implements OnModuleInit {
                 await this.customerService.updateContactPointProfile(
                     contactPoint.id,
                     {
-                        displaySenderName: profile.name,
+                        displaySenderName: senderName,
                         senderAvatar: avatarBase64 ?? null,
                         fetchedAt,
                     }
                 );
                 await this.customerService.fillCustomerNameIfEmpty(
                     customerId,
-                    profile.name
+                    senderName
                 );
-                conversation.senderName = profile.name;
+                conversation.senderName = senderName;
                 conversation.senderAvatar = avatarBase64 ?? null;
                 conversation.senderProfileFetchedAt = fetchedAt;
             } catch (e) {

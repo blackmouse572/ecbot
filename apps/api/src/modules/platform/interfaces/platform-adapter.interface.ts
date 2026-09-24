@@ -54,6 +54,11 @@ export interface PlatformWebhookEvent {
     senderId: string;
     recipientId: string;
     /**
+     * Display name the platform ships inside the webhook itself. Used when
+     * `fetchSenderProfile` cannot supply one (WhatsApp has no profile lookup).
+     */
+    senderName?: string;
+    /**
      * 'echo' only: the message came from *our* app's send API, so we already
      * persisted it at send time and must not store it twice. Deliberately not
      * "some app sent this" — the platform's own tools (Meta Business Suite)

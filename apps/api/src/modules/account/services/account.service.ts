@@ -347,8 +347,18 @@ export class AccountService implements IAccountService {
                 this.upsertLinkedPage(page, linked, workspaceId, actor)
             )
         );
+        // Siblings from the same login (e.g. every number of a WhatsApp
+        // Business account) — shown alongside pages in the link response.
+        const linkedSiblings = await Promise.all(
+            (profile.additionalAccounts ?? []).map(sibling =>
+                this.upsertLinkedAccount(sibling, platform, workspaceId, actor)
+            )
+        );
 
-        return this.joinAccountsWithPages(linked, linkedPages);
+        return this.joinAccountsWithPages(linked, [
+            ...linkedPages,
+            ...linkedSiblings,
+        ]);
     }
 
     /** Keyed on `externalId`, so re-linking refreshes the existing row. */
