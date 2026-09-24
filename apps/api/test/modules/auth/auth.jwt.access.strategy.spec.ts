@@ -60,4 +60,29 @@ describe('AuthJwtAccessStrategy', () => {
         expect(findLoginSession).toHaveBeenCalledWith('session-1');
         expect(touchLastActive).toHaveBeenCalledWith('session-1');
     });
+
+    it('rejects a payload without a session claim instead of skipping the check', async () => {
+        // Every real access token always carries `session` (see
+        // AuthService.createPayloadAccessToken) — this guards the case where
+        // a payload somehow lacks it: findLoginSession(undefined) resolves
+        // falsy, so it must still 401 rather than silently pass through.
+        findLoginSession.mockResolvedValue(undefined);
+        const payloadWithoutSession = {
+            ...payload,
+            session: undefined,
+        } as unknown as IAuthJwtAccessTokenPayload;
+
+        const strategy = new AuthJwtAccessStrategy(configService, sessionService);
+
+        await expect(
+            strategy.validate(payloadWithoutSession)
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.JWT_ACCESS_TOKEN,
+                message: 'auth.error.accessTokenUnauthorized',
+            },
+        });
+        expect(findLoginSession).toHaveBeenCalledWith(undefined);
+        expect(touchLastActive).not.toHaveBeenCalled();
+    });
 });
