@@ -18,6 +18,16 @@ export enum ENUM_CHATBOT_TYPE {
     AUTOMOTIVE = 'automotive',
     REAL_ESTATE = 'real_estate',
     ENTERTAINMENT = 'entertainment',
+    COSMETICS = 'cosmetics',
+    HOTEL = 'hotel',
+    HOME_SERVICES = 'home_services',
+    STUDIO_EVENTS = 'studio_events',
+    HEALTH_FOODS = 'health_foods',
+    PERSONAL_SCHEDULING = 'personal_scheduling',
+    PERSONAL_EMAIL = 'personal_email',
+    PERSONAL_TASKS = 'personal_tasks',
+    PERSONAL_RESEARCH = 'personal_research',
+    PERSONAL_CRM = 'personal_crm',
     OTHER = 'other',
 }
 

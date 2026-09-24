@@ -84,6 +84,7 @@
         "@nestjs/throttler": "^6.5.0",
         "@react-email/components": "^1.0.12",
         "@react-email/render": "^1.4.0",
+        "@repo/agent-blueprint": "workspace:*",
         "@scalar/nestjs-api-reference": "^0.5.14",
         "@sentry/nestjs": "^10.71.0",
         "ajv": "^8.20.0",

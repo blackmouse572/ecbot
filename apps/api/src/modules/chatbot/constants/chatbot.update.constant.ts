@@ -6,6 +6,8 @@ export const CHATBOT_EDITABLE_FIELDS = [
     'accounts',
     'avatar',
     'generalKnowledge',
+    'agentProfile',
+    'extraInstructions',
     'type',
     'autoRead',
     'typingIndicator',

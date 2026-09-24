@@ -128,6 +128,9 @@ importers:
       '@react-email/render':
         specifier: ^1.4.0
         version: 1.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@repo/agent-blueprint':
+        specifier: workspace:*
+        version: link:../../packages/agent-blueprint
       '@scalar/nestjs-api-reference':
         specifier: ^0.5.14
         version: 0.5.14

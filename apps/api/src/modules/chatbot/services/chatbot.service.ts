@@ -1,4 +1,5 @@
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
+import { ENUM_REQUEST_STATUS_CODE_ERROR } from '@app/common/request/enums/request.status-code.enum';
 import {
     IDatabaseCreateOptions,
     IDatabaseDeleteManyOptions,
@@ -10,8 +11,18 @@ import {
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { CloneChatbotRequestDto } from '../dtos/request/chatbot.clone.request.dto';
 import { IChatbotService } from '@app/modules/chatbot/interfaces/chatbot.service.interface';
+import {
+    agentProfileSchema,
+    compilePrompt,
+    type AgentProfile,
+} from '@repo/agent-blueprint';
 import { Collection, EntityManager, FilterQuery, wrap } from '@mikro-orm/core';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    Logger,
+    NotFoundException,
+} from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ChatbotCreateRequestDto } from '../dtos/request/chatbot.create.request.dto';
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
@@ -29,6 +40,14 @@ import { ChatbotKnowledgeItemEntity } from 'src/modules/knowledge-base/repositor
 import { ChatbotCacheService } from 'src/modules/ai-cache/services/chatbot-cache.service';
 import { RAGEntity } from 'src/modules/rag/repository/entities/rag.entity';
 import { ENUM_RAG_STATUS } from 'src/modules/rag/enums/rag.status.enum';
+
+type ChatbotCreateEntityFields = Omit<
+    ChatbotCreateRequestDto,
+    'accounts' | 'agentProfile'
+> & {
+    modelProvider: ENUM_CHATBOT_MODEL_PROVIDER;
+    agentProfile?: AgentProfile;
+};
 
 @Injectable()
 export class ChatbotService implements IChatbotService {
@@ -98,23 +117,91 @@ export class ChatbotService implements IChatbotService {
     }
 
     /**
+     * Decides what to write to agentProfile / extraInstructions /
+     * generalKnowledge. Builder bots always get a compiled prompt; a partial
+     * update never wipes their profile. Bots without a profile keep their
+     * prompt: Extra instructions carries the old text (forms prefill it), and
+     * old clients may still send generalKnowledge directly.
+     */
+    resolvePromptFields(
+        input: {
+            agentProfile?: unknown;
+            extraInstructions?: string;
+            generalKnowledge?: string;
+        },
+        existing?: {
+            agentProfile?: AgentProfile | null;
+            extraInstructions?: string | null;
+        }
+    ): {
+        agentProfile?: AgentProfile;
+        extraInstructions?: string;
+        generalKnowledge?: string;
+    } {
+        if (input.agentProfile !== undefined && input.agentProfile !== null) {
+            const parsed = agentProfileSchema.safeParse(input.agentProfile);
+            if (!parsed.success) {
+                throw new BadRequestException({
+                    statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
+                    message: 'chatbot.error.invalidAgentProfile',
+                });
+            }
+            const extra =
+                input.extraInstructions ??
+                existing?.extraInstructions ??
+                undefined;
+            return {
+                agentProfile: parsed.data,
+                ...(extra !== undefined ? { extraInstructions: extra } : {}),
+                generalKnowledge: compilePrompt(parsed.data, {
+                    extraInstructions: extra,
+                }),
+            };
+        }
+        if (existing?.agentProfile) {
+            if (input.extraInstructions === undefined) return {};
+            return {
+                extraInstructions: input.extraInstructions,
+                generalKnowledge: compilePrompt(existing.agentProfile, {
+                    extraInstructions: input.extraInstructions,
+                }),
+            };
+        }
+        if (input.extraInstructions !== undefined) {
+            return {
+                extraInstructions: input.extraInstructions,
+                generalKnowledge: input.extraInstructions,
+            };
+        }
+        return input.generalKnowledge !== undefined
+            ? { generalKnowledge: input.generalKnowledge }
+            : {};
+    }
+
+    /**
      * Builds the entity fields for a new chatbot from the create DTO,
      * deriving `modelProvider` from the OpenRouter model id prefix
      * (e.g. `anthropic/claude-sonnet-4.5` -> `anthropic`) since the
      * client no longer sends it explicitly.
      */
-    buildCreateEntity(createDto: ChatbotCreateRequestDto): Omit<
-        ChatbotCreateRequestDto,
-        'accounts'
-    > & {
-        modelProvider: ENUM_CHATBOT_MODEL_PROVIDER;
-    } {
+    buildCreateEntity(
+        createDto: ChatbotCreateRequestDto
+    ): ChatbotCreateEntityFields {
         const { accounts, ...fieldsWithoutAccounts } = createDto;
         const modelProvider = fieldsWithoutAccounts.modelTextName.split(
             '/'
         )[0] as ENUM_CHATBOT_MODEL_PROVIDER;
+        const promptFields = this.resolvePromptFields(fieldsWithoutAccounts);
 
-        return { ...fieldsWithoutAccounts, modelProvider };
+        // The spread below merges `agentProfile?: Record<string, unknown>`
+        // (the DTO) with `agentProfile?: AgentProfile` (resolvePromptFields);
+        // TS widens optional-property spreads to a union, so the assertion
+        // below just re-states the method's own declared return type.
+        return {
+            ...fieldsWithoutAccounts,
+            ...promptFields,
+            modelProvider,
+        } as ChatbotCreateEntityFields;
     }
 
     async create(
@@ -140,6 +227,9 @@ export class ChatbotService implements IChatbotService {
                 this.em.getReference(AccountEntity, accountId)
             );
         }
+
+        // apps/ai may already hold a stale miss for this id; drop it.
+        await this.chatbotCacheService.invalidate(chatbot.id);
 
         return chatbot;
     }
@@ -174,8 +264,21 @@ export class ChatbotService implements IChatbotService {
             ? fieldsWithoutAccounts
             : updateDto;
 
+        // Take the prompt keys out so an `undefined` from pickFields can
+        // never overwrite them; resolvePromptFields decides instead.
+        const {
+            agentProfile: _agentProfile,
+            extraInstructions: _extraInstructions,
+            generalKnowledge: _generalKnowledge,
+            ...otherFields
+        } = assignableFields;
+        const promptFields = this.resolvePromptFields(assignableFields, {
+            agentProfile: repository.agentProfile,
+            extraInstructions: repository.extraInstructions,
+        });
+
         wrap(repository).assign(
-            { ...assignableFields, ...modelProviderUpdate },
+            { ...otherFields, ...promptFields, ...modelProviderUpdate },
             { em: this.chatbotRepository.getEntityManager() }
         );
 
