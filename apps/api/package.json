@@ -61,7 +61,7 @@
         "@aws-sdk/client-ses": "^3.1139.0",
         "@aws-sdk/s3-request-presigner": "^3.1139.0",
         "@casl/ability": "^6.8.1",
-        "@composio/core": "^0.10.0",
+        "@composio/core": "^0.20.0",
         "@google-cloud/tasks": "^6.3.0",
         "@grpc/grpc-js": "^1.14.5",
         "@keyv/redis": "^4.6.0",
