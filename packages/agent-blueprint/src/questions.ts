@@ -70,7 +70,7 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
     q("businessName", "text", {
       required: true,
       titleKey: personal ? "agentBuilder.questions.ownerName.title" : "agentBuilder.questions.businessName.title",
-      placeholderKey: "agentBuilder.questions.businessName.placeholder",
+      placeholderKey: personal ? undefined : "agentBuilder.questions.businessName.placeholder",
     }),
     q("agentName", "text", { required: true, placeholderKey: "agentBuilder.questions.agentName.placeholder" }),
     ...(personal ? [] : [q("channels", "multi", { choices: choicesOf("channels") })]),

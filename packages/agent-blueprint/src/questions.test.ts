@@ -31,6 +31,13 @@ describe("buildQuestionGroups", () => {
     expect(buildQuestionGroups(createProfile("personal_scheduling", "en")).map((g) => g.id)).not.toContain("process");
   });
 
+  it("shows the business placeholder only on the business name question, not the owner name", () => {
+    const nameQ = (type: Parameters<typeof createProfile>[0]) =>
+      buildQuestionGroups(createProfile(type, "en")).flatMap((g) => g.questions).find((q) => q.id === "businessName")!;
+    expect(nameQ("beauty").placeholderKey).toBe("agentBuilder.questions.businessName.placeholder");
+    expect(nameQ("personal_scheduling").placeholderKey).toBeUndefined();
+  });
+
   it("offers personal goals to personal types and business goals to SMB types", () => {
     const goalsQ = (p: ReturnType<typeof createProfile>) =>
       buildQuestionGroups(p).flatMap((g) => g.questions).find((q) => q.id === "goals")!;
