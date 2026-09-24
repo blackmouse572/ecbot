@@ -48,23 +48,35 @@ export function buildSuggestQuestions(): Record<string, SystemOneQuestion> {
   return questions;
 }
 
-function scored(a: SystemOneAnswer | undefined, allowed: readonly string[]): Scored | null {
-  if (!a || a.type !== "choice" || typeof a.choice !== "string" || !allowed.includes(a.choice)) return null;
-  return { value: a.choice, confidence: Number(a.confidence) || 0 };
+function scored(a: SystemOneAnswer | undefined | null, allowed: readonly string[]): Scored | null {
+  if (!a || typeof a !== "object" || a.type !== "choice" || typeof a.choice !== "string" || !allowed.includes(a.choice)) return null;
+  const confidence = Number(a.confidence);
+  const clampedConfidence = Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0;
+  return { value: a.choice, confidence: clampedConfidence };
 }
 
-export function readSuggestAnswers(answers: Record<string, SystemOneAnswer | undefined>): AgentSuggestion {
-  const nouls = (prefix: string) => Object.fromEntries(
-    Object.entries(answers)
-      .filter(([k, a]) => k.startsWith(prefix) && a?.type === "noul" && typeof a.noul === "number")
-      .map(([k, a]) => [k.slice(prefix.length), (a as { noul: number }).noul]),
+export function readSuggestAnswers(answers: Record<string, SystemOneAnswer | undefined> | null | undefined): AgentSuggestion {
+  const safeAnswers = typeof answers === "object" && answers !== null ? answers : {};
+  const goalIds = new Set(GOALS.map((g) => g.id));
+  const ruleIds = new Set(RULES.map((r) => r.id));
+
+  const nouls = (prefix: string, idValidator: Set<string>) => Object.fromEntries(
+    Object.entries(safeAnswers)
+      .filter(([k, a]) => {
+        if (!k.startsWith(prefix) || !a || typeof a !== "object") return false;
+        if (a.type !== "noul" || typeof a.noul !== "number") return false;
+        const id = k.slice(prefix.length);
+        const noul = (a as { noul: number }).noul;
+        return idValidator.has(id) && Number.isFinite(noul) && noul >= 0;
+      })
+      .map(([k, a]) => [k.slice(prefix.length), Math.min(1, (a as { noul: number }).noul)]),
   );
   return {
-    businessType: scored(answers.business_type, BUSINESS_TYPES.map((t) => t.id)),
-    personality: scored(answers.personality, PERSONALITY.map((p) => p.id)),
-    formality: scored(answers.formality, FORMALITY.map((f) => f.id)),
-    goals: nouls("goal__"),
-    rules: nouls("rule__"),
+    businessType: scored(safeAnswers.business_type, BUSINESS_TYPES.map((t) => t.id)),
+    personality: scored(safeAnswers.personality, PERSONALITY.map((p) => p.id)),
+    formality: scored(safeAnswers.formality, FORMALITY.map((f) => f.id)),
+    goals: nouls("goal__", goalIds),
+    rules: nouls("rule__", ruleIds),
   };
 }
 
@@ -80,12 +92,13 @@ export function applySuggestion(s: AgentSuggestion, primaryLanguage: string): Ag
   const personal = getBusinessType(typeId).personal;
   const base = createProfile(typeId, primaryLanguage);
   const allowedGoals = new Set<GoalId>(personal ? PERSONAL_GOALS : GOALS.map((g) => g.id).filter((g) => !PERSONAL_GOALS.includes(g) || g === "capture_leads"));
-  const likely = <T extends string>(scores: Record<string, number>) =>
-    Object.entries(scores).filter(([, p]) => p >= 0.5).map(([id]) => id as T);
+  const validRuleIds = new Set(RULES.map((r) => r.id));
+  const likely = <T extends string>(scores: Record<string, number>, validator?: Set<string>) =>
+    Object.entries(scores).filter(([id, p]) => p >= 0.5 && (!validator || validator.has(id))).map(([id]) => id as T);
   return {
     ...base,
     goals: Array.from(new Set([...base.goals, ...likely<GoalId>(s.goals).filter((g) => allowedGoals.has(g))])),
-    rules: Array.from(new Set([...base.rules, ...likely<RuleId>(s.rules)])),
+    rules: Array.from(new Set([...base.rules, ...likely<RuleId>(s.rules, validRuleIds)])),
     personality: s.personality && confidenceLevel(s.personality.confidence) !== "none" ? [s.personality.value as AgentProfile["personality"][number]] : base.personality,
     formality: s.formality && confidenceLevel(s.formality.confidence) !== "none" ? (s.formality.value as AgentProfile["formality"]) : base.formality,
   };

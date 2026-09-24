@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   EMPTY_SUGGESTION, applySuggestion, buildSuggestQuestions, confidenceLevel, readSuggestAnswers,
 } from "./suggest";
+import { agentProfileSchema } from "./profile";
 
 describe("buildSuggestQuestions", () => {
   it("asks one choice for type, personality, formality and a noul per goal and rule", () => {
@@ -41,6 +42,52 @@ describe("readSuggestAnswers", () => {
   it("rejects a choice that is not a known id", () => {
     expect(readSuggestAnswers({ business_type: { type: "choice", choice: "casino", confidence: 1 } }).businessType).toBeNull();
   });
+
+  it("returns EMPTY_SUGGESTION when answers is null without throwing", () => {
+    const s = readSuggestAnswers(null as never);
+    expect(s).toEqual(EMPTY_SUGGESTION);
+  });
+
+  it("returns EMPTY_SUGGESTION when answers is undefined without throwing", () => {
+    const s = readSuggestAnswers(undefined as never);
+    expect(s).toEqual(EMPTY_SUGGESTION);
+  });
+
+  it("ignores entries that are null", () => {
+    const s = readSuggestAnswers({ business_type: null as never });
+    expect(s.businessType).toBeNull();
+  });
+
+  it("drops unknown goal and rule ids", () => {
+    const s = readSuggestAnswers({
+      rule__not_a_real_rule: { type: "noul", noul: 0.9 },
+      goal__nope: { type: "noul", noul: 0.9 },
+    });
+    expect(s.rules).toEqual({});
+    expect(s.goals).toEqual({});
+  });
+
+  it("clamps numbers to valid ranges", () => {
+    const s = readSuggestAnswers({
+      goal__take_orders: { type: "noul", noul: 1.7 },
+      rule__no_medical_advice: { type: "noul", noul: -0.5 },
+      business_type: { type: "choice", choice: "beauty", confidence: -2 },
+      personality: { type: "choice", choice: "warm", confidence: 2.5 },
+    });
+    expect(s.goals.take_orders).toBe(1);
+    expect(s.rules.no_medical_advice).toBeUndefined();
+    expect(s.businessType?.confidence).toBe(0);
+    expect(s.personality?.confidence).toBe(1);
+  });
+
+  it("drops NaN and Infinity noul values", () => {
+    const s = readSuggestAnswers({
+      goal__take_orders: { type: "noul", noul: NaN },
+      rule__no_medical_advice: { type: "noul", noul: Infinity },
+    });
+    expect(s.goals).toEqual({});
+    expect(s.rules).toEqual({});
+  });
 });
 
 describe("applySuggestion", () => {
@@ -64,6 +111,16 @@ describe("applySuggestion", () => {
     expect(p.goals).not.toContain("manage_schedule");
     expect(p.rules).toContain("no_competitors");
     expect(p.personality).toEqual(["premium"]);
+  });
+
+  it("output passes agentProfileSchema validation even with malformed answers", () => {
+    const answers = readSuggestAnswers({
+      business_type: { type: "choice", choice: "beauty", confidence: 0.95 },
+      rule__not_a_real_rule: { type: "noul", noul: 0.9 },
+      goal__take_orders: { type: "noul", noul: 0.8 },
+    });
+    const profile = applySuggestion(answers, "en")!;
+    expect(() => agentProfileSchema.parse(profile)).not.toThrow();
   });
 });
 
