@@ -122,7 +122,7 @@ export class UserService {
         return em.findOne(
             UserEntity,
             {
-                email: { $ilike: email },
+                email: email.toLowerCase(),
             },
             findOptions
         );
@@ -269,7 +269,7 @@ export class UserService {
             UserEntity,
             {
                 $or: [
-                    { email: { $ilike: emailOrMobileNumber } },
+                    { email: emailOrMobileNumber.toLowerCase() },
                     { mobileNumber: { number: emailOrMobileNumber } },
                 ],
             },
@@ -291,7 +291,7 @@ export class UserService {
             UserEntity,
             {
                 $or: [
-                    { email: { $ilike: emailOrUsername } },
+                    { email: emailOrUsername.toLowerCase() },
                     { username: { $ilike: emailOrUsername } },
                 ],
             },
@@ -326,7 +326,7 @@ export class UserService {
         mobileNumber?: string,
         options?: IDatabaseFindOneOptions
     ): Promise<boolean> {
-        const filters: any[] = [{ email: { $ilike: email } }];
+        const filters: any[] = [{ email: email.toLowerCase() }];
 
         if (mobileNumber) {
             filters.push({ mobileNumber: { number: mobileNumber } });
@@ -358,7 +358,7 @@ export class UserService {
         const user = await em.findOne(
             UserEntity,
             {
-                email: { $ilike: email },
+                email: email.toLowerCase(),
             },
             findOptions
         );
