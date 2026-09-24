@@ -35,6 +35,9 @@ export function ChatbotEditForm() {
 
     setDefaultValues({
       ...rest,
+      extraInstructions:
+        chatbot.extraInstructions ??
+        (chatbot.agentProfile ? "" : chatbot.generalKnowledge ?? ""),
       accounts: accounts.map((account: AccountListResponseDto) => account.id),
     });
   }, [chatbot]);
@@ -49,7 +52,8 @@ export function ChatbotEditForm() {
       const body: ChatbotUpdateRequestDto = {
         ...(data as A),
         name: data.name,
-        generalKnowledge: data.generalKnowledge || "",
+        extraInstructions: data.extraInstructions ?? "",
+        agentProfile: chatbot?.agentProfile ?? undefined,
         accounts: data.accounts || [],
         type: (data.type ||
           CHATBOT_FORM_DEFAULTS.type) as ChatbotUpdateRequestDto["type"],
@@ -105,11 +109,12 @@ export function ChatbotEditForm() {
         submitText={t("chatbot.edit.save")}
         cancelText={t("chatbot.edit.cancel")}
         nameLabel={t("chatbot.edit.name")}
-        generalKnowledgeLabel={t("chatbot.edit.generalKnowledge")}
-        generalKnowledgePlaceholder={t(
-          "chatbot.edit.generalKnowledgePlaceholder",
-        )}
         typeLabel={t("chatbot.edit.type")}
+        builderHref={
+          chatbot?.agentProfile
+            ? `/${workspaceSlug}/chatbot/create?chatbotId=${id}`
+            : undefined
+        }
       />
     </RouteFocusModal>
   );

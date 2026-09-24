@@ -12,6 +12,7 @@ import {
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { CHATBOT_FORM_DEFAULTS, CHATBOT_LANGUAGES } from "../../constants";
 import { createChatbotSchema, type ChatbotFormData } from "../../schemas";
 import { LinkedAccountsField } from "../linked-accounts-field";
@@ -26,9 +27,8 @@ type ChatbotFormProps = {
   submitText: string;
   cancelText: string;
   nameLabel: string;
-  generalKnowledgeLabel: string;
-  generalKnowledgePlaceholder: string;
   typeLabel: string;
+  builderHref?: string;
   className?: string;
 };
 
@@ -40,9 +40,8 @@ export function ChatbotForm({
   submitText,
   cancelText,
   nameLabel,
-  generalKnowledgeLabel,
-  generalKnowledgePlaceholder,
   typeLabel,
+  builderHref,
 }: ChatbotFormProps) {
   const { t } = useTranslation();
 
@@ -103,23 +102,28 @@ export function ChatbotForm({
               />
 
               <Form.Field
-                name="generalKnowledge"
+                name="extraInstructions"
                 control={form.control}
                 render={({ field }) => (
                   <Form.Item>
-                    <Form.Label>{generalKnowledgeLabel}</Form.Label>
+                    <div className="flex items-center justify-between gap-2">
+                      <Form.Label optional>
+                        {t("agentBuilder.ui.extraInstructions")}
+                      </Form.Label>
+                      {builderHref && (
+                        <Link
+                          to={builderHref}
+                          className="txt-compact-small-plus text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+                        >
+                          {t("agentBuilder.ui.editWithBuilder")}
+                        </Link>
+                      )}
+                    </div>
                     <Form.Hint>
-                      A prompt that determine chatbot personality and knowledge
-                      base.
+                      {t("agentBuilder.ui.extraInstructionsHint")}
                     </Form.Hint>
                     <Form.Control>
-                      <TipTapEditor
-                        format="markdown"
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        placeholder={generalKnowledgePlaceholder}
-                        className="w-full"
-                      />
+                      <Textarea {...field} rows={5} maxLength={5000} className="w-full" />
                     </Form.Control>
                     <Form.ErrorMessage />
                   </Form.Item>

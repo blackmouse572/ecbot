@@ -172,7 +172,7 @@ export const CHATBOT_FORM_DEFAULTS: Partial<ChatbotFormData> = {
   name: "Bot " + new Date().getTime(),
   autoRead: true,
   typingIndicator: true,
-  generalKnowledge: "",
+  extraInstructions: "",
   accounts: [],
   primaryLanguage: "en",
   deferedLanguage: "en",
