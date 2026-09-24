@@ -1,4 +1,5 @@
 export * from "./accounts";
+export * from "./agent-builder";
 export * from "./auth";
 export * from "./chatbot";
 export * from "./contact-points";
