@@ -49,6 +49,10 @@ export const useAccountTableFilters = (): Filter[] => {
         ["TELEGRAM_BOT", t("accounts.details.types.telegramBot.label")],
         ["API_CHANNEL", t("accounts.details.types.apiChannel.label")],
         ["WEBSITE_WIDGET", t("accounts.details.types.websiteWidget.label")],
+        [
+          "WHATSAPP_BUSINESS",
+          t("accounts.details.types.whatsappBusiness.label"),
+        ],
       ]),
     ],
     [t],

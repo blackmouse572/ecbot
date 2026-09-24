@@ -26,4 +26,5 @@ const colorMap: Record<
   TELEGRAM_BOT: "blue",
   API_CHANNEL: "grey",
   WEBSITE_WIDGET: "green",
+  WHATSAPP_BUSINESS: "green",
 };

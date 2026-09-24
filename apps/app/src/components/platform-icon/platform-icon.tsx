@@ -16,6 +16,7 @@ const ICON_BY_TYPE: Record<AccountType, { src: string; label: string }> = {
   TELEGRAM_BOT: { src: "/icons/telegram.svg", label: "Telegram" },
   API_CHANNEL: { src: "/icons/api-channel.svg", label: "API" },
   WEBSITE_WIDGET: { src: "/icons/website-widget.svg", label: "Website" },
+  WHATSAPP_BUSINESS: { src: "/icons/whatsapp.svg", label: "WhatsApp" },
 };
 
 interface PlatformIconProps extends Omit<ComponentProps<"img">, "src" | "alt"> {

@@ -22,6 +22,7 @@ Ecbot is a multi-platform AI agent platform for conversational commerce and cust
 | Facebook Messenger | Shipped                                                                         |
 | Zalo OA            | Shipped                                                                         |
 | Telegram           | Shipped                                                                         |
+| WhatsApp Business  | Shipped                                                                         |
 | Website widget     | Shipped                                                                         |
 | REST API channel   | Shipped                                                                         |
 | Instagram          | Roadmap — [adapter slot open](https://github.com/blackmouse572/ecbot/issues/22) |
@@ -32,7 +33,7 @@ Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three s
 
 ## Features
 
-- **One agent, every channel.** Define persona, knowledge, tools and behaviour once; the same agent answers on Facebook Messenger, Zalo OA, Telegram, your website widget and a REST API channel. Instagram, TikTok Shop and Shopee are open adapter slots.
+- **One agent, every channel.** Define persona, knowledge, tools and behaviour once; the same agent answers on Facebook Messenger, Zalo OA, Telegram, WhatsApp Business, your website widget and a REST API channel. Instagram, TikTok Shop and Shopee are open adapter slots.
 - **Operator inbox with human handoff.** Every conversation is visible to operators, who can take over at any time; the agent hands off on its own by keyword or when its confidence drops below a threshold you set.
 - **Knowledge base with RAG.** Upload files and pages; embeddings live next to the relational data in one Postgres (pgvector), and retrieval is scoped per agent.
 - **Tools and MCP.** Give agents tools from the marketplace (Composio), a hosted MCP server, or any MCP URL you operate; tool calls run inside the conversation.

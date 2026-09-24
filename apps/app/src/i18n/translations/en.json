@@ -458,6 +458,19 @@
           "tokenHint": "Create a bot and get the token via @BotFather",
           "tokenInvalid": "Invalid token format — expected 1234567890:ABC...",
           "cta": "Connect Bot"
+        },
+        "whatsapp": {
+          "description": "Paste your WhatsApp Business phone number ID and a permanent System User access token from Meta.",
+          "phoneNumberIdLabel": "Phone number ID",
+          "phoneNumberIdInvalid": "Phone number ID must contain digits only",
+          "tokenLabel": "Access token",
+          "tokenPlaceholder": "EAAG...",
+          "tokenHint": "Use a system user token issued for ecbot's Meta app, with access to your WhatsApp Business account. A token from your own Meta app won't receive messages — use \"Log in with Facebook\" instead.",
+          "cta": "Connect WhatsApp",
+          "tabs": {
+            "oauth": "Log in with Facebook",
+            "manual": "Enter manually"
+          }
         }
       }
     },
@@ -528,6 +541,10 @@
         "websiteWidget": {
           "label": "Website Widget",
           "description": "A chat widget embedded on your website."
+        },
+        "whatsappBusiness": {
+          "label": "WhatsApp Business",
+          "description": "A WhatsApp Business number connected through the Cloud API."
         }
       },
       "apiChannel": {

@@ -13,7 +13,7 @@ consumer instead (see References).
 | ------ | ------------------------- | ------------------------------------------------------- |
 | GET    | `/health`                 | Liveness check                                           |
 | GET    | `/robots.txt`             | `Disallow: /` for every crawler (see Bots & crawlers)     |
-| GET    | `/webhooks/:platform`     | Facebook/Messenger `hub.challenge` verification, checked locally (see Env / bindings); 404 for every other slug |
+| GET    | `/webhooks/:platform`     | Meta `hub.challenge` verification (Messenger, WhatsApp), checked locally (see Env / bindings); 404 for every other slug |
 | POST   | `/webhooks/telegram/:botId` | Telegram (botId comes from the URL, not the payload)   |
 | POST   | `/webhooks/:platform`     | Every other platform (slug-based)                        |
 
@@ -118,10 +118,7 @@ deep in a handler. Add a new required var to both the schema in `src/env.ts`
 and `.env.example`.
 
 `FACEBOOK_WEBHOOK_SECRET` is duplicated in both `apps/api`'s env and this
-worker's — **rotate both together**, they must match exactly. Note
-`apps/api/.env.example` currently documents this var as
-`FACEBOOK_WEBHOOK_VERIFY_TOKEN`, which apps/api's code does not read; the
-real key is `FACEBOOK_WEBHOOK_SECRET`.
+worker's — **rotate both together**, they must match exactly.
 
 `wrangler.json`'s `secrets.required` lists the three secrets above — `wrangler
 deploy`/`versions upload` validate they're already set on the Worker before
