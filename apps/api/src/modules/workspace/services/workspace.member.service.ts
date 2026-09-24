@@ -4,11 +4,13 @@ import {
     IDatabaseGetTotalOptions,
     IDatabaseOptions,
 } from '@app/common/database/interfaces/database.interface';
+import { ENUM_INVITATION_STATUS_CODE_ERROR } from '@app/modules/invitation/enums/invitation.enum';
 import { InvitationService } from '@app/modules/invitation/services/invitation.service';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
+    ForbiddenException,
     Injectable,
     NotFoundException,
     UnauthorizedException,
@@ -325,6 +327,12 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
 
         // Find the invitation in database
         const invitation = await this.invitationService.findOneByToken(token);
+        if (!invitation) {
+            throw new NotFoundException({
+                statusCode: ENUM_INVITATION_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'invitation.error.notFound',
+            });
+        }
 
         // Check if invitation is still pending
         if (invitation.status !== 'PENDING') {
@@ -352,7 +360,8 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
             !caller ||
             caller.email.toLowerCase() !== invitation.inviteeEmail.toLowerCase()
         ) {
-            throw new UnauthorizedException({
+            // 403, not 401: apps/app retries a 401 as an expired session.
+            throw new ForbiddenException({
                 statusCode:
                     ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
                 message: 'workspace.member.join.invalid',

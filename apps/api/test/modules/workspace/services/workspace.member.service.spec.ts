@@ -1,4 +1,8 @@
-import { UnauthorizedException } from '@nestjs/common';
+import {
+    ForbiddenException,
+    NotFoundException,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -273,7 +277,9 @@ describe('WorkspaceMemberService', () => {
             );
         });
 
-        it('should reject when the caller is not the invited user', async () => {
+        // 403, not 401: apps/app treats any 401 as an expired session and
+        // tries a token refresh, which would bounce a valid user to login.
+        it('should reject with 403 when the caller is not the invited user', async () => {
             mockInvitationService.findOneByToken.mockResolvedValue({
                 id: invitationId,
                 status: 'PENDING',
@@ -284,7 +290,21 @@ describe('WorkspaceMemberService', () => {
 
             await expect(
                 service.joinWorkspaceViaInvitation('token', userId)
-            ).rejects.toThrow(UnauthorizedException);
+            ).rejects.toThrow(ForbiddenException);
+            expect(mockInvitationService.accept).not.toHaveBeenCalled();
+        });
+
+        it('should reject with 404 when no invitation row matches the token', async () => {
+            mockInvitationService.findOneByToken.mockResolvedValue(null);
+
+            const error = await service
+                .joinWorkspaceViaInvitation('token', userId)
+                .catch((err: unknown) => err);
+
+            expect(error).toBeInstanceOf(NotFoundException);
+            expect((error as NotFoundException).getResponse()).toMatchObject({
+                message: 'invitation.error.notFound',
+            });
             expect(mockInvitationService.accept).not.toHaveBeenCalled();
         });
     });
