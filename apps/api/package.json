@@ -137,7 +137,7 @@
         "@commitlint/cli": "^19.8.1",
         "@commitlint/config-conventional": "^19.8.1",
         "@faker-js/faker": "^10.5.0",
-        "@hey-api/openapi-ts": "^0.71.1",
+        "@hey-api/openapi-ts": "^0.99.0",
         "@mikro-orm/cli": "^6.6.16",
         "@mikro-orm/migrations": "^6.6.16",
         "@nestjs/cli": "^11.0.24",

@@ -17,6 +17,6 @@
     "@repo/typescript-config": "workspace:*"
   },
   "dependencies": {
-    "@hey-api/client-axios": "^0.7.1"
+    "axios": "^1.19.0"
   }
 }

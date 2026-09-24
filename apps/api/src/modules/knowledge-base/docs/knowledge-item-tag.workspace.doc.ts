@@ -5,7 +5,6 @@ import {
     DocGuard,
     DocRequest,
     DocResponse,
-    DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
 import { WorkspaceDocParamsId } from 'src/modules/workspace/constants/workspace.doc.constant';
 import {
@@ -29,9 +28,7 @@ export function KnowledgeItemTagWorkspaceListDoc(): MethodDecorator {
             jwtAccessToken: true,
         }),
         DocGuard({ policy: true, role: true }),
-        DocResponsePaging<any>('knowledge-base.tag.list', {
-            dto: Array<string>,
-        })
+        DocResponse('knowledge-base.tag.list')
     );
 }
 
