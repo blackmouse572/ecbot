@@ -18,9 +18,21 @@ export function withArticle(text: string): string {
   return `${/^[aeiou]/i.test(text) ? "an" : "a"} ${text}`;
 }
 
-function list(items: string[]): string {
+function list(items: string[], conjunction = "and"): string {
   if (items.length <= 1) return items.join("");
-  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+  return `${items.slice(0, -1).join(", ")} ${conjunction} ${items[items.length - 1]}`;
+}
+
+// An item like "date and time" would blur where items split, so such lists
+// use semicolons.
+function unambiguousList(items: string[]): string {
+  if (items.length <= 1 || !items.some((item) => item.includes(" and "))) return list(items);
+  return `${items.slice(0, -1).join("; ")}; and ${items[items.length - 1]}`;
+}
+
+// Numbers the kept lines 1..n so an omitted step never leaves a gap.
+function numbered(lines: string[]): string[] {
+  return lines.filter(Boolean).map((line, i) => `${i + 1}. ${line}`);
 }
 
 function section(title: string, body: string[]): string {
@@ -69,13 +81,13 @@ export function compilePrompt(profile: AgentProfile, options: CompileOptions = {
     ? facts.map((f, i) => (type.mode === "detailed" ? `${i + 1}. ${f}` : `- ${f}`))
     : ["No business facts were provided. Rely on the knowledge base and never guess."]);
 
-  const process = type.personal ? "" : section("Process", [
-    "1. Understand what the customer needs. Ask at most one question at a time.",
-    profile.collect.length ? `2. Before confirming anything, collect: ${list(profile.collect.map((c) => promptOf(COLLECT, c)))}.` : "",
-    "3. Read the key details back and wait for a clear yes before you confirm.",
-    profile.handoffWhen.length ? `4. Hand the conversation to a person when ${list(profile.handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)))}.` : "",
-    type.mode === "detailed" ? "5. Explain step by step and check that the customer understood before moving on." : "",
-  ]);
+  const process = type.personal ? "" : section("Process", numbered([
+    "Understand what the customer needs. Ask at most one question at a time.",
+    profile.collect.length ? `Before confirming anything, collect: ${unambiguousList(profile.collect.map((c) => promptOf(COLLECT, c)))}.` : "",
+    "Read the key details back and wait for a clear yes before you confirm.",
+    profile.handoffWhen.length ? `Hand the conversation to a person when ${list(profile.handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.` : "",
+    type.mode === "detailed" ? "Explain step by step and check that the customer understood before moving on." : "",
+  ]));
 
   const rules = section("Rules", [
     ...profile.rules.map((r, i) => `${i + 1}. ${promptOf(RULES, r)}`),

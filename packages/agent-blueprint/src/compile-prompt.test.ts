@@ -39,6 +39,26 @@ describe("compilePrompt", () => {
     expect(out).not.toContain("## Process");
   });
 
+  it("joins handoff conditions with or", () => {
+    const out = compilePrompt({ ...sample("beauty", "en"), handoffWhen: ["asks_for_human", "upset", "complaint"] });
+    expect(out).toContain(
+      "Hand the conversation to a person when the customer asks for a person, the customer is upset or the customer makes a complaint.",
+    );
+  });
+
+  it("separates collect items with semicolons when one of them contains and", () => {
+    const out = compilePrompt({ ...sample("beauty", "en"), collect: ["name", "phone", "date_time"] });
+    expect(out).toContain("collect: full name; phone number; and preferred date and time.");
+    const plainOut = compilePrompt({ ...sample("beauty", "en"), collect: ["name", "phone"] });
+    expect(plainOut).toContain("collect: full name and phone number.");
+  });
+
+  it("numbers the Process steps 1..n without gaps when a step is omitted", () => {
+    const out = compilePrompt({ ...sample("beauty", "en"), collect: [], handoffWhen: [] });
+    const process = out.split("## Process\n")[1].split("\n\n")[0].split("\n");
+    expect(process.map((line) => line.split(".")[0])).toEqual(process.map((_, i) => String(i + 1)));
+  });
+
   it("only includes facts that belong to the current type", () => {
     const p = { ...sample("restaurant"), facts: { opening_hours: "9h-22h", size_guide: "S M L" } };
     const out = compilePrompt(p);
