@@ -493,7 +493,7 @@
           "phoneNumberIdInvalid": "Phone number ID chỉ được chứa chữ số",
           "tokenLabel": "Access token",
           "tokenPlaceholder": "EAAG...",
-          "tokenHint": "Lấy cả hai trong mục WhatsApp → API Setup của Meta app. Đồng thời đặt webhook WhatsApp của app thành /api/v1/public/webhooks/whatsapp và đăng ký trường messages.",
+          "tokenHint": "Dùng token system user được cấp cho Meta app của ecbot, có quyền truy cập tài khoản WhatsApp Business của bạn. Token từ Meta app riêng của bạn sẽ không nhận được tin nhắn — hãy dùng \"Đăng nhập bằng Facebook\".",
           "cta": "Kết nối WhatsApp",
           "tabs": {
             "oauth": "Đăng nhập bằng Facebook",

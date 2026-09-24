@@ -465,7 +465,7 @@
           "phoneNumberIdInvalid": "Phone number ID must contain digits only",
           "tokenLabel": "Access token",
           "tokenPlaceholder": "EAAG...",
-          "tokenHint": "Find both under WhatsApp → API Setup in your Meta app. Also set the app's WhatsApp webhook to /api/v1/public/webhooks/whatsapp and subscribe to the messages field.",
+          "tokenHint": "Use a system user token issued for ecbot's Meta app, with access to your WhatsApp Business account. A token from your own Meta app won't receive messages — use \"Log in with Facebook\" instead.",
           "cta": "Connect WhatsApp",
           "tabs": {
             "oauth": "Log in with Facebook",
