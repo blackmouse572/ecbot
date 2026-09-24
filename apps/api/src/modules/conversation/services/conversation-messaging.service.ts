@@ -59,14 +59,17 @@ export class ConversationMessagingService {
 
     async sendOperatorReply(
         conversationId: string,
+        workspaceId: string,
         operatorId: string,
         text: string,
         attachments?: unknown[]
     ): Promise<MessageEntity> {
-        const conversation = await this.conversationRepository.findOneById(
-            conversationId,
-            { populate: ['account'] }
-        );
+        const conversation =
+            await this.conversationRepository.findOneByIdInWorkspace(
+                conversationId,
+                workspaceId,
+                { populate: ['account'] }
+            );
 
         if (!conversation) {
             throw new NotFoundException({
@@ -120,18 +123,27 @@ export class ConversationMessagingService {
 
     async reactToMessage(params: {
         conversationId: string;
+        workspaceId: string;
         messageId: string;
         emoji: string;
         action: 'react' | 'unreact';
         operatorUserId: string;
     }): Promise<MessageGetResponseDto> {
-        const { conversationId, messageId, emoji, action, operatorUserId } =
-            params;
-
-        const conversation = await this.conversationRepository.findOneById(
+        const {
             conversationId,
-            { populate: ['account'] }
-        );
+            workspaceId,
+            messageId,
+            emoji,
+            action,
+            operatorUserId,
+        } = params;
+
+        const conversation =
+            await this.conversationRepository.findOneByIdInWorkspace(
+                conversationId,
+                workspaceId,
+                { populate: ['account'] }
+            );
 
         if (!conversation) {
             throw new NotFoundException({
@@ -188,16 +200,19 @@ export class ConversationMessagingService {
 
     async listMessages(
         conversationId: string,
+        workspaceId: string,
         options?: { limit?: number; offset?: number }
     ): Promise<{
         messages: MessageEntity[];
         conversation: ConversationEntity;
         total: number;
     }> {
-        const conversation = await this.conversationRepository.findOneById(
-            conversationId,
-            { populate: ['chatbot'] }
-        );
+        const conversation =
+            await this.conversationRepository.findOneByIdInWorkspace(
+                conversationId,
+                workspaceId,
+                { populate: ['chatbot'] }
+            );
         if (!conversation) {
             throw new NotFoundException({
                 message: 'conversation.error.notFound',

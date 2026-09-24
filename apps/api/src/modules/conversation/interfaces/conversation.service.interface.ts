@@ -1,4 +1,7 @@
-import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
+import {
+    IDatabaseFindAllOptions,
+    IDatabaseFindOneOptions,
+} from '@app/common/database/interfaces/database.interface';
 import { ConversationGetResponseDto } from '../dtos/response/conversation.get.response.dto';
 import { ConversationEntity } from '../repository/entities/conversation.entity';
 import { ENUM_CONVERSATION_STATUS } from '../enums/conversation.enum';
@@ -54,7 +57,8 @@ export interface IConversationService {
     ): ConversationGetResponseDto[];
     findOneByIdInWorkspace(
         id: string,
-        workspaceId: string
+        workspaceId: string,
+        options?: IDatabaseFindOneOptions
     ): Promise<ConversationEntity | null>;
     markConversationRead(
         operatorId: string,

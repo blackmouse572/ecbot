@@ -1,5 +1,8 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
-import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
+import {
+    IDatabaseFindAllOptions,
+    IDatabaseFindOneOptions,
+} from '@app/common/database/interfaces/database.interface';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ENUM_CONVERSATION_STATUS } from '../../enums/conversation.enum';
@@ -26,14 +29,15 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
 
     async findOneByIdInWorkspace(
         id: string,
-        workspaceId: string
+        workspaceId: string,
+        options?: IDatabaseFindOneOptions
     ): Promise<ConversationEntity | null> {
         const filter: Record<string, any> = {
             id,
             chatbot: { workspace: workspaceId },
             deletedAt: null,
         };
-        return this.findOne(filter as any);
+        return this.findOne(filter as any, options);
     }
 
     async findByWorkspace(

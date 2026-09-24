@@ -27,6 +27,7 @@ const mockConversationMessagingService = {
     listMessages: jest.fn(),
     mapMessages: jest.fn(),
     sendOperatorReply: jest.fn(),
+    reactToMessage: jest.fn(),
     mapMessage: jest.fn(),
     buildUserNameMap: jest.fn(),
     listToolInvocations: jest.fn(),
@@ -447,8 +448,19 @@ describe('ConversationWorkspaceController', () => {
             mockConversationMessagingService.mapMessages.mockReturnValue([]);
             mockPaginationService.totalPage.mockReturnValue(3);
 
-            const result = await controller.listMessages('conv-1', 1, 50);
+            const result = await controller.listMessages(
+                workspace,
+                'conv-1',
+                1,
+                50
+            );
 
+            expect(
+                mockConversationMessagingService.listMessages
+            ).toHaveBeenCalledWith('conv-1', workspaceId, {
+                limit: 50,
+                offset: 0,
+            });
             expect(result._pagination.total).toBe(137);
             expect(mockPaginationService.totalPage).toHaveBeenCalledWith(
                 137,
@@ -456,29 +468,41 @@ describe('ConversationWorkspaceController', () => {
             );
             expect(result._pagination.totalPage).toBe(3);
         });
+
+        it('propagates the 404 thrown by the messaging service for a cross-workspace id', async () => {
+            mockConversationMessagingService.listMessages.mockRejectedValue(
+                new NotFoundException({
+                    message: 'conversation.error.notFound',
+                    statusCode: 404,
+                })
+            );
+
+            await expect(
+                controller.listMessages(workspace, 'conv-other-workspace', 1, 50)
+            ).rejects.toBeInstanceOf(NotFoundException);
+        });
     });
 
     describe('get', () => {
         it('should return mapped conversation when found', async () => {
-            mockConversationService.findOneById.mockResolvedValue(
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
                 mockConversation
             );
 
-            const result = await controller.get('conv-1');
+            const result = await controller.get(workspace, 'conv-1');
 
             // The detail endpoint also populates contactPoint + its customer so
             // mapGet can surface customerId without risking ReferenceNotInitializedError.
-            expect(mockConversationService.findOneById).toHaveBeenCalledWith(
-                'conv-1',
-                {
-                    populate: [
-                        'account',
-                        'chatbot',
-                        'contactPoint',
-                        'contactPoint.customer',
-                    ],
-                }
-            );
+            expect(
+                mockConversationService.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId, {
+                populate: [
+                    'account',
+                    'chatbot',
+                    'contactPoint',
+                    'contactPoint.customer',
+                ],
+            });
             expect(mockConversationService.mapGet).toHaveBeenCalledWith(
                 mockConversation
             );
@@ -486,10 +510,30 @@ describe('ConversationWorkspaceController', () => {
         });
 
         it('should throw NotFoundException when conversation does not exist', async () => {
-            mockConversationService.findOneById.mockResolvedValue(null);
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
 
-            await expect(controller.get('nonexistent-id')).rejects.toThrow(
-                NotFoundException
+            await expect(
+                controller.get(workspace, 'nonexistent-id')
+            ).rejects.toThrow(NotFoundException);
+        });
+
+        it('should throw NotFoundException (same as non-existent) when conversation belongs to another workspace', async () => {
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                controller.get(workspace, 'conv-in-other-workspace')
+            ).rejects.toThrow(NotFoundException);
+
+            expect(
+                mockConversationService.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith(
+                'conv-in-other-workspace',
+                workspaceId,
+                expect.anything()
             );
         });
     });
@@ -543,7 +587,7 @@ describe('ConversationWorkspaceController', () => {
                 status: ENUM_CONVERSATION_STATUS.RESOLVED,
             };
 
-            mockConversationService.findOneById.mockResolvedValue(
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
                 mockConversation
             );
             mockConversationService.updateStatus.mockResolvedValue(updated);
@@ -555,6 +599,9 @@ describe('ConversationWorkspaceController', () => {
                 user
             );
 
+            expect(
+                mockConversationService.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId);
             expect(mockConversationService.updateStatus).toHaveBeenCalledWith(
                 'conv-1',
                 ENUM_CONVERSATION_STATUS.RESOLVED,
@@ -566,7 +613,7 @@ describe('ConversationWorkspaceController', () => {
         it('should not notify operators on a lifecycle change', async () => {
             const dto = { status: ENUM_CONVERSATION_STATUS.RESOLVED };
 
-            mockConversationService.findOneById.mockResolvedValue(
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
                 mockConversation
             );
             mockConversationService.updateStatus.mockResolvedValue(
@@ -586,7 +633,9 @@ describe('ConversationWorkspaceController', () => {
         });
 
         it('should throw NotFoundException when conversation does not exist', async () => {
-            mockConversationService.findOneById.mockResolvedValue(null);
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
 
             await expect(
                 controller.updateStatus(
@@ -599,6 +648,23 @@ describe('ConversationWorkspaceController', () => {
                 )
             ).rejects.toThrow(NotFoundException);
         });
+
+        it('should throw NotFoundException (same as non-existent) when conversation belongs to another workspace', async () => {
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                controller.updateStatus(
+                    workspace,
+                    'conv-in-other-workspace',
+                    { status: ENUM_CONVERSATION_STATUS.RESOLVED } as any,
+                    user
+                )
+            ).rejects.toThrow(NotFoundException);
+
+            expect(mockConversationService.updateStatus).not.toHaveBeenCalled();
+        });
     });
 
     describe('updateBot', () => {
@@ -606,7 +672,7 @@ describe('ConversationWorkspaceController', () => {
             const dto = { botEnabled: false, reason: 'Handling myself' };
             const updated = { ...mockConversation, botEnabled: false };
 
-            mockConversationService.findOneById.mockResolvedValue(
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
                 mockConversation
             );
             mockConversationService.setBotEnabled.mockResolvedValue(updated);
@@ -618,6 +684,9 @@ describe('ConversationWorkspaceController', () => {
                 user
             );
 
+            expect(
+                mockConversationService.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId);
             expect(mockConversationService.setBotEnabled).toHaveBeenCalledWith(
                 'conv-1',
                 false,
@@ -630,7 +699,9 @@ describe('ConversationWorkspaceController', () => {
         });
 
         it('should throw NotFoundException when conversation does not exist', async () => {
-            mockConversationService.findOneById.mockResolvedValue(null);
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
 
             await expect(
                 controller.updateBot(
@@ -642,6 +713,146 @@ describe('ConversationWorkspaceController', () => {
                     user
                 )
             ).rejects.toThrow(NotFoundException);
+        });
+
+        it('should throw NotFoundException (same as non-existent) when conversation belongs to another workspace', async () => {
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                controller.updateBot(
+                    workspace,
+                    'conv-in-other-workspace',
+                    { botEnabled: true } as any,
+                    user
+                )
+            ).rejects.toThrow(NotFoundException);
+
+            expect(
+                mockConversationService.setBotEnabled
+            ).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('sendMessage', () => {
+        const dto = { text: 'Hi! How can I help?', attachments: undefined };
+        const sentMessage = {
+            id: 'msg-1',
+            text: dto.text,
+        };
+        const mappedMessage = { id: 'msg-1', text: dto.text } as any;
+
+        it('sends the operator reply and returns the mapped message', async () => {
+            mockConversationMessagingService.sendOperatorReply.mockResolvedValue(
+                sentMessage
+            );
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                mockConversation
+            );
+            mockConversationMessagingService.buildUserNameMap.mockResolvedValue(
+                new Map()
+            );
+            mockConversationMessagingService.mapMessage.mockReturnValue(
+                mappedMessage
+            );
+
+            const result = await controller.sendMessage(
+                workspace,
+                'conv-1',
+                dto as any,
+                user
+            );
+
+            expect(
+                mockConversationMessagingService.sendOperatorReply
+            ).toHaveBeenCalledWith(
+                'conv-1',
+                workspaceId,
+                operatorId,
+                dto.text,
+                dto.attachments
+            );
+            expect(
+                mockConversationService.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId);
+            expect(result).toEqual({ data: mappedMessage });
+        });
+
+        it('propagates the 404 thrown for a conversation in another workspace', async () => {
+            mockConversationMessagingService.sendOperatorReply.mockRejectedValue(
+                new NotFoundException({
+                    message: 'conversation.error.notFound',
+                    statusCode: 404,
+                })
+            );
+
+            await expect(
+                controller.sendMessage(
+                    workspace,
+                    'conv-other-workspace',
+                    dto as any,
+                    user
+                )
+            ).rejects.toBeInstanceOf(NotFoundException);
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('reactToMessage', () => {
+        const dto = { emoji: '❤️', action: 'react' as const };
+        const reactedMessage = { id: 'msg-1', reactions: [] } as any;
+
+        it('reacts to the message and returns the result', async () => {
+            mockConversationMessagingService.reactToMessage.mockResolvedValue(
+                reactedMessage
+            );
+
+            const result = await controller.reactToMessage(
+                workspace,
+                'conv-1',
+                'msg-1',
+                dto as any,
+                user
+            );
+
+            expect(
+                mockConversationMessagingService.reactToMessage
+            ).toHaveBeenCalledWith({
+                conversationId: 'conv-1',
+                workspaceId,
+                messageId: 'msg-1',
+                emoji: dto.emoji,
+                action: dto.action,
+                operatorUserId: operatorId,
+            });
+            expect(result).toEqual({ data: reactedMessage });
+        });
+
+        it('propagates the 404 thrown for a conversation in another workspace', async () => {
+            mockConversationMessagingService.reactToMessage.mockRejectedValue(
+                new NotFoundException({
+                    message: 'conversation.error.notFound',
+                    statusCode: 404,
+                })
+            );
+
+            await expect(
+                controller.reactToMessage(
+                    workspace,
+                    'conv-other-workspace',
+                    'msg-1',
+                    dto as any,
+                    user
+                )
+            ).rejects.toBeInstanceOf(NotFoundException);
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
         });
     });
 });

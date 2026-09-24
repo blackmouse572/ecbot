@@ -205,16 +205,22 @@ export class ConversationWorkspaceController {
     @ApiKeyProtected()
     @Get('/:id')
     async get(
+        @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('id') id: string
     ): Promise<IResponse<ConversationGetResponseDto>> {
-        const conversation = await this.conversationService.findOneById(id, {
-            populate: [
-                'account',
-                'chatbot',
-                'contactPoint',
-                'contactPoint.customer',
-            ],
-        });
+        const conversation =
+            await this.conversationService.findOneByIdInWorkspace(
+                id,
+                workspace.id,
+                {
+                    populate: [
+                        'account',
+                        'chatbot',
+                        'contactPoint',
+                        'contactPoint.customer',
+                    ],
+                }
+            );
 
         if (!conversation) {
             throw new NotFoundException({
@@ -242,7 +248,11 @@ export class ConversationWorkspaceController {
         @Body() dto: ConversationUpdateStatusRequestDto,
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
     ): Promise<IResponse<ConversationGetResponseDto>> {
-        const conversation = await this.conversationService.findOneById(id);
+        const conversation =
+            await this.conversationService.findOneByIdInWorkspace(
+                id,
+                workspace.id
+            );
 
         if (!conversation) {
             throw new NotFoundException({
@@ -285,7 +295,11 @@ export class ConversationWorkspaceController {
         @Body() dto: ConversationUpdateBotRequestDto,
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
     ): Promise<IResponse<ConversationGetResponseDto>> {
-        const conversation = await this.conversationService.findOneById(id);
+        const conversation =
+            await this.conversationService.findOneByIdInWorkspace(
+                id,
+                workspace.id
+            );
 
         if (!conversation) {
             throw new NotFoundException({
@@ -323,6 +337,7 @@ export class ConversationWorkspaceController {
     @ApiKeyProtected()
     @Get('/:id/messages')
     async listMessages(
+        @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('id') id: string,
         @Query('page') page?: number,
         @Query('perPage') perPage?: number
@@ -331,10 +346,14 @@ export class ConversationWorkspaceController {
         const offset = page && page > 1 ? (page - 1) * limit : 0;
 
         const { messages, conversation, total } =
-            await this.conversationMessagingService.listMessages(id, {
-                limit,
-                offset,
-            });
+            await this.conversationMessagingService.listMessages(
+                id,
+                workspace.id,
+                {
+                    limit,
+                    offset,
+                }
+            );
 
         const userNameMap =
             await this.conversationMessagingService.buildUserNameMap(messages);
@@ -391,12 +410,17 @@ export class ConversationWorkspaceController {
         const message =
             await this.conversationMessagingService.sendOperatorReply(
                 id,
+                workspace.id,
                 user.id,
                 dto.text,
                 dto.attachments
             );
 
-        const conversation = await this.conversationService.findOneById(id);
+        const conversation =
+            await this.conversationService.findOneByIdInWorkspace(
+                id,
+                workspace.id
+            );
         const userNameMap =
             await this.conversationMessagingService.buildUserNameMap([message]);
 
@@ -437,6 +461,7 @@ export class ConversationWorkspaceController {
     ): Promise<IResponse<MessageGetResponseDto>> {
         const message = await this.conversationMessagingService.reactToMessage({
             conversationId: id,
+            workspaceId: workspace.id,
             messageId,
             emoji: dto.emoji,
             action: dto.action,

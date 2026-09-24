@@ -131,11 +131,13 @@ export class ConversationService implements IConversationService {
 
     async findOneByIdInWorkspace(
         id: string,
-        workspaceId: string
+        workspaceId: string,
+        options?: IDatabaseFindOneOptions
     ): Promise<ConversationEntity | null> {
         return this.conversationRepository.findOneByIdInWorkspace(
             id,
-            workspaceId
+            workspaceId,
+            options
         );
     }
 
