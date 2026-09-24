@@ -14,6 +14,10 @@ function plain(text: string): string {
   return text.replace(/^\s*#+\s*/gm, "").replace(/\s*\n+\s*/g, " ").trim();
 }
 
+export function withArticle(text: string): string {
+  return `${/^[aeiou]/i.test(text) ? "an" : "a"} ${text}`;
+}
+
 function list(items: string[]): string {
   if (items.length <= 1) return items.join("");
   return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
@@ -35,7 +39,7 @@ export function compilePrompt(profile: AgentProfile, options: CompileOptions = {
   const requirements = section("Requirements", [
     type.personal
       ? `- You are a personal ${type.promptLabel} working for ${business}.`
-      : `- Business: ${business}, a ${type.promptLabel}.`,
+      : `- Business: ${business}, ${withArticle(type.promptLabel)}.`,
     !type.personal && profile.channels.length
       ? `- Customers reach you on ${list(profile.channels.map((c) => promptOf(CHANNELS, c)))}.`
       : "",

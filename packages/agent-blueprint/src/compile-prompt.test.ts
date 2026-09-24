@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BUSINESS_TYPES } from "./business-types";
-import { compilePrompt } from "./compile-prompt";
+import { compilePrompt, withArticle } from "./compile-prompt";
 import { createProfile } from "./profile";
 import { PRESETS } from "./presets";
 
@@ -65,5 +65,15 @@ describe("compilePrompt", () => {
   it("numbers knowledge in detailed mode and bullets it in simple mode", () => {
     expect(compilePrompt(sample("healthcare"))).toMatch(/## Knowledge\n1\. /);
     expect(compilePrompt(sample("beauty"))).toMatch(/## Knowledge\n- /);
+  });
+
+  it("chooses a or an based on the following word", () => {
+    expect(withArticle("online shop")).toBe("an online shop");
+    expect(withArticle("hotel or homestay")).toBe("a hotel or homestay");
+  });
+
+  it("uses an before a business label that starts with a vowel sound", () => {
+    expect(compilePrompt(sample("ecommerce"))).toContain("an online shop");
+    expect(compilePrompt(sample("finance"))).toContain("an insurance and finance advisory");
   });
 });

@@ -149,7 +149,7 @@ exports[`compilePrompt > matches the snapshot for ecommerce 1`] = `
 ━━━━━━━━━━━━━━━━
 
 ## Requirements
-- Business: Lotus, a digital shop.
+- Business: Lotus, an online shop.
 - Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
@@ -198,7 +198,7 @@ exports[`compilePrompt > matches the snapshot for education 1`] = `
 ━━━━━━━━━━━━━━━━
 
 ## Requirements
-- Business: Lotus, a learning centre or online course provider.
+- Business: Lotus, an education centre or online course provider.
 - Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
@@ -294,7 +294,7 @@ exports[`compilePrompt > matches the snapshot for finance 1`] = `
 ━━━━━━━━━━━━━━━━
 
 ## Requirements
-- Business: Lotus, a finance and insurance advisory.
+- Business: Lotus, an insurance and finance advisory.
 - Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
