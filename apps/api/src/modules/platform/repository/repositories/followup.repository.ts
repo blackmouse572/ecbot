@@ -46,7 +46,8 @@ export class FollowupRepository extends DatabaseRepository<FollowupEntity> {
     /** Not delivered yet, so still cancellable and still re-firable. */
     async findPendingById(
         id: string,
-        workspaceId?: string
+        workspaceId?: string,
+        conversationId?: string
     ): Promise<FollowupEntity | null> {
         return this.findOne({
             id,
@@ -55,6 +56,7 @@ export class FollowupRepository extends DatabaseRepository<FollowupEntity> {
             ...(workspaceId
                 ? { chatbot: { workspace: workspaceId, deletedAt: null } }
                 : {}),
+            ...(conversationId ? { conversation: conversationId } : {}),
         });
     }
 

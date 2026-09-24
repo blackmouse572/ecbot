@@ -146,6 +146,22 @@ async def test_delete_sends_x_api_key_and_returns_json():
     assert result == {"cancelled": True}
 
 
+async def test_delete_sends_params_when_provided():
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "DELETE"
+        assert request.url.params.get("conversationId") == "conv-1"
+        return httpx.Response(200, json={"cancelled": True})
+
+    transport = httpx.MockTransport(handler)
+    client = _client_with_transport(transport)
+
+    result = await client.delete(
+        "/system/followups/f1", params={"conversationId": "conv-1"}
+    )
+
+    assert result == {"cancelled": True}
+
+
 async def test_get_raises_clean_api_client_error_on_4xx():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(404, json={"message": "followup.error.notFound"})

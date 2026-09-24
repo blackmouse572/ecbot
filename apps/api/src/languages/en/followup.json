@@ -5,5 +5,15 @@
     },
     "task": {
         "processed": "Follow-up task processed successfully."
+    },
+    "schedule": {
+        "error": {
+            "tooManyPending": "This conversation already has too many pending follow-ups."
+        }
+    },
+    "cancel": {
+        "error": {
+            "missingConversationId": "conversationId is required to cancel a follow-up."
+        }
     }
 }

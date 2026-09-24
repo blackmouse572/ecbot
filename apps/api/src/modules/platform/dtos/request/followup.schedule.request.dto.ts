@@ -4,6 +4,7 @@ import {
     IsOptional,
     IsString,
     IsUUID,
+    Max,
     Min,
 } from 'class-validator';
 
@@ -43,5 +44,6 @@ export class FollowupScheduleRequestDto {
 
     @IsInt()
     @Min(1)
+    @Max(43200) // 30 days — a bot has no business scheduling further out than that.
     delayMinutes: number;
 }
