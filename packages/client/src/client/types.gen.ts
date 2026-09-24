@@ -2181,6 +2181,10 @@ export type ChatbotAdminResponseDto = {
      * General knowledge
      */
     generalKnowledge?: string;
+    agentProfile?: {
+        [key: string]: unknown;
+    } | null;
+    extraInstructions?: string | null;
     /**
      * Chatbot status
      */
@@ -2188,7 +2192,7 @@ export type ChatbotAdminResponseDto = {
     /**
      * Type of the chatbot
      */
-    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'other';
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
     /**
      * Show typing indicator when new message came
      */
@@ -2287,7 +2291,7 @@ export type ChatbotUpdateRequestDto = {
     /**
      * Type of the chatbot
      */
-    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'other';
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
     /**
      * Avatar URL of the chatbot
      */
@@ -2296,6 +2300,20 @@ export type ChatbotUpdateRequestDto = {
      * General knowledge of the chatbot
      */
     generalKnowledge?: string;
+    /**
+     * Agent builder answers. Compiled into generalKnowledge on save.
+     */
+    agentProfile?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Free text appended after the compiled agent instructions
+     */
+    extraInstructions?: string;
+    /**
+     * Initial status. The agent builder creates drafts as inactive.
+     */
+    status?: 'active' | 'inactive' | 'archived';
     /**
      * List of account IDs associated with the chatbot
      */
@@ -2414,7 +2432,7 @@ export type ChatbotGetDetailShortResponseDto = {
     /**
      * Type of the chatbot
      */
-    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'other';
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
     /**
      * Workspace the chatbot belongs to
      */
@@ -3009,6 +3027,10 @@ export type ChatbotListResponseDto = {
      * General knowledge
      */
     generalKnowledge?: string;
+    agentProfile?: {
+        [key: string]: unknown;
+    } | null;
+    extraInstructions?: string | null;
     /**
      * Chatbot status
      */
@@ -3016,7 +3038,7 @@ export type ChatbotListResponseDto = {
     /**
      * Type of the chatbot
      */
-    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'other';
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
     /**
      * Show typing indicator when new message came
      */
@@ -3172,6 +3194,10 @@ export type ChatbotGetDetailResponseDto = {
      * General knowledge
      */
     generalKnowledge?: string;
+    agentProfile?: {
+        [key: string]: unknown;
+    } | null;
+    extraInstructions?: string | null;
     /**
      * Chatbot status
      */
@@ -3179,7 +3205,7 @@ export type ChatbotGetDetailResponseDto = {
     /**
      * Type of the chatbot
      */
-    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'other';
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
     /**
      * Show typing indicator when new message came
      */
@@ -3315,6 +3341,10 @@ export type ChatbotCreateResponseDto = {
      * General knowledge
      */
     generalKnowledge?: string;
+    agentProfile?: {
+        [key: string]: unknown;
+    } | null;
+    extraInstructions?: string | null;
     /**
      * Chatbot status
      */
@@ -3322,7 +3352,7 @@ export type ChatbotCreateResponseDto = {
     /**
      * Type of the chatbot
      */
-    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'other';
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
     /**
      * Show typing indicator when new message came
      */
@@ -3421,7 +3451,7 @@ export type ChatbotCreateRequestDto = {
     /**
      * Type of the chatbot
      */
-    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'other';
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
     /**
      * Avatar URL of the chatbot
      */
@@ -3430,6 +3460,20 @@ export type ChatbotCreateRequestDto = {
      * General knowledge of the chatbot
      */
     generalKnowledge?: string;
+    /**
+     * Agent builder answers. Compiled into generalKnowledge on save.
+     */
+    agentProfile?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Free text appended after the compiled agent instructions
+     */
+    extraInstructions?: string;
+    /**
+     * Initial status. The agent builder creates drafts as inactive.
+     */
+    status?: 'active' | 'inactive' | 'archived';
     /**
      * List of account IDs associated with the chatbot
      */
@@ -3606,6 +3650,30 @@ export type RoleUpdateWorkspaceRequestDto = {
      * Permission list of role
      */
     permissions: Array<RolePermissionDto>;
+};
+
+export type AgentBuilderScoredDto = {
+    value: string;
+    confidence: number;
+};
+
+export type AgentBuilderSuggestResponseDto = {
+    businessType: AgentBuilderScoredDto | null;
+    personality: AgentBuilderScoredDto | null;
+    formality: AgentBuilderScoredDto | null;
+    goals: {
+        [key: string]: number;
+    };
+    rules: {
+        [key: string]: number;
+    };
+};
+
+export type AgentBuilderSuggestRequestDto = {
+    /**
+     * One or two sentences about the business and what the agent should do
+     */
+    description: string;
 };
 
 export type InvitationListResponseDto = {
@@ -5116,6 +5184,47 @@ export type RequestCreateDto = {
      * ID of the user making the request
      */
     reason?: string;
+};
+
+export type TestHelpersControllerConfirmEmailV1Data = {
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: never;
+    url: '/api/v1/test-helpers/confirm-email/{userId}';
+};
+
+export type TestHelpersControllerConfirmEmailV1Responses = {
+    204: void;
+};
+
+export type TestHelpersControllerConfirmEmailV1Response = TestHelpersControllerConfirmEmailV1Responses[keyof TestHelpersControllerConfirmEmailV1Responses];
+
+export type TestHelpersControllerGetResetPasswordTokenV1Data = {
+    body?: never;
+    path: {
+        email: string;
+    };
+    query?: never;
+    url: '/api/v1/test-helpers/reset-password-token/{email}';
+};
+
+export type TestHelpersControllerGetResetPasswordTokenV1Responses = {
+    200: unknown;
+};
+
+export type TestHelpersControllerGetInviteTokenV1Data = {
+    body?: never;
+    path: {
+        workspaceId: string;
+    };
+    query?: never;
+    url: '/api/v1/test-helpers/invite-token/{workspaceId}';
+};
+
+export type TestHelpersControllerGetInviteTokenV1Responses = {
+    200: unknown;
 };
 
 export type WorkspaceControllerProfileV1Data = {
@@ -18357,6 +18466,92 @@ export type ActivityWorkspaceControllerListV1Responses = {
 };
 
 export type ActivityWorkspaceControllerListV1Response = ActivityWorkspaceControllerListV1Responses[keyof ActivityWorkspaceControllerListV1Responses];
+
+export type AgentBuilderWorkspaceControllerSuggestV1Data = {
+    body: AgentBuilderSuggestRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/agent-builder/suggest';
+};
+
+export type AgentBuilderWorkspaceControllerSuggestV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AgentBuilderWorkspaceControllerSuggestV1Error = AgentBuilderWorkspaceControllerSuggestV1Errors[keyof AgentBuilderWorkspaceControllerSuggestV1Errors];
+
+export type AgentBuilderWorkspaceControllerSuggestV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AgentBuilderSuggestResponseDto;
+    };
+};
+
+export type AgentBuilderWorkspaceControllerSuggestV1Response = AgentBuilderWorkspaceControllerSuggestV1Responses[keyof AgentBuilderWorkspaceControllerSuggestV1Responses];
 
 export type InvitationWorkspaceControllerGetInvitationsV1Data = {
     body?: never;
