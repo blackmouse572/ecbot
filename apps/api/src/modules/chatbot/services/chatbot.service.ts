@@ -333,38 +333,6 @@ export class ChatbotService implements IChatbotService {
         return true;
     }
 
-    async linkAccount(
-        repository: ChatbotEntity,
-        accountId: string,
-        options?: IDatabaseSaveOptions & { actionBy?: string }
-    ): Promise<boolean> {
-        if (!repository) {
-            throw new NotFoundException({
-                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'chatbot.error.notFound',
-            });
-        }
-
-        // Ensure accounts collection is initialized
-        if (!repository.accounts) {
-            repository.accounts = new Collection(repository);
-        }
-
-        // Check if account already exists in the collection
-        const accountExists = repository.accounts
-            .getItems()
-            .some(acc => acc.id === accountId);
-
-        if (!accountExists) {
-            // Add the account to the collection
-            const accountEntity = { id: accountId } as any;
-            repository.accounts.add(accountEntity);
-            await this.chatbotRepository.save(repository, options);
-        }
-
-        return true;
-    }
-
     async unlinkAccount(
         repository: ChatbotEntity,
         accountId: string,

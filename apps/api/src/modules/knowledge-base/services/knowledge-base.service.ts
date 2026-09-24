@@ -8,8 +8,9 @@ import {
     IDatabaseUpdateOptions,
 } from '@app/common/database/interfaces/database.interface';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { KnowledgeBaseEntity } from '../repository/entities/knowledge-base.entity';
 import { KnowledgeBaseRepository } from '../repository/repositories/knowledge-base.repository';
@@ -96,10 +97,17 @@ export class KnowledgeBaseService {
     ): Promise<KnowledgeBaseEntity> {
         const em = options?.em ?? this.em;
 
-        const knowledgeBase = await em.findOneOrFail(KnowledgeBaseEntity, {
+        const knowledgeBase = await em.findOne(KnowledgeBaseEntity, {
             id,
             workspace: workspaceId,
         });
+
+        if (!knowledgeBase) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'knowledgeBase.error.notFound',
+            });
+        }
 
         if (payload.name !== undefined) {
             knowledgeBase.name = payload.name;
@@ -125,10 +133,17 @@ export class KnowledgeBaseService {
     ): Promise<void> {
         const em = options?.em ?? this.em;
 
-        const knowledgeBase = await em.findOneOrFail(KnowledgeBaseEntity, {
+        const knowledgeBase = await em.findOne(KnowledgeBaseEntity, {
             id,
             workspace: workspaceId,
         });
+
+        if (!knowledgeBase) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'knowledgeBase.error.notFound',
+            });
+        }
 
         knowledgeBase.deletedAt = new Date();
         knowledgeBase.deletedBy = options?.actionBy
