@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUSINESS_TYPES, getBusinessType } from "./business-types";
 import {
-  COLLECT, FACTS, GOALS, RULES,
+  ADDRESS_STYLE, COLLECT, FACTS, GOALS, RULES, promptOf,
 } from "./libraries";
 import { PRESETS } from "./presets";
 
@@ -37,5 +37,10 @@ describe("catalog", () => {
 
   it("looks up a type by id", () => {
     expect(getBusinessType("healthcare").mode).toBe("detailed");
+  });
+
+  it("keeps Vietnamese pronouns intact", () => {
+    expect(promptOf(ADDRESS_STYLE, "toi_quykhach")).toContain('"quý khách"');
+    expect(promptOf(ADDRESS_STYLE, "em_anhchi")).toContain('"chị"');
   });
 });

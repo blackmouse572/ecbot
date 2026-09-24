@@ -78,10 +78,10 @@ export const REPLY_LENGTH = [
 ] as const satisfies readonly Entry[];
 
 export const ADDRESS_STYLE = [
-  { id: "em_anhchi", prompt: "Refer to yourself as \"em\" and address the customer as \"anh\" or \"chi\"." },
-  { id: "minh_ban", prompt: "Refer to yourself as \"minh\" and address the customer as \"ban\"." },
-  { id: "shop_ban", prompt: "Refer to yourself as \"shop\" and address the customer as \"ban\"." },
-  { id: "toi_quykhach", prompt: "Refer to yourself as \"toi\" and address the customer as \"quy khach\"." },
+  { id: "em_anhchi", prompt: "Refer to yourself as \"em\" and address the customer as \"anh\" or \"chị\"." },
+  { id: "minh_ban", prompt: "Refer to yourself as \"mình\" and address the customer as \"bạn\"." },
+  { id: "shop_ban", prompt: "Refer to yourself as \"shop\" and address the customer as \"bạn\"." },
+  { id: "toi_quykhach", prompt: "Refer to yourself as \"tôi\" and address the customer as \"quý khách\"." },
 ] as const satisfies readonly Entry[];
 
 export const AFTER_HOURS = [

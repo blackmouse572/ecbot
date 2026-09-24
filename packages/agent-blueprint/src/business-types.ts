@@ -1,5 +1,5 @@
 export const BUSINESS_TYPES = [
-  { id: "restaurant", promptLabel: "restaurant or cafe", mode: "simple", personal: false },
+  { id: "restaurant", promptLabel: "restaurant or café", mode: "simple", personal: false },
   { id: "beauty", promptLabel: "beauty salon or spa", mode: "simple", personal: false },
   { id: "healthcare", promptLabel: "clinic or dental practice", mode: "detailed", personal: false },
   { id: "fashion", promptLabel: "fashion and accessories shop", mode: "simple", personal: false },
