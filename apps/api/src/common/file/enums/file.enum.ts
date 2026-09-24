@@ -9,6 +9,7 @@ export enum ENUM_FILE_MIME_IMAGE {
     JPG = 'image/jpg',
     JPEG = 'image/jpeg',
     PNG = 'image/png',
+    WEBP = 'image/webp',
 }
 
 export enum ENUM_FILE_MIME_DOCUMENT {
@@ -68,4 +69,5 @@ export const EXTENSION_BY_MIME_IMAGE: Record<ENUM_FILE_MIME_IMAGE, string> = {
     [ENUM_FILE_MIME_IMAGE.JPG]: 'jpg',
     [ENUM_FILE_MIME_IMAGE.JPEG]: 'jpg',
     [ENUM_FILE_MIME_IMAGE.PNG]: 'png',
+    [ENUM_FILE_MIME_IMAGE.WEBP]: 'webp',
 };

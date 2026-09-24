@@ -250,7 +250,7 @@ export class WorkspaceController {
         FileInterceptor('image', {
             storage: multer.memoryStorage(),
             limits: {
-                fileSize: 2 * 1024 * 1024,
+                fileSize: 5 * 1024 * 1024,
                 files: 1,
             },
         })
@@ -264,6 +264,7 @@ export class WorkspaceController {
                 ENUM_FILE_MIME_IMAGE.JPG,
                 ENUM_FILE_MIME_IMAGE.JPEG,
                 ENUM_FILE_MIME_IMAGE.PNG,
+                ENUM_FILE_MIME_IMAGE.WEBP,
             ])
         )
         image?: Express.Multer.File
@@ -317,7 +318,7 @@ export class WorkspaceController {
         FileInterceptor('image', {
             storage: multer.memoryStorage(),
             limits: {
-                fileSize: 2 * 1024 * 1024,
+                fileSize: 5 * 1024 * 1024,
                 files: 1,
             },
         })
@@ -332,6 +333,7 @@ export class WorkspaceController {
                 ENUM_FILE_MIME_IMAGE.JPG,
                 ENUM_FILE_MIME_IMAGE.JPEG,
                 ENUM_FILE_MIME_IMAGE.PNG,
+                ENUM_FILE_MIME_IMAGE.WEBP,
             ])
         )
         image?: Express.Multer.File

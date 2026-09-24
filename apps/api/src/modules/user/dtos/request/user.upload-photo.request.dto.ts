@@ -13,18 +13,19 @@ export class UserUploadPhotoRequestDto {
     @IsNotEmpty()
     mime: ENUM_FILE_MIME_IMAGE;
 
-    // Avatars are capped at 2MB, same as the direct multipart upload path
-    // (FileInterceptor limits on updateProfile / workspace avatar uploads).
+    // Avatars are capped at 5MB, same as the direct multipart upload path
+    // (FileInterceptor limits on updateProfile / workspace avatar uploads) —
+    // matches what apps/app already allows client-side.
     // Declared in full (not picked from AwsS3PresignRequestDto) because
     // redeclaring an inherited property in a subclass drops the parent's
     // decorators for that property in class-validator.
     @ApiProperty({
         required: true,
         example: 1024,
-        description: 'Unit in bytes, max 2MB',
+        description: 'Unit in bytes, max 5MB',
     })
     @Min(1)
-    @Max(2 * 1024 * 1024)
+    @Max(5 * 1024 * 1024)
     @IsInt()
     @IsNotEmpty()
     size: number;

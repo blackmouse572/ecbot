@@ -171,6 +171,17 @@ describe('UserService - exact email lookups (Task 12)', () => {
             expect(jpgKey.endsWith('.jpg')).toBe(true);
         });
 
+        // Fix round 1: WEBP was added to ENUM_FILE_MIME_IMAGE to match what
+        // apps/app already sends for avatars.
+        it('derives .webp for the WEBP mime (Fix round 1)', () => {
+            const webpKey = service.createRandomFilenamePhoto('user-1', {
+                mime: ENUM_FILE_MIME_IMAGE.WEBP,
+                size: 1024,
+            });
+
+            expect(webpKey.endsWith('.webp')).toBe(true);
+        });
+
         it('generates a different key on every call (random, not Date.now())', () => {
             const keyA = service.createRandomFilenamePhoto('user-1', {
                 mime: ENUM_FILE_MIME_IMAGE.PNG,
