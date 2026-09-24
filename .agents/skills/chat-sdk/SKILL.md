@@ -1,6 +1,6 @@
 ---
 name: eccho-platform-adapters
-description: Build chat channel integrations for the ecbot `apps/api` NestJS backend using the internal `platform` module (`PlatformAdapter` abstract class at `apps/api/src/modules/platform/`). Use whenever a developer asks to build, register, or modify a channel — Facebook Messenger, Instagram, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget — including handling inbound webhooks, verifying signatures, parsing platform events, sending operator replies, fetching conversations or sender profiles, wiring OAuth, adding a webhook route, or adding a new channel. Use even when the user does not explicitly say "platform adapter" — e.g. "make our bot reply on Zalo", "add a Shopee webhook", "send a message back to the customer on TikTok", "verify Meta signatures", "register an Instagram integration", "let a third party post messages over REST", "embed a chat widget on a customer site". This is the canonical pattern in this codebase and replaces the legacy Vercel Chat SDK; do not reach for the `chat` npm package or `@chat-adapter/*` — they have been removed.
+description: Build chat channel integrations for the ecbot `apps/api` NestJS backend using the internal `platform` module (`PlatformAdapter` abstract class at `apps/api/src/modules/platform/`). Use whenever a developer asks to build, register, or modify a channel — Facebook Messenger, Instagram, WhatsApp Business, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget — including handling inbound webhooks, verifying signatures, parsing platform events, sending operator replies, fetching conversations or sender profiles, wiring OAuth, adding a webhook route, or adding a new channel. Use even when the user does not explicitly say "platform adapter" — e.g. "make our bot reply on Zalo", "add a Shopee webhook", "send a message back to the customer on TikTok", "verify Meta signatures", "register an Instagram integration", "let a third party post messages over REST", "embed a chat widget on a customer site". This is the canonical pattern in this codebase and replaces the legacy Vercel Chat SDK; do not reach for the `chat` npm package or `@chat-adapter/*` — they have been removed.
 ---
 
 # ecbot Platform Adapters
@@ -9,10 +9,10 @@ Every channel ecbot talks on lives at `apps/api/src/modules/platform/` as a
 single NestJS class extending the abstract `PlatformAdapter`, registered in
 `PlatformAdapterRegistry` and keyed by `ENUM_ACCOUNT_TYPE`.
 
-Eight channels are registered today, in two groups:
+Nine channels are registered today, in two groups:
 
-- **Platform channels** — Messenger, Instagram, Zalo OA, TikTok Shop, Shopee,
-  Telegram. A third party pushes events to us and we call their API to reply.
+- **Platform channels** — Messenger, Instagram, WhatsApp Business, Zalo OA,
+  TikTok Shop, Shopee, Telegram. A third party pushes events to us and we call their API to reply.
   Inbound arrives through the shared webhook controller.
 - **eccho-issued channels** — the API channel and the website widget. There is
   no third-party platform: ecbot issues the credential and owns both ends. They
@@ -83,8 +83,8 @@ it shows how the registry is consumed: `registry.get(account.type).sendMessage(.
   dropped as unde-dupable.
 
 - **Slug → type map** — `apps/api/src/modules/platform/constants/platform-slug.constant.ts`
-  resolves a URL slug (`messenger`, `zalo`, `instagram`, `tiktok`, `shopee`,
-  `telegram`, `api`, `website`) to an `ENUM_ACCOUNT_TYPE`. Add an entry when
+  resolves a URL slug (`messenger`, `zalo`, `instagram`, `whatsapp`, `tiktok`,
+  `shopee`, `telegram`, `api`, `website`) to an `ENUM_ACCOUNT_TYPE`. Add an entry when
   adding a channel.
 
 - **Raw body** — `main.ts` sets `rawBody: true` so HMAC verification runs
@@ -257,6 +257,7 @@ factory and `PlatformAdapterRegistry.onModuleInit` pick it up from there.
 | Zalo OA | `x-zevent-signature` | `mac=HMAC-SHA256(rawBody, appSecret)` | no | `https://openapi.zalo.me/v3.0/oa/message/cs` |
 | TikTok Shop | `x-tts-signature` | `HMAC-SHA256(app_key + timestamp + body, appSecret)` | no | TikTok Customer Service API |
 | Shopee | `authorization` | `HMAC-SHA256(partner_id + path + timestamp, partner_key)` | no | Shopee Open Platform Chat API |
+| WhatsApp Business | `x-hub-signature-256` (same Meta app as Messenger) | `HMAC-SHA256(rawBody, appSecret)` | yes (`hub.challenge`) | `https://graph.facebook.com/<v>/<phone_number_id>/messages` |
 | Telegram | `x-telegram-bot-api-secret-token` | shared secret, compared timing-safe | no | `https://api.telegram.org/bot<token>/sendMessage` |
 | API channel | — (`ClientCredentialGuard` on `/client`) | n/a — `verifySignature` returns false | no | the account's own `config.callbackUrl` |
 | Website widget | — (widget key + Turnstile on `/public`) | n/a — `verifySignature` returns false | no | none; delivery is the visitor's poll |
