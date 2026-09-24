@@ -1,4 +1,14 @@
 import {
+  IconAddressBook,
+  IconBed,
+  IconCalendar,
+  IconCamera,
+  IconChecklist,
+  IconHome,
+  IconLeaf,
+  IconMail,
+  IconSearch,
+  IconSparkles,
   IconBarbell,
   IconBook,
   IconBuildingSkyscraper,
@@ -31,6 +41,16 @@ export const CHATBOT_TYPE_ICON_COMPONENTS = {
   IconShirt,
   IconShoppingCart,
   IconMassage,
+  IconAddressBook,
+  IconBed,
+  IconCalendar,
+  IconCamera,
+  IconChecklist,
+  IconHome,
+  IconLeaf,
+  IconMail,
+  IconSearch,
+  IconSparkles,
 };
 
 export type ChatbotTypeIconName = keyof typeof CHATBOT_TYPE_ICON_COMPONENTS;

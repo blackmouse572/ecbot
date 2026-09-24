@@ -17,6 +17,8 @@ if (!HTMLElement.prototype.scroll) {
 const chatbots = [
   { id: "a", name: "Alpha", status: "active", type: "beauty" },
   { id: "b", name: "Beta", status: "inactive", type: "fashion" },
+  { id: "c", name: "Gamma", status: "active", type: "hotel" },
+  { id: "d", name: "Delta", status: "active", type: "not_a_real_type" },
 ];
 
 vi.mock("@/hooks/api", () => ({
@@ -60,5 +62,21 @@ describe("ChatbotListTable", () => {
 
     const checkboxes = screen.queryAllByRole("checkbox");
     expect(checkboxes.length).toBe(chatbots.length + 1);
+  });
+
+  it("renders rows for a new business type and an unknown type", () => {
+    render(
+      <MemoryRouter initialEntries={["/acme/chatbot"]}>
+        <Routes>
+          <Route
+            path="/:workspaceSlug/chatbot"
+            element={<ChatbotListTable />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Gamma")).toBeDefined();
+    expect(screen.getByText("Delta")).toBeDefined();
   });
 });

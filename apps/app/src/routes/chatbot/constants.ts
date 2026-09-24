@@ -166,6 +166,56 @@ export const CHATBOT_TYPE_CONFIG: Record<
     color: "grey",
     icon: "IconDots", // Tabler: Dots
   },
+  cosmetics: {
+    label: i18n.t("agentBuilder.types.cosmetics"),
+    color: "purple",
+    icon: "IconSparkles",
+  },
+  hotel: {
+    label: i18n.t("agentBuilder.types.hotel"),
+    color: "blue",
+    icon: "IconBed",
+  },
+  home_services: {
+    label: i18n.t("agentBuilder.types.home_services"),
+    color: "orange",
+    icon: "IconHome",
+  },
+  studio_events: {
+    label: i18n.t("agentBuilder.types.studio_events"),
+    color: "purple",
+    icon: "IconCamera",
+  },
+  health_foods: {
+    label: i18n.t("agentBuilder.types.health_foods"),
+    color: "green",
+    icon: "IconLeaf",
+  },
+  personal_scheduling: {
+    label: i18n.t("agentBuilder.types.personal_scheduling"),
+    color: "blue",
+    icon: "IconCalendar",
+  },
+  personal_email: {
+    label: i18n.t("agentBuilder.types.personal_email"),
+    color: "blue",
+    icon: "IconMail",
+  },
+  personal_tasks: {
+    label: i18n.t("agentBuilder.types.personal_tasks"),
+    color: "orange",
+    icon: "IconChecklist",
+  },
+  personal_research: {
+    label: i18n.t("agentBuilder.types.personal_research"),
+    color: "green",
+    icon: "IconSearch",
+  },
+  personal_crm: {
+    label: i18n.t("agentBuilder.types.personal_crm"),
+    color: "purple",
+    icon: "IconAddressBook",
+  },
 } as const;
 
 export const CHATBOT_FORM_DEFAULTS: Partial<ChatbotFormData> = {

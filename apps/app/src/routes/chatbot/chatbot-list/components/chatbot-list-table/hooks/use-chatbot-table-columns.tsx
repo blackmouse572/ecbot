@@ -60,7 +60,9 @@ export const useChatbotTableColumns = () => {
                 name={row.original.name}
                 avatar={row.original.avatar}
               />
-              <ChatbotTypeBadge config={config} size="xsmall" clamp />
+              {config && (
+                <ChatbotTypeBadge config={config} size="xsmall" clamp />
+              )}
             </div>
           );
         },
