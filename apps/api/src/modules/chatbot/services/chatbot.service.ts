@@ -537,6 +537,8 @@ export class ChatbotService implements IChatbotService {
             name: cloneName,
             avatar: cloneAvatar,
             generalKnowledge: source.generalKnowledge,
+            agentProfile: source.agentProfile,
+            extraInstructions: source.extraInstructions,
             workspace: em.getReference(WorkspaceEntity, workspaceId),
             typingIndicator: source.typingIndicator,
             autoRead: source.autoRead,

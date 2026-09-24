@@ -160,6 +160,26 @@ describe('ChatbotService.clone()', () => {
         );
     });
 
+    it('carries the agent builder profile and extra instructions to the clone', async () => {
+        const source = makeSource();
+        const agentProfile = { businessType: 'beauty', businessName: 'Lotus' } as any;
+        source.agentProfile = agentProfile;
+        source.extraInstructions = 'Closed Mondays';
+        chatbotRepository.findOne.mockResolvedValue(source);
+        chatbotRepository.getEntityManager.mockReturnValue(em);
+        em.create.mockReturnValue(new ChatbotEntity());
+
+        await service.clone(sourceId, workspaceId, {});
+
+        expect(em.create).toHaveBeenCalledWith(
+            ChatbotEntity,
+            expect.objectContaining({
+                agentProfile,
+                extraInstructions: 'Closed Mondays',
+            })
+        );
+    });
+
     it('uses custom name from DTO', async () => {
         const source = makeSource();
         chatbotRepository.findOne.mockResolvedValue(source);
