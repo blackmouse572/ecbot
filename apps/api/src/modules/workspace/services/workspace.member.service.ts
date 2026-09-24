@@ -273,21 +273,6 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         });
     }
 
-    async hasUserRole(
-        workspaceId: string,
-        userId: string,
-        roleId: string
-    ): Promise<boolean> {
-        const activeMembership = await this.workspaceMemberRepository.findOne({
-            workspace: workspaceId,
-            user: userId,
-            role: roleId,
-            isActive: true,
-        });
-
-        return !!activeMembership;
-    }
-
     async getUserWorkspaces(memberUserId: string): Promise<string[]> {
         const memberships = await this.workspaceMemberRepository.find({
             user: memberUserId,

@@ -22,7 +22,7 @@ function fakeQueue() {
             return store.delete(key) ? 1 : 0;
         },
     };
-    return { client: Promise.resolve(client) } as any;
+    return { getBackend: () => ({ client: Promise.resolve(client) }) } as any;
 }
 
 describe('InboundEventDedupeService (candidate 1)', () => {

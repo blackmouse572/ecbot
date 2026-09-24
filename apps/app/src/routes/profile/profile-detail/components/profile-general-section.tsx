@@ -10,7 +10,7 @@ export type ProfileGeneralSectionProps = {
   user: UserProfileResponseDto;
 };
 export const ProfileGeneralSection = ({ user }: ProfileGeneralSectionProps) => {
-  const { t } = useTranslation("translation");
+  const { t } = useTranslation();
 
   const { name, username, email, country, signUpDate, status, mobileNumber } =
     user;

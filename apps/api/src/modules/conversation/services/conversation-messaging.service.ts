@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
-import { v4 as uuidV4 } from 'uuid';
+import { randomUUID as uuidV4 } from 'node:crypto';
 import {
     MessageGetResponseDto,
     ToolCallSerialization,

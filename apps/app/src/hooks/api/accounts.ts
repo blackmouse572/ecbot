@@ -136,7 +136,7 @@ export function unLinkAccountQueryOptions(
     queryFn: () => fetchUnlinkedAccounts(workspaceId, query),
   });
 
-  return { ...base, ...options };
+  return { ...options, ...base };
 }
 
 export function useUnlinkAccounts(

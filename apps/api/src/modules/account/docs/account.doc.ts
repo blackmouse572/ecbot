@@ -13,6 +13,7 @@ import {
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
 import {
+    AccountDocAuth,
     AccountDocParamsId,
     BasedAccountDocParams,
 } from '../constants/account.doc.constant';
@@ -28,8 +29,6 @@ import { AccountUpdateAllowedOriginsResponseDto } from '../dtos/response/account
 import { AccountGetDetailResponseDto } from '../dtos/response/account.detail.response.dto';
 import { AccountListResponseDto } from '../dtos/response/account.list.response.dto';
 import { ENUM_ACCOUNT_STATUS } from '../enums/account.enum';
-
-const AUTH = { xApiKey: true, jwtAccessToken: true };
 
 // Both list endpoints are workspace-scoped and take the same filters.
 const LIST_FILTERS = [
@@ -48,7 +47,7 @@ function listDoc(summary: string): MethodDecorator {
     return applyDecorators(
         Doc({ summary }),
         DocRequest(LIST_REQUEST),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocResponsePaging<AccountListResponseDto>('account.list', {
             dto: AccountListResponseDto,
         })
@@ -71,7 +70,7 @@ export function AccountGetDoc(): MethodDecorator {
         DocRequest({
             params: AccountDocParamsId,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocResponse<AccountGetDetailResponseDto>('account.get', {
             dto: AccountGetDetailResponseDto,
         })
@@ -84,7 +83,7 @@ export function DeleteSyncAccountDoc(): MethodDecorator {
             summary: 'delete sync account',
         }),
         DocRequest({ params: AccountDocParamsId }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
         DocResponse<Promise<boolean>>('account.deleteSync')
     );
@@ -100,7 +99,7 @@ export function AccountLinkDoc(): MethodDecorator {
             dto: AccountLinkRequestDto,
             params: BasedAccountDocParams,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
         DocResponse('account.link')
     );
@@ -118,7 +117,7 @@ export function AccountProvisionApiChannelDoc(): MethodDecorator {
             dto: AccountProvisionApiChannelRequestDto,
             params: BasedAccountDocParams,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
         DocResponse('account.provisionApiChannel', {
             dto: AccountProvisionApiChannelResponseDto,
@@ -134,7 +133,7 @@ export function AccountRotateApiChannelSecretDoc(): MethodDecorator {
                 'Mint a new callback signing secret. The account key and callback URL are unchanged; signatures made with the previous secret stop verifying immediately.',
         }),
         DocRequest({ params: BasedAccountDocParams }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
         DocResponse('account.rotateApiChannelSecret', {
             dto: AccountProvisionApiChannelResponseDto,
@@ -154,7 +153,7 @@ export function AccountUpdateCallbackUrlDoc(): MethodDecorator {
             dto: AccountUpdateCallbackUrlRequestDto,
             params: AccountDocParamsId,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
         DocResponse('account.updateCallbackUrl', {
             dto: AccountUpdateCallbackUrlResponseDto,
@@ -174,7 +173,7 @@ export function AccountUpdateAllowedOriginsDoc(): MethodDecorator {
             dto: AccountUpdateAllowedOriginsRequestDto,
             params: AccountDocParamsId,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
         DocResponse('account.updateAllowedOrigins', {
             dto: AccountUpdateAllowedOriginsResponseDto,
@@ -194,7 +193,7 @@ export function AccountProvisionWebsiteWidgetDoc(): MethodDecorator {
             dto: AccountProvisionWebsiteWidgetRequestDto,
             params: BasedAccountDocParams,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
         DocResponse('account.provisionWebsiteWidget', {
             dto: AccountProvisionWebsiteWidgetResponseDto,
@@ -214,7 +213,7 @@ export function AccountBatchDeleteSyncDoc(): MethodDecorator {
             params: [...WorkspaceDocParamsId],
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
         DocResponse<BatchResultResponseDto>('account.batchDeleteSync', {
             dto: BatchResultResponseDto,

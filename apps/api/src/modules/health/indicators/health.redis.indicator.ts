@@ -39,7 +39,7 @@ export class HealthRedisIndicator {
         try {
             // BullMQ's IRedisClient interface doesn't surface `ping`, but the
             // concrete client (ioredis) does.
-            const client = (await this.queue.client) as unknown as {
+            const client = (await this.queue.getBackend().client) as unknown as {
                 ping(): Promise<string>;
             };
             const pong = await client.ping();

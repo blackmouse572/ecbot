@@ -36,20 +36,20 @@
     "e2e:record:down": "docker-compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.e2e.record.yml down -v"
   },
   "devDependencies": {
-    "prettier": "^3.9.6",
-    "turbo": "^2.10.11",
+    "prettier": "^3.9.9",
+    "turbo": "^2.11.3",
     "typescript": "5.8.2"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=18"
   },
   "pnpm": {
     "overrides": {
-      "@types/react": "19.1.0",
-      "@types/react-dom": "19.1.1",
-      "react": "19.1.0",
-      "react-dom": "19.1.0",
+      "@types/react": "19.3.0",
+      "@types/react-dom": "19.3.0",
+      "react": "19.3.0",
+      "react-dom": "19.3.0",
       "tar": "^7.5.19",
       "handlebars": "^4.7.9",
       "axios@<1": "^0.34.0",
@@ -58,11 +58,15 @@
       "js-yaml@3": "^3.15.2",
       "postcss": "^8.5.18",
       "sharp": "^0.35.4",
-      "multer": "^2.3.0"
+      "multer": "^2.3.0",
+      "@nestjs/terminus>mongoose": "-",
+      "@nestjs/terminus>@nestjs/mongoose": "-",
+      "gaxios>uuid": "^11.1.1",
+      "ajv@>=8.0.0 <8.18.0": "^8.18.0"
     }
   },
   "dependencies": {
-    "@turbo/gen": "^2.10.11",
+    "@turbo/gen": "^2.11.3",
     "slugify": "^1.6.9"
   }
 }
