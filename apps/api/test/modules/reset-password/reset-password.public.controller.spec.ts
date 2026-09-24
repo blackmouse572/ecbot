@@ -117,6 +117,34 @@ describe('ResetPasswordPublicController — email dispatch', () => {
         );
     });
 
+    it('request: the enqueued email payload carries the OTP (regression: /reset can never succeed without it)', async () => {
+        const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
+        const resetPassword = {
+            created: {
+                url: 'https://app.example.com/reset-password?token=tok-1',
+                token: 'tok-1',
+                otp: '482913',
+                expiredDate: new Date(),
+                to: '*@b.com',
+            },
+        };
+        findOneActiveByEmail.mockResolvedValue(user);
+        checkActiveLatestEmailByUser.mockResolvedValue(null);
+        inactiveEmailManyByUser.mockResolvedValue(undefined);
+        requestEmailByUser.mockResolvedValue(resetPassword);
+
+        await controller.request({ email: 'a@b.com' } as any);
+
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
+            expect.objectContaining({
+                data: expect.objectContaining({ otp: '482913' }),
+            }),
+            expect.anything()
+        );
+    });
+
     it('request: always sends the reset email to user.email, never the request-body email', async () => {
         const user = { id: 'user-1', email: 'real@b.com', name: 'A' };
         const resetPassword = {

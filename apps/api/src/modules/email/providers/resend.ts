@@ -129,11 +129,12 @@ export class ResendProvider implements IEmailService {
 
     async sendResetPassword(
         { name, email }: EmailSendDto,
-        { expiredDate, url }: EmailResetPasswordDto
+        { expiredDate, url, otp }: EmailResetPasswordDto
     ): Promise<boolean> {
         return this.sendEmailTemplate(email, EmailSubject.ResetPassword, {
             name,
             url,
+            otp,
             expiredDate: this.helperDateService.formatToRFC2822(expiredDate),
             supportEmail: this.supportEmail,
             homeUrl: this.homeUrl,

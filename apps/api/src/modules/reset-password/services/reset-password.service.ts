@@ -1,4 +1,5 @@
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
+import { raw } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Duration } from 'luxon';
@@ -149,6 +150,7 @@ export class ResetPasswordService implements IResetPasswordService {
                     url: this.buildResetPasswordUrl(check.token),
                     expiredDate: check.expiredDate,
                     token: check.token,
+                    otp: check.otp,
                     to: this.helperStringService.censor(check.to),
                 },
             };
@@ -207,6 +209,7 @@ export class ResetPasswordService implements IResetPasswordService {
                 url: this.buildResetPasswordUrl(created.token),
                 expiredDate: created.expiredDate,
                 token: created.token,
+                otp: created.otp,
                 to: this.helperStringService.censor(email),
             },
         };
@@ -246,12 +249,31 @@ export class ResetPasswordService implements IResetPasswordService {
         repository: ResetPasswordEntity,
         options?: IDatabaseSaveOptions
     ): Promise<ResetPasswordEntity> {
-        repository.otpAttempt += 1;
-        if (repository.otpAttempt >= this.maxOtpAttempt) {
-            repository.isActive = false;
-        }
+        const nextAttempt = repository.otpAttempt + 1;
+        const staysActive =
+            repository.isActive && nextAttempt < this.maxOtpAttempt;
 
-        return this.resetPasswordRepository.save(repository, options);
+        // Atomic at the DB level (`otp_attempt = otp_attempt + 1`), not a
+        // read-modify-write — concurrent wrong-OTP guesses on the same row
+        // can't race a stale in-memory count past the attempt cap. The two
+        // fields below mirror this exact SQL expression for this request's
+        // immediate branching; every later request re-reads the real
+        // (correctly atomic) DB state through the entity pipes regardless.
+        await this.resetPasswordRepository.updateRaw(
+            { id: repository.id },
+            {
+                otpAttempt: raw('otp_attempt + 1'),
+                isActive: raw(
+                    `is_active and otp_attempt + 1 < ${this.maxOtpAttempt}`
+                ),
+            },
+            options
+        );
+
+        repository.otpAttempt = nextAttempt;
+        repository.isActive = staysActive;
+
+        return repository;
     }
 
     async inactive(
