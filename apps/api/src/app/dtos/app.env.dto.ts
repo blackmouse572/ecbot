@@ -456,6 +456,11 @@ export class AppEnvDto {
     @IsString()
     AI_BACKEND_URL?: string;
 
+    // Shared secret sent as X-Internal-Token to apps/ai; must match its value
+    @IsNotEmpty()
+    @IsString()
+    API_INTERNAL_TOKEN: string;
+
     // Local dev tunnel (e.g. for platform webhook callbacks)
     @IsOptional()
     @IsBoolean()

@@ -75,3 +75,31 @@ async def test_health_stays_open_without_a_token(monkeypatch):
         resp = await client.get("/health")
 
     assert resp.status_code != 401
+
+
+def test_boot_check_logs_an_error_when_token_is_unset(monkeypatch):
+    from eccho_ai.core import security
+
+    errors: list[str] = []
+    monkeypatch.setattr(AppVars, "API_INTERNAL_TOKEN", SecretStr(""))
+    monkeypatch.setattr(
+        security.logger, "error", lambda event, **_: errors.append(event)
+    )
+
+    security.log_if_internal_token_missing()
+
+    assert errors == ["internal_token_not_configured"]
+
+
+def test_boot_check_is_silent_when_token_is_set(monkeypatch):
+    from eccho_ai.core import security
+
+    errors: list[str] = []
+    monkeypatch.setattr(AppVars, "API_INTERNAL_TOKEN", SecretStr("set"))
+    monkeypatch.setattr(
+        security.logger, "error", lambda event, **_: errors.append(event)
+    )
+
+    security.log_if_internal_token_missing()
+
+    assert errors == []
