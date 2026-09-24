@@ -7,7 +7,7 @@ import {
     Property,
     Rel,
 } from '@mikro-orm/postgresql';
-import { v4 as uuidV4 } from 'uuid';
+import { randomUUID as uuidV4 } from 'node:crypto';
 import { ChatbotEntity } from 'src/modules/chatbot/repository/entities/chatbot.entity';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
 import { ENUM_TOOL_INVOCATION_STATUS } from 'src/modules/tool/enums/tool-invocation-status.enum';

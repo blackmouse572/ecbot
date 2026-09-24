@@ -60,7 +60,8 @@
       "sharp": "^0.35.4",
       "multer": "^2.3.0",
       "@nestjs/terminus>mongoose": "-",
-      "@nestjs/terminus>@nestjs/mongoose": "-"
+      "@nestjs/terminus>@nestjs/mongoose": "-",
+      "gaxios>uuid": "^11.1.1"
     }
   },
   "dependencies": {

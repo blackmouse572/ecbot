@@ -260,6 +260,21 @@ describe('AccountService - findOneByIdOrSlug', () => {
         const [where] = mockAccountRepository.findOne.mock.calls[0];
         expect(where).not.toHaveProperty('workspace');
     });
+
+    it('matches a UUID against both id and slug', async () => {
+        await service.findOneByIdOrSlug(validId);
+
+        const [where] = mockAccountRepository.findOne.mock.calls[0];
+        expect(where.$or).toEqual([{ id: validId }, { slug: validId }]);
+    });
+
+    it('matches a non-UUID only against slug', async () => {
+        await service.findOneByIdOrSlug('my-page');
+
+        const [where] = mockAccountRepository.findOne.mock.calls[0];
+        expect(where).not.toHaveProperty('$or');
+        expect(where.slug).toBe('my-page');
+    });
 });
 
 describe('AccountService - deleteSyncAccount', () => {
