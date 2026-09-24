@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { agentProfileSchema, applyPreset, createProfile } from "./profile";
+import { agentProfileSchema, applyPreset, createProfile, type AgentProfile } from "./profile";
 
 describe("createProfile", () => {
   it("fills presets and sane defaults for an SMB type", () => {
@@ -44,3 +44,7 @@ describe("agentProfileSchema", () => {
     expect(agentProfileSchema.safeParse({ ...base, facts: { unknown_fact: "x" } }).success).toBe(false);
   });
 });
+
+// Compile-time check: unknown fact ids are not allowed
+// @ts-expect-error unknown fact ids are not allowed
+const _typo: AgentProfile["facts"] = { not_a_fact: "x" };

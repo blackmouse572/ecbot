@@ -11,19 +11,6 @@ export const PROFILE_LIMITS = { shortText: 120, longText: 1000 } as const;
 const shortText = z.string().trim().max(PROFILE_LIMITS.shortText);
 const longText = z.string().trim().max(PROFILE_LIMITS.longText);
 
-const factsSchema = z.record(z.string(), longText).superRefine((obj, ctx) => {
-  const validIds = new Set(idsOf(FACTS));
-  for (const key of Object.keys(obj)) {
-    if (!validIds.has(key as FactId)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Invalid fact ID",
-        path: [key],
-      });
-    }
-  }
-});
-
 export const agentProfileSchema = z.object({
   version: z.literal(1),
   businessType: z.enum(BUSINESS_TYPE_IDS),
@@ -35,7 +22,7 @@ export const agentProfileSchema = z.object({
   difference: longText,
   personality: z.array(z.enum(idsOf(PERSONALITY))).max(2),
   formality: z.enum(idsOf(FORMALITY)),
-  facts: factsSchema,
+  facts: z.partialRecord(z.enum(idsOf(FACTS)), longText),
   collect: z.array(z.enum(idsOf(COLLECT))),
   handoffWhen: z.array(z.enum(idsOf(HANDOFF_WHEN))),
   rules: z.array(z.enum(idsOf(RULES))),
