@@ -34,7 +34,11 @@ export class ResetPasswordService implements IResetPasswordService {
     private readonly referenceLength: number;
     private readonly referencePrefix: string;
 
-    private readonly prefixUrl: string;
+    private readonly homeUrl: string;
+
+    // Failed OTP attempts allowed on `/verify/:token` before the row is
+    // locked (isActive=false) and ATTEMPT_MAX is thrown.
+    private readonly maxOtpAttempt = 5;
 
     constructor(
         private readonly resetPasswordRepository: ResetPasswordRepository,
@@ -61,9 +65,16 @@ export class ResetPasswordService implements IResetPasswordService {
             'resetPassword.reference.prefix'
         );
 
-        this.prefixUrl = this.configService.get<string>(
-            'resetPassword.prefixUrl'
-        );
+        this.homeUrl = (
+            this.configService.get<string>('home.url') ?? ''
+        ).replace(/\/$/, '');
+    }
+
+    // Same shape as chatbot.controller.ts's share-link URL: strip the
+    // trailing slash from home.url, then append the frontend route the
+    // token query param belongs to (apps/app reads `?token=` only).
+    buildResetPasswordUrl(token: string): string {
+        return `${this.homeUrl}/reset-password?token=${token}`;
     }
 
     async findAll(
@@ -135,10 +146,10 @@ export class ResetPasswordService implements IResetPasswordService {
             return {
                 resetPassword: check,
                 created: {
-                    url: `${this.prefixUrl}/${check.token}`,
+                    url: this.buildResetPasswordUrl(check.token),
                     expiredDate: check.expiredDate,
                     token: check.token,
-                    to: this.helperStringService.censor(check.user.id),
+                    to: this.helperStringService.censor(check.to),
                 },
             };
         }
@@ -193,7 +204,7 @@ export class ResetPasswordService implements IResetPasswordService {
         return {
             resetPassword: created,
             created: {
-                url: `${this.prefixUrl}/${created.token}`,
+                url: this.buildResetPasswordUrl(created.token),
                 expiredDate: created.expiredDate,
                 token: created.token,
                 to: this.helperStringService.censor(email),
@@ -227,6 +238,18 @@ export class ResetPasswordService implements IResetPasswordService {
     ): Promise<ResetPasswordEntity> {
         repository.verifyDate = this.helperDateService.create();
         repository.isActive = false;
+
+        return this.resetPasswordRepository.save(repository, options);
+    }
+
+    async incrementOtpAttempt(
+        repository: ResetPasswordEntity,
+        options?: IDatabaseSaveOptions
+    ): Promise<ResetPasswordEntity> {
+        repository.otpAttempt += 1;
+        if (repository.otpAttempt >= this.maxOtpAttempt) {
+            repository.isActive = false;
+        }
 
         return this.resetPasswordRepository.save(repository, options);
     }
@@ -271,9 +294,7 @@ export class ResetPasswordService implements IResetPasswordService {
         { email }: ResetPasswordCreateRequestDto
     ): ResetPasswordCreteResponseDto {
         return {
-            url: `${this.prefixUrl}/${resetPassword.token}`,
             expiredDate: resetPassword.expiredDate,
-            token: resetPassword.token,
             to: this.helperStringService.censor(email),
         };
     }

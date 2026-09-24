@@ -59,6 +59,10 @@ export interface IResetPasswordService {
         repository: ResetPasswordEntity,
         options?: IDatabaseSaveOptions
     ): Promise<ResetPasswordEntity>;
+    incrementOtpAttempt(
+        repository: ResetPasswordEntity,
+        options?: IDatabaseSaveOptions
+    ): Promise<ResetPasswordEntity>;
     inactive(
         repository: ResetPasswordEntity,
         options?: IDatabaseSaveOptions

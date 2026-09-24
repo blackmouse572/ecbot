@@ -51,4 +51,7 @@ export class ResetPasswordEntity extends DatabaseEntityBase {
 
     @Property({ type: 'varchar', length: 255 })
     reference: string;
+
+    @Property({ type: 'integer', default: 0 })
+    otpAttempt: number = 0;
 }

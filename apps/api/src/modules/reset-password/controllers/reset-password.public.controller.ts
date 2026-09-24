@@ -40,8 +40,10 @@ import { ResetPasswordActivePipe } from 'src/modules/reset-password/pipes/reset-
 import { ResetPasswordDateExpiredPipe } from 'src/modules/reset-password/pipes/reset-password.date-expired.pipe';
 import { ResetPasswordExpiredPipe } from 'src/modules/reset-password/pipes/reset-password.expired.pipe';
 import { ResetPasswordParseByTokenPipe } from 'src/modules/reset-password/pipes/reset-password.parse.pipe';
+import { ResetPasswordVerifiedPipe } from 'src/modules/reset-password/pipes/reset-password.verified.pipe';
 import { ResetPasswordEntity } from 'src/modules/reset-password/repository/entities/reset-password.entity';
 import { ResetPasswordService } from 'src/modules/reset-password/services/reset-password.service';
+import { SessionService } from 'src/modules/session/services/session.service';
 import { ENUM_USER_STATUS_CODE_ERROR } from 'src/modules/user/enums/user.status-code.enum';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { UserService } from 'src/modules/user/services/user.service';
@@ -60,7 +62,8 @@ export class ResetPasswordPublicController {
         private readonly userService: UserService,
         private readonly passwordHistoryService: PasswordHistoryService,
         private readonly authService: AuthService,
-        private readonly resetPasswordService: ResetPasswordService
+        private readonly resetPasswordService: ResetPasswordService,
+        private readonly sessionService: SessionService
     ) {}
 
     @ResetPasswordPublicRequestDoc()
@@ -70,14 +73,16 @@ export class ResetPasswordPublicController {
     @Post('/request')
     async request(
         @Body() { email }: ResetPasswordCreateRequestDto
-    ): Promise<IResponse<ResetPasswordCreteResponseDto>> {
+    ): Promise<IResponse<void>> {
+        // No enumeration: every outcome below (unknown email, already an
+        // active pending reset, or a freshly created one) returns this same
+        // empty ack — never the token/url, never a 404 for an unknown email.
+        const ack: IResponse<void> = { data: undefined };
+
         const user: UserEntity =
             await this.userService.findOneActiveByEmail(email);
         if (!user) {
-            throw new NotFoundException({
-                statusCode: ENUM_USER_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'user.error.notFound',
-            });
+            return ack;
         }
 
         const checkLatest: IResetPasswordRequest =
@@ -85,9 +90,7 @@ export class ResetPasswordPublicController {
                 user.id
             );
         if (checkLatest) {
-            return {
-                data: checkLatest.created,
-            };
+            return ack;
         }
 
         const session = this.em.fork();
@@ -102,7 +105,7 @@ export class ResetPasswordPublicController {
                 await this.resetPasswordService.requestEmailByUser(
                     user.id,
                     {
-                        email,
+                        email: user.email,
                     },
                     { em: session }
                 );
@@ -112,7 +115,7 @@ export class ResetPasswordPublicController {
                     'email',
                     ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
                     {
-                        send: { email, name: user.name },
+                        send: { email: user.email, name: user.name },
                         data: resetPassword.created,
                     },
                     {
@@ -127,9 +130,7 @@ export class ResetPasswordPublicController {
 
             await session.commit();
 
-            return {
-                data: resetPassword.created,
-            };
+            return ack;
         } catch (err: unknown) {
             await session.rollback();
 
@@ -206,6 +207,18 @@ export class ResetPasswordPublicController {
             otp
         );
         if (!check) {
+            const attempted =
+                await this.resetPasswordService.incrementOtpAttempt(
+                    resetPassword
+                );
+            if (!attempted.isActive) {
+                throw new BadRequestException({
+                    statusCode:
+                        ENUM_RESET_PASSWORD_STATUS_CODE_ERROR.ATTEMPT_MAX,
+                    message: 'resetPassword.error.attemptMax',
+                });
+            }
+
             throw new BadRequestException({
                 statusCode: ENUM_RESET_PASSWORD_STATUS_CODE_ERROR.OTP_NOT_MATCH,
                 message: 'resetPassword.error.otpNotMatch',
@@ -228,7 +241,8 @@ export class ResetPasswordPublicController {
             RequestRequiredPipe,
             ResetPasswordParseByTokenPipe,
             ResetPasswordActivePipe,
-            ResetPasswordDateExpiredPipe
+            ResetPasswordDateExpiredPipe,
+            ResetPasswordVerifiedPipe
         )
         resetPassword: ResetPasswordEntity,
         @Body()
@@ -257,6 +271,9 @@ export class ResetPasswordPublicController {
             });
             await this.passwordHistoryService.createByUser(user, {
                 type: ENUM_PASSWORD_HISTORY_TYPE.FORGOT,
+            });
+            await this.sessionService.updateManyRevokeByUser(user.id, {
+                em: session,
             });
 
             this.cloudTasksClient
