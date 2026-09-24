@@ -27,6 +27,7 @@ export interface IAuthService {
         token: string
     ): IAuthJwtRefreshTokenPayload | null;
     validateUser(passwordString: string, passwordHash: string): boolean;
+    runDummyPasswordCompare(passwordString: string): void;
     createPayloadAccessToken(
         data: UserEntity,
         session: string,

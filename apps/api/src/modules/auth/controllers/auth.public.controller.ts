@@ -106,37 +106,40 @@ export class AuthPublicController {
             ENUM_TURNSTILE_ACTION.LOGIN
         );
 
-        let user: UserEntity = await this.userService.findOneByEmail(email);
+        const user: UserEntity = await this.userService.findOneByEmail(email);
         if (!user) {
-            throw new NotFoundException({
-                statusCode: ENUM_USER_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'user.error.notFound',
-            });
+            // Same error as a wrong password below, plus a real bcrypt
+            // compare against a fixed hash, so an unknown email can't be
+            // told apart from a known one — by response body or timing.
+            this.authService.runDummyPasswordCompare(password);
+            throw this.buildInvalidCredentialError();
         }
 
         const passwordAttempt: boolean = this.authService.getPasswordAttempt();
         const passwordMaxAttempt: number =
             this.authService.getPasswordMaxAttempt();
-        if (passwordAttempt && user.passwordAttempt >= passwordMaxAttempt) {
-            throw new ForbiddenException({
-                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
-                message: 'auth.error.passwordAttemptMax',
-            });
-        }
+        const isPasswordLocked: boolean =
+            passwordAttempt && user.passwordAttempt >= passwordMaxAttempt;
 
         const validate: boolean = this.authService.validateUser(
             password,
             user.password
         );
         if (!validate) {
-            user = await this.userService.increasePasswordAttempt(user);
+            // Stop counting once already locked, so the counter doesn't
+            // grow past the threshold.
+            if (!isPasswordLocked) {
+                await this.userService.increasePasswordAttempt(user);
+            }
 
-            throw new BadRequestException({
-                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
-                message: 'auth.error.passwordNotMatch',
-                data: {
-                    attempt: user.passwordAttempt,
-                },
+            // Identical to the unknown-email error above — no attempt
+            // count, no lockout hint — a guesser can't distinguish "wrong
+            // password" from "no such account" or "this account is locked."
+            throw this.buildInvalidCredentialError();
+        } else if (isPasswordLocked) {
+            throw new ForbiddenException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
+                message: 'auth.error.passwordAttemptMax',
             });
         } else if (user.status === ENUM_USER_STATUS.BLOCKED) {
             throw new ForbiddenException({
@@ -580,5 +583,15 @@ export class AuthPublicController {
                 _error: err,
             });
         }
+    }
+
+    // Shared by both the unknown-email and wrong-password branches of
+    // loginWithCredential, so the two are byte-for-byte identical and
+    // carry no attempt count.
+    private buildInvalidCredentialError(): BadRequestException {
+        return new BadRequestException({
+            statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+            message: 'auth.error.passwordNotMatch',
+        });
     }
 }

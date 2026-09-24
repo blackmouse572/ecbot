@@ -52,6 +52,12 @@ export class AuthService implements IAuthService {
     private readonly passwordAttempt: boolean;
     private readonly passwordMaxAttempt: number;
 
+    // A bcrypt hash of a fixed, unrelated string, computed once at the
+    // configured cost. Compared against on an unknown-email login so that
+    // path costs roughly the same as a real password check — otherwise the
+    // response-time gap becomes an account-enumeration oracle.
+    private readonly dummyPasswordHash: string;
+
     // apple
     private readonly appleClientId: string;
     private readonly appleSignInClientId: string;
@@ -121,6 +127,11 @@ export class AuthService implements IAuthService {
         );
         this.passwordMaxAttempt = this.configService.get<number>(
             'auth.password.maxAttempt'
+        );
+
+        this.dummyPasswordHash = this.helperHashService.bcrypt(
+            'dummy-password-for-timing-safety',
+            this.createSalt(this.passwordSaltLength)
         );
 
         // apple
@@ -232,6 +243,15 @@ export class AuthService implements IAuthService {
         return this.helperHashService.bcryptCompare(
             passwordString,
             passwordHash
+        );
+    }
+
+    // See dummyPasswordHash above. Call this on the unknown-email login
+    // path instead of validateUser, so it still pays a real bcrypt compare.
+    runDummyPasswordCompare(passwordString: string): void {
+        this.helperHashService.bcryptCompare(
+            passwordString,
+            this.dummyPasswordHash
         );
     }
 
@@ -351,7 +371,6 @@ export class AuthService implements IAuthService {
         const payloadRefreshToken = this.payload<IAuthJwtRefreshTokenPayload>(
             refreshTokenFromRequest
         );
-        console.log('DECODED PAYLOAD REFRESH TOKEN', payloadRefreshToken);
         const payloadAccessToken: IAuthJwtAccessTokenPayload =
             this.createPayloadAccessToken(
                 user,

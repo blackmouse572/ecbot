@@ -193,9 +193,11 @@ describe('AuthPublicController.loginWithCredential', () => {
     const getPasswordAttempt = jest.fn();
     const getPasswordMaxAttempt = jest.fn();
     const validateUser = jest.fn();
+    const runDummyPasswordCompare = jest.fn();
     const verifyLoginTurnstile = jest.fn();
     const checkPasswordExpired = jest.fn();
     const resetPasswordAttempt = jest.fn();
+    const increasePasswordAttempt = jest.fn();
     const join = jest.fn();
     const createToken = jest.fn();
     const setRefreshTokenCookie = jest.fn();
@@ -222,8 +224,10 @@ describe('AuthPublicController.loginWithCredential', () => {
         getPasswordAttempt.mockReset();
         getPasswordMaxAttempt.mockReset();
         validateUser.mockReset();
+        runDummyPasswordCompare.mockReset();
         checkPasswordExpired.mockReset();
         resetPasswordAttempt.mockReset();
+        increasePasswordAttempt.mockReset();
         join.mockReset();
         createToken.mockReset();
         setRefreshTokenCookie.mockReset();
@@ -248,6 +252,7 @@ describe('AuthPublicController.loginWithCredential', () => {
                     useValue: {
                         findOneByEmail,
                         resetPasswordAttempt,
+                        increasePasswordAttempt,
                         join,
                     },
                 },
@@ -257,6 +262,7 @@ describe('AuthPublicController.loginWithCredential', () => {
                         getPasswordAttempt,
                         getPasswordMaxAttempt,
                         validateUser,
+                        runDummyPasswordCompare,
                         checkPasswordExpired,
                         createToken,
                         setRefreshTokenCookie,
@@ -290,9 +296,11 @@ describe('AuthPublicController.loginWithCredential', () => {
         getPasswordAttempt.mockReturnValue(false);
         getPasswordMaxAttempt.mockReturnValue(5);
         validateUser.mockReturnValue(true);
+        runDummyPasswordCompare.mockReturnValue(undefined);
         verifyLoginTurnstile.mockResolvedValue(undefined);
         checkPasswordExpired.mockReturnValue(false);
         resetPasswordAttempt.mockResolvedValue(undefined);
+        increasePasswordAttempt.mockResolvedValue(undefined);
         join.mockResolvedValue(activeUser);
         createSession.mockResolvedValue({ id: 'session-1' });
         setLoginSession.mockResolvedValue(undefined);
@@ -425,5 +433,93 @@ describe('AuthPublicController.loginWithCredential', () => {
             'session-1',
             undefined
         );
+    });
+
+    it('rejects an unknown email with the same error as a wrong password, and runs a dummy bcrypt compare', async () => {
+        findOneByEmail.mockResolvedValue(undefined);
+
+        await expect(
+            controller.loginWithCredential(
+                { email: 'nobody@x.com', password: 'pass' } as any,
+                {} as any,
+                {} as any
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+                message: 'auth.error.passwordNotMatch',
+            },
+        });
+
+        expect(runDummyPasswordCompare).toHaveBeenCalledWith('pass');
+        expect(validateUser).not.toHaveBeenCalled();
+    });
+
+    it('rejects a wrong password with the same statusCode/message as an unknown email, and no attempt count', async () => {
+        findOneByEmail.mockResolvedValue(activeUser);
+        validateUser.mockReturnValue(false);
+
+        const error = await controller
+            .loginWithCredential(
+                { email: 'ok@x.com', password: 'wrong' } as any,
+                {} as any,
+                {} as any
+            )
+            .catch((err) => err);
+
+        expect(error.response).toStrictEqual({
+            statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+            message: 'auth.error.passwordNotMatch',
+        });
+        expect(error.response.data).toBeUndefined();
+        expect(increasePasswordAttempt).toHaveBeenCalledWith(activeUser);
+    });
+
+    it('does not increase the attempt counter or reveal lockout once already at max, on a wrong password', async () => {
+        findOneByEmail.mockResolvedValue({
+            ...activeUser,
+            passwordAttempt: 5,
+        });
+        getPasswordAttempt.mockReturnValue(true);
+        getPasswordMaxAttempt.mockReturnValue(5);
+        validateUser.mockReturnValue(false);
+
+        await expect(
+            controller.loginWithCredential(
+                { email: 'ok@x.com', password: 'wrong' } as any,
+                {} as any,
+                {} as any
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+                message: 'auth.error.passwordNotMatch',
+            },
+        });
+
+        expect(increasePasswordAttempt).not.toHaveBeenCalled();
+    });
+
+    it('reveals the lockout only once the password has matched', async () => {
+        findOneByEmail.mockResolvedValue({
+            ...activeUser,
+            passwordAttempt: 5,
+        });
+        getPasswordAttempt.mockReturnValue(true);
+        getPasswordMaxAttempt.mockReturnValue(5);
+        validateUser.mockReturnValue(true);
+
+        await expect(
+            controller.loginWithCredential(
+                { email: 'ok@x.com', password: 'pass' } as any,
+                {} as any,
+                {} as any
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
+                message: 'auth.error.passwordAttemptMax',
+            },
+        });
     });
 });
