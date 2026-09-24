@@ -11,9 +11,19 @@ import { toChatbotPayload } from "./to-chatbot-payload";
 
 const SAVE_DEBOUNCE_MS = 600;
 
+/**
+ * The chatbot's editable fields only. Read-only ones (timestamps, ids, the
+ * compiled prompt) change on every refetch and would make each one look like
+ * an unsaved edit.
+ */
+const READ_ONLY_FIELDS = new Set<string>([
+  "id", "createdAt", "createdBy", "updatedAt", "updatedBy", "deleted", "deletedAt", "deletedBy",
+  "generalKnowledge", "workspace", "status", "modelProvider",
+]);
+
 function baseFrom(chatbot: ChatbotGetDetailResponseDto): Partial<ChatbotCreateRequestDto> {
-  const { accounts, ...rest } = chatbot as ChatbotGetDetailResponseDto & { accounts?: { id: string }[] };
-  return { ...(rest as Partial<ChatbotCreateRequestDto>), accounts: (accounts ?? []).map((a) => a.id) };
+  const editable = Object.fromEntries(Object.entries(chatbot).filter(([key]) => !READ_ONLY_FIELDS.has(key)));
+  return { ...(editable as Partial<ChatbotCreateRequestDto>), accounts: (chatbot.accounts ?? []).map((a) => a.id) };
 }
 
 export function useAgentBuilder({ hydrateFrom }: { hydrateFrom?: ChatbotGetDetailResponseDto }) {
@@ -28,6 +38,11 @@ export function useAgentBuilder({ hydrateFrom }: { hydrateFrom?: ChatbotGetDetai
   const [saveError, setSaveError] = useState(false);
   const creating = useRef(false);
   const lastSaved = useRef("");
+  // The last snapshot a save failed on: it is retried only once the profile
+  // changes, never in a loop on re-render.
+  const failed = useRef("");
+  // The debounced save not sent yet, flushed on unmount.
+  const pending = useRef<{ id: string; body: ChatbotCreateRequestDto; snapshot: string } | null>(null);
   // Hydrate a given chatbot id only once: `hydrateFrom` is refetched (a new
   // object reference with the same id) after every autosave, and re-running
   // "hydrate" on each refetch would replace in-progress local answers with
@@ -63,44 +78,64 @@ export function useAgentBuilder({ hydrateFrom }: { hydrateFrom?: ChatbotGetDetai
     dispatch({ type: "start", profile: createProfile(type, language), suggestion: null, source: "template" });
 
   // Create the inactive draft as soon as everything up to Rules is answered.
-  // A failure is retried on the next state change (the next answer).
+  // A failure is retried once an answer changes the profile.
+  const createDraft = create.mutateAsync;
   useEffect(() => {
     if (!state.profile || state.chatbotId || creating.current || !isDraftReady(state)) return;
-    creating.current = true;
     const body = toChatbotPayload(state.profile, extraInstructions, base);
-    create
-      .mutateAsync({ ...body, status: "inactive" } as ChatbotCreateRequestDto)
+    const snapshot = JSON.stringify(body);
+    if (snapshot === failed.current) return;
+    creating.current = true;
+    createDraft({ ...body, status: "inactive" } as ChatbotCreateRequestDto)
       .then((res) => {
         const id = (res as { data?: { data?: { id?: string } } }).data?.data?.id;
         if (!id) throw new Error("missing chatbot id");
-        lastSaved.current = JSON.stringify(body);
+        lastSaved.current = snapshot;
         setSaveError(false);
         dispatch({ type: "draftCreated", chatbotId: id });
       })
-      .catch(() => setSaveError(true))
+      .catch(() => {
+        failed.current = snapshot;
+        setSaveError(true);
+      })
       .finally(() => {
         creating.current = false;
       });
-  }, [state, extraInstructions, base, create]);
+  }, [state, extraInstructions, base, createDraft]);
 
   // After the draft exists, every answer saves the full payload (debounced).
+  const save = update.mutateAsync;
   useEffect(() => {
+    pending.current = null;
     if (!state.chatbotId || !state.profile) return;
     const body = toChatbotPayload(state.profile, extraInstructions, base);
     const snapshot = JSON.stringify(body);
-    if (snapshot === lastSaved.current) return;
+    if (snapshot === lastSaved.current || snapshot === failed.current) return;
     const id = state.chatbotId;
+    pending.current = { id, body, snapshot };
     const timer = setTimeout(() => {
-      update
-        .mutateAsync({ id, body })
+      pending.current = null;
+      save({ id, body })
         .then(() => {
           lastSaved.current = snapshot;
           setSaveError(false);
         })
-        .catch(() => setSaveError(true));
+        .catch(() => {
+          failed.current = snapshot;
+          setSaveError(true);
+        });
     }, SAVE_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [state.chatbotId, state.profile, extraInstructions, base, update]);
+  }, [state.chatbotId, state.profile, extraInstructions, base, save]);
+
+  // Leaving the builder sends the answer still waiting on the debounce.
+  useEffect(
+    () => () => {
+      const last = pending.current;
+      if (last && last.snapshot !== lastSaved.current) save({ id: last.id, body: last.body }).catch(() => {});
+    },
+    [save],
+  );
 
   const finish = async () => {
     if (!state.chatbotId) return;

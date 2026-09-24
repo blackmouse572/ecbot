@@ -139,4 +139,81 @@ describe("AgentBuilder", () => {
     expect(screen.getByText("Lotus Spa")).toBeInTheDocument();
     expect(screen.queryByText("Lotus")).not.toBeInTheDocument();
   });
+
+  it(
+    "does not retry a failed draft create until an answer changes the profile",
+    async () => {
+      create.mockReset().mockRejectedValue(new Error("down"));
+      renderBuilder();
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
+      for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
+      await waitFor(() => expect(create).toHaveBeenCalledOnce());
+      await new Promise((r) => setTimeout(r, 100));
+      expect(create).toHaveBeenCalledOnce();
+
+      await userEvent.click(screen.getAllByText("Lotus")[0]);
+      const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+      await userEvent.type(input, " Spa");
+      await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+      await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+    },
+    15000,
+  );
+
+  describe("on a hydrated builder chatbot", () => {
+    const route = "/ws/chatbot/create?chatbotId=bot-9";
+    const profile = { ...createProfile("beauty", "en"), businessName: "Lotus" };
+    const bot = (extra: Record<string, unknown> = {}) => ({
+      id: "bot-9",
+      status: "inactive",
+      extraInstructions: "",
+      agentProfile: profile,
+      updatedAt: "2026-09-24T00:00:00.000Z",
+      ...extra,
+    });
+    const tree = () => (
+      <MemoryRouter initialEntries={[route]}>
+        <AgentBuilder />
+      </MemoryRouter>
+    );
+    const renameTo = async (name: string) => {
+      await userEvent.click(screen.getByText(/^Lotus/));
+      const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+      await userEvent.clear(input);
+      await userEvent.type(input, name);
+      await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+    };
+    const settle = () => new Promise((r) => setTimeout(r, 900));
+
+    it("does not retry a failed autosave until an answer changes the profile", async () => {
+      update.mockReset().mockRejectedValue(new Error("down"));
+      chatbot.mockReturnValue({ chatbot: bot() });
+      render(tree());
+      await renameTo("Lotus Spa");
+      await waitFor(() => expect(update).toHaveBeenCalledOnce());
+      await settle();
+      expect(update).toHaveBeenCalledOnce();
+
+      await renameTo("Lotus Nails");
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
+    });
+
+    it("sends no update when a refetch only changes read-only fields", async () => {
+      chatbot.mockReturnValue({ chatbot: bot() });
+      const { rerender } = render(tree());
+      chatbot.mockReturnValue({ chatbot: bot({ updatedAt: "2026-09-24T01:00:00.000Z" }) });
+      rerender(tree());
+      await settle();
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it("flushes the pending autosave on unmount", async () => {
+      chatbot.mockReturnValue({ chatbot: bot() });
+      const { unmount } = render(tree());
+      await renameTo("Lotus Spa");
+      unmount();
+      expect(update).toHaveBeenCalledOnce();
+      expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-9", body: { agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }) } });
+    });
+  });
 });
