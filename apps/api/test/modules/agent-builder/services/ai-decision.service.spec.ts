@@ -1,4 +1,10 @@
 import { of } from 'rxjs';
+
+jest.mock('@app/common/utils/gcp-id-token.util', () => ({
+    getInternalAuthHeader: jest.fn(async () => ({ Authorization: 'Bearer id-token' })),
+}));
+
+import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
 import { AiDecisionService } from '../../../../src/modules/agent-builder/services/ai-decision.service';
 
 const config = { get: (k: string) => ({ 'ai.backend.url': 'http://ai:8000', 'agentBuilder.decisionTimeoutMs': 15000 } as Record<string, unknown>)[k] } as any;
@@ -13,7 +19,8 @@ describe('AiDecisionService', () => {
         expect(url).toBe('http://ai:8000/api/decision/system-one');
         expect(body).toEqual({ state: 'hello', questions: { a: { type: 'noul', instructions: 'q' } } });
         expect(opts.timeout).toBe(15000);
-        expect(opts.headers.Authorization).toMatch(/^Bearer /);
+        expect(getInternalAuthHeader).toHaveBeenCalledWith('http://ai:8000');
+        expect(opts.headers).toEqual({ Authorization: 'Bearer id-token', 'Content-Type': 'application/json' });
     });
 
     it('returns no answers when apps/ai sends none', async () => {
