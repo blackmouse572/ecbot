@@ -28,9 +28,8 @@ describe('E2E — workspace member invite → join', () => {
     beforeAll(async () => {
         ctx = await bootstrapE2E();
         // Use `business` as the owner and `premium` as the invitee. The
-        // invite endpoint resolves the target workspace via
-        // findWorkspaceByOwner(ownerId, workspaceId) — scoped to the
-        // :workspace path param — so every invite here deterministically
+        // invite endpoint always targets the :workspace path param (the
+        // guard-resolved workspace), so every invite here deterministically
         // targets `workspaceId`.
         ownerToken = await login(ctx.app, ctx.base, SEED_USERS.business);
         inviteeToken = await login(ctx.app, ctx.base, SEED_USERS.premium);

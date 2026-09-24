@@ -28,6 +28,8 @@ describe('WorkspaceMemberController', () => {
         removeRoleFromMember: jest.fn(),
         getMemberWorkspaceRoles: jest.fn(),
         isUserMemberOfWorkspace: jest.fn(),
+        verifyInvitationToken: jest.fn(),
+        joinWorkspaceViaInvitation: jest.fn(),
     };
     const mockRoleService = { findOne: jest.fn() };
     const mockPaginationService = { totalPage: jest.fn().mockReturnValue(1) };
@@ -45,7 +47,6 @@ describe('WorkspaceMemberController', () => {
             mockRoleService as any,
             mockPaginationService as any,
             mockActivityService as any,
-            {} as any, // invitationService
             {} as any // workspaceRequestService
         );
     });
@@ -219,10 +220,9 @@ describe('WorkspaceMemberController', () => {
         beforeEach(() => {
             jest.clearAllMocks();
             mockMemberService.isUserMemberOfWorkspace.mockResolvedValue(false);
-            mockMemberService.verifyInvitationToken = jest
-                .fn()
-                .mockResolvedValue({ workspaceId: targetWorkspace.id });
-            mockMemberService.joinWorkspaceViaInvitation = jest.fn();
+            mockMemberService.verifyInvitationToken.mockResolvedValue({
+                workspaceId: targetWorkspace.id,
+            });
             mockOwnerService.findOneById.mockResolvedValue(targetWorkspace);
 
             joinController = new WorkspaceMemberController(
@@ -233,7 +233,6 @@ describe('WorkspaceMemberController', () => {
                 mockRoleService as any,
                 mockPaginationService as any,
                 mockActivityService as any,
-                {} as any, // invitationService
                 {} as any // workspaceRequestService
             );
         });

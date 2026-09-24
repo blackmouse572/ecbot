@@ -247,6 +247,32 @@ describe('WorkspaceMemberService', () => {
             ).rejects.toThrow(UnauthorizedException);
         });
 
+        it('should match a mixed-case caller email against the lowercased invitee email', async () => {
+            mockUserService.findOneById.mockResolvedValue({
+                id: userId,
+                email: 'Invitee@Mail.com',
+            });
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
+                role: { id: roleId },
+            });
+
+            const result = await service.joinWorkspaceViaInvitation(
+                'token',
+                userId
+            );
+
+            expect(result.workspace).toEqual({ id: workspaceId });
+            expect(mockInvitationService.accept).toHaveBeenCalledWith(
+                invitationId,
+                userId,
+                undefined
+            );
+        });
+
         it('should reject when the caller is not the invited user', async () => {
             mockInvitationService.findOneByToken.mockResolvedValue({
                 id: invitationId,

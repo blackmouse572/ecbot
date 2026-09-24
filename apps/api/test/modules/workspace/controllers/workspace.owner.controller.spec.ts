@@ -77,7 +77,30 @@ describe('WorkspaceController — inviteMemberToWorkSpace', () => {
             'owner-1',
             { invitedEmail: 'invitee@mail.com' },
             'https://ecbot.example.com',
-            workspace.id
+            workspace
+        );
+    });
+
+    it('targets the guard-resolved (URL) workspace for a non-owner caller with invite permission', async () => {
+        // The WorkspacePolicyAbilityProtected({MEMBER: CREATE}) guard already
+        // authorized this caller against `workspace` — the controller must
+        // not re-derive or second-guess the target from the caller's own
+        // owned workspaces; it always passes through the URL workspace.
+        const nonOwnerCallerId = 'admin-not-owner';
+
+        await controller.inviteMemberToWorkSpace(
+            nonOwnerCallerId,
+            { invitedEmail: 'invitee@mail.com' } as any,
+            workspace
+        );
+
+        expect(
+            mockWorkSpaceService.generateInvitationLinkWithDetails
+        ).toHaveBeenCalledWith(
+            nonOwnerCallerId,
+            { invitedEmail: 'invitee@mail.com' },
+            'https://ecbot.example.com',
+            workspace
         );
     });
 });

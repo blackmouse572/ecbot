@@ -1,4 +1,8 @@
 import { NotFoundException } from '@nestjs/common';
+import {
+    REQUEST_STATUS,
+    REQUEST_TYPE,
+} from '../../../../src/modules/requests/constant/requests.constant';
 import { WorkspaceRequestService } from '../../../../src/modules/workspace/services/workspace.request.service';
 
 // Focused unit test for approve(): a request id must be looked up scoped to
@@ -47,13 +51,29 @@ describe('WorkspaceRequestService — approve', () => {
         });
     });
 
-    it('throws 404 for a request id that belongs to a different workspace', async () => {
-        // Simulate: the repository only returns rows matching BOTH id and
-        // workspace — a foreign-workspace request id resolves to nothing.
-        mockRequestRepository.findOne.mockResolvedValue(null);
+    it('approves a matching JOIN_WORKSPACE request scoped to the workspace', async () => {
+        const request: any = {
+            id: 'req-1',
+            type: REQUEST_TYPE.JOIN_WORKSPACE,
+            status: REQUEST_STATUS.PENDING,
+            isCancelled: false,
+            isApproved: false,
+            isRejected: false,
+            requestFrom: { id: 'user-1' },
+            requestTo: { id: 'own-1' },
+        };
+        mockRequestRepository.findOne.mockResolvedValue(request);
+        mockUserService.findOneById.mockResolvedValue({ id: 'user-1' });
 
-        await expect(
-            service.approve('foreign-request-id', workspace)
-        ).rejects.toThrow(NotFoundException);
+        await service.approve('req-1', workspace);
+
+        expect(mockRequestRepository.findOne).toHaveBeenCalledWith({
+            id: 'req-1',
+            workspace: workspace.id,
+        });
+        expect(request.status).toBe(REQUEST_STATUS.APPROVED);
+        expect(
+            mockWorkspaceOwnerService.addMemberToWorkspace
+        ).toHaveBeenCalledWith(workspace.id, 'user-1');
     });
 });

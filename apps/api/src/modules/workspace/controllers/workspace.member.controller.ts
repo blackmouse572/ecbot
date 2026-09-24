@@ -11,7 +11,6 @@ import {
     AuthJwtAccessProtected,
     AuthJwtPayload,
 } from '@app/modules/auth/decorators/auth.jwt.decorator';
-import { InvitationService } from '@app/modules/invitation/services/invitation.service';
 import {
     ENUM_POLICY_ROLE_TYPE,
     ENUM_POLICY_SUBJECT,
@@ -84,7 +83,6 @@ export class WorkspaceMemberController {
         private readonly roleService: RoleService,
         private readonly paginationService: PaginationService,
         private readonly activityService: ActivityService,
-        private readonly invitationService: InvitationService,
         private readonly workspaceRequestService: WorkspaceRequestService
     ) {}
 

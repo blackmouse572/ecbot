@@ -113,7 +113,7 @@ describe('Invitation token contract (owner ↔ member ↔ invitation)', () => {
                 ownerId,
                 { invitedEmail },
                 'https://app.example.com',
-                workspace.id
+                workspace as any
             );
 
         // (a) persisted verbatim — the row's token equals the minted token

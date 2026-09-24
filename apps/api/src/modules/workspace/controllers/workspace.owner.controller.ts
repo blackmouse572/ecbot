@@ -390,14 +390,16 @@ export class WorkspaceController {
         @WorkspacePayload() workspace: WorkspaceEntity
     ) {
         // Generate invitation link and get details. The invitation targets
-        // the workspace resolved from the URL (workspace.id) — not just any
-        // workspace this caller happens to own.
+        // the workspace resolved from the URL by the guard (WorkspacePayload)
+        // — never a different workspace this caller happens to own — and the
+        // guard has already authorized the caller against it, so the service
+        // does no separate owner-only lookup.
         const { invitationLink, expiresAt } =
             await this.workSpaceService.generateInvitationLinkWithDetails(
                 userId,
                 body,
                 this.homeUrl,
-                workspace.id
+                workspace
             );
 
         this.logger.debug(

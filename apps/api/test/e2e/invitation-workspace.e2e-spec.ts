@@ -44,15 +44,14 @@ describe('E2E — workspace invitation management', () => {
         await ctx?.close();
     });
 
-    // The invite endpoint resolves the target workspace via findWorkspaceByOwner
-    // (it ignores the :workspace param), so we decode the actual workspace from
-    // the returned token and manage the invitation there.
+    // The invite endpoint always targets the :workspace path param
+    // (workspaceId here); decode the token's workspaceId as a sanity check
+    // and to manage the invitation via the same workspace.
     async function inviteAndGet(
         email: string
     ): Promise<{ id: string; ws: string }> {
-        // No roleId: the invite resolves its own target workspace, so a role id
-        // scoped to a different workspace would be rejected. The default member
-        // role is assigned instead — irrelevant to invitation management.
+        // No roleId: the default member role is assigned instead — irrelevant
+        // to invitation management.
         const inv = await http(ctx.app)
             .post(`${wsBase(ctx.base)}/invite-member/${workspaceId}`)
             .set(...auth(ownerToken))

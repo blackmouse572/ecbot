@@ -63,9 +63,8 @@ export async function getInvitableRoleId(
  */
 /**
  * Decodes the workspaceId embedded in the invitation JWT payload. The invite
- * endpoint resolves the target workspace via
- * findWorkspaceByOwner(ownerId, workspaceId) — scoped to the :workspace path
- * param — so this now always equals the workspace the invite was requested
+ * endpoint always targets the :workspace path param (the guard-resolved
+ * workspace), so this always equals the workspace the invite was requested
  * against. Kept as a convenience accessor / sanity check, not a workaround.
  */
 export function decodeInvitationWorkspaceId(token: string): string {
