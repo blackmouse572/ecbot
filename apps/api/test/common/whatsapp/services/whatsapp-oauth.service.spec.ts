@@ -45,6 +45,7 @@ describe('WhatsAppOAuthService.getTokenAndProfile — manual credential', () => 
                 return Promise.resolve({
                     data: {
                         data: {
+                            app_id: 'APP',
                             granular_scopes: [
                                 {
                                     scope: 'whatsapp_business_management',
@@ -94,6 +95,36 @@ describe('WhatsAppOAuthService.getTokenAndProfile — manual credential', () => 
         const [url, , opts] = post.mock.calls[0];
         expect(url).toMatch(/\/777\/subscribed_apps$/);
         expect(opts.headers.Authorization).toBe('Bearer EAAtoken');
+    });
+
+    // subscribed_apps subscribes the app that issued the token, so a token
+    // from the customer's own Meta app would "link" a number whose messages
+    // go to that other app — a silently dead channel.
+    it('rejects a token issued by a different Meta app, before subscribing', async () => {
+        const get = graphGet({
+            '/debug_token': () =>
+                Promise.resolve({
+                    data: {
+                        data: {
+                            app_id: 'OTHER_APP',
+                            granular_scopes: [
+                                {
+                                    scope: 'whatsapp_business_management',
+                                    target_ids: ['777'],
+                                },
+                            ],
+                        },
+                    },
+                }),
+        });
+        const post = ok();
+
+        await expect(
+            buildService(get, post).getTokenAndProfile('1055:EAAtoken')
+        ).rejects.toMatchObject({
+            response: { message: 'whatsapp.error.foreignApp' },
+        });
+        expect(post).not.toHaveBeenCalled();
     });
 
     it('fails with wabaAccess when no WABA the token manages holds the number', async () => {
@@ -298,6 +329,45 @@ describe('WhatsAppOAuthService.getTokenAndProfile — Embedded Signup (redirect)
             .map(([u, body]) => [u.split('/').at(-2), body.pin]);
         expect(registered.map(([id]) => id)).toEqual(['1055', '2066']);
         registered.forEach(([, pin]) => expect(pin).toMatch(/^\d{6}$/));
+    });
+
+    // Registering sets a two-step PIN when none is set; a number already on
+    // Cloud API (possibly used by another integration) must be left alone.
+    it('registers only numbers not yet on Cloud API', async () => {
+        const get = graphGet({
+            '/777/phone_numbers': () =>
+                Promise.resolve({
+                    data: {
+                        data: [
+                            { ...numbers[0], platform_type: 'CLOUD_API' },
+                            { ...numbers[1], platform_type: 'NOT_APPLICABLE' },
+                        ],
+                    },
+                }),
+        });
+        const post = ok();
+
+        await buildService(get, post).getTokenAndProfile('AQBcode');
+
+        const registered = post.mock.calls
+            .filter(([u]) => u.endsWith('/register'))
+            .map(([u]) => u.split('/').at(-2));
+        expect(registered).toEqual(['2066']);
+        const [, opts] = get.mock.calls.find(([u]) =>
+            u.endsWith('/777/phone_numbers')
+        );
+        expect(opts.params.fields).toContain('platform_type');
+    });
+
+    // A Graph 5xx is Meta being down, not a bad signup — worth a retry.
+    it('maps a Graph 5xx during signup to a retryable 503', async () => {
+        const post = jest
+            .fn()
+            .mockRejectedValue({ response: { status: 500, data: {} } });
+
+        await expect(
+            buildService(graphGet(), post).getTokenAndProfile('AQBcode')
+        ).rejects.toBeInstanceOf(ServiceUnavailableException);
     });
 
     // A number already on Cloud API keeps its own PIN, so re-registering

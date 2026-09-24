@@ -260,6 +260,32 @@ describe('AccountService - syncAccount', () => {
         expect(result.pages.map(p => p.id)).toEqual(['account-uuid-2']);
     });
 
+    // A sibling the user did not pick must not be pulled out of the workspace
+    // it already lives in — only the number they connected moves, as on every
+    // other channel.
+    it('skips additional accounts already linked in another workspace', async () => {
+        mockPlatformService.getTokenAndProfile.mockResolvedValueOnce({
+            ...mockOAuthResult,
+            additionalAccounts: [
+                { accessToken: 't', externalId: 'ext-456', name: 'Elsewhere' },
+            ],
+        });
+        mockAccountRepository.findOne.mockResolvedValueOnce({
+            externalId: 'ext-456',
+            workspace: { id: 'ws-other' },
+        });
+
+        const result = await service.syncAccount(
+            'auth-code',
+            ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS,
+            'ws-1',
+            'user-1'
+        );
+
+        expect(mockAccountRepository.upsert).toHaveBeenCalledTimes(1);
+        expect(result.pages).toEqual([]);
+    });
+
     it('excludes accessToken from the returned account', async () => {
         const result = await service.syncAccount(
             'auth-code',

@@ -17,6 +17,8 @@ interface WhatsAppPhoneNumber {
     id: string;
     display_phone_number: string;
     verified_name: string;
+    /** `CLOUD_API` once registered for Cloud API. */
+    platform_type?: string;
 }
 
 /** Graph `/oauth/access_token` response; `expires_in` only for expiring tokens. */
@@ -25,9 +27,12 @@ interface GraphToken {
     expires_in?: number;
 }
 
-/** Graph `/debug_token`: which assets each permission was granted on. */
+/** Graph `/debug_token`: the issuing app, and which assets each permission covers. */
 interface DebugToken {
-    data: { granular_scopes?: { scope: string; target_ids?: string[] }[] };
+    data: {
+        app_id?: string;
+        granular_scopes?: { scope: string; target_ids?: string[] }[];
+    };
 }
 
 const GRAPH_API_BASE = 'https://graph.facebook.com';
@@ -108,9 +113,11 @@ export class WhatsAppOAuthService implements IOAuthPlatformService {
         const token = await this.exchangeCode(code);
         let numbers: WhatsAppPhoneNumber[];
         try {
-            // Meta lists the most recently onboarded WABA first — the one this
-            // signup just shared.
-            const [wabaId] = await this.wabaIds(token.accessToken);
+            // "IDs for the most recently onboarded WABAs appear first, so
+            // capture the first ID" — Meta, Manage WhatsApp Business accounts.
+            const {
+                wabaIds: [wabaId],
+            } = await this.tokenInfo(token.accessToken);
             if (!wabaId) throw this.invalid('whatsapp.error.signupFailed');
             // Without the subscription Meta sends no webhooks for this WABA,
             // so a failure here must fail the link rather than leave a silent
@@ -123,7 +130,11 @@ export class WhatsAppOAuthService implements IOAuthPlatformService {
 
         if (!numbers.length) throw this.invalid('whatsapp.error.noPhoneNumber');
         for (const number of numbers) {
-            await this.registerNumber(number.id, token.accessToken);
+            // Registering sets a two-step PIN when none is set, so leave
+            // numbers already on Cloud API (maybe another integration's) alone.
+            if (number.platform_type !== 'CLOUD_API') {
+                await this.registerNumber(number.id, token.accessToken);
+            }
         }
 
         const [first, ...rest] = numbers.map(number => ({
@@ -165,7 +176,14 @@ export class WhatsAppOAuthService implements IOAuthPlatformService {
         accessToken: string
     ): Promise<void> {
         try {
-            for (const wabaId of await this.wabaIds(accessToken)) {
+            const { appId, wabaIds } = await this.tokenInfo(accessToken);
+            // subscribed_apps subscribes the app that issued the token: one
+            // from the customer's own Meta app would send this number's
+            // messages there, never to us.
+            if (appId !== this.appId) {
+                throw this.invalid('whatsapp.error.foreignApp');
+            }
+            for (const wabaId of wabaIds) {
                 const numbers = await this.phoneNumbers(wabaId, accessToken);
                 if (numbers.some(number => number.id === phoneNumberId)) {
                     await this.post(`${wabaId}/subscribed_apps`, accessToken);
@@ -180,8 +198,10 @@ export class WhatsAppOAuthService implements IOAuthPlatformService {
 
     // ----- WABA lookups (callers map failures to their own message) -----
 
-    /** WABAs the token may manage, newest onboarded first. */
-    private async wabaIds(accessToken: string): Promise<string[]> {
+    /** The token's issuing app and the WABAs it may manage, newest onboarded first. */
+    private async tokenInfo(
+        accessToken: string
+    ): Promise<{ appId?: string; wabaIds: string[] }> {
         const res = await this.http.axiosRef.get<DebugToken>(
             `${this.graphUrl}/debug_token`,
             {
@@ -191,11 +211,14 @@ export class WhatsAppOAuthService implements IOAuthPlatformService {
                 },
             }
         );
-        return (
-            res.data.data.granular_scopes?.find(
-                s => s.scope === 'whatsapp_business_management'
-            )?.target_ids ?? []
-        );
+        const { app_id, granular_scopes } = res.data.data;
+        return {
+            appId: app_id,
+            wabaIds:
+                granular_scopes?.find(
+                    s => s.scope === 'whatsapp_business_management'
+                )?.target_ids ?? [],
+        };
     }
 
     private async phoneNumbers(
@@ -205,7 +228,9 @@ export class WhatsAppOAuthService implements IOAuthPlatformService {
         const res = await this.http.axiosRef.get<{
             data: WhatsAppPhoneNumber[];
         }>(`${this.graphUrl}/${wabaId}/phone_numbers`, {
-            params: { fields: 'id,display_phone_number,verified_name' },
+            params: {
+                fields: 'id,display_phone_number,verified_name,platform_type',
+            },
             headers: { Authorization: `Bearer ${accessToken}` },
         });
         return res.data.data ?? [];
@@ -234,7 +259,7 @@ export class WhatsAppOAuthService implements IOAuthPlatformService {
         }
     }
 
-    /** A Graph refusal becomes `message` (422); a network failure a retryable 503. */
+    /** A Graph 4xx becomes `message` (422); a 5xx or network failure a retryable 503. */
     private graphFailed(err: unknown, message: string): never {
         if (err instanceof HttpException) throw err;
         this.logger.warn(
@@ -244,7 +269,8 @@ export class WhatsAppOAuthService implements IOAuthPlatformService {
                 err
             }`
         );
-        if ((err as any)?.response) throw this.invalid(message);
+        const status = (err as any)?.response?.status;
+        if (status >= 400 && status < 500) throw this.invalid(message);
         throw new ServiceUnavailableException({
             message: 'whatsapp.error.unreachable',
         });

@@ -4,6 +4,7 @@
         "unreachable": "Không thể kết nối tới WhatsApp. Vui lòng thử lại.",
         "signupFailed": "Không thể hoàn tất đăng ký WhatsApp. Vui lòng thử lại.",
         "noPhoneNumber": "Chưa có số điện thoại nào được thêm khi đăng ký WhatsApp. Vui lòng thực hiện lại và thêm số.",
-        "wabaAccess": "Token này không quản lý được tài khoản WhatsApp Business chứa số điện thoại này. Hãy dùng token có quyền whatsapp_business_management cho tài khoản đó."
+        "wabaAccess": "Token này không quản lý được tài khoản WhatsApp Business chứa số điện thoại này. Hãy dùng token có quyền whatsapp_business_management cho tài khoản đó.",
+        "foreignApp": "Token này do một Meta app khác cấp. Hãy dùng \"Đăng nhập bằng Facebook\", hoặc token system user của Meta app của ecbot."
     }
 }

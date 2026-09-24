@@ -4,6 +4,7 @@
         "unreachable": "Could not reach WhatsApp. Please try again.",
         "signupFailed": "WhatsApp signup could not be completed. Please try again.",
         "noPhoneNumber": "No phone number was added during WhatsApp signup. Please run it again and add a number.",
-        "wabaAccess": "This token can't manage the WhatsApp Business account that owns this number. Use a token with whatsapp_business_management access to it."
+        "wabaAccess": "This token can't manage the WhatsApp Business account that owns this number. Use a token with whatsapp_business_management access to it.",
+        "foreignApp": "This token was issued by a different Meta app. Use \"Log in with Facebook\", or a system user token for ecbot's Meta app."
     }
 }
