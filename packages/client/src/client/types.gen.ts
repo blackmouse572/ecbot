@@ -319,6 +319,37 @@ export type UserShortResponseDto = {
     country: CountryShortResponseDto;
 };
 
+export type WorkspaceInvitableCoMemberResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    name: string;
+    username: string;
+    avatar?: string;
+    country: CountryShortResponseDto;
+};
+
 export type WorkSpaceGetResponseDto = {
     /**
      * Alias id of api key
@@ -6167,7 +6198,7 @@ export type WorkspaceMemberControllerGetAvailableInviteMembersV1Responses = {
     200: ResponsePagingDto & {
         message?: unknown;
         statusCode?: number;
-        data?: Array<UserShortResponseDto>;
+        data?: Array<WorkspaceInvitableCoMemberResponseDto>;
     };
 };
 

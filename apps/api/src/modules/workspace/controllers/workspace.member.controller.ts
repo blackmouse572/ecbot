@@ -41,6 +41,8 @@ import {
     Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { isEmail } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 import {
     WorkspaceMemberOrOwnerProtected,
     WorkspaceOwnerProtected,
@@ -59,6 +61,7 @@ import {
     WorkSpaceOwnerMemberRemoveDoc,
 } from '../docs/workspace.owner.doc';
 import { WorkspaceJoinRequestDto } from '../dtos/request/workspace.join-request.request.dto';
+import { WorkspaceInvitableCoMemberResponseDto } from '../dtos/response/workspace-invitable-co-member.response.dto';
 import { WorkspaceMemberGetResponseDto } from '../dtos/response/workspace-member.get.response.dto';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
 import { IWorkspaceMemberWithUserDoc } from '../interfaces/workspace-member.interface';
@@ -348,9 +351,14 @@ export class WorkspaceMemberController {
     @AuthJwtAccessProtected()
     @Get('/:workspace/invitable')
     async getAvailableInviteMembers(
+        @AuthJwtPayload('user') callerId: string,
         @WorkspacePayload() workspace: WorkspaceEntity,
+        @Query('search') search: string | undefined,
+        // Only 'name' is searchable here — unlike USER_DEFAULT_AVAILABLE_SEARCH,
+        // this must never fuzzy-match on email (that's what let any member
+        // enumerate arbitrary platform users' addresses).
         @PaginationQuery({
-            availableSearch: USER_DEFAULT_AVAILABLE_SEARCH,
+            availableSearch: ['name'],
         })
         { _search, _limit, _offset, _order }: PaginationListDto
     ) {
@@ -361,30 +369,127 @@ export class WorkspaceMemberController {
             { populate: ['user'] }
         );
         const memberIds = currentMembers.map(member => (member as any).user.id);
+        const trimmedSearch = search?.trim();
+
+        // A full email is looked up exactly (never $ilike — Task 12 makes
+        // every email lookup exact) among ALL platform users: the caller
+        // typed a specific address, so there's nothing to enumerate.
+        if (trimmedSearch && isEmail(trimmedSearch)) {
+            return this.findInvitableByExactEmail(trimmedSearch, memberIds, {
+                limit: _limit,
+            });
+        }
+
+        // Otherwise (a partial name, or an empty search): fuzzy-match by name
+        // only among users who already share a workspace with the caller —
+        // never the whole platform — and never expose their email.
+        return this.findInvitableCoMembers(callerId, memberIds, _search, {
+            limit: _limit,
+            offset: _offset,
+            order: _order,
+        });
+    }
+
+    private async findInvitableByExactEmail(
+        email: string,
+        excludedMemberIds: string[],
+        { limit }: { limit: number }
+    ) {
         const find: Record<string, any> = {
-            ..._search,
-            id: { $nin: memberIds },
+            email: email.toLowerCase(),
+            id: { $nin: excludedMemberIds },
         };
-        const invitableUsers = await this.userService.findAllWithRoleAndCountry(
-            find,
-            {
-                paging: {
-                    limit: _limit,
-                    offset: _offset,
-                },
-                order: _order,
-            }
-        );
-        const totalInvitable = await this.countInvitableUsers(find);
+        const invitableUsers =
+            await this.userService.findAllWithRoleAndCountry(find, {
+                paging: { limit, offset: 0 },
+            });
+        const total = await this.countInvitableUsers(find);
         const totalPage: number = this.paginationService.totalPage(
-            totalInvitable,
-            _limit
+            total,
+            limit
         );
 
         return {
             data: invitableUsers.map(user => this.userService.mapShort(user)),
-            _pagination: { total: totalInvitable, totalPage },
+            _pagination: { total, totalPage },
         };
+    }
+
+    private async findInvitableCoMembers(
+        callerId: string,
+        excludedMemberIds: string[],
+        nameSearch: Record<string, any> | undefined,
+        paging: { limit: number; offset: number; order: any }
+    ) {
+        const coMemberIds = await this.getCoMemberIds(callerId);
+
+        if (coMemberIds.length === 0) {
+            return {
+                data: [],
+                _pagination: {
+                    total: 0,
+                    totalPage: this.paginationService.totalPage(
+                        0,
+                        paging.limit
+                    ),
+                },
+            };
+        }
+
+        const find: Record<string, any> = {
+            ...nameSearch,
+            id: { $in: coMemberIds, $nin: excludedMemberIds },
+        };
+        const invitableUsers =
+            await this.userService.findAllWithRoleAndCountry(find, {
+                paging: { limit: paging.limit, offset: paging.offset },
+                order: paging.order,
+            });
+        const total = await this.countInvitableUsers(find);
+        const totalPage: number = this.paginationService.totalPage(
+            total,
+            paging.limit
+        );
+
+        return {
+            data: invitableUsers.map(user =>
+                plainToInstance(WorkspaceInvitableCoMemberResponseDto, user)
+            ),
+            _pagination: { total, totalPage },
+        };
+    }
+
+    // Users who share at least one workspace with the caller — an active
+    // membership or ownership of a workspace the caller also belongs to
+    // (ownership itself creates an active membership row on workspace
+    // creation, but the owner-lookup is kept as a defensive belt-and-braces
+    // for any workspace missing that row).
+    private async getCoMemberIds(callerId: string): Promise<string[]> {
+        const [ownedWorkspaces, memberWorkspaceIds] = await Promise.all([
+            this.workSpaceService.getListByOwner(callerId),
+            this.workSpaceMemberService.getUserWorkspaces(callerId),
+        ]);
+        const sharedWorkspaceIds = Array.from(
+            new Set([
+                ...memberWorkspaceIds,
+                ...ownedWorkspaces.map(w => w.id),
+            ])
+        );
+
+        if (sharedWorkspaceIds.length === 0) {
+            return [];
+        }
+
+        const coMembers = await this.workSpaceMemberService.findAll(
+            { workspace: { $in: sharedWorkspaceIds }, isActive: true },
+            { populate: ['user'] }
+        );
+
+        const coMemberIds = coMembers
+            .map(member => (member as any).user.id)
+            .filter(id => id !== callerId);
+
+        return Array.from(new Set(coMemberIds));
     }
 
     private countInvitableUsers(find: Record<string, any>): Promise<number> {
