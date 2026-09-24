@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
@@ -12,6 +12,7 @@ import { HelperHashService } from 'src/common/helper/services/helper.hash.servic
 import { HelperStringService } from 'src/common/helper/services/helper.string.service';
 import { AuthLoginResponseDto } from 'src/modules/auth/dtos/response/auth.login.response.dto';
 import { ENUM_AUTH_LOGIN_FROM } from 'src/modules/auth/enums/auth.enum';
+import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import {
     IAuthJwtAccessTokenPayload,
     IAuthJwtRefreshTokenPayload,
@@ -57,6 +58,7 @@ export class AuthService implements IAuthService {
 
     // google
     private readonly googleClient: OAuth2Client;
+    private readonly googleClientId: string;
 
     constructor(
         private readonly helperHashService: HelperHashService,
@@ -130,8 +132,10 @@ export class AuthService implements IAuthService {
         );
 
         // google
+        this.googleClientId =
+            this.configService.get<string>('auth.google.clientId');
         this.googleClient = new OAuth2Client(
-            this.configService.get<string>('auth.google.clientId'),
+            this.googleClientId,
             this.configService.get<string>('auth.google.clientSecret')
         );
     }
@@ -391,12 +395,21 @@ export class AuthService implements IAuthService {
     ): Promise<IAuthSocialGooglePayload> {
         const login: LoginTicket = await this.googleClient.verifyIdToken({
             idToken: idToken,
+            audience: this.googleClientId,
         });
         const payload: TokenPayload = login.getPayload();
 
+        if (payload.email_verified !== true) {
+            throw new UnauthorizedException({
+                statusCode:
+                    ENUM_AUTH_STATUS_CODE_ERROR.SOCIAL_GOOGLE_EMAIL_NOT_VERIFIED,
+                message: 'auth.error.socialGoogleEmailNotVerified',
+            });
+        }
+
         return {
             email: payload.email,
-            emailVerified: true,
+            emailVerified: payload.email_verified,
             name: payload.name,
             photo: payload.picture,
         };
