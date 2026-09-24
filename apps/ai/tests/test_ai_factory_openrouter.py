@@ -71,3 +71,12 @@ def test_cache_flag_disabled_when_maxsize_is_zero(monkeypatch):
     monkeypatch.setattr(cv.AppVars, "GUARDRAIL_CACHE_MAXSIZE", 0)
     llm = build_chat_model("google/gemini-2.5-flash", temperature=0.7, cache=True)
     assert llm.cache is None
+
+
+# ── Task 16: bound the model call so a hung upstream can't hang the agent loop ──
+
+def test_chat_model_uses_configured_timeout(monkeypatch):
+    monkeypatch.setattr(cv.AppVars, "OPENROUTER_API_KEY", SecretStr("sk-test"))
+    monkeypatch.setattr(cv.AppVars, "CHAT_MODEL_TIMEOUT_SECONDS", 45.0)
+    llm = build_chat_model("google/gemini-2.5-flash", temperature=0.8)
+    assert llm.request_timeout == 45.0

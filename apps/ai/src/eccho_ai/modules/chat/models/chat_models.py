@@ -24,7 +24,7 @@ class ActionDataResponse(BaseModel):
 
 
 class ChatHistoryMessage(BaseModel):
-    role: Literal["user", "assistant", "system"] = Field(..., description="Who authored this turn.")
+    role: Literal["user", "assistant"] = Field(..., description="Who authored this turn.")
     content: str = Field(..., description="The message text.")
 
 
@@ -44,6 +44,7 @@ class ChatRequest(BaseModel):
     customer_id: Optional[str] = Field(None, description="The Customer record the sender resolves to (apps/api).")
     contact_point_id: Optional[str] = Field(None, description="The ContactPoint linking sender→Customer (apps/api).")
     trigger_message_id: Optional[str] = Field(default=None, description="apps/api message id that triggered this turn; attached to a scheduled followup so the UI can link back.")
+    max_tool_iterations: Optional[int] = Field(None, ge=1, le=50, description="Caps the agent's tool-call rounds this turn; bounds the LangGraph recursion_limit (see get_agent_config). Defaults to 10 when omitted.")
 
 
 class ChatResponse(BaseModel):

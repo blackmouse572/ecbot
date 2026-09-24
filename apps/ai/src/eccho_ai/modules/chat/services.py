@@ -137,10 +137,8 @@ async def get_agent_input(
     for turn in chat_request.history or []:
         if turn.role == "user":
             messages.append(HumanMessage(content=turn.content))
-        elif turn.role == "assistant":
-            messages.append(AIMessage(content=turn.content))
         else:
-            messages.append(SystemMessage(content=turn.content))
+            messages.append(AIMessage(content=turn.content))
 
     message = _build_rag_message(chat_request.message or "", retrieval)
     messages.append(HumanMessage(content=message))
@@ -164,10 +162,22 @@ def get_agent_context(
     )
 
 
+DEFAULT_MAX_TOOL_ITERATIONS = 10
+
+
 def get_agent_config(chat_request: ChatRequest, request: Request) -> RunnableConfig:
-    if not chat_request.conversation_id:
-        return {}
-    return {
-        "run_id": request.state.request_id,
-        "configurable": {"thread_id": chat_request.conversation_id},
-    }
+    """Build the per-request LangGraph run config.
+
+    `recursion_limit` bounds the agent loop regardless of `conversation_id`: the
+    compiled graph is `model -> tools -> model -> ... -> model -> END`, so each
+    tool-call round costs 2 supersteps (one "model" node run, one "tools" node
+    run) and the final answer costs 1 more "model" run with no tool call. For
+    `iterations` tool rounds that is `iterations * 2 + 1` supersteps — set as
+    the LangGraph `recursion_limit`, which counts supersteps, not tool calls.
+    """
+    iterations = chat_request.max_tool_iterations or DEFAULT_MAX_TOOL_ITERATIONS
+    config: RunnableConfig = {"recursion_limit": iterations * 2 + 1}
+    if chat_request.conversation_id:
+        config["run_id"] = request.state.request_id
+        config["configurable"] = {"thread_id": chat_request.conversation_id}
+    return config

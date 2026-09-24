@@ -39,6 +39,9 @@ class _AppVars(BaseSettings):
     FIRECRAWL_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    # Bounds a single chat-model call (the chatbot's own model, via build_chat_model)
+    # so a hung upstream can't hang the agent loop indefinitely.
+    CHAT_MODEL_TIMEOUT_SECONDS: float = 60.0
 
     # Postgres - required
     POSTGRES_URL: SecretStr

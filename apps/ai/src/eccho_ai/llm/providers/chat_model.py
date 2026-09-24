@@ -68,7 +68,7 @@ def build_chat_model(
         temperature=temperature,
         max_tokens=max_tokens,
         max_retries=2,
-        timeout=None,
+        timeout=AppVars.CHAT_MODEL_TIMEOUT_SECONDS,
         extra_body=extra_body,
         cache=response_cache,
     )

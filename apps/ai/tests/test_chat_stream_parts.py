@@ -109,3 +109,49 @@ async def test_open_text_run_is_closed_before_error_on_raise():
     assert seq.index("text-end") < seq.index("error")
     assert seq[-1] == "[DONE]"
     assert seq[-2] == "finish"
+
+
+@pytest.mark.asyncio
+async def test_stream_error_does_not_leak_exception_text():
+    """Task 16: the client-facing error part must be a fixed generic message,
+    never the raw exception text (which can contain internals, secrets, or a
+    stack-trace-derived string such as a GraphRecursionError detail)."""
+
+    async def fake_events():
+        if False:
+            yield  # pragma: no cover - makes this an async generator
+        raise RuntimeError("db password is hunter2, table users leaked")
+
+    frames = [f async for f in events_to_ui_parts(fake_events(), request_id="m1")]
+    error_frames = [
+        f for f in frames if f[len("data: "):].strip() != "[DONE]"
+        and json.loads(f[len("data: "):].strip()).get("type") == "error"
+    ]
+    assert len(error_frames) == 1
+    error_body = json.loads(error_frames[0][len("data: "):].strip())
+    assert "hunter2" not in error_body["errorText"]
+    assert "db password" not in error_body["errorText"]
+
+
+@pytest.mark.asyncio
+async def test_recursion_limit_error_yields_same_generic_message():
+    """GraphRecursionError (langgraph.errors, a RecursionError subclass) is what
+    the agent raises when it hits `recursion_limit` — it must surface through
+    the same generic error path as any other exception, not a stack trace."""
+    from langgraph.errors import GraphRecursionError
+
+    async def fake_events():
+        if False:
+            yield  # pragma: no cover - makes this an async generator
+        raise GraphRecursionError("Recursion limit of 21 reached without hitting a stop condition.")
+
+    frames = [f async for f in events_to_ui_parts(fake_events(), request_id="m1")]
+    seq = _types(frames)
+    assert "error" in seq
+    error_frame = next(
+        f for f in frames
+        if f[len("data: "):].strip() != "[DONE]"
+        and json.loads(f[len("data: "):].strip()).get("type") == "error"
+    )
+    error_body = json.loads(error_frame[len("data: "):].strip())
+    assert "Recursion limit" not in error_body["errorText"]
