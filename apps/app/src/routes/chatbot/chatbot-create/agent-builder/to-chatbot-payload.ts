@@ -5,8 +5,11 @@ import { CHATBOT_FORM_DEFAULTS } from "../../constants";
 /**
  * The full chatbot body for create and update. The update endpoint writes
  * every editable field (unsent ones become undefined), so the builder always
- * sends everything: builder-owned fields from the profile, the rest from
- * `base` (the existing chatbot) or the form defaults.
+ * sends everything: builder-owned fields (type, agentProfile,
+ * extraInstructions) from the profile, the rest from `base` (the existing
+ * chatbot) or the form defaults. Name, languages and the welcome message are
+ * derived from the profile only when `base` has none, so settings edited
+ * elsewhere survive reopening the builder.
  */
 export function toChatbotPayload(
   profile: AgentProfile,
@@ -27,11 +30,11 @@ export function toChatbotPayload(
     guardrailEscalateOnBlock: CHATBOT_FORM_DEFAULTS.guardrailEscalateOnBlock,
     followupRules: "",
     ...base,
-    name: profile.agentName.trim() || profile.businessName.trim() || "Agent",
+    name: base.name ?? (profile.agentName.trim() || profile.businessName.trim() || "Agent"),
     type: profile.businessType as ChatbotCreateRequestDto["type"],
-    primaryLanguage: language,
+    primaryLanguage: base.primaryLanguage ?? language,
     deferedLanguage: base.deferedLanguage ?? language,
-    welcomeMessage: profile.greeting,
+    welcomeMessage: profile.greeting.trim() ? profile.greeting : (base.welcomeMessage ?? ""),
     agentProfile: profile as unknown as Record<string, unknown>,
     extraInstructions,
   } as ChatbotCreateRequestDto;
