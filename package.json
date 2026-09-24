@@ -61,7 +61,8 @@
       "multer": "^2.3.0",
       "@nestjs/terminus>mongoose": "-",
       "@nestjs/terminus>@nestjs/mongoose": "-",
-      "gaxios>uuid": "^11.1.1"
+      "gaxios>uuid": "^11.1.1",
+      "ajv@>=8.0.0 <8.18.0": "^8.18.0"
     }
   },
   "dependencies": {
