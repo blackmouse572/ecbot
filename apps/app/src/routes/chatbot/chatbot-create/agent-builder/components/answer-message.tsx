@@ -19,7 +19,7 @@ export function AnswerMessage({ question, profile, onEdit }: { question: Questio
   return (
     <Message from="user">
       <MessageContent
-        render={<button type="button" onClick={onEdit} title={t("agentBuilder.ui.editAnswer")} className="group text-left" />}
+        render={<button type="button" onClick={onEdit} title={t("actions.edit")} className="group text-left" />}
       >
         <span className="flex items-center gap-2">
           {summary}

@@ -940,7 +940,6 @@
       "skipped": "Skipped",
       "yes": "Yes",
       "no": "No",
-      "editAnswer": "Edit answer",
       "draftCreated": "Your agent is saved as a draft. Try it in the chat, then keep going.",
       "saveFailed": "Could not save your agent. Your answers are kept, and we will retry on the next answer.",
       "done": "All set. Activate your agent when you are happy with it.",

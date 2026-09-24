@@ -104,7 +104,7 @@ describe("AgentBuilder", () => {
     renderBuilder();
     await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
     await answerCurrent();
-    await userEvent.click(screen.getByTitle("agentBuilder.ui.editAnswer"));
+    await userEvent.click(screen.getByTitle("actions.edit"));
     expect(screen.getByRole("group", { name: "agentBuilder.questions.businessType.title" })).toBeInTheDocument();
   });
 
