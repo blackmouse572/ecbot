@@ -71,6 +71,13 @@ describe("Questionnaire", () => {
     expect(screen.getByTestId("value").textContent).toBe('["a","c"]');
   });
 
+  it("picks a choice with number keys in single mode", async () => {
+    render(<Harness />);
+    screen.getAllByRole("radio")[0]!.focus();
+    await userEvent.keyboard("3");
+    expect(screen.getByTestId("value").textContent).toBe('"c"');
+  });
+
   it("does not render or validate a disabled item", async () => {
     const onSubmit = vi.fn();
     render(<Harness required disabled onSubmit={onSubmit} />);
