@@ -1,4 +1,5 @@
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
+import { ENUM_FILE_MIME_IMAGE } from '@app/common/file/enums/file.enum';
 
 // Global setup (test/modules/account/setup.ts) stubs UserService with an
 // empty class for specs that only need it as a DI placeholder. This spec
@@ -29,8 +30,6 @@ describe('UserService - exact email lookups (Task 12)', () => {
                     return 'user_';
                 case 'user.usernamePattern':
                     return /^[a-z0-9_]+$/;
-                case 'user.uploadPath':
-                    return '/uploads';
                 default:
                     return undefined;
             }
@@ -139,6 +138,50 @@ describe('UserService - exact email lookups (Task 12)', () => {
                 { email: 'john.smith@example.com' },
                 {}
             );
+        });
+    });
+
+    // Task 14: createRandomFilenamePhoto used to interpolate into
+    // `user.uploadPath` ("/users/{user}"), an unsubstituted `{user}`
+    // template literal, and derived the extension via a raw
+    // `mime.split('/')[1]` instead of a validated mime→extension map.
+    describe('createRandomFilenamePhoto', () => {
+        it('builds a key under user/{userId}/ with a random uuid filename', () => {
+            const key = service.createRandomFilenamePhoto('user-1', {
+                mime: ENUM_FILE_MIME_IMAGE.PNG,
+                size: 1024,
+            });
+
+            expect(key).toMatch(
+                /^user\/user-1\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$/
+            );
+        });
+
+        it('derives the extension from the validated mime, not a raw split', () => {
+            const jpegKey = service.createRandomFilenamePhoto('user-1', {
+                mime: ENUM_FILE_MIME_IMAGE.JPEG,
+                size: 1024,
+            });
+            const jpgKey = service.createRandomFilenamePhoto('user-1', {
+                mime: ENUM_FILE_MIME_IMAGE.JPG,
+                size: 1024,
+            });
+
+            expect(jpegKey.endsWith('.jpg')).toBe(true);
+            expect(jpgKey.endsWith('.jpg')).toBe(true);
+        });
+
+        it('generates a different key on every call (random, not Date.now())', () => {
+            const keyA = service.createRandomFilenamePhoto('user-1', {
+                mime: ENUM_FILE_MIME_IMAGE.PNG,
+                size: 1024,
+            });
+            const keyB = service.createRandomFilenamePhoto('user-1', {
+                mime: ENUM_FILE_MIME_IMAGE.PNG,
+                size: 1024,
+            });
+
+            expect(keyA).not.toEqual(keyB);
         });
     });
 });

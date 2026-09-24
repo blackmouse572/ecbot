@@ -60,3 +60,12 @@ export const EXTENSION_BY_MIME: Record<ENUM_FILE_MIME_DOCUMENT, string> = {
     [ENUM_FILE_MIME_DOCUMENT.HTML]: 'html',
     [ENUM_FILE_MIME_DOCUMENT.MD]: 'md',
 };
+
+// Mime → file-extension mapping for avatar upload storage keys. Used to
+// derive the stored extension from the FileTypePipe-validated mimetype
+// instead of the client-controlled `originalname`.
+export const EXTENSION_BY_MIME_IMAGE: Record<ENUM_FILE_MIME_IMAGE, string> = {
+    [ENUM_FILE_MIME_IMAGE.JPG]: 'jpg',
+    [ENUM_FILE_MIME_IMAGE.JPEG]: 'jpg',
+    [ENUM_FILE_MIME_IMAGE.PNG]: 'png',
+};

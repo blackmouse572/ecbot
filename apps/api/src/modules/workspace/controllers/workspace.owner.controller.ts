@@ -18,6 +18,11 @@ import {
 } from '@app/modules/auth/decorators/auth.jwt.decorator';
 import { IAuthJwtAccessTokenPayload } from '@app/modules/auth/interfaces/auth.interface';
 import { AwsS3Service } from '@app/modules/aws/services/aws.s3.service';
+import {
+    ENUM_FILE_MIME_IMAGE,
+    EXTENSION_BY_MIME_IMAGE,
+} from '@app/common/file/enums/file.enum';
+import { FileTypePipe } from '@app/common/file/pipes/file.type.pipe';
 import { EmailService } from '@app/modules/email/services/email.service';
 import { NotificationService } from '@app/modules/notification/services/notification.service';
 import {
@@ -45,6 +50,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { randomUUID } from 'crypto';
 import * as multer from 'multer';
 import { WORKSPACE_DEFAULT_AVAILABLE_SEARCH } from '../constants/workspace.constant';
 import {
@@ -156,7 +162,13 @@ export class WorkspaceController {
         image: Express.Multer.File,
         userId: string
     ): Promise<string> {
-        const key = `workspace/avatar/${userId}_${Date.now()}_${image.originalname}`;
+        // Key derives from the FileTypePipe-validated mimetype, never the
+        // client-controlled `originalname`.
+        const extension =
+            EXTENSION_BY_MIME_IMAGE[
+                image.mimetype as ENUM_FILE_MIME_IMAGE
+            ] ?? 'jpg';
+        const key = `workspace/${userId}/${randomUUID()}.${extension}`;
         const uploaded = await this.awsS3Service.putItem({
             key,
             file: image.buffer,
@@ -235,13 +247,26 @@ export class WorkspaceController {
     @AuthJwtAccessProtected()
     @Post('/create')
     @UseInterceptors(
-        FileInterceptor('image', { storage: multer.memoryStorage() })
+        FileInterceptor('image', {
+            storage: multer.memoryStorage(),
+            limits: {
+                fileSize: 2 * 1024 * 1024,
+                files: 1,
+            },
+        })
     )
     @ApiConsumes('multipart/form-data')
     async createWorkSpace(
         @AuthJwtPayload('user') userId: string,
         @Body() body: WorkSpaceCreateRequestDto,
-        @UploadedFile() image?: Express.Multer.File
+        @UploadedFile(
+            new FileTypePipe([
+                ENUM_FILE_MIME_IMAGE.JPG,
+                ENUM_FILE_MIME_IMAGE.JPEG,
+                ENUM_FILE_MIME_IMAGE.PNG,
+            ])
+        )
+        image?: Express.Multer.File
     ): Promise<IResponse<WorkSpaceGetResponseDto>> {
         const user = await this.userService.findOneById(userId);
         if (!user) {
@@ -289,14 +314,27 @@ export class WorkspaceController {
     @AuthJwtAccessProtected()
     @Put('/:workspace/update')
     @UseInterceptors(
-        FileInterceptor('image', { storage: multer.memoryStorage() })
+        FileInterceptor('image', {
+            storage: multer.memoryStorage(),
+            limits: {
+                fileSize: 2 * 1024 * 1024,
+                files: 1,
+            },
+        })
     )
     @ApiConsumes('multipart/form-data')
     async updateWorkSpace(
         @AuthJwtPayload('user') userId: string,
         @Body() body: WorkSpaceUpdateRequestDto,
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @UploadedFile() image?: Express.Multer.File
+        @UploadedFile(
+            new FileTypePipe([
+                ENUM_FILE_MIME_IMAGE.JPG,
+                ENUM_FILE_MIME_IMAGE.JPEG,
+                ENUM_FILE_MIME_IMAGE.PNG,
+            ])
+        )
+        image?: Express.Multer.File
     ) {
         if (!workspace) {
             throw new NotFoundException({

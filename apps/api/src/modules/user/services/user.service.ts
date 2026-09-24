@@ -4,6 +4,11 @@ import { EntityManager, FilterQuery, InferEntity } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
+import { randomUUID } from 'crypto';
+import {
+    ENUM_FILE_MIME_IMAGE,
+    EXTENSION_BY_MIME_IMAGE,
+} from 'src/common/file/enums/file.enum';
 import {
     IDatabaseCreateOptions,
     IDatabaseDeleteOptions,
@@ -41,7 +46,6 @@ import { UserRepository } from 'src/modules/user/repository/repositories/user.re
 export class UserService {
     private readonly usernamePrefix: string;
     private readonly usernamePattern: RegExp;
-    private readonly uploadPath: string;
 
     constructor(
         private readonly userRepository: UserRepository,
@@ -57,7 +61,6 @@ export class UserService {
         this.usernamePattern = this.configService.get<RegExp>(
             'user.usernamePattern'
         );
-        this.uploadPath = this.configService.get<string>('user.uploadPath');
     }
 
     async findAll(
@@ -707,10 +710,10 @@ export class UserService {
     }
     createRandomFilenamePhoto(
         userId: string,
-        options: { mime: string; size: number }
+        options: { mime: ENUM_FILE_MIME_IMAGE; size: number }
     ): string {
-        const extension = options.mime.split('/')[1] || 'jpg';
-        return `${this.uploadPath}/${userId}_${Date.now()}.${extension}`;
+        const extension = EXTENSION_BY_MIME_IMAGE[options.mime] ?? 'jpg';
+        return `user/${userId}/${randomUUID()}.${extension}`;
     }
     async findOneActiveById(
         id: string,
