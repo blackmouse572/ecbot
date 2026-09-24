@@ -37,6 +37,9 @@ export class AgentBuilderService {
 
             const answers = await this.aiDecision.systemOne(state, buildSuggestQuestions());
             const suggestion = readSuggestAnswers(answers);
+            // apps/ai answers `{}` on any failure: never cache that for 24h.
+            const empty = !answers || Object.keys(answers).length === 0;
+            if (empty || suggestion.businessType === null) return suggestion;
             await this.cache.set(key, suggestion, this.config.get<number>('agentBuilder.suggestTtlMs'));
             return suggestion;
         } catch (error) {
