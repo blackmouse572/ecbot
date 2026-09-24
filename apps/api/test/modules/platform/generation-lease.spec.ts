@@ -19,7 +19,7 @@ function fakeQueue() {
             return store.has(key) ? String(store.get(key)) : null;
         },
     };
-    return { client: Promise.resolve(client) } as any;
+    return { getBackend: () => ({ client: Promise.resolve(client) }) } as any;
 }
 
 describe('GenerationLeaseService (candidate 2)', () => {
