@@ -29,6 +29,8 @@ import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
 import { UserService } from 'src/modules/user/services/user.service';
 
 import { VerificationService } from 'src/modules/verification/services/verification.service';
+import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
+import { VerificationEntity } from 'src/modules/verification/repository/entity/verification.entity';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 
 @ApiTags('modules.public.verification')
@@ -55,15 +57,16 @@ export class VerificationEmailController {
         @Body(new RequestEmailPipe())
         { email, id }: VerificationResendEmailRequestDto
     ): Promise<void> {
-        const verification =
-            await this.verificationService.findOneActiveLatestEmailByUser(
-                id,
-                email
-            );
+        const [existing, user] = await Promise.all([
+            this.verificationService.findOneActiveLatestEmailByUser(id, email),
+            this.userService.findOneById(id),
+        ]);
 
-        const user = await this.userService.findOneById(id);
-
-        if (!verification) {
+        const canIssue =
+            !!user &&
+            user.email?.toLowerCase() === email.toLowerCase() &&
+            user.verification?.email !== true;
+        if (!existing && !canIssue) {
             throw new ConflictException({
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'verification.error.notFound',
@@ -76,6 +79,10 @@ export class VerificationEmailController {
                 message: 'user.error.notFound',
             });
         }
+
+        // An expired or attempt-locked code leaves no active row: issue a
+        // fresh one so an unverified user is never stuck (login refuses them).
+        const verification = existing ?? (await this.reissueEmail(user));
 
         await this.cloudTasksClient
             .enqueue(
@@ -98,6 +105,32 @@ export class VerificationEmailController {
                     `Email queue failed after resend-verification-email for user [${user.id}] job [${ENUM_SEND_EMAIL_PROCESS.VERIFICATION}] (non-fatal): ${(err as Error)?.message}`
                 );
             });
+    }
+
+    private async reissueEmail(user: UserEntity): Promise<VerificationEntity> {
+        const session = this.em.fork();
+        await session.begin();
+
+        try {
+            await this.verificationService.inactiveEmailManyByUser(user.id, {
+                em: session,
+            });
+            const verification =
+                await this.verificationService.createEmailByUser(user, {
+                    em: session,
+                });
+            await session.commit();
+
+            return verification;
+        } catch (err: unknown) {
+            await session.rollback();
+
+            throw new InternalServerErrorException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
+                message: 'http.serverError.internalServerError',
+                _error: err,
+            });
+        }
     }
 
     @VerificationEmailVerifyEmailDoc()

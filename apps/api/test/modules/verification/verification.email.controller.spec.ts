@@ -16,6 +16,8 @@ describe('VerificationEmailController — email dispatch', () => {
     const validateOtp = jest.fn();
     const verify = jest.fn();
     const incrementOtpAttempt = jest.fn();
+    const inactiveEmailManyByUser = jest.fn();
+    const createEmailByUser = jest.fn();
     const updateVerificationEmail = jest.fn();
     const begin = jest.fn();
     const commit = jest.fn();
@@ -29,6 +31,8 @@ describe('VerificationEmailController — email dispatch', () => {
         validateOtp.mockReset();
         verify.mockReset();
         incrementOtpAttempt.mockReset();
+        inactiveEmailManyByUser.mockReset();
+        createEmailByUser.mockReset();
         updateVerificationEmail.mockReset();
         begin.mockReset();
         commit.mockReset();
@@ -46,6 +50,8 @@ describe('VerificationEmailController — email dispatch', () => {
                         validateOtp,
                         verify,
                         incrementOtpAttempt,
+                        inactiveEmailManyByUser,
+                        createEmailByUser,
                     },
                 },
                 {
@@ -108,6 +114,134 @@ describe('VerificationEmailController — email dispatch', () => {
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'verification.error.notFound',
             },
+        });
+    });
+
+    describe('resendVerificationEmail: no active row', () => {
+        const unverifiedUser = {
+            id: 'user-1',
+            email: 'a@b.com',
+            name: 'A',
+            verification: { email: false },
+        };
+        const fresh = {
+            otp: '777777',
+            expiredDate: new Date('2026-06-01T00:05:00.000Z'),
+            reference: 'ref-fresh-1',
+        };
+
+        const expectFreshCodeIssued = () => {
+            expect(inactiveEmailManyByUser).toHaveBeenCalledWith('user-1', {
+                em: expect.objectContaining({ begin }),
+            });
+            expect(createEmailByUser).toHaveBeenCalledWith(unverifiedUser, {
+                em: expect.objectContaining({ begin }),
+            });
+            expect(commit).toHaveBeenCalledTimes(1);
+            expect(enqueue).toHaveBeenCalledWith(
+                'email',
+                ENUM_SEND_EMAIL_PROCESS.VERIFICATION,
+                {
+                    send: { email: 'a@b.com', name: 'A' },
+                    data: {
+                        otp: '777777',
+                        expiredAt: fresh.expiredDate,
+                        reference: 'ref-fresh-1',
+                    },
+                },
+                {
+                    taskName: expect.stringMatching(
+                        /^VERIFICATION-user-1-VE\d+$/
+                    ),
+                }
+            );
+        };
+
+        it('resend after expiry issues a fresh code', async () => {
+            // the 5-minute row expired, so the active+unexpired lookup is empty
+            findOneActiveLatestEmailByUser.mockResolvedValue(null);
+            findOneById.mockResolvedValue(unverifiedUser);
+            createEmailByUser.mockResolvedValue(fresh);
+
+            await controller.resendVerificationEmail({
+                email: 'a@b.com',
+                id: 'user-1',
+            } as any);
+
+            expectFreshCodeIssued();
+        });
+
+        it('resend after lock issues a fresh code', async () => {
+            // the 5th wrong OTP set isActive=false on the row
+            findOneActiveLatestEmailByUser.mockResolvedValue(null);
+            findOneById.mockResolvedValue(unverifiedUser);
+            createEmailByUser.mockResolvedValue(fresh);
+
+            await controller.resendVerificationEmail({
+                email: 'A@B.com',
+                id: 'user-1',
+            } as any);
+
+            expectFreshCodeIssued();
+        });
+
+        it('resend for an already-verified user does not issue a code', async () => {
+            findOneActiveLatestEmailByUser.mockResolvedValue(null);
+            findOneById.mockResolvedValue({
+                ...unverifiedUser,
+                verification: { email: true },
+            });
+
+            await expect(
+                controller.resendVerificationEmail({
+                    email: 'a@b.com',
+                    id: 'user-1',
+                } as any)
+            ).rejects.toMatchObject({
+                response: {
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
+                    message: 'verification.error.notFound',
+                },
+            });
+            expect(createEmailByUser).not.toHaveBeenCalled();
+            expect(enqueue).not.toHaveBeenCalled();
+        });
+
+        it('resend for an email that is not the user\'s does not issue a code', async () => {
+            findOneActiveLatestEmailByUser.mockResolvedValue(null);
+            findOneById.mockResolvedValue(unverifiedUser);
+
+            await expect(
+                controller.resendVerificationEmail({
+                    email: 'victim@b.com',
+                    id: 'user-1',
+                } as any)
+            ).rejects.toMatchObject({
+                response: {
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
+                    message: 'verification.error.notFound',
+                },
+            });
+            expect(createEmailByUser).not.toHaveBeenCalled();
+            expect(enqueue).not.toHaveBeenCalled();
+        });
+
+        it('resend for an unknown user answers the same not-found as a missing row', async () => {
+            findOneActiveLatestEmailByUser.mockResolvedValue(null);
+            findOneById.mockResolvedValue(null);
+
+            await expect(
+                controller.resendVerificationEmail({
+                    email: 'a@b.com',
+                    id: 'nobody',
+                } as any)
+            ).rejects.toMatchObject({
+                response: {
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
+                    message: 'verification.error.notFound',
+                },
+            });
+            expect(createEmailByUser).not.toHaveBeenCalled();
         });
     });
 
