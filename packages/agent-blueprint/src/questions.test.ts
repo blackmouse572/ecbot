@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BUSINESS_TYPES } from "./business-types";
 import { createProfile } from "./profile";
 import { allTranslationKeys, buildQuestionGroups, readAnswer, writeAnswer } from "./questions";
 
@@ -59,5 +60,21 @@ describe("allTranslationKeys", () => {
     expect(keys).toContain("agentBuilder.facts.menu_highlights.placeholder");
     expect(keys).toContain("agentBuilder.types.personal_crm");
     expect(keys).toContain("agentBuilder.groups.interaction");
+  });
+
+  it("covers every key that buildQuestionGroups can emit, for every type and language", () => {
+    const known = new Set(allTranslationKeys());
+    const missing = new Set<string>();
+    for (const type of BUSINESS_TYPES) {
+      for (const lang of ["vi", "en"]) {
+        for (const group of buildQuestionGroups(createProfile(type.id, lang))) {
+          const keys = [group.titleKey, ...group.questions.flatMap((q) => [
+            q.titleKey, q.descriptionKey, q.placeholderKey, ...(q.choices ?? []).map((c) => c.labelKey),
+          ])];
+          keys.filter((k): k is string => !!k && !known.has(k)).forEach((k) => missing.add(k));
+        }
+      }
+    }
+    expect([...missing]).toEqual([]);
   });
 });
