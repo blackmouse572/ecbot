@@ -438,6 +438,9 @@ importers:
       '@medusajs/ui':
         specifier: 4.1.6
         version: 4.1.6(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
+      '@repo/agent-blueprint':
+        specifier: workspace:*
+        version: link:../../packages/agent-blueprint
       '@tabler/icons-react':
         specifier: ^3.46.0
         version: 3.46.0(react@19.1.0)

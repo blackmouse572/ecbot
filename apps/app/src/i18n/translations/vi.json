@@ -953,6 +953,387 @@
       "clone": "Sao chép"
     }
   },
+  "agentBuilder": {
+    "ui": {
+      "title": "Tạo agent",
+      "startMessage": "Chào bạn! Hãy mô tả việc kinh doanh của bạn trong một câu, hoặc chọn một mẫu có sẵn.",
+      "startPlaceholder": "Ví dụ: Mình có tiệm nail ở Đà Nẵng. Khách hay hỏi giá và muốn đặt lịch.",
+      "templates": "Hoặc bắt đầu từ mẫu",
+      "suggesting": "Đang thiết lập agent...",
+      "suggestFailed": "Mình chưa tự nhận diện được. Mình cùng trả lời vài câu hỏi nhé.",
+      "suggested": "Mình đã điền sẵn những gì có thể. Bạn kiểm tra giúp các mục cần xem lại nhé.",
+      "auto": "Tự động điền",
+      "check": "Vui lòng kiểm tra",
+      "required": "Vui lòng trả lời câu hỏi này.",
+      "skipped": "Đã bỏ qua",
+      "yes": "Có",
+      "no": "Không",
+      "editAnswer": "Sửa câu trả lời",
+      "draftCreated": "Agent đã được lưu nháp. Hãy thử trò chuyện rồi tiếp tục nhé.",
+      "saveFailed": "Chưa lưu được agent. Câu trả lời vẫn được giữ và sẽ thử lại ở câu tiếp theo.",
+      "done": "Đã xong. Hãy kích hoạt agent khi bạn thấy hài lòng.",
+      "finish": "Kích hoạt agent",
+      "finished": "Agent đã được kích hoạt. Bạn có thể sửa bất kỳ câu trả lời nào ở trên.",
+      "tryAgent": "Thử agent",
+      "chatTab": "Trò chuyện",
+      "promptTab": "Nội dung hướng dẫn",
+      "testLocked": "Agent sẽ xuất hiện ở đây sau bước Quy tắc.",
+      "progress": "Câu {{current}} / {{total}}",
+      "extraInstructions": "Hướng dẫn bổ sung",
+      "extraInstructionsHint": "Được thêm vào cuối phần hướng dẫn cho agent. Để trống nếu các câu trả lời đã đầy đủ.",
+      "editWithBuilder": "Chỉnh sửa bằng trình tạo"
+    },
+    "groups": {
+      "identity": "Về doanh nghiệp",
+      "essence": "Tính cách",
+      "facts": "Thông tin kinh doanh",
+      "process": "Quy trình",
+      "rules": "Quy tắc",
+      "interaction": "Cách trò chuyện"
+    },
+    "questions": {
+      "businessType": {
+        "title": "Agent này dành cho loại hình kinh doanh nào?"
+      },
+      "businessName": {
+        "title": "Tên doanh nghiệp của bạn là gì?",
+        "placeholder": "Lotus Nail Spa"
+      },
+      "ownerName": { "title": "Trợ lý nên gọi bạn là gì?" },
+      "agentName": {
+        "title": "Bạn muốn đặt tên agent là gì?",
+        "placeholder": "Linh"
+      },
+      "channels": { "title": "Khách hàng nhắn tin cho bạn ở đâu?" },
+      "goals": {
+        "title": "Agent của bạn cần làm những việc gì?",
+        "description": "Chọn tất cả các mục phù hợp."
+      },
+      "greeting": {
+        "title": "Agent nên chào như thế nào? (không bắt buộc)",
+        "placeholder": "Chào bạn! Mình là Linh từ Lotus Nail Spa. Mình có thể giúp gì cho bạn?"
+      },
+      "difference": {
+        "title": "Điều gì làm bạn khác biệt? (không bắt buộc)",
+        "placeholder": "Mẫu vẽ tay, 10 năm kinh nghiệm, có chỗ đậu xe miễn phí"
+      },
+      "personality": {
+        "title": "Những từ nào mô tả thương hiệu của bạn?",
+        "description": "Chọn tối đa hai."
+      },
+      "formality": { "title": "Agent nên trang trọng đến mức nào?" },
+      "collect": { "title": "Agent cần thu thập thông tin gì từ khách?" },
+      "handoffWhen": {
+        "title": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn?"
+      },
+      "rules": { "title": "Agent tuyệt đối không được làm gì?" },
+      "unsure": { "title": "Khi không biết câu trả lời, agent nên làm gì?" },
+      "replyLength": { "title": "Câu trả lời nên dài bao nhiêu?" },
+      "emoji": { "title": "Agent có dùng emoji không?" },
+      "addressStyle": { "title": "Agent nên xưng hô với khách như thế nào?" },
+      "followUpQuestions": {
+        "title": "Agent có nên hỏi thêm để tiếp tục cuộc trò chuyện không?"
+      },
+      "afterHours": { "title": "Ngoài giờ làm việc, agent nên làm gì?" }
+    },
+    "types": {
+      "restaurant": "Nhà hàng & quán cà phê",
+      "beauty": "Salon làm đẹp & spa",
+      "healthcare": "Phòng khám & nha khoa",
+      "fashion": "Thời trang & phụ kiện",
+      "cosmetics": "Mỹ phẩm & chăm sóc da",
+      "ecommerce": "Cửa hàng online",
+      "real_estate": "Bất động sản",
+      "education": "Giáo dục & khóa học",
+      "hotel": "Khách sạn & homestay",
+      "travel": "Du lịch & tour",
+      "fitness": "Gym & thể hình",
+      "automotive": "Ô tô & xe máy",
+      "finance": "Bảo hiểm & tài chính",
+      "home_services": "Dịch vụ tại nhà & nội thất",
+      "studio_events": "Studio ảnh & sự kiện",
+      "health_foods": "Thực phẩm chức năng",
+      "personal_scheduling": "Trợ lý lịch hẹn",
+      "personal_email": "Trợ lý email",
+      "personal_tasks": "Công việc & nhắc nhở",
+      "personal_research": "Trợ lý nghiên cứu",
+      "personal_crm": "CRM cá nhân"
+    },
+    "goals": {
+      "answer_questions": "Trả lời câu hỏi về sản phẩm và giá",
+      "recommend": "Tư vấn sản phẩm hoặc dịch vụ",
+      "take_orders": "Nhận đơn hàng",
+      "book_appointments": "Đặt lịch hẹn",
+      "reservations": "Nhận đặt bàn, đặt phòng",
+      "capture_leads": "Thu thập thông tin liên hệ",
+      "qualify_leads": "Sàng lọc khách tiềm năng",
+      "order_status": "Kiểm tra tình trạng đơn hàng",
+      "after_sales": "Hỗ trợ sau bán hàng",
+      "promotions": "Giới thiệu khuyến mãi",
+      "manage_schedule": "Quản lý lịch của tôi",
+      "triage_email": "Phân loại và soạn email",
+      "track_tasks": "Theo dõi công việc và nhắc nhở",
+      "research": "Tìm hiểu thông tin giúp tôi",
+      "log_contacts": "Ghi lại liên hệ và lịch theo dõi"
+    },
+    "rules": {
+      "no_invented_prices": "Không tự đoán giá hoặc tồn kho",
+      "no_discount_promises": "Không hứa giảm giá ngoài chính sách",
+      "no_medical_advice": "Không tư vấn y khoa",
+      "no_financial_advice": "Không tư vấn tài chính, pháp lý cá nhân",
+      "no_competitors": "Không nhắc đến đối thủ",
+      "no_personal_data_requests": "Chỉ hỏi thông tin thật sự cần",
+      "no_guarantees": "Không cam kết kết quả",
+      "no_health_claims": "Không nói sản phẩm chữa được bệnh",
+      "confirm_before_acting": "Hỏi tôi trước khi gửi, đặt lịch hoặc xóa"
+    },
+    "unsure": {
+      "handoff": "Báo sẽ kiểm tra rồi chuyển cho tôi",
+      "collect_contact": "Xin số điện thoại hoặc email",
+      "say_unknown": "Nói chưa rõ và gợi ý bước tiếp theo"
+    },
+    "handoffWhen": {
+      "asks_for_human": "Khách muốn nói chuyện với người thật",
+      "upset": "Khách không hài lòng",
+      "unsure": "Agent không chắc câu trả lời",
+      "large_order": "Đơn hàng lớn hoặc bất thường",
+      "complaint": "Có khiếu nại"
+    },
+    "collect": {
+      "name": "Họ tên",
+      "phone": "Số điện thoại",
+      "email": "Email",
+      "address": "Địa chỉ giao hàng",
+      "date_time": "Ngày và giờ",
+      "party_size": "Số người",
+      "budget": "Ngân sách",
+      "product_interest": "Sản phẩm hoặc dịch vụ quan tâm",
+      "notes": "Yêu cầu đặc biệt"
+    },
+    "personality": {
+      "warm": "Ấm áp",
+      "expert": "Chuyên nghiệp",
+      "playful": "Vui vẻ",
+      "premium": "Sang trọng",
+      "energetic": "Năng động",
+      "calm": "Điềm tĩnh"
+    },
+    "formality": {
+      "casual": "Thân mật",
+      "balanced": "Vừa phải",
+      "formal": "Trang trọng"
+    },
+    "replyLength": {
+      "short": "Ngắn (1 đến 2 câu)",
+      "medium": "Vừa (một đoạn ngắn)",
+      "detailed": "Chi tiết khi cần"
+    },
+    "addressStyle": {
+      "em_anhchi": "Em / Anh Chị",
+      "minh_ban": "Mình / Bạn",
+      "shop_ban": "Shop / Bạn",
+      "toi_quykhach": "Tôi / Quý khách"
+    },
+    "afterHours": {
+      "reply_normally": "Trả lời bình thường",
+      "share_hours": "Trả lời và báo giờ mở cửa",
+      "promise_callback": "Hẹn liên hệ lại trong giờ làm việc"
+    },
+    "channels": {
+      "messenger": "Facebook Messenger",
+      "instagram": "Instagram",
+      "zalo": "Zalo OA",
+      "tiktok": "TikTok Shop",
+      "shopee": "Shopee",
+      "website": "Chat trên website"
+    },
+    "facts": {
+      "opening_hours": {
+        "title": "Giờ mở cửa của bạn là khi nào?",
+        "placeholder": "Thứ 2 đến Chủ nhật, 9:00 đến 21:00"
+      },
+      "address": {
+        "title": "Địa chỉ và chi nhánh của bạn ở đâu?",
+        "placeholder": "12 Bạch Đằng, Hải Châu, Đà Nẵng"
+      },
+      "service_area": {
+        "title": "Bạn phục vụ khu vực nào?",
+        "placeholder": "Trong nội thành Đà Nẵng"
+      },
+      "delivery": {
+        "title": "Bạn có giao hàng không? Giao như thế nào?",
+        "placeholder": "Qua Grab và ShopeeFood trong bán kính 5 km"
+      },
+      "shipping_fee": {
+        "title": "Phí và thời gian giao hàng thế nào?",
+        "placeholder": "30k toàn quốc, miễn phí đơn từ 500k, 2 đến 4 ngày"
+      },
+      "payment_methods": {
+        "title": "Khách có thể thanh toán bằng cách nào?",
+        "placeholder": "Tiền mặt, chuyển khoản, MoMo"
+      },
+      "return_policy": {
+        "title": "Chính sách đổi trả của bạn là gì?",
+        "placeholder": "Đổi trong 7 ngày kèm hóa đơn"
+      },
+      "warranty": {
+        "title": "Chính sách bảo hành thế nào?",
+        "placeholder": "Bảo hành 12 tháng linh kiện và công"
+      },
+      "menu_highlights": {
+        "title": "Món nổi bật và giá của bạn là gì?",
+        "placeholder": "Phở bò 55k, chả giò 35k"
+      },
+      "reservation_policy": {
+        "title": "Việc đặt bàn diễn ra như thế nào?",
+        "placeholder": "Đặt trước 2 tiếng, giữ bàn 15 phút"
+      },
+      "services_prices": {
+        "title": "Bạn có những dịch vụ nào và giá bao nhiêu?",
+        "placeholder": "Sơn gel 150k, chăm sóc chân 120k"
+      },
+      "deposit_policy": {
+        "title": "Bạn có yêu cầu đặt cọc không? Nếu khách hủy thì sao?",
+        "placeholder": "Cọc 30%, hủy miễn phí trước 24 giờ"
+      },
+      "doctors_specialties": {
+        "title": "Bạn có những bác sĩ và chuyên khoa nào?",
+        "placeholder": "BS. An chỉnh nha; BS. Bình cấy ghép implant"
+      },
+      "insurance_accepted": {
+        "title": "Bạn chấp nhận những loại bảo hiểm nào?",
+        "placeholder": "Bảo Việt, PVI"
+      },
+      "size_guide": {
+        "title": "Khách nên chọn size như thế nào?",
+        "placeholder": "S dưới 50 kg, M 50 đến 60 kg, L trên 60 kg"
+      },
+      "stock_updates": {
+        "title": "Làm sao agent biết hàng nào còn?",
+        "placeholder": "Hỏi nhân viên; nhập hàng mỗi thứ 2"
+      },
+      "skin_types": {
+        "title": "Sản phẩm nào hợp với loại da nào?",
+        "placeholder": "Da dầu: sữa rửa mặt dạng gel; da khô: dạng kem"
+      },
+      "authenticity": {
+        "title": "Bạn chứng minh hàng chính hãng như thế nào?",
+        "placeholder": "Nhập khẩu Hàn Quốc, có hóa đơn"
+      },
+      "projects": {
+        "title": "Bạn đang có dự án hoặc sản phẩm nào?",
+        "placeholder": "Căn hộ Sun Riverside, 2 phòng ngủ từ 2,5 tỷ"
+      },
+      "price_range": {
+        "title": "Khoảng giá của bạn là bao nhiêu?",
+        "placeholder": "Từ 1,8 đến 6 tỷ đồng"
+      },
+      "courses": {
+        "title": "Bạn có những khóa học nào và học phí bao nhiêu?",
+        "placeholder": "IELTS 6.5 trong 3 tháng, 8 triệu"
+      },
+      "schedule": {
+        "title": "Lịch học như thế nào?",
+        "placeholder": "Tối thứ 2, 4, 6 từ 18:00 đến 20:00"
+      },
+      "level_test": {
+        "title": "Bạn có kiểm tra trình độ đầu vào không?",
+        "placeholder": "Kiểm tra miễn phí 30 phút online"
+      },
+      "room_types": {
+        "title": "Bạn có những loại phòng nào và giá bao nhiêu?",
+        "placeholder": "Phòng đôi 600k/đêm, phòng gia đình 1,1 triệu"
+      },
+      "checkin_policy": {
+        "title": "Giờ nhận và trả phòng là khi nào?",
+        "placeholder": "Nhận phòng 14:00, trả phòng 12:00"
+      },
+      "tour_packages": {
+        "title": "Bạn có những tour nào và giá bao nhiêu?",
+        "placeholder": "Tour Hội An 1 ngày 650k/người"
+      },
+      "visa_support": {
+        "title": "Bạn có hỗ trợ visa hoặc giấy tờ không?",
+        "placeholder": "Hỗ trợ visa du lịch Hàn Quốc, 2 tuần"
+      },
+      "membership_plans": {
+        "title": "Bạn có những gói thành viên nào và giá bao nhiêu?",
+        "placeholder": "Gói tháng 500k, gói năm 4,5 triệu"
+      },
+      "trial_class": {
+        "title": "Bạn có buổi tập thử miễn phí không?",
+        "placeholder": "Một buổi miễn phí, đặt trước 1 ngày"
+      },
+      "car_models": {
+        "title": "Bạn bán những mẫu xe nào và giá bao nhiêu?",
+        "placeholder": "VF 5 từ 468 triệu"
+      },
+      "test_drive": {
+        "title": "Lái thử diễn ra như thế nào?",
+        "placeholder": "Đặt trước 1 ngày, mang theo bằng lái"
+      },
+      "service_booking": {
+        "title": "Khách đặt lịch bảo dưỡng như thế nào?",
+        "placeholder": "Ngày thường 8:00 đến 17:00, khoảng 2 tiếng"
+      },
+      "products_plans": {
+        "title": "Bạn có những sản phẩm hoặc gói nào?",
+        "placeholder": "Bảo hiểm sức khỏe từ 2 triệu/năm"
+      },
+      "eligibility": {
+        "title": "Ai có thể đăng ký?",
+        "placeholder": "Từ 18 đến 60 tuổi, sống tại Việt Nam"
+      },
+      "services_offered": {
+        "title": "Bạn cung cấp những dịch vụ nào?",
+        "placeholder": "Vệ sinh máy lạnh, sửa ống nước, thiết kế nội thất"
+      },
+      "quote_process": {
+        "title": "Báo giá được thực hiện thế nào?",
+        "placeholder": "Khảo sát miễn phí, báo giá trong 24 giờ"
+      },
+      "packages": {
+        "title": "Bạn có những gói nào và giá bao nhiêu?",
+        "placeholder": "Gói chụp cưới 12 triệu"
+      },
+      "booking_lead_time": {
+        "title": "Khách nên đặt trước bao lâu?",
+        "placeholder": "Ít nhất 2 tuần"
+      },
+      "key_ingredients": {
+        "title": "Thành phần chính là gì?",
+        "placeholder": "Collagen, vitamin C"
+      },
+      "certifications": {
+        "title": "Sản phẩm của bạn có những chứng nhận nào?",
+        "placeholder": "Giấy công bố Bộ Y tế, ISO 22000"
+      },
+      "working_hours": {
+        "title": "Bạn thường làm việc vào khung giờ nào?",
+        "placeholder": "Ngày thường 9:00 đến 18:00, không họp chiều thứ 6"
+      },
+      "priorities": {
+        "title": "Điều gì quan trọng nhất với bạn?",
+        "placeholder": "Ưu tiên gặp khách hàng, sau đó đến việc nhóm"
+      },
+      "email_rules": {
+        "title": "Email của bạn nên được xử lý thế nào?",
+        "placeholder": "Đánh dấu email từ khách hàng, lưu trữ bản tin"
+      },
+      "reminder_style": {
+        "title": "Bạn muốn được nhắc như thế nào và khi nào?",
+        "placeholder": "Tóm tắt lúc 8:00 và nhắc trước hạn 30 phút"
+      },
+      "sources": {
+        "title": "Bạn tin tưởng những nguồn nào?",
+        "placeholder": "Trang chính thức, VnExpress, báo cáo ngành"
+      },
+      "followup_cadence": {
+        "title": "Bạn nên liên hệ lại với khách bao lâu một lần?",
+        "placeholder": "Mỗi 2 tuần với khách tiềm năng"
+      }
+    }
+  },
   "followups": {
     "title": "Nhắc hẹn",
     "list": {
@@ -1296,7 +1677,8 @@
     "close": "Đóng",
     "copy": "Sao chép",
     "previous": "Trước",
-    "next": "Sau"
+    "next": "Sau",
+    "skip": "Bỏ qua"
   },
   "fields": {
     "name": "Tên",

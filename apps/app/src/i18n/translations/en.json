@@ -925,6 +925,385 @@
       "clone": "Clone"
     }
   },
+  "agentBuilder": {
+    "ui": {
+      "title": "Create agent",
+      "startMessage": "Hi! Tell me about your business in one sentence, or start from a template.",
+      "startPlaceholder": "e.g. I run a nail spa in Da Nang. Customers ask prices and want to book.",
+      "templates": "Or start from a template",
+      "suggesting": "Setting up your agent...",
+      "suggestFailed": "I could not work that out on my own. Let's go through the questions.",
+      "suggested": "I filled in what I could. Check the answers marked for review.",
+      "auto": "Auto-filled",
+      "check": "Please check",
+      "required": "Please answer this question.",
+      "skipped": "Skipped",
+      "yes": "Yes",
+      "no": "No",
+      "editAnswer": "Edit answer",
+      "draftCreated": "Your agent is saved as a draft. Try it in the chat, then keep going.",
+      "saveFailed": "Could not save your agent. Your answers are kept, and we will retry on the next answer.",
+      "done": "All set. Activate your agent when you are happy with it.",
+      "finish": "Activate agent",
+      "finished": "Your agent is active. You can change any answer above at any time.",
+      "tryAgent": "Try your agent",
+      "chatTab": "Chat",
+      "promptTab": "What it is told",
+      "testLocked": "Your agent appears here once the Rules step is done.",
+      "progress": "Question {{current}} of {{total}}",
+      "extraInstructions": "Extra instructions",
+      "extraInstructionsHint": "Added at the end of what your agent is told. Leave it empty if your answers cover everything.",
+      "editWithBuilder": "Edit with builder"
+    },
+    "groups": {
+      "identity": "About your business",
+      "essence": "Personality",
+      "facts": "Business facts",
+      "process": "How it works",
+      "rules": "Rules",
+      "interaction": "Conversation style"
+    },
+    "questions": {
+      "businessType": { "title": "What kind of business is this agent for?" },
+      "businessName": {
+        "title": "What is your business called?",
+        "placeholder": "Lotus Nail Spa"
+      },
+      "ownerName": { "title": "What should the assistant call you?" },
+      "agentName": {
+        "title": "What should we name your agent?",
+        "placeholder": "Linh"
+      },
+      "channels": { "title": "Where do customers message you?" },
+      "goals": {
+        "title": "What should your agent do?",
+        "description": "Pick everything that applies."
+      },
+      "greeting": {
+        "title": "How should it greet people? (optional)",
+        "placeholder": "Hi! This is Linh from Lotus Nail Spa. How can I help?"
+      },
+      "difference": {
+        "title": "What makes you different? (optional)",
+        "placeholder": "Hand-painted designs, 10 years of experience, free parking"
+      },
+      "personality": {
+        "title": "Which words describe your brand?",
+        "description": "Pick up to two."
+      },
+      "formality": { "title": "How formal should it be?" },
+      "collect": { "title": "What details should it collect from customers?" },
+      "handoffWhen": { "title": "When should it pass the chat to you?" },
+      "rules": { "title": "What must it never do?" },
+      "unsure": {
+        "title": "What should it do when it does not know the answer?"
+      },
+      "replyLength": { "title": "How long should replies be?" },
+      "emoji": { "title": "Should it use emoji?" },
+      "addressStyle": { "title": "How should it address customers?" },
+      "followUpQuestions": {
+        "title": "Should it ask a follow-up question to keep the chat going?"
+      },
+      "afterHours": { "title": "What should it do outside opening hours?" }
+    },
+    "types": {
+      "restaurant": "Restaurant & café",
+      "beauty": "Beauty salon & spa",
+      "healthcare": "Clinic & dental",
+      "fashion": "Fashion & accessories",
+      "cosmetics": "Cosmetics & skincare",
+      "ecommerce": "Online shop",
+      "real_estate": "Real estate",
+      "education": "Education & courses",
+      "hotel": "Hotel & homestay",
+      "travel": "Travel & tours",
+      "fitness": "Gym & fitness",
+      "automotive": "Automotive",
+      "finance": "Insurance & finance",
+      "home_services": "Home services & interior",
+      "studio_events": "Photo studio & events",
+      "health_foods": "Health foods & supplements",
+      "personal_scheduling": "Scheduling assistant",
+      "personal_email": "Email assistant",
+      "personal_tasks": "Tasks & reminders",
+      "personal_research": "Research assistant",
+      "personal_crm": "Personal CRM"
+    },
+    "goals": {
+      "answer_questions": "Answer questions about products and prices",
+      "recommend": "Recommend products or services",
+      "take_orders": "Take orders",
+      "book_appointments": "Book appointments",
+      "reservations": "Take reservations",
+      "capture_leads": "Collect contact details",
+      "qualify_leads": "Qualify leads",
+      "order_status": "Check order status",
+      "after_sales": "After-sales support",
+      "promotions": "Share promotions",
+      "manage_schedule": "Manage my calendar",
+      "triage_email": "Sort and draft my email",
+      "track_tasks": "Track tasks and reminders",
+      "research": "Research topics for me",
+      "log_contacts": "Log contacts and follow-ups"
+    },
+    "rules": {
+      "no_invented_prices": "Never guess prices or stock",
+      "no_discount_promises": "Never promise unlisted discounts",
+      "no_medical_advice": "No medical advice",
+      "no_financial_advice": "No personal financial or legal advice",
+      "no_competitors": "Do not talk about competitors",
+      "no_personal_data_requests": "Only ask for details that are needed",
+      "no_guarantees": "Never guarantee results",
+      "no_health_claims": "No claims that products cure illness",
+      "confirm_before_acting": "Ask me before sending, booking or deleting"
+    },
+    "unsure": {
+      "handoff": "Say it will check, then pass the chat to me",
+      "collect_contact": "Ask for a phone number or email",
+      "say_unknown": "Say it does not know and suggest a next step"
+    },
+    "handoffWhen": {
+      "asks_for_human": "The customer asks for a person",
+      "upset": "The customer is upset",
+      "unsure": "The agent is not sure",
+      "large_order": "A large or unusual order",
+      "complaint": "A complaint"
+    },
+    "collect": {
+      "name": "Name",
+      "phone": "Phone number",
+      "email": "Email",
+      "address": "Delivery address",
+      "date_time": "Date and time",
+      "party_size": "Number of people",
+      "budget": "Budget",
+      "product_interest": "Product or service of interest",
+      "notes": "Special requests"
+    },
+    "personality": {
+      "warm": "Warm",
+      "expert": "Expert",
+      "playful": "Playful",
+      "premium": "Premium",
+      "energetic": "Energetic",
+      "calm": "Calm"
+    },
+    "formality": {
+      "casual": "Casual",
+      "balanced": "Balanced",
+      "formal": "Formal"
+    },
+    "replyLength": {
+      "short": "Short (1 to 2 sentences)",
+      "medium": "Medium (a short paragraph)",
+      "detailed": "Detailed when needed"
+    },
+    "addressStyle": {
+      "em_anhchi": "Em / Anh Chị",
+      "minh_ban": "Mình / Bạn",
+      "shop_ban": "Shop / Bạn",
+      "toi_quykhach": "Tôi / Quý khách"
+    },
+    "afterHours": {
+      "reply_normally": "Reply as usual",
+      "share_hours": "Reply and share opening hours",
+      "promise_callback": "Promise a call back during opening hours"
+    },
+    "channels": {
+      "messenger": "Facebook Messenger",
+      "instagram": "Instagram",
+      "zalo": "Zalo OA",
+      "tiktok": "TikTok Shop",
+      "shopee": "Shopee",
+      "website": "Website chat"
+    },
+    "facts": {
+      "opening_hours": {
+        "title": "What are your opening hours?",
+        "placeholder": "Mon to Sun, 9:00 to 21:00"
+      },
+      "address": {
+        "title": "Where are you located?",
+        "placeholder": "12 Bach Dang, Hai Chau, Da Nang"
+      },
+      "service_area": {
+        "title": "Which areas do you serve?",
+        "placeholder": "Inside Da Nang city"
+      },
+      "delivery": {
+        "title": "Do you deliver? How?",
+        "placeholder": "Grab and ShopeeFood within 5 km"
+      },
+      "shipping_fee": {
+        "title": "What are your shipping fees and times?",
+        "placeholder": "30k nationwide, free over 500k, 2 to 4 days"
+      },
+      "payment_methods": {
+        "title": "How can customers pay?",
+        "placeholder": "Cash, bank transfer, MoMo"
+      },
+      "return_policy": {
+        "title": "What is your return or exchange policy?",
+        "placeholder": "Exchange within 7 days with the receipt"
+      },
+      "warranty": {
+        "title": "What warranty do you offer?",
+        "placeholder": "12 months for parts and labour"
+      },
+      "menu_highlights": {
+        "title": "What are your best dishes and their prices?",
+        "placeholder": "Beef pho 55k, spring rolls 35k"
+      },
+      "reservation_policy": {
+        "title": "How do reservations work?",
+        "placeholder": "Book 2 hours ahead, tables held for 15 minutes"
+      },
+      "services_prices": {
+        "title": "Which services do you offer and at what price?",
+        "placeholder": "Gel nails 150k, pedicure 120k"
+      },
+      "deposit_policy": {
+        "title": "Do you ask for a deposit? What if someone cancels?",
+        "placeholder": "30% deposit, free cancellation 24 hours ahead"
+      },
+      "doctors_specialties": {
+        "title": "Which doctors and specialties do you have?",
+        "placeholder": "Dr. An, orthodontics; Dr. Binh, implants"
+      },
+      "insurance_accepted": {
+        "title": "Which insurance do you accept?",
+        "placeholder": "Bao Viet, PVI"
+      },
+      "size_guide": {
+        "title": "How should customers choose a size?",
+        "placeholder": "S under 50 kg, M 50 to 60 kg, L over 60 kg"
+      },
+      "stock_updates": {
+        "title": "How can the agent know what is in stock?",
+        "placeholder": "Ask staff; restock every Monday"
+      },
+      "skin_types": {
+        "title": "Which products suit which skin types?",
+        "placeholder": "Oily skin: gel cleanser; dry skin: cream cleanser"
+      },
+      "authenticity": {
+        "title": "How do you prove products are authentic?",
+        "placeholder": "Imported from Korea, with invoices"
+      },
+      "projects": {
+        "title": "Which projects or listings do you have?",
+        "placeholder": "Sun Riverside apartments, 2 bedrooms from 2.5 billion"
+      },
+      "price_range": {
+        "title": "What is your price range?",
+        "placeholder": "From 1.8 to 6 billion VND"
+      },
+      "courses": {
+        "title": "Which courses do you offer and at what fee?",
+        "placeholder": "IELTS 6.5 in 3 months, 8 million"
+      },
+      "schedule": {
+        "title": "What is the class schedule?",
+        "placeholder": "Mon, Wed, Fri evenings 18:00 to 20:00"
+      },
+      "level_test": {
+        "title": "Do you offer a level test?",
+        "placeholder": "Free 30 minute test online"
+      },
+      "room_types": {
+        "title": "Which rooms do you have and at what price?",
+        "placeholder": "Double room 600k per night, family room 1.1 million"
+      },
+      "checkin_policy": {
+        "title": "What are check-in and check-out times?",
+        "placeholder": "Check-in 14:00, check-out 12:00"
+      },
+      "tour_packages": {
+        "title": "Which tours do you offer and at what price?",
+        "placeholder": "Hoi An day tour 650k per person"
+      },
+      "visa_support": {
+        "title": "Do you help with visas or documents?",
+        "placeholder": "Korea tourist visa support, 2 weeks"
+      },
+      "membership_plans": {
+        "title": "Which memberships do you offer and at what price?",
+        "placeholder": "Monthly 500k, yearly 4.5 million"
+      },
+      "trial_class": {
+        "title": "Do you offer a free trial?",
+        "placeholder": "One free session, book a day ahead"
+      },
+      "car_models": {
+        "title": "Which models do you sell and at what price?",
+        "placeholder": "VF 5 from 468 million"
+      },
+      "test_drive": {
+        "title": "How do test drives work?",
+        "placeholder": "Book a day ahead, bring a driving licence"
+      },
+      "service_booking": {
+        "title": "How can customers book maintenance?",
+        "placeholder": "Weekdays 8:00 to 17:00, about 2 hours"
+      },
+      "products_plans": {
+        "title": "Which products or plans do you offer?",
+        "placeholder": "Health insurance from 2 million per year"
+      },
+      "eligibility": {
+        "title": "Who can sign up?",
+        "placeholder": "Ages 18 to 60, living in Vietnam"
+      },
+      "services_offered": {
+        "title": "Which services do you offer?",
+        "placeholder": "Aircon cleaning, plumbing, interior design"
+      },
+      "quote_process": {
+        "title": "How do quotes work?",
+        "placeholder": "Free site survey, quote within 24 hours"
+      },
+      "packages": {
+        "title": "Which packages do you offer and at what price?",
+        "placeholder": "Wedding photo package 12 million"
+      },
+      "booking_lead_time": {
+        "title": "How far ahead should customers book?",
+        "placeholder": "At least 2 weeks"
+      },
+      "key_ingredients": {
+        "title": "What are the key ingredients?",
+        "placeholder": "Collagen, vitamin C"
+      },
+      "certifications": {
+        "title": "Which certifications do your products have?",
+        "placeholder": "Ministry of Health registration, ISO 22000"
+      },
+      "working_hours": {
+        "title": "When do you usually work?",
+        "placeholder": "Weekdays 9:00 to 18:00, no meetings on Friday afternoon"
+      },
+      "priorities": {
+        "title": "What matters most to you?",
+        "placeholder": "Client meetings first, then team work"
+      },
+      "email_rules": {
+        "title": "How should your email be handled?",
+        "placeholder": "Flag anything from clients, archive newsletters"
+      },
+      "reminder_style": {
+        "title": "How and when should you be reminded?",
+        "placeholder": "A summary at 8:00 and a nudge 30 minutes before deadlines"
+      },
+      "sources": {
+        "title": "Which sources do you trust?",
+        "placeholder": "Official sites, VnExpress, industry reports"
+      },
+      "followup_cadence": {
+        "title": "How often should you follow up with contacts?",
+        "placeholder": "Every 2 weeks for warm leads"
+      }
+    }
+  },
   "followups": {
     "title": "Followups",
     "list": {
@@ -1205,7 +1584,8 @@
     "close": "Close",
     "copy": "Copy",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "skip": "Skip"
   },
   "general": {
     "emojiTooltip": "Emoji",
