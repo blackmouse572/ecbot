@@ -11,10 +11,19 @@
  * and `TextEncoder` output must be equal-length before a byte-by-byte XOR is
  * meaningful. Every byte is then XORed unconditionally (no early return) so
  * a mismatch doesn't leak *where* the strings differ via timing.
+ *
+ * `expected` is the configured secret; when it is unset or empty the
+ * compare fails closed.
  */
-export function timingSafeEqual(a: string, b: string): boolean {
-  const aBytes = new TextEncoder().encode(a);
-  const bBytes = new TextEncoder().encode(b);
+export function timingSafeEqual(
+  candidate: string,
+  expected: string | undefined,
+): boolean {
+  // An unset/empty secret matches nothing — never an empty candidate.
+  if (!expected) return false;
+
+  const aBytes = new TextEncoder().encode(candidate);
+  const bBytes = new TextEncoder().encode(expected);
   if (aBytes.length !== bBytes.length) return false;
 
   let diff = 0;

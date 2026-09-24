@@ -22,7 +22,14 @@ describe("timingSafeEqual", () => {
     expect(timingSafeEqual("", "shh")).toBe(false);
   });
 
-  it("returns true for two empty strings", () => {
-    expect(timingSafeEqual("", "")).toBe(true);
+  // An unset secret must never match — otherwise an empty candidate
+  // (e.g. `hub.verify_token=`) is accepted when the env var is missing.
+  it("returns false when the expected secret is empty", () => {
+    expect(timingSafeEqual("", "")).toBe(false);
+  });
+
+  it("returns false when the expected secret is undefined", () => {
+    expect(timingSafeEqual("", undefined)).toBe(false);
+    expect(timingSafeEqual("undefined", undefined)).toBe(false);
   });
 });
