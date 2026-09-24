@@ -235,6 +235,7 @@ export class KnowledgeBaseWorkspaceController {
         try {
             const knowledgeBase = await this.knowledgeBaseService.update(
                 id,
+                workspace.id,
                 dto,
                 {
                     em: session,

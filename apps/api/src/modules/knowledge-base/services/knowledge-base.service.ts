@@ -85,6 +85,7 @@ export class KnowledgeBaseService {
 
     async update(
         id: string,
+        workspaceId: string,
         payload: {
             name?: string;
             description?: string;
@@ -95,7 +96,10 @@ export class KnowledgeBaseService {
     ): Promise<KnowledgeBaseEntity> {
         const em = options?.em ?? this.em;
 
-        const knowledgeBase = await em.findOneOrFail(KnowledgeBaseEntity, id);
+        const knowledgeBase = await em.findOneOrFail(KnowledgeBaseEntity, {
+            id,
+            workspace: workspaceId,
+        });
 
         if (payload.name !== undefined) {
             knowledgeBase.name = payload.name;
@@ -116,11 +120,15 @@ export class KnowledgeBaseService {
 
     async softDelete(
         id: string,
+        workspaceId: string,
         options?: IDatabaseSoftDeleteOptions
     ): Promise<void> {
         const em = options?.em ?? this.em;
 
-        const knowledgeBase = await em.findOneOrFail(KnowledgeBaseEntity, id);
+        const knowledgeBase = await em.findOneOrFail(KnowledgeBaseEntity, {
+            id,
+            workspace: workspaceId,
+        });
 
         knowledgeBase.deletedAt = new Date();
         knowledgeBase.deletedBy = options?.actionBy

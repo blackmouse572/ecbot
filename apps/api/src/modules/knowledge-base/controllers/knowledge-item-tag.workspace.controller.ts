@@ -3,6 +3,7 @@ import {
     Get,
     Post,
     Delete,
+    NotFoundException,
     Param,
     Body,
     HttpCode,
@@ -11,10 +12,12 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { EntityManager } from '@mikro-orm/postgresql';
 
+import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import { IResponse } from 'src/common/response/interfaces/response.interface';
 import { KnowledgeItemTagService } from '../services/knowledge-item-tag.service';
+import { KnowledgeBaseService } from '../services/knowledge-base.service';
 import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entity';
 import { ApiKeyProtected } from '@app/modules/api-key/decorators/api-key.decorator';
 import {
@@ -47,8 +50,27 @@ export class KnowledgeItemTagController {
     constructor(
         private readonly em: EntityManager,
         private readonly tagService: KnowledgeItemTagService,
+        private readonly knowledgeBaseService: KnowledgeBaseService,
         private readonly activityService: ActivityService
     ) {}
+
+    /** A cross-workspace `:knowledgeBaseId` must 404 like a nonexistent one. */
+    private async assertKnowledgeBaseInWorkspace(
+        knowledgeBaseId: string,
+        workspaceId: string
+    ): Promise<void> {
+        const knowledgeBase = await this.knowledgeBaseService.findOne({
+            id: knowledgeBaseId,
+            workspace: workspaceId,
+        });
+
+        if (!knowledgeBase) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'knowledgeBase.error.notFound',
+            });
+        }
+    }
 
     @KnowledgeItemTagWorkspaceListDoc()
     @Response('knowledge-base.tag.list')
@@ -61,8 +83,11 @@ export class KnowledgeItemTagController {
     @ApiKeyProtected()
     @Get('/list')
     async list(
+        @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('knowledgeBaseId') knowledgeBaseId: string
     ): Promise<IResponse<string[]>> {
+        await this.assertKnowledgeBaseInWorkspace(knowledgeBaseId, workspace.id);
+
         const tags =
             await this.tagService.findUniqueTagsByKnowledgeBase(
                 knowledgeBaseId
@@ -91,6 +116,8 @@ export class KnowledgeItemTagController {
         @Param('knowledgeBaseId') knowledgeBaseId: string,
         @Param('tag') tag: string
     ): Promise<void> {
+        await this.assertKnowledgeBaseInWorkspace(knowledgeBaseId, workspace.id);
+
         const session = this.em.fork();
         await session.begin();
 
