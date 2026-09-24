@@ -242,8 +242,9 @@
           "submit": "Gửi mã đặt lại",
           "backToLogin": "Đã nhớ ra rồi? <0>Đăng nhập</0>"
         },
-        "errors": {
-          "requestFailed": "Không thể bắt đầu đặt lại mật khẩu cho email này."
+        "checkEmail": {
+          "title": "Kiểm tra email của bạn",
+          "description": "Nếu email này có tài khoản, chúng tôi đã gửi liên kết và mã để đặt lại mật khẩu."
         }
       },
       "resetPassword": {

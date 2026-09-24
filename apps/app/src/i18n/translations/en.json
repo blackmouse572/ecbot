@@ -242,8 +242,9 @@
           "submit": "Send reset code",
           "backToLogin": "Remembered it? <0>Login</0>"
         },
-        "errors": {
-          "requestFailed": "Could not start a password reset for that email."
+        "checkEmail": {
+          "title": "Check your email",
+          "description": "If an account exists for that email, we've sent a link and code to reset your password."
         }
       },
       "resetPassword": {

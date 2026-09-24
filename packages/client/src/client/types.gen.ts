@@ -614,8 +614,6 @@ export type AuthSignUpRequestDto = {
 export type ResetPasswordCreteResponseDto = {
     expiredDate: string;
     to: string;
-    token: string;
-    url: string;
 };
 
 export type ResetPasswordCreateRequestDto = {
@@ -6684,7 +6682,6 @@ export type ResetPasswordPublicControllerRequestV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: ResetPasswordCreteResponseDto;
     };
 };
 
