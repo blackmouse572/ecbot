@@ -7,7 +7,7 @@ import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.ut
 import { ToolSpec } from 'src/modules/tool/interfaces/tool-spec.interface';
 
 export interface AIChatHistoryMessage {
-    role: 'user' | 'assistant' | 'system';
+    role: 'user' | 'assistant';
     content: string;
 }
 

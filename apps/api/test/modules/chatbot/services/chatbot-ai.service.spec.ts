@@ -1,4 +1,7 @@
-import { ChatbotAIService } from 'src/modules/chatbot/services/chatbot-ai.service';
+import {
+    AIChatHistoryMessage,
+    ChatbotAIService,
+} from 'src/modules/chatbot/services/chatbot-ai.service';
 
 jest.mock('@app/common/utils/gcp-id-token.util', () => ({
     getInternalAuthHeader: jest
@@ -55,5 +58,15 @@ describe('ChatbotAIService', () => {
                 'X-Internal-Token': 'internal-token',
             },
         });
+    });
+
+    // Compile-time contract (checked by tsc): apps/ai rejects a 'system'
+    // history role, so the type must not allow sending one.
+    it('types history roles as user | assistant only', () => {
+        const roles: AIChatHistoryMessage['role'][] = ['user', 'assistant'];
+        // @ts-expect-error 'system' is not a valid history role
+        const system: AIChatHistoryMessage['role'] = 'system';
+
+        expect(roles).not.toContain(system);
     });
 });
