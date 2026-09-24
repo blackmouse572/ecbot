@@ -311,10 +311,16 @@ describe('ChatbotController', () => {
             );
 
             const editableFields = mockChatbotService.update.mock.calls[0][1];
-            expect(Object.keys(editableFields)).toHaveLength(22);
+            expect(Object.keys(editableFields)).toHaveLength(24);
             expect(editableFields).toHaveProperty('handoffMessage', undefined);
             expect(editableFields).not.toHaveProperty('dailyTokenCap');
             expect(editableFields).not.toHaveProperty('monthlyTokenCap');
+            expect(editableFields).toHaveProperty('agentProfile', undefined);
+            expect(editableFields).toHaveProperty(
+                'extraInstructions',
+                undefined
+            );
+            expect(editableFields).not.toHaveProperty('status');
         });
     });
 
