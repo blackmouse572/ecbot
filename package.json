@@ -58,7 +58,9 @@
       "js-yaml@3": "^3.15.2",
       "postcss": "^8.5.18",
       "sharp": "^0.35.4",
-      "multer": "^2.3.0"
+      "multer": "^2.3.0",
+      "@nestjs/terminus>mongoose": "-",
+      "@nestjs/terminus>@nestjs/mongoose": "-"
     }
   },
   "dependencies": {
