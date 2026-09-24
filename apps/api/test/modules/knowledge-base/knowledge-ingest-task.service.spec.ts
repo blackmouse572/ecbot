@@ -22,14 +22,17 @@ describe('KnowledgeIngestTaskService', () => {
     const httpDelete = jest.fn();
     const getItemBuffer = jest.fn();
     const configService = {
-        get: jest.fn().mockReturnValue('http://ai.example.test'),
+        get: jest.fn((key: string) =>
+            key === 'ai.internalToken' ? 'internal-token' : 'http://ai.example.test'
+        ),
     };
     let service: KnowledgeIngestTaskService;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        process.env.API_INTERNAL_TOKEN = 'internal-token';
-        configService.get.mockReturnValue('http://ai.example.test');
+        configService.get.mockImplementation((key: string) =>
+            key === 'ai.internalToken' ? 'internal-token' : 'http://ai.example.test'
+        );
         findOneById.mockResolvedValue({
             id: 'item-1',
             type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
@@ -125,7 +128,7 @@ describe('KnowledgeIngestTaskService', () => {
             {
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: {
-                    Authorization: 'Bearer internal-token',
+                    'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
                 },
             }
@@ -171,7 +174,7 @@ describe('KnowledgeIngestTaskService', () => {
             expect.objectContaining({
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: {
-                    Authorization: 'Bearer internal-token',
+                    'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
                 },
             })
@@ -207,7 +210,7 @@ describe('KnowledgeIngestTaskService', () => {
             expect.objectContaining({
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: expect.objectContaining({
-                    Authorization: 'Bearer internal-token',
+                    'X-Internal-Token': 'internal-token',
                 }),
                 maxBodyLength: Infinity,
             })
@@ -230,7 +233,7 @@ describe('KnowledgeIngestTaskService', () => {
             {
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: {
-                    Authorization: 'Bearer internal-token',
+                    'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
                 },
             }
@@ -268,7 +271,7 @@ describe('KnowledgeIngestTaskService', () => {
             {
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: {
-                    Authorization: 'Bearer internal-token',
+                    'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
                 },
             }

@@ -18,6 +18,7 @@ import { CustomerTagAssignmentService } from './customer-tag-assignment.service'
 import { CustomerTagService } from './customer-tag.service';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 import { CustomerTagClassifierService } from './customer-tag-classifier.service';
+import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 
 interface IClassifierMessagePayload {
     role: 'user' | 'bot' | 'operator' | 'system';
@@ -41,7 +42,6 @@ interface IClassifierResponse {
 export class CustomerTagClassifierTaskService {
     private readonly logger = new Logger(CustomerTagClassifierTaskService.name);
     private readonly aiBackendUrl: string;
-    private readonly internalToken: string;
 
     constructor(
         private readonly conversationRepository: ConversationRepository,
@@ -56,7 +56,6 @@ export class CustomerTagClassifierTaskService {
         this.aiBackendUrl =
             this.configService.get<string>('ai.backend.url') ??
             'http://localhost:8000';
-        this.internalToken = process.env.API_INTERNAL_TOKEN ?? '';
     }
 
     async handle(
@@ -259,7 +258,7 @@ export class CustomerTagClassifierTaskService {
                 {
                     timeout: CUSTOMER_TAG_CLASSIFIER_HTTP_TIMEOUT_MS,
                     headers: {
-                        Authorization: `Bearer ${this.internalToken}`,
+                        ...getInternalTokenHeader(this.configService),
                         'Content-Type': 'application/json',
                     },
                 }

@@ -33,7 +33,11 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         ),
     };
     const httpService = { post: jest.fn() };
-    const configService = { get: jest.fn(() => 'http://ai-test') };
+    const configService = {
+        get: jest.fn((key: string) =>
+            key === 'ai.internalToken' ? 'test-token' : 'http://ai-test'
+        ),
+    };
 
     const lastMessageAt = new Date('2026-06-15T12:00:00Z');
     const snapshotKey = `${lastMessageAt.toISOString()}:${ENUM_CONVERSATION_STATUS.RESOLVED}`;
@@ -61,7 +65,9 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
 
     beforeEach(() => {
         jest.clearAllMocks();
-        process.env.API_INTERNAL_TOKEN = 'test-token';
+        configService.get.mockImplementation((key: string) =>
+            key === 'ai.internalToken' ? 'test-token' : 'http://ai-test'
+        );
         conversationRepository.findOneById.mockResolvedValue(
             liveConversation()
         );
@@ -92,6 +98,16 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
             httpService as any,
             configService as any
         );
+    });
+
+    it('sends the internal token header on the classify call', async () => {
+        await service.handle(dto() as any, 0);
+
+        const [, , options] = httpService.post.mock.calls[0];
+        expect(options.headers).toEqual({
+            'X-Internal-Token': 'test-token',
+            'Content-Type': 'application/json',
+        });
     });
 
     it('skips all classifier side effects when the live snapshot is stale', async () => {
