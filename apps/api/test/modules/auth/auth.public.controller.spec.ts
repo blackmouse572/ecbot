@@ -103,7 +103,7 @@ describe('AuthPublicController.signUp', () => {
         findOneByName.mockResolvedValue({ id: 'role-1' });
         existByEmail.mockResolvedValue(false);
         findOneByIdCountry.mockResolvedValue({ id: 'country-1' });
-        createPassword.mockReturnValue({ password: 'hashed' });
+        createPassword.mockResolvedValue({ password: 'hashed' });
         signUp.mockResolvedValue(user);
         createEmailByUser.mockResolvedValue(verification);
         createByUserPasswordHistory.mockResolvedValue(undefined);
@@ -301,9 +301,9 @@ describe('AuthPublicController.loginWithCredential', () => {
 
         getPasswordAttempt.mockReturnValue(false);
         getPasswordMaxAttempt.mockReturnValue(5);
-        validateUser.mockReturnValue(true);
-        runDummyPasswordCompare.mockReturnValue(undefined);
-        maybeRehashPassword.mockReturnValue(null);
+        validateUser.mockResolvedValue(true);
+        runDummyPasswordCompare.mockResolvedValue(undefined);
+        maybeRehashPassword.mockResolvedValue(null);
         verifyLoginTurnstile.mockResolvedValue(undefined);
         checkPasswordExpired.mockReturnValue(false);
         resetPasswordAttempt.mockResolvedValue(undefined);
@@ -423,7 +423,11 @@ describe('AuthPublicController.loginWithCredential', () => {
             {} as any
         );
 
-        expect(createToken).toHaveBeenCalledWith(activeUser, 'session-1', false);
+        expect(createToken).toHaveBeenCalledWith(
+            activeUser,
+            'session-1',
+            false
+        );
         expect(setRefreshTokenCookie).toHaveBeenCalledWith({}, 'r', false);
     });
 
@@ -465,7 +469,7 @@ describe('AuthPublicController.loginWithCredential', () => {
 
     it('rejects a wrong password with the same statusCode/message as an unknown email, and no attempt count', async () => {
         findOneByEmail.mockResolvedValue(activeUser);
-        validateUser.mockReturnValue(false);
+        validateUser.mockResolvedValue(false);
 
         const error = await controller
             .loginWithCredential(
@@ -473,7 +477,7 @@ describe('AuthPublicController.loginWithCredential', () => {
                 {} as any,
                 {} as any
             )
-            .catch((err) => err);
+            .catch(err => err);
 
         expect(error.response).toStrictEqual({
             statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
@@ -490,7 +494,7 @@ describe('AuthPublicController.loginWithCredential', () => {
         });
         getPasswordAttempt.mockReturnValue(true);
         getPasswordMaxAttempt.mockReturnValue(5);
-        validateUser.mockReturnValue(false);
+        validateUser.mockResolvedValue(false);
 
         await expect(
             controller.loginWithCredential(
@@ -523,7 +527,7 @@ describe('AuthPublicController.loginWithCredential', () => {
         });
         getPasswordAttempt.mockReturnValue(true);
         getPasswordMaxAttempt.mockReturnValue(5);
-        validateUser.mockReturnValue(true);
+        validateUser.mockResolvedValue(true);
 
         await expect(
             controller.loginWithCredential(
@@ -547,7 +551,7 @@ describe('AuthPublicController.loginWithCredential', () => {
 
     it('rehashes a stored password hash that is weaker than the configured cost, after a successful login', async () => {
         findOneByEmail.mockResolvedValue(activeUser);
-        maybeRehashPassword.mockReturnValue({
+        maybeRehashPassword.mockResolvedValue({
             passwordHash: 'new-hash-at-cost-12',
             salt: 'new-salt',
         });
@@ -570,7 +574,7 @@ describe('AuthPublicController.loginWithCredential', () => {
 
     it('does not rehash when the stored hash is already at the configured cost', async () => {
         findOneByEmail.mockResolvedValue(activeUser);
-        maybeRehashPassword.mockReturnValue(null);
+        maybeRehashPassword.mockResolvedValue(null);
 
         await controller.loginWithCredential(
             { email: 'ok@x.com', password: 'pass' } as any,

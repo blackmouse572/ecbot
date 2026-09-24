@@ -111,7 +111,7 @@ export class AuthPublicController {
             // Same error as a wrong password below, plus a real bcrypt
             // compare against a fixed hash, so an unknown email can't be
             // told apart from a known one — by response body or timing.
-            this.authService.runDummyPasswordCompare(password);
+            await this.authService.runDummyPasswordCompare(password);
             throw this.buildInvalidCredentialError();
         }
 
@@ -123,7 +123,7 @@ export class AuthPublicController {
 
         // Always run the real compare, whatever the lock state, so a locked
         // account's response takes the same time as an unlocked one's.
-        const validate: boolean = this.authService.validateUser(
+        const validate: boolean = await this.authService.validateUser(
             password,
             user.password
         );
@@ -151,7 +151,7 @@ export class AuthPublicController {
         // before the cost-12 config change) to the current cost. Dormant
         // accounts that never log in or reset a password keep their
         // original, weaker cost until they do.
-        const rehash = this.authService.maybeRehashPassword(
+        const rehash = await this.authService.maybeRehashPassword(
             password,
             user.password
         );
@@ -494,7 +494,7 @@ export class AuthPublicController {
             });
         }
 
-        const password = this.authService.createPassword(passwordString);
+        const password = await this.authService.createPassword(passwordString);
 
         const session = this.em.fork();
         await session.begin();

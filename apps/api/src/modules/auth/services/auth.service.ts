@@ -52,11 +52,11 @@ export class AuthService implements IAuthService {
     private readonly passwordAttempt: boolean;
     private readonly passwordMaxAttempt: number;
 
-    // A bcrypt hash of a fixed, unrelated string, computed once at the
-    // configured cost. Compared against on an unknown-email login so that
+    // A bcrypt hash of a fixed, unrelated string, computed once (lazily, on
+    // first use) at the configured cost. Compared against on an unknown-email login so that
     // path costs roughly the same as a real password check — otherwise the
     // response-time gap becomes an account-enumeration oracle.
-    private readonly dummyPasswordHash: string;
+    private dummyPasswordHash?: Promise<string>;
 
     // apple
     private readonly appleClientId: string;
@@ -129,11 +129,6 @@ export class AuthService implements IAuthService {
             'auth.password.maxAttempt'
         );
 
-        this.dummyPasswordHash = this.helperHashService.bcrypt(
-            'dummy-password-for-timing-safety',
-            this.createSalt(this.passwordSaltLength)
-        );
-
         // apple
         this.appleClientId = this.configService.get<string>(
             'auth.apple.clientId'
@@ -143,8 +138,9 @@ export class AuthService implements IAuthService {
         );
 
         // google
-        this.googleClientId =
-            this.configService.get<string>('auth.google.clientId');
+        this.googleClientId = this.configService.get<string>(
+            'auth.google.clientId'
+        );
         this.googleClient = new OAuth2Client(
             this.googleClientId,
             this.configService.get<string>('auth.google.clientSecret')
@@ -224,22 +220,22 @@ export class AuthService implements IAuthService {
         token: string
     ): IAuthJwtRefreshTokenPayload | null {
         try {
-            return this.jwtService.verify<IAuthJwtRefreshTokenPayload>(
-                token,
-                {
-                    publicKey: this.jwtRefreshTokenPublicKey,
-                    algorithms: [this.jwtAlgorithm],
-                    audience: this.jwtAudience,
-                    issuer: this.jwtIssuer,
-                    ignoreExpiration: true,
-                }
-            );
+            return this.jwtService.verify<IAuthJwtRefreshTokenPayload>(token, {
+                publicKey: this.jwtRefreshTokenPublicKey,
+                algorithms: [this.jwtAlgorithm],
+                audience: this.jwtAudience,
+                issuer: this.jwtIssuer,
+                ignoreExpiration: true,
+            });
         } catch {
             return null;
         }
     }
 
-    validateUser(passwordString: string, passwordHash: string): boolean {
+    validateUser(
+        passwordString: string,
+        passwordHash: string
+    ): Promise<boolean> {
         return this.helperHashService.bcryptCompare(
             passwordString,
             passwordHash
@@ -248,10 +244,14 @@ export class AuthService implements IAuthService {
 
     // See dummyPasswordHash above. Call this on the unknown-email login
     // path instead of validateUser, so it still pays a real bcrypt compare.
-    runDummyPasswordCompare(passwordString: string): void {
-        this.helperHashService.bcryptCompare(
+    async runDummyPasswordCompare(passwordString: string): Promise<void> {
+        this.dummyPasswordHash ??= this.helperHashService.bcrypt(
+            'dummy-password-for-timing-safety',
+            this.createSalt(this.passwordSaltLength)
+        );
+        await this.helperHashService.bcryptCompare(
             passwordString,
-            this.dummyPasswordHash
+            await this.dummyPasswordHash
         );
     }
 
@@ -263,20 +263,22 @@ export class AuthService implements IAuthService {
     // at the current cost; returns null when the stored hash is already at
     // (or above) that cost. Dormant accounts that never log in or reset
     // their password keep their original, weaker cost until they do.
-    maybeRehashPassword(
+    async maybeRehashPassword(
         passwordString: string,
         currentPasswordHash: string
-    ): Pick<IAuthPassword, 'passwordHash' | 'salt'> | null {
-        const currentCost = this.helperHashService.bcryptGetCost(
-            currentPasswordHash
-        );
+    ): Promise<Pick<IAuthPassword, 'passwordHash' | 'salt'> | null> {
+        const currentCost =
+            this.helperHashService.bcryptGetCost(currentPasswordHash);
         if (currentCost >= this.passwordSaltLength) {
             return null;
         }
 
         const salt = this.createSalt(this.passwordSaltLength);
         return {
-            passwordHash: this.helperHashService.bcrypt(passwordString, salt),
+            passwordHash: await this.helperHashService.bcrypt(
+                passwordString,
+                salt
+            ),
             salt,
         };
     }
@@ -315,10 +317,10 @@ export class AuthService implements IAuthService {
         return this.helperHashService.randomSalt(length);
     }
 
-    createPassword(
+    async createPassword(
         password: string,
         options?: IAuthPasswordOptions
-    ): IAuthPassword {
+    ): Promise<IAuthPassword> {
         const salt: string = this.createSalt(this.passwordSaltLength);
 
         const today = this.helperDateService.create();
@@ -331,7 +333,10 @@ export class AuthService implements IAuthService {
             })
         );
         const passwordCreated: Date = this.helperDateService.create();
-        const passwordHash = this.helperHashService.bcrypt(password, salt);
+        const passwordHash = await this.helperHashService.bcrypt(
+            password,
+            salt
+        );
         return {
             passwordHash,
             passwordExpired,

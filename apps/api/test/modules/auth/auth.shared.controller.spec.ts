@@ -108,9 +108,9 @@ describe('AuthSharedController.changePassword', () => {
         findOneById.mockResolvedValue(user);
         getPasswordAttempt.mockReturnValue(true);
         getPasswordMaxAttempt.mockReturnValue(5);
-        validateUser.mockReturnValue(true);
+        validateUser.mockResolvedValue(true);
         resetPasswordAttempt.mockResolvedValue(user);
-        createPassword.mockReturnValue({ password: 'new-hash' });
+        createPassword.mockResolvedValue({ password: 'new-hash' });
         findOneUsedByUser.mockResolvedValue(null);
         updatePassword.mockResolvedValue(user);
         createByUserPasswordHistory.mockResolvedValue(undefined);
@@ -146,9 +146,9 @@ describe('AuthSharedController.changePassword', () => {
         findOneById.mockResolvedValue(user);
         getPasswordAttempt.mockReturnValue(true);
         getPasswordMaxAttempt.mockReturnValue(5);
-        validateUser.mockReturnValue(true);
+        validateUser.mockResolvedValue(true);
         resetPasswordAttempt.mockResolvedValue(user);
-        createPassword.mockReturnValue({ password: 'new-hash' });
+        createPassword.mockResolvedValue({ password: 'new-hash' });
         findOneUsedByUser.mockResolvedValue(null);
         updatePassword.mockResolvedValue(user);
         createByUserPasswordHistory.mockResolvedValue(undefined);
@@ -328,7 +328,10 @@ describe('AuthSharedController.logout', () => {
                     },
                 },
                 { provide: PasswordHistoryService, useValue: {} },
-                { provide: SessionService, useValue: { findOneById, updateRevoke } },
+                {
+                    provide: SessionService,
+                    useValue: { findOneById, updateRevoke },
+                },
                 { provide: ActivityService, useValue: {} },
                 { provide: MessageService, useValue: {} },
             ],

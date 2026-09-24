@@ -265,7 +265,7 @@ export class ResetPasswordPublicController {
 
         try {
             const password: IAuthPassword =
-                this.authService.createPassword(newPassword);
+                await this.authService.createPassword(newPassword);
 
             user = await this.userService.updatePassword(user, password, {
                 em: session,

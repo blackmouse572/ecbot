@@ -207,7 +207,7 @@ describe('VerificationEmailController — email dispatch', () => {
             expect(enqueue).not.toHaveBeenCalled();
         });
 
-        it('resend for an email that is not the user\'s does not issue a code', async () => {
+        it("resend for an email that is not the user's does not issue a code", async () => {
             findOneActiveLatestEmailByUser.mockResolvedValue(null);
             findOneById.mockResolvedValue(unverifiedUser);
 

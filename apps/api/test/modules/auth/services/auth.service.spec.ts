@@ -187,14 +187,14 @@ describe('AuthService.maybeRehashPassword', () => {
             configService
         );
 
-    it("rehashes a password whose stored hash's cost is below the configured cost (8 → 12)", () => {
+    it("rehashes a password whose stored hash's cost is below the configured cost (8 → 12)", async () => {
         const service = build();
-        const weakHash = hashService.bcrypt(
+        const weakHash = await hashService.bcrypt(
             'CorrectPass1!',
             hashService.randomSalt(8)
         );
 
-        const result = service.maybeRehashPassword(
+        const result = await service.maybeRehashPassword(
             'CorrectPass1!',
             weakHash
         );
@@ -202,19 +202,22 @@ describe('AuthService.maybeRehashPassword', () => {
         expect(result).not.toBeNull();
         expect(result.passwordHash).not.toEqual(weakHash);
         expect(
-            hashService.bcryptCompare('CorrectPass1!', result.passwordHash)
+            await hashService.bcryptCompare(
+                'CorrectPass1!',
+                result.passwordHash
+            )
         ).toBe(true);
         expect(hashService.bcryptGetCost(result.passwordHash)).toBe(12);
     });
 
-    it('does not rehash when the stored hash is already at the configured cost', () => {
+    it('does not rehash when the stored hash is already at the configured cost', async () => {
         const service = build();
-        const strongHash = hashService.bcrypt(
+        const strongHash = await hashService.bcrypt(
             'CorrectPass1!',
             hashService.randomSalt(12)
         );
 
-        const result = service.maybeRehashPassword(
+        const result = await service.maybeRehashPassword(
             'CorrectPass1!',
             strongHash
         );
@@ -222,18 +225,65 @@ describe('AuthService.maybeRehashPassword', () => {
         expect(result).toBeNull();
     });
 
-    it('does not rehash when the stored hash is above the configured cost', () => {
+    it('does not rehash when the stored hash is above the configured cost', async () => {
         const service = build();
-        const strongerHash = hashService.bcrypt(
+        const strongerHash = await hashService.bcrypt(
             'CorrectPass1!',
             hashService.randomSalt(13)
         );
 
-        const result = service.maybeRehashPassword(
+        const result = await service.maybeRehashPassword(
             'CorrectPass1!',
             strongerHash
         );
 
         expect(result).toBeNull();
+    });
+});
+
+// bcrypt at cost 12 takes ~250 ms; the sync variants blocked the event loop
+// for that long on every (unauthenticated) login. Everything is async now.
+describe('password hashing does not block the event loop', () => {
+    const hashService = new HelperHashService();
+
+    it('HelperHashService.bcrypt and bcryptCompare are async', async () => {
+        const hashing = hashService.bcrypt('pw', hashService.randomSalt(4));
+        expect(hashing).toBeInstanceOf(Promise);
+        const hash = await hashing;
+
+        const comparing = hashService.bcryptCompare('pw', hash);
+        expect(comparing).toBeInstanceOf(Promise);
+        expect(await comparing).toBe(true);
+        expect(await hashService.bcryptCompare('nope', hash)).toBe(false);
+    });
+
+    it('AuthService validateUser / runDummyPasswordCompare / createPassword are async and correct', async () => {
+        const configService = {
+            get: jest.fn((key: string) => {
+                if (key === 'auth.password.saltLength') return 4;
+                if (key.endsWith('KeyPath')) return 'key.pem';
+                return undefined;
+            }),
+        } as any;
+        const service = new AuthService(
+            hashService,
+            new HelperDateService(configService),
+            new HelperStringService(),
+            new JwtService(),
+            configService
+        );
+
+        const creating = service.createPassword('Secret1!');
+        expect(creating).toBeInstanceOf(Promise);
+        const { passwordHash } = await creating;
+
+        const validating = service.validateUser('Secret1!', passwordHash);
+        expect(validating).toBeInstanceOf(Promise);
+        expect(await validating).toBe(true);
+        expect(await service.validateUser('wrong', passwordHash)).toBe(false);
+
+        const dummy = service.runDummyPasswordCompare('anything');
+        expect(dummy).toBeInstanceOf(Promise);
+        await expect(dummy).resolves.toBeUndefined();
     });
 });

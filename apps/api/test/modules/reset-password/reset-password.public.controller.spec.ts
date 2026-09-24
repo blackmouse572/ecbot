@@ -312,7 +312,7 @@ describe('ResetPasswordPublicController — email dispatch', () => {
         const user = { id: 'user-2', email: 'c@d.com', name: 'C' };
         const resetPasswordEntity = { id: 'reset-1', user: { id: 'user-2' } };
         findOneById.mockResolvedValue(user);
-        createPassword.mockReturnValue({ password: 'new-hash' });
+        createPassword.mockResolvedValue({ password: 'new-hash' });
         updatePassword.mockResolvedValue(user);
         resetEntity.mockResolvedValue(undefined);
         createByUser.mockResolvedValue(undefined);
@@ -340,7 +340,7 @@ describe('ResetPasswordPublicController — email dispatch', () => {
         const user = { id: 'user-2', email: 'c@d.com', name: 'C' };
         const resetPasswordEntity = { id: 'reset-1', user: { id: 'user-2' } };
         findOneById.mockResolvedValue(user);
-        createPassword.mockReturnValue({ password: 'new-hash' });
+        createPassword.mockResolvedValue({ password: 'new-hash' });
         updatePassword.mockResolvedValue(user);
         resetEntity.mockResolvedValue(undefined);
         createByUser.mockResolvedValue(undefined);
@@ -361,7 +361,7 @@ describe('ResetPasswordPublicController — email dispatch', () => {
         const user = { id: 'user-2', email: 'c@d.com', name: 'C' };
         const resetPasswordEntity = { id: 'reset-1', user: { id: 'user-2' } };
         findOneById.mockResolvedValue(user);
-        createPassword.mockReturnValue({ password: 'new-hash' });
+        createPassword.mockResolvedValue({ password: 'new-hash' });
         updatePassword.mockResolvedValue(user);
         resetEntity.mockResolvedValue(undefined);
         createByUser.mockResolvedValue(undefined);
