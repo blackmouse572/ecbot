@@ -75,10 +75,8 @@ export const useChatbotTableColumns = () => {
         header: () => iconHeader(<EyeMini />, t("chatbot.details.autoRead")),
         cell: ({ row }) => toggleBadge(row.original.autoRead),
       }),
-      // NOTE: shares the "autoRead" id with the column above — left as-is so
-      // the rendered table is unchanged.
       columnHelper.display({
-        id: "autoRead",
+        id: "typingIndicator",
         header: () =>
           iconHeader(
             <IconCodeDots className="size-5" />,
