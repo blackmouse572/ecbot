@@ -100,6 +100,8 @@ class _AppVars(BaseSettings):
     GUARDRAIL_MODEL: str = "google/gemini-2.5-flash"
     CLASSIFIER_MODEL: str = "google/gemini-2.5-flash"
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
+    # OpenRouter model that answers agent-builder decisions (System One-shaped).
+    DECISION_MODEL: str = "google/gemini-2.5-flash"
     # OpenRouter image-generation model.
     IMAGE_MODEL: str = "google/gemini-2.5-flash-image"
 
