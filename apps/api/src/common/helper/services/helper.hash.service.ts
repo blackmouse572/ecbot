@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { compareSync, genSaltSync, hashSync } from 'bcryptjs';
+import { compareSync, genSaltSync, getRounds, hashSync } from 'bcryptjs';
 import { SHA256, enc } from 'crypto-js';
 import { IHelperHashService } from 'src/common/helper/interfaces/helper.hash-service.interface';
 
@@ -15,6 +15,13 @@ export class HelperHashService implements IHelperHashService {
 
     bcryptCompare(passwordString: string, passwordHashed: string): boolean {
         return compareSync(passwordString, passwordHashed);
+    }
+
+    // The bcrypt cost is embedded in the hash string itself
+    // (`$2a$<cost>$...`), so this reads back whatever cost a given hash
+    // was created at, regardless of the currently configured cost.
+    bcryptGetCost(passwordHashed: string): number {
+        return getRounds(passwordHashed);
     }
 
     sha256(string: string): string {

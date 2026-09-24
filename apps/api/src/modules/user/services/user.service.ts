@@ -533,6 +533,23 @@ export class UserService {
         return user;
     }
 
+    // Persists an opportunistic cost upgrade of an existing password hash
+    // (see AuthService.maybeRehashPassword). Unlike updatePassword, this is
+    // not a real password change, so it deliberately leaves
+    // passwordExpired/passwordCreated/passwordAttempt untouched.
+    async rehashPassword(
+        user: UserEntity,
+        { passwordHash, salt }: Pick<IAuthPassword, 'passwordHash' | 'salt'>,
+        options?: IDatabaseUpdateOptions
+    ): Promise<UserEntity> {
+        const em = options?.em || this.em;
+        user.password = passwordHash;
+        user.salt = salt;
+
+        await em.persistAndFlush(user);
+        return user;
+    }
+
     async increasePasswordAttempt(
         user: UserEntity,
         options?: IDatabaseUpdateOptions

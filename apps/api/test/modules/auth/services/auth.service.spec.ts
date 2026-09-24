@@ -144,3 +144,96 @@ describe('AuthService.googleGetTokenInfo', () => {
         );
     });
 });
+
+// Fix round 1 (Task 18): existing hashes created before the bcrypt cost was
+// raised (8 → 12) still verify fine (bcrypt reads the cost back out of the
+// hash string), but stay that much cheaper to brute-force forever unless
+// they're re-hashed. loginWithCredential calls maybeRehashPassword after a
+// successful password check to upgrade them opportunistically.
+describe('AuthService.maybeRehashPassword', () => {
+    const configValues: Record<string, any> = {
+        'auth.jwt.accessToken.kid': 'access-kid',
+        'auth.jwt.accessToken.privateKeyPath': 'access-private.pem',
+        'auth.jwt.accessToken.publicKeyPath': 'access-public.pem',
+        'auth.jwt.accessToken.expirationTime': 3600,
+        'auth.jwt.refreshToken.kid': 'refresh-kid',
+        'auth.jwt.refreshToken.privateKeyPath': 'refresh-private.pem',
+        'auth.jwt.refreshToken.publicKeyPath': 'refresh-public.pem',
+        'auth.jwt.refreshToken.expirationTime': 86400,
+        'auth.jwt.prefix': 'Bearer',
+        'auth.jwt.audience': 'ecbot-audience',
+        'auth.jwt.issuer': 'ecbot-issuer',
+        'auth.jwt.algorithm': 'RS256',
+        'auth.password.expiredIn': 90,
+        'auth.password.expiredInTemporary': 1,
+        'auth.password.saltLength': 12,
+        'auth.password.attempt': true,
+        'auth.password.maxAttempt': 5,
+        'auth.apple.clientId': 'apple-client-id',
+        'auth.apple.signInClientId': 'apple-signin-client-id',
+        'auth.google.clientId': 'google-client-id-123',
+        'auth.google.clientSecret': 'google-client-secret',
+    };
+    const get = jest.fn((key: string) => configValues[key]);
+    const configService = { get } as any;
+    const hashService = new HelperHashService();
+
+    const build = () =>
+        new AuthService(
+            hashService,
+            new HelperDateService(configService),
+            new HelperStringService(),
+            new JwtService(),
+            configService
+        );
+
+    it("rehashes a password whose stored hash's cost is below the configured cost (8 → 12)", () => {
+        const service = build();
+        const weakHash = hashService.bcrypt(
+            'CorrectPass1!',
+            hashService.randomSalt(8)
+        );
+
+        const result = service.maybeRehashPassword(
+            'CorrectPass1!',
+            weakHash
+        );
+
+        expect(result).not.toBeNull();
+        expect(result.passwordHash).not.toEqual(weakHash);
+        expect(
+            hashService.bcryptCompare('CorrectPass1!', result.passwordHash)
+        ).toBe(true);
+        expect(hashService.bcryptGetCost(result.passwordHash)).toBe(12);
+    });
+
+    it('does not rehash when the stored hash is already at the configured cost', () => {
+        const service = build();
+        const strongHash = hashService.bcrypt(
+            'CorrectPass1!',
+            hashService.randomSalt(12)
+        );
+
+        const result = service.maybeRehashPassword(
+            'CorrectPass1!',
+            strongHash
+        );
+
+        expect(result).toBeNull();
+    });
+
+    it('does not rehash when the stored hash is above the configured cost', () => {
+        const service = build();
+        const strongerHash = hashService.bcrypt(
+            'CorrectPass1!',
+            hashService.randomSalt(13)
+        );
+
+        const result = service.maybeRehashPassword(
+            'CorrectPass1!',
+            strongerHash
+        );
+
+        expect(result).toBeNull();
+    });
+});

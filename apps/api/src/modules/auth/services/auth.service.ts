@@ -255,6 +255,32 @@ export class AuthService implements IAuthService {
         );
     }
 
+    // Raising `auth.password.saltLength` (the bcrypt cost) only affects
+    // *new* hashes — bcrypt reads the cost back out of the hash string
+    // itself, so a hash created at a lower cost keeps verifying, and stays
+    // that much cheaper to brute-force, forever. Call this after a
+    // successful password check to opportunistically re-hash the plaintext
+    // at the current cost; returns null when the stored hash is already at
+    // (or above) that cost. Dormant accounts that never log in or reset
+    // their password keep their original, weaker cost until they do.
+    maybeRehashPassword(
+        passwordString: string,
+        currentPasswordHash: string
+    ): Pick<IAuthPassword, 'passwordHash' | 'salt'> | null {
+        const currentCost = this.helperHashService.bcryptGetCost(
+            currentPasswordHash
+        );
+        if (currentCost >= this.passwordSaltLength) {
+            return null;
+        }
+
+        const salt = this.createSalt(this.passwordSaltLength);
+        return {
+            passwordHash: this.helperHashService.bcrypt(passwordString, salt),
+            salt,
+        };
+    }
+
     createPayloadAccessToken(
         data: UserEntity,
         session: string,

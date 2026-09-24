@@ -121,27 +121,45 @@ export class AuthPublicController {
         const isPasswordLocked: boolean =
             passwordAttempt && user.passwordAttempt >= passwordMaxAttempt;
 
+        // Always run the real compare, whatever the lock state, so a locked
+        // account's response takes the same time as an unlocked one's.
         const validate: boolean = this.authService.validateUser(
             password,
             user.password
         );
+
+        if (isPasswordLocked) {
+            // A locked account is rejected outright, whatever the password
+            // — reset your password to unlock it. Branching on `validate`
+            // here would turn the lockout into an unlimited-guess "is this
+            // the right password" oracle (a 403 for the right password vs.
+            // a 400 for a wrong one), which defeats the point of locking.
+            throw this.buildInvalidCredentialError();
+        }
+
         if (!validate) {
-            // Stop counting once already locked, so the counter doesn't
-            // grow past the threshold.
-            if (!isPasswordLocked) {
-                await this.userService.increasePasswordAttempt(user);
-            }
+            await this.userService.increasePasswordAttempt(user);
 
             // Identical to the unknown-email error above — no attempt
             // count, no lockout hint — a guesser can't distinguish "wrong
             // password" from "no such account" or "this account is locked."
             throw this.buildInvalidCredentialError();
-        } else if (isPasswordLocked) {
-            throw new ForbiddenException({
-                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
-                message: 'auth.error.passwordAttemptMax',
-            });
-        } else if (user.status === ENUM_USER_STATUS.BLOCKED) {
+        }
+
+        // Correct password on an unlocked account: opportunistically
+        // upgrade a hash that was created at a lower bcrypt cost (e.g.
+        // before the cost-12 config change) to the current cost. Dormant
+        // accounts that never log in or reset a password keep their
+        // original, weaker cost until they do.
+        const rehash = this.authService.maybeRehashPassword(
+            password,
+            user.password
+        );
+        if (rehash) {
+            await this.userService.rehashPassword(user, rehash);
+        }
+
+        if (user.status === ENUM_USER_STATUS.BLOCKED) {
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.BLOCKED_FORBIDDEN,
                 message: 'user.error.blocked',
@@ -591,7 +609,11 @@ export class AuthPublicController {
     private buildInvalidCredentialError(): BadRequestException {
         return new BadRequestException({
             statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
-            message: 'auth.error.passwordNotMatch',
+            // Dedicated login copy — distinct from auth.error.passwordNotMatch
+            // (used by changePassword's old-password mismatch), because this
+            // one message now also covers an unknown email and a locked
+            // account, not just a wrong password.
+            message: 'auth.error.invalidCredential',
         });
     }
 }

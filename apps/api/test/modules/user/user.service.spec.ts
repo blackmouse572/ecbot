@@ -18,6 +18,7 @@ describe('UserService - exact email lookups (Task 12)', () => {
 
     const mockEm = {
         findOne: jest.fn(),
+        persistAndFlush: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockUserRepository = {};
@@ -193,6 +194,59 @@ describe('UserService - exact email lookups (Task 12)', () => {
             });
 
             expect(keyA).not.toEqual(keyB);
+        });
+    });
+
+    // Fix round 1 (Task 18): reset-password's `reset()` controller action
+    // saves the new password via this method. Pinning that it also clears
+    // passwordAttempt, so a user locked out by repeated wrong-password
+    // guesses can still recover by resetting their password instead of
+    // being stuck forever (loginWithCredential now refuses a locked account
+    // outright, whatever the password — reset is the only way out).
+    describe('updatePassword', () => {
+        it('resets passwordAttempt to 0 so a locked account can recover via reset-password', async () => {
+            const user = {
+                id: 'user-1',
+                passwordAttempt: 5,
+            } as any;
+
+            const result = await service.updatePassword(user, {
+                passwordHash: 'new-hash',
+                passwordExpired: new Date('2099-01-01'),
+                passwordCreated: new Date('2026-01-01'),
+                salt: 'new-salt',
+            });
+
+            expect(result.passwordAttempt).toBe(0);
+            expect(mockEm.persistAndFlush).toHaveBeenCalledWith(user);
+        });
+    });
+
+    // Fix round 1 (Task 18): loginWithCredential calls this after a
+    // successful password check to upgrade a hash that was created at a
+    // lower bcrypt cost. Unlike updatePassword, this is not a real password
+    // change, so passwordExpired/passwordCreated/passwordAttempt must be
+    // left untouched.
+    describe('rehashPassword', () => {
+        it('updates password and salt without touching expiry or the attempt counter', async () => {
+            const user = {
+                id: 'user-1',
+                password: 'old-hash',
+                salt: 'old-salt',
+                passwordExpired: new Date('2099-01-01'),
+                passwordAttempt: 3,
+            } as any;
+
+            const result = await service.rehashPassword(user, {
+                passwordHash: 'new-hash-at-cost-12',
+                salt: 'new-salt',
+            });
+
+            expect(result.password).toBe('new-hash-at-cost-12');
+            expect(result.salt).toBe('new-salt');
+            expect(result.passwordExpired).toEqual(new Date('2099-01-01'));
+            expect(result.passwordAttempt).toBe(3);
+            expect(mockEm.persistAndFlush).toHaveBeenCalledWith(user);
         });
     });
 });

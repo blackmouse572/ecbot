@@ -28,6 +28,10 @@ export interface IAuthService {
     ): IAuthJwtRefreshTokenPayload | null;
     validateUser(passwordString: string, passwordHash: string): boolean;
     runDummyPasswordCompare(passwordString: string): void;
+    maybeRehashPassword(
+        passwordString: string,
+        currentPasswordHash: string
+    ): Pick<IAuthPassword, 'passwordHash' | 'salt'> | null;
     createPayloadAccessToken(
         data: UserEntity,
         session: string,
