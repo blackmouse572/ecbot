@@ -53,9 +53,11 @@ export class VerificationEmailController {
         @Body(new RequestEmailPipe())
         { email, id }: VerificationResendEmailRequestDto
     ): Promise<void> {
-        const verification = await this.verificationService.findOne({
-            to: email,
-        });
+        const verification =
+            await this.verificationService.findOneActiveLatestEmailByUser(
+                id,
+                email
+            );
 
         const user = await this.userService.findOneById(id);
 
@@ -105,9 +107,7 @@ export class VerificationEmailController {
         { email, id, otp }: VerificationVerifyEmailRequestDto
     ): Promise<void> {
         const [verificationTask, userTask] = await Promise.allSettled([
-            this.verificationService.findOne({
-                to: email,
-            }),
+            this.verificationService.findOneActiveLatestEmailByUser(id, email),
             this.userService.findOneById(id),
         ]);
         const verification =
@@ -133,6 +133,17 @@ export class VerificationEmailController {
             otp
         );
         if (!check) {
+            const attempted =
+                await this.verificationService.incrementOtpAttempt(
+                    verification
+                );
+            if (!attempted.isActive) {
+                throw new BadRequestException({
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
+                    message: 'verification.error.attemptMax',
+                });
+            }
+
             throw new BadRequestException({
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.OTP_NOT_MATCH,
                 message: 'verification.error.otpNotMatch',

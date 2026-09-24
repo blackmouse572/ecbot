@@ -8,6 +8,7 @@
     "error": {
         "notFound": "Không tìm thấy xác minh.",
         "otpNotMatch": "Mã xác minh không khớp.",
+        "attemptMax": "Nhập sai quá nhiều lần. Mã xác minh này đã bị khóa.",
         "userEmailVerified": "Email này đã được xác minh rồi.",
         "userMobileNumberVerified": "Số điện thoại di động này đã được xác minh rồi."
     }
