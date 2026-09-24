@@ -72,6 +72,18 @@ export class AppEnvDto {
     @Type(() => Number)
     HTTP_PORT: number;
 
+    // Reverse-proxy hops trusted for req.ip (Express `trust proxy`). Default: 1.
+    @IsOptional()
+    @IsNumber({
+        allowInfinity: false,
+        allowNaN: false,
+        maxDecimalPlaces: 0,
+    })
+    @IsInt()
+    @Min(0)
+    @Type(() => Number)
+    APP_TRUST_PROXY_HOPS?: number;
+
     @IsBoolean()
     @IsNotEmpty()
     @Type(() => Boolean)

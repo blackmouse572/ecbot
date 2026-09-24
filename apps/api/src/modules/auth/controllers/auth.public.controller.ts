@@ -20,6 +20,7 @@ import {
     Res,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Response as ExpressResponse } from 'express';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { MessageService } from 'src/common/message/services/message.service';
@@ -90,6 +91,7 @@ export class AuthPublicController {
     @AuthPublicLoginCredentialDoc()
     @Response('auth.loginWithCredential')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @HttpCode(HttpStatus.OK)
     @Post('/login/credential')
     async loginWithCredential(

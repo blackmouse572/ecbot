@@ -25,6 +25,12 @@ export default registerAs('app', (): Record<string, any> => {
             host: process.env.HTTP_HOST,
             port: Number.parseInt(process.env.PORT ?? process.env.HTTP_PORT),
         },
+        // Reverse-proxy hops trusted for req.ip (Express `trust proxy`). Behind
+        // a load balancer this must be >=1, or every client resolves to the
+        // same IP and shares one throttle bucket.
+        trustProxyHops: Number.parseInt(
+            process.env.APP_TRUST_PROXY_HOPS ?? '1'
+        ),
         urlVersion: {
             enable: isFlagOn(process.env.URL_VERSIONING_ENABLE),
             prefix: 'v',

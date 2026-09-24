@@ -13,6 +13,7 @@ import {
     Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { uniqueId } from 'lodash';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
@@ -69,6 +70,7 @@ export class ResetPasswordPublicController {
     @ResetPasswordPublicRequestDoc()
     @Response('resetPassword.request')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @HttpCode(HttpStatus.OK)
     @Post('/request')
     async request(
@@ -180,6 +182,7 @@ export class ResetPasswordPublicController {
     @ResetPasswordPublicVerifyDoc()
     @Response('resetPassword.verify')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @HttpCode(HttpStatus.OK)
     @Post('/verify/:token')
     async verify(
@@ -233,6 +236,7 @@ export class ResetPasswordPublicController {
     @ResetPasswordPublicResetDoc()
     @Response('resetPassword.reset')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @HttpCode(HttpStatus.OK)
     @Post('/reset/:token')
     async reset(

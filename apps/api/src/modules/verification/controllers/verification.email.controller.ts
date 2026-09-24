@@ -21,6 +21,7 @@ import {
     Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { uniqueId } from 'lodash';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
@@ -48,6 +49,7 @@ export class VerificationEmailController {
     @VerificationEmailResendEmailDoc()
     @Response('verification.resendEmail')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Post('/resend/email')
     async resendVerificationEmail(
         @Body(new RequestEmailPipe())
@@ -101,6 +103,7 @@ export class VerificationEmailController {
     @VerificationEmailVerifyEmailDoc()
     @Response('verification.verifyEmail')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Post('/verify/email')
     async verifyEmail(
         @Body(new RequestEmailPipe())
