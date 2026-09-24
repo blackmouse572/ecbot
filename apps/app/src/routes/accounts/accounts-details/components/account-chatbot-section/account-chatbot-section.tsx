@@ -1,6 +1,5 @@
 import { ChatbotSection } from "@/components/chatbot/chatbot-section";
 import { useAccountChatbot } from "@/hooks/api";
-import { defaultNs } from "@/i18n";
 import type { ChatbotListResponseDto } from "@repo/client";
 import { useTranslation } from "react-i18next";
 
@@ -14,7 +13,7 @@ type Props = {
  * without one render nothing rather than an empty card.
  */
 export const AccountChatbotSection = ({ accountId, initialData }: Props) => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
   const { chatbot, isLoading } = useAccountChatbot(accountId, { initialData });
 
   const linkedChatbotId = isLoading ? undefined : chatbot?.id;

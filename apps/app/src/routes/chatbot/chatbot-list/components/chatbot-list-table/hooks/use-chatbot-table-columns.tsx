@@ -1,13 +1,13 @@
+import { headerLabel } from "@/components/table/columns";
 import { CreatedAtCell } from "@/components/table/table-cells/common/created-at-cell";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { defaultNs } from "@/i18n";
 import { ROUTES } from "@/routes/constants";
 import { EyeMini } from "@medusajs/icons";
 import { StatusBadge } from "@medusajs/ui";
 import type { ChatbotListResponseDto } from "@repo/client";
 import { IconCodeDots } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo, type ReactNode } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { CHATBOT_TYPE_CONFIG } from "../../../../constants";
@@ -25,18 +25,10 @@ type ChatbotRow = ChatbotListResponseDto & {
 };
 
 export const useChatbotTableColumns = () => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
 
   return useMemo(() => {
-    /** Header for the toggle columns: a glyph in front of the label. */
-    const iconHeader = (icon: ReactNode, label: string) => (
-      <span className="flex items-center gap-1">
-        {icon}
-        {label}
-      </span>
-    );
-
     /** Reads an on/off chatbot setting as an enabled / disabled badge. */
     const toggleBadge = (on?: boolean) => (
       <StatusBadge color={on ? "green" : "grey"}>
@@ -72,15 +64,23 @@ export const useChatbotTableColumns = () => {
       }),
       columnHelper.display({
         id: "autoRead",
-        header: () => iconHeader(<EyeMini />, t("chatbot.details.autoRead")),
+        header: () =>
+          headerLabel(
+            <>
+              <EyeMini />
+              {t("chatbot.details.autoRead")}
+            </>,
+          ),
         cell: ({ row }) => toggleBadge(row.original.autoRead),
       }),
       columnHelper.display({
         id: "typingIndicator",
         header: () =>
-          iconHeader(
-            <IconCodeDots className="size-5" />,
-            t("chatbot.details.typingIndicator"),
+          headerLabel(
+            <>
+              <IconCodeDots className="size-5" />
+              {t("chatbot.details.typingIndicator")}
+            </>,
           ),
         cell: ({ row }) => toggleBadge(row.original.typingIndicator),
       }),
