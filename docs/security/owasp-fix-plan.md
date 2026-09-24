@@ -26,7 +26,7 @@ LLM Top 10) of 2026-09-24. Line numbers below are approximate — always verify 
 - API tests: unit specs under `apps/api/test/modules/**` (Jest, mocked providers). Run one file with
   `cd apps/api && pnpm test -- <path>`. apps/ai: `cd apps/ai && uv run pytest -m "not integration" <path>`.
   apps/app / apps/edge / packages/ui: `pnpm --filter <name> test`.
-- Migrations: `apps/api/src/database/migrations/`, hand-written, timestamp-named. The MikroORM snapshot
+- Migrations: `apps/api/migrations/`, hand-written, timestamp-named. The MikroORM snapshot
   must stay in parity with entities (CI guard) — see commit `2a89883` for the pattern.
 - After API DTO/route changes that apps/app consumes: `pnpm generate:client`.
 - Commits: Conventional Commits `<type>(<scope>): <subject>`, scope = workspace (api, app, ai, edge, ui).
