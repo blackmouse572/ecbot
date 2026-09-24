@@ -36,8 +36,8 @@
     "e2e:record:down": "docker-compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.e2e.record.yml down -v"
   },
   "devDependencies": {
-    "prettier": "^3.9.6",
-    "turbo": "^2.10.11",
+    "prettier": "^3.9.9",
+    "turbo": "^2.11.3",
     "typescript": "5.8.2"
   },
   "packageManager": "pnpm@9.0.0",
@@ -65,7 +65,7 @@
     }
   },
   "dependencies": {
-    "@turbo/gen": "^2.10.11",
+    "@turbo/gen": "^2.11.3",
     "slugify": "^1.6.9"
   }
 }
