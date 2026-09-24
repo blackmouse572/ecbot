@@ -12,6 +12,11 @@ import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '@app/modules/knowledge-base/enu
 import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
 
 jest.mock('@sentry/nestjs', () => ({ captureException: jest.fn() }));
+jest.mock('@app/common/utils/gcp-id-token.util', () => ({
+    getInternalAuthHeader: jest
+        .fn()
+        .mockResolvedValue({ Authorization: 'Bearer gcp-id-token' }),
+}));
 
 describe('KnowledgeIngestTaskService', () => {
     const findOneById = jest.fn();
@@ -23,7 +28,9 @@ describe('KnowledgeIngestTaskService', () => {
     const getItemBuffer = jest.fn();
     const configService = {
         get: jest.fn((key: string) =>
-            key === 'ai.internalToken' ? 'internal-token' : 'http://ai.example.test'
+            key === 'ai.internalToken'
+                ? 'internal-token'
+                : 'http://ai.example.test'
         ),
     };
     let service: KnowledgeIngestTaskService;
@@ -31,7 +38,9 @@ describe('KnowledgeIngestTaskService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         configService.get.mockImplementation((key: string) =>
-            key === 'ai.internalToken' ? 'internal-token' : 'http://ai.example.test'
+            key === 'ai.internalToken'
+                ? 'internal-token'
+                : 'http://ai.example.test'
         );
         findOneById.mockResolvedValue({
             id: 'item-1',
@@ -78,12 +87,18 @@ describe('KnowledgeIngestTaskService', () => {
             { response: { data: { detail: 'URL ingest failed: boom' } } },
             'URL ingest failed: boom',
         ],
-        [{ response: { data: { detail: '' } }, message: 'axios message' }, 'axios message'],
+        [
+            { response: { data: { detail: '' } }, message: 'axios message' },
+            'axios message',
+        ],
         [
             { response: { data: { detail: [{ msg: 'bad url' }] } } },
             JSON.stringify([{ msg: 'bad url' }]),
         ],
-        [{ message: 'Request failed with status code 502' }, 'Request failed with status code 502'],
+        [
+            { message: 'Request failed with status code 502' },
+            'Request failed with status code 502',
+        ],
         ['plain string error', 'plain string error'],
     ])('extracts message from %p as %p', async (error, expected) => {
         const { extractIngestErrorMessage } =
@@ -128,6 +143,7 @@ describe('KnowledgeIngestTaskService', () => {
             {
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: {
+                    Authorization: 'Bearer gcp-id-token',
                     'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
                 },
@@ -174,6 +190,7 @@ describe('KnowledgeIngestTaskService', () => {
             expect.objectContaining({
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: {
+                    Authorization: 'Bearer gcp-id-token',
                     'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
                 },
@@ -210,6 +227,7 @@ describe('KnowledgeIngestTaskService', () => {
             expect.objectContaining({
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: expect.objectContaining({
+                    Authorization: 'Bearer gcp-id-token',
                     'X-Internal-Token': 'internal-token',
                 }),
                 maxBodyLength: Infinity,
@@ -233,6 +251,7 @@ describe('KnowledgeIngestTaskService', () => {
             {
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: {
+                    Authorization: 'Bearer gcp-id-token',
                     'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
                 },
@@ -271,6 +290,7 @@ describe('KnowledgeIngestTaskService', () => {
             {
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
                 headers: {
+                    Authorization: 'Bearer gcp-id-token',
                     'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
                 },

@@ -13,6 +13,11 @@ import {
 import { CustomerTagClassifierTaskService } from '../../../src/modules/customer/services/customer-tag-classifier-task.service';
 
 jest.mock('@sentry/nestjs', () => ({ captureException: jest.fn() }));
+jest.mock('@app/common/utils/gcp-id-token.util', () => ({
+    getInternalAuthHeader: jest
+        .fn()
+        .mockResolvedValue({ Authorization: 'Bearer gcp-id-token' }),
+}));
 
 describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () => {
     let service: CustomerTagClassifierTaskService;
@@ -100,11 +105,12 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         );
     });
 
-    it('sends the internal token header on the classify call', async () => {
+    it('sends the GCP ID token and internal token headers on the classify call', async () => {
         await service.handle(dto() as any, 0);
 
         const [, , options] = httpService.post.mock.calls[0];
         expect(options.headers).toEqual({
+            Authorization: 'Bearer gcp-id-token',
             'X-Internal-Token': 'test-token',
             'Content-Type': 'application/json',
         });
