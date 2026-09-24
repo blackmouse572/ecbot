@@ -199,9 +199,6 @@ importers:
       jwks-rsa:
         specifier: ^3.2.2
         version: 3.2.2
-      localtunnel:
-        specifier: ^2.0.2
-        version: 2.0.2
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -395,6 +392,9 @@ importers:
       lint-staged:
         specifier: ^15.5.2
         version: 15.5.2
+      localtunnel:
+        specifier: ^2.0.2
+        version: 2.0.2
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
