@@ -298,23 +298,22 @@ describe('WorkspaceMemberController', () => {
             getTotalWithRoleAndCountry: jest.fn(),
             mapShort: jest.fn(),
         };
-        const mockOwnerService = { getListByOwner: jest.fn() };
 
         let inviteController: WorkspaceMemberController;
 
         beforeEach(() => {
             jest.clearAllMocks();
-            mockOwnerService.getListByOwner.mockResolvedValue([]);
             mockMemberService.getUserWorkspaces.mockResolvedValue([
                 'ws-shared',
             ]);
             mockPaginationService.totalPage.mockReturnValue(1);
+            mockUserService.mapShort.mockImplementation(user => user);
 
             inviteController = new WorkspaceMemberController(
                 {} as any, // em
                 mockUserService as any,
                 mockMemberService as any,
-                mockOwnerService as any,
+                {} as any, // workSpaceService (owner)
                 mockRoleService as any,
                 mockPaginationService as any,
                 mockActivityService as any,
@@ -366,7 +365,7 @@ describe('WorkspaceMemberController', () => {
             expect(find.id.$nin).toEqual(currentMemberIds);
         });
 
-        it('returns co-member fuzzy results without an email field', async () => {
+        it('returns co-member fuzzy results with email (GET /:workspace/members already exposes it to the same audience)', async () => {
             mockMemberService.findAll
                 .mockResolvedValueOnce([])
                 .mockResolvedValueOnce([{ user: { id: 'friend-1' } }]);
@@ -384,8 +383,10 @@ describe('WorkspaceMemberController', () => {
 
             expect(result.data).toHaveLength(1);
             expect(result.data[0].name).toBe('Friend');
-            expect(result.data[0].email).toBeUndefined();
-            expect(mockUserService.mapShort).not.toHaveBeenCalled();
+            expect(result.data[0].email).toBe('friend@mail.com');
+            expect(mockUserService.mapShort).toHaveBeenCalledWith(
+                expect.objectContaining({ id: 'friend-1' })
+            );
         });
 
         it('an exact email search finds a stranger, not limited to co-members', async () => {
@@ -399,7 +400,6 @@ describe('WorkspaceMemberController', () => {
                 stranger,
             ]);
             mockUserService.getTotalWithRoleAndCountry.mockResolvedValue(1);
-            mockUserService.mapShort.mockImplementation(user => user);
 
             const result = await inviteController.getAvailableInviteMembers(
                 callerId,
@@ -433,6 +433,28 @@ describe('WorkspaceMemberController', () => {
             const find =
                 mockUserService.findAllWithRoleAndCountry.mock.calls[0][0];
             expect(find.id.$nin).toEqual(currentMemberIds);
+        });
+
+        it('respects the caller-provided offset for the exact-email match (page 2 must not repeat page 1)', async () => {
+            mockMemberService.findAll.mockResolvedValueOnce([]);
+            mockUserService.findAllWithRoleAndCountry.mockResolvedValue([]);
+            mockUserService.getTotalWithRoleAndCountry.mockResolvedValue(0);
+
+            await inviteController.getAvailableInviteMembers(
+                callerId,
+                workspace,
+                'x@mail.com',
+                { ...pagination, _offset: 20 }
+            );
+
+            expect(
+                mockUserService.findAllWithRoleAndCountry
+            ).toHaveBeenCalledWith(
+                expect.any(Object),
+                expect.objectContaining({
+                    paging: { limit: pagination._limit, offset: 20 },
+                })
+            );
         });
     });
 });

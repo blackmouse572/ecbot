@@ -7,11 +7,10 @@ import type React from "react";
 
 const ITEM_LAYOUT = "px-3 py-2 flex items-center justify-between";
 
-// Fuzzy (co-member) search results never carry an email — only an exact
-// email match does (see the /invitable endpoint's two search branches).
-type InvitableUser = Pick<UserListResponseDto, "id" | "name" | "photo"> & {
-  email?: string;
-};
+type InvitableUser = Pick<
+  UserListResponseDto,
+  "id" | "name" | "email" | "photo"
+>;
 
 export type InvitableUserItemProps = React.ComponentProps<
   typeof CommandItem

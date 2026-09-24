@@ -8,12 +8,12 @@ import {
 } from '@app/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from '@app/common/doc/enums/doc.enum';
 import { UserDocParamsId } from '@app/modules/user/constants/user.doc.constant';
+import { UserShortResponseDto } from '@app/modules/user/dtos/response/user.short.response.dto';
 import { applyDecorators } from '@nestjs/common';
 import { WorkspaceDocParamsId } from '../constants/workspace.doc.constant';
 import { WorkSpaceCreateRequestDto } from '../dtos/request/workspace.create.request';
 import { WorkSpaceInviteMemberRequestDto } from '../dtos/request/workspace.invite-member.request';
 import { WorkSpaceUpdateRequestDto } from '../dtos/request/workspace.update.request';
-import { WorkspaceInvitableCoMemberResponseDto } from '../dtos/response/workspace-invitable-co-member.response.dto';
 import { WorkspaceMemberGetResponseDto } from '../dtos/response/workspace-member.get.response.dto';
 import { WorkspaceMemberListResponseDto } from '../dtos/response/workspace-member.list.response.dto';
 import { WorkspaceGetProfileResponseDto } from '../dtos/response/workspace.get-profile.response';
@@ -202,19 +202,16 @@ export function GetInvitableUserListDoc(): MethodDecorator {
         Doc({
             summary: 'Get all users that not belong to the workspace',
             description:
-                'This endpoint retrieves users eligible to invite: a fuzzy name search over users who already share a workspace with the caller (no email in these results), or an exact match by email for anyone else on the platform when the search value is a full email address.',
+                'This endpoint retrieves users eligible to invite: a fuzzy name search over users who already share a workspace with the caller, or an exact match by email for anyone else on the platform when the search value is a full email address.',
         }),
         DocAuth({
             jwtAccessToken: true,
             xApiKey: true,
         }),
         DocGuard(MEMBER_POLICY_GUARD),
-        DocResponsePaging<WorkspaceInvitableCoMemberResponseDto>(
-            'workspace.member.list',
-            {
-                dto: WorkspaceInvitableCoMemberResponseDto,
-            }
-        ),
+        DocResponsePaging<UserShortResponseDto>('workspace.member.list', {
+            dto: UserShortResponseDto,
+        }),
         DocRequest({
             params: WorkspaceDocParamsId,
         })

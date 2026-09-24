@@ -42,7 +42,6 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { isEmail } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
 import {
     WorkspaceMemberOrOwnerProtected,
     WorkspaceOwnerProtected,
@@ -61,7 +60,6 @@ import {
     WorkSpaceOwnerMemberRemoveDoc,
 } from '../docs/workspace.owner.doc';
 import { WorkspaceJoinRequestDto } from '../dtos/request/workspace.join-request.request.dto';
-import { WorkspaceInvitableCoMemberResponseDto } from '../dtos/response/workspace-invitable-co-member.response.dto';
 import { WorkspaceMemberGetResponseDto } from '../dtos/response/workspace-member.get.response.dto';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
 import { IWorkspaceMemberWithUserDoc } from '../interfaces/workspace-member.interface';
@@ -377,6 +375,7 @@ export class WorkspaceMemberController {
         if (trimmedSearch && isEmail(trimmedSearch)) {
             return this.findInvitableByExactEmail(trimmedSearch, memberIds, {
                 limit: _limit,
+                offset: _offset,
             });
         }
 
@@ -393,7 +392,7 @@ export class WorkspaceMemberController {
     private async findInvitableByExactEmail(
         email: string,
         excludedMemberIds: string[],
-        { limit }: { limit: number }
+        { limit, offset }: { limit: number; offset: number }
     ) {
         const find: Record<string, any> = {
             email: email.toLowerCase(),
@@ -401,7 +400,7 @@ export class WorkspaceMemberController {
         };
         const invitableUsers =
             await this.userService.findAllWithRoleAndCountry(find, {
-                paging: { limit, offset: 0 },
+                paging: { limit, offset },
             });
         const total = await this.countInvitableUsers(find);
         const totalPage: number = this.paginationService.totalPage(
@@ -452,29 +451,19 @@ export class WorkspaceMemberController {
         );
 
         return {
-            data: invitableUsers.map(user =>
-                plainToInstance(WorkspaceInvitableCoMemberResponseDto, user)
-            ),
+            data: invitableUsers.map(user => this.userService.mapShort(user)),
             _pagination: { total, totalPage },
         };
     }
 
-    // Users who share at least one workspace with the caller — an active
-    // membership or ownership of a workspace the caller also belongs to
-    // (ownership itself creates an active membership row on workspace
-    // creation, but the owner-lookup is kept as a defensive belt-and-braces
-    // for any workspace missing that row).
+    // Users who share at least one workspace with the caller. Ownership
+    // always creates an active membership row for the owner at workspace
+    // creation (see WorkspaceOwnerService.create), so active memberships
+    // alone already cover both plain members and owners — no separate
+    // owner-only lookup needed.
     private async getCoMemberIds(callerId: string): Promise<string[]> {
-        const [ownedWorkspaces, memberWorkspaceIds] = await Promise.all([
-            this.workSpaceService.getListByOwner(callerId),
-            this.workSpaceMemberService.getUserWorkspaces(callerId),
-        ]);
-        const sharedWorkspaceIds = Array.from(
-            new Set([
-                ...memberWorkspaceIds,
-                ...ownedWorkspaces.map(w => w.id),
-            ])
-        );
+        const sharedWorkspaceIds =
+            await this.workSpaceMemberService.getUserWorkspaces(callerId);
 
         if (sharedWorkspaceIds.length === 0) {
             return [];

@@ -10,9 +10,9 @@ import {
   workspaceMemberControllerMemberDetailsV1,
   workspaceMemberControllerMembersV1,
   type ResponsePagingDto,
+  type UserShortResponseDto,
   type WorkSpaceGetResponseDto,
   type WorkSpaceInviteMemberRequestDto,
-  type WorkspaceInvitableCoMemberResponseDto,
   type WorkspaceMemberControllerFindWorkspaceByInvitationCodeV1Response,
   type WorkspaceMemberControllerGetAvailableInviteMembersV1Data,
   type WorkspaceMemberGetResponseDto,
@@ -108,7 +108,7 @@ const fetchInvitableUsers = async (
       query,
     });
   return response.data as Omit<ResponsePagingDto, "data"> & {
-    data: WorkspaceInvitableCoMemberResponseDto[];
+    data: UserShortResponseDto[];
   };
 };
 
