@@ -29,6 +29,32 @@ function getFacebookConfig(): PlatformConfig {
   };
 }
 
+const WHATSAPP_GRAPH_API_VERSION = "v23.0";
+
+// WhatsApp Embedded Signup opened as a plain facebook.com popup rather than
+// through Meta's JS SDK, which ad-blockers stop. The config_id replaces scopes;
+// the redirect carries only a code, so the backend finds the shared WhatsApp
+// Business account and numbers itself. Reuses the Facebook callback page.
+function getWhatsAppConfig(): PlatformConfig {
+  // Mirrors what FB.login sends for Embedded Signup v4, minus the SDK's own
+  // response channel: our redirect_uri receives the code instead.
+  const params = new URLSearchParams({
+    client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
+    redirect_uri: import.meta.env.VITE_FACEBOOK_REDIRECT_URI,
+    config_id: import.meta.env.VITE_WHATSAPP_CONFIG_ID,
+    response_type: "code",
+    override_default_response_type: "true",
+    display: "popup",
+    // v4 sends only `setup`. `sessionInfoVersion` would make the popup report
+    // to an SDK listener in this window, which does not exist without the SDK.
+    extras: JSON.stringify({ setup: {} }),
+  });
+  return {
+    url: `https://www.facebook.com/${WHATSAPP_GRAPH_API_VERSION}/dialog/oauth?${params}`,
+    windowTitle: "WhatsApp Signup",
+  };
+}
+
 function getInstagramConfig(): PlatformConfig {
   const appId = import.meta.env.VITE_INSTAGRAM_APP_ID;
   const redirectUri = import.meta.env.VITE_INSTAGRAM_REDIRECT_URI;
@@ -71,6 +97,7 @@ const PLATFORM_CONFIGS: Record<string, () => PlatformConfig> = {
   ZALO_ACCOUNT: getZaloConfig,
   TIKTOK_SHOP: getTikTokShopConfig,
   SHOPEE_SHOP: getShopeeConfig,
+  WHATSAPP_BUSINESS: getWhatsAppConfig,
 };
 
 export function useOAuthLogin(

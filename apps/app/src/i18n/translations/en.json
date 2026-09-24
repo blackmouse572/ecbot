@@ -458,6 +458,19 @@
           "tokenHint": "Create a bot and get the token via @BotFather",
           "tokenInvalid": "Invalid token format — expected 1234567890:ABC...",
           "cta": "Connect Bot"
+        },
+        "whatsapp": {
+          "description": "Paste your WhatsApp Business phone number ID and a permanent System User access token from Meta.",
+          "phoneNumberIdLabel": "Phone number ID",
+          "phoneNumberIdInvalid": "Phone number ID must contain digits only",
+          "tokenLabel": "Access token",
+          "tokenPlaceholder": "EAAG...",
+          "tokenHint": "Find both under WhatsApp → API Setup in your Meta app. Also set the app's WhatsApp webhook to /api/v1/public/webhooks/whatsapp and subscribe to the messages field.",
+          "cta": "Connect WhatsApp",
+          "tabs": {
+            "oauth": "Log in with Facebook",
+            "manual": "Enter manually"
+          }
         }
       }
     },
@@ -528,6 +541,10 @@
         "websiteWidget": {
           "label": "Website Widget",
           "description": "A chat widget embedded on your website."
+        },
+        "whatsappBusiness": {
+          "label": "WhatsApp Business",
+          "description": "A WhatsApp Business number connected through the Cloud API."
         }
       },
       "apiChannel": {
