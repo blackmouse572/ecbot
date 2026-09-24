@@ -19,7 +19,7 @@ Decisions already agreed:
 - **Selections are saved as a profile.** The API builds the prompt from the profile and writes it into the existing `generalKnowledge` column, which `apps/ai` already reads. `apps/ai` does no building, and the existing invalidation (`ChatbotCacheService.invalidate`) refreshes it.
 - **The free-text prompt editor goes away.** An optional "Extra instructions" field is appended at the end instead.
 - **Prompt templates are in English.** The agent replies in the chosen primary language, and facts the user typed are kept as written.
-- **Jev (TypeSafe) turns a one-sentence description into suggested answers**, called server-side. Suggestions are cached in Redis.
+- **A decision model turns a one-sentence description into suggested answers.** Amended 2026-09-24: it runs in `apps/ai` on OpenRouter through the existing LangChain structured-output pattern, with the model chosen by the `DECISION_MODEL` environment variable. The endpoint keeps TypeSafe System One's question/answer shape, so Jev can be plugged in later as another provider. apps/api forwards the call and caches suggestions in Redis.
 - **The chatbot is created as an inactive draft after the Rules group**, so knowledge, tools and the test chat all work against a real chatbot ID.
 
 ## Architecture

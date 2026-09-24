@@ -2487,6 +2487,365 @@ git commit -m "feat(api): agent builder suggest endpoint backed by Jev with Redi
 
 ---
 
+### Amendment (2026-09-24): the decision model runs in apps/ai on OpenRouter
+
+The owner decided the suggestion call must not go to TypeSafe's API. Instead, `apps/ai` answers the same typed questions with an OpenRouter model chosen by an environment variable (`DECISION_MODEL`, defaulting to `google/gemini-2.5-flash`), through the existing LangChain `build_chat_model(...).with_structured_output(...)` pattern that the customer classifier uses. Jev is not on OpenRouter; because the new endpoint keeps System One's request and answer shape, a Jev provider can be added later behind the same variable without touching apps/api or `@repo/agent-blueprint`.
+
+What changes:
+- **New Task 8a** (below) adds `POST /api/decision/system-one` to apps/ai.
+- **Task 8** keeps everything except the TypeSafe client: `services/typesafe-api.service.ts` and its spec are replaced by `services/ai-decision.service.ts`, which posts `{ state, questions }` to `${ai.backend.url}/api/decision/system-one` exactly like `customer-tag-classifier-task.service.ts` calls apps/ai (`HttpService`, `Authorization: Bearer ${process.env.API_INTERNAL_TOKEN}`), and reads `data.answers`. `agent-builder.config.ts` drops the `typesafe` block and keeps `suggestTtlMs: 86_400_000` plus `decisionTimeoutMs: 15000`. `TYPESAFE_API_KEY` is not added to `.env.example`. `AgentBuilderModule` imports `HttpModule`.
+- Global constraint "model `jev-latest` / `TYPESAFE_API_KEY`" is replaced by: decision model from `DECISION_MODEL` in apps/ai; no provider key in apps/api.
+
+`apps/api/src/modules/agent-builder/services/ai-decision.service.ts`:
+```ts
+import { HttpService } from '@nestjs/axios';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { SystemOneAnswer, SystemOneQuestion } from '@repo/agent-blueprint';
+import { firstValueFrom } from 'rxjs';
+
+// apps/ai answers System One-shaped questions with the model in DECISION_MODEL.
+@Injectable()
+export class AiDecisionService {
+    private readonly baseUrl: string;
+    private readonly internalToken: string;
+
+    constructor(
+        private readonly http: HttpService,
+        private readonly config: ConfigService
+    ) {
+        this.baseUrl = this.config.get<string>('ai.backend.url') ?? 'http://localhost:8000';
+        this.internalToken = process.env.API_INTERNAL_TOKEN ?? '';
+    }
+
+    async systemOne(
+        state: string,
+        questions: Record<string, SystemOneQuestion>
+    ): Promise<Record<string, SystemOneAnswer>> {
+        const resp = await firstValueFrom(
+            this.http.post(
+                `${this.baseUrl}/api/decision/system-one`,
+                { state, questions },
+                {
+                    timeout: this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
+                    headers: {
+                        Authorization: `Bearer ${this.internalToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            )
+        );
+        const payload = resp.data as { data?: { answers?: Record<string, SystemOneAnswer> } };
+        return payload?.data?.answers ?? {};
+    }
+}
+```
+`apps/api/test/modules/agent-builder/services/ai-decision.service.spec.ts` (replaces the TypeSafe spec):
+```ts
+import { of } from 'rxjs';
+import { AiDecisionService } from '../../../../src/modules/agent-builder/services/ai-decision.service';
+
+const config = { get: (k: string) => ({ 'ai.backend.url': 'http://ai:8000', 'agentBuilder.decisionTimeoutMs': 15000 } as Record<string, unknown>)[k] } as any;
+
+describe('AiDecisionService', () => {
+    it('posts state and questions to apps/ai and returns the answers', async () => {
+        const post = jest.fn(() => of({ data: { data: { answers: { a: { type: 'noul', noul: 0.9 } } } } }));
+        const s = new AiDecisionService({ post } as any, config);
+        const out = await s.systemOne('hello', { a: { type: 'noul', instructions: 'q' } });
+        expect(out).toEqual({ a: { type: 'noul', noul: 0.9 } });
+        const [url, body, opts] = post.mock.calls[0] as unknown as [string, unknown, { timeout: number; headers: Record<string, string> }];
+        expect(url).toBe('http://ai:8000/api/decision/system-one');
+        expect(body).toEqual({ state: 'hello', questions: { a: { type: 'noul', instructions: 'q' } } });
+        expect(opts.timeout).toBe(15000);
+        expect(opts.headers.Authorization).toMatch(/^Bearer /);
+    });
+
+    it('returns no answers when apps/ai sends none', async () => {
+        const s = new AiDecisionService({ post: () => of({ data: {} }) } as any, config);
+        await expect(s.systemOne('x', {})).resolves.toEqual({});
+    });
+});
+```
+`AgentBuilderService` takes `AiDecisionService` where it took `TypeSafeApiService`; its spec's fake keeps the same `systemOne` method, so only the import/type changes.
+
+---
+
+### Task 8a: apps/ai decision endpoint (`POST /api/decision/system-one`)
+
+**Files:**
+- Modify: `apps/ai/src/eccho_ai/core/variables.py` (add `DECISION_MODEL: str = "google/gemini-2.5-flash"` next to `CLASSIFIER_MODEL`)
+- Modify: `apps/ai/.env.example` (add `DECISION_MODEL=google/gemini-2.5-flash` next to `CLASSIFIER_MODEL`)
+- Create: `apps/ai/src/eccho_ai/modules/decision/__init__.py` (empty)
+- Create: `apps/ai/src/eccho_ai/modules/decision/models.py`
+- Create: `apps/ai/src/eccho_ai/modules/decision/routers.py`
+- Modify: `apps/ai/src/eccho_ai/main.py` (include the router with `prefix="/api"`, like `customer_router`)
+- Test: `apps/ai/tests/test_decision_endpoint.py`
+
+**Interfaces:**
+- Consumes: the question shape produced by `buildSuggestQuestions()` in `@repo/agent-blueprint`: `{ type: "choice", instructions, criteria: {id: description} } | { type: "noul", instructions }`.
+- Produces: `POST /api/decision/system-one` with body `{ state: string, questions: Record<string, Question> }`, returning `AppResponse` with `data.answers`, where each answer is `{ type: "choice", choice, confidence }` or `{ type: "noul", noul }`. On any model failure it returns `data.answers == {}` with HTTP 200.
+
+- [ ] **Step 1: Write the failing test**
+
+`apps/ai/tests/test_decision_endpoint.py` (mirrors `tests/test_customer_classify_endpoint.py`: same `async_client` fixture, same monkeypatch of `build_chat_model` inside the router module):
+```python
+from __future__ import annotations
+
+from typing import Any
+
+import pytest
+
+from eccho_ai.core.variables import AppVars
+from eccho_ai.modules.decision import routers as decision_router_module
+
+
+class _FakeStructured:
+    def __init__(self, *, returns: Any = None, raises: Exception | None = None):
+        self._returns = returns
+        self._raises = raises
+        self.calls: list[Any] = []
+
+    async def ainvoke(self, messages: Any) -> Any:
+        self.calls.append(messages)
+        if self._raises is not None:
+            raise self._raises
+        return self._returns
+
+
+class _FakeLLM:
+    def __init__(self, structured: _FakeStructured) -> None:
+        self._structured = structured
+        self.schema: type | None = None
+
+    def with_structured_output(self, schema: type) -> _FakeStructured:
+        self.schema = schema
+        return self._structured
+
+
+@pytest.fixture
+def patch_llm(monkeypatch):
+    seen: dict[str, Any] = {}
+
+    def _apply(structured: _FakeStructured) -> dict[str, Any]:
+        fake = _FakeLLM(structured)
+
+        def _build(*_a, **kw):
+            seen["kwargs"] = kw
+            return fake
+
+        monkeypatch.setattr(decision_router_module, "build_chat_model", _build)
+        seen["llm"] = fake
+        return seen
+
+    return _apply
+
+
+BODY = {
+    "state": "Nail spa in Da Nang. Customers ask prices and want to book.",
+    "questions": {
+        "business_type": {
+            "type": "choice",
+            "instructions": "Which kind of business is it?",
+            "criteria": {"beauty": "A beauty salon or spa", "restaurant": "A restaurant or café"},
+        },
+        "goal__book_appointments": {"type": "noul", "instructions": "Should it book appointments?"},
+    },
+}
+
+
+async def test_answers_in_system_one_shape_with_the_configured_model(async_client, patch_llm):
+    seen = patch_llm(_FakeStructured(returns={
+        "business_type": {"choice": "beauty", "confidence": 0.93},
+        "goal__book_appointments": 0.88,
+    }))
+    resp = await async_client.post("/api/decision/system-one", json=BODY)
+    assert resp.status_code == 200
+    assert resp.json()["data"]["answers"] == {
+        "business_type": {"type": "choice", "choice": "beauty", "confidence": 0.93},
+        "goal__book_appointments": {"type": "noul", "noul": 0.88},
+    }
+    assert seen["kwargs"]["model_text_name"] == AppVars.DECISION_MODEL
+
+
+async def test_output_schema_limits_choices_and_ranges(async_client, patch_llm):
+    seen = patch_llm(_FakeStructured(returns={}))
+    await async_client.post("/api/decision/system-one", json=BODY)
+    schema = seen["llm"].schema
+    ok = schema.model_validate({"business_type": {"choice": "beauty", "confidence": 0.5}, "goal__book_appointments": 0.2})
+    assert ok is not None
+    with pytest.raises(Exception):
+        schema.model_validate({"business_type": {"choice": "casino", "confidence": 0.5}, "goal__book_appointments": 0.2})
+    with pytest.raises(Exception):
+        schema.model_validate({"business_type": {"choice": "beauty", "confidence": 1.5}, "goal__book_appointments": 0.2})
+
+
+async def test_model_failure_returns_no_answers(async_client, patch_llm):
+    patch_llm(_FakeStructured(raises=RuntimeError("provider down")))
+    resp = await async_client.post("/api/decision/system-one", json=BODY)
+    assert resp.status_code == 200
+    assert resp.json()["data"]["answers"] == {}
+
+
+async def test_no_questions_skips_the_model(async_client, patch_llm):
+    seen = patch_llm(_FakeStructured(returns={}))
+    resp = await async_client.post("/api/decision/system-one", json={"state": "x", "questions": {}})
+    assert resp.status_code == 200
+    assert resp.json()["data"]["answers"] == {}
+    assert "kwargs" not in seen
+
+
+async def test_rejects_a_choice_question_without_options(async_client):
+    body = {"state": "x", "questions": {"q": {"type": "choice", "instructions": "?", "criteria": {"only": "one"}}}}
+    resp = await async_client.post("/api/decision/system-one", json=body)
+    assert resp.status_code == 422
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `cd apps/ai && uv run pytest tests/test_decision_endpoint.py -q`
+Expected: FAIL with `ModuleNotFoundError: No module named 'eccho_ai.modules.decision'`.
+
+- [ ] **Step 3: Implement**
+
+`apps/ai/src/eccho_ai/modules/decision/models.py`:
+```python
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field, model_validator
+
+
+class DecisionQuestion(BaseModel):
+    type: Literal["choice", "noul"]
+    instructions: str = Field(min_length=1, max_length=2000)
+    criteria: dict[str, str] | None = None
+
+    @model_validator(mode="after")
+    def _choice_needs_options(self) -> "DecisionQuestion":
+        if self.type == "choice" and len(self.criteria or {}) < 2:
+            raise ValueError("a choice question needs at least two criteria")
+        return self
+
+
+class DecisionRequest(BaseModel):
+    state: str = Field(min_length=1, max_length=4000)
+    questions: dict[str, DecisionQuestion] = Field(max_length=64)
+
+
+class DecisionResponse(BaseModel):
+    answers: dict[str, dict[str, Any]] = Field(default_factory=dict)
+```
+
+`apps/ai/src/eccho_ai/modules/decision/routers.py`:
+```python
+"""System One-shaped decisions answered by an OpenRouter model.
+
+apps/api sends typed questions (choice / noul, built by @repo/agent-blueprint)
+and reads answers in the shape TypeSafe's System One API uses, so which model
+decides is configuration (DECISION_MODEL), not code.
+"""
+import logging
+from typing import Any, Literal
+
+from fastapi import APIRouter
+from pydantic import BaseModel, Field, create_model
+
+from eccho_ai.core.variables import AppVars
+from eccho_ai.llm.providers.chat_model import build_chat_model
+from eccho_ai.models.app_models import AppResponse
+from eccho_ai.modules.decision.models import DecisionQuestion, DecisionRequest, DecisionResponse
+
+logger = logging.getLogger("uvicorn.info")
+router = APIRouter(prefix="/decision", tags=["Decision"])
+
+SYSTEM_PROMPT = """\
+You answer typed questions about a piece of state, like a calibrated classifier.
+For a "choice" question, pick exactly one option id from its options and give
+your confidence from 0 to 1 that it is the right option.
+For a "noul" question, give the probability from 0 to 1 that the answer is yes.
+Judge only from the state. Do not explain.
+"""
+
+
+def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
+    fields: dict[str, Any] = {}
+    for index, (qid, q) in enumerate(questions.items()):
+        if q.type == "choice":
+            options = tuple((q.criteria or {}).keys())
+            answer = create_model(
+                f"ChoiceAnswer{index}",
+                choice=(Literal[options], ...),  # type: ignore[valid-type]
+                confidence=(float, Field(ge=0, le=1)),
+            )
+            fields[qid] = (answer, ...)
+        else:
+            fields[qid] = (float, Field(ge=0, le=1))
+    return create_model("DecisionAnswers", **fields)
+
+
+def _format_questions(questions: dict[str, DecisionQuestion]) -> str:
+    lines: list[str] = []
+    for qid, q in questions.items():
+        if q.type == "choice":
+            options = "\n".join(f"    - {key}: {text}" for key, text in (q.criteria or {}).items())
+            lines.append(f"- {qid} (choice): {q.instructions}\n  options:\n{options}")
+        else:
+            lines.append(f"- {qid} (noul, probability of yes): {q.instructions}")
+    return "\n".join(lines)
+
+
+def _as_dict(value: Any) -> dict[str, Any]:
+    return value.model_dump() if isinstance(value, BaseModel) else dict(value)
+
+
+@router.post("/system-one", response_model=AppResponse[DecisionResponse])
+async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
+    if not req.questions:
+        return AppResponse(data=DecisionResponse())
+
+    llm = build_chat_model(model_text_name=AppVars.DECISION_MODEL, temperature=0.0)
+    structured = llm.with_structured_output(_output_model(req.questions))
+    try:
+        result = _as_dict(
+            await structured.ainvoke(
+                [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": f"State:\n{req.state}\n\nQuestions:\n{_format_questions(req.questions)}"},
+                ]
+            )
+        )
+    except Exception as exc:  # noqa: BLE001 — the builder must work without suggestions
+        logger.warning("decision.system_one failed err=%s", exc)
+        return AppResponse(data=DecisionResponse())
+
+    answers: dict[str, dict[str, Any]] = {}
+    for qid, q in req.questions.items():
+        value = result.get(qid)
+        if value is None:
+            continue
+        if q.type == "choice":
+            v = _as_dict(value)
+            answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
+        else:
+            answers[qid] = {"type": "noul", "noul": value}
+    return AppResponse(data=DecisionResponse(answers=answers))
+```
+
+In `main.py`, import `from eccho_ai.modules.decision.routers import router as decision_router` next to the customer router import and add `app.include_router(decision_router, prefix="/api")` next to `customer_router`. In `variables.py` add `DECISION_MODEL: str = "google/gemini-2.5-flash"` under `CLASSIFIER_MODEL` with the comment `# OpenRouter model that answers agent-builder decisions (System One-shaped).`
+
+- [ ] **Step 4: Run the tests**
+
+Run: `cd apps/ai && uv run pytest tests/test_decision_endpoint.py -q && uv run pytest -q`
+Expected: the 5 new tests PASS and the existing suite still passes.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/ai
+git commit -m "feat(ai): system-one shaped decision endpoint on the configured model"
+```
+
+---
+
 ### Task 9: Builder translations (en, vi) with a completeness test
 
 **Files:**
