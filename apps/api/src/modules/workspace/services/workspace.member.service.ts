@@ -344,6 +344,21 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
             });
         }
 
+        // The invitation carries an invitedEmail, but the caller must be
+        // authenticated as that exact user — never someone who merely knows
+        // the token. Compare against the caller's own (JWT-authenticated) id.
+        const caller = await this.userService.findOneById(userId);
+        if (
+            !caller ||
+            caller.email.toLowerCase() !== invitation.inviteeEmail.toLowerCase()
+        ) {
+            throw new UnauthorizedException({
+                statusCode:
+                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
+                message: 'workspace.member.join.invalid',
+            });
+        }
+
         // Join the workspace
         const workspace = await this.joinWorkspace(
             payload.workspaceId,

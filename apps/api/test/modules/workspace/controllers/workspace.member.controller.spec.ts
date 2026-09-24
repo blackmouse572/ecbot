@@ -7,7 +7,7 @@ jest.mock('@app/modules/workspace/decorators/workspace.decorator', () => ({
     WorkspacePayload: () => () => {},
 }));
 
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { WorkspaceMemberController } from '../../../../src/modules/workspace/controllers/workspace.member.controller';
 
@@ -199,6 +199,87 @@ describe('WorkspaceMemberController', () => {
             expect(
                 mockActivityService.createByUserWithWorkspace
             ).toHaveBeenCalled();
+        });
+    });
+
+    describe('joinWorkspace', () => {
+        const caller = { id: 'caller-1', email: 'caller@mail.com' } as any;
+        const targetWorkspace = { id: 'ws-target', name: 'Target' } as any;
+
+        const mockEm = {
+            begin: jest.fn(),
+            commit: jest.fn(),
+            rollback: jest.fn(),
+        };
+        const mockRootEm = { fork: jest.fn(() => mockEm) };
+        const mockOwnerService = { findOneById: jest.fn() };
+
+        let joinController: WorkspaceMemberController;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            mockMemberService.isUserMemberOfWorkspace.mockResolvedValue(false);
+            mockMemberService.verifyInvitationToken = jest
+                .fn()
+                .mockResolvedValue({ workspaceId: targetWorkspace.id });
+            mockMemberService.joinWorkspaceViaInvitation = jest.fn();
+            mockOwnerService.findOneById.mockResolvedValue(targetWorkspace);
+
+            joinController = new WorkspaceMemberController(
+                mockRootEm as any, // em
+                {} as any, // userService
+                mockMemberService as any,
+                mockOwnerService as any, // workSpaceService (owner)
+                mockRoleService as any,
+                mockPaginationService as any,
+                mockActivityService as any,
+                {} as any, // invitationService
+                {} as any // workspaceRequestService
+            );
+        });
+
+        it('rejects when the caller is already a member of the target workspace', async () => {
+            mockMemberService.isUserMemberOfWorkspace.mockResolvedValue(true);
+
+            await expect(
+                joinController.joinWorkspace(caller, 'token')
+            ).rejects.toThrow(ConflictException);
+
+            expect(
+                mockMemberService.joinWorkspaceViaInvitation
+            ).not.toHaveBeenCalled();
+        });
+
+        it('joins via joinWorkspaceViaInvitation using the caller from the JWT', async () => {
+            mockMemberService.joinWorkspaceViaInvitation.mockResolvedValue({
+                workspace: targetWorkspace,
+                roleId: 'role-1',
+            });
+
+            await joinController.joinWorkspace(caller, 'token');
+
+            expect(
+                mockMemberService.joinWorkspaceViaInvitation
+            ).toHaveBeenCalledWith('token', caller.id, { em: mockEm });
+            expect(mockEm.commit).toHaveBeenCalled();
+            expect(mockEm.rollback).not.toHaveBeenCalled();
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalled();
+        });
+
+        it('rolls back and propagates a rejected invitation (e.g. caller mismatch)', async () => {
+            const rejection = new ConflictException('nope');
+            mockMemberService.joinWorkspaceViaInvitation.mockRejectedValue(
+                rejection
+            );
+
+            await expect(
+                joinController.joinWorkspace(caller, 'token')
+            ).rejects.toBe(rejection);
+
+            expect(mockEm.rollback).toHaveBeenCalled();
+            expect(mockEm.commit).not.toHaveBeenCalled();
         });
     });
 });

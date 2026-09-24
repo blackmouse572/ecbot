@@ -98,9 +98,14 @@ describe('WorkspaceOwnerService', () => {
             const result = await service.generateInvitationLinkWithDetails(
                 ownerId,
                 { invitedEmail: 'invitee@mail.com' },
-                url
+                url,
+                workspace.id
             );
 
+            expect(mockWorkspaceRepository.findOne).toHaveBeenCalledWith(
+                { id: workspace.id, owner: ownerId },
+                expect.anything()
+            );
             expect(mockJwtService.sign).toHaveBeenCalledWith(
                 expect.objectContaining({
                     ownerId,
@@ -135,7 +140,8 @@ describe('WorkspaceOwnerService', () => {
             const result = await service.generateInvitationLinkWithDetails(
                 ownerId,
                 { invitedEmail: 'invitee@mail.com' },
-                url
+                url,
+                workspace.id
             );
 
             expect(result.token).toBe('existing-token');
@@ -153,7 +159,8 @@ describe('WorkspaceOwnerService', () => {
                 service.generateInvitationLinkWithDetails(
                     ownerId,
                     { invitedEmail: 'invitee@mail.com', roleId: 'ghost' },
-                    url
+                    url,
+                    workspace.id
                 )
             ).rejects.toThrow(NotFoundException);
         });
@@ -169,7 +176,8 @@ describe('WorkspaceOwnerService', () => {
                 service.generateInvitationLinkWithDetails(
                     ownerId,
                     { invitedEmail: 'invitee@mail.com', roleId: 'owner-role' },
-                    url
+                    url,
+                    workspace.id
                 )
             ).rejects.toThrow(NotFoundException);
         });
@@ -183,7 +191,8 @@ describe('WorkspaceOwnerService', () => {
             await service.generateInvitationLinkWithDetails(
                 ownerId,
                 { invitedEmail: 'invitee@mail.com' },
-                url
+                url,
+                workspace.id
             );
 
             expect(mockRoleService.findOne).toHaveBeenCalledWith(
@@ -196,6 +205,19 @@ describe('WorkspaceOwnerService', () => {
             expect(mockInvitationService.create).toHaveBeenCalledWith(
                 expect.objectContaining({ role: 'default-member' })
             );
+        });
+
+        it('should throw when the workspace is not owned by the caller (findWorkspaceByOwner is workspace-scoped)', async () => {
+            mockWorkspaceRepository.findOne.mockResolvedValue(null);
+
+            await expect(
+                service.generateInvitationLinkWithDetails(
+                    ownerId,
+                    { invitedEmail: 'invitee@mail.com' },
+                    url,
+                    'some-other-workspace-id'
+                )
+            ).rejects.toThrow(NotFoundException);
         });
     });
 

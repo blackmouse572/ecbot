@@ -112,7 +112,8 @@ describe('Invitation token contract (owner ↔ member ↔ invitation)', () => {
             await ownerService.generateInvitationLinkWithDetails(
                 ownerId,
                 { invitedEmail },
-                'https://app.example.com'
+                'https://app.example.com',
+                workspace.id
             );
 
         // (a) persisted verbatim — the row's token equals the minted token

@@ -15,7 +15,6 @@ import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { UserService } from '@app/modules/user/services/user.service';
 import {
-    BadRequestException,
     ConflictException,
     Injectable,
     NotFoundException,
@@ -154,10 +153,16 @@ export class WorkspaceRequestService {
         requestId: string,
         workspace: WorkspaceEntity
     ): Promise<void> {
-        const request = await this.requestRepository.findOne({ id: requestId });
+        // Scope the lookup to the workspace being approved in — otherwise a
+        // request id that belongs to a different workspace would still
+        // resolve, letting an owner approve a foreign join-request.
+        const request = await this.requestRepository.findOne({
+            id: requestId,
+            workspace: workspace.id,
+        });
 
         if (!request) {
-            throw new BadRequestException({
+            throw new NotFoundException({
                 statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'requests.error.notFound',
             });

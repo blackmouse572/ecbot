@@ -79,4 +79,55 @@ describe('WorkspacePolicyGuard customer permissions', () => {
             ForbiddenException
         );
     });
+
+    it('rejects when the member only holds a deactivated role, even with matching permissions', async () => {
+        const reflector = {
+            get: jest.fn((key: string) =>
+                key === WORKSPACE_POLICY_ABILITY_META_KEY
+                    ? [
+                          {
+                              action: [ENUM_POLICY_ACTION.CREATE],
+                              subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                          },
+                      ]
+                    : undefined
+            ),
+        };
+        const workspaceMemberService = {
+            getMemberWorkspaceRoles: jest
+                .fn()
+                .mockResolvedValue([{ id: 'role-member' }]),
+        };
+        const roleService = {
+            findOneById: jest.fn().mockResolvedValue({
+                isActive: false,
+                permissions: WORKSPACE_DEFAULT_MEMBER_ROLES[0].permissions,
+                type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+            }),
+        };
+        const guard = new WorkspacePolicyGuard(
+            reflector as any,
+            workspaceMemberService as any,
+            roleService as any,
+            new PolicyAbilityFactory()
+        );
+        const context = {
+            getHandler: jest.fn(),
+            switchToHttp: () => ({
+                getRequest: () => ({
+                    __user: { id: 'user-1' },
+                    __workspace: {
+                        id: 'workspace-1',
+                        owner: { id: 'owner-1' },
+                    },
+                    params: { workspace: 'workspace-1' },
+                    user: { type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER },
+                }),
+            }),
+        } as any;
+
+        await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+            ForbiddenException
+        );
+    });
 });

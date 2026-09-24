@@ -42,12 +42,12 @@ import {
     UploadedFile,
     UseInterceptors,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import * as multer from 'multer';
 import { WORKSPACE_DEFAULT_AVAILABLE_SEARCH } from '../constants/workspace.constant';
 import {
-    GetClientOrigin,
     WorkspaceMemberOrOwnerProtected,
     WorkspacePayload,
     WorkspacePolicyAbilityProtected,
@@ -78,6 +78,8 @@ import { WorkSpaceGetResponseDto } from '../dtos/response/workspace.get.response
     path: 'workspace',
 })
 export class WorkspaceController {
+    private readonly homeUrl: string;
+
     constructor(
         private readonly userService: UserService,
         private readonly workSpaceService: WorkspaceOwnerService,
@@ -86,8 +88,17 @@ export class WorkspaceController {
         private readonly emailService: EmailService,
         private readonly activityService: ActivityService,
         private readonly notificationService: NotificationService,
-        private readonly awsS3Service: AwsS3Service
-    ) {}
+        private readonly awsS3Service: AwsS3Service,
+        private readonly configService: ConfigService
+    ) {
+        // Same pattern as reset-password.service.ts: the emailed invite link
+        // must come from configured home.url, not the caller-controlled
+        // Origin header (@GetClientOrigin), which let a caller point the
+        // link at an attacker-controlled host.
+        this.homeUrl = (
+            this.configService.get<string>('home.url') ?? ''
+        ).replace(/\/$/, '');
+    }
 
     private readonly logger = new Logger();
 
@@ -375,16 +386,18 @@ export class WorkspaceController {
     @Post('/invite-member/:workspace')
     async inviteMemberToWorkSpace(
         @AuthJwtPayload('user') userId: string,
-        @GetClientOrigin() url: string,
         @Body() body: WorkSpaceInviteMemberRequestDto,
         @WorkspacePayload() workspace: WorkspaceEntity
     ) {
-        // Generate invitation link and get details
+        // Generate invitation link and get details. The invitation targets
+        // the workspace resolved from the URL (workspace.id) — not just any
+        // workspace this caller happens to own.
         const { invitationLink, expiresAt } =
             await this.workSpaceService.generateInvitationLinkWithDetails(
                 userId,
                 body,
-                url
+                this.homeUrl,
+                workspace.id
             );
 
         this.logger.debug(

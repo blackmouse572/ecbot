@@ -24,6 +24,7 @@ export interface IWorkspaceOwnerService {
 
     findWorkspaceByOwner(
         ownerId: string,
+        workspaceId: string,
         options?: IDatabaseFindAllOptions
     ): Promise<WorkspaceEntity>;
 

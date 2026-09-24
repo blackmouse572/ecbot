@@ -139,22 +139,33 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
 
     async findWorkspaceByOwner(
         ownerId: string,
+        workspaceId: string,
         options?: IDatabaseFindOneOptions
     ): Promise<WorkspaceEntity> {
-        return this.workSpaceRepository.findOne<WorkspaceEntity>(
-            { owner: ownerId },
+        const workspace = await this.workSpaceRepository.findOne<WorkspaceEntity>(
+            { id: workspaceId, owner: ownerId },
             {
                 ...options,
             }
         );
+
+        if (!workspace) {
+            throw new NotFoundException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'workspace.error.notFound',
+            });
+        }
+
+        return workspace;
     }
 
     async generateInvitationLink(
         ownerId: string,
         { invitedEmail, roleId }: WorkSpaceInviteMemberRequestDto,
-        url: string
+        url: string,
+        workspaceId: string
     ) {
-        const workspace = await this.findWorkspaceByOwner(ownerId);
+        const workspace = await this.findWorkspaceByOwner(ownerId, workspaceId);
 
         // If roleId is provided, validate that it belongs to this workspace
         if (roleId) {
@@ -202,14 +213,18 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
     async generateInvitationLinkWithDetails(
         ownerId: string,
         { invitedEmail, roleId }: WorkSpaceInviteMemberRequestDto,
-        url: string
+        url: string,
+        workspaceId: string
     ): Promise<{
         invitationLink: string;
         token: string;
         expiresAt: Date;
         workspaceId: string;
     }> {
-        const workspace = await this.findWorkspaceByOwner(ownerId);
+        const workspace = await this.findWorkspaceByOwner(
+            ownerId,
+            workspaceId
+        );
 
         // Check if there's already a pending invitation for this email
         const existingInvitation =

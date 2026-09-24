@@ -33,6 +33,7 @@ import {
     Controller,
     Delete,
     Get,
+    HttpException,
     InternalServerErrorException,
     Logger,
     NotFoundException,
@@ -152,27 +153,15 @@ export class WorkspaceMemberController {
     @UserProtected()
     @AuthJwtAccessProtected()
     @Post('/join')
-    async joinWorkspace(@Query('token') token: string) {
-        const { workspaceId, invitedEmail, roleId } =
+    async joinWorkspace(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Query('token') token: string
+    ) {
+        // Resolve the target workspace from the token itself (not from the
+        // invitedEmail — the caller's identity comes from the JWT, never
+        // from a claim inside the token being redeemed).
+        const { workspaceId } =
             await this.workSpaceMemberService.verifyInvitationToken(token);
-
-        const user = await this.userService.findOneByEmail(invitedEmail);
-        const invitation = await this.invitationService.findOneByToken(token);
-
-        if (!user) {
-            throw new NotFoundException({
-                statusCode: ENUM_USER_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'user.error.notFound',
-            });
-        }
-
-        if (user.email !== invitedEmail) {
-            throw new ConflictException({
-                statusCode:
-                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
-                message: 'workspace.error.invitationLinkInvalid',
-            });
-        }
 
         const workspace = await this.workSpaceService.findOneById(workspaceId);
 
@@ -188,43 +177,33 @@ export class WorkspaceMemberController {
                 message: 'workspace.error.memberExist',
             });
         }
+
         const em = this.em.fork();
         await em.begin();
         try {
-            // Join the workspace
-            await this.workSpaceMemberService.joinWorkspace(
-                workspaceId,
-                user.id,
-                { em }
-            );
-
-            // Auto-assign role if specified in the invitation
-            if (roleId) {
-                try {
-                    await this.workSpaceMemberService.assignRoleToMember(
-                        workspaceId,
-                        user.id,
-                        invitation.role.id ?? roleId
-                    );
-                } catch (err) {
-                    await em.rollback();
-                    throw err;
-                }
-            }
+            // Joins as the caller (from the JWT). The service checks the
+            // invitation is PENDING, unexpired, and that the caller's own
+            // email matches the invitation's invitedEmail.
+            const { workspace: joinedWorkspace, roleId } =
+                await this.workSpaceMemberService.joinWorkspaceViaInvitation(
+                    token,
+                    user.id,
+                    { em }
+                );
 
             if (!roleId) {
-                await this.assignDefaultRole(workspaceId, workspace, user);
+                await this.assignDefaultRole(workspaceId, joinedWorkspace, user);
             }
 
             await this.activityService.createByUserWithWorkspace(
                 user,
-                workspace,
+                joinedWorkspace,
                 {
                     action: ENUM_ACTIVITY_ACTION.JOIN_WORKSPACE,
                     subject: ENUM_POLICY_SUBJECT.WORKSPACE,
                     metadata: {
-                        id: workspace.id,
-                        name: workspace.name,
+                        id: joinedWorkspace.id,
+                        name: joinedWorkspace.name,
                         old: {
                             username: user.username,
                         },
@@ -235,14 +214,21 @@ export class WorkspaceMemberController {
                     },
                 }
             );
-            await this.invitationService.accept(invitation.id, user.id);
             await em.commit();
             return;
         } catch (e) {
             this.logger.error(
-                `Failed for user ${user.id}[${user.email}] to join workspace ${workspace.id}[${workspace.name}] due to: ${e.message}`
+                `Failed for user ${user.id}[${user.email}] to join workspace ${workspaceId} due to: ${e.message}`
             );
             await em.rollback();
+
+            // Let known errors (invalid/expired/mismatched invitation,
+            // role-assignment failures) surface with their real status
+            // instead of being flattened into a 500.
+            if (e instanceof HttpException) {
+                throw e;
+            }
+
             throw new InternalServerErrorException({
                 statusCode:
                     ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,

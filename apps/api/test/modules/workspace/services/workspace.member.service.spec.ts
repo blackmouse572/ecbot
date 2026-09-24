@@ -192,7 +192,10 @@ describe('WorkspaceMemberService', () => {
             });
             // for assignRoleToMember path
             mockRoleService.findOne.mockResolvedValue({ id: roleId });
-            mockUserService.findOneById.mockResolvedValue({ id: userId });
+            mockUserService.findOneById.mockResolvedValue({
+                id: userId,
+                email: 'invitee@mail.com',
+            });
             mockWorkspaceMemberRepository.find.mockResolvedValue([]);
         });
 
@@ -201,6 +204,7 @@ describe('WorkspaceMemberService', () => {
                 id: invitationId,
                 status: 'PENDING',
                 expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
                 role: { id: roleId },
             });
 
@@ -241,6 +245,21 @@ describe('WorkspaceMemberService', () => {
             await expect(
                 service.joinWorkspaceViaInvitation('token', userId)
             ).rejects.toThrow(UnauthorizedException);
+        });
+
+        it('should reject when the caller is not the invited user', async () => {
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'someone-else@mail.com',
+                role: { id: roleId },
+            });
+
+            await expect(
+                service.joinWorkspaceViaInvitation('token', userId)
+            ).rejects.toThrow(UnauthorizedException);
+            expect(mockInvitationService.accept).not.toHaveBeenCalled();
         });
     });
 
