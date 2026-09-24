@@ -1,8 +1,13 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    NotFoundException,
+} from '@nestjs/common';
 import { ToolExecutionService } from 'src/modules/tool/services/tool-execution.service';
 import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.repository';
 import { ToolInvocationRepository } from 'src/modules/tool/repository/repositories/tool-invocation.repository';
+import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { HttpToolExecutorService } from 'src/modules/tool/services/http-tool-executor.service';
 import { McpToolExecutorService } from 'src/modules/tool/services/mcp-tool-executor.service';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
@@ -20,11 +25,17 @@ describe('ToolExecutionService', () => {
         create: jest.fn((data: any) => ({ id: 'inv-1', ...data })),
         getEntityManager: () => mockEm,
     };
+    const mockChatbotToolRepo: any = { findOneByChatbotAndTool: jest.fn() };
     const mockHttp: any = { execute: jest.fn() };
     const mockMcp: any = { execute: jest.fn() };
 
     beforeEach(async () => {
         jest.clearAllMocks();
+        // Default: tool is linked and enabled for the chatbot, no action restriction.
+        mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue({
+            enabled: true,
+            enabledActions: undefined,
+        });
         const mod = await Test.createTestingModule({
             providers: [
                 ToolExecutionService,
@@ -32,6 +43,10 @@ describe('ToolExecutionService', () => {
                 {
                     provide: ToolInvocationRepository,
                     useValue: mockInvocationRepo,
+                },
+                {
+                    provide: ChatbotToolRepository,
+                    useValue: mockChatbotToolRepo,
                 },
                 { provide: HttpToolExecutorService, useValue: mockHttp },
                 { provide: McpToolExecutorService, useValue: mockMcp },
@@ -226,5 +241,129 @@ describe('ToolExecutionService', () => {
         expect(mockHttp.execute).toHaveBeenCalledWith(tool, { x: 1 });
         const created = mockInvocationRepo.create.mock.calls[0][0];
         expect(created.tool).toEqual({ id: 't-1' });
+    });
+
+    describe('chatbot tool link enforcement', () => {
+        it('rejects and never executes when the tool is not linked to the chatbot', async () => {
+            const tool = { id: 't-1', kind: ENUM_TOOL_KIND.HTTP };
+            mockToolRepo.findOne.mockResolvedValue(tool);
+            mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                svc.execute({
+                    toolId: 't-1',
+                    args: { x: 1 },
+                    chatbotId: 'cb-1',
+                    correlationId: 'corr-1',
+                })
+            ).rejects.toBeInstanceOf(ForbiddenException);
+
+            expect(
+                mockChatbotToolRepo.findOneByChatbotAndTool
+            ).toHaveBeenCalledWith('cb-1', 't-1');
+            expect(mockHttp.execute).not.toHaveBeenCalled();
+            expect(mockInvocationRepo.create).not.toHaveBeenCalled();
+        });
+
+        it('rejects and never executes when the link exists but is disabled', async () => {
+            const tool = { id: 't-1', kind: ENUM_TOOL_KIND.HTTP };
+            mockToolRepo.findOne.mockResolvedValue(tool);
+            mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue({
+                enabled: false,
+                enabledActions: undefined,
+            });
+
+            await expect(
+                svc.execute({
+                    toolId: 't-1',
+                    args: { x: 1 },
+                    chatbotId: 'cb-1',
+                    correlationId: 'corr-1',
+                })
+            ).rejects.toBeInstanceOf(ForbiddenException);
+
+            expect(mockHttp.execute).not.toHaveBeenCalled();
+            expect(mockInvocationRepo.create).not.toHaveBeenCalled();
+        });
+
+        it('rejects an MCP action not present in a non-empty enabledActions allow-list', async () => {
+            const tool = { id: 't-mcp', kind: ENUM_TOOL_KIND.MCP };
+            mockToolRepo.findOne.mockResolvedValue(tool);
+            mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue({
+                enabled: true,
+                enabledActions: ['allowedAction'],
+            });
+
+            await expect(
+                svc.execute({
+                    toolId: 't-mcp',
+                    actionName: 'otherAction',
+                    args: {},
+                    chatbotId: 'cb-1',
+                    correlationId: 'corr-1',
+                })
+            ).rejects.toBeInstanceOf(ForbiddenException);
+
+            expect(mockMcp.execute).not.toHaveBeenCalled();
+            expect(mockInvocationRepo.create).not.toHaveBeenCalled();
+        });
+
+        it('allows an MCP action present in a non-empty enabledActions allow-list', async () => {
+            const tool = { id: 't-mcp', kind: ENUM_TOOL_KIND.MCP };
+            mockToolRepo.findOne.mockResolvedValue(tool);
+            mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue({
+                enabled: true,
+                enabledActions: ['allowedAction'],
+            });
+            mockMcp.execute.mockResolvedValue({
+                status: ENUM_TOOL_INVOCATION_STATUS.SUCCESS,
+                result: { ok: true },
+                durationMs: 5,
+            });
+
+            await svc.execute({
+                toolId: 't-mcp',
+                actionName: 'allowedAction',
+                args: {},
+                chatbotId: 'cb-1',
+                correlationId: 'corr-1',
+            });
+
+            expect(mockMcp.execute).toHaveBeenCalledWith(
+                tool,
+                'allowedAction',
+                {}
+            );
+        });
+
+        it('allows any action when enabledActions is empty (all actions allowed)', async () => {
+            const tool = { id: 't-mcp', kind: ENUM_TOOL_KIND.MCP };
+            mockToolRepo.findOne.mockResolvedValue(tool);
+            mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue({
+                enabled: true,
+                enabledActions: [],
+            });
+            mockMcp.execute.mockResolvedValue({
+                status: ENUM_TOOL_INVOCATION_STATUS.SUCCESS,
+                result: { ok: true },
+                durationMs: 5,
+            });
+
+            await svc.execute({
+                toolId: 't-mcp',
+                actionName: 'anyAction',
+                args: {},
+                chatbotId: 'cb-1',
+                correlationId: 'corr-1',
+            });
+
+            expect(mockMcp.execute).toHaveBeenCalledWith(
+                tool,
+                'anyAction',
+                {}
+            );
+        });
     });
 });
