@@ -3,6 +3,7 @@ import { useUnlinkAccounts } from "@/hooks/api";
 import { useLinkChatbotAccount } from "@/hooks/api/chatbot";
 import { MagnifyingGlass } from "@medusajs/icons";
 import { Avatar, Button, Drawer, Input, Text, toast } from "@medusajs/ui";
+import type { ChatbotLinkAccountResponseDto } from "@repo/client";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PlatformIcon } from "../../../../components/platform-icon/platform-icon";
@@ -21,17 +22,29 @@ export function AccountLinkDrawer({ isOpen, onClose, chatbotId }: Props) {
 
   const available = useMemo(
     () =>
-      (accounts ?? []).filter(
-        (a) => !search || a.name?.toLowerCase().includes(search.toLowerCase()),
-      ),
+      (accounts ?? [])
+        // User-level Facebook accounts aren't a messaging channel
+        // themselves (only their pages are), consistent with the agent
+        // builder's channels turn.
+        .filter((a) => a.type !== "FACEBOOK_ACCOUNT")
+        .filter((a) => !search || a.name?.toLowerCase().includes(search.toLowerCase())),
     [accounts, search],
   );
 
-  const handleAdd = async (accountId: string) => {
+  const handleAdd = async (accountId: string, accountName: string) => {
     try {
-      await link.mutateAsync({ accounts: [accountId] });
-      toast.success(t("chatbot.details.accountLinked"));
-      onClose();
+      const res = await link.mutateAsync({ accounts: [accountId] });
+      const result = (res.data as A)?.data as ChatbotLinkAccountResponseDto | undefined;
+      // The server can refuse an id already owned by another chatbot
+      // (ChatbotService.linkBatchAccounts); only a success toast when the
+      // response actually confirms this id linked.
+      if (result?.linked?.includes(accountId)) {
+        toast.success(t("chatbot.details.accountLinked"));
+        onClose();
+        return;
+      }
+      const skippedName = result?.skipped?.find((s) => s.id === accountId)?.name ?? accountName;
+      toast.error(t("agentBuilder.ui.channelInUse", { name: skippedName }));
     } catch {
       toast.error(t("chatbot.details.accountLinkFailed"));
     }
@@ -74,7 +87,7 @@ export function AccountLinkDrawer({ isOpen, onClose, chatbotId }: Props) {
                     size="small"
                     variant="secondary"
                     isLoading={link.isPending}
-                    onClick={() => handleAdd(account.id)}
+                    onClick={() => handleAdd(account.id, account.name)}
                   >
                     {t("actions.add")}
                   </Button>
