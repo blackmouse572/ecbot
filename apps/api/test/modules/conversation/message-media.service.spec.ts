@@ -4,9 +4,7 @@ import { ENUM_AWS_S3_ACCESSIBILITY } from '../../../src/modules/aws/enums/aws.en
 describe('MessageMediaService', () => {
     const s3 = {
         putItem: jest.fn().mockResolvedValue({}),
-        presignGetItem: jest.fn(async (key: string) => ({
-            presignUrl: `https://s3/${key}?sig`,
-        })),
+        signGetUrl: jest.fn(async (key: string) => `https://s3/${key}?sig`),
     };
     const service = new MessageMediaService(s3 as any);
 
@@ -41,14 +39,13 @@ describe('MessageMediaService', () => {
             { type: 'image', url: 'https://kb/shirt.jpg' },
             { type: 'video' },
         ]);
-        expect(s3.presignGetItem).toHaveBeenCalledWith(
-            'conversations/c/a.jpg',
-            { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
-        );
+        expect(s3.signGetUrl).toHaveBeenCalledWith('conversations/c/a.jpg', {
+            access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE,
+        });
     });
 
     it('drops the url of an image whose presign fails', async () => {
-        s3.presignGetItem.mockRejectedValueOnce(new Error('s3 down'));
+        s3.signGetUrl.mockRejectedValueOnce(new Error('s3 down'));
         await expect(
             service.resolve([{ type: 'image', key: 'k.jpg' }])
         ).resolves.toEqual([{ type: 'image' }]);

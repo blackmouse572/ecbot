@@ -53,8 +53,7 @@ export class MessageMediaService {
     }: IMessageAttachment): Promise<IMessageAttachment> {
         if (!key) return url ? { type, url } : { type };
         try {
-            const signed = await this.s3.presignGetItem(key, PRIVATE);
-            return signed ? { type, url: signed.presignUrl } : { type };
+            return { type, url: await this.s3.signGetUrl(key, PRIVATE) };
         } catch (err) {
             this.logger.warn(
                 `presign failed for ${key}: ${(err as Error).message}`

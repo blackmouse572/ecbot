@@ -1,8 +1,10 @@
+import { MESSAGE_MEDIA_MAX_BYTES } from '../../../src/modules/conversation/constants/message-media.constant';
 import { TelegramPlatformAdapter } from '../../../src/modules/platform/adapters/telegram/telegram.platform-adapter';
 import { WhatsAppPlatformAdapter } from '../../../src/modules/platform/adapters/whatsapp/whatsapp.platform-adapter';
 import { ZaloPlatformAdapter } from '../../../src/modules/platform/adapters/zalo/zalo.platform-adapter';
 
 const JPEG = Buffer.from([0xff, 0xd8, 0xff]);
+const MAX = MESSAGE_MEDIA_MAX_BYTES;
 const ACCOUNT = { accessToken: 'e', externalId: 'PHONE' } as any;
 
 describe('PlatformAdapter.fetchMedia', () => {
@@ -34,7 +36,7 @@ describe('PlatformAdapter.fetchMedia', () => {
         );
         expect(get).toHaveBeenCalledWith(
             'https://api.telegram.org/file/botTOKEN/photos/f.jpg',
-            { responseType: 'arraybuffer' }
+            { responseType: 'arraybuffer', maxContentLength: MAX }
         );
         expect(media).toEqual({ data: JPEG, mime: 'image/jpeg' });
     });
@@ -62,7 +64,7 @@ describe('PlatformAdapter.fetchMedia', () => {
         expect(get.mock.calls[0][1]).toEqual(auth);
         expect(get.mock.calls[1]).toEqual([
             'https://lookaside/m1',
-            { ...auth, responseType: 'arraybuffer' },
+            { ...auth, responseType: 'arraybuffer', maxContentLength: MAX },
         ]);
         expect(media).toEqual({ data: JPEG, mime: 'image/png' });
     });
@@ -100,5 +102,58 @@ describe('PlatformAdapter.fetchMedia', () => {
         await expect(
             adapter.fetchMedia(ACCOUNT, { type: 'image' })
         ).resolves.toBeNull();
+    });
+
+    describe('size cap on public-link downloads', () => {
+        const zalo = () =>
+            new ZaloPlatformAdapter(
+                { get: () => undefined } as any,
+                { axiosRef: {} } as any,
+                {} as any
+            );
+        afterEach(() => jest.restoreAllMocks());
+
+        it('refuses up front when the declared size is over the cap', async () => {
+            const body = new ReadableStream({ pull: jest.fn() });
+            jest.spyOn(global, 'fetch').mockResolvedValue(
+                new Response(body, {
+                    headers: {
+                        'content-type': 'image/jpeg',
+                        'content-length': String(MAX + 1),
+                    },
+                })
+            );
+
+            await expect(
+                zalo().fetchMedia(ACCOUNT, {
+                    type: 'image',
+                    url: 'https://cdn/big.jpg',
+                })
+            ).resolves.toBeNull();
+        });
+
+        it('stops reading once an undeclared body passes the cap', async () => {
+            const chunk = new Uint8Array(1024 * 1024);
+            let sent = 0;
+            const body = new ReadableStream({
+                pull(controller) {
+                    sent += chunk.length;
+                    controller.enqueue(chunk); // never ends on its own
+                },
+            });
+            jest.spyOn(global, 'fetch').mockResolvedValue(
+                new Response(body, {
+                    headers: { 'content-type': 'image/jpeg' },
+                })
+            );
+
+            await expect(
+                zalo().fetchMedia(ACCOUNT, {
+                    type: 'image',
+                    url: 'https://cdn/endless.jpg',
+                })
+            ).resolves.toBeNull();
+            expect(sent).toBeLessThanOrEqual(MAX + 2 * chunk.length);
+        });
     });
 });

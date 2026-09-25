@@ -61,6 +61,16 @@ export function hasImage(attachments?: unknown[]): boolean {
     );
 }
 
+/** How a message's images read in chat history: what the AI saw in them
+ *  when it described them, else a bare marker. '' when there is no image. */
+export function imageHistoryNote(attachments?: unknown[]): string {
+    if (!hasImage(attachments)) return '';
+    const described = (attachments ?? [])
+        .map(a => (a as { description?: unknown } | null)?.description)
+        .find((d): d is string => typeof d === 'string' && d.length > 0);
+    return described ? `[image: ${described}]` : '[image]';
+}
+
 /** URLs of the image attachments we can actually fetch (some platforms only
  *  give a file id — those are skipped). */
 export function imageUrls(attachments?: unknown[]): string[] {

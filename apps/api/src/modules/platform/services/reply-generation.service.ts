@@ -20,7 +20,7 @@ import {
     MESSAGE_TYPING_REFRESH_MS,
 } from '../constants/message-debounce.constant';
 import {
-    hasImage,
+    imageHistoryNote,
     imageUrls,
     text as toText,
 } from '../interfaces/message-model';
@@ -157,7 +157,7 @@ export class ReplyGenerationService {
             const history: AIChatHistoryMessage[] = prior
                 .map(m => ({
                     role: this.roleFor(m.authorType, m.direction),
-                    content: [m.text, hasImage(m.attachments) ? '[image]' : '']
+                    content: [m.text, imageHistoryNote(m.attachments)]
                         .filter(Boolean)
                         .join(' '),
                 }))
@@ -262,6 +262,11 @@ export class ReplyGenerationService {
                             `Outbound sent: conversation=${conversationId} externalId=${externalId}`
                         );
                     },
+                    onImageDescription: (messageId, description) =>
+                        this.messageRepository.describeImages(
+                            messageId,
+                            description
+                        ),
                     onFailed: async (nonce: string) => {
                         this.logger.error(
                             `Send failed for conversation ${conversationId}`

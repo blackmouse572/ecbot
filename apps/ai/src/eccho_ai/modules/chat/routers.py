@@ -37,7 +37,7 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 async def chat_endpoint(chat_request: ChatRequest, request: Request):
     """Endpoint to handle chat messages from the user."""
 
-    chat_request, _ = await with_image_description(chat_request)
+    chat_request, _, _ = await with_image_description(chat_request)
     if not chat_request.message:
         return AppResponse(
             status=400,
@@ -162,7 +162,7 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
     `stream_pipeline.events_to_ui_parts`; this endpoint only wires up the
     agent, guardrails and RAG sources around it.
     """
-    chat_request, vision_usage = await with_image_description(chat_request)
+    chat_request, vision_usage, described = await with_image_description(chat_request)
     if not chat_request.message:
         raise HTTPException(status_code=400, detail="message is required")
     # Local binding so nested closures below see `str`, not `str | None`
@@ -180,7 +180,12 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
                 yield  # pragma: no cover - makes this an async generator
 
         return StreamingResponse(
-            events_to_ui_parts(_no_events(), request_id=request_id, guardrail_reason=input_block),
+            events_to_ui_parts(
+                _no_events(),
+                request_id=request_id,
+                guardrail_reason=input_block,
+                image_description=described,
+            ),
             media_type="text/event-stream",
             headers=dict([STREAM_HEADER]),
         )
@@ -240,6 +245,7 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
             sources=source_attributions,
             image_url_allowed=lambda url: is_known_image_url(ctx.chatbot, url),
             usage=vision_usage,
+            image_description=described,
         ),
         media_type="text/event-stream",
         headers=dict([STREAM_HEADER]),

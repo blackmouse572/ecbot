@@ -2,6 +2,7 @@ import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
+import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
 import { HttpService } from '@nestjs/axios';
 import {
     Injectable,
@@ -343,7 +344,11 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
         if (!res.data.ok || !filePath) return null;
         const file = await this.httpService.axiosRef.get<ArrayBuffer>(
             `${this.apiUrl}/file/bot${this.token(account)}/${filePath}`,
-            { responseType: 'arraybuffer' }
+            {
+                responseType: 'arraybuffer',
+                // Aborts mid-download, not after buffering the whole file.
+                maxContentLength: MESSAGE_MEDIA_MAX_BYTES,
+            }
         );
         return {
             data: Buffer.from(file.data),

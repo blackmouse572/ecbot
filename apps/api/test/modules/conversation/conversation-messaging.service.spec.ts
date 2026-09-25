@@ -13,9 +13,7 @@ import { MessageEntity } from '../../../src/modules/conversation/repository/enti
 import { ConversationMessagingService } from '../../../src/modules/conversation/services/conversation-messaging.service';
 
 const mockS3 = {
-    presignGetItem: jest.fn(async (key: string) => ({
-        presignUrl: `https://s3/${key}?sig`,
-    })),
+    signGetUrl: jest.fn(async (key: string) => `https://s3/${key}?sig`),
 };
 
 describe('ConversationMessagingService', () => {

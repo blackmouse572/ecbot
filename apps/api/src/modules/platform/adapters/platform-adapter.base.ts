@@ -3,6 +3,8 @@ import { AccountEntity } from '@app/modules/account/repository/entities/account.
 import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { MEDIA_FETCH_TIMEOUT_MS } from '../constants/media.constant';
+import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
+import { readCappedBody } from '@app/common/utils/read-capped-body.util';
 import { isAxiosError } from 'axios';
 import {
     AdapterCapabilities,
@@ -70,8 +72,10 @@ export abstract class PlatformAdapter {
             signal: AbortSignal.timeout(MEDIA_FETCH_TIMEOUT_MS),
         });
         if (!res.ok) return null;
+        const data = await readCappedBody(res, MESSAGE_MEDIA_MAX_BYTES);
+        if (!data) return null;
         return {
-            data: Buffer.from(await res.arrayBuffer()),
+            data,
             mime: res.headers.get('content-type')?.split(';')[0] ?? '',
         };
     }

@@ -103,6 +103,7 @@ class _AppVars(BaseSettings):
     # Describes inbound customer images (must accept image input).
     VISION_MODEL: str = "google/gemini-2.5-flash"
     VISION_MAX_IMAGES: int = 4
+    # KEEP IN SYNC with apps/api MESSAGE_MEDIA_MAX_BYTES (what it stores).
     VISION_MAX_IMAGE_BYTES: int = 5 * 1024 * 1024
     # OpenRouter image-generation model.
     IMAGE_MODEL: str = "google/gemini-2.5-flash-image"

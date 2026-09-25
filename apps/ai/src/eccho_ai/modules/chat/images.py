@@ -33,18 +33,30 @@ _UNREADABLE_NOTE = "[The user sent an image that could not be viewed.]"
 
 
 async def fetch_image_data_url(url: str) -> str | None:
-    """Download an image into memory as a base64 data URL; None if unusable."""
+    """Download an image into memory as a base64 data URL; None if unusable.
+
+    Redirects are not followed (the URL is ours or the platform's, never a
+    hop to somewhere else), and the size cap holds while streaming, so an
+    oversized or endless body is never buffered whole.
+    """
+    cap = AppVars.VISION_MAX_IMAGE_BYTES
     try:
-        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
-            res = await client.get(url)
-        res.raise_for_status()
+        async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
+            async with client.stream("GET", url) as res:
+                if res.status_code != 200:
+                    return None
+                mime = res.headers.get("content-type", "").split(";")[0].strip()
+                if not mime.startswith("image/") or int(res.headers.get("content-length") or 0) > cap:
+                    return None
+                body = bytearray()
+                async for chunk in res.aiter_bytes():
+                    body.extend(chunk)
+                    if len(body) > cap:
+                        return None
     except httpx.HTTPError as exc:
         logger.warning("image_fetch_failed", error=str(exc))
         return None
-    mime = res.headers.get("content-type", "").split(";")[0].strip()
-    if not mime.startswith("image/") or len(res.content) > AppVars.VISION_MAX_IMAGE_BYTES:
-        return None
-    return f"data:{mime};base64,{base64.b64encode(res.content).decode()}"
+    return f"data:{mime};base64,{base64.b64encode(body).decode()}"
 
 
 async def _describe(urls: list[str]) -> tuple[str, dict[str, int]]:
@@ -68,13 +80,16 @@ async def _describe(urls: list[str]) -> tuple[str, dict[str, int]]:
 
 async def with_image_description(
     chat_request: ChatRequest,
-) -> tuple[ChatRequest, dict[str, int]]:
-    """Return the request with its images described in `message`, plus the
-    token usage of the vision call (billed with the turn)."""
-    urls = [a.preview_url for a in chat_request.attachments or [] if a.preview_url]
-    if not urls:
-        return chat_request, _NO_USAGE
+) -> tuple[ChatRequest, dict[str, int], dict[str, str] | None]:
+    """Return the request with its images described in `message`, the token
+    usage of the vision call (billed with the turn), and — when there is a
+    description — `{messageId, description}` for apps/api to keep, so later
+    turns remember what the images showed."""
+    attachments = [a for a in chat_request.attachments or [] if a.preview_url]
+    if not attachments:
+        return chat_request, _NO_USAGE, None
 
+    urls = [a.preview_url for a in attachments]
     description, usage = await _describe(urls[: AppVars.VISION_MAX_IMAGES])
     note = (
         f"[The user sent {len(urls)} image(s). Image description: {description}]"
@@ -82,4 +97,9 @@ async def with_image_description(
         else _UNREADABLE_NOTE
     )
     message = f"{chat_request.message}\n\n{note}" if chat_request.message else note
-    return chat_request.model_copy(update={"message": message}), usage
+    described = (
+        {"messageId": attachments[-1].attachment_id, "description": description}
+        if description
+        else None
+    )
+    return chat_request.model_copy(update={"message": message}), usage, described

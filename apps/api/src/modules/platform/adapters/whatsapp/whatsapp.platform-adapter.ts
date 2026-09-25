@@ -2,6 +2,7 @@ import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
+import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -289,7 +290,12 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
         if (!meta.data.url) return null;
         const file = await this.httpService.axiosRef.get<ArrayBuffer>(
             meta.data.url,
-            { ...auth, responseType: 'arraybuffer' }
+            {
+                ...auth,
+                responseType: 'arraybuffer',
+                // Aborts mid-download, not after buffering the whole file.
+                maxContentLength: MESSAGE_MEDIA_MAX_BYTES,
+            }
         );
         return {
             data: Buffer.from(file.data),

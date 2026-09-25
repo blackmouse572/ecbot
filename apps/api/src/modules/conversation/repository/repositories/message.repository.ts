@@ -54,6 +54,25 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         } as any);
     }
 
+    /** Keep what the AI saw in a message's images, so later turns remember it. */
+    async describeImages(
+        messageId: string,
+        description: string
+    ): Promise<void> {
+        const message = await this.findOneById(messageId);
+        if (!message?.attachments?.length) return;
+        await this.updateEntity(
+            { id: messageId } as any,
+            {
+                attachments: message.attachments.map(a =>
+                    (a as { type?: unknown } | null)?.type === 'image'
+                        ? { ...(a as object), description }
+                        : a
+                ),
+            } as any
+        );
+    }
+
     async insertPendingOutbound(
         conversationId: string,
         clientNonce: string,

@@ -75,7 +75,13 @@ describe('ReplyGenerationService.run', () => {
             findRecentByConversation: jest.fn().mockResolvedValue([
                 {
                     text: '',
-                    attachments: [{ type: 'image', key: 'old.jpg' }],
+                    attachments: [
+                        {
+                            type: 'image',
+                            key: 'old.jpg',
+                            description: 'A yoga flyer, Sat 9am',
+                        },
+                    ],
                     direction: 'INBOUND',
                 },
                 { text: 'giá bao nhiêu?', direction: 'INBOUND' },
@@ -120,7 +126,7 @@ describe('ReplyGenerationService.run', () => {
             { attachment_id: 'm-3', preview_url: 'https://s3/new.jpg' },
         ]);
         expect(params.history).toEqual([
-            { role: 'user', content: '[image]' },
+            { role: 'user', content: '[image: A yoga flyer, Sat 9am]' },
             { role: 'user', content: 'giá bao nhiêu?' },
         ]);
     });

@@ -405,6 +405,48 @@ describe('StreamingDelivery — send_image file parts', () => {
     );
 });
 
+describe('StreamingDelivery — image descriptions', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        '%s: hands the image description to its callback',
+        async (_mode, chatbot) => {
+            const onImageDescription = jest.fn().mockResolvedValue(undefined);
+            await new StreamingDelivery().deliver({
+                adapter: makeAdapter(),
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({ type: 'start', messageId: 'm1' }),
+                    line({
+                        type: 'data-image-description',
+                        data: {
+                            messageId: 'in-1',
+                            description: 'A red dress.',
+                        },
+                    }),
+                    line({ type: 'text-delta', id: 't1', delta: 'Đẹp quá!' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async () => 'nonce',
+                onSent: async () => {},
+                onFailed: async () => {},
+                onImageDescription,
+            });
+            expect(onImageDescription).toHaveBeenCalledWith(
+                'in-1',
+                'A red dress.'
+            );
+        }
+    );
+});
+
 describe('guardrailDeliveryPolicy', () => {
     it('no chatbot -> buffered (safe default)', () => {
         expect(guardrailDeliveryPolicy()).toEqual({

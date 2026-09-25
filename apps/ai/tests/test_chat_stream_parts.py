@@ -172,3 +172,14 @@ async def test_a_reply_that_is_only_a_split_markdown_image_is_not_lost():
     assert text == "![a](https://cdn/ok.jpg)"
     seq = [p["type"] for p in parts]
     assert seq.index("text-start") < seq.index("text-delta") < seq.index("text-end")
+
+
+@pytest.mark.asyncio
+async def test_image_description_is_reported_first():
+    async def fake_events():
+        yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk("Đẹp!")}}
+
+    described = {"messageId": "in-1", "description": "A red dress."}
+    parts = _parts([f async for f in events_to_ui_parts(
+        fake_events(), request_id="m1", image_description=described)])
+    assert parts[1] == {"type": "data-image-description", "data": described}

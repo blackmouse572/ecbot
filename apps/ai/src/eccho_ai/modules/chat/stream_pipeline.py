@@ -24,6 +24,7 @@ async def events_to_ui_parts(
     sources: list[dict[str, Any]] | None = None,
     image_url_allowed: Callable[[str], Awaitable[bool]] | None = None,
     usage: dict[str, int] | None = None,
+    image_description: dict[str, str] | None = None,
 ) -> AsyncIterator[str]:
     """Yield UI Message Stream SSE frames for one agent turn.
 
@@ -31,9 +32,12 @@ async def events_to_ui_parts(
     optional data-guardrail | source-url*+message-metadata) -> finish -> done.
 
     `image_url_allowed` screens markdown images in the text; `usage` seeds the
-    turn's token count (e.g. with the image-description call).
+    turn's token count (e.g. with the image-description call);
+    `image_description` is reported first so apps/api can keep it.
     """
     yield ui.start(request_id)
+    if image_description:
+        yield ui.data_part("image-description", image_description)
     # Open-run trackers live outside the try so the `except` handler can close
     # any unterminated text/reasoning/tool bracket before emitting `error`.
     text_id: str | None = None
