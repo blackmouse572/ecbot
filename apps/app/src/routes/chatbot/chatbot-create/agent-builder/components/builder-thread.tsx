@@ -56,11 +56,17 @@ export function BuilderThread(builder: AgentBuilderController) {
                 <MessageContent>{t("agentBuilder.ui.heroSubtitle")}</MessageContent>
               </Message>
               <Message from="user">
-                <MessageContent
-                  render={<button type="button" onClick={() => dispatch({ type: "restart" })} title={t("actions.edit")} className="text-left" />}
-                >
-                  {step0Answer}
-                </MessageContent>
+                {/* Once activated, restarting would overwrite the live bot,
+                    so the step-0 answer is read-only. */}
+                {state.finished ? (
+                  <MessageContent>{step0Answer}</MessageContent>
+                ) : (
+                  <MessageContent
+                    render={<button type="button" onClick={() => dispatch({ type: "restart" })} title={t("actions.edit")} className="text-left" />}
+                  >
+                    {step0Answer}
+                  </MessageContent>
+                )}
               </Message>
             </div>
           )}

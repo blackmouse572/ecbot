@@ -56,6 +56,7 @@ const linkChatbotAccount = vi.fn();
 const unlinkChatbotAccount = vi.fn();
 const provisionWebsiteWidget = vi.fn();
 const oAuthLoginClick = vi.fn();
+const setCloseOnEscape = vi.fn();
 
 // `to-chatbot-payload.ts` pulls in `../../constants`, which imports `@/i18n`
 // and initializes it with the real translation resources. Mocking
@@ -103,6 +104,7 @@ vi.mock("./components/test-panel", () => ({
 }));
 vi.mock("@/components/modals", () => ({
   RouteFocusModal: { Header: ({ children }: never) => <div>{children}</div>, Body: ({ children }: never) => <div>{children}</div> },
+  useRouteModal: () => ({ setCloseOnEscape }),
 }));
 
 const renderBuilder = () => render(<MemoryRouter initialEntries={["/ws/chatbot/create"]}><AgentBuilder /></MemoryRouter>);
@@ -138,6 +140,7 @@ describe("AgentBuilder", () => {
     unlinkChatbotAccount.mockReset();
     provisionWebsiteWidget.mockReset();
     oAuthLoginClick.mockReset();
+    setCloseOnEscape.mockReset();
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -416,7 +419,7 @@ describe("AgentBuilder", () => {
     // linked set in sync" logic left to verify); the assertion that
     // matters is simply that `accounts` is always empty, never the stale
     // (or even the correct) linked set.
-    it("keeps a channel linked through the channels turn in the next autosave's accounts", async () => {
+    it("sends accounts: [] in the next autosave even after a channel is linked through the channels turn", async () => {
       chatbot.mockReturnValue({
         chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
       });
@@ -580,5 +583,80 @@ describe("AgentBuilder", () => {
       await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
       expect(testPanelMounts).toHaveBeenCalledOnce();
     });
+    it("keeps the desktop panel visible with reduced motion (the opacity crossfade is mobile-only)", async () => {
+      mockMatchMedia(true);
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerToAgentName();
+      await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
+      expect(screen.getByTestId("test-panel").closest("aside")).toHaveClass("md:motion-reduce:opacity-100");
+    });
+
+    it("reflects the panel state in aria-expanded on the header toggle (desktop)", async () => {
+      mockMatchMedia(true);
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerToAgentName();
+      const toggle = await screen.findByRole("button", { name: "agentBuilder.ui.tryAgent" });
+      await waitFor(() => expect(toggle).toHaveAttribute("aria-expanded", "true"));
+      await userEvent.click(toggle);
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("is a labelled modal dialog on mobile: focus moves in on open, Escape closes it and focus returns to the opener", async () => {
+      mockMatchMedia(false);
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerToAgentName();
+      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+
+      const sheet = screen.getByTestId("test-panel").closest("aside")!;
+      const [headerToggle, floating] = screen.getAllByRole("button", { name: "agentBuilder.ui.tryAgent" });
+      expect(headerToggle).toHaveAttribute("aria-expanded", "false");
+      expect(floating).toHaveAttribute("aria-expanded", "false");
+
+      await userEvent.click(floating!);
+      expect(sheet).toHaveAttribute("role", "dialog");
+      expect(sheet).toHaveAttribute("aria-modal", "true");
+      expect(sheet).toHaveAttribute("aria-label", "agentBuilder.ui.tryAgent");
+      expect(sheet.contains(document.activeElement)).toBe(true);
+      expect(floating).toHaveAttribute("aria-expanded", "true");
+      expect(headerToggle).toHaveAttribute("aria-expanded", "true");
+      // The route modal must not also close on this Escape.
+      expect(setCloseOnEscape).toHaveBeenLastCalledWith(false);
+
+      await userEvent.keyboard("{Escape}");
+      expect(sheet).toHaveAttribute("aria-hidden", "true");
+      expect(document.activeElement).toBe(floating);
+      expect(setCloseOnEscape).toHaveBeenLastCalledWith(true);
+    });
+
+    it("returns focus to the opener when the mobile sheet's close control closes it", async () => {
+      mockMatchMedia(false);
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerToAgentName();
+      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+
+      const floating = screen.getAllByRole("button", { name: "agentBuilder.ui.tryAgent" }).at(-1)!;
+      await userEvent.click(floating);
+      await userEvent.click(screen.getByRole("button", { name: "actions.close" }));
+      expect(document.activeElement).toBe(floating);
+    });
   });
+
+  it("makes the step-0 bubble read-only once the agent is activated", async () => {
+    renderBuilder();
+    await pickBeautyTemplate();
+    for (let i = 0; i < 60 && !screen.queryByRole("button", { name: "agentBuilder.ui.finish" }); i++) {
+      await answerCurrent();
+    }
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.templateAnswer" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: "agentBuilder.ui.finish" })).toBeEnabled());
+    await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.finish" }));
+    await screen.findByText("agentBuilder.ui.finished");
+
+    expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "agentBuilder.ui.templateAnswer" })).not.toBeInTheDocument();
+  }, 20000);
 });

@@ -1,4 +1,4 @@
-import { RouteFocusModal } from "@/components/modals";
+import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { useChatbot } from "@/hooks/api";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SidebarRight, XMark } from "@medusajs/icons";
@@ -38,6 +38,23 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
   const { t } = useTranslation();
   const { desktop, mobile, toggle } = useSidebar();
   const isDesktopViewport = useMediaQuery(DESKTOP_QUERY);
+  const { setCloseOnEscape } = useRouteModal();
+  const panelOpen = isDesktopViewport ? desktop : mobile;
+  const sheetOpen = !isDesktopViewport && mobile;
+  const sheetCloseRef = useRef<HTMLButtonElement>(null);
+
+  // The mobile sheet is modal: focus moves in on open and returns to the
+  // opener on close, and Escape closes the sheet, not the route modal.
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    sheetCloseRef.current?.focus();
+    setCloseOnEscape(false);
+    return () => {
+      setCloseOnEscape(true);
+      opener?.focus();
+    };
+  }, [sheetOpen, setCloseOnEscape]);
 
   // Opens the test panel once, automatically, the first time this session's
   // draft chatbot is created (chatbotId goes null -> id). Never re-opens
@@ -80,6 +97,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
               size="small"
               className="max-w-[240px]"
               title={tryAgentLabel}
+              aria-expanded={panelOpen}
               onClick={() => toggle(isDesktopViewport ? "desktop" : "mobile")}
             >
               <SidebarRight className="size-4 shrink-0" />
@@ -114,13 +132,22 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
               mobile ? "translate-y-0 motion-reduce:opacity-100" : "translate-y-full motion-reduce:opacity-0",
               // Desktop: static grid column, width driven by the parent's
               // --panel-w, no transform/transition of its own.
-              "md:static md:inset-auto md:z-auto md:flex md:translate-y-0 md:border-l md:border-ui-border-base md:transition-none",
+              // The reduced-motion opacity crossfade is mobile-only.
+              "md:static md:inset-auto md:z-auto md:flex md:translate-y-0 md:border-l md:border-ui-border-base md:transition-none md:motion-reduce:opacity-100",
             )}
-            inert={(isDesktopViewport ? !desktop : !mobile) || undefined}
-            aria-hidden={(isDesktopViewport ? !desktop : !mobile) || undefined}
+            inert={!panelOpen || undefined}
+            aria-hidden={!panelOpen || undefined}
+            role={sheetOpen ? "dialog" : undefined}
+            aria-modal={sheetOpen || undefined}
+            aria-label={sheetOpen ? tryAgentLabel : undefined}
+            onKeyDown={(e) => {
+              if (!sheetOpen || e.key !== "Escape") return;
+              e.stopPropagation();
+              toggle("mobile");
+            }}
           >
             <div className="flex justify-end p-4 pb-0 md:hidden">
-              <IconButton variant="transparent" onClick={() => toggle("mobile")}>
+              <IconButton ref={sheetCloseRef} variant="transparent" onClick={() => toggle("mobile")}>
                 <XMark />
                 <span className="sr-only">{t("actions.close")}</span>
               </IconButton>
@@ -133,6 +160,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
           <Button
             className="fixed bottom-4 right-4 z-30 max-w-[70vw]"
             title={tryAgentLabel}
+            aria-expanded={mobile}
             onClick={() => {
               if (!mobile) toggle("mobile");
             }}
