@@ -9,6 +9,7 @@ import {
 } from "@repo/ui/common-components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { LinkedAccountRef } from "../builder-state";
 import { businessTypeIcon } from "./business-type-icon";
 import { ChannelConnect } from "./channel-connect";
 import { channelIcon } from "./channel-icon";
@@ -23,8 +24,12 @@ type Props = {
   /** Only used by the channels question, which connects real channels
    * instead of picking from a checkbox list (wireframe delta section 3). */
   chatbotId: string | null;
-  onAccountsLinked: (ids: string[]) => void;
+  linkedAccounts: LinkedAccountRef[];
+  onAccountsLinked: (accounts: LinkedAccountRef[]) => void;
   onAccountsUnlinked: (ids: string[]) => void;
+  beginAccountsChange: () => void;
+  endAccountsChange: () => void;
+  waitForPendingSave: () => Promise<void>;
 };
 
 const BOOLEAN_CHOICES = [
@@ -70,7 +75,8 @@ function choiceIcon(question: Question, value: string) {
  * Questionnaire item (wireframe delta section 2, replaces QuestionMessage).
  */
 export function QuestionTurn({
-  question, profile, suggestion, position, onAnswer, onSkip, chatbotId, onAccountsLinked, onAccountsUnlinked,
+  question, profile, suggestion, position, onAnswer, onSkip, chatbotId, linkedAccounts,
+  onAccountsLinked, onAccountsUnlinked, beginAccountsChange, endAccountsChange, waitForPendingSave,
 }: Props) {
   const { t } = useTranslation();
   const [value, setValue] = useState(() => toFormValue(question, readAnswer(profile, question.path)));
@@ -90,9 +96,13 @@ export function QuestionTurn({
               chatbotId={chatbotId}
               agentName={profile.agentName}
               channels={(readAnswer(profile, question.path) as string[] | undefined) ?? []}
+              linkedAccounts={linkedAccounts}
               onAccountsLinked={onAccountsLinked}
               onAccountsUnlinked={onAccountsUnlinked}
               onAnswer={(channels) => onAnswer(channels)}
+              beginAccountsChange={beginAccountsChange}
+              endAccountsChange={endAccountsChange}
+              waitForPendingSave={waitForPendingSave}
             />
           </MessageContent>
         </Message>

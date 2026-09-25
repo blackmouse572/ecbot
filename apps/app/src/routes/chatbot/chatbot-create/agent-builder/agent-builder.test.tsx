@@ -51,6 +51,7 @@ const chatbot = vi.fn();
 const activate = vi.fn();
 const toastError = vi.fn();
 const unlinkAccounts = vi.fn();
+const fetchUnlinkedAccounts = vi.fn();
 const linkAccount = vi.fn();
 const linkChatbotAccount = vi.fn();
 const unlinkChatbotAccount = vi.fn();
@@ -78,6 +79,7 @@ vi.mock("@/hooks/api", () => ({
   // QueryClient/workspace requirements. channel-connect.test.tsx covers the
   // actual connect behavior with its own, more specific mocks.
   useUnlinkAccounts: (...args: unknown[]) => unlinkAccounts(...args),
+  useFetchUnlinkedAccounts: () => fetchUnlinkedAccounts,
   useLinkAccount: () => ({ mutateAsync: linkAccount, isPending: false }),
   useLinkChatbotAccount: () => ({ mutateAsync: linkChatbotAccount, isPending: false }),
   useUnlinkChatbotAccount: () => ({ mutateAsync: unlinkChatbotAccount, isPending: false }),
@@ -133,6 +135,7 @@ describe("AgentBuilder", () => {
     toastError.mockReset();
     testPanelMounts.mockReset();
     unlinkAccounts.mockReset().mockReturnValue({ accounts: [] });
+    fetchUnlinkedAccounts.mockReset().mockResolvedValue({ data: [] });
     linkAccount.mockReset();
     linkChatbotAccount.mockReset();
     unlinkChatbotAccount.mockReset();
@@ -405,7 +408,8 @@ describe("AgentBuilder", () => {
       chatbot.mockReturnValue({
         chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
       });
-      linkAccount.mockResolvedValue({ data: { data: { id: "a2" } } });
+      linkAccount.mockResolvedValue({ data: { data: { id: "a2", type: "TELEGRAM_BOT", name: "New Bot" } } });
+      fetchUnlinkedAccounts.mockResolvedValue({ data: [{ id: "a2" }] });
       linkChatbotAccount.mockResolvedValue({});
       render(tree());
 
@@ -420,6 +424,41 @@ describe("AgentBuilder", () => {
       // An unrelated answer edit triggers the next autosave.
       await renameTo("Lotus Spa");
       await waitFor(() => expect(update).toHaveBeenCalled());
+      const lastBody = update.mock.calls.at(-1)?.[0]?.body;
+      expect(lastBody.accounts).toEqual(expect.arrayContaining(["a1", "a2"]));
+    });
+
+    // Section 4's autosave safety fix, hardened by review round 1 item 5:
+    // `accounts` is replace-all server side, so a link and a debounced
+    // autosave firing at the same time can still race even with
+    // linkedAccounts tracked locally. Uses deferred promises to prove the
+    // two are actually serialized, not just usually fast enough.
+    it("does not autosave while a link is in flight, then sends one save with the current set once it settles", async () => {
+      chatbot.mockReturnValue({
+        chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
+      });
+      linkAccount.mockResolvedValue({ data: { data: { id: "a2", type: "TELEGRAM_BOT", name: "New Bot" } } });
+      fetchUnlinkedAccounts.mockResolvedValue({ data: [{ id: "a2" }] });
+      let resolveLink: (v: unknown) => void = () => {};
+      linkChatbotAccount.mockReturnValue(new Promise((r) => { resolveLink = r; }));
+      render(tree());
+
+      await userEvent.click(screen.getByText(/agentBuilder\.questions\.channels\.lead/));
+      await userEvent.click(screen.getByText("agentBuilder.channels.telegram"));
+      const token = `123456:${"A".repeat(40)}`;
+      await userEvent.type(screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"), token);
+      await userEvent.click(screen.getByRole("button", { name: "accounts.create.connect.telegram.cta" }));
+      await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalled());
+
+      // An unrelated edit would normally schedule a debounced autosave;
+      // while the link above is still pending, it must not fire.
+      await renameTo("Lotus Spa");
+      await new Promise((r) => setTimeout(r, 900));
+      expect(update).not.toHaveBeenCalled();
+
+      // Settle the link, then the debounce reschedules with the current set.
+      resolveLink({});
+      await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 2000 });
       const lastBody = update.mock.calls.at(-1)?.[0]?.body;
       expect(lastBody.accounts).toEqual(expect.arrayContaining(["a1", "a2"]));
     });

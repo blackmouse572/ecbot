@@ -24,7 +24,7 @@ const QUESTION_ENTRANCE = clx(
 
 export function BuilderThread(builder: AgentBuilderController) {
   const { t } = useTranslation();
-  const { state, dispatch } = builder;
+  const { state, dispatch, beginAccountsChange, endAccountsChange, waitForPendingSave } = builder;
   const reduceMotion = useReducedMotion();
 
   const profile = state.profile;
@@ -94,8 +94,12 @@ export function BuilderThread(builder: AgentBuilderController) {
                           onAnswer={(value) => dispatch({ type: "answer", question, value })}
                           onSkip={() => dispatch({ type: "skip", question })}
                           chatbotId={state.chatbotId}
-                          onAccountsLinked={(ids) => dispatch({ type: "accountsLinked", ids })}
+                          linkedAccounts={state.linkedAccounts}
+                          onAccountsLinked={(accounts) => dispatch({ type: "accountsLinked", accounts })}
                           onAccountsUnlinked={(ids) => dispatch({ type: "accountsUnlinked", ids })}
+                          beginAccountsChange={beginAccountsChange}
+                          endAccountsChange={endAccountsChange}
+                          waitForPendingSave={waitForPendingSave}
                         />
                       </MessageScrollerItem>
                     ) : (
@@ -107,7 +111,7 @@ export function BuilderThread(builder: AgentBuilderController) {
                         {question.id === "channels" && state.chatbotId ? (
                           <ChannelsAnswer
                             question={question}
-                            chatbotId={state.chatbotId}
+                            linkedAccounts={state.linkedAccounts}
                             channels={profile.channels}
                             onEdit={() => dispatch({ type: "edit", questionId: question.id })}
                           />

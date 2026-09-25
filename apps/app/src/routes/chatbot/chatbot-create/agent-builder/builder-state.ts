@@ -2,6 +2,11 @@ import {
   buildQuestionGroups, writeAnswer,
   type AgentProfile, type AgentSuggestion, type Question, type QuestionGroup,
 } from "@repo/agent-blueprint";
+import type { AccountGetDetailResponseDto } from "@repo/client";
+
+/** Just enough of a linked account to derive the channels answer and the
+ * answered summary without a query round trip. */
+export type LinkedAccountRef = Pick<AccountGetDetailResponseDto, "id" | "type" | "name">;
 
 export type BuilderState = {
   profile: AgentProfile | null;
@@ -14,10 +19,13 @@ export type BuilderState = {
   editing: string | null;
   chatbotId: string | null;
   finished: boolean;
-  // Ids of the accounts currently linked to this draft, tracked locally so
-  // autosave always sends the true current set instead of a stale one (see
-  // toChatbotPayload's "never send a partial non-empty accounts list" rule).
-  linkedAccountIds: string[];
+  // The accounts currently linked to this draft, tracked locally (not just
+  // ids) so both the channels answer and the answered summary can be
+  // derived synchronously right after a link/unlink, without waiting on a
+  // query refetch. Also keeps autosave's `accounts` field always sending
+  // the true current set instead of a stale one (see toChatbotPayload's
+  // "never send a partial non-empty accounts list" rule).
+  linkedAccounts: LinkedAccountRef[];
 };
 
 export type BuilderAction =
@@ -28,21 +36,21 @@ export type BuilderAction =
       source: "describe" | "template";
       description?: string;
     }
-  | { type: "hydrate"; profile: AgentProfile; chatbotId: string; finished: boolean; accountIds?: string[] }
+  | { type: "hydrate"; profile: AgentProfile; chatbotId: string; finished: boolean; accounts?: LinkedAccountRef[] }
   | { type: "answer"; question: Question; value: unknown }
   | { type: "skip"; question: Question }
   | { type: "edit"; questionId: string }
   | { type: "restart" }
   | { type: "draftCreated"; chatbotId: string }
   | { type: "finished" }
-  | { type: "accountsLinked"; ids: string[] }
+  | { type: "accountsLinked"; accounts: LinkedAccountRef[] }
   | { type: "accountsUnlinked"; ids: string[] };
 
 export type Step = { group: QuestionGroup; question: Question };
 
 export const initialBuilderState: BuilderState = {
   profile: null, suggestion: null, source: null, describeText: null, answered: [], editing: null, chatbotId: null, finished: false,
-  linkedAccountIds: [],
+  linkedAccounts: [],
 };
 
 export function steps(profile: AgentProfile): Step[] {
@@ -78,7 +86,7 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         // choosing a template (or a new description) after `restart`
         // updates that draft instead of creating a second one.
         chatbotId: state.chatbotId,
-        linkedAccountIds: state.linkedAccountIds,
+        linkedAccounts: state.linkedAccounts,
         profile: action.profile,
         suggestion: action.suggestion,
         source: action.source,
@@ -94,7 +102,7 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         chatbotId: action.chatbotId,
         finished: action.finished,
         answered: steps(action.profile).map((s) => s.question.id),
-        linkedAccountIds: action.accountIds ?? [],
+        linkedAccounts: action.accounts ?? [],
       };
     case "answer": {
       if (!state.profile) return state;
@@ -113,14 +121,17 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       // Back to step 0. Keeps chatbotId (and its linked accounts) so
       // choosing again updates the existing draft instead of creating a
       // second one.
-      return { ...initialBuilderState, chatbotId: state.chatbotId, linkedAccountIds: state.linkedAccountIds };
+      return { ...initialBuilderState, chatbotId: state.chatbotId, linkedAccounts: state.linkedAccounts };
     case "draftCreated":
       return { ...state, chatbotId: action.chatbotId };
     case "finished":
       return { ...state, finished: true };
-    case "accountsLinked":
-      return { ...state, linkedAccountIds: Array.from(new Set([...state.linkedAccountIds, ...action.ids])) };
+    case "accountsLinked": {
+      const existingIds = new Set(state.linkedAccounts.map((a) => a.id));
+      const additions = action.accounts.filter((a) => !existingIds.has(a.id));
+      return { ...state, linkedAccounts: [...state.linkedAccounts, ...additions] };
+    }
     case "accountsUnlinked":
-      return { ...state, linkedAccountIds: state.linkedAccountIds.filter((id) => !action.ids.includes(id)) };
+      return { ...state, linkedAccounts: state.linkedAccounts.filter((a) => !action.ids.includes(a.id)) };
   }
 }

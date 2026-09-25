@@ -106,32 +106,35 @@ describe("builderReducer", () => {
     expect(s.answered).toEqual(["businessType"]);
   });
 
-  it("seeds linkedAccountIds from the hydrate action", () => {
+  const a1 = { id: "a1", type: "FACEBOOK_ACCOUNT", name: "Lotus Spa" };
+  const a2 = { id: "a2", type: "TELEGRAM_BOT", name: "Lotus Bot" };
+
+  it("seeds linkedAccounts from the hydrate action", () => {
     const s = builderReducer(initialBuilderState, {
-      type: "hydrate", profile: createProfile("hotel", "en"), chatbotId: "c1", finished: true, accountIds: ["a1", "a2"],
+      type: "hydrate", profile: createProfile("hotel", "en"), chatbotId: "c1", finished: true, accounts: [a1, a2],
     });
-    expect(s.linkedAccountIds).toEqual(["a1", "a2"]);
+    expect(s.linkedAccounts).toEqual([a1, a2]);
   });
 
-  it("adds newly linked account ids without duplicates", () => {
-    const s = { ...started(), linkedAccountIds: ["a1"] };
-    const linked = builderReducer(s, { type: "accountsLinked", ids: ["a1", "a2"] });
-    expect(linked.linkedAccountIds).toEqual(["a1", "a2"]);
+  it("adds newly linked accounts without duplicates", () => {
+    const s = { ...started(), linkedAccounts: [a1] };
+    const linked = builderReducer(s, { type: "accountsLinked", accounts: [a1, a2] });
+    expect(linked.linkedAccounts).toEqual([a1, a2]);
   });
 
-  it("removes unlinked account ids", () => {
-    const s = { ...started(), linkedAccountIds: ["a1", "a2"] };
+  it("removes unlinked accounts by id", () => {
+    const s = { ...started(), linkedAccounts: [a1, a2] };
     const unlinked = builderReducer(s, { type: "accountsUnlinked", ids: ["a1"] });
-    expect(unlinked.linkedAccountIds).toEqual(["a2"]);
+    expect(unlinked.linkedAccounts).toEqual([a2]);
   });
 
-  it("keeps linkedAccountIds across a restart, and across starting again", () => {
-    const withAccounts = { ...started(), chatbotId: "c1", linkedAccountIds: ["a1"] };
+  it("keeps linkedAccounts across a restart, and across starting again", () => {
+    const withAccounts = { ...started(), chatbotId: "c1", linkedAccounts: [a1] };
     const restarted = builderReducer(withAccounts, { type: "restart" });
-    expect(restarted.linkedAccountIds).toEqual(["a1"]);
+    expect(restarted.linkedAccounts).toEqual([a1]);
     const s = builderReducer(restarted, {
       type: "start", profile: createProfile("restaurant", "vi"), suggestion: null, source: "template",
     });
-    expect(s.linkedAccountIds).toEqual(["a1"]);
+    expect(s.linkedAccounts).toEqual([a1]);
   });
 });

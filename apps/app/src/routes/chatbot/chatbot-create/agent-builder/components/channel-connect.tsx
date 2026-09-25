@@ -5,7 +5,7 @@ import {
 import { isHttpUrl, splitOrigins } from "@/components/channel-connect/website-origins";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import {
-  useChatbot,
+  useFetchUnlinkedAccounts,
   useLinkAccount,
   useLinkChatbotAccount,
   useProvisionWebsiteWidget,
@@ -16,11 +16,12 @@ import { useOAuthLogin } from "@/hooks/use-oauth-login";
 import { IssuedPanel } from "@/routes/accounts/account-create/components/account-create-form/provision-step";
 import type { Issued } from "@/routes/accounts/account-create/components/account-create-form/provisioned-platforms";
 import { XMarkMini } from "@medusajs/icons";
-import { Button, IconButton, Input, Text, clx } from "@medusajs/ui";
+import { Button, IconButton, Input, Label, Text, Textarea, clx } from "@medusajs/ui";
 import type { ChannelId } from "@repo/agent-blueprint";
 import type { AccountGetDetailResponseDto, AccountListResponseDto } from "@repo/client";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { LinkedAccountRef } from "../builder-state";
 import { CHANNEL_CONNECT, channelOfAccountType } from "../channel-accounts";
 import { channelIcon } from "./channel-icon";
 
@@ -39,16 +40,25 @@ type Props = {
   chatbotId: string;
   agentName: string;
   channels: string[];
-  onAccountsLinked: (ids: string[]) => void;
+  linkedAccounts: LinkedAccountRef[];
+  onAccountsLinked: (accounts: LinkedAccountRef[]) => void;
   onAccountsUnlinked: (ids: string[]) => void;
   onAnswer: (channels: string[]) => void;
+  /** Serializes account changes against autosave (fix round 1, item 5):
+   * `accounts` is replace-all server side, so a link/unlink and a debounced
+   * autosave racing each other can drop whichever one loses. */
+  beginAccountsChange: () => void;
+  endAccountsChange: () => void;
+  waitForPendingSave: () => Promise<void>;
 };
 
-export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinked, onAccountsUnlinked, onAnswer }: Props) {
+export function ChannelConnect({
+  chatbotId, agentName, channels, linkedAccounts, onAccountsLinked, onAccountsUnlinked, onAnswer,
+  beginAccountsChange, endAccountsChange, waitForPendingSave,
+}: Props) {
   const { t } = useTranslation();
   const { accounts: unlinkedAccounts } = useUnlinkAccounts();
-  const { chatbot } = useChatbot(chatbotId);
-  const linkedAccounts = chatbot?.accounts ?? [];
+  const fetchUnlinkedAccounts = useFetchUnlinkedAccounts();
 
   const linkAccount = useLinkAccount();
   const linkChatbotAccount = useLinkChatbotAccount(chatbotId);
@@ -57,6 +67,9 @@ export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinke
 
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  // Accounts an OAuth/Telegram response returned that turned out to belong
+  // to another chatbot already (fix round 1, item 1: "no stealing").
+  const [inUseAccounts, setInUseAccounts] = useState<LinkedAccountRef[]>([]);
   const [expanded, setExpanded] = useState<ChannelId | null>(null);
   const [telegramToken, setTelegramToken] = useState("");
   const [telegramError, setTelegramError] = useState<string | undefined>();
@@ -67,48 +80,114 @@ export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinke
   const [comingSoon, setComingSoon] = useState<Set<ChannelId>>(
     () => new Set(channels.filter((c) => COMING_SOON_CHANNELS.includes(c as ChannelId)) as ChannelId[]),
   );
-  // Which oauth popup is currently in flight — both oauth hooks below stay
+  const widgetNameId = useId();
+  const widgetOriginsId = useId();
+
+  // Which oauth popup is currently in flight; both oauth hooks below stay
   // mounted at once (messenger and zalo cards are both always visible), so
   // this stops the other platform's listener from also reacting to a single
   // postMessage.
   const pendingOAuth = useRef<ChannelId | null>(null);
+  const oauthPending = busy === "messenger" || busy === "zalo" ? (busy as ChannelId) : null;
 
-  const linkOAuthAccount = async (channel: ChannelId, platform: string, code: string) => {
-    setBusy(channel);
+  /**
+   * Runs one account mutation with the round-1 fixes applied uniformly:
+   * awaits any autosave already in flight first (item 5), marks this change
+   * "in flight" so autosave waits for it in turn, and manages the busy/error
+   * UI state around it.
+   */
+  const runAccountChange = async (busyKey: string, fn: () => Promise<void>) => {
+    await waitForPendingSave();
+    beginAccountsChange();
+    setBusy(busyKey);
     setError(false);
     try {
-      const res = await linkAccount.mutateAsync({ code, platform: platform as A });
-      const linked = (res.data as A)?.data as LinkedAccount | null | undefined;
-      const ids = linked ? [linked.id, ...(linked.pages ?? []).map((p) => p.id)] : [];
-      if (ids.length) {
-        await linkChatbotAccount.mutateAsync({ accounts: ids });
-        onAccountsLinked(ids);
-      }
+      await fn();
     } catch {
       setError(true);
     } finally {
       setBusy(null);
+      endAccountsChange();
     }
   };
+
+  /**
+   * The no-stealing check (fix round 1, item 1): `syncAccount` upserts by
+   * externalId, so a link response can return an id already owned by
+   * another chatbot. Only candidates that are either already on this bot or
+   * currently unlinked (checked fresh, not from cache) are linked; the rest
+   * surface an inline notice instead of silently moving someone else's
+   * channel.
+   */
+  const linkAllowed = async (candidates: LinkedAccountRef[]) => {
+    if (!candidates.length) return;
+    const alreadyOnThisBot = new Set(linkedAccounts.map((a) => a.id));
+    const toCheck = candidates.filter((c) => !alreadyOnThisBot.has(c.id));
+    let freshUnlinkedIds = new Set<string>();
+    if (toCheck.length) {
+      const fresh = await fetchUnlinkedAccounts();
+      freshUnlinkedIds = new Set((fresh?.data ?? []).map((a) => a.id));
+    }
+    const linkable = candidates.filter((c) => alreadyOnThisBot.has(c.id) || freshUnlinkedIds.has(c.id));
+    const blocked = candidates.filter((c) => !alreadyOnThisBot.has(c.id) && !freshUnlinkedIds.has(c.id));
+    if (blocked.length) {
+      setInUseAccounts((prev) => {
+        const existing = new Set(prev.map((a) => a.id));
+        return [...prev, ...blocked.filter((b) => !existing.has(b.id))];
+      });
+    }
+    if (linkable.length) {
+      await linkChatbotAccount.mutateAsync({ accounts: linkable.map((a) => a.id) });
+      onAccountsLinked(linkable);
+    }
+  };
+
+  const linkOAuthAccount = (channel: ChannelId, platform: string, code: string) =>
+    runAccountChange(channel, async () => {
+      const res = await linkAccount.mutateAsync({ code, platform: platform as A });
+      const linked = (res.data as A)?.data as LinkedAccount | null | undefined;
+      if (!linked) return;
+      // Facebook: link the pages only, never the user-level account row.
+      const candidates: LinkedAccountRef[] = linked.pages?.length
+        ? linked.pages.map((p) => ({ id: p.id, type: p.type, name: p.name }))
+        : [{ id: linked.id, type: linked.type, name: linked.name }];
+      await linkAllowed(candidates);
+    });
 
   const { handleLinkClick: openMessenger } = useOAuthLogin("FACEBOOK_ACCOUNT", {
     onSuccess: ({ code }) => {
       if (pendingOAuth.current !== "messenger") return;
+      pendingOAuth.current = null;
       void linkOAuthAccount("messenger", "FACEBOOK_ACCOUNT", code);
     },
     onError: () => {
       if (pendingOAuth.current !== "messenger") return;
+      pendingOAuth.current = null;
+      setBusy(null);
       setError(true);
+    },
+    onClosed: () => {
+      if (pendingOAuth.current !== "messenger") return;
+      pendingOAuth.current = null;
+      setBusy(null);
     },
   });
   const { handleLinkClick: openZalo } = useOAuthLogin("ZALO_ACCOUNT", {
     onSuccess: ({ code }) => {
       if (pendingOAuth.current !== "zalo") return;
+      pendingOAuth.current = null;
       void linkOAuthAccount("zalo", "ZALO_ACCOUNT", code);
     },
     onError: () => {
       if (pendingOAuth.current !== "zalo") return;
+      pendingOAuth.current = null;
+      setBusy(null);
       setError(true);
+    },
+    onClosed: () => {
+      if (pendingOAuth.current !== "zalo") return;
+      pendingOAuth.current = null;
+      setBusy(null);
     },
   });
 
@@ -135,77 +214,49 @@ export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinke
     setExpanded((prev) => (prev === channel ? null : channel));
   };
 
-  const handleTelegramConnect = async () => {
+  const handleTelegramConnect = () => {
     const token = telegramToken.trim();
     if (!TELEGRAM_TOKEN_PATTERN.test(token)) {
       setTelegramError(t("accounts.create.connect.telegram.tokenInvalid"));
       return;
     }
     setTelegramError(undefined);
-    setBusy("telegram");
-    setError(false);
-    try {
+    return runAccountChange("telegram", async () => {
       const res = await linkAccount.mutateAsync({ code: token, platform: "TELEGRAM_BOT" });
       const linked = (res.data as A)?.data as LinkedAccount | null | undefined;
-      if (linked) {
-        await linkChatbotAccount.mutateAsync({ accounts: [linked.id] });
-        onAccountsLinked([linked.id]);
-        setTelegramToken("");
-        setExpanded(null);
-      }
-    } catch {
-      setError(true);
-    } finally {
-      setBusy(null);
-    }
+      if (!linked) return;
+      await linkAllowed([{ id: linked.id, type: linked.type, name: linked.name }]);
+      setTelegramToken("");
+      setExpanded(null);
+    });
   };
 
-  const handleWidgetProvision = async () => {
+  const handleWidgetProvision = () => {
     const origins = splitOrigins(widgetOrigins);
     if (!widgetName.trim() || !origins.length || !origins.every(isHttpUrl)) {
       setWidgetError(t("accounts.create.provision.websiteWidget.originsInvalid"));
       return;
     }
     setWidgetError(undefined);
-    setBusy("website");
-    setError(false);
-    try {
+    return runAccountChange("website", async () => {
       const res = await provisionWidget.mutateAsync({ name: widgetName.trim(), allowedOrigins: origins });
       await linkChatbotAccount.mutateAsync({ accounts: [res.id] });
-      onAccountsLinked([res.id]);
+      onAccountsLinked([{ id: res.id, type: "WEBSITE_WIDGET", name: widgetName.trim() }]);
       setIssued({ kind: "WEBSITE_WIDGET", widgetKey: res.widgetKey });
-    } catch {
-      setError(true);
-    } finally {
-      setBusy(null);
-    }
+    });
   };
 
-  const handleUseExisting = async (account: AccountListResponseDto) => {
-    setBusy(account.id);
-    setError(false);
-    try {
+  const handleUseExisting = (account: AccountListResponseDto) =>
+    runAccountChange(account.id, async () => {
       await linkChatbotAccount.mutateAsync({ accounts: [account.id] });
-      onAccountsLinked([account.id]);
-    } catch {
-      setError(true);
-    } finally {
-      setBusy(null);
-    }
-  };
+      onAccountsLinked([{ id: account.id, type: account.type, name: account.name }]);
+    });
 
-  const handleUnlink = async (accountId: string) => {
-    setBusy(accountId);
-    setError(false);
-    try {
+  const handleUnlink = (accountId: string) =>
+    runAccountChange(accountId, async () => {
       await unlinkChatbotAccount.mutateAsync({ accounts: [accountId] });
       onAccountsUnlinked([accountId]);
-    } catch {
-      setError(true);
-    } finally {
-      setBusy(null);
-    }
-  };
+    });
 
   const commit = () => {
     const fromAccounts = linkedAccounts
@@ -250,17 +301,22 @@ export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinke
           const connect = CHANNEL_CONNECT[channel];
           const selected = connect.kind === "comingSoon" && comingSoon.has(channel);
           const connected = linkedAccounts.some((a) => channelOfAccountType(a.type) === channel);
+          // Only one OAuth flow at a time: while messenger or zalo is
+          // mid-popup, disable the other OAuth card so its click can't be
+          // misread as belonging to the flow already in progress.
+          const disabledByOtherOAuth = connect.kind === "oauth" && oauthPending !== null && oauthPending !== channel;
           return (
             <button
               key={channel}
               type="button"
               aria-pressed={connect.kind === "comingSoon" ? selected : undefined}
               onClick={() => handleCardClick(channel)}
-              disabled={busy === channel}
+              disabled={busy === channel || disabledByOtherOAuth}
               className={clx(
                 "flex items-center gap-2 rounded-md border p-3 text-left transition-colors duration-150 ease-out",
                 "border-ui-border-base bg-ui-bg-base hover:bg-ui-bg-base-hover",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-border-interactive",
+                "disabled:cursor-not-allowed disabled:opacity-60",
                 selected && "border-ui-border-interactive bg-ui-bg-highlight",
               )}
             >
@@ -302,10 +358,11 @@ export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinke
       {expanded === "website" && !issued && (
         <div className="flex flex-col gap-2 rounded-md border border-ui-border-base bg-ui-bg-subtle p-3">
           <div className="flex flex-col gap-y-2">
-            <Text size="xsmall" weight="plus">
+            <Label htmlFor={widgetNameId} size="xsmall" weight="plus">
               {t("accounts.create.provision.nameLabel")}
-            </Text>
+            </Label>
             <Input
+              id={widgetNameId}
               placeholder={t("accounts.create.provision.namePlaceholder")}
               value={widgetName}
               onChange={(e) => setWidgetName(e.target.value)}
@@ -313,15 +370,16 @@ export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinke
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text size="xsmall" weight="plus">
+            <Label htmlFor={widgetOriginsId} size="xsmall" weight="plus">
               {t("agentBuilder.ui.widgetOriginsLabel")}
-            </Text>
-            <textarea
-              className="min-h-16 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-2 py-1.5 text-ui-fg-base text-sm"
+            </Label>
+            <Textarea
+              id={widgetOriginsId}
               value={widgetOrigins}
               onChange={(e) => setWidgetOrigins(e.target.value)}
               disabled={busy === "website"}
               placeholder="https://shop.example.com"
+              rows={3}
             />
             {widgetError && (
               <Text size="xsmall" className="text-ui-fg-error">
@@ -336,7 +394,16 @@ export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinke
       )}
 
       {expanded === "website" && issued && (
-        <IssuedPanel issued={issued} onDone={() => setExpanded(null)} />
+        <IssuedPanel
+          issued={issued}
+          onDone={() => {
+            setExpanded(null);
+            // Clears the issued key so reopening the website card shows a
+            // fresh provision form instead of the last widget's panel
+            // again (fix round 1, item 4).
+            setIssued(null);
+          }}
+        />
       )}
 
       {(linkedAccounts.length > 0 || comingSoon.size > 0) && (
@@ -354,28 +421,37 @@ export function ChannelConnect({ chatbotId, agentName, channels, onAccountsLinke
                 size="small"
                 isLoading={busy === account.id}
                 onClick={() => handleUnlink(account.id)}
-                aria-label={t("actions.close")}
+                aria-label={t("agentBuilder.ui.unlinkChannel", { name: account.name })}
               >
                 <XMarkMini />
               </IconButton>
             </div>
           ))}
-          {Array.from(comingSoon).map((channel) => (
-            <div key={channel} className="flex items-center gap-1.5 rounded-full border border-ui-border-base bg-ui-bg-base py-1 pl-2 pr-1">
-              <Text size="xsmall">{t(`agentBuilder.channels.${channel}`)}</Text>
-              <IconButton
-                type="button"
-                variant="transparent"
-                size="small"
-                onClick={() => handleCardClick(channel)}
-                aria-label={t("actions.close")}
-              >
-                <XMarkMini />
-              </IconButton>
-            </div>
-          ))}
+          {Array.from(comingSoon).map((channel) => {
+            const label = t(`agentBuilder.channels.${channel}`);
+            return (
+              <div key={channel} className="flex items-center gap-1.5 rounded-full border border-ui-border-base bg-ui-bg-base py-1 pl-2 pr-1">
+                <Text size="xsmall">{label}</Text>
+                <IconButton
+                  type="button"
+                  variant="transparent"
+                  size="small"
+                  onClick={() => handleCardClick(channel)}
+                  aria-label={t("agentBuilder.ui.unlinkChannel", { name: label })}
+                >
+                  <XMarkMini />
+                </IconButton>
+              </div>
+            );
+          })}
         </div>
       )}
+
+      {inUseAccounts.map((account) => (
+        <Text key={account.id} size="small" className="text-ui-fg-error">
+          {t("agentBuilder.ui.channelInUse", { name: account.name })}
+        </Text>
+      ))}
 
       {error && (
         <Text size="small" className="text-ui-fg-error">

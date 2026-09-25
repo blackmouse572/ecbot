@@ -7,7 +7,7 @@ export const TELEGRAM_TOKEN_PATTERN = /^\d+:[A-Za-z0-9_-]{35,}$/;
 
 /**
  * The Telegram bot-token input, shared by the accounts create form
- * (`ConnectStep`) and the agent builder's channel connect card — both send
+ * (`ConnectStep`) and the agent builder's channel connect card; both send
  * the token through `useLinkAccount` as `{ code: botToken, platform:
  * "TELEGRAM_BOT" }`, so the field itself (label, placeholder, hint) should
  * never drift between the two.

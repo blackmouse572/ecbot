@@ -32,7 +32,7 @@ describe("useFetchUnlinkedAccounts", () => {
     expect(first?.data).toEqual([{ id: "a1" }]);
 
     // A second call right after must hit the network again (fresh), not
-    // return the same cached page — this is what the no-stealing check
+    // return the same cached page; this is what the no-stealing check
     // relies on to see an account another user just linked elsewhere.
     const second = await result.current();
     expect(second?.data).toEqual([{ id: "a1" }, { id: "a2" }]);
