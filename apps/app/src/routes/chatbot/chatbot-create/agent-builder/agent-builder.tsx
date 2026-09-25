@@ -74,17 +74,10 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
   // button and TestPanel's tab/heading never duplicate the name fallback.
   const displayName = agentDisplayName(builder.state.profile, t);
   const tryAgentLabel = t("agentBuilder.ui.tryAgent", { name: displayName });
-  const panel = (
-    <TestPanel
-      chatbotId={builder.state.chatbotId}
-      profile={builder.state.profile}
-      extraInstructions={builder.extraInstructions}
-      agentDisplayName={displayName}
-    />
-  );
   // Batch 3: unlocks once the draft exists (chatbotId set), not merely once
   // it's ready to be created.
-  const unlocked = !!builder.state.chatbotId;
+  const chatbotId = builder.state.chatbotId;
+  const unlocked = !!chatbotId;
 
   return (
     <>
@@ -118,7 +111,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
           <BuilderThread {...builder} />
         </div>
 
-        {unlocked && (
+        {chatbotId && (
           // Batch 3: a single persistent panel element whose classes switch
           // between the desktop column and the mobile sheet, instead of two
           // mutually exclusive branches. Crossing the md breakpoint no
@@ -152,7 +145,14 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
                 <span className="sr-only">{t("actions.close")}</span>
               </IconButton>
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden p-4 md:w-[420px]">{panel}</div>
+            <div className="min-h-0 flex-1 overflow-hidden p-4 md:w-[420px]">
+              <TestPanel
+                chatbotId={chatbotId}
+                profile={builder.state.profile}
+                extraInstructions={builder.extraInstructions}
+                agentDisplayName={displayName}
+              />
+            </div>
           </aside>
         )}
 

@@ -36,7 +36,7 @@ describe("TestPanel", () => {
   });
 
   it('falls back to "Talk with your agent" before the agent has a name', () => {
-    render(<TestPanel chatbotId={null} profile={null} extraInstructions="" agentDisplayName="your agent" />);
+    render(<TestPanel chatbotId="bot-1" profile={null} extraInstructions="" agentDisplayName="your agent" />);
     expect(screen.getByRole("tab", { name: "Talk with your agent" })).toBeInTheDocument();
   });
 

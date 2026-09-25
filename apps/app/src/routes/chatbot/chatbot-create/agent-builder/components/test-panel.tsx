@@ -4,14 +4,14 @@ import { workspaceChatTransport } from "@/components/ai-chat/use-ai-chat-stream"
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useAuthToken } from "@/modules/auth";
 import { compilePrompt, type AgentProfile } from "@repo/agent-blueprint";
-import { Tabs, Text } from "@medusajs/ui";
+import { Tabs } from "@medusajs/ui";
 import { ScrollArea } from "@repo/ui/components";
 import { MessageResponse } from "@repo/ui/common-components";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 type Props = {
-  chatbotId: string | null;
+  chatbotId: string;
   profile: AgentProfile | null;
   extraInstructions: string;
   /** "Talk with {{name}}"'s name, computed once by the caller (agent-builder.tsx). */
@@ -22,7 +22,7 @@ export function TestPanel({ chatbotId, profile, extraInstructions, agentDisplayN
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const token = useAuthToken();
-  const transport = useMemo(() => workspaceChatTransport(workspaceSlug, chatbotId ?? ""), [workspaceSlug, chatbotId]);
+  const transport = useMemo(() => workspaceChatTransport(workspaceSlug, chatbotId), [workspaceSlug, chatbotId]);
   const prompt = useMemo(() => (profile ? compilePrompt(profile, { extraInstructions }) : ""), [profile, extraInstructions]);
   const tryAgentLabel = t("agentBuilder.ui.tryAgent", { name: agentDisplayName });
 
@@ -35,19 +35,15 @@ export function TestPanel({ chatbotId, profile, extraInstructions, agentDisplayN
         <Tabs.Trigger value="prompt">{t("agentBuilder.ui.promptTab")}</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="chat" className="min-h-0 flex-1">
-        {chatbotId ? (
-          <AIChatCard
-            key={chatbotId}
-            heading={tryAgentLabel}
-            chatbotId={chatbotId}
-            transport={transport}
-            canSubmit={!!token}
-            renderInput={<AIChatInput />}
-            className="h-full"
-          />
-        ) : (
-          <Text size="small" className="text-ui-fg-muted p-4 text-center">{t("agentBuilder.ui.testLocked")}</Text>
-        )}
+        <AIChatCard
+          key={chatbotId}
+          heading={tryAgentLabel}
+          chatbotId={chatbotId}
+          transport={transport}
+          canSubmit={!!token}
+          renderInput={<AIChatInput />}
+          className="h-full"
+        />
       </Tabs.Content>
       <Tabs.Content value="prompt" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">

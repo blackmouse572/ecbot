@@ -974,7 +974,6 @@
       "tryAgent": "Trò chuyện với {{name}}",
       "yourAgent": "agent của bạn",
       "promptTab": "Prompt",
-      "testLocked": "Agent sẽ xuất hiện ở đây sau khi được đặt tên.",
       "progress": "Câu {{current}} / {{total}}",
       "extraInstructions": "Hướng dẫn bổ sung",
       "extraInstructionsHint": "Được thêm vào cuối phần hướng dẫn cho agent. Để trống nếu các câu trả lời đã đầy đủ.",

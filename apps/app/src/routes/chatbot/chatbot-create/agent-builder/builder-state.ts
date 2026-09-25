@@ -22,9 +22,7 @@ export type BuilderState = {
   // The accounts currently linked to this draft, tracked locally (not just
   // ids) so both the channels answer and the answered summary can be
   // derived synchronously right after a link/unlink, without waiting on a
-  // query refetch. Also keeps autosave's `accounts` field always sending
-  // the true current set instead of a stale one (see toChatbotPayload's
-  // "never send a partial non-empty accounts list" rule).
+  // query refetch.
   linkedAccounts: LinkedAccountRef[];
 };
 

@@ -946,7 +946,6 @@
       "tryAgent": "Talk with {{name}}",
       "yourAgent": "your agent",
       "promptTab": "Prompt",
-      "testLocked": "Your agent appears here once it has a name.",
       "progress": "Question {{current}} of {{total}}",
       "extraInstructions": "Extra instructions",
       "extraInstructionsHint": "Added at the end of what your agent is told. Leave it empty if your answers cover everything.",
