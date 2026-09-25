@@ -5,6 +5,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useAuthToken } from "@/modules/auth";
 import { compilePrompt, type AgentProfile } from "@repo/agent-blueprint";
 import { Tabs, Text } from "@medusajs/ui";
+import { ScrollArea } from "@repo/ui/components";
 import { MessageResponse } from "@repo/ui/common-components";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -39,8 +40,10 @@ export function TestPanel({ chatbotId, profile, extraInstructions }: Props) {
           <Text size="small" className="text-ui-fg-muted p-4 text-center">{t("agentBuilder.ui.testLocked")}</Text>
         )}
       </Tabs.Content>
-      <Tabs.Content value="prompt" className="min-h-0 flex-1 overflow-y-auto">
-        <MessageResponse>{prompt}</MessageResponse>
+      <Tabs.Content value="prompt" className="min-h-0 flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <MessageResponse>{prompt}</MessageResponse>
+        </ScrollArea>
       </Tabs.Content>
     </Tabs>
   );

@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { ScrollAreaPrimitive, ScrollBar } from "../../ui/scroll-area";
 
 // ============================================================================
 // MessageScroller — intent-aware chat transcript scroller. Replaces
@@ -175,13 +176,16 @@ export const MessageScrollerViewport = ({
   }, [viewportRef, contentRef, stickRef, recomputeAtBottom]);
 
   return (
-    <div
-      ref={viewportRef}
-      className={clx("scroll-fade-y min-h-0 flex-1 overflow-y-auto", className)}
-      {...props}
-    >
-      <div ref={contentRef}>{children}</div>
-    </div>
+    <ScrollAreaPrimitive.Root className={clx("min-h-0 flex-1", className)}>
+      <ScrollAreaPrimitive.Viewport
+        ref={viewportRef}
+        className="scroll-fade-y size-full rounded-[inherit]"
+        {...props}
+      >
+        <div ref={contentRef}>{children}</div>
+      </ScrollAreaPrimitive.Viewport>
+      <ScrollBar orientation="vertical" />
+    </ScrollAreaPrimitive.Root>
   );
 };
 

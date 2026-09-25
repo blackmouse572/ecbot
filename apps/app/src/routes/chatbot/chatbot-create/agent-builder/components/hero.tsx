@@ -4,6 +4,7 @@ import { Heading, Text, clx } from "@medusajs/ui";
 import {
   PromptInput, PromptInputBody, PromptInputFooter, PromptInputSubmit, PromptInputTextarea,
 } from "@repo/ui/common-components";
+import { ScrollArea } from "@repo/ui/components";
 import { useTranslation } from "react-i18next";
 import { businessTypeIcon } from "./business-type-icon";
 
@@ -24,41 +25,43 @@ const CARD_CLASSES = clx(
 export function Hero({ loading, onDescribe, onTemplate }: Props) {
   const { t } = useTranslation();
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto p-4 md:p-8">
-      <div className="flex w-full max-w-[640px] flex-col items-center gap-6 text-center">
-        <div className="flex flex-col items-center gap-2">
-          <Heading level="h1">{t("agentBuilder.ui.heroTitle")}</Heading>
-          <Text className="text-ui-fg-subtle">{t("agentBuilder.ui.heroSubtitle")}</Text>
-        </div>
-        <PromptInput
-          className="w-full"
-          onSubmit={({ text }) => {
-            if (text.trim() && !loading) onDescribe(text.trim());
-          }}
-        >
-          <PromptInputBody>
-            <PromptInputTextarea
-              placeholder={t("agentBuilder.ui.startPlaceholder")}
-              maxLength={1000}
-              disabled={loading}
-              rows={4}
-              className="min-h-32"
-            />
-          </PromptInputBody>
-          <PromptInputFooter>
-            <PromptInputSubmit className="ml-auto" status={loading ? "submitted" : "idle"} disabled={loading} />
-          </PromptInputFooter>
-        </PromptInput>
-        {loading && <BuildingLoader state={t("agentBuilder.ui.suggesting")} />}
-        <div className={clx("flex flex-wrap items-center justify-center gap-2", loading && "pointer-events-none opacity-60")}>
-          {TEMPLATE_TYPES.map((type) => (
-            <button key={type} type="button" className={CARD_CLASSES} onClick={() => onTemplate(type)}>
-              {businessTypeIcon(type)}
-              <Text size="small" weight="plus">{t(`agentBuilder.types.${type}`)}</Text>
-            </button>
-          ))}
+    <ScrollArea className="h-full min-h-0 flex-1">
+      <div className="flex min-h-full flex-col items-center justify-center p-4 md:p-8">
+        <div className="flex w-full max-w-[640px] flex-col items-center gap-6 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <Heading level="h1">{t("agentBuilder.ui.heroTitle")}</Heading>
+            <Text className="text-ui-fg-subtle">{t("agentBuilder.ui.heroSubtitle")}</Text>
+          </div>
+          <PromptInput
+            className="w-full"
+            onSubmit={({ text }) => {
+              if (text.trim() && !loading) onDescribe(text.trim());
+            }}
+          >
+            <PromptInputBody>
+              <PromptInputTextarea
+                placeholder={t("agentBuilder.ui.startPlaceholder")}
+                maxLength={1000}
+                disabled={loading}
+                rows={4}
+                className="min-h-32"
+              />
+            </PromptInputBody>
+            <PromptInputFooter>
+              <PromptInputSubmit className="ml-auto" status={loading ? "submitted" : "idle"} disabled={loading} />
+            </PromptInputFooter>
+          </PromptInput>
+          {loading && <BuildingLoader state={t("agentBuilder.ui.suggesting")} />}
+          <div className={clx("flex flex-wrap items-center justify-center gap-2", loading && "pointer-events-none opacity-60")}>
+            {TEMPLATE_TYPES.map((type) => (
+              <button key={type} type="button" className={CARD_CLASSES} onClick={() => onTemplate(type)}>
+                {businessTypeIcon(type)}
+                <Text size="small" weight="plus">{t(`agentBuilder.types.${type}`)}</Text>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 }
