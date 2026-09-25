@@ -21,7 +21,7 @@ export function TestPanel({ chatbotId, profile, extraInstructions }: Props) {
   return (
     <Tabs defaultValue="chat" className="flex h-full min-h-0 flex-col gap-3">
       <Tabs.List>
-        <Tabs.Trigger value="chat">{t("agentBuilder.ui.chatTab")}</Tabs.Trigger>
+        <Tabs.Trigger value="chat">{t("agentBuilder.ui.tryAgent")}</Tabs.Trigger>
         <Tabs.Trigger value="prompt">{t("agentBuilder.ui.promptTab")}</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="chat" className="min-h-0 flex-1">

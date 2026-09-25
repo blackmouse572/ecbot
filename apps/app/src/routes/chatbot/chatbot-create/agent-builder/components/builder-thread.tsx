@@ -5,12 +5,13 @@ import {
   MessageScrollerContent, MessageScrollerItem, MessageScrollerViewport,
 } from "@repo/ui/common-components";
 import { motion, useReducedMotion } from "motion/react";
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { currentStep, isComplete, steps } from "../builder-state";
 import type { AgentBuilderController } from "../use-agent-builder";
 import { AnswerMessage } from "./answer-message";
-import { QuestionMessage } from "./question-message";
-import { Step0Card } from "./step0-card";
+import { Hero } from "./hero";
+import { QuestionTurn } from "./question-turn";
 
 // Section F.1: the current question's entrance. No exit animation, and
 // input is never blocked by it.
@@ -26,14 +27,21 @@ export function BuilderThread(builder: AgentBuilderController) {
   const reduceMotion = useReducedMotion();
 
   const profile = state.profile;
-  const all = profile ? steps(profile) : [];
+
+  // Wireframe delta section 1: step 0 is a centered hero, not part of the
+  // thread, while there is no profile yet.
+  if (!profile) {
+    return <Hero loading={builder.starting} onDescribe={builder.startFromDescription} onTemplate={builder.startFromTemplate} />;
+  }
+
+  const all = steps(profile);
   const current = currentStep(state);
   const complete = isComplete(state);
 
-  // Section E: step 0's answer, once a description or template was chosen.
+  // Section E (kept by the wireframe delta): step 0's answer, once a
+  // description or template was chosen.
   const step0Answer =
-    !profile ? null
-    : state.source === "template" ? t("agentBuilder.ui.templateAnswer", { name: t(`agentBuilder.types.${profile.businessType}`) })
+    state.source === "template" ? t("agentBuilder.ui.templateAnswer", { name: t(`agentBuilder.types.${profile.businessType}`) })
     : state.source === "describe" ? (state.describeText ?? "")
     : null; // hydrate: no original step-0 choice to redisplay.
 
@@ -41,25 +49,19 @@ export function BuilderThread(builder: AgentBuilderController) {
     <MessageScroller className="h-full">
       <MessageScrollerViewport>
         <MessageScrollerContent className="mx-auto flex w-full max-w-[680px] flex-col gap-4 p-4 pb-24 md:p-8">
-          {!profile ? (
-            <MessageScrollerItem scrollAnchor>
-              <Step0Card loading={builder.starting} onDescribe={builder.startFromDescription} onTemplate={builder.startFromTemplate} />
-            </MessageScrollerItem>
-          ) : (
-            step0Answer !== null && (
-              <div className="flex flex-col gap-4">
-                <Message from="assistant">
-                  <MessageContent>{t("agentBuilder.ui.startMessage")}</MessageContent>
-                </Message>
-                <Message from="user">
-                  <MessageContent
-                    render={<button type="button" onClick={() => dispatch({ type: "restart" })} title={t("actions.edit")} className="text-left" />}
-                  >
-                    {step0Answer}
-                  </MessageContent>
-                </Message>
-              </div>
-            )
+          {step0Answer !== null && (
+            <div className="flex flex-col gap-4">
+              <Message from="assistant">
+                <MessageContent>{t("agentBuilder.ui.heroSubtitle")}</MessageContent>
+              </Message>
+              <Message from="user">
+                <MessageContent
+                  render={<button type="button" onClick={() => dispatch({ type: "restart" })} title={t("actions.edit")} className="text-left" />}
+                >
+                  {step0Answer}
+                </MessageContent>
+              </Message>
+            </div>
           )}
 
           {state.source === "describe" && (
@@ -68,21 +70,21 @@ export function BuilderThread(builder: AgentBuilderController) {
             </Message>
           )}
 
-          {profile &&
-            buildQuestionGroups(profile).map((group) => {
-              const visible = group.questions.filter(
-                (q) => state.answered.includes(q.id) || q.id === current?.question.id,
-              );
-              if (!visible.length) return null;
-              return (
-                <div key={group.id} className="flex flex-col gap-4">
-                  <Marker variant="separator">
-                    <MarkerContent>{t(group.titleKey)}</MarkerContent>
-                  </Marker>
-                  {visible.map((question) =>
-                    question.id === current?.question.id ? (
-                      <MessageScrollerItem key={question.id} messageId={question.id} scrollAnchor className={QUESTION_ENTRANCE}>
-                        <QuestionMessage
+          {buildQuestionGroups(profile).map((group) => {
+            const visible = group.questions.filter(
+              (q) => state.answered.includes(q.id) || q.id === current?.question.id,
+            );
+            if (!visible.length) return null;
+            return (
+              <div key={group.id} className="flex flex-col gap-4">
+                <Marker variant="separator">
+                  <MarkerContent>{t(group.titleKey)}</MarkerContent>
+                </Marker>
+                {visible.map((question) => (
+                  <Fragment key={question.id}>
+                    {question.id === current?.question.id ? (
+                      <MessageScrollerItem messageId={question.id} scrollAnchor className={clx("flex flex-col gap-4", QUESTION_ENTRANCE)}>
+                        <QuestionTurn
                           key={`${question.id}:${state.editing ?? ""}`}
                           question={question}
                           profile={profile}
@@ -94,22 +96,25 @@ export function BuilderThread(builder: AgentBuilderController) {
                       </MessageScrollerItem>
                     ) : (
                       // Section D: the question asked, then the answer given.
-                      <div key={question.id} className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-4">
                         <Message from="assistant">
-                          <MessageContent>{t(question.titleKey)}</MessageContent>
+                          <MessageContent>{t(question.askKey)}</MessageContent>
                         </Message>
                         <AnswerMessage question={question} profile={profile} onEdit={() => dispatch({ type: "edit", questionId: question.id })} />
                       </div>
-                    ),
-                  )}
-                  {group.id === "rules" && state.chatbotId && state.source !== "hydrate" && (
-                    <Message from="assistant">
-                      <MessageContent>{t("agentBuilder.ui.draftCreated")}</MessageContent>
-                    </Message>
-                  )}
-                </div>
-              );
-            })}
+                    )}
+                    {/* Wireframe delta section 4: the draft-created message moves
+                        to right after the business-type answer. */}
+                    {question.id === "businessType" && state.chatbotId && state.source !== "hydrate" && (
+                      <Message from="assistant">
+                        <MessageContent>{t("agentBuilder.ui.draftCreated")}</MessageContent>
+                      </Message>
+                    )}
+                  </Fragment>
+                ))}
+              </div>
+            );
+          })}
 
           {builder.saveError && (
             <Marker className="text-ui-fg-error">

@@ -60,6 +60,8 @@ async function answerCurrent() {
   await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
 }
 
+const pickBeautyTemplate = () => userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
+
 describe("AgentBuilder", () => {
   beforeEach(() => {
     create.mockReset().mockResolvedValue({ data: { data: { id: "bot-1" } } });
@@ -72,13 +74,24 @@ describe("AgentBuilder", () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  it("starts from a template and skips straight to the business-name question", async () => {
-    renderBuilder();
-    await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
-    // The template already chose the business type (section B), so it asks
-    // for the business name next instead of asking the type again.
-    expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
-    expect(screen.getByText("agentBuilder.groups.identity")).toBeInTheDocument();
+  describe("the hero (step 0)", () => {
+    it("shows the title, subtitle, a large input and template cards", () => {
+      renderBuilder();
+      expect(screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" })).toBeInTheDocument();
+      expect(screen.getByText("agentBuilder.ui.heroSubtitle")).toBeInTheDocument();
+      const input = screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder");
+      expect(input).toHaveAttribute("rows", "4");
+      expect(screen.getByRole("button", { name: "agentBuilder.types.beauty" })).toBeInTheDocument();
+    });
+
+    it("starts that template when a card is clicked", async () => {
+      renderBuilder();
+      await pickBeautyTemplate();
+      // The template already chose the business type (section B), so it asks
+      // for the business name next instead of asking the type again.
+      expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
+      expect(screen.getByText("agentBuilder.groups.identity")).toBeInTheDocument();
+    });
   });
 
   it("shows the suggestion badge after describing the business", async () => {
@@ -109,70 +122,83 @@ describe("AgentBuilder", () => {
     }
   });
 
-  it("shows an answered step as the question asked, then the answer given", async () => {
+  it("shows a platform logo on each channel choice", async () => {
     renderBuilder();
-    await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
-    await answerCurrent();
-    const asked = screen.getByText("agentBuilder.questions.businessName.title");
-    const answered = screen.getByText("Lotus");
-    expect(asked).toBeInTheDocument();
-    expect(answered).toBeInTheDocument();
-    // The assistant "asked" bubble comes before the user "answered" bubble.
-    expect(asked.compareDocumentPosition(answered) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await pickBeautyTemplate();
+    await answerCurrent(); // businessName
+    await answerCurrent(); // agentName
+    await screen.findByRole("group", { name: "agentBuilder.questions.channels.title" });
+    const checkboxes = screen.getAllByRole("checkbox");
+    expect(checkboxes.length).toBeGreaterThan(0);
+    for (const checkbox of checkboxes) {
+      expect(checkbox.closest("label")?.querySelector("img")).toBeInTheDocument();
+    }
   });
 
-  it("shows step 0 as a pair after starting, and its answer bubble goes back to step 0", async () => {
+  describe("a question turn", () => {
+    it("shows the friendly ask on the left and the lead-in on the right for the current question", async () => {
+      renderBuilder();
+      await pickBeautyTemplate();
+      expect(screen.getByText("agentBuilder.questions.businessName.ask")).toBeInTheDocument();
+      expect(screen.getByText("agentBuilder.questions.businessName.lead")).toBeInTheDocument();
+    });
+
+    it("shows an answered step as the ask, then the lead-in and answer given", async () => {
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerCurrent();
+      const asked = screen.getByText("agentBuilder.questions.businessName.ask");
+      const answered = screen.getByText(/Lotus/);
+      expect(asked).toBeInTheDocument();
+      expect(answered).toBeInTheDocument();
+      expect(answered.textContent).toBe("agentBuilder.questions.businessName.lead Lotus");
+      // The assistant "asked" bubble comes before the user "answered" bubble.
+      expect(asked.compareDocumentPosition(answered) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+  });
+
+  it("shows step 0 as a pair using the hero subtitle, and its answer bubble goes back to the hero", async () => {
     renderBuilder();
-    await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
-    expect(screen.getByText("agentBuilder.ui.startMessage")).toBeInTheDocument();
+    await pickBeautyTemplate();
+    expect(screen.getByText("agentBuilder.ui.heroSubtitle")).toBeInTheDocument();
     expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
 
     await userEvent.click(screen.getByText("agentBuilder.ui.templateAnswer"));
-    expect(screen.getByRole("group", { name: "agentBuilder.ui.templates" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" })).toBeInTheDocument();
   });
 
-  it(
-    "updates the same draft instead of creating a second one after going back to step 0",
-    async () => {
-      renderBuilder();
-      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
-      for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
-      await waitFor(() => expect(create).toHaveBeenCalledOnce());
+  it("updates the same draft instead of creating a second one after going back to the hero", async () => {
+    renderBuilder();
+    await pickBeautyTemplate();
+    await waitFor(() => expect(create).toHaveBeenCalledOnce());
 
-      await userEvent.click(screen.getByText("agentBuilder.ui.templateAnswer"));
-      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.restaurant" }));
-      // Answer through to the end again. Each answer resets the save
-      // debounce, so `update` only fires once the last one settles.
-      for (let i = 0; i < 40 && screen.queryByRole("button", { name: "actions.next" }); i++) await answerCurrent();
+    await userEvent.click(screen.getByText("agentBuilder.ui.templateAnswer"));
+    await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.restaurant" }));
+    await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 2000 });
 
-      await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 2000 });
-      expect(create).toHaveBeenCalledOnce();
-      expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-1" });
-    },
-    15000,
-  );
+    expect(create).toHaveBeenCalledOnce();
+    expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-1" });
+  });
 
-  it(
-    "creates an inactive draft once the Rules group is done and unlocks the test panel",
-    async () => {
-      renderBuilder();
-      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
-      for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
-      await waitFor(() => expect(create).toHaveBeenCalledOnce());
-      expect(create.mock.calls[0][0]).toMatchObject({ status: "inactive", type: "beauty", name: "Lotus", agentProfile: expect.objectContaining({ businessName: "Lotus" }) });
-      await waitFor(() => expect(screen.getByTestId("test-panel")).toHaveTextContent("bot-1"));
-      expect(screen.getByText("agentBuilder.ui.draftCreated")).toBeInTheDocument();
-    },
-    // Answers up to ~20 questions one at a time via userEvent; under the full
-    // suite's parallel worker load this reliably exceeds the default 5s.
-    15000,
-  );
+  it("creates an inactive draft as soon as the business type is answered, and unlocks the test panel", async () => {
+    renderBuilder();
+    await pickBeautyTemplate();
+    await waitFor(() => expect(create).toHaveBeenCalledOnce());
+    expect(create.mock.calls[0][0]).toMatchObject({ status: "inactive", type: "beauty" });
+    await waitFor(() => expect(screen.getByTestId("test-panel")).toHaveTextContent("bot-1"));
+    // Moved from after the Rules group to right after the business-type
+    // answer (wireframe delta section 4).
+    expect(screen.getByText("agentBuilder.ui.draftCreated")).toBeInTheDocument();
+    const businessTypeAnswer = screen.getByText(/agentBuilder.questions.businessType.lead/);
+    const draftCreated = screen.getByText("agentBuilder.ui.draftCreated");
+    expect(businessTypeAnswer.compareDocumentPosition(draftCreated) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 
   it("lets the user edit an earlier answer", async () => {
     renderBuilder();
-    await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
+    await pickBeautyTemplate();
     await answerCurrent();
-    await userEvent.click(screen.getByText("Lotus"));
+    await userEvent.click(screen.getByText(/Lotus/));
     expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
   });
 
@@ -196,12 +222,12 @@ describe("AgentBuilder", () => {
     );
 
     // Edit the (already-hydrated) businessName answer locally.
-    await userEvent.click(screen.getByText("Lotus"));
+    await userEvent.click(screen.getByText(/Lotus/));
     const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
     await userEvent.clear(input);
     await userEvent.type(input, "Lotus Spa");
     await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
-    expect(screen.getByText("Lotus Spa")).toBeInTheDocument();
+    expect(screen.getByText(/Lotus Spa$/)).toBeInTheDocument();
 
     // Simulate the refetch every debounced autosave triggers (same chatbot
     // id, a new object reference, still the last-saved server snapshot).
@@ -212,29 +238,21 @@ describe("AgentBuilder", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Lotus Spa")).toBeInTheDocument();
-    expect(screen.queryByText("Lotus")).not.toBeInTheDocument();
+    expect(screen.getByText(/Lotus Spa$/)).toBeInTheDocument();
+    expect(screen.queryByText(/(?<!Spa )Lotus$/)).not.toBeInTheDocument();
   });
 
-  it(
-    "does not retry a failed draft create until an answer changes the profile",
-    async () => {
-      create.mockReset().mockRejectedValue(new Error("down"));
-      renderBuilder();
-      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
-      for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
-      await waitFor(() => expect(create).toHaveBeenCalledOnce());
-      await new Promise((r) => setTimeout(r, 100));
-      expect(create).toHaveBeenCalledOnce();
+  it("does not retry a failed draft create until an answer changes the profile", async () => {
+    create.mockReset().mockRejectedValue(new Error("down"));
+    renderBuilder();
+    await pickBeautyTemplate();
+    await waitFor(() => expect(create).toHaveBeenCalledOnce());
+    await new Promise((r) => setTimeout(r, 100));
+    expect(create).toHaveBeenCalledOnce();
 
-      await userEvent.click(screen.getAllByText("Lotus")[0]);
-      const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
-      await userEvent.type(input, " Spa");
-      await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
-      await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
-    },
-    15000,
-  );
+    await answerCurrent(); // businessName changes the profile
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+  });
 
   describe("on a hydrated builder chatbot", () => {
     const route = "/ws/chatbot/create?chatbotId=bot-9";
@@ -253,7 +271,7 @@ describe("AgentBuilder", () => {
       </MemoryRouter>
     );
     const renameTo = async (name: string) => {
-      await userEvent.click(screen.getByText(/^Lotus/));
+      await userEvent.click(screen.getByText(/Lotus/));
       const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
       await userEvent.clear(input);
       await userEvent.type(input, name);
@@ -303,37 +321,47 @@ describe("AgentBuilder", () => {
     });
   });
 
-  it(
-    "starts fresh when the chatbot has no builder profile, so the draft never takes its accounts",
-    async () => {
-      chatbot.mockReturnValue({
-        chatbot: { id: "legacy-1", name: "Legacy bot", status: "active", accounts: [{ id: "acc-1" }], welcomeMessage: "Hi" },
-      });
-      render(
-        <MemoryRouter initialEntries={["/ws/chatbot/create?chatbotId=legacy-1"]}>
-          <AgentBuilder />
-        </MemoryRouter>,
-      );
-      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
-      for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
-      await waitFor(() => expect(create).toHaveBeenCalledOnce());
-      expect(create.mock.calls[0][0]).toMatchObject({ accounts: [], name: "Lotus" });
-    },
-    15000,
-  );
+  it("starts fresh when the chatbot has no builder profile, so the draft never takes its accounts", async () => {
+    chatbot.mockReturnValue({
+      chatbot: { id: "legacy-1", name: "Legacy bot", status: "active", accounts: [{ id: "acc-1" }], welcomeMessage: "Hi" },
+    });
+    render(
+      <MemoryRouter initialEntries={["/ws/chatbot/create?chatbotId=legacy-1"]}>
+        <AgentBuilder />
+      </MemoryRouter>,
+    );
+    await pickBeautyTemplate();
+    await waitFor(() => expect(create).toHaveBeenCalledOnce());
+    expect(create.mock.calls[0][0]).toMatchObject({ accounts: [] });
+  });
 
   describe("the test panel", () => {
     const desktopPanel = () => screen.getByTestId("test-panel").closest('[aria-hidden], [inert]') ?? screen.getByTestId("test-panel").parentElement!.parentElement!;
 
-    it("starts collapsed on desktop", () => {
+    it("shows neither the panel nor the Try agent button before the business type is answered", () => {
       mockMatchMedia(true);
       renderBuilder();
+      expect(screen.queryByRole("button", { name: "agentBuilder.ui.tryAgent" })).not.toBeInTheDocument();
+      expect(screen.queryByTestId("test-panel")).not.toBeInTheDocument();
+    });
+
+    it("starts collapsed once unlocked, before the draft finishes creating", async () => {
+      mockMatchMedia(true);
+      create.mockReturnValue(new Promise(() => {})); // never resolves: chatbotId stays null
+      renderBuilder();
+      await pickBeautyTemplate();
+      await waitFor(() => expect(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" })).toBeInTheDocument());
       expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
     });
 
     it("the header toggle opens and closes it on desktop", async () => {
       mockMatchMedia(true);
+      create.mockReturnValue(new Promise(() => {})); // isolate manual toggle from the auto-open effect
       renderBuilder();
+      await pickBeautyTemplate();
+      await waitFor(() => expect(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" })).toBeInTheDocument());
+      expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
+
       await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
       expect(desktopPanel()).not.toHaveAttribute("aria-hidden");
 
@@ -341,35 +369,34 @@ describe("AgentBuilder", () => {
       expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
     });
 
-    it(
-      "opens automatically once the draft chatbot is created, and stays closed once the user closes it",
-      async () => {
-        mockMatchMedia(true);
-        renderBuilder();
-        expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
+    it("opens automatically once the draft chatbot is created, and stays closed once the user closes it", async () => {
+      mockMatchMedia(true);
+      renderBuilder();
+      await pickBeautyTemplate();
+      await waitFor(() => expect(create).toHaveBeenCalledOnce());
+      await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
 
-        await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
-        for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
-        await waitFor(() => expect(create).toHaveBeenCalledOnce());
-        await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
+      // Closing it by hand is respected: it does not reopen itself again.
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
+      expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
 
-        // Closing it by hand is respected: it does not reopen itself again.
-        await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
-        expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
-      },
-      15000,
-    );
+      // ...even once a later answer triggers another save.
+      await answerCurrent(); // businessName
+      await waitFor(() => expect(update).toHaveBeenCalled());
+      expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
+    });
 
     it("is a full-screen sheet on mobile, opened by the floating button and closed by its own close control", async () => {
       mockMatchMedia(false);
       renderBuilder();
-      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
+      await pickBeautyTemplate();
+      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
 
       const sheet = screen.getByTestId("test-panel").closest("aside")!;
       expect(sheet).toHaveAttribute("aria-hidden", "true");
 
-      // Both the header toggle and the floating "try your agent" button share
-      // the same label on mobile; the floating one is the last in the DOM.
+      // Both the header toggle and the floating "Try agent" button share the
+      // same label on mobile; the floating one is the last in the DOM.
       const tryAgentButtons = screen.getAllByRole("button", { name: "agentBuilder.ui.tryAgent" });
       await userEvent.click(tryAgentButtons[tryAgentButtons.length - 1]!);
       expect(sheet).not.toHaveAttribute("aria-hidden");

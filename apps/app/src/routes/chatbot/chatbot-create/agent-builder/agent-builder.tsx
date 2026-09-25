@@ -7,6 +7,7 @@ import { SidebarProvider, useSidebar } from "@repo/ui/layout";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { isDraftReady } from "./builder-state";
 import { BuilderThread } from "./components/builder-thread";
 import { TestPanel } from "./components/test-panel";
 import { useAgentBuilder, type AgentBuilderController } from "./use-agent-builder";
@@ -53,16 +54,21 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
   }, [builder.state.chatbotId, desktop, toggle]);
 
   const panel = <TestPanel chatbotId={builder.state.chatbotId} profile={builder.state.profile} extraInstructions={builder.extraInstructions} />;
+  // Wireframe delta section 4: before the business type is answered
+  // (step 2), neither the panel nor the header button is shown.
+  const unlocked = isDraftReady(builder.state);
 
   return (
     <>
       <RouteFocusModal.Header>
         <div className="flex w-full items-center justify-between gap-2">
           <Text size="small" className="text-ui-fg-subtle">{t("agentBuilder.ui.title")}</Text>
-          <Button variant="transparent" size="small" onClick={() => toggle(isDesktopViewport ? "desktop" : "mobile")}>
-            <SidebarRight className="size-4" />
-            {t("agentBuilder.ui.tryAgent")}
-          </Button>
+          {unlocked && (
+            <Button variant="transparent" size="small" onClick={() => toggle(isDesktopViewport ? "desktop" : "mobile")}>
+              <SidebarRight className="size-4" />
+              {t("agentBuilder.ui.tryAgent")}
+            </Button>
+          )}
         </div>
       </RouteFocusModal.Header>
       <RouteFocusModal.Body
@@ -77,7 +83,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
           <BuilderThread {...builder} />
         </div>
 
-        {isDesktopViewport ? (
+        {unlocked && isDesktopViewport && (
           <div
             className="overflow-hidden border-l border-ui-border-base bg-ui-bg-subtle"
             inert={!desktop || undefined}
@@ -85,7 +91,8 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
           >
             <div className="h-full w-[420px] overflow-hidden p-4">{panel}</div>
           </div>
-        ) : (
+        )}
+        {unlocked && !isDesktopViewport && (
           <aside
             className={clx(
               "fixed inset-0 z-40 flex flex-col overflow-hidden bg-ui-bg-subtle p-4",
@@ -106,7 +113,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
           </aside>
         )}
 
-        {!isDesktopViewport && builder.state.profile && (
+        {unlocked && !isDesktopViewport && (
           <Button
             className="fixed bottom-4 right-4 z-30"
             onClick={() => {
