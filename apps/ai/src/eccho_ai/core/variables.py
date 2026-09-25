@@ -100,6 +100,10 @@ class _AppVars(BaseSettings):
     GUARDRAIL_MODEL: str = "google/gemini-2.5-flash"
     CLASSIFIER_MODEL: str = "google/gemini-2.5-flash"
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
+    # Describes inbound customer images (must accept image input).
+    VISION_MODEL: str = "google/gemini-2.5-flash"
+    VISION_MAX_IMAGES: int = 4
+    VISION_MAX_IMAGE_BYTES: int = 5 * 1024 * 1024
     # OpenRouter image-generation model.
     IMAGE_MODEL: str = "google/gemini-2.5-flash-image"
 

@@ -9,6 +9,7 @@ from eccho_ai.llm.guardrails.content import run_input_guardrail, run_output_guar
 from eccho_ai.llm.guardrails.secrets import scan_output_for_secrets
 from eccho_ai.middlewares.cassette_middleware import apply_cassette, cassette_name_for
 from eccho_ai.models.app_models import AppResponse
+from eccho_ai.modules.chat.images import with_image_description
 from eccho_ai.modules.chat.models.chat_models import ChatRequest, ChatResponse
 from eccho_ai.modules.chat.services import (
     append_source_attribution_if_missing,
@@ -35,6 +36,7 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 async def chat_endpoint(chat_request: ChatRequest, request: Request):
     """Endpoint to handle chat messages from the user."""
 
+    chat_request = await with_image_description(chat_request)
     if not chat_request.message:
         return AppResponse(
             status=400,
@@ -159,6 +161,7 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
     `stream_pipeline.events_to_ui_parts`; this endpoint only wires up the
     agent, guardrails and RAG sources around it.
     """
+    chat_request = await with_image_description(chat_request)
     if not chat_request.message:
         raise HTTPException(status_code=400, detail="message is required")
     # Local binding so nested closures below see `str`, not `str | None`

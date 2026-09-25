@@ -294,6 +294,57 @@ describe('StreamingDelivery.deliver (UI Message Stream)', () => {
     });
 });
 
+describe('StreamingDelivery — product images', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        '%s: sends a markdown image as a media message and persists it as an attachment',
+        async (_mode, chatbot) => {
+            const adapter = makeAdapter();
+            const persisted: { text: string; attachments?: unknown[] }[] = [];
+            await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({
+                        type: 'text-delta',
+                        id: 't1',
+                        delta: 'Here it is\n![Shirt](https://cdn/shirt.jpg)',
+                    }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async (text, attachments) => {
+                    persisted.push({ text, attachments });
+                    return 'nonce';
+                },
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(persisted).toEqual([
+                { text: 'Here it is', attachments: undefined },
+                {
+                    text: '',
+                    attachments: [
+                        { type: 'image', url: 'https://cdn/shirt.jpg' },
+                    ],
+                },
+            ]);
+            expect(adapter.sendMessage.mock.calls[1][2].content).toEqual({
+                kind: 'media',
+                url: 'https://cdn/shirt.jpg',
+                mediaType: 'image',
+            });
+        }
+    );
+});
+
 describe('guardrailDeliveryPolicy', () => {
     it('no chatbot -> buffered (safe default)', () => {
         expect(guardrailDeliveryPolicy()).toEqual({

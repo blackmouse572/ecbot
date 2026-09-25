@@ -3,7 +3,7 @@ import { IncomingMessage } from 'http';
 import { StringDecoder } from 'string_decoder';
 import { PlatformAdapter } from '../adapters/platform-adapter.base';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
-import { text } from '../interfaces/message-model';
+import { replyMessages } from '../interfaces/message-model';
 import {
     parseWireTokenUsage,
     TokenUsageDelta,
@@ -25,8 +25,11 @@ export interface StreamingDeliverParams {
     stream: IncomingMessage;
     abort: AbortController;
     isCurrent: () => Promise<boolean>;
-    /** Persist one segment, return the clientNonce. */
-    onSegmentPersist: (segmentText: string) => Promise<string>;
+    /** Persist one outbound message, return the clientNonce. */
+    onSegmentPersist: (
+        segmentText: string,
+        attachments?: unknown[]
+    ) => Promise<string>;
     onSent: (nonce: string, externalId: string) => Promise<void>;
     onFailed: (nonce: string) => Promise<void>;
     /** Guardrail config that selects buffered vs incremental delivery. When
@@ -173,18 +176,7 @@ export class StreamingDelivery {
                         p.abort.abort();
                         return;
                     }
-                    const nonce = await p.onSegmentPersist(seg);
-                    try {
-                        const { externalId } = await p.adapter.sendMessage(
-                            p.account,
-                            p.senderId,
-                            text(seg)
-                        );
-                        await p.onSent(nonce, externalId);
-                        anySent = true;
-                    } catch {
-                        await p.onFailed(nonce);
-                    }
+                    if (await this.sendSegment(p, seg)) anySent = true;
                 });
             };
 
@@ -330,18 +322,7 @@ export class StreamingDelivery {
                 supersededMidSend = true;
                 break;
             }
-            const nonce = await p.onSegmentPersist(segment);
-            try {
-                const { externalId } = await p.adapter.sendMessage(
-                    p.account,
-                    p.senderId,
-                    text(segment)
-                );
-                await p.onSent(nonce, externalId);
-                anySent = true;
-            } catch {
-                await p.onFailed(nonce);
-            }
+            if (await this.sendSegment(p, segment)) anySent = true;
         }
         return {
             anySent,
@@ -351,6 +332,38 @@ export class StreamingDelivery {
             generationFailed: false,
             usage: result.usage,
         };
+    }
+
+    /**
+     * Persist and send one reply segment — its text, then any product images
+     * the agent wrote as markdown, each as its own platform message. Returns
+     * whether anything reached the customer.
+     */
+    private async sendSegment(
+        p: StreamingDeliverParams,
+        segment: string
+    ): Promise<boolean> {
+        let sent = false;
+        for (const msg of replyMessages(segment)) {
+            const nonce =
+                msg.content.kind === 'media'
+                    ? await p.onSegmentPersist('', [
+                          { type: 'image', url: msg.content.url },
+                      ])
+                    : await p.onSegmentPersist(msg.fallbackText);
+            try {
+                const { externalId } = await p.adapter.sendMessage(
+                    p.account,
+                    p.senderId,
+                    msg
+                );
+                await p.onSent(nonce, externalId);
+                sent = true;
+            } catch {
+                await p.onFailed(nonce);
+            }
+        }
+        return sent;
     }
 
     /**

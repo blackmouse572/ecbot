@@ -13,6 +13,7 @@ import { CustomerTagClassifierService } from '@app/modules/customer/services/cus
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { PlatformWebhookEvent } from '../interfaces/platform-adapter.interface';
+import { imageUrls } from '../interfaces/message-model';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import { fetchAsBase64 } from '@app/common/utils/fetch-as-base64.util';
 import { MessageDebounceService } from './message-debounce.service';
@@ -67,7 +68,13 @@ export class MessageProcessorService implements OnModuleInit {
 
         // Allow action events (postback/quick_reply) through even when kind != 'message'
         if (event.kind !== 'message' && !event.action) return;
-        if (!event.text && !event.action) return;
+        // An image with no caption is still a customer turn (the AI describes it).
+        if (
+            !event.text &&
+            !event.action &&
+            !imageUrls(event.attachments).length
+        )
+            return;
 
         const account = await this.accountService.findOne(
             { externalId: event.accountKey },
@@ -217,6 +224,7 @@ export class MessageProcessorService implements OnModuleInit {
                     authorType: ENUM_MESSAGE_AUTHOR.USER,
                     authorId: event.senderId,
                     text: effectiveText,
+                    attachments: event.attachments,
                     raw: event.raw,
                     dateSent: event.timestamp,
                 }

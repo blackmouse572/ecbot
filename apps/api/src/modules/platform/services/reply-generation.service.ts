@@ -19,7 +19,7 @@ import {
     MESSAGE_HISTORY_WINDOW,
     MESSAGE_TYPING_REFRESH_MS,
 } from '../constants/message-debounce.constant';
-import { text as toText } from '../interfaces/message-model';
+import { imageUrls, text as toText } from '../interfaces/message-model';
 import { GenerationLeaseService } from './generation-lease.service';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import {
@@ -149,11 +149,23 @@ export class ReplyGenerationService {
                 Math.max(0, recent.length - texts.length)
             );
             const history: AIChatHistoryMessage[] = prior
-                .filter(m => m.text)
                 .map(m => ({
                     role: this.roleFor(m.authorType, m.direction),
-                    content: m.text as string,
-                }));
+                    content: [
+                        m.text,
+                        imageUrls(m.attachments).length ? '[image]' : '',
+                    ]
+                        .filter(Boolean)
+                        .join(' '),
+                }))
+                .filter(m => m.content);
+            // Images in this burst go to apps/ai, which describes them.
+            const attachments = recent.slice(prior.length).flatMap(m =>
+                imageUrls(m.attachments).map(url => ({
+                    attachment_id: m.id,
+                    preview_url: url,
+                }))
+            );
 
             const triggerMessage =
                 await this.messageRepository.findLatestInbound(conversationId);
@@ -194,6 +206,7 @@ export class ReplyGenerationService {
                         customer_id: customerId,
                         contact_point_id: contactPointId,
                         history,
+                        attachments,
                         trigger_message_id: triggerMessage?.id,
                     },
                     ac.signal
@@ -211,7 +224,10 @@ export class ReplyGenerationService {
                     abort: ac,
                     isCurrent: () =>
                         this.lease.isCurrent(conversationId, myEpoch),
-                    onSegmentPersist: async (segmentText: string) => {
+                    onSegmentPersist: async (
+                        segmentText: string,
+                        attachments?: unknown[]
+                    ) => {
                         const clientNonce = randomUUID();
                         await this.messageRepository.insertPendingOutbound(
                             conversationId,
@@ -220,6 +236,7 @@ export class ReplyGenerationService {
                                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
                                 authorId: chatbot.id,
                                 text: segmentText,
+                                attachments,
                                 dateSent: new Date(),
                             }
                         );

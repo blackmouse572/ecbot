@@ -22,6 +22,8 @@ interface AIChatStreamParams {
     customer_id?: string;
     contact_point_id?: string;
     history?: AIChatHistoryMessage[];
+    /** Customer images for apps/ai to describe (`preview_url` = image URL). */
+    attachments?: { attachment_id: string; preview_url: string }[];
     trigger_message_id?: string;
 }
 

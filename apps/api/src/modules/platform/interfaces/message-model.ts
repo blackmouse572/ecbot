@@ -47,6 +47,32 @@ export function text(s: string): OutboundMessage {
     return { content: { kind: 'text', text: s }, fallbackText: s };
 }
 
+function image(url: string): OutboundMessage {
+    return {
+        content: { kind: 'media', url, mediaType: 'image' },
+        fallbackText: url,
+    };
+}
+
+/** URLs of the image attachments we can actually fetch (some platforms only
+ *  give a file id — those are skipped). */
+export function imageUrls(attachments?: unknown[]): string[] {
+    return (attachments ?? []).flatMap(a => {
+        const { type, url } = (a ?? {}) as { type?: unknown; url?: unknown };
+        return type === 'image' && typeof url === 'string' ? [url] : [];
+    });
+}
+
+const MARKDOWN_IMAGE = /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g;
+
+/** Split one reply segment into platform messages: its text, then one media
+ *  message per markdown image (`![alt](url)`) the agent wrote. */
+export function replyMessages(segment: string): OutboundMessage[] {
+    const urls = [...segment.matchAll(MARKDOWN_IMAGE)].map(m => m[1]);
+    const rest = segment.replace(MARKDOWN_IMAGE, '').trim();
+    return [...(rest ? [text(rest)] : []), ...urls.map(image)];
+}
+
 // Round-trip a button/quick-reply id+value through a platform payload string.
 export function encodeActionPayload(id: string, value?: string): string {
     return JSON.stringify({ id, value });
