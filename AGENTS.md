@@ -52,10 +52,11 @@ pnpm generate:client        # regenerate @repo/client after API DTO/route change
 
 Project skills route you to the canonical docs and enforce this repo's patterns. Invoke the matching skill **before** writing code in that area:
 
-| Skill                       | Use for                                                                                                                                                                                                                             |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **eccho-backend**           | anything under `apps/api/**` — modules, entities, repositories, services, controllers, DTOs, migrations, BullMQ jobs, auth, i18n responses. Global rules + structure + links to every `apps/api/docs/*` guide.                      |
+| Skill                       | Use for                                                                                                                                                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **eccho-backend**           | anything under `apps/api/**` — modules, entities, repositories, services, controllers, DTOs, migrations, BullMQ jobs, auth, i18n responses. Global rules + structure + links to every `apps/api/docs/*` guide.     |
 | **eccho-frontend**          | anything under `apps/app/**` — pages, route modules, loaders, data hooks, mutations, forms, create/edit modals, UI, authz, i18n. Global rules + structure + references (TanStack Query, React Router, `@repo/ui`). |
-| **eccho-platform-adapters** | building/registering a chat platform integration (Messenger, Instagram, Zalo, TikTok, Shopee) via the `apps/api` `platform` module.                                                                                                 |
+| **eccho-platform-adapters** | building/registering a chat platform integration (Messenger, Instagram, Zalo, TikTok, Shopee) via the `apps/api` `platform` module.                                                                                |
+| **local-setup**             | setting up / running the project locally, or fixing local sign-in, CORS, API-key, JWKS or Turnstile failures. Runs `pnpm setup:local` and asks the user only for credentials.                                      |
 
 Adding a skill: create `.agents/skills/<name>/SKILL.md` (+ `references/` if it exceeds ~100 lines), then `ln -s ../../.agents/skills/<name> .claude/skills/<name>`.
