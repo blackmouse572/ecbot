@@ -72,6 +72,6 @@ describe('MessageMediaService', () => {
             { type: 'image' },
             { type: 'image' },
         ]);
-        expect(s3.presignGetItem).not.toHaveBeenCalled();
+        expect(s3.signGetUrl).not.toHaveBeenCalled();
     });
 });
