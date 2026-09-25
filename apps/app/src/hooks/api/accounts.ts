@@ -33,6 +33,7 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { useWorkspaceParams } from "../use-workspace-params";
 import { useWorkspace } from "./workspace";
 
@@ -137,6 +138,21 @@ export function unLinkAccountQueryOptions(
   });
 
   return { ...base, ...options };
+}
+
+/**
+ * A one-shot, always-fresh read of the unlinked accounts, bypassing the
+ * query cache entirely. Used right before linking an id a third-party OAuth
+ * response returned, to check it is not already owned by another chatbot
+ * (the cached `useUnlinkAccounts` list can be a beat behind another tab or
+ * another user's own link).
+ */
+export function useFetchUnlinkedAccounts() {
+  const { workspace } = useWorkspace();
+  return useCallback(
+    (query?: Record<string, A>) => fetchUnlinkedAccounts(workspace!.id, query),
+    [workspace],
+  );
 }
 
 export function useUnlinkAccounts(
