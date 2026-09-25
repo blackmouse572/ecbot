@@ -299,7 +299,7 @@ describe('StreamingDelivery — product images', () => {
         ['buffered', undefined],
         ['incremental', GUARD_OFF],
     ])(
-        '%s: an image inside a paragraph goes after that paragraph\'s text',
+        "%s: an image inside a paragraph goes after that paragraph's text",
         async (_mode, chatbot) => {
             const adapter = makeAdapter();
             const persisted: { text: string; attachments?: unknown[] }[] = [];
@@ -310,7 +310,11 @@ describe('StreamingDelivery — product images', () => {
                 conversationId: 'C',
                 chatbot,
                 stream: sse([
-                    line({ type: 'text-delta', id: 't1', delta: 'Here it is, ' }),
+                    line({
+                        type: 'text-delta',
+                        id: 't1',
+                        delta: 'Here it is, ',
+                    }),
                     line({
                         type: 'file',
                         url: 'https://cdn/shirt.jpg',

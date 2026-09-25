@@ -14,7 +14,8 @@ export function parseAttachments(raw: unknown): IMessageAttachment[] {
         if (typeof value?.type !== 'string') return [];
         const attachment: IMessageAttachment = { type: value.type };
         for (const field of FIELDS) {
-            if (typeof value[field] === 'string') attachment[field] = value[field];
+            if (typeof value[field] === 'string')
+                attachment[field] = value[field];
         }
         return [attachment];
     });

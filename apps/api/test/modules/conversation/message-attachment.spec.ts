@@ -12,7 +12,11 @@ describe('message attachment', () => {
         expect(
             parseAttachments([
                 { type: 'image', key: 'conversations/c/a.jpg', raw: { x: 1 } },
-                { type: 'image', url: 'https://kb/s.jpg', description: 'A shirt' },
+                {
+                    type: 'image',
+                    url: 'https://kb/s.jpg',
+                    description: 'A shirt',
+                },
                 { type: 'video', url: 42 },
                 { url: 'https://no-type' },
                 'junk',
@@ -28,9 +32,9 @@ describe('message attachment', () => {
     });
 
     it('notes images in history with what the AI saw in them', () => {
-        expect(historyNote([{ type: 'image', description: 'A red dress' }])).toBe(
-            '[image: A red dress]'
-        );
+        expect(
+            historyNote([{ type: 'image', description: 'A red dress' }])
+        ).toBe('[image: A red dress]');
         expect(historyNote([{ type: 'image' }])).toBe('[image]');
         expect(historyNote([{ type: 'video' }])).toBe('');
         expect(historyNote([])).toBe('');
