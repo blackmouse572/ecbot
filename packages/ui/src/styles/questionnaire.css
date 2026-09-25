@@ -1,5 +1,5 @@
 /* ============================================================================
-   Questionnaire utilities — the refused-pick nudge (section F.6 of the agent
+   Questionnaire utilities: the refused-pick nudge (section F.6 of the agent
    builder walkthrough fixes). Lives with the @repo/ui common/questionnaire
    component that consumes it. Any app rendering Questionnaire must import
    this file, e.g. `@import "@repo/ui/styles/questionnaire.css";`.

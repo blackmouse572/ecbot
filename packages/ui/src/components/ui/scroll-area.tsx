@@ -6,10 +6,13 @@ export function ScrollArea({
   children,
   scrollFade = false,
   scrollbarGutter = false,
+  viewportClassName,
   ...props
 }: ScrollAreaPrimitive.ScrollAreaProps & {
   scrollFade?: boolean;
   scrollbarGutter?: boolean;
+  /** Extra classes for the viewport, e.g. `[&>div]:!h-full` to let content fill the height. */
+  viewportClassName?: string;
 }): React.ReactElement {
   return (
     <ScrollAreaPrimitive.Root
@@ -29,6 +32,7 @@ export function ScrollArea({
             "mask-t-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-start)))] mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] mask-l-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-start)))] mask-r-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-end)))] [--fade-size:1.5rem]",
           scrollbarGutter &&
             "data-has-overflow-y:pe-2.5 data-has-overflow-x:pb-2.5",
+          viewportClassName,
         )}
         data-slot="scroll-area-viewport"
       >
