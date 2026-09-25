@@ -58,15 +58,27 @@ describe("builderReducer", () => {
     expect(edited.answered).toEqual(["businessType"]);
   });
 
-  it("is draft-ready as soon as businessType is answered (wireframe delta section 4)", () => {
-    expect(isDraftReady(started())).toBe(false);
-    const s = builderReducer(started(), { type: "answer", question: currentStep(started())!.question, value: "beauty" });
-    expect(isDraftReady(s)).toBe(true);
+  it("is draft-ready only once agentName is answered (owner decision: step 3, not businessType)", () => {
+    let s = started();
+    expect(isDraftReady(s)).toBe(false);
+    s = builderReducer(s, { type: "answer", question: currentStep(s)!.question, value: "beauty" }); // businessType
+    expect(isDraftReady(s)).toBe(false);
     expect(currentStep(s)?.question.id).toBe("businessName");
+    s = builderReducer(s, { type: "answer", question: currentStep(s)!.question, value: "Lotus" }); // businessName
+    expect(isDraftReady(s)).toBe(false);
+    expect(currentStep(s)?.question.id).toBe("agentName");
+    s = builderReducer(s, { type: "answer", question: currentStep(s)!.question, value: "Linh" }); // agentName
+    expect(isDraftReady(s)).toBe(true);
   });
 
-  it("is draft-ready immediately from a template start, since it pre-answers businessType", () => {
-    expect(isDraftReady(startedFromTemplate())).toBe(true);
+  it("is not draft-ready right after a template start; still needs businessName and agentName", () => {
+    let s = startedFromTemplate();
+    expect(isDraftReady(s)).toBe(false);
+    expect(currentStep(s)?.question.id).toBe("businessName");
+    s = builderReducer(s, { type: "answer", question: currentStep(s)!.question, value: "Lotus" });
+    expect(isDraftReady(s)).toBe(false);
+    s = builderReducer(s, { type: "answer", question: currentStep(s)!.question, value: "Linh" });
+    expect(isDraftReady(s)).toBe(true);
   });
 
   it("reaches complete once every question is answered or skipped", () => {

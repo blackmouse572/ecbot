@@ -49,10 +49,11 @@ export function currentStep(state: BuilderState): Step | null {
   return all.find((s) => !state.answered.includes(s.question.id)) ?? null;
 }
 
-// Wireframe delta section 4 (owner decision): the draft is created as soon
-// as the business type is answered, not after the whole draft-groups run.
+// Owner decision (batch 3): the draft is created once agentName is
+// answered — the 3rd identity question for every business type, so this
+// holds regardless of type — not right after businessType.
 export function isDraftReady(state: BuilderState): boolean {
-  return !!state.profile && state.answered.includes("businessType");
+  return !!state.profile && state.answered.includes("agentName");
 }
 
 export function isComplete(state: BuilderState): boolean {
