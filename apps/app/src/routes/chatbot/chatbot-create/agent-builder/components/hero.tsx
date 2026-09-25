@@ -25,7 +25,9 @@ const CARD_CLASSES = clx(
 export function Hero({ loading, onDescribe, onTemplate }: Props) {
   const { t } = useTranslation();
   return (
-    <ScrollArea className="h-full min-h-0 flex-1">
+    // The viewport's inner wrapper fills the height so the hero centers
+    // vertically; taller content still scrolls.
+    <ScrollArea className="h-full min-h-0 flex-1" viewportClassName="[&>div]:!h-full">
       <div className="flex min-h-full flex-col items-center justify-center p-4 md:p-8">
         <div className="flex w-full max-w-[640px] flex-col items-center gap-6 text-center">
           <div className="flex flex-col items-center gap-2">
@@ -54,7 +56,7 @@ export function Hero({ loading, onDescribe, onTemplate }: Props) {
           {loading && <BuildingLoader state={t("agentBuilder.ui.suggesting")} />}
           <div className={clx("flex flex-wrap items-center justify-center gap-2", loading && "pointer-events-none opacity-60")}>
             {TEMPLATE_TYPES.map((type) => (
-              <button key={type} type="button" className={CARD_CLASSES} onClick={() => onTemplate(type)}>
+              <button key={type} type="button" className={CARD_CLASSES} disabled={loading} onClick={() => onTemplate(type)}>
                 {businessTypeIcon(type)}
                 <Text size="small" weight="plus">{t(`agentBuilder.types.${type}`)}</Text>
               </button>
