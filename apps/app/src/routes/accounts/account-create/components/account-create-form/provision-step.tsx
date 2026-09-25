@@ -1,3 +1,4 @@
+import { isHttpUrl, splitOrigins } from "@/components/channel-connect/website-origins";
 import {
   useProvisionApiChannel,
   useProvisionWebsiteWidget,
@@ -273,19 +274,4 @@ export function IssuedPanel({
 
 function embedSnippet(widgetKey: string): string {
   return `<script src="${window.location.origin}/widget.js" data-widget-key="${widgetKey}" async></script>`;
-}
-
-function splitOrigins(value: string): string[] {
-  return value
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-}
-
-function isHttpUrl(value: string): boolean {
-  try {
-    return /^https?:$/.test(new URL(value).protocol);
-  } catch {
-    return false;
-  }
 }

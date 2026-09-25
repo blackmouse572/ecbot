@@ -18,7 +18,7 @@ vi.mock("@/hooks/api", () => ({
   useLinkAccount: () => ({ mutateAsync: linkMutateAsync, isPending: false }),
 }));
 
-vi.mock("../../hook/use-oauth-login", () => ({
+vi.mock("@/hooks/use-oauth-login", () => ({
   useOAuthLogin: () => ({ handleLinkClick: vi.fn() }),
 }));
 
