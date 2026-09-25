@@ -2159,6 +2159,13 @@
     "messages": "Messages",
     "tokens": "Tokens",
     "export": "Export CSV",
+    "range": {
+      "label": "Date range",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days",
+      "all": "All time"
+    },
     "settings": {
       "title": "Low-balance alert",
       "description": "Warn the workspace owner when the remaining quota drops below this percent.",
