@@ -2,6 +2,11 @@ import type { AgentProfile } from "@repo/agent-blueprint";
 import type { ChatbotCreateRequestDto } from "@repo/client";
 import { CHATBOT_FORM_DEFAULTS } from "../../constants";
 
+// Mirrors ChatbotEntity's own default (apps/api chatbot.entity.ts). The
+// column is non-nullable, and the update endpoint turns every unsent
+// editable field into `undefined`, so it must always be sent.
+export const CHATBOT_HANDOFF_FALLBACK_THRESHOLD_DEFAULT = 3;
+
 /**
  * The full chatbot body for create and update. The update endpoint writes
  * every editable field (unsent ones become undefined), so the builder always
@@ -29,6 +34,7 @@ export function toChatbotPayload(
     guardrailCustomInstruction: "",
     guardrailEscalateOnBlock: CHATBOT_FORM_DEFAULTS.guardrailEscalateOnBlock,
     followupRules: "",
+    handoffFallbackThreshold: CHATBOT_HANDOFF_FALLBACK_THRESHOLD_DEFAULT,
     ...base,
     name: base.name ?? (profile.agentName.trim() || profile.businessName.trim() || "Agent"),
     type: profile.businessType as ChatbotCreateRequestDto["type"],

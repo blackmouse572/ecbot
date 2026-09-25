@@ -48,4 +48,30 @@ describe("toChatbotPayload", () => {
     expect(toChatbotPayload(profile, "", { deferedLanguage: "en" } as never).deferedLanguage).toBe("en");
     expect(toChatbotPayload(profile, "").deferedLanguage).toBe("vi");
   });
+
+  // The update endpoint's pickFields (CHATBOT_EDITABLE_FIELDS) turns every
+  // unsent editable field into `undefined`, and MikroORM rejects `undefined`
+  // for a non-nullable column. Every non-nullable editable chatbot field
+  // (apps/api chatbot.entity.ts, cross-checked against
+  // apps/api/src/modules/chatbot/constants/chatbot.update.constant.ts) must
+  // therefore always be present, with no base given.
+  it("always sends every non-nullable editable chatbot field, even with no base", () => {
+    const body = toChatbotPayload(profile, "");
+    const nonNullableEditableFields = [
+      "name", "type", "primaryLanguage", "modelTextName", "modelTemperature",
+      "autoRead", "typingIndicator", "guardrailEnabled", "guardrailModelEnabled",
+      "guardrailEscalateOnBlock", "handoffFallbackThreshold",
+    ] as const;
+    for (const field of nonNullableEditableFields) {
+      expect(body[field as keyof typeof body], `${field} must not be undefined`).not.toBeUndefined();
+    }
+  });
+
+  it("mirrors the entity's default handoffFallbackThreshold when there is no base", () => {
+    expect(toChatbotPayload(profile, "").handoffFallbackThreshold).toBe(3);
+  });
+
+  it("keeps the chatbot's existing handoff fallback threshold when a base is given", () => {
+    expect(toChatbotPayload(profile, "", { handoffFallbackThreshold: 5 } as never).handoffFallbackThreshold).toBe(5);
+  });
 });
