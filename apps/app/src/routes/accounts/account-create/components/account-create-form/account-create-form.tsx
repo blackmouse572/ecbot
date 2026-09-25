@@ -356,7 +356,13 @@ function ConnectStep({
 
   const { handleLinkClick } = useOAuthLogin(platform, {
     onSuccess: onOAuthSuccess,
-    onError: (err) => toast.error(t("accounts.link.error", { error: err })),
+    // A blocked popup reports a raw code; show a translated message instead.
+    onError: (err) =>
+      toast.error(
+        err === "popup-blocked"
+          ? t("agentBuilder.ui.connectFailed")
+          : t("accounts.link.error", { error: err }),
+      ),
   });
 
   const handleTelegramConnect = form.handleSubmit(({ botToken }) => {
@@ -397,8 +403,10 @@ function ConnectStep({
             }}
             render={({ field, fieldState }) => (
               <TelegramTokenField
+                ref={field.ref}
                 value={field.value}
                 onChange={field.onChange}
+                onBlur={field.onBlur}
                 error={fieldState.error?.message}
               />
             )}
