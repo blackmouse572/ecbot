@@ -7,6 +7,7 @@ import { SidebarProvider, useSidebar } from "@repo/ui/layout";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { agentDisplayName } from "./agent-display-name";
 import { BuilderThread } from "./components/builder-thread";
 import { TestPanel } from "./components/test-panel";
 import { useAgentBuilder, type AgentBuilderController } from "./use-agent-builder";
@@ -52,7 +53,18 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
     if (!desktop) toggle("desktop");
   }, [builder.state.chatbotId, desktop, toggle]);
 
-  const panel = <TestPanel chatbotId={builder.state.chatbotId} profile={builder.state.profile} extraInstructions={builder.extraInstructions} />;
+  // Computed once here and passed down, so the header button, the floating
+  // button and TestPanel's tab/heading never duplicate the name fallback.
+  const displayName = agentDisplayName(builder.state.profile, t);
+  const tryAgentLabel = t("agentBuilder.ui.tryAgent", { name: displayName });
+  const panel = (
+    <TestPanel
+      chatbotId={builder.state.chatbotId}
+      profile={builder.state.profile}
+      extraInstructions={builder.extraInstructions}
+      agentDisplayName={displayName}
+    />
+  );
   // Batch 3: unlocks once the draft exists (chatbotId set), not merely once
   // it's ready to be created.
   const unlocked = !!builder.state.chatbotId;
@@ -63,9 +75,15 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
         <div className="flex w-full items-center justify-between gap-2">
           <Text size="small" className="text-ui-fg-subtle">{t("agentBuilder.ui.title")}</Text>
           {unlocked && (
-            <Button variant="transparent" size="small" onClick={() => toggle(isDesktopViewport ? "desktop" : "mobile")}>
-              <SidebarRight className="size-4" />
-              {t("agentBuilder.ui.tryAgent")}
+            <Button
+              variant="transparent"
+              size="small"
+              className="max-w-[240px]"
+              title={tryAgentLabel}
+              onClick={() => toggle(isDesktopViewport ? "desktop" : "mobile")}
+            >
+              <SidebarRight className="size-4 shrink-0" />
+              <span className="truncate">{tryAgentLabel}</span>
             </Button>
           )}
         </div>
@@ -113,12 +131,13 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
 
         {unlocked && !isDesktopViewport && (
           <Button
-            className="fixed bottom-4 right-4 z-30"
+            className="fixed bottom-4 right-4 z-30 max-w-[70vw]"
+            title={tryAgentLabel}
             onClick={() => {
               if (!mobile) toggle("mobile");
             }}
           >
-            {t("agentBuilder.ui.tryAgent")}
+            <span className="truncate">{tryAgentLabel}</span>
           </Button>
         )}
       </RouteFocusModal.Body>
