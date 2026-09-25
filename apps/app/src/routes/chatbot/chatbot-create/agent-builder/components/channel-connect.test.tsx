@@ -1,5 +1,6 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const unlinkAccountsMock = vi.fn();
@@ -62,6 +63,31 @@ const renderConnect = (channels: string[] = [], linkedAccounts: LinkedAccountRef
     />,
   );
 
+// Mirrors how BuilderThread actually feeds `linkedAccounts` back in: it
+// dispatches the reducer's `accountsLinked` action, whose new state flows
+// back down as a new prop. Used where a test needs to see the resulting
+// chip, not just that the callback fired.
+function StatefulHarness({ channels = [] as string[] }) {
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccountRef[]>([]);
+  return (
+    <ChannelConnect
+      chatbotId="bot-1"
+      agentName="Linh"
+      channels={channels}
+      linkedAccounts={linkedAccounts}
+      onAccountsLinked={(accounts) => {
+        onAccountsLinked(accounts);
+        setLinkedAccounts((prev) => [...prev, ...accounts.filter((a) => !prev.some((p) => p.id === a.id))]);
+      }}
+      onAccountsUnlinked={onAccountsUnlinked}
+      onAnswer={onAnswer}
+      beginAccountsChange={beginAccountsChange}
+      endAccountsChange={endAccountsChange}
+      waitForPendingSave={waitForPendingSave}
+    />
+  );
+}
+
 beforeEach(() => {
   unlinkAccountsMock.mockReset().mockReturnValue({ accounts: [] });
   fetchUnlinkedAccounts.mockReset().mockResolvedValue({ data: [] });
@@ -85,7 +111,7 @@ describe("ChannelConnect", () => {
     fetchUnlinkedAccounts.mockResolvedValue({ data: [{ id: "acc-1" }] });
 
     const user = userEvent.setup();
-    renderConnect();
+    render(<StatefulHarness />);
 
     await user.click(screen.getByText("agentBuilder.channels.messenger"));
     expect(oAuthClick).toHaveBeenCalledWith("FACEBOOK_ACCOUNT");
@@ -97,6 +123,9 @@ describe("ChannelConnect", () => {
     expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" }]);
     expect(beginAccountsChange).toHaveBeenCalled();
     expect(endAccountsChange).toHaveBeenCalled();
+    // The chip actually renders once the account flows back into state,
+    // the same way BuilderThread's reducer feeds it back in practice.
+    expect(await screen.findByText("Lotus Spa")).toBeInTheDocument();
   });
 
   it("links only the Facebook pages a response returns, never the user-level account", async () => {
