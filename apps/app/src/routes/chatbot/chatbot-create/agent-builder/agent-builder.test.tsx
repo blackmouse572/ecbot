@@ -2,8 +2,17 @@ import { createProfile } from "@repo/agent-blueprint";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentBuilder } from "./agent-builder";
+
+// Same pattern as `hooks/use-media-query.test.ts`: stub `window.matchMedia`
+// to pin the viewport the test exercises (desktop vs. mobile test panel).
+const mockMatchMedia = (matches: boolean) => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+  );
+};
 
 const create = vi.fn();
 const update = vi.fn();
@@ -61,10 +70,14 @@ describe("AgentBuilder", () => {
     toastError.mockReset();
   });
 
-  it("starts from a template and asks the first question", async () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("starts from a template and skips straight to the business-name question", async () => {
     renderBuilder();
-    await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
-    expect(screen.getByRole("group", { name: "agentBuilder.questions.businessType.title" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
+    // The template already chose the business type (section B), so it asks
+    // for the business name next instead of asking the type again.
+    expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
     expect(screen.getByText("agentBuilder.groups.identity")).toBeInTheDocument();
   });
 
@@ -84,11 +97,66 @@ describe("AgentBuilder", () => {
     expect(screen.getByRole("group", { name: "agentBuilder.questions.businessType.title" })).toBeInTheDocument();
   });
 
+  it("shows a business-type icon on each businessType choice", async () => {
+    suggest.mockRejectedValue(new Error("down"));
+    renderBuilder();
+    await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "something{enter}");
+    await screen.findByRole("group", { name: "agentBuilder.questions.businessType.title" });
+    const radios = screen.getAllByRole("radio");
+    expect(radios.length).toBeGreaterThan(0);
+    for (const radio of radios) {
+      expect(radio.closest("label")?.querySelector("svg")).toBeInTheDocument();
+    }
+  });
+
+  it("shows an answered step as the question asked, then the answer given", async () => {
+    renderBuilder();
+    await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
+    await answerCurrent();
+    const asked = screen.getByText("agentBuilder.questions.businessName.title");
+    const answered = screen.getByText("Lotus");
+    expect(asked).toBeInTheDocument();
+    expect(answered).toBeInTheDocument();
+    // The assistant "asked" bubble comes before the user "answered" bubble.
+    expect(asked.compareDocumentPosition(answered) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("shows step 0 as a pair after starting, and its answer bubble goes back to step 0", async () => {
+    renderBuilder();
+    await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
+    expect(screen.getByText("agentBuilder.ui.startMessage")).toBeInTheDocument();
+    expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText("agentBuilder.ui.templateAnswer"));
+    expect(screen.getByRole("group", { name: "agentBuilder.ui.templates" })).toBeInTheDocument();
+  });
+
+  it(
+    "updates the same draft instead of creating a second one after going back to step 0",
+    async () => {
+      renderBuilder();
+      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
+      for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
+      await waitFor(() => expect(create).toHaveBeenCalledOnce());
+
+      await userEvent.click(screen.getByText("agentBuilder.ui.templateAnswer"));
+      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.restaurant" }));
+      // Answer through to the end again. Each answer resets the save
+      // debounce, so `update` only fires once the last one settles.
+      for (let i = 0; i < 40 && screen.queryByRole("button", { name: "actions.next" }); i++) await answerCurrent();
+
+      await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 2000 });
+      expect(create).toHaveBeenCalledOnce();
+      expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-1" });
+    },
+    15000,
+  );
+
   it(
     "creates an inactive draft once the Rules group is done and unlocks the test panel",
     async () => {
       renderBuilder();
-      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
+      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
       for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
       await waitFor(() => expect(create).toHaveBeenCalledOnce());
       expect(create.mock.calls[0][0]).toMatchObject({ status: "inactive", type: "beauty", name: "Lotus", agentProfile: expect.objectContaining({ businessName: "Lotus" }) });
@@ -102,10 +170,10 @@ describe("AgentBuilder", () => {
 
   it("lets the user edit an earlier answer", async () => {
     renderBuilder();
-    await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
+    await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
     await answerCurrent();
-    await userEvent.click(screen.getByTitle("actions.edit"));
-    expect(screen.getByRole("group", { name: "agentBuilder.questions.businessType.title" })).toBeInTheDocument();
+    await userEvent.click(screen.getByText("Lotus"));
+    expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
   });
 
   it("keeps a local answer through a hydrate refetch (e.g. after an autosave)", async () => {
@@ -153,7 +221,7 @@ describe("AgentBuilder", () => {
     async () => {
       create.mockReset().mockRejectedValue(new Error("down"));
       renderBuilder();
-      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
+      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
       for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
       await waitFor(() => expect(create).toHaveBeenCalledOnce());
       await new Promise((r) => setTimeout(r, 100));
@@ -246,11 +314,68 @@ describe("AgentBuilder", () => {
           <AgentBuilder />
         </MemoryRouter>,
       );
-      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
+      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
       for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
       await waitFor(() => expect(create).toHaveBeenCalledOnce());
       expect(create.mock.calls[0][0]).toMatchObject({ accounts: [], name: "Lotus" });
     },
     15000,
   );
+
+  describe("the test panel", () => {
+    const desktopPanel = () => screen.getByTestId("test-panel").closest('[aria-hidden], [inert]') ?? screen.getByTestId("test-panel").parentElement!.parentElement!;
+
+    it("starts collapsed on desktop", () => {
+      mockMatchMedia(true);
+      renderBuilder();
+      expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("the header toggle opens and closes it on desktop", async () => {
+      mockMatchMedia(true);
+      renderBuilder();
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
+      expect(desktopPanel()).not.toHaveAttribute("aria-hidden");
+
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
+      expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it(
+      "opens automatically once the draft chatbot is created, and stays closed once the user closes it",
+      async () => {
+        mockMatchMedia(true);
+        renderBuilder();
+        expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
+
+        await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
+        for (let i = 0; i < 40 && create.mock.calls.length === 0; i++) await answerCurrent();
+        await waitFor(() => expect(create).toHaveBeenCalledOnce());
+        await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
+
+        // Closing it by hand is respected: it does not reopen itself again.
+        await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
+        expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
+      },
+      15000,
+    );
+
+    it("is a full-screen sheet on mobile, opened by the floating button and closed by its own close control", async () => {
+      mockMatchMedia(false);
+      renderBuilder();
+      await userEvent.click(screen.getByRole("radio", { name: "agentBuilder.types.beauty" }));
+
+      const sheet = screen.getByTestId("test-panel").closest("aside")!;
+      expect(sheet).toHaveAttribute("aria-hidden", "true");
+
+      // Both the header toggle and the floating "try your agent" button share
+      // the same label on mobile; the floating one is the last in the DOM.
+      const tryAgentButtons = screen.getAllByRole("button", { name: "agentBuilder.ui.tryAgent" });
+      await userEvent.click(tryAgentButtons[tryAgentButtons.length - 1]!);
+      expect(sheet).not.toHaveAttribute("aria-hidden");
+
+      await userEvent.click(screen.getByRole("button", { name: "actions.close" }));
+      expect(sheet).toHaveAttribute("aria-hidden", "true");
+    });
+  });
 });
