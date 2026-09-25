@@ -23,7 +23,11 @@ describe('MessageProcessorService — inbound images', () => {
         fetchSenderProfile: jest.fn(),
         markRead: jest.fn(),
         startTyping: jest.fn().mockResolvedValue(undefined),
+        fetchMedia: jest.fn(),
     };
+    const messageMedia = { saveImage: jest.fn() };
+    const JPEG = { data: Buffer.from('jpg'), mime: 'image/jpeg' };
+    const stored = { type: 'image', key: 'conversations/conv-1/a.jpg' };
     const registry = { get: jest.fn(() => adapter) };
     const customerService = {
         resolveContactPoint: jest.fn(),
@@ -88,12 +92,15 @@ describe('MessageProcessorService — inbound images', () => {
             { get: jest.fn(() => conversationService) } as any,
             chatbotAIService as any,
             lease as any,
-            dedupe as any
+            dedupe as any,
+            messageMedia as any
         );
         processor.onModuleInit();
         accountService.findOne.mockResolvedValue(buildAccount());
 
         dedupe.claim.mockResolvedValue(true);
+        adapter.fetchMedia.mockResolvedValue(JPEG);
+        messageMedia.saveImage.mockResolvedValue(stored);
         customerService.resolveContactPoint.mockResolvedValue({
             contactPoint: { id: 'cp-1' },
             customerId: 'cust-1',
@@ -106,22 +113,43 @@ describe('MessageProcessorService — inbound images', () => {
         });
     });
 
-    it('keeps an image-only message: persisted with its attachments and replied to', async () => {
+    it('keeps an image-only message: stored privately and replied to', async () => {
         await processor.process({
             ...baseEvent,
             text: undefined,
             attachments: [image],
         });
 
+        expect(adapter.fetchMedia).toHaveBeenCalledWith(
+            expect.objectContaining({ id: 'account-1' }),
+            image
+        );
+        expect(messageMedia.saveImage).toHaveBeenCalledWith('conv-1', JPEG);
         expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
             'conv-1',
             'msg-image-1',
-            expect.objectContaining({ text: '', attachments: [image] })
+            expect.objectContaining({ text: '', attachments: [stored] })
         );
         expect(messageDebounceService.schedule).toHaveBeenCalled();
     });
 
-    it('persists the attachments of a captioned image', async () => {
+    it('accepts a Telegram-style image that only carries a file id', async () => {
+        await processor.process({
+            ...baseEvent,
+            text: undefined,
+            attachments: [{ type: 'image', raw: { file_id: 'F1' } }],
+        });
+
+        expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
+            'conv-1',
+            'msg-image-1',
+            expect.objectContaining({ attachments: [stored] })
+        );
+    });
+
+    it('keeps the platform link when the download fails', async () => {
+        adapter.fetchMedia.mockRejectedValueOnce(new Error('403'));
+
         await processor.process({ ...baseEvent, attachments: [image] });
 
         expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
@@ -131,11 +159,22 @@ describe('MessageProcessorService — inbound images', () => {
         );
     });
 
-    it('still skips a message with no text and no viewable image', async () => {
+    it('does not store a download that is not an image', async () => {
+        adapter.fetchMedia.mockResolvedValueOnce({
+            data: Buffer.from('<html>'),
+            mime: 'text/html',
+        });
+
+        await processor.process({ ...baseEvent, attachments: [image] });
+
+        expect(messageMedia.saveImage).not.toHaveBeenCalled();
+    });
+
+    it('still skips a message with no text and no image', async () => {
         await processor.process({
             ...baseEvent,
             text: undefined,
-            attachments: [{ type: 'image', raw: { file_id: 'x' } }],
+            attachments: [{ type: 'audio', url: 'https://cdn/a.mp3' }],
         });
 
         expect(accountService.findOne).not.toHaveBeenCalled();

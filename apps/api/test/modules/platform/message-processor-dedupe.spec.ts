@@ -100,7 +100,8 @@ describe('MessageProcessorService — inbound event dedupe (candidate 1)', () =>
             mockModuleRef as any,
             chatbotAIService as any,
             lease as any,
-            dedupe as any
+            dedupe as any,
+            {} as any
         );
         processor.onModuleInit();
 

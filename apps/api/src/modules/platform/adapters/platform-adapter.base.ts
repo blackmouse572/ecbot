@@ -1,5 +1,6 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
+import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { isAxiosError } from 'axios';
 import {
@@ -9,6 +10,7 @@ import {
     QuickReply,
 } from '../interfaces/message-model';
 import {
+    PlatformAttachment,
     PlatformConversation,
     PlatformMessage,
     PlatformOAuthCapability,
@@ -52,6 +54,24 @@ export abstract class PlatformAdapter {
         account: AccountEntity,
         lookback: Date
     ): Promise<PlatformWebhookEvent[]>;
+
+    /**
+     * Download an inbound attachment's bytes. Default: GET its public URL
+     * (Messenger, Zalo CDNs). Platforms that hand out ids or need
+     * credentials override this. Null when there is nothing to download.
+     */
+    async fetchMedia(
+        _account: AccountEntity,
+        attachment: PlatformAttachment
+    ): Promise<IMessageMedia | null> {
+        if (!attachment.url) return null;
+        const res = await fetch(attachment.url);
+        if (!res.ok) return null;
+        return {
+            data: Buffer.from(await res.arrayBuffer()),
+            mime: res.headers.get('content-type')?.split(';')[0] ?? '',
+        };
+    }
 
     // ---- outbound (concrete: degrade + guard → protected hook) ----
     async sendMessage(

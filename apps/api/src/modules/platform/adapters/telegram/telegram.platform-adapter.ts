@@ -1,6 +1,7 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
+import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
 import { HttpService } from '@nestjs/axios';
 import {
     Injectable,
@@ -19,6 +20,7 @@ import {
     PlatformOAuthCapability,
     PlatformOAuthTokens,
     PlatformOwnerProfile,
+    PlatformAttachment,
     PlatformUserProfile,
     PlatformWebhookEvent,
 } from '../../interfaces/platform-adapter.interface';
@@ -323,6 +325,30 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
         } catch {
             return { id: senderId };
         }
+    }
+
+    /** Photos arrive as a file id: resolve it with getFile, then download.
+     *  (The download URL embeds the bot token — never store or expose it.) */
+    async fetchMedia(
+        account: AccountEntity,
+        attachment: PlatformAttachment
+    ): Promise<IMessageMedia | null> {
+        const fileId = (attachment.raw as { file_id?: string } | undefined)
+            ?.file_id;
+        if (!fileId) return null;
+        const res = await this.httpService.axiosRef.post<
+            TelegramResponse<{ file_path?: string }>
+        >(this.botUrl(account, 'getFile'), { file_id: fileId });
+        const filePath = res.data.result?.file_path;
+        if (!res.data.ok || !filePath) return null;
+        const file = await this.httpService.axiosRef.get<ArrayBuffer>(
+            `${this.apiUrl}/file/bot${this.token(account)}/${filePath}`,
+            { responseType: 'arraybuffer' }
+        );
+        return {
+            data: Buffer.from(file.data),
+            mime: String(file.headers?.['content-type'] ?? 'image/jpeg'),
+        };
     }
 
     // Telegram Bot API does not expose conversation history — bots only receive new updates.

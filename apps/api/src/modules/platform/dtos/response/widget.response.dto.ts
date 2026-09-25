@@ -1,7 +1,11 @@
+import { MessageAttachmentResponseDto } from '@app/modules/conversation/dtos/response/message.get.response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class WidgetMetaResponseDto {
-    @ApiProperty({ description: 'Chatbot display name', example: 'Shop Helper' })
+    @ApiProperty({
+        description: 'Chatbot display name',
+        example: 'Shop Helper',
+    })
     name: string;
 
     @ApiPropertyOptional({ description: 'Chatbot avatar URL' })
@@ -44,6 +48,13 @@ export class WidgetMessageResponseDto {
 
     @ApiPropertyOptional({ description: 'Message text' })
     text?: string;
+
+    @ApiPropertyOptional({
+        type: () => MessageAttachmentResponseDto,
+        isArray: true,
+        description: 'Images on this message (e.g. ones the bot sent)',
+    })
+    attachments?: MessageAttachmentResponseDto[];
 
     @ApiProperty({ description: 'When it was sent' })
     dateSent: Date;

@@ -12,6 +12,7 @@ describe('ReplyGenerationService.run', () => {
             {} as any,
             {} as any,
             {} as any,
+            {} as any,
             {} as any
         );
         await expect(
@@ -44,6 +45,7 @@ describe('ReplyGenerationService.run', () => {
             moduleRef as any,
             { em: { fork: () => ({}) } } as any,
             {} as any,
+            {} as any,
             {} as any
         );
         await svc.run({
@@ -64,22 +66,23 @@ describe('ReplyGenerationService.run', () => {
                 .mockResolvedValue({ botEnabled: true, account: 'acc-1' }),
         };
         const adapter = { startTyping: jest.fn().mockResolvedValue(undefined) };
+        const messageMedia = {
+            resolve: jest.fn(async (list: { key?: string }[] = []) =>
+                list.map(a => ({ type: 'image', url: `https://s3/${a.key}` }))
+            ),
+        };
         const messageRepository = {
             findRecentByConversation: jest.fn().mockResolvedValue([
                 {
                     text: '',
-                    attachments: [
-                        { type: 'image', url: 'https://cdn/old.jpg' },
-                    ],
+                    attachments: [{ type: 'image', key: 'old.jpg' }],
                     direction: 'INBOUND',
                 },
                 { text: 'giá bao nhiêu?', direction: 'INBOUND' },
                 {
                     id: 'm-3',
                     text: '',
-                    attachments: [
-                        { type: 'image', url: 'https://cdn/new.jpg' },
-                    ],
+                    attachments: [{ type: 'image', key: 'new.jpg' }],
                     direction: 'INBOUND',
                 },
             ]),
@@ -100,7 +103,8 @@ describe('ReplyGenerationService.run', () => {
             {} as any,
             { get: jest.fn(() => conversationService) } as any,
             { em: { fork: () => ({}) } } as any,
-            { build: jest.fn().mockResolvedValue([]) } as any
+            { build: jest.fn().mockResolvedValue([]) } as any,
+            messageMedia as any
         );
 
         await svc.run({
@@ -113,7 +117,7 @@ describe('ReplyGenerationService.run', () => {
 
         const params = streamChat.mock.calls[0][0];
         expect(params.attachments).toEqual([
-            { attachment_id: 'm-3', preview_url: 'https://cdn/new.jpg' },
+            { attachment_id: 'm-3', preview_url: 'https://s3/new.jpg' },
         ]);
         expect(params.history).toEqual([
             { role: 'user', content: '[image]' },

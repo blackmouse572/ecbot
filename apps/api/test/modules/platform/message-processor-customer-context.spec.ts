@@ -103,7 +103,8 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
             mockModuleRef as any,
             chatbotAIService as any,
             lease as any,
-            { claim: jest.fn().mockResolvedValue(true) } as any
+            { claim: jest.fn().mockResolvedValue(true) } as any,
+            {} as any
         );
         processor.onModuleInit();
 

@@ -54,6 +54,13 @@ function image(url: string): OutboundMessage {
     };
 }
 
+/** Whether any attachment is an image (stored, linked, or id-only). */
+export function hasImage(attachments?: unknown[]): boolean {
+    return (attachments ?? []).some(
+        a => (a as { type?: unknown } | null)?.type === 'image'
+    );
+}
+
 /** URLs of the image attachments we can actually fetch (some platforms only
  *  give a file id — those are skipped). */
 export function imageUrls(attachments?: unknown[]): string[] {

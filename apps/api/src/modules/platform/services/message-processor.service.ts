@@ -8,12 +8,18 @@ import {
 } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
+import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
+import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { CustomerTagClassifierService } from '@app/modules/customer/services/customer-tag-classifier.service';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { PlatformWebhookEvent } from '../interfaces/platform-adapter.interface';
-import { imageUrls } from '../interfaces/message-model';
+import {
+    PlatformAttachment,
+    PlatformWebhookEvent,
+} from '../interfaces/platform-adapter.interface';
+import { PlatformAdapter } from '../adapters/platform-adapter.base';
+import { hasImage } from '../interfaces/message-model';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import { fetchAsBase64 } from '@app/common/utils/fetch-as-base64.util';
 import { MessageDebounceService } from './message-debounce.service';
@@ -42,7 +48,8 @@ export class MessageProcessorService implements OnModuleInit {
         private readonly moduleRef: ModuleRef,
         private readonly chatbotAIService: ChatbotAIService,
         private readonly lease: GenerationLeaseService,
-        private readonly dedupe: InboundEventDedupeService
+        private readonly dedupe: InboundEventDedupeService,
+        private readonly messageMedia: MessageMediaService
     ) {}
 
     onModuleInit(): void {
@@ -69,11 +76,7 @@ export class MessageProcessorService implements OnModuleInit {
         // Allow action events (postback/quick_reply) through even when kind != 'message'
         if (event.kind !== 'message' && !event.action) return;
         // An image with no caption is still a customer turn (the AI describes it).
-        if (
-            !event.text &&
-            !event.action &&
-            !imageUrls(event.attachments).length
-        )
+        if (!event.text && !event.action && !hasImage(event.attachments))
             return;
 
         const account = await this.accountService.findOne(
@@ -224,7 +227,12 @@ export class MessageProcessorService implements OnModuleInit {
                     authorType: ENUM_MESSAGE_AUTHOR.USER,
                     authorId: event.senderId,
                     text: effectiveText,
-                    attachments: event.attachments,
+                    attachments: await this.storeAttachments(
+                        adapter,
+                        account,
+                        conversation.id,
+                        event.attachments
+                    ),
                     raw: event.raw,
                     dateSent: event.timestamp,
                 }
@@ -337,6 +345,48 @@ export class MessageProcessorService implements OnModuleInit {
                     )
                 );
         }
+    }
+
+    /**
+     * Copy each image into our own storage: platform links expire or need
+     * credentials. On any failure the image keeps its platform link, so the
+     * turn still goes through. The platform `raw` payload is not kept here —
+     * it already lives on the message's `raw`.
+     */
+    private async storeAttachments(
+        adapter: PlatformAdapter,
+        account: AccountEntity,
+        conversationId: string,
+        attachments?: PlatformAttachment[]
+    ): Promise<unknown[] | undefined> {
+        if (!attachments?.length) return undefined;
+        return Promise.all(
+            attachments.map(async ({ type, url, raw }) => {
+                const kept = url ? { type, url } : { type };
+                if (type !== 'image') return kept;
+                try {
+                    const media = await adapter.fetchMedia(account, {
+                        type,
+                        url,
+                        raw,
+                    });
+                    if (
+                        !media?.mime.startsWith('image/') ||
+                        media.data.length > MESSAGE_MEDIA_MAX_BYTES
+                    )
+                        return kept;
+                    return await this.messageMedia.saveImage(
+                        conversationId,
+                        media
+                    );
+                } catch (err) {
+                    this.logger.warn(
+                        `Storing inbound image failed for ${conversationId}: ${(err as Error).message}`
+                    );
+                    return kept;
+                }
+            })
+        );
     }
 
     /**

@@ -44,6 +44,9 @@ function streamFrom(lines: string[]) {
     return stream;
 }
 
+/** No stored images in these turns: attachments resolve to nothing. */
+const noMedia = { resolve: async () => [] };
+
 describe('ReplyGenerationService.run — generation lease (candidate 2)', () => {
     const conversationService = {
         findOneById: jest.fn(),
@@ -99,6 +102,7 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             mockModuleRef as any,
             ormStub(),
             manifestBuilder as any,
+            noMedia as any,
             meter as any
         );
 
@@ -205,7 +209,8 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             new StreamingDelivery(),
             { get: jest.fn(() => conversationService) } as any,
             ormStub(),
-            manifestBuilder as any
+            manifestBuilder as any,
+            noMedia as any
         );
 
         await unmetered.run(replyInput);

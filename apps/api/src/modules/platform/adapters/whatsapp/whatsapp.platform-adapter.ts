@@ -1,6 +1,7 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
+import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -14,6 +15,7 @@ import {
     PlatformOAuthCapability,
     PlatformOAuthTokens,
     PlatformOwnerProfile,
+    PlatformAttachment,
     PlatformUserProfile,
     PlatformWebhookEvent,
 } from '../../interfaces/platform-adapter.interface';
@@ -270,6 +272,30 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
     }
 
     // ----- outbound hooks -----
+
+    /** Media arrives as an id: look up its (auth-only) URL, then download
+     *  it with the same token. */
+    async fetchMedia(
+        account: AccountEntity,
+        attachment: PlatformAttachment
+    ): Promise<IMessageMedia | null> {
+        const mediaId = (attachment.raw as { id?: string } | undefined)?.id;
+        if (!mediaId) return null;
+        const auth = { headers: this.authHeaders(account) };
+        const meta = await this.httpService.axiosRef.get<{
+            url?: string;
+            mime_type?: string;
+        }>(this.graphUrl(mediaId), auth);
+        if (!meta.data.url) return null;
+        const file = await this.httpService.axiosRef.get<ArrayBuffer>(
+            meta.data.url,
+            { ...auth, responseType: 'arraybuffer' }
+        );
+        return {
+            data: Buffer.from(file.data),
+            mime: meta.data.mime_type ?? 'image/jpeg',
+        };
+    }
 
     protected async doSend(
         account: AccountEntity,

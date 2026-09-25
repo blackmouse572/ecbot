@@ -92,7 +92,8 @@ describe('MessageProcessorService — typing indicator starts at intake', () => 
             { get: jest.fn(() => conversationService) } as any,
             chatbotAIService as any,
             lease as any,
-            dedupe as any
+            dedupe as any,
+            {} as any
         );
         processor.onModuleInit();
 

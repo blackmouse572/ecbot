@@ -19,7 +19,12 @@ import {
     MESSAGE_HISTORY_WINDOW,
     MESSAGE_TYPING_REFRESH_MS,
 } from '../constants/message-debounce.constant';
-import { imageUrls, text as toText } from '../interfaces/message-model';
+import {
+    hasImage,
+    imageUrls,
+    text as toText,
+} from '../interfaces/message-model';
+import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
 import { GenerationLeaseService } from './generation-lease.service';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import {
@@ -54,6 +59,7 @@ export class ReplyGenerationService {
         private readonly moduleRef: ModuleRef,
         private readonly orm: MikroORM,
         private readonly manifestBuilder: ManifestBuilderService,
+        private readonly messageMedia: MessageMediaService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -151,21 +157,26 @@ export class ReplyGenerationService {
             const history: AIChatHistoryMessage[] = prior
                 .map(m => ({
                     role: this.roleFor(m.authorType, m.direction),
-                    content: [
-                        m.text,
-                        imageUrls(m.attachments).length ? '[image]' : '',
-                    ]
+                    content: [m.text, hasImage(m.attachments) ? '[image]' : '']
                         .filter(Boolean)
                         .join(' '),
                 }))
                 .filter(m => m.content);
-            // Images in this burst go to apps/ai, which describes them.
-            const attachments = recent.slice(prior.length).flatMap(m =>
-                imageUrls(m.attachments).map(url => ({
-                    attachment_id: m.id,
-                    preview_url: url,
-                }))
-            );
+            // Images in this burst go to apps/ai (which describes them), as
+            // short-lived urls for the ones stored privately.
+            const burst = recent.slice(prior.length);
+            const attachments = (
+                await Promise.all(
+                    burst.map(async m =>
+                        imageUrls(
+                            await this.messageMedia.resolve(m.attachments)
+                        ).map(url => ({
+                            attachment_id: m.id,
+                            preview_url: url,
+                        }))
+                    )
+                )
+            ).flat();
 
             const triggerMessage =
                 await this.messageRepository.findLatestInbound(conversationId);

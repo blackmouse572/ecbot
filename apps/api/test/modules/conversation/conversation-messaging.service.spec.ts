@@ -1,3 +1,4 @@
+import { MessageMediaService } from '../../../src/modules/conversation/services/message-media.service';
 import {
     NotFoundException,
     UnprocessableEntityException,
@@ -10,6 +11,12 @@ import {
 import { ConversationEntity } from '../../../src/modules/conversation/repository/entities/conversation.entity';
 import { MessageEntity } from '../../../src/modules/conversation/repository/entities/message.entity';
 import { ConversationMessagingService } from '../../../src/modules/conversation/services/conversation-messaging.service';
+
+const mockS3 = {
+    presignGetItem: jest.fn(async (key: string) => ({
+        presignUrl: `https://s3/${key}?sig`,
+    })),
+};
 
 describe('ConversationMessagingService', () => {
     let service: ConversationMessagingService;
@@ -53,7 +60,8 @@ describe('ConversationMessagingService', () => {
             mockMessageRepository as any,
             mockUserRepository as any,
             mockToolInvocationRepository as any,
-            { get: jest.fn(() => mockPlatformRegistry) } as any
+            { get: jest.fn(() => mockPlatformRegistry) } as any,
+            new MessageMediaService(mockS3 as any)
         );
 
     const facebookAccount = {
@@ -435,13 +443,13 @@ describe('ConversationMessagingService', () => {
                 ...overrides,
             }) as MessageEntity;
 
-        it('uses operator full name from the user-name map', () => {
+        it('uses operator full name from the user-name map', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'op-1',
                 authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
             });
-            const dto = service.mapMessage(
+            const dto = await service.mapMessage(
                 msg,
                 undefined,
                 new Map([['op-1', 'Ada Lovelace']])
@@ -451,7 +459,7 @@ describe('ConversationMessagingService', () => {
 
         // Imported page messages (adapter.reconcile / message_echoes) are
         // OPERATOR but carry the platform's page id, not an eccho user uuid.
-        it('names an imported page message after the account, not the raw page id', () => {
+        it('names an imported page message after the account, not the raw page id', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: '111848957952146',
@@ -461,7 +469,7 @@ describe('ConversationMessagingService', () => {
                 account: { name: 'PeaceMaker and Insensitive' },
             } as any;
 
-            const dto = service.mapMessage(msg, conversation, new Map());
+            const dto = await service.mapMessage(msg, conversation, new Map());
 
             expect(dto.author).toEqual({
                 id: '111848957952146',
@@ -469,14 +477,14 @@ describe('ConversationMessagingService', () => {
             });
         });
 
-        it('falls back to author id when operator is missing from the map', () => {
+        it('falls back to author id when operator is missing from the map', async () => {
             const service = buildService();
             const msg = buildMessage({ authorId: 'op-2' });
-            const dto = service.mapMessage(msg, undefined, new Map());
+            const dto = await service.mapMessage(msg, undefined, new Map());
             expect(dto.author).toEqual({ id: 'op-2', name: 'op-2' });
         });
 
-        it('uses chatbot name for BOT messages when conversation.chatbot is populated', () => {
+        it('uses chatbot name for BOT messages when conversation.chatbot is populated', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'bot-1',
@@ -485,24 +493,24 @@ describe('ConversationMessagingService', () => {
             const conversation = {
                 chatbot: { name: 'Ecbot Assistant' },
             } as ConversationEntity;
-            const dto = service.mapMessage(msg, conversation);
+            const dto = await service.mapMessage(msg, conversation);
             expect(dto.author).toEqual({
                 id: 'bot-1',
                 name: 'Ecbot Assistant',
             });
         });
 
-        it('falls back to author id for BOT when chatbot is not populated', () => {
+        it('falls back to author id for BOT when chatbot is not populated', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'bot-1',
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
             });
-            const dto = service.mapMessage(msg, undefined);
+            const dto = await service.mapMessage(msg, undefined);
             expect(dto.author).toEqual({ id: 'bot-1', name: 'bot-1' });
         });
 
-        it('uses conversation.senderName for USER messages', () => {
+        it('uses conversation.senderName for USER messages', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'u-1',
@@ -511,39 +519,44 @@ describe('ConversationMessagingService', () => {
             const conversation = {
                 senderName: 'Jane Doe',
             } as ConversationEntity;
-            const dto = service.mapMessage(msg, conversation);
+            const dto = await service.mapMessage(msg, conversation);
             expect(dto.author).toEqual({ id: 'u-1', name: 'Jane Doe' });
         });
 
-        it('falls back to author id for USER when senderName is absent', () => {
+        it('falls back to author id for USER when senderName is absent', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'u-1',
                 authorType: ENUM_MESSAGE_AUTHOR.USER,
             });
-            const dto = service.mapMessage(msg, {} as ConversationEntity);
+            const dto = await service.mapMessage(msg, {} as ConversationEntity);
             expect(dto.author).toEqual({ id: 'u-1', name: 'u-1' });
         });
     });
 
     describe('attachments (via mapMessage)', () => {
-        it('exposes image attachments as { type, url } for the inbox', () => {
-            const dto = buildService().mapMessage({
+        it('exposes image attachments as { type, url } for the inbox', async () => {
+            const dto = await buildService().mapMessage({
                 authorId: 'bot-1',
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
                 attachments: [
                     { type: 'image', url: 'https://cdn/s.jpg', raw: { x: 1 } },
+                    { type: 'image', key: 'conversations/c/a.jpg' },
                     'junk',
                 ],
             } as unknown as MessageEntity);
 
             expect(dto.attachments).toEqual([
                 { type: 'image', url: 'https://cdn/s.jpg' },
+                {
+                    type: 'image',
+                    url: 'https://s3/conversations/c/a.jpg?sig',
+                },
             ]);
         });
 
-        it('defaults to an empty list', () => {
-            const dto = buildService().mapMessage({
+        it('defaults to an empty list', async () => {
+            const dto = await buildService().mapMessage({
                 authorId: 'bot-1',
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
             } as MessageEntity);
