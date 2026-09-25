@@ -980,7 +980,8 @@
       "progress": "Câu {{current}} / {{total}}",
       "extraInstructions": "Hướng dẫn bổ sung",
       "extraInstructionsHint": "Được thêm vào cuối phần hướng dẫn cho agent. Để trống nếu các câu trả lời đã đầy đủ.",
-      "editWithBuilder": "Chỉnh sửa bằng trình tạo"
+      "editWithBuilder": "Chỉnh sửa bằng trình tạo",
+      "templateAnswer": "Mẫu: {{name}}"
     },
     "groups": {
       "identity": "Về doanh nghiệp",

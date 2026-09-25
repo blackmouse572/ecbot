@@ -952,7 +952,8 @@
       "progress": "Question {{current}} of {{total}}",
       "extraInstructions": "Extra instructions",
       "extraInstructionsHint": "Added at the end of what your agent is told. Leave it empty if your answers cover everything.",
-      "editWithBuilder": "Edit with builder"
+      "editWithBuilder": "Edit with builder",
+      "templateAnswer": "Template: {{name}}"
     },
     "groups": {
       "identity": "About your business",
