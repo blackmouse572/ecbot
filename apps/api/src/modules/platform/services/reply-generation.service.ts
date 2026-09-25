@@ -15,6 +15,7 @@ import { MikroORM, RequestContext } from '@mikro-orm/core';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
+import { UNVIEWABLE_IMAGE_NOTE } from '../constants/media.constant';
 import {
     MESSAGE_HISTORY_WINDOW,
     MESSAGE_TYPING_REFRESH_MS,
@@ -142,44 +143,61 @@ export class ReplyGenerationService {
 
             // The AI agent is stateless (no LangGraph checkpointer), so we supply
             // conversation context each turn from the DB (the message source of
-            // truth). The current burst is already persisted as trailing inbound
-            // rows, so drop the last `texts.length` to avoid duplicating the turn
+            // truth). The current burst is already persisted as the last
+            // `texts.length` inbound rows (a reply to an earlier burst can sit
+            // between them), so leave those out to avoid duplicating the turn
             // we're about to send as `message`.
             const recent =
                 await this.messageRepository.findRecentByConversation(
                     conversationId,
                     MESSAGE_HISTORY_WINDOW + texts.length
                 );
-            const prior = recent.slice(
-                0,
-                Math.max(0, recent.length - texts.length)
+            const burstRows = new Set(
+                recent
+                    .filter(m => m.direction === ENUM_MESSAGE_DIRECTION.INBOUND)
+                    .slice(-texts.length)
             );
+            const prior = recent.filter(m => !burstRows.has(m));
+            // The bot's own images stay out: the model copied an assistant
+            // "[image]" into its replies, and its text says what it showed.
             const history: AIChatHistoryMessage[] = prior
                 .map(m => ({
                     role: this.roleFor(m.authorType, m.direction),
-                    content: [m.text, imageHistoryNote(m.attachments)]
+                    content: [
+                        m.text,
+                        m.direction === ENUM_MESSAGE_DIRECTION.INBOUND
+                            ? imageHistoryNote(m.attachments)
+                            : '',
+                    ]
                         .filter(Boolean)
                         .join(' '),
                 }))
                 .filter(m => m.content);
             // Images in this burst go to apps/ai (which describes them), as
-            // short-lived urls for the ones stored privately.
-            const burst = recent.slice(prior.length);
-            const attachments = (
-                await Promise.all(
-                    burst.map(async m =>
-                        imageUrls(
-                            await this.messageMedia.resolve(
-                                m.attachments,
-                                conversationId
-                            )
-                        ).map(url => ({
-                            attachment_id: m.id,
-                            preview_url: url,
-                        }))
-                    )
-                )
-            ).flat();
+            // short-lived urls for the ones stored privately. One with no url
+            // (a Telegram photo whose download failed) becomes a note instead.
+            const burst = await Promise.all(
+                [...burstRows].map(async m => ({
+                    id: m.id,
+                    attachments: await this.messageMedia.resolve(
+                        m.attachments,
+                        conversationId
+                    ),
+                }))
+            );
+            const attachments = burst.flatMap(m =>
+                imageUrls(m.attachments).map(url => ({
+                    attachment_id: m.id,
+                    preview_url: url,
+                }))
+            );
+            const unviewable = burst
+                .flatMap(m => m.attachments)
+                .filter(a => a.type === 'image' && !a.url)
+                .map(() => UNVIEWABLE_IMAGE_NOTE);
+            const message = [combinedText, ...unviewable]
+                .filter(Boolean)
+                .join('\n');
 
             const triggerMessage =
                 await this.messageRepository.findLatestInbound(conversationId);
@@ -212,7 +230,7 @@ export class ReplyGenerationService {
                         chatbot_id: chatbot.id,
                         user_id: senderId,
                         provider_id: account.id,
-                        message: combinedText,
+                        message,
                         chat_session_id: conversationId,
                         tools,
                         max_tool_iterations: 5,
