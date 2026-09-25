@@ -7,7 +7,7 @@ import {
   QuestionnaireError, QuestionnaireInput, QuestionnaireItem, QuestionnaireNext, QuestionnaireTitle,
 } from "./questionnaire";
 
-function Harness(props: { multiple?: boolean; required?: boolean; max?: number; disabled?: boolean; onSubmit?: () => void; text?: boolean }) {
+function Harness(props: { multiple?: boolean; required?: boolean; max?: number; disabled?: boolean; onSubmit?: () => void; text?: boolean; icon?: boolean }) {
   const [value, setValue] = useState<string | string[]>(props.multiple ? [] : "");
   return (
     <Questionnaire onSubmit={props.onSubmit ?? (() => {})}>
@@ -17,9 +17,9 @@ function Harness(props: { multiple?: boolean; required?: boolean; max?: number; 
           <QuestionnaireInput aria-label="answer" />
         ) : (
           <QuestionnaireChoices shortcuts="numbers">
-            <QuestionnaireChoice value="a" label="Alpha" />
-            <QuestionnaireChoice value="b" label="Beta" />
-            <QuestionnaireChoice value="c" label="Gamma" />
+            <QuestionnaireChoice value="a" label="Alpha" icon={props.icon ? <span data-testid="icon-a">*</span> : undefined} />
+            <QuestionnaireChoice value="b" label="Beta" icon={props.icon ? <span data-testid="icon-b">*</span> : undefined} />
+            <QuestionnaireChoice value="c" label="Gamma" icon={props.icon ? <span data-testid="icon-c">*</span> : undefined} />
           </QuestionnaireChoices>
         )}
         <QuestionnaireError>Required</QuestionnaireError>
@@ -90,5 +90,29 @@ describe("Questionnaire", () => {
     render(<Harness text />);
     await userEvent.type(screen.getByLabelText("answer"), "hi");
     expect(screen.getByTestId("value").textContent).toBe('"hi"');
+  });
+
+  it("renders an icon before the label in single-select mode", () => {
+    render(<Harness icon />);
+    expect(screen.getByTestId("icon-a")).toBeInTheDocument();
+  });
+
+  it("renders an icon before the label in multi-select mode", () => {
+    render(<Harness multiple icon />);
+    expect(screen.getByTestId("icon-a")).toBeInTheDocument();
+  });
+
+  it("nudges a refused card when a multi-select pick exceeds max, without changing the value", async () => {
+    render(<Harness multiple max={2} />);
+    const boxes = screen.getAllByRole("checkbox");
+    await userEvent.click(boxes[0]!);
+    await userEvent.click(boxes[1]!);
+    const cards = document.querySelectorAll("label");
+    expect(cards[2]).not.toHaveAttribute("data-refused");
+
+    await userEvent.click(boxes[2]!);
+
+    expect(screen.getByTestId("value").textContent).toBe('["a","b"]');
+    expect(cards[2]).toHaveAttribute("data-refused");
   });
 });

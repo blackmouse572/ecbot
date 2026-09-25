@@ -17,7 +17,11 @@ type ItemContextValue = {
   invalid: boolean;
 };
 const ItemContext = createContext<ItemContextValue | null>(null);
-const ChoicesContext = createContext<{ toggle: (v: string) => void } | null>(null);
+// `refused` names the multi-select value that was just rejected for being
+// past `max`, with a `nonce` so the same value can be refused twice in a
+// row and still retrigger the nudge (section F.6).
+type ChoicesContextValue = { toggle: (v: string) => void; refused: { value: string; nonce: number } | null };
+const ChoicesContext = createContext<ChoicesContextValue | null>(null);
 
 function useItem() {
   const ctx = useContext(ItemContext);
@@ -90,12 +94,15 @@ export function QuestionnaireChoices({ shortcuts, className, children }: { short
   const values = Children.toArray(children)
     .filter(isValidElement)
     .map((child) => (child.props as { value: string }).value);
+  const [refused, setRefused] = useState<{ value: string; nonce: number } | null>(null);
 
   const toggle = (v: string) => {
     if (!item.multiple) return item.setValue(v);
     const current = item.value as string[];
-    if (current.includes(v)) item.setValue(current.filter((x) => x !== v));
-    else if (!item.max || current.length < item.max) item.setValue([...current, v]);
+    if (current.includes(v)) return item.setValue(current.filter((x) => x !== v));
+    if (!item.max || current.length < item.max) return item.setValue([...current, v]);
+    // Past max: refuse the pick and nudge that card instead of changing the value.
+    setRefused({ value: v, nonce: Date.now() });
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
@@ -109,7 +116,7 @@ export function QuestionnaireChoices({ shortcuts, className, children }: { short
 
   const grid = clx("grid gap-2 sm:grid-cols-2", className);
   return (
-    <ChoicesContext.Provider value={{ toggle }}>
+    <ChoicesContext.Provider value={{ toggle, refused }}>
       {item.multiple ? (
         <div role="group" onKeyDown={onKeyDown} className={grid}>{children}</div>
       ) : (
@@ -121,21 +128,56 @@ export function QuestionnaireChoices({ shortcuts, className, children }: { short
   );
 }
 
-export function QuestionnaireChoice({ value, label, description }: { value: string; label: string; description?: string }) {
+// Selected-state transition + refused-nudge shared by both card kinds
+// (section F.5, F.6). Medusa's RadioGroup.Item / Checkbox own their own
+// check/dot indicator internally, so the fade-in-on-select treatment is
+// applied to the card's selected styling instead, per the brief's fallback.
+const CARD_CLASSES = clx(
+  "bg-ui-bg-base hover:bg-ui-bg-base-hover shadow-borders-base flex cursor-pointer items-start gap-x-2 rounded-lg border border-transparent px-3 py-2",
+  "transition-[box-shadow,background-color] duration-150 ease-out motion-reduce:transition-[background-color]",
+  "data-[refused]:animate-refused-nudge motion-reduce:data-[refused]:animate-none",
+  "motion-reduce:data-[refused]:border-ui-border-error motion-reduce:data-[refused]:transition-colors motion-reduce:data-[refused]:duration-150 motion-reduce:data-[refused]:ease-out",
+);
+
+/** How long the `data-refused` attribute stays on a nudged card, matching
+ * the longer of the two nudge/flash durations (F.6) so it resets after
+ * either has finished playing, and can retrigger on the next refusal. */
+const REFUSED_ATTR_MS = 200;
+
+function useRefusedNudge(value: string) {
+  const choices = useContext(ChoicesContext);
+  const [nudging, setNudging] = useState(false);
+  const lastNonce = useRef(0);
+  useEffect(() => {
+    if (choices?.refused?.value !== value || choices.refused.nonce === lastNonce.current) return;
+    lastNonce.current = choices.refused.nonce;
+    setNudging(true);
+    const timer = setTimeout(() => setNudging(false), REFUSED_ATTR_MS);
+    return () => clearTimeout(timer);
+  }, [choices?.refused, value]);
+  return nudging;
+}
+
+export function QuestionnaireChoice({
+  value, label, description, icon,
+}: { value: string; label: string; description?: string; icon?: ReactNode }) {
   const item = useItem();
   const choices = useContext(ChoicesContext);
   const id = useId();
-  if (!item.multiple) return <RadioGroup.ChoiceBox value={value} label={label} description={description ?? ""} />;
-  const checked = (item.value as string[]).includes(value);
+  const nudging = useRefusedNudge(value);
+  const checked = item.multiple ? (item.value as string[]).includes(value) : item.value === value;
   return (
     <label
       htmlFor={id}
-      className={clx(
-        "bg-ui-bg-base hover:bg-ui-bg-base-hover shadow-borders-base flex cursor-pointer items-start gap-x-2 rounded-lg px-3 py-2 transition-shadow",
-        checked && "shadow-borders-interactive-with-active",
-      )}
+      data-refused={nudging ? "" : undefined}
+      className={clx(CARD_CLASSES, checked && "shadow-borders-interactive-with-active")}
     >
-      <Checkbox id={id} checked={checked} onCheckedChange={() => choices?.toggle(value)} />
+      {item.multiple ? (
+        <Checkbox id={id} checked={checked} onCheckedChange={() => choices?.toggle(value)} />
+      ) : (
+        <RadioGroup.Item value={value} id={id} />
+      )}
+      {icon && <span className="text-ui-fg-subtle mt-0.5 shrink-0">{icon}</span>}
       <span className="flex flex-col">
         <Text size="small" weight="plus">{label}</Text>
         {description && <Text size="small" className="text-ui-fg-subtle">{description}</Text>}

@@ -10,6 +10,7 @@
     "./table": "./src/components/table/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./styles/ai.css": "./src/styles/ai.css",
+    "./styles/questionnaire.css": "./src/styles/questionnaire.css",
     "./*": "./src/*.tsx"
   },
   "scripts": {
