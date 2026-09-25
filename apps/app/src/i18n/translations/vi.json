@@ -2192,6 +2192,13 @@
     "messages": "Tin nhắn",
     "tokens": "Token",
     "export": "Xuất CSV",
+    "range": {
+      "label": "Khoảng thời gian",
+      "7d": "7 ngày qua",
+      "30d": "30 ngày qua",
+      "90d": "90 ngày qua",
+      "all": "Toàn bộ"
+    },
     "settings": {
       "title": "Cảnh báo sắp hết quota",
       "description": "Cảnh báo chủ workspace khi quota còn lại thấp hơn tỷ lệ này.",
