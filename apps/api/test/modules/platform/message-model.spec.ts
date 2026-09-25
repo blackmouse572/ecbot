@@ -60,6 +60,13 @@ describe('message-model images', () => {
         ]);
     });
 
+    it('replyMessages() does not read an image whose alt text spans lines', () => {
+        // apps/ai screens only single-line alt text, so a multi-line one was
+        // never checked against the knowledge base and must stay text.
+        const segment = '![a\nb](https://evil.example/x.png)';
+        expect(replyMessages(segment)).toEqual([text(segment)]);
+    });
+
     it('replyMessages() leaves plain text as one text message', () => {
         expect(replyMessages('hello')).toEqual([text('hello')]);
     });
