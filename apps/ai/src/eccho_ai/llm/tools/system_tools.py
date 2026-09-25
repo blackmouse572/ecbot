@@ -427,7 +427,7 @@ async def cancel_followup(followup_id: str) -> dict[str, Any]:
 
 @tool
 async def send_image(url: str) -> dict[str, Any]:
-    """Send an image to the customer as its own message, after any text you
+    """Send an image to the user as its own message, after any text you
     wrote before this call. `url` must be an image URL that appears in your
     instructions or knowledge base; other URLs are rejected."""
     if not await is_known_image_url(_get_chatbot(), url):

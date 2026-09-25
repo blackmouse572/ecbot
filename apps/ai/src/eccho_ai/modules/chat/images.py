@@ -1,6 +1,6 @@
-"""Image understanding for inbound customer images.
+"""Image understanding for inbound user images.
 
-A vision model (VISION_MODEL) turns the customer's images into a neutral
+A vision model (VISION_MODEL) turns the user's images into a neutral
 description plus a verbatim transcription of any visible text, appended to the
 message. Everything downstream (input guardrail, RAG retrieval, the agent)
 then works on text, so any chatbot model can answer — and what the business
@@ -22,14 +22,14 @@ from eccho_ai.modules.chat.models.chat_models import ChatRequest
 logger = get_logger(__name__)
 
 _DESCRIBE_PROMPT = (
-    "A customer sent these images in a chat with a business. Describe what they show, "
+    "A user sent these images in a chat with a business. Describe what they show, "
     "factually and concisely: the kind of image (photo, flyer, banner, screenshot, "
     "document…), the main subjects and their distinguishing details. Then transcribe "
     "all visible text verbatim (names, dates, times, prices, addresses, codes). "
     "Do not guess anything that is not visible."
 )
 _NO_USAGE: dict[str, int] = {}
-_UNREADABLE_NOTE = "[The customer sent an image that could not be viewed.]"
+_UNREADABLE_NOTE = "[The user sent an image that could not be viewed.]"
 
 
 async def fetch_image_data_url(url: str) -> str | None:
@@ -77,7 +77,7 @@ async def with_image_description(
 
     description, usage = await _describe(urls[: AppVars.VISION_MAX_IMAGES])
     note = (
-        f"[The customer sent {len(urls)} image(s). Image description: {description}]"
+        f"[The user sent {len(urls)} image(s). Image description: {description}]"
         if description
         else _UNREADABLE_NOTE
     )

@@ -53,10 +53,10 @@ within these quality guardrails.
   </accuracy>
 
   <images>
-    - When the customer sends images, their message carries an "Image
+    - When the user sends images, their message carries an "Image
       description" (including any text visible in them). Treat it as what the
-      customer showed you and respond as the operator instructions direct.
-    - To show the customer an image, call send_image with its URL. Only URLs
+      user showed you and respond as the operator instructions direct.
+    - To show the user an image, call send_image with its URL. Only URLs
       from your instructions or knowledge base work; never invent one.
   </images>
 
