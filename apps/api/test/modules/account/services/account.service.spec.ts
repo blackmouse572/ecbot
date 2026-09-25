@@ -262,6 +262,35 @@ describe('AccountService - findOneByIdOrSlug', () => {
     });
 });
 
+describe('AccountService - findAccountsNotBelongingToAnyChatbot', () => {
+    let service: AccountService;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockAccountRepository.find.mockResolvedValue([]);
+        service = buildService();
+    });
+
+    // Accounts orphaned on a soft-deleted chatbot are free to reuse, the
+    // same as accounts with no chatbot at all.
+    it('treats an account whose chatbot is soft-deleted as unlinked', async () => {
+        await service.findAccountsNotBelongingToAnyChatbot('workspace-uuid-1');
+
+        const [where] = mockAccountRepository.find.mock.calls[0];
+        expect(where).toEqual(
+            expect.objectContaining({
+                deletedAt: null,
+                workspace: 'workspace-uuid-1',
+                $or: [
+                    { chatbot: null },
+                    { chatbot: { deletedAt: { $ne: null } } },
+                ],
+            })
+        );
+        expect(where).not.toHaveProperty('chatbot');
+    });
+});
+
 describe('AccountService - deleteSyncAccount', () => {
     let service: AccountService;
 

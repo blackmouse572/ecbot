@@ -267,9 +267,13 @@ export class AccountService implements IAccountService {
         workspaceId?: string,
         options?: IDatabaseFindAllOptions
     ): Promise<AccountEntity[]> {
+        // A soft-deleted chatbot's accounts count as unlinked too.
         const find: Record<string, any> = {
             deletedAt: null,
-            chatbot: null,
+            $or: [
+                { chatbot: null },
+                { chatbot: { deletedAt: { $ne: null } } },
+            ],
             ...(workspaceId && { workspace: workspaceId }),
         };
 

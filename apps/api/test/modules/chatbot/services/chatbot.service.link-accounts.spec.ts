@@ -114,7 +114,36 @@ describe('ChatbotService.linkBatchAccounts', () => {
         await service.linkBatchAccounts(chatbot, ['a1']);
 
         expect(accountRepository.find).toHaveBeenCalledWith(
-            expect.objectContaining({ workspace: 'ws-1' })
+            expect.objectContaining({ workspace: 'ws-1' }),
+            expect.anything()
+        );
+    });
+
+    it('treats an account whose owner chatbot is soft-deleted as free and links it', async () => {
+        const chatbot = makeChatbot('bot-1');
+        accountRepository.find.mockResolvedValue([
+            {
+                id: 'a4',
+                name: 'Orphaned Account',
+                chatbot: { id: 'bot-deleted', deletedAt: new Date() },
+            },
+        ]);
+
+        const result = await service.linkBatchAccounts(chatbot, ['a4']);
+
+        expect(result).toEqual({ linked: ['a4'], skipped: [] });
+        expect(chatbot.accounts.getItems().map(a => a.id)).toEqual(['a4']);
+    });
+
+    it("populates each account's owner chatbot so its deletedAt is known", async () => {
+        const chatbot = makeChatbot('bot-1');
+        accountRepository.find.mockResolvedValue([]);
+
+        await service.linkBatchAccounts(chatbot, ['a1']);
+
+        expect(accountRepository.find).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ populate: ['chatbot'] })
         );
     });
 });

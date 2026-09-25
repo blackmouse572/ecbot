@@ -259,13 +259,11 @@ export class ChatbotService implements IChatbotService {
               }
             : {};
 
-        // Handle accounts separately if provided
+        // Accounts never go through assign; the collection is touched only
+        // for a non-empty list, so `accounts: []` can never clear it.
+        const { accounts: accountIds, ...assignableFields } = updateDto;
         const hasAccountUpdates =
-            Array.isArray(updateDto.accounts) && updateDto.accounts.length > 0;
-        const { accounts: accountIds, ...fieldsWithoutAccounts } = updateDto;
-        const assignableFields = hasAccountUpdates
-            ? fieldsWithoutAccounts
-            : updateDto;
+            Array.isArray(accountIds) && accountIds.length > 0;
 
         // Take the prompt keys out so an `undefined` from pickFields can
         // never overwrite them; resolvePromptFields decides instead.
@@ -306,7 +304,7 @@ export class ChatbotService implements IChatbotService {
         return saved;
     }
 
-    softDelete(
+    async softDelete(
         repository: ChatbotEntity,
         options?: IDatabaseSaveOptions & { actionBy?: string }
     ): Promise<ChatbotEntity> {
@@ -316,6 +314,12 @@ export class ChatbotService implements IChatbotService {
                 message: 'chatbot.error.notFound',
             });
         }
+        // Frees the deleted chatbot's channels (account.chatbot = null) in
+        // the same flush, so they can be linked to another chatbot.
+        if (!repository.accounts.isInitialized()) {
+            await repository.accounts.init();
+        }
+        repository.accounts.removeAll();
         repository.deletedAt = new Date();
         return this.chatbotRepository.save(repository, options);
     }
@@ -447,10 +451,15 @@ export class ChatbotService implements IChatbotService {
 
         // Loaded fresh from the database (never trusted from the client),
         // scoped to this chatbot's own workspace.
-        const accounts = await this.accountRepository.find({
-            id: { $in: uniqueIds },
-            workspace: chatbot.workspace.id,
-        } as FilterQuery<AccountEntity>);
+        // The owner chatbot is populated so a soft-deleted owner (whose
+        // accounts were never unlinked) counts as free.
+        const accounts = await this.accountRepository.find(
+            {
+                id: { $in: uniqueIds },
+                workspace: chatbot.workspace.id,
+            } as FilterQuery<AccountEntity>,
+            { populate: ['chatbot'] }
+        );
         const accountById = new Map(accounts.map(acc => [acc.id, acc]));
 
         const linked: string[] = [];
@@ -465,8 +474,8 @@ export class ChatbotService implements IChatbotService {
                 continue;
             }
 
-            const ownerId = account.chatbot?.id;
-            if (ownerId && ownerId !== chatbot.id) {
+            const owner = account.chatbot;
+            if (owner && owner.id !== chatbot.id && !owner.deletedAt) {
                 skipped.push({ id: account.id, name: account.name });
                 continue;
             }
