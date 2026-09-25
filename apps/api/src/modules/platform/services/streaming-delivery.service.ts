@@ -4,6 +4,8 @@ import { StringDecoder } from 'string_decoder';
 import { PlatformAdapter } from '../adapters/platform-adapter.base';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { ReplySegment, segmentMessages } from '../interfaces/message-model';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
+import { botImage } from '@app/modules/conversation/utils/message-attachment';
 import { ReplySegmenter } from '../utils/reply-segmenter';
 import {
     parseWireTokenUsage,
@@ -29,7 +31,7 @@ export interface StreamingDeliverParams {
     /** Persist one outbound message, return the clientNonce. */
     onSegmentPersist: (
         segmentText: string,
-        attachments?: unknown[]
+        attachments?: IMessageAttachment[]
     ) => Promise<string>;
     onSent: (nonce: string, externalId: string) => Promise<void>;
     onFailed: (nonce: string) => Promise<void>;
@@ -396,9 +398,7 @@ export class StreamingDelivery {
         for (const msg of segmentMessages(segment)) {
             const nonce =
                 msg.content.kind === 'media'
-                    ? await p.onSegmentPersist('', [
-                          { type: 'image', url: msg.content.url },
-                      ])
+                    ? await p.onSegmentPersist('', [botImage(msg.content.url)])
                     : await p.onSegmentPersist(msg.fallbackText);
             try {
                 const { externalId } = await p.adapter.sendMessage(

@@ -20,11 +20,12 @@ import {
     MESSAGE_HISTORY_WINDOW,
     MESSAGE_TYPING_REFRESH_MS,
 } from '../constants/message-debounce.constant';
+import { text as toText } from '../interfaces/message-model';
 import {
-    imageHistoryNote,
-    imageUrls,
-    text as toText,
-} from '../interfaces/message-model';
+    forTurn,
+    historyNote,
+} from '@app/modules/conversation/utils/message-attachment';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
 import { GenerationLeaseService } from './generation-lease.service';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
@@ -166,7 +167,7 @@ export class ReplyGenerationService {
                     content: [
                         m.text,
                         m.direction === ENUM_MESSAGE_DIRECTION.INBOUND
-                            ? imageHistoryNote(m.attachments)
+                            ? historyNote(m.attachments ?? [])
                             : '',
                     ]
                         .filter(Boolean)
@@ -179,22 +180,23 @@ export class ReplyGenerationService {
             const burst = await Promise.all(
                 [...burstRows].map(async m => ({
                     id: m.id,
-                    attachments: await this.messageMedia.resolve(
-                        m.attachments,
-                        conversationId
+                    images: forTurn(
+                        await this.messageMedia.resolve(
+                            m.attachments,
+                            conversationId
+                        )
                     ),
                 }))
             );
             const attachments = burst.flatMap(m =>
-                imageUrls(m.attachments).map(url => ({
+                m.images.urls.map(url => ({
                     attachment_id: m.id,
                     preview_url: url,
                 }))
             );
-            const unviewable = burst
-                .flatMap(m => m.attachments)
-                .filter(a => a.type === 'image' && !a.url)
-                .map(() => UNVIEWABLE_IMAGE_NOTE);
+            const unviewable = burst.flatMap(m =>
+                Array<string>(m.images.unviewable).fill(UNVIEWABLE_IMAGE_NOTE)
+            );
             const message = [combinedText, ...unviewable]
                 .filter(Boolean)
                 .join('\n');
@@ -258,7 +260,7 @@ export class ReplyGenerationService {
                         this.lease.isCurrent(conversationId, myEpoch),
                     onSegmentPersist: async (
                         segmentText: string,
-                        attachments?: unknown[]
+                        attachments?: IMessageAttachment[]
                     ) => {
                         const clientNonce = randomUUID();
                         await this.messageRepository.insertPendingOutbound(

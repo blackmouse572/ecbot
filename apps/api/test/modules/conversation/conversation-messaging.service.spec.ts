@@ -183,11 +183,9 @@ describe('ConversationMessagingService', () => {
             ).not.toHaveBeenCalled();
         });
 
-        it('persists attachments in the DB record but sends plain text to the platform adapter', async () => {
-            const attachments = [
-                { type: 'image', url: 'https://example.com/img.png' },
-            ];
-
+        // Operators cannot attach images: attachments were stored but never
+        // delivered, so the inbox showed images the customer never got.
+        it('stores and sends an operator reply as text only', async () => {
             mockConversationRepository.findOneById.mockResolvedValue(
                 conversation
             );
@@ -202,17 +200,13 @@ describe('ConversationMessagingService', () => {
             await service.sendOperatorReply(
                 'conv-1',
                 'operator-user-id',
-                'See attached',
-                attachments
+                'See attached'
             );
 
             expect(
-                mockMessageRepository.insertPendingOutbound
-            ).toHaveBeenCalledWith(
-                'conv-1',
-                expect.any(String),
-                expect.objectContaining({ attachments })
-            );
+                mockMessageRepository.insertPendingOutbound.mock.calls[0][2]
+                    .attachments
+            ).toBeUndefined();
             expect(mockAdapter.sendMessage).toHaveBeenCalledWith(
                 facebookAccount,
                 'user-psid-456',
@@ -541,9 +535,9 @@ describe('ConversationMessagingService', () => {
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
                 conversation: { id: 'c' },
                 attachments: [
-                    { type: 'image', url: 'https://cdn/s.jpg', raw: { x: 1 } },
+                    // Already parsed by MessageAttachmentsType when read.
+                    { type: 'image', url: 'https://cdn/s.jpg' },
                     { type: 'image', key: 'conversations/c/a.jpg' },
-                    'junk',
                 ],
             } as unknown as MessageEntity);
 

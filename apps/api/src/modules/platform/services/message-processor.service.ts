@@ -1,4 +1,5 @@
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
@@ -19,7 +20,6 @@ import {
     PlatformWebhookEvent,
 } from '../interfaces/platform-adapter.interface';
 import { PlatformAdapter } from '../adapters/platform-adapter.base';
-import { hasImage } from '../interfaces/message-model';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import { fetchAsBase64 } from '@app/common/utils/fetch-as-base64.util';
 import { MessageDebounceService } from './message-debounce.service';
@@ -76,8 +76,8 @@ export class MessageProcessorService implements OnModuleInit {
         // Allow action events (postback/quick_reply) through even when kind != 'message'
         if (event.kind !== 'message' && !event.action) return;
         // An image with no caption is still a customer turn (the AI describes it).
-        if (!event.text && !event.action && !hasImage(event.attachments))
-            return;
+        const hasImage = event.attachments?.some(a => a.type === 'image');
+        if (!event.text && !event.action && !hasImage) return;
 
         const account = await this.accountService.findOne(
             { externalId: event.accountKey },
@@ -358,11 +358,11 @@ export class MessageProcessorService implements OnModuleInit {
         account: AccountEntity,
         conversationId: string,
         attachments?: PlatformAttachment[]
-    ): Promise<unknown[] | undefined> {
+    ): Promise<IMessageAttachment[] | undefined> {
         if (!attachments?.length) return undefined;
         return Promise.all(
             attachments.map(async ({ type, url, raw }) => {
-                const kept = url ? { type, url } : { type };
+                const kept: IMessageAttachment = url ? { type, url } : { type };
                 if (type !== 'image') return kept;
                 try {
                     const media = await adapter.fetchMedia(account, {

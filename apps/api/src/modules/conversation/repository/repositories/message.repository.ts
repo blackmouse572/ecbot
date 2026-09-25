@@ -7,6 +7,8 @@ import {
     ENUM_MESSAGE_DIRECTION,
     ENUM_MESSAGE_STATUS,
 } from '../../enums/message.enum';
+import { IMessageAttachment } from '../../interfaces/message-media.interface';
+import { withDescription } from '../../utils/message-attachment';
 import { MessageEntity, MessageReaction } from '../entities/message.entity';
 
 export interface IMessageUpsertData {
@@ -14,7 +16,7 @@ export interface IMessageUpsertData {
     authorType: ENUM_MESSAGE_AUTHOR;
     authorId: string;
     text?: string;
-    attachments?: unknown[];
+    attachments?: IMessageAttachment[];
     raw?: unknown;
     dateSent: Date;
 }
@@ -23,7 +25,7 @@ export interface IMessageOutboundData {
     authorType: ENUM_MESSAGE_AUTHOR;
     authorId: string;
     text?: string;
-    attachments?: unknown[];
+    attachments?: IMessageAttachment[];
     dateSent: Date;
 }
 
@@ -64,11 +66,7 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         await this.updateEntity(
             { id: messageId } as any,
             {
-                attachments: message.attachments.map(a =>
-                    (a as { type?: unknown } | null)?.type === 'image'
-                        ? { ...(a as object), description }
-                        : a
-                ),
+                attachments: withDescription(message.attachments, description),
             } as any
         );
     }

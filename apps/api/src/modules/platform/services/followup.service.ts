@@ -1,4 +1,5 @@
 import { AccountService } from '@app/modules/account/services/account.service';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import {
     AIChatHistoryMessage,
     ChatbotAIService,
@@ -305,7 +306,7 @@ export class FollowupService {
                 isCurrent: async () => true,
                 onSegmentPersist: async (
                     segmentText: string,
-                    attachments?: unknown[]
+                    attachments?: IMessageAttachment[]
                 ) => {
                     const nonce = randomUUID();
                     await this.messageRepository.insertPendingOutbound(

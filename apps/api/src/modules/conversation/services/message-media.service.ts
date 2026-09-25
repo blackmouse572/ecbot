@@ -43,18 +43,16 @@ export class MessageMediaService {
     }
 
     /** Stored attachments → `{ type, url }` for the inbox and the AI. Only
-     *  keys under this conversation's folder are signed: `attachments` can
-     *  come from an operator, and the private bucket holds other files too. */
+     *  keys under this conversation's folder are signed: the private bucket
+     *  holds other files too. */
     async resolve(
-        attachments: unknown[] | undefined,
+        attachments: IMessageAttachment[] | undefined,
         conversationId: string
     ): Promise<IMessageAttachment[]> {
-        const valid = (attachments ?? []).filter(
-            (a): a is IMessageAttachment =>
-                typeof (a as IMessageAttachment | null)?.type === 'string'
-        );
         const folder = `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}/`;
-        return Promise.all(valid.map(a => this.resolveOne(a, folder)));
+        return Promise.all(
+            (attachments ?? []).map(a => this.resolveOne(a, folder))
+        );
     }
 
     private async resolveOne(

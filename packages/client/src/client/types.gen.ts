@@ -700,6 +700,17 @@ export type WidgetSendMessageRequestDto = {
     turnstileToken?: string;
 };
 
+export type MessageAttachmentResponseDto = {
+    /**
+     * Attachment kind
+     */
+    type: string;
+    /**
+     * Media URL, when known
+     */
+    url?: string;
+};
+
 export type WidgetMessageResponseDto = {
     /**
      * Message id — pass back as the poll cursor
@@ -713,6 +724,10 @@ export type WidgetMessageResponseDto = {
      * Message text
      */
     text?: string;
+    /**
+     * Images on this message (e.g. ones the bot sent)
+     */
+    attachments?: Array<MessageAttachmentResponseDto>;
     /**
      * When it was sent
      */
@@ -4327,6 +4342,10 @@ export type MessageGetResponseDto = {
         [key: string]: unknown;
     }>;
     /**
+     * Images and other media on this message
+     */
+    attachments?: Array<MessageAttachmentResponseDto>;
+    /**
      * Reactions left on this message
      */
     reactions?: Array<MessageReactionResponseDto>;
@@ -4337,12 +4356,6 @@ export type ConversationSendMessageRequestDto = {
      * Message text to send to the customer
      */
     text: string;
-    /**
-     * Optional attachments (platform-specific payload)
-     */
-    attachments?: Array<{
-        [key: string]: unknown;
-    }>;
 };
 
 export type ConversationReactToMessageRequestDto = {

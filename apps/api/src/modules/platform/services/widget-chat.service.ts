@@ -1,4 +1,5 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
+import { botImage } from '@app/modules/conversation/utils/message-attachment';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import {
     AIChatHistoryMessage,
@@ -216,7 +217,7 @@ export class WidgetChatService {
     ): Promise<void> {
         // The row IS the delivery for this channel — the visitor already saw the
         // stream, and their poll reads this back on the next page load.
-        const attachments = images.map(url => ({ type: 'image', url }));
+        const attachments = images.map(botImage);
         const nonce = randomUUID();
         await this.messageRepository.insertPendingOutbound(
             conversationId,

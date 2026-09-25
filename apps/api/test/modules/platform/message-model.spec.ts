@@ -2,7 +2,6 @@ import {
     text,
     encodeActionPayload,
     decodeActionPayload,
-    imageUrls,
     segmentMessages,
 } from '../../../src/modules/platform/interfaces/message-model';
 
@@ -30,18 +29,6 @@ describe('message-model builders', () => {
 });
 
 describe('message-model images', () => {
-    it('imageUrls() keeps only image attachments that carry a url', () => {
-        expect(
-            imageUrls([
-                { type: 'image', url: 'https://cdn/a.jpg' },
-                { type: 'image' },
-                { type: 'video', url: 'https://cdn/v.mp4' },
-                'junk',
-            ])
-        ).toEqual(['https://cdn/a.jpg']);
-        expect(imageUrls(undefined)).toEqual([]);
-    });
-
     it('segmentMessages() sends the text, then each image', () => {
         expect(
             segmentMessages({

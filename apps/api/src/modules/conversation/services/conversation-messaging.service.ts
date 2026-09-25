@@ -62,8 +62,7 @@ export class ConversationMessagingService {
     async sendOperatorReply(
         conversationId: string,
         operatorId: string,
-        text: string,
-        attachments?: unknown[]
+        text: string
     ): Promise<MessageEntity> {
         const conversation = await this.conversationRepository.findOneById(
             conversationId,
@@ -87,7 +86,6 @@ export class ConversationMessagingService {
                 authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
                 authorId: operatorId,
                 text,
-                attachments,
                 dateSent: new Date(),
             }
         );

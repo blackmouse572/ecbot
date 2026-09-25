@@ -37,7 +37,6 @@ describe('MessageMediaService', () => {
                 { type: 'image', key: 'conversations/c/a.jpg' },
                 { type: 'image', url: 'https://kb/shirt.jpg' },
                 { type: 'video' },
-                'junk',
             ],
             'c'
         );

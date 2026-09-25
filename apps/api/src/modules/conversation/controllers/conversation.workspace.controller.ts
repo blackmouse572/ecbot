@@ -392,8 +392,7 @@ export class ConversationWorkspaceController {
             await this.conversationMessagingService.sendOperatorReply(
                 id,
                 user.id,
-                dto.text,
-                dto.attachments
+                dto.text
             );
 
         const conversation = await this.conversationService.findOneById(id);
