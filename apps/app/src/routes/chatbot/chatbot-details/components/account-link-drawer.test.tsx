@@ -76,6 +76,19 @@ describe("AccountLinkDrawer", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it("shows the generic failure toast (not 'already used') when the id is in neither linked nor skipped", async () => {
+    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-1", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
+    linkChatbotAccount.mockResolvedValue({ data: { data: { linked: [], skipped: [] } } });
+
+    const user = userEvent.setup();
+    render(<AccountLinkDrawer isOpen chatbotId="bot-1" onClose={onClose} />);
+    await user.click(screen.getByRole("button", { name: "actions.add" }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("chatbot.details.accountLinkFailed"));
+    expect(toast.error).not.toHaveBeenCalledWith(expect.stringContaining("agentBuilder.ui.channelInUse"));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it("shows the generic failure toast when the mutation itself rejects", async () => {
     unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-1", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
     linkChatbotAccount.mockRejectedValue(new Error("down"));

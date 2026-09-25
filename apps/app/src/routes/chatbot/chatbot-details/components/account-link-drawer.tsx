@@ -43,8 +43,14 @@ export function AccountLinkDrawer({ isOpen, onClose, chatbotId }: Props) {
         onClose();
         return;
       }
-      const skippedName = result?.skipped?.find((s) => s.id === accountId)?.name ?? accountName;
-      toast.error(t("agentBuilder.ui.channelInUse", { name: skippedName }));
+      const skipped = result?.skipped?.find((s) => s.id === accountId);
+      // Only an explicit skip means "already used"; anything else is an
+      // unexpected response, reported as a generic failure.
+      toast.error(
+        skipped
+          ? t("agentBuilder.ui.channelInUse", { name: skipped.name ?? accountName })
+          : t("chatbot.details.accountLinkFailed"),
+      );
     } catch {
       toast.error(t("chatbot.details.accountLinkFailed"));
     }
