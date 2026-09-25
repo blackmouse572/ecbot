@@ -1,13 +1,7 @@
 import { AccountService } from '@app/modules/account/services/account.service';
-import {
-    AIChatHistoryMessage,
-    ChatbotAIService,
-} from '@app/modules/chatbot/services/chatbot-ai.service';
+import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
-import {
-    ENUM_MESSAGE_AUTHOR,
-    ENUM_MESSAGE_DIRECTION,
-} from '@app/modules/conversation/enums/message.enum';
+import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { ManifestBuilderService } from '@app/modules/tool/services/manifest-builder.service';
@@ -15,18 +9,10 @@ import { MikroORM, RequestContext } from '@mikro-orm/core';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
-import { UNVIEWABLE_IMAGE_NOTE } from '../constants/media.constant';
-import {
-    MESSAGE_HISTORY_WINDOW,
-    MESSAGE_TYPING_REFRESH_MS,
-} from '../constants/message-debounce.constant';
+import { MESSAGE_TYPING_REFRESH_MS } from '../constants/message-debounce.constant';
 import { text as toText } from '../interfaces/message-model';
-import {
-    forTurn,
-    historyNote,
-} from '@app/modules/conversation/utils/message-attachment';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
-import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
+import { TurnContextService } from './turn-context.service';
 import { GenerationLeaseService } from './generation-lease.service';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import {
@@ -61,7 +47,7 @@ export class ReplyGenerationService {
         private readonly moduleRef: ModuleRef,
         private readonly orm: MikroORM,
         private readonly manifestBuilder: ManifestBuilderService,
-        private readonly messageMedia: MessageMediaService,
+        private readonly turnContext: TurnContextService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -136,70 +122,15 @@ export class ReplyGenerationService {
 
         startTyping();
         try {
-            const combinedText = texts.join('\n');
             const tools = await this.manifestBuilder.build(
                 chatbot.id,
                 chatbot.workspace.id
             );
 
-            // The AI agent is stateless (no LangGraph checkpointer), so we supply
-            // conversation context each turn from the DB (the message source of
-            // truth). The current burst is already persisted as the last
-            // `texts.length` inbound rows (a reply to an earlier burst can sit
-            // between them), so leave those out to avoid duplicating the turn
-            // we're about to send as `message`.
-            const recent =
-                await this.messageRepository.findRecentByConversation(
-                    conversationId,
-                    MESSAGE_HISTORY_WINDOW + texts.length
-                );
-            const burstRows = new Set(
-                recent
-                    .filter(m => m.direction === ENUM_MESSAGE_DIRECTION.INBOUND)
-                    .slice(-texts.length)
-            );
-            const prior = recent.filter(m => !burstRows.has(m));
-            // The bot's own images stay out: the model copied an assistant
-            // "[image]" into its replies, and its text says what it showed.
-            const history: AIChatHistoryMessage[] = prior
-                .map(m => ({
-                    role: this.roleFor(m.authorType, m.direction),
-                    content: [
-                        m.text,
-                        m.direction === ENUM_MESSAGE_DIRECTION.INBOUND
-                            ? historyNote(m.attachments ?? [])
-                            : '',
-                    ]
-                        .filter(Boolean)
-                        .join(' '),
-                }))
-                .filter(m => m.content);
-            // Images in this burst go to apps/ai (which describes them), as
-            // short-lived urls for the ones stored privately. One with no url
-            // (a Telegram photo whose download failed) becomes a note instead.
-            const burst = await Promise.all(
-                [...burstRows].map(async m => ({
-                    id: m.id,
-                    images: forTurn(
-                        await this.messageMedia.resolve(
-                            m.attachments,
-                            conversationId
-                        )
-                    ),
-                }))
-            );
-            const attachments = burst.flatMap(m =>
-                m.images.urls.map(url => ({
-                    attachment_id: m.id,
-                    preview_url: url,
-                }))
-            );
-            const unviewable = burst.flatMap(m =>
-                Array<string>(m.images.unviewable).fill(UNVIEWABLE_IMAGE_NOTE)
-            );
-            const message = [combinedText, ...unviewable]
-                .filter(Boolean)
-                .join('\n');
+            // The agent is stateless: history, the burst's message and its
+            // images come from the DB each Turn.
+            const { history, message, attachments } =
+                await this.turnContext.build(conversationId, texts);
 
             const triggerMessage =
                 await this.messageRepository.findLatestInbound(conversationId);
@@ -379,15 +310,6 @@ export class ReplyGenerationService {
         } finally {
             stopTyping();
         }
-    }
-
-    private roleFor(
-        _authorType: ENUM_MESSAGE_AUTHOR,
-        direction: ENUM_MESSAGE_DIRECTION
-    ): AIChatHistoryMessage['role'] {
-        return direction === ENUM_MESSAGE_DIRECTION.INBOUND
-            ? 'user'
-            : 'assistant';
     }
 
     /**

@@ -1,3 +1,4 @@
+import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import {
     ENUM_MESSAGE_AUTHOR,
@@ -56,6 +57,12 @@ function setup(overrides: Record<string, any> = {}) {
         check: jest.fn().mockResolvedValue({ allowed: true }),
         record: jest.fn(),
     };
+    // The real Turn context over the fake repository (widget visitors send
+    // no images, so nothing is signed).
+    const turnContext = new TurnContextService(
+        messageRepository as any,
+        { resolve: async (list: unknown[] = []) => list } as any
+    );
 
     const service = new WidgetChatService(
         customerService as any,
@@ -63,6 +70,7 @@ function setup(overrides: Record<string, any> = {}) {
         messageRepository as any,
         chatbotAIService as any,
         sseStream as any,
+        turnContext,
         meter as any
     );
 
@@ -72,7 +80,8 @@ function setup(overrides: Record<string, any> = {}) {
         conversationService as any,
         messageRepository as any,
         chatbotAIService as any,
-        sseStream as any
+        sseStream as any,
+        turnContext
     );
 
     return {

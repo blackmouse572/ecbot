@@ -190,11 +190,14 @@ describe('FollowupService', () => {
             chatbot: { id: 'cb-1', workspace: { id: 'ws-1' } },
         };
         const image = [{ type: 'image', url: 'https://kb/shirt.jpg' }];
+        const history = [{ role: 'user', content: '[image: A white shirt]' }];
+        const streamChat = jest.fn().mockResolvedValue({});
+        const turnContext = { build: jest.fn().mockResolvedValue({ history }) };
         const service = new FollowupService(
             {} as any,
             makeFollowupRepository([]) as any,
             { findOne: jest.fn().mockResolvedValue(account) } as any,
-            { streamChat: jest.fn().mockResolvedValue({}) } as any,
+            { streamChat } as any,
             { insertPendingOutbound } as any,
             { get: jest.fn().mockReturnValue({}) } as any,
             { build: jest.fn().mockResolvedValue([]) } as any,
@@ -204,14 +207,18 @@ describe('FollowupService', () => {
                     return {};
                 }),
             } as any,
-            {} as any
+            {} as any,
+            turnContext as any
         );
-        jest.spyOn(service as any, 'buildHistory').mockResolvedValue([]);
         jest.spyOn(service as any, 'recordOutcome').mockResolvedValue(
             undefined
         );
 
         await (service as any).generateAndDeliver(null, jobData);
+
+        // A follow-up answers no burst: all recent rows are its history.
+        expect(turnContext.build).toHaveBeenCalledWith('conv-1', []);
+        expect(streamChat.mock.calls[0][0].history).toBe(history);
 
         expect(insertPendingOutbound).toHaveBeenCalledWith(
             'conv-1',

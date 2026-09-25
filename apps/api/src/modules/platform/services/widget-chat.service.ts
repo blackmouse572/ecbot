@@ -1,10 +1,7 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { botImage } from '@app/modules/conversation/utils/message-attachment';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
-import {
-    AIChatHistoryMessage,
-    ChatbotAIService,
-} from '@app/modules/chatbot/services/chatbot-ai.service';
+import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ChatbotAiSseStreamService } from '@app/modules/chatbot/services/chatbot-ai-sse-stream.service';
 import {
     ENUM_MESSAGE_AUTHOR,
@@ -23,7 +20,6 @@ import {
 import { randomUUID } from 'crypto';
 import { Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
-import { MESSAGE_HISTORY_WINDOW } from '../constants/message-debounce.constant';
 import { ENUM_WIDGET_STATUS_CODE_ERROR } from '../enums/widget.status-code.enum';
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
 import {
@@ -31,6 +27,7 @@ import {
     AiUsageMeter,
     ENUM_AI_USAGE_SOURCE,
 } from '@app/app/ai-usage-meter.interface';
+import { TurnContextService } from './turn-context.service';
 
 export interface IWidgetTurn {
     /** WEBSITE_WIDGET account with `chatbot` and `workspace` populated. */
@@ -67,6 +64,7 @@ export class WidgetChatService {
         private readonly messageRepository: MessageRepository,
         private readonly chatbotAIService: ChatbotAIService,
         private readonly sseStream: ChatbotAiSseStreamService,
+        private readonly turnContext: TurnContextService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -121,7 +119,9 @@ export class WidgetChatService {
             return;
         }
 
-        const history = await this.loadHistory(conversation.id, messageId);
+        const { history } = await this.turnContext.build(conversation.id, [
+            text,
+        ]);
 
         // Out of tokens: answer with the fallback line over the same stream the
         // widget is already reading, rather than failing the request.
@@ -185,31 +185,6 @@ export class WidgetChatService {
      * rather than a cache: a widget conversation is durable, and an expiring
      * cache would leave the bot with less context than the operator can see.
      */
-    private async loadHistory(
-        conversationId: string,
-        currentMessageId: string
-    ): Promise<AIChatHistoryMessage[]> {
-        const recent = await this.messageRepository.findRecentByConversation(
-            conversationId,
-            MESSAGE_HISTORY_WINDOW
-        );
-
-        return (
-            recent
-                // Drop the message we just wrote — it is sent as `message`, and
-                // repeating it in `history` makes the agent see it twice.
-                .filter(m => m.externalId !== currentMessageId)
-                .filter(m => !!m.text)
-                .map(m => ({
-                    role:
-                        m.direction === ENUM_MESSAGE_DIRECTION.INBOUND
-                            ? ('user' as const)
-                            : ('assistant' as const),
-                    content: m.text!,
-                }))
-        );
-    }
-
     private async persistReply(
         conversationId: string,
         text: string,

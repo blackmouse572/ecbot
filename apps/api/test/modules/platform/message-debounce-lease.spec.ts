@@ -1,3 +1,4 @@
+import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
 import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
@@ -103,7 +104,7 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             mockModuleRef as any,
             ormStub(),
             manifestBuilder as any,
-            noMedia as any,
+            new TurnContextService(messageRepository as any, noMedia as any),
             meter as any
         );
 
@@ -232,7 +233,7 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             { get: jest.fn(() => conversationService) } as any,
             ormStub(),
             manifestBuilder as any,
-            noMedia as any
+            new TurnContextService(messageRepository as any, noMedia as any)
         );
 
         await unmetered.run(replyInput);

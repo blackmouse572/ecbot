@@ -135,6 +135,10 @@ _Avoid_: request, transaction, run.
 The rapid-fire **sender** messages collapsed into a single **Turn** while the debounce window is open, so the agent replies once to the newest context.
 _Avoid_: batch, group.
 
+**Turn context**:
+What apps/ai receives for one **Turn**: the conversation history, the burst's message, and the burst's images. Built from the database each Turn, because the agent keeps no state between Turns. The burst is the customer's last messages, even when a reply to an earlier burst was saved between them. History notes what the customer showed in images, but leaves out the bot's own images. A follow-up has no burst, so every recent message is history.
+_Avoid_: prompt context, chat history (when you mean all three parts).
+
 **Generation lease**:
 The claim a **Turn** holds on being the newest context for its **Conversation** — a per-conversation epoch in Redis. Every inbound message bumps the epoch; a reply generation captures it at the start and re-checks mid-stream and before send, aborting the AI stream and discarding instead of sending a stale reply when superseded. Aborting the stream drops the `api↔ai` connection so `apps/ai` stops generating (no wasted tokens).
 _Avoid_: lock, mutex, cancellation token.
