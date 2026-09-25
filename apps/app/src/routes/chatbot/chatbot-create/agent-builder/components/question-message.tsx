@@ -9,6 +9,7 @@ import {
 } from "@repo/ui/common-components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { businessTypeIcon } from "./business-type-icon";
 
 type Props = {
   question: Question;
@@ -88,7 +89,12 @@ export function QuestionMessage({ question, profile, suggestion, position, onAns
             ) : (
               <QuestionnaireChoices shortcuts="numbers">
                 {choices.map((c) => (
-                  <QuestionnaireChoice key={c.value} value={c.value} label={t(c.labelKey)} />
+                  <QuestionnaireChoice
+                    key={c.value}
+                    value={c.value}
+                    label={t(c.labelKey)}
+                    icon={question.id === "businessType" ? businessTypeIcon(c.value) : undefined}
+                  />
                 ))}
               </QuestionnaireChoices>
             )}

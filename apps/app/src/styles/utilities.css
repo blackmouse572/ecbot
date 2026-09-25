@@ -2,6 +2,9 @@
 /* AI chat utilities (.shimmer, .scroll-fade-x/-y) live in @repo/ui alongside
    the components that use them (Attachment, MessageScroller, BuildingLoader). */
 @import "@repo/ui/styles/ai.css";
+/* Questionnaire utilities (the refused-pick nudge) live in @repo/ui alongside
+   the Questionnaire component that uses them. */
+@import "@repo/ui/styles/questionnaire.css";
 
 @layer component {
   .focus-modal-header-reverse {
