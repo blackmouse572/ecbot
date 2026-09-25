@@ -940,20 +940,22 @@
       "skipped": "Skipped",
       "yes": "Yes",
       "no": "No",
-      "draftCreated": "Your agent is saved as a draft. Try it in the chat, then keep going.",
+      "draftCreated": "Your agent is saved as a draft. Try it on the right while we keep going.",
       "saveFailed": "Could not save your agent. Your answers are kept, and we will retry on the next answer.",
       "done": "All set. Activate your agent when you are happy with it.",
       "finish": "Activate agent",
       "finished": "Your agent is active. You can change any answer above at any time.",
-      "tryAgent": "Try your agent",
-      "chatTab": "Chat",
-      "promptTab": "What it is told",
-      "testLocked": "Your agent appears here once the Rules step is done.",
+      "tryAgent": "Try agent",
+      "promptTab": "Prompt",
+      "testLocked": "Your agent appears here after the first question.",
       "progress": "Question {{current}} of {{total}}",
       "extraInstructions": "Extra instructions",
       "extraInstructionsHint": "Added at the end of what your agent is told. Leave it empty if your answers cover everything.",
       "editWithBuilder": "Edit with builder",
-      "templateAnswer": "Template: {{name}}"
+      "templateAnswer": "Template: {{name}}",
+      "heroTitle": "Start creating your agent",
+      "heroSubtitle": "Describe your business, or choose a template",
+      "factLead": "Here's the answer:"
     },
     "groups": {
       "identity": "About your business",
@@ -964,47 +966,107 @@
       "interaction": "Conversation style"
     },
     "questions": {
-      "businessType": { "title": "What kind of business is this agent for?" },
+      "businessType": {
+        "title": "What kind of business is this agent for?",
+        "ask": "First, let's talk about your business. What kind of business is it?",
+        "lead": "My business type is:"
+      },
       "businessName": {
         "title": "What is your business called?",
-        "placeholder": "Lotus Nail Spa"
+        "placeholder": "Lotus Nail Spa",
+        "ask": "Great! What should we call your business?",
+        "lead": "My business name is:"
       },
-      "ownerName": { "title": "What should the assistant call you?" },
+      "ownerName": {
+        "title": "What should the assistant call you?",
+        "ask": "Great! What should your assistant call you?",
+        "lead": "Call me:"
+      },
       "agentName": {
         "title": "What should we name your agent?",
-        "placeholder": "Linh"
+        "placeholder": "Linh",
+        "ask": "Nice. Now give your agent a name your customers will see.",
+        "lead": "My agent's name is:"
       },
-      "channels": { "title": "Where do customers message you?" },
+      "channels": {
+        "title": "Where do customers message you?",
+        "ask": "Where do your customers usually message you?",
+        "lead": "My customers message me on:"
+      },
       "goals": {
         "title": "What should your agent do?",
-        "description": "Pick everything that applies."
+        "description": "Pick everything that applies.",
+        "ask": "What would you like your agent to help with?",
+        "lead": "I want my agent to:"
       },
       "greeting": {
         "title": "How should it greet people? (optional)",
-        "placeholder": "Hi! This is Linh from Lotus Nail Spa. How can I help?"
+        "placeholder": "Hi! This is Linh from Lotus Nail Spa. How can I help?",
+        "ask": "How should your agent say hello? You can skip this.",
+        "lead": "My agent greets people with:"
       },
       "difference": {
         "title": "What makes you different? (optional)",
-        "placeholder": "Hand-painted designs, 10 years of experience, free parking"
+        "placeholder": "Hand-painted designs, 10 years of experience, free parking",
+        "ask": "What makes your business special? You can skip this.",
+        "lead": "What makes us special:"
       },
       "personality": {
         "title": "Which words describe your brand?",
-        "description": "Pick up to two."
+        "description": "Pick up to two.",
+        "ask": "Which words best describe your brand?",
+        "lead": "My brand is:"
       },
-      "formality": { "title": "How formal should it be?" },
-      "collect": { "title": "What details should it collect from customers?" },
-      "handoffWhen": { "title": "When should it pass the chat to you?" },
-      "rules": { "title": "What must it never do?" },
+      "formality": {
+        "title": "How formal should it be?",
+        "ask": "How formal should your agent be?",
+        "lead": "My agent should sound:"
+      },
+      "collect": {
+        "title": "What details should it collect from customers?",
+        "ask": "When a customer is ready, what details should your agent collect?",
+        "lead": "Please collect:"
+      },
+      "handoffWhen": {
+        "title": "When should it pass the chat to you?",
+        "ask": "When should your agent hand the chat over to you?",
+        "lead": "Hand over to me when:"
+      },
+      "rules": {
+        "title": "What must it never do?",
+        "ask": "Is there anything your agent must never do?",
+        "lead": "My agent must never:"
+      },
       "unsure": {
-        "title": "What should it do when it does not know the answer?"
+        "title": "What should it do when it does not know the answer?",
+        "ask": "And if your agent doesn't know the answer?",
+        "lead": "When unsure, my agent should:"
       },
-      "replyLength": { "title": "How long should replies be?" },
-      "emoji": { "title": "Should it use emoji?" },
-      "addressStyle": { "title": "How should it address customers?" },
+      "replyLength": {
+        "title": "How long should replies be?",
+        "ask": "How long should replies be?",
+        "lead": "Replies should be:"
+      },
+      "emoji": {
+        "title": "Should it use emoji?",
+        "ask": "Should your agent use emoji?",
+        "lead": "Emoji:"
+      },
+      "addressStyle": {
+        "title": "How should it address customers?",
+        "ask": "How should your agent address customers?",
+        "lead": "My agent should say:"
+      },
       "followUpQuestions": {
-        "title": "Should it ask a follow-up question to keep the chat going?"
+        "title": "Should it ask a follow-up question to keep the chat going?",
+        "ask": "Should your agent ask a follow-up question to keep the chat going?",
+        "lead": "Follow-up questions:"
       },
-      "afterHours": { "title": "What should it do outside opening hours?" }
+      "afterHours": {
+        "title": "What should it do outside opening hours?",
+        "ask": "What should happen outside opening hours?",
+        "lead": "Outside opening hours:"
+      }
     },
     "types": {
       "restaurant": "Restaurant & café",
