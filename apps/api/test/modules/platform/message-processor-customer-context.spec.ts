@@ -22,7 +22,8 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         resetFallbackCount: jest.fn(),
     };
     const messageRepository = {
-        upsertByExternalId: jest.fn(),
+        // The saved inbound row; its id travels with the burst.
+        upsertByExternalId: jest.fn().mockResolvedValue({ id: 'm-in' }),
         insertPendingOutbound: jest.fn(),
         markOutboundSent: jest.fn(),
         markOutboundFailed: jest.fn(),
@@ -141,13 +142,14 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         await processor.process(baseEvent);
 
         expect(messageDebounceService.schedule).toHaveBeenCalledTimes(1);
-        // schedule(conversationId, senderId, customerId, contactPointId, text)
+        // schedule(conversationId, senderId, customerId, contactPointId, text, messageId)
         expect(messageDebounceService.schedule).toHaveBeenCalledWith(
             'conv-existing',
             'sender-fb-1',
             'cust-42',
             'cp-42',
-            'Hello'
+            'Hello',
+            'm-in'
         );
     });
 
@@ -236,6 +238,7 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
                         customerId: 'cust-42',
                         contactPointId: 'cp-42',
                         text: 'Hello',
+                        messageId: 'm-in',
                     }),
                 })
             );

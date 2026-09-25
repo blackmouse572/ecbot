@@ -17,7 +17,7 @@ import {
     UNVIEWABLE_IMAGE_NOTE,
 } from '../constants/media.constant';
 import { MESSAGE_HISTORY_WINDOW } from '../constants/message-debounce.constant';
-import { ITurnContext } from '../interfaces/turn-context.interface';
+import { ITurnBurst, ITurnContext } from '../interfaces/turn-context.interface';
 
 /** One burst image: its message, its position there, and what we know. */
 interface IBurstImage {
@@ -30,8 +30,9 @@ interface IBurstImage {
 /**
  * Builds what apps/ai gets for a Turn from the conversation's rows (the
  * agent is stateless, so context comes from the DB each Turn). The burst is
- * the customer's last `burst.length` rows (a reply to an earlier burst can
- * sit between them); everything before is history. Burst images not yet
+ * the rows of the messages the Turn answers, found by id (a reply to an
+ * earlier burst can sit between them); what came before is history. Burst
+ * images not yet
  * described are described once, in one apps/ai call, and kept on their
  * image so later Turns remember them.
  */
@@ -45,30 +46,30 @@ export class TurnContextService {
         private readonly chatbotAIService: ChatbotAIService
     ) {}
 
-    /** `burst`: the texts of the customer messages this Turn answers ([] for
-     *  a follow-up, which answers none). */
+    /** `burst`: the customer messages this Turn answers (none for a
+     *  follow-up, which answers none). */
     async build(
         conversationId: string,
-        burst: string[],
+        burst: ITurnBurst,
         chatbotId: string
     ): Promise<ITurnContext> {
+        const { texts } = burst;
         const recent = await this.messageRepository.findRecentByConversation(
             conversationId,
-            MESSAGE_HISTORY_WINDOW + burst.length
+            MESSAGE_HISTORY_WINDOW + texts.length
         );
-        const burstRows = new Set(
-            burst.length
-                ? recent
-                      .filter(
-                          m => m.direction === ENUM_MESSAGE_DIRECTION.INBOUND
-                      )
-                      .slice(-burst.length)
-                : []
+        const burstRows = new Set(this.burstRows(recent, burst));
+        // History is what came before the burst; rows saved after it belong
+        // to the next Turn.
+        const lastBurst = Math.max(
+            -1,
+            ...recent.flatMap((m, i) => (burstRows.has(m) ? [i] : []))
         );
+        const earlier = burstRows.size ? recent.slice(0, lastBurst) : recent;
 
         // The bot's own images stay out: the model copied an assistant
         // "[image]" into its replies, and its text says what it showed.
-        const history = recent
+        const history = earlier
             .filter(m => !burstRows.has(m))
             .map(m => {
                 const inbound = m.direction === ENUM_MESSAGE_DIRECTION.INBOUND;
@@ -90,9 +91,23 @@ export class TurnContextService {
 
         return {
             history,
-            message: [burst.join('\n'), ...notes].filter(Boolean).join('\n'),
+            message: [texts.join('\n'), ...notes].filter(Boolean).join('\n'),
             usage,
         };
+    }
+
+    private burstRows(
+        recent: MessageEntity[],
+        { texts, messageIds }: ITurnBurst
+    ): MessageEntity[] {
+        if (messageIds?.length) {
+            const ids = new Set(messageIds);
+            return recent.filter(m => ids.has(m.id));
+        }
+        if (!texts.length) return [];
+        return recent
+            .filter(m => m.direction === ENUM_MESSAGE_DIRECTION.INBOUND)
+            .slice(-texts.length);
     }
 
     private async burstImages(

@@ -94,7 +94,7 @@ export class WidgetChatService {
             contactPointId: contactPoint.id,
         });
 
-        await this.messageRepository.upsertByExternalId(
+        const inbound = await this.messageRepository.upsertByExternalId(
             conversation.id,
             messageId,
             {
@@ -121,7 +121,7 @@ export class WidgetChatService {
 
         const { history } = await this.turnContext.build(
             conversation.id,
-            [text],
+            { texts: [text], messageIds: [inbound.id] },
             chatbot.id
         );
 

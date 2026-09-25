@@ -258,7 +258,7 @@ export class FollowupService {
         // is history.
         const { history } = await this.turnContext.build(
             conversationId,
-            [],
+            { texts: [] },
             chatbot.id
         );
 

@@ -218,26 +218,26 @@ export class MessageProcessorService implements OnModuleInit {
             }
         }
 
-        if (event.externalMessageId) {
-            await this.messageRepository.upsertByExternalId(
-                conversation.id,
-                event.externalMessageId,
-                {
-                    direction: ENUM_MESSAGE_DIRECTION.INBOUND,
-                    authorType: ENUM_MESSAGE_AUTHOR.USER,
-                    authorId: event.senderId,
-                    text: effectiveText,
-                    attachments: await this.storeAttachments(
-                        adapter,
-                        account,
-                        conversation.id,
-                        event.attachments
-                    ),
-                    raw: event.raw,
-                    dateSent: event.timestamp,
-                }
-            );
-        }
+        const inbound = event.externalMessageId
+            ? await this.messageRepository.upsertByExternalId(
+                  conversation.id,
+                  event.externalMessageId,
+                  {
+                      direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                      authorType: ENUM_MESSAGE_AUTHOR.USER,
+                      authorId: event.senderId,
+                      text: effectiveText,
+                      attachments: await this.storeAttachments(
+                          adapter,
+                          account,
+                          conversation.id,
+                          event.attachments
+                      ),
+                      raw: event.raw,
+                      dateSent: event.timestamp,
+                  }
+              )
+            : undefined;
 
         await this.conversationService.touchLastMessage(
             chatbot.id,
@@ -323,6 +323,7 @@ export class MessageProcessorService implements OnModuleInit {
                         customerId,
                         contactPointId: contactPoint.id,
                         text: effectiveText,
+                        messageId: inbound?.id,
                     }),
                 }
             ).catch(err =>
@@ -337,7 +338,8 @@ export class MessageProcessorService implements OnModuleInit {
                     event.senderId,
                     customerId,
                     contactPoint.id,
-                    effectiveText
+                    effectiveText,
+                    inbound?.id
                 )
                 .catch(err =>
                     this.logger.warn(

@@ -118,7 +118,7 @@ describe('ReplyGenerationService.run', () => {
 
         expect(turnContext.build).toHaveBeenCalledWith(
             'c',
-            ['giá bao nhiêu?'],
+            { texts: ['giá bao nhiêu?'], messageIds: undefined },
             'bot-1'
         );
         expect(streamChat.mock.calls[0][0]).toEqual(

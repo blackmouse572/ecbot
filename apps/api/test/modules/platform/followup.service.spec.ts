@@ -217,7 +217,11 @@ describe('FollowupService', () => {
         await (service as any).generateAndDeliver(null, jobData);
 
         // A follow-up answers no burst: all recent rows are its history.
-        expect(turnContext.build).toHaveBeenCalledWith('conv-1', [], 'cb-1');
+        expect(turnContext.build).toHaveBeenCalledWith(
+            'conv-1',
+            { texts: [] },
+            'cb-1'
+        );
         expect(streamChat.mock.calls[0][0].history).toBe(history);
 
         expect(insertPendingOutbound).toHaveBeenCalledWith(

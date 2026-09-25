@@ -32,6 +32,8 @@ export interface ReplyInput {
     customerId: string;
     contactPointId: string;
     texts: string[];
+    /** The saved rows of `texts`, in order (see ITurnBurst). */
+    messageIds?: string[];
 }
 
 @Injectable()
@@ -134,7 +136,11 @@ export class ReplyGenerationService {
                 history,
                 message,
                 usage: describeUsage,
-            } = await this.turnContext.build(conversationId, texts, chatbot.id);
+            } = await this.turnContext.build(
+                conversationId,
+                { texts, messageIds: input.messageIds },
+                chatbot.id
+            );
 
             const triggerMessage =
                 await this.messageRepository.findLatestInbound(conversationId);

@@ -163,6 +163,7 @@ describe('WidgetChatService.handleTurn', () => {
                     },
                     {
                         direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                        id: 'msg-in', // the row upsertByExternalId saved
                         externalId: 'wm-1',
                         text: 'do you ship to Da Nang?',
                     },

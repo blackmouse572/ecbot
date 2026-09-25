@@ -47,7 +47,7 @@ function contextOver(rows: object[], describeImages?: jest.Mock) {
 describe('TurnContextService', () => {
     it('reads the history window plus the burst', async () => {
         const { service, findRecentByConversation } = contextOver([]);
-        await service.build('c', ['a', 'b'], 'bot');
+        await service.build('c', { texts: ['a', 'b'] }, 'bot');
         expect(findRecentByConversation).toHaveBeenCalledWith(
             'c',
             MESSAGE_HISTORY_WINDOW + 2
@@ -67,7 +67,11 @@ describe('TurnContextService', () => {
             },
         ]);
 
-        const context = await service.build('c', ['do you have these?'], 'bot');
+        const context = await service.build(
+            'c',
+            { texts: ['do you have these?'] },
+            'bot'
+        );
 
         expect(ai.describeImages).toHaveBeenCalledTimes(1);
         expect(ai.describeImages).toHaveBeenCalledWith({
@@ -109,7 +113,7 @@ describe('TurnContextService', () => {
             },
         ]);
 
-        const context = await service.build('c', [''], 'bot');
+        const context = await service.build('c', { texts: [''] }, 'bot');
 
         expect(ai.describeImages).not.toHaveBeenCalled();
         expect(context.message).toBe('[Image description: A shirt]');
@@ -137,7 +141,7 @@ describe('TurnContextService', () => {
             describeImages
         );
 
-        const context = await service.build('c', [''], 'bot');
+        const context = await service.build('c', { texts: [''] }, 'bot');
 
         expect(context.message).toBe(`${UNVIEWABLE}\n${UNVIEWABLE}`);
         expect(updateAttachments).not.toHaveBeenCalled();
@@ -156,7 +160,7 @@ describe('TurnContextService', () => {
             jest.fn().mockRejectedValue(new Error('apps/ai down'))
         );
 
-        const context = await service.build('c', ['this?'], 'bot');
+        const context = await service.build('c', { texts: ['this?'] }, 'bot');
 
         expect(context.message).toBe(`this?\n${UNVIEWABLE}`);
     });
@@ -177,7 +181,11 @@ describe('TurnContextService', () => {
             { id: 'm-2', text: 'giá bao nhiêu?', direction: 'INBOUND' },
         ]);
 
-        const context = await service.build('c', ['giá bao nhiêu?'], 'bot');
+        const context = await service.build(
+            'c',
+            { texts: ['giá bao nhiêu?'] },
+            'bot'
+        );
 
         expect(context.history).toEqual([
             { role: 'user', content: '[image: A yoga flyer, Sat 9am]' },
@@ -199,7 +207,11 @@ describe('TurnContextService', () => {
             { id: 'm-txt', text: 'You have this', direction: 'INBOUND' },
         ]);
 
-        const context = await service.build('c', ['', 'You have this'], 'bot');
+        const context = await service.build(
+            'c',
+            { texts: ['', 'You have this'] },
+            'bot'
+        );
 
         expect(context.message).toBe(
             '\nYou have this\n[Image description: seen https://s3/other.jpg]'
@@ -224,7 +236,7 @@ describe('TurnContextService', () => {
 
         const context = await service.build(
             'c',
-            ['do you have it in M?'],
+            { texts: ['do you have it in M?'] },
             'bot'
         );
 
@@ -251,7 +263,7 @@ describe('TurnContextService', () => {
             { text: 'Dạ còn ạ', direction: 'OUTBOUND' },
         ]);
 
-        const context = await service.build('c', [], 'bot');
+        const context = await service.build('c', { texts: [] }, 'bot');
 
         expect(context.history).toEqual([
             { role: 'user', content: 'còn hàng không? [image: A white shirt]' },
@@ -259,5 +271,32 @@ describe('TurnContextService', () => {
         ]);
         expect(context.message).toBe('');
         expect(ai.describeImages).not.toHaveBeenCalled();
+    });
+
+    // An album's photos are saved one by one after each download; a customer
+    // message saved just before the Turn reads the rows must not push one of
+    // them out of the burst.
+    it('picks the burst by message id and leaves newer rows for the next Turn', async () => {
+        const { service, ai } = contextOver([
+            { text: 'hi', direction: 'INBOUND' },
+            ...['p1', 'p2', 'p3'].map(id => ({
+                id,
+                text: '',
+                attachments: [{ type: 'image', key: `${id}.jpg` }],
+                direction: 'INBOUND',
+            })),
+            { id: 'next', text: 'This one', direction: 'INBOUND' },
+        ]);
+
+        const context = await service.build(
+            'c',
+            { texts: ['', '', ''], messageIds: ['p1', 'p2', 'p3'] },
+            'bot'
+        );
+
+        expect(
+            ai.describeImages.mock.calls[0][0].images.map((i: any) => i.id)
+        ).toEqual(['p1:0', 'p2:0', 'p3:0']);
+        expect(context.history).toEqual([{ role: 'user', content: 'hi' }]);
     });
 });
