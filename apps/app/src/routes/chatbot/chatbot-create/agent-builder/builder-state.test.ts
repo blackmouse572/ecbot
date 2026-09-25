@@ -58,12 +58,19 @@ describe("builderReducer", () => {
     expect(edited.answered).toEqual(["businessType"]);
   });
 
-  it("is draft-ready only after every question up to Rules is answered or skipped", () => {
-    const s = answerAllUntil(started(), isDraftReady);
+  it("is draft-ready as soon as businessType is answered (wireframe delta section 4)", () => {
+    expect(isDraftReady(started())).toBe(false);
+    const s = builderReducer(started(), { type: "answer", question: currentStep(started())!.question, value: "beauty" });
     expect(isDraftReady(s)).toBe(true);
-    expect(currentStep(s)?.group.id).toBe("interaction");
-    expect(isComplete(s)).toBe(false);
-    expect(isComplete(answerAllUntil(s, isComplete))).toBe(true);
+    expect(currentStep(s)?.question.id).toBe("businessName");
+  });
+
+  it("is draft-ready immediately from a template start, since it pre-answers businessType", () => {
+    expect(isDraftReady(startedFromTemplate())).toBe(true);
+  });
+
+  it("reaches complete once every question is answered or skipped", () => {
+    expect(isComplete(answerAllUntil(started(), isComplete))).toBe(true);
   });
 
   it("hydrates an existing builder chatbot as fully answered", () => {

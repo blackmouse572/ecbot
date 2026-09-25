@@ -1,5 +1,5 @@
 import {
-  DRAFT_GROUPS, buildQuestionGroups, writeAnswer,
+  buildQuestionGroups, writeAnswer,
   type AgentProfile, type AgentSuggestion, type Question, type QuestionGroup,
 } from "@repo/agent-blueprint";
 
@@ -49,11 +49,10 @@ export function currentStep(state: BuilderState): Step | null {
   return all.find((s) => !state.answered.includes(s.question.id)) ?? null;
 }
 
+// Wireframe delta section 4 (owner decision): the draft is created as soon
+// as the business type is answered, not after the whole draft-groups run.
 export function isDraftReady(state: BuilderState): boolean {
-  if (!state.profile) return false;
-  return steps(state.profile)
-    .filter((s) => DRAFT_GROUPS.includes(s.group.id))
-    .every((s) => state.answered.includes(s.question.id));
+  return !!state.profile && state.answered.includes("businessType");
 }
 
 export function isComplete(state: BuilderState): boolean {

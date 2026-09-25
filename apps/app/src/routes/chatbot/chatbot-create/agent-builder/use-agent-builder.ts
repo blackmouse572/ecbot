@@ -82,8 +82,9 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   const startFromTemplate = (type: BusinessTypeId) =>
     dispatch({ type: "start", profile: createProfile(type, language), suggestion: null, source: "template" });
 
-  // Create the inactive draft as soon as everything up to Rules is answered.
-  // A failure is retried once an answer changes the profile.
+  // Create the inactive draft as soon as the business type is answered
+  // (wireframe delta section 4). A failure is retried once an answer
+  // changes the profile.
   const createDraft = create.mutateAsync;
   useEffect(() => {
     if (!state.profile || state.chatbotId || creating.current || !isDraftReady(state)) return;
