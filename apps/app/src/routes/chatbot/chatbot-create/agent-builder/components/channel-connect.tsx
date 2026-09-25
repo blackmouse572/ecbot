@@ -65,7 +65,7 @@ export function ChannelConnect({
   // Accounts the server refused to link because they already belong to
   // another chatbot (fix round 2, item 1: enforced server-side now, not
   // pre-checked against a client-side list that only ever saw one page).
-  const [inUseAccounts, setInUseAccounts] = useState<LinkedAccountRef[]>([]);
+  const [inUseAccounts, setInUseAccounts] = useState<{ id: string; name: string }[]>([]);
   const [expanded, setExpanded] = useState<ChannelId | null>(null);
   const [telegramToken, setTelegramToken] = useState("");
   const [telegramError, setTelegramError] = useState<string | undefined>();
