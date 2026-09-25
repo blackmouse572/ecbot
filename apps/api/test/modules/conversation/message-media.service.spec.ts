@@ -27,12 +27,15 @@ describe('MessageMediaService', () => {
     });
 
     it('resolves stored keys to presigned urls and keeps plain urls', async () => {
-        const out = await service.resolve([
-            { type: 'image', key: 'conversations/c/a.jpg' },
-            { type: 'image', url: 'https://kb/shirt.jpg' },
-            { type: 'video' },
-            'junk',
-        ]);
+        const out = await service.resolve(
+            [
+                { type: 'image', key: 'conversations/c/a.jpg' },
+                { type: 'image', url: 'https://kb/shirt.jpg' },
+                { type: 'video' },
+                'junk',
+            ],
+            'c'
+        );
 
         expect(out).toEqual([
             { type: 'image', url: 'https://s3/conversations/c/a.jpg?sig' },
@@ -47,7 +50,28 @@ describe('MessageMediaService', () => {
     it('drops the url of an image whose presign fails', async () => {
         s3.signGetUrl.mockRejectedValueOnce(new Error('s3 down'));
         await expect(
-            service.resolve([{ type: 'image', key: 'k.jpg' }])
+            service.resolve(
+                [{ type: 'image', key: 'conversations/c/k.jpg' }],
+                'c'
+            )
         ).resolves.toEqual([{ type: 'image' }]);
+    });
+
+    it('never presigns a key outside the conversation folder', async () => {
+        await expect(
+            service.resolve(
+                [
+                    { type: 'image', key: 'knowledge/secret.pdf' },
+                    { type: 'image', key: 'conversations/other/a.jpg' },
+                    { type: 'image', key: 'conversations/c' },
+                ],
+                'c'
+            )
+        ).resolves.toEqual([
+            { type: 'image' },
+            { type: 'image' },
+            { type: 'image' },
+        ]);
+        expect(s3.presignGetItem).not.toHaveBeenCalled();
     });
 });

@@ -432,7 +432,7 @@ async def send_image(url: str) -> dict[str, Any]:
     instructions or knowledge base; other URLs are rejected."""
     if not await is_known_image_url(_get_chatbot(), url):
         _log_call("send_image", _truncate(url), "rejected", 0)
-        return {"ok": False, "reason": "Unknown image URL — use one from your knowledge base."}
+        return {"ok": False, "reason": "Unknown image URL. Use one from your knowledge base."}
     _log_call("send_image", _truncate(url), "ok", 0)
     return {"ok": True, "url": url}
 

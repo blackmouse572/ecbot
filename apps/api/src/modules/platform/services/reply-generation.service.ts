@@ -169,7 +169,10 @@ export class ReplyGenerationService {
                 await Promise.all(
                     burst.map(async m =>
                         imageUrls(
-                            await this.messageMedia.resolve(m.attachments)
+                            await this.messageMedia.resolve(
+                                m.attachments,
+                                conversationId
+                            )
                         ).map(url => ({
                             attachment_id: m.id,
                             preview_url: url,

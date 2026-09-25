@@ -80,7 +80,9 @@ export function imageUrls(attachments?: unknown[]): string[] {
     });
 }
 
-const MARKDOWN_IMAGE = /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g;
+// Alt text stays on one line, matching the apps/ai filter that screens
+// image urls: an image it did not see must not become a media message.
+const MARKDOWN_IMAGE = /!\[[^\]\n]*\]\((https?:\/\/[^\s)]+)\)/g;
 
 /** A reply segment holding just one image — how a `send_image` file part
  *  joins the segment stream (`replyMessages` turns it into a media message). */

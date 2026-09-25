@@ -230,6 +230,7 @@ describe('ConversationMessagingService', () => {
             externalId: 'mid.abc123',
             authorType: ENUM_MESSAGE_AUTHOR.USER,
             authorId: 'user-psid-456',
+            conversation: { id: 'c' },
         };
 
         it('reacts via the adapter and persists the reaction', async () => {
@@ -438,6 +439,7 @@ describe('ConversationMessagingService', () => {
             ({
                 authorId: 'a-1',
                 authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
+                conversation: { id: 'c' },
                 ...overrides,
             }) as MessageEntity;
 
@@ -537,6 +539,7 @@ describe('ConversationMessagingService', () => {
             const dto = await buildService().mapMessage({
                 authorId: 'bot-1',
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
+                conversation: { id: 'c' },
                 attachments: [
                     { type: 'image', url: 'https://cdn/s.jpg', raw: { x: 1 } },
                     { type: 'image', key: 'conversations/c/a.jpg' },
@@ -557,7 +560,8 @@ describe('ConversationMessagingService', () => {
             const dto = await buildService().mapMessage({
                 authorId: 'bot-1',
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
-            } as MessageEntity);
+                conversation: { id: 'c' },
+            } as unknown as MessageEntity);
 
             expect(dto.attachments).toEqual([]);
         });

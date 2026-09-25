@@ -246,7 +246,10 @@ export class ConversationMessagingService {
         dto.author = this.resolveAuthor(message, conversation, userNameMap);
         dto.reactions = message.reactions ?? [];
         // Stored images carry a private key; the inbox gets a short-lived url.
-        dto.attachments = await this.messageMedia.resolve(message.attachments);
+        dto.attachments = await this.messageMedia.resolve(
+            message.attachments,
+            message.conversation.id
+        );
         return dto;
     }
 

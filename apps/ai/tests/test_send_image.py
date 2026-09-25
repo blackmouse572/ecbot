@@ -39,3 +39,4 @@ async def test_send_image_rejects_an_unknown_url(monkeypatch):
     monkeypatch.setattr(st, "is_known_image_url", AsyncMock(return_value=False))
     out = await st.send_image.ainvoke({"url": "https://evil/x.jpg"})
     assert out["ok"] is False
+    assert "\u2014" not in out["reason"]

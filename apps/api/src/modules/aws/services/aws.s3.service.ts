@@ -413,6 +413,7 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             Bucket: config.bucket,
             Key: file.key,
             Body: content,
+            ContentType: mime,
             ...(isPrivate && { ServerSideEncryption: 'AES256' }),
         });
 
