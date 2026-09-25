@@ -64,16 +64,19 @@ its Troubleshooting table when a step fails.
    ```bash
    KEY=$(grep ^VITE_API_KEY= apps/app/.env | cut -d= -f2- | tr -d '"')
    SECRET=$(grep ^VITE_API_KEY_SECRET= apps/app/.env | cut -d= -f2- | tr -d '"')
-   TOKEN=$(curl -s localhost:8080/api/v1/public/auth/login/credential \
+   RES=$(curl -s localhost:8080/api/v1/public/auth/login/credential \
      -H "x-api-key: $KEY:$SECRET" -H 'content-type: application/json' \
      -H 'origin: http://localhost:5173' \
-     -d '{"email":"admin@mail.com","password":"aaAA@123","turnstileToken":"XXXX.DUMMY.TOKEN.XXXX"}' \
-     | node -pe 'JSON.parse(require("fs").readFileSync(0)).data?.accessToken ?? ""')
+     -d '{"email":"admin@mail.com","password":"aaAA@123","turnstileToken":"XXXX.DUMMY.TOKEN.XXXX"}')
+   TOKEN=$(printf '%s' "$RES" | node -pe 'JSON.parse(require("fs").readFileSync(0)).data?.accessToken ?? ""')
+   [ -n "$TOKEN" ] || echo "login failed: $RES"
    curl -s -o /dev/null -w '%{http_code}\n' localhost:8080/api/v1/shared/user/profile \
      -H "x-api-key: $KEY:$SECRET" -H "authorization: Bearer $TOKEN"
    ```
 
-   `200` means login and token verification work. The dummy token is
+   `200` means login and token verification work. A failed login prints the
+   API's response; its `statusCode` (e.g. `5400` Turnstile) points to the row
+   in Troubleshooting. The dummy token is
    Cloudflare's, and it's accepted with the example test secret when the
    machine can reach Cloudflare. Match any failure to the install doc's
    Troubleshooting table and fix the cause. Don't just retry.

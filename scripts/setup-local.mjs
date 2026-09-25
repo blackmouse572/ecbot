@@ -44,6 +44,8 @@ Options
   --client-env <path>   Extra frontend .env to receive the default API key pair
                         and API URL (repeatable; created from <path>.example)
   --root <dir>          Repository root (default: this script's repo)
+  --no-next-steps       Skip the closing "Next:" commands (for wrappers that
+                        print their own)
   -h, --help            Show this help
 `;
 
@@ -67,6 +69,7 @@ function parseArgs(argv) {
     else if (arg === "--origin") opts.origins.push(next());
     else if (arg === "--client-env") opts.clientEnvs.push(next());
     else if (arg === "--root") opts.root = next();
+    else if (arg === "--no-next-steps") opts.noNextSteps = true;
     else if (arg === "-h" || arg === "--help") opts.help = true;
     else throw new Error(`Unknown option ${arg}\n\n${HELP}`);
   }
@@ -410,7 +413,7 @@ if (!opts.check && report.filled.some((f) => /API key pair/.test(f))) {
   );
 }
 
-if (!opts.check) {
+if (!opts.check && !opts.noNextSteps) {
   log(`
 Next:
   docker compose up -d            # Postgres (pgvector), Redis, JWKS server
