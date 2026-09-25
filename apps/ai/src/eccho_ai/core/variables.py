@@ -103,6 +103,9 @@ class _AppVars(BaseSettings):
     # Describes inbound customer images (must accept image input).
     VISION_MODEL: str = "google/gemini-2.5-flash"
     VISION_MAX_IMAGES: int = 4
+    # Catalog images from the operator instructions shown alongside, so the
+    # description can name the product a customer photo shows.
+    VISION_MAX_CATALOG_IMAGES: int = 6
     # KEEP IN SYNC with apps/api MESSAGE_MEDIA_MAX_BYTES (what it stores).
     VISION_MAX_IMAGE_BYTES: int = 5 * 1024 * 1024
     # OpenRouter image-generation model.

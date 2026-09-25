@@ -87,6 +87,9 @@ def test_system_prompt_image_guidance_is_business_neutral():
     assert "image description" in rules
     assert "send_image" in rules
     assert "price" not in rules and "product" not in rules
+    # Sending back the catalog photo of what the user just showed is noise.
+    assert "already shows" in rules
+    assert "\u2014" not in section[start:end]
 
 
 # ---- fetch_image_data_url: bounded, no redirects --------------------------
@@ -108,6 +111,17 @@ def _serve(handler):
 async def test_fetch_returns_a_data_url_for_a_small_image():
     with _serve(lambda req: httpx.Response(200, headers={"content-type": "image/png"}, content=b"PNG")):
         assert await images.fetch_image_data_url("https://s3/a.png") == "data:image/png;base64,UE5H"
+
+
+async def test_fetch_names_itself_in_the_user_agent():
+    # Some image hosts (Wikimedia, some shop CDNs) refuse library default agents.
+    def handler(req):
+        if req.headers["user-agent"].startswith("python-httpx"):
+            return httpx.Response(403)
+        return httpx.Response(200, headers={"content-type": "image/png"}, content=b"PNG")
+
+    with _serve(handler):
+        assert await images.fetch_image_data_url("https://kb/a.png") == "data:image/png;base64,UE5H"
 
 
 async def test_fetch_does_not_follow_redirects():
@@ -137,3 +151,29 @@ async def test_fetch_gives_up_on_an_oversized_body_while_streaming():
     with _serve(handler):
         assert await images.fetch_image_data_url("https://s3/endless.jpg") is None
     assert sent <= images.AppVars.VISION_MAX_IMAGE_BYTES + 2 * len(chunk)
+
+
+async def test_catalog_images_from_the_instructions_go_to_the_vision_model_labelled():
+    # The agent only sees a text description, so the vision model is the one
+    # place that can tell a customer photo is one of the shop's own products.
+    model = _vision_model("A photo of the catalog item 'White linen shirt'.")
+    catalog = (
+        "White linen shirt, 350.000đ\n"
+        "![White linen shirt](https://kb/shirt.jpg)\n"
+        "![Blue dress](https://kb/dress.jpg)"
+    )
+    fetch = AsyncMock(side_effect=lambda url: f"data:image/jpeg;base64,{url.rsplit('/', 1)[-1]}")
+    with patch.object(images, "fetch_image_data_url", fetch), \
+         patch.object(images, "build_chat_model", return_value=model):
+        await images.with_image_description(_req("do you have this?", ["https://s3/u.jpg"]), catalog)
+
+    parts = model.ainvoke.call_args.args[0][0].content
+    texts = [p["text"] for p in parts if p["type"] == "text"]
+    assert "Catalog image: White linen shirt" in texts
+    assert "Catalog image: Blue dress" in texts
+    urls = [p["image_url"]["url"] for p in parts if p["type"] == "image_url"]
+    assert urls == [
+        "data:image/jpeg;base64,u.jpg",
+        "data:image/jpeg;base64,shirt.jpg",
+        "data:image/jpeg;base64,dress.jpg",
+    ]

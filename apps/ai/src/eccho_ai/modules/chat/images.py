@@ -10,6 +10,7 @@ instructions, not the platform.
 from __future__ import annotations
 
 import base64
+import re
 
 import httpx
 from langchain_core.messages import HumanMessage
@@ -28,8 +29,17 @@ _DESCRIBE_PROMPT = (
     "all visible text verbatim (names, dates, times, prices, addresses, codes). "
     "Do not guess anything that is not visible."
 )
+_CATALOG_PROMPT = (
+    "After the user's images come the business's own catalog images, each after "
+    "its label. They are for comparison only: describe only the user's images. "
+    "End with one line: 'Catalog match: <label>' when a user image shows the same "
+    "item as a catalog image, otherwise 'Catalog match: none'."
+)
+_CATALOG_IMAGE = re.compile(r"!\[([^\]\n]*)\]\((https?://[^)\s]+)\)")
 _NO_USAGE: dict[str, int] = {}
 _UNREADABLE_NOTE = "[The user sent an image that could not be viewed.]"
+# Some image hosts (Wikimedia, some shop CDNs) refuse library default agents.
+_USER_AGENT = "eccho-ai/1.0 (image description)"
 
 
 async def fetch_image_data_url(url: str) -> str | None:
@@ -41,7 +51,9 @@ async def fetch_image_data_url(url: str) -> str | None:
     """
     cap = AppVars.VISION_MAX_IMAGE_BYTES
     try:
-        async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
+        async with httpx.AsyncClient(
+            timeout=10, follow_redirects=False, headers={"User-Agent": _USER_AGENT}
+        ) as client:
             async with client.stream("GET", url) as res:
                 if res.status_code != 200:
                     return None
@@ -59,13 +71,28 @@ async def fetch_image_data_url(url: str) -> str | None:
     return f"data:{mime};base64,{base64.b64encode(body).decode()}"
 
 
-async def _describe(urls: list[str]) -> tuple[str, dict[str, int]]:
+def _image(data_url: str) -> dict:
+    return {"type": "image_url", "image_url": {"url": data_url}}
+
+
+async def _catalog_parts(instructions: str | None) -> list[dict]:
+    """Markdown images in the operator instructions, each after its label."""
+    found = _CATALOG_IMAGE.findall(instructions or "")[: AppVars.VISION_MAX_CATALOG_IMAGES]
+    parts: list[dict] = []
+    for label, url in found:
+        data_url = await fetch_image_data_url(url)
+        if data_url:
+            parts += [{"type": "text", "text": f"Catalog image: {label or url}"}, _image(data_url)]
+    return parts
+
+
+async def _describe(urls: list[str], instructions: str | None) -> tuple[str, dict[str, int]]:
     data_urls = [d for d in [await fetch_image_data_url(u) for u in urls] if d]
     if not data_urls:
         return "", _NO_USAGE
-    content = [{"type": "text", "text": _DESCRIBE_PROMPT}] + [
-        {"type": "image_url", "image_url": {"url": d}} for d in data_urls
-    ]
+    catalog = await _catalog_parts(instructions)
+    prompt = f"{_DESCRIBE_PROMPT} {_CATALOG_PROMPT}" if catalog else _DESCRIBE_PROMPT
+    content = [{"type": "text", "text": prompt}, *map(_image, data_urls), *catalog]
     try:
         model = build_chat_model(AppVars.VISION_MODEL, temperature=0.0, max_tokens=500)
         reply = await model.ainvoke([HumanMessage(content=content)])
@@ -80,17 +107,19 @@ async def _describe(urls: list[str]) -> tuple[str, dict[str, int]]:
 
 async def with_image_description(
     chat_request: ChatRequest,
+    instructions: str | None = None,
 ) -> tuple[ChatRequest, dict[str, int], dict[str, str] | None]:
     """Return the request with its images described in `message`, the token
     usage of the vision call (billed with the turn), and — when there is a
     description — `{messageId, description}` for apps/api to keep, so later
-    turns remember what the images showed."""
+    turns remember what the images showed. Catalog images in `instructions`
+    (the chatbot's operator instructions) are shown to the vision model too."""
     attachments = [a for a in chat_request.attachments or [] if a.preview_url]
     if not attachments:
         return chat_request, _NO_USAGE, None
 
     urls = [a.preview_url for a in attachments]
-    description, usage = await _describe(urls[: AppVars.VISION_MAX_IMAGES])
+    description, usage = await _describe(urls[: AppVars.VISION_MAX_IMAGES], instructions)
     note = (
         f"[The user sent {len(urls)} image(s). Image description: {description}]"
         if description

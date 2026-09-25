@@ -162,14 +162,15 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
     `stream_pipeline.events_to_ui_parts`; this endpoint only wires up the
     agent, guardrails and RAG sources around it.
     """
-    chat_request, vision_usage, described = await with_image_description(chat_request)
+    ctx = await get_agent(chat_request.chatbot_id)
+    chat_request, vision_usage, described = await with_image_description(
+        chat_request, ctx.chatbot.general_knowledge
+    )
     if not chat_request.message:
         raise HTTPException(status_code=400, detail="message is required")
     # Local binding so nested closures below see `str`, not `str | None`
     # (type narrowing on `chat_request.message` doesn't cross closure bounds).
     message = chat_request.message
-
-    ctx = await get_agent(chat_request.chatbot_id)
     request_id = request.state.request_id
 
     # Input guardrail — before agent runs
