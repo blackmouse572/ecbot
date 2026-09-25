@@ -387,4 +387,79 @@ describe("ChannelConnect", () => {
     await user.click(screen.getByText("agentBuilder.channels.tiktok"));
     expect(screen.getByRole("button", { name: "agentBuilder.ui.removeChannel agentBuilder.channels.tiktok" })).toBeInTheDocument();
   });
+  it("disables Next and Connect later while a link is pending", async () => {
+    let resolveLink: (v: unknown) => void = () => {};
+    linkChatbotAccount.mockReturnValue(new Promise((r) => { resolveLink = r; }));
+    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
+
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByRole("button", { name: "agentBuilder.ui.useChannel" }));
+
+    expect(screen.getByRole("button", { name: "actions.next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.connectLater" })).toBeDisabled();
+
+    resolveLink({ data: { data: { linked: ["acc-9"], skipped: [] } } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "actions.next" })).toBeEnabled());
+  });
+
+  it("disables Next and Connect later while an OAuth popup is pending", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.messenger"));
+
+    expect(screen.getByRole("button", { name: "actions.next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.connectLater" })).toBeDisabled();
+  });
+
+  it("still shows the issued widget key once when linking the provisioned widget fails", async () => {
+    provisionWebsiteWidget.mockResolvedValue({ id: "acc-widget", widgetKey: "wk_456" });
+    linkChatbotAccount.mockRejectedValue(new Error("link failed"));
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+    await user.type(screen.getByLabelText("agentBuilder.ui.widgetOriginsLabel"), "https://lotus.example.com");
+    await user.click(screen.getByRole("button", { name: "accounts.create.provision.cta" }));
+
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("wk_456")).toBeInTheDocument();
+    expect(onAccountsLinked).not.toHaveBeenCalled();
+  });
+
+  it("shows connectFailed when the OAuth link response carries no account", async () => {
+    linkAccount.mockResolvedValue({ data: { data: null } });
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+    expect(linkChatbotAccount).not.toHaveBeenCalled();
+  });
+
+  it("shows connectFailed when the Telegram link response carries no account", async () => {
+    linkAccount.mockResolvedValue({ data: {} });
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.telegram"));
+    await user.type(screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"), `123456:${"A".repeat(40)}`);
+    await user.click(screen.getByRole("button", { name: "accounts.create.connect.telegram.cta" }));
+
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+    expect(linkChatbotAccount).not.toHaveBeenCalled();
+  });
+
+  it("excludes API_CHANNEL accounts from 'use an existing channel'", () => {
+    unlinkAccountsMock.mockReturnValue({
+      accounts: [
+        { id: "acc-api", name: "Server Channel", type: "API_CHANNEL" },
+        { id: "acc-zalo", name: "Lotus Zalo", type: "ZALO_ACCOUNT" },
+      ],
+    });
+    renderConnect();
+    expect(screen.queryByText("Server Channel")).not.toBeInTheDocument();
+    expect(screen.getByText("Lotus Zalo")).toBeInTheDocument();
+  });
 });

@@ -136,7 +136,10 @@ export function ChannelConnect({
     runAccountChange(channel, async () => {
       const res = await linkAccount.mutateAsync({ code, platform: platform as A });
       const linked = (res.data as A)?.data as LinkedAccount | null | undefined;
-      if (!linked) return;
+      if (!linked) {
+        setError(true);
+        return;
+      }
       // Facebook: link the pages only, never the user-level account row.
       const candidates: LinkedAccountRef[] = linked.pages?.length
         ? linked.pages.map((p) => ({ id: p.id, type: p.type, name: p.name }))
@@ -214,7 +217,10 @@ export function ChannelConnect({
     return runAccountChange("telegram", async () => {
       const res = await linkAccount.mutateAsync({ code: token, platform: "TELEGRAM_BOT" });
       const linked = (res.data as A)?.data as LinkedAccount | null | undefined;
-      if (!linked) return;
+      if (!linked) {
+        setError(true);
+        return;
+      }
       await linkCandidates([{ id: linked.id, type: linked.type, name: linked.name }]);
       setTelegramToken("");
       setExpanded(null);
@@ -236,8 +242,9 @@ export function ChannelConnect({
     setWidgetError(undefined);
     return runAccountChange("website", async () => {
       const res = await provisionWidget.mutateAsync({ name: widgetName.trim(), allowedOrigins: origins });
-      await linkCandidates([{ id: res.id, type: "WEBSITE_WIDGET", name: widgetName.trim() }]);
+      // The key is shown only once, so keep it even if linking fails below.
       setIssued({ kind: "WEBSITE_WIDGET", widgetKey: res.widgetKey });
+      await linkCandidates([{ id: res.id, type: "WEBSITE_WIDGET", name: widgetName.trim() }]);
     });
   };
 
@@ -258,8 +265,11 @@ export function ChannelConnect({
   };
 
   // User-level Facebook accounts aren't a messaging channel themselves
-  // (only their pages are), so never offered here (fix round 2, item 4).
-  const existingChannelAccounts = (unlinkedAccounts ?? []).filter((a) => a.type !== "FACEBOOK_ACCOUNT");
+  // (only their pages are), and API channels are server integrations, not
+  // a channel this builder connects, so neither is offered here.
+  const existingChannelAccounts = (unlinkedAccounts ?? []).filter(
+    (a) => a.type !== "FACEBOOK_ACCOUNT" && a.type !== "API_CHANNEL",
+  );
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -458,10 +468,10 @@ export function ChannelConnect({
       )}
 
       <div className="flex gap-2">
-        <Button size="small" variant="secondary" onClick={commit}>
+        <Button size="small" variant="secondary" disabled={accountsLocked} onClick={commit}>
           {t("agentBuilder.ui.connectLater")}
         </Button>
-        <Button size="small" onClick={commit}>
+        <Button size="small" disabled={accountsLocked} onClick={commit}>
           {t("actions.next")}
         </Button>
       </div>
