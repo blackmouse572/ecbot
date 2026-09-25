@@ -67,6 +67,15 @@ describe('message-model images', () => {
         expect(replyMessages(segment)).toEqual([text(segment)]);
     });
 
+    it('replyMessages() does not read a url holding a character apps/ai treats as whitespace', () => {
+        // Python's \s also covers \x1c-\x1f and \x85, so apps/ai never
+        // screened these urls against the knowledge base.
+        for (const c of ['\x85', '\x1c', '\x1f']) {
+            const segment = `![p](https://evil.example/a${c}b)`;
+            expect(replyMessages(segment)).toEqual([text(segment)]);
+        }
+    });
+
     it('replyMessages() leaves plain text as one text message', () => {
         expect(replyMessages('hello')).toEqual([text('hello')]);
     });
