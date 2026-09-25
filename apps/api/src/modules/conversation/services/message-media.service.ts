@@ -31,7 +31,12 @@ export class MessageMediaService {
         const ext = MESSAGE_MEDIA_EXTENSIONS[media.mime] ?? 'jpg';
         const key = `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}/${randomUUID()}.${ext}`;
         await this.s3.putItem(
-            { key, file: media.data, size: media.data.length },
+            {
+                key,
+                file: media.data,
+                size: media.data.length,
+                mime: media.mime,
+            },
             PRIVATE
         );
         return { type: 'image', key };

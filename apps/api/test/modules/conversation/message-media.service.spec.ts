@@ -21,7 +21,12 @@ describe('MessageMediaService', () => {
             key: expect.stringMatching(/^conversations\/conv-1\/.+\.png$/),
         });
         expect(s3.putItem).toHaveBeenCalledWith(
-            { key: saved.key, file: Buffer.from('x'), size: 1 },
+            {
+                key: saved.key,
+                file: Buffer.from('x'),
+                size: 1,
+                mime: 'image/png',
+            },
             { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
         );
     });
