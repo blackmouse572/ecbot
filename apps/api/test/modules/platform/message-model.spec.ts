@@ -3,7 +3,7 @@ import {
     encodeActionPayload,
     decodeActionPayload,
     imageUrls,
-    replyMessages,
+    segmentMessages,
 } from '../../../src/modules/platform/interfaces/message-model';
 
 describe('message-model builders', () => {
@@ -42,11 +42,12 @@ describe('message-model images', () => {
         expect(imageUrls(undefined)).toEqual([]);
     });
 
-    it('replyMessages() turns markdown images into media messages', () => {
+    it('segmentMessages() sends the text, then each image', () => {
         expect(
-            replyMessages(
-                'Mẫu này giá 350k nhé\n![Áo sơ mi trắng](https://cdn/shirt.jpg)'
-            )
+            segmentMessages({
+                text: 'Mẫu này giá 350k nhé',
+                images: ['https://cdn/shirt.jpg'],
+            })
         ).toEqual([
             text('Mẫu này giá 350k nhé'),
             {
@@ -60,23 +61,10 @@ describe('message-model images', () => {
         ]);
     });
 
-    it('replyMessages() does not read an image whose alt text spans lines', () => {
-        // apps/ai screens only single-line alt text, so a multi-line one was
-        // never checked against the knowledge base and must stay text.
-        const segment = '![a\nb](https://evil.example/x.png)';
-        expect(replyMessages(segment)).toEqual([text(segment)]);
-    });
-
-    it('replyMessages() does not read a url holding a character apps/ai treats as whitespace', () => {
-        // Python's \s also covers \x1c-\x1f and \x85, so apps/ai never
-        // screened these urls against the knowledge base.
-        for (const c of ['\x85', '\x1c', '\x1f']) {
-            const segment = `![p](https://evil.example/a${c}b)`;
-            expect(replyMessages(segment)).toEqual([text(segment)]);
-        }
-    });
-
-    it('replyMessages() leaves plain text as one text message', () => {
-        expect(replyMessages('hello')).toEqual([text('hello')]);
+    it('segmentMessages() leaves markdown in the text alone', () => {
+        // apps/ai already turned allowed images into file parts; anything
+        // left in the text is plain text.
+        const segment = { text: '![x](https://evil/x.png)', images: [] };
+        expect(segmentMessages(segment)).toEqual([text(segment.text)]);
     });
 });

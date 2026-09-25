@@ -299,7 +299,7 @@ describe('StreamingDelivery — product images', () => {
         ['buffered', undefined],
         ['incremental', GUARD_OFF],
     ])(
-        '%s: sends a markdown image as a media message and persists it as an attachment',
+        '%s: an image inside a paragraph goes after that paragraph\'s text',
         async (_mode, chatbot) => {
             const adapter = makeAdapter();
             const persisted: { text: string; attachments?: unknown[] }[] = [];
@@ -310,11 +310,13 @@ describe('StreamingDelivery — product images', () => {
                 conversationId: 'C',
                 chatbot,
                 stream: sse([
+                    line({ type: 'text-delta', id: 't1', delta: 'Here it is, ' }),
                     line({
-                        type: 'text-delta',
-                        id: 't1',
-                        delta: 'Here it is\n![Shirt](https://cdn/shirt.jpg)',
+                        type: 'file',
+                        url: 'https://cdn/shirt.jpg',
+                        mediaType: 'image/*',
                     }),
+                    line({ type: 'text-delta', id: 't1', delta: 'in white.' }),
                     line({ type: 'finish' }),
                     DONE,
                 ]),
@@ -328,7 +330,7 @@ describe('StreamingDelivery — product images', () => {
                 onFailed: async () => {},
             });
             expect(persisted).toEqual([
-                { text: 'Here it is', attachments: undefined },
+                { text: 'Here it is, in white.', attachments: undefined },
                 {
                     text: '',
                     attachments: [
@@ -341,6 +343,42 @@ describe('StreamingDelivery — product images', () => {
                 url: 'https://cdn/shirt.jpg',
                 mediaType: 'image',
             });
+        }
+    );
+});
+
+describe('StreamingDelivery — markdown in text', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        '%s: sends markdown image syntax as plain text',
+        async (_mode, chatbot) => {
+            const adapter = makeAdapter();
+            await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({
+                        type: 'text-delta',
+                        id: 't1',
+                        delta: 'see ![x](https://evil/p.png)',
+                    }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async () => 'nonce',
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(
+                adapter.sendMessage.mock.calls.map(c => c[2].content.kind)
+            ).toEqual(['text']);
         }
     );
 });

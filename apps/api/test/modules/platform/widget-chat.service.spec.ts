@@ -48,7 +48,7 @@ function setup(overrides: Record<string, any> = {}) {
     };
     const sseStream = {
         pipe: jest.fn(async ({ onFinalize }: any) => {
-            await onFinalize('the bot reply');
+            await onFinalize('the bot reply', []);
         }),
     };
 
@@ -186,10 +186,10 @@ describe('WidgetChatService.handleTurn', () => {
         expect(messageRepository.markOutboundSent).toHaveBeenCalled();
     });
 
-    it('persists reply images as attachments, not as markdown text', async () => {
+    it('persists reply images as attachments', async () => {
         const { service, messageRepository, sseStream } = setup();
         sseStream.pipe.mockImplementationOnce(async ({ onFinalize }: any) => {
-            await onFinalize('Mẫu này nè\n\n![](https://cdn/s.jpg)');
+            await onFinalize('Mẫu này nè', ['https://cdn/s.jpg']);
         });
 
         await service.handleTurn(res, turn);

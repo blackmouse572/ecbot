@@ -152,7 +152,9 @@ async def test_markdown_images_are_screened_and_usage_includes_extra_tokens():
         fake_events(), request_id="m1", image_url_allowed=allowed,
         usage={"input_tokens": 100, "output_tokens": 20, "total_tokens": 120})])
     text = "".join(p["delta"] for p in parts if p["type"] == "text-delta")
-    assert text == "A ![a](https://cdn/ok.jpg) B "
+    assert text == "A B "
+    # An allowed markdown image leaves the text as a file part, like send_image.
+    assert [p["url"] for p in parts if p["type"] == "file"] == ["https://cdn/ok.jpg"]
     meta = next(p for p in parts if p["type"] == "message-metadata")
     assert meta["messageMetadata"]["usage"]["total_tokens"] == 120
 
@@ -168,10 +170,8 @@ async def test_a_reply_that_is_only_a_split_markdown_image_is_not_lost():
 
     parts = _parts([f async for f in events_to_ui_parts(
         fake_events(), request_id="m1", image_url_allowed=allowed)])
-    text = "".join(p["delta"] for p in parts if p["type"] == "text-delta")
-    assert text == "![a](https://cdn/ok.jpg)"
-    seq = [p["type"] for p in parts]
-    assert seq.index("text-start") < seq.index("text-delta") < seq.index("text-end")
+    assert [p["type"] for p in parts if p["type"].startswith("text")] == []
+    assert {"type": "file", "url": "https://cdn/ok.jpg", "mediaType": "image/*"} in parts
 
 
 @pytest.mark.asyncio

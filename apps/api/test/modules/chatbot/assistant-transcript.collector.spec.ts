@@ -14,7 +14,7 @@ describe('AssistantTranscriptCollector', () => {
         expect(c.assistantText()).toBe('Xin chao');
     });
 
-    it('records a send_image file part as a markdown image in the transcript', () => {
+    it('keeps a file part image apart from the transcript text', () => {
         const c = new AssistantTranscriptCollector();
         c.onFrame({ type: 'text-delta', id: 't1', delta: 'Mẫu này nè' });
         c.onFrame({
@@ -23,7 +23,8 @@ describe('AssistantTranscriptCollector', () => {
             mediaType: 'image/*',
         });
 
-        expect(c.assistantText()).toBe('Mẫu này nè\n\n![](https://cdn/s.jpg)');
+        expect(c.assistantText()).toBe('Mẫu này nè');
+        expect(c.images()).toEqual(['https://cdn/s.jpg']);
         expect(c.shouldPersist()).toBe(true);
     });
 

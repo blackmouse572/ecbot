@@ -22,7 +22,6 @@ import {
 import { randomUUID } from 'crypto';
 import { Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
-import { replyMessages } from '../interfaces/message-model';
 import { MESSAGE_HISTORY_WINDOW } from '../constants/message-debounce.constant';
 import { ENUM_WIDGET_STATUS_CODE_ERROR } from '../enums/widget.status-code.enum';
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
@@ -163,8 +162,8 @@ export class WidgetChatService {
             upstream,
             abort,
             logContext: `widget account ${account.id}`,
-            onFinalize: assistantText =>
-                this.persistReply(conversation.id, assistantText),
+            onFinalize: (assistantText, images) =>
+                this.persistReply(conversation.id, assistantText, images),
             onUsage: async usage => {
                 await this.meter?.record({
                     workspaceId: account.workspace.id,
@@ -212,21 +211,12 @@ export class WidgetChatService {
 
     private async persistReply(
         conversationId: string,
-        assistantText: string
+        text: string,
+        images: string[]
     ): Promise<void> {
         // The row IS the delivery for this channel — the visitor already saw the
         // stream, and their poll reads this back on the next page load.
-        // Images the bot sent are stored as attachments, not markdown text.
-        const parts = replyMessages(assistantText);
-        const text = parts
-            .filter(m => m.content.kind === 'text')
-            .map(m => m.fallbackText)
-            .join('\n\n');
-        const attachments = parts.flatMap(m =>
-            m.content.kind === 'media'
-                ? [{ type: 'image', url: m.content.url }]
-                : []
-        );
+        const attachments = images.map(url => ({ type: 'image', url }));
         const nonce = randomUUID();
         await this.messageRepository.insertPendingOutbound(
             conversationId,

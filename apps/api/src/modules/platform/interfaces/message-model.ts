@@ -80,24 +80,18 @@ export function imageUrls(attachments?: unknown[]): string[] {
     });
 }
 
-// Must never match more than the apps/ai filter that screens image urls: an
-// image it did not see must not become a media message. So alt text stays
-// on one line, and the url also stops at \x1c-\x1f and \x85, which Python's
-// \s covers and JS's does not.
-const MARKDOWN_IMAGE = /!\[[^\]\n]*\]\((https?:\/\/[^\s)\x1c-\x1f\x85]+)\)/g;
-
-/** A reply segment holding just one image — how a `send_image` file part
- *  joins the segment stream (`replyMessages` turns it into a media message). */
-export function imageSegment(url: string): string {
-    return `![](${url})`;
+/** One reply segment: its text, and the images (apps/ai `file` parts) that
+ *  arrived while it was open. */
+export interface ReplySegment {
+    text: string;
+    images: string[];
 }
 
-/** Split one reply segment into platform messages: its text, then one media
- *  message per markdown image (`![alt](url)`) the agent wrote. */
-export function replyMessages(segment: string): OutboundMessage[] {
-    const urls = [...segment.matchAll(MARKDOWN_IMAGE)].map(m => m[1]);
-    const rest = segment.replace(MARKDOWN_IMAGE, '').trim();
-    return [...(rest ? [text(rest)] : []), ...urls.map(image)];
+/** A segment's platform messages: its text, then each image. Markdown in the
+ *  text is not read: apps/ai already turned allowed images into file parts. */
+export function segmentMessages(segment: ReplySegment): OutboundMessage[] {
+    const rest = segment.text.trim();
+    return [...(rest ? [text(rest)] : []), ...segment.images.map(image)];
 }
 
 // Round-trip a button/quick-reply id+value through a platform payload string.
