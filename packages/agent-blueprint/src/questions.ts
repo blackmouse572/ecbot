@@ -13,6 +13,10 @@ export type Question = {
   path: QuestionPath;
   kind: QuestionKind;
   titleKey: string;
+  /** The friendly assistant "ask" shown on the left (wireframe delta section 2). */
+  askKey: string;
+  /** The lead-in shown before the answer on the right, e.g. "My business type is:". */
+  leadKey: string;
   descriptionKey?: string;
   placeholderKey?: string;
   required: boolean;
@@ -56,6 +60,8 @@ const q = (
   path: { field: id },
   kind,
   titleKey: `agentBuilder.questions.${id}.title`,
+  askKey: `agentBuilder.questions.${id}.ask`,
+  leadKey: `agentBuilder.questions.${id}.lead`,
   required: false,
   ...extra,
 });
@@ -70,6 +76,8 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
     q("businessName", "text", {
       required: true,
       titleKey: personal ? "agentBuilder.questions.ownerName.title" : "agentBuilder.questions.businessName.title",
+      askKey: personal ? "agentBuilder.questions.ownerName.ask" : "agentBuilder.questions.businessName.ask",
+      leadKey: personal ? "agentBuilder.questions.ownerName.lead" : "agentBuilder.questions.businessName.lead",
       placeholderKey: personal ? undefined : "agentBuilder.questions.businessName.placeholder",
     }),
     q("agentName", "text", { required: true, placeholderKey: "agentBuilder.questions.agentName.placeholder" }),
@@ -89,6 +97,10 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
     path: { field: "facts", fact },
     kind: "text",
     titleKey: `agentBuilder.facts.${fact}.title`,
+    // Fact titles are already phrased as questions, so they double as the
+    // ask; the lead-in is the one shared "Here's the answer:" key.
+    askKey: `agentBuilder.facts.${fact}.title`,
+    leadKey: "agentBuilder.ui.factLead",
     placeholderKey: `agentBuilder.facts.${fact}.placeholder`,
     required: false,
     multiline: true,
@@ -145,6 +157,8 @@ export function allTranslationKeys(): string[] {
   };
   const keys = questionIds.flatMap((id) => [
     `agentBuilder.questions.${id}.title`,
+    `agentBuilder.questions.${id}.ask`,
+    `agentBuilder.questions.${id}.lead`,
     ...(withExtras[id] ?? []).map((s) => `agentBuilder.questions.${id}.${s}`),
   ]);
   for (const [lib, entries] of Object.entries(LIBRARIES)) {

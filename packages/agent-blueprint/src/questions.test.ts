@@ -38,6 +38,24 @@ describe("buildQuestionGroups", () => {
     expect(nameQ("personal_scheduling").placeholderKey).toBeUndefined();
   });
 
+  it("gives every question an ask and a lead key, using the owner-name pair for personal types", () => {
+    const q = (type: Parameters<typeof createProfile>[0], id: string) =>
+      buildQuestionGroups(createProfile(type, "en")).flatMap((g) => g.questions).find((x) => x.id === id)!;
+    expect(q("beauty", "businessName").askKey).toBe("agentBuilder.questions.businessName.ask");
+    expect(q("beauty", "businessName").leadKey).toBe("agentBuilder.questions.businessName.lead");
+    expect(q("personal_scheduling", "businessName").askKey).toBe("agentBuilder.questions.ownerName.ask");
+    expect(q("personal_scheduling", "businessName").leadKey).toBe("agentBuilder.questions.ownerName.lead");
+    expect(q("beauty", "channels").askKey).toBe("agentBuilder.questions.channels.ask");
+  });
+
+  it("gives fact questions their own title as the ask, and the shared factLead key as the lead", () => {
+    const facts = buildQuestionGroups(createProfile("restaurant", "vi")).find((g) => g.id === "facts")!;
+    for (const fact of facts.questions) {
+      expect(fact.askKey).toBe(fact.titleKey);
+      expect(fact.leadKey).toBe("agentBuilder.ui.factLead");
+    }
+  });
+
   it("offers personal goals to personal types and business goals to SMB types", () => {
     const goalsQ = (p: ReturnType<typeof createProfile>) =>
       buildQuestionGroups(p).flatMap((g) => g.questions).find((q) => q.id === "goals")!;
@@ -76,9 +94,14 @@ describe("allTranslationKeys", () => {
       for (const lang of ["vi", "en"]) {
         for (const group of buildQuestionGroups(createProfile(type.id, lang))) {
           const keys = [group.titleKey, ...group.questions.flatMap((q) => [
-            q.titleKey, q.descriptionKey, q.placeholderKey, ...(q.choices ?? []).map((c) => c.labelKey),
+            q.titleKey, q.askKey, q.leadKey, q.descriptionKey, q.placeholderKey, ...(q.choices ?? []).map((c) => c.labelKey),
           ])];
-          keys.filter((k): k is string => !!k && !known.has(k)).forEach((k) => missing.add(k));
+          keys
+            // `agentBuilder.ui.*` keys (e.g. the shared fact leadKey) are the
+            // app layer's responsibility: apps/app's own i18n-keys.test.ts
+            // covers them via BUILDER_UI_KEYS.
+            .filter((k): k is string => !!k && !k.startsWith("agentBuilder.ui.") && !known.has(k))
+            .forEach((k) => missing.add(k));
         }
       }
     }
