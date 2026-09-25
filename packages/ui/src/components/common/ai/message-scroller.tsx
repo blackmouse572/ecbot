@@ -179,7 +179,14 @@ export const MessageScrollerViewport = ({
     <ScrollAreaPrimitive.Root className={clx("min-h-0 flex-1", className)}>
       <ScrollAreaPrimitive.Viewport
         ref={viewportRef}
-        className="scroll-fade-y size-full rounded-[inherit]"
+        // Radix wraps the viewport's children in its own shrink-to-fit div
+        // (`min-width:100%;display:table`). With only a vertical scrollbar
+        // registered, overflow-x is hidden, so a long unbroken token (a URL
+        // in a message) can inflate that wrapper's width and push
+        // percentage-width children (chat bubbles) past the clipped edge.
+        // Force it back to a normal block so widths resolve against the
+        // viewport instead.
+        className="scroll-fade-y size-full rounded-[inherit] [&>div]:!block [&>div]:!min-w-0 [&>div]:!w-full"
         {...props}
       >
         <div ref={contentRef}>{children}</div>

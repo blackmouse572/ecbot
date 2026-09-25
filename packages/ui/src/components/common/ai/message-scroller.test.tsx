@@ -69,4 +69,21 @@ describe("MessageScrollerViewport (Radix scroll area)", () => {
     fireEvent.scroll(viewport);
     expect(onReachTop).toHaveBeenCalledOnce();
   });
+
+  it("forces the Radix inner wrapper to behave like a normal block so percentage-width bubbles never resolve against a shrink-wrapped width", () => {
+    const { container } = render(
+      <MessageScroller>
+        <MessageScrollerViewport>
+          <MessageScrollerContent>hi</MessageScrollerContent>
+        </MessageScrollerViewport>
+      </MessageScroller>,
+    );
+    const viewport = getViewport(container);
+    expect(viewport.className).toContain("[&>div]:!block");
+    expect(viewport.className).toContain("[&>div]:!min-w-0");
+    expect(viewport.className).toContain("[&>div]:!w-full");
+    // Radix always wraps the viewport's children in a div for its own
+    // shrink-to-fit measurement; confirm the selector above targets it.
+    expect(viewport.firstElementChild?.tagName).toBe("DIV");
+  });
 });
