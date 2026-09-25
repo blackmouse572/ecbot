@@ -30,6 +30,12 @@ describe("useMediaQuery", () => {
     expect(result.current).toBe(false);
   });
 
+  it("returns false instead of throwing when matchMedia is present but not implemented (jsdom's default)", () => {
+    vi.stubGlobal("matchMedia", undefined);
+    const { result } = renderHook(() => useMediaQuery("(max-width: 768px)"));
+    expect(result.current).toBe(false);
+  });
+
   it("subscribes to and unsubscribes from media-query changes", () => {
     const mql = mockMatchMedia(false);
     const { unmount } = renderHook(() => useMediaQuery("(max-width: 768px)"));
