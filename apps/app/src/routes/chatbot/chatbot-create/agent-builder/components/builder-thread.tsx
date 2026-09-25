@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { currentStep, isComplete, steps } from "../builder-state";
 import type { AgentBuilderController } from "../use-agent-builder";
 import { AnswerMessage } from "./answer-message";
+import { ChannelsAnswer } from "./channels-answer";
 import { Hero } from "./hero";
 import { QuestionTurn } from "./question-turn";
 
@@ -92,6 +93,9 @@ export function BuilderThread(builder: AgentBuilderController) {
                           position={{ current: all.findIndex((s) => s.question.id === question.id) + 1, total: all.length }}
                           onAnswer={(value) => dispatch({ type: "answer", question, value })}
                           onSkip={() => dispatch({ type: "skip", question })}
+                          chatbotId={state.chatbotId}
+                          onAccountsLinked={(ids) => dispatch({ type: "accountsLinked", ids })}
+                          onAccountsUnlinked={(ids) => dispatch({ type: "accountsUnlinked", ids })}
                         />
                       </MessageScrollerItem>
                     ) : (
@@ -100,7 +104,16 @@ export function BuilderThread(builder: AgentBuilderController) {
                         <Message from="assistant">
                           <MessageContent>{t(question.askKey)}</MessageContent>
                         </Message>
-                        <AnswerMessage question={question} profile={profile} onEdit={() => dispatch({ type: "edit", questionId: question.id })} />
+                        {question.id === "channels" && state.chatbotId ? (
+                          <ChannelsAnswer
+                            question={question}
+                            chatbotId={state.chatbotId}
+                            channels={profile.channels}
+                            onEdit={() => dispatch({ type: "edit", questionId: question.id })}
+                          />
+                        ) : (
+                          <AnswerMessage question={question} profile={profile} onEdit={() => dispatch({ type: "edit", questionId: question.id })} />
+                        )}
                       </div>
                     )}
                     {/* Batch 3: the draft-created message moves to right

@@ -105,4 +105,33 @@ describe("builderReducer", () => {
     expect(s.chatbotId).toBe("c1");
     expect(s.answered).toEqual(["businessType"]);
   });
+
+  it("seeds linkedAccountIds from the hydrate action", () => {
+    const s = builderReducer(initialBuilderState, {
+      type: "hydrate", profile: createProfile("hotel", "en"), chatbotId: "c1", finished: true, accountIds: ["a1", "a2"],
+    });
+    expect(s.linkedAccountIds).toEqual(["a1", "a2"]);
+  });
+
+  it("adds newly linked account ids without duplicates", () => {
+    const s = { ...started(), linkedAccountIds: ["a1"] };
+    const linked = builderReducer(s, { type: "accountsLinked", ids: ["a1", "a2"] });
+    expect(linked.linkedAccountIds).toEqual(["a1", "a2"]);
+  });
+
+  it("removes unlinked account ids", () => {
+    const s = { ...started(), linkedAccountIds: ["a1", "a2"] };
+    const unlinked = builderReducer(s, { type: "accountsUnlinked", ids: ["a1"] });
+    expect(unlinked.linkedAccountIds).toEqual(["a2"]);
+  });
+
+  it("keeps linkedAccountIds across a restart, and across starting again", () => {
+    const withAccounts = { ...started(), chatbotId: "c1", linkedAccountIds: ["a1"] };
+    const restarted = builderReducer(withAccounts, { type: "restart" });
+    expect(restarted.linkedAccountIds).toEqual(["a1"]);
+    const s = builderReducer(restarted, {
+      type: "start", profile: createProfile("restaurant", "vi"), suggestion: null, source: "template",
+    });
+    expect(s.linkedAccountIds).toEqual(["a1"]);
+  });
 });

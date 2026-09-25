@@ -17,11 +17,16 @@ export function TelegramTokenField({
   onChange,
   error,
   disabled,
+  label,
 }: {
   value: string;
   onChange: (value: string) => void;
   error?: string;
   disabled?: boolean;
+  /** Defaults to the accounts form's own label; the builder passes its own
+   * ("Bot token from @BotFather") so the two contexts can read differently
+   * while still sharing the field, the validation message and the hint. */
+  label?: string;
 }) {
   const { t } = useTranslation();
   const id = useId();
@@ -29,7 +34,7 @@ export function TelegramTokenField({
   return (
     <div className="flex w-full flex-col gap-y-2">
       <Label htmlFor={id} size="xsmall" weight="plus">
-        {t("accounts.create.connect.telegram.tokenLabel")}
+        {label ?? t("accounts.create.connect.telegram.tokenLabel")}
       </Label>
       <Input
         id={id}

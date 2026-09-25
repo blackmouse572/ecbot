@@ -50,6 +50,12 @@ const suggest = vi.fn();
 const chatbot = vi.fn();
 const activate = vi.fn();
 const toastError = vi.fn();
+const unlinkAccounts = vi.fn();
+const linkAccount = vi.fn();
+const linkChatbotAccount = vi.fn();
+const unlinkChatbotAccount = vi.fn();
+const provisionWebsiteWidget = vi.fn();
+const oAuthLoginClick = vi.fn();
 
 // `to-chatbot-payload.ts` pulls in `../../constants`, which imports `@/i18n`
 // and initializes it with the real translation resources. Mocking
@@ -66,6 +72,19 @@ vi.mock("@/hooks/api", () => ({
   useUpdateChatbot: () => ({ mutateAsync: update }),
   useToggleChatbotActivate: () => ({ mutateAsync: activate, isPending: false }),
   useChatbot: (...args: unknown[]) => chatbot(...args),
+  // The channels question mounts ChannelConnect once it's reached; these
+  // stubs keep the rest of this suite (which isn't exercising channel
+  // connect behavior) from hitting the real account hooks and their
+  // QueryClient/workspace requirements. channel-connect.test.tsx covers the
+  // actual connect behavior with its own, more specific mocks.
+  useUnlinkAccounts: (...args: unknown[]) => unlinkAccounts(...args),
+  useLinkAccount: () => ({ mutateAsync: linkAccount, isPending: false }),
+  useLinkChatbotAccount: () => ({ mutateAsync: linkChatbotAccount, isPending: false }),
+  useUnlinkChatbotAccount: () => ({ mutateAsync: unlinkChatbotAccount, isPending: false }),
+  useProvisionWebsiteWidget: () => ({ mutateAsync: provisionWebsiteWidget, isPending: false }),
+}));
+vi.mock("@/hooks/use-oauth-login", () => ({
+  useOAuthLogin: () => ({ handleLinkClick: oAuthLoginClick }),
 }));
 vi.mock("@medusajs/ui", async () => {
   const actual = await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
@@ -113,6 +132,12 @@ describe("AgentBuilder", () => {
     activate.mockReset().mockResolvedValue({});
     toastError.mockReset();
     testPanelMounts.mockReset();
+    unlinkAccounts.mockReset().mockReturnValue({ accounts: [] });
+    linkAccount.mockReset();
+    linkChatbotAccount.mockReset();
+    unlinkChatbotAccount.mockReset();
+    provisionWebsiteWidget.mockReset();
+    oAuthLoginClick.mockReset();
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -165,16 +190,15 @@ describe("AgentBuilder", () => {
     }
   });
 
-  it("shows a platform logo on each channel choice", async () => {
+  it("shows a platform logo on each channel card (the channels turn connects real channels)", async () => {
     renderBuilder();
     await pickBeautyTemplate();
     await answerCurrent(); // businessName
     await answerCurrent(); // agentName
-    await screen.findByRole("group", { name: "agentBuilder.questions.channels.title" });
-    const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes.length).toBeGreaterThan(0);
-    for (const checkbox of checkboxes) {
-      expect(checkbox.closest("label")?.querySelector("img")).toBeInTheDocument();
+    await screen.findByText("agentBuilder.channels.messenger");
+    for (const channel of ["messenger", "zalo", "telegram", "website", "instagram", "tiktok", "shopee"]) {
+      const card = screen.getByText(`agentBuilder.channels.${channel}`).closest("button");
+      expect(card?.querySelector("img")).toBeInTheDocument();
     }
   });
 
@@ -372,6 +396,32 @@ describe("AgentBuilder", () => {
       unmount();
       expect(update).toHaveBeenCalledOnce();
       expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-9", body: { agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }) } });
+    });
+
+    // Section 4's autosave safety rule: `accounts` must never regress to a
+    // stale non-empty list, or the next autosave would REPLACE the whole
+    // set server-side and drop whatever was just linked.
+    it("keeps a channel linked through the channels turn in the next autosave's accounts", async () => {
+      chatbot.mockReturnValue({
+        chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
+      });
+      linkAccount.mockResolvedValue({ data: { data: { id: "a2" } } });
+      linkChatbotAccount.mockResolvedValue({});
+      render(tree());
+
+      // Reopen the (already-hydrated) channels turn and link a Telegram bot.
+      await userEvent.click(screen.getByText(/agentBuilder\.questions\.channels\.lead/));
+      await userEvent.click(screen.getByText("agentBuilder.channels.telegram"));
+      const token = `123456:${"A".repeat(40)}`;
+      await userEvent.type(screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"), token);
+      await userEvent.click(screen.getByRole("button", { name: "accounts.create.connect.telegram.cta" }));
+      await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["a2"] }));
+
+      // An unrelated answer edit triggers the next autosave.
+      await renameTo("Lotus Spa");
+      await waitFor(() => expect(update).toHaveBeenCalled());
+      const lastBody = update.mock.calls.at(-1)?.[0]?.body;
+      expect(lastBody.accounts).toEqual(expect.arrayContaining(["a1", "a2"]));
     });
   });
 

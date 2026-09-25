@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { businessTypeIcon } from "./business-type-icon";
+import { ChannelConnect } from "./channel-connect";
 import { channelIcon } from "./channel-icon";
 
 type Props = {
@@ -19,6 +20,11 @@ type Props = {
   position: { current: number; total: number };
   onAnswer: (value: unknown) => void;
   onSkip: () => void;
+  /** Only used by the channels question, which connects real channels
+   * instead of picking from a checkbox list (wireframe delta section 3). */
+  chatbotId: string | null;
+  onAccountsLinked: (ids: string[]) => void;
+  onAccountsUnlinked: (ids: string[]) => void;
 };
 
 const BOOLEAN_CHOICES = [
@@ -63,11 +69,36 @@ function choiceIcon(question: Question, value: string) {
  * answer card on the right with a lead-in ("My business type is:") and the
  * Questionnaire item (wireframe delta section 2, replaces QuestionMessage).
  */
-export function QuestionTurn({ question, profile, suggestion, position, onAnswer, onSkip }: Props) {
+export function QuestionTurn({
+  question, profile, suggestion, position, onAnswer, onSkip, chatbotId, onAccountsLinked, onAccountsUnlinked,
+}: Props) {
   const { t } = useTranslation();
   const [value, setValue] = useState(() => toFormValue(question, readAnswer(profile, question.path)));
   const badge = badgeFor(question, suggestion);
   const choices = question.kind === "boolean" ? BOOLEAN_CHOICES : (question.choices ?? []);
+
+  if (question.id === "channels" && chatbotId) {
+    return (
+      <>
+        <Message from="assistant">
+          <MessageContent>{t(question.askKey)}</MessageContent>
+        </Message>
+        <Message from="user" variant="outline" className="w-full">
+          <MessageContent className="w-full max-w-full">
+            <Text size="small" weight="plus" className="mb-2 block">{t(question.leadKey)}</Text>
+            <ChannelConnect
+              chatbotId={chatbotId}
+              agentName={profile.agentName}
+              channels={(readAnswer(profile, question.path) as string[] | undefined) ?? []}
+              onAccountsLinked={onAccountsLinked}
+              onAccountsUnlinked={onAccountsUnlinked}
+              onAnswer={(channels) => onAnswer(channels)}
+            />
+          </MessageContent>
+        </Message>
+      </>
+    );
+  }
 
   return (
     <>

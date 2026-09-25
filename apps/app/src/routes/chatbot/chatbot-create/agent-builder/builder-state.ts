@@ -14,6 +14,10 @@ export type BuilderState = {
   editing: string | null;
   chatbotId: string | null;
   finished: boolean;
+  // Ids of the accounts currently linked to this draft, tracked locally so
+  // autosave always sends the true current set instead of a stale one (see
+  // toChatbotPayload's "never send a partial non-empty accounts list" rule).
+  linkedAccountIds: string[];
 };
 
 export type BuilderAction =
@@ -24,18 +28,21 @@ export type BuilderAction =
       source: "describe" | "template";
       description?: string;
     }
-  | { type: "hydrate"; profile: AgentProfile; chatbotId: string; finished: boolean }
+  | { type: "hydrate"; profile: AgentProfile; chatbotId: string; finished: boolean; accountIds?: string[] }
   | { type: "answer"; question: Question; value: unknown }
   | { type: "skip"; question: Question }
   | { type: "edit"; questionId: string }
   | { type: "restart" }
   | { type: "draftCreated"; chatbotId: string }
-  | { type: "finished" };
+  | { type: "finished" }
+  | { type: "accountsLinked"; ids: string[] }
+  | { type: "accountsUnlinked"; ids: string[] };
 
 export type Step = { group: QuestionGroup; question: Question };
 
 export const initialBuilderState: BuilderState = {
   profile: null, suggestion: null, source: null, describeText: null, answered: [], editing: null, chatbotId: null, finished: false,
+  linkedAccountIds: [],
 };
 
 export function steps(profile: AgentProfile): Step[] {
@@ -67,10 +74,11 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
     case "start":
       return {
         ...initialBuilderState,
-        // Preserve an existing draft's id: choosing a template (or a new
-        // description) after `restart` updates that draft instead of
-        // creating a second one.
+        // Preserve an existing draft's id (and its linked accounts):
+        // choosing a template (or a new description) after `restart`
+        // updates that draft instead of creating a second one.
         chatbotId: state.chatbotId,
+        linkedAccountIds: state.linkedAccountIds,
         profile: action.profile,
         suggestion: action.suggestion,
         source: action.source,
@@ -86,6 +94,7 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         chatbotId: action.chatbotId,
         finished: action.finished,
         answered: steps(action.profile).map((s) => s.question.id),
+        linkedAccountIds: action.accountIds ?? [],
       };
     case "answer": {
       if (!state.profile) return state;
@@ -101,12 +110,17 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
     case "edit":
       return { ...state, editing: action.questionId };
     case "restart":
-      // Back to step 0. Keeps chatbotId so choosing again updates the
-      // existing draft instead of creating a second one.
-      return { ...initialBuilderState, chatbotId: state.chatbotId };
+      // Back to step 0. Keeps chatbotId (and its linked accounts) so
+      // choosing again updates the existing draft instead of creating a
+      // second one.
+      return { ...initialBuilderState, chatbotId: state.chatbotId, linkedAccountIds: state.linkedAccountIds };
     case "draftCreated":
       return { ...state, chatbotId: action.chatbotId };
     case "finished":
       return { ...state, finished: true };
+    case "accountsLinked":
+      return { ...state, linkedAccountIds: Array.from(new Set([...state.linkedAccountIds, ...action.ids])) };
+    case "accountsUnlinked":
+      return { ...state, linkedAccountIds: state.linkedAccountIds.filter((id) => !action.ids.includes(id)) };
   }
 }

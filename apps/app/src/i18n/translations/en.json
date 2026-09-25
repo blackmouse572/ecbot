@@ -954,7 +954,15 @@
       "templateAnswer": "Template: {{name}}",
       "heroTitle": "Start creating your agent",
       "heroSubtitle": "Describe your business, or choose a template",
-      "factLead": "Here's the answer:"
+      "factLead": "Here's the answer:",
+      "existingChannels": "Use an existing channel",
+      "useChannel": "Use",
+      "connectLater": "Connect later",
+      "comingSoon": "Coming soon",
+      "connectFailed": "Could not connect this channel. Please try again.",
+      "connected": "Connected",
+      "telegramTokenLabel": "Bot token from @BotFather",
+      "widgetOriginsLabel": "Websites allowed to show the chat (one per line)"
     },
     "groups": {
       "identity": "About your business",

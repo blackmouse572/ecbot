@@ -54,15 +54,24 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   const hydratedId = useRef<string | null>(null);
 
   const extraInstructions = hydrateFrom?.extraInstructions ?? "";
-  const base = useMemo(() => (hydrateFrom ? baseFrom(hydrateFrom) : undefined), [hydrateFrom]);
+  // `accounts` always reflects `state.linkedAccountIds`, tracked locally
+  // (builder-state.ts) rather than the hydrate snapshot: an account linked
+  // or unlinked through the channels turn updates it synchronously, so
+  // autosave never sends a stale non-empty list that would drop it (see
+  // to-chatbot-payload.ts's "never send a partial non-empty list" rule).
+  const base = useMemo(
+    () => ({ ...(hydrateFrom ? baseFrom(hydrateFrom) : {}), accounts: state.linkedAccountIds }),
+    [hydrateFrom, state.linkedAccountIds],
+  );
 
   useEffect(() => {
     if (!hydrateFrom?.agentProfile) return;
     if (hydratedId.current === hydrateFrom.id) return;
     hydratedId.current = hydrateFrom.id;
     const profile = hydrateFrom.agentProfile as unknown as AgentProfile;
-    lastSaved.current = JSON.stringify(toChatbotPayload(profile, extraInstructions, base));
-    dispatch({ type: "hydrate", profile, chatbotId: hydrateFrom.id, finished: hydrateFrom.status === "active" });
+    const accountIds = (hydrateFrom.accounts ?? []).map((a) => a.id);
+    lastSaved.current = JSON.stringify(toChatbotPayload(profile, extraInstructions, { ...base, accounts: accountIds }));
+    dispatch({ type: "hydrate", profile, chatbotId: hydrateFrom.id, finished: hydrateFrom.status === "active", accountIds });
   }, [hydrateFrom, extraInstructions, base]);
 
   const startFromDescription = async (description: string) => {

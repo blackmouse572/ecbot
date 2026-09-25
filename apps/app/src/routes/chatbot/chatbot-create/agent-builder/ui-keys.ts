@@ -4,4 +4,6 @@ export const BUILDER_UI_KEYS = [
   "draftCreated", "saveFailed", "done", "finish", "finished", "tryAgent",
   "promptTab", "testLocked", "progress", "extraInstructions", "extraInstructionsHint",
   "editWithBuilder", "templateAnswer", "heroTitle", "heroSubtitle", "factLead", "yourAgent",
+  "existingChannels", "useChannel", "connectLater", "comingSoon", "connectFailed",
+  "connected", "telegramTokenLabel", "widgetOriginsLabel",
 ].map((k) => `agentBuilder.ui.${k}`);
