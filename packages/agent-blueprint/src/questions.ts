@@ -27,7 +27,6 @@ export type Question = {
 export type GroupId = "identity" | "essence" | "facts" | "process" | "rules" | "interaction";
 export type QuestionGroup = { id: GroupId; titleKey: string; questions: Question[] };
 
-export const DRAFT_GROUPS: GroupId[] = ["identity", "essence", "facts", "process", "rules"];
 export const TEMPLATE_TYPES: BusinessTypeId[] = ["restaurant", "beauty", "ecommerce", "healthcare", "education", "personal_scheduling"];
 
 const LIBRARIES = {

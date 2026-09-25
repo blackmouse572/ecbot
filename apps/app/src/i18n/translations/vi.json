@@ -956,9 +956,7 @@
   "agentBuilder": {
     "ui": {
       "title": "Tạo agent",
-      "startMessage": "Chào bạn! Hãy mô tả việc kinh doanh của bạn trong một câu, hoặc chọn một mẫu có sẵn.",
       "startPlaceholder": "Ví dụ: Mình có tiệm nail ở Đà Nẵng. Khách hay hỏi giá và muốn đặt lịch.",
-      "templates": "Hoặc bắt đầu từ mẫu",
       "suggesting": "Đang thiết lập agent...",
       "suggestFailed": "Mình chưa tự nhận diện được. Mình cùng trả lời vài câu hỏi nhé.",
       "suggested": "Mình đã điền sẵn những gì có thể. Bạn kiểm tra giúp các mục cần xem lại nhé.",
@@ -975,7 +973,7 @@
       "finished": "Agent đã được kích hoạt. Bạn có thể sửa bất kỳ câu trả lời nào ở trên.",
       "tryAgent": "Thử agent",
       "promptTab": "Prompt",
-      "testLocked": "Agent sẽ xuất hiện ở đây sau câu hỏi đầu tiên.",
+      "testLocked": "Agent sẽ xuất hiện ở đây sau khi được đặt tên.",
       "progress": "Câu {{current}} / {{total}}",
       "extraInstructions": "Hướng dẫn bổ sung",
       "extraInstructionsHint": "Được thêm vào cuối phần hướng dẫn cho agent. Để trống nếu các câu trả lời đã đầy đủ.",

@@ -1,6 +1,7 @@
 import { createProfile } from "@repo/agent-blueprint";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useEffect } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentBuilder } from "./agent-builder";
@@ -13,6 +14,35 @@ const mockMatchMedia = (matches: boolean) => {
     vi.fn(() => ({ matches, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
   );
 };
+
+// A matchMedia stub whose result can flip live and notify useMediaQuery's
+// "change" listener, to simulate actually crossing the md breakpoint.
+const mockMatchMediaToggleable = (initial: boolean) => {
+  let matches = initial;
+  let onChange: (() => void) | null = null;
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({
+      get matches() {
+        return matches;
+      },
+      addEventListener: (_event: string, cb: () => void) => {
+        onChange = cb;
+      },
+      removeEventListener: () => {
+        onChange = null;
+      },
+    })),
+  );
+  return {
+    flip: () => {
+      matches = !matches;
+      onChange?.();
+    },
+  };
+};
+
+const testPanelMounts = vi.fn();
 
 const create = vi.fn();
 const update = vi.fn();
@@ -45,7 +75,12 @@ vi.mock("@/hooks/api/agent-builder", () => ({
   useAgentBuilderSuggest: () => ({ mutateAsync: suggest, isPending: false }),
 }));
 vi.mock("./components/test-panel", () => ({
-  TestPanel: ({ chatbotId }: { chatbotId: string | null }) => <div data-testid="test-panel">{chatbotId ?? "locked"}</div>,
+  TestPanel: ({ chatbotId }: { chatbotId: string | null }) => {
+    useEffect(() => {
+      testPanelMounts();
+    }, []);
+    return <div data-testid="test-panel">{chatbotId ?? "locked"}</div>;
+  },
 }));
 vi.mock("@/components/modals", () => ({
   RouteFocusModal: { Header: ({ children }: never) => <div>{children}</div>, Body: ({ children }: never) => <div>{children}</div> },
@@ -62,6 +97,13 @@ async function answerCurrent() {
 
 const pickBeautyTemplate = () => userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
 
+// The draft is created once agentName (step 3) is answered: businessName,
+// then agentName, both text questions that answerCurrent fills with "Lotus".
+async function answerToAgentName() {
+  await answerCurrent(); // businessName
+  await answerCurrent(); // agentName
+}
+
 describe("AgentBuilder", () => {
   beforeEach(() => {
     create.mockReset().mockResolvedValue({ data: { data: { id: "bot-1" } } });
@@ -70,6 +112,7 @@ describe("AgentBuilder", () => {
     chatbot.mockReset().mockReturnValue({ chatbot: undefined });
     activate.mockReset().mockResolvedValue({});
     toastError.mockReset();
+    testPanelMounts.mockReset();
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -170,6 +213,7 @@ describe("AgentBuilder", () => {
   it("updates the same draft instead of creating a second one after going back to the hero", async () => {
     renderBuilder();
     await pickBeautyTemplate();
+    await answerToAgentName();
     await waitFor(() => expect(create).toHaveBeenCalledOnce());
 
     await userEvent.click(screen.getByText("agentBuilder.ui.templateAnswer"));
@@ -180,18 +224,20 @@ describe("AgentBuilder", () => {
     expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-1" });
   });
 
-  it("creates an inactive draft as soon as the business type is answered, and unlocks the test panel", async () => {
+  it("creates an inactive draft once agentName (step 3) is answered, and unlocks the test panel", async () => {
     renderBuilder();
     await pickBeautyTemplate();
+    await answerCurrent(); // businessName
+    expect(create).not.toHaveBeenCalled();
+    await answerCurrent(); // agentName
     await waitFor(() => expect(create).toHaveBeenCalledOnce());
     expect(create.mock.calls[0][0]).toMatchObject({ status: "inactive", type: "beauty" });
     await waitFor(() => expect(screen.getByTestId("test-panel")).toHaveTextContent("bot-1"));
-    // Moved from after the Rules group to right after the business-type
-    // answer (wireframe delta section 4).
+    // Moved to right after the agent-name answer (batch 3, step 3).
     expect(screen.getByText("agentBuilder.ui.draftCreated")).toBeInTheDocument();
-    const businessTypeAnswer = screen.getByText(/agentBuilder.questions.businessType.lead/);
+    const agentNameAnswer = screen.getByText(/agentBuilder.questions.agentName.lead/);
     const draftCreated = screen.getByText("agentBuilder.ui.draftCreated");
-    expect(businessTypeAnswer.compareDocumentPosition(draftCreated) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(agentNameAnswer.compareDocumentPosition(draftCreated) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("lets the user edit an earlier answer", async () => {
@@ -246,11 +292,19 @@ describe("AgentBuilder", () => {
     create.mockReset().mockRejectedValue(new Error("down"));
     renderBuilder();
     await pickBeautyTemplate();
+    await answerToAgentName();
     await waitFor(() => expect(create).toHaveBeenCalledOnce());
     await new Promise((r) => setTimeout(r, 100));
     expect(create).toHaveBeenCalledOnce();
 
-    await answerCurrent(); // businessName changes the profile
+    // Re-edit businessName so the payload actually changes (answering
+    // channels with nothing selected would leave the payload identical).
+    // Both businessName and agentName read "Lotus" at this point, so match
+    // the businessName answer specifically.
+    await userEvent.click(screen.getByText(/businessName\.lead Lotus/));
+    const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+    await userEvent.type(input, " Spa");
+    await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
     await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
   });
 
@@ -331,6 +385,7 @@ describe("AgentBuilder", () => {
       </MemoryRouter>,
     );
     await pickBeautyTemplate();
+    await answerToAgentName();
     await waitFor(() => expect(create).toHaveBeenCalledOnce());
     expect(create.mock.calls[0][0]).toMatchObject({ accounts: [] });
   });
@@ -338,41 +393,39 @@ describe("AgentBuilder", () => {
   describe("the test panel", () => {
     const desktopPanel = () => screen.getByTestId("test-panel").closest('[aria-hidden], [inert]') ?? screen.getByTestId("test-panel").parentElement!.parentElement!;
 
-    it("shows neither the panel nor the Try agent button before the business type is answered", () => {
+    it("shows neither the panel nor the Try agent button before the draft exists", () => {
       mockMatchMedia(true);
       renderBuilder();
       expect(screen.queryByRole("button", { name: "agentBuilder.ui.tryAgent" })).not.toBeInTheDocument();
       expect(screen.queryByTestId("test-panel")).not.toBeInTheDocument();
     });
 
-    it("starts collapsed once unlocked, before the draft finishes creating", async () => {
-      mockMatchMedia(true);
-      create.mockReturnValue(new Promise(() => {})); // never resolves: chatbotId stays null
-      renderBuilder();
-      await pickBeautyTemplate();
-      await waitFor(() => expect(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" })).toBeInTheDocument());
-      expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
-    });
+    // Panel visibility and the auto-open-once effect now key off the same
+    // signal (chatbotId), so by the time the header button exists, the
+    // panel has already auto-opened: there is no longer an observable
+    // "unlocked but still collapsed, draft still creating" state (that
+    // required chatbotId, which is exactly what unlocks the button/panel).
 
-    it("the header toggle opens and closes it on desktop", async () => {
+    it("the header toggle opens and closes it on desktop (already auto-opened once the draft exists)", async () => {
       mockMatchMedia(true);
-      create.mockReturnValue(new Promise(() => {})); // isolate manual toggle from the auto-open effect
       renderBuilder();
       await pickBeautyTemplate();
+      await answerToAgentName();
       await waitFor(() => expect(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" })).toBeInTheDocument());
+      await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
+
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
       expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
 
       await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
       expect(desktopPanel()).not.toHaveAttribute("aria-hidden");
-
-      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
-      expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
     });
 
     it("opens automatically once the draft chatbot is created, and stays closed once the user closes it", async () => {
       mockMatchMedia(true);
       renderBuilder();
       await pickBeautyTemplate();
+      await answerToAgentName();
       await waitFor(() => expect(create).toHaveBeenCalledOnce());
       await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
 
@@ -381,7 +434,10 @@ describe("AgentBuilder", () => {
       expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
 
       // ...even once a later answer triggers another save.
-      await answerCurrent(); // businessName
+      await userEvent.click(screen.getByText(/businessName\.lead Lotus/));
+      const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+      await userEvent.type(input, " Spa");
+      await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
       await waitFor(() => expect(update).toHaveBeenCalled());
       expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
     });
@@ -390,6 +446,7 @@ describe("AgentBuilder", () => {
       mockMatchMedia(false);
       renderBuilder();
       await pickBeautyTemplate();
+      await answerToAgentName();
       await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
 
       const sheet = screen.getByTestId("test-panel").closest("aside")!;
@@ -403,6 +460,24 @@ describe("AgentBuilder", () => {
 
       await userEvent.click(screen.getByRole("button", { name: "actions.close" }));
       expect(sheet).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("does not remount TestPanel (and its chat session) when the viewport crosses the md breakpoint", async () => {
+      const viewport = mockMatchMediaToggleable(true); // start desktop
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerToAgentName();
+      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      expect(testPanelMounts).toHaveBeenCalledOnce();
+
+      // Cross from desktop to mobile, and back.
+      act(() => viewport.flip());
+      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      expect(testPanelMounts).toHaveBeenCalledOnce();
+
+      act(() => viewport.flip());
+      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      expect(testPanelMounts).toHaveBeenCalledOnce();
     });
   });
 });

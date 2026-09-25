@@ -7,7 +7,6 @@ import { SidebarProvider, useSidebar } from "@repo/ui/layout";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import { isDraftReady } from "./builder-state";
 import { BuilderThread } from "./components/builder-thread";
 import { TestPanel } from "./components/test-panel";
 import { useAgentBuilder, type AgentBuilderController } from "./use-agent-builder";
@@ -54,9 +53,9 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
   }, [builder.state.chatbotId, desktop, toggle]);
 
   const panel = <TestPanel chatbotId={builder.state.chatbotId} profile={builder.state.profile} extraInstructions={builder.extraInstructions} />;
-  // Wireframe delta section 4: before the business type is answered
-  // (step 2), neither the panel nor the header button is shown.
-  const unlocked = isDraftReady(builder.state);
+  // Batch 3: unlocks once the draft exists (chatbotId set), not merely once
+  // it's ready to be created.
+  const unlocked = !!builder.state.chatbotId;
 
   return (
     <>
@@ -83,33 +82,32 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
           <BuilderThread {...builder} />
         </div>
 
-        {unlocked && isDesktopViewport && (
-          <div
-            className="overflow-hidden border-l border-ui-border-base bg-ui-bg-subtle"
-            inert={!desktop || undefined}
-            aria-hidden={!desktop || undefined}
-          >
-            <div className="h-full w-[420px] overflow-hidden p-4">{panel}</div>
-          </div>
-        )}
-        {unlocked && !isDesktopViewport && (
+        {unlocked && (
+          // Batch 3: a single persistent panel element whose classes switch
+          // between the desktop column and the mobile sheet, instead of two
+          // mutually exclusive branches. Crossing the md breakpoint no
+          // longer unmounts (and reconnects) TestPanel/AIChatCard.
           <aside
             className={clx(
-              "fixed inset-0 z-40 flex flex-col overflow-hidden bg-ui-bg-subtle p-4",
-              "transition-transform duration-300 ease-drawer",
+              "overflow-hidden bg-ui-bg-subtle",
+              // Mobile: full-screen sheet, transform-driven.
+              "fixed inset-0 z-40 flex flex-col transition-transform duration-300 ease-drawer",
               "motion-reduce:translate-y-0 motion-reduce:transition-opacity motion-reduce:duration-200 motion-reduce:ease-out",
               mobile ? "translate-y-0 motion-reduce:opacity-100" : "translate-y-full motion-reduce:opacity-0",
+              // Desktop: static grid column, width driven by the parent's
+              // --panel-w, no transform/transition of its own.
+              "md:static md:inset-auto md:z-auto md:flex md:translate-y-0 md:border-l md:border-ui-border-base md:transition-none",
             )}
-            inert={!mobile || undefined}
-            aria-hidden={!mobile || undefined}
+            inert={(isDesktopViewport ? !desktop : !mobile) || undefined}
+            aria-hidden={(isDesktopViewport ? !desktop : !mobile) || undefined}
           >
-            <div className="flex justify-end">
+            <div className="flex justify-end p-4 pb-0 md:hidden">
               <IconButton variant="transparent" onClick={() => toggle("mobile")}>
                 <XMark />
                 <span className="sr-only">{t("actions.close")}</span>
               </IconButton>
             </div>
-            {panel}
+            <div className="min-h-0 flex-1 overflow-hidden p-4 md:w-[420px]">{panel}</div>
           </aside>
         )}
 

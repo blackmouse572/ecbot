@@ -928,9 +928,7 @@
   "agentBuilder": {
     "ui": {
       "title": "Create agent",
-      "startMessage": "Hi! Tell me about your business in one sentence, or start from a template.",
       "startPlaceholder": "e.g. I run a nail spa in Da Nang. Customers ask prices and want to book.",
-      "templates": "Or start from a template",
       "suggesting": "Setting up your agent...",
       "suggestFailed": "I could not work that out on my own. Let's go through the questions.",
       "suggested": "I filled in what I could. Check the answers marked for review.",
@@ -947,7 +945,7 @@
       "finished": "Your agent is active. You can change any answer above at any time.",
       "tryAgent": "Try agent",
       "promptTab": "Prompt",
-      "testLocked": "Your agent appears here after the first question.",
+      "testLocked": "Your agent appears here once it has a name.",
       "progress": "Question {{current}} of {{total}}",
       "extraInstructions": "Extra instructions",
       "extraInstructionsHint": "Added at the end of what your agent is told. Leave it empty if your answers cover everything.",

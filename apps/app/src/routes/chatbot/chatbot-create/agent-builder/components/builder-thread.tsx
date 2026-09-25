@@ -103,9 +103,10 @@ export function BuilderThread(builder: AgentBuilderController) {
                         <AnswerMessage question={question} profile={profile} onEdit={() => dispatch({ type: "edit", questionId: question.id })} />
                       </div>
                     )}
-                    {/* Wireframe delta section 4: the draft-created message moves
-                        to right after the business-type answer. */}
-                    {question.id === "businessType" && state.chatbotId && state.source !== "hydrate" && (
+                    {/* Batch 3: the draft-created message moves to right
+                        after the agent-name answer (step 3, when the draft
+                        is actually created). */}
+                    {question.id === "agentName" && state.chatbotId && state.source !== "hydrate" && (
                       <Message from="assistant">
                         <MessageContent>{t("agentBuilder.ui.draftCreated")}</MessageContent>
                       </Message>
