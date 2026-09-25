@@ -4,7 +4,6 @@ import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const unlinkAccountsMock = vi.fn();
-const fetchUnlinkedAccounts = vi.fn();
 const linkAccount = vi.fn();
 const linkChatbotAccount = vi.fn();
 const unlinkChatbotAccount = vi.fn();
@@ -23,7 +22,6 @@ vi.mock("react-i18next", () => ({
 
 vi.mock("@/hooks/api", () => ({
   useUnlinkAccounts: (...args: unknown[]) => unlinkAccountsMock(...args),
-  useFetchUnlinkedAccounts: () => fetchUnlinkedAccounts,
   useLinkAccount: () => ({ mutateAsync: linkAccount, isPending: false }),
   useLinkChatbotAccount: () => ({ mutateAsync: linkChatbotAccount, isPending: false }),
   useUnlinkChatbotAccount: () => ({ mutateAsync: unlinkChatbotAccount, isPending: false }),
@@ -90,9 +88,13 @@ function StatefulHarness({ channels = [] as string[] }) {
 
 beforeEach(() => {
   unlinkAccountsMock.mockReset().mockReturnValue({ accounts: [] });
-  fetchUnlinkedAccounts.mockReset().mockResolvedValue({ data: [] });
   linkAccount.mockReset();
-  linkChatbotAccount.mockReset().mockResolvedValue({});
+  // By default every requested id links cleanly (server reports it back
+  // under `linked`, nothing `skipped`); tests that need an id refused
+  // override this per-call.
+  linkChatbotAccount.mockReset().mockImplementation((body: { accounts: string[] }) =>
+    Promise.resolve({ data: { data: { linked: body.accounts, skipped: [] } } }),
+  );
   unlinkChatbotAccount.mockReset().mockResolvedValue({});
   provisionWebsiteWidget.mockReset();
   onAccountsLinked.mockReset();
@@ -108,7 +110,6 @@ beforeEach(() => {
 describe("ChannelConnect", () => {
   it("links the account and shows a chip after an OAuth success", async () => {
     linkAccount.mockResolvedValue({ data: { data: { id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" } } });
-    fetchUnlinkedAccounts.mockResolvedValue({ data: [{ id: "acc-1" }] });
 
     const user = userEvent.setup();
     render(<StatefulHarness />);
@@ -139,7 +140,6 @@ describe("ChannelConnect", () => {
         },
       },
     });
-    fetchUnlinkedAccounts.mockResolvedValue({ data: [{ id: "page-1" }] });
 
     const user = userEvent.setup();
     renderConnect();
@@ -150,21 +150,43 @@ describe("ChannelConnect", () => {
     expect(linkChatbotAccount).not.toHaveBeenCalledWith(expect.objectContaining({ accounts: expect.arrayContaining(["acc-user"]) }));
   });
 
-  it("no stealing: does not link an id that belongs to another chatbot, and shows a notice", async () => {
+  it("no stealing: shows a notice and does not add a server-skipped id to local state", async () => {
+    // The server (not the client) is the source of truth on ownership now:
+    // it refuses ids already on another chatbot and reports them back under
+    // `skipped` instead of the client pre-checking an unlinked-accounts list
+    // (fix round 2: that pre-check only ever saw page 1 and was unreliable).
     linkAccount.mockResolvedValue({ data: { data: { id: "acc-taken", name: "Taken Account", type: "ZALO_ACCOUNT" } } });
-    // The fresh unlinked-accounts fetch does not contain acc-taken, meaning
-    // some other chatbot already owns it.
-    fetchUnlinkedAccounts.mockResolvedValue({ data: [] });
+    linkChatbotAccount.mockResolvedValue({
+      data: { data: { linked: [], skipped: [{ id: "acc-taken", name: "Taken Account" }] } },
+    });
 
     const user = userEvent.setup();
     renderConnect();
     await user.click(screen.getByText("agentBuilder.channels.zalo"));
     await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
 
-    await waitFor(() => expect(fetchUnlinkedAccounts).toHaveBeenCalled());
-    expect(linkChatbotAccount).not.toHaveBeenCalled();
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-taken"] }));
     expect(onAccountsLinked).not.toHaveBeenCalled();
     expect(await screen.findByText("agentBuilder.ui.channelInUse Taken Account")).toBeInTheDocument();
+  });
+
+  it("links a freshly authorized account regardless of how many other unlinked accounts the workspace has", async () => {
+    // No client-side list fetch gates this path any more, so a workspace
+    // with far more than one pagination page of unlinked accounts can't
+    // wrongly refuse a legitimate connect (fix round 2).
+    unlinkAccountsMock.mockReturnValue({
+      accounts: Array.from({ length: 25 }, (_, i) => ({ id: `other-${i}`, name: `Other ${i}`, type: "ZALO_ACCOUNT" })),
+    });
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-new", name: "New Account", type: "ZALO_ACCOUNT" } } });
+
+    const user = userEvent.setup();
+    render(<StatefulHarness />);
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-new"] }));
+    expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-new", name: "New Account", type: "ZALO_ACCOUNT" }]);
+    expect(await screen.findByText("New Account")).toBeInTheDocument();
   });
 
   it("shows the inline error when the OAuth popup errors", async () => {
@@ -213,7 +235,6 @@ describe("ChannelConnect", () => {
 
   it("links a Telegram bot token", async () => {
     linkAccount.mockResolvedValue({ data: { data: { id: "acc-tg", name: "Lotus Bot", type: "TELEGRAM_BOT" } } });
-    fetchUnlinkedAccounts.mockResolvedValue({ data: [{ id: "acc-tg" }] });
     const user = userEvent.setup();
     renderConnect();
 
@@ -310,5 +331,62 @@ describe("ChannelConnect", () => {
 
     resolveSave();
     await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-9"] }));
+  });
+
+  it("excludes user-level FACEBOOK_ACCOUNT rows from 'use an existing channel' (only pages are a channel)", () => {
+    unlinkAccountsMock.mockReturnValue({
+      accounts: [
+        { id: "acc-user", name: "Owner Account", type: "FACEBOOK_ACCOUNT" },
+        { id: "acc-page", name: "Lotus Page", type: "FACEBOOK_PAGE" },
+      ],
+    });
+    renderConnect();
+    expect(screen.queryByText("Owner Account")).not.toBeInTheDocument();
+    expect(screen.getByText("Lotus Page")).toBeInTheDocument();
+  });
+
+  it("disables every other account action while one change is in flight (item 5)", async () => {
+    let resolveLink: (v: unknown) => void = () => {};
+    linkChatbotAccount.mockReturnValue(new Promise((r) => { resolveLink = r; }));
+    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
+
+    const user = userEvent.setup();
+    renderConnect([], [{ id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" }]);
+    await user.click(screen.getByRole("button", { name: "agentBuilder.ui.useChannel" }));
+
+    // A link is now in flight: every other account action is locked, not
+    // just the one clicked (a single `busy` value covers them all).
+    expect(screen.getByText("agentBuilder.channels.messenger").closest("button")).toBeDisabled();
+    expect(screen.getByText("agentBuilder.channels.telegram").closest("button")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.unlinkChannel Lotus Spa" })).toBeDisabled();
+
+    resolveLink({ data: { data: { linked: ["acc-9"], skipped: [] } } });
+    await waitFor(() => expect(screen.getByText("agentBuilder.channels.messenger").closest("button")).toBeEnabled());
+  });
+
+  it("resets the widget name and origins after the issued panel closes", async () => {
+    provisionWebsiteWidget.mockResolvedValue({ id: "acc-widget", widgetKey: "wk_123" });
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+    await user.clear(screen.getByLabelText("accounts.create.provision.nameLabel"));
+    await user.type(screen.getByLabelText("accounts.create.provision.nameLabel"), "Custom Name");
+    await user.type(screen.getByLabelText("agentBuilder.ui.widgetOriginsLabel"), "https://lotus.example.com");
+    await user.click(screen.getByRole("button", { name: "accounts.create.provision.cta" }));
+    await screen.findByDisplayValue("wk_123");
+
+    await user.click(screen.getByRole("button", { name: "actions.close" }));
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+
+    expect(screen.getByLabelText("accounts.create.provision.nameLabel")).toHaveValue("Linh");
+    expect(screen.getByLabelText("agentBuilder.ui.widgetOriginsLabel")).toHaveValue("");
+  });
+
+  it("labels a coming-soon chip's remove button distinctly from an unlink (item 7)", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.tiktok"));
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.removeChannel agentBuilder.channels.tiktok" })).toBeInTheDocument();
   });
 });

@@ -992,7 +992,8 @@
       "telegramTokenLabel": "Bot token từ @BotFather",
       "widgetOriginsLabel": "Các website được phép hiển thị chat (mỗi dòng một địa chỉ)",
       "channelInUse": "{{name}} đang được dùng cho agent khác. Hãy gỡ liên kết ở đó trước để dùng tại đây.",
-      "unlinkChannel": "Gỡ liên kết {{name}}"
+      "unlinkChannel": "Gỡ liên kết {{name}}",
+      "removeChannel": "Bỏ {{name}}"
     },
     "groups": {
       "identity": "Về doanh nghiệp",

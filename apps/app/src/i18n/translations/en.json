@@ -964,7 +964,8 @@
       "telegramTokenLabel": "Bot token from @BotFather",
       "widgetOriginsLabel": "Websites allowed to show the chat (one per line)",
       "channelInUse": "{{name}} is already used by another agent. Unlink it there first to use it here.",
-      "unlinkChannel": "Unlink {{name}}"
+      "unlinkChannel": "Unlink {{name}}",
+      "removeChannel": "Remove {{name}}"
     },
     "groups": {
       "identity": "About your business",

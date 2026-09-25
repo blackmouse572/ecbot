@@ -5,7 +5,6 @@ import {
 import { isHttpUrl, splitOrigins } from "@/components/channel-connect/website-origins";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import {
-  useFetchUnlinkedAccounts,
   useLinkAccount,
   useLinkChatbotAccount,
   useProvisionWebsiteWidget,
@@ -18,7 +17,7 @@ import type { Issued } from "@/routes/accounts/account-create/components/account
 import { XMarkMini } from "@medusajs/icons";
 import { Button, IconButton, Input, Label, Text, Textarea, clx } from "@medusajs/ui";
 import type { ChannelId } from "@repo/agent-blueprint";
-import type { AccountGetDetailResponseDto, AccountListResponseDto } from "@repo/client";
+import type { AccountGetDetailResponseDto, AccountListResponseDto, ChatbotLinkAccountResponseDto } from "@repo/client";
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { LinkedAccountRef } from "../builder-state";
@@ -58,7 +57,6 @@ export function ChannelConnect({
 }: Props) {
   const { t } = useTranslation();
   const { accounts: unlinkedAccounts } = useUnlinkAccounts();
-  const fetchUnlinkedAccounts = useFetchUnlinkedAccounts();
 
   const linkAccount = useLinkAccount();
   const linkChatbotAccount = useLinkChatbotAccount(chatbotId);
@@ -66,9 +64,14 @@ export function ChannelConnect({
   const provisionWidget = useProvisionWebsiteWidget();
 
   const [busy, setBusy] = useState<string | null>(null);
+  // Fix round 2, item 5: a single busy value already means only one change
+  // is in flight; every other account action is disabled while it's set, so
+  // changes can never overlap.
+  const accountsLocked = busy !== null;
   const [error, setError] = useState(false);
-  // Accounts an OAuth/Telegram response returned that turned out to belong
-  // to another chatbot already (fix round 1, item 1: "no stealing").
+  // Accounts the server refused to link because they already belong to
+  // another chatbot (fix round 2, item 1: enforced server-side now, not
+  // pre-checked against a client-side list that only ever saw one page).
   const [inUseAccounts, setInUseAccounts] = useState<LinkedAccountRef[]>([]);
   const [expanded, setExpanded] = useState<ChannelId | null>(null);
   const [telegramToken, setTelegramToken] = useState("");
@@ -88,13 +91,12 @@ export function ChannelConnect({
   // this stops the other platform's listener from also reacting to a single
   // postMessage.
   const pendingOAuth = useRef<ChannelId | null>(null);
-  const oauthPending = busy === "messenger" || busy === "zalo" ? (busy as ChannelId) : null;
 
   /**
-   * Runs one account mutation with the round-1 fixes applied uniformly:
-   * awaits any autosave already in flight first (item 5), marks this change
-   * "in flight" so autosave waits for it in turn, and manages the busy/error
-   * UI state around it.
+   * Runs one account mutation with the fixes applied uniformly: awaits any
+   * autosave already in flight first (round 1 item 5), marks this change
+   * "in flight" so autosave waits for it in turn, and manages the
+   * busy/error UI state around it.
    */
   const runAccountChange = async (busyKey: string, fn: () => Promise<void>) => {
     await waitForPendingSave();
@@ -112,34 +114,30 @@ export function ChannelConnect({
   };
 
   /**
-   * The no-stealing check (fix round 1, item 1): `syncAccount` upserts by
-   * externalId, so a link response can return an id already owned by
-   * another chatbot. Only candidates that are either already on this bot or
-   * currently unlinked (checked fresh, not from cache) are linked; the rest
-   * surface an inline notice instead of silently moving someone else's
-   * channel.
+   * Applies the server's link result (round 2, item 1): the ownership check
+   * now happens in ChatbotService.linkBatchAccounts, not against a
+   * client-side unlinked-accounts fetch (which only ever saw page 1 and
+   * could wrongly refuse a legitimate connect). Candidates the response
+   * reports under `skipped` already belong to another chatbot and were
+   * never linked; the rest join local state and show an inline notice.
    */
-  const linkAllowed = async (candidates: LinkedAccountRef[]) => {
-    if (!candidates.length) return;
-    const alreadyOnThisBot = new Set(linkedAccounts.map((a) => a.id));
-    const toCheck = candidates.filter((c) => !alreadyOnThisBot.has(c.id));
-    let freshUnlinkedIds = new Set<string>();
-    if (toCheck.length) {
-      const fresh = await fetchUnlinkedAccounts();
-      freshUnlinkedIds = new Set((fresh?.data ?? []).map((a) => a.id));
-    }
-    const linkable = candidates.filter((c) => alreadyOnThisBot.has(c.id) || freshUnlinkedIds.has(c.id));
-    const blocked = candidates.filter((c) => !alreadyOnThisBot.has(c.id) && !freshUnlinkedIds.has(c.id));
-    if (blocked.length) {
+  const applyLinkResult = (candidates: LinkedAccountRef[], result: ChatbotLinkAccountResponseDto | undefined) => {
+    const skipped = result?.skipped ?? [];
+    const skippedIds = new Set(skipped.map((s) => s.id));
+    const linked = candidates.filter((c) => !skippedIds.has(c.id));
+    if (skipped.length) {
       setInUseAccounts((prev) => {
         const existing = new Set(prev.map((a) => a.id));
-        return [...prev, ...blocked.filter((b) => !existing.has(b.id))];
+        return [...prev, ...skipped.filter((s) => !existing.has(s.id))];
       });
     }
-    if (linkable.length) {
-      await linkChatbotAccount.mutateAsync({ accounts: linkable.map((a) => a.id) });
-      onAccountsLinked(linkable);
-    }
+    if (linked.length) onAccountsLinked(linked);
+  };
+
+  const linkCandidates = async (candidates: LinkedAccountRef[]) => {
+    if (!candidates.length) return;
+    const res = await linkChatbotAccount.mutateAsync({ accounts: candidates.map((c) => c.id) });
+    applyLinkResult(candidates, (res.data as A)?.data as ChatbotLinkAccountResponseDto | undefined);
   };
 
   const linkOAuthAccount = (channel: ChannelId, platform: string, code: string) =>
@@ -151,7 +149,7 @@ export function ChannelConnect({
       const candidates: LinkedAccountRef[] = linked.pages?.length
         ? linked.pages.map((p) => ({ id: p.id, type: p.type, name: p.name }))
         : [{ id: linked.id, type: linked.type, name: linked.name }];
-      await linkAllowed(candidates);
+      await linkCandidates(candidates);
     });
 
   const { handleLinkClick: openMessenger } = useOAuthLogin("FACEBOOK_ACCOUNT", {
@@ -225,10 +223,16 @@ export function ChannelConnect({
       const res = await linkAccount.mutateAsync({ code: token, platform: "TELEGRAM_BOT" });
       const linked = (res.data as A)?.data as LinkedAccount | null | undefined;
       if (!linked) return;
-      await linkAllowed([{ id: linked.id, type: linked.type, name: linked.name }]);
+      await linkCandidates([{ id: linked.id, type: linked.type, name: linked.name }]);
       setTelegramToken("");
       setExpanded(null);
     });
+  };
+
+  const resetWidgetForm = () => {
+    setWidgetName(agentName);
+    setWidgetOrigins("");
+    setWidgetError(undefined);
   };
 
   const handleWidgetProvision = () => {
@@ -240,17 +244,13 @@ export function ChannelConnect({
     setWidgetError(undefined);
     return runAccountChange("website", async () => {
       const res = await provisionWidget.mutateAsync({ name: widgetName.trim(), allowedOrigins: origins });
-      await linkChatbotAccount.mutateAsync({ accounts: [res.id] });
-      onAccountsLinked([{ id: res.id, type: "WEBSITE_WIDGET", name: widgetName.trim() }]);
+      await linkCandidates([{ id: res.id, type: "WEBSITE_WIDGET", name: widgetName.trim() }]);
       setIssued({ kind: "WEBSITE_WIDGET", widgetKey: res.widgetKey });
     });
   };
 
   const handleUseExisting = (account: AccountListResponseDto) =>
-    runAccountChange(account.id, async () => {
-      await linkChatbotAccount.mutateAsync({ accounts: [account.id] });
-      onAccountsLinked([{ id: account.id, type: account.type, name: account.name }]);
-    });
+    runAccountChange(account.id, () => linkCandidates([{ id: account.id, type: account.type, name: account.name }]));
 
   const handleUnlink = (accountId: string) =>
     runAccountChange(accountId, async () => {
@@ -265,15 +265,19 @@ export function ChannelConnect({
     onAnswer(Array.from(new Set([...fromAccounts, ...comingSoon])));
   };
 
+  // User-level Facebook accounts aren't a messaging channel themselves
+  // (only their pages are), so never offered here (fix round 2, item 4).
+  const existingChannelAccounts = (unlinkedAccounts ?? []).filter((a) => a.type !== "FACEBOOK_ACCOUNT");
+
   return (
     <div className="flex w-full flex-col gap-4">
-      {unlinkedAccounts && unlinkedAccounts.length > 0 && (
+      {existingChannelAccounts.length > 0 && (
         <div className="flex flex-col gap-2">
           <Text size="small" weight="plus">
             {t("agentBuilder.ui.existingChannels")}
           </Text>
           <div className="flex flex-col gap-1">
-            {unlinkedAccounts.map((account) => (
+            {existingChannelAccounts.map((account) => (
               <div
                 key={account.id}
                 className="flex items-center gap-2 rounded-md border border-ui-border-base bg-ui-bg-base px-3 py-2"
@@ -286,6 +290,7 @@ export function ChannelConnect({
                   size="small"
                   variant="secondary"
                   isLoading={busy === account.id}
+                  disabled={accountsLocked}
                   onClick={() => handleUseExisting(account)}
                 >
                   {t("agentBuilder.ui.useChannel")}
@@ -301,17 +306,13 @@ export function ChannelConnect({
           const connect = CHANNEL_CONNECT[channel];
           const selected = connect.kind === "comingSoon" && comingSoon.has(channel);
           const connected = linkedAccounts.some((a) => channelOfAccountType(a.type) === channel);
-          // Only one OAuth flow at a time: while messenger or zalo is
-          // mid-popup, disable the other OAuth card so its click can't be
-          // misread as belonging to the flow already in progress.
-          const disabledByOtherOAuth = connect.kind === "oauth" && oauthPending !== null && oauthPending !== channel;
           return (
             <button
               key={channel}
               type="button"
               aria-pressed={connect.kind === "comingSoon" ? selected : undefined}
               onClick={() => handleCardClick(channel)}
-              disabled={busy === channel || disabledByOtherOAuth}
+              disabled={accountsLocked}
               className={clx(
                 "flex items-center gap-2 rounded-md border p-3 text-left transition-colors duration-150 ease-out",
                 "border-ui-border-base bg-ui-bg-base hover:bg-ui-bg-base-hover",
@@ -346,10 +347,10 @@ export function ChannelConnect({
             value={telegramToken}
             onChange={setTelegramToken}
             error={telegramError}
-            disabled={busy === "telegram"}
+            disabled={accountsLocked}
             label={t("agentBuilder.ui.telegramTokenLabel")}
           />
-          <Button size="small" isLoading={busy === "telegram"} onClick={handleTelegramConnect}>
+          <Button size="small" isLoading={busy === "telegram"} disabled={accountsLocked && busy !== "telegram"} onClick={handleTelegramConnect}>
             {t("accounts.create.connect.telegram.cta")}
           </Button>
         </div>
@@ -366,7 +367,7 @@ export function ChannelConnect({
               placeholder={t("accounts.create.provision.namePlaceholder")}
               value={widgetName}
               onChange={(e) => setWidgetName(e.target.value)}
-              disabled={busy === "website"}
+              disabled={accountsLocked}
             />
           </div>
           <div className="flex flex-col gap-y-2">
@@ -377,7 +378,7 @@ export function ChannelConnect({
               id={widgetOriginsId}
               value={widgetOrigins}
               onChange={(e) => setWidgetOrigins(e.target.value)}
-              disabled={busy === "website"}
+              disabled={accountsLocked}
               placeholder="https://shop.example.com"
               rows={3}
             />
@@ -387,7 +388,7 @@ export function ChannelConnect({
               </Text>
             )}
           </div>
-          <Button size="small" isLoading={busy === "website"} onClick={handleWidgetProvision}>
+          <Button size="small" isLoading={busy === "website"} disabled={accountsLocked && busy !== "website"} onClick={handleWidgetProvision}>
             {t("accounts.create.provision.cta")}
           </Button>
         </div>
@@ -400,8 +401,11 @@ export function ChannelConnect({
             setExpanded(null);
             // Clears the issued key so reopening the website card shows a
             // fresh provision form instead of the last widget's panel
-            // again (fix round 1, item 4).
+            // again (round 1, item 4), and resets the fields so a second
+            // widget doesn't start prefilled with the last one's name/
+            // origins (round 2, item 7).
             setIssued(null);
+            resetWidgetForm();
           }}
         />
       )}
@@ -420,6 +424,7 @@ export function ChannelConnect({
                 variant="transparent"
                 size="small"
                 isLoading={busy === account.id}
+                disabled={accountsLocked && busy !== account.id}
                 onClick={() => handleUnlink(account.id)}
                 aria-label={t("agentBuilder.ui.unlinkChannel", { name: account.name })}
               >
@@ -436,8 +441,9 @@ export function ChannelConnect({
                   type="button"
                   variant="transparent"
                   size="small"
+                  disabled={accountsLocked}
                   onClick={() => handleCardClick(channel)}
-                  aria-label={t("agentBuilder.ui.unlinkChannel", { name: label })}
+                  aria-label={t("agentBuilder.ui.removeChannel", { name: label })}
                 >
                   <XMarkMini />
                 </IconButton>

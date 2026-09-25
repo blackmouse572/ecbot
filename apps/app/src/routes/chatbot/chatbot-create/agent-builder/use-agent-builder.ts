@@ -139,8 +139,15 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   // set instead of racing it.
   const save = update.mutateAsync;
   useEffect(() => {
+    // While an account change is in flight, leave `pending.current` exactly
+    // as it is instead of clearing it: an answer debounced just before the
+    // link/unlink started must still be there for the unmount-flush effect
+    // below if the builder unmounts mid-link, and once accountsBusy flips
+    // back this effect re-runs and reschedules it (recomputed from current
+    // state) anyway.
+    if (accountsBusy) return;
     pending.current = null;
-    if (!state.chatbotId || !state.profile || accountsBusy) return;
+    if (!state.chatbotId || !state.profile) return;
     const body = toChatbotPayload(state.profile, extraInstructions, base);
     const snapshot = JSON.stringify(body);
     if (snapshot === lastSaved.current || snapshot === failed.current) return;
