@@ -3596,6 +3596,28 @@ export type ChatbotShareLinkRequestDto = {
     expiresIn?: '1h' | '24h' | '7d';
 };
 
+export type ChatbotLinkAccountSkippedDto = {
+    /**
+     * Account ID
+     */
+    id: string;
+    /**
+     * Account name
+     */
+    name: string;
+};
+
+export type ChatbotLinkAccountResponseDto = {
+    /**
+     * Ids actually linked to the chatbot (or already on it)
+     */
+    linked: Array<string>;
+    /**
+     * Accounts the request asked to link that were refused because they already belong to a different chatbot
+     */
+    skipped: Array<ChatbotLinkAccountSkippedDto>;
+};
+
 export type ChatbotLinkAccountRequestDto = {
     /**
      * List of account IDs associated with the chatbot
@@ -17565,6 +17587,7 @@ export type ChatbotControllerLinkAccountV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
+        data?: ChatbotLinkAccountResponseDto;
     };
 };
 

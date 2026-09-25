@@ -69,6 +69,7 @@ const mockChatbotService = {
     mapList: jest.fn(),
     mapDetails: jest.fn(),
     clone: jest.fn(),
+    linkBatchAccounts: jest.fn(),
 };
 
 const mockPaginationService = {
@@ -321,6 +322,49 @@ describe('ChatbotController', () => {
                 undefined
             );
             expect(editableFields).not.toHaveProperty('status');
+        });
+    });
+
+    describe('linkAccount', () => {
+        it('returns the service result (linked/skipped) as the response data, not a mapped chatbot', async () => {
+            mockChatbotService.findOne.mockResolvedValue(mockChatbot);
+            mockChatbotService.linkBatchAccounts.mockResolvedValue({
+                linked: ['a1'],
+                skipped: [{ id: 'a2', name: 'Taken Account' }],
+            });
+            mockActivityService.createByUserWithWorkspace.mockResolvedValue(
+                undefined
+            );
+
+            const result = await controller.linkAccount(
+                mockWorkspace,
+                mockChatbot.id,
+                { accounts: ['a1', 'a2'] },
+                mockUser
+            );
+
+            expect(mockChatbotService.linkBatchAccounts).toHaveBeenCalledWith(
+                mockChatbot,
+                ['a1', 'a2'],
+                { actionBy: mockUser.id }
+            );
+            expect(result.data).toEqual({
+                linked: ['a1'],
+                skipped: [{ id: 'a2', name: 'Taken Account' }],
+            });
+        });
+
+        it('throws NotFoundException when chatbot does not exist', async () => {
+            mockChatbotService.findOne.mockResolvedValue(null);
+
+            await expect(
+                controller.linkAccount(
+                    mockWorkspace,
+                    'nonexistent-id',
+                    { accounts: ['a1'] },
+                    mockUser
+                )
+            ).rejects.toThrow(NotFoundException);
         });
     });
 

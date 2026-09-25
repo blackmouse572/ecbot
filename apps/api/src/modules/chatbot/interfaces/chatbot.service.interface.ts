@@ -11,7 +11,11 @@ import { CloneChatbotRequestDto } from '../dtos/request/chatbot.clone.request.dt
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
 import { ChatbotListResponseDto } from '../dtos/response/chatbot.list.response.dto';
 
-import { IChatbotDoc, IChatbotEntity } from './chatbot.interface';
+import {
+    IChatbotDoc,
+    IChatbotEntity,
+    IChatbotLinkAccountsResult,
+} from './chatbot.interface';
 
 export interface IChatbotService {
     findAll(
@@ -80,7 +84,7 @@ export interface IChatbotService {
         chatbot: IChatbotDoc,
         accountIds: string[],
         options?: IDatabaseSaveOptions
-    ): Promise<IChatbotDoc>;
+    ): Promise<IChatbotLinkAccountsResult>;
 
     unlinkBatchAccounts(
         chatbot: IChatbotDoc,

@@ -9,7 +9,12 @@ describe('ChatbotService', () => {
     let service: ChatbotService;
 
     beforeEach(() => {
-        service = new ChatbotService({} as any, {} as any, {} as any);
+        service = new ChatbotService(
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any
+        );
     });
 
     describe('buildCreateEntity', () => {

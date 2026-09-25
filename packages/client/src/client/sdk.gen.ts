@@ -3391,6 +3391,7 @@ export const chatbotControllerArchiveV1 = <ThrowOnError extends boolean = false>
 
 /**
  * link an account to chatbot
+ * Links each requested account id, unless it already belongs to a different chatbot: those are refused (never moved) and reported back under `skipped`.
  */
 export const chatbotControllerLinkAccountV1 = <ThrowOnError extends boolean = false>(options: Options<ChatbotControllerLinkAccountV1Data, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).post<ChatbotControllerLinkAccountV1Responses, ChatbotControllerLinkAccountV1Errors, ThrowOnError>({

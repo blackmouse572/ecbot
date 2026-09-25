@@ -3,7 +3,12 @@ import { createProfile } from '@repo/agent-blueprint';
 import { ChatbotService } from '../../../../src/modules/chatbot/services/chatbot.service';
 
 describe('ChatbotService.resolvePromptFields', () => {
-    const service = new ChatbotService({} as any, {} as any, {} as any);
+    const service = new ChatbotService(
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any
+    );
     const profile = {
         ...createProfile('beauty', 'vi'),
         businessName: 'Lotus',
@@ -91,7 +96,8 @@ describe('ChatbotService.create', () => {
         const service = new ChatbotService(
             { getReference: jest.fn() } as any,
             repo as any,
-            cache as any
+            cache as any,
+            {} as any
         );
         await service.create({
             name: 'b',

@@ -9,8 +9,10 @@ import {
     IDatabaseSaveOptions,
 } from '@app/common/database/interfaces/database.interface';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
+import { AccountRepository } from '@app/modules/account/repository/repositories/account.repository';
 import { CloneChatbotRequestDto } from '../dtos/request/chatbot.clone.request.dto';
 import { IChatbotService } from '@app/modules/chatbot/interfaces/chatbot.service.interface';
+import { IChatbotLinkAccountsResult } from '@app/modules/chatbot/interfaces/chatbot.interface';
 import {
     agentProfileSchema,
     compilePrompt,
@@ -56,7 +58,8 @@ export class ChatbotService implements IChatbotService {
     constructor(
         private readonly em: EntityManager,
         private readonly chatbotRepository: ChatbotRepository,
-        private readonly chatbotCacheService: ChatbotCacheService
+        private readonly chatbotCacheService: ChatbotCacheService,
+        private readonly accountRepository: AccountRepository
     ) {}
 
     findAll(
@@ -448,11 +451,19 @@ export class ChatbotService implements IChatbotService {
         return true;
     }
 
+    /**
+     * Links accounts to this chatbot, refusing to move one that already
+     * belongs to a different chatbot instead of silently reassigning it.
+     * `syncAccount` upserts by `externalId`, so a client (an OAuth/Telegram
+     * link response, or a stale "Use an existing channel" list) can be
+     * handed an id it does not actually own; this is the one place that
+     * enforces ownership before the collection is mutated.
+     */
     async linkBatchAccounts(
         chatbot: ChatbotEntity,
         accountIds: string[],
         options?: IDatabaseSaveOptions & { actionBy?: string }
-    ): Promise<ChatbotEntity> {
+    ): Promise<IChatbotLinkAccountsResult> {
         if (!chatbot.accounts) {
             chatbot.accounts = new Collection(chatbot);
         }
@@ -464,20 +475,46 @@ export class ChatbotService implements IChatbotService {
         }
 
         const existingIds = chatbot.accounts.getItems().map(acc => acc.id);
-        const newAccountIds = accountIds.filter(
-            id => !existingIds.includes(id)
-        );
+        const uniqueIds = Array.from(new Set(accountIds));
 
-        if (newAccountIds.length > 0) {
-            newAccountIds.forEach(accountId => {
-                chatbot.accounts.add(
-                    this.em.getReference(AccountEntity, accountId)
-                );
-            });
-            return this.chatbotRepository.save(chatbot, options);
+        // Loaded fresh from the database (never trusted from the client),
+        // scoped to this chatbot's own workspace.
+        const accounts = await this.accountRepository.find({
+            id: { $in: uniqueIds },
+            workspace: chatbot.workspace.id,
+        } as FilterQuery<AccountEntity>);
+        const accountById = new Map(accounts.map(acc => [acc.id, acc]));
+
+        const linked: string[] = [];
+        const skipped: IChatbotLinkAccountsResult['skipped'] = [];
+        let changed = false;
+
+        for (const id of uniqueIds) {
+            const account = accountById.get(id);
+            // Not found in this workspace at all: neither linked nor
+            // reported, the same as any other unknown id.
+            if (!account) {
+                continue;
+            }
+
+            const ownerId = account.chatbot?.id;
+            if (ownerId && ownerId !== chatbot.id) {
+                skipped.push({ id: account.id, name: account.name });
+                continue;
+            }
+
+            if (!existingIds.includes(id)) {
+                chatbot.accounts.add(account);
+                changed = true;
+            }
+            linked.push(id);
         }
 
-        return chatbot;
+        if (changed) {
+            await this.chatbotRepository.save(chatbot, options);
+        }
+
+        return { linked, skipped };
     }
 
     async unlinkBatchAccounts(
