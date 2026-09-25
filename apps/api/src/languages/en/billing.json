@@ -5,12 +5,18 @@
         "create": "Plan created successfully.",
         "update": "Plan updated successfully.",
         "archive": "Plan archived successfully.",
-        "sync": "Plan synced to the payment provider successfully."
+        "sync": "Plan synced to the payment provider successfully.",
+        "activate": "Plan is on sale again.",
+        "inactivate": "Plan taken off sale."
     },
     "subscription": {
         "get": "Subscription retrieved successfully.",
         "assign": "Plan assigned to the workspace successfully.",
-        "credit": "Tokens credited to the workspace successfully."
+        "credit": "Tokens credited to the workspace successfully.",
+        "list": "Subscriptions retrieved successfully.",
+        "cancel": "Subscription canceled successfully.",
+        "resume": "Subscription resumed successfully.",
+        "changePlan": "Subscription plan changed successfully."
     },
     "error": {
         "planNotFound": "Plan not found.",
@@ -18,6 +24,11 @@
         "planSyncFailed": "Plan saved, but syncing it to the payment provider failed.",
         "subscriptionNotFound": "This workspace has no subscription.",
         "unsupportedPaymentProvider": "Payment provider is not supported.",
-        "planIsSystem": "This is a system plan and cannot be archived."
+        "planIsSystem": "This is a system plan and cannot be archived.",
+        "subscriptionProviderManaged": "This subscription is paid through a payment provider and cannot be changed here yet.",
+        "subscriptionNotCancelable": "This subscription has already ended.",
+        "subscriptionNotResumable": "This subscription has no scheduled cancel to undo.",
+        "planInactive": "This plan is not on sale.",
+        "planInUse": "{live} workspace(s) are subscribed to this plan, so its price, currency and billing cycle cannot change. Create a new plan instead."
     }
 }
