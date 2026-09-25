@@ -303,7 +303,10 @@ export class FollowupService {
                 stream,
                 abort: ac,
                 isCurrent: async () => true,
-                onSegmentPersist: async (segmentText: string) => {
+                onSegmentPersist: async (
+                    segmentText: string,
+                    attachments?: unknown[]
+                ) => {
                     const nonce = randomUUID();
                     await this.messageRepository.insertPendingOutbound(
                         conversationId,
@@ -312,6 +315,7 @@ export class FollowupService {
                             authorType: ENUM_MESSAGE_AUTHOR.BOT,
                             authorId: chatbot.id,
                             text: segmentText,
+                            attachments,
                             dateSent: new Date(),
                         }
                     );

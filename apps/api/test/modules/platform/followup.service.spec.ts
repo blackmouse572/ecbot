@@ -181,4 +181,42 @@ describe('FollowupService', () => {
             { followupId: 'f-1', reason: 'payment_check', firesInMinutes: 20 },
         ]);
     });
+
+    it('keeps the image a follow-up sends on the persisted message', async () => {
+        const insertPendingOutbound = jest.fn().mockResolvedValue(undefined);
+        const account = {
+            id: 'acc-1',
+            type: 'telegram',
+            chatbot: { id: 'cb-1', workspace: { id: 'ws-1' } },
+        };
+        const image = [{ type: 'image', url: 'https://kb/shirt.jpg' }];
+        const service = new FollowupService(
+            {} as any,
+            makeFollowupRepository([]) as any,
+            { findOne: jest.fn().mockResolvedValue(account) } as any,
+            { streamChat: jest.fn().mockResolvedValue({}) } as any,
+            { insertPendingOutbound } as any,
+            { get: jest.fn().mockReturnValue({}) } as any,
+            { build: jest.fn().mockResolvedValue([]) } as any,
+            {
+                deliver: jest.fn(async (p: any) => {
+                    await p.onSegmentPersist('', image);
+                    return {};
+                }),
+            } as any,
+            {} as any
+        );
+        jest.spyOn(service as any, 'buildHistory').mockResolvedValue([]);
+        jest.spyOn(service as any, 'recordOutcome').mockResolvedValue(
+            undefined
+        );
+
+        await (service as any).generateAndDeliver(null, jobData);
+
+        expect(insertPendingOutbound).toHaveBeenCalledWith(
+            'conv-1',
+            expect.any(String),
+            expect.objectContaining({ attachments: image })
+        );
+    });
 });
