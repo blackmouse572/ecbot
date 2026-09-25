@@ -7,6 +7,9 @@ export type BuilderState = {
   profile: AgentProfile | null;
   suggestion: AgentSuggestion | null;
   source: "describe" | "template" | "hydrate" | null;
+  // The raw text typed into the step-0 describe box, kept only to redisplay
+  // it as the step-0 answer bubble (it isn't part of AgentProfile).
+  describeText: string | null;
   answered: string[];
   editing: string | null;
   chatbotId: string | null;
@@ -14,18 +17,25 @@ export type BuilderState = {
 };
 
 export type BuilderAction =
-  | { type: "start"; profile: AgentProfile; suggestion: AgentSuggestion | null; source: "describe" | "template" }
+  | {
+      type: "start";
+      profile: AgentProfile;
+      suggestion: AgentSuggestion | null;
+      source: "describe" | "template";
+      description?: string;
+    }
   | { type: "hydrate"; profile: AgentProfile; chatbotId: string; finished: boolean }
   | { type: "answer"; question: Question; value: unknown }
   | { type: "skip"; question: Question }
   | { type: "edit"; questionId: string }
+  | { type: "restart" }
   | { type: "draftCreated"; chatbotId: string }
   | { type: "finished" };
 
 export type Step = { group: QuestionGroup; question: Question };
 
 export const initialBuilderState: BuilderState = {
-  profile: null, suggestion: null, source: null, answered: [], editing: null, chatbotId: null, finished: false,
+  profile: null, suggestion: null, source: null, describeText: null, answered: [], editing: null, chatbotId: null, finished: false,
 };
 
 export function steps(profile: AgentProfile): Step[] {
@@ -55,7 +65,19 @@ const addOnce = (list: string[], id: string) => (list.includes(id) ? list : [...
 export function builderReducer(state: BuilderState, action: BuilderAction): BuilderState {
   switch (action.type) {
     case "start":
-      return { ...initialBuilderState, profile: action.profile, suggestion: action.suggestion, source: action.source };
+      return {
+        ...initialBuilderState,
+        // Preserve an existing draft's id: choosing a template (or a new
+        // description) after `restart` updates that draft instead of
+        // creating a second one.
+        chatbotId: state.chatbotId,
+        profile: action.profile,
+        suggestion: action.suggestion,
+        source: action.source,
+        describeText: action.source === "describe" ? (action.description ?? null) : null,
+        // The template already chose the business type.
+        answered: action.source === "template" ? ["businessType"] : [],
+      };
     case "hydrate":
       return {
         ...initialBuilderState,
@@ -78,6 +100,10 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       return { ...state, answered: addOnce(state.answered, action.question.id), editing: null };
     case "edit":
       return { ...state, editing: action.questionId };
+    case "restart":
+      // Back to step 0. Keeps chatbotId so choosing again updates the
+      // existing draft instead of creating a second one.
+      return { ...initialBuilderState, chatbotId: state.chatbotId };
     case "draftCreated":
       return { ...state, chatbotId: action.chatbotId };
     case "finished":

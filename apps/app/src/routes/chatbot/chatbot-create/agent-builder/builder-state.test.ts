@@ -4,7 +4,13 @@ import {
   builderReducer, currentStep, initialBuilderState, isComplete, isDraftReady, steps, type BuilderState,
 } from "./builder-state";
 
+// Generic reducer-flow tests use "describe" so businessType starts
+// unanswered; the template-specific skip behavior (section B) gets its own
+// helper below.
 const started = (): BuilderState =>
+  builderReducer(initialBuilderState, { type: "start", profile: createProfile("beauty", "vi"), suggestion: null, source: "describe" });
+
+const startedFromTemplate = (): BuilderState =>
   builderReducer(initialBuilderState, { type: "start", profile: createProfile("beauty", "vi"), suggestion: null, source: "template" });
 
 function answerAllUntil(state: BuilderState, stop: (s: BuilderState) => boolean): BuilderState {
@@ -19,6 +25,12 @@ function answerAllUntil(state: BuilderState, stop: (s: BuilderState) => boolean)
 describe("builderReducer", () => {
   it("starts on the first identity question", () => {
     expect(currentStep(started())?.question.id).toBe("businessType");
+  });
+
+  it("skips the business-type question when starting from a template", () => {
+    const s = startedFromTemplate();
+    expect(s.answered).toEqual(["businessType"]);
+    expect(currentStep(s)?.question.id).toBe("businessName");
   });
 
   it("records an answer and moves to the next question", () => {
@@ -58,5 +70,20 @@ describe("builderReducer", () => {
     const s = builderReducer(initialBuilderState, { type: "hydrate", profile: createProfile("hotel", "en"), chatbotId: "c1", finished: true });
     expect(isComplete(s)).toBe(true);
     expect(s.chatbotId).toBe("c1");
+  });
+
+  it("restart keeps chatbotId and clears everything else", () => {
+    const withDraft = { ...started(), chatbotId: "c1" };
+    const restarted = builderReducer(withDraft, { type: "restart" });
+    expect(restarted).toEqual({ ...initialBuilderState, chatbotId: "c1" });
+  });
+
+  it("keeps chatbotId when starting a new template after a restart", () => {
+    const restarted = builderReducer({ ...started(), chatbotId: "c1" }, { type: "restart" });
+    const s = builderReducer(restarted, {
+      type: "start", profile: createProfile("restaurant", "vi"), suggestion: null, source: "template",
+    });
+    expect(s.chatbotId).toBe("c1");
+    expect(s.answered).toEqual(["businessType"]);
   });
 });
