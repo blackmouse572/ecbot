@@ -27,9 +27,6 @@ type Props = {
   linkedAccounts: LinkedAccountRef[];
   onAccountsLinked: (accounts: LinkedAccountRef[]) => void;
   onAccountsUnlinked: (ids: string[]) => void;
-  beginAccountsChange: () => void;
-  endAccountsChange: () => void;
-  waitForPendingSave: () => Promise<void>;
 };
 
 const BOOLEAN_CHOICES = [
@@ -76,7 +73,7 @@ function choiceIcon(question: Question, value: string) {
  */
 export function QuestionTurn({
   question, profile, suggestion, position, onAnswer, onSkip, chatbotId, linkedAccounts,
-  onAccountsLinked, onAccountsUnlinked, beginAccountsChange, endAccountsChange, waitForPendingSave,
+  onAccountsLinked, onAccountsUnlinked,
 }: Props) {
   const { t } = useTranslation();
   const [value, setValue] = useState(() => toFormValue(question, readAnswer(profile, question.path)));
@@ -100,9 +97,6 @@ export function QuestionTurn({
               onAccountsLinked={onAccountsLinked}
               onAccountsUnlinked={onAccountsUnlinked}
               onAnswer={(channels) => onAnswer(channels)}
-              beginAccountsChange={beginAccountsChange}
-              endAccountsChange={endAccountsChange}
-              waitForPendingSave={waitForPendingSave}
             />
           </MessageContent>
         </Message>

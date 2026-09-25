@@ -379,6 +379,19 @@ describe("AgentBuilder", () => {
       expect(update).not.toHaveBeenCalled();
     });
 
+    // Fix round 3, item 3: hydrating a chatbot that already has linked
+    // accounts must never reintroduce them into an autosave body: `base`
+    // (built from the hydrated chatbot) no longer carries `accounts` at all.
+    it("never reintroduces a hydrated chatbot's existing linked accounts into an autosave body", async () => {
+      chatbot.mockReturnValue({
+        chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
+      });
+      render(tree());
+      await renameTo("Lotus Spa");
+      await waitFor(() => expect(update).toHaveBeenCalled());
+      expect(update.mock.calls.at(-1)?.[0]?.body?.accounts).toEqual([]);
+    });
+
     it("keeps the builder open and shows an error when activating fails", async () => {
       activate.mockRejectedValue(new Error("down"));
       chatbot.mockReturnValue({ chatbot: bot() });
@@ -398,15 +411,17 @@ describe("AgentBuilder", () => {
       expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-9", body: { agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }) } });
     });
 
-    // Section 4's autosave safety rule: `accounts` must never regress to a
-    // stale non-empty list, or the next autosave would REPLACE the whole
-    // set server-side and drop whatever was just linked.
+    // Fix round 3: account membership never travels through the autosave
+    // payload at all any more, so this is now trivially true (no "keep the
+    // linked set in sync" logic left to verify); the assertion that
+    // matters is simply that `accounts` is always empty, never the stale
+    // (or even the correct) linked set.
     it("keeps a channel linked through the channels turn in the next autosave's accounts", async () => {
       chatbot.mockReturnValue({
         chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
       });
       linkAccount.mockResolvedValue({ data: { data: { id: "a2", type: "TELEGRAM_BOT", name: "New Bot" } } });
-      linkChatbotAccount.mockResolvedValue({});
+      linkChatbotAccount.mockResolvedValue({ data: { data: { linked: ["a2"], skipped: [] } } });
       render(tree());
 
       // Reopen the (already-hydrated) channels turn and link a Telegram bot.
@@ -421,48 +436,15 @@ describe("AgentBuilder", () => {
       await renameTo("Lotus Spa");
       await waitFor(() => expect(update).toHaveBeenCalled());
       const lastBody = update.mock.calls.at(-1)?.[0]?.body;
-      expect(lastBody.accounts).toEqual(expect.arrayContaining(["a1", "a2"]));
+      expect(lastBody.accounts).toEqual([]);
     });
 
-    // Section 4's autosave safety fix, hardened by review round 1 item 5:
-    // `accounts` is replace-all server side, so a link and a debounced
-    // autosave firing at the same time can still race even with
-    // linkedAccounts tracked locally. Uses deferred promises to prove the
-    // two are actually serialized, not just usually fast enough.
-    it("does not autosave while a link is in flight, then sends one save with the current set once it settles", async () => {
-      chatbot.mockReturnValue({
-        chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
-      });
-      linkAccount.mockResolvedValue({ data: { data: { id: "a2", type: "TELEGRAM_BOT", name: "New Bot" } } });
-      let resolveLink: (v: unknown) => void = () => {};
-      linkChatbotAccount.mockReturnValue(new Promise((r) => { resolveLink = r; }));
-      render(tree());
-
-      await userEvent.click(screen.getByText(/agentBuilder\.questions\.channels\.lead/));
-      await userEvent.click(screen.getByText("agentBuilder.channels.telegram"));
-      const token = `123456:${"A".repeat(40)}`;
-      await userEvent.type(screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"), token);
-      await userEvent.click(screen.getByRole("button", { name: "accounts.create.connect.telegram.cta" }));
-      await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalled());
-
-      // An unrelated edit would normally schedule a debounced autosave;
-      // while the link above is still pending, it must not fire.
-      await renameTo("Lotus Spa");
-      await new Promise((r) => setTimeout(r, 900));
-      expect(update).not.toHaveBeenCalled();
-
-      // Settle the link, then the debounce reschedules with the current set.
-      resolveLink({});
-      await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 2000 });
-      const lastBody = update.mock.calls.at(-1)?.[0]?.body;
-      expect(lastBody.accounts).toEqual(expect.arrayContaining(["a1", "a2"]));
-    });
-
-    // Fix round 2, item 6: a debounced answer queued just before a link
-    // starts must not be silently dropped if the builder unmounts while
-    // that link is still in flight (accountsBusy blocks the debounce from
-    // firing, but the queued edit itself must survive to the unmount flush).
-    it("flushes a debounced answer that was pending when a link started, if the builder unmounts mid-link", async () => {
+    // Fix round 3, item 3: a debounced answer queued just before (or during)
+    // a link starts must still flush normally if the builder unmounts: there's
+    // no serialization left to interfere (round 2's accountsBusy gating was
+    // removed once `accounts` stopped traveling through this payload at
+    // all), and the flushed body's accounts is always [].
+    it("flushes a debounced answer with accounts: [] if the builder unmounts while a link is still in flight", async () => {
       chatbot.mockReturnValue({
         chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
       });
@@ -471,11 +453,10 @@ describe("AgentBuilder", () => {
       linkChatbotAccount.mockReturnValue(new Promise(() => {}));
       const { unmount } = render(tree());
 
-      // Queue an unrelated debounced answer edit first, before any link starts.
+      // Queue an unrelated debounced answer edit first.
       await renameTo("Lotus Spa");
 
-      // Before that debounce fires, start a link: accountsBusy flips true
-      // partway through the queued edit's debounce window.
+      // Before that debounce fires, start a link (still pending at unmount).
       await userEvent.click(screen.getByText(/agentBuilder\.questions\.channels\.lead/));
       await userEvent.click(screen.getByText("agentBuilder.channels.telegram"));
       const token = `123456:${"A".repeat(40)}`;
@@ -486,10 +467,12 @@ describe("AgentBuilder", () => {
       unmount();
 
       expect(update).toHaveBeenCalled();
-      expect(update.mock.calls.at(-1)?.[0]).toMatchObject({
+      const lastCall = update.mock.calls.at(-1)?.[0];
+      expect(lastCall).toMatchObject({
         id: "bot-9",
         body: { agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }) },
       });
+      expect(lastCall.body.accounts).toEqual([]);
     });
   });
 

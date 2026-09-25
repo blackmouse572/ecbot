@@ -15,6 +15,13 @@ export const CHATBOT_HANDOFF_FALLBACK_THRESHOLD_DEFAULT = 3;
  * chatbot) or the form defaults. Name, languages and the welcome message are
  * derived from the profile only when `base` has none, so settings edited
  * elsewhere survive reopening the builder.
+ *
+ * `accounts` is always `[]`, regardless of `base` (fix round 3): account
+ * membership never travels through this payload. It changes only through
+ * the guarded link/unlink endpoints (apps/api ChatbotService.linkBatchAccounts
+ * checks ownership; this payload has no way to). Sending a non-empty array
+ * here would replace the chatbot's whole linked-accounts set server side;
+ * exactly the race this rule removes by construction, not by timing.
  */
 export function toChatbotPayload(
   profile: AgentProfile,
@@ -25,7 +32,6 @@ export function toChatbotPayload(
   return {
     autoRead: CHATBOT_FORM_DEFAULTS.autoRead,
     typingIndicator: CHATBOT_FORM_DEFAULTS.typingIndicator,
-    accounts: [],
     modelTextName: CHATBOT_FORM_DEFAULTS.modelTextName,
     modelTemperature: CHATBOT_FORM_DEFAULTS.modelTemperature,
     fallbackMessage: "",
@@ -36,6 +42,7 @@ export function toChatbotPayload(
     followupRules: "",
     handoffFallbackThreshold: CHATBOT_HANDOFF_FALLBACK_THRESHOLD_DEFAULT,
     ...base,
+    accounts: [],
     name: base.name ?? (profile.agentName.trim() || profile.businessName.trim() || "Agent"),
     type: profile.businessType as ChatbotCreateRequestDto["type"],
     primaryLanguage: base.primaryLanguage ?? language,

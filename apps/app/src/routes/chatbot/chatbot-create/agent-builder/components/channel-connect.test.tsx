@@ -41,9 +41,6 @@ import { ChannelConnect } from "./channel-connect";
 const onAccountsLinked = vi.fn();
 const onAccountsUnlinked = vi.fn();
 const onAnswer = vi.fn();
-const beginAccountsChange = vi.fn();
-const endAccountsChange = vi.fn();
-const waitForPendingSave = vi.fn();
 
 const renderConnect = (channels: string[] = [], linkedAccounts: LinkedAccountRef[] = []) =>
   render(
@@ -55,9 +52,6 @@ const renderConnect = (channels: string[] = [], linkedAccounts: LinkedAccountRef
       onAccountsLinked={onAccountsLinked}
       onAccountsUnlinked={onAccountsUnlinked}
       onAnswer={onAnswer}
-      beginAccountsChange={beginAccountsChange}
-      endAccountsChange={endAccountsChange}
-      waitForPendingSave={waitForPendingSave}
     />,
   );
 
@@ -79,9 +73,6 @@ function StatefulHarness({ channels = [] as string[] }) {
       }}
       onAccountsUnlinked={onAccountsUnlinked}
       onAnswer={onAnswer}
-      beginAccountsChange={beginAccountsChange}
-      endAccountsChange={endAccountsChange}
-      waitForPendingSave={waitForPendingSave}
     />
   );
 }
@@ -90,8 +81,8 @@ beforeEach(() => {
   unlinkAccountsMock.mockReset().mockReturnValue({ accounts: [] });
   linkAccount.mockReset();
   // By default every requested id links cleanly (server reports it back
-  // under `linked`, nothing `skipped`); tests that need an id refused
-  // override this per-call.
+  // under `linked`, nothing `skipped`); tests that need an id refused, or
+  // an unexpected response shape, override this per-call.
   linkChatbotAccount.mockReset().mockImplementation((body: { accounts: string[] }) =>
     Promise.resolve({ data: { data: { linked: body.accounts, skipped: [] } } }),
   );
@@ -101,9 +92,6 @@ beforeEach(() => {
   onAccountsUnlinked.mockReset();
   onAnswer.mockReset();
   oAuthClick.mockReset();
-  beginAccountsChange.mockReset();
-  endAccountsChange.mockReset();
-  waitForPendingSave.mockReset().mockResolvedValue(undefined);
   for (const k of Object.keys(oAuthHandlers)) delete oAuthHandlers[k];
 });
 
@@ -122,8 +110,6 @@ describe("ChannelConnect", () => {
     await waitFor(() => expect(linkAccount).toHaveBeenCalledWith({ code: "auth-code", platform: "FACEBOOK_ACCOUNT" }));
     await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-1"] }));
     expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" }]);
-    expect(beginAccountsChange).toHaveBeenCalled();
-    expect(endAccountsChange).toHaveBeenCalled();
     // The chip actually renders once the account flows back into state,
     // the same way BuilderThread's reducer feeds it back in practice.
     expect(await screen.findByText("Lotus Spa")).toBeInTheDocument();
@@ -317,20 +303,32 @@ describe("ChannelConnect", () => {
     expect(screen.getByRole("button", { name: "agentBuilder.ui.connectLater" })).toBeInTheDocument();
   });
 
-  it("awaits any pending autosave before starting a link (item 5)", async () => {
-    let resolveSave: () => void = () => {};
-    waitForPendingSave.mockReturnValue(new Promise<void>((r) => { resolveSave = r; }));
-    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
+  it("fails closed: an id the response reports in neither linked nor skipped adds no chip, and shows connectFailed (item 4)", async () => {
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-x", name: "Mystery Account", type: "ZALO_ACCOUNT" } } });
+    linkChatbotAccount.mockResolvedValue({ data: { data: { linked: [], skipped: [] } } });
 
     const user = userEvent.setup();
     renderConnect();
-    await user.click(screen.getByRole("button", { name: "agentBuilder.ui.useChannel" }));
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
 
-    // The mutation must not have started yet: waitForPendingSave hasn't resolved.
-    expect(linkChatbotAccount).not.toHaveBeenCalled();
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-x"] }));
+    expect(onAccountsLinked).not.toHaveBeenCalled();
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+  });
 
-    resolveSave();
-    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-9"] }));
+  it("fails closed: an undefined response body links nothing and shows connectFailed (item 4)", async () => {
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-y", name: "No Response", type: "ZALO_ACCOUNT" } } });
+    linkChatbotAccount.mockResolvedValue({});
+
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalled());
+    expect(onAccountsLinked).not.toHaveBeenCalled();
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
   });
 
   it("excludes user-level FACEBOOK_ACCOUNT rows from 'use an existing channel' (only pages are a channel)", () => {

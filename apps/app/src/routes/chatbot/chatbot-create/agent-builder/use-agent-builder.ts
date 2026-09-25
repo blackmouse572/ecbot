@@ -5,7 +5,7 @@ import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto } from "@repo
 import { useCreateChatbot, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
 import { useAgentBuilderSuggest } from "@/hooks/api/agent-builder";
 import { toast } from "@medusajs/ui";
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { builderReducer, initialBuilderState, isDraftReady } from "./builder-state";
 import { toChatbotPayload } from "./to-chatbot-payload";
@@ -15,16 +15,20 @@ const SAVE_DEBOUNCE_MS = 600;
 /**
  * The chatbot's editable fields only. Read-only ones (timestamps, ids, the
  * compiled prompt) change on every refetch and would make each one look like
- * an unsaved edit.
+ * an unsaved edit. `accounts` is excluded too (fix round 3): it never
+ * travels through this payload, only the guarded link/unlink endpoints
+ * change it, so a reopened bot's existing linked accounts can never
+ * reintroduce themselves into an autosave body. toChatbotPayload also
+ * forces `accounts: []` unconditionally, as a second, independent guard.
  */
 const READ_ONLY_FIELDS = new Set<string>([
   "id", "createdAt", "createdBy", "updatedAt", "updatedBy", "deleted", "deletedAt", "deletedBy",
-  "generalKnowledge", "workspace", "status", "modelProvider",
+  "generalKnowledge", "workspace", "status", "modelProvider", "accounts",
 ]);
 
 function baseFrom(chatbot: ChatbotGetDetailResponseDto): Partial<ChatbotCreateRequestDto> {
   const editable = Object.fromEntries(Object.entries(chatbot).filter(([key]) => !READ_ONLY_FIELDS.has(key)));
-  return { ...(editable as Partial<ChatbotCreateRequestDto>), accounts: (chatbot.accounts ?? []).map((a) => a.id) };
+  return editable as Partial<ChatbotCreateRequestDto>;
 }
 
 export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: ChatbotGetDetailResponseDto }) {
@@ -47,18 +51,6 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   const failed = useRef("");
   // The debounced save not sent yet, flushed on unmount.
   const pending = useRef<{ id: string; body: ChatbotCreateRequestDto; snapshot: string } | null>(null);
-  // Serializes autosave against linking/unlinking an account through the
-  // channels turn (replace-all semantics on `accounts` means either one
-  // racing the other can drop a change): while an account change is in
-  // flight, no new autosave is scheduled; ChannelConnect awaits
-  // `waitForPendingSave` before starting its own mutation.
-  const [accountsBusy, setAccountsBusy] = useState(false);
-  const savePromiseRef = useRef<Promise<unknown> | null>(null);
-  const beginAccountsChange = useCallback(() => setAccountsBusy(true), []);
-  const endAccountsChange = useCallback(() => setAccountsBusy(false), []);
-  const waitForPendingSave = useCallback(async () => {
-    if (savePromiseRef.current) await savePromiseRef.current.catch(() => {});
-  }, []);
   // Hydrate a given chatbot id only once: `hydrateFrom` is refetched (a new
   // object reference with the same id) after every autosave, and re-running
   // "hydrate" on each refetch would replace in-progress local answers with
@@ -66,16 +58,11 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   const hydratedId = useRef<string | null>(null);
 
   const extraInstructions = hydrateFrom?.extraInstructions ?? "";
-  // `accounts` always reflects `state.linkedAccounts`, tracked locally
-  // (builder-state.ts) rather than the hydrate snapshot: an account linked
-  // or unlinked through the channels turn updates it synchronously, so
-  // autosave never sends a stale non-empty list that would drop it (see
-  // to-chatbot-payload.ts's "never send a partial non-empty list" rule).
-  const linkedAccountIds = useMemo(() => state.linkedAccounts.map((a) => a.id), [state.linkedAccounts]);
-  const base = useMemo(
-    () => ({ ...(hydrateFrom ? baseFrom(hydrateFrom) : {}), accounts: linkedAccountIds }),
-    [hydrateFrom, linkedAccountIds],
-  );
+  // `state.linkedAccounts` (builder-state.ts) is for the UI and the channels
+  // answer only; it never feeds into `base`/the autosave payload (fix
+  // round 3: account membership changes only through the guarded
+  // link/unlink endpoints, never through this create/update body).
+  const base = useMemo(() => (hydrateFrom ? baseFrom(hydrateFrom) : {}), [hydrateFrom]);
 
   useEffect(() => {
     if (!hydrateFrom?.agentProfile) return;
@@ -83,8 +70,7 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
     hydratedId.current = hydrateFrom.id;
     const profile = hydrateFrom.agentProfile as unknown as AgentProfile;
     const accounts = (hydrateFrom.accounts ?? []).map((a) => ({ id: a.id, type: a.type, name: a.name }));
-    const accountIds = accounts.map((a) => a.id);
-    lastSaved.current = JSON.stringify(toChatbotPayload(profile, extraInstructions, { ...base, accounts: accountIds }));
+    lastSaved.current = JSON.stringify(toChatbotPayload(profile, extraInstructions, base));
     dispatch({ type: "hydrate", profile, chatbotId: hydrateFrom.id, finished: hydrateFrom.status === "active", accounts });
   }, [hydrateFrom, extraInstructions, base]);
 
@@ -133,19 +119,12 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   }, [state, extraInstructions, base, createDraft]);
 
   // After the draft exists, every answer saves the full payload (debounced).
-  // Never while an account link/unlink is in flight (accountsBusy): that
-  // mutation's own success already updates `state.linkedAccounts`, so once
-  // it settles this effect re-runs and schedules a save with the current
-  // set instead of racing it.
+  // No longer serialized against account link/unlink (fix round 3): since
+  // `accounts` is always `[]` in this payload, autosave and a link/unlink
+  // can never race on it: they're independent mutations now, by
+  // construction rather than by timing.
   const save = update.mutateAsync;
   useEffect(() => {
-    // While an account change is in flight, leave `pending.current` exactly
-    // as it is instead of clearing it: an answer debounced just before the
-    // link/unlink started must still be there for the unmount-flush effect
-    // below if the builder unmounts mid-link, and once accountsBusy flips
-    // back this effect re-runs and reschedules it (recomputed from current
-    // state) anyway.
-    if (accountsBusy) return;
     pending.current = null;
     if (!state.chatbotId || !state.profile) return;
     const body = toChatbotPayload(state.profile, extraInstructions, base);
@@ -155,7 +134,7 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
     pending.current = { id, body, snapshot };
     const timer = setTimeout(() => {
       pending.current = null;
-      const savePromise = save({ id, body })
+      save({ id, body })
         .then(() => {
           lastSaved.current = snapshot;
           setSaveError(false);
@@ -164,13 +143,9 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
           failed.current = snapshot;
           setSaveError(true);
         });
-      savePromiseRef.current = savePromise;
-      savePromise.finally(() => {
-        if (savePromiseRef.current === savePromise) savePromiseRef.current = null;
-      });
     }, SAVE_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [state.chatbotId, state.profile, extraInstructions, base, save, accountsBusy]);
+  }, [state.chatbotId, state.profile, extraInstructions, base, save]);
 
   // Leaving the builder sends the answer still waiting on the debounce.
   useEffect(
@@ -194,7 +169,6 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   return {
     state, dispatch, startFromDescription, startFromTemplate, starting, saveError,
     finish, finishing: activate.isPending, extraInstructions,
-    beginAccountsChange, endAccountsChange, waitForPendingSave,
   };
 }
 

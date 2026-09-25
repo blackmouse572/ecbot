@@ -43,17 +43,10 @@ type Props = {
   onAccountsLinked: (accounts: LinkedAccountRef[]) => void;
   onAccountsUnlinked: (ids: string[]) => void;
   onAnswer: (channels: string[]) => void;
-  /** Serializes account changes against autosave (fix round 1, item 5):
-   * `accounts` is replace-all server side, so a link/unlink and a debounced
-   * autosave racing each other can drop whichever one loses. */
-  beginAccountsChange: () => void;
-  endAccountsChange: () => void;
-  waitForPendingSave: () => Promise<void>;
 };
 
 export function ChannelConnect({
   chatbotId, agentName, channels, linkedAccounts, onAccountsLinked, onAccountsUnlinked, onAnswer,
-  beginAccountsChange, endAccountsChange, waitForPendingSave,
 }: Props) {
   const { t } = useTranslation();
   const { accounts: unlinkedAccounts } = useUnlinkAccounts();
@@ -93,14 +86,12 @@ export function ChannelConnect({
   const pendingOAuth = useRef<ChannelId | null>(null);
 
   /**
-   * Runs one account mutation with the fixes applied uniformly: awaits any
-   * autosave already in flight first (round 1 item 5), marks this change
-   * "in flight" so autosave waits for it in turn, and manages the
-   * busy/error UI state around it.
+   * Runs one account mutation, managing the busy/error UI state around it.
+   * (Round 1 item 5 also serialized this against autosave; that's no longer
+   * needed since round 3 removed `accounts` from the autosave payload
+   * entirely, so the two can never race.)
    */
   const runAccountChange = async (busyKey: string, fn: () => Promise<void>) => {
-    await waitForPendingSave();
-    beginAccountsChange();
     setBusy(busyKey);
     setError(false);
     try {
@@ -109,22 +100,22 @@ export function ChannelConnect({
       setError(true);
     } finally {
       setBusy(null);
-      endAccountsChange();
     }
   };
 
   /**
-   * Applies the server's link result (round 2, item 1): the ownership check
-   * now happens in ChatbotService.linkBatchAccounts, not against a
-   * client-side unlinked-accounts fetch (which only ever saw page 1 and
-   * could wrongly refuse a legitimate connect). Candidates the response
-   * reports under `skipped` already belong to another chatbot and were
-   * never linked; the rest join local state and show an inline notice.
+   * Applies the server's link result (round 2, item 1: the ownership check
+   * happens in ChatbotService.linkBatchAccounts, not a client-side
+   * pre-check). Fails closed (round 3, item 4): only ids the response
+   * explicitly reports under `linked` become chips; an id in neither list,
+   * or an undefined result entirely, links nothing. If nothing was linked
+   * and nothing was reported skipped either, that's an unexpected response
+   * shape, surfaced the same as any other connect failure.
    */
   const applyLinkResult = (candidates: LinkedAccountRef[], result: ChatbotLinkAccountResponseDto | undefined) => {
+    const linkedIds = new Set(result?.linked ?? []);
     const skipped = result?.skipped ?? [];
-    const skippedIds = new Set(skipped.map((s) => s.id));
-    const linked = candidates.filter((c) => !skippedIds.has(c.id));
+    const linked = candidates.filter((c) => linkedIds.has(c.id));
     if (skipped.length) {
       setInUseAccounts((prev) => {
         const existing = new Set(prev.map((a) => a.id));
@@ -132,6 +123,7 @@ export function ChannelConnect({
       });
     }
     if (linked.length) onAccountsLinked(linked);
+    if (!linked.length && !skipped.length) setError(true);
   };
 
   const linkCandidates = async (candidates: LinkedAccountRef[]) => {

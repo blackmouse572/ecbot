@@ -16,10 +16,21 @@ describe("toChatbotPayload", () => {
   });
 
   it("keeps fields the builder does not own when a base is given", () => {
-    const body = toChatbotPayload(profile, "", { accounts: ["a1"], guardrailEnabled: true, modelTextName: "openai/gpt-5.4" } as never);
-    expect(body.accounts).toEqual(["a1"]);
+    const body = toChatbotPayload(profile, "", { guardrailEnabled: true, modelTextName: "openai/gpt-5.4" } as never);
     expect(body.guardrailEnabled).toBe(true);
     expect(body.modelTextName).toBe("openai/gpt-5.4");
+  });
+
+  // Fix round 3: account membership never travels through this payload;
+  // only the guarded link/unlink endpoints change it (apps/api
+  // ChatbotService.linkBatchAccounts). The builder's own create/update
+  // bodies must always send an empty accounts array, even when a base
+  // (e.g. a reopened chatbot's existing linked accounts) would otherwise
+  // reintroduce them, so autosave can never race a link/unlink and drop it.
+  it("always sends an empty accounts array, even when the base has linked accounts", () => {
+    expect(toChatbotPayload(profile, "").accounts).toEqual([]);
+    const base = { accounts: ["a1", "a2"] } as never;
+    expect(toChatbotPayload(profile, "", base).accounts).toEqual([]);
   });
 
   it("falls back to the business name, then a default name", () => {

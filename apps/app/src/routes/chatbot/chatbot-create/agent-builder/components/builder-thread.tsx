@@ -24,7 +24,7 @@ const QUESTION_ENTRANCE = clx(
 
 export function BuilderThread(builder: AgentBuilderController) {
   const { t } = useTranslation();
-  const { state, dispatch, beginAccountsChange, endAccountsChange, waitForPendingSave } = builder;
+  const { state, dispatch } = builder;
   const reduceMotion = useReducedMotion();
 
   const profile = state.profile;
@@ -97,9 +97,6 @@ export function BuilderThread(builder: AgentBuilderController) {
                           linkedAccounts={state.linkedAccounts}
                           onAccountsLinked={(accounts) => dispatch({ type: "accountsLinked", accounts })}
                           onAccountsUnlinked={(ids) => dispatch({ type: "accountsUnlinked", ids })}
-                          beginAccountsChange={beginAccountsChange}
-                          endAccountsChange={endAccountsChange}
-                          waitForPendingSave={waitForPendingSave}
                         />
                       </MessageScrollerItem>
                     ) : (
