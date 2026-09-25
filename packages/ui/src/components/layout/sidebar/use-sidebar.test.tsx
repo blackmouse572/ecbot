@@ -63,6 +63,30 @@ describe("useSidebar", () => {
     });
   });
 
+  describe("defaultDesktopOpen", () => {
+    it("defaults to open when omitted, so existing callers are unchanged", () => {
+      render(
+        <MemoryRouter>
+          <SidebarProvider>
+            <SidebarState />
+          </SidebarProvider>
+        </MemoryRouter>,
+      );
+      expect(screen.getByTestId("desktop")).toHaveTextContent("true");
+    });
+
+    it("starts closed when set to false", () => {
+      render(
+        <MemoryRouter>
+          <SidebarProvider defaultDesktopOpen={false}>
+            <SidebarState />
+          </SidebarProvider>
+        </MemoryRouter>,
+      );
+      expect(screen.getByTestId("desktop")).toHaveTextContent("false");
+    });
+  });
+
   describe("route change", () => {
     it("closes the mobile sidebar when the pathname changes", async () => {
       const user = userEvent.setup();
