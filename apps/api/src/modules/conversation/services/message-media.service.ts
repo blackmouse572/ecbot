@@ -37,21 +37,27 @@ export class MessageMediaService {
         return { type: 'image', key };
     }
 
-    /** Stored attachments → `{ type, url }` for the inbox and the AI. */
-    async resolve(attachments?: unknown[]): Promise<IMessageAttachment[]> {
+    /** Stored attachments → `{ type, url }` for the inbox and the AI. Only
+     *  keys under this conversation's folder are signed: `attachments` can
+     *  come from an operator, and the private bucket holds other files too. */
+    async resolve(
+        attachments: unknown[] | undefined,
+        conversationId: string
+    ): Promise<IMessageAttachment[]> {
         const valid = (attachments ?? []).filter(
             (a): a is IMessageAttachment =>
                 typeof (a as IMessageAttachment | null)?.type === 'string'
         );
-        return Promise.all(valid.map(a => this.resolveOne(a)));
+        const folder = `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}/`;
+        return Promise.all(valid.map(a => this.resolveOne(a, folder)));
     }
 
-    private async resolveOne({
-        type,
-        url,
-        key,
-    }: IMessageAttachment): Promise<IMessageAttachment> {
+    private async resolveOne(
+        { type, url, key }: IMessageAttachment,
+        folder: string
+    ): Promise<IMessageAttachment> {
         if (!key) return url ? { type, url } : { type };
+        if (!key.startsWith(folder)) return { type };
         try {
             const signed = await this.s3.presignGetItem(key, PRIVATE);
             return signed ? { type, url: signed.presignUrl } : { type };

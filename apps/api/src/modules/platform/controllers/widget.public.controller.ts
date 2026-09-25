@@ -209,7 +209,10 @@ export class WidgetPublicController {
                     id: m.id,
                     authorType: m.authorType,
                     text: m.text,
-                    attachments: await this.messageMedia.resolve(m.attachments),
+                    attachments: await this.messageMedia.resolve(
+                        m.attachments,
+                        conversation.id
+                    ),
                     dateSent: m.dateSent,
                 }))
             ),
