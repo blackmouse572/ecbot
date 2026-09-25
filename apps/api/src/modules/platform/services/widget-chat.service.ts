@@ -22,6 +22,7 @@ import {
 import { randomUUID } from 'crypto';
 import { Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
+import { replyMessages } from '../interfaces/message-model';
 import { MESSAGE_HISTORY_WINDOW } from '../constants/message-debounce.constant';
 import { ENUM_WIDGET_STATUS_CODE_ERROR } from '../enums/widget.status-code.enum';
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
@@ -215,6 +216,17 @@ export class WidgetChatService {
     ): Promise<void> {
         // The row IS the delivery for this channel — the visitor already saw the
         // stream, and their poll reads this back on the next page load.
+        // Images the bot sent are stored as attachments, not markdown text.
+        const parts = replyMessages(assistantText);
+        const text = parts
+            .filter(m => m.content.kind === 'text')
+            .map(m => m.fallbackText)
+            .join('\n\n');
+        const attachments = parts.flatMap(m =>
+            m.content.kind === 'media'
+                ? [{ type: 'image', url: m.content.url }]
+                : []
+        );
         const nonce = randomUUID();
         await this.messageRepository.insertPendingOutbound(
             conversationId,
@@ -222,7 +234,8 @@ export class WidgetChatService {
             {
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
                 authorId: 'bot',
-                text: assistantText,
+                text,
+                attachments: attachments.length ? attachments : undefined,
                 dateSent: new Date(),
             }
         );

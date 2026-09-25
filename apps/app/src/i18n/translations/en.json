@@ -1640,7 +1640,8 @@
         "collapse": "Collapse sidebar",
         "expand": "Expand sidebar"
       }
-    }
+    },
+    "image": "Image"
   },
   "customers": {
     "suggestions": {

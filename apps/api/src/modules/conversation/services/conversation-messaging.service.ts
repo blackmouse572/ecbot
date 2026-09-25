@@ -15,6 +15,7 @@ import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { randomUUID as uuidV4 } from 'node:crypto';
 import {
+    MessageAttachmentResponseDto,
     MessageGetResponseDto,
     ToolCallSerialization,
 } from '../dtos/response/message.get.response.dto';
@@ -243,7 +244,22 @@ export class ConversationMessagingService {
         });
         dto.author = this.resolveAuthor(message, conversation, userNameMap);
         dto.reactions = message.reactions ?? [];
+        dto.attachments = this.mapAttachments(message.attachments);
         return dto;
+    }
+
+    /** Stored attachments are platform-shaped; the inbox only needs type + url. */
+    private mapAttachments(
+        attachments?: unknown[]
+    ): MessageAttachmentResponseDto[] {
+        return (attachments ?? []).flatMap(a => {
+            const { type, url } = (a ?? {}) as {
+                type?: unknown;
+                url?: unknown;
+            };
+            if (typeof type !== 'string') return [];
+            return [{ type, ...(typeof url === 'string' ? { url } : {}) }];
+        });
     }
 
     /**

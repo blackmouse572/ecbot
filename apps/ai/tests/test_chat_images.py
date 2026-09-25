@@ -18,35 +18,39 @@ def _req(message: str | None, urls: list[str]) -> ChatRequest:
     )
 
 
+USAGE = {"input_tokens": 1200, "output_tokens": 40, "total_tokens": 1240}
+
+
 def _vision_model(reply: str) -> MagicMock:
     model = MagicMock()
-    model.ainvoke = AsyncMock(return_value=AIMessage(content=reply))
+    model.ainvoke = AsyncMock(return_value=AIMessage(content=reply, usage_metadata=USAGE))
     return model
 
 
 async def test_no_attachments_leaves_request_untouched():
     req = ChatRequest(chatbot_id="bot-1", message="hi")
-    assert await images.with_image_description(req) is req
+    assert await images.with_image_description(req) == (req, {})
 
 
 async def test_image_description_is_appended_to_the_message():
     model = _vision_model("A white linen shirt with a mandarin collar.")
     with patch.object(images, "fetch_image_data_url", AsyncMock(return_value="data:image/jpeg;base64,AAA")), \
          patch.object(images, "build_chat_model", return_value=model):
-        out = await images.with_image_description(_req("how much is this?", ["https://cdn/x.jpg"]))
+        out, usage = await images.with_image_description(_req("how much is this?", ["https://cdn/x.jpg"]))
 
     assert out.message.startswith("how much is this?")
     assert "A white linen shirt with a mandarin collar." in out.message
     # All images go to the vision model together, inline as base64 data URLs.
     parts = model.ainvoke.call_args.args[0][0].content
     assert {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,AAA"}} in parts
+    assert usage == USAGE  # the vision call is billed with the turn
 
 
 async def test_image_only_message_gets_a_description_as_its_text():
     model = _vision_model("A red dress.")
     with patch.object(images, "fetch_image_data_url", AsyncMock(return_value="data:image/png;base64,B")), \
          patch.object(images, "build_chat_model", return_value=model):
-        out = await images.with_image_description(_req(None, ["https://cdn/a.png", "https://cdn/b.png"]))
+        out, _ = await images.with_image_description(_req(None, ["https://cdn/a.png", "https://cdn/b.png"]))
 
     assert "A red dress." in out.message
     parts = model.ainvoke.call_args.args[0][0].content
@@ -55,10 +59,11 @@ async def test_image_only_message_gets_a_description_as_its_text():
 
 async def test_unreadable_image_still_tells_the_agent_an_image_was_sent():
     with patch.object(images, "fetch_image_data_url", AsyncMock(return_value=None)):
-        out = await images.with_image_description(_req(None, ["https://cdn/gone.jpg"]))
+        out, usage = await images.with_image_description(_req(None, ["https://cdn/gone.jpg"]))
 
     assert out.message
     assert "could not be viewed" in out.message
+    assert usage == {}
 
 
 async def test_vision_model_failure_falls_back_to_the_unreadable_note():
@@ -66,15 +71,16 @@ async def test_vision_model_failure_falls_back_to_the_unreadable_note():
     model.ainvoke = AsyncMock(side_effect=RuntimeError("boom"))
     with patch.object(images, "fetch_image_data_url", AsyncMock(return_value="data:image/png;base64,B")), \
          patch.object(images, "build_chat_model", return_value=model):
-        out = await images.with_image_description(_req("?", ["https://cdn/a.png"]))
+        out, _ = await images.with_image_description(_req("?", ["https://cdn/a.png"]))
 
     assert "could not be viewed" in out.message
 
 
-def test_system_prompt_has_product_image_rules():
+def test_system_prompt_image_guidance_is_business_neutral():
+    """The platform explains images; what to do with them is the operator's call."""
     section = system_prompt_template()
     start, end = section.index("<images>"), section.index("</images>")
-    rules = section[start:end].lower()
-    assert "knowledge_base_context" in rules  # match against the KB only
-    assert "does not carry" in rules  # reject clearly when not in the KB
-    assert "![" in rules  # reply with a markdown image to send a product photo
+    rules = " ".join(section[start:end].lower().split())
+    assert "image description" in rules
+    assert "send_image" in rules
+    assert "price" not in rules and "product" not in rules

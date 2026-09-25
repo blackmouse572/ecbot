@@ -525,4 +525,30 @@ describe('ConversationMessagingService', () => {
             expect(dto.author).toEqual({ id: 'u-1', name: 'u-1' });
         });
     });
+
+    describe('attachments (via mapMessage)', () => {
+        it('exposes image attachments as { type, url } for the inbox', () => {
+            const dto = buildService().mapMessage({
+                authorId: 'bot-1',
+                authorType: ENUM_MESSAGE_AUTHOR.BOT,
+                attachments: [
+                    { type: 'image', url: 'https://cdn/s.jpg', raw: { x: 1 } },
+                    'junk',
+                ],
+            } as unknown as MessageEntity);
+
+            expect(dto.attachments).toEqual([
+                { type: 'image', url: 'https://cdn/s.jpg' },
+            ]);
+        });
+
+        it('defaults to an empty list', () => {
+            const dto = buildService().mapMessage({
+                authorId: 'bot-1',
+                authorType: ENUM_MESSAGE_AUTHOR.BOT,
+            } as MessageEntity);
+
+            expect(dto.attachments).toEqual([]);
+        });
+    });
 });

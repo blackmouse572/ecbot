@@ -65,6 +65,12 @@ export function imageUrls(attachments?: unknown[]): string[] {
 
 const MARKDOWN_IMAGE = /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g;
 
+/** A reply segment holding just one image — how a `send_image` file part
+ *  joins the segment stream (`replyMessages` turns it into a media message). */
+export function imageSegment(url: string): string {
+    return `![](${url})`;
+}
+
 /** Split one reply segment into platform messages: its text, then one media
  *  message per markdown image (`![alt](url)`) the agent wrote. */
 export function replyMessages(segment: string): OutboundMessage[] {

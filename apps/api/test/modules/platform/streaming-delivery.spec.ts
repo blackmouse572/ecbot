@@ -345,6 +345,66 @@ describe('StreamingDelivery — product images', () => {
     );
 });
 
+describe('StreamingDelivery — send_image file parts', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        '%s: sends text, then the image, in stream order',
+        async (_mode, chatbot) => {
+            const adapter = makeAdapter();
+            const persisted: { text: string; attachments?: unknown[] }[] = [];
+            await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({ type: 'text-delta', id: 't1', delta: 'Mẫu này nè' }),
+                    line({
+                        type: 'tool-input-start',
+                        toolCallId: 'r1',
+                        toolName: 'send_image',
+                    }),
+                    line({
+                        type: 'tool-output-available',
+                        toolCallId: 'r1',
+                        output: { ok: true, url: 'https://cdn/s.jpg' },
+                    }),
+                    line({
+                        type: 'file',
+                        url: 'https://cdn/s.jpg',
+                        mediaType: 'image/*',
+                    }),
+                    line({ type: 'text-delta', id: 't2', delta: 'Giá 350k' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async (text, attachments) => {
+                    persisted.push({ text, attachments });
+                    return 'nonce';
+                },
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(persisted).toEqual([
+                { text: 'Mẫu này nè', attachments: undefined },
+                {
+                    text: '',
+                    attachments: [{ type: 'image', url: 'https://cdn/s.jpg' }],
+                },
+                { text: 'Giá 350k', attachments: undefined },
+            ]);
+            expect(adapter.sendMessage.mock.calls[1][2].content.kind).toBe(
+                'media'
+            );
+        }
+    );
+});
+
 describe('guardrailDeliveryPolicy', () => {
     it('no chatbot -> buffered (safe default)', () => {
         expect(guardrailDeliveryPolicy()).toEqual({

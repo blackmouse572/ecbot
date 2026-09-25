@@ -186,6 +186,24 @@ describe('WidgetChatService.handleTurn', () => {
         expect(messageRepository.markOutboundSent).toHaveBeenCalled();
     });
 
+    it('persists reply images as attachments, not as markdown text', async () => {
+        const { service, messageRepository, sseStream } = setup();
+        sseStream.pipe.mockImplementationOnce(async ({ onFinalize }: any) => {
+            await onFinalize('Mẫu này nè\n\n![](https://cdn/s.jpg)');
+        });
+
+        await service.handleTurn(res, turn);
+
+        expect(messageRepository.insertPendingOutbound).toHaveBeenCalledWith(
+            'conv-1',
+            expect.any(String),
+            expect.objectContaining({
+                text: 'Mẫu này nè',
+                attachments: [{ type: 'image', url: 'https://cdn/s.jpg' }],
+            })
+        );
+    });
+
     it('persists the visitor message but generates nothing when the bot is paused', async () => {
         const { service, chatbotAIService, messageRepository } = setup({
             conversation: { botEnabled: false },

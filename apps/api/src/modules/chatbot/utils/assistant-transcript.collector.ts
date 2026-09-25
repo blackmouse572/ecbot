@@ -3,6 +3,7 @@ import {
     parseWireTokenUsage,
     TokenUsageDelta,
 } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
+import { imageSegment } from 'src/modules/platform/interfaces/message-model';
 
 /** One parsed AI SDK v5 UI-message-stream `data:` frame. */
 export type UiStreamFrame = Record<string, unknown> & { type?: unknown };
@@ -31,6 +32,17 @@ export class AssistantTranscriptCollector {
         if (type === 'text-delta') {
             const delta = frame.delta;
             if (typeof delta === 'string') this.text += delta;
+            return;
+        }
+        // send_image: keep the image in the transcript, in reply order.
+        if (
+            type === 'file' &&
+            typeof frame.url === 'string' &&
+            typeof frame.mediaType === 'string' &&
+            frame.mediaType.startsWith('image/')
+        ) {
+            const image = imageSegment(frame.url);
+            this.text += this.text ? `\n\n${image}` : image;
             return;
         }
         if (type === 'message-metadata') {

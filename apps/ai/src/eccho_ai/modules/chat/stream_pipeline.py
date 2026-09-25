@@ -10,6 +10,9 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Any
 
 from eccho_ai.modules.chat import ui_message_stream as ui
+from eccho_ai.modules.chat.image_markdown import ImageMarkdownFilter
+
+SEND_IMAGE_TOOL = "send_image"
 
 
 async def events_to_ui_parts(
@@ -19,11 +22,16 @@ async def events_to_ui_parts(
     guardrail_reason: str | None = None,
     output_guardrail: Callable[[str], Awaitable[str | None]] | None = None,
     sources: list[dict[str, Any]] | None = None,
+    image_url_allowed: Callable[[str], Awaitable[bool]] | None = None,
+    usage: dict[str, int] | None = None,
 ) -> AsyncIterator[str]:
     """Yield UI Message Stream SSE frames for one agent turn.
 
     Order: start -> (guardrail data-part) | (text/reasoning/tool parts ->
     optional data-guardrail | source-url*+message-metadata) -> finish -> done.
+
+    `image_url_allowed` screens markdown images in the text; `usage` seeds the
+    turn's token count (e.g. with the image-description call).
     """
     yield ui.start(request_id)
     # Open-run trackers live outside the try so the `except` handler can close
@@ -39,7 +47,9 @@ async def events_to_ui_parts(
         text_run = 0
         reasoning_run = 0
         output_text = ""
-        usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+        usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0, **(usage or {})}
+        images = ImageMarkdownFilter(image_url_allowed) if image_url_allowed else None
+        tool_names: dict[str, str] = {}
 
         async for event in events:
             evt_type = event.get("event")
@@ -62,6 +72,8 @@ async def events_to_ui_parts(
                 # Content may be a plain string (DeepSeek, OpenAI) or a list of
                 # typed blocks (Anthropic, Bedrock).
                 content = getattr(chunk, "content", None)
+                if isinstance(content, str) and images:
+                    content = await images.feed(content)
                 if isinstance(content, str):
                     if content:
                         output_text += content
@@ -85,6 +97,8 @@ async def events_to_ui_parts(
                                 yield ui.reasoning_delta(reasoning_id, reasoning_chunk)
                         elif btype == "text":
                             text_chunk = block.get("text", "")
+                            if text_chunk and images:
+                                text_chunk = await images.feed(text_chunk)
                             if text_chunk:
                                 output_text += text_chunk
                                 if text_id is None:
@@ -100,6 +114,14 @@ async def events_to_ui_parts(
                     usage["total_tokens"] += usage_metadata.get("total_tokens", 0)
 
             elif evt_type == "on_tool_start":
+                tail = await images.flush() if images else ""
+                if tail:
+                    if text_id is None:
+                        text_run += 1
+                        text_id = f"text-{text_run}"
+                        yield ui.text_start(text_id)
+                    output_text += tail
+                    yield ui.text_delta(text_id, tail)
                 if text_id is not None:
                     yield ui.text_end(text_id)
                     text_id = None
@@ -109,6 +131,7 @@ async def events_to_ui_parts(
 
                 tool_call_id: str = event.get("run_id") or "unknown"
                 tool_name: str = event.get("name", "")
+                tool_names[tool_call_id] = tool_name
                 yield ui.start_step()
                 step_open = True
                 yield ui.tool_input_start(tool_call_id, tool_name)
@@ -126,9 +149,23 @@ async def events_to_ui_parts(
                     except json.JSONDecodeError:
                         pass
                 yield ui.tool_output_available(tool_call_id, output)
+                if (
+                    tool_names.get(tool_call_id) == SEND_IMAGE_TOOL
+                    and isinstance(output, dict)
+                    and output.get("ok")
+                ):
+                    yield ui.file(output["url"], "image/*")
                 yield ui.finish_step()
                 step_open = False
 
+        tail = await images.flush() if images else ""
+        if tail:
+            if text_id is None:
+                text_run += 1
+                text_id = f"text-{text_run}"
+                yield ui.text_start(text_id)
+            output_text += tail
+            yield ui.text_delta(text_id, tail)
         if text_id is not None:
             yield ui.text_end(text_id)
             text_id = None

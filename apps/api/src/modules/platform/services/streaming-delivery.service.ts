@@ -3,7 +3,7 @@ import { IncomingMessage } from 'http';
 import { StringDecoder } from 'string_decoder';
 import { PlatformAdapter } from '../adapters/platform-adapter.base';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
-import { replyMessages } from '../interfaces/message-model';
+import { imageSegment, replyMessages } from '../interfaces/message-model';
 import {
     parseWireTokenUsage,
     TokenUsageDelta,
@@ -85,6 +85,8 @@ function parseSsePart(line: string): {
     delta?: unknown;
     data?: unknown;
     messageMetadata?: unknown;
+    url?: unknown;
+    mediaType?: unknown;
 } | null {
     if (!line.startsWith('data: ')) return null;
     const body = line.slice(6);
@@ -95,6 +97,20 @@ function parseSsePart(line: string): {
     } catch {
         return null;
     }
+}
+
+/** A `file` part carrying an image (emitted by apps/ai for `send_image`). */
+function isImagePart(part: {
+    type: string;
+    url?: unknown;
+    mediaType?: unknown;
+}): part is { type: 'file'; url: string; mediaType: string } {
+    return (
+        part.type === 'file' &&
+        typeof part.url === 'string' &&
+        typeof part.mediaType === 'string' &&
+        part.mediaType.startsWith('image/')
+    );
 }
 
 export interface DeliveryResult {
@@ -196,6 +212,10 @@ export class StreamingDelivery {
                 } else if (parsed.type === 'tool-input-start') {
                     enqueueSend(current); // a tool call ends the spoken segment
                     current = '';
+                } else if (isImagePart(parsed)) {
+                    enqueueSend(current); // send_image: the image follows the text before it
+                    current = '';
+                    enqueueSend(imageSegment(parsed.url));
                 } else if (parsed.type === 'data-guardrail') {
                     // Defensive: shouldn't fire in incremental mode (no semantic
                     // tier). If it does, stop sending the rest.
@@ -425,6 +445,8 @@ export class StreamingDelivery {
                     delta?: unknown;
                     data?: unknown;
                     messageMetadata?: unknown;
+                    url?: unknown;
+                    mediaType?: unknown;
                 };
                 try {
                     parsed = JSON.parse(body) as typeof parsed;
@@ -439,6 +461,9 @@ export class StreamingDelivery {
                     current += parsed.delta;
                 } else if (parsed.type === 'tool-input-start') {
                     flushSegment();
+                } else if (isImagePart(parsed)) {
+                    flushSegment();
+                    segments.push(imageSegment(parsed.url));
                 } else if (parsed.type === 'data-guardrail') {
                     guardrailBlocked = true;
                     guardrailReason =
