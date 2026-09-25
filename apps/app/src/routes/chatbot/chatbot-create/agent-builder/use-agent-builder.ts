@@ -75,6 +75,7 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
       profile: profile ?? createProfile("ecommerce", language),
       suggestion: profile ? suggestion : null,
       source: "describe",
+      description,
     });
   };
 
