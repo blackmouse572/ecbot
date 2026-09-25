@@ -1,3 +1,5 @@
+import { IssuedPanel } from "@/components/account-connect/issued-panel";
+import type { Issued } from "@/components/account-connect/issued";
 import {
   TELEGRAM_TOKEN_PATTERN,
   TelegramTokenField,
@@ -25,11 +27,8 @@ import { Form } from "@repo/ui/common-components";
 import { useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { IssuedPanel, ProvisionStep } from "./provision-step";
-import {
-  isProvisionedPlatform,
-  type Issued,
-} from "./provisioned-platforms";
+import { ProvisionStep } from "./provision-step";
+import { isProvisionedPlatform } from "./provisioned-platforms";
 
 // ─── Step definitions ────────────────────────────────────────────────────────
 

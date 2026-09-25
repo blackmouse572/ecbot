@@ -12,8 +12,8 @@ import {
   useUnlinkChatbotAccount,
 } from "@/hooks/api";
 import { useOAuthLogin } from "@/hooks/use-oauth-login";
-import { IssuedPanel } from "@/routes/accounts/account-create/components/account-create-form/provision-step";
-import type { Issued } from "@/routes/accounts/account-create/components/account-create-form/provisioned-platforms";
+import type { Issued } from "@/components/account-connect/issued";
+import { IssuedPanel } from "@/components/account-connect/issued-panel";
 import { XMarkMini } from "@medusajs/icons";
 import { Button, IconButton, Input, Label, Text, Textarea, clx } from "@medusajs/ui";
 import type { ChannelId } from "@repo/agent-blueprint";

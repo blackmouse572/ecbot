@@ -8,8 +8,3 @@ export function isProvisionedPlatform(
 ): platform is ProvisionedPlatform {
   return (PROVISIONED_PLATFORMS as readonly string[]).includes(platform);
 }
-
-/** What the server minted, shown once on the wizard's final step. */
-export type Issued =
-  | { kind: "API_CHANNEL"; accountKey: string; signingSecret: string }
-  | { kind: "WEBSITE_WIDGET"; widgetKey: string };
