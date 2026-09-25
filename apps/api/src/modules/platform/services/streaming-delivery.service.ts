@@ -35,11 +35,6 @@ export interface StreamingDeliverParams {
     ) => Promise<string>;
     onSent: (nonce: string, externalId: string) => Promise<void>;
     onFailed: (nonce: string) => Promise<void>;
-    /** apps/ai described the user's images; keep it for later turns. */
-    onImageDescription?: (
-        messageId: string,
-        description: string
-    ) => Promise<void>;
     /** Guardrail config that selects buffered vs incremental delivery. When
      *  absent, delivery stays buffered (the safe default). */
     chatbot?: GuardrailConfig;
@@ -105,19 +100,6 @@ function parseSsePart(line: string): {
     } catch {
         return null;
     }
-}
-
-/** The `data-image-description` payload, or null if malformed. */
-function imageDescription(
-    data: unknown
-): { messageId: string; description: string } | null {
-    const { messageId, description } = (data ?? {}) as {
-        messageId?: unknown;
-        description?: unknown;
-    };
-    return typeof messageId === 'string' && typeof description === 'string'
-        ? { messageId, description }
-        : null;
 }
 
 /** A `file` part carrying an image (emitted by apps/ai for `send_image`). */
@@ -225,8 +207,6 @@ export class StreamingDelivery {
                     segments.addText(parsed.delta);
                 } else if (parsed.type === 'tool-input-start') {
                     segments.close();
-                } else if (parsed.type === 'data-image-description') {
-                    this.keepDescription(p, parsed.data);
                 } else if (isImagePart(parsed)) {
                     segments.addImage(parsed.url);
                 } else if (parsed.type === 'data-guardrail') {
@@ -315,12 +295,7 @@ export class StreamingDelivery {
     private async deliverBuffered(
         p: StreamingDeliverParams
     ): Promise<DeliveryResult> {
-        const result = await this.consumeStream(
-            p.stream,
-            p.abort,
-            p.isCurrent,
-            data => this.keepDescription(p, data)
-        );
+        const result = await this.consumeStream(p.stream, p.abort, p.isCurrent);
 
         if (result.superseded) {
             return {
@@ -372,20 +347,6 @@ export class StreamingDelivery {
         };
     }
 
-    /** Hand a described-images part to the caller; never fails the reply. */
-    private keepDescription(p: StreamingDeliverParams, data: unknown): void {
-        const parsed = imageDescription(data);
-        const save = p.onImageDescription;
-        if (!parsed || !save) return;
-        Promise.resolve()
-            .then(() => save(parsed.messageId, parsed.description))
-            .catch(err =>
-                this.logger.warn(
-                    `Saving image description failed: ${(err as Error).message}`
-                )
-            );
-    }
-
     /**
      * Persist and send one reply segment: its text, then each image, each as
      * its own platform message. Returns whether anything reached the customer.
@@ -428,8 +389,7 @@ export class StreamingDelivery {
     private consumeStream(
         stream: IncomingMessage,
         ac: AbortController,
-        isCurrent: () => Promise<boolean>,
-        onImageDescription: (data: unknown) => void
+        isCurrent: () => Promise<boolean>
     ): Promise<{
         segments: ReplySegment[];
         superseded: boolean;
@@ -489,8 +449,6 @@ export class StreamingDelivery {
                     segmenter.addText(parsed.delta);
                 } else if (parsed.type === 'tool-input-start') {
                     segmenter.close(); // a tool call ends the spoken segment
-                } else if (parsed.type === 'data-image-description') {
-                    onImageDescription(parsed.data);
                 } else if (isImagePart(parsed)) {
                     segmenter.addImage(parsed.url);
                 } else if (parsed.type === 'data-guardrail') {

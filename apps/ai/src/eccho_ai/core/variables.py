@@ -102,7 +102,9 @@ class _AppVars(BaseSettings):
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
     # Describes inbound customer images (must accept image input).
     VISION_MODEL: str = "google/gemini-2.5-flash"
-    VISION_MAX_IMAGES: int = 4
+    # Images one burst can have described (a Telegram album or Messenger
+    # multi-select holds up to 10).
+    VISION_MAX_IMAGES: int = 10
     # Catalog images from the operator instructions shown alongside, so the
     # description can name the product a customer photo shows.
     VISION_MAX_CATALOG_IMAGES: int = 6

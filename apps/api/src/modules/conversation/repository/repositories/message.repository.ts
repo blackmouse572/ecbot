@@ -8,7 +8,6 @@ import {
     ENUM_MESSAGE_STATUS,
 } from '../../enums/message.enum';
 import { IMessageAttachment } from '../../interfaces/message-media.interface';
-import { withDescription } from '../../utils/message-attachment';
 import { MessageEntity, MessageReaction } from '../entities/message.entity';
 
 export interface IMessageUpsertData {
@@ -56,19 +55,14 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         } as any);
     }
 
-    /** Keep what the AI saw in a message's images, so later turns remember it. */
-    async describeImages(
+    /** Replace a message's attachments (e.g. with the descriptions of what
+     *  the AI saw in its images, so later Turns remember them). */
+    async updateAttachments(
         messageId: string,
-        description: string
+        attachments: IMessageAttachment[]
     ): Promise<void> {
-        const message = await this.findOneById(messageId);
-        if (!message?.attachments?.length) return;
-        await this.updateEntity(
-            { id: messageId } as any,
-            {
-                attachments: withDescription(message.attachments, description),
-            } as any
-        );
+        // One UPDATE: nothing else in the Turn's unit of work is flushed.
+        await this.updateRaw({ id: messageId }, { attachments });
     }
 
     async insertPendingOutbound(

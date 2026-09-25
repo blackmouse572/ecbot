@@ -4,7 +4,7 @@ import {
     forTurn,
     historyNote,
     parseAttachments,
-    withDescription,
+    withDescriptions,
 } from '../../../src/modules/conversation/utils/message-attachment';
 
 describe('message attachment', () => {
@@ -40,15 +40,18 @@ describe('message attachment', () => {
         expect(historyNote([])).toBe('');
     });
 
-    it('describes only the images', () => {
+    it('sets each description on its own attachment', () => {
         expect(
-            withDescription(
-                [{ type: 'image', key: 'k.jpg' }, { type: 'video' }],
-                'A shirt'
+            withDescriptions(
+                [
+                    { type: 'image', key: 'a.jpg' },
+                    { type: 'image', key: 'b.jpg' },
+                ],
+                [undefined, 'A shirt']
             )
         ).toEqual([
-            { type: 'image', key: 'k.jpg', description: 'A shirt' },
-            { type: 'video' },
+            { type: 'image', key: 'a.jpg' },
+            { type: 'image', key: 'b.jpg', description: 'A shirt' },
         ]);
     });
 

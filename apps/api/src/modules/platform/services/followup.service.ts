@@ -256,7 +256,11 @@ export class FollowupService {
         );
         // No burst of its own: every recent row, customer images included,
         // is history.
-        const { history } = await this.turnContext.build(conversationId, []);
+        const { history } = await this.turnContext.build(
+            conversationId,
+            [],
+            chatbot.id
+        );
 
         // A follow-up is our idea, not the customer's — it is the first thing
         // that should stop when the workspace runs out of tokens.

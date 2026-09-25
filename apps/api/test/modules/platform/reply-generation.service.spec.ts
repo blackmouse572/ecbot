@@ -58,17 +58,9 @@ describe('ReplyGenerationService.run', () => {
         expect(lease.current).toHaveBeenCalledWith('c');
     });
 
-    // Burst and history rules are TurnContextService's (its own spec); here
-    // only that the Turn sends apps/ai what the context built.
-    it('sends apps/ai the Turn context for the burst', async () => {
+    /** A service whose Turn context is `context`; apps/ai's stream fails. */
+    function serviceWith(context: object, meter?: object) {
         const streamChat = jest.fn().mockRejectedValue(new Error('stop'));
-        const context = {
-            history: [{ role: 'user', content: 'earlier' }],
-            message: 'giá bao nhiêu?',
-            attachments: [
-                { attachment_id: 'm-1', preview_url: 'https://s3/a.jpg' },
-            ],
-        };
         const turnContext = { build: jest.fn().mockResolvedValue(context) };
         const svc = new ReplyGenerationService(
             {
@@ -99,20 +91,58 @@ describe('ReplyGenerationService.run', () => {
             } as any,
             { em: { fork: () => ({}) } } as any,
             { build: jest.fn().mockResolvedValue([]) } as any,
-            turnContext as any
+            turnContext as any,
+            meter as any
         );
+        const run = () =>
+            svc.run({
+                conversationId: 'c',
+                senderId: 's',
+                customerId: 'cu',
+                contactPointId: 'cp',
+                texts: ['giá bao nhiêu?'],
+            });
+        return { run, streamChat, turnContext };
+    }
 
-        await svc.run({
-            conversationId: 'c',
-            senderId: 's',
-            customerId: 'cu',
-            contactPointId: 'cp',
-            texts: ['giá bao nhiêu?'],
-        });
+    // Burst and history rules are TurnContextService's (its own spec); here
+    // only that the Turn sends apps/ai what the context built.
+    it('sends apps/ai the Turn context for the burst', async () => {
+        const context = {
+            history: [{ role: 'user', content: 'earlier' }],
+            message: 'giá bao nhiêu?\n[Image description: A shirt]',
+        };
+        const { run, streamChat, turnContext } = serviceWith(context);
 
-        expect(turnContext.build).toHaveBeenCalledWith('c', ['giá bao nhiêu?']);
+        await run();
+
+        expect(turnContext.build).toHaveBeenCalledWith(
+            'c',
+            ['giá bao nhiêu?'],
+            'bot-1'
+        );
         expect(streamChat.mock.calls[0][0]).toEqual(
             expect.objectContaining(context)
+        );
+    });
+
+    // The vision tokens were spent describing the burst, whatever happens
+    // to the reply after.
+    it('bills describing the images even when the reply fails', async () => {
+        const usage = { inputTokens: 900, outputTokens: 60, totalTokens: 960 };
+        const meter = {
+            check: jest.fn().mockResolvedValue({ allowed: true }),
+            record: jest.fn().mockResolvedValue(undefined),
+        };
+        const { run } = serviceWith(
+            { history: [], message: 'x', usage },
+            meter
+        );
+
+        await run();
+
+        expect(meter.record).toHaveBeenCalledWith(
+            expect.objectContaining({ usage })
         );
     });
 });

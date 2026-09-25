@@ -34,12 +34,14 @@ export function historyNote(attachments: IMessageAttachment[]): string {
     return described ? `[image: ${described}]` : '[image]';
 }
 
-/** The attachments with `description` set on each image. */
-export function withDescription(
+/** The attachments with each given description set, by position. */
+export function withDescriptions(
     attachments: IMessageAttachment[],
-    description: string
+    descriptions: (string | undefined)[]
 ): IMessageAttachment[] {
-    return attachments.map(a => (isImage(a) ? { ...a, description } : a));
+    return attachments.map((a, i) =>
+        descriptions[i] ? { ...a, description: descriptions[i] } : a
+    );
 }
 
 /** The attachment of an image the bot sent. */

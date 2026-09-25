@@ -24,9 +24,11 @@ function makeService(overrides: any = {}) {
         {
             get: jest.fn().mockReturnValue(overrides.conversationService),
         } as any,
-        new TurnContextService(overrides.messageRepository, {
-            resolve: async (list: unknown[] = []) => list,
-        } as any),
+        new TurnContextService(
+            overrides.messageRepository,
+            { resolve: async (list: unknown[] = []) => list } as any,
+            {} as any
+        ),
         // `meter: null` builds the service without one — the public build.
         overrides.meter === null
             ? undefined

@@ -139,6 +139,10 @@ _Avoid_: batch, group.
 What apps/ai receives for one **Turn**: the conversation history, the burst's message, and the burst's images. Built from the database each Turn, because the agent keeps no state between Turns. The burst is the customer's last messages, even when a reply to an earlier burst was saved between them. History notes what the customer showed in images, but leaves out the bot's own images. A follow-up has no burst, so every recent message is history.
 _Avoid_: prompt context, chat history (when you mean all three parts).
 
+**Image description**:
+What the AI saw in one customer image: a neutral description, the image's visible text, and which catalog product it shows when the operator instructions carry product images. Made once per image, when the **Turn** that answers it starts, and kept on the image so later Turns remember it. A description the input **Guardrail** would block is not kept; the image then reads as one that could not be viewed.
+_Avoid_: caption (the customer writes a caption; the AI writes a description).
+
 **Generation lease**:
 The claim a **Turn** holds on being the newest context for its **Conversation** — a per-conversation epoch in Redis. Every inbound message bumps the epoch; a reply generation captures it at the start and re-checks mid-stream and before send, aborting the AI stream and discarding instead of sending a stale reply when superseded. Aborting the stream drops the `api↔ai` connection so `apps/ai` stops generating (no wasted tokens).
 _Avoid_: lock, mutex, cancellation token.

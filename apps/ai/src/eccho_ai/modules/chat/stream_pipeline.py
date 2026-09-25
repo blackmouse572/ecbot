@@ -23,8 +23,6 @@ async def events_to_ui_parts(
     output_guardrail: Callable[[str], Awaitable[str | None]] | None = None,
     sources: list[dict[str, Any]] | None = None,
     image_url_allowed: Callable[[str], Awaitable[bool]] | None = None,
-    usage: dict[str, int] | None = None,
-    image_description: dict[str, str] | None = None,
 ) -> AsyncIterator[str]:
     """Yield UI Message Stream SSE frames for one agent turn.
 
@@ -32,13 +30,9 @@ async def events_to_ui_parts(
     optional data-guardrail | source-url*+message-metadata) -> finish -> done.
 
     `image_url_allowed` screens markdown images in the text (allowed ones
-    leave it as `file` parts, like `send_image`); `usage` seeds the
-    turn's token count (e.g. with the image-description call);
-    `image_description` is reported first so apps/api can keep it.
+    leave it as `file` parts, like `send_image`).
     """
     yield ui.start(request_id)
-    if image_description:
-        yield ui.data_part("image-description", image_description)
     # Open-run trackers live outside the try so the `except` handler can close
     # any unterminated text/reasoning/tool bracket before emitting `error`.
     text_id: str | None = None
@@ -52,7 +46,7 @@ async def events_to_ui_parts(
         text_run = 0
         reasoning_run = 0
         output_text = ""
-        usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0, **(usage or {})}
+        usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
         images = ImageMarkdownFilter(image_url_allowed) if image_url_allowed else None
         tool_names: dict[str, str] = {}
 

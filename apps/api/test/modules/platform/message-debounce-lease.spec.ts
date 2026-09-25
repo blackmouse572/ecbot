@@ -64,7 +64,6 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
         insertPendingOutbound: jest.fn(),
         markOutboundSent: jest.fn(),
         markOutboundFailed: jest.fn(),
-        describeImages: jest.fn(),
     };
     // Flat adapter mock — StreamingDelivery calls adapter.sendMessage directly
     const adapterSendMessage = jest.fn();
@@ -104,7 +103,11 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             mockModuleRef as any,
             ormStub(),
             manifestBuilder as any,
-            new TurnContextService(messageRepository as any, noMedia as any),
+            new TurnContextService(
+                messageRepository as any,
+                noMedia as any,
+                {} as any
+            ),
             meter as any
         );
 
@@ -156,27 +159,6 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
         expect(chatbotAIService.streamChat).toHaveBeenCalledWith(
             expect.objectContaining({ trigger_message_id: 'msg-trigger-1' }),
             expect.anything()
-        );
-    });
-
-    it('keeps the image description apps/ai reports on the image message', async () => {
-        lease.isCurrent.mockResolvedValue(true);
-        adapterSendMessage.mockResolvedValue({ externalId: 'mid-out' });
-        chatbotAIService.streamChat.mockImplementationOnce(async () =>
-            streamFrom([
-                `data: ${JSON.stringify({
-                    type: 'data-image-description',
-                    data: { messageId: 'in-1', description: 'A red dress.' },
-                })}`,
-                `data: ${JSON.stringify({ type: 'text-delta', id: 't', delta: 'Đẹp!' })}`,
-            ])
-        );
-
-        await replyGeneration.run(replyInput);
-
-        expect(messageRepository.describeImages).toHaveBeenCalledWith(
-            'in-1',
-            'A red dress.'
         );
     });
 
@@ -233,7 +215,11 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             { get: jest.fn(() => conversationService) } as any,
             ormStub(),
             manifestBuilder as any,
-            new TurnContextService(messageRepository as any, noMedia as any)
+            new TurnContextService(
+                messageRepository as any,
+                noMedia as any,
+                {} as any
+            )
         );
 
         await unmetered.run(replyInput);

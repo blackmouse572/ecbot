@@ -10,8 +10,8 @@ from eccho_ai.llm.guardrails.secrets import scan_output_for_secrets
 from eccho_ai.middlewares.cassette_middleware import apply_cassette, cassette_name_for
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.llm.tools.image_urls import is_known_image_url
-from eccho_ai.modules.chat.images import with_image_description
-from eccho_ai.modules.chat.models.chat_models import ChatRequest, ChatResponse
+from eccho_ai.modules.chat.images import describe_images
+from eccho_ai.modules.chat.models.chat_models import ChatRequest, ChatResponse, DescribeImagesRequest
 from eccho_ai.modules.chat.services import (
     append_source_attribution_if_missing,
     get_agent,
@@ -37,7 +37,6 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 async def chat_endpoint(chat_request: ChatRequest, request: Request):
     """Endpoint to handle chat messages from the user."""
 
-    chat_request, _, _ = await with_image_description(chat_request)
     if not chat_request.message:
         return AppResponse(
             status=400,
@@ -153,6 +152,24 @@ async def invalidate_chatbot_cache(chatbot_id: str):
     return AppResponse(data={"invalidated": invalidated})
 
 
+@router.post("/describe")
+async def describe_images_endpoint(describe_request: DescribeImagesRequest):
+    """Describe a burst's images once, when apps/api starts the Turn. Each
+    description comes back screened (None when it could not be made or the
+    input guardrail would block it), with the vision call's token usage."""
+    ctx = await get_agent(describe_request.chatbot_id)
+    described, usage = await describe_images(describe_request.images, ctx.chatbot)
+    return AppResponse(
+        data={
+            "images": [
+                {"id": image.id, "description": description}
+                for image, description in zip(describe_request.images, described)
+            ],
+            "usage": usage,
+        }
+    )
+
+
 @router.post("/stream")
 async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
     """Endpoint to handle streaming chat messages from the user.
@@ -163,9 +180,6 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
     agent, guardrails and RAG sources around it.
     """
     ctx = await get_agent(chat_request.chatbot_id)
-    chat_request, vision_usage, described = await with_image_description(
-        chat_request, ctx.chatbot.general_knowledge
-    )
     if not chat_request.message:
         raise HTTPException(status_code=400, detail="message is required")
     # Local binding so nested closures below see `str`, not `str | None`
@@ -185,7 +199,6 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
                 _no_events(),
                 request_id=request_id,
                 guardrail_reason=input_block,
-                image_description=described,
             ),
             media_type="text/event-stream",
             headers=dict([STREAM_HEADER]),
@@ -245,8 +258,6 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
             output_guardrail=_check_output_guardrail,
             sources=source_attributions,
             image_url_allowed=lambda url: is_known_image_url(ctx.chatbot, url),
-            usage=vision_usage,
-            image_description=described,
         ),
         media_type="text/event-stream",
         headers=dict([STREAM_HEADER]),

@@ -61,7 +61,8 @@ function setup(overrides: Record<string, any> = {}) {
     // no images, so nothing is signed).
     const turnContext = new TurnContextService(
         messageRepository as any,
-        { resolve: async (list: unknown[] = []) => list } as any
+        { resolve: async (list: unknown[] = []) => list } as any,
+        {} as any
     );
 
     const service = new WidgetChatService(

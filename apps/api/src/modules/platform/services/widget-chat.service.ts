@@ -119,9 +119,11 @@ export class WidgetChatService {
             return;
         }
 
-        const { history } = await this.turnContext.build(conversation.id, [
-            text,
-        ]);
+        const { history } = await this.turnContext.build(
+            conversation.id,
+            [text],
+            chatbot.id
+        );
 
         // Out of tokens: answer with the fallback line over the same stream the
         // widget is already reading, rather than failing the request.

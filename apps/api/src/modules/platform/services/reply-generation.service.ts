@@ -1,4 +1,5 @@
 import { AccountService } from '@app/modules/account/services/account.service';
+import { addTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
 import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enum';
@@ -129,8 +130,11 @@ export class ReplyGenerationService {
 
             // The agent is stateless: history, the burst's message and its
             // images come from the DB each Turn.
-            const { history, message, attachments } =
-                await this.turnContext.build(conversationId, texts);
+            const {
+                history,
+                message,
+                usage: describeUsage,
+            } = await this.turnContext.build(conversationId, texts, chatbot.id);
 
             const triggerMessage =
                 await this.messageRepository.findLatestInbound(conversationId);
@@ -171,7 +175,6 @@ export class ReplyGenerationService {
                         customer_id: customerId,
                         contact_point_id: contactPointId,
                         history,
-                        attachments,
                         trigger_message_id: triggerMessage?.id,
                     },
                     ac.signal
@@ -216,11 +219,6 @@ export class ReplyGenerationService {
                             `Outbound sent: conversation=${conversationId} externalId=${externalId}`
                         );
                     },
-                    onImageDescription: (messageId, description) =>
-                        this.messageRepository.describeImages(
-                            messageId,
-                            description
-                        ),
                     onFailed: async (nonce: string) => {
                         this.logger.error(
                             `Send failed for conversation ${conversationId}`
@@ -239,10 +237,13 @@ export class ReplyGenerationService {
 
             // Booked before any early return below: the tokens were spent the
             // moment apps/ai generated, whatever we decide to do with the text.
-            if (deliveryResult?.usage) {
+            // Describing the burst's images is billed with the reply, even
+            // when the reply itself was blocked or failed.
+            const usage = addTokenUsage(describeUsage, deliveryResult?.usage);
+            if (usage) {
                 await this.meter?.record({
                     workspaceId: chatbot.workspace.id,
-                    usage: deliveryResult.usage,
+                    usage,
                     source: ENUM_AI_USAGE_SOURCE.PLATFORM_REPLY,
                     chatbotId: chatbot.id,
                     accountId: account.id,

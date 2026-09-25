@@ -28,6 +28,16 @@ class ChatHistoryMessage(BaseModel):
     content: str = Field(..., description="The message text.")
 
 
+class ImageToDescribe(BaseModel):
+    id: str = Field(..., description="apps/api's id for the image, echoed back with its description.")
+    url: str = Field(..., description="A URL apps/ai can fetch the image from (stored images are signed).")
+
+
+class DescribeImagesRequest(BaseModel):
+    chatbot_id: str = Field(..., description="Chatbot whose catalog images and guardrail apply.")
+    images: list[ImageToDescribe] = Field(..., description="The burst's images, in order.")
+
+
 class ChatRequest(BaseModel):
     """
     ChatRequestData represents the data required to process a chat request, including the user's message and any relevant metadata.

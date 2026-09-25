@@ -140,7 +140,7 @@ async def test_rejected_send_image_emits_no_file_part():
 
 
 @pytest.mark.asyncio
-async def test_markdown_images_are_screened_and_usage_includes_extra_tokens():
+async def test_markdown_images_are_screened():
     async def allowed(url: str) -> bool:
         return url == "https://cdn/ok.jpg"
 
@@ -149,14 +149,11 @@ async def test_markdown_images_are_screened_and_usage_includes_extra_tokens():
             "A ![a](https://cdn/ok.jpg) B ![b](https://evil/x.jpg)")}}
 
     parts = _parts([f async for f in events_to_ui_parts(
-        fake_events(), request_id="m1", image_url_allowed=allowed,
-        usage={"input_tokens": 100, "output_tokens": 20, "total_tokens": 120})])
+        fake_events(), request_id="m1", image_url_allowed=allowed)])
     text = "".join(p["delta"] for p in parts if p["type"] == "text-delta")
     assert text == "A B "
     # An allowed markdown image leaves the text as a file part, like send_image.
     assert [p["url"] for p in parts if p["type"] == "file"] == ["https://cdn/ok.jpg"]
-    meta = next(p for p in parts if p["type"] == "message-metadata")
-    assert meta["messageMetadata"]["usage"]["total_tokens"] == 120
 
 
 @pytest.mark.asyncio
@@ -172,14 +169,3 @@ async def test_a_reply_that_is_only_a_split_markdown_image_is_not_lost():
         fake_events(), request_id="m1", image_url_allowed=allowed)])
     assert [p["type"] for p in parts if p["type"].startswith("text")] == []
     assert {"type": "file", "url": "https://cdn/ok.jpg", "mediaType": "image/*"} in parts
-
-
-@pytest.mark.asyncio
-async def test_image_description_is_reported_first():
-    async def fake_events():
-        yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk("Đẹp!")}}
-
-    described = {"messageId": "in-1", "description": "A red dress."}
-    parts = _parts([f async for f in events_to_ui_parts(
-        fake_events(), request_id="m1", image_description=described)])
-    assert parts[1] == {"type": "data-image-description", "data": described}
