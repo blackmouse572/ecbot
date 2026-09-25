@@ -13,11 +13,11 @@ import {
 import { ScrollAreaPrimitive, ScrollBar } from "../../ui/scroll-area";
 
 // ============================================================================
-// MessageScroller — intent-aware chat transcript scroller. Replaces
+// MessageScroller: intent-aware chat transcript scroller. Replaces
 // `use-stick-to-bottom`: it follows the live edge ONLY while the reader is
 // already at the bottom, releases the moment they scroll up, preserves scroll
 // position when older messages are prepended, and exposes `onReachTop` for
-// infinite-scroll pagination. Pure refs/observers — no external dependency.
+// infinite-scroll pagination. Pure refs/observers, no external dependency.
 // ============================================================================
 
 // Treat "within this many px of the bottom" as at-bottom (rounding slack).

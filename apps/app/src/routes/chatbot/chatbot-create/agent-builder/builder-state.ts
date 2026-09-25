@@ -57,8 +57,8 @@ export function currentStep(state: BuilderState): Step | null {
 }
 
 // Owner decision (batch 3): the draft is created once agentName is
-// answered — the 3rd identity question for every business type, so this
-// holds regardless of type — not right after businessType.
+// answered, the 3rd identity question for every business type, so this
+// holds regardless of type, not right after businessType.
 export function isDraftReady(state: BuilderState): boolean {
   return !!state.profile && state.answered.includes("agentName");
 }
