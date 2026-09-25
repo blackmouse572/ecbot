@@ -9,6 +9,7 @@ const CHANNEL_ICON_SRC: Partial<Record<ChannelId, string>> = {
   tiktok: PLATFORM_ICON_SRC.tiktok,
   shopee: PLATFORM_ICON_SRC.shopee,
   website: PLATFORM_ICON_SRC.websiteWidget,
+  telegram: PLATFORM_ICON_SRC.telegram,
 };
 
 export function channelIcon(value: string) {

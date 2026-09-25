@@ -97,6 +97,7 @@ export const CHANNELS = [
   { id: "tiktok", prompt: "TikTok Shop" },
   { id: "shopee", prompt: "Shopee" },
   { id: "website", prompt: "the website chat" },
+  { id: "telegram", prompt: "Telegram" },
 ] as const satisfies readonly Entry[];
 
 export const FACTS = [
