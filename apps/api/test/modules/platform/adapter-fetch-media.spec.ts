@@ -41,6 +41,36 @@ describe('PlatformAdapter.fetchMedia', () => {
         expect(media).toEqual({ data: JPEG, mime: 'image/jpeg' });
     });
 
+    // Telegram's file server labels photos application/octet-stream, and
+    // anything that is not image/* is dropped before storage.
+    it('Telegram treats an untyped photo download as a JPEG', async () => {
+        const adapter = new TelegramPlatformAdapter(
+            {
+                get: (k: string) =>
+                    k === 'telegram.apiUrl' ? 'https://api.telegram.org' : '',
+            } as any,
+            {
+                axiosRef: {
+                    post: jest.fn().mockResolvedValue({
+                        data: { ok: true, result: { file_path: 'photos/f.jpg' } },
+                    }),
+                    get: jest.fn().mockResolvedValue({
+                        data: JPEG,
+                        headers: { 'content-type': 'application/octet-stream' },
+                    }),
+                },
+            } as any,
+            { decryptToken: () => 'TOKEN' } as any
+        );
+
+        const media = await adapter.fetchMedia(ACCOUNT, {
+            type: 'image',
+            raw: { file_id: 'F1' },
+        });
+
+        expect(media).toEqual({ data: JPEG, mime: 'image/jpeg' });
+    });
+
     it('WhatsApp looks the media id up on the Graph API and downloads it with the token', async () => {
         const get = jest
             .fn()

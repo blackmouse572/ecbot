@@ -350,9 +350,12 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
                 maxContentLength: MESSAGE_MEDIA_MAX_BYTES,
             }
         );
+        // Telegram re-encodes photos as JPEG, but its file server labels
+        // them application/octet-stream.
+        const type = String(file.headers?.['content-type'] ?? '');
         return {
             data: Buffer.from(file.data),
-            mime: String(file.headers?.['content-type'] ?? 'image/jpeg'),
+            mime: type.startsWith('image/') ? type : 'image/jpeg',
         };
     }
 
