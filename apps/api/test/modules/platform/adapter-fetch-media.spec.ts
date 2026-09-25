@@ -68,13 +68,11 @@ describe('PlatformAdapter.fetchMedia', () => {
     });
 
     it('platforms with public CDN links (Zalo, Messenger) download the url', async () => {
-        const fetchSpy = jest
-            .spyOn(global, 'fetch')
-            .mockResolvedValue(
-                new Response(JPEG, {
-                    headers: { 'content-type': 'image/jpeg' },
-                })
-            );
+        const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(
+            new Response(JPEG, {
+                headers: { 'content-type': 'image/jpeg' },
+            })
+        );
         const adapter = new ZaloPlatformAdapter(
             { get: () => undefined } as any,
             { axiosRef: {} } as any,
@@ -86,7 +84,9 @@ describe('PlatformAdapter.fetchMedia', () => {
             url: 'https://cdn/z.jpg',
         });
 
-        expect(fetchSpy).toHaveBeenCalledWith('https://cdn/z.jpg');
+        expect(fetchSpy).toHaveBeenCalledWith('https://cdn/z.jpg', {
+            signal: expect.any(AbortSignal), // a stuck CDN must not stall the turn
+        });
         expect(media).toEqual({ data: JPEG, mime: 'image/jpeg' });
         fetchSpy.mockRestore();
     });

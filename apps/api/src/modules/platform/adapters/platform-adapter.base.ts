@@ -2,6 +2,7 @@ import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { MEDIA_FETCH_TIMEOUT_MS } from '../constants/media.constant';
 import { isAxiosError } from 'axios';
 import {
     AdapterCapabilities,
@@ -65,7 +66,9 @@ export abstract class PlatformAdapter {
         attachment: PlatformAttachment
     ): Promise<IMessageMedia | null> {
         if (!attachment.url) return null;
-        const res = await fetch(attachment.url);
+        const res = await fetch(attachment.url, {
+            signal: AbortSignal.timeout(MEDIA_FETCH_TIMEOUT_MS),
+        });
         if (!res.ok) return null;
         return {
             data: Buffer.from(await res.arrayBuffer()),
