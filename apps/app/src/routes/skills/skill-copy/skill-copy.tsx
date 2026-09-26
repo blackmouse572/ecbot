@@ -2,7 +2,7 @@ import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
 import { useCreateSkill, useGetSkill } from "@/hooks/api/skills";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { zodV4Resolver } from "@repo/ui/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Text, toast } from "@medusajs/ui";
 import { Helmet } from "react-helmet-async";
 import { useEffect } from "react";
@@ -22,7 +22,7 @@ const SkillCopyForm = ({ skillId }: { skillId: string }) => {
   const { createSkill, isPending } = useCreateSkill(workspaceSlug);
 
   const form = useForm<SkillFormData>({
-    resolver: zodV4Resolver(skillFormSchema),
+    resolver: zodResolver(skillFormSchema),
     defaultValues: { name: "", description: "", instructions: "" },
   });
 

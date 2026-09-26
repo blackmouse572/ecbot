@@ -9,10 +9,10 @@ import type { FC } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {} from "nuqs";
-import type { FileSchema } from "../schema";
+import type { KnowledgeItemCreateFormValues } from "../schema";
 
 interface FileFormProps {
-  form: UseFormReturn<FileSchema>;
+  form: UseFormReturn<KnowledgeItemCreateFormValues>;
   isLoading?: boolean;
   uploadProgress?: number;
 }

@@ -1,3 +1,5 @@
+export const AccountDocAuth = { xApiKey: true, jwtAccessToken: true };
+
 export const BasedAccountDocParams = [
     {
         name: 'workspace',

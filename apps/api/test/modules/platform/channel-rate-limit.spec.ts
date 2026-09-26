@@ -14,7 +14,7 @@ function makeService() {
             return 1;
         }),
     };
-    const queue = { client: Promise.resolve(client) };
+    const queue = { getBackend: () => ({ client: Promise.resolve(client) }) };
     const service = new ChannelRateLimitService(queue as any, true);
     return { service, client, counters, expires };
 }
@@ -64,7 +64,7 @@ describe('ChannelRateLimitService.claim', () => {
             expire: jest.fn(),
         };
         const service = new ChannelRateLimitService(
-            { client: Promise.resolve(client) } as any,
+            { getBackend: () => ({ client: Promise.resolve(client) }) } as any,
             true
         );
 
@@ -78,7 +78,7 @@ describe('ChannelRateLimitService.claim — no Redis at boot', () => {
     function makeInMemoryService() {
         const client = { incr: jest.fn(), expire: jest.fn() };
         const service = new ChannelRateLimitService(
-            { client: Promise.resolve(client) } as any,
+            { getBackend: () => ({ client: Promise.resolve(client) }) } as any,
             false
         );
         services.push(service);
@@ -114,7 +114,7 @@ describe('ChannelRateLimitService.claim — no Redis at boot', () => {
 
 describe('ChannelRateLimitService — in-memory sweep lifecycle', () => {
     function fakeQueue() {
-        return { client: Promise.resolve({ incr: jest.fn(), expire: jest.fn() }) };
+        return { getBackend: () => ({ client: Promise.resolve({ incr: jest.fn(), expire: jest.fn() }) }) };
     }
 
     it('does not schedule a sweep when Redis is available', () => {

@@ -31,3 +31,14 @@ export function partialFormValidation<TForm extends FieldValues>(
 
   return true;
 }
+
+/**
+ * Maps a cleared input back to "unset" before zod coerces it.
+ *
+ * `Number("") === 0`, so a bare `z.coerce.number()` turns an emptied field
+ * into a real `0`: `.optional()` never sees `undefined` and silently submits
+ * zero, `.default()` never fires, and `.positive()` fails with no way back to
+ * empty. Preprocess blanks to `undefined` so those modifiers work as written.
+ */
+export const blankToUndefined = (value: unknown) =>
+  value === "" || value === null ? undefined : value;

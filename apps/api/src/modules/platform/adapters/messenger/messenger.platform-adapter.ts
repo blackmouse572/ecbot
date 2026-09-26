@@ -8,7 +8,6 @@ import {
     UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import {
     AdapterCapabilities,
     OutboundMessage,
@@ -25,6 +24,10 @@ import {
     PlatformWebhookEvent,
     PlatformWebhookEventKind,
 } from '../../interfaces/platform-adapter.interface';
+import {
+    verifyMetaChallenge,
+    verifyMetaSignature,
+} from '../meta/meta-webhook.util';
 import { PlatformAdapter } from '../platform-adapter.base';
 import {
     MessengerMessagingEvent,
@@ -116,55 +119,14 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
     // ----- webhook -----
 
     verifyChallenge(req: Request): Response | null {
-        if (req.method !== 'GET') return null;
-        const url = new URL(req.url);
-        const mode = url.searchParams.get('hub.mode');
-        const token = url.searchParams.get('hub.verify_token');
-        const challenge = url.searchParams.get('hub.challenge');
-        if (
-            mode === 'subscribe' &&
-            token !== null &&
-            this.verifyToken &&
-            this.constantTimeEquals(token, this.verifyToken)
-        ) {
-            return new Response(challenge ?? '', { status: 200 });
-        }
-        return new Response('Forbidden', { status: 403 });
-    }
-
-    // Hash both to fixed length before timingSafeEqual — avoids a RangeError
-    // on mismatched lengths and eliminates the length/content timing leak a
-    // plain `===` compare has (mirrors TelegramPlatformAdapter.verifySignature).
-    private constantTimeEquals(a: string, b: string): boolean {
-        const ah = createHash('sha256').update(a).digest();
-        const bh = createHash('sha256').update(b).digest();
-        return timingSafeEqual(ah, bh);
+        return verifyMetaChallenge(req, this.verifyToken);
     }
 
     verifySignature(
         rawBody: string,
         headers: Headers | Record<string, string>
     ): boolean {
-        if (!this.appSecret) return false;
-        const sig =
-            headers instanceof Headers
-                ? headers.get('x-hub-signature-256')
-                : (headers['x-hub-signature-256'] ??
-                  headers['X-Hub-Signature-256']);
-        if (!sig) return false;
-        const [algo, hash] = sig.split('=');
-        if (algo !== 'sha256' || !hash) return false;
-        try {
-            const computed = createHmac('sha256', this.appSecret)
-                .update(rawBody, 'utf8')
-                .digest('hex');
-            return timingSafeEqual(
-                Buffer.from(hash, 'hex'),
-                Buffer.from(computed, 'hex')
-            );
-        } catch {
-            return false;
-        }
+        return verifyMetaSignature(rawBody, headers, this.appSecret);
     }
 
     parse(rawBody: string): PlatformWebhookEvent[] {

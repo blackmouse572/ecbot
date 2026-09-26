@@ -5,18 +5,18 @@ import { defineConfig } from "vitest/config";
 // it loads Cloudflare/Tailwind plugins that don't play well with jsdom unit tests.
 export default defineConfig({
   // Workspace packages (e.g. @repo/auth) inherit `jsx: "preserve"` from the
-  // shared next tsconfig, which makes esbuild emit the classic runtime and blow
-  // up with "React is not defined" under test. Pin the automatic runtime here.
-  esbuild: { jsx: "automatic" },
+  // shared next tsconfig, which makes the transformer skip or emit the classic
+  // runtime under test. Pin the automatic runtime here (vite 8 transforms with oxc).
+  oxc: { jsx: { runtime: "automatic" } },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@components": path.resolve(__dirname, "./src/components"),
-      "@hooks": path.resolve(__dirname, "./src/hooks"),
-      "@libs": path.resolve(__dirname, "./src/libs"),
-      "@providers": path.resolve(__dirname, "./src/providers"),
-      "@assets": path.resolve(__dirname, "./src/assets"),
-      "@i18n": path.resolve(__dirname, "./src/i18n"),
+      "@": path.resolve(import.meta.dirname, "./src"),
+      "@components": path.resolve(import.meta.dirname, "./src/components"),
+      "@hooks": path.resolve(import.meta.dirname, "./src/hooks"),
+      "@libs": path.resolve(import.meta.dirname, "./src/libs"),
+      "@providers": path.resolve(import.meta.dirname, "./src/providers"),
+      "@assets": path.resolve(import.meta.dirname, "./src/assets"),
+      "@i18n": path.resolve(import.meta.dirname, "./src/i18n"),
     },
   },
   test: {

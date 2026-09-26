@@ -22,6 +22,7 @@ Ecbot is a multi-platform AI agent platform for conversational commerce and cust
 | Facebook Messenger | Shipped                                                                         |
 | Zalo OA            | Shipped                                                                         |
 | Telegram           | Shipped                                                                         |
+| WhatsApp Business  | Shipped                                                                         |
 | Website widget     | Shipped                                                                         |
 | REST API channel   | Shipped                                                                         |
 | Instagram          | Roadmap — [adapter slot open](https://github.com/blackmouse572/ecbot/issues/22) |
@@ -32,7 +33,7 @@ Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three s
 
 ## Features
 
-- **One agent, every channel.** Define persona, knowledge, tools and behaviour once; the same agent answers on Facebook Messenger, Zalo OA, Telegram, your website widget and a REST API channel. Instagram, TikTok Shop and Shopee are open adapter slots.
+- **One agent, every channel.** Define persona, knowledge, tools and behaviour once; the same agent answers on Facebook Messenger, Zalo OA, Telegram, WhatsApp Business, your website widget and a REST API channel. Instagram, TikTok Shop and Shopee are open adapter slots.
 - **Operator inbox with human handoff.** Every conversation is visible to operators, who can take over at any time; the agent hands off on its own by keyword or when its confidence drops below a threshold you set.
 - **Knowledge base with RAG.** Upload files and pages; embeddings live next to the relational data in one Postgres (pgvector), and retrieval is scoped per agent.
 - **Tools and MCP.** Give agents tools from the marketplace (Composio), a hosted MCP server, or any MCP URL you operate; tool calls run inside the conversation.
@@ -54,7 +55,15 @@ cd ecbot
 pnpm install
 ```
 
-**1. Bring up the infrastructure.** Postgres with pgvector, Redis, a JWKS server, Bull Board and a Cloud Tasks emulator — everything the apps talk to.
+**1. Configure.**
+
+```bash
+pnpm setup:local
+```
+
+Creates `apps/api`, `apps/app` and `apps/ai` `.env` files and fills everything that only has to be consistent: JWT keys, CORS origins, internal secrets, and the API key pairs the apps share. It prompts only for values that need you, and `OPENROUTER_API_KEY` is the one you must supply, since Ecbot has no LLM access without it. It never overwrites a value you've set, so it's safe to re-run. See [installation](apps/api/docs/installation.md) for what it sets, the options, and troubleshooting. Run it before Compose: the JWKS server serves the keys it writes.
+
+**2. Bring up the infrastructure.** Postgres with pgvector, Redis, a JWKS server, Bull Board and a Cloud Tasks emulator — everything the apps talk to.
 
 ```bash
 docker compose up -d
@@ -62,23 +71,7 @@ docker compose up -d
 
 To use a hosted Postgres instead ([Neon](https://neon.tech), Supabase, RDS), point `DATABASE_URL` at it and ignore the `database` container. It needs the **pgvector** extension: Ecbot keeps relational data and embeddings in one database.
 
-**2. Configure.**
-
-```bash
-cp apps/api/.env.example apps/api/.env
-cp apps/app/.env.example apps/app/.env
-cp apps/ai/.env.example  apps/ai/.env
-```
-
-The defaults work against the Compose stack as-is. The only value you must supply is `OPENROUTER_API_KEY` in `apps/ai/.env` — Ecbot has no LLM access without it.
-
-**3. JWT signing keys.** Writes a keypair into `apps/api/keys/` and fills the matching `.env` entries.
-
-```bash
-pnpm generate:keys
-```
-
-**4. Create the schema, and optionally seed demo data.**
+**3. Create the schema, and optionally seed demo data.**
 
 ```bash
 pnpm --filter api migration:up
@@ -87,7 +80,7 @@ pnpm --filter api migrate:seed      # demo countries, API keys, roles and users
 
 `migration:up` applies the chain under `apps/api/migrations/` — it replays cleanly onto an empty database and records what ran, so later upgrades are plain `migration:up` too. Do not use `schema:create`: it builds the tables without recording any migration, and the next upgrade would try to replay the whole chain.
 
-**5. Run the apps.**
+**4. Run the apps.**
 
 ```bash
 pnpm dev:app                          # api + app

@@ -4,6 +4,7 @@ import { FacebookOAuthAdapterService } from '@app/common/oauth/services/facebook
 import { ShopeeOAuthService } from '@app/common/shopee/services/shopee-oauth.service';
 import { TelegramOAuthService } from '@app/common/telegram/services/telegram-oauth.service';
 import { TikTokShopOAuthService } from '@app/common/tiktok-shop/services/tiktok-shop-oauth.service';
+import { WhatsAppOAuthService } from '@app/common/whatsapp/services/whatsapp-oauth.service';
 import { ZaloOAuthService } from '@app/common/zalo/services/zalo-oauth.service';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
@@ -18,6 +19,7 @@ import { ConfigModule } from '@nestjs/config';
         TikTokShopOAuthService,
         ShopeeOAuthService,
         TelegramOAuthService,
+        WhatsAppOAuthService,
         OAuthPlatformFactory,
     ],
     exports: [OAuthPlatformFactory],

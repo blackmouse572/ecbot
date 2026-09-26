@@ -1,5 +1,4 @@
 import { getAvatarFallback } from "@/components/utils/avatar-fallback";
-import { defaultNs } from "@/i18n";
 import { Avatar, Badge, clx, Text } from "@medusajs/ui";
 import type {
   UserShortResponseDto,
@@ -34,7 +33,7 @@ export const MemberAvatarName = ({
 );
 
 const OwnerBadge = () => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
   const label = t("roles.types.workspaceOwner");
 
   return (

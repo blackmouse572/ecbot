@@ -12,7 +12,10 @@ import {
 } from 'src/common/doc/decorators/doc.decorator';
 import { IDocRequestOptions } from 'src/common/doc/interfaces/doc.interface';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
-import { AccountDocParamsId } from '../constants/account.doc.constant';
+import {
+    AccountDocAuth,
+    AccountDocParamsId,
+} from '../constants/account.doc.constant';
 import { AccountCreateRequestDto } from '../dtos/request/account.create.request.dto';
 import { AccountUpdateStatusRequestDto } from '../dtos/request/account.update-status.request.dto';
 import { AccountUpdateRequestDto } from '../dtos/request/account.update.request.dto';
@@ -20,7 +23,6 @@ import { AccountGetDetailResponseDto } from '../dtos/response/account.detail.res
 import { AccountListResponseDto } from '../dtos/response/account.list.response.dto';
 import { ENUM_ACCOUNT_STATUS } from '../enums/account.enum';
 
-const AUTH = { xApiKey: true, jwtAccessToken: true };
 const GUARD = { role: true, policy: true };
 
 // Admin reads span every workspace, so the workspace itself is a filter.
@@ -38,7 +40,7 @@ export function AccountAdminListDoc(): MethodDecorator {
             summary: 'get all accounts',
         }),
         DocRequest(LIST_REQUEST),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard(GUARD),
         DocResponsePaging<AccountListResponseDto>('account.list', {
             dto: AccountListResponseDto,
@@ -54,7 +56,7 @@ export function AccountAdminGetDoc(): MethodDecorator {
         DocRequest({
             params: AccountDocParamsId,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard(GUARD),
         DocResponse<AccountGetDetailResponseDto>('account.get', {
             dto: AccountGetDetailResponseDto,
@@ -72,7 +74,7 @@ export function AccountAdminCreateDoc(): MethodDecorator {
         Doc({
             summary: 'create an account',
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocRequest({
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
             dto: AccountCreateRequestDto,
@@ -95,7 +97,7 @@ export function AccountAdminUpdateStatusDoc(): MethodDecorator {
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
             dto: AccountUpdateStatusRequestDto,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard(GUARD),
         DocResponse('account.updateStatus')
     );
@@ -111,7 +113,7 @@ export function AccountAdminUpdateDoc(): MethodDecorator {
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
             dto: AccountUpdateRequestDto,
         }),
-        DocAuth(AUTH),
+        DocAuth(AccountDocAuth),
         DocGuard(GUARD),
         DocResponse('account.update')
     );

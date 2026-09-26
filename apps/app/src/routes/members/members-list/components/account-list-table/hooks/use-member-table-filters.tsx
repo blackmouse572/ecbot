@@ -1,5 +1,4 @@
 import type { Filter } from "@/components/table/data-table";
-import { defaultNs } from "@/i18n";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,7 +6,7 @@ import { useTranslation } from "react-i18next";
 const STATUS = { key: "status", type: "select", multiple: false } as const;
 
 export const useMemberTableFilters = (): Filter[] => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
 
   return useMemo(() => {
     const options = [

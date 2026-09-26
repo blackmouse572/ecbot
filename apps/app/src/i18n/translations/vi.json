@@ -488,6 +488,19 @@
           "tokenHint": "Tạo bot và lấy token qua @BotFather",
           "tokenInvalid": "Sai định dạng token — phải có dạng 1234567890:ABC...",
           "cta": "Kết nối Bot"
+        },
+        "whatsapp": {
+          "description": "Dán phone number ID của WhatsApp Business và một access token System User vĩnh viễn từ Meta.",
+          "phoneNumberIdLabel": "Phone number ID",
+          "phoneNumberIdInvalid": "Phone number ID chỉ được chứa chữ số",
+          "tokenLabel": "Access token",
+          "tokenPlaceholder": "EAAG...",
+          "tokenHint": "Dùng token system user được cấp cho Meta app của ecbot, có quyền truy cập tài khoản WhatsApp Business của bạn. Token từ Meta app riêng của bạn sẽ không nhận được tin nhắn — hãy dùng \"Đăng nhập bằng Facebook\".",
+          "cta": "Kết nối WhatsApp",
+          "tabs": {
+            "oauth": "Đăng nhập bằng Facebook",
+            "manual": "Nhập thủ công"
+          }
         }
       }
     },
@@ -558,6 +571,10 @@
         "websiteWidget": {
           "label": "Website Widget",
           "description": "Widget chat được nhúng trên website của bạn."
+        },
+        "whatsappBusiness": {
+          "label": "WhatsApp Business",
+          "description": "Một số WhatsApp Business được kết nối qua Cloud API."
         }
       },
       "apiChannel": {
@@ -2177,6 +2194,13 @@
     "messages": "Tin nhắn",
     "tokens": "Token",
     "export": "Xuất CSV",
+    "range": {
+      "label": "Khoảng thời gian",
+      "7d": "7 ngày qua",
+      "30d": "30 ngày qua",
+      "90d": "90 ngày qua",
+      "all": "Toàn bộ"
+    },
     "settings": {
       "title": "Cảnh báo sắp hết quota",
       "description": "Cảnh báo chủ workspace khi quota còn lại thấp hơn tỷ lệ này.",

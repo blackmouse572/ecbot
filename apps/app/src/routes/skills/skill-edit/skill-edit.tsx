@@ -1,7 +1,7 @@
 import { RouteDrawer } from "@/components/modals";
 import { useGetSkill, useUpdateSkill } from "@/hooks/api/skills";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { zodV4Resolver } from "@repo/ui/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Text, toast } from "@medusajs/ui";
 import { Helmet } from "react-helmet-async";
 import { useEffect } from "react";
@@ -26,7 +26,7 @@ const SkillEditInner = () => {
   );
 
   const form = useForm<SkillFormData>({
-    resolver: zodV4Resolver(skillFormSchema),
+    resolver: zodResolver(skillFormSchema),
     defaultValues: {
       name: "",
       description: "",

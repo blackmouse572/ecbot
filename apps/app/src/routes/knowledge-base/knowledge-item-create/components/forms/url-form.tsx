@@ -2,11 +2,11 @@ import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { Form } from "@repo/ui/common-components";
 import type { UseFormReturn } from "react-hook-form";
-import type { KnowledgeItemCreateRequestDto } from "@repo/client";
+import type { KnowledgeItemCreateFormValues } from "../schema";
 import { Textarea, Input } from "@medusajs/ui";
 
 interface UrlFormProps {
-  form: UseFormReturn<KnowledgeItemCreateRequestDto>;
+  form: UseFormReturn<KnowledgeItemCreateFormValues>;
 }
 
 export const UrlForm: FC<UrlFormProps> = ({ form }) => {

@@ -46,6 +46,9 @@ yarn-error.log*
 # ==============================================
 # Python
 # ==============================================
+# Directory names like lib/, bin/ and env/ are common in the TypeScript apps
+# too, so the Python-only ones are scoped to apps/ai (the only Python code).
+# Unscoped, they silently kept new source folders out of commits.
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -54,15 +57,15 @@ __pycache__/
 # Distribution / build files
 .Python
 build/
-develop-eggs/
+/apps/ai/**/develop-eggs/
 dist/
-downloads/
-eggs/
+/apps/ai/**/downloads/
+/apps/ai/**/eggs/
 .eggs/
-parts/
-sdist/
-var/
-wheels/
+/apps/ai/**/parts/
+/apps/ai/**/sdist/
+/apps/ai/**/var/
+/apps/ai/**/wheels/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -72,12 +75,12 @@ EGG-INFO
 
 # Virtual environment
 .venv/
-env/
-venv/
-ENV/
-bin/
-lib/
-include/
+/apps/ai/**/env/
+/apps/ai/**/venv/
+/apps/ai/**/ENV/
+/apps/ai/**/bin/
+/apps/ai/**/lib/
+/apps/ai/**/include/
 
 # Testing and coverage
 .pytest_cache/

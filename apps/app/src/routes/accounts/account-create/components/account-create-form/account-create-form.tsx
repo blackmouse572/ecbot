@@ -13,6 +13,7 @@ import {
   ProgressTabs,
   type ProgressStatus,
   StatusBadge,
+  Tabs,
   Text,
   toast,
 } from "@medusajs/ui";
@@ -23,10 +24,8 @@ import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useOAuthLogin } from "../../hook/use-oauth-login";
 import { IssuedPanel, ProvisionStep } from "./provision-step";
-import {
-  isProvisionedPlatform,
-  type Issued,
-} from "./provisioned-platforms";
+import { isProvisionedPlatform, type Issued } from "./provisioned-platforms";
+import { WhatsAppCredentialFields } from "./whatsapp-credential-fields";
 
 // ─── Step definitions ────────────────────────────────────────────────────────
 
@@ -103,6 +102,12 @@ const PLATFORMS: PlatformMeta[] = [
     icon: <img src="/icons/telegram.svg" alt="Telegram" className="size-8" />,
   },
   {
+    value: "WHATSAPP_BUSINESS",
+    label: "WhatsApp",
+    description: "WhatsApp Business (Cloud API)",
+    icon: <img src="/icons/whatsapp.svg" alt="WhatsApp" className="size-8" />,
+  },
+  {
     value: "WEBSITE_WIDGET",
     label: "Website",
     description: "Embeddable chat widget",
@@ -122,6 +127,8 @@ type AccountLinkFormValues = {
   platform: string | null;
   acceptedTerms: boolean;
   botToken: string;
+  phoneNumberId: string;
+  accessToken: string;
 };
 
 export const AccountCreateForm = () => {
@@ -129,7 +136,13 @@ export const AccountCreateForm = () => {
   const { handleSuccess } = useRouteModal();
 
   const form = useForm<AccountLinkFormValues>({
-    defaultValues: { platform: null, acceptedTerms: false, botToken: "" },
+    defaultValues: {
+      platform: null,
+      acceptedTerms: false,
+      botToken: "",
+      phoneNumberId: "",
+      accessToken: "",
+    },
     mode: "onChange",
   });
 
@@ -165,6 +178,8 @@ export const AccountCreateForm = () => {
   const handleBack = () => {
     form.setValue("acceptedTerms", false);
     form.setValue("botToken", "");
+    form.setValue("phoneNumberId", "");
+    form.setValue("accessToken", "");
     setIssued(null);
     setTabState((prev) => ({
       ...prev,
@@ -262,10 +277,7 @@ export const AccountCreateForm = () => {
               className="w-full flex justify-center"
             >
               {issued ? (
-                <IssuedPanel
-                  issued={issued}
-                  onDone={() => handleSuccess?.()}
-                />
+                <IssuedPanel issued={issued} onDone={() => handleSuccess?.()} />
               ) : (
                 linkedData && (
                   <SuccessStep
@@ -330,6 +342,34 @@ function PlatformStep({ onSelect }: { onSelect: (value: string) => void }) {
   );
 }
 
+type WhatsAppTab = "oauth" | "manual";
+
+function AcceptTermsField() {
+  const { t } = useTranslation();
+  const form = useFormContext<AccountLinkFormValues>();
+  return (
+    <Form.Field
+      name="acceptedTerms"
+      control={form.control}
+      render={({ field }) => (
+        <Form.Item className="flex-row items-center gap-x-2">
+          <Form.Control>
+            <Checkbox
+              {...field}
+              value={field.value.toString()}
+              checked={field.value}
+              onCheckedChange={field.onChange}
+              className="mb-0"
+            />
+          </Form.Control>
+          <Form.Label>{t("accounts.link.acceptTerms")}</Form.Label>
+          <Form.ErrorMessage />
+        </Form.Item>
+      )}
+    />
+  );
+}
+
 function ConnectStep({
   platform,
   isPending,
@@ -350,14 +390,28 @@ function ConnectStep({
 
   const meta = PLATFORMS.find((p) => p.value === platform);
   const isTelegram = platform === "TELEGRAM_BOT";
+  const isWhatsApp = platform === "WHATSAPP_BUSINESS";
+  // WhatsApp connects through Meta's signup popup; pasting credentials is a fallback.
+  const [whatsAppTab, setWhatsAppTab] = useState<WhatsAppTab>("oauth");
+  // Platforms linked by pasting a credential instead of an OAuth popup.
+  const manualKey = isTelegram
+    ? "telegram"
+    : isWhatsApp && whatsAppTab === "manual"
+      ? "whatsapp"
+      : null;
 
   const { handleLinkClick } = useOAuthLogin(platform, {
     onSuccess: onOAuthSuccess,
     onError: (err) => toast.error(t("accounts.link.error", { error: err })),
   });
 
-  const handleTelegramConnect = form.handleSubmit(({ botToken }) => {
-    onOAuthSuccess({ code: botToken.trim() });
+  const handleManualConnect = form.handleSubmit((values) => {
+    onOAuthSuccess({
+      // The link endpoint takes one `code`; Meta tokens contain no `:`.
+      code: isWhatsApp
+        ? `${values.phoneNumberId.trim()}:${values.accessToken.trim()}`
+        : values.botToken.trim(),
+    });
   });
 
   return (
@@ -373,8 +427,8 @@ function ConnectStep({
             {t("accounts.create.connect.title", { platform: meta?.label })}
           </Heading>
           <Text size="small" className="text-ui-fg-subtle">
-            {isTelegram
-              ? t("accounts.create.connect.telegram.description")
+            {manualKey
+              ? t(`accounts.create.connect.${manualKey}.description`)
               : t("accounts.create.connect.description")}
           </Text>
         </div>
@@ -414,40 +468,42 @@ function ConnectStep({
               </Form.Item>
             )}
           />
+        ) : isWhatsApp ? (
+          <Tabs
+            value={whatsAppTab}
+            onValueChange={(value) => setWhatsAppTab(value as WhatsAppTab)}
+          >
+            <Tabs.List>
+              <Tabs.Trigger value="oauth">
+                {t("accounts.create.connect.whatsapp.tabs.oauth")}
+              </Tabs.Trigger>
+              <Tabs.Trigger value="manual">
+                {t("accounts.create.connect.whatsapp.tabs.manual")}
+              </Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="oauth" className="pt-4">
+              <AcceptTermsField />
+            </Tabs.Content>
+            <Tabs.Content value="manual" className="flex flex-col gap-y-4 pt-4">
+              <WhatsAppCredentialFields />
+            </Tabs.Content>
+          </Tabs>
         ) : (
-          <Form.Field
-            name="acceptedTerms"
-            control={form.control}
-            render={({ field }) => (
-              <Form.Item className="flex-row items-center gap-x-2">
-                <Form.Control>
-                  <Checkbox
-                    {...field}
-                    value={field.value.toString()}
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    className="mb-0"
-                  />
-                </Form.Control>
-                <Form.Label>{t("accounts.link.acceptTerms")}</Form.Label>
-                <Form.ErrorMessage />
-              </Form.Item>
-            )}
-          />
+          <AcceptTermsField />
         )}
 
         <div className="flex gap-x-2">
           <Button type="button" variant="secondary" onClick={onBack}>
             {t("actions.back")}
           </Button>
-          {isTelegram ? (
+          {manualKey ? (
             <Button
               type="button"
-              onClick={handleTelegramConnect}
+              onClick={handleManualConnect}
               disabled={!form.formState.isValid}
               isLoading={isPending}
             >
-              {t("accounts.create.connect.telegram.cta")}
+              {t(`accounts.create.connect.${manualKey}.cta`)}
             </Button>
           ) : (
             <Button

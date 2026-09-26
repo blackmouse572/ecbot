@@ -15,7 +15,7 @@ export const MembersRoleCell = ({
   const { icon: RoleIcon } = ROLE_TYPES[memberRole.type];
 
   return (
-    <Badge {...rest} color={getBadgeColor(memberRole.name + memberRole.type)}>
+    <Badge color={getBadgeColor(memberRole.name + memberRole.type)} {...rest}>
       <RoleIcon className="mr-1 inline h-3 w-3" />
       {memberRole.name}
     </Badge>

@@ -17,7 +17,7 @@ function makeIndicatorService() {
 
 describe('HealthRedisIndicator', () => {
     const ping = jest.fn();
-    const queue = { client: Promise.resolve({ ping }) };
+    const queue = { getBackend: () => ({ client: Promise.resolve({ ping }) }) };
 
     function build(redisAvailable = true) {
         return new HealthRedisIndicator(

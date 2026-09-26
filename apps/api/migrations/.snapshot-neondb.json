@@ -226,7 +226,8 @@
             "SHOPEE_SHOP",
             "TELEGRAM_BOT",
             "API_CHANNEL",
-            "WEBSITE_WIDGET"
+            "WEBSITE_WIDGET",
+            "WHATSAPP_BUSINESS"
           ],
           "mappedType": "enum"
         },
@@ -3657,7 +3658,8 @@
             "SHOPEE_SHOP",
             "TELEGRAM_BOT",
             "API_CHANNEL",
-            "WEBSITE_WIDGET"
+            "WEBSITE_WIDGET",
+            "WHATSAPP_BUSINESS"
           ],
           "mappedType": "enum"
         },

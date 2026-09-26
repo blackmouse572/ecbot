@@ -33,8 +33,8 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { isUUID } from 'class-validator';
 import slugify from 'slugify';
-import { validate as uuidValidate } from 'uuid';
 import { AccountCreateRequestDto } from '../dtos/request/account.create.request.dto';
 import { AccountUpdateStatusRequestDto } from '../dtos/request/account.update-status.request.dto';
 import { AccountUpdateRequestDto } from '../dtos/request/account.update.request.dto';
@@ -109,7 +109,7 @@ export class AccountService implements IAccountService {
 
     /** A UUID can be either the primary key or a slug that looks like one. */
     private matchIdOrSlug(idOrSlug: string): Record<string, any> {
-        return uuidValidate(idOrSlug)
+        return isUUID(idOrSlug)
             ? { $or: [{ id: idOrSlug }, { slug: idOrSlug }] }
             : { slug: idOrSlug };
     }
@@ -347,8 +347,17 @@ export class AccountService implements IAccountService {
                 this.upsertLinkedPage(page, linked, workspaceId, actor)
             )
         );
+        const linkedSiblings = await this.upsertSiblingAccounts(
+            profile.additionalAccounts ?? [],
+            platform,
+            workspaceId,
+            actor
+        );
 
-        return this.joinAccountsWithPages(linked, linkedPages);
+        return this.joinAccountsWithPages(linked, [
+            ...linkedPages,
+            ...linkedSiblings,
+        ]);
     }
 
     /** Keyed on `externalId`, so re-linking refreshes the existing row. */
@@ -376,6 +385,37 @@ export class AccountService implements IAccountService {
             },
             actor
         );
+    }
+
+    /**
+     * Siblings from the same login (e.g. every number of a WhatsApp Business
+     * account), shown alongside pages in the link response. One already linked
+     * in another workspace is left there: the user did not pick it, and the
+     * externalId-keyed upsert would otherwise move it here.
+     */
+    private async upsertSiblingAccounts(
+        siblings: IOAuthTokenResult[],
+        platform: ENUM_ACCOUNT_TYPE,
+        workspaceId: string,
+        actor: string
+    ): Promise<AccountEntity[]> {
+        const linked: AccountEntity[] = [];
+        for (const sibling of siblings) {
+            const existing = await this.accountRepository.findOne({
+                externalId: sibling.externalId,
+                deletedAt: null,
+            });
+            if (existing && existing.workspace?.id !== workspaceId) continue;
+            linked.push(
+                await this.upsertLinkedAccount(
+                    sibling,
+                    platform,
+                    workspaceId,
+                    actor
+                )
+            );
+        }
+        return linked;
     }
 
     /** A page carries its own token and hangs off the account that owns it. */
