@@ -1,3 +1,4 @@
+import { NotImplementedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { PocSystemController } from '../../../src/modules/platform/controllers/poc.system.controller';
@@ -76,6 +77,33 @@ describe('PocSystemController.inbound', () => {
         expect(parse).not.toHaveBeenCalled();
         expect(process).not.toHaveBeenCalled();
         expect(res).toEqual({ processed: 0 });
+    });
+
+    it('acks and drops platforms whose adapter is not built yet, so the edge does not retry them', async () => {
+        verifySignature.mockImplementation(() => {
+            throw new NotImplementedException();
+        });
+        const res = await controller.inbound({
+            platform: 'tiktok',
+            rawBody: '{}',
+            headers: {},
+        });
+        expect(parse).not.toHaveBeenCalled();
+        expect(process).not.toHaveBeenCalled();
+        expect(res).toEqual({ processed: 0 });
+    });
+
+    it('still throws other verification errors', async () => {
+        verifySignature.mockImplementation(() => {
+            throw new Error('boom');
+        });
+        await expect(
+            controller.inbound({
+                platform: 'zalo',
+                rawBody: '{}',
+                headers: {},
+            })
+        ).rejects.toThrow('boom');
     });
 
     it('reply endpoint delegates to ReplyGenerationService.run', async () => {
