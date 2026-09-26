@@ -6,10 +6,12 @@
     "./utils": "./src/utils/index.ts",
     "./common-components": "./src/components/common/index.ts",
     "./components": "./src/components/ui/index.ts",
+    "./charts": "./src/components/charts/index.ts",
     "./layout": "./src/components/layout/index.ts",
     "./table": "./src/components/table/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./styles/ai.css": "./src/styles/ai.css",
+    "./styles/evilcharts.css": "./src/styles/evilcharts.css",
     "./*": "./src/*.tsx"
   },
   "scripts": {
@@ -60,7 +62,7 @@
     "react-i18next": "^15.7.4",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^7.18.4",
-    "recharts": "2.15.4",
+    "recharts": "3.8.0",
     "streamdown": "^2.6.0",
     "tailwindcss": "^4.3.3",
     "use-stick-to-bottom": "^1.1.6",

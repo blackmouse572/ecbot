@@ -1,0 +1,23 @@
+/* ============================================================================
+   Token bridge for the vendored EvilCharts components
+   (@repo/ui/charts, src/components/charts/evilcharts).
+
+   EvilCharts is written against shadcn's colour names (`text-muted-foreground`,
+   `bg-background`, `stroke-border`, …). Our theme is Medusa's, which has no
+   such names, and in Tailwind v4 a class whose colour isn't defined generates
+   nothing — axes, tooltips and legends would render unstyled. Rather than edit
+   the vendored files, map those names onto Medusa's tokens here.
+
+   Any app rendering @repo/ui/charts must import this file, e.g.
+   `@import "@repo/ui/styles/evilcharts.css";`. Light and dark follow Medusa's
+   variables, which already switch on `.dark`.
+   ========================================================================== */
+
+@theme inline {
+  --color-background: var(--bg-base);
+  --color-foreground: var(--fg-base);
+  --color-muted: var(--bg-component);
+  --color-muted-foreground: var(--fg-muted);
+  --color-border: var(--border-base);
+  --color-primary: var(--fg-interactive);
+}

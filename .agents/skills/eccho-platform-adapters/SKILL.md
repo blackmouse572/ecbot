@@ -1,6 +1,6 @@
 ---
 name: eccho-platform-adapters
-description: Build chat channel integrations for the ecbot `apps/api` NestJS backend using the internal `platform` module (`PlatformAdapter` abstract class at `apps/api/src/modules/platform/`). Use whenever a developer asks to build, register, or modify a channel — Facebook Messenger, Instagram, WhatsApp Business, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget — including handling inbound webhooks, verifying signatures, parsing platform events, sending operator replies, fetching conversations or sender profiles, wiring OAuth, adding a webhook route, or adding a new channel. Use even when the user does not explicitly say "platform adapter" — e.g. "make our bot reply on Zalo", "add a Shopee webhook", "send a message back to the customer on TikTok", "verify Meta signatures", "register an Instagram integration", "let a third party post messages over REST", "embed a chat widget on a customer site". This is the canonical pattern in this codebase and replaces the legacy Vercel Chat SDK; do not reach for the `chat` npm package or `@chat-adapter/*` — they have been removed.
+description: Build or change an ecbot chat channel through the `apps/api` platform module (`PlatformAdapter`). Use for Messenger, Instagram, WhatsApp Business, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget: inbound webhooks, signature verification, event parsing, operator replies, sender profiles, channel OAuth, or adding a new channel.
 ---
 
 # ecbot Platform Adapters
@@ -18,11 +18,6 @@ Nine channels are registered today, in two groups:
   no third-party platform: ecbot issues the credential and owns both ends. They
   implement the same contract but their inbound arrives through their own
   controllers, not the webhook route (see "eccho-issued channels" below).
-
-The previous Vercel `chat` SDK and `@chat-adapter/*` packages have been ripped
-out. Do not add them back, and do not look for `Chat`, `Adapter`,
-`createMessengerAdapter`, `RedisStateAdapter`, or `BaseFormatConverter` — those
-symbols no longer exist in this repo.
 
 ## Start by reading these files
 
@@ -77,7 +72,7 @@ it shows how the registry is consumed: `registry.get(account.type).sendMessage(.
 - **Durability and dedupe** — the webhook controller enqueues every event via
   `InboundInboxService.accept()` **before** it ACKs (receipt-before-ACK,
   ADR-0007). The BullMQ jobId is `${platform}-${externalMessageId}` and its
-  26h retention *is* the redelivery dedupe. A second, shared Redis claim
+  26h retention _is_ the redelivery dedupe. A second, shared Redis claim
   (`InboundEventDedupeService`) sits inside `MessageProcessorService.process()`
   so every ingress path is covered. Events with no `externalMessageId` are
   dropped as unde-dupable.
@@ -103,17 +98,17 @@ it shows how the registry is consumed: `registry.get(account.type).sendMessage(.
 
 ## When to do what
 
-| User intent | What to build / where to edit |
-| --- | --- |
-| Add a new chat platform | New adapter in `adapters/<platform>/`, add to `ADAPTERS` in `platform.module.ts`, add the slug to `platform-slug.constant.ts`, add the `ENUM_ACCOUNT_TYPE` value **and a migration** widening the `accounts_type_check` and `contact_points_platform_check` constraints. |
-| Send a message from the app to a customer | Don't call providers directly — `ConversationMessagingService.sendOperatorReply`, or `registry.get(account.type).sendMessage(...)`. |
-| Register a new inbound webhook URL | Usually unnecessary: `POST /v1/webhooks/:platform` already handles it. Add a dedicated route **only** when the payload doesn't identify the target account (the Telegram `POST /webhooks/telegram/:botId` precedent). |
-| Fetch conversation history from the provider | `adapter.fetchConversations` + `fetchMessages` (both optional). |
-| Look up a customer's profile | `adapter.fetchSenderProfile`. |
+| User intent                                         | What to build / where to edit                                                                                                                                                                                                                                                 |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add a new chat platform                             | New adapter in `adapters/<platform>/`, add to `ADAPTERS` in `platform.module.ts`, add the slug to `platform-slug.constant.ts`, add the `ENUM_ACCOUNT_TYPE` value **and a migration** widening the `accounts_type_check` and `contact_points_platform_check` constraints.      |
+| Send a message from the app to a customer           | Don't call providers directly — `ConversationMessagingService.sendOperatorReply`, or `registry.get(account.type).sendMessage(...)`.                                                                                                                                           |
+| Register a new inbound webhook URL                  | Usually unnecessary: `POST /v1/webhooks/:platform` already handles it. Add a dedicated route **only** when the payload doesn't identify the target account (the Telegram `POST /webhooks/telegram/:botId` precedent).                                                         |
+| Fetch conversation history from the provider        | `adapter.fetchConversations` + `fetchMessages` (both optional).                                                                                                                                                                                                               |
+| Look up a customer's profile                        | `adapter.fetchSenderProfile`.                                                                                                                                                                                                                                                 |
 | Refresh tokens / get the page/OA/shop's own profile | `adapter.oauth.refresh` / `adapter.oauth.getOwnerProfile`. Note the **account-linking** flow is a separate interface — `IOAuthPlatformService` under `apps/api/src/common/<platform>/`, dispatched by `OAuthPlatformFactory`. Adding a linkable platform means touching both. |
-| Auto-reply to inbound messages (LLM, handoff) | NOT in the adapter. `MessageProcessorService` → `MessageDebounceService` (3s burst window) → `ReplyGenerationService` → `StreamingDelivery` → `adapter.sendMessage`. |
-| Let a third party send/receive over REST | That is the **API channel** — it already exists. See below. |
-| Embed a chat widget on a customer's site | That is the **website widget** — it already exists. See below. |
+| Auto-reply to inbound messages (LLM, handoff)       | NOT in the adapter. `MessageProcessorService` → `MessageDebounceService` (3s burst window) → `ReplyGenerationService` → `StreamingDelivery` → `adapter.sendMessage`.                                                                                                          |
+| Let a third party send/receive over REST            | That is the **API channel** — it already exists. See below.                                                                                                                                                                                                                   |
+| Embed a chat widget on a customer's site            | That is the **website widget** — it already exists. See below.                                                                                                                                                                                                                |
 
 ## eccho-issued channels
 
@@ -145,122 +140,34 @@ registered, which also exposes them on the unauthenticated
 `POST /v1/webhooks/:platform` route. Returning anything else there would turn
 that route into a free message-injection endpoint. Do not "fix" this.
 
-## Quick start — implementing a new platform adapter
+## Implementing a new platform adapter
 
-```ts
-import { ENUM_ACCOUNT_TYPE } from "@app/modules/account/enums/account.enum";
-import { AccountEntity } from "@app/modules/account/repository/entities/account.entity";
-import { AccountService } from "@app/modules/account/services/account.service";
-import { HttpService } from "@nestjs/axios";
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { createHmac, timingSafeEqual } from "crypto";
-import {
-  AdapterCapabilities,
-  OutboundMessage,
-} from "../../interfaces/message-model";
-import {
-  PlatformOAuthCapability,
-  PlatformUserProfile,
-  PlatformWebhookEvent,
-} from "../../interfaces/platform-adapter.interface";
-import { PlatformAdapter } from "../platform-adapter.base";
+Copy the closest existing adapter rather than starting blank:
 
-@Injectable()
-export class ZaloPlatformAdapter extends PlatformAdapter {
-  readonly type = ENUM_ACCOUNT_TYPE.ZALO_PAGE;
+- OAuth platform with HMAC webhooks: `adapters/zalo/zalo.platform-adapter.ts` (smallest) or `adapters/messenger/messenger.platform-adapter.ts` (richest).
+- Manual credential instead of OAuth: `adapters/telegram/telegram.platform-adapter.ts`.
 
-  // Declare honestly — `degrade()` downgrades anything set to false.
-  readonly capabilities: AdapterCapabilities = {
-    cards: false,
-    buttons: false,
-    quickReplies: false,
-    media: true,
-    editMessage: false,
-    deleteMessage: false,
-    reactions: { inbound: false, outbound: false },
-    typing: false,
-    markRead: false,
-  };
+While filling it in:
 
-  constructor(
-    private readonly config: ConfigService,
-    private readonly http: HttpService,
-    private readonly accounts: AccountService,
-  ) {
-    super();
-  }
+- Declare `capabilities` honestly; `degrade()` downgrades anything set to `false`.
+- `verifySignature` hashes both sides to a fixed length before `timingSafeEqual` (it throws on a length mismatch, which leaks the expected length). Copy the Messenger or Zalo implementation.
+- `parse()` sets `accountKey` to the stored `account.externalId`.
+- On a provider HTTP error in `doSend`, call `this.rethrowPlatformError(err, '<platform> sendMessage')` so the provider's reason reaches the logs.
 
-  private token(account: AccountEntity): string {
-    return this.accounts.decryptToken(account.accessToken);
-  }
-
-  readonly oauth: PlatformOAuthCapability = {
-    exchangeCode: async () => ({ accessToken: "" }), // linking goes through ZaloOAuthService
-    refresh: async (account) => ({ accessToken: this.token(account) }),
-    getOwnerProfile: async (account) => {
-      /* GET https://openapi.zalo.me/v3.0/oa/getoa */
-    },
-  };
-
-  verifyChallenge(_req: Request): Response | null {
-    return null; // Zalo has no challenge handshake
-  }
-
-  verifySignature(rawBody: string, headers: Record<string, string>): boolean {
-    const secret = this.config.get<string>("zalo.appSecret");
-    if (!secret) return false;
-    const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
-    const incoming = headers["x-zevent-signature"] ?? "";
-    // Hash both to a fixed length first — timingSafeEqual throws on a length
-    // mismatch, which would itself leak the expected length.
-    return timingSafeEqual(
-      createHmac("sha256", secret).update(incoming).digest(),
-      createHmac("sha256", secret).update(`mac=${expected}`).digest(),
-    );
-  }
-
-  parse(rawBody: string): PlatformWebhookEvent[] {
-    const body = JSON.parse(rawBody);
-    // accountKey MUST equal the stored account.externalId.
-    return [];
-  }
-
-  async fetchSenderProfile(
-    account: AccountEntity,
-    senderId: string,
-  ): Promise<PlatformUserProfile> {
-    return { id: senderId };
-  }
-
-  protected async doSend(
-    account: AccountEntity,
-    senderId: string,
-    msg: OutboundMessage,
-  ): Promise<{ externalId: string }> {
-    // POST https://openapi.zalo.me/v3.0/oa/message/cs
-    // On an HTTP error call this.rethrowPlatformError(err, 'zalo sendMessage')
-    // so the provider's real reason reaches the logs instead of an AxiosError.
-    return { externalId: "..." };
-  }
-}
-```
-
-Then add the class to `ADAPTERS` in `platform.module.ts` — the `PLATFORM_ADAPTER`
-factory and `PlatformAdapterRegistry.onModuleInit` pick it up from there.
+Then add the class to `ADAPTERS` in `platform.module.ts`; the `PLATFORM_ADAPTER` factory and `PlatformAdapterRegistry.onModuleInit` pick it up from there.
 
 ## Provider quick reference
 
-| Platform | Signature header | Algorithm | GET challenge | Outbound endpoint |
-| --- | --- | --- | --- | --- |
-| Messenger / Instagram | `x-hub-signature-256` | `HMAC-SHA256(rawBody, appSecret)` | yes (`hub.challenge`) | `https://graph.facebook.com/<v>/me/messages` |
-| Zalo OA | `x-zevent-signature` | `mac=HMAC-SHA256(rawBody, appSecret)` | no | `https://openapi.zalo.me/v3.0/oa/message/cs` |
-| TikTok Shop | `x-tts-signature` | `HMAC-SHA256(app_key + timestamp + body, appSecret)` | no | TikTok Customer Service API |
-| Shopee | `authorization` | `HMAC-SHA256(partner_id + path + timestamp, partner_key)` | no | Shopee Open Platform Chat API |
-| WhatsApp Business | `x-hub-signature-256` (same Meta app as Messenger) | `HMAC-SHA256(rawBody, appSecret)` | yes (`hub.challenge`) | `https://graph.facebook.com/<v>/<phone_number_id>/messages` |
-| Telegram | `x-telegram-bot-api-secret-token` | shared secret, compared timing-safe | no | `https://api.telegram.org/bot<token>/sendMessage` |
-| API channel | — (`ClientCredentialGuard` on `/client`) | n/a — `verifySignature` returns false | no | the account's own `config.callbackUrl` |
-| Website widget | — (widget key + Turnstile on `/public`) | n/a — `verifySignature` returns false | no | none; delivery is the visitor's poll |
+| Platform              | Signature header                                   | Algorithm                                                 | GET challenge         | Outbound endpoint                                           |
+| --------------------- | -------------------------------------------------- | --------------------------------------------------------- | --------------------- | ----------------------------------------------------------- |
+| Messenger / Instagram | `x-hub-signature-256`                              | `HMAC-SHA256(rawBody, appSecret)`                         | yes (`hub.challenge`) | `https://graph.facebook.com/<v>/me/messages`                |
+| Zalo OA               | `x-zevent-signature`                               | `mac=HMAC-SHA256(rawBody, appSecret)`                     | no                    | `https://openapi.zalo.me/v3.0/oa/message/cs`                |
+| TikTok Shop           | `x-tts-signature`                                  | `HMAC-SHA256(app_key + timestamp + body, appSecret)`      | no                    | TikTok Customer Service API                                 |
+| Shopee                | `authorization`                                    | `HMAC-SHA256(partner_id + path + timestamp, partner_key)` | no                    | Shopee Open Platform Chat API                               |
+| WhatsApp Business     | `x-hub-signature-256` (same Meta app as Messenger) | `HMAC-SHA256(rawBody, appSecret)`                         | yes (`hub.challenge`) | `https://graph.facebook.com/<v>/<phone_number_id>/messages` |
+| Telegram              | `x-telegram-bot-api-secret-token`                  | shared secret, compared timing-safe                       | no                    | `https://api.telegram.org/bot<token>/sendMessage`           |
+| API channel           | — (`ClientCredentialGuard` on `/client`)           | n/a — `verifySignature` returns false                     | no                    | the account's own `config.callbackUrl`                      |
+| Website widget        | — (widget key + Turnstile on `/public`)            | n/a — `verifySignature` returns false                     | no                    | none; delivery is the visitor's poll                        |
 
 ## What's intentionally out of scope for adapters
 

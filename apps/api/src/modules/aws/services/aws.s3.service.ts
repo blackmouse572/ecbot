@@ -354,9 +354,14 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
         }
 
         const { extension, mime } = this.getFileInfo(key);
+        // Override the stored headers so the browser renders the file inline
+        // (e.g. a PDF in an iframe). Objects uploaded without a ContentType
+        // are served as binary/octet-stream, which browsers download instead.
         const command: GetObjectCommand = new GetObjectCommand({
             Bucket: config.bucket,
             Key: key,
+            ResponseContentType: mime,
+            ResponseContentDisposition: 'inline',
         });
         const expiresIn = options?.expired ?? this.presignExpired;
 

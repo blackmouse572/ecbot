@@ -1313,7 +1313,8 @@
     "close": "Đóng",
     "copy": "Sao chép",
     "previous": "Trước",
-    "next": "Sau"
+    "next": "Sau",
+    "preview": "Xem trước"
   },
   "fields": {
     "name": "Tên",
@@ -1527,7 +1528,10 @@
       "error": "Failed to update knowledge item"
     },
     "tagsUpdateError": "Không thể cập nhật thẻ",
-    "editTags": "Chỉnh sửa thẻ"
+    "editTags": "Chỉnh sửa thẻ",
+    "preview_empty": "Chưa có nội dung",
+    "preview_unsupported": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
+    "preview_error": "Không tải được mục này. Vui lòng thử lại."
   },
   "conversations": {
     "title": "Hội thoại",
@@ -2193,6 +2197,13 @@
     "messages": "Tin nhắn",
     "tokens": "Token",
     "export": "Xuất CSV",
+    "range": {
+      "label": "Khoảng thời gian",
+      "7d": "7 ngày qua",
+      "30d": "30 ngày qua",
+      "90d": "90 ngày qua",
+      "all": "Toàn bộ"
+    },
     "settings": {
       "title": "Cảnh báo sắp hết quota",
       "description": "Cảnh báo chủ workspace khi quota còn lại thấp hơn tỷ lệ này.",
