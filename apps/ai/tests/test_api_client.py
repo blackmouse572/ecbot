@@ -18,32 +18,7 @@ def _client(
     api_key: str = "ai-key",
     api_secret: str = "ai-secret",
 ) -> ApiClient:
-    # Inject the mock transport via a subclass; the production class creates its
-    # own AsyncClient inside `post`, so we override `post` to use our transport.
-    class _TestApiClient(ApiClient):
-        async def post(self, path, json):
-            url = self._base_url + (path if path.startswith("/") else "/" + path)
-            async with httpx.AsyncClient(transport=transport, timeout=self._timeout) as client:
-                try:
-                    resp = await client.post(url, json=json, headers=self._headers())
-                except httpx.HTTPError as exc:
-                    raise ApiClientError(
-                        f"POST {url} transport error: {exc}"
-                    ) from exc
-            if resp.status_code >= 400:
-                raise ApiClientError(
-                    f"POST {url} failed: {resp.status_code} {resp.text[:200]}"
-                )
-            if not resp.content:
-                return {}
-            try:
-                return resp.json()
-            except ValueError:
-                return {"raw": resp.text}
-
-    return _TestApiClient(
-        base_url="http://api.test", api_key=api_key, api_secret=api_secret
-    )
+    return _client_with_transport(transport, api_key, api_secret)
 
 
 async def test_post_sends_x_api_key_header():
@@ -172,3 +147,44 @@ async def test_delete_raises_clean_api_client_error_on_4xx():
 
     assert "404" in str(exc_info.value)
     assert not isinstance(exc_info.value, httpx.HTTPError)
+
+
+@pytest.mark.parametrize(
+    "method, call",
+    [
+        ("POST", lambda c: c.post("/system/customers/cust-1/profile", {"name": "A"})),
+        ("GET", lambda c: c.get("/system/followups", {"conversationId": "conv-1"})),
+        ("DELETE", lambda c: c.delete("/system/followups/f1")),
+    ],
+)
+async def test_requests_go_to_the_api_v1_prefix(method, call):
+    # API_BASE_URL is the API's origin; its routes live under /api/v1. Without
+    # the prefix every call got a 308 redirect instead of reaching the route.
+    seen: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["method"] = request.method
+        seen["path"] = request.url.path
+        return httpx.Response(200, json={"ok": True})
+
+    await call(_client_with_transport(httpx.MockTransport(handler)))
+
+    assert seen["method"] == method
+    assert seen["path"].startswith("/api/v1/system/")
+
+
+@pytest.mark.parametrize("status", [301, 302, 307, 308])
+async def test_a_redirect_is_an_error_not_a_success(status):
+    # A redirect means the route was not reached. Treating it as success made
+    # tools report "ok" while doing nothing, and fed the redirect page to the model.
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            status, headers={"location": "/api/public/hello"}, text="Permanent Redirect."
+        )
+
+    client = _client_with_transport(httpx.MockTransport(handler))
+
+    with pytest.raises(ApiClientError) as exc_info:
+        await client.post("/system/customers/cust-1/profile", {"name": "A"})
+
+    assert str(status) in str(exc_info.value)

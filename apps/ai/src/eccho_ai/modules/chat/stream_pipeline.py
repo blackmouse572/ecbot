@@ -9,8 +9,12 @@ import json
 from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Any
 
+from eccho_ai.core.app_logger import get_logger
 from eccho_ai.modules.chat import ui_message_stream as ui
 from eccho_ai.modules.chat.image_markdown import Image, ImageMarkdownFilter, Piece
+from eccho_ai.modules.chat.prompt_leak import PROMPT_LEAK_REASON, PromptLeakFilter
+
+logger = get_logger(__name__)
 
 SEND_IMAGE_TOOL = "send_image"
 
@@ -48,10 +52,22 @@ async def events_to_ui_parts(
         output_text = ""
         usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
         images = ImageMarkdownFilter(image_url_allowed) if image_url_allowed else None
+        leak = PromptLeakFilter()
+        leaked = False
         tool_names: dict[str, str] = {}
 
         async def screen(text: str) -> list[Piece]:
-            return await images.feed(text) if images else [text]
+            nonlocal leaked
+            safe = leak.feed(text)
+            if safe is None:
+                leaked = True
+                return []
+            return await images.feed(safe) if images else [safe]
+
+        async def flush_screens() -> list[Piece]:
+            held = leak.flush()
+            pieces = (await images.feed(held) if images else [held]) if held else []
+            return pieces + (await images.flush() if images else [])
 
         def emit(pieces: list[Piece]):
             """Frames for screened pieces: text into the open text run (opened
@@ -117,8 +133,11 @@ async def events_to_ui_parts(
                     usage["output_tokens"] += usage_metadata.get("output_tokens", 0)
                     usage["total_tokens"] += usage_metadata.get("total_tokens", 0)
 
+                if leaked:
+                    break
+
             elif evt_type == "on_tool_start":
-                for frame in emit(await images.flush() if images else []):
+                for frame in emit(await flush_screens()):
                     yield frame
                 if text_id is not None:
                     yield ui.text_end(text_id)
@@ -156,14 +175,34 @@ async def events_to_ui_parts(
                 yield ui.finish_step()
                 step_open = False
 
-        for frame in emit(await images.flush() if images else []):
-            yield frame
+        if leaked:
+            # Stop the agent run: nothing it produces from here can be sent.
+            aclose = getattr(events, "aclose", None)
+            if aclose is not None:
+                await aclose()
+        else:
+            for frame in emit(await flush_screens()):
+                yield frame
         if text_id is not None:
             yield ui.text_end(text_id)
             text_id = None
         if reasoning_id is not None:
             yield ui.reasoning_end(reasoning_id)
             reasoning_id = None
+
+        # A reply that starts reproducing the system prompt is cut at the first
+        # marker (see prompt_leak.py). apps/api answers a `data-guardrail` with
+        # the chatbot's fallback message. Usage goes first: apps/api stops
+        # reading at the guardrail part, and the turn must still be billed.
+        if leaked:
+            logger.warning(
+                "Prompt leak blocked request_id=%s output_chars=%d",
+                request_id,
+                len(output_text),
+            )
+            yield ui.message_metadata({"usage": usage, "sources": []})
+            yield ui.data_part("guardrail", {"reason": PROMPT_LEAK_REASON})
+            return
 
         # The output guardrail runs after text has already been yielded. On the
         # platform (customer) path apps/api buffers all segments and discards

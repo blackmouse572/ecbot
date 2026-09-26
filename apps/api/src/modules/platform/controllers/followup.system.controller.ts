@@ -20,7 +20,7 @@ import { FollowupService } from '../services/followup.service';
  * the Python side stays a thin tool runner.
  */
 @ApiTags('modules.system.followup')
-@Controller({ version: '1', path: '/system/followups' })
+@Controller({ version: '1', path: '/followups' })
 export class FollowupSystemController {
     constructor(private readonly followupService: FollowupService) {}
 

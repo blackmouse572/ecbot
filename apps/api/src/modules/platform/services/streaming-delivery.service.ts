@@ -210,8 +210,9 @@ export class StreamingDelivery {
                 } else if (isImagePart(parsed)) {
                     segments.addImage(parsed.url);
                 } else if (parsed.type === 'data-guardrail') {
-                    // Defensive: shouldn't fire in incremental mode (no semantic
-                    // tier). If it does, stop sending the rest.
+                    // No semantic tier here, but apps/ai still cuts a reply
+                    // that starts reproducing the system prompt. Stop sending
+                    // the rest; the caller sends the fallback message.
                     blocked = true;
                     blockReason =
                         (parsed.data as { reason: string })?.reason ?? '';
