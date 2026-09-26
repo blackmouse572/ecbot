@@ -28,7 +28,7 @@ export default function ChatbotRAGSectionPreviewDialog({
 
   return (
     <FocusModal open={open} onOpenChange={onOpenChange}>
-      <FocusModal.Content>
+      <FocusModal.Content aria-describedby={undefined}>
         <FocusModal.Header>
           <div className="flex w-full items-center justify-between gap-x-4">
             <div className="min-w-0">
