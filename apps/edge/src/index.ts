@@ -16,6 +16,9 @@ export const app = new Hono<{
 // header for ones that fetch first and check second).
 app.use(async (c, next) => {
   await next();
+  // Rebuild first: a Response passed through from fetch() (the debounce DO
+  // stub) has immutable headers, and setting one on it throws.
+  c.res = new Response(c.res.body, c.res);
   c.res.headers.set("X-Robots-Tag", "noindex, nofollow");
 });
 app.get("/robots.txt", (c) => c.text("User-agent: *\nDisallow: /\n"));
