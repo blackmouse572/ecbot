@@ -74,4 +74,38 @@ describe("ConversationDebounceDO", () => {
     expect(sentBody).toMatchObject({ conversationId: "c", texts: ["a", "b"] });
     expect(await state.storage.get("texts")).toBeUndefined();
   });
+
+  // apps/api finds the burst's rows by id; counting the last rows breaks
+  // when another message is saved before the Turn reads them.
+  it("carries the saved message ids of the burst to /poc/reply", async () => {
+    const fetchMock = vi.fn(async () => new Response("ok", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const state = mkState();
+    const sut = new ConversationDebounceDO(state as any);
+    for (const [text, messageId] of [
+      ["", "m-1"],
+      ["hi", undefined],
+      ["", "m-2"],
+    ]) {
+      await sut.fetch(
+        new Request("http://do/schedule", {
+          method: "POST",
+          body: JSON.stringify({
+            conversationId: "c",
+            senderId: "s",
+            customerId: "cu",
+            contactPointId: "cp",
+            text,
+            messageId,
+          }),
+        }),
+      );
+    }
+    await sut.alarm();
+    const sentBody = JSON.parse((fetchMock.mock.calls[0][1] as any).body);
+    expect(sentBody).toMatchObject({
+      texts: ["", "hi", ""],
+      messageIds: ["m-1", "m-2"],
+    });
+  });
 });

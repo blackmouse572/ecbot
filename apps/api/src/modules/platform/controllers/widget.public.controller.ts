@@ -1,9 +1,13 @@
+import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
 import { RequestTimeout } from '@app/common/request/decorators/request.decorator';
 import { Response } from '@app/common/response/decorators/response.decorator';
 import { IResponse } from '@app/common/response/interfaces/response.interface';
 import { ENUM_TURNSTILE_ACTION } from '@app/common/turnstile/enums/turnstile.action.enum';
 import { TurnstileService } from '@app/common/turnstile/services/turnstile.service';
-import { ENUM_ACCOUNT_STATUS, ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
+import {
+    ENUM_ACCOUNT_STATUS,
+    ENUM_ACCOUNT_TYPE,
+} from '@app/modules/account/enums/account.enum';
 import {
     isWebsiteWidgetAccount,
     WebsiteWidgetConfig,
@@ -68,7 +72,8 @@ export class WidgetPublicController {
         private readonly sessionService: WidgetSessionService,
         private readonly widgetChatService: WidgetChatService,
         private readonly turnstileService: TurnstileService,
-        private readonly rateLimit: ChannelRateLimitService
+        private readonly rateLimit: ChannelRateLimitService,
+        private readonly messageMedia: MessageMediaService
     ) {}
 
     @WidgetMetaDoc()
@@ -199,12 +204,18 @@ export class WidgetPublicController {
         );
 
         return {
-            data: messages.map(m => ({
-                id: m.id,
-                authorType: m.authorType,
-                text: m.text,
-                dateSent: m.dateSent,
-            })),
+            data: await Promise.all(
+                messages.map(async m => ({
+                    id: m.id,
+                    authorType: m.authorType,
+                    text: m.text,
+                    attachments: await this.messageMedia.resolve(
+                        m.attachments,
+                        conversation.id
+                    ),
+                    dateSent: m.dateSent,
+                }))
+            ),
         };
     }
 

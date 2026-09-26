@@ -10,6 +10,9 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Any
 
 from eccho_ai.modules.chat import ui_message_stream as ui
+from eccho_ai.modules.chat.image_markdown import Image, ImageMarkdownFilter, Piece
+
+SEND_IMAGE_TOOL = "send_image"
 
 
 async def events_to_ui_parts(
@@ -19,11 +22,15 @@ async def events_to_ui_parts(
     guardrail_reason: str | None = None,
     output_guardrail: Callable[[str], Awaitable[str | None]] | None = None,
     sources: list[dict[str, Any]] | None = None,
+    image_url_allowed: Callable[[str], Awaitable[bool]] | None = None,
 ) -> AsyncIterator[str]:
     """Yield UI Message Stream SSE frames for one agent turn.
 
     Order: start -> (guardrail data-part) | (text/reasoning/tool parts ->
     optional data-guardrail | source-url*+message-metadata) -> finish -> done.
+
+    `image_url_allowed` screens markdown images in the text (allowed ones
+    leave it as `file` parts, like `send_image`).
     """
     yield ui.start(request_id)
     # Open-run trackers live outside the try so the `except` handler can close
@@ -40,6 +47,26 @@ async def events_to_ui_parts(
         reasoning_run = 0
         output_text = ""
         usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+        images = ImageMarkdownFilter(image_url_allowed) if image_url_allowed else None
+        tool_names: dict[str, str] = {}
+
+        async def screen(text: str) -> list[Piece]:
+            return await images.feed(text) if images else [text]
+
+        def emit(pieces: list[Piece]):
+            """Frames for screened pieces: text into the open text run (opened
+            on demand), allowed images as file parts."""
+            nonlocal text_id, text_run, output_text
+            for piece in pieces:
+                if isinstance(piece, Image):
+                    yield ui.file(piece.url, "image/*")
+                elif piece:
+                    output_text += piece
+                    if text_id is None:
+                        text_run += 1
+                        text_id = f"text-{text_run}"
+                        yield ui.text_start(text_id)
+                    yield ui.text_delta(text_id, piece)
 
         async for event in events:
             evt_type = event.get("event")
@@ -63,13 +90,8 @@ async def events_to_ui_parts(
                 # typed blocks (Anthropic, Bedrock).
                 content = getattr(chunk, "content", None)
                 if isinstance(content, str):
-                    if content:
-                        output_text += content
-                        if text_id is None:
-                            text_run += 1
-                            text_id = f"text-{text_run}"
-                            yield ui.text_start(text_id)
-                        yield ui.text_delta(text_id, content)
+                    for frame in emit(await screen(content)):
+                        yield frame
                 elif isinstance(content, list):
                     for block in content:
                         if not isinstance(block, dict):
@@ -86,12 +108,8 @@ async def events_to_ui_parts(
                         elif btype == "text":
                             text_chunk = block.get("text", "")
                             if text_chunk:
-                                output_text += text_chunk
-                                if text_id is None:
-                                    text_run += 1
-                                    text_id = f"text-{text_run}"
-                                    yield ui.text_start(text_id)
-                                yield ui.text_delta(text_id, text_chunk)
+                                for frame in emit(await screen(text_chunk)):
+                                    yield frame
 
                 usage_metadata = getattr(chunk, "usage_metadata", None)
                 if usage_metadata:
@@ -100,6 +118,8 @@ async def events_to_ui_parts(
                     usage["total_tokens"] += usage_metadata.get("total_tokens", 0)
 
             elif evt_type == "on_tool_start":
+                for frame in emit(await images.flush() if images else []):
+                    yield frame
                 if text_id is not None:
                     yield ui.text_end(text_id)
                     text_id = None
@@ -109,6 +129,7 @@ async def events_to_ui_parts(
 
                 tool_call_id: str = event.get("run_id") or "unknown"
                 tool_name: str = event.get("name", "")
+                tool_names[tool_call_id] = tool_name
                 yield ui.start_step()
                 step_open = True
                 yield ui.tool_input_start(tool_call_id, tool_name)
@@ -126,9 +147,17 @@ async def events_to_ui_parts(
                     except json.JSONDecodeError:
                         pass
                 yield ui.tool_output_available(tool_call_id, output)
+                if (
+                    tool_names.get(tool_call_id) == SEND_IMAGE_TOOL
+                    and isinstance(output, dict)
+                    and output.get("ok")
+                ):
+                    yield ui.file(output["url"], "image/*")
                 yield ui.finish_step()
                 step_open = False
 
+        for frame in emit(await images.flush() if images else []):
+            yield frame
         if text_id is not None:
             yield ui.text_end(text_id)
             text_id = None

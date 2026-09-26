@@ -42,6 +42,12 @@ export type PlatformWebhookEventKind =
     | 'read'
     | 'unknown';
 
+export interface PlatformAttachment {
+    type: 'image' | 'video' | 'file' | 'location' | 'sticker' | 'audio';
+    url?: string;
+    raw?: unknown;
+}
+
 export interface PlatformWebhookEvent {
     kind: PlatformWebhookEventKind;
     accountKey: string; // page id / oa id / shop id — the account.externalId
@@ -72,11 +78,7 @@ export interface PlatformWebhookEvent {
     raw: unknown;
     // structured inbound extras (optional — parsers fill when present)
     action?: { id: string; value?: string };
-    attachments?: {
-        type: 'image' | 'video' | 'file' | 'location' | 'sticker' | 'audio';
-        url?: string;
-        raw?: unknown;
-    }[];
+    attachments?: PlatformAttachment[];
     reaction?: {
         emoji: string;
         messageId: string;

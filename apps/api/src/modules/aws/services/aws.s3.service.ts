@@ -378,6 +378,26 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
         };
     }
 
+    /**
+     * Sign a download URL without checking the object first. For hot read
+     * paths (e.g. rendering a conversation) where `presignGetItem`'s HEAD
+     * round trip per object is too costly; a missing object just 404s.
+     */
+    async signGetUrl(
+        key: string,
+        options?: IAwsS3PresignGetItemOptions
+    ): Promise<string> {
+        if (key.startsWith('/')) {
+            throw new Error('Key should not start with "/"');
+        }
+        const config = this.getConfig(options);
+        return getSignedUrl(
+            config.client,
+            new GetObjectCommand({ Bucket: config.bucket, Key: key }),
+            { expiresIn: options?.expired ?? this.presignExpired }
+        );
+    }
+
     async putItem(
         file: IAwsS3PutItem,
         options?: IAwsS3Options
@@ -398,7 +418,7 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             Bucket: config.bucket,
             Key: file.key,
             Body: content,
-            ContentType: mime,
+            ContentType: file.mime,
             ...(isPrivate && { ServerSideEncryption: 'AES256' }),
         });
 

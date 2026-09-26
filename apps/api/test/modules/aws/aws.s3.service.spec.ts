@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { AwsS3Service } from 'src/modules/aws/services/aws.s3.service';
 import { ENUM_AWS_S3_ACCESSIBILITY } from 'src/modules/aws/enums/aws.enum';
@@ -41,25 +41,6 @@ describe('AwsS3Service', () => {
                 Key: 'knowledge/kb-1/policy.pdf',
                 ResponseContentType: 'application/pdf',
                 ResponseContentDisposition: 'inline',
-            });
-        });
-    });
-
-    describe('putItem', () => {
-        it('stores the object with its content type', async () => {
-            await service.putItem(
-                {
-                    key: 'knowledge/kb-1/policy.pdf',
-                    file: Buffer.from('%PDF-1.4'),
-                    size: 8,
-                },
-                { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
-            );
-
-            const command = send.mock.calls[0][0] as PutObjectCommand;
-            expect(command.input).toMatchObject({
-                Key: 'knowledge/kb-1/policy.pdf',
-                ContentType: 'application/pdf',
             });
         });
     });

@@ -54,3 +54,16 @@ export function parseWireTokenUsage(raw: unknown): TokenUsageDelta | null {
         totalTokens: totalTokens || inputTokens + outputTokens,
     };
 }
+
+/** Two usages of one Turn added up; undefined when neither was reported. */
+export function addTokenUsage(
+    a?: TokenUsageDelta | null,
+    b?: TokenUsageDelta | null
+): TokenUsageDelta | undefined {
+    if (!a || !b) return a ?? b ?? undefined;
+    return {
+        inputTokens: a.inputTokens + b.inputTokens,
+        outputTokens: a.outputTokens + b.outputTokens,
+        totalTokens: a.totalTokens + b.totalTokens,
+    };
+}

@@ -23,6 +23,7 @@ from eccho_ai.models.customers import Customers
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 from eccho_ai.core.api_client import ApiClient, ApiClientError
 from eccho_ai.core.postgres import PostgresRepo
+from eccho_ai.llm.tools.image_urls import is_known_image_url
 
 logger = logging.getLogger("uvicorn.info")
 
@@ -38,6 +39,16 @@ def _get_customer_id() -> str | None:
     if ctx is None:
         return None
     return getattr(ctx, "customer_id", None)
+
+
+def _get_chatbot() -> Any:
+    from langgraph.runtime import get_runtime
+
+    try:
+        ctx = get_runtime(AgentRequestContext).context
+    except Exception:  # pragma: no cover — runtime missing outside agent
+        return None
+    return getattr(ctx, "chatbot", None)
 
 
 def _get_session_id() -> str | None:
@@ -414,6 +425,18 @@ async def cancel_followup(followup_id: str) -> dict[str, Any]:
         return {"error": str(exc)}
 
 
+@tool
+async def send_image(url: str) -> dict[str, Any]:
+    """Send an image to the user as its own message, after any text you
+    wrote before this call. `url` must be an image URL that appears in your
+    instructions or knowledge base; other URLs are rejected."""
+    if not await is_known_image_url(_get_chatbot(), url):
+        _log_call("send_image", _truncate(url), "rejected", 0)
+        return {"ok": False, "reason": "Unknown image URL. Use one from your knowledge base."}
+    _log_call("send_image", _truncate(url), "ok", 0)
+    return {"ok": True, "url": url}
+
+
 SYSTEM_TOOLS: list[Any] = [
     get_customer_field,
     list_customer_fields,
@@ -424,6 +447,7 @@ SYSTEM_TOOLS: list[Any] = [
     schedule_followup,
     list_pending_followups,
     cancel_followup,
+    send_image,
 ]
 
 

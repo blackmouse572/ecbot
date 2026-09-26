@@ -118,7 +118,8 @@ describe('MessageProcessorService — Customer + ContactPoint wiring (#172)', ()
                 current: jest.fn().mockResolvedValue(0),
                 isCurrent: jest.fn().mockResolvedValue(true),
             } as any,
-            { claim: jest.fn().mockResolvedValue(true) } as any
+            { claim: jest.fn().mockResolvedValue(true) } as any,
+            {} as any
         );
         processor.onModuleInit();
 

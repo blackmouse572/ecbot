@@ -26,6 +26,7 @@ import { ConversationEntity } from '../repository/entities/conversation.entity';
 import { MessageEntity } from '../repository/entities/message.entity';
 import { ConversationRepository } from '../repository/repositories/conversation.repository';
 import { MessageRepository } from '../repository/repositories/message.repository';
+import { MessageMediaService } from './message-media.service';
 
 /**
  * Dispatches operator-initiated messages to the customer's platform via the
@@ -50,7 +51,8 @@ export class ConversationMessagingService {
         private readonly messageRepository: MessageRepository,
         private readonly userRepository: UserRepository,
         private readonly toolInvocationRepository: ToolInvocationRepository,
-        private readonly moduleRef: ModuleRef
+        private readonly moduleRef: ModuleRef,
+        private readonly messageMedia: MessageMediaService
     ) {}
 
     private get platformRegistry(): PlatformAdapterRegistry {
@@ -60,8 +62,7 @@ export class ConversationMessagingService {
     async sendOperatorReply(
         conversationId: string,
         operatorId: string,
-        text: string,
-        attachments?: unknown[]
+        text: string
     ): Promise<MessageEntity> {
         const conversation = await this.conversationRepository.findOneById(
             conversationId,
@@ -85,7 +86,6 @@ export class ConversationMessagingService {
                 authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
                 authorId: operatorId,
                 text,
-                attachments,
                 dateSent: new Date(),
             }
         );
@@ -183,7 +183,7 @@ export class ConversationMessagingService {
             )) ?? message;
 
         const userNameMap = await this.buildUserNameMap([updated]);
-        return this.mapMessage(updated, conversation, userNameMap);
+        return await this.mapMessage(updated, conversation, userNameMap);
     }
 
     async listMessages(
@@ -233,16 +233,21 @@ export class ConversationMessagingService {
         });
     }
 
-    mapMessage(
+    async mapMessage(
         message: MessageEntity,
         conversation?: ConversationEntity,
         userNameMap?: Map<string, string>
-    ): MessageGetResponseDto {
+    ): Promise<MessageGetResponseDto> {
         const dto = plainToInstance(MessageGetResponseDto, message, {
             excludeExtraneousValues: true,
         });
         dto.author = this.resolveAuthor(message, conversation, userNameMap);
         dto.reactions = message.reactions ?? [];
+        // Stored images carry a private key; the inbox gets a short-lived url.
+        dto.attachments = await this.messageMedia.resolve(
+            message.attachments,
+            message.conversation.id
+        );
         return dto;
     }
 
@@ -250,14 +255,14 @@ export class ConversationMessagingService {
      * Map messages to DTOs, resolving author names and splicing persisted tool
      * invocations under the nearest-following BOT message.
      */
-    mapMessages(
+    async mapMessages(
         messages: MessageEntity[],
         conversation?: ConversationEntity,
         userNameMap?: Map<string, string>,
         invocations: ToolInvocationEntity[] = []
-    ): MessageGetResponseDto[] {
-        const dtos = messages.map(m =>
-            this.mapMessage(m, conversation, userNameMap)
+    ): Promise<MessageGetResponseDto[]> {
+        const dtos = await Promise.all(
+            messages.map(m => this.mapMessage(m, conversation, userNameMap))
         );
 
         if (!invocations.length) return dtos;

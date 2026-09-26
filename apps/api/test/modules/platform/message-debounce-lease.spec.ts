@@ -1,3 +1,4 @@
+import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
 import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
@@ -43,6 +44,9 @@ function streamFrom(lines: string[]) {
     });
     return stream;
 }
+
+/** No stored images in these turns: attachments resolve to nothing. */
+const noMedia = { resolve: async () => [] };
 
 describe('ReplyGenerationService.run — generation lease (candidate 2)', () => {
     const conversationService = {
@@ -99,6 +103,11 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             mockModuleRef as any,
             ormStub(),
             manifestBuilder as any,
+            new TurnContextService(
+                messageRepository as any,
+                noMedia as any,
+                {} as any
+            ),
             meter as any
         );
 
@@ -205,7 +214,12 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             new StreamingDelivery(),
             { get: jest.fn(() => conversationService) } as any,
             ormStub(),
-            manifestBuilder as any
+            manifestBuilder as any,
+            new TurnContextService(
+                messageRepository as any,
+                noMedia as any,
+                {} as any
+            )
         );
 
         await unmetered.run(replyInput);

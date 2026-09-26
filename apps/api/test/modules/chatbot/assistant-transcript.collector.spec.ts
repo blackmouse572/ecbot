@@ -14,6 +14,20 @@ describe('AssistantTranscriptCollector', () => {
         expect(c.assistantText()).toBe('Xin chao');
     });
 
+    it('keeps a file part image apart from the transcript text', () => {
+        const c = new AssistantTranscriptCollector();
+        c.onFrame({ type: 'text-delta', id: 't1', delta: 'Mẫu này nè' });
+        c.onFrame({
+            type: 'file',
+            url: 'https://cdn/s.jpg',
+            mediaType: 'image/*',
+        });
+
+        expect(c.assistantText()).toBe('Mẫu này nè');
+        expect(c.images()).toEqual(['https://cdn/s.jpg']);
+        expect(c.shouldPersist()).toBe(true);
+    });
+
     it('excludes reasoning deltas from the assistant text', () => {
         const c = new AssistantTranscriptCollector();
         c.onFrame({ type: 'reasoning-delta', id: 'r1', delta: 'thinking...' });
