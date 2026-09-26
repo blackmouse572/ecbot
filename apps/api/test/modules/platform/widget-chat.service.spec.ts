@@ -1,3 +1,4 @@
+import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import {
     ENUM_MESSAGE_AUTHOR,
@@ -48,7 +49,7 @@ function setup(overrides: Record<string, any> = {}) {
     };
     const sseStream = {
         pipe: jest.fn(async ({ onFinalize }: any) => {
-            await onFinalize('the bot reply');
+            await onFinalize('the bot reply', []);
         }),
     };
 
@@ -56,6 +57,13 @@ function setup(overrides: Record<string, any> = {}) {
         check: jest.fn().mockResolvedValue({ allowed: true }),
         record: jest.fn(),
     };
+    // The real Turn context over the fake repository (widget visitors send
+    // no images, so nothing is signed).
+    const turnContext = new TurnContextService(
+        messageRepository as any,
+        { resolve: async (list: unknown[] = []) => list } as any,
+        {} as any
+    );
 
     const service = new WidgetChatService(
         customerService as any,
@@ -63,6 +71,7 @@ function setup(overrides: Record<string, any> = {}) {
         messageRepository as any,
         chatbotAIService as any,
         sseStream as any,
+        turnContext,
         meter as any
     );
 
@@ -72,7 +81,8 @@ function setup(overrides: Record<string, any> = {}) {
         conversationService as any,
         messageRepository as any,
         chatbotAIService as any,
-        sseStream as any
+        sseStream as any,
+        turnContext
     );
 
     return {
@@ -153,6 +163,7 @@ describe('WidgetChatService.handleTurn', () => {
                     },
                     {
                         direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                        id: 'msg-in', // the row upsertByExternalId saved
                         externalId: 'wm-1',
                         text: 'do you ship to Da Nang?',
                     },
@@ -184,6 +195,24 @@ describe('WidgetChatService.handleTurn', () => {
             })
         );
         expect(messageRepository.markOutboundSent).toHaveBeenCalled();
+    });
+
+    it('persists reply images as attachments', async () => {
+        const { service, messageRepository, sseStream } = setup();
+        sseStream.pipe.mockImplementationOnce(async ({ onFinalize }: any) => {
+            await onFinalize('Mẫu này nè', ['https://cdn/s.jpg']);
+        });
+
+        await service.handleTurn(res, turn);
+
+        expect(messageRepository.insertPendingOutbound).toHaveBeenCalledWith(
+            'conv-1',
+            expect.any(String),
+            expect.objectContaining({
+                text: 'Mẫu này nè',
+                attachments: [{ type: 'image', url: 'https://cdn/s.jpg' }],
+            })
+        );
     });
 
     it('persists the visitor message but generates nothing when the bot is paused', async () => {

@@ -382,7 +382,7 @@ export class ConversationWorkspaceController {
                 total,
                 totalPage: this.paginationService.totalPage(total, limit),
             },
-            data: this.conversationMessagingService.mapMessages(
+            data: await this.conversationMessagingService.mapMessages(
                 messages,
                 conversation,
                 userNameMap,
@@ -412,8 +412,7 @@ export class ConversationWorkspaceController {
                 id,
                 workspace.id,
                 user.id,
-                dto.text,
-                dto.attachments
+                dto.text
             );
 
         const conversation =
@@ -434,7 +433,7 @@ export class ConversationWorkspaceController {
         });
 
         return {
-            data: this.conversationMessagingService.mapMessage(
+            data: await this.conversationMessagingService.mapMessage(
                 message,
                 conversation ?? undefined,
                 userNameMap

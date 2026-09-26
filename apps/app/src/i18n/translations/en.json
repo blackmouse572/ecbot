@@ -1224,7 +1224,8 @@
     "close": "Close",
     "copy": "Copy",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "preview": "Preview"
   },
   "general": {
     "emojiTooltip": "Emoji",
@@ -1496,7 +1497,10 @@
     "edit": {
       "success": "Knowledge item updated successfully",
       "error": "Failed to update knowledge item"
-    }
+    },
+    "preview_empty": "No content yet",
+    "preview_unsupported": "This file type can't be previewed. Download it to view.",
+    "preview_error": "Couldn't load this item. Please try again."
   },
   "conversations": {
     "title": "Conversations",
@@ -1642,7 +1646,8 @@
         "collapse": "Collapse sidebar",
         "expand": "Expand sidebar"
       }
-    }
+    },
+    "image": "Image"
   },
   "customers": {
     "suggestions": {

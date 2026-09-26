@@ -155,3 +155,63 @@ async def test_recursion_limit_error_yields_same_generic_message():
     )
     error_body = json.loads(error_frame[len("data: "):].strip())
     assert "Recursion limit" not in error_body["errorText"]
+
+
+def _parts(frames):
+    return [json.loads(f[len("data: "):]) for f in frames if not f.startswith("data: [DONE]")]
+
+
+@pytest.mark.asyncio
+async def test_send_image_tool_emits_a_file_part():
+    async def fake_events():
+        yield {"event": "on_tool_start", "run_id": "r1", "name": "send_image",
+               "data": {"input": {"url": "https://cdn/s.jpg"}}}
+        yield {"event": "on_tool_end", "run_id": "r1", "name": "send_image",
+               "data": {"output": _tool_msg('{"ok": true, "url": "https://cdn/s.jpg"}')}}
+
+    parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
+    assert {"type": "file", "url": "https://cdn/s.jpg", "mediaType": "image/*"} in parts
+
+
+@pytest.mark.asyncio
+async def test_rejected_send_image_emits_no_file_part():
+    async def fake_events():
+        yield {"event": "on_tool_start", "run_id": "r1", "name": "send_image",
+               "data": {"input": {"url": "https://evil/x.jpg"}}}
+        yield {"event": "on_tool_end", "run_id": "r1", "name": "send_image",
+               "data": {"output": _tool_msg('{"ok": false, "reason": "unknown"}')}}
+
+    parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
+    assert not [p for p in parts if p["type"] == "file"]
+
+
+@pytest.mark.asyncio
+async def test_markdown_images_are_screened():
+    async def allowed(url: str) -> bool:
+        return url == "https://cdn/ok.jpg"
+
+    async def fake_events():
+        yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk(
+            "A ![a](https://cdn/ok.jpg) B ![b](https://evil/x.jpg)")}}
+
+    parts = _parts([f async for f in events_to_ui_parts(
+        fake_events(), request_id="m1", image_url_allowed=allowed)])
+    text = "".join(p["delta"] for p in parts if p["type"] == "text-delta")
+    assert text == "A B "
+    # An allowed markdown image leaves the text as a file part, like send_image.
+    assert [p["url"] for p in parts if p["type"] == "file"] == ["https://cdn/ok.jpg"]
+
+
+@pytest.mark.asyncio
+async def test_a_reply_that_is_only_a_split_markdown_image_is_not_lost():
+    async def allowed(url: str) -> bool:
+        return True
+
+    async def fake_events():
+        for piece in ["![a](https://cdn/", "ok.jpg)"]:
+            yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk(piece)}}
+
+    parts = _parts([f async for f in events_to_ui_parts(
+        fake_events(), request_id="m1", image_url_allowed=allowed)])
+    assert [p["type"] for p in parts if p["type"].startswith("text")] == []
+    assert {"type": "file", "url": "https://cdn/ok.jpg", "mediaType": "image/*"} in parts

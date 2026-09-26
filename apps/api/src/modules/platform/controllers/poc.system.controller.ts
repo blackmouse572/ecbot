@@ -50,6 +50,12 @@ class PocReplyDto {
     @IsArray()
     @IsString({ each: true })
     texts: string[];
+
+    /** The saved rows of `texts`; an older edge Worker sends none. */
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    messageIds?: string[];
 }
 
 /**

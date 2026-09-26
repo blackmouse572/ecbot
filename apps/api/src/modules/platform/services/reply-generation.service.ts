@@ -1,13 +1,8 @@
 import { AccountService } from '@app/modules/account/services/account.service';
-import {
-    AIChatHistoryMessage,
-    ChatbotAIService,
-} from '@app/modules/chatbot/services/chatbot-ai.service';
+import { addTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
+import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
-import {
-    ENUM_MESSAGE_AUTHOR,
-    ENUM_MESSAGE_DIRECTION,
-} from '@app/modules/conversation/enums/message.enum';
+import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { ManifestBuilderService } from '@app/modules/tool/services/manifest-builder.service';
@@ -15,11 +10,10 @@ import { MikroORM, RequestContext } from '@mikro-orm/core';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
-import {
-    MESSAGE_HISTORY_WINDOW,
-    MESSAGE_TYPING_REFRESH_MS,
-} from '../constants/message-debounce.constant';
+import { MESSAGE_TYPING_REFRESH_MS } from '../constants/message-debounce.constant';
 import { text as toText } from '../interfaces/message-model';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
+import { TurnContextService } from './turn-context.service';
 import { GenerationLeaseService } from './generation-lease.service';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import {
@@ -38,6 +32,8 @@ export interface ReplyInput {
     customerId: string;
     contactPointId: string;
     texts: string[];
+    /** The saved rows of `texts`, in order (see ITurnBurst). */
+    messageIds?: string[];
 }
 
 @Injectable()
@@ -54,6 +50,7 @@ export class ReplyGenerationService {
         private readonly moduleRef: ModuleRef,
         private readonly orm: MikroORM,
         private readonly manifestBuilder: ManifestBuilderService,
+        private readonly turnContext: TurnContextService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -128,32 +125,22 @@ export class ReplyGenerationService {
 
         startTyping();
         try {
-            const combinedText = texts.join('\n');
             const tools = await this.manifestBuilder.build(
                 chatbot.id,
                 chatbot.workspace.id
             );
 
-            // The AI agent is stateless (no LangGraph checkpointer), so we supply
-            // conversation context each turn from the DB (the message source of
-            // truth). The current burst is already persisted as trailing inbound
-            // rows, so drop the last `texts.length` to avoid duplicating the turn
-            // we're about to send as `message`.
-            const recent =
-                await this.messageRepository.findRecentByConversation(
-                    conversationId,
-                    MESSAGE_HISTORY_WINDOW + texts.length
-                );
-            const prior = recent.slice(
-                0,
-                Math.max(0, recent.length - texts.length)
+            // The agent is stateless: history, the burst's message and its
+            // images come from the DB each Turn.
+            const {
+                history,
+                message,
+                usage: describeUsage,
+            } = await this.turnContext.build(
+                conversationId,
+                { texts, messageIds: input.messageIds },
+                chatbot.id
             );
-            const history: AIChatHistoryMessage[] = prior
-                .filter(m => m.text)
-                .map(m => ({
-                    role: this.roleFor(m.authorType, m.direction),
-                    content: m.text as string,
-                }));
 
             const triggerMessage =
                 await this.messageRepository.findLatestInbound(conversationId);
@@ -186,7 +173,7 @@ export class ReplyGenerationService {
                         chatbot_id: chatbot.id,
                         user_id: senderId,
                         provider_id: account.id,
-                        message: combinedText,
+                        message,
                         chat_session_id: conversationId,
                         tools,
                         max_tool_iterations: 5,
@@ -211,7 +198,10 @@ export class ReplyGenerationService {
                     abort: ac,
                     isCurrent: () =>
                         this.lease.isCurrent(conversationId, myEpoch),
-                    onSegmentPersist: async (segmentText: string) => {
+                    onSegmentPersist: async (
+                        segmentText: string,
+                        attachments?: IMessageAttachment[]
+                    ) => {
                         const clientNonce = randomUUID();
                         await this.messageRepository.insertPendingOutbound(
                             conversationId,
@@ -220,6 +210,7 @@ export class ReplyGenerationService {
                                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
                                 authorId: chatbot.id,
                                 text: segmentText,
+                                attachments,
                                 dateSent: new Date(),
                             }
                         );
@@ -252,10 +243,13 @@ export class ReplyGenerationService {
 
             // Booked before any early return below: the tokens were spent the
             // moment apps/ai generated, whatever we decide to do with the text.
-            if (deliveryResult?.usage) {
+            // Describing the burst's images is billed with the reply, even
+            // when the reply itself was blocked or failed.
+            const usage = addTokenUsage(describeUsage, deliveryResult?.usage);
+            if (usage) {
                 await this.meter?.record({
                     workspaceId: chatbot.workspace.id,
-                    usage: deliveryResult.usage,
+                    usage,
                     source: ENUM_AI_USAGE_SOURCE.PLATFORM_REPLY,
                     chatbotId: chatbot.id,
                     accountId: account.id,
@@ -323,15 +317,6 @@ export class ReplyGenerationService {
         } finally {
             stopTyping();
         }
-    }
-
-    private roleFor(
-        _authorType: ENUM_MESSAGE_AUTHOR,
-        direction: ENUM_MESSAGE_DIRECTION
-    ): AIChatHistoryMessage['role'] {
-        return direction === ENUM_MESSAGE_DIRECTION.INBOUND
-            ? 'user'
-            : 'assistant';
     }
 
     /**

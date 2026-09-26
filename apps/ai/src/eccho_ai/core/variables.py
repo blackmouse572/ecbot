@@ -108,6 +108,16 @@ class _AppVars(BaseSettings):
     GUARDRAIL_MODEL: str = "google/gemini-2.5-flash"
     CLASSIFIER_MODEL: str = "google/gemini-2.5-flash"
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
+    # Describes inbound customer images (must accept image input).
+    VISION_MODEL: str = "google/gemini-2.5-flash"
+    # Images one burst can have described (a Telegram album or Messenger
+    # multi-select holds up to 10).
+    VISION_MAX_IMAGES: int = 10
+    # Catalog images from the operator instructions shown alongside, so the
+    # description can name the product a customer photo shows.
+    VISION_MAX_CATALOG_IMAGES: int = 6
+    # KEEP IN SYNC with apps/api MESSAGE_MEDIA_MAX_BYTES (what it stores).
+    VISION_MAX_IMAGE_BYTES: int = 5 * 1024 * 1024
     # OpenRouter image-generation model.
     IMAGE_MODEL: str = "google/gemini-2.5-flash-image"
 

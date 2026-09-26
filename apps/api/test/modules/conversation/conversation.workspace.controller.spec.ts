@@ -736,7 +736,7 @@ describe('ConversationWorkspaceController', () => {
     });
 
     describe('sendMessage', () => {
-        const dto = { text: 'Hi! How can I help?', attachments: undefined };
+        const dto = { text: 'Hi! How can I help?' };
         const sentMessage = {
             id: 'msg-1',
             text: dto.text,
@@ -770,8 +770,7 @@ describe('ConversationWorkspaceController', () => {
                 'conv-1',
                 workspaceId,
                 operatorId,
-                dto.text,
-                dto.attachments
+                dto.text
             );
             expect(
                 mockConversationService.findOneByIdInWorkspace

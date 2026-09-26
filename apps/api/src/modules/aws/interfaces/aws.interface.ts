@@ -32,6 +32,8 @@ export interface IAwsS3PutItem {
     file?: Buffer;
     key: string;
     size?: number;
+    /** Sent as the object's Content-Type. Pass only a type you checked. */
+    mime?: string;
 }
 
 export interface IAwsS3ConfigCredential {

@@ -21,7 +21,8 @@ import type {
   MessageGetResponseDto,
   ReactToMessageAction,
 } from "@/hooks/api/conversations";
-import type { ChatToolCall } from "@/types/chat-message";
+import type { ChatToolCall, MessageAttachment } from "@/types/chat-message";
+import { MessageImages } from "./message-images";
 import { POLICY_URL } from "./reaction-window";
 
 // Telegram's allowed-reaction set is a superset supported across the
@@ -29,10 +30,12 @@ import { POLICY_URL } from "./reaction-window";
 const QUICK_REACTIONS = ["👍", "❤️", "🔥", "🎉", "😁", "😢"] as const;
 
 // TODO: remove this once `pnpm generate:client` regenerates @repo/client
-// to include the new `toolCalls` field on MessageGetResponseDto. Until then,
-// we cast at the read site to surface the field added on the api side.
+// to include the new `toolCalls` / `attachments` fields on
+// MessageGetResponseDto. Until then, we cast at the read site to surface the
+// fields added on the api side.
 type MessageWithToolCalls = MessageGetResponseDto & {
   toolCalls?: ChatToolCall[];
+  attachments?: MessageAttachment[];
 };
 
 interface Props {
@@ -95,7 +98,7 @@ export const MessageBubble = ({
   const author = (message as A).author as
     | { id: string; name: string }
     | undefined;
-  const toolCalls = (message as MessageWithToolCalls).toolCalls;
+  const { toolCalls, attachments } = message as MessageWithToolCalls;
 
   // Group reactions by emoji for the chip row; track whether the current
   // operator is one of the reactors so their chip can be highlighted.
@@ -203,17 +206,30 @@ export const MessageBubble = ({
         )}
       >
         {!isInbound && reactTrigger}
-        <MessageContent
-          className={clx(
-            "whitespace-pre-wrap",
-            isPending && "opacity-70",
-            isFailed && "border-ui-border-error opacity-80",
-          )}
-        >
-          {message.text}
-        </MessageContent>
+        {message.text ? (
+          <MessageContent
+            className={clx(
+              "whitespace-pre-wrap",
+              isPending && "opacity-70",
+              isFailed && "border-ui-border-error opacity-80",
+            )}
+          >
+            {message.text}
+          </MessageContent>
+        ) : (
+          <MessageImages
+            attachments={attachments}
+            align={isInbound ? "start" : "end"}
+          />
+        )}
         {isInbound && reactTrigger}
       </div>
+      {message.text && (
+        <MessageImages
+          attachments={attachments}
+          align={isInbound ? "start" : "end"}
+        />
+      )}
       {reactionGroups.length > 0 && (
         <div
           className={clx(

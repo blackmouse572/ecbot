@@ -9,6 +9,8 @@ import { Module } from '@nestjs/common';
 import { ConversationRepositoryModule } from './repository/conversation.repository.module';
 import { ConversationMessagingService } from './services/conversation-messaging.service';
 import { ConversationService } from './services/conversation.service';
+import { MessageMediaService } from './services/message-media.service';
+import { AwsModule } from '@app/modules/aws/aws.module';
 
 @Module({
     imports: [
@@ -20,11 +22,17 @@ import { ConversationService } from './services/conversation.service';
         UserRepositoryModule,
         ToolModule,
         CustomerModule,
+        AwsModule,
     ],
-    providers: [ConversationService, ConversationMessagingService],
+    providers: [
+        ConversationService,
+        ConversationMessagingService,
+        MessageMediaService,
+    ],
     exports: [
         ConversationService,
         ConversationMessagingService,
+        MessageMediaService,
         ConversationRepositoryModule,
     ],
 })

@@ -3,7 +3,10 @@ import { IncomingMessage } from 'http';
 import { StringDecoder } from 'string_decoder';
 import { PlatformAdapter } from '../adapters/platform-adapter.base';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
-import { text } from '../interfaces/message-model';
+import { ReplySegment, segmentMessages } from '../interfaces/message-model';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
+import { botImage } from '@app/modules/conversation/utils/message-attachment';
+import { ReplySegmenter } from '../utils/reply-segmenter';
 import {
     parseWireTokenUsage,
     TokenUsageDelta,
@@ -25,8 +28,11 @@ export interface StreamingDeliverParams {
     stream: IncomingMessage;
     abort: AbortController;
     isCurrent: () => Promise<boolean>;
-    /** Persist one segment, return the clientNonce. */
-    onSegmentPersist: (segmentText: string) => Promise<string>;
+    /** Persist one outbound message, return the clientNonce. */
+    onSegmentPersist: (
+        segmentText: string,
+        attachments?: IMessageAttachment[]
+    ) => Promise<string>;
     onSent: (nonce: string, externalId: string) => Promise<void>;
     onFailed: (nonce: string) => Promise<void>;
     /** Guardrail config that selects buffered vs incremental delivery. When
@@ -82,6 +88,8 @@ function parseSsePart(line: string): {
     delta?: unknown;
     data?: unknown;
     messageMetadata?: unknown;
+    url?: unknown;
+    mediaType?: unknown;
 } | null {
     if (!line.startsWith('data: ')) return null;
     const body = line.slice(6);
@@ -92,6 +100,20 @@ function parseSsePart(line: string): {
     } catch {
         return null;
     }
+}
+
+/** A `file` part carrying an image (emitted by apps/ai for `send_image`). */
+function isImagePart(part: {
+    type: string;
+    url?: unknown;
+    mediaType?: unknown;
+}): part is { type: 'file'; url: string; mediaType: string } {
+    return (
+        part.type === 'file' &&
+        typeof part.url === 'string' &&
+        typeof part.mediaType === 'string' &&
+        part.mediaType.startsWith('image/')
+    );
 }
 
 export interface DeliveryResult {
@@ -136,7 +158,6 @@ export class StreamingDelivery {
         return new Promise(resolve => {
             const decoder = new StringDecoder('utf8');
             let lineBuffer = '';
-            let current = ''; // in-progress paragraph
             let cumulative = ''; // all text queued so far (for the heuristic)
             let anySent = false;
             let superseded = false;
@@ -153,13 +174,11 @@ export class StreamingDelivery {
             let checking = false;
             let pendingCheck: Promise<void> | null = null;
 
-            const enqueueSend = (raw: string) => {
-                const seg = raw.trim();
-                if (!seg) return;
+            const enqueueSend = (seg: ReplySegment) => {
                 sendChain = sendChain.then(async () => {
                     if (blocked || superseded || failed) return;
-                    if (heuristicPerPart) {
-                        cumulative += (cumulative ? '\n' : '') + seg;
+                    if (heuristicPerPart && seg.text) {
+                        cumulative += (cumulative ? '\n' : '') + seg.text;
                         const hit = outputHeuristic(cumulative);
                         if (hit) {
                             blocked = true;
@@ -173,20 +192,10 @@ export class StreamingDelivery {
                         p.abort.abort();
                         return;
                     }
-                    const nonce = await p.onSegmentPersist(seg);
-                    try {
-                        const { externalId } = await p.adapter.sendMessage(
-                            p.account,
-                            p.senderId,
-                            text(seg)
-                        );
-                        await p.onSent(nonce, externalId);
-                        anySent = true;
-                    } catch {
-                        await p.onFailed(nonce);
-                    }
+                    if (await this.sendSegment(p, seg)) anySent = true;
                 });
             };
+            const segments = new ReplySegmenter(enqueueSend, true);
 
             const consumeLine = (line: string) => {
                 const parsed = parseSsePart(line);
@@ -195,15 +204,11 @@ export class StreamingDelivery {
                     parsed.type === 'text-delta' &&
                     typeof parsed.delta === 'string'
                 ) {
-                    current += parsed.delta;
-                    let i: number;
-                    while ((i = current.indexOf('\n\n')) !== -1) {
-                        enqueueSend(current.slice(0, i)); // paragraph boundary
-                        current = current.slice(i + 2);
-                    }
+                    segments.addText(parsed.delta);
                 } else if (parsed.type === 'tool-input-start') {
-                    enqueueSend(current); // a tool call ends the spoken segment
-                    current = '';
+                    segments.close();
+                } else if (isImagePart(parsed)) {
+                    segments.addImage(parsed.url);
                 } else if (parsed.type === 'data-guardrail') {
                     // Defensive: shouldn't fire in incremental mode (no semantic
                     // tier). If it does, stop sending the rest.
@@ -227,7 +232,7 @@ export class StreamingDelivery {
                 settled = true;
                 lineBuffer += decoder.end();
                 if (lineBuffer) consumeLine(lineBuffer);
-                if (!blocked && !failed && !sup) enqueueSend(current);
+                if (!blocked && !failed && !sup) segments.close();
                 // Resolve only after the send chain drains, so callers see the
                 // final anySent/blocked/superseded state.
                 sendChain.finally(() =>
@@ -330,18 +335,7 @@ export class StreamingDelivery {
                 supersededMidSend = true;
                 break;
             }
-            const nonce = await p.onSegmentPersist(segment);
-            try {
-                const { externalId } = await p.adapter.sendMessage(
-                    p.account,
-                    p.senderId,
-                    text(segment)
-                );
-                await p.onSent(nonce, externalId);
-                anySent = true;
-            } catch {
-                await p.onFailed(nonce);
-            }
+            if (await this.sendSegment(p, segment)) anySent = true;
         }
         return {
             anySent,
@@ -351,6 +345,35 @@ export class StreamingDelivery {
             generationFailed: false,
             usage: result.usage,
         };
+    }
+
+    /**
+     * Persist and send one reply segment: its text, then each image, each as
+     * its own platform message. Returns whether anything reached the customer.
+     */
+    private async sendSegment(
+        p: StreamingDeliverParams,
+        segment: ReplySegment
+    ): Promise<boolean> {
+        let sent = false;
+        for (const msg of segmentMessages(segment)) {
+            const nonce =
+                msg.content.kind === 'media'
+                    ? await p.onSegmentPersist('', [botImage(msg.content.url)])
+                    : await p.onSegmentPersist(msg.fallbackText);
+            try {
+                const { externalId } = await p.adapter.sendMessage(
+                    p.account,
+                    p.senderId,
+                    msg
+                );
+                await p.onSent(nonce, externalId);
+                sent = true;
+            } catch {
+                await p.onFailed(nonce);
+            }
+        }
+        return sent;
     }
 
     /**
@@ -368,7 +391,7 @@ export class StreamingDelivery {
         ac: AbortController,
         isCurrent: () => Promise<boolean>
     ): Promise<{
-        segments: string[];
+        segments: ReplySegment[];
         superseded: boolean;
         guardrailBlocked: boolean;
         guardrailReason: string;
@@ -376,8 +399,13 @@ export class StreamingDelivery {
         usage?: TokenUsageDelta;
     }> {
         return new Promise(resolve => {
-            const segments: string[] = [];
-            let current = '';
+            const segments: ReplySegment[] = [];
+            // No paragraph split: the guardrail's verdict covers the whole
+            // reply, so text between tool calls is one message.
+            const segmenter = new ReplySegmenter(
+                segment => segments.push(segment),
+                false
+            );
             let superseded = false;
             let guardrailBlocked = false;
             let guardrailReason = '';
@@ -387,13 +415,6 @@ export class StreamingDelivery {
             let lastCheck = 0; // 0 so the throttled supersede check fires on the first chunk
             let checking = false;
             let pendingCheck: Promise<void> | null = null;
-
-            // A tool call ends the spoken segment that preceded it.
-            const flushSegment = () => {
-                const trimmed = current.trim();
-                if (trimmed) segments.push(trimmed);
-                current = '';
-            };
 
             // Chunks are arbitrary byte buffers: an SSE line — or even a single
             // multi-byte UTF-8 char (e.g. Vietnamese) — can straddle a chunk
@@ -412,6 +433,8 @@ export class StreamingDelivery {
                     delta?: unknown;
                     data?: unknown;
                     messageMetadata?: unknown;
+                    url?: unknown;
+                    mediaType?: unknown;
                 };
                 try {
                     parsed = JSON.parse(body) as typeof parsed;
@@ -423,19 +446,21 @@ export class StreamingDelivery {
                     parsed.type === 'text-delta' &&
                     typeof parsed.delta === 'string'
                 ) {
-                    current += parsed.delta;
+                    segmenter.addText(parsed.delta);
                 } else if (parsed.type === 'tool-input-start') {
-                    flushSegment();
+                    segmenter.close(); // a tool call ends the spoken segment
+                } else if (isImagePart(parsed)) {
+                    segmenter.addImage(parsed.url);
                 } else if (parsed.type === 'data-guardrail') {
                     guardrailBlocked = true;
                     guardrailReason =
                         (parsed.data as { reason: string })?.reason ?? '';
                     segments.length = 0; // discard any accumulated text
-                    current = '';
+                    segmenter.reset();
                 } else if (parsed.type === 'error') {
                     generationFailed = true;
                     segments.length = 0;
-                    current = '';
+                    segmenter.reset();
                 } else if (parsed.type === 'message-metadata') {
                     const parsedUsage = parseWireTokenUsage(
                         (parsed.messageMetadata as { usage?: unknown })?.usage
@@ -454,7 +479,7 @@ export class StreamingDelivery {
                 // Flush any decoder/line remainder, then the final segment.
                 lineBuffer += decoder.end();
                 if (lineBuffer) consumeLine(lineBuffer);
-                if (!guardrailBlocked && !generationFailed) flushSegment();
+                if (!guardrailBlocked && !generationFailed) segmenter.close();
                 resolve({
                     segments:
                         guardrailBlocked || generationFailed ? [] : segments,

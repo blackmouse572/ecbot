@@ -15,6 +15,7 @@ export type UiStreamFrame = Record<string, unknown> & { type?: unknown };
  */
 export class AssistantTranscriptCollector {
     private text = '';
+    private imageUrls: string[] = [];
     /** A guardrail tripped. apps/ai emits `data-guardrail` *after* the text has
      * already streamed, so blocked content reaches the wire — it must never be
      * written to history, or the next turn feeds it back to the model. */
@@ -33,6 +34,16 @@ export class AssistantTranscriptCollector {
             if (typeof delta === 'string') this.text += delta;
             return;
         }
+        // An image the reply sent (send_image, or an allowed markdown image).
+        if (
+            type === 'file' &&
+            typeof frame.url === 'string' &&
+            typeof frame.mediaType === 'string' &&
+            frame.mediaType.startsWith('image/')
+        ) {
+            this.imageUrls.push(frame.url);
+            return;
+        }
         if (type === 'message-metadata') {
             const metadata = frame.messageMetadata as
                 { usage?: unknown } | undefined;
@@ -48,8 +59,17 @@ export class AssistantTranscriptCollector {
         return this.text;
     }
 
+    /** URLs of the images the reply sent, in order. */
+    images(): string[] {
+        return this.imageUrls;
+    }
+
     /** Whether this turn is safe and meaningful to persist. */
     shouldPersist(): boolean {
-        return !this.blocked && !this.errored && this.text.trim().length > 0;
+        return (
+            !this.blocked &&
+            !this.errored &&
+            (this.text.trim().length > 0 || this.imageUrls.length > 0)
+        );
     }
 }

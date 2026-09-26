@@ -354,9 +354,14 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
         }
 
         const { extension, mime } = this.getFileInfo(key);
+        // Override the stored headers so the browser renders the file inline
+        // (e.g. a PDF in an iframe). Objects uploaded without a ContentType
+        // are served as binary/octet-stream, which browsers download instead.
         const command: GetObjectCommand = new GetObjectCommand({
             Bucket: config.bucket,
             Key: key,
+            ResponseContentType: mime,
+            ResponseContentDisposition: 'inline',
         });
         const expiresIn = options?.expired ?? this.presignExpired;
 
@@ -371,6 +376,26 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             mime,
             extension,
         };
+    }
+
+    /**
+     * Sign a download URL without checking the object first. For hot read
+     * paths (e.g. rendering a conversation) where `presignGetItem`'s HEAD
+     * round trip per object is too costly; a missing object just 404s.
+     */
+    async signGetUrl(
+        key: string,
+        options?: IAwsS3PresignGetItemOptions
+    ): Promise<string> {
+        if (key.startsWith('/')) {
+            throw new Error('Key should not start with "/"');
+        }
+        const config = this.getConfig(options);
+        return getSignedUrl(
+            config.client,
+            new GetObjectCommand({ Bucket: config.bucket, Key: key }),
+            { expiresIn: options?.expired ?? this.presignExpired }
+        );
     }
 
     async putItem(
@@ -393,6 +418,7 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             Bucket: config.bucket,
             Key: file.key,
             Body: content,
+            ContentType: file.mime,
             ...(isPrivate && { ServerSideEncryption: 'AES256' }),
         });
 

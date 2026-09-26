@@ -37,7 +37,37 @@ describe('MessageDebounceService (in-process)', () => {
             customerId: 'cust-1',
             contactPointId: 'cp-1',
             texts: ['hi'],
+            messageIds: [],
         });
+    });
+
+    // The Turn finds the burst's rows by id: counting the last rows breaks
+    // when another message is saved before the Turn reads them.
+    it("carries the ids of the burst's saved messages to the reply", async () => {
+        await service.schedule(
+            'conv-1',
+            'sender-1',
+            'cust-1',
+            'cp-1',
+            '',
+            'm-1'
+        );
+        await service.schedule(
+            'conv-1',
+            'sender-1',
+            'cust-1',
+            'cp-1',
+            '',
+            'm-2'
+        );
+
+        await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+        expect(replyGeneration.run).toHaveBeenCalledWith(
+            expect.objectContaining({
+                texts: ['', ''],
+                messageIds: ['m-1', 'm-2'],
+            })
+        );
     });
 
     it('coalesces a burst of messages into a single reply, resetting the window each time', async () => {

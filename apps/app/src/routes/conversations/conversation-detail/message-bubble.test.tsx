@@ -246,3 +246,32 @@ describe("MessageBubble reactions", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("MessageBubble images", () => {
+  it("renders image attachments as images, without an empty text bubble", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <MessageBubble
+          message={
+            {
+              ...baseMessage,
+              direction: "OUTBOUND",
+              authorType: "BOT",
+              text: "",
+              attachments: [
+                { type: "image", url: "https://cdn/shirt.jpg" },
+                { type: "image" },
+                { type: "video", url: "https://cdn/v.mp4" },
+              ],
+            } as React.ComponentProps<typeof MessageBubble>["message"]
+          }
+        />
+      </TooltipProvider>,
+    );
+
+    const images = screen.getAllByRole("img", { name: "conversations.image" });
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute("src", "https://cdn/shirt.jpg");
+    expect(container.querySelector(".whitespace-pre-wrap")).toBeNull();
+  });
+});
