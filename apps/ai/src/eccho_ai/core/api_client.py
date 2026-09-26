@@ -14,6 +14,9 @@ import httpx
 from eccho_ai.core.variables import AppVars
 
 
+API_PREFIX = "/api/v1"
+
+
 class ApiClientError(RuntimeError):
     """Raised when the back-channel call to apps/api fails."""
 
@@ -36,15 +39,17 @@ class ApiClient:
             "x-api-key": f"{self._api_key}:{self._api_secret}",
         }
 
-    async def post(self, path: str, json: dict[str, Any]) -> dict[str, Any]:
-        url = self._base_url + (path if path.startswith("/") else "/" + path)
-        try:
-            resp = await self._client.post(url, json=json, headers=self._headers())
-        except httpx.HTTPError as exc:
-            raise ApiClientError(f"POST {url} transport error: {exc}") from exc
-        if resp.status_code >= 400:
+    def _url(self, path: str) -> str:
+        # API_BASE_URL is the API's origin; its routes are served under /api/v1.
+        return f"{self._base_url}{API_PREFIX}{path if path.startswith('/') else '/' + path}"
+
+    @staticmethod
+    def _parse(method: str, url: str, resp: httpx.Response) -> Any:
+        # Anything but 2xx means the route was not reached or refused the call.
+        # A redirect counts: httpx does not follow it, and its body is not data.
+        if not resp.is_success:
             raise ApiClientError(
-                f"POST {url} failed: {resp.status_code} {resp.text[:200]}"
+                f"{method} {url} failed: {resp.status_code} {resp.text[:200]}"
             )
         if not resp.content:
             return {}
@@ -53,41 +58,31 @@ class ApiClient:
         except ValueError:
             return {"raw": resp.text}
 
+    async def post(self, path: str, json: dict[str, Any]) -> dict[str, Any]:
+        url = self._url(path)
+        try:
+            resp = await self._client.post(url, json=json, headers=self._headers())
+        except httpx.HTTPError as exc:
+            raise ApiClientError(f"POST {url} transport error: {exc}") from exc
+        return self._parse("POST", url, resp)
+
     async def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
-        url = self._base_url + (path if path.startswith("/") else "/" + path)
+        url = self._url(path)
         try:
             resp = await self._client.get(
                 url, params=params, headers=self._headers()
             )
         except httpx.HTTPError as exc:
             raise ApiClientError(f"GET {url} transport error: {exc}") from exc
-        if resp.status_code >= 400:
-            raise ApiClientError(
-                f"GET {url} failed: {resp.status_code} {resp.text[:200]}"
-            )
-        if not resp.content:
-            return {}
-        try:
-            return resp.json()
-        except ValueError:
-            return {"raw": resp.text}
+        return self._parse("GET", url, resp)
 
     async def delete(self, path: str) -> Any:
-        url = self._base_url + (path if path.startswith("/") else "/" + path)
+        url = self._url(path)
         try:
             resp = await self._client.delete(url, headers=self._headers())
         except httpx.HTTPError as exc:
             raise ApiClientError(f"DELETE {url} transport error: {exc}") from exc
-        if resp.status_code >= 400:
-            raise ApiClientError(
-                f"DELETE {url} failed: {resp.status_code} {resp.text[:200]}"
-            )
-        if not resp.content:
-            return {}
-        try:
-            return resp.json()
-        except ValueError:
-            return {"raw": resp.text}
+        return self._parse("DELETE", url, resp)
 
     @staticmethod
     @lru_cache(maxsize=1)

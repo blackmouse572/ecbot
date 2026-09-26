@@ -659,7 +659,7 @@ export const facebookActivityControllerListBySenderIdV1 = <ThrowOnError extends 
 });
 
 export const customerSystemControllerSetFieldV1 = <ThrowOnError extends boolean = false>(options: Options<CustomerSystemControllerSetFieldV1Data, ThrowOnError>): RequestResult<CustomerSystemControllerSetFieldV1Responses, unknown, ThrowOnError> => (options.client ?? client).post<CustomerSystemControllerSetFieldV1Responses, unknown, ThrowOnError>({
-    url: '/api/v1/system/system/customers/{customerId}/fields',
+    url: '/api/v1/system/customers/{customerId}/fields',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -668,7 +668,7 @@ export const customerSystemControllerSetFieldV1 = <ThrowOnError extends boolean 
 });
 
 export const customerSystemControllerUpdateProfileV1 = <ThrowOnError extends boolean = false>(options: Options<CustomerSystemControllerUpdateProfileV1Data, ThrowOnError>): RequestResult<CustomerSystemControllerUpdateProfileV1Responses, unknown, ThrowOnError> => (options.client ?? client).post<CustomerSystemControllerUpdateProfileV1Responses, unknown, ThrowOnError>({
-    url: '/api/v1/system/system/customers/{customerId}/profile',
+    url: '/api/v1/system/customers/{customerId}/profile',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -677,7 +677,7 @@ export const customerSystemControllerUpdateProfileV1 = <ThrowOnError extends boo
 });
 
 export const customerTagSystemControllerApplyV1 = <ThrowOnError extends boolean = false>(options: Options<CustomerTagSystemControllerApplyV1Data, ThrowOnError>): RequestResult<CustomerTagSystemControllerApplyV1Responses, unknown, ThrowOnError> => (options.client ?? client).post<CustomerTagSystemControllerApplyV1Responses, unknown, ThrowOnError>({
-    url: '/api/v1/system/system/customers/{customerId}/tags/apply',
+    url: '/api/v1/system/customers/{customerId}/tags/apply',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -686,7 +686,7 @@ export const customerTagSystemControllerApplyV1 = <ThrowOnError extends boolean 
 });
 
 export const customerTagSystemControllerRemoveV1 = <ThrowOnError extends boolean = false>(options: Options<CustomerTagSystemControllerRemoveV1Data, ThrowOnError>): RequestResult<CustomerTagSystemControllerRemoveV1Responses, unknown, ThrowOnError> => (options.client ?? client).post<CustomerTagSystemControllerRemoveV1Responses, unknown, ThrowOnError>({
-    url: '/api/v1/system/system/customers/{customerId}/tags/remove',
+    url: '/api/v1/system/customers/{customerId}/tags/remove',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -694,10 +694,10 @@ export const customerTagSystemControllerRemoveV1 = <ThrowOnError extends boolean
     }
 });
 
-export const followupSystemControllerListV1 = <ThrowOnError extends boolean = false>(options: Options<FollowupSystemControllerListV1Data, ThrowOnError>): RequestResult<FollowupSystemControllerListV1Responses, unknown, ThrowOnError> => (options.client ?? client).get<FollowupSystemControllerListV1Responses, unknown, ThrowOnError>({ url: '/api/v1/system/system/followups', ...options });
+export const followupSystemControllerListV1 = <ThrowOnError extends boolean = false>(options: Options<FollowupSystemControllerListV1Data, ThrowOnError>): RequestResult<FollowupSystemControllerListV1Responses, unknown, ThrowOnError> => (options.client ?? client).get<FollowupSystemControllerListV1Responses, unknown, ThrowOnError>({ url: '/api/v1/system/followups', ...options });
 
 export const followupSystemControllerScheduleV1 = <ThrowOnError extends boolean = false>(options: Options<FollowupSystemControllerScheduleV1Data, ThrowOnError>): RequestResult<FollowupSystemControllerScheduleV1Responses, unknown, ThrowOnError> => (options.client ?? client).post<FollowupSystemControllerScheduleV1Responses, unknown, ThrowOnError>({
-    url: '/api/v1/system/system/followups',
+    url: '/api/v1/system/followups',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -705,7 +705,7 @@ export const followupSystemControllerScheduleV1 = <ThrowOnError extends boolean 
     }
 });
 
-export const followupSystemControllerCancelV1 = <ThrowOnError extends boolean = false>(options: Options<FollowupSystemControllerCancelV1Data, ThrowOnError>): RequestResult<FollowupSystemControllerCancelV1Responses, unknown, ThrowOnError> => (options.client ?? client).delete<FollowupSystemControllerCancelV1Responses, unknown, ThrowOnError>({ url: '/api/v1/system/system/followups/{id}', ...options });
+export const followupSystemControllerCancelV1 = <ThrowOnError extends boolean = false>(options: Options<FollowupSystemControllerCancelV1Data, ThrowOnError>): RequestResult<FollowupSystemControllerCancelV1Responses, unknown, ThrowOnError> => (options.client ?? client).delete<FollowupSystemControllerCancelV1Responses, unknown, ThrowOnError>({ url: '/api/v1/system/followups/{id}', ...options });
 
 export const pocSystemControllerInboundV1 = <ThrowOnError extends boolean = false>(options: Options<PocSystemControllerInboundV1Data, ThrowOnError>): RequestResult<PocSystemControllerInboundV1Responses, unknown, ThrowOnError> => (options.client ?? client).post<PocSystemControllerInboundV1Responses, unknown, ThrowOnError>({
     url: '/api/v1/system/poc/inbound',

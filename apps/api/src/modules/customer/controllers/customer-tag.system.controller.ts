@@ -39,7 +39,7 @@ interface RemoveResponse {
 @ApiKeySystemProtected()
 @Controller({
     version: '1',
-    path: '/system/customers/:customerId/tags',
+    path: '/customers/:customerId/tags',
 })
 export class CustomerTagSystemController {
     private readonly logger = new Logger(CustomerTagSystemController.name);
