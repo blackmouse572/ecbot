@@ -118,7 +118,7 @@ Supported part types (streamed as `data: <serialized-part>\n\n`):
 - **Reasoning (model reasoning/CoT):** `reasoning-start`, `reasoning-delta`, `reasoning-end`
 - **Tool calls:** `tool-input-available` (tool name + args), `tool-output-available` (tool result)
 - **Metadata:** `source-url` (RAG citations), `message-metadata` (token usage, latency)
-- **Guardrails (custom):** `data-guardrail` (content policy filter results)
+- **Guardrails (custom):** `data-guardrail` (content policy filter results). Reason `prompt_leak`: the reply began reproducing the system prompt (`modules/chat/prompt_leak.py`), so the stream is cut at the first marker and apps/api sends the fallback message.
 - **Errors & termination:** `error` (stream-side failure), `data: [DONE]` (final terminator)
 
 The `show tool activity` archetype toggle controls whether `reasoning-*` and `tool-*` parts are forwarded to clients or stripped per channel.
