@@ -294,21 +294,63 @@ export class MessageProcessorService implements OnModuleInit {
             adapter.startTyping(account, event.senderId, true).catch(() => {});
         }
 
-        if (process.env.POC_EDGE_DEBOUNCE_URL) {
-            // POC: the burst buffer + debounce timer now live in the edge
-            // Durable Object. Bump the Redis lease here (same supersede
-            // semantics as messageDebounceService.schedule) then hand the
-            // message off to the edge Worker instead of enqueuing BullMQ.
-            // Resilient like the flag-OFF path below: a Redis hiccup must not
-            // throw out of process() and abort the rest of the webhook batch.
-            await this.lease
-                .bump(conversation.id)
-                .catch(err =>
-                    this.logger.warn(
-                        `lease.bump failed for ${conversation.id}: ${err.message}`
-                    )
-                );
-            await fetch(
+        const job = {
+            conversationId: conversation.id,
+            senderId: event.senderId,
+            customerId,
+            contactPointId: contactPoint.id,
+            text: effectiveText,
+            messageId: inbound?.id,
+        };
+        // POC: the burst buffer + debounce timer live in the edge Durable
+        // Object when POC_EDGE_DEBOUNCE_URL is set. If the edge does not take
+        // the message, the in-process debounce does, so the bot still replies.
+        if (
+            process.env.POC_EDGE_DEBOUNCE_URL &&
+            (await this.handOffToEdgeDebounce(job))
+        ) {
+            return;
+        }
+        this.messageDebounceService
+            .schedule(
+                job.conversationId,
+                job.senderId,
+                job.customerId,
+                job.contactPointId,
+                job.text,
+                job.messageId
+            )
+            .catch(err =>
+                this.logger.warn(
+                    `messageDebounce.schedule failed for ${conversation.id}: ${err.message}`
+                )
+            );
+    }
+
+    /**
+     * Hand one message to the edge debounce. Bumps the Redis lease first (same
+     * supersede semantics as messageDebounceService.schedule). Resolves false
+     * when the edge did not accept it (non-2xx or unreachable), so the caller
+     * can fall back; never throws, so one failure cannot abort the rest of the
+     * webhook batch.
+     */
+    private async handOffToEdgeDebounce(job: {
+        conversationId: string;
+        senderId: string;
+        customerId: string;
+        contactPointId: string;
+        text: string;
+        messageId?: string;
+    }): Promise<boolean> {
+        await this.lease
+            .bump(job.conversationId)
+            .catch(err =>
+                this.logger.warn(
+                    `lease.bump failed for ${job.conversationId}: ${err.message}`
+                )
+            );
+        try {
+            const res = await fetch(
                 `${process.env.POC_EDGE_DEBOUNCE_URL}/internal/debounce`,
                 {
                     method: 'POST',
@@ -317,36 +359,19 @@ export class MessageProcessorService implements OnModuleInit {
                         'x-internal-secret':
                             process.env.POC_EDGE_INTERNAL_SECRET ?? '',
                     },
-                    body: JSON.stringify({
-                        conversationId: conversation.id,
-                        senderId: event.senderId,
-                        customerId,
-                        contactPointId: contactPoint.id,
-                        text: effectiveText,
-                        messageId: inbound?.id,
-                    }),
+                    body: JSON.stringify(job),
                 }
-            ).catch(err =>
-                this.logger.warn(
-                    `edge debounce POST failed for ${conversation.id}: ${err.message}`
-                )
             );
-        } else {
-            this.messageDebounceService
-                .schedule(
-                    conversation.id,
-                    event.senderId,
-                    customerId,
-                    contactPoint.id,
-                    effectiveText,
-                    inbound?.id
-                )
-                .catch(err =>
-                    this.logger.warn(
-                        `messageDebounce.schedule failed for ${conversation.id}: ${err.message}`
-                    )
-                );
+            if (res.ok) return true;
+            this.logger.warn(
+                `edge debounce refused ${job.conversationId} with ${res.status}, falling back to in-process debounce`
+            );
+        } catch (err) {
+            this.logger.warn(
+                `edge debounce POST failed for ${job.conversationId}: ${(err as Error).message}, falling back to in-process debounce`
+            );
         }
+        return false;
     }
 
     /**
