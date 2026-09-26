@@ -5,12 +5,26 @@
         "create": "Tạo plan thành công.",
         "update": "Cập nhật plan thành công.",
         "archive": "Lưu trữ plan thành công.",
-        "sync": "Đồng bộ plan sang cổng thanh toán thành công."
+        "sync": "Đồng bộ plan sang cổng thanh toán thành công.",
+        "activate": "Đã mở bán lại plan.",
+        "inactivate": "Đã ngừng bán plan."
     },
     "subscription": {
         "get": "Lấy thông tin subscription thành công.",
         "assign": "Gán plan cho workspace thành công.",
-        "credit": "Nạp token cho workspace thành công."
+        "credit": "Nạp token cho workspace thành công.",
+        "list": "Lấy danh sách subscription thành công.",
+        "cancel": "Huỷ subscription thành công.",
+        "resume": "Khôi phục subscription thành công.",
+        "changePlan": "Đổi plan cho subscription thành công."
+    },
+    "checkout": {
+        "providers": "Lấy danh sách cổng thanh toán thành công.",
+        "create": "Đã tạo phiên thanh toán."
+    },
+    "order": {
+        "list": "Lấy danh sách đơn thanh toán thành công.",
+        "get": "Lấy đơn thanh toán thành công."
     },
     "error": {
         "planNotFound": "Không tìm thấy plan.",
@@ -18,6 +32,16 @@
         "planSyncFailed": "Đã lưu plan nhưng đồng bộ sang cổng thanh toán thất bại.",
         "subscriptionNotFound": "Workspace này chưa có subscription.",
         "unsupportedPaymentProvider": "Cổng thanh toán không được hỗ trợ.",
-        "planIsSystem": "Đây là plan hệ thống, không thể lưu trữ."
+        "planIsSystem": "Đây là plan hệ thống, không thể lưu trữ.",
+        "subscriptionProviderManaged": "Gói này đang được cổng thanh toán thu phí nên không thể thay đổi theo cách này. Hãy huỷ gói đăng ký trước.",
+        "subscriptionNotCancelable": "Subscription này đã kết thúc.",
+        "subscriptionNotResumable": "Subscription này không có lịch huỷ để hoàn tác.",
+        "planInactive": "Plan này đang ngừng bán.",
+        "planInUse": "Có {live} workspace đang dùng plan này nên không thể đổi giá, tiền tệ hay chu kỳ thanh toán. Hãy tạo plan mới.",
+        "checkoutUnavailable": "Hiện chưa thể thanh toán qua cổng thanh toán này.",
+        "planNotPurchasable": "Không thể mua gói này qua cổng thanh toán này.",
+        "subscriptionAlreadyPaid": "Workspace này đã có gói trả phí. Hãy đổi gói thay vì thanh toán lại.",
+        "paymentOrderNotFound": "Không tìm thấy đơn thanh toán.",
+        "providerRequestFailed": "Cổng thanh toán từ chối yêu cầu. Chưa có gì thay đổi."
     }
 }

@@ -5,12 +5,26 @@
         "create": "Plan created successfully.",
         "update": "Plan updated successfully.",
         "archive": "Plan archived successfully.",
-        "sync": "Plan synced to the payment provider successfully."
+        "sync": "Plan synced to the payment provider successfully.",
+        "activate": "Plan is on sale again.",
+        "inactivate": "Plan taken off sale."
     },
     "subscription": {
         "get": "Subscription retrieved successfully.",
         "assign": "Plan assigned to the workspace successfully.",
-        "credit": "Tokens credited to the workspace successfully."
+        "credit": "Tokens credited to the workspace successfully.",
+        "list": "Subscriptions retrieved successfully.",
+        "cancel": "Subscription canceled successfully.",
+        "resume": "Subscription resumed successfully.",
+        "changePlan": "Subscription plan changed successfully."
+    },
+    "checkout": {
+        "providers": "Checkout providers retrieved successfully.",
+        "create": "Checkout started successfully."
+    },
+    "order": {
+        "list": "Payment orders retrieved successfully.",
+        "get": "Payment order retrieved successfully."
     },
     "error": {
         "planNotFound": "Plan not found.",
@@ -18,6 +32,16 @@
         "planSyncFailed": "Plan saved, but syncing it to the payment provider failed.",
         "subscriptionNotFound": "This workspace has no subscription.",
         "unsupportedPaymentProvider": "Payment provider is not supported.",
-        "planIsSystem": "This is a system plan and cannot be archived."
+        "planIsSystem": "This is a system plan and cannot be archived.",
+        "subscriptionProviderManaged": "A payment provider bills this subscription, and this change cannot go through it. Cancel the subscription first.",
+        "subscriptionNotCancelable": "This subscription has already ended.",
+        "subscriptionNotResumable": "This subscription has no scheduled cancel to undo.",
+        "planInactive": "This plan is not on sale.",
+        "planInUse": "{live} workspace(s) are subscribed to this plan, so its price, currency and billing cycle cannot change. Create a new plan instead.",
+        "checkoutUnavailable": "Checkout is not available with this payment provider right now.",
+        "planNotPurchasable": "This plan cannot be bought with this payment provider.",
+        "subscriptionAlreadyPaid": "This workspace already has a paid subscription. Change its plan instead of checking out again.",
+        "paymentOrderNotFound": "Payment order not found.",
+        "providerRequestFailed": "The payment provider refused the request. Nothing was changed."
     }
 }
