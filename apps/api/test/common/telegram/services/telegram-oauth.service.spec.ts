@@ -74,6 +74,38 @@ describe('TelegramOAuthService - registerWebhook', () => {
             'https://eccho.onrender.com/api/v1/public/webhooks/telegram/123'
         );
     });
+
+    describe('with telegram.webhookUrl set (edge Worker)', () => {
+        const withWebhookUrl = (overrides: Record<string, any>) =>
+            new TelegramOAuthService(
+                {
+                    get: jest.fn(
+                        (key: string) =>
+                            ({ ...configValues, ...overrides })[key]
+                    ),
+                } as any,
+                mockHttp as any
+            );
+
+        it('registers the webhook at the configured URL plus the bot id', async () => {
+            await withWebhookUrl({
+                'telegram.webhookUrl': 'https://edge.test/webhooks/telegram',
+            }).getTokenAndProfile(VALID_BOT_TOKEN);
+
+            const [, body] = mockHttp.axiosRef.post.mock.calls[0];
+            expect(body.url).toBe('https://edge.test/webhooks/telegram/123');
+        });
+
+        it('still registers when API_BACKEND_URL is unset', async () => {
+            await withWebhookUrl({
+                'telegram.webhookUrl': 'https://edge.test/webhooks/telegram',
+                'app.backendUrl': undefined,
+            }).getTokenAndProfile(VALID_BOT_TOKEN);
+
+            const [, body] = mockHttp.axiosRef.post.mock.calls[0];
+            expect(body.url).toBe('https://edge.test/webhooks/telegram/123');
+        });
+    });
 });
 
 describe('TelegramOAuthService - getMe error handling', () => {

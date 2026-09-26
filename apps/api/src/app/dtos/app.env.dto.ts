@@ -438,6 +438,13 @@ export class AppEnvDto {
     @IsString()
     TELEGRAM_API_URL?: string;
 
+    // Webhook base URL registered with Telegram, bot id appended (e.g. the
+    // edge Worker's https://edge.example.com/webhooks/telegram).
+    // Default: this API's /api/v1/public/webhooks/telegram on API_BACKEND_URL
+    @IsOptional()
+    @IsString()
+    TELEGRAM_WEBHOOK_URL?: string;
+
     // apps/ai service origin (not API_BACKEND_URL/HOME_URL)
     // Default: 'http://localhost:8000'
     @IsOptional()

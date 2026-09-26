@@ -1,6 +1,12 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { ApiKeySystemProtected } from '@app/modules/api-key/decorators/api-key.decorator';
-import { Body, Controller, Logger, Post } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Logger,
+    NotImplementedException,
+    Post,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
     IsArray,
@@ -9,6 +15,7 @@ import {
     IsOptional,
     IsString,
 } from 'class-validator';
+import { PlatformAdapter } from '../adapters/platform-adapter.base';
 import { PLATFORM_SLUG_TO_TYPE } from '../constants/platform-slug.constant';
 import { MessageProcessorService } from '../services/message-processor.service';
 import { PlatformAdapterRegistry } from '../services/platform-adapter.registry';
@@ -76,6 +83,21 @@ export class PocSystemController {
         private readonly replyGeneration: ReplyGenerationService
     ) {}
 
+    // Stub adapters (Instagram, TikTok, Shopee) throw 501 here. Answering 5xx
+    // would make the edge queue retry the event until Cloudflare gives up, so
+    // treat "not built yet" like a bad signature: ack and drop.
+    private verify(adapter: PlatformAdapter, dto: PocInboundDto): boolean {
+        try {
+            return adapter.verifySignature(dto.rawBody, dto.headers);
+        } catch (error: unknown) {
+            if (!(error instanceof NotImplementedException)) throw error;
+            this.logger.warn(
+                `poc inbound: ${dto.platform} is not implemented yet, dropping event`
+            );
+            return false;
+        }
+    }
+
     @Post('/inbound')
     @ApiKeySystemProtected()
     async inbound(@Body() dto: PocInboundDto): Promise<{ processed: number }> {
@@ -88,9 +110,7 @@ export class PocSystemController {
 
         const adapter = this.registry.get(type);
         // Deferred verification (Option B): the edge forwarded rawBody + headers.
-        if (!adapter.verifySignature(dto.rawBody, dto.headers)) {
-            return { processed: 0 };
-        }
+        if (!this.verify(adapter, dto)) return { processed: 0 };
 
         const events = adapter
             .parse(dto.rawBody)
