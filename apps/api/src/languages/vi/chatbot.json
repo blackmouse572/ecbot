@@ -22,7 +22,8 @@
         "shareLinkExpired": "Link preview này đã hết hạn.",
         "shareLinkNotConfigured": "Máy chủ chưa được cấu hình để chia sẻ preview.",
         "previewNotAvailable": "Chatbot này hiện không khả dụng để xem thử.",
-        "previewSessionLimit": "Bạn đã đạt giới hạn tin nhắn cho phiên preview này. Vui lòng thử lại sau."
+        "previewSessionLimit": "Bạn đã đạt giới hạn tin nhắn cho phiên preview này. Vui lòng thử lại sau.",
+        "accountsNotFound": "Một hoặc nhiều tài khoản không thuộc về không gian làm việc này."
     },
     "active": "Chatbot đã được kích hoạt thành công.",
     "inactive": "Chatbot đã được vô hiệu hóa thành công.",

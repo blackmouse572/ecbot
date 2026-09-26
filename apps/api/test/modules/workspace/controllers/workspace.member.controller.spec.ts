@@ -7,7 +7,7 @@ jest.mock('@app/modules/workspace/decorators/workspace.decorator', () => ({
     WorkspacePayload: () => () => {},
 }));
 
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { WorkspaceMemberController } from '../../../../src/modules/workspace/controllers/workspace.member.controller';
 
@@ -28,6 +28,9 @@ describe('WorkspaceMemberController', () => {
         removeRoleFromMember: jest.fn(),
         getMemberWorkspaceRoles: jest.fn(),
         isUserMemberOfWorkspace: jest.fn(),
+        verifyInvitationToken: jest.fn(),
+        joinWorkspaceViaInvitation: jest.fn(),
+        getUserWorkspaces: jest.fn(),
     };
     const mockRoleService = { findOne: jest.fn() };
     const mockPaginationService = { totalPage: jest.fn().mockReturnValue(1) };
@@ -45,7 +48,6 @@ describe('WorkspaceMemberController', () => {
             mockRoleService as any,
             mockPaginationService as any,
             mockActivityService as any,
-            {} as any, // invitationService
             {} as any // workspaceRequestService
         );
     });
@@ -199,6 +201,260 @@ describe('WorkspaceMemberController', () => {
             expect(
                 mockActivityService.createByUserWithWorkspace
             ).toHaveBeenCalled();
+        });
+    });
+
+    describe('joinWorkspace', () => {
+        const caller = { id: 'caller-1', email: 'caller@mail.com' } as any;
+        const targetWorkspace = { id: 'ws-target', name: 'Target' } as any;
+
+        const mockEm = {
+            begin: jest.fn(),
+            commit: jest.fn(),
+            rollback: jest.fn(),
+        };
+        const mockRootEm = { fork: jest.fn(() => mockEm) };
+        const mockOwnerService = { findOneById: jest.fn() };
+
+        let joinController: WorkspaceMemberController;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            mockMemberService.isUserMemberOfWorkspace.mockResolvedValue(false);
+            mockMemberService.verifyInvitationToken.mockResolvedValue({
+                workspaceId: targetWorkspace.id,
+            });
+            mockOwnerService.findOneById.mockResolvedValue(targetWorkspace);
+
+            joinController = new WorkspaceMemberController(
+                mockRootEm as any, // em
+                {} as any, // userService
+                mockMemberService as any,
+                mockOwnerService as any, // workSpaceService (owner)
+                mockRoleService as any,
+                mockPaginationService as any,
+                mockActivityService as any,
+                {} as any // workspaceRequestService
+            );
+        });
+
+        it('rejects when the caller is already a member of the target workspace', async () => {
+            mockMemberService.isUserMemberOfWorkspace.mockResolvedValue(true);
+
+            await expect(
+                joinController.joinWorkspace(caller, 'token')
+            ).rejects.toThrow(ConflictException);
+
+            expect(
+                mockMemberService.joinWorkspaceViaInvitation
+            ).not.toHaveBeenCalled();
+        });
+
+        it('joins via joinWorkspaceViaInvitation using the caller from the JWT', async () => {
+            mockMemberService.joinWorkspaceViaInvitation.mockResolvedValue({
+                workspace: targetWorkspace,
+                roleId: 'role-1',
+            });
+
+            await joinController.joinWorkspace(caller, 'token');
+
+            expect(
+                mockMemberService.joinWorkspaceViaInvitation
+            ).toHaveBeenCalledWith('token', caller.id, { em: mockEm });
+            expect(mockEm.commit).toHaveBeenCalled();
+            expect(mockEm.rollback).not.toHaveBeenCalled();
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalled();
+        });
+
+        it('rolls back and propagates a rejected invitation (e.g. caller mismatch)', async () => {
+            const rejection = new ConflictException('nope');
+            mockMemberService.joinWorkspaceViaInvitation.mockRejectedValue(
+                rejection
+            );
+
+            await expect(
+                joinController.joinWorkspace(caller, 'token')
+            ).rejects.toBe(rejection);
+
+            expect(mockEm.rollback).toHaveBeenCalled();
+            expect(mockEm.commit).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('getAvailableInviteMembers', () => {
+        const callerId = 'caller-1';
+        const currentMemberIds = ['existing-member'];
+        const pagination = {
+            _search: undefined,
+            _limit: 10,
+            _offset: 0,
+            _order: {},
+        } as any;
+
+        const mockUserService = {
+            findAllWithRoleAndCountry: jest.fn(),
+            getTotalWithRoleAndCountry: jest.fn(),
+            mapShort: jest.fn(),
+        };
+
+        let inviteController: WorkspaceMemberController;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            mockMemberService.getUserWorkspaces.mockResolvedValue([
+                'ws-shared',
+            ]);
+            mockPaginationService.totalPage.mockReturnValue(1);
+            mockUserService.mapShort.mockImplementation(user => user);
+
+            inviteController = new WorkspaceMemberController(
+                {} as any, // em
+                mockUserService as any,
+                mockMemberService as any,
+                {} as any, // workSpaceService (owner)
+                mockRoleService as any,
+                mockPaginationService as any,
+                mockActivityService as any,
+                {} as any // workspaceRequestService
+            );
+        });
+
+        it('scopes fuzzy name search to co-members only — a stranger is never queried', async () => {
+            mockMemberService.findAll
+                .mockResolvedValueOnce([]) // current members of the target workspace
+                .mockResolvedValueOnce([{ user: { id: 'friend-1' } }]); // co-members across shared workspaces
+            mockUserService.findAllWithRoleAndCountry.mockResolvedValue([]);
+            mockUserService.getTotalWithRoleAndCountry.mockResolvedValue(0);
+
+            await inviteController.getAvailableInviteMembers(
+                callerId,
+                workspace,
+                'alice',
+                {
+                    ...pagination,
+                    _search: { $or: [{ name: { $ilike: '%alice%' } }] },
+                }
+            );
+
+            const find =
+                mockUserService.findAllWithRoleAndCountry.mock.calls[0][0];
+            expect(find.id.$in).toEqual(['friend-1']);
+            expect(find.email).toBeUndefined();
+        });
+
+        it('excludes current workspace members from the co-member candidates', async () => {
+            mockMemberService.findAll
+                .mockResolvedValueOnce(
+                    currentMemberIds.map(id => ({ user: { id } }))
+                )
+                .mockResolvedValueOnce([{ user: { id: 'friend-1' } }]);
+            mockUserService.findAllWithRoleAndCountry.mockResolvedValue([]);
+            mockUserService.getTotalWithRoleAndCountry.mockResolvedValue(0);
+
+            await inviteController.getAvailableInviteMembers(
+                callerId,
+                workspace,
+                undefined,
+                pagination
+            );
+
+            const find =
+                mockUserService.findAllWithRoleAndCountry.mock.calls[0][0];
+            expect(find.id.$nin).toEqual(currentMemberIds);
+        });
+
+        it('returns co-member fuzzy results with email (GET /:workspace/members already exposes it to the same audience)', async () => {
+            mockMemberService.findAll
+                .mockResolvedValueOnce([])
+                .mockResolvedValueOnce([{ user: { id: 'friend-1' } }]);
+            mockUserService.findAllWithRoleAndCountry.mockResolvedValue([
+                { id: 'friend-1', name: 'Friend', email: 'friend@mail.com' },
+            ]);
+            mockUserService.getTotalWithRoleAndCountry.mockResolvedValue(1);
+
+            const result = await inviteController.getAvailableInviteMembers(
+                callerId,
+                workspace,
+                undefined,
+                pagination
+            );
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].name).toBe('Friend');
+            expect(result.data[0].email).toBe('friend@mail.com');
+            expect(mockUserService.mapShort).toHaveBeenCalledWith(
+                expect.objectContaining({ id: 'friend-1' })
+            );
+        });
+
+        it('an exact email search finds a stranger, not limited to co-members', async () => {
+            const stranger = {
+                id: 'stranger-1',
+                name: 'Stranger',
+                email: 'stranger@mail.com',
+            };
+            mockMemberService.findAll.mockResolvedValueOnce([]);
+            mockUserService.findAllWithRoleAndCountry.mockResolvedValue([
+                stranger,
+            ]);
+            mockUserService.getTotalWithRoleAndCountry.mockResolvedValue(1);
+
+            const result = await inviteController.getAvailableInviteMembers(
+                callerId,
+                workspace,
+                'Stranger@Mail.com',
+                pagination
+            );
+
+            const find =
+                mockUserService.findAllWithRoleAndCountry.mock.calls[0][0];
+            expect(find.email).toBe('stranger@mail.com');
+            expect(find.id.$in).toBeUndefined();
+            expect(result.data[0].email).toBe('stranger@mail.com');
+            expect(mockMemberService.getUserWorkspaces).not.toHaveBeenCalled();
+        });
+
+        it('excludes current workspace members from the exact-email match', async () => {
+            mockMemberService.findAll.mockResolvedValueOnce(
+                currentMemberIds.map(id => ({ user: { id } }))
+            );
+            mockUserService.findAllWithRoleAndCountry.mockResolvedValue([]);
+            mockUserService.getTotalWithRoleAndCountry.mockResolvedValue(0);
+
+            await inviteController.getAvailableInviteMembers(
+                callerId,
+                workspace,
+                'x@mail.com',
+                pagination
+            );
+
+            const find =
+                mockUserService.findAllWithRoleAndCountry.mock.calls[0][0];
+            expect(find.id.$nin).toEqual(currentMemberIds);
+        });
+
+        it('respects the caller-provided offset for the exact-email match (page 2 must not repeat page 1)', async () => {
+            mockMemberService.findAll.mockResolvedValueOnce([]);
+            mockUserService.findAllWithRoleAndCountry.mockResolvedValue([]);
+            mockUserService.getTotalWithRoleAndCountry.mockResolvedValue(0);
+
+            await inviteController.getAvailableInviteMembers(
+                callerId,
+                workspace,
+                'x@mail.com',
+                { ...pagination, _offset: 20 }
+            );
+
+            expect(
+                mockUserService.findAllWithRoleAndCountry
+            ).toHaveBeenCalledWith(
+                expect.any(Object),
+                expect.objectContaining({
+                    paging: { limit: pagination._limit, offset: 20 },
+                })
+            );
         });
     });
 });

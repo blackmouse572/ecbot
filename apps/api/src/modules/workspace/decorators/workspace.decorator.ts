@@ -57,15 +57,6 @@ export const WorkspacePayload = createParamDecorator(
     }
 );
 
-export const GetClientOrigin = createParamDecorator(
-    (_: never, ctx: ExecutionContext) => {
-        const {
-            headers: { origin },
-        } = ctx.switchToHttp().getRequest();
-        return origin;
-    }
-);
-
 // Re-export workspace policy decorators for convenience
 export {
     WorkspacePolicyAbilityProtected,

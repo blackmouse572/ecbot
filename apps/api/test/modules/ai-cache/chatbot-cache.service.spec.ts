@@ -22,19 +22,24 @@ describe('ChatbotCacheService', () => {
                 },
                 {
                     provide: ConfigService,
-                    useValue: { get: () => 'http://ai:8000' },
+                    useValue: {
+                        get: (key: string) =>
+                            key === 'ai.internalToken'
+                                ? 'internal-token'
+                                : 'http://ai:8000',
+                    },
                 },
             ],
         }).compile();
         service = module.get(ChatbotCacheService);
     });
 
-    it('calls the apps/ai invalidation endpoint', async () => {
+    it('calls the apps/ai invalidation endpoint with the internal token header', async () => {
         del.mockResolvedValue({});
         await service.invalidate('cb-1');
         expect(del).toHaveBeenCalledWith(
             'http://ai:8000/api/chat/chatbot-cache/cb-1',
-            expect.anything()
+            { headers: { 'X-Internal-Token': 'internal-token' } }
         );
     });
 

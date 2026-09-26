@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomInt } from 'node:crypto';
 import { IHelperNumberService } from 'src/common/helper/interfaces/helper.number-service.interface';
 
 @Injectable()
@@ -17,7 +18,7 @@ export class HelperNumberService implements IHelperNumberService {
     randomInRange(min: number, max: number): number {
         min = Math.ceil(min);
         max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min) + min);
+        return randomInt(min, max);
     }
 
     percent(value: number, total: number): number {

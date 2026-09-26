@@ -4,6 +4,7 @@ import React from 'react';
 interface ResendPasswordEmailProps {
     name: string;
     url: string;
+    otp: string;
     expiredDate: string;
     supportEmail: string;
     homeUrl: string;
@@ -13,6 +14,7 @@ interface ResendPasswordEmailProps {
 const ResetPasswordEmail: React.FC<ResendPasswordEmailProps> = ({
     name,
     url,
+    otp,
     expiredDate,
     supportEmail,
     homeUrl,
@@ -25,6 +27,9 @@ const ResetPasswordEmail: React.FC<ResendPasswordEmailProps> = ({
             <br />
             <p>
                 Your reset password link is here <a href={url}>{url}</a>
+            </p>
+            <p>
+                Your OTP code is <b>{otp}</b>.
             </p>
             <p>Expired until {expiredDate}.</p>
             <p>

@@ -9,6 +9,12 @@ export class EmailResetPasswordDto {
 
     @ApiProperty({
         required: true,
+        description: 'The OTP code required to complete the reset',
+    })
+    otp: string;
+
+    @ApiProperty({
+        required: true,
         example: new Date('2027-02-03T15:00:25.386Z'),
         description: 'Expired at by date',
     })

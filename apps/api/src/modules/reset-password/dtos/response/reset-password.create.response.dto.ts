@@ -12,16 +12,4 @@ export class ResetPasswordCreteResponseDto {
         example: 'Muhammad_Satterfield17@hotmail.com',
     })
     to: string;
-
-    @ApiProperty({
-        required: true,
-        example: 'bH3kQ8yD1sZ6nJf0',
-    })
-    token: string;
-
-    @ApiProperty({
-        required: true,
-        example: 'https://variable-disk.info',
-    })
-    url: string;
 }

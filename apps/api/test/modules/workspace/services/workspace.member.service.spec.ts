@@ -1,4 +1,8 @@
-import { UnauthorizedException } from '@nestjs/common';
+import {
+    ForbiddenException,
+    NotFoundException,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -192,7 +196,10 @@ describe('WorkspaceMemberService', () => {
             });
             // for assignRoleToMember path
             mockRoleService.findOne.mockResolvedValue({ id: roleId });
-            mockUserService.findOneById.mockResolvedValue({ id: userId });
+            mockUserService.findOneById.mockResolvedValue({
+                id: userId,
+                email: 'invitee@mail.com',
+            });
             mockWorkspaceMemberRepository.find.mockResolvedValue([]);
         });
 
@@ -201,6 +208,7 @@ describe('WorkspaceMemberService', () => {
                 id: invitationId,
                 status: 'PENDING',
                 expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
                 role: { id: roleId },
             });
 
@@ -241,6 +249,63 @@ describe('WorkspaceMemberService', () => {
             await expect(
                 service.joinWorkspaceViaInvitation('token', userId)
             ).rejects.toThrow(UnauthorizedException);
+        });
+
+        it('should match a mixed-case caller email against the lowercased invitee email', async () => {
+            mockUserService.findOneById.mockResolvedValue({
+                id: userId,
+                email: 'Invitee@Mail.com',
+            });
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
+                role: { id: roleId },
+            });
+
+            const result = await service.joinWorkspaceViaInvitation(
+                'token',
+                userId
+            );
+
+            expect(result.workspace).toEqual({ id: workspaceId });
+            expect(mockInvitationService.accept).toHaveBeenCalledWith(
+                invitationId,
+                userId,
+                undefined
+            );
+        });
+
+        // 403, not 401: apps/app treats any 401 as an expired session and
+        // tries a token refresh, which would bounce a valid user to login.
+        it('should reject with 403 when the caller is not the invited user', async () => {
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'someone-else@mail.com',
+                role: { id: roleId },
+            });
+
+            await expect(
+                service.joinWorkspaceViaInvitation('token', userId)
+            ).rejects.toThrow(ForbiddenException);
+            expect(mockInvitationService.accept).not.toHaveBeenCalled();
+        });
+
+        it('should reject with 404 when no invitation row matches the token', async () => {
+            mockInvitationService.findOneByToken.mockResolvedValue(null);
+
+            const error = await service
+                .joinWorkspaceViaInvitation('token', userId)
+                .catch((err: unknown) => err);
+
+            expect(error).toBeInstanceOf(NotFoundException);
+            expect((error as NotFoundException).getResponse()).toMatchObject({
+                message: 'invitation.error.notFound',
+            });
+            expect(mockInvitationService.accept).not.toHaveBeenCalled();
         });
     });
 

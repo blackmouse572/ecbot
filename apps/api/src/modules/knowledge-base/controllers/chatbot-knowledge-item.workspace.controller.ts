@@ -170,7 +170,9 @@ export class ChatbotKnowledgeItemWorkspaceController {
                 });
             }
 
-            // Verify knowledge item exists (any KB in workspace)
+            // Verify knowledge item exists and its knowledge base belongs to
+            // this workspace — a cross-workspace id must 404 like a
+            // nonexistent one, not link the item into a foreign chatbot.
             const knowledgeItem = await session
                 .getRepository(KnowledgeItemEntity)
                 .findOne(
@@ -178,7 +180,10 @@ export class ChatbotKnowledgeItemWorkspaceController {
                     { populate: ['knowledgeBase'] }
                 );
 
-            if (!knowledgeItem) {
+            if (
+                !knowledgeItem ||
+                knowledgeItem.knowledgeBase.workspace.id !== workspace.id
+            ) {
                 throw new NotFoundException({
                     statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
                     message: 'knowledgeItem.error.notFound',

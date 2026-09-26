@@ -76,9 +76,10 @@ export class AuthAdminController {
 
         try {
             const passwordString = this.authService.createPasswordRandom();
-            const password = this.authService.createPassword(passwordString, {
-                temporary: true,
-            });
+            const password = await this.authService.createPassword(
+                passwordString,
+                { temporary: true }
+            );
 
             user = await this.userService.updatePassword(user, password, {
                 em: session,

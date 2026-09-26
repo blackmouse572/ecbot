@@ -72,10 +72,12 @@ class ApiClient:
         except ValueError:
             return {"raw": resp.text}
 
-    async def delete(self, path: str) -> Any:
+    async def delete(self, path: str, params: dict[str, Any] | None = None) -> Any:
         url = self._base_url + (path if path.startswith("/") else "/" + path)
         try:
-            resp = await self._client.delete(url, headers=self._headers())
+            resp = await self._client.delete(
+                url, params=params, headers=self._headers()
+            )
         except httpx.HTTPError as exc:
             raise ApiClientError(f"DELETE {url} transport error: {exc}") from exc
         if resp.status_code >= 400:

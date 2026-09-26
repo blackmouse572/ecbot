@@ -232,10 +232,12 @@ export class SessionService implements ISessionService {
         this.logger.debug(`Setting login for user [${user.id}]`);
         const key = `${this.appName}:${this.sessionKeyPrefix}:${session.id}`;
 
+        // refreshTokenExpiration is stored in seconds (auth.config.ts:
+        // ms(...) / 1000); cache-manager v6 `set()` takes milliseconds.
         await this.cacheManager.set(
             key,
             { user: user.id },
-            this.refreshTokenExpiration
+            this.refreshTokenExpiration * 1000
         );
 
         return;

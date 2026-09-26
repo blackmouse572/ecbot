@@ -10,6 +10,18 @@ const isFlagOn = (value?: string): boolean => value === 'true';
 export default registerAs('app', (): Record<string, any> => {
     validateUtil(process.env, AppEnvDto);
 
+    // Number.parseInt('') is NaN, and an empty string sails through the DTO's
+    // @IsOptional/@IsNumber check (class-transformer's Type(() => Number)
+    // coerces '' to 0, which passes @Min(0)) — so fall back to 1 for any
+    // empty/invalid value rather than trusting the parse blindly.
+    const trustProxyHopsParsed = Number.parseInt(
+        process.env.APP_TRUST_PROXY_HOPS ?? '1',
+        10
+    );
+    const trustProxyHops = Number.isNaN(trustProxyHopsParsed)
+        ? 1
+        : trustProxyHopsParsed;
+
     return {
         name: process.env.APP_NAME,
         env: process.env.APP_ENV,
@@ -25,6 +37,12 @@ export default registerAs('app', (): Record<string, any> => {
             host: process.env.HTTP_HOST,
             port: Number.parseInt(process.env.PORT ?? process.env.HTTP_PORT),
         },
+        // Reverse-proxy hops trusted for req.ip (Express `trust proxy`). Behind
+        // a load balancer this must be >=1, or every client resolves to the
+        // same IP and shares one throttle bucket. Must equal the exact number
+        // of proxies in front of the API — a higher value lets clients spoof
+        // their IP via X-Forwarded-For and evade rate limits.
+        trustProxyHops,
         urlVersion: {
             enable: isFlagOn(process.env.URL_VERSIONING_ENABLE),
             prefix: 'v',

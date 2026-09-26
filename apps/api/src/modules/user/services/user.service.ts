@@ -4,6 +4,11 @@ import { EntityManager, FilterQuery, InferEntity } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
+import { randomUUID } from 'crypto';
+import {
+    ENUM_FILE_MIME_IMAGE,
+    EXTENSION_BY_MIME_IMAGE,
+} from 'src/common/file/enums/file.enum';
 import {
     IDatabaseCreateOptions,
     IDatabaseDeleteOptions,
@@ -41,7 +46,6 @@ import { UserRepository } from 'src/modules/user/repository/repositories/user.re
 export class UserService {
     private readonly usernamePrefix: string;
     private readonly usernamePattern: RegExp;
-    private readonly uploadPath: string;
 
     constructor(
         private readonly userRepository: UserRepository,
@@ -57,7 +61,6 @@ export class UserService {
         this.usernamePattern = this.configService.get<RegExp>(
             'user.usernamePattern'
         );
-        this.uploadPath = this.configService.get<string>('user.uploadPath');
     }
 
     async findAll(
@@ -122,7 +125,7 @@ export class UserService {
         return em.findOne(
             UserEntity,
             {
-                email: { $ilike: email },
+                email: email.toLowerCase(),
             },
             findOptions
         );
@@ -269,7 +272,7 @@ export class UserService {
             UserEntity,
             {
                 $or: [
-                    { email: { $ilike: emailOrMobileNumber } },
+                    { email: emailOrMobileNumber.toLowerCase() },
                     { mobileNumber: { number: emailOrMobileNumber } },
                 ],
             },
@@ -291,7 +294,7 @@ export class UserService {
             UserEntity,
             {
                 $or: [
-                    { email: { $ilike: emailOrUsername } },
+                    { email: emailOrUsername.toLowerCase() },
                     { username: { $ilike: emailOrUsername } },
                 ],
             },
@@ -326,7 +329,7 @@ export class UserService {
         mobileNumber?: string,
         options?: IDatabaseFindOneOptions
     ): Promise<boolean> {
-        const filters: any[] = [{ email: { $ilike: email } }];
+        const filters: any[] = [{ email: email.toLowerCase() }];
 
         if (mobileNumber) {
             filters.push({ mobileNumber: { number: mobileNumber } });
@@ -358,7 +361,7 @@ export class UserService {
         const user = await em.findOne(
             UserEntity,
             {
-                email: { $ilike: email },
+                email: email.toLowerCase(),
             },
             findOptions
         );
@@ -524,6 +527,23 @@ export class UserService {
         user.passwordExpired = passwordExpired;
         user.passwordCreated = passwordCreated;
         user.passwordAttempt = 0;
+        user.salt = salt;
+
+        await em.persistAndFlush(user);
+        return user;
+    }
+
+    // Persists an opportunistic cost upgrade of an existing password hash
+    // (see AuthService.maybeRehashPassword). Unlike updatePassword, this is
+    // not a real password change, so it deliberately leaves
+    // passwordExpired/passwordCreated/passwordAttempt untouched.
+    async rehashPassword(
+        user: UserEntity,
+        { passwordHash, salt }: Pick<IAuthPassword, 'passwordHash' | 'salt'>,
+        options?: IDatabaseUpdateOptions
+    ): Promise<UserEntity> {
+        const em = options?.em || this.em;
+        user.password = passwordHash;
         user.salt = salt;
 
         await em.persistAndFlush(user);
@@ -707,10 +727,10 @@ export class UserService {
     }
     createRandomFilenamePhoto(
         userId: string,
-        options: { mime: string; size: number }
+        options: { mime: ENUM_FILE_MIME_IMAGE; size: number }
     ): string {
-        const extension = options.mime.split('/')[1] || 'jpg';
-        return `${this.uploadPath}/${userId}_${Date.now()}.${extension}`;
+        const extension = EXTENSION_BY_MIME_IMAGE[options.mime] ?? 'jpg';
+        return `user/${userId}/${randomUUID()}.${extension}`;
     }
     async findOneActiveById(
         id: string,

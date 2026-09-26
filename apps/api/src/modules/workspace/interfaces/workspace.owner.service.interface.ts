@@ -22,11 +22,6 @@ export interface IWorkspaceOwnerService {
         options?: IDatabaseFindAllOptions
     ): Promise<WorkspaceEntity[]>;
 
-    findWorkspaceByOwner(
-        ownerId: string,
-        options?: IDatabaseFindAllOptions
-    ): Promise<WorkspaceEntity>;
-
     findOneById(
         workSpaceId: string,
         options?: IDatabaseFindOneOptions

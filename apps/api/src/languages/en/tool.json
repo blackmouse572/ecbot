@@ -28,7 +28,8 @@
         "success": "Tool executed",
         "error": {
             "notFound": "Tool not found",
-            "executionFailed": "Tool execution failed"
+            "executionFailed": "Tool execution failed",
+            "notLinked": "Tool is not enabled for this chatbot"
         }
     },
     "enable": {

@@ -21,6 +21,7 @@ import {
     Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { uniqueId } from 'lodash';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
@@ -28,6 +29,8 @@ import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
 import { UserService } from 'src/modules/user/services/user.service';
 
 import { VerificationService } from 'src/modules/verification/services/verification.service';
+import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
+import { VerificationEntity } from 'src/modules/verification/repository/entity/verification.entity';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 
 @ApiTags('modules.public.verification')
@@ -48,18 +51,22 @@ export class VerificationEmailController {
     @VerificationEmailResendEmailDoc()
     @Response('verification.resendEmail')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Post('/resend/email')
     async resendVerificationEmail(
         @Body(new RequestEmailPipe())
         { email, id }: VerificationResendEmailRequestDto
     ): Promise<void> {
-        const verification = await this.verificationService.findOne({
-            to: email,
-        });
+        const [existing, user] = await Promise.all([
+            this.verificationService.findOneActiveLatestEmailByUser(id, email),
+            this.userService.findOneById(id),
+        ]);
 
-        const user = await this.userService.findOneById(id);
-
-        if (!verification) {
+        const canIssue =
+            !!user &&
+            user.email?.toLowerCase() === email.toLowerCase() &&
+            user.verification?.email !== true;
+        if (!existing && !canIssue) {
             throw new ConflictException({
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'verification.error.notFound',
@@ -72,6 +79,10 @@ export class VerificationEmailController {
                 message: 'user.error.notFound',
             });
         }
+
+        // An expired or attempt-locked code leaves no active row: issue a
+        // fresh one so an unverified user is never stuck (login refuses them).
+        const verification = existing ?? (await this.reissueEmail(user));
 
         await this.cloudTasksClient
             .enqueue(
@@ -96,18 +107,43 @@ export class VerificationEmailController {
             });
     }
 
+    private async reissueEmail(user: UserEntity): Promise<VerificationEntity> {
+        const session = this.em.fork();
+        await session.begin();
+
+        try {
+            await this.verificationService.inactiveEmailManyByUser(user.id, {
+                em: session,
+            });
+            const verification =
+                await this.verificationService.createEmailByUser(user, {
+                    em: session,
+                });
+            await session.commit();
+
+            return verification;
+        } catch (err: unknown) {
+            await session.rollback();
+
+            throw new InternalServerErrorException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
+                message: 'http.serverError.internalServerError',
+                _error: err,
+            });
+        }
+    }
+
     @VerificationEmailVerifyEmailDoc()
     @Response('verification.verifyEmail')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Post('/verify/email')
     async verifyEmail(
         @Body(new RequestEmailPipe())
         { email, id, otp }: VerificationVerifyEmailRequestDto
     ): Promise<void> {
         const [verificationTask, userTask] = await Promise.allSettled([
-            this.verificationService.findOne({
-                to: email,
-            }),
+            this.verificationService.findOneActiveLatestEmailByUser(id, email),
             this.userService.findOneById(id),
         ]);
         const verification =
@@ -133,6 +169,17 @@ export class VerificationEmailController {
             otp
         );
         if (!check) {
+            const attempted =
+                await this.verificationService.incrementOtpAttempt(
+                    verification
+                );
+            if (!attempted.isActive) {
+                throw new BadRequestException({
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
+                    message: 'verification.error.attemptMax',
+                });
+            }
+
             throw new BadRequestException({
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.OTP_NOT_MATCH,
                 message: 'verification.error.otpNotMatch',

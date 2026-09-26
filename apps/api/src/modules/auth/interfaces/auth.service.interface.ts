@@ -26,7 +26,15 @@ export interface IAuthService {
     verifyRefreshTokenAllowExpired(
         token: string
     ): IAuthJwtRefreshTokenPayload | null;
-    validateUser(passwordString: string, passwordHash: string): boolean;
+    validateUser(
+        passwordString: string,
+        passwordHash: string
+    ): Promise<boolean>;
+    runDummyPasswordCompare(passwordString: string): Promise<void>;
+    maybeRehashPassword(
+        passwordString: string,
+        currentPasswordHash: string
+    ): Promise<Pick<IAuthPassword, 'passwordHash' | 'salt'> | null>;
     createPayloadAccessToken(
         data: UserEntity,
         session: string,
@@ -34,19 +42,14 @@ export interface IAuthService {
         loginFrom: ENUM_AUTH_LOGIN_FROM
     ): IAuthJwtAccessTokenPayload;
     createPayloadRefreshToken(
-        {
-            user,
-            session,
-            loginFrom,
-            loginDate,
-        }: IAuthJwtAccessTokenPayload,
+        { user, session, loginFrom, loginDate }: IAuthJwtAccessTokenPayload,
         rememberMe: boolean
     ): IAuthJwtRefreshTokenPayload;
     createSalt(length: number): string;
     createPassword(
         password: string,
         options?: IAuthPasswordOptions
-    ): IAuthPassword;
+    ): Promise<IAuthPassword>;
     createPasswordRandom(): string;
     checkPasswordExpired(passwordExpired: Date): boolean;
     createToken(

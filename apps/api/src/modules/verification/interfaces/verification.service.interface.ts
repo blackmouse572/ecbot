@@ -43,8 +43,17 @@ export interface IVerificationService {
         user: string,
         options?: IDatabaseFindOneOptions
     ): Promise<VerificationEntity>;
+    findOneActiveLatestEmailByUser(
+        user: string,
+        email: string,
+        options?: IDatabaseFindOneOptions
+    ): Promise<VerificationEntity>;
     validateOtp(verification: VerificationEntity, otp: string): boolean;
     verify(
+        repository: VerificationEntity,
+        options?: IDatabaseSaveOptions
+    ): Promise<VerificationEntity>;
+    incrementOtpAttempt(
         repository: VerificationEntity,
         options?: IDatabaseSaveOptions
     ): Promise<VerificationEntity>;

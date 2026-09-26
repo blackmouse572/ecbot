@@ -103,7 +103,7 @@ describe('AuthPublicController.signUp', () => {
         findOneByName.mockResolvedValue({ id: 'role-1' });
         existByEmail.mockResolvedValue(false);
         findOneByIdCountry.mockResolvedValue({ id: 'country-1' });
-        createPassword.mockReturnValue({ password: 'hashed' });
+        createPassword.mockResolvedValue({ password: 'hashed' });
         signUp.mockResolvedValue(user);
         createEmailByUser.mockResolvedValue(verification);
         createByUserPasswordHistory.mockResolvedValue(undefined);
@@ -193,9 +193,13 @@ describe('AuthPublicController.loginWithCredential', () => {
     const getPasswordAttempt = jest.fn();
     const getPasswordMaxAttempt = jest.fn();
     const validateUser = jest.fn();
+    const runDummyPasswordCompare = jest.fn();
+    const maybeRehashPassword = jest.fn();
     const verifyLoginTurnstile = jest.fn();
     const checkPasswordExpired = jest.fn();
     const resetPasswordAttempt = jest.fn();
+    const increasePasswordAttempt = jest.fn();
+    const rehashPassword = jest.fn();
     const join = jest.fn();
     const createToken = jest.fn();
     const setRefreshTokenCookie = jest.fn();
@@ -222,8 +226,12 @@ describe('AuthPublicController.loginWithCredential', () => {
         getPasswordAttempt.mockReset();
         getPasswordMaxAttempt.mockReset();
         validateUser.mockReset();
+        runDummyPasswordCompare.mockReset();
+        maybeRehashPassword.mockReset();
         checkPasswordExpired.mockReset();
         resetPasswordAttempt.mockReset();
+        increasePasswordAttempt.mockReset();
+        rehashPassword.mockReset();
         join.mockReset();
         createToken.mockReset();
         setRefreshTokenCookie.mockReset();
@@ -248,6 +256,8 @@ describe('AuthPublicController.loginWithCredential', () => {
                     useValue: {
                         findOneByEmail,
                         resetPasswordAttempt,
+                        increasePasswordAttempt,
+                        rehashPassword,
                         join,
                     },
                 },
@@ -257,6 +267,8 @@ describe('AuthPublicController.loginWithCredential', () => {
                         getPasswordAttempt,
                         getPasswordMaxAttempt,
                         validateUser,
+                        runDummyPasswordCompare,
+                        maybeRehashPassword,
                         checkPasswordExpired,
                         createToken,
                         setRefreshTokenCookie,
@@ -289,10 +301,14 @@ describe('AuthPublicController.loginWithCredential', () => {
 
         getPasswordAttempt.mockReturnValue(false);
         getPasswordMaxAttempt.mockReturnValue(5);
-        validateUser.mockReturnValue(true);
+        validateUser.mockResolvedValue(true);
+        runDummyPasswordCompare.mockResolvedValue(undefined);
+        maybeRehashPassword.mockResolvedValue(null);
         verifyLoginTurnstile.mockResolvedValue(undefined);
         checkPasswordExpired.mockReturnValue(false);
         resetPasswordAttempt.mockResolvedValue(undefined);
+        increasePasswordAttempt.mockResolvedValue(undefined);
+        rehashPassword.mockResolvedValue(undefined);
         join.mockResolvedValue(activeUser);
         createSession.mockResolvedValue({ id: 'session-1' });
         setLoginSession.mockResolvedValue(undefined);
@@ -407,7 +423,11 @@ describe('AuthPublicController.loginWithCredential', () => {
             {} as any
         );
 
-        expect(createToken).toHaveBeenCalledWith(activeUser, 'session-1', false);
+        expect(createToken).toHaveBeenCalledWith(
+            activeUser,
+            'session-1',
+            false
+        );
         expect(setRefreshTokenCookie).toHaveBeenCalledWith({}, 'r', false);
     });
 
@@ -425,5 +445,143 @@ describe('AuthPublicController.loginWithCredential', () => {
             'session-1',
             undefined
         );
+    });
+
+    it('rejects an unknown email with the same error as a wrong password, and runs a dummy bcrypt compare', async () => {
+        findOneByEmail.mockResolvedValue(undefined);
+
+        await expect(
+            controller.loginWithCredential(
+                { email: 'nobody@x.com', password: 'pass' } as any,
+                {} as any,
+                {} as any
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+                message: 'auth.error.invalidCredential',
+            },
+        });
+
+        expect(runDummyPasswordCompare).toHaveBeenCalledWith('pass');
+        expect(validateUser).not.toHaveBeenCalled();
+    });
+
+    it('rejects a wrong password with the same statusCode/message as an unknown email, and no attempt count', async () => {
+        findOneByEmail.mockResolvedValue(activeUser);
+        validateUser.mockResolvedValue(false);
+
+        const error = await controller
+            .loginWithCredential(
+                { email: 'ok@x.com', password: 'wrong' } as any,
+                {} as any,
+                {} as any
+            )
+            .catch(err => err);
+
+        expect(error.response).toStrictEqual({
+            statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+            message: 'auth.error.invalidCredential',
+        });
+        expect(error.response.data).toBeUndefined();
+        expect(increasePasswordAttempt).toHaveBeenCalledWith(activeUser);
+    });
+
+    it('does not increase the attempt counter or reveal lockout once already at max, on a wrong password', async () => {
+        findOneByEmail.mockResolvedValue({
+            ...activeUser,
+            passwordAttempt: 5,
+        });
+        getPasswordAttempt.mockReturnValue(true);
+        getPasswordMaxAttempt.mockReturnValue(5);
+        validateUser.mockResolvedValue(false);
+
+        await expect(
+            controller.loginWithCredential(
+                { email: 'ok@x.com', password: 'wrong' } as any,
+                {} as any,
+                {} as any
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+                message: 'auth.error.invalidCredential',
+            },
+        });
+
+        expect(increasePasswordAttempt).not.toHaveBeenCalled();
+    });
+
+    // Fix round 1: the original version of this test asserted the opposite
+    // — that a locked account revealed PASSWORD_ATTEMPT_MAX once the
+    // password matched. That was itself an oracle: a 403 for the right
+    // password vs. a 400 for a wrong one lets an attacker binary-search the
+    // password of an account they already know is locked, with no attempt
+    // limit on the guessing (the counter is frozen once locked). A locked
+    // account must now be indistinguishable regardless of password
+    // correctness — same error, no tokens either way.
+    it('never reveals the lockout or issues tokens once locked, even with the correct password', async () => {
+        findOneByEmail.mockResolvedValue({
+            ...activeUser,
+            passwordAttempt: 5,
+        });
+        getPasswordAttempt.mockReturnValue(true);
+        getPasswordMaxAttempt.mockReturnValue(5);
+        validateUser.mockResolvedValue(true);
+
+        await expect(
+            controller.loginWithCredential(
+                { email: 'ok@x.com', password: 'pass' } as any,
+                {} as any,
+                {} as any
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+                message: 'auth.error.invalidCredential',
+            },
+        });
+
+        // Still ran the real compare, so a locked account's timing matches
+        // an unlocked wrong-password rejection.
+        expect(validateUser).toHaveBeenCalledWith('pass', undefined);
+        expect(increasePasswordAttempt).not.toHaveBeenCalled();
+        expect(createToken).not.toHaveBeenCalled();
+    });
+
+    it('rehashes a stored password hash that is weaker than the configured cost, after a successful login', async () => {
+        findOneByEmail.mockResolvedValue(activeUser);
+        maybeRehashPassword.mockResolvedValue({
+            passwordHash: 'new-hash-at-cost-12',
+            salt: 'new-salt',
+        });
+
+        await controller.loginWithCredential(
+            { email: 'ok@x.com', password: 'pass' } as any,
+            {} as any,
+            {} as any
+        );
+
+        expect(maybeRehashPassword).toHaveBeenCalledWith(
+            'pass',
+            (activeUser as any).password
+        );
+        expect(rehashPassword).toHaveBeenCalledWith(activeUser, {
+            passwordHash: 'new-hash-at-cost-12',
+            salt: 'new-salt',
+        });
+    });
+
+    it('does not rehash when the stored hash is already at the configured cost', async () => {
+        findOneByEmail.mockResolvedValue(activeUser);
+        maybeRehashPassword.mockResolvedValue(null);
+
+        await controller.loginWithCredential(
+            { email: 'ok@x.com', password: 'pass' } as any,
+            {} as any,
+            {} as any
+        );
+
+        expect(rehashPassword).not.toHaveBeenCalled();
     });
 });

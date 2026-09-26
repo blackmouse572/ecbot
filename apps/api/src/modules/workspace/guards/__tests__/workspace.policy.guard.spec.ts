@@ -1,4 +1,4 @@
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -144,6 +144,31 @@ describe('WorkspacePolicyGuard', () => {
             requiredAbilities
         );
         expect(result).toBe(true);
+    });
+
+    it('rejects a member whose only role is deactivated', async () => {
+        const requiredAbilities = [
+            {
+                subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                action: [ENUM_POLICY_ACTION.READ],
+            },
+        ];
+
+        jest.spyOn(reflector, 'get').mockReturnValueOnce(requiredAbilities);
+        jest.spyOn(
+            workspaceMemberService,
+            'getMemberWorkspaceRoles'
+        ).mockResolvedValue([mockRole as any]);
+        jest.spyOn(roleService, 'findOneById').mockResolvedValue({
+            ...mockRole,
+            isActive: false,
+        } as any);
+
+        const mockContext = createMockExecutionContext(mockUser, mockWorkspace);
+
+        await expect(guard.canActivate(mockContext)).rejects.toBeInstanceOf(
+            ForbiddenException
+        );
     });
 
     function createMockExecutionContext(

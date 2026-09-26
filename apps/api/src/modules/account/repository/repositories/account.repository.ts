@@ -1,7 +1,8 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { ENUM_ACCOUNT_STATUS } from '../../enums/account.enum';
+import { ENUM_ACCOUNT_STATUS_CODE_ERROR } from '../../enums/account.status-code.enum';
 import { AccountEntity } from '../entities/account.entity';
 import { IDatabaseCreateOptions } from '../../../../common/database/interfaces/database.interface';
 
@@ -87,6 +88,23 @@ export class AccountRepository extends DatabaseRepository<AccountEntity> {
             this.stamp(created, 'updatedBy', actionBy);
             await this.em.persistAndFlush(created);
             return created;
+        }
+
+        // Same externalId re-linking under a different workspace would move
+        // the account (and its conversation history) between tenants — block
+        // it instead of silently reassigning ownership.
+        const incomingWorkspaceId =
+            (data.workspace as { id?: string } | undefined)?.id ??
+            (data.workspace as unknown as string | undefined);
+        if (
+            incomingWorkspaceId &&
+            existing.workspace?.id &&
+            existing.workspace.id !== incomingWorkspaceId
+        ) {
+            throw new ConflictException({
+                statusCode: ENUM_ACCOUNT_STATUS_CODE_ERROR.WORKSPACE_MISMATCH,
+                message: 'account.error.workspaceMismatch',
+            });
         }
 
         // Relinking an externalId revives the row: unlinking an account that

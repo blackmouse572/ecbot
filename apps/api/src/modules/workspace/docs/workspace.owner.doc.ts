@@ -202,7 +202,7 @@ export function GetInvitableUserListDoc(): MethodDecorator {
         Doc({
             summary: 'Get all users that not belong to the workspace',
             description:
-                'This endpoint retrieves all users who are not members of the specified workspace, allowing the owner to invite them.',
+                'This endpoint retrieves users eligible to invite: a fuzzy name search over users who already share a workspace with the caller, or an exact match by email for anyone else on the platform when the search value is a full email address.',
         }),
         DocAuth({
             jwtAccessToken: true,

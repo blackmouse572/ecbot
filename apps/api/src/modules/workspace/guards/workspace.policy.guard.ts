@@ -96,7 +96,11 @@ export class WorkspacePolicyGuard implements CanActivate {
             )
         );
 
-        const validRoles = userRoles.filter(role => role !== null);
+        // Deactivated roles (isActive === false) grant nothing, even if the
+        // membership row that references them is still active.
+        const validRoles = userRoles.filter(
+            role => role !== null && role.isActive !== false
+        );
 
         if (validRoles.length === 0) {
             throw new ForbiddenException({

@@ -148,14 +148,11 @@ export class AuthSharedController {
         @Res({ passthrough: true }) res: ExpressResponse
     ): Promise<void> {
         const refreshToken = req.cookies?.['refreshToken'] as
-            | string
-            | undefined;
+            string | undefined;
 
         if (refreshToken) {
             const payload =
-                this.authService.verifyRefreshTokenAllowExpired(
-                    refreshToken
-                );
+                this.authService.verifyRefreshTokenAllowExpired(refreshToken);
 
             if (payload?.session) {
                 try {
@@ -199,7 +196,7 @@ export class AuthSharedController {
             });
         }
 
-        const matchPassword = this.authService.validateUser(
+        const matchPassword = await this.authService.validateUser(
             body.oldPassword,
             user.password
         );
@@ -214,7 +211,9 @@ export class AuthSharedController {
 
         await this.userService.resetPasswordAttempt(user);
 
-        const password = this.authService.createPassword(body.newPassword);
+        const password = await this.authService.createPassword(
+            body.newPassword
+        );
         const checkPassword =
             await this.passwordHistoryService.findOneUsedByUser(
                 user.id,

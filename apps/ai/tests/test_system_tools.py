@@ -171,8 +171,8 @@ def _stub_api_client_all(monkeypatch, *, post=None, get=None, delete=None):
         async def get(self, path, params=None):
             calls["get"].append((path, params))
             return get
-        async def delete(self, path):
-            calls["delete"].append(path)
+        async def delete(self, path, params=None):
+            calls["delete"].append((path, params))
             return delete
 
     monkeypatch.setattr(
@@ -259,4 +259,18 @@ async def test_cancel_followup_deletes(monkeypatch):
     calls = _stub_api_client_all(monkeypatch, delete={"cancelled": True})
     result = await cancel_followup.ainvoke({"followup_id": "f-1"})
     assert result == {"cancelled": True}
-    assert calls["delete"] == ["/system/followups/f-1"]
+    assert calls["delete"] == [
+        ("/system/followups/f-1", {"conversationId": "conv-1"})
+    ]
+
+
+async def test_cancel_followup_no_context_returns_error(monkeypatch):
+    _patch_followup_ctx(monkeypatch, None)
+    result = await cancel_followup.ainvoke({"followup_id": "f-1"})
+    assert result == {"error": "no conversation context"}
+
+
+async def test_cancel_followup_no_conversation_id_returns_error(monkeypatch):
+    _patch_followup_ctx(monkeypatch, {"conversation_id": None})
+    result = await cancel_followup.ainvoke({"followup_id": "f-1"})
+    assert result == {"error": "no conversation context"}

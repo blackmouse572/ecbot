@@ -5,5 +5,15 @@
     },
     "task": {
         "processed": "Xử lý tác vụ follow-up thành công."
+    },
+    "schedule": {
+        "error": {
+            "tooManyPending": "Cuộc hội thoại này đã có quá nhiều follow-up đang chờ."
+        }
+    },
+    "cancel": {
+        "error": {
+            "missingConversationId": "Cần có conversationId để hủy follow-up."
+        }
     }
 }

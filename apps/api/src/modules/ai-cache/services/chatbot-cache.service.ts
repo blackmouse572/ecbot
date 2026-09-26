@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
+import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 
 /**
  * Drops apps/ai's cached copy of a chatbot's config.
@@ -26,7 +27,10 @@ export class ChatbotCacheService {
     /** Best-effort: a failed invalidation must never fail the write that triggered it. */
     async invalidate(chatbotId: string): Promise<void> {
         try {
-            const headers = await getInternalAuthHeader(this.aiBackendUrl);
+            const headers = {
+                ...(await getInternalAuthHeader(this.aiBackendUrl)),
+                ...getInternalTokenHeader(this.configService),
+            };
             await this.httpService.axiosRef.delete(
                 `${this.aiBackendUrl}/api/chat/chatbot-cache/${chatbotId}`,
                 { headers }

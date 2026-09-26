@@ -1,7 +1,7 @@
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { isApiChannelAccount } from '@app/modules/account/interfaces/account-config.interface';
-import { HttpService } from '@nestjs/axios';
+import { HelperEgressService } from '@app/common/helper/services/helper.egress.service';
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import {
@@ -31,7 +31,7 @@ export interface ApiChannelCallbackPayload {
 export class ApiChannelCallbackService {
     constructor(
         private readonly accountService: AccountService,
-        private readonly httpService: HttpService
+        private readonly egress: HelperEgressService
     ) {}
 
     /**
@@ -66,17 +66,31 @@ export class ApiChannelCallbackService {
             this.signaturePayload(payload.timestamp, payload)
         );
 
-        await this.httpService.axiosRef.post(
-            account.config.callbackUrl,
-            payload,
-            {
-                timeout: API_CHANNEL_CALLBACK_TIMEOUT_MS,
+        const controller = new AbortController();
+        const timer = setTimeout(
+            () => controller.abort(),
+            API_CHANNEL_CALLBACK_TIMEOUT_MS
+        );
+        try {
+            const res = await this.egress.fetch(account.config.callbackUrl, {
+                method: 'POST',
+                body: JSON.stringify(payload),
                 headers: {
                     'content-type': 'application/json',
                     [API_CHANNEL_SIGNATURE_HEADER]: signature,
                     [API_CHANNEL_TIMESTAMP_HEADER]: payload.timestamp,
                 },
+                signal: controller.signal,
+            });
+            // fetch doesn't throw on non-2xx the way axios did — surface it so
+            // the caller's retry loop still treats a bad response as failed.
+            if (!res.ok) {
+                throw new Error(
+                    `API channel callback responded with status ${res.status}`
+                );
             }
-        );
+        } finally {
+            clearTimeout(timer);
+        }
     }
 }

@@ -63,9 +63,9 @@ export async function getInvitableRoleId(
  */
 /**
  * Decodes the workspaceId embedded in the invitation JWT payload. The invite
- * endpoint resolves the target workspace via findWorkspaceByOwner (it ignores
- * the :workspace path param), so tests must follow the workspace the token
- * actually points at rather than the one they created.
+ * endpoint always targets the :workspace path param (the guard-resolved
+ * workspace), so this always equals the workspace the invite was requested
+ * against. Kept as a convenience accessor / sanity check, not a workaround.
  */
 export function decodeInvitationWorkspaceId(token: string): string {
     const [, payload] = token.split('.');

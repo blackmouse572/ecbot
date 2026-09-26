@@ -64,6 +64,10 @@ export class PlatformWebhookPublicController {
             res.status(404).send('Not Found');
             return;
         }
+        // Meta expects the raw hub.challenge back with a text content type —
+        // Express's default (application/json for a plain string body) fails
+        // the handshake in some clients that sniff the header.
+        res.type('text/plain');
         res.status(challenge.status).send(await challenge.text());
     }
 

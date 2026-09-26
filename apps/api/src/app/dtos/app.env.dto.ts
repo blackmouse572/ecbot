@@ -72,6 +72,18 @@ export class AppEnvDto {
     @Type(() => Number)
     HTTP_PORT: number;
 
+    // Reverse-proxy hops trusted for req.ip (Express `trust proxy`). Default: 1.
+    @IsOptional()
+    @IsNumber({
+        allowInfinity: false,
+        allowNaN: false,
+        maxDecimalPlaces: 0,
+    })
+    @IsInt()
+    @Min(0)
+    @Type(() => Number)
+    APP_TRUST_PROXY_HOPS?: number;
+
     @IsBoolean()
     @IsNotEmpty()
     @Type(() => Boolean)
@@ -443,6 +455,11 @@ export class AppEnvDto {
     @IsOptional()
     @IsString()
     AI_BACKEND_URL?: string;
+
+    // Shared secret sent as X-Internal-Token to apps/ai; must match its value
+    @IsNotEmpty()
+    @IsString()
+    API_INTERNAL_TOKEN: string;
 
     // Local dev tunnel (e.g. for platform webhook callbacks)
     @IsOptional()

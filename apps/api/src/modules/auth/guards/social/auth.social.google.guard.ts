@@ -1,6 +1,7 @@
 import {
     CanActivate,
     ExecutionContext,
+    HttpException,
     Injectable,
     UnauthorizedException,
 } from '@nestjs/common';
@@ -49,6 +50,12 @@ export class AuthSocialGoogleGuard implements CanActivate {
 
             return true;
         } catch (err: any) {
+            // Preserve any HttpException we deliberately threw in the service
+            // (e.g. the unverified-email 401), instead of masking it below.
+            if (err instanceof HttpException) {
+                throw err;
+            }
+
             throw new UnauthorizedException({
                 statusCode: ENUM_AUTH_STATUS_CODE_ERROR.SOCIAL_GOOGLE_INVALID,
                 message: 'auth.error.socialGoogleInvalid',

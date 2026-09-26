@@ -27,10 +27,10 @@ describe('E2E — workspace member invite → join', () => {
 
     beforeAll(async () => {
         ctx = await bootstrapE2E();
-        // Use `business` as the owner: the invite endpoint resolves the target
-        // workspace via findWorkspaceByOwner, so an owner with a single (freshly
-        // created) workspace keeps the flow deterministic. `premium` is the
-        // invitee.
+        // Use `business` as the owner and `premium` as the invitee. The
+        // invite endpoint always targets the :workspace path param (the
+        // guard-resolved workspace), so every invite here deterministically
+        // targets `workspaceId`.
         ownerToken = await login(ctx.app, ctx.base, SEED_USERS.business);
         inviteeToken = await login(ctx.app, ctx.base, SEED_USERS.premium);
         workspaceId = await createWorkspace(
@@ -71,9 +71,10 @@ describe('E2E — workspace member invite → join', () => {
         const token = extractInvitationToken(
             inviteRes.body.data.invitationLink
         );
-        // Follow the workspace the token actually targets (the invite endpoint
-        // resolves it via findWorkspaceByOwner, not the :workspace param).
+        // The invite endpoint now targets the :workspace path param, so this
+        // always equals `workspaceId` — decoded here as a sanity check.
         const targetWs = decodeInvitationWorkspaceId(token);
+        expect(targetWs).toBe(workspaceId);
 
         const joinRes = await http(ctx.app)
             .post(`${wsBase(ctx.base)}/member/join`)
@@ -117,6 +118,25 @@ describe('E2E — workspace member invite → join', () => {
             .set('Authorization', `Bearer ${inviteeToken}`);
 
         expect(joinRes.status).toBe(409);
+    });
+
+    it('rejects a caller who is authenticated as someone other than the invitee', async () => {
+        // The token invites SEED_USERS.premium; using it while authenticated
+        // as an unrelated third user (not a member, not the invitee) must be
+        // refused — the caller's own JWT identity is what is joined, never
+        // the invitedEmail claim inside the token.
+        const otherToken = await login(ctx.app, ctx.base, SEED_USERS.admin);
+        const inviteRes = await invite(SEED_USERS.premium);
+        const token = extractInvitationToken(
+            inviteRes.body.data.invitationLink
+        );
+
+        const joinRes = await http(ctx.app)
+            .post(`${wsBase(ctx.base)}/member/join`)
+            .query({ token })
+            .set('Authorization', `Bearer ${otherToken}`);
+
+        expect(joinRes.status).toBe(401);
     });
 
     it('rejects an invalid / forged token', async () => {

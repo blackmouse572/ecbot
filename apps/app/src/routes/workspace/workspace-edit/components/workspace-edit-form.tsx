@@ -29,7 +29,13 @@ const WorkspaceEditSchema = zod.object({
     .regex(/^[a-z0-9-]+$/, t("errors.slug")),
   avatar: zod
     .object({
-      file: zod.instanceof(File).optional(),
+      file: zod
+        .instanceof(File)
+        .refine(
+          (file) => file.size <= 1024 * 1024 * 5,
+          t("errors.maxFileSize", { maxFileSize: 5 }),
+        )
+        .optional(),
       url: zod.string(),
     })
     .optional(),

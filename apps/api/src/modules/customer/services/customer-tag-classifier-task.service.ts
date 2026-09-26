@@ -18,6 +18,8 @@ import { CustomerTagAssignmentService } from './customer-tag-assignment.service'
 import { CustomerTagService } from './customer-tag.service';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 import { CustomerTagClassifierService } from './customer-tag-classifier.service';
+import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
+import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 
 interface IClassifierMessagePayload {
     role: 'user' | 'bot' | 'operator' | 'system';
@@ -41,7 +43,6 @@ interface IClassifierResponse {
 export class CustomerTagClassifierTaskService {
     private readonly logger = new Logger(CustomerTagClassifierTaskService.name);
     private readonly aiBackendUrl: string;
-    private readonly internalToken: string;
 
     constructor(
         private readonly conversationRepository: ConversationRepository,
@@ -56,7 +57,6 @@ export class CustomerTagClassifierTaskService {
         this.aiBackendUrl =
             this.configService.get<string>('ai.backend.url') ??
             'http://localhost:8000';
-        this.internalToken = process.env.API_INTERNAL_TOKEN ?? '';
     }
 
     async handle(
@@ -151,9 +151,8 @@ export class CustomerTagClassifierTaskService {
             ts: m.dateSent.toISOString(),
         }));
 
-        const catalog = await this.customerTagService.findAllByWorkspace(
-            workspaceId
-        );
+        const catalog =
+            await this.customerTagService.findAllByWorkspace(workspaceId);
         const availableTags: IClassifierTagDef[] = catalog
             .filter(t => !t.triggersHandoff)
             .map(t => ({
@@ -197,7 +196,10 @@ export class CustomerTagClassifierTaskService {
             const tag = catalog.find(t => t.name === name);
             if (!tag) continue;
             try {
-                await this.customerTagAssignmentService.apply(customerId, tag.id);
+                await this.customerTagAssignmentService.apply(
+                    customerId,
+                    tag.id
+                );
             } catch (err) {
                 this.logger.warn(
                     `classify: apply tag "${name}" failed: ${(err as Error).message}`
@@ -211,7 +213,10 @@ export class CustomerTagClassifierTaskService {
             const tag = catalog.find(t => t.name === name);
             if (!tag) continue;
             try {
-                await this.customerTagAssignmentService.remove(customerId, tag.id);
+                await this.customerTagAssignmentService.remove(
+                    customerId,
+                    tag.id
+                );
             } catch (err) {
                 this.logger.warn(
                     `classify: remove tag "${name}" failed: ${(err as Error).message}`
@@ -221,10 +226,9 @@ export class CustomerTagClassifierTaskService {
 
         const summary = (result.profile_summary ?? '').trim();
         if (summary) {
-            await this.customerRepository.updateEntity(
-                { id: customerId },
-                { profileSummary: summary } as any
-            );
+            await this.customerRepository.updateEntity({ id: customerId }, {
+                profileSummary: summary,
+            } as any);
         }
 
         this.logger.log(
@@ -259,7 +263,8 @@ export class CustomerTagClassifierTaskService {
                 {
                     timeout: CUSTOMER_TAG_CLASSIFIER_HTTP_TIMEOUT_MS,
                     headers: {
-                        Authorization: `Bearer ${this.internalToken}`,
+                        ...(await getInternalAuthHeader(this.aiBackendUrl)),
+                        ...getInternalTokenHeader(this.configService),
                         'Content-Type': 'application/json',
                     },
                 }

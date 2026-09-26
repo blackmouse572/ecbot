@@ -3,6 +3,7 @@ import { postToServer } from "./server-client";
 import { tracing } from "cloudflare:workers";
 import { getChallengeVerifier } from "./platforms/registry";
 import { env, type Env, type Bindings } from "./env";
+import { timingSafeEqual } from "./timing-safe-equal";
 
 export { ConversationDebounceDO } from "./conversation-do";
 
@@ -136,7 +137,12 @@ app.post("/webhooks/:platform", (c) => receipt(c, c.req.param("platform")));
 // Nest calls this after persisting a message — forward to the per-conversation debounce DO.
 app.post("/internal/debounce", async (c) => {
   return tracing.enterSpan("debounce", async (span) => {
-    if (c.req.header("x-internal-secret") !== env.INTERNAL_SECRET) {
+    if (
+      !timingSafeEqual(
+        c.req.header("x-internal-secret") ?? "",
+        env.INTERNAL_SECRET,
+      )
+    ) {
       span.setAttribute("eccho.forbidden", true);
       return c.text("Forbidden", 403);
     }

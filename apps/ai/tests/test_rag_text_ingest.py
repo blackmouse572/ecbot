@@ -16,7 +16,11 @@ async def test_ingest_text_returns_chunk_count(monkeypatch):
     monkeypatch.setattr("eccho_ai.modules.rag.routers.rag_ingest_service.ingest_text", fake_ingest_text)
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+        headers={"X-Internal-Token": "test-internal-token"},
+    ) as ac:
         resp = await ac.post("/api/rag/ingest/text", json={
             "knowledge_item_id": "item-1", "text": "hello world",
             "title": "note", "chatbot_ids": ["c1"],

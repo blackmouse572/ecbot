@@ -10,12 +10,13 @@ import { ResetPasswordDocParamsToken } from 'src/modules/reset-password/constant
 import { ResetPasswordCreateRequestDto } from 'src/modules/reset-password/dtos/request/reset-password.create.request.dto';
 import { ResetPasswordResetRequestDto } from 'src/modules/reset-password/dtos/request/reset-password.reset.request.dto';
 import { ResetPasswordVerifyRequestDto } from 'src/modules/reset-password/dtos/request/reset-password.verify.request.dto';
-import { ResetPasswordCreteResponseDto } from 'src/modules/reset-password/dtos/response/reset-password.create.response.dto';
 
 export function ResetPasswordPublicRequestDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary: 'request otp for reset password',
+            description:
+                'Always returns the same empty ack, whether or not the email belongs to an account — prevents account enumeration. The reset link/OTP is delivered by email only.',
         }),
         DocAuth({
             xApiKey: true,
@@ -24,9 +25,7 @@ export function ResetPasswordPublicRequestDoc(): MethodDecorator {
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
             dto: ResetPasswordCreateRequestDto,
         }),
-        DocResponse<ResetPasswordCreteResponseDto>('resetPassword.request', {
-            dto: ResetPasswordCreteResponseDto,
-        })
+        DocResponse('resetPassword.request')
     );
 }
 

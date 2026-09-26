@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
@@ -12,6 +12,7 @@ import { HelperHashService } from 'src/common/helper/services/helper.hash.servic
 import { HelperStringService } from 'src/common/helper/services/helper.string.service';
 import { AuthLoginResponseDto } from 'src/modules/auth/dtos/response/auth.login.response.dto';
 import { ENUM_AUTH_LOGIN_FROM } from 'src/modules/auth/enums/auth.enum';
+import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import {
     IAuthJwtAccessTokenPayload,
     IAuthJwtRefreshTokenPayload,
@@ -51,12 +52,19 @@ export class AuthService implements IAuthService {
     private readonly passwordAttempt: boolean;
     private readonly passwordMaxAttempt: number;
 
+    // A bcrypt hash of a fixed, unrelated string, computed once (lazily, on
+    // first use) at the configured cost. Compared against on an unknown-email login so that
+    // path costs roughly the same as a real password check — otherwise the
+    // response-time gap becomes an account-enumeration oracle.
+    private dummyPasswordHash?: Promise<string>;
+
     // apple
     private readonly appleClientId: string;
     private readonly appleSignInClientId: string;
 
     // google
     private readonly googleClient: OAuth2Client;
+    private readonly googleClientId: string;
 
     constructor(
         private readonly helperHashService: HelperHashService,
@@ -130,8 +138,11 @@ export class AuthService implements IAuthService {
         );
 
         // google
+        this.googleClientId = this.configService.get<string>(
+            'auth.google.clientId'
+        );
         this.googleClient = new OAuth2Client(
-            this.configService.get<string>('auth.google.clientId'),
+            this.googleClientId,
             this.configService.get<string>('auth.google.clientSecret')
         );
     }
@@ -209,26 +220,67 @@ export class AuthService implements IAuthService {
         token: string
     ): IAuthJwtRefreshTokenPayload | null {
         try {
-            return this.jwtService.verify<IAuthJwtRefreshTokenPayload>(
-                token,
-                {
-                    publicKey: this.jwtRefreshTokenPublicKey,
-                    algorithms: [this.jwtAlgorithm],
-                    audience: this.jwtAudience,
-                    issuer: this.jwtIssuer,
-                    ignoreExpiration: true,
-                }
-            );
+            return this.jwtService.verify<IAuthJwtRefreshTokenPayload>(token, {
+                publicKey: this.jwtRefreshTokenPublicKey,
+                algorithms: [this.jwtAlgorithm],
+                audience: this.jwtAudience,
+                issuer: this.jwtIssuer,
+                ignoreExpiration: true,
+            });
         } catch {
             return null;
         }
     }
 
-    validateUser(passwordString: string, passwordHash: string): boolean {
+    validateUser(
+        passwordString: string,
+        passwordHash: string
+    ): Promise<boolean> {
         return this.helperHashService.bcryptCompare(
             passwordString,
             passwordHash
         );
+    }
+
+    // See dummyPasswordHash above. Call this on the unknown-email login
+    // path instead of validateUser, so it still pays a real bcrypt compare.
+    async runDummyPasswordCompare(passwordString: string): Promise<void> {
+        this.dummyPasswordHash ??= this.helperHashService.bcrypt(
+            'dummy-password-for-timing-safety',
+            this.createSalt(this.passwordSaltLength)
+        );
+        await this.helperHashService.bcryptCompare(
+            passwordString,
+            await this.dummyPasswordHash
+        );
+    }
+
+    // Raising `auth.password.saltLength` (the bcrypt cost) only affects
+    // *new* hashes — bcrypt reads the cost back out of the hash string
+    // itself, so a hash created at a lower cost keeps verifying, and stays
+    // that much cheaper to brute-force, forever. Call this after a
+    // successful password check to opportunistically re-hash the plaintext
+    // at the current cost; returns null when the stored hash is already at
+    // (or above) that cost. Dormant accounts that never log in or reset
+    // their password keep their original, weaker cost until they do.
+    async maybeRehashPassword(
+        passwordString: string,
+        currentPasswordHash: string
+    ): Promise<Pick<IAuthPassword, 'passwordHash' | 'salt'> | null> {
+        const currentCost =
+            this.helperHashService.bcryptGetCost(currentPasswordHash);
+        if (currentCost >= this.passwordSaltLength) {
+            return null;
+        }
+
+        const salt = this.createSalt(this.passwordSaltLength);
+        return {
+            passwordHash: await this.helperHashService.bcrypt(
+                passwordString,
+                salt
+            ),
+            salt,
+        };
     }
 
     createPayloadAccessToken(
@@ -265,10 +317,10 @@ export class AuthService implements IAuthService {
         return this.helperHashService.randomSalt(length);
     }
 
-    createPassword(
+    async createPassword(
         password: string,
         options?: IAuthPasswordOptions
-    ): IAuthPassword {
+    ): Promise<IAuthPassword> {
         const salt: string = this.createSalt(this.passwordSaltLength);
 
         const today = this.helperDateService.create();
@@ -281,7 +333,10 @@ export class AuthService implements IAuthService {
             })
         );
         const passwordCreated: Date = this.helperDateService.create();
-        const passwordHash = this.helperHashService.bcrypt(password, salt);
+        const passwordHash = await this.helperHashService.bcrypt(
+            password,
+            salt
+        );
         return {
             passwordHash,
             passwordExpired,
@@ -347,7 +402,6 @@ export class AuthService implements IAuthService {
         const payloadRefreshToken = this.payload<IAuthJwtRefreshTokenPayload>(
             refreshTokenFromRequest
         );
-        console.log('DECODED PAYLOAD REFRESH TOKEN', payloadRefreshToken);
         const payloadAccessToken: IAuthJwtAccessTokenPayload =
             this.createPayloadAccessToken(
                 user,
@@ -391,12 +445,21 @@ export class AuthService implements IAuthService {
     ): Promise<IAuthSocialGooglePayload> {
         const login: LoginTicket = await this.googleClient.verifyIdToken({
             idToken: idToken,
+            audience: this.googleClientId,
         });
         const payload: TokenPayload = login.getPayload();
 
+        if (payload.email_verified !== true) {
+            throw new UnauthorizedException({
+                statusCode:
+                    ENUM_AUTH_STATUS_CODE_ERROR.SOCIAL_GOOGLE_EMAIL_NOT_VERIFIED,
+                message: 'auth.error.socialGoogleEmailNotVerified',
+            });
+        }
+
         return {
             email: payload.email,
-            emailVerified: true,
+            emailVerified: payload.email_verified,
             name: payload.name,
             photo: payload.picture,
         };

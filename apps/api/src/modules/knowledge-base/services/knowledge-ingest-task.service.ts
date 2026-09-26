@@ -5,6 +5,8 @@ import * as Sentry from '@sentry/nestjs';
 import { firstValueFrom } from 'rxjs';
 import FormData from 'form-data';
 import { AwsS3Service } from '@app/modules/aws/services/aws.s3.service';
+import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
+import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '../enums/knowledge-base-item-status.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '../enums/knowledge-base-item-type.enum';
@@ -46,7 +48,6 @@ export function extractIngestErrorMessage(err: any): string {
 export class KnowledgeIngestTaskService {
     private readonly logger = new Logger(KnowledgeIngestTaskService.name);
     private readonly aiBackendUrl: string;
-    private readonly internalToken: string;
 
     constructor(
         private readonly knowledgeItemService: KnowledgeItemService,
@@ -58,7 +59,6 @@ export class KnowledgeIngestTaskService {
         this.aiBackendUrl =
             this.configService.get<string>('ai.backend.url') ??
             'http://localhost:8000';
-        this.internalToken = process.env.API_INTERNAL_TOKEN ?? '';
     }
 
     async handle(
@@ -101,7 +101,7 @@ export class KnowledgeIngestTaskService {
                         { chatbot_ids: dto.chatbotIds },
                         {
                             timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
-                            headers: this.authHeaders({
+                            headers: await this.authHeaders({
                                 'Content-Type': 'application/json',
                             }),
                         }
@@ -123,7 +123,7 @@ export class KnowledgeIngestTaskService {
                         `${this.aiBackendUrl}/api/rag/documents/by-item/${knowledgeItemId}`,
                         {
                             timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
-                            headers: this.authHeaders({
+                            headers: await this.authHeaders({
                                 'Content-Type': 'application/json',
                             }),
                         }
@@ -158,10 +158,14 @@ export class KnowledgeIngestTaskService {
             .filter((v: unknown): v is string => typeof v === 'string');
     }
 
-    private authHeaders(
+    private async authHeaders(
         extra: Record<string, string> = {}
-    ): Record<string, string> {
-        return { Authorization: `Bearer ${this.internalToken}`, ...extra };
+    ): Promise<Record<string, string>> {
+        return {
+            ...(await getInternalAuthHeader(this.aiBackendUrl)),
+            ...getInternalTokenHeader(this.configService),
+            ...extra,
+        };
     }
 
     private async ingest(knowledgeItemId: string): Promise<void> {
@@ -230,7 +234,7 @@ export class KnowledgeIngestTaskService {
                 form,
                 {
                     timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
-                    headers: this.authHeaders(form.getHeaders()),
+                    headers: await this.authHeaders(form.getHeaders()),
                     maxBodyLength: Infinity,
                 }
             )
@@ -250,7 +254,7 @@ export class KnowledgeIngestTaskService {
                 },
                 {
                     timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
-                    headers: this.authHeaders({
+                    headers: await this.authHeaders({
                         'Content-Type': 'application/json',
                     }),
                 }
@@ -272,7 +276,7 @@ export class KnowledgeIngestTaskService {
                 },
                 {
                     timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
-                    headers: this.authHeaders({
+                    headers: await this.authHeaders({
                         'Content-Type': 'application/json',
                     }),
                 }

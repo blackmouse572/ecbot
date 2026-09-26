@@ -153,10 +153,16 @@ describe('SessionService (geo + activity additions)', () => {
 
             await service.setLoginSession({ id: 'u1' } as any, session as any);
 
+            // cache-manager v6 `set(key, value, ttl)` takes milliseconds, while
+            // refreshTokenExpiration (auth.jwt.refreshToken.expirationTime) is
+            // stored in seconds — passing the raw seconds value expired the
+            // login session ~1000x too early (a 7-day refresh window collapsed
+            // to ~10 minutes), silently logging every user out once the access
+            // strategy started checking this key.
             expect(mockCache.set).toHaveBeenCalledWith(
                 'x:x:550e8400-e29b-41d4-a716-446655440000',
                 { user: 'u1' },
-                3600
+                3600 * 1000
             );
             expect(mockCloudTasksClient.enqueue).not.toHaveBeenCalled();
         });

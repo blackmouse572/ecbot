@@ -7,6 +7,7 @@ import { UserService } from '@app/modules/user/services/user.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_SEND_SMS_PROCESS } from '@app/modules/sms/enums/sms.enum';
+import { ENUM_VERIFICATION_STATUS_CODE_ERROR } from '@app/modules/verification/enums/verification.status-code.constant';
 
 describe('VerificationUserController — email dispatch', () => {
     let controller: VerificationUserController;
@@ -20,6 +21,7 @@ describe('VerificationUserController — email dispatch', () => {
     const createMobileNumberByUser = jest.fn();
     const validateOtp = jest.fn();
     const verify = jest.fn();
+    const incrementOtpAttempt = jest.fn();
     const map = jest.fn();
     const updateVerificationEmail = jest.fn();
     const updateVerificationMobileNumber = jest.fn();
@@ -38,6 +40,7 @@ describe('VerificationUserController — email dispatch', () => {
         createMobileNumberByUser.mockReset();
         validateOtp.mockReset();
         verify.mockReset();
+        incrementOtpAttempt.mockReset();
         map.mockReset();
         updateVerificationEmail.mockReset();
         updateVerificationMobileNumber.mockReset();
@@ -62,6 +65,7 @@ describe('VerificationUserController — email dispatch', () => {
                         createMobileNumberByUser,
                         validateOtp,
                         verify,
+                        incrementOtpAttempt,
                         map,
                     },
                 },
@@ -276,5 +280,65 @@ describe('VerificationUserController — email dispatch', () => {
 
         expect(commit).toHaveBeenCalledTimes(1);
         expect(rollback).not.toHaveBeenCalled();
+    });
+    // Same attempt counter / lockout as the public /verify/email path.
+    describe.each([
+        ['verifyEmail', findOneLatestEmailByUser],
+        ['verifyMobileNumber', findOneLatestMobileNumberByUser],
+    ] as const)('%s: wrong OTP attempts', (method, findLatest) => {
+        const user = { id: 'user-9', email: 'x@y.com', name: 'X' };
+        const verification = { id: 'ver-9', otp: '111111', otpAttempt: 2 };
+
+        it('counts a wrong OTP and throws OTP_NOT_MATCH under the limit', async () => {
+            findLatest.mockResolvedValue(verification);
+            validateOtp.mockReturnValue(false);
+            incrementOtpAttempt.mockResolvedValue({
+                ...verification,
+                otpAttempt: 3,
+                isActive: true,
+            });
+
+            await expect(
+                controller[method](user as any, { otp: '000000' } as any)
+            ).rejects.toMatchObject({
+                response: {
+                    statusCode:
+                        ENUM_VERIFICATION_STATUS_CODE_ERROR.OTP_NOT_MATCH,
+                    message: 'verification.error.otpNotMatch',
+                },
+            });
+            expect(incrementOtpAttempt).toHaveBeenCalledWith(verification);
+            expect(verify).not.toHaveBeenCalled();
+        });
+
+        it('locks the row on the last wrong OTP and throws ATTEMPT_MAX', async () => {
+            findLatest.mockResolvedValue(verification);
+            validateOtp.mockReturnValue(false);
+            incrementOtpAttempt.mockResolvedValue({
+                ...verification,
+                otpAttempt: 5,
+                isActive: false,
+            });
+
+            await expect(
+                controller[method](user as any, { otp: '000000' } as any)
+            ).rejects.toMatchObject({
+                response: {
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
+                    message: 'verification.error.attemptMax',
+                },
+            });
+            expect(verify).not.toHaveBeenCalled();
+        });
+
+        it('is throttled to 5 requests per minute', () => {
+            const handler = VerificationUserController.prototype[method];
+            expect(Reflect.getMetadata('THROTTLER:LIMITdefault', handler)).toBe(
+                5
+            );
+            expect(Reflect.getMetadata('THROTTLER:TTLdefault', handler)).toBe(
+                60000
+            );
+        });
     });
 });

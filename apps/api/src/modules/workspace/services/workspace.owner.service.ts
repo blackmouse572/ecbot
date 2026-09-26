@@ -137,24 +137,16 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         });
     }
 
-    async findWorkspaceByOwner(
-        ownerId: string,
-        options?: IDatabaseFindOneOptions
-    ): Promise<WorkspaceEntity> {
-        return this.workSpaceRepository.findOne<WorkspaceEntity>(
-            { owner: ownerId },
-            {
-                ...options,
-            }
-        );
-    }
-
     async generateInvitationLink(
         ownerId: string,
         { invitedEmail, roleId }: WorkSpaceInviteMemberRequestDto,
-        url: string
+        url: string,
+        workspace: WorkspaceEntity
     ) {
-        const workspace = await this.findWorkspaceByOwner(ownerId);
+        // `workspace` is resolved and authorized by the caller (the
+        // WorkspacePolicyGuard already checked the caller against this exact
+        // :workspace), so there is no owner-only re-lookup here — an admin
+        // with CREATE:MEMBER (not the owner) can invite too.
 
         // If roleId is provided, validate that it belongs to this workspace
         if (roleId) {
@@ -202,14 +194,16 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
     async generateInvitationLinkWithDetails(
         ownerId: string,
         { invitedEmail, roleId }: WorkSpaceInviteMemberRequestDto,
-        url: string
+        url: string,
+        workspace: WorkspaceEntity
     ): Promise<{
         invitationLink: string;
         token: string;
         expiresAt: Date;
         workspaceId: string;
     }> {
-        const workspace = await this.findWorkspaceByOwner(ownerId);
+        // `workspace` is resolved and authorized by the caller (see
+        // generateInvitationLink above) — no owner-only re-lookup here.
 
         // Check if there's already a pending invitation for this email
         const existingInvitation =
@@ -219,9 +213,12 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
             );
 
         if (existingInvitation) {
-            // Return existing invitation details
+            // Rebuild the link from the configured url + the stored token —
+            // never trust the persisted invitationLink column. Pre-fix rows
+            // may have been built from an attacker-controlled Origin header,
+            // and returning that stored value here would still email it out.
             return {
-                invitationLink: existingInvitation.invitationLink,
+                invitationLink: `${url}/join?tokens=${existingInvitation.token}`,
                 token: existingInvitation.token,
                 expiresAt: existingInvitation.expiresAt,
                 workspaceId: workspace.id,

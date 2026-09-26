@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IncomingMessage } from 'http';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
+import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 import { ToolSpec } from 'src/modules/tool/interfaces/tool-spec.interface';
 import {
     parseWireTokenUsage,
@@ -10,7 +11,7 @@ import {
 } from '../interfaces/token-usage-wire.interface';
 
 export interface AIChatHistoryMessage {
-    role: 'user' | 'assistant' | 'system';
+    role: 'user' | 'assistant';
     content: string;
 }
 
@@ -57,7 +58,7 @@ export class ChatbotAIService {
         params: AIChatStreamParams,
         signal?: AbortSignal
     ): Promise<IncomingMessage> {
-        const headers = await getInternalAuthHeader(this.aiBackendUrl);
+        const headers = await this.buildHeaders();
         const response = await this.httpService.axiosRef.post(
             `${this.aiBackendUrl}/api/chat/stream`,
             params,
@@ -78,10 +79,17 @@ export class ChatbotAIService {
     }
 
     async deleteSession(sessionId: string): Promise<void> {
-        const headers = await getInternalAuthHeader(this.aiBackendUrl);
+        const headers = await this.buildHeaders();
         await this.httpService.axiosRef.delete(
             `${this.aiBackendUrl}/api/chat/session/${sessionId}`,
             { headers }
         );
+    }
+
+    private async buildHeaders(): Promise<Record<string, string>> {
+        return {
+            ...(await getInternalAuthHeader(this.aiBackendUrl)),
+            ...getInternalTokenHeader(this.configService),
+        };
     }
 }
