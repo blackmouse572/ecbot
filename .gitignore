@@ -103,9 +103,16 @@ apps/api/src/ee/
 apps/app/src/ee/
 apps/api/test/ee/
 
-# Hosted-edition migration + schema snapshot, copied in by the enterprise overlay
-apps/api/migrations/*_create_billing_and_token_usage.ts
+# The hosted edition's schema snapshot, copied in by the enterprise overlay.
+# This repo knows that name: mikro-orm.config.ts selects it when src/ee exists.
 apps/api/migrations/.snapshot-ee.json
+
+# The hosted edition's own migrations land in apps/api/migrations/ alongside
+# this repo's, and their names belong to the overlay, so naming them here went
+# stale every time it added one. The overlay instead writes
+# apps/api/migrations/.gitignore listing exactly the files it copied, and that
+# file ignores itself, so an enterprise checkout stays clean without this repo
+# having to track hosted filenames.
 
 # Hosted-edition wrangler configs, copied in by the enterprise overlay at build time
 apps/*/wrangler.json
