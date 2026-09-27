@@ -29,8 +29,10 @@ export function DatabaseHelperQueryContain(
     options?: IDatabaseQueryContainOptions
 ): FilterQuery<any> {
     const escapedValue = escapeRegExp(value);
+    // MikroORM maps the `i` flag to Postgres `~*`.
+    const flags = options?.ignoreCase ? 'i' : '';
     const regex = options?.fullWord
-        ? new RegExp(`\\b${escapedValue}\\b`)
-        : new RegExp(escapedValue);
+        ? new RegExp(`\\b${escapedValue}\\b`, flags)
+        : new RegExp(escapedValue, flags);
     return expandDatabaseField(field, regex);
 }

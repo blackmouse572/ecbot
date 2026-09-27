@@ -23,7 +23,18 @@ describe('DatabaseHelperQueryContain', () => {
         const { name } = DatabaseHelperQueryContain('name', 'smith');
 
         expect(name.test('john smith')).toBe(true);
-        expect(name.test('SMITH')).toBe(false); // case handling unchanged
+        expect(name.test('SMITH')).toBe(false);
+    });
+
+    // List search promises a case-insensitive contains; MikroORM turns the
+    // `i` flag into Postgres `~*`.
+    it('ignores case when asked', () => {
+        const { name } = DatabaseHelperQueryContain('name', 'lotus', {
+            ignoreCase: true,
+        });
+
+        expect(name.flags).toContain('i');
+        expect(name.test('Lotus Spa')).toBe(true);
     });
 
     it('escapes metacharacters inside the fullWord \\b...\\b wrapper too', () => {
