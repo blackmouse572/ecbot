@@ -43,3 +43,13 @@ describe("createChatbotSchema numeric fields", () => {
     expect(result.data?.maxTokens).toBeUndefined();
   });
 });
+
+describe("createChatbotSchema submitted keys", () => {
+  // The edit form seeds its defaults from the fetched chatbot. The API
+  // rejects undeclared body keys with 422, so parsing must drop the id.
+  it("drops the chatbot id from the submitted values", () => {
+    const parsed = createChatbotSchema.parse({ ...base, id: "bot-1" });
+
+    expect(parsed).not.toHaveProperty("id");
+  });
+});

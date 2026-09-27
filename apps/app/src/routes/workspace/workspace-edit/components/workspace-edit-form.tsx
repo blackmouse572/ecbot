@@ -66,9 +66,11 @@ export function WorkspaceEditForm({ workspace }: WorkspaceEditFormProps) {
   const { mutateAsync, isPending } = useEditWorkspace();
 
   const handleSubmit = form.handleSubmit(
-    async (data) => {
+    async ({ name, slug }) => {
       try {
-        await mutateAsync(data);
+        // The update endpoint takes no avatar yet, and it rejects a body key
+        // its DTO does not declare.
+        await mutateAsync({ name, slug });
         handleSuccess();
         navigate(`/${workspaceSlug}/${ROUTES.Settings}/${ROUTES.Workspace}`);
       } catch (error) {
