@@ -60,12 +60,9 @@ describe("toChatbotPayload", () => {
     expect(toChatbotPayload(profile, "").deferedLanguage).toBe("vi");
   });
 
-  // The update endpoint's pickFields (CHATBOT_EDITABLE_FIELDS) turns every
-  // unsent editable field into `undefined`, and MikroORM rejects `undefined`
-  // for a non-nullable column. Every non-nullable editable chatbot field
-  // (apps/api chatbot.entity.ts, cross-checked against
-  // apps/api/src/modules/chatbot/constants/chatbot.update.constant.ts) must
-  // therefore always be present, with no base given.
+  // The same payload creates the draft chatbot, and create requires every
+  // non-nullable chatbot field (apps/api chatbot.entity.ts). So each one
+  // must be present, with no base given.
   it("always sends every non-nullable editable chatbot field, even with no base", () => {
     const body = toChatbotPayload(profile, "");
     const nonNullableEditableFields = [
