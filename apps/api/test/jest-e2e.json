@@ -5,7 +5,8 @@
     "testEnvironment": "node",
     "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
     "moduleNameMapper": {
-        "^@app/(.*)$": "<rootDir>/src/$1"
+        "^@app/(.*)$": "<rootDir>/src/$1",
+        "^@repo/agent-blueprint$": "<rootDir>/../../packages/agent-blueprint/src/index.ts"
     },
     "collectCoverage": false,
     "maxWorkers": 1,

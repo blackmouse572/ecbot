@@ -6,6 +6,7 @@ import { EntityManager } from '@mikro-orm/core';
 import { EntityManager as SqlEntityManager } from '@mikro-orm/postgresql';
 import { ChatbotService } from '../../../../src/modules/chatbot/services/chatbot.service';
 import { ChatbotCacheService } from '../../../../src/modules/ai-cache/services/chatbot-cache.service';
+import { AccountRepository } from '../../../../src/modules/account/repository/repositories/account.repository';
 import { ChatbotRepository } from '../../../../src/modules/chatbot/repository/repositories/chatbot.repository';
 import { ChatbotEntity } from '../../../../src/modules/chatbot/repository/entities/chatbot.entity';
 import { WorkspaceEntity } from '../../../../src/modules/workspace/repository/entities/workspace.entity';
@@ -92,6 +93,10 @@ describe('ChatbotService.clone()', () => {
                     provide: ChatbotCacheService,
                     useValue: { invalidate: jest.fn() },
                 },
+                {
+                    provide: AccountRepository,
+                    useValue: { find: jest.fn().mockResolvedValue([]) },
+                },
             ],
         }).compile();
 
@@ -156,6 +161,26 @@ describe('ChatbotService.clone()', () => {
             expect.objectContaining({
                 dailyTokenCap: 100_000,
                 monthlyTokenCap: 2_000_000,
+            })
+        );
+    });
+
+    it('carries the agent builder profile and extra instructions to the clone', async () => {
+        const source = makeSource();
+        const agentProfile = { businessType: 'beauty', businessName: 'Lotus' } as any;
+        source.agentProfile = agentProfile;
+        source.extraInstructions = 'Closed Mondays';
+        chatbotRepository.findOne.mockResolvedValue(source);
+        chatbotRepository.getEntityManager.mockReturnValue(em);
+        em.create.mockReturnValue(new ChatbotEntity());
+
+        await service.clone(sourceId, workspaceId, {});
+
+        expect(em.create).toHaveBeenCalledWith(
+            ChatbotEntity,
+            expect.objectContaining({
+                agentProfile,
+                extraInstructions: 'Closed Mondays',
             })
         );
     });

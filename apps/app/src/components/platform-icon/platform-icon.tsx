@@ -4,19 +4,33 @@ import type { ComponentProps } from "react";
 
 export type AccountType = AccountGetDetailResponseDto["type"];
 
+/** Shared platform logo paths (public/icons/*.svg) so other lookups (e.g. the
+ * agent builder's channel choices) reuse these instead of duplicating them. */
+export const PLATFORM_ICON_SRC = {
+  facebookMessenger: "/icons/facebook-messenger.svg",
+  instagram: "/icons/instagram.svg",
+  zalo: "/icons/zalo.svg",
+  tiktok: "/icons/tiktok.svg",
+  shopee: "/icons/shopee.svg",
+  telegram: "/icons/telegram.svg",
+  apiChannel: "/icons/api-channel.svg",
+  websiteWidget: "/icons/website-widget.svg",
+  whatsapp: "/icons/whatsapp.svg",
+} as const;
+
 const ICON_BY_TYPE: Record<AccountType, { src: string; label: string }> = {
-  FACEBOOK_ACCOUNT: { src: "/icons/facebook-messenger.svg", label: "Facebook" },
-  FACEBOOK_PAGE: { src: "/icons/facebook-messenger.svg", label: "Facebook" },
-  INSTAGRAM_ACCOUNT: { src: "/icons/instagram.svg", label: "Instagram" },
-  INSTAGRAM_PAGE: { src: "/icons/instagram.svg", label: "Instagram" },
-  ZALO_ACCOUNT: { src: "/icons/zalo.svg", label: "Zalo" },
-  ZALO_PAGE: { src: "/icons/zalo.svg", label: "Zalo" },
-  TIKTOK_SHOP: { src: "/icons/tiktok.svg", label: "TikTok" },
-  SHOPEE_SHOP: { src: "/icons/shopee.svg", label: "Shopee" },
-  TELEGRAM_BOT: { src: "/icons/telegram.svg", label: "Telegram" },
-  API_CHANNEL: { src: "/icons/api-channel.svg", label: "API" },
-  WEBSITE_WIDGET: { src: "/icons/website-widget.svg", label: "Website" },
-  WHATSAPP_BUSINESS: { src: "/icons/whatsapp.svg", label: "WhatsApp" },
+  FACEBOOK_ACCOUNT: { src: PLATFORM_ICON_SRC.facebookMessenger, label: "Facebook" },
+  FACEBOOK_PAGE: { src: PLATFORM_ICON_SRC.facebookMessenger, label: "Facebook" },
+  INSTAGRAM_ACCOUNT: { src: PLATFORM_ICON_SRC.instagram, label: "Instagram" },
+  INSTAGRAM_PAGE: { src: PLATFORM_ICON_SRC.instagram, label: "Instagram" },
+  ZALO_ACCOUNT: { src: PLATFORM_ICON_SRC.zalo, label: "Zalo" },
+  ZALO_PAGE: { src: PLATFORM_ICON_SRC.zalo, label: "Zalo" },
+  TIKTOK_SHOP: { src: PLATFORM_ICON_SRC.tiktok, label: "TikTok" },
+  SHOPEE_SHOP: { src: PLATFORM_ICON_SRC.shopee, label: "Shopee" },
+  TELEGRAM_BOT: { src: PLATFORM_ICON_SRC.telegram, label: "Telegram" },
+  API_CHANNEL: { src: PLATFORM_ICON_SRC.apiChannel, label: "API" },
+  WEBSITE_WIDGET: { src: PLATFORM_ICON_SRC.websiteWidget, label: "Website" },
+  WHATSAPP_BUSINESS: { src: PLATFORM_ICON_SRC.whatsapp, label: "WhatsApp" },
 };
 
 interface PlatformIconProps extends Omit<ComponentProps<"img">, "src" | "alt"> {

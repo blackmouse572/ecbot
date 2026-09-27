@@ -24,7 +24,7 @@ const oauthLogin = vi.hoisted(() => ({
   platform: undefined as string | undefined,
   props: undefined as A,
 }));
-vi.mock("../../hook/use-oauth-login", () => ({
+vi.mock("@/hooks/use-oauth-login", () => ({
   useOAuthLogin: (platform: string, props: A) => {
     oauthLogin.platform = platform;
     oauthLogin.props = props;
@@ -108,6 +108,44 @@ describe("AccountCreateForm — link failure toast", () => {
 
     const message = errorToast.mock.calls.at(-1)?.[0] as string;
     expect(message).toContain("Invalid bot token");
+  });
+});
+
+describe("AccountCreateForm: Telegram token field", () => {
+  it("links the field's error to the input through aria-invalid and aria-describedby", async () => {
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+    await user.click(screen.getByText("Telegram"));
+
+    const tokenInput = screen.getByLabelText(
+      "accounts.create.connect.telegram.tokenLabel",
+    );
+    expect(tokenInput).toHaveAttribute("aria-invalid", "false");
+    await user.type(tokenInput, "not-a-token");
+
+    const error = await screen.findByText(
+      "accounts.create.connect.telegram.tokenInvalid",
+    );
+    expect(tokenInput).toHaveAttribute("aria-invalid", "true");
+    expect(tokenInput.getAttribute("aria-describedby")?.split(" ")).toContain(
+      error.id,
+    );
+  });
+});
+
+describe("AccountCreateForm: blocked OAuth popup", () => {
+  it("shows a translated message, never the raw popup-blocked code", async () => {
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+    await user.click(screen.getByText("Zalo"));
+
+    oauthLogin.props.onError?.("popup-blocked");
+
+    const errorToast = vi.mocked(toast.error);
+    expect(errorToast).toHaveBeenCalledWith("agentBuilder.ui.connectFailed");
+    expect(errorToast.mock.calls.flat().join(" ")).not.toContain(
+      "popup-blocked",
+    );
   });
 });
 

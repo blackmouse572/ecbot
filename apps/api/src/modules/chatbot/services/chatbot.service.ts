@@ -1,4 +1,5 @@
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
+import { ENUM_REQUEST_STATUS_CODE_ERROR } from '@app/common/request/enums/request.status-code.enum';
 import {
     IDatabaseCreateOptions,
     IDatabaseDeleteManyOptions,
@@ -8,8 +9,15 @@ import {
     IDatabaseSaveOptions,
 } from '@app/common/database/interfaces/database.interface';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
+import { AccountRepository } from '@app/modules/account/repository/repositories/account.repository';
 import { CloneChatbotRequestDto } from '../dtos/request/chatbot.clone.request.dto';
 import { IChatbotService } from '@app/modules/chatbot/interfaces/chatbot.service.interface';
+import { IChatbotLinkAccountsResult } from '@app/modules/chatbot/interfaces/chatbot.interface';
+import {
+    agentProfileSchema,
+    compilePrompt,
+    type AgentProfile,
+} from '@repo/agent-blueprint';
 import { Collection, EntityManager, FilterQuery, wrap } from '@mikro-orm/core';
 import {
     BadRequestException,
@@ -36,6 +44,14 @@ import { ChatbotCacheService } from 'src/modules/ai-cache/services/chatbot-cache
 import { RAGEntity } from 'src/modules/rag/repository/entities/rag.entity';
 import { ENUM_RAG_STATUS } from 'src/modules/rag/enums/rag.status.enum';
 
+type ChatbotCreateEntityFields = Omit<
+    ChatbotCreateRequestDto,
+    'accounts' | 'agentProfile'
+> & {
+    modelProvider: ENUM_CHATBOT_MODEL_PROVIDER;
+    agentProfile?: AgentProfile;
+};
+
 @Injectable()
 export class ChatbotService implements IChatbotService {
     private readonly logger = new Logger(ChatbotService.name);
@@ -43,7 +59,8 @@ export class ChatbotService implements IChatbotService {
     constructor(
         private readonly em: EntityManager,
         private readonly chatbotRepository: ChatbotRepository,
-        private readonly chatbotCacheService: ChatbotCacheService
+        private readonly chatbotCacheService: ChatbotCacheService,
+        private readonly accountRepository: AccountRepository
     ) {}
 
     findAll(
@@ -104,23 +121,91 @@ export class ChatbotService implements IChatbotService {
     }
 
     /**
+     * Decides what to write to agentProfile / extraInstructions /
+     * generalKnowledge. Builder bots always get a compiled prompt; a partial
+     * update never wipes their profile. Bots without a profile keep their
+     * prompt: Extra instructions carries the old text (forms prefill it), and
+     * old clients may still send generalKnowledge directly.
+     */
+    resolvePromptFields(
+        input: {
+            agentProfile?: unknown;
+            extraInstructions?: string;
+            generalKnowledge?: string;
+        },
+        existing?: {
+            agentProfile?: AgentProfile | null;
+            extraInstructions?: string | null;
+        }
+    ): {
+        agentProfile?: AgentProfile;
+        extraInstructions?: string;
+        generalKnowledge?: string;
+    } {
+        if (input.agentProfile !== undefined && input.agentProfile !== null) {
+            const parsed = agentProfileSchema.safeParse(input.agentProfile);
+            if (!parsed.success) {
+                throw new BadRequestException({
+                    statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
+                    message: 'chatbot.error.invalidAgentProfile',
+                });
+            }
+            const extra =
+                input.extraInstructions ??
+                existing?.extraInstructions ??
+                undefined;
+            return {
+                agentProfile: parsed.data,
+                ...(extra !== undefined ? { extraInstructions: extra } : {}),
+                generalKnowledge: compilePrompt(parsed.data, {
+                    extraInstructions: extra,
+                }),
+            };
+        }
+        if (existing?.agentProfile) {
+            if (input.extraInstructions === undefined) return {};
+            return {
+                extraInstructions: input.extraInstructions,
+                generalKnowledge: compilePrompt(existing.agentProfile, {
+                    extraInstructions: input.extraInstructions,
+                }),
+            };
+        }
+        if (input.extraInstructions !== undefined) {
+            return {
+                extraInstructions: input.extraInstructions,
+                generalKnowledge: input.extraInstructions,
+            };
+        }
+        return input.generalKnowledge !== undefined
+            ? { generalKnowledge: input.generalKnowledge }
+            : {};
+    }
+
+    /**
      * Builds the entity fields for a new chatbot from the create DTO,
      * deriving `modelProvider` from the OpenRouter model id prefix
      * (e.g. `anthropic/claude-sonnet-4.5` -> `anthropic`) since the
      * client no longer sends it explicitly.
      */
-    buildCreateEntity(createDto: ChatbotCreateRequestDto): Omit<
-        ChatbotCreateRequestDto,
-        'accounts'
-    > & {
-        modelProvider: ENUM_CHATBOT_MODEL_PROVIDER;
-    } {
+    buildCreateEntity(
+        createDto: ChatbotCreateRequestDto
+    ): ChatbotCreateEntityFields {
         const { accounts, ...fieldsWithoutAccounts } = createDto;
         const modelProvider = fieldsWithoutAccounts.modelTextName.split(
             '/'
         )[0] as ENUM_CHATBOT_MODEL_PROVIDER;
+        const promptFields = this.resolvePromptFields(fieldsWithoutAccounts);
 
-        return { ...fieldsWithoutAccounts, modelProvider };
+        // The spread below merges `agentProfile?: Record<string, unknown>`
+        // (the DTO) with `agentProfile?: AgentProfile` (resolvePromptFields);
+        // TS widens optional-property spreads to a union, so the assertion
+        // below just re-states the method's own declared return type.
+        return {
+            ...fieldsWithoutAccounts,
+            ...promptFields,
+            modelProvider,
+        } as ChatbotCreateEntityFields;
     }
 
     /**
@@ -150,6 +235,46 @@ export class ChatbotService implements IChatbotService {
         }
     }
 
+    /**
+     * create/update replace the whole account list and cannot report a
+     * skipped id, so an account another live chatbot owns fails the call
+     * instead of being moved. linkBatchAccounts applies the same rule but
+     * skips and reports instead.
+     */
+    private async assertAccountsNotTaken(
+        accountIds: string[],
+        chatbotId?: string
+    ): Promise<void> {
+        if (accountIds.length === 0) {
+            return;
+        }
+
+        const accounts = await this.accountRepository.find(
+            {
+                id: { $in: [...new Set(accountIds)] },
+            } as FilterQuery<AccountEntity>,
+            { populate: ['chatbot'] }
+        );
+        const taken = accounts.some(account =>
+            this.isOwnedByAnotherChatbot(account, chatbotId)
+        );
+
+        if (taken) {
+            throw new BadRequestException({
+                statusCode: ENUM_CHATBOT_STATUS_CODE_ERROR.ACCOUNTS_TAKEN,
+                message: 'chatbot.error.accountsTaken',
+            });
+        }
+    }
+
+    private isOwnedByAnotherChatbot(
+        account: AccountEntity,
+        chatbotId?: string
+    ): boolean {
+        const owner = account.chatbot;
+        return !!owner && owner.id !== chatbotId && !owner.deletedAt;
+    }
+
     async create(
         createDto: ChatbotCreateRequestDto,
         options?: IDatabaseCreateOptions & { actionBy?: string }
@@ -160,6 +285,7 @@ export class ChatbotService implements IChatbotService {
             accountIds,
             createDto.workspace
         );
+        await this.assertAccountsNotTaken(accountIds);
 
         const entityFields = this.buildCreateEntity(createDto);
 
@@ -178,6 +304,9 @@ export class ChatbotService implements IChatbotService {
                 this.em.getReference(AccountEntity, accountId)
             );
         }
+
+        // apps/ai may already hold a stale miss for this id; drop it.
+        await this.chatbotCacheService.invalidate(chatbot.id);
 
         return chatbot;
     }
@@ -204,23 +333,35 @@ export class ChatbotService implements IChatbotService {
               }
             : {};
 
-        // Handle accounts separately if provided
+        // Accounts never go through assign; the collection is touched only
+        // for a non-empty list, so `accounts: []` can never clear it.
+        const { accounts: accountIds, ...assignableFields } = updateDto;
         const hasAccountUpdates =
-            Array.isArray(updateDto.accounts) && updateDto.accounts.length > 0;
-        const { accounts: accountIds, ...fieldsWithoutAccounts } = updateDto;
-        const assignableFields = hasAccountUpdates
-            ? fieldsWithoutAccounts
-            : updateDto;
+            Array.isArray(accountIds) && accountIds.length > 0;
+
+        // Take the prompt keys out so an `undefined` from pickFields can
+        // never overwrite them; resolvePromptFields decides instead.
+        const {
+            agentProfile: _agentProfile,
+            extraInstructions: _extraInstructions,
+            generalKnowledge: _generalKnowledge,
+            ...otherFields
+        } = assignableFields;
+        const promptFields = this.resolvePromptFields(assignableFields, {
+            agentProfile: repository.agentProfile,
+            extraInstructions: repository.extraInstructions,
+        });
 
         if (hasAccountUpdates) {
             await this.assertAccountsBelongToWorkspace(
                 accountIds ?? [],
                 repository.workspace.id
             );
+            await this.assertAccountsNotTaken(accountIds ?? [], repository.id);
         }
 
         wrap(repository).assign(
-            { ...assignableFields, ...modelProviderUpdate },
+            { ...otherFields, ...promptFields, ...modelProviderUpdate },
             { em: this.chatbotRepository.getEntityManager() }
         );
 
@@ -245,7 +386,7 @@ export class ChatbotService implements IChatbotService {
         return saved;
     }
 
-    softDelete(
+    async softDelete(
         repository: ChatbotEntity,
         options?: IDatabaseSaveOptions & { actionBy?: string }
     ): Promise<ChatbotEntity> {
@@ -255,6 +396,12 @@ export class ChatbotService implements IChatbotService {
                 message: 'chatbot.error.notFound',
             });
         }
+        // Frees the deleted chatbot's channels (account.chatbot = null) in
+        // the same flush, so they can be linked to another chatbot.
+        if (!repository.accounts.isInitialized()) {
+            await repository.accounts.init();
+        }
+        repository.accounts.removeAll();
         repository.deletedAt = new Date();
         return this.chatbotRepository.save(repository, options);
     }
@@ -358,11 +505,19 @@ export class ChatbotService implements IChatbotService {
         return true;
     }
 
+    /**
+     * Links accounts to this chatbot, refusing to move one that already
+     * belongs to a different chatbot instead of silently reassigning it.
+     * `syncAccount` upserts by `externalId`, so a client (an OAuth/Telegram
+     * link response, or a stale "Use an existing channel" list) can be
+     * handed an id it does not actually own. create/update refuse the same
+     * ids through assertAccountsNotTaken.
+     */
     async linkBatchAccounts(
         chatbot: ChatbotEntity,
         accountIds: string[],
         options?: IDatabaseSaveOptions & { actionBy?: string }
-    ): Promise<ChatbotEntity> {
+    ): Promise<IChatbotLinkAccountsResult> {
         await this.assertAccountsBelongToWorkspace(
             accountIds,
             chatbot.workspace.id
@@ -379,20 +534,49 @@ export class ChatbotService implements IChatbotService {
         }
 
         const existingIds = chatbot.accounts.getItems().map(acc => acc.id);
-        const newAccountIds = accountIds.filter(
-            id => !existingIds.includes(id)
-        );
+        const uniqueIds = Array.from(new Set(accountIds));
 
-        if (newAccountIds.length > 0) {
-            newAccountIds.forEach(accountId => {
-                chatbot.accounts.add(
-                    this.em.getReference(AccountEntity, accountId)
-                );
-            });
-            return this.chatbotRepository.save(chatbot, options);
+        // Loaded fresh from the database (never trusted from the client),
+        // scoped to this chatbot's own workspace.
+        // The owner chatbot is populated so a soft-deleted owner (whose
+        // accounts were never unlinked) counts as free.
+        const accounts = await this.accountRepository.find(
+            {
+                id: { $in: uniqueIds },
+                workspace: chatbot.workspace.id,
+            } as FilterQuery<AccountEntity>,
+            { populate: ['chatbot'] }
+        );
+        const accountById = new Map(accounts.map(acc => [acc.id, acc]));
+
+        const linked: string[] = [];
+        const skipped: IChatbotLinkAccountsResult['skipped'] = [];
+        let changed = false;
+
+        for (const id of uniqueIds) {
+            const account = accountById.get(id);
+            // Unreachable after the workspace assert above; kept as a guard.
+            if (!account) {
+                continue;
+            }
+
+            if (this.isOwnedByAnotherChatbot(account, chatbot.id)) {
+                skipped.push({ id: account.id, name: account.name });
+                continue;
+            }
+
+            if (!existingIds.includes(id)) {
+                chatbot.accounts.add(account);
+                changed = true;
+            }
+            linked.push(id);
         }
 
-        return chatbot;
+        if (changed) {
+            await this.chatbotRepository.save(chatbot, options);
+        }
+
+        return { linked, skipped };
     }
 
     async unlinkBatchAccounts(
@@ -452,6 +636,8 @@ export class ChatbotService implements IChatbotService {
             name: cloneName,
             avatar: cloneAvatar,
             generalKnowledge: source.generalKnowledge,
+            agentProfile: source.agentProfile,
+            extraInstructions: source.extraInstructions,
             workspace: em.getReference(WorkspaceEntity, workspaceId),
             typingIndicator: source.typingIndicator,
             autoRead: source.autoRead,

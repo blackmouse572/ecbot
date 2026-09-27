@@ -23,6 +23,7 @@ import { ChatbotLinkAccountRequestDto } from '../dtos/request/chatbot.link-accou
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
 import { ChatbotCreateResponseDto } from '../dtos/response/chatbot.create.response.dto';
 import { ChatbotGetDetailResponseDto } from '../dtos/response/chatbot.detail.response.dto';
+import { ChatbotLinkAccountResponseDto } from '../dtos/response/chatbot.link-account.response.dto';
 import { ChatbotListResponseDto } from '../dtos/response/chatbot.list.response.dto';
 import { ChatbotModelResponseDto } from '../dtos/response/chatbot.model.response.dto';
 import { ChatbotShareLinkRequestDto } from '../dtos/request/chatbot.share-link.request.dto';
@@ -259,7 +260,11 @@ export function ChatbotUnarchiveDoc(): MethodDecorator {
 
 export function ChatbotLinkAccountDoc(): MethodDecorator {
     return applyDecorators(
-        Doc({ summary: 'link an account to chatbot' }),
+        Doc({
+            summary: 'link an account to chatbot',
+            description:
+                'Links each requested account id, unless it already belongs to a different chatbot: those are refused (never moved) and reported back under `skipped`.',
+        }),
         DocRequest({
             params: ChatbotDocParamsId,
             dto: ChatbotLinkAccountRequestDto,
@@ -267,7 +272,8 @@ export function ChatbotLinkAccountDoc(): MethodDecorator {
         }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
         DocGuard({ policy: true }),
-        DocResponse<boolean>('chatbot.linkAccount', {
+        DocResponse<ChatbotLinkAccountResponseDto>('chatbot.linkAccount', {
+            dto: ChatbotLinkAccountResponseDto,
             httpStatus: HttpStatus.OK,
         })
     );

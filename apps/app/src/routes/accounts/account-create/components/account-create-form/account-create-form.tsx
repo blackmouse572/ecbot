@@ -1,7 +1,14 @@
+import { IssuedPanel } from "@/components/account-connect/issued-panel";
+import type { Issued } from "@/components/account-connect/issued";
+import {
+  TELEGRAM_TOKEN_PATTERN,
+  TelegramTokenField,
+} from "@/components/channel-connect/telegram-token-field";
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { getAvatarFallback } from "@/components/utils/avatar-fallback";
 import { KeyboundForm } from "@/components/utils/keybound-form";
 import { useLinkAccount } from "@/hooks/api";
+import { useOAuthLogin } from "@/hooks/use-oauth-login";
 import {
   Avatar,
   Button,
@@ -9,7 +16,6 @@ import {
   Container,
   Divider,
   Heading,
-  Input,
   ProgressTabs,
   type ProgressStatus,
   StatusBadge,
@@ -22,9 +28,8 @@ import { Form } from "@repo/ui/common-components";
 import { useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useOAuthLogin } from "../../hook/use-oauth-login";
-import { IssuedPanel, ProvisionStep } from "./provision-step";
-import { isProvisionedPlatform, type Issued } from "./provisioned-platforms";
+import { ProvisionStep } from "./provision-step";
+import { isProvisionedPlatform } from "./provisioned-platforms";
 import { WhatsAppCredentialFields } from "./whatsapp-credential-fields";
 
 // ─── Step definitions ────────────────────────────────────────────────────────
@@ -402,7 +407,13 @@ function ConnectStep({
 
   const { handleLinkClick } = useOAuthLogin(platform, {
     onSuccess: onOAuthSuccess,
-    onError: (err) => toast.error(t("accounts.link.error", { error: err })),
+    // A blocked popup reports a raw code; show a translated message instead.
+    onError: (err) =>
+      toast.error(
+        err === "popup-blocked"
+          ? t("agentBuilder.ui.connectFailed")
+          : t("accounts.link.error", { error: err }),
+      ),
   });
 
   const handleManualConnect = form.handleSubmit((values) => {
@@ -442,30 +453,18 @@ function ConnectStep({
             rules={{
               required: t("accounts.create.connect.telegram.tokenLabel"),
               pattern: {
-                value: /^\d+:[A-Za-z0-9_-]{35,}$/,
+                value: TELEGRAM_TOKEN_PATTERN,
                 message: t("accounts.create.connect.telegram.tokenInvalid"),
               },
             }}
-            render={({ field }) => (
-              <Form.Item className="flex flex-col gap-y-2">
-                <Form.Label>
-                  {t("accounts.create.connect.telegram.tokenLabel")}
-                </Form.Label>
-                <Form.Control>
-                  <Input
-                    type="password"
-                    placeholder={t(
-                      "accounts.create.connect.telegram.tokenPlaceholder",
-                    )}
-                    autoComplete="off"
-                    {...field}
-                  />
-                </Form.Control>
-                <Text size="xsmall" className="text-ui-fg-subtle">
-                  {t("accounts.create.connect.telegram.tokenHint")}
-                </Text>
-                <Form.ErrorMessage />
-              </Form.Item>
+            render={({ field, fieldState }) => (
+              <TelegramTokenField
+                ref={field.ref}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
             )}
           />
         ) : isWhatsApp ? (

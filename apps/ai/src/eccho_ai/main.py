@@ -95,10 +95,12 @@ app.add_middleware(RequestLogicMiddleware)
 # ====================================
 from eccho_ai.modules.chat.routers import router as chat_router
 from eccho_ai.modules.customer.routers import router as customer_router
+from eccho_ai.modules.decision.routers import router as decision_router
 from eccho_ai.modules.rag.routers import router as rag_router
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(customer_router, prefix="/api")
+app.include_router(decision_router, prefix="/api")
 app.include_router(rag_router, prefix="/api")
 
 

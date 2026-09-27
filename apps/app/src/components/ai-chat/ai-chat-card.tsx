@@ -239,8 +239,10 @@ export function AIChatCard(props: AIChatCardProps) {
       >
         {heading && (
           <Header actions={renderHeaderActions}>
-            <div className="flex flex-col gap-y-0.5">
-              <Heading>{heading}</Heading>
+            <div className="flex min-w-0 flex-col gap-y-0.5">
+              <Heading className="truncate" title={heading}>
+                {heading}
+              </Heading>
               {subheading}
             </div>
           </Header>
@@ -275,7 +277,7 @@ function Header({
       {...props}
     >
       {children}
-      <div className="ml-auto flex items-center gap-x-2">
+      <div className="ml-auto flex shrink-0 items-center gap-x-2">
         {actions}
         {messages.length > 0 && (
           <Button size="small" variant="secondary" onClick={onRestart}>

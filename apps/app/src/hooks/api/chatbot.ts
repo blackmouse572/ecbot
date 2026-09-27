@@ -35,6 +35,7 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
+import { accountQueryKeys } from "./accounts";
 import { useWorkspace } from "./workspace";
 
 /** Shared by every read hook below that just forwards `useQuery`'s options. */
@@ -324,6 +325,11 @@ export const useUnlinkChatbotAccount = (chatbotId: string) => {
       queryClient.invalidateQueries({
         queryKey: chatbotQueryKeys.lists(),
       });
+      // The unlinked account can now be reused elsewhere (e.g. "Use an
+      // existing channel" in the agent builder, or the accounts pages).
+      queryClient.invalidateQueries({
+        queryKey: accountQueryKeys.lists(),
+      });
     },
   });
 };
@@ -344,6 +350,11 @@ export const useLinkChatbotAccount = (chatbotId: string) => {
       });
       queryClient.invalidateQueries({
         queryKey: chatbotQueryKeys.lists(),
+      });
+      // The account just linked here should stop showing under "Use an
+      // existing channel" (and anywhere else the unlinked list is shown).
+      queryClient.invalidateQueries({
+        queryKey: accountQueryKeys.lists(),
       });
     },
   });

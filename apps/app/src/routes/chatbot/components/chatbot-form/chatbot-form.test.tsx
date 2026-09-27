@@ -2,6 +2,7 @@ import { useChatbotModels } from "@/hooks/api/chatbot";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FormProvider } from "react-hook-form";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CHATBOT_FORM_DEFAULTS } from "../../constants";
 import { ChatbotForm } from "./chatbot-form";
@@ -88,10 +89,22 @@ const baseProps = {
   submitText: "Create",
   cancelText: "Cancel",
   nameLabel: "Name",
-  generalKnowledgeLabel: "General knowledge",
-  generalKnowledgePlaceholder: "placeholder",
   typeLabel: "Type",
 };
+
+const renderForm = (
+  extra: Partial<React.ComponentProps<typeof ChatbotForm>> = {},
+) =>
+  render(
+    <MemoryRouter>
+      <ChatbotForm
+        defaultValues={CHATBOT_FORM_DEFAULTS}
+        onSubmit={vi.fn()}
+        {...baseProps}
+        {...extra}
+      />
+    </MemoryRouter>,
+  );
 
 describe("ChatbotForm model select", () => {
   beforeEach(() => {
@@ -125,7 +138,7 @@ describe("ChatbotForm model select", () => {
     } as A);
 
     const user = userEvent.setup({ pointerEventsCheck: 0 });
-    render(<ChatbotForm {...baseProps} onSubmit={vi.fn()} />);
+    renderForm();
 
     // The standalone "AI Provider" select is gone.
     expect(screen.queryByText("AI Provider")).not.toBeInTheDocument();
@@ -151,7 +164,7 @@ describe("ChatbotForm model select", () => {
     } as A);
 
     const user = userEvent.setup({ pointerEventsCheck: 0 });
-    render(<ChatbotForm {...baseProps} onSubmit={vi.fn()} />);
+    renderForm();
 
     const combos = screen.getAllByRole("combobox");
     await user.click(combos[combos.length - 1]);
@@ -174,13 +187,7 @@ describe("ChatbotForm model select", () => {
 
     const onSubmit = vi.fn(async () => {});
     const user = userEvent.setup({ pointerEventsCheck: 0 });
-    render(
-      <ChatbotForm
-        {...baseProps}
-        onSubmit={onSubmit}
-        defaultValues={CHATBOT_FORM_DEFAULTS}
-      />,
-    );
+    renderForm({ onSubmit });
 
     await user.type(
       screen.getByPlaceholderText("Enter chatbot name"),
@@ -234,5 +241,22 @@ describe("ChatbotForm model select", () => {
       ),
     );
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  // `t()` resolves against the real i18next instance in this test file (it
+  // is initialized as a side effect of importing `CHATBOT_FORM_DEFAULTS`
+  // from "../../constants", which imports "@/i18n"), so assertions target
+  // the actual English copy for these keys rather than the raw key names.
+  it("shows Extra instructions instead of a General knowledge editor", () => {
+    renderForm();
+    expect(screen.getByLabelText("Extra instructions")).toBeInTheDocument();
+    expect(screen.queryByText("General knowledge")).not.toBeInTheDocument();
+  });
+
+  it("links to the builder when a builder link is given", () => {
+    renderForm({ builderHref: "/ws/chatbot/create?chatbotId=c1" });
+    expect(
+      screen.getByRole("link", { name: "Edit with builder" }),
+    ).toHaveAttribute("href", "/ws/chatbot/create?chatbotId=c1");
   });
 });

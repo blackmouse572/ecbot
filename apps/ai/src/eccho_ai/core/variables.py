@@ -108,6 +108,8 @@ class _AppVars(BaseSettings):
     GUARDRAIL_MODEL: str = "google/gemini-2.5-flash"
     CLASSIFIER_MODEL: str = "google/gemini-2.5-flash"
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
+    # OpenRouter model that answers agent-builder decisions (System One-shaped).
+    DECISION_MODEL: str = "google/gemini-2.5-flash"
     # Describes inbound customer images (must accept image input).
     VISION_MODEL: str = "google/gemini-2.5-flash"
     # Images one burst can have described (a Telegram album or Messenger

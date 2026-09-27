@@ -116,6 +116,11 @@
       "cache": false,
       "persistent": true
     },
+    "api#dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["@repo/agent-blueprint#build"]
+    },
     "test": {
       "cache": false,
       "persistent": true,

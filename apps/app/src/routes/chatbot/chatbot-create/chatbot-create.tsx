@@ -1,10 +1,10 @@
 import { RouteFocusModal } from "@/components/modals";
-import { ChatbotCreateForm } from "./components";
+import { AgentBuilder } from "./agent-builder/agent-builder";
 
 export function ChatbotCreate() {
   return (
     <RouteFocusModal>
-      <ChatbotCreateForm />
+      <AgentBuilder />
     </RouteFocusModal>
   );
 }

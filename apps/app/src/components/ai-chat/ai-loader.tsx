@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import React, { useEffect, useState } from "react";
 
 interface AiAssistantLoadingProps {
@@ -113,14 +113,17 @@ const colorMap = {
 
 export function AiAssistantLoading() {
   const [currentPattern, setCurrentPattern] = useState(0);
+  const reduceMotion = useReducedMotion();
 
+  // Reduced motion: a static frame (the first pattern), no cycling.
   useEffect(() => {
+    if (reduceMotion) return;
     const interval = setInterval(() => {
       setCurrentPattern((prev) => (prev + 1) % patterns.length);
     }, 800);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [reduceMotion]);
 
   const allPositions = [];
   for (let row = 1; row <= 4; row++) {

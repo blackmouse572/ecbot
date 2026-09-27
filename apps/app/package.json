@@ -24,6 +24,7 @@
     "@hookform/resolvers": "5.9.1",
     "@medusajs/icons": "^2.21.1",
     "@medusajs/ui": "^4.2.5",
+    "@repo/agent-blueprint": "workspace:*",
     "@tabler/icons-react": "^3.48.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-hotkeys": "^0.10.0",

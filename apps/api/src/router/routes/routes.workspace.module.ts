@@ -1,6 +1,8 @@
 import { CommonModule } from '@app/common/common.module';
 import { AccountModule } from '@app/modules/account/account.module';
 import { ActivityWorkspaceController } from '@app/modules/activity/controllers/activity.workspace.controller';
+import { AgentBuilderModule } from '@app/modules/agent-builder/agent-builder.module';
+import { AgentBuilderWorkspaceController } from '@app/modules/agent-builder/controllers/agent-builder.workspace.controller';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { ClientCredentialModule } from '@app/modules/client-credential/client-credential.module';
 import { ClientCredentialWorkspaceController } from '@app/modules/client-credential/controllers/client-credential.workspace.controller';
@@ -57,6 +59,7 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
     controllers: [
         RoleWorkspaceController,
         ActivityWorkspaceController,
+        AgentBuilderWorkspaceController,
         InvitationWorkspaceController,
         RAGWorkspaceController,
         KnowledgeBaseWorkspaceController,
@@ -110,6 +113,7 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         NavCountModule,
         PlatformModule,
         ChatbotRepositoryModule,
+        AgentBuilderModule,
     ],
 })
 export class RoutesWorkspaceModule {}

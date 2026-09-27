@@ -73,7 +73,7 @@ export const BubbleContent = ({
       : variantSurface[variant];
 
   const classes = clx(
-    "min-w-0 overflow-hidden text-sm leading-relaxed",
+    "min-w-0 overflow-hidden break-words text-sm leading-relaxed",
     isGhost
       ? "w-full max-w-full"
       : clx(

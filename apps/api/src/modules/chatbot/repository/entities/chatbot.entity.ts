@@ -1,4 +1,5 @@
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
+import type { AgentProfile } from '@repo/agent-blueprint';
 import {
     BigIntType,
     Collection,
@@ -30,6 +31,13 @@ export class ChatbotEntity extends DatabaseEntityBase {
 
     @Property({ type: 'text', nullable: true })
     generalKnowledge?: string;
+
+    // Agent builder answers. When set, generalKnowledge is compiled from it.
+    @Property({ type: 'jsonb', nullable: true })
+    agentProfile?: AgentProfile;
+
+    @Property({ type: 'text', nullable: true })
+    extraInstructions?: string;
 
     @ManyToOne(() => WorkspaceEntity)
     workspace: WorkspaceEntity;
