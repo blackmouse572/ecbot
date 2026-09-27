@@ -235,6 +235,46 @@ export class ChatbotService implements IChatbotService {
         }
     }
 
+    /**
+     * create/update replace the whole account list and cannot report a
+     * skipped id, so an account another live chatbot owns fails the call
+     * instead of being moved. linkBatchAccounts applies the same rule but
+     * skips and reports instead.
+     */
+    private async assertAccountsNotTaken(
+        accountIds: string[],
+        chatbotId?: string
+    ): Promise<void> {
+        if (accountIds.length === 0) {
+            return;
+        }
+
+        const accounts = await this.accountRepository.find(
+            {
+                id: { $in: [...new Set(accountIds)] },
+            } as FilterQuery<AccountEntity>,
+            { populate: ['chatbot'] }
+        );
+        const taken = accounts.some(account =>
+            this.isOwnedByAnotherChatbot(account, chatbotId)
+        );
+
+        if (taken) {
+            throw new BadRequestException({
+                statusCode: ENUM_CHATBOT_STATUS_CODE_ERROR.ACCOUNTS_TAKEN,
+                message: 'chatbot.error.accountsTaken',
+            });
+        }
+    }
+
+    private isOwnedByAnotherChatbot(
+        account: AccountEntity,
+        chatbotId?: string
+    ): boolean {
+        const owner = account.chatbot;
+        return !!owner && owner.id !== chatbotId && !owner.deletedAt;
+    }
+
     async create(
         createDto: ChatbotCreateRequestDto,
         options?: IDatabaseCreateOptions & { actionBy?: string }
@@ -245,6 +285,7 @@ export class ChatbotService implements IChatbotService {
             accountIds,
             createDto.workspace
         );
+        await this.assertAccountsNotTaken(accountIds);
 
         const entityFields = this.buildCreateEntity(createDto);
 
@@ -316,6 +357,7 @@ export class ChatbotService implements IChatbotService {
                 accountIds ?? [],
                 repository.workspace.id
             );
+            await this.assertAccountsNotTaken(accountIds ?? [], repository.id);
         }
 
         wrap(repository).assign(
@@ -468,8 +510,8 @@ export class ChatbotService implements IChatbotService {
      * belongs to a different chatbot instead of silently reassigning it.
      * `syncAccount` upserts by `externalId`, so a client (an OAuth/Telegram
      * link response, or a stale "Use an existing channel" list) can be
-     * handed an id it does not actually own; this is the one place that
-     * enforces ownership before the collection is mutated.
+     * handed an id it does not actually own. create/update refuse the same
+     * ids through assertAccountsNotTaken.
      */
     async linkBatchAccounts(
         chatbot: ChatbotEntity,
@@ -518,8 +560,7 @@ export class ChatbotService implements IChatbotService {
                 continue;
             }
 
-            const owner = account.chatbot;
-            if (owner && owner.id !== chatbot.id && !owner.deletedAt) {
+            if (this.isOwnedByAnotherChatbot(account, chatbot.id)) {
                 skipped.push({ id: account.id, name: account.name });
                 continue;
             }
