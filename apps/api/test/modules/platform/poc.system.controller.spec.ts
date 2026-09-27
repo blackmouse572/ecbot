@@ -1,5 +1,9 @@
 import { NotImplementedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import {
+    REQUEST_CUSTOM_TIMEOUT_META_KEY,
+    REQUEST_CUSTOM_TIMEOUT_VALUE_META_KEY,
+} from '../../../src/common/request/constants/request.constant';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { PocSystemController } from '../../../src/modules/platform/controllers/poc.system.controller';
 import { PlatformAdapterRegistry } from '../../../src/modules/platform/services/platform-adapter.registry';
@@ -121,5 +125,16 @@ describe('PocSystemController.inbound', () => {
             contactPointId: 'cp',
             texts: ['a', 'b'],
         });
+    });
+
+    it('allows a full agent turn on the reply endpoint', () => {
+        const handler = PocSystemController.prototype.reply;
+
+        expect(
+            Reflect.getMetadata(REQUEST_CUSTOM_TIMEOUT_META_KEY, handler)
+        ).toBe(true);
+        expect(
+            Reflect.getMetadata(REQUEST_CUSTOM_TIMEOUT_VALUE_META_KEY, handler)
+        ).toBe('300s');
     });
 });
