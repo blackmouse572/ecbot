@@ -242,8 +242,9 @@
           "submit": "Send reset code",
           "backToLogin": "Remembered it? <0>Login</0>"
         },
-        "errors": {
-          "requestFailed": "Could not start a password reset for that email."
+        "checkEmail": {
+          "title": "Check your email",
+          "description": "If an account exists for that email, we've sent a link and code to reset your password."
         }
       },
       "resetPassword": {
@@ -394,6 +395,7 @@
       "description": "Connect to your Facebook account and pages, select the pages you want to manage.",
       "acceptTerms": "By linking your account, you agree to our terms of service and privacy policy.",
       "error": "An error occurred while linking your account. {{error}}",
+      "invalidState": "This connection attempt could not be verified. Please try linking your account again.",
       "success": {
         "title": "Account Linked",
         "description": "Your account has been successfully linked.",

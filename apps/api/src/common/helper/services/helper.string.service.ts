@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomInt } from 'node:crypto';
 import {
     IHelperEmailValidation,
     IHelperStringPasswordOptions,
@@ -21,9 +22,7 @@ export class HelperStringService implements IHelperStringService {
 
         let counter = 0;
         while (counter < length) {
-            result += characters.charAt(
-                Math.floor(Math.random() * characters.length)
-            );
+            result += characters.charAt(randomInt(0, characters.length));
 
             counter += 1;
         }

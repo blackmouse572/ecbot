@@ -21,6 +21,7 @@
         "notFound": "Xin lỗi, chúng tôi không tìm thấy người dùng bạn yêu cầu. Họ có thể đã biến mất!",
         "statusInvalid": "Trạng thái người dùng không hợp lệ.",
         "usernameExist": "Tên người dùng này đã được sử dụng rồi. Hãy nghĩ ra cái tên độc đáo hơn!",
-        "emailNotVerified": "Email chưa được xác minh. Kiểm tra hộp thư xem?"
+        "emailNotVerified": "Email chưa được xác minh. Kiểm tra hộp thư xem?",
+        "photoKeyInvalid": "Key ảnh này không thuộc về bạn."
     }
 }

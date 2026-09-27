@@ -1,4 +1,5 @@
 import { env } from "../env";
+import { timingSafeEqual } from "../timing-safe-equal";
 import type { ChallengeVerifier } from "./challenge-verifier";
 
 // Mirrors apps/api's verifyMetaChallenge() (Messenger and WhatsApp share one
@@ -11,7 +12,11 @@ export const facebookChallengeVerifier: ChallengeVerifier = {
     const mode = url.searchParams.get("hub.mode");
     const token = url.searchParams.get("hub.verify_token");
     const challenge = url.searchParams.get("hub.challenge");
-    if (mode === "subscribe" && token === env.FACEBOOK_WEBHOOK_SECRET) {
+    if (
+      mode === "subscribe" &&
+      token !== null &&
+      timingSafeEqual(token, env.FACEBOOK_WEBHOOK_SECRET)
+    ) {
       return new Response(challenge ?? "", { status: 200 });
     }
     return new Response("Forbidden", { status: 403 });

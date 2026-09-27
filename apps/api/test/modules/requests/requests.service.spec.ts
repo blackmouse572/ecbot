@@ -59,6 +59,21 @@ describe('RequestService', () => {
         });
     });
 
+    describe('approve', () => {
+        it('looks up the request scoped to the workspace and 404s when absent', async () => {
+            mockRepo.findOne.mockResolvedValue(null);
+
+            await expect(service.approve('req-1', workspace)).rejects.toThrow(
+                'requests.error.notFound'
+            );
+
+            expect(mockRepo.findOne).toHaveBeenCalledWith({
+                id: 'req-1',
+                workspace: workspace.id,
+            });
+        });
+    });
+
     describe('mapList', () => {
         it('exposes only the whitelisted request + requester fields', () => {
             const createdAt = new Date('2026-01-01T00:00:00.000Z');

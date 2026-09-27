@@ -415,11 +415,14 @@ async def cancel_followup(followup_id: str) -> dict[str, Any]:
     """Cancel a pending follow-up by its id (from list_pending_followups) once
     its need has been met, so it does not disturb the user."""
     ctx = _get_followup_context()
-    if not ctx:
+    if not ctx or not ctx.get("conversation_id"):
         _log_call("cancel_followup", _truncate(followup_id), "no_context", 0)
         return {"error": "no conversation context"}
     try:
-        result = await ApiClient.get_instance().delete(f"/system/followups/{followup_id}")
+        result = await ApiClient.get_instance().delete(
+            f"/system/followups/{followup_id}",
+            params={"conversationId": ctx["conversation_id"]},
+        )
         return result if isinstance(result, dict) else {"cancelled": True}
     except ApiClientError as exc:
         return {"error": str(exc)}

@@ -242,8 +242,9 @@
           "submit": "Gửi mã đặt lại",
           "backToLogin": "Đã nhớ ra rồi? <0>Đăng nhập</0>"
         },
-        "errors": {
-          "requestFailed": "Không thể bắt đầu đặt lại mật khẩu cho email này."
+        "checkEmail": {
+          "title": "Kiểm tra email của bạn",
+          "description": "Nếu email này có tài khoản, chúng tôi đã gửi liên kết và mã để đặt lại mật khẩu."
         }
       },
       "resetPassword": {
@@ -422,6 +423,7 @@
       "description": "Kết nối với tài khoản và trang Facebook của bạn, chọn các trang bạn muốn quản lý. Dễ như ăn bánh! 🍰",
       "acceptTerms": "Bằng cách liên kết tài khoản của bạn, bạn đồng ý với các điều khoản dịch vụ và chính sách quyền riêng tư của chúng tôi.",
       "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}} (Đừng lo, chúng ta sẽ sửa nó!)",
+      "invalidState": "Không thể xác minh yêu cầu liên kết này. Vui lòng thử liên kết tài khoản lại nhé!",
       "success": {
         "title": "Liên kết tài khoản thành công! 🎊",
         "description": "Tài khoản của bạn đã được liên kết thành công.",

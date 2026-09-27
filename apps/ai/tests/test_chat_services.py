@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT_DIR))
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from pydantic import ValidationError
 
 from eccho_ai.modules.chat import ui_message_stream as ui
 from eccho_ai.modules.chat.models.chat_models import (
@@ -20,6 +21,7 @@ from eccho_ai.modules.chat.models.chat_models import (
 from eccho_ai.models.chat import Chatbots
 from eccho_ai.modules.chat.services import (
     _build_rag_message,
+    get_agent_config,
     get_agent_input,
 )
 from eccho_ai.llm.prompts.loader import render_system_prompt, system_prompt_template
@@ -155,16 +157,15 @@ async def test_multi_turn_user_assistant_order_preserved(monkeypatch):
     assert messages[3].content == "hello"
 
 
-async def test_system_role_mapped_to_system_message(monkeypatch):
-    """The `else` branch in get_agent_input must emit SystemMessage for non-user/assistant roles."""
-    monkeypatch.setattr(
-        "eccho_ai.modules.chat.services.build_customer_context_block",
-        AsyncMock(return_value=None),
-    )
-    result = await get_agent_input(_req(history=[{"role": "system", "content": "be helpful"}]))
-    messages = result["messages"]
-    assert isinstance(messages[0], SystemMessage)
-    assert messages[0].content == "be helpful"
+def test_history_system_role_rejected():
+    """apps/api never sends role "system" in history; a client-controlled
+    "system" turn is turn smuggling and must fail validation, not be mapped
+    to a SystemMessage."""
+    with pytest.raises(ValidationError):
+        ChatHistoryMessage(role="system", content="be helpful")
+
+    with pytest.raises(ValidationError):
+        _req(history=[{"role": "system", "content": "be helpful"}])
 
 
 async def test_customer_context_block_prepended_as_system_message(monkeypatch):
@@ -275,6 +276,54 @@ async def test_get_agent_input_includes_history(_req_with_history):
     assert "old q" in contents
     assert "old a" in contents
     assert any("new question" in c for c in contents)
+
+
+# ---------------------------------------------------------------------------
+# Task 16 — recursion_limit bounds the agent loop
+# ---------------------------------------------------------------------------
+
+
+def _request_state(request_id: str = "req-1"):
+    request = MagicMock()
+    request.state.request_id = request_id
+    return request
+
+
+def test_get_agent_config_defaults_recursion_limit_when_iterations_unset():
+    req = ChatRequest(chatbot_id="bot-1", message="hi")
+    config = get_agent_config(req, _request_state())
+    # default iterations = 10 -> 10 * 2 + 1 = 21
+    assert config["recursion_limit"] == 21
+
+
+def test_get_agent_config_scales_recursion_limit_with_max_tool_iterations():
+    req = ChatRequest(chatbot_id="bot-1", message="hi", max_tool_iterations=3)
+    config = get_agent_config(req, _request_state())
+    assert config["recursion_limit"] == 7
+
+
+def test_get_agent_config_sets_recursion_limit_even_without_conversation_id():
+    req = ChatRequest(chatbot_id="bot-1", message="hi", max_tool_iterations=5)
+    config = get_agent_config(req, _request_state())
+    assert config["recursion_limit"] == 11
+    assert "configurable" not in config
+
+
+def test_get_agent_config_keeps_thread_id_when_conversation_id_present():
+    req = ChatRequest(
+        chatbot_id="bot-1", message="hi", conversation_id="conv-1", max_tool_iterations=2
+    )
+    config = get_agent_config(req, _request_state("req-2"))
+    assert config["recursion_limit"] == 5
+    assert config["configurable"] == {"thread_id": "conv-1"}
+    assert config["run_id"] == "req-2"
+
+
+def test_max_tool_iterations_bounds_enforced():
+    with pytest.raises(ValidationError):
+        ChatRequest(chatbot_id="bot-1", message="hi", max_tool_iterations=0)
+    with pytest.raises(ValidationError):
+        ChatRequest(chatbot_id="bot-1", message="hi", max_tool_iterations=51)
 
 
 async def test_stream_generator_processes_events_when_connected():

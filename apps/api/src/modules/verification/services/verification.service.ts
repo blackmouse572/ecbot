@@ -1,3 +1,4 @@
+import { raw } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Duration } from 'luxon';
@@ -27,6 +28,11 @@ export class VerificationService implements IVerificationService {
 
     private readonly referenceLength: number;
     private readonly referencePrefix: string;
+
+    // Failed OTP attempts allowed on /verify/email before the row is
+    // locked (isActive=false) and ATTEMPT_MAX is thrown. Mirrors
+    // ResetPasswordService.maxOtpAttempt.
+    private readonly maxOtpAttempt = 5;
 
     constructor(
         private readonly verificationRepository: VerificationRepository,
@@ -179,6 +185,32 @@ export class VerificationService implements IVerificationService {
         );
     }
 
+    // Binds a /resend/email or /verify/email request to the caller's own
+    // user id, not just the `to` email address — otherwise a request
+    // carrying an arbitrary `id` plus a known/guessed email could match
+    // another user's verification row. Also enforces isActive/expiredDate
+    // so an inactivated or stale row is never matched.
+    async findOneActiveLatestEmailByUser(
+        user: string,
+        email: string,
+        options?: IDatabaseFindOneOptions
+    ): Promise<VerificationEntity> {
+        return this.verificationRepository.findOne<VerificationEntity>(
+            {
+                user,
+                to: email,
+                isActive: true,
+                expiredDate: {
+                    $gte: this.helperDateService.create(),
+                },
+            },
+            {
+                ...options,
+                order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC },
+            }
+        );
+    }
+
     validateOtp(verification: VerificationEntity, otp: string): boolean {
         return verification.otp === otp;
     }
@@ -192,6 +224,37 @@ export class VerificationService implements IVerificationService {
         repository.verifyDate = this.helperDateService.create();
 
         return this.verificationRepository.save(repository, options);
+    }
+
+    async incrementOtpAttempt(
+        repository: VerificationEntity,
+        options?: IDatabaseSaveOptions
+    ): Promise<VerificationEntity> {
+        const nextAttempt = repository.otpAttempt + 1;
+        const staysActive =
+            repository.isActive && nextAttempt < this.maxOtpAttempt;
+
+        // Atomic at the DB level (`otp_attempt = otp_attempt + 1`), not a
+        // read-modify-write — concurrent wrong-OTP guesses on the same row
+        // can't race a stale in-memory count past the attempt cap. The two
+        // fields below mirror this exact SQL expression for this request's
+        // immediate branching; every later request re-reads the real
+        // (correctly atomic) DB state through the entity pipes regardless.
+        await this.verificationRepository.updateRaw(
+            { id: repository.id },
+            {
+                otpAttempt: raw('otp_attempt + 1'),
+                isActive: raw(
+                    `is_active and otp_attempt + 1 < ${this.maxOtpAttempt}`
+                ),
+            },
+            options
+        );
+
+        repository.otpAttempt = nextAttempt;
+        repository.isActive = staysActive;
+
+        return repository;
     }
 
     async inactiveEmailManyByUser(

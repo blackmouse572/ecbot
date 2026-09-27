@@ -25,6 +25,70 @@ const sign = (body: string) =>
     'sha256=' +
     createHmac('sha256', APP_SECRET).update(body, 'utf8').digest('hex');
 
+describe('MessengerPlatformAdapter.verifyChallenge', () => {
+    const makeReq = (params: Record<string, string>) =>
+        new Request(
+            `https://x/webhooks/messenger?${new URLSearchParams(params).toString()}`
+        );
+
+    it('returns 200 with the echoed challenge when the token matches', async () => {
+        const a = makeAdapter();
+        const res = a.verifyChallenge(
+            makeReq({
+                'hub.mode': 'subscribe',
+                'hub.verify_token': 'vtoken',
+                'hub.challenge': '123456',
+            })
+        );
+        expect(res?.status).toBe(200);
+        expect(await res?.text()).toBe('123456');
+    });
+
+    it('returns 403 when the token does not match', () => {
+        const a = makeAdapter();
+        const res = a.verifyChallenge(
+            makeReq({
+                'hub.mode': 'subscribe',
+                'hub.verify_token': 'wrong',
+                'hub.challenge': '123456',
+            })
+        );
+        expect(res?.status).toBe(403);
+    });
+
+    it('returns 403 when the token has a different length than expected', () => {
+        const a = makeAdapter();
+        const res = a.verifyChallenge(
+            makeReq({
+                'hub.mode': 'subscribe',
+                'hub.verify_token': 'v',
+                'hub.challenge': '123456',
+            })
+        );
+        expect(res?.status).toBe(403);
+    });
+
+    it('returns 403 when hub.mode is not subscribe', () => {
+        const a = makeAdapter();
+        const res = a.verifyChallenge(
+            makeReq({
+                'hub.mode': 'unsubscribe',
+                'hub.verify_token': 'vtoken',
+                'hub.challenge': '123456',
+            })
+        );
+        expect(res?.status).toBe(403);
+    });
+
+    it('returns null for non-GET requests', () => {
+        const a = makeAdapter();
+        const req = new Request('https://x/webhooks/messenger', {
+            method: 'POST',
+        });
+        expect(a.verifyChallenge(req)).toBeNull();
+    });
+});
+
 describe('MessengerPlatformAdapter.verifySignature', () => {
     it('accepts a correct signature', () => {
         const a = makeAdapter();

@@ -28,7 +28,8 @@
         "success": "Thực thi công cụ thành công",
         "error": {
             "notFound": "Không tìm thấy công cụ",
-            "executionFailed": "Thực thi công cụ thất bại"
+            "executionFailed": "Thực thi công cụ thất bại",
+            "notLinked": "Công cụ chưa được bật cho chatbot này"
         }
     },
     "enable": {

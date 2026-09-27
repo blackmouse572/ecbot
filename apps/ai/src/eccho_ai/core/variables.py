@@ -39,6 +39,9 @@ class _AppVars(BaseSettings):
     FIRECRAWL_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    # Bounds a single chat-model call (the chatbot's own model, via build_chat_model)
+    # so a hung upstream can't hang the agent loop indefinitely.
+    CHAT_MODEL_TIMEOUT_SECONDS: float = 60.0
 
     # Postgres - required
     POSTGRES_URL: SecretStr
@@ -48,6 +51,11 @@ class _AppVars(BaseSettings):
     AI_SERVICE_API_KEY: SecretStr = Field(default=SecretStr(""))
     AI_SERVICE_API_SECRET: SecretStr = Field(default=SecretStr(""))
     API_BASE_URL: str = Field(default="http://localhost:3000")
+
+    # Shared secret checked on every inbound apps/api -> apps/ai call
+    # (`X-Internal-Token`, see `core/security.py`). Must match apps/api's own
+    # API_INTERNAL_TOKEN. Empty means the service fails closed (503).
+    API_INTERNAL_TOKEN: SecretStr = Field(default=SecretStr(""))
 
     # Langsmith tracing - optional
     LANGSMITH_TRACING: bool = Field(default=False)
