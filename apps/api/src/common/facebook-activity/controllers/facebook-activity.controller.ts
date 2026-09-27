@@ -20,14 +20,15 @@ import { ActivityFilter } from '../interfaces/facebook-activity.service.interfac
 import { FacebookActivityService } from '../services/facebook-activity.service';
 
 /**
- * Guard stack the three listings share, written in the order Nest applies the
- * guards, which is the order the separate decorators produced.
+ * Guard stack the three listings share. applyDecorators applies in array
+ * order and each UseGuards appends, so this is the order the guards run:
+ * UserGuard reads request.user, which AuthJwtAccessGuard sets.
  */
 function SystemAdminProtected(): MethodDecorator {
     const guards = [
-        UserProtected(),
-        AuthJwtAccessProtected(),
         ApiKeySystemProtected(),
+        AuthJwtAccessProtected(),
+        UserProtected(),
         PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN),
     ];
 
