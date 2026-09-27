@@ -3,7 +3,9 @@ import { ChatbotCreateRequestDto } from './chatbot.create.request.dto';
 
 // Every create field is editable except `workspace`, which the controller
 // sets from the route param rather than the request body. All optional:
-// the update writes only the keys the body sends.
+// the update writes only the keys the body sends. skipNullProperties: false
+// makes a missing key optional without letting null past a required field.
 export class ChatbotUpdateRequestDto extends PartialType(
-    OmitType(ChatbotCreateRequestDto, ['workspace'] as const)
+    OmitType(ChatbotCreateRequestDto, ['workspace'] as const),
+    { skipNullProperties: false }
 ) {}

@@ -55,6 +55,7 @@ The `/common/request/validations/` directory contains custom validators for comp
 | `@GreaterThanEqualOtherProperty()` | Validates that a value is greater than or equal to another property | `request.greater-than-other-property.validation.ts` |
 | `@LessThanOtherProperty()`         | Validates that a value is less than another property                | `request.less-than-other-property.validation.ts`    |
 | `@LessThanEqualOtherProperty()`    | Validates that a value is less than or equal to another property    | `request.less-than-other-property.validation.ts`    |
+| `@IsOptionalNotNull()`             | Skips validation only when the value is missing; `null` still fails | `request.is-optional-not-null.validation.ts`        |
 
 Example of custom validator implementation (IsPassword):
 
