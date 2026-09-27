@@ -15,6 +15,14 @@ describe("compilePrompt", () => {
     expect(compilePrompt(sample(type))).toMatchSnapshot();
   });
 
+  // Channels are a connection setting, not something the agent acts on, so
+  // the prompt stays the same whichever channels are picked or connected.
+  it("leaves channels out of the prompt", () => {
+    const out = compilePrompt({ ...sample("beauty", "en"), channels: ["messenger", "zalo"] });
+    expect(out).not.toMatch(/reach you|Messenger|Zalo/);
+    expect(out).toBe(compilePrompt({ ...sample("beauty", "en"), channels: [] }));
+  });
+
   it("never contains an em dash for any type", () => {
     for (const t of BUSINESS_TYPES) expect(compilePrompt(sample(t.id))).not.toContain("—");
   });

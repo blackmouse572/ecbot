@@ -6,7 +6,6 @@ exports[`compilePrompt > matches the snapshot for automotive 1`] = `
 
 ## Requirements
 - Business: Lotus, a car or motorbike showroom and garage.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Book appointments: offer available times, confirm the service, date, time and contact details, then read the booking back.
@@ -54,7 +53,6 @@ exports[`compilePrompt > matches the snapshot for beauty 1`] = `
 
 ## Requirements
 - Business: Lotus, a beauty salon or spa.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Recommend the most suitable product or service after asking one or two short questions about what the customer needs.
@@ -102,7 +100,6 @@ exports[`compilePrompt > matches the snapshot for cosmetics 1`] = `
 
 ## Requirements
 - Business: Lotus, a cosmetics and skincare shop.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Recommend the most suitable product or service after asking one or two short questions about what the customer needs.
@@ -150,7 +147,6 @@ exports[`compilePrompt > matches the snapshot for ecommerce 1`] = `
 
 ## Requirements
 - Business: Lotus, an online shop.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Recommend the most suitable product or service after asking one or two short questions about what the customer needs.
@@ -199,7 +195,6 @@ exports[`compilePrompt > matches the snapshot for education 1`] = `
 
 ## Requirements
 - Business: Lotus, an education centre or online course provider.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Recommend the most suitable product or service after asking one or two short questions about what the customer needs.
@@ -247,7 +242,6 @@ exports[`compilePrompt > matches the snapshot for fashion 1`] = `
 
 ## Requirements
 - Business: Lotus, a fashion and accessories shop.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Recommend the most suitable product or service after asking one or two short questions about what the customer needs.
@@ -295,7 +289,6 @@ exports[`compilePrompt > matches the snapshot for finance 1`] = `
 
 ## Requirements
 - Business: Lotus, an insurance and finance advisory.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Qualify leads by asking about budget, timeline and needs before handing over to the team.
@@ -341,7 +334,6 @@ exports[`compilePrompt > matches the snapshot for fitness 1`] = `
 
 ## Requirements
 - Business: Lotus, a gym or fitness studio.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Book appointments: offer available times, confirm the service, date, time and contact details, then read the booking back.
@@ -389,7 +381,6 @@ exports[`compilePrompt > matches the snapshot for health_foods 1`] = `
 
 ## Requirements
 - Business: Lotus, a health foods and supplements shop.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Recommend the most suitable product or service after asking one or two short questions about what the customer needs.
@@ -435,7 +426,6 @@ exports[`compilePrompt > matches the snapshot for healthcare 1`] = `
 
 ## Requirements
 - Business: Lotus, a clinic or dental practice.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Book appointments: offer available times, confirm the service, date, time and contact details, then read the booking back.
@@ -485,7 +475,6 @@ exports[`compilePrompt > matches the snapshot for home_services 1`] = `
 
 ## Requirements
 - Business: Lotus, a home services and interior business.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Book appointments: offer available times, confirm the service, date, time and contact details, then read the booking back.
@@ -530,7 +519,6 @@ exports[`compilePrompt > matches the snapshot for hotel 1`] = `
 
 ## Requirements
 - Business: Lotus, a hotel or homestay.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Take reservations: confirm the date, time, number of guests or rooms, and contact details.
@@ -741,7 +729,6 @@ exports[`compilePrompt > matches the snapshot for real_estate 1`] = `
 
 ## Requirements
 - Business: Lotus, a real estate agency.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Qualify leads by asking about budget, timeline and needs before handing over to the team.
@@ -789,7 +776,6 @@ exports[`compilePrompt > matches the snapshot for restaurant 1`] = `
 
 ## Requirements
 - Business: Lotus, a restaurant or café.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Take reservations: confirm the date, time, number of guests or rooms, and contact details.
@@ -837,7 +823,6 @@ exports[`compilePrompt > matches the snapshot for studio_events 1`] = `
 
 ## Requirements
 - Business: Lotus, a photo studio and events business.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Recommend the most suitable product or service after asking one or two short questions about what the customer needs.
@@ -883,7 +868,6 @@ exports[`compilePrompt > matches the snapshot for travel 1`] = `
 
 ## Requirements
 - Business: Lotus, a travel agency.
-- Customers reach you on Facebook Messenger.
 - Your jobs:
   1. Answer questions about products, services, prices and policies using only the business facts and knowledge you were given.
   2. Recommend the most suitable product or service after asking one or two short questions about what the customer needs.

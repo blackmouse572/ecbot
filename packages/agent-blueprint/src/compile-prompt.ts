@@ -1,6 +1,6 @@
 import { getBusinessType } from "./business-types";
 import {
-  ADDRESS_STYLE, AFTER_HOURS, CHANNELS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN,
+  ADDRESS_STYLE, AFTER_HOURS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN,
   PERSONALITY, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
 } from "./libraries";
 import { PRESETS } from "./presets";
@@ -52,9 +52,6 @@ export function compilePrompt(profile: AgentProfile, options: CompileOptions = {
     type.personal
       ? `- You are a personal ${type.promptLabel} working for ${business}.`
       : `- Business: ${business}, ${withArticle(type.promptLabel)}.`,
-    !type.personal && profile.channels.length
-      ? `- Customers reach you on ${list(profile.channels.map((c) => promptOf(CHANNELS, c)))}.`
-      : "",
     profile.goals.length ? "- Your jobs:" : "",
     ...profile.goals.map((g, i) => `  ${i + 1}. ${promptOf(GOALS, g)}`),
   ]);

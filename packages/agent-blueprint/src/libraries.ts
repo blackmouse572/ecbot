@@ -90,15 +90,17 @@ export const AFTER_HOURS = [
   { id: "promise_callback", prompt: "Take the request and promise that the team will get back during opening hours." },
 ] as const satisfies readonly Entry[];
 
+// Which channels to connect in the builder. Not compiled into the prompt: the
+// agent answers the same way on every channel.
 export const CHANNELS = [
-  { id: "messenger", prompt: "Facebook Messenger" },
-  { id: "instagram", prompt: "Instagram" },
-  { id: "zalo", prompt: "Zalo" },
-  { id: "tiktok", prompt: "TikTok Shop" },
-  { id: "shopee", prompt: "Shopee" },
-  { id: "website", prompt: "the website chat" },
-  { id: "telegram", prompt: "Telegram" },
-] as const satisfies readonly Entry[];
+  { id: "messenger" },
+  { id: "instagram" },
+  { id: "zalo" },
+  { id: "tiktok" },
+  { id: "shopee" },
+  { id: "website" },
+  { id: "telegram" },
+] as const;
 
 export const FACTS = [
   { id: "opening_hours", prompt: "Opening hours" },
@@ -149,7 +151,7 @@ export const FACTS = [
   { id: "followup_cadence", prompt: "How often to follow up" },
 ] as const satisfies readonly Entry[];
 
-type IdOf<T extends readonly Entry[]> = T[number]["id"];
+type IdOf<T extends readonly { readonly id: string }[]> = T[number]["id"];
 export type GoalId = IdOf<typeof GOALS>;
 export type RuleId = IdOf<typeof RULES>;
 export type UnsureId = IdOf<typeof UNSURE>;
@@ -163,7 +165,7 @@ export type AfterHoursId = IdOf<typeof AFTER_HOURS>;
 export type ChannelId = IdOf<typeof CHANNELS>;
 export type FactId = IdOf<typeof FACTS>;
 
-export const idsOf = <T extends readonly Entry[]>(list: T) =>
+export const idsOf = <T extends readonly { readonly id: string }[]>(list: T) =>
   list.map((x) => x.id) as [IdOf<T>, ...IdOf<T>[]];
 
 export function promptOf(list: readonly Entry[], id: string): string {

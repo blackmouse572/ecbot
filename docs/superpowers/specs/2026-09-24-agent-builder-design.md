@@ -26,6 +26,7 @@ Decisions already agreed:
 
 - **Draft timing.** The draft is created right after the agent name (step 3), not after the Rules group. The test panel and channel linking need a real chatbot ID that early. The trade-off: an abandoned session leaves an inactive draft named after the agent.
 - **Channels moved into Phase 1.** The channels question connects real channels (OAuth, Telegram, website widget, or an existing channel) and links or unlinks them on the draft. This was Phase 4 "Go live" scope. Account links only go through the link and unlink endpoints, never through the autosave body, and the API refuses to move a channel that another live chatbot owns.
+- **Channels stay out of the prompt.** The agent replies the same way on every channel, so the channels answer only drives which channels the builder helps connect.
 - **Editing a live bot.** "Edit with builder" on an active bot autosaves each answer to it, one request at a time. Changing the business type resets the answers that depend on it, so on a live bot the builder asks for confirmation first.
 
 ## Architecture
@@ -57,7 +58,7 @@ Set up like the other packages (`packages/auth` is the reference for package.jso
   | Group | Prompt section | Questions (highlights) |
   |---|---|---|
   | Start | none | describe in one sentence, or pick a template |
-  | Identity | Requirements + Initialization | business type, business name, agent name, where customers message, main jobs (goals), greeting (suggested, editable) |
+  | Identity | Requirements + Initialization | business type, business name, agent name, where customers message (connects channels only, not compiled into the prompt), main jobs (goals), greeting (suggested, editable) |
   | Essence | Essence | what makes you different (text), personality chips (warm, expert, playful, premium, energetic), formality scale |
   | Facts | Knowledge | questions per type, e.g. restaurant: hours, address, delivery, reservation policy; spa: services and prices, deposit; shop: shipping fee, returns, payment |
   | Process | Process | for each goal, what to collect (name, phone, address, time, party size…), and when to hand over to a person |
