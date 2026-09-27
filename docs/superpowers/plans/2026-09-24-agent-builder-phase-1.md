@@ -27,7 +27,7 @@
 - **Confidence thresholds:** 0.9 or higher means auto-filled; 0.5 to 0.9 means "please check"; below 0.5 means don't apply.
 - **Jev config:** model `jev-latest`, and the API key only ever lives server-side in `TYPESAFE_API_KEY`.
 - **Suggestion cache:** key `agent-builder:suggest:v1:{sha256(description)}`, TTL 86,400,000 ms (24 h).
-- **Draft timing:** the chatbot is created with `status: inactive` once every question in the identity, essence, facts, process and rules groups is answered or skipped. "Finish" activates it.
+- **Draft timing:** the chatbot is created with `status: inactive` once the agent name is answered (amended from "after the Rules group"; see the spec's Amendments). "Finish" activates it. Task snippets below that mention the Rules group predate this change.
 - **Existing bots:** a chatbot with no `agentProfile` keeps its current `generalKnowledge` unless the user saves new Extra instructions.
 - **Tests first.** Write each failing test before the implementation (AGENTS.md).
 

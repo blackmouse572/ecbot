@@ -20,7 +20,13 @@ Decisions already agreed:
 - **The free-text prompt editor goes away.** An optional "Extra instructions" field is appended at the end instead.
 - **Prompt templates are in English.** The agent replies in the chosen primary language, and facts the user typed are kept as written.
 - **A decision model turns a one-sentence description into suggested answers.** Amended 2026-09-24: it runs in `apps/ai` on OpenRouter through the existing LangChain structured-output pattern, with the model chosen by the `DECISION_MODEL` environment variable. The endpoint keeps TypeSafe System One's question/answer shape, so Jev can be plugged in later as another provider. apps/api forwards the call and caches suggestions in Redis.
-- **The chatbot is created as an inactive draft after the Rules group**, so knowledge, tools and the test chat all work against a real chatbot ID.
+- **The chatbot is created as an inactive draft once the agent name is answered** (amended, see below), so knowledge, tools, channels and the test chat all work against a real chatbot ID.
+
+### Amendments made during Phase 1
+
+- **Draft timing.** The draft is created right after the agent name (step 3), not after the Rules group. The test panel and channel linking need a real chatbot ID that early. The trade-off: an abandoned session leaves an inactive draft named after the agent.
+- **Channels moved into Phase 1.** The channels question connects real channels (OAuth, Telegram, website widget, or an existing channel) and links or unlinks them on the draft. This was Phase 4 "Go live" scope. Account links only go through the link and unlink endpoints, never through the autosave body, and the API refuses to move a channel that another live chatbot owns.
+- **Editing a live bot.** "Edit with builder" on an active bot autosaves each answer to it, one request at a time. Changing the business type resets the answers that depend on it, so on a live bot the builder asks for confirmation first.
 
 ## Architecture
 
@@ -102,7 +108,7 @@ Follow `.github/instructions/app/*` and the eccho-frontend skill. Replace today'
 - `components/start-composer.tsx`: `PromptInput` for the one-sentence description, plus template buttons.
 - `components/test-panel.tsx`: reuses `apps/app/src/components/ai-chat/ai-chat-card.tsx`, with a tab for "What your agent is told" rendered through `MessageResponse`.
 - `hooks/use-agent-builder.ts`: holds the profile, current step and draft id. It saves with `useCreateChatbot` / update mutations (TanStack Query, per `data-fetching.instructions.md`).
-  - The draft is created with `status: inactive` after the Rules group.
+  - The draft is created with `status: inactive` once the agent name is answered.
   - Each later answer triggers a debounced update.
 - **Confidence badges:** 0.9 or higher means auto-filled; 0.5 to 0.9 means "please check"; below 0.5 leaves the choice empty.
 - **i18n:** a new `agentBuilder.*` block in `en.json` and `vi.json`. Reuse `actions.*` (next, back, skip→add if missing, create, cancel) and `fields.*`. Tone examples are translated per locale. Follow `.claude/rules/i18n.md`.
@@ -133,7 +139,7 @@ Follow `.github/instructions/app/*` and the eccho-frontend skill. Replace today'
   - Plain-language toggles map to existing fields: `autoRead`, `typingIndicator`, `handoffKeywords` / `handoffMessage`.
   - The follow-up choice compiles into `followupRules`.
 - **Go live group:**
-  - Reuse `LinkedAccountsField` / `account-link-drawer` for channel linking.
+  - Channel linking already ships in Phase 1 (see Amendments), so this group only needs "Go live".
   - "Go live" sets `status: active`. The group can be skipped.
 
 ## Critical files
