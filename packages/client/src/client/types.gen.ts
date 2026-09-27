@@ -8686,7 +8686,7 @@ export type CustomerSystemControllerSetFieldV1Data = {
         customerId: string;
     };
     query?: never;
-    url: '/api/v1/system/system/customers/{customerId}/fields';
+    url: '/api/v1/system/customers/{customerId}/fields';
 };
 
 export type CustomerSystemControllerSetFieldV1Responses = {
@@ -8699,7 +8699,7 @@ export type CustomerSystemControllerUpdateProfileV1Data = {
         customerId: string;
     };
     query?: never;
-    url: '/api/v1/system/system/customers/{customerId}/profile';
+    url: '/api/v1/system/customers/{customerId}/profile';
 };
 
 export type CustomerSystemControllerUpdateProfileV1Responses = {
@@ -8712,7 +8712,7 @@ export type CustomerTagSystemControllerApplyV1Data = {
         customerId: string;
     };
     query?: never;
-    url: '/api/v1/system/system/customers/{customerId}/tags/apply';
+    url: '/api/v1/system/customers/{customerId}/tags/apply';
 };
 
 export type CustomerTagSystemControllerApplyV1Responses = {
@@ -8725,7 +8725,7 @@ export type CustomerTagSystemControllerRemoveV1Data = {
         customerId: string;
     };
     query?: never;
-    url: '/api/v1/system/system/customers/{customerId}/tags/remove';
+    url: '/api/v1/system/customers/{customerId}/tags/remove';
 };
 
 export type CustomerTagSystemControllerRemoveV1Responses = {
@@ -8738,7 +8738,7 @@ export type FollowupSystemControllerListV1Data = {
     query: {
         conversationId: string;
     };
-    url: '/api/v1/system/system/followups';
+    url: '/api/v1/system/followups';
 };
 
 export type FollowupSystemControllerListV1Responses = {
@@ -8749,7 +8749,7 @@ export type FollowupSystemControllerScheduleV1Data = {
     body: FollowupScheduleRequestDto;
     path?: never;
     query?: never;
-    url: '/api/v1/system/system/followups';
+    url: '/api/v1/system/followups';
 };
 
 export type FollowupSystemControllerScheduleV1Responses = {
@@ -8762,7 +8762,7 @@ export type FollowupSystemControllerCancelV1Data = {
         id: string;
     };
     query?: never;
-    url: '/api/v1/system/system/followups/{id}';
+    url: '/api/v1/system/followups/{id}';
 };
 
 export type FollowupSystemControllerCancelV1Responses = {
