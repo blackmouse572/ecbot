@@ -373,6 +373,30 @@ describe("AgentBuilder", () => {
       await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
     });
 
+    it("waits for the save in flight, so an older answer never lands after a newer one", async () => {
+      let finishFirst!: () => void;
+      update.mockReset()
+        .mockReturnValueOnce(new Promise<void>((resolve) => { finishFirst = resolve; }))
+        .mockResolvedValue(undefined);
+      chatbot.mockReturnValue({ chatbot: bot() });
+      render(tree());
+
+      await renameTo("Lotus Spa");
+      await waitFor(() => expect(update).toHaveBeenCalledOnce());
+
+      await userEvent.click(screen.getByText(/Lotus Spa$/));
+      const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+      await userEvent.clear(input);
+      await userEvent.type(input, "Lotus Nails");
+      await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+      await settle();
+      expect(update).toHaveBeenCalledOnce();
+
+      await act(async () => finishFirst());
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
+      expect(update.mock.calls[1][0].body.agentProfile.businessName).toBe("Lotus Nails");
+    });
+
     it("sends no update when a refetch only changes read-only fields", async () => {
       chatbot.mockReturnValue({ chatbot: bot() });
       const { rerender } = render(tree());

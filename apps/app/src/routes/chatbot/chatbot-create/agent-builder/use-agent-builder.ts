@@ -5,7 +5,7 @@ import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto } from "@repo
 import { useCreateChatbot, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
 import { useAgentBuilderSuggest } from "@/hooks/api/agent-builder";
 import { toast } from "@medusajs/ui";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { builderReducer, initialBuilderState, isDraftReady } from "./builder-state";
 import { toChatbotPayload } from "./to-chatbot-payload";
@@ -51,6 +51,9 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   const failed = useRef("");
   // The debounced save not sent yet, flushed on unmount.
   const pending = useRef<{ id: string; body: ChatbotCreateRequestDto; snapshot: string } | null>(null);
+  // The save in flight. Saves run one at a time, in order, so an older answer
+  // can never land after a newer one.
+  const inFlight = useRef<Promise<void> | null>(null);
   // Hydrate a given chatbot id only once: `hydrateFrom` is refetched (a new
   // object reference with the same id) after every autosave, and re-running
   // "hydrate" on each refetch would replace in-progress local answers with
@@ -124,6 +127,27 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   // can never race on it: they're independent mutations now, by
   // construction rather than by timing.
   const save = update.mutateAsync;
+  const enqueueSave = useCallback(
+    (id: string, body: ChatbotCreateRequestDto, snapshot: string) => {
+      const run = () =>
+        save({ id, body }).then(
+          () => {
+            lastSaved.current = snapshot;
+            setSaveError(false);
+          },
+          () => {
+            failed.current = snapshot;
+            setSaveError(true);
+          },
+        );
+      // Start right away when idle, so an unmount flush is sent synchronously.
+      const next: Promise<void> = (inFlight.current ? inFlight.current.then(run) : run()).finally(() => {
+        if (inFlight.current === next) inFlight.current = null;
+      });
+      inFlight.current = next;
+    },
+    [save],
+  );
   useEffect(() => {
     pending.current = null;
     if (!state.chatbotId || !state.profile) return;
@@ -134,26 +158,18 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
     pending.current = { id, body, snapshot };
     const timer = setTimeout(() => {
       pending.current = null;
-      save({ id, body })
-        .then(() => {
-          lastSaved.current = snapshot;
-          setSaveError(false);
-        })
-        .catch(() => {
-          failed.current = snapshot;
-          setSaveError(true);
-        });
+      enqueueSave(id, body, snapshot);
     }, SAVE_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [state.chatbotId, state.profile, extraInstructions, base, save]);
+  }, [state.chatbotId, state.profile, extraInstructions, base, enqueueSave]);
 
   // Leaving the builder sends the answer still waiting on the debounce.
   useEffect(
     () => () => {
       const last = pending.current;
-      if (last && last.snapshot !== lastSaved.current) save({ id: last.id, body: last.body }).catch(() => {});
+      if (last && last.snapshot !== lastSaved.current) enqueueSave(last.id, last.body, last.snapshot);
     },
-    [save],
+    [enqueueSave],
   );
 
   const finish = async () => {
