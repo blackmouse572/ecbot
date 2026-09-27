@@ -5,6 +5,7 @@ import {
   partsToRenderModel,
   shareChatTransport,
   toolCallToChat,
+  widgetChatTransport,
   workspaceChatTransport,
 } from "./use-ai-chat-stream";
 
@@ -352,5 +353,26 @@ describe("chat transport configs", () => {
     });
 
     expect((request.body as { message: string }).message).toBe("Xin chao");
+  });
+
+  // The widget endpoint takes `text` and keys the session by visitor, and
+  // it rejects a body key its DTO does not declare.
+  it("posts a widget turn as text with only the keys its endpoint declares", () => {
+    const request = buildChatStreamRequest({
+      transport: widgetChatTransport("wk", "v1", "https://shop.example", () => "ts"),
+      clientConfig,
+      token: null,
+      id: "s",
+      messages: messages as never,
+    });
+
+    expect(Object.keys(request.body).sort()).toEqual([
+      "messageId",
+      "parentOrigin",
+      "text",
+      "turnstileToken",
+      "visitorId",
+    ]);
+    expect(request.body).toMatchObject({ text: "hello", visitorId: "v1" });
   });
 });
