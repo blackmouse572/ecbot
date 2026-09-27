@@ -5,7 +5,7 @@ Deploy the AI package as two Render services connected to the **already-deployed
 - `eccho-ai` — **Web Service** (public HTTPS), FastAPI `:8000`, from `Dockerfile`.
 - `eccho-ai-jobs` — **Background Worker** (no inbound, DB poller), from `Dockerfile.jobs`.
 
-Setup is **manual via the Render dashboard** (no `render.yaml`). No inbound auth is added — endpoints are public.
+Setup is **manual via the Render dashboard** (no `render.yaml`). Every `/api/chat/*`, `/api/customer/*` and `/api/rag/*` route requires a matching `X-Internal-Token` header (`/health` stays open) — see `API_INTERNAL_TOKEN` below.
 
 ## Architecture
 
@@ -53,6 +53,7 @@ Dashboard → **New → Web Service** → connect this repo.
 | `API_BASE_URL`          | `https://eccho.onrender.com` (deployed API, tool callback)            |
 | `AI_SERVICE_API_KEY`    | must match API's internal-tool-execute guard                          |
 | `AI_SERVICE_API_SECRET` | must match API's internal-tool-execute guard                          |
+| `API_INTERNAL_TOKEN`    | must match the API's `API_INTERNAL_TOKEN`; empty fails closed (503)   |
 | `RAG_*`                 | retrieval/rerank vars (see `.env.example`) — defaults OK              |
 | `CUSTOMER_CLASSIFIER_*` | provider/model/temperature — defaults OK                              |
 | `LANGSMITH_*`           | optional tracing                                                      |
@@ -86,11 +87,12 @@ Dashboard → **New → Background Worker** → same repo.
 
 On the **existing API service** (`API Ecbot`, `srv-d1h3ghfgi27c73c8j5o0`, `https://eccho.onrender.com`) set:
 
-| Key              | Value                                                       |
-| ---------------- | ----------------------------------------------------------- |
-| `AI_BACKEND_URL` | `https://eccho-ai.onrender.com` (the `eccho-ai` public URL) |
+| Key                  | Value                                                        |
+| -------------------- | ------------------------------------------------------------ |
+| `AI_BACKEND_URL`     | `https://eccho-ai.onrender.com` (the `eccho-ai` public URL)  |
+| `API_INTERNAL_TOKEN` | same value as `eccho-ai`'s `API_INTERNAL_TOKEN` above        |
 
-`API_INTERNAL_TOKEN` stays as-is on the API — it is sent as `Authorization: Bearer …` but the AI service does not verify it (accepted risk; endpoints are public). Redeploy the API so `AI_BACKEND_URL` takes effect.
+The API sends this value as the `X-Internal-Token` header on every call to `eccho-ai`; `eccho-ai` rejects requests whose header doesn't match its own `API_INTERNAL_TOKEN`. Redeploy the API so `AI_BACKEND_URL` / `API_INTERNAL_TOKEN` take effect.
 
 ## Post-deploy smoke test
 
@@ -102,6 +104,5 @@ On the **existing API service** (`API Ecbot`, `srv-d1h3ghfgi27c73c8j5o0`, `https
 
 ## Risks / notes
 
-- **Public endpoints, no auth** — `/api/rag/*` and `/api/chat/*` are open to the internet; anyone can drive LLM/RAG cost. Add an inbound token check later if needed (the API already sends `Authorization: Bearer ${API_INTERNAL_TOKEN}`).
 - **Memory** — both services load ML models; under 2 GB they OOM on first request.
 - **pgvector** — ingest/retrieval fail if the extension is not enabled on the shared DB.

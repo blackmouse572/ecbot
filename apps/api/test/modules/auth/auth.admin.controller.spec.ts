@@ -61,7 +61,10 @@ describe('AuthAdminController.updatePassword', () => {
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
         const passwordExpired = new Date('2026-02-01T00:00:00.000Z');
         createPasswordRandom.mockReturnValue('Temp123!');
-        createPassword.mockReturnValue({ password: 'hashed', passwordExpired });
+        createPassword.mockResolvedValue({
+            password: 'hashed',
+            passwordExpired,
+        });
         updatePassword.mockResolvedValue(user);
         resetPasswordAttempt.mockResolvedValue(user);
         createByAdmin.mockResolvedValue(undefined);
@@ -91,7 +94,10 @@ describe('AuthAdminController.updatePassword', () => {
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
         const passwordExpired = new Date('2026-02-01T00:00:00.000Z');
         createPasswordRandom.mockReturnValue('Temp123!');
-        createPassword.mockReturnValue({ password: 'hashed', passwordExpired });
+        createPassword.mockResolvedValue({
+            password: 'hashed',
+            passwordExpired,
+        });
         updatePassword.mockResolvedValue(user);
         resetPasswordAttempt.mockResolvedValue(user);
         createByAdmin.mockResolvedValue(undefined);

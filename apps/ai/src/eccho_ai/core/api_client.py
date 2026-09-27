@@ -76,10 +76,12 @@ class ApiClient:
             raise ApiClientError(f"GET {url} transport error: {exc}") from exc
         return self._parse("GET", url, resp)
 
-    async def delete(self, path: str) -> Any:
-        url = self._url(path)
+    async def delete(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        url = self._base_url + (path if path.startswith("/") else "/" + path)
         try:
-            resp = await self._client.delete(url, headers=self._headers())
+            resp = await self._client.delete(
+                url, params=params, headers=self._headers()
+            )
         except httpx.HTTPError as exc:
             raise ApiClientError(f"DELETE {url} transport error: {exc}") from exc
         return self._parse("DELETE", url, resp)

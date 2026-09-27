@@ -14,8 +14,9 @@ export const resetPasswordQueryKeys = queryKeysFactory(
 );
 
 /**
- * Starts the flow: emails an OTP and hands the caller the token that the
- * verify/reset steps are scoped to.
+ * Starts the flow: always resolves with the same empty ack, whether or not
+ * the email has an account — no enumeration. The reset link and OTP are
+ * delivered by email only, never on this response.
  */
 export const useRequestPasswordReset = () => {
   const { mutateAsync, isPending } = useMutation({
@@ -28,7 +29,6 @@ export const useRequestPasswordReset = () => {
         console.error("[useRequestPasswordReset] error: ", response.error);
         throw response.error;
       }
-      return (response.data as A).data as ResetPasswordCreteResponseDto;
     },
   });
 

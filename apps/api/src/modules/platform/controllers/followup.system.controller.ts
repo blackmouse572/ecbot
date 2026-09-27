@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Delete,
@@ -61,7 +62,17 @@ export class FollowupSystemController {
 
     @Delete(':id')
     @ApiKeySystemProtected()
-    async cancel(@Param('id') id: string): Promise<{ cancelled: boolean }> {
-        return { cancelled: await this.followupService.cancel(id) };
+    async cancel(
+        @Param('id') id: string,
+        @Query('conversationId') conversationId?: string
+    ): Promise<{ cancelled: boolean }> {
+        if (!conversationId) {
+            throw new BadRequestException(
+                'followup.cancel.error.missingConversationId'
+            );
+        }
+        return {
+            cancelled: await this.followupService.cancel(id, conversationId),
+        };
     }
 }

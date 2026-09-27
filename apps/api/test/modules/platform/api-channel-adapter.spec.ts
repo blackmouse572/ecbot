@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { ApiChannelPlatformAdapter } from '../../../src/modules/platform/adapters/api-channel/api-channel.platform-adapter';
 import { OutboundMessage } from '../../../src/modules/platform/interfaces/message-model';
+import { EgressBlockedError } from '../../../src/common/helper/services/helper.egress.service';
 
 const SIGNING_SECRET = 'signing-secret-plaintext';
 
@@ -212,6 +213,46 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
                 expect.stringContaining('exhausted all 5 attempts')
             );
 
+            errorSpy.mockRestore();
+        });
+
+        it('does not schedule a retry when the first attempt is blocked by the egress guard', async () => {
+            const { adapter, callbackService, accountService } =
+                makeAdapter();
+            const account = makeAccount();
+            (callbackService.deliver as jest.Mock).mockRejectedValue(
+                new EgressBlockedError('Egress blocked: host is not allowed')
+            );
+
+            await adapter.sendMessage(account, 'user-9', textMsg('hi'));
+            await jest.advanceTimersByTimeAsync(75_000);
+
+            expect(callbackService.deliver).toHaveBeenCalledTimes(1);
+            expect(accountService.findOne).not.toHaveBeenCalled();
+        });
+
+        it('stops retrying immediately once a later attempt is blocked by the egress guard', async () => {
+            const errorSpy = jest
+                .spyOn(Logger.prototype, 'error')
+                .mockImplementation(() => undefined);
+            const { adapter, callbackService, accountService } =
+                makeAdapter();
+            const account = makeAccount();
+            accountService.findOne.mockResolvedValue(account);
+            (callbackService.deliver as jest.Mock)
+                .mockRejectedValueOnce(new Error('receiver down'))
+                .mockRejectedValueOnce(
+                    new EgressBlockedError(
+                        'Egress blocked: host is not allowed'
+                    )
+                );
+
+            await adapter.sendMessage(account, 'user-9', textMsg('hi'));
+            // First retry at 5s hits the block; a non-blocked run would still
+            // have attempts left at 10s/20s/40s.
+            await jest.advanceTimersByTimeAsync(75_000);
+
+            expect(callbackService.deliver).toHaveBeenCalledTimes(2);
             errorSpy.mockRestore();
         });
     });

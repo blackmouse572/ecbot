@@ -25,8 +25,10 @@ export class MigrationPasswordHistorySeed {
 
         const oldPassword1 = 'oldPassword123';
         const oldPassword2 = 'previousPass456';
-        const oldPasswordHash1 = this.authService.createPassword(oldPassword1);
-        const oldPasswordHash2 = this.authService.createPassword(oldPassword2);
+        const oldPasswordHash1 =
+            await this.authService.createPassword(oldPassword1);
+        const oldPasswordHash2 =
+            await this.authService.createPassword(oldPassword2);
 
         const passwordHistoryData = [
             {

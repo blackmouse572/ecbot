@@ -99,7 +99,7 @@ describe('UserAdminController.create', () => {
         existByEmail.mockResolvedValue(false);
         findOneByIdCountry.mockResolvedValue({ id: 'country-1' });
         createPasswordRandom.mockReturnValue('Temp123!');
-        createPassword.mockReturnValue({ password: 'hashed', passwordExpired });
+        createPassword.mockResolvedValue({ password: 'hashed', passwordExpired });
         create.mockResolvedValue(created);
         createEmailByUser.mockResolvedValue(verification);
         createByAdminPasswordHistory.mockResolvedValue(undefined);

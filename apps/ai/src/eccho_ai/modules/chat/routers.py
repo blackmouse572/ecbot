@@ -1,9 +1,10 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from eccho_ai.core.app_logger import get_logger
+from eccho_ai.core.security import require_internal_token
 from eccho_ai.llm.agents.agent import invalidate_chatbot
 from eccho_ai.llm.guardrails.content import run_input_guardrail, run_output_guardrail
 from eccho_ai.llm.guardrails.secrets import scan_output_for_secrets
@@ -30,7 +31,9 @@ logger = get_logger(__name__)
 # Define Routers & Workflows
 # ================================
 
-router = APIRouter(prefix="/chat", tags=["Chat"])
+router = APIRouter(
+    prefix="/chat", tags=["Chat"], dependencies=[Depends(require_internal_token)]
+)
 
 
 @router.post("/message")

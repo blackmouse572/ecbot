@@ -19,13 +19,18 @@ export function expandDatabaseField(
     return result;
 }
 
+function escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function DatabaseHelperQueryContain(
     field: string,
     value: string,
     options?: IDatabaseQueryContainOptions
 ): FilterQuery<any> {
+    const escapedValue = escapeRegExp(value);
     const regex = options?.fullWord
-        ? new RegExp(`\\b${value}\\b`)
-        : new RegExp(value);
+        ? new RegExp(`\\b${escapedValue}\\b`)
+        : new RegExp(escapedValue);
     return expandDatabaseField(field, regex);
 }

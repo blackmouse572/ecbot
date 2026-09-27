@@ -241,7 +241,7 @@ export class UserAdminController {
         }
 
         const passwordString = this.authService.createPasswordRandom();
-        const password: IAuthPassword = this.authService.createPassword(
+        const password: IAuthPassword = await this.authService.createPassword(
             passwordString,
             {
                 temporary: true,

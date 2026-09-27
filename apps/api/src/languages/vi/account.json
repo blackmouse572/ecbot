@@ -17,7 +17,8 @@
         "notAnApiChannel": "Tài khoản này không phải API channel nên không có signing secret để xoay.",
         "invalidAllowedOrigin": "Một trong các website được phép không phải URL hợp lệ. Hãy nhập đầy đủ, vd: https://shop.example.com.",
         "apiChannelCallbackUrlMissing": "API channel này chưa cấu hình callback URL nên không gửi được câu trả lời.",
-        "notAWebsiteWidget": "Tài khoản này không phải website widget nên không có danh sách website được phép để cập nhật."
+        "notAWebsiteWidget": "Tài khoản này không phải website widget nên không có danh sách website được phép để cập nhật.",
+        "workspaceMismatch": "Tài khoản này đã thuộc về một không gian làm việc khác."
     },
     "provisionApiChannel": "Đã tạo API channel. Hãy sao chép signing secret ngay — nó sẽ không hiển thị lại.",
     "rotateApiChannelSecret": "Đã cấp signing secret mới. Secret cũ không còn dùng được.",

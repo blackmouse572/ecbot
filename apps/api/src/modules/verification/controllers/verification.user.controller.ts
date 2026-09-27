@@ -14,6 +14,7 @@ import {
     Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { uniqueId } from 'lodash';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { Response } from 'src/common/response/decorators/response.decorator';
@@ -282,6 +283,7 @@ export class VerificationUserController {
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
     @HttpCode(HttpStatus.OK)
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Post('/verify/email')
     async verifyEmail(
         @AuthJwtPayload<IAuthJwtAccessTokenPayload>(
@@ -306,6 +308,17 @@ export class VerificationUserController {
             otp
         );
         if (!check) {
+            const attempted =
+                await this.verificationService.incrementOtpAttempt(
+                    verification
+                );
+            if (!attempted.isActive) {
+                throw new BadRequestException({
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
+                    message: 'verification.error.attemptMax',
+                });
+            }
+
             throw new BadRequestException({
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.OTP_NOT_MATCH,
                 message: 'verification.error.otpNotMatch',
@@ -362,6 +375,7 @@ export class VerificationUserController {
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
     @HttpCode(HttpStatus.OK)
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Post('/verify/mobile-number')
     async verifyMobileNumber(
         @AuthJwtPayload<IAuthJwtAccessTokenPayload>(
@@ -388,6 +402,17 @@ export class VerificationUserController {
             otp
         );
         if (!check) {
+            const attempted =
+                await this.verificationService.incrementOtpAttempt(
+                    verification
+                );
+            if (!attempted.isActive) {
+                throw new BadRequestException({
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
+                    message: 'verification.error.attemptMax',
+                });
+            }
+
             throw new BadRequestException({
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.OTP_NOT_MATCH,
                 message: 'verification.error.otpNotMatch',

@@ -21,6 +21,7 @@ describe('ConversationMessagingService', () => {
 
     const mockConversationRepository = {
         findOneById: jest.fn(),
+        findOneByIdInWorkspace: jest.fn(),
     };
 
     const mockMessageRepository = {
@@ -75,6 +76,8 @@ describe('ConversationMessagingService', () => {
         account: facebookAccount,
     };
 
+    const workspaceId = 'workspace-1';
+
     beforeEach(() => {
         jest.clearAllMocks();
 
@@ -89,7 +92,7 @@ describe('ConversationMessagingService', () => {
             const clientNonce = 'some-uuid';
             const platformMessageId = 'mid.abc123';
 
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.insertPendingOutbound.mockResolvedValue({
@@ -106,10 +109,16 @@ describe('ConversationMessagingService', () => {
 
             const result = await service.sendOperatorReply(
                 'conv-1',
+                workspaceId,
                 'operator-user-id',
                 'Hello from operator'
             );
 
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId, {
+                populate: ['account'],
+            });
             expect(mockPlatformRegistry.get).toHaveBeenCalledWith(
                 ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE
             );
@@ -143,7 +152,7 @@ describe('ConversationMessagingService', () => {
         });
 
         it('should mark the message as failed and throw when the platform send fails', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.insertPendingOutbound.mockResolvedValue({
@@ -158,7 +167,12 @@ describe('ConversationMessagingService', () => {
             );
 
             await expect(
-                service.sendOperatorReply('conv-1', 'operator-user-id', 'Hello')
+                service.sendOperatorReply(
+                    'conv-1',
+                    workspaceId,
+                    'operator-user-id',
+                    'Hello'
+                )
             ).rejects.toThrow(UnprocessableEntityException);
 
             expect(mockMessageRepository.markOutboundFailed).toHaveBeenCalled();
@@ -168,11 +182,14 @@ describe('ConversationMessagingService', () => {
         });
 
         it('should throw NotFoundException when the conversation does not exist', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(null);
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
 
             await expect(
                 service.sendOperatorReply(
                     'conv-ghost',
+                    workspaceId,
                     'operator-user-id',
                     'Hello'
                 )
@@ -183,10 +200,37 @@ describe('ConversationMessagingService', () => {
             ).not.toHaveBeenCalled();
         });
 
+        it('should throw NotFoundException (not the account/adapter path) when the conversation belongs to another workspace', async () => {
+            // The repository's own workspace filter is what makes this a 404,
+            // not a special-cased comparison here — same as "does not exist".
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                service.sendOperatorReply(
+                    'conv-1',
+                    'workspace-other',
+                    'operator-user-id',
+                    'Hello'
+                )
+            ).rejects.toThrow(NotFoundException);
+
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', 'workspace-other', {
+                populate: ['account'],
+            });
+            expect(mockPlatformRegistry.get).not.toHaveBeenCalled();
+            expect(
+                mockMessageRepository.insertPendingOutbound
+            ).not.toHaveBeenCalled();
+        });
+
         // Operators cannot attach images: attachments were stored but never
         // delivered, so the inbox showed images the customer never got.
         it('stores and sends an operator reply as text only', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.insertPendingOutbound.mockResolvedValue({
@@ -199,6 +243,7 @@ describe('ConversationMessagingService', () => {
 
             await service.sendOperatorReply(
                 'conv-1',
+                workspaceId,
                 'operator-user-id',
                 'See attached'
             );
@@ -228,7 +273,7 @@ describe('ConversationMessagingService', () => {
         };
 
         it('reacts via the adapter and persists the reaction', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.findOne.mockResolvedValue(message);
@@ -241,12 +286,18 @@ describe('ConversationMessagingService', () => {
 
             await service.reactToMessage({
                 conversationId: 'conv-1',
+                workspaceId,
                 messageId: 'msg-1',
                 emoji: '❤',
                 action: 'react',
                 operatorUserId: 'operator-user-id',
             });
 
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId, {
+                populate: ['account'],
+            });
             expect(mockAdapter.addReaction).toHaveBeenCalledWith(
                 facebookAccount,
                 'user-psid-456',
@@ -267,7 +318,7 @@ describe('ConversationMessagingService', () => {
         });
 
         it('throws when the adapter does not support outbound reactions', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.findOne.mockResolvedValue(message);
@@ -276,6 +327,7 @@ describe('ConversationMessagingService', () => {
             await expect(
                 service.reactToMessage({
                     conversationId: 'conv-1',
+                    workspaceId,
                     messageId: 'msg-1',
                     emoji: '❤',
                     action: 'react',
@@ -288,11 +340,14 @@ describe('ConversationMessagingService', () => {
         });
 
         it('throws NotFoundException when the conversation does not exist', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(null);
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
 
             await expect(
                 service.reactToMessage({
                     conversationId: 'conv-ghost',
+                    workspaceId,
                     messageId: 'msg-1',
                     emoji: '❤',
                     action: 'react',
@@ -301,8 +356,32 @@ describe('ConversationMessagingService', () => {
             ).rejects.toThrow(NotFoundException);
         });
 
+        it('throws NotFoundException when the conversation belongs to another workspace', async () => {
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                service.reactToMessage({
+                    conversationId: 'conv-1',
+                    workspaceId: 'workspace-other',
+                    messageId: 'msg-1',
+                    emoji: '❤',
+                    action: 'react',
+                    operatorUserId: 'operator-user-id',
+                })
+            ).rejects.toThrow(NotFoundException);
+
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', 'workspace-other', {
+                populate: ['account'],
+            });
+            expect(mockAdapter.addReaction).not.toHaveBeenCalled();
+        });
+
         it('throws NotFoundException when the message does not exist', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.findOne.mockResolvedValue(null);
@@ -310,6 +389,7 @@ describe('ConversationMessagingService', () => {
             await expect(
                 service.reactToMessage({
                     conversationId: 'conv-1',
+                    workspaceId,
                     messageId: 'msg-ghost',
                     emoji: '❤',
                     action: 'react',
@@ -339,19 +419,26 @@ describe('ConversationMessagingService', () => {
                 },
             ];
 
-            mockConversationRepository.findOneById.mockResolvedValue({
-                id: 'conv-1',
-            });
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                {
+                    id: 'conv-1',
+                }
+            );
             mockMessageRepository.findByConversation.mockResolvedValue(
                 messages
             );
             mockMessageRepository.countByConversation.mockResolvedValue(137);
 
-            const result = await service.listMessages('conv-1', {
+            const result = await service.listMessages('conv-1', workspaceId, {
                 limit: 50,
                 offset: 0,
             });
 
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId, {
+                populate: ['chatbot'],
+            });
             expect(
                 mockMessageRepository.findByConversation
             ).toHaveBeenCalledWith('conv-1', {
@@ -365,24 +452,47 @@ describe('ConversationMessagingService', () => {
         });
 
         it('should throw NotFoundException when the conversation does not exist', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(null);
-
-            await expect(service.listMessages('conv-ghost')).rejects.toThrow(
-                NotFoundException
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
             );
+
+            await expect(
+                service.listMessages('conv-ghost', workspaceId)
+            ).rejects.toThrow(NotFoundException);
 
             expect(
                 mockMessageRepository.findByConversation
             ).not.toHaveBeenCalled();
         });
 
-        it('should return an empty array when the conversation has no messages yet', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue({
-                id: 'conv-1',
+        it('should throw NotFoundException when the conversation belongs to another workspace', async () => {
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                service.listMessages('conv-1', 'workspace-other')
+            ).rejects.toThrow(NotFoundException);
+
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', 'workspace-other', {
+                populate: ['chatbot'],
             });
+            expect(
+                mockMessageRepository.findByConversation
+            ).not.toHaveBeenCalled();
+        });
+
+        it('should return an empty array when the conversation has no messages yet', async () => {
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                {
+                    id: 'conv-1',
+                }
+            );
             mockMessageRepository.findByConversation.mockResolvedValue([]);
 
-            const result = await service.listMessages('conv-1');
+            const result = await service.listMessages('conv-1', workspaceId);
 
             expect(result.messages).toHaveLength(0);
         });

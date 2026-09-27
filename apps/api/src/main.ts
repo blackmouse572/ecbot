@@ -26,6 +26,9 @@ async function bootstrap() {
     const timezone: string = configService.get<string>('app.timezone');
     const host: string = configService.get<string>('app.http.host');
     const port: number = configService.get<number>('app.http.port');
+    const trustProxyHops: number = configService.get<number>(
+        'app.trustProxyHops'
+    );
     const globalPrefix: string = configService.get<string>('app.globalPrefix');
     const versioningPrefix: string = configService.get<string>(
         'app.urlVersion.prefix'
@@ -49,6 +52,12 @@ async function bootstrap() {
 
     // logger
     app.useLogger(app.get(PinoLogger));
+
+    // Trust the configured number of reverse-proxy hops (load balancer/CDN) so
+    // req.ip — and therefore the throttler's per-client key — reflects the
+    // real client instead of the proxy. Without this, every client behind the
+    // same load balancer shares one rate-limit bucket.
+    app.getHttpAdapter().getInstance().set('trust proxy', trustProxyHops);
 
     // Compression — but never for Server-Sent Events. gzip buffers the response
     // body, which defeats SSE streaming (the chatbot stream proxy would arrive

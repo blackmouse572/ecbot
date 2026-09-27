@@ -5,7 +5,6 @@ import { UserService } from '@app/modules/user/services/user.service';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { WorkspaceRequestService } from '@app/modules/workspace/services/workspace.request.service';
 import {
-    BadRequestException,
     ConflictException,
     Injectable,
     NotFoundException,
@@ -134,10 +133,16 @@ export class RequestService {
         requestId: string,
         workspace: WorkspaceEntity
     ): Promise<void> {
-        const request = await this.requestRepository.findOne({ id: requestId });
+        // Scope the lookup to the workspace being approved in — otherwise a
+        // request id that belongs to a different workspace would still
+        // resolve, letting an owner approve a foreign join-request.
+        const request = await this.requestRepository.findOne({
+            id: requestId,
+            workspace: workspace.id,
+        });
 
         if (!request) {
-            throw new BadRequestException({
+            throw new NotFoundException({
                 statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'requests.error.notFound',
             });

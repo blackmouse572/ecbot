@@ -18,6 +18,13 @@ logger = get_logger(__name__)
 
 SEND_IMAGE_TOOL = "send_image"
 
+logger = get_logger(__name__)
+
+# Shown to clients on any stream-side failure (including a LangGraph
+# GraphRecursionError when the agent loop hits recursion_limit). Never the raw
+# exception text — that can leak internals, secrets, or stack-trace details.
+GENERIC_STREAM_ERROR = "Something went wrong while generating a response. Please try again."
+
 
 async def events_to_ui_parts(
     events: AsyncIterator[dict],
@@ -230,7 +237,8 @@ async def events_to_ui_parts(
             yield ui.reasoning_end(reasoning_id)
         if step_open:
             yield ui.finish_step()
-        yield ui.error(f"[agent error: {e}]")
+        logger.error("chat_stream_error", error=str(e), error_type=type(e).__name__, request_id=request_id)
+        yield ui.error(GENERIC_STREAM_ERROR)
     finally:
         yield ui.finish()
         yield ui.done()

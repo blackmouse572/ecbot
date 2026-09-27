@@ -7,7 +7,13 @@ import { ConversationService } from '@app/modules/conversation/services/conversa
 import { ManifestBuilderService } from '@app/modules/tool/services/manifest-builder.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import {
+    BadRequestException,
+    Inject,
+    Injectable,
+    Logger,
+    Optional,
+} from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
@@ -17,7 +23,9 @@ import {
     ENUM_FOLLOWUP_STATUS,
     FOLLOWUP_QUEUE,
     FOLLOWUP_TASK_PREFIX,
+    MAX_PENDING_FOLLOWUPS_PER_CONVERSATION,
     OUTCOME_REASON_MAX_LENGTH,
+    PENDING_FOLLOWUP_STATUSES,
 } from '../constants/followup.constant';
 import { FollowupListResponseDto } from '../dtos/response/followup.list.response.dto';
 import { FollowupPendingResponseDto } from '../dtos/response/followup.pending.response.dto';
@@ -58,6 +66,23 @@ export class FollowupService {
     ) {}
 
     async schedule(data: IFollowupJob, delayMinutes: number): Promise<string> {
+        // Not wrapped in a transaction with the insert below: a burst of
+        // concurrent schedule() calls for the same conversation can each read
+        // the count before any of them commits, so the cap can be exceeded by
+        // a handful of rows under a race. Acceptable here — the cap is a spam
+        // backstop, not a hard invariant — but a transactional count+insert
+        // would close it if that changes.
+        const pendingCount = await this.followupRepository.getTotal({
+            conversation: data.conversationId,
+            status: { $in: PENDING_FOLLOWUP_STATUSES },
+            deletedAt: null,
+        });
+        if (pendingCount >= MAX_PENDING_FOLLOWUPS_PER_CONVERSATION) {
+            throw new BadRequestException(
+                'followup.schedule.error.tooManyPending'
+            );
+        }
+
         const scheduledAt = new Date(
             Date.now() + Math.max(0, delayMinutes) * 60_000
         );
@@ -89,9 +114,12 @@ export class FollowupService {
         return followup.id;
     }
 
-    async cancel(followupId: string): Promise<boolean> {
-        const followup =
-            await this.followupRepository.findPendingById(followupId);
+    async cancel(followupId: string, conversationId: string): Promise<boolean> {
+        const followup = await this.followupRepository.findPendingById(
+            followupId,
+            undefined,
+            conversationId
+        );
         if (!followup) return false;
 
         await this.applyCancellation(followup);
