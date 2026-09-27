@@ -8,6 +8,7 @@ export const PLATFORM_SLUG_TO_TYPE: Record<string, ENUM_ACCOUNT_TYPE> = {
     tiktok: ENUM_ACCOUNT_TYPE.TIKTOK_SHOP,
     shopee: ENUM_ACCOUNT_TYPE.SHOPEE_SHOP,
     telegram: ENUM_ACCOUNT_TYPE.TELEGRAM_BOT,
+    whatsapp: ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS,
     // Registered so the channel is addressable, but neither eccho-issued channel
     // is reachable through the unauthenticated `POST /public/webhooks/:platform`
     // route: both adapters return false from verifySignature, so that route

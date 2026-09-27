@@ -13,6 +13,8 @@ import {
     ENUM_MESSAGE_STATUS,
 } from '../../enums/message.enum';
 import { ConversationEntity } from './conversation.entity';
+import { IMessageAttachment } from '../../interfaces/message-media.interface';
+import { MessageAttachmentsType } from '../types/message-attachments.type';
 
 export const MessageTableName = 'messages';
 
@@ -55,8 +57,12 @@ export class MessageEntity extends DatabaseEntityBase {
     @Property({ type: 'text', nullable: true })
     text?: string;
 
-    @Property({ type: 'jsonb', nullable: true })
-    attachments?: unknown[];
+    @Property({
+        type: MessageAttachmentsType,
+        columnType: 'jsonb',
+        nullable: true,
+    })
+    attachments?: IMessageAttachment[];
 
     @Property({ type: 'jsonb', nullable: true })
     raw?: unknown;

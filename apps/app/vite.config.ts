@@ -18,7 +18,7 @@ function faviconSync(): Plugin {
     config(_, { mode }) {
       const env =
         mode === "production" || mode === "staging" ? mode : "dev";
-      syncFavicon(env, path.resolve(__dirname, "public/favicon"));
+      syncFavicon(env, path.resolve(import.meta.dirname, "public/favicon"));
     },
   };
 }
@@ -33,7 +33,7 @@ export default defineConfig({
     tsconfigPaths(),
     tailwindcss(),
     // Deploy-only: a clean clone has no wrangler.json and must still build.
-    ...(existsSync(path.resolve(__dirname, "wrangler.json")) ? [cloudflare()] : []),
+    ...(existsSync(path.resolve(import.meta.dirname, "wrangler.json")) ? [cloudflare()] : []),
     faviconSync(),
   ],
   optimizeDeps: {
@@ -42,13 +42,13 @@ export default defineConfig({
   assetsInclude: ["src/**/*.svg"],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@components": path.resolve(__dirname, "./src/components"),
-      "@hooks": path.resolve(__dirname, "./src/hooks"),
-      "@libs": path.resolve(__dirname, "./src/libs"),
-      "@providers": path.resolve(__dirname, "./src/providers"),
-      "@assets": path.resolve(__dirname, "./src/assets"),
-      "@i18n": path.resolve(__dirname, "./src/i18n"),
+      "@": path.resolve(import.meta.dirname, "./src"),
+      "@components": path.resolve(import.meta.dirname, "./src/components"),
+      "@hooks": path.resolve(import.meta.dirname, "./src/hooks"),
+      "@libs": path.resolve(import.meta.dirname, "./src/libs"),
+      "@providers": path.resolve(import.meta.dirname, "./src/providers"),
+      "@assets": path.resolve(import.meta.dirname, "./src/assets"),
+      "@i18n": path.resolve(import.meta.dirname, "./src/i18n"),
     },
   },
   build: {

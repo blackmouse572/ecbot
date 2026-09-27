@@ -29,8 +29,7 @@ interface TelegramResponse<T> {
 export class TelegramOAuthService implements IOAuthPlatformService {
     private readonly logger = new Logger(TelegramOAuthService.name);
     private readonly apiUrl: string;
-    private readonly backendUrl: string;
-    private readonly webhookBasePath: string;
+    private readonly webhookBaseUrl: string;
     private readonly webhookSecretToken: string;
 
     constructor(
@@ -39,17 +38,26 @@ export class TelegramOAuthService implements IOAuthPlatformService {
     ) {
         this.apiUrl =
             config.get<string>('telegram.apiUrl') ?? 'https://api.telegram.org';
+        // TELEGRAM_WEBHOOK_URL sends updates through the edge Worker. Without
+        // it, bots post to this API's own public webhook route.
+        this.webhookBaseUrl =
+            config.get<string>('telegram.webhookUrl') ??
+            this.apiWebhookBaseUrl(config);
+        this.webhookSecretToken =
+            config.get<string>('telegram.webhookSecretToken') ?? '';
+    }
+
+    private apiWebhookBaseUrl(config: ConfigService): string {
         // Backend origin reachable from the public internet (API_BACKEND_URL),
         // NOT home.url — that points at the frontend and is only for email links.
-        this.backendUrl = config.get<string>('app.backendUrl') ?? '';
+        const backendUrl = config.get<string>('app.backendUrl');
+        if (!backendUrl) return '';
         // Compose the route prefix from the same config the app boots with:
         // globalPrefix (/api) + URI version (v1) → /api/v1
         const globalPrefix = config.get<string>('app.globalPrefix') ?? '';
         const versionPrefix = config.get<string>('app.urlVersion.prefix') ?? '';
         const version = config.get<string>('app.urlVersion.version') ?? '';
-        this.webhookBasePath = `${globalPrefix}/${versionPrefix}${version}/public/webhooks/telegram`;
-        this.webhookSecretToken =
-            config.get<string>('telegram.webhookSecretToken') ?? '';
+        return `${backendUrl}${globalPrefix}/${versionPrefix}${version}/public/webhooks/telegram`;
     }
 
     async getTokenAndProfile(botToken: string): Promise<IOAuthTokenResult> {
@@ -144,16 +152,16 @@ export class TelegramOAuthService implements IOAuthPlatformService {
         botToken: string,
         botId: number
     ): Promise<void> {
-        if (!this.backendUrl) {
+        if (!this.webhookBaseUrl) {
             this.logger.warn(
-                `TELEGRAM: app.backendUrl (API_BACKEND_URL) not set — skipping setWebhook for bot ${botId}`
+                `TELEGRAM: neither TELEGRAM_WEBHOOK_URL nor API_BACKEND_URL is set, skipping setWebhook for bot ${botId}`
             );
             return;
         }
 
         // Include botId in path so the controller can inject it as accountKey,
         // since Telegram webhook payloads do not contain the bot's own ID.
-        const webhookUrl = `${this.backendUrl}${this.webhookBasePath}/${botId}`;
+        const webhookUrl = `${this.webhookBaseUrl}/${botId}`;
         // Setting allowed_updates overrides Telegram's defaults, so every
         // update type the adapter's parse() relies on must be listed
         // explicitly — including message_reaction, which is NOT delivered

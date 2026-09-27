@@ -1,6 +1,5 @@
 import { useDeleteWorkspaceMember, useMe } from "@/hooks/api";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { defaultNs } from "@/i18n";
 import { ROUTES } from "@/routes/constants";
 import { Pencil, Trash } from "@medusajs/icons";
 import { toast, usePrompt } from "@medusajs/ui";
@@ -13,7 +12,7 @@ type MemberRowActionsProps = { member: WorkspaceMemberListResponseDto };
 
 /** Row menu of the members table: assign a role, or remove the member. */
 export const MemberRowActions = ({ member }: MemberRowActionsProps) => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
   const { user: currentUser } = useMe();
   const { workspaceSlug } = useWorkspaceParams();
   const location = useLocation();

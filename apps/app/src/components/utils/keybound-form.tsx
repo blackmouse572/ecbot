@@ -7,9 +7,11 @@ export const KeyboundForm = React.forwardRef<
   HTMLFormElement,
   React.FormHTMLAttributes<HTMLFormElement>
 >(({ onSubmit, onKeyDown, ...rest }, ref) => {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  // Also called from the meta/ctrl+Enter shortcut with the keyboard event;
+  // onSubmit handlers only use the shared synthetic-event surface.
+  const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSubmit?.(event);
+    onSubmit?.(event as React.SubmitEvent<HTMLFormElement>);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {

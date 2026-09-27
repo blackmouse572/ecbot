@@ -1,5 +1,4 @@
 import type { Filter } from "@/components/table/data-table";
-import { defaultNs } from "@/i18n";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -25,7 +24,7 @@ const facet = (
 
 /** Status and channel-type facets above the accounts table. */
 export const useAccountTableFilters = (): Filter[] => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
 
   return useMemo<Filter[]>(
     () => [
@@ -49,6 +48,10 @@ export const useAccountTableFilters = (): Filter[] => {
         ["TELEGRAM_BOT", t("accounts.details.types.telegramBot.label")],
         ["API_CHANNEL", t("accounts.details.types.apiChannel.label")],
         ["WEBSITE_WIDGET", t("accounts.details.types.websiteWidget.label")],
+        [
+          "WHATSAPP_BUSINESS",
+          t("accounts.details.types.whatsappBusiness.label"),
+        ],
       ]),
     ],
     [t],

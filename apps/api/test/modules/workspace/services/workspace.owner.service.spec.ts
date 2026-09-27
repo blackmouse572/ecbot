@@ -98,7 +98,8 @@ describe('WorkspaceOwnerService', () => {
             const result = await service.generateInvitationLinkWithDetails(
                 ownerId,
                 { invitedEmail: 'invitee@mail.com' },
-                url
+                url,
+                workspace as any
             );
 
             expect(mockJwtService.sign).toHaveBeenCalledWith(
@@ -135,12 +136,36 @@ describe('WorkspaceOwnerService', () => {
             const result = await service.generateInvitationLinkWithDetails(
                 ownerId,
                 { invitedEmail: 'invitee@mail.com' },
-                url
+                url,
+                workspace as any
             );
 
             expect(result.token).toBe('existing-token');
             expect(mockJwtService.sign).not.toHaveBeenCalled();
             expect(mockInvitationService.create).not.toHaveBeenCalled();
+        });
+
+        it('should rebuild the idempotent link from the configured url + stored token, never the stored invitationLink column', async () => {
+            // A pre-fix row (or any row with a bad/foreign stored link) must
+            // not be trusted and re-emailed as-is.
+            mockInvitationService.checkExistingInvitation.mockResolvedValue({
+                token: 'existing-token',
+                invitationLink:
+                    'https://attacker.example.com/join?tokens=existing-token',
+                expiresAt: new Date('2026-08-30T00:00:00Z'),
+            });
+
+            const result = await service.generateInvitationLinkWithDetails(
+                ownerId,
+                { invitedEmail: 'invitee@mail.com' },
+                url,
+                workspace as any
+            );
+
+            expect(result.invitationLink).toBe(
+                `${url}/join?tokens=existing-token`
+            );
+            expect(result.invitationLink.startsWith(url)).toBe(true);
         });
 
         it('should throw when the provided roleId does not belong to the workspace', async () => {
@@ -153,7 +178,8 @@ describe('WorkspaceOwnerService', () => {
                 service.generateInvitationLinkWithDetails(
                     ownerId,
                     { invitedEmail: 'invitee@mail.com', roleId: 'ghost' },
-                    url
+                    url,
+                    workspace as any
                 )
             ).rejects.toThrow(NotFoundException);
         });
@@ -169,7 +195,8 @@ describe('WorkspaceOwnerService', () => {
                 service.generateInvitationLinkWithDetails(
                     ownerId,
                     { invitedEmail: 'invitee@mail.com', roleId: 'owner-role' },
-                    url
+                    url,
+                    workspace as any
                 )
             ).rejects.toThrow(NotFoundException);
         });
@@ -183,7 +210,8 @@ describe('WorkspaceOwnerService', () => {
             await service.generateInvitationLinkWithDetails(
                 ownerId,
                 { invitedEmail: 'invitee@mail.com' },
-                url
+                url,
+                workspace as any
             );
 
             expect(mockRoleService.findOne).toHaveBeenCalledWith(
@@ -196,6 +224,29 @@ describe('WorkspaceOwnerService', () => {
             expect(mockInvitationService.create).toHaveBeenCalledWith(
                 expect.objectContaining({ role: 'default-member' })
             );
+        });
+
+        it('never re-looks-up the workspace by owner — the passed-in workspace is always the target, even for a caller who does not own it', async () => {
+            mockInvitationService.checkExistingInvitation.mockResolvedValue(
+                null
+            );
+            mockRoleService.findOne.mockResolvedValue({ id: 'default-member' });
+            // A caller id with no relation to `workspace` at all (not its
+            // owner) — the guard already authorized them; the service must
+            // not re-derive or gate the target based on ownership.
+            const nonOwnerCallerId = randomUUID();
+
+            const result = await service.generateInvitationLinkWithDetails(
+                nonOwnerCallerId,
+                { invitedEmail: 'invitee@mail.com' },
+                url,
+                workspace as any
+            );
+
+            expect(result.workspaceId).toBe(workspace.id);
+            // No owner-scoped (or any) workspace repository lookup happens
+            // in this flow anymore.
+            expect(mockWorkspaceRepository.findOne).not.toHaveBeenCalled();
         });
     });
 

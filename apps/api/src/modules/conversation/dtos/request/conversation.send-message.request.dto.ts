@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-    IsArray,
-    IsNotEmpty,
-    IsOptional,
-    IsString,
-    MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class ConversationSendMessageRequestDto {
     @IsString()
@@ -17,13 +11,4 @@ export class ConversationSendMessageRequestDto {
         maxLength: 4096,
     })
     text: string;
-
-    @IsOptional()
-    @IsArray()
-    @ApiProperty({
-        description: 'Optional attachments (platform-specific payload)',
-        required: false,
-        type: [Object],
-    })
-    attachments?: unknown[];
 }

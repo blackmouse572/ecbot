@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 type UseOAuthLoginProps = {
   onSuccess?: (data: { code: string }) => void;
@@ -15,7 +16,7 @@ type PlatformConfig = {
   windowTitle: string;
 };
 
-function getFacebookConfig(): PlatformConfig {
+function getFacebookConfig(state: string): PlatformConfig {
   const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
   const redirectUri = import.meta.env.VITE_FACEBOOK_REDIRECT_URI;
   const permissions = [
@@ -29,40 +30,67 @@ function getFacebookConfig(): PlatformConfig {
     "business_management",
   ].join(",");
   return {
-    url: `https://www.facebook.com/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${permissions}`,
+    url: `https://www.facebook.com/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${permissions}&state=${state}`,
     windowTitle: "Facebook Login",
   };
 }
 
-function getInstagramConfig(): PlatformConfig {
+const WHATSAPP_GRAPH_API_VERSION = "v23.0";
+
+// WhatsApp Embedded Signup opened as a plain facebook.com popup rather than
+// through Meta's JS SDK, which ad-blockers stop. The config_id replaces scopes;
+// the redirect carries only a code, so the backend finds the shared WhatsApp
+// Business account and numbers itself. Reuses the Facebook callback page.
+function getWhatsAppConfig(): PlatformConfig {
+  // Mirrors what FB.login sends for Embedded Signup v4, minus the SDK's own
+  // response channel: our redirect_uri receives the code instead.
+  const params = new URLSearchParams({
+    client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
+    redirect_uri: import.meta.env.VITE_FACEBOOK_REDIRECT_URI,
+    config_id: import.meta.env.VITE_WHATSAPP_CONFIG_ID,
+    response_type: "code",
+    override_default_response_type: "true",
+    display: "popup",
+    // v4 sends only `setup`. `sessionInfoVersion` would make the popup report
+    // to an SDK listener in this window, which does not exist without the SDK.
+    extras: JSON.stringify({ setup: {} }),
+  });
+  return {
+    url: `https://www.facebook.com/${WHATSAPP_GRAPH_API_VERSION}/dialog/oauth?${params}`,
+    windowTitle: "WhatsApp Signup",
+  };
+}
+
+function getInstagramConfig(state: string): PlatformConfig {
   const appId = import.meta.env.VITE_INSTAGRAM_APP_ID;
   const redirectUri = import.meta.env.VITE_INSTAGRAM_REDIRECT_URI;
   return {
-    url: `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_messages&response_type=code`,
+    url: `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_messages&response_type=code&state=${state}`,
     windowTitle: "Instagram Login",
   };
 }
 
-function getZaloConfig(): PlatformConfig {
+function getZaloConfig(state: string): PlatformConfig {
   const appId = import.meta.env.VITE_ZALO_APP_ID;
   const redirectUri = import.meta.env.VITE_ZALO_REDIRECT_URI;
   return {
-    url: `https://oauth.zaloapp.com/v4/oa/permission?app_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=zalo`,
+    url: `https://oauth.zaloapp.com/v4/oa/permission?app_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`,
     windowTitle: "Zalo Login",
   };
 }
 
-function getTikTokShopConfig(): PlatformConfig {
+function getTikTokShopConfig(state: string): PlatformConfig {
   const appKey = import.meta.env.VITE_TIKTOK_APP_KEY;
   const redirectUri = import.meta.env.VITE_TIKTOK_REDIRECT_URI;
   return {
-    url: `https://auth.tiktok-shops.com/oauth/authorize?app_key=${appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&state=tiktok`,
+    url: `https://auth.tiktok-shops.com/oauth/authorize?app_key=${appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`,
     windowTitle: "TikTok Shop Login",
   };
 }
 
 function getShopeeConfig(): PlatformConfig {
-  // Shopee auth URL requires HMAC signing — use the backend-provided URL
+  // Shopee auth URL requires HMAC signing — use the backend-provided URL,
+  // which builds its own redirect. We don't append or verify state here.
   const redirectUri = import.meta.env.VITE_SHOPEE_REDIRECT_URI;
   return {
     url: `/api/account/shopee-auth-url?redirect_uri=${encodeURIComponent(redirectUri)}`,
@@ -70,18 +98,43 @@ function getShopeeConfig(): PlatformConfig {
   };
 }
 
-const PLATFORM_CONFIGS: Record<string, () => PlatformConfig> = {
+const PLATFORM_CONFIGS: Record<string, (state: string) => PlatformConfig> = {
   FACEBOOK_ACCOUNT: getFacebookConfig,
   INSTAGRAM_ACCOUNT: getInstagramConfig,
   ZALO_ACCOUNT: getZaloConfig,
   TIKTOK_SHOP: getTikTokShopConfig,
   SHOPEE_SHOP: getShopeeConfig,
+  WHATSAPP_BUSINESS: getWhatsAppConfig,
 };
+
+// Platforms whose authorize URL we build ourselves, so we can bind a
+// per-click state to the popup and verify it comes back unchanged. Shopee's
+// URL is server-built (see getShopeeConfig) and out of scope for this check.
+const STATEFUL_PLATFORMS = new Set([
+  "FACEBOOK_ACCOUNT",
+  "INSTAGRAM_ACCOUNT",
+  "ZALO_ACCOUNT",
+  "TIKTOK_SHOP",
+]);
+
+function oauthStateKey(platform: string) {
+  return `oauth-state:${platform}`;
+}
+
+function generateState(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+    "",
+  );
+}
 
 export function useOAuthLogin(
   platform: string,
   { onSuccess, onError, onClosed }: UseOAuthLoginProps,
 ) {
+  const { t } = useTranslation();
+
   // A ref so the popup poll and the message listener always call the
   // latest handlers without re-subscribing (and re-opening a new listener)
   // on every render.
@@ -108,7 +161,12 @@ export function useOAuthLogin(
       return;
     }
 
-    const { url, windowTitle } = configFn();
+    const state = generateState();
+    if (STATEFUL_PLATFORMS.has(platform)) {
+      sessionStorage.setItem(oauthStateKey(platform), state);
+    }
+
+    const { url, windowTitle } = configFn(state);
     const width = 600;
     const height = 700;
     const left = window.innerWidth / 2 - width / 2 + window.screenX;
@@ -142,6 +200,15 @@ export function useOAuthLogin(
       if (data.type === "oauth-success") {
         settledRef.current = true;
         stopPolling();
+        if (STATEFUL_PLATFORMS.has(platform)) {
+          const key = oauthStateKey(platform);
+          const expectedState = sessionStorage.getItem(key);
+          sessionStorage.removeItem(key);
+          if (!expectedState || data.payload?.state !== expectedState) {
+            handlers.current.onError?.(t("accounts.link.invalidState"));
+            return;
+          }
+        }
         handlers.current.onSuccess?.(data.payload);
       } else if (data.type === "oauth-error") {
         settledRef.current = true;
@@ -155,7 +222,7 @@ export function useOAuthLogin(
       window.removeEventListener("message", handleMessage);
       stopPolling();
     };
-  }, [stopPolling]);
+  }, [platform, stopPolling, t]);
 
   return { handleLinkClick };
 }

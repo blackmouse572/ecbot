@@ -294,6 +294,159 @@ describe('StreamingDelivery.deliver (UI Message Stream)', () => {
     });
 });
 
+describe('StreamingDelivery — product images', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        "%s: an image inside a paragraph goes after that paragraph's text",
+        async (_mode, chatbot) => {
+            const adapter = makeAdapter();
+            const persisted: { text: string; attachments?: unknown[] }[] = [];
+            await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({
+                        type: 'text-delta',
+                        id: 't1',
+                        delta: 'Here it is, ',
+                    }),
+                    line({
+                        type: 'file',
+                        url: 'https://cdn/shirt.jpg',
+                        mediaType: 'image/*',
+                    }),
+                    line({ type: 'text-delta', id: 't1', delta: 'in white.' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async (text, attachments) => {
+                    persisted.push({ text, attachments });
+                    return 'nonce';
+                },
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(persisted).toEqual([
+                { text: 'Here it is, in white.', attachments: undefined },
+                {
+                    text: '',
+                    attachments: [
+                        { type: 'image', url: 'https://cdn/shirt.jpg' },
+                    ],
+                },
+            ]);
+            expect(adapter.sendMessage.mock.calls[1][2].content).toEqual({
+                kind: 'media',
+                url: 'https://cdn/shirt.jpg',
+                mediaType: 'image',
+            });
+        }
+    );
+});
+
+describe('StreamingDelivery — markdown in text', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        '%s: sends markdown image syntax as plain text',
+        async (_mode, chatbot) => {
+            const adapter = makeAdapter();
+            await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({
+                        type: 'text-delta',
+                        id: 't1',
+                        delta: 'see ![x](https://evil/p.png)',
+                    }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async () => 'nonce',
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(
+                adapter.sendMessage.mock.calls.map(c => c[2].content.kind)
+            ).toEqual(['text']);
+        }
+    );
+});
+
+describe('StreamingDelivery — send_image file parts', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        '%s: sends text, then the image, in stream order',
+        async (_mode, chatbot) => {
+            const adapter = makeAdapter();
+            const persisted: { text: string; attachments?: unknown[] }[] = [];
+            await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({ type: 'text-delta', id: 't1', delta: 'Mẫu này nè' }),
+                    line({
+                        type: 'tool-input-start',
+                        toolCallId: 'r1',
+                        toolName: 'send_image',
+                    }),
+                    line({
+                        type: 'tool-output-available',
+                        toolCallId: 'r1',
+                        output: { ok: true, url: 'https://cdn/s.jpg' },
+                    }),
+                    line({
+                        type: 'file',
+                        url: 'https://cdn/s.jpg',
+                        mediaType: 'image/*',
+                    }),
+                    line({ type: 'text-delta', id: 't2', delta: 'Giá 350k' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async (text, attachments) => {
+                    persisted.push({ text, attachments });
+                    return 'nonce';
+                },
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(persisted).toEqual([
+                { text: 'Mẫu này nè', attachments: undefined },
+                {
+                    text: '',
+                    attachments: [{ type: 'image', url: 'https://cdn/s.jpg' }],
+                },
+                { text: 'Giá 350k', attachments: undefined },
+            ]);
+            expect(adapter.sendMessage.mock.calls[1][2].content.kind).toBe(
+                'media'
+            );
+        }
+    );
+});
+
 describe('guardrailDeliveryPolicy', () => {
     it('no chatbot -> buffered (safe default)', () => {
         expect(guardrailDeliveryPolicy()).toEqual({

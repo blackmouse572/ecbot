@@ -1,4 +1,5 @@
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
@@ -8,11 +9,17 @@ import {
 } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
+import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
+import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { CustomerTagClassifierService } from '@app/modules/customer/services/customer-tag-classifier.service';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { PlatformWebhookEvent } from '../interfaces/platform-adapter.interface';
+import {
+    PlatformAttachment,
+    PlatformWebhookEvent,
+} from '../interfaces/platform-adapter.interface';
+import { PlatformAdapter } from '../adapters/platform-adapter.base';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import { fetchAsBase64 } from '@app/common/utils/fetch-as-base64.util';
 import { MessageDebounceService } from './message-debounce.service';
@@ -41,7 +48,8 @@ export class MessageProcessorService implements OnModuleInit {
         private readonly moduleRef: ModuleRef,
         private readonly chatbotAIService: ChatbotAIService,
         private readonly lease: GenerationLeaseService,
-        private readonly dedupe: InboundEventDedupeService
+        private readonly dedupe: InboundEventDedupeService,
+        private readonly messageMedia: MessageMediaService
     ) {}
 
     onModuleInit(): void {
@@ -67,7 +75,9 @@ export class MessageProcessorService implements OnModuleInit {
 
         // Allow action events (postback/quick_reply) through even when kind != 'message'
         if (event.kind !== 'message' && !event.action) return;
-        if (!event.text && !event.action) return;
+        // An image with no caption is still a customer turn (the AI describes it).
+        const hasImage = event.attachments?.some(a => a.type === 'image');
+        if (!event.text && !event.action && !hasImage) return;
 
         const account = await this.accountService.findOne(
             { externalId: event.accountKey },
@@ -173,6 +183,7 @@ export class MessageProcessorService implements OnModuleInit {
                     account,
                     event.senderId
                 );
+                const senderName = profile.name ?? event.senderName;
                 const avatarBase64 = profile.avatar
                     ? await fetchAsBase64(profile.avatar)
                     : undefined;
@@ -180,7 +191,7 @@ export class MessageProcessorService implements OnModuleInit {
                 await this.conversationService.updateSenderProfile(
                     conversation.id,
                     {
-                        senderName: profile.name,
+                        senderName,
                         senderAvatar: avatarBase64 ?? null,
                         senderProfileFetchedAt: fetchedAt,
                     }
@@ -188,16 +199,16 @@ export class MessageProcessorService implements OnModuleInit {
                 await this.customerService.updateContactPointProfile(
                     contactPoint.id,
                     {
-                        displaySenderName: profile.name,
+                        displaySenderName: senderName,
                         senderAvatar: avatarBase64 ?? null,
                         fetchedAt,
                     }
                 );
                 await this.customerService.fillCustomerNameIfEmpty(
                     customerId,
-                    profile.name
+                    senderName
                 );
-                conversation.senderName = profile.name;
+                conversation.senderName = senderName;
                 conversation.senderAvatar = avatarBase64 ?? null;
                 conversation.senderProfileFetchedAt = fetchedAt;
             } catch (e) {
@@ -207,20 +218,26 @@ export class MessageProcessorService implements OnModuleInit {
             }
         }
 
-        if (event.externalMessageId) {
-            await this.messageRepository.upsertByExternalId(
-                conversation.id,
-                event.externalMessageId,
-                {
-                    direction: ENUM_MESSAGE_DIRECTION.INBOUND,
-                    authorType: ENUM_MESSAGE_AUTHOR.USER,
-                    authorId: event.senderId,
-                    text: effectiveText,
-                    raw: event.raw,
-                    dateSent: event.timestamp,
-                }
-            );
-        }
+        const inbound = event.externalMessageId
+            ? await this.messageRepository.upsertByExternalId(
+                  conversation.id,
+                  event.externalMessageId,
+                  {
+                      direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                      authorType: ENUM_MESSAGE_AUTHOR.USER,
+                      authorId: event.senderId,
+                      text: effectiveText,
+                      attachments: await this.storeAttachments(
+                          adapter,
+                          account,
+                          conversation.id,
+                          event.attachments
+                      ),
+                      raw: event.raw,
+                      dateSent: event.timestamp,
+                  }
+              )
+            : undefined;
 
         await this.conversationService.touchLastMessage(
             chatbot.id,
@@ -277,21 +294,63 @@ export class MessageProcessorService implements OnModuleInit {
             adapter.startTyping(account, event.senderId, true).catch(() => {});
         }
 
-        if (process.env.POC_EDGE_DEBOUNCE_URL) {
-            // POC: the burst buffer + debounce timer now live in the edge
-            // Durable Object. Bump the Redis lease here (same supersede
-            // semantics as messageDebounceService.schedule) then hand the
-            // message off to the edge Worker instead of enqueuing BullMQ.
-            // Resilient like the flag-OFF path below: a Redis hiccup must not
-            // throw out of process() and abort the rest of the webhook batch.
-            await this.lease
-                .bump(conversation.id)
-                .catch(err =>
-                    this.logger.warn(
-                        `lease.bump failed for ${conversation.id}: ${err.message}`
-                    )
-                );
-            await fetch(
+        const job = {
+            conversationId: conversation.id,
+            senderId: event.senderId,
+            customerId,
+            contactPointId: contactPoint.id,
+            text: effectiveText,
+            messageId: inbound?.id,
+        };
+        // POC: the burst buffer + debounce timer live in the edge Durable
+        // Object when POC_EDGE_DEBOUNCE_URL is set. If the edge does not take
+        // the message, the in-process debounce does, so the bot still replies.
+        if (
+            process.env.POC_EDGE_DEBOUNCE_URL &&
+            (await this.handOffToEdgeDebounce(job))
+        ) {
+            return;
+        }
+        this.messageDebounceService
+            .schedule(
+                job.conversationId,
+                job.senderId,
+                job.customerId,
+                job.contactPointId,
+                job.text,
+                job.messageId
+            )
+            .catch(err =>
+                this.logger.warn(
+                    `messageDebounce.schedule failed for ${conversation.id}: ${err.message}`
+                )
+            );
+    }
+
+    /**
+     * Hand one message to the edge debounce. Bumps the Redis lease first (same
+     * supersede semantics as messageDebounceService.schedule). Resolves false
+     * when the edge did not accept it (non-2xx or unreachable), so the caller
+     * can fall back; never throws, so one failure cannot abort the rest of the
+     * webhook batch.
+     */
+    private async handOffToEdgeDebounce(job: {
+        conversationId: string;
+        senderId: string;
+        customerId: string;
+        contactPointId: string;
+        text: string;
+        messageId?: string;
+    }): Promise<boolean> {
+        await this.lease
+            .bump(job.conversationId)
+            .catch(err =>
+                this.logger.warn(
+                    `lease.bump failed for ${job.conversationId}: ${err.message}`
+                )
+            );
+        try {
+            const res = await fetch(
                 `${process.env.POC_EDGE_DEBOUNCE_URL}/internal/debounce`,
                 {
                     method: 'POST',
@@ -300,34 +359,61 @@ export class MessageProcessorService implements OnModuleInit {
                         'x-internal-secret':
                             process.env.POC_EDGE_INTERNAL_SECRET ?? '',
                     },
-                    body: JSON.stringify({
-                        conversationId: conversation.id,
-                        senderId: event.senderId,
-                        customerId,
-                        contactPointId: contactPoint.id,
-                        text: effectiveText,
-                    }),
+                    body: JSON.stringify(job),
                 }
-            ).catch(err =>
-                this.logger.warn(
-                    `edge debounce POST failed for ${conversation.id}: ${err.message}`
-                )
             );
-        } else {
-            this.messageDebounceService
-                .schedule(
-                    conversation.id,
-                    event.senderId,
-                    customerId,
-                    contactPoint.id,
-                    effectiveText
-                )
-                .catch(err =>
-                    this.logger.warn(
-                        `messageDebounce.schedule failed for ${conversation.id}: ${err.message}`
-                    )
-                );
+            if (res.ok) return true;
+            this.logger.warn(
+                `edge debounce refused ${job.conversationId} with ${res.status}, falling back to in-process debounce`
+            );
+        } catch (err) {
+            this.logger.warn(
+                `edge debounce POST failed for ${job.conversationId}: ${(err as Error).message}, falling back to in-process debounce`
+            );
         }
+        return false;
+    }
+
+    /**
+     * Copy each image into our own storage: platform links expire or need
+     * credentials. On any failure the image keeps its platform link, so the
+     * turn still goes through. The platform `raw` payload is not kept here —
+     * it already lives on the message's `raw`.
+     */
+    private async storeAttachments(
+        adapter: PlatformAdapter,
+        account: AccountEntity,
+        conversationId: string,
+        attachments?: PlatformAttachment[]
+    ): Promise<IMessageAttachment[] | undefined> {
+        if (!attachments?.length) return undefined;
+        return Promise.all(
+            attachments.map(async ({ type, url, raw }) => {
+                const kept: IMessageAttachment = url ? { type, url } : { type };
+                if (type !== 'image') return kept;
+                try {
+                    const media = await adapter.fetchMedia(account, {
+                        type,
+                        url,
+                        raw,
+                    });
+                    if (
+                        !media?.mime.startsWith('image/') ||
+                        media.data.length > MESSAGE_MEDIA_MAX_BYTES
+                    )
+                        return kept;
+                    return await this.messageMedia.saveImage(
+                        conversationId,
+                        media
+                    );
+                } catch (err) {
+                    this.logger.warn(
+                        `Storing inbound image failed for ${conversationId}: ${(err as Error).message}`
+                    );
+                    return kept;
+                }
+            })
+        );
     }
 
     /**

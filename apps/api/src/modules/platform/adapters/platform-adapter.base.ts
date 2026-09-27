@@ -1,6 +1,10 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
+import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { MEDIA_FETCH_TIMEOUT_MS } from '../constants/media.constant';
+import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
+import { readCappedBody } from '@app/common/utils/read-capped-body.util';
 import { isAxiosError } from 'axios';
 import {
     AdapterCapabilities,
@@ -9,6 +13,7 @@ import {
     QuickReply,
 } from '../interfaces/message-model';
 import {
+    PlatformAttachment,
     PlatformConversation,
     PlatformMessage,
     PlatformOAuthCapability,
@@ -52,6 +57,28 @@ export abstract class PlatformAdapter {
         account: AccountEntity,
         lookback: Date
     ): Promise<PlatformWebhookEvent[]>;
+
+    /**
+     * Download an inbound attachment's bytes. Default: GET its public URL
+     * (Messenger, Zalo CDNs). Platforms that hand out ids or need
+     * credentials override this. Null when there is nothing to download.
+     */
+    async fetchMedia(
+        _account: AccountEntity,
+        attachment: PlatformAttachment
+    ): Promise<IMessageMedia | null> {
+        if (!attachment.url) return null;
+        const res = await fetch(attachment.url, {
+            signal: AbortSignal.timeout(MEDIA_FETCH_TIMEOUT_MS),
+        });
+        if (!res.ok) return null;
+        const data = await readCappedBody(res, MESSAGE_MEDIA_MAX_BYTES);
+        if (!data) return null;
+        return {
+            data,
+            mime: res.headers.get('content-type')?.split(';')[0] ?? '',
+        };
+    }
 
     // ---- outbound (concrete: degrade + guard → protected hook) ----
     async sendMessage(

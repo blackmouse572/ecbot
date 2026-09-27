@@ -23,7 +23,13 @@ export const toChatbotListQuery = (
   },
 });
 
-export const useChatbotTableQuery = (
-  perPage = CHATBOT_CONSTANTS.PAGE_SIZE,
-  prefix?: string,
-) => toChatbotListQuery(useQueryParams(CHATBOT_TABLE_PARAMS, prefix), perPage);
+type UseChatbotTableQueryProps = {
+  prefix?: string;
+  pageSize?: number;
+};
+
+export const useChatbotTableQuery = ({
+  prefix,
+  pageSize = CHATBOT_CONSTANTS.PAGE_SIZE,
+}: UseChatbotTableQueryProps = {}) =>
+  toChatbotListQuery(useQueryParams(CHATBOT_TABLE_PARAMS, prefix), pageSize);

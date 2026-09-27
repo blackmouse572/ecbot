@@ -14,7 +14,11 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { CHATBOT_FORM_DEFAULTS, CHATBOT_LANGUAGES } from "../../constants";
-import { createChatbotSchema, type ChatbotFormData } from "../../schemas";
+import {
+  createChatbotSchema,
+  type ChatbotFormData,
+  type ChatbotFormInput,
+} from "../../schemas";
 import { LinkedAccountsField } from "../linked-accounts-field";
 import { ChatbotTypeField } from "./chatbot-type-field";
 
@@ -45,7 +49,10 @@ export function ChatbotForm({
 }: ChatbotFormProps) {
   const { t } = useTranslation();
 
-  const form = useForm<ChatbotFormData>({
+  // Three generics because the schema coerces and defaults: most fields are
+  // optional (or `unknown`) going in and required coming out, so the field
+  // values and the submitted payload are different types.
+  const form = useForm<ChatbotFormInput, unknown, ChatbotFormData>({
     resolver: zodResolver(createChatbotSchema),
     defaultValues,
   });

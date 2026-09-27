@@ -2,10 +2,6 @@ import { UserMetaResponseDto } from '@app/modules/user/dtos/response/user.meta.r
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose, Type } from 'class-transformer';
 
-// Shared by every audit-trail field below so the three decorators don't
-// each carry their own inline factory.
-const userMetaType = (): typeof UserMetaResponseDto => UserMetaResponseDto;
-
 export class DatabaseDto {
     @ApiProperty({
         description: 'Alias id of api key',
@@ -29,7 +25,7 @@ export class DatabaseDto {
         type: UserMetaResponseDto,
     })
     @Expose()
-    @Type(userMetaType)
+    @Type(() => UserMetaResponseDto)
     createdBy?: UserMetaResponseDto;
 
     @ApiProperty({
@@ -46,7 +42,7 @@ export class DatabaseDto {
         type: UserMetaResponseDto,
     })
     @Expose()
-    @Type(userMetaType)
+    @Type(() => UserMetaResponseDto)
     updatedBy?: UserMetaResponseDto;
 
     @ApiProperty({
@@ -70,7 +66,7 @@ export class DatabaseDto {
         type: UserMetaResponseDto,
     })
     @Expose()
-    @Type(userMetaType)
+    @Type(() => UserMetaResponseDto)
     deletedBy?: UserMetaResponseDto;
 
     @ApiHideProperty()

@@ -17,6 +17,7 @@ import { ShopeePlatformAdapter } from './adapters/shopee/shopee.platform-adapter
 import { TelegramPlatformAdapter } from './adapters/telegram/telegram.platform-adapter';
 import { TiktokPlatformAdapter } from './adapters/tiktok/tiktok.platform-adapter';
 import { WebsitePlatformAdapter } from './adapters/website/website.platform-adapter';
+import { WhatsAppPlatformAdapter } from './adapters/whatsapp/whatsapp.platform-adapter';
 import { ZaloPlatformAdapter } from './adapters/zalo/zalo.platform-adapter';
 import { PLATFORM_ADAPTER } from './interfaces/platform-adapter.interface';
 import { PlatformAdapterRegistry } from './services/platform-adapter.registry';
@@ -26,6 +27,7 @@ import { GenerationLeaseService } from './services/generation-lease.service';
 import { InboundEventDedupeService } from './services/inbound-event-dedupe.service';
 import { StreamingDelivery } from './services/streaming-delivery.service';
 import { ReplyGenerationService } from './services/reply-generation.service';
+import { TurnContextService } from './services/turn-context.service';
 import { INBOUND_EVENT_QUEUE } from './constants/inbound-event.constant';
 import { InboundInboxService } from './services/inbound-inbox.service';
 import { InboundEventProcessor } from './processors/inbound-event.processor';
@@ -47,6 +49,7 @@ const ADAPTERS = [
     TiktokPlatformAdapter,
     ShopeePlatformAdapter,
     TelegramPlatformAdapter,
+    WhatsAppPlatformAdapter,
     ApiChannelPlatformAdapter,
     WebsitePlatformAdapter,
 ];
@@ -87,6 +90,7 @@ const ADAPTERS = [
         InboundEventDedupeService,
         StreamingDelivery,
         ReplyGenerationService,
+        TurnContextService,
         MessageDebounceService,
         MessageProcessorService,
         ActionRouter,

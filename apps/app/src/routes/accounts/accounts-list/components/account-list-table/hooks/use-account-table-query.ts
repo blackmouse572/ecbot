@@ -36,5 +36,5 @@ type UseAccountTableQueryProps = {
 export const useAccountTableQuery = ({
   prefix,
   pageSize = ACCOUNTS_PAGE_SIZE,
-}: UseAccountTableQueryProps) =>
+}: UseAccountTableQueryProps = {}) =>
   toAccountListQuery(useQueryParams(ACCOUNT_TABLE_PARAMS, prefix), pageSize);

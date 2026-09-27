@@ -1,4 +1,5 @@
 import { useAIChat } from "@/components/ai-chat/ai-chat-provider";
+import type { MessageAttachment } from "@/types/chat-message";
 import { widgetPublicControllerMessagesV1 } from "@repo/client";
 import type { UIMessage } from "ai";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +13,7 @@ type WidgetMessage = {
   authorType: string;
   text?: string;
   dateSent: string;
+  attachments?: MessageAttachment[];
 };
 
 /**
@@ -109,10 +111,20 @@ export function useWidgetTranscript({
   }, [data, isOpen, setMessages]);
 }
 
-function toUiMessage(message: WidgetMessage): UIMessage {
+/** A persisted row as a chat message — images the bot sent come back as
+ *  `file` parts, the same shape the live stream used. */
+export function toUiMessage(message: WidgetMessage): UIMessage {
+  const files = (message.attachments ?? [])
+    .filter((a) => a.type === "image" && a.url)
+    .map((a) => ({
+      type: "file" as const,
+      url: a.url as string,
+      mediaType: "image/*",
+    }));
+  const text = { type: "text" as const, text: message.text ?? "" };
   return {
     id: message.id,
     role: message.authorType === "USER" ? "user" : "assistant",
-    parts: [{ type: "text", text: message.text ?? "" }],
+    parts: message.text || !files.length ? [text, ...files] : files,
   };
 }

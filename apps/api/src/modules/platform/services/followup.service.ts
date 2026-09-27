@@ -1,18 +1,19 @@
 import { AccountService } from '@app/modules/account/services/account.service';
-import {
-    AIChatHistoryMessage,
-    ChatbotAIService,
-} from '@app/modules/chatbot/services/chatbot-ai.service';
+import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
-import {
-    ENUM_MESSAGE_AUTHOR,
-    ENUM_MESSAGE_DIRECTION,
-} from '@app/modules/conversation/enums/message.enum';
+import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { ManifestBuilderService } from '@app/modules/tool/services/manifest-builder.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
+import {
+    BadRequestException,
+    Inject,
+    Injectable,
+    Logger,
+    Optional,
+} from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
@@ -22,9 +23,10 @@ import {
     ENUM_FOLLOWUP_STATUS,
     FOLLOWUP_QUEUE,
     FOLLOWUP_TASK_PREFIX,
+    MAX_PENDING_FOLLOWUPS_PER_CONVERSATION,
     OUTCOME_REASON_MAX_LENGTH,
+    PENDING_FOLLOWUP_STATUSES,
 } from '../constants/followup.constant';
-import { MESSAGE_HISTORY_WINDOW } from '../constants/message-debounce.constant';
 import { FollowupListResponseDto } from '../dtos/response/followup.list.response.dto';
 import { FollowupPendingResponseDto } from '../dtos/response/followup.pending.response.dto';
 import {
@@ -36,6 +38,7 @@ import { FollowupEntity } from '../repository/entities/followup.entity';
 import { FollowupRepository } from '../repository/repositories/followup.repository';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import { StreamingDelivery } from './streaming-delivery.service';
+import { TurnContextService } from './turn-context.service';
 import {
     AI_USAGE_METER,
     AiUsageMeter,
@@ -56,12 +59,30 @@ export class FollowupService {
         private readonly manifestBuilder: ManifestBuilderService,
         private readonly streaming: StreamingDelivery,
         private readonly moduleRef: ModuleRef,
+        private readonly turnContext: TurnContextService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
     ) {}
 
     async schedule(data: IFollowupJob, delayMinutes: number): Promise<string> {
+        // Not wrapped in a transaction with the insert below: a burst of
+        // concurrent schedule() calls for the same conversation can each read
+        // the count before any of them commits, so the cap can be exceeded by
+        // a handful of rows under a race. Acceptable here — the cap is a spam
+        // backstop, not a hard invariant — but a transactional count+insert
+        // would close it if that changes.
+        const pendingCount = await this.followupRepository.getTotal({
+            conversation: data.conversationId,
+            status: { $in: PENDING_FOLLOWUP_STATUSES },
+            deletedAt: null,
+        });
+        if (pendingCount >= MAX_PENDING_FOLLOWUPS_PER_CONVERSATION) {
+            throw new BadRequestException(
+                'followup.schedule.error.tooManyPending'
+            );
+        }
+
         const scheduledAt = new Date(
             Date.now() + Math.max(0, delayMinutes) * 60_000
         );
@@ -93,9 +114,12 @@ export class FollowupService {
         return followup.id;
     }
 
-    async cancel(followupId: string): Promise<boolean> {
-        const followup =
-            await this.followupRepository.findPendingById(followupId);
+    async cancel(followupId: string, conversationId: string): Promise<boolean> {
+        const followup = await this.followupRepository.findPendingById(
+            followupId,
+            undefined,
+            conversationId
+        );
         if (!followup) return false;
 
         await this.applyCancellation(followup);
@@ -258,7 +282,13 @@ export class FollowupService {
             chatbot.id,
             chatbot.workspace.id
         );
-        const history = await this.buildHistory(conversationId);
+        // No burst of its own: every recent row, customer images included,
+        // is history.
+        const { history } = await this.turnContext.build(
+            conversationId,
+            { texts: [] },
+            chatbot.id
+        );
 
         // A follow-up is our idea, not the customer's — it is the first thing
         // that should stop when the workspace runs out of tokens.
@@ -303,7 +333,10 @@ export class FollowupService {
                 stream,
                 abort: ac,
                 isCurrent: async () => true,
-                onSegmentPersist: async (segmentText: string) => {
+                onSegmentPersist: async (
+                    segmentText: string,
+                    attachments?: IMessageAttachment[]
+                ) => {
                     const nonce = randomUUID();
                     await this.messageRepository.insertPendingOutbound(
                         conversationId,
@@ -312,6 +345,7 @@ export class FollowupService {
                             authorType: ENUM_MESSAGE_AUTHOR.BOT,
                             authorId: chatbot.id,
                             text: segmentText,
+                            attachments,
                             dateSent: new Date(),
                         }
                     );
@@ -360,26 +394,6 @@ export class FollowupService {
         await this.recordOutcome(followup, conversationId, {
             status: ENUM_FOLLOWUP_STATUS.COMPLETED,
         });
-    }
-
-    /** Safety net for an empty agent thread — replay recent turns from the DB. */
-    private async buildHistory(
-        conversationId: string
-    ): Promise<AIChatHistoryMessage[]> {
-        const recent = await this.messageRepository.findRecentByConversation(
-            conversationId,
-            MESSAGE_HISTORY_WINDOW
-        );
-
-        return recent
-            .filter(message => message.text)
-            .map(message => ({
-                role:
-                    message.direction === ENUM_MESSAGE_DIRECTION.INBOUND
-                        ? 'user'
-                        : 'assistant',
-                content: message.text as string,
-            }));
     }
 
     private async applyCancellation(followup: FollowupEntity): Promise<void> {

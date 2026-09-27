@@ -1,9 +1,7 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
+import { botImage } from '@app/modules/conversation/utils/message-attachment';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
-import {
-    AIChatHistoryMessage,
-    ChatbotAIService,
-} from '@app/modules/chatbot/services/chatbot-ai.service';
+import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ChatbotAiSseStreamService } from '@app/modules/chatbot/services/chatbot-ai-sse-stream.service';
 import {
     ENUM_MESSAGE_AUTHOR,
@@ -22,7 +20,6 @@ import {
 import { randomUUID } from 'crypto';
 import { Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
-import { MESSAGE_HISTORY_WINDOW } from '../constants/message-debounce.constant';
 import { ENUM_WIDGET_STATUS_CODE_ERROR } from '../enums/widget.status-code.enum';
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
 import {
@@ -30,6 +27,7 @@ import {
     AiUsageMeter,
     ENUM_AI_USAGE_SOURCE,
 } from '@app/app/ai-usage-meter.interface';
+import { TurnContextService } from './turn-context.service';
 
 export interface IWidgetTurn {
     /** WEBSITE_WIDGET account with `chatbot` and `workspace` populated. */
@@ -66,6 +64,7 @@ export class WidgetChatService {
         private readonly messageRepository: MessageRepository,
         private readonly chatbotAIService: ChatbotAIService,
         private readonly sseStream: ChatbotAiSseStreamService,
+        private readonly turnContext: TurnContextService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -95,7 +94,7 @@ export class WidgetChatService {
             contactPointId: contactPoint.id,
         });
 
-        await this.messageRepository.upsertByExternalId(
+        const inbound = await this.messageRepository.upsertByExternalId(
             conversation.id,
             messageId,
             {
@@ -120,7 +119,11 @@ export class WidgetChatService {
             return;
         }
 
-        const history = await this.loadHistory(conversation.id, messageId);
+        const { history } = await this.turnContext.build(
+            conversation.id,
+            { texts: [text], messageIds: [inbound.id] },
+            chatbot.id
+        );
 
         // Out of tokens: answer with the fallback line over the same stream the
         // widget is already reading, rather than failing the request.
@@ -162,8 +165,8 @@ export class WidgetChatService {
             upstream,
             abort,
             logContext: `widget account ${account.id}`,
-            onFinalize: assistantText =>
-                this.persistReply(conversation.id, assistantText),
+            onFinalize: (assistantText, images) =>
+                this.persistReply(conversation.id, assistantText, images),
             onUsage: async usage => {
                 await this.meter?.record({
                     workspaceId: account.workspace.id,
@@ -184,37 +187,14 @@ export class WidgetChatService {
      * rather than a cache: a widget conversation is durable, and an expiring
      * cache would leave the bot with less context than the operator can see.
      */
-    private async loadHistory(
-        conversationId: string,
-        currentMessageId: string
-    ): Promise<AIChatHistoryMessage[]> {
-        const recent = await this.messageRepository.findRecentByConversation(
-            conversationId,
-            MESSAGE_HISTORY_WINDOW
-        );
-
-        return (
-            recent
-                // Drop the message we just wrote — it is sent as `message`, and
-                // repeating it in `history` makes the agent see it twice.
-                .filter(m => m.externalId !== currentMessageId)
-                .filter(m => !!m.text)
-                .map(m => ({
-                    role:
-                        m.direction === ENUM_MESSAGE_DIRECTION.INBOUND
-                            ? ('user' as const)
-                            : ('assistant' as const),
-                    content: m.text!,
-                }))
-        );
-    }
-
     private async persistReply(
         conversationId: string,
-        assistantText: string
+        text: string,
+        images: string[]
     ): Promise<void> {
         // The row IS the delivery for this channel — the visitor already saw the
         // stream, and their poll reads this back on the next page load.
+        const attachments = images.map(botImage);
         const nonce = randomUUID();
         await this.messageRepository.insertPendingOutbound(
             conversationId,
@@ -222,7 +202,8 @@ export class WidgetChatService {
             {
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
                 authorId: 'bot',
-                text: assistantText,
+                text,
+                attachments: attachments.length ? attachments : undefined,
                 dateSent: new Date(),
             }
         );

@@ -72,7 +72,7 @@ export function makeFollowupRepository(rows: FollowupRow[] = []) {
             async (id: string) => find({ id, deletedAt: null })[0] ?? null
         ),
         findPendingById: jest.fn(
-            async (id: string, workspaceId?: string) =>
+            async (id: string, workspaceId?: string, conversationId?: string) =>
                 find({
                     id,
                     status: { $in: PENDING_FOLLOWUP_STATUSES },
@@ -85,6 +85,7 @@ export function makeFollowupRepository(rows: FollowupRow[] = []) {
                               },
                           }
                         : {}),
+                    ...(conversationId ? { conversation: conversationId } : {}),
                 })[0] ?? null
         ),
         findScheduledByConversation: jest.fn(async (conversationId: string) =>
@@ -141,6 +142,7 @@ export function makeFollowupRepository(rows: FollowupRow[] = []) {
         incrementAttempts: jest.fn(async (id: string, attempts: number) =>
             update(id, { attempts: attempts + 1 })
         ),
+        getTotal: jest.fn(async (where: FollowupRow) => find(where).length),
     };
 }
 

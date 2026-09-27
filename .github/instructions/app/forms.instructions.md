@@ -15,13 +15,46 @@ Use `zodResolver` from `@hookform/resolvers/zod`. This is the pattern used every
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-const form = useForm<ChatbotFormData>({
-  resolver: zodResolver(createChatbotSchema),
+const form = useForm<WorkspaceEditFormData>({
+  resolver: zodResolver(WorkspaceEditSchema),
   defaultValues,
 });
 ```
 
 > Schemas are authored with the `zod/v4` import (`import { z } from "zod/v4"`), and `zodResolver` works with them directly. Do **not** reach for `standardSchemaResolver` — it is not used in this codebase.
+
+### Coercing or defaulting schemas need three generics
+
+The one-generic form above only holds when the schema's input and output types
+match. `z.coerce.*`, `.default()`, `.transform()`, `.catch()` and
+`z.preprocess()` all make them differ: the field holds a raw string while the
+parsed payload holds a number, or the field may be absent while the payload
+guarantees a value. `zodResolver` is typed `Resolver<z.input<T>, TContext,
+z.output<T>>`, so `useForm<z.infer<T>>` fails to compile with a `Resolver` is
+not assignable error naming the mismatched field.
+
+Spell out all three generics instead — `TFieldValues` is what the inputs hold,
+`TTransformedValues` is what `handleSubmit` receives:
+
+```typescript
+export type ChatbotFormData = z.infer<typeof createChatbotSchema>; // submitted
+export type ChatbotFormInput = z.input<typeof createChatbotSchema>; // in the fields
+
+const form = useForm<ChatbotFormInput, unknown, ChatbotFormData>({
+  resolver: zodResolver(createChatbotSchema),
+  defaultValues,
+});
+```
+
+`defaultValues`, `reset()` and `onSubmit` callbacks keep working unchanged —
+output values are assignable to the wider input type. What does change is
+`watch()` and `getValues()`: they now return the **input** type, so a coerced
+field reads back as `unknown`. Parse before handing those values to anything
+expecting the output type:
+
+```typescript
+onTest(createHttpToolSchema.parse(form.getValues()), args);
+```
 
 ## Schema convention
 

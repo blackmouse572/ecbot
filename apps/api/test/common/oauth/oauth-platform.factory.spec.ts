@@ -7,6 +7,7 @@ import { ZaloOAuthService } from '../../../src/common/zalo/services/zalo-oauth.s
 import { TikTokShopOAuthService } from '../../../src/common/tiktok-shop/services/tiktok-shop-oauth.service';
 import { ShopeeOAuthService } from '../../../src/common/shopee/services/shopee-oauth.service';
 import { TelegramOAuthService } from '../../../src/common/telegram/services/telegram-oauth.service';
+import { WhatsAppOAuthService } from '../../../src/common/whatsapp/services/whatsapp-oauth.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 
 const mockFacebookAdapter = {
@@ -30,6 +31,11 @@ const mockShopeeService = {
     refreshToken: jest.fn(),
 };
 const mockTelegramService = {
+    getTokenAndProfile: jest.fn(),
+    refreshCredentials: jest.fn(),
+};
+
+const mockWhatsAppService = {
     getTokenAndProfile: jest.fn(),
     refreshCredentials: jest.fn(),
 };
@@ -58,6 +64,10 @@ describe('OAuthPlatformFactory', () => {
                 {
                     provide: TelegramOAuthService,
                     useValue: mockTelegramService,
+                },
+                {
+                    provide: WhatsAppOAuthService,
+                    useValue: mockWhatsAppService,
                 },
             ],
         }).compile();
@@ -98,6 +108,12 @@ describe('OAuthPlatformFactory', () => {
     it('returns the Telegram service for TELEGRAM_BOT', () => {
         expect(factory.getService(ENUM_ACCOUNT_TYPE.TELEGRAM_BOT)).toBe(
             mockTelegramService
+        );
+    });
+
+    it('returns the WhatsApp service for WHATSAPP_BUSINESS', () => {
+        expect(factory.getService(ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS)).toBe(
+            mockWhatsAppService
         );
     });
 

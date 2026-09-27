@@ -13,7 +13,7 @@ consumer instead (see References).
 | ------ | ------------------------- | ------------------------------------------------------- |
 | GET    | `/health`                 | Liveness check                                           |
 | GET    | `/robots.txt`             | `Disallow: /` for every crawler (see Bots & crawlers)     |
-| GET    | `/webhooks/:platform`     | Facebook/Messenger `hub.challenge` verification, checked locally (see Env / bindings); 404 for every other slug |
+| GET    | `/webhooks/:platform`     | Meta `hub.challenge` verification (Messenger, WhatsApp), checked locally (see Env / bindings); 404 for every other slug |
 | POST   | `/webhooks/telegram/:botId` | Telegram (botId comes from the URL, not the payload)   |
 | POST   | `/webhooks/:platform`     | Every other platform (slug-based)                        |
 
@@ -33,6 +33,30 @@ consumer instead (see References).
   body, keyed with `FACEBOOK_APP_SECRET` (apps/api env — POST events are
   still verified downstream in apps/api, not here).
 
+### WhatsApp Business
+
+- Slug: `whatsapp`
+- Path: `POST /webhooks/whatsapp`
+- GET challenge: same Meta handshake as Messenger (`GET /webhooks/whatsapp`),
+  checked against the same `FACEBOOK_WEBHOOK_SECRET`. Messenger and WhatsApp
+  share one Meta app.
+- Signature: same `x-hub-signature-256` HMAC keyed with `FACEBOOK_APP_SECRET`,
+  verified in apps/api.
+- The callback URL is set by hand in the Meta app dashboard (WhatsApp >
+  Configuration). Point it at this worker's `/webhooks/whatsapp`.
+
+### Telegram
+
+- Path: `POST /webhooks/telegram/:botId`. Telegram payloads don't carry the
+  bot's own id, so it rides in the URL and apps/api uses it as the account key.
+- No GET challenge.
+- Signature: header `x-telegram-bot-api-secret-token`, compared in apps/api
+  against `TELEGRAM_WEBHOOK_SECRET_TOKEN`.
+- apps/api registers the URL itself with `setWebhook` when a bot is linked.
+  Set `TELEGRAM_WEBHOOK_URL=https://<this worker>/webhooks/telegram` on apps/api
+  to register bots here; without it, bots post to apps/api directly. Only bots
+  linked (or re-linked) after the change move to this worker.
+
 ### Zalo OA
 
 - Slug: `zalo`
@@ -49,10 +73,10 @@ consumer instead (see References).
 - Slug: `tiktok`
 - Path: `POST /webhooks/tiktok`
 - No GET challenge.
-- **Adapter is a stub** — `TiktokPlatformAdapter` has no real
-  `verifySignature`/`parse` yet, so events queued here will fail processing
-  (501) until the adapter is implemented. Safe to point the URL here ahead
-  of time; nothing will process end-to-end yet.
+- **Adapter is a stub**: `TiktokPlatformAdapter` has no real
+  `verifySignature`/`parse` yet. apps/api answers `{ processed: 0 }` for its
+  events, so they are acknowledged and dropped (not retried) until the adapter
+  is implemented. Safe to point the URL here ahead of time.
 - Planned: header `x-tts-signature`, HMAC-SHA256 of `app_key + timestamp + body`,
   keyed with `TIKTOK_APP_SECRET`.
 
@@ -61,10 +85,15 @@ consumer instead (see References).
 - Slug: `shopee`
 - Path: `POST /webhooks/shopee`
 - No GET challenge.
-- **Adapter is a stub** — same caveat as TikTok: `ShopeePlatformAdapter` has
-  no real `verifySignature`/`parse` yet.
+- **Adapter is a stub**: same as TikTok, `ShopeePlatformAdapter` events are
+  acknowledged and dropped until the adapter is implemented.
 - Planned: header `authorization`, HMAC-SHA256 of `partner_id + path + timestamp`,
   keyed with `SHOPEE_PARTNER_KEY`.
+
+### Instagram
+
+- Slug: `instagram`
+- **Adapter is a stub**: events are acknowledged and dropped, same as TikTok.
 
 ## Adding a GET challenge for another platform
 
@@ -118,10 +147,7 @@ deep in a handler. Add a new required var to both the schema in `src/env.ts`
 and `.env.example`.
 
 `FACEBOOK_WEBHOOK_SECRET` is duplicated in both `apps/api`'s env and this
-worker's — **rotate both together**, they must match exactly. Note
-`apps/api/.env.example` currently documents this var as
-`FACEBOOK_WEBHOOK_VERIFY_TOKEN`, which apps/api's code does not read; the
-real key is `FACEBOOK_WEBHOOK_SECRET`.
+worker's — **rotate both together**, they must match exactly.
 
 `wrangler.json`'s `secrets.required` lists the three secrets above — `wrangler
 deploy`/`versions upload` validate they're already set on the Worker before

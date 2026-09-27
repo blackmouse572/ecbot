@@ -66,7 +66,8 @@ describe('MessageProcessorService — echo persistence', () => {
             { get: jest.fn(() => conversationService) } as any,
             chatbotAIService as any,
             lease as any,
-            dedupe as any
+            dedupe as any,
+            {} as any
         );
         processor.onModuleInit();
 

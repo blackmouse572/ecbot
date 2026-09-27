@@ -14,7 +14,7 @@ import { CustomerService } from '../services/customer.service';
 @ApiKeySystemProtected()
 @Controller({
     version: '1',
-    path: '/system/customers/:customerId',
+    path: '/customers/:customerId',
 })
 export class CustomerSystemController {
     constructor(private readonly customerService: CustomerService) {}

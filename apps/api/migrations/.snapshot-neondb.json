@@ -226,7 +226,8 @@
             "SHOPEE_SHOP",
             "TELEGRAM_BOT",
             "API_CHANNEL",
-            "WEBSITE_WIDGET"
+            "WEBSITE_WIDGET",
+            "WHATSAPP_BUSINESS"
           ],
           "mappedType": "enum"
         },
@@ -3689,7 +3690,8 @@
             "SHOPEE_SHOP",
             "TELEGRAM_BOT",
             "API_CHANNEL",
-            "WEBSITE_WIDGET"
+            "WEBSITE_WIDGET",
+            "WHATSAPP_BUSINESS"
           ],
           "mappedType": "enum"
         },
@@ -13699,6 +13701,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "otp_attempt": {
+          "name": "otp_attempt",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
         }
       },
       "name": "reset_passwords",
@@ -17964,6 +17982,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "otp_attempt": {
+          "name": "otp_attempt",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
         }
       },
       "name": "verifications",

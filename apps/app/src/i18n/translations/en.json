@@ -242,8 +242,9 @@
           "submit": "Send reset code",
           "backToLogin": "Remembered it? <0>Login</0>"
         },
-        "errors": {
-          "requestFailed": "Could not start a password reset for that email."
+        "checkEmail": {
+          "title": "Check your email",
+          "description": "If an account exists for that email, we've sent a link and code to reset your password."
         }
       },
       "resetPassword": {
@@ -394,6 +395,7 @@
       "description": "Connect to your Facebook account and pages, select the pages you want to manage.",
       "acceptTerms": "By linking your account, you agree to our terms of service and privacy policy.",
       "error": "An error occurred while linking your account. {{error}}",
+      "invalidState": "This connection attempt could not be verified. Please try linking your account again.",
       "success": {
         "title": "Account Linked",
         "description": "Your account has been successfully linked.",
@@ -458,6 +460,19 @@
           "tokenHint": "Create a bot and get the token via @BotFather",
           "tokenInvalid": "Invalid token format — expected 1234567890:ABC...",
           "cta": "Connect Bot"
+        },
+        "whatsapp": {
+          "description": "Paste your WhatsApp Business phone number ID and a permanent System User access token from Meta.",
+          "phoneNumberIdLabel": "Phone number ID",
+          "phoneNumberIdInvalid": "Phone number ID must contain digits only",
+          "tokenLabel": "Access token",
+          "tokenPlaceholder": "EAAG...",
+          "tokenHint": "Use a system user token issued for ecbot's Meta app, with access to your WhatsApp Business account. A token from your own Meta app won't receive messages — use \"Log in with Facebook\" instead.",
+          "cta": "Connect WhatsApp",
+          "tabs": {
+            "oauth": "Log in with Facebook",
+            "manual": "Enter manually"
+          }
         }
       }
     },
@@ -528,6 +543,10 @@
         "websiteWidget": {
           "label": "Website Widget",
           "description": "A chat widget embedded on your website."
+        },
+        "whatsappBusiness": {
+          "label": "WhatsApp Business",
+          "description": "A WhatsApp Business number connected through the Cloud API."
         }
       },
       "apiChannel": {
@@ -1657,7 +1676,8 @@
     "copy": "Copy",
     "previous": "Previous",
     "next": "Next",
-    "skip": "Skip"
+    "skip": "Skip",
+    "preview": "Preview"
   },
   "general": {
     "emojiTooltip": "Emoji",
@@ -1929,7 +1949,10 @@
     "edit": {
       "success": "Knowledge item updated successfully",
       "error": "Failed to update knowledge item"
-    }
+    },
+    "preview_empty": "No content yet",
+    "preview_unsupported": "This file type can't be previewed. Download it to view.",
+    "preview_error": "Couldn't load this item. Please try again."
   },
   "conversations": {
     "title": "Conversations",
@@ -2075,7 +2098,8 @@
         "collapse": "Collapse sidebar",
         "expand": "Expand sidebar"
       }
-    }
+    },
+    "image": "Image"
   },
   "customers": {
     "suggestions": {
@@ -2594,6 +2618,13 @@
     "messages": "Messages",
     "tokens": "Tokens",
     "export": "Export CSV",
+    "range": {
+      "label": "Date range",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days",
+      "all": "All time"
+    },
     "settings": {
       "title": "Low-balance alert",
       "description": "Warn the workspace owner when the remaining quota drops below this percent.",

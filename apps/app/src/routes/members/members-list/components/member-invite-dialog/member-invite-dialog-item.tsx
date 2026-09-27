@@ -53,8 +53,15 @@ export function InvitableUserItem({
       </div>
 
       <div className="flex items-center gap-2">
-        {user.name ? <p className="text-ui-fg-muted">{user.email}</p> : null}
-        <InviteButton onClick={() => onInvite(user.email)} />
+        {user.name && user.email ? (
+          <p className="text-ui-fg-muted">{user.email}</p>
+        ) : null}
+        {/* Fuzzy (co-member) results carry no email, so there's nothing to
+            invite with here — the caller has to type the exact address,
+            which routes the search into the exact-email match instead. */}
+        {user.email ? (
+          <InviteButton onClick={() => onInvite(user.email as string)} />
+        ) : null}
       </div>
     </CommandItem>
   );

@@ -1,4 +1,5 @@
 import { toolsQueryKeys } from "@/hooks/api/tools";
+import { SEND_IMAGE_TOOL_PART } from "./constants";
 import { tokenAtom } from "@/modules/auth";
 import type { ChatToolCall, ChatToolCallStatus } from "@/types/chat-message";
 import { useChat } from "@ai-sdk/react";
@@ -111,7 +112,10 @@ export function partsToRenderModel(
     } else if (part.type === "data-guardrail") {
       const data = part.data as { reason: string } | undefined;
       model.guardrail = { reason: data?.reason ?? "" };
-    } else if (part.type.startsWith("tool-")) {
+    } else if (
+      part.type.startsWith("tool-") &&
+      part.type !== SEND_IMAGE_TOOL_PART
+    ) {
       model.toolCalls.push({
         toolCallId: part.toolCallId as string,
         toolName: part.type.slice("tool-".length),

@@ -242,8 +242,9 @@
           "submit": "Gửi mã đặt lại",
           "backToLogin": "Đã nhớ ra rồi? <0>Đăng nhập</0>"
         },
-        "errors": {
-          "requestFailed": "Không thể bắt đầu đặt lại mật khẩu cho email này."
+        "checkEmail": {
+          "title": "Kiểm tra email của bạn",
+          "description": "Nếu email này có tài khoản, chúng tôi đã gửi liên kết và mã để đặt lại mật khẩu."
         }
       },
       "resetPassword": {
@@ -422,6 +423,7 @@
       "description": "Kết nối với tài khoản và trang Facebook của bạn, chọn các trang bạn muốn quản lý. Dễ như ăn bánh! 🍰",
       "acceptTerms": "Bằng cách liên kết tài khoản của bạn, bạn đồng ý với các điều khoản dịch vụ và chính sách quyền riêng tư của chúng tôi.",
       "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}} (Đừng lo, chúng ta sẽ sửa nó!)",
+      "invalidState": "Không thể xác minh yêu cầu liên kết này. Vui lòng thử liên kết tài khoản lại nhé!",
       "success": {
         "title": "Liên kết tài khoản thành công! 🎊",
         "description": "Tài khoản của bạn đã được liên kết thành công.",
@@ -486,6 +488,19 @@
           "tokenHint": "Tạo bot và lấy token qua @BotFather",
           "tokenInvalid": "Sai định dạng token — phải có dạng 1234567890:ABC...",
           "cta": "Kết nối Bot"
+        },
+        "whatsapp": {
+          "description": "Dán phone number ID của WhatsApp Business và một access token System User vĩnh viễn từ Meta.",
+          "phoneNumberIdLabel": "Phone number ID",
+          "phoneNumberIdInvalid": "Phone number ID chỉ được chứa chữ số",
+          "tokenLabel": "Access token",
+          "tokenPlaceholder": "EAAG...",
+          "tokenHint": "Dùng token system user được cấp cho Meta app của ecbot, có quyền truy cập tài khoản WhatsApp Business của bạn. Token từ Meta app riêng của bạn sẽ không nhận được tin nhắn — hãy dùng \"Đăng nhập bằng Facebook\".",
+          "cta": "Kết nối WhatsApp",
+          "tabs": {
+            "oauth": "Đăng nhập bằng Facebook",
+            "manual": "Nhập thủ công"
+          }
         }
       }
     },
@@ -556,6 +571,10 @@
         "websiteWidget": {
           "label": "Website Widget",
           "description": "Widget chat được nhúng trên website của bạn."
+        },
+        "whatsappBusiness": {
+          "label": "WhatsApp Business",
+          "description": "Một số WhatsApp Business được kết nối qua Cloud API."
         }
       },
       "apiChannel": {
@@ -1748,7 +1767,8 @@
     "copy": "Sao chép",
     "previous": "Trước",
     "next": "Sau",
-    "skip": "Bỏ qua"
+    "skip": "Bỏ qua",
+    "preview": "Xem trước"
   },
   "fields": {
     "name": "Tên",
@@ -1962,7 +1982,10 @@
       "error": "Failed to update knowledge item"
     },
     "tagsUpdateError": "Không thể cập nhật thẻ",
-    "editTags": "Chỉnh sửa thẻ"
+    "editTags": "Chỉnh sửa thẻ",
+    "preview_empty": "Chưa có nội dung",
+    "preview_unsupported": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
+    "preview_error": "Không tải được mục này. Vui lòng thử lại."
   },
   "conversations": {
     "title": "Hội thoại",
@@ -2108,7 +2131,8 @@
         "collapse": "Thu gọn thanh bên",
         "expand": "Mở rộng thanh bên"
       }
-    }
+    },
+    "image": "Hình ảnh"
   },
   "customers": {
     "suggestions": {
@@ -2627,6 +2651,13 @@
     "messages": "Tin nhắn",
     "tokens": "Token",
     "export": "Xuất CSV",
+    "range": {
+      "label": "Khoảng thời gian",
+      "7d": "7 ngày qua",
+      "30d": "30 ngày qua",
+      "90d": "90 ngày qua",
+      "all": "Toàn bộ"
+    },
     "settings": {
       "title": "Cảnh báo sắp hết quota",
       "description": "Cảnh báo chủ workspace khi quota còn lại thấp hơn tỷ lệ này.",

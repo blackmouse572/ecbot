@@ -1,7 +1,7 @@
 import { Entity, Index, ManyToOne, Property, Rel } from '@mikro-orm/postgresql';
 import { Exclude } from 'class-transformer';
 import { IsOptional } from 'class-validator';
-import { v4 as uuidV4 } from 'uuid';
+import { randomUUID as uuidV4 } from 'node:crypto';
 
 @Entity()
 @Index({ properties: ['deleted'] })

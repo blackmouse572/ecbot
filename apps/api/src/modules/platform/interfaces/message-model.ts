@@ -47,6 +47,27 @@ export function text(s: string): OutboundMessage {
     return { content: { kind: 'text', text: s }, fallbackText: s };
 }
 
+function image(url: string): OutboundMessage {
+    return {
+        content: { kind: 'media', url, mediaType: 'image' },
+        fallbackText: url,
+    };
+}
+
+/** One reply segment: its text, and the images (apps/ai `file` parts) that
+ *  arrived while it was open. */
+export interface ReplySegment {
+    text: string;
+    images: string[];
+}
+
+/** A segment's platform messages: its text, then each image. Markdown in the
+ *  text is not read: apps/ai already turned allowed images into file parts. */
+export function segmentMessages(segment: ReplySegment): OutboundMessage[] {
+    const rest = segment.text.trim();
+    return [...(rest ? [text(rest)] : []), ...segment.images.map(image)];
+}
+
 // Round-trip a button/quick-reply id+value through a platform payload string.
 export function encodeActionPayload(id: string, value?: string): string {
     return JSON.stringify({ id, value });

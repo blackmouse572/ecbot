@@ -325,7 +325,7 @@ Your endpoint is now `POST /v1/webhooks/<slug>`.
    secret you've set in env config.
 3. **Smoke test the handshake** (where applicable):
     ```bash
-    curl "https://<host>/v1/webhooks/messenger?hub.mode=subscribe&hub.verify_token=$FACEBOOK_WEBHOOK_VERIFY_TOKEN&hub.challenge=ping"
+    curl "https://<host>/v1/webhooks/messenger?hub.mode=subscribe&hub.verify_token=$FACEBOOK_WEBHOOK_SECRET&hub.challenge=ping"
     # → ping
     ```
 4. **Send a test event** from the provider portal and tail logs:

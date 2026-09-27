@@ -23,7 +23,8 @@
         "shareLinkNotConfigured": "Máy chủ chưa được cấu hình để chia sẻ preview.",
         "previewNotAvailable": "Chatbot này hiện không khả dụng để xem thử.",
         "previewSessionLimit": "Bạn đã đạt giới hạn tin nhắn cho phiên preview này. Vui lòng thử lại sau.",
-        "invalidAgentProfile": "Câu trả lời của trình tạo agent không hợp lệ."
+        "invalidAgentProfile": "Câu trả lời của trình tạo agent không hợp lệ.",
+        "accountsNotFound": "Một hoặc nhiều tài khoản không thuộc về không gian làm việc này."
     },
     "active": "Chatbot đã được kích hoạt thành công.",
     "inactive": "Chatbot đã được vô hiệu hóa thành công.",

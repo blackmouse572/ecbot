@@ -34,6 +34,7 @@ import {
     ENUM_CHATBOT_MODEL_PROVIDER,
     ENUM_CHATBOT_STATUS,
 } from '../enums/chatbot.enum';
+import { ENUM_CHATBOT_STATUS_CODE_ERROR } from '../enums/chatbot.status-code.enum';
 import { ChatbotEntity } from '../repository/entities/chatbot.entity';
 import { ChatbotRepository } from '../repository/repositories/chatbot.repository';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
@@ -207,12 +208,44 @@ export class ChatbotService implements IChatbotService {
         } as ChatbotCreateEntityFields;
     }
 
+    /**
+     * Guards against linking a chatbot to another workspace's accounts:
+     * every id in `accountIds` must resolve to an AccountEntity owned by
+     * `workspaceId`, otherwise the id is treated as if it doesn't exist.
+     */
+    private async assertAccountsBelongToWorkspace(
+        accountIds: string[],
+        workspaceId: string
+    ): Promise<void> {
+        if (accountIds.length === 0) {
+            return;
+        }
+
+        const uniqueIds = [...new Set(accountIds)];
+        const found = await this.em.find(AccountEntity, {
+            id: { $in: uniqueIds },
+            workspace: workspaceId,
+        });
+
+        if (found.length !== uniqueIds.length) {
+            throw new BadRequestException({
+                statusCode: ENUM_CHATBOT_STATUS_CODE_ERROR.ACCOUNTS_NOT_FOUND,
+                message: 'chatbot.error.accountsNotFound',
+            });
+        }
+    }
+
     async create(
         createDto: ChatbotCreateRequestDto,
         options?: IDatabaseCreateOptions & { actionBy?: string }
     ): Promise<ChatbotEntity> {
         // Extract accounts if provided and convert IDs to references
         const accountIds = createDto.accounts || [];
+        await this.assertAccountsBelongToWorkspace(
+            accountIds,
+            createDto.workspace
+        );
+
         const entityFields = this.buildCreateEntity(createDto);
 
         // Create entity without accounts first
@@ -277,6 +310,13 @@ export class ChatbotService implements IChatbotService {
             agentProfile: repository.agentProfile,
             extraInstructions: repository.extraInstructions,
         });
+
+        if (hasAccountUpdates) {
+            await this.assertAccountsBelongToWorkspace(
+                accountIds ?? [],
+                repository.workspace.id
+            );
+        }
 
         wrap(repository).assign(
             { ...otherFields, ...promptFields, ...modelProviderUpdate },
@@ -436,6 +476,11 @@ export class ChatbotService implements IChatbotService {
         accountIds: string[],
         options?: IDatabaseSaveOptions & { actionBy?: string }
     ): Promise<IChatbotLinkAccountsResult> {
+        await this.assertAccountsBelongToWorkspace(
+            accountIds,
+            chatbot.workspace.id
+        );
+
         if (!chatbot.accounts) {
             chatbot.accounts = new Collection(chatbot);
         }
@@ -468,8 +513,7 @@ export class ChatbotService implements IChatbotService {
 
         for (const id of uniqueIds) {
             const account = accountById.get(id);
-            // Not found in this workspace at all: neither linked nor
-            // reported, the same as any other unknown id.
+            // Unreachable after the workspace assert above; kept as a guard.
             if (!account) {
                 continue;
             }

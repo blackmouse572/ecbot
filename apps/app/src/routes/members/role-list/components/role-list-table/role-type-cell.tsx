@@ -40,7 +40,7 @@ export const RoleTypeCell = ({ type, ...rest }: RoleTypeCellProps) => {
   const { icon: RoleIcon, label } = ROLE_TYPES[type];
 
   return (
-    <Badge {...rest} color={getBadgeColor(type)}>
+    <Badge color={getBadgeColor(type)} {...rest}>
       <RoleIcon size={14} className="mr-1" />
       {label}
     </Badge>

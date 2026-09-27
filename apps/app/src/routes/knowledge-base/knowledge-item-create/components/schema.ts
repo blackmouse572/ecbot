@@ -50,5 +50,21 @@ const createTextSchema = () => baseSchema;
 
 type TextSchema = z.infer<ReturnType<typeof createTextSchema>>;
 
+/**
+ * One stable shape for `useForm`. The active schema swaps with the selected
+ * type but the form instance does not, so every variant-only field is optional
+ * here and validated by whichever schema is live.
+ */
+type KnowledgeItemCreateFormValues = TextSchema &
+  Partial<Pick<FileSchema, "file">> &
+  Partial<Pick<UrlSchema, "metadata">> & {
+    type: "FILE" | "URL" | "TEXT";
+  };
+
 export { createFileSchema, createUrlSchema, createTextSchema };
-export type { FileSchema, UrlSchema, TextSchema };
+export type {
+  FileSchema,
+  UrlSchema,
+  TextSchema,
+  KnowledgeItemCreateFormValues,
+};

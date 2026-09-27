@@ -7,19 +7,19 @@ ENV PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH"
 # Pinned to match root package.json's packageManager/turbo — an unpinned
 # `latest` drifts from the repo's actual pnpm 9 / turbo 2.10 over time and
 # can break the lockfile or silently diverge.
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Prune stage - extract only the app and its dependencies
 FROM base AS builder
 WORKDIR /app
-RUN pnpm i -g turbo@2.10.11
+RUN pnpm i -g turbo@2.11.3
 COPY . .
 RUN turbo prune app --docker
 
 # Install dependencies stage
 FROM base AS installer
 WORKDIR /app
-RUN pnpm i -g turbo@2.10.11
+RUN pnpm i -g turbo@2.11.3
 
 # Copy package files and install dependencies first (better caching)
 COPY --from=builder /app/out/json/ .

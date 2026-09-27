@@ -55,7 +55,7 @@ describe("compilePrompt", () => {
 
   it("numbers the Process steps 1..n without gaps when a step is omitted", () => {
     const out = compilePrompt({ ...sample("beauty", "en"), collect: [], handoffWhen: [] });
-    const process = out.split("## Process\n")[1].split("\n\n")[0].split("\n");
+    const process = out.split("## Process\n")[1]!.split("\n\n")[0]!.split("\n");
     expect(process.map((line) => line.split(".")[0])).toEqual(process.map((_, i) => String(i + 1)));
   });
 

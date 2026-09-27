@@ -23,7 +23,8 @@
         "shareLinkNotConfigured": "Preview sharing is not configured on this server.",
         "previewNotAvailable": "This chatbot is not available for preview.",
         "previewSessionLimit": "You've reached the message limit for this preview. Please try again later.",
-        "invalidAgentProfile": "The agent builder answers are not valid."
+        "invalidAgentProfile": "The agent builder answers are not valid.",
+        "accountsNotFound": "One or more accounts don't belong to this workspace."
     },
     "active": "Chatbot activated successfully.",
     "inactive": "Chatbot deactivated successfully.",

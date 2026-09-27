@@ -7,6 +7,7 @@ import {
     ENUM_MESSAGE_DIRECTION,
     ENUM_MESSAGE_STATUS,
 } from '../../enums/message.enum';
+import { IMessageAttachment } from '../../interfaces/message-media.interface';
 import { MessageEntity, MessageReaction } from '../entities/message.entity';
 
 export interface IMessageUpsertData {
@@ -14,7 +15,7 @@ export interface IMessageUpsertData {
     authorType: ENUM_MESSAGE_AUTHOR;
     authorId: string;
     text?: string;
-    attachments?: unknown[];
+    attachments?: IMessageAttachment[];
     raw?: unknown;
     dateSent: Date;
 }
@@ -23,7 +24,7 @@ export interface IMessageOutboundData {
     authorType: ENUM_MESSAGE_AUTHOR;
     authorId: string;
     text?: string;
-    attachments?: unknown[];
+    attachments?: IMessageAttachment[];
     dateSent: Date;
 }
 
@@ -52,6 +53,16 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
             externalId,
             ...data,
         } as any);
+    }
+
+    /** Replace a message's attachments (e.g. with the descriptions of what
+     *  the AI saw in its images, so later Turns remember them). */
+    async updateAttachments(
+        messageId: string,
+        attachments: IMessageAttachment[]
+    ): Promise<void> {
+        // One UPDATE: nothing else in the Turn's unit of work is flushed.
+        await this.updateRaw({ id: messageId }, { attachments });
     }
 
     async insertPendingOutbound(

@@ -1,7 +1,6 @@
 import type { Filter } from "@/components/table/data-table";
 import { getAvatarFallback } from "@/components/utils/avatar-fallback";
 import { useAccounts } from "@/hooks/api";
-import { defaultNs } from "@/i18n";
 import {
   CHATBOT_CONSTANTS,
   CHATBOT_TYPE_CONFIG,
@@ -63,7 +62,7 @@ const facet = (
 
 /** Status, industry type and account facets above the chatbot table. */
 export const useChatbotTableFilters = (): Filter[] => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
   const { accounts } = useAccounts(ACCOUNTS_QUERY);
 
   return useMemo<Filter[]>(

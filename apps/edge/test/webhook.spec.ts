@@ -200,6 +200,16 @@ describe("webhook GET challenge (facebook)", () => {
     expect(await res.text()).toBe("456");
   });
 
+  it("verifies the WhatsApp handshake with the same Meta secret", async () => {
+    const res = await app.request(
+      "/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=verify-me&hub.challenge=789",
+      { method: "GET" },
+      mkEnv(),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("789");
+  });
+
   it("404s for a platform with no GET handshake", async () => {
     const res = await app.request("/webhooks/zalo", { method: "GET" }, mkEnv());
     expect(res.status).toBe(404);

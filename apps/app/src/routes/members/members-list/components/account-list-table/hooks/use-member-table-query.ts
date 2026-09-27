@@ -23,7 +23,13 @@ export const toMemberListQuery = (
   },
 });
 
-export const useMemberTableQuery = (
-  perPage = MEMBERS_PAGE_SIZE,
-  prefix?: string,
-) => toMemberListQuery(useQueryParams(MEMBER_TABLE_PARAMS, prefix), perPage);
+type UseMemberTableQueryProps = {
+  prefix?: string;
+  pageSize?: number;
+};
+
+export const useMemberTableQuery = ({
+  prefix,
+  pageSize = MEMBERS_PAGE_SIZE,
+}: UseMemberTableQueryProps = {}) =>
+  toMemberListQuery(useQueryParams(MEMBER_TABLE_PARAMS, prefix), pageSize);

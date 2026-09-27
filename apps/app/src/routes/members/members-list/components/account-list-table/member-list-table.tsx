@@ -1,7 +1,6 @@
 import { _DataTable } from "@/components/table/data-table";
 import { useWorkspaceMembers } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
-import { defaultNs } from "@/i18n";
 import { Button, Container, Heading } from "@medusajs/ui";
 import type { WorkspaceMemberListResponseDto } from "@repo/client";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -36,7 +35,7 @@ const useColumnsWithActions = () => {
 };
 
 export const MemberListTable = () => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
   const [isInviteOpen, setInviteOpen] = useState(false);
   const { raw: urlParams, searchParams } = useMemberTableQuery();
   const {

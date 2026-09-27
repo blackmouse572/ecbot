@@ -13,6 +13,8 @@ describe('ChatbotService.linkBatchAccounts', () => {
     let service: ChatbotService;
     let accountRepository: { find: jest.Mock };
     let chatbotRepository: { save: jest.Mock };
+    // The workspace assert's lookup; by default every id is in the workspace.
+    let emFind: jest.Mock;
 
     // A lightweight stand-in for a MikroORM Collection: this is a unit test
     // of linkBatchAccounts' own linked/skipped decisions, not of MikroORM's
@@ -34,12 +36,18 @@ describe('ChatbotService.linkBatchAccounts', () => {
 
     beforeEach(() => {
         accountRepository = { find: jest.fn() };
+        emFind = jest.fn(async (_entity, where: { id: { $in: string[] } }) =>
+            where.id.$in.map(id => ({ id }))
+        );
         chatbotRepository = {
             save: jest.fn(entity => Promise.resolve(entity)),
         };
 
         service = new ChatbotService(
-            { getReference: (_entity: unknown, id: string) => ({ id }) } as any,
+            {
+                getReference: (_entity: unknown, id: string) => ({ id }),
+                find: emFind,
+            } as any,
             chatbotRepository as unknown as ChatbotRepository,
             {} as ChatbotCacheService,
             accountRepository as unknown as AccountRepository
@@ -105,6 +113,18 @@ describe('ChatbotService.linkBatchAccounts', () => {
         expect(result.skipped).toEqual([
             { id: 'a2', name: 'Taken Account' },
         ]);
+    });
+
+    it("refuses the whole call when an id is outside the chatbot's workspace", async () => {
+        const chatbot = makeChatbot('bot-1');
+        emFind.mockResolvedValue([{ id: 'a1' }]);
+
+        await expect(
+            service.linkBatchAccounts(chatbot, ['a1', 'foreign'])
+        ).rejects.toMatchObject({
+            response: { message: 'chatbot.error.accountsNotFound' },
+        });
+        expect(chatbotRepository.save).not.toHaveBeenCalled();
     });
 
     it("only queries accounts within the chatbot's own workspace", async () => {

@@ -4,19 +4,19 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH"
 # Install dependencies for better performance
 RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Prune stage - extract only the API and its dependencies
 FROM base AS builder
 WORKDIR /app
-RUN pnpm i -g turbo@2.9.16
+RUN pnpm i -g turbo@2.11.3
 COPY . .
 RUN turbo prune api --docker
 
 # Install dependencies stage
 FROM base AS installer
 WORKDIR /app
-RUN pnpm i -g turbo@2.9.16
+RUN pnpm i -g turbo@2.11.3
 RUN pnpm i -g @nestjs/cli@^11.0.5
 
 # Copy package files and install dependencies first (better caching)

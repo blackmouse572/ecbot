@@ -69,7 +69,7 @@ export class ChannelRateLimitService implements OnModuleDestroy {
         incr(key: string): Promise<number>;
         expire(key: string, seconds: number): Promise<number>;
     }> {
-        return (await this.queue.client) as unknown as {
+        return (await this.queue.getBackend().client) as unknown as {
             incr(key: string): Promise<number>;
             expire(key: string, seconds: number): Promise<number>;
         };

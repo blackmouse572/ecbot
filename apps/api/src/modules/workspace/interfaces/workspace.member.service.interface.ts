@@ -49,11 +49,6 @@ export interface IWorkspaceMemberService {
         workspaceId: string,
         memberUserId: string
     ): Promise<void>;
-    hasUserRole(
-        workspaceId: string,
-        userId: string,
-        roleId: string
-    ): Promise<boolean>;
     getUserWorkspaces(memberUserId: string): Promise<string[]>;
     getMembershipDetails(
         workspaceId: string,

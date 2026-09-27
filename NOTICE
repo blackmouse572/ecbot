@@ -20,6 +20,17 @@ from that project. The full MIT text is retained at apps/api/LICENSE.md.
 Modifications and additions made by Ecbot are licensed under the AGPL-3.0
 terms in LICENSE.
 
+packages/ui/src/components/charts/evilcharts
+--------------------------------------------
+Vendored from EvilCharts
+  https://github.com/legions-developer/evilcharts
+  Copyright (c) 2026 Gurbinder
+  Licensed under the MIT License.
+
+The full MIT text is retained at
+packages/ui/src/components/charts/evilcharts/LICENSE. Local modifications are
+listed in each file's header.
+
 Other dependencies
 ------------------
 This project depends on third-party packages declared in package.json and

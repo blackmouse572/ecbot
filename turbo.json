@@ -21,6 +21,10 @@
       "cache": false,
       "persistent": false
     },
+    "migrate:seed": {
+      "cache": false,
+      "persistent": false
+    },
     "migration:down": {
       "cache": false,
       "persistent": false

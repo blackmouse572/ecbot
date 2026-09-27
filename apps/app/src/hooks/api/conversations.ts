@@ -193,7 +193,6 @@ export const useSendOperatorReply = (id: string | undefined) => {
     Error,
     {
       text: string;
-      attachments?: ConversationSendMessageRequestDto["attachments"];
       retryOfClientNonce?: string;
     },
     { clientNonce: string; prev?: InfiniteData<MessagePage> }
@@ -201,7 +200,7 @@ export const useSendOperatorReply = (id: string | undefined) => {
     mutationFn: async (variables) => {
       const res = await conversationWorkspaceControllerSendMessageV1({
         path: { workspace: slug!, id: id! },
-        body: { text: variables.text, attachments: variables.attachments },
+        body: { text: variables.text },
       });
       return ((res.data as A)?.data as MessageGetResponseDto)!;
     },

@@ -70,7 +70,7 @@ export const CHATBOT_STATUS_CONFIG: Record<
     color: "green" as const,
   },
   inactive: {
-    label: i18n.t("chatbot.list.columns.statusOptions.active"),
+    label: i18n.t("chatbot.list.columns.statusOptions.inactive"),
     color: "grey" as const,
   },
   archived: {

@@ -1,12 +1,12 @@
 import { Textarea } from "@medusajs/ui";
-import type { KnowledgeItemCreateRequestDto } from "@repo/client";
 import { Form } from "@repo/ui/common-components";
 import type { FC } from "react";
 import type { UseFormReturn } from "react-hook-form";
+import type { KnowledgeItemCreateFormValues } from "../schema";
 import { useTranslation } from "react-i18next";
 
 interface TextFormProps {
-  form: UseFormReturn<KnowledgeItemCreateRequestDto>;
+  form: UseFormReturn<KnowledgeItemCreateFormValues>;
 }
 
 export const TextForm: FC<TextFormProps> = ({ form }) => {

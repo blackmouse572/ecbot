@@ -58,7 +58,10 @@ class Chatbots(SQLModel, table=True):
     model_temperature: float = Field(default=1.0)
     handoff_fallback_threshold: int = Field(default=3)
     handoff_message: str | None = Field(default=None)
-    handoff_keywords: list[str] | None = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    handoff_keywords: list[str] | None = Field(
+    default=None,
+    sa_column=Column(ARRAY(TEXT).with_variant(JSON(), "sqlite")),
+)
 
     # Guardrail configuration
     guardrail_enabled: bool = Field(default=False)

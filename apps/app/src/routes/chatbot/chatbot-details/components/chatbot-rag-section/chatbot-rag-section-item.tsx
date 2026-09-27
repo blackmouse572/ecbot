@@ -8,6 +8,7 @@ import {
 } from "@medusajs/ui";
 import type { ChatbotKnowledgeItemResponseDto } from "@repo/client";
 import {
+  IconEye,
   IconFileTypePdf,
   IconInvoice,
   IconTrash,
@@ -19,6 +20,7 @@ type ChatbotKnowledgeItemProps = {
   item: ChatbotKnowledgeItemResponseDto;
   className?: string;
   onUnlink?: (id: string) => void;
+  onPreview?: (item: ChatbotKnowledgeItemResponseDto) => void;
   isUnlinking?: boolean;
 };
 
@@ -33,6 +35,7 @@ export function ChatbotRAGSectionItem({
   item,
   className,
   onUnlink,
+  onPreview,
   isUnlinking,
 }: ChatbotKnowledgeItemProps) {
   const { t } = useTranslation();
@@ -80,16 +83,26 @@ export function ChatbotRAGSectionItem({
           />
         </Tooltip>
 
-        <IconButton
-          onClick={() => onUnlink?.(knowledgeItem?.id)}
-          isLoading={isUnlinking}
-          disabled={isUnlinking}
-          variant="transparent"
-          size="small"
-          aria-label={t("actions.unlink", "Unlink")}
-        >
-          <IconTrash size={16} />
-        </IconButton>
+        <div className="flex items-center gap-x-1">
+          <IconButton
+            onClick={() => onPreview?.(item)}
+            variant="transparent"
+            size="small"
+            aria-label={t("actions.preview")}
+          >
+            <IconEye size={16} />
+          </IconButton>
+          <IconButton
+            onClick={() => onUnlink?.(knowledgeItem?.id)}
+            isLoading={isUnlinking}
+            disabled={isUnlinking}
+            variant="transparent"
+            size="small"
+            aria-label={t("actions.unlink", "Unlink")}
+          >
+            <IconTrash size={16} />
+          </IconButton>
+        </div>
       </div>
     </Container>
   );

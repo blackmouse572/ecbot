@@ -65,7 +65,7 @@ export class InboundEventDedupeService implements OnModuleDestroy {
         ): Promise<'OK' | null>;
         del(key: string): Promise<number>;
     }> {
-        return (await this.queue.client) as unknown as {
+        return (await this.queue.getBackend().client) as unknown as {
             set(
                 key: string,
                 value: string,

@@ -1,7 +1,6 @@
 import { useChatbot } from "@/hooks/api";
 import { useDate } from "@/hooks/use-date";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { defaultNs } from "@/i18n";
 import { ChatbotStatusCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-status-cell";
 import { ChatbotTypeCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-type-cell";
 import { ROUTES } from "@/routes/constants";
@@ -33,7 +32,7 @@ type SummaryRow = { title: string; value: ReactNode };
 const useSummaryRows = (
   chatbot?: ChatbotGetDetailResponseDto,
 ): SummaryRow[] => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
   const { getFullDate } = useDate();
   const pending = <Skeleton className="h-8 w-full" />;
 
@@ -60,7 +59,7 @@ const useSummaryRows = (
 
 /** Read-only card summarising one chatbot, with a jump to its detail page. */
 export const ChatbotSection = ({ chatbotId, title }: ChatbotSectionProps) => {
-  const { t } = useTranslation(defaultNs);
+  const { t } = useTranslation();
   const workspace = useWorkspaceParams();
   const { pathname } = useLocation();
   const { chatbot, isLoading } = useChatbot(chatbotId);

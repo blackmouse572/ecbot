@@ -6,6 +6,11 @@ export interface IOAuthTokenResult {
     name: string;
     avatar?: string;
     link?: string;
+    /**
+     * Further channels the same login connected, linked as their own accounts
+     * alongside this one (e.g. every number of a WhatsApp Business account).
+     */
+    additionalAccounts?: IOAuthTokenResult[];
 }
 
 export interface IOAuthPlatformService {

@@ -42,6 +42,12 @@ export type PlatformWebhookEventKind =
     | 'read'
     | 'unknown';
 
+export interface PlatformAttachment {
+    type: 'image' | 'video' | 'file' | 'location' | 'sticker' | 'audio';
+    url?: string;
+    raw?: unknown;
+}
+
 export interface PlatformWebhookEvent {
     kind: PlatformWebhookEventKind;
     accountKey: string; // page id / oa id / shop id — the account.externalId
@@ -53,6 +59,11 @@ export interface PlatformWebhookEvent {
      */
     senderId: string;
     recipientId: string;
+    /**
+     * Display name the platform ships inside the webhook itself. Used when
+     * `fetchSenderProfile` cannot supply one (WhatsApp has no profile lookup).
+     */
+    senderName?: string;
     /**
      * 'echo' only: the message came from *our* app's send API, so we already
      * persisted it at send time and must not store it twice. Deliberately not
@@ -67,11 +78,7 @@ export interface PlatformWebhookEvent {
     raw: unknown;
     // structured inbound extras (optional — parsers fill when present)
     action?: { id: string; value?: string };
-    attachments?: {
-        type: 'image' | 'video' | 'file' | 'location' | 'sticker' | 'audio';
-        url?: string;
-        raw?: unknown;
-    }[];
+    attachments?: PlatformAttachment[];
     reaction?: {
         emoji: string;
         messageId: string;

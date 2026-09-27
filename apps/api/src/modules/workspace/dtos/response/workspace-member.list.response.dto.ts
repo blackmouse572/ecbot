@@ -4,10 +4,6 @@ import { UserShortResponseDto } from '@app/modules/user/dtos/response/user.short
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
-// class-transformer needs a class reference, not just an interface — a
-// named factory reads better here than a second inline arrow next to `user`.
-const roleListType = (): typeof RoleListResponseDto => RoleListResponseDto;
-
 export class WorkspaceMemberListResponseDto extends DatabaseDto {
     @ApiProperty({
         required: true,
@@ -28,7 +24,7 @@ export class WorkspaceMemberListResponseDto extends DatabaseDto {
         required: true,
         type: RoleListResponseDto,
     })
-    @Type(roleListType)
+    @Type(() => RoleListResponseDto)
     role: RoleListResponseDto;
 
     @ApiProperty({

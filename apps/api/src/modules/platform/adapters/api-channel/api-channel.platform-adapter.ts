@@ -2,6 +2,7 @@ import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { isApiChannelAccount } from '@app/modules/account/interfaces/account-config.interface';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
+import { EgressBlockedError } from '@app/common/helper/services/helper.egress.service';
 import {
     Injectable,
     Logger,
@@ -176,6 +177,14 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
         try {
             await this.callbackService.deliver(account, payload);
         } catch (error) {
+            if (error instanceof EgressBlockedError) {
+                // The target is a blocked address (internal/metadata/etc.) —
+                // that never changes on retry, so give up immediately.
+                this.logger.error(
+                    `API channel callback blocked by egress guard for account ${account.id}, not retrying: ${error}`
+                );
+                return { externalId };
+            }
             // The reply is already persisted by the caller; a receiver being down
             // must not fail the turn. Retry in-process with backoff instead of
             // blocking the reply pipeline — a restart drops any retry still in
@@ -218,6 +227,12 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
                 await this.callbackService.deliver(account, payload);
                 return;
             } catch (error) {
+                if (error instanceof EgressBlockedError) {
+                    this.logger.error(
+                        `API channel callback blocked by egress guard for account ${accountId}, giving up: ${error}`
+                    );
+                    return;
+                }
                 this.logger.warn(
                     `API channel callback retry ${attempt}/${API_CHANNEL_CALLBACK_MAX_ATTEMPTS} failed for account ${accountId}: ${error}`
                 );

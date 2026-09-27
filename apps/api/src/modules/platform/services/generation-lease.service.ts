@@ -64,7 +64,7 @@ export class GenerationLeaseService implements OnModuleDestroy {
         expire(key: string, seconds: number): Promise<number>;
         get(key: string): Promise<string | null>;
     }> {
-        return (await this.queue.client) as unknown as {
+        return (await this.queue.getBackend().client) as unknown as {
             incr(key: string): Promise<number>;
             expire(key: string, seconds: number): Promise<number>;
             get(key: string): Promise<string | null>;
