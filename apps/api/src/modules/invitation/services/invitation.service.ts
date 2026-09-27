@@ -8,6 +8,7 @@ import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { CreateInvitationRequestDto } from '../dtos/request/invitation.create.request.dto';
 import { InvitationDetailResponseDto } from '../dtos/response/invitation-detail.response.dto';
@@ -19,10 +20,18 @@ import {
 import { IInvitationService } from '../interfaces/invitation.interface';
 import { InvitationEntity } from '../repository/entities/invitation.entity';
 import { InvitationRepository } from '../repository/repositories/invitation.repository';
+import { buildInvitationLink } from '../utils/invitation-link.util';
 
 @Injectable()
 export class InvitationService implements IInvitationService {
-    constructor(private readonly invitationRepository: InvitationRepository) {}
+    private readonly homeUrl: string;
+
+    constructor(
+        private readonly invitationRepository: InvitationRepository,
+        private readonly configService: ConfigService
+    ) {
+        this.homeUrl = this.configService.get<string>('home.url') ?? '';
+    }
 
     async findOneById(
         id: string,
@@ -232,17 +241,36 @@ export class InvitationService implements IInvitationService {
     async mapList(
         invitations: InvitationEntity[]
     ): Promise<InvitationListResponseDto[]> {
-        return plainToInstance(InvitationListResponseDto, invitations, {
-            excludeExtraneousValues: true,
+        return invitations.map(invitation => {
+            const dto = plainToInstance(InvitationListResponseDto, invitation, {
+                excludeExtraneousValues: true,
+            });
+            dto.invitationLink = this.freshLink(invitation);
+
+            return dto;
         });
     }
 
     async mapDetail(
         invitation: InvitationEntity
     ): Promise<InvitationDetailResponseDto> {
-        return plainToInstance(InvitationDetailResponseDto, invitation, {
+        const dto = plainToInstance(InvitationDetailResponseDto, invitation, {
             excludeExtraneousValues: true,
         });
+        dto.invitationLink = this.freshLink(invitation);
+
+        return dto;
+    }
+
+    /**
+     * Builds the link from the configured url + the stored token — never
+     * serve the persisted invitationLink column. Rows written before the
+     * placeholder-domain fix hold a link on a domain we do not own, which is
+     * dead for the invitee and leaks a live token off-domain.
+     * Same defence workspace.owner.service.ts applies on the create path.
+     */
+    private freshLink(invitation: InvitationEntity): string {
+        return buildInvitationLink(this.homeUrl, invitation.token);
     }
 
     async checkExistingInvitation(

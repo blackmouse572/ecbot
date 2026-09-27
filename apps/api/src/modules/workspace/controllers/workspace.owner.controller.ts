@@ -101,9 +101,7 @@ export class WorkspaceController {
         // must come from configured home.url, not the caller-controlled
         // Origin header (@GetClientOrigin), which let a caller point the
         // link at an attacker-controlled host.
-        this.homeUrl = (
-            this.configService.get<string>('home.url') ?? ''
-        ).replace(/\/$/, '');
+        this.homeUrl = this.configService.get<string>('home.url') ?? '';
     }
 
     private readonly logger = new Logger();
@@ -165,9 +163,8 @@ export class WorkspaceController {
         // Key derives from the FileTypePipe-validated mimetype, never the
         // client-controlled `originalname`.
         const extension =
-            EXTENSION_BY_MIME_IMAGE[
-                image.mimetype as ENUM_FILE_MIME_IMAGE
-            ] ?? 'jpg';
+            EXTENSION_BY_MIME_IMAGE[image.mimetype as ENUM_FILE_MIME_IMAGE] ??
+            'jpg';
         const key = `workspace/${userId}/${randomUUID()}.${extension}`;
         const uploaded = await this.awsS3Service.putItem({
             key,

@@ -8,6 +8,7 @@ import { HelperAvatarService } from '@app/common/helper/services/helper.avatar.s
 import { HelperHashService } from '@app/common/helper/services/helper.hash.service';
 import { HelperStringService } from '@app/common/helper/services/helper.string.service';
 import { InvitationService } from '@app/modules/invitation/services/invitation.service';
+import { buildInvitationLink } from '@app/modules/invitation/utils/invitation-link.util';
 import { ENUM_POLICY_ROLE_TYPE } from '@app/modules/policy/enums/policy.enum';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
@@ -188,7 +189,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
             expiresIn: this.invitationTokenExpired,
             algorithm: 'HS256',
         });
-        return `${url}/join?tokens=${token}`;
+        return buildInvitationLink(url, token);
     }
 
     async generateInvitationLinkWithDetails(
@@ -218,7 +219,10 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
             // may have been built from an attacker-controlled Origin header,
             // and returning that stored value here would still email it out.
             return {
-                invitationLink: `${url}/join?tokens=${existingInvitation.token}`,
+                invitationLink: buildInvitationLink(
+                    url,
+                    existingInvitation.token
+                ),
                 token: existingInvitation.token,
                 expiresAt: existingInvitation.expiresAt,
                 workspaceId: workspace.id,
@@ -277,7 +281,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         const expirationMs = this.parseExpiration(expirationTime);
         const expiresAt = new Date(Date.now() + expirationMs);
 
-        const invitationLink = `${url}/join?tokens=${token}`;
+        const invitationLink = buildInvitationLink(url, token);
 
         // Save invitation to database
         await this.invitationService.create({

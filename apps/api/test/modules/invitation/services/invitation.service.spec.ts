@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { InvitationService } from '../../../../src/modules/invitation/services/invitation.service';
@@ -30,6 +31,12 @@ describe('InvitationService', () => {
                 {
                     provide: InvitationRepository,
                     useValue: mockInvitationRepository,
+                },
+                {
+                    provide: ConfigService,
+                    useValue: {
+                        get: jest.fn(() => 'https://app.configured.test'),
+                    },
                 },
             ],
         }).compile();
@@ -212,6 +219,33 @@ describe('InvitationService', () => {
                 inviteeEmail: 'someone@mail.com',
                 status: ENUM_INVITATION_STATUS.PENDING,
             });
+        });
+    });
+
+    describe('mapDetail / mapList', () => {
+        // Rows written before the placeholder-domain fix still hold
+        // `https://app.example.com/join?token=<live-jwt>`, so the link is
+        // rebuilt on read rather than served from the column.
+        const stale = {
+            id: randomUUID(),
+            token: 'stored-jwt',
+            invitationLink: 'https://app.example.com/join?token=stored-jwt',
+        } as any;
+
+        it('rebuilds a stale link from the configured client URL', async () => {
+            const result = await service.mapDetail(stale);
+
+            expect(result.invitationLink).toBe(
+                'https://app.configured.test/join?tokens=stored-jwt'
+            );
+        });
+
+        it('rebuilds stale links for every row in a list', async () => {
+            const result = await service.mapList([stale]);
+
+            expect(result[0].invitationLink).toBe(
+                'https://app.configured.test/join?tokens=stored-jwt'
+            );
         });
     });
 

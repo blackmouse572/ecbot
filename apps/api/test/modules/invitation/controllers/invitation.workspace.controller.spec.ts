@@ -28,9 +28,11 @@ describe('InvitationWorkspaceController', () => {
     const mockPaginationService = { totalPage: jest.fn().mockReturnValue(1) };
     const mockJwtService = { sign: jest.fn().mockReturnValue('new-jwt') };
     const mockConfigService = {
-        get: jest.fn((key: string) =>
-            key === 'workspace.invitationKey' ? 'secret' : '7d'
-        ),
+        get: jest.fn((key: string) => {
+            if (key === 'workspace.invitationKey') return 'secret';
+            if (key === 'home.url') return 'https://app.configured.test';
+            return '7d';
+        }),
     };
     const mockActivityService = { createByUserWithWorkspace: jest.fn() };
 
@@ -176,7 +178,7 @@ describe('InvitationWorkspaceController', () => {
                 'x',
                 'new-jwt',
                 expect.any(Date),
-                expect.stringContaining('new-jwt')
+                'https://app.configured.test/join?tokens=new-jwt'
             );
         });
     });

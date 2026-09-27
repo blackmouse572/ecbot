@@ -87,6 +87,10 @@ describe('E2E — workspace invitation management', () => {
             .post(`${wsBase(ctx.base)}/${ws}/invitations/${id}/regenerate`)
             .set(...auth(ownerToken));
         expect(regen.status).toBeLessThan(300);
+        // Real DI + real ConfigService: the only test that catches a wrong
+        // config key, which the mocked unit test would sail past.
+        expect(regen.body.data.invitationLink).toContain('/join?tokens=');
+        expect(regen.body.data.invitationLink).not.toContain('app.example.com');
 
         const revoke = await http(ctx.app)
             .delete(`${wsBase(ctx.base)}/${ws}/invitations/${id}`)

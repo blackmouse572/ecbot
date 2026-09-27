@@ -49,7 +49,7 @@ export class InvitationListResponseDto {
     status: ENUM_INVITATION_STATUS;
 
     @ApiProperty({
-        example: 'https://app.example.com/join?token=xyz123',
+        example: 'https://app.eccho.io/join?tokens=xyz123',
         description: 'Invitation link',
     })
     @Expose()
