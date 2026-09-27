@@ -178,23 +178,6 @@ describe('InvitationWorkspaceController', () => {
                 'x',
                 'new-jwt',
                 expect.any(Date),
-                expect.stringContaining('new-jwt')
-            );
-        });
-
-        it('builds the link from the configured client URL', async () => {
-            mockInvitationService.findOneById.mockResolvedValue(inWorkspace());
-            mockInvitationService.regenerateToken.mockResolvedValue({
-                id: 'i',
-            });
-            mockInvitationService.mapDetail.mockResolvedValue({ id: 'i' });
-
-            await controller.regenerateInvitation('user', workspace, 'x', user);
-
-            expect(mockInvitationService.regenerateToken).toHaveBeenCalledWith(
-                'x',
-                'new-jwt',
-                expect.any(Date),
                 'https://app.configured.test/join?tokens=new-jwt'
             );
         });
