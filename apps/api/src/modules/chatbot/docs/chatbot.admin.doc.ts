@@ -54,6 +54,8 @@ export function ChatbotAdminUpdateDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary: 'update a chatbot (admin)',
+            description:
+                'Partial update: only the fields in the body change, and a field left out keeps its stored value. Send null to clear an optional field.',
         }),
         DocRequest({
             params: ChatbotAdminDocParamsId,

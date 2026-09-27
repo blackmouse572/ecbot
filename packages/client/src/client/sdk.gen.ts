@@ -1597,6 +1597,8 @@ export const chatbotAdminControllerFindOneV1 = <ThrowOnError extends boolean = f
 
 /**
  * update a chatbot (admin)
+ *
+ * Partial update: only the fields in the body change, and a field left out keeps its stored value. Send null to clear an optional field.
  */
 export const chatbotAdminControllerUpdateV1 = <ThrowOnError extends boolean = false>(options: Options<ChatbotAdminControllerUpdateV1Data, ThrowOnError>): RequestResult<ChatbotAdminControllerUpdateV1Responses, ChatbotAdminControllerUpdateV1Errors, ThrowOnError> => (options.client ?? client).put<ChatbotAdminControllerUpdateV1Responses, ChatbotAdminControllerUpdateV1Errors, ThrowOnError>({
     responseType: 'json',
@@ -2220,7 +2222,7 @@ export const chatbotControllerFindOneV1 = <ThrowOnError extends boolean = false>
 /**
  * update chatbot configuration
  *
- * Update chatbot name, avatar, or shop knowledge information.
+ * Partial update: only the fields in the body change, and a field left out keeps its stored value. Send null to clear an optional field. Accounts are replaced only by a non-empty list.
  */
 export const chatbotControllerUpdateV1 = <ThrowOnError extends boolean = false>(options: Options<ChatbotControllerUpdateV1Data, ThrowOnError>): RequestResult<ChatbotControllerUpdateV1Responses, ChatbotControllerUpdateV1Errors, ThrowOnError> => (options.client ?? client).put<ChatbotControllerUpdateV1Responses, ChatbotControllerUpdateV1Errors, ThrowOnError>({
     responseType: 'json',

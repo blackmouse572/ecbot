@@ -1,3 +1,4 @@
+import { plainToInstance } from 'class-transformer';
 import { ChatbotCacheService } from '../../../../src/modules/ai-cache/services/chatbot-cache.service';
 import { AccountRepository } from '../../../../src/modules/account/repository/repositories/account.repository';
 import { ChatbotUpdateRequestDto } from '../../../../src/modules/chatbot/dtos/request/chatbot.update.request.dto';
@@ -47,7 +48,10 @@ describe('ChatbotService soft delete and update accounts', () => {
     describe('softDelete', () => {
         it('unlinks every account of the chatbot in the same save', async () => {
             const accounts = makeAccounts([{ id: 'a1' }, { id: 'a2' }]);
-            const chatbot = { id: 'bot-1', accounts } as unknown as ChatbotEntity;
+            const chatbot = {
+                id: 'bot-1',
+                accounts,
+            } as unknown as ChatbotEntity;
 
             await service.softDelete(chatbot);
 
@@ -62,7 +66,10 @@ describe('ChatbotService soft delete and update accounts', () => {
         it('initializes the accounts collection before unlinking', async () => {
             const accounts = makeAccounts([{ id: 'a1' }]);
             accounts.isInitialized.mockReturnValue(false);
-            const chatbot = { id: 'bot-1', accounts } as unknown as ChatbotEntity;
+            const chatbot = {
+                id: 'bot-1',
+                accounts,
+            } as unknown as ChatbotEntity;
 
             await service.softDelete(chatbot);
 
@@ -74,7 +81,10 @@ describe('ChatbotService soft delete and update accounts', () => {
     describe('update', () => {
         it('never touches the accounts collection for accounts: [], even when it is initialized', async () => {
             const accounts = makeAccounts([{ id: 'a1' }]);
-            const chatbot = { id: 'bot-1', accounts } as unknown as ChatbotEntity;
+            const chatbot = {
+                id: 'bot-1',
+                accounts,
+            } as unknown as ChatbotEntity;
             const dto = {
                 name: 'Renamed',
                 accounts: [],
@@ -90,6 +100,20 @@ describe('ChatbotService soft delete and update accounts', () => {
             expect(accounts.removeAll).not.toHaveBeenCalled();
             expect(accounts.add).not.toHaveBeenCalled();
             expect(accounts.getItems()).toEqual([{ id: 'a1' }]);
+        });
+
+        it('assigns only the fields a partial body sent', async () => {
+            const chatbot = {
+                id: 'bot-1',
+                accounts: makeAccounts([]),
+            } as unknown as ChatbotEntity;
+            const dto = plainToInstance(ChatbotUpdateRequestDto, {
+                name: 'Renamed',
+            });
+
+            await service.update(chatbot, dto);
+
+            expect(assign.mock.calls[0][0]).toStrictEqual({ name: 'Renamed' });
         });
     });
 });

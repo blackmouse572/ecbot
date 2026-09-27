@@ -133,7 +133,7 @@ export function ChatbotUpdateDoc(): MethodDecorator {
         Doc({
             summary: 'update chatbot configuration',
             description:
-                'Update chatbot name, avatar, or shop knowledge information.',
+                'Partial update: only the fields in the body change, and a field left out keeps its stored value. Send null to clear an optional field. Accounts are replaced only by a non-empty list.',
         }),
         DocRequest({
             params: ChatbotDocParamsId,

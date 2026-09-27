@@ -18,6 +18,9 @@ import {
     ENUM_CHATBOT_TYPE,
 } from '../../enums/chatbot.enum';
 
+// No field carries a default initializer: ChatbotEntity holds the defaults,
+// and an initializer here would be inherited by ChatbotUpdateRequestDto and
+// overwrite the stored value whenever a partial update leaves the key out.
 export class ChatbotCreateRequestDto {
     @IsString()
     @IsNotEmpty()
@@ -107,17 +110,21 @@ export class ChatbotCreateRequestDto {
         description: 'Show typing indicator when new message came',
         type: Boolean,
         default: true,
+        required: false,
     })
     @IsBoolean()
-    typingIndicator: boolean = true;
+    @IsOptional()
+    typingIndicator?: boolean;
 
     @ApiProperty({
         description: 'Show typing indicator when new message came',
         type: Boolean,
         default: true,
+        required: false,
     })
     @IsBoolean()
-    autoRead: boolean = true;
+    @IsOptional()
+    autoRead?: boolean;
 
     @IsString()
     @IsEnum(ENUM_CHATBOT_LANGUAGE)
@@ -182,7 +189,7 @@ export class ChatbotCreateRequestDto {
         required: false,
         default: 1.0,
     })
-    modelTemperature?: number = 1.0;
+    modelTemperature?: number;
 
     @IsOptional()
     @IsNumber()
@@ -260,7 +267,7 @@ export class ChatbotCreateRequestDto {
         default: false,
         required: false,
     })
-    guardrailEnabled: boolean = false;
+    guardrailEnabled?: boolean;
 
     @IsBoolean()
     @IsOptional()
@@ -271,7 +278,7 @@ export class ChatbotCreateRequestDto {
         default: false,
         required: false,
     })
-    guardrailModelEnabled: boolean = false;
+    guardrailModelEnabled?: boolean;
 
     @IsString()
     @IsOptional()
@@ -293,7 +300,7 @@ export class ChatbotCreateRequestDto {
         default: true,
         required: false,
     })
-    guardrailEscalateOnBlock: boolean = true;
+    guardrailEscalateOnBlock?: boolean;
 
     @IsString()
     @IsOptional()

@@ -2299,11 +2299,11 @@ export type ChatbotUpdateRequestDto = {
     /**
      * Name of the chatbot
      */
-    name: string;
+    name?: string;
     /**
      * Type of the chatbot
      */
-    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
+    type?: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
     /**
      * Avatar URL of the chatbot
      */
@@ -2333,15 +2333,15 @@ export type ChatbotUpdateRequestDto = {
     /**
      * Show typing indicator when new message came
      */
-    typingIndicator: boolean;
+    typingIndicator?: boolean;
     /**
      * Show typing indicator when new message came
      */
-    autoRead: boolean;
+    autoRead?: boolean;
     /**
      * Primary language for the chatbot
      */
-    primaryLanguage: 'ar' | 'bn' | 'bg' | 'zh' | 'hr' | 'cs' | 'da' | 'nl' | 'en' | 'et' | 'fi' | 'fr' | 'de' | 'el' | 'he' | 'hi' | 'hu' | 'id' | 'it' | 'ja' | 'ko' | 'lv' | 'lt' | 'no' | 'pl' | 'pt' | 'ro' | 'ru' | 'sr' | 'sk' | 'sl' | 'es' | 'sw' | 'sv' | 'th' | 'tr' | 'uk' | 'vi';
+    primaryLanguage?: 'ar' | 'bn' | 'bg' | 'zh' | 'hr' | 'cs' | 'da' | 'nl' | 'en' | 'et' | 'fi' | 'fr' | 'de' | 'el' | 'he' | 'hi' | 'hu' | 'id' | 'it' | 'ja' | 'ko' | 'lv' | 'lt' | 'no' | 'pl' | 'pt' | 'ro' | 'ru' | 'sr' | 'sk' | 'sl' | 'es' | 'sw' | 'sv' | 'th' | 'tr' | 'uk' | 'vi';
     /**
      * Language to switch to when user does not use primary language
      */
@@ -2357,7 +2357,7 @@ export type ChatbotUpdateRequestDto = {
     /**
      * OpenRouter model id
      */
-    modelTextName: string;
+    modelTextName?: string;
     /**
      * Temperature for model response (0-2)
      */
@@ -3493,11 +3493,11 @@ export type ChatbotCreateRequestDto = {
     /**
      * Show typing indicator when new message came
      */
-    typingIndicator: boolean;
+    typingIndicator?: boolean;
     /**
      * Show typing indicator when new message came
      */
-    autoRead: boolean;
+    autoRead?: boolean;
     /**
      * Primary language for the chatbot
      */

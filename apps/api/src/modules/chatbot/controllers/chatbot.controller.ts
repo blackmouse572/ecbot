@@ -17,7 +17,7 @@ import {
     IResponse,
     IResponsePaging,
 } from '@app/common/response/interfaces/response.interface';
-import { getDiffObject, pickFields } from '@app/common/utils/common';
+import { getDiffObject, pickDefinedFields } from '@app/common/utils/common';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { ApiKeyProtected } from '@app/modules/api-key/decorators/api-key.decorator';
@@ -291,8 +291,9 @@ export class ChatbotController {
             });
         }
 
-        // Token caps aren't editable through this endpoint yet.
-        const editableFields = pickFields(dto, CHATBOT_EDITABLE_FIELDS);
+        // Merge: only the keys the body sent are written. Token caps aren't
+        // editable through this endpoint yet.
+        const editableFields = pickDefinedFields(dto, CHATBOT_EDITABLE_FIELDS);
 
         const updatedChatbot = await this.chatbotService.update(
             chatbot,

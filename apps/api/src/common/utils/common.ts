@@ -59,21 +59,23 @@ export function getDiffObject(
 }
 
 /**
- * Build a new object with exactly the given keys copied from `source`,
- * regardless of whether they are own properties on it — a key `source`
- * never set comes through as `undefined` instead of being left out.
+ * Build a new object with the given keys that `source` holds a value for.
+ * A key left `undefined` is left out, so a partial update writes only what
+ * the client sent; `null` is kept, so a client can still clear a field.
  *
  * @param source - The object to pick from.
  * @param keys - The keys to copy.
- * @returns A new object with `keys` as its own properties.
+ * @returns A new object with the defined `keys` as its own properties.
  */
-export function pickFields<T, K extends keyof T>(
+export function pickDefinedFields<T, K extends keyof T>(
     source: T,
     keys: readonly K[]
-): Pick<T, K> {
-    const result = {} as Pick<T, K>;
+): Partial<Pick<T, K>> {
+    const result: Partial<Pick<T, K>> = {};
     for (const key of keys) {
-        result[key] = source[key];
+        if (source[key] !== undefined) {
+            result[key] = source[key];
+        }
     }
     return result;
 }
