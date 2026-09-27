@@ -5,6 +5,7 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import {
     Body,
     Controller,
+    ForbiddenException,
     Get,
     HttpCode,
     HttpStatus,
@@ -17,9 +18,15 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { randomUUID } from 'crypto';
 import multer from 'multer';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { DatabaseService } from 'src/common/database/services/database.service';
+import {
+    ENUM_FILE_MIME_IMAGE,
+    EXTENSION_BY_MIME_IMAGE,
+} from 'src/common/file/enums/file.enum';
+import { FileTypePipe } from 'src/common/file/pipes/file.type.pipe';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { IResponse } from 'src/common/response/interfaces/response.interface';
 import { ActivityService } from 'src/modules/activity/services/activity.service';
@@ -46,6 +53,7 @@ import {
     UserSharedUpdateProfileDoc,
     UserSharedUploadPhotoProfileDoc,
 } from 'src/modules/user/docs/user.shared.doc';
+import { ENUM_USER_STATUS_CODE_ERROR } from 'src/modules/user/enums/user.status-code.enum';
 import { UserUpdateProfileRequestDto } from 'src/modules/user/dtos/request/user.update-profile.dto';
 import { UserUploadPhotoRequestDto } from 'src/modules/user/dtos/request/user.upload-photo.request.dto';
 import { UserProfileResponseDto } from 'src/modules/user/dtos/response/user.profile.response.dto';
@@ -76,7 +84,14 @@ export class UserSharedController {
         image: Express.Multer.File,
         userId: string
     ): Promise<string> {
-        const key = `user/avatar/${userId}_${Date.now()}_${image.originalname}`;
+        // Key derives from the FileTypePipe-validated mimetype, never the
+        // client-controlled `originalname` — same scheme as
+        // UserService#createRandomFilenamePhoto (the presign path).
+        const extension =
+            EXTENSION_BY_MIME_IMAGE[
+                image.mimetype as ENUM_FILE_MIME_IMAGE
+            ] ?? 'jpg';
+        const key = `user/${userId}/${randomUUID()}.${extension}`;
         const uploaded = await this.awsS3Service.putItem({
             key,
             file: image.buffer,
@@ -121,7 +136,13 @@ export class UserSharedController {
     @ApiKeyProtected()
     @Put('/profile/update')
     @UseInterceptors(
-        FileInterceptor('image', { storage: multer.memoryStorage() })
+        FileInterceptor('image', {
+            storage: multer.memoryStorage(),
+            limits: {
+                fileSize: 5 * 1024 * 1024,
+                files: 1,
+            },
+        })
     )
     @ApiConsumes('multipart/form-data')
     async updateProfile(
@@ -129,7 +150,15 @@ export class UserSharedController {
         user: UserEntity,
         @Body()
         { country, ...body }: UserUpdateProfileRequestDto,
-        @UploadedFile() image?: Express.Multer.File
+        @UploadedFile(
+            new FileTypePipe([
+                ENUM_FILE_MIME_IMAGE.JPG,
+                ENUM_FILE_MIME_IMAGE.JPEG,
+                ENUM_FILE_MIME_IMAGE.PNG,
+                ENUM_FILE_MIME_IMAGE.WEBP,
+            ])
+        )
+        image?: Express.Multer.File
     ): Promise<void> {
         const checkCountry = this.countryService.findOneById(country);
         if (!checkCountry) {
@@ -212,6 +241,17 @@ export class UserSharedController {
         user: UserEntity,
         @Body() body: AwsS3PresignRequestDto
     ): Promise<void> {
+        // The presign step (uploadPhotoProfile) only ever issues keys under
+        // `user/{user.id}/`. Without this check a caller could confirm any
+        // S3 key here — including another user's avatar or an unrelated
+        // object — and have it attached to their own profile.
+        if (!body.key.startsWith(`user/${user.id}/`)) {
+            throw new ForbiddenException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PHOTO_KEY_INVALID,
+                message: 'user.error.photoKeyInvalid',
+            });
+        }
+
         const session = this.em.fork();
         await session.begin();
 

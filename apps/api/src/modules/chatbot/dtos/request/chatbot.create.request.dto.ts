@@ -5,6 +5,7 @@ import {
     IsInt,
     IsNotEmpty,
     IsNumber,
+    IsObject,
     IsOptional,
     IsString,
     Max,
@@ -13,6 +14,7 @@ import {
 } from 'class-validator';
 import {
     ENUM_CHATBOT_LANGUAGE,
+    ENUM_CHATBOT_STATUS,
     ENUM_CHATBOT_TYPE,
 } from '../../enums/chatbot.enum';
 
@@ -58,6 +60,36 @@ export class ChatbotCreateRequestDto {
         required: false,
     })
     generalKnowledge?: string;
+
+    @IsOptional()
+    @IsObject()
+    @ApiProperty({
+        description:
+            'Agent builder answers. Compiled into generalKnowledge on save.',
+        required: false,
+        type: 'object',
+        additionalProperties: true,
+    } as any)
+    agentProfile?: Record<string, unknown>;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(5000)
+    @ApiProperty({
+        description: 'Free text appended after the compiled agent instructions',
+        required: false,
+    })
+    extraInstructions?: string;
+
+    @IsOptional()
+    @IsEnum(ENUM_CHATBOT_STATUS)
+    @ApiProperty({
+        description:
+            'Initial status. The agent builder creates drafts as inactive.',
+        enum: ENUM_CHATBOT_STATUS,
+        required: false,
+    })
+    status?: ENUM_CHATBOT_STATUS;
 
     workspace: string;
 

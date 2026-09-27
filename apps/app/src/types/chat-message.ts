@@ -18,3 +18,10 @@ export type RagSource = {
   filename?: string;
   sourceUrl?: string | null;
 };
+
+// A media attachment on a persisted conversation message (customer photo or
+// an image the bot sent). `url` is absent when the platform gave only an id.
+export type MessageAttachment = {
+  type: string;
+  url?: string;
+};

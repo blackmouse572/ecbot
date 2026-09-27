@@ -16,6 +16,7 @@ from selectolax.parser import HTMLParser
 
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.retrievers.html_text import strip_noise_tags
+from eccho_ai.llm.retrievers.safe_fetch import safe_get
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,10 @@ class WebCrawlerRepo:
     * Duplicate URLs deduplicated.
     * Content-type checked — only HTML pages are crawled.
     * Total page limit (_MAX_PAGES) prevents infinite crawls.
+    * Fetches go through `safe_get` (see `retrievers/safe_fetch.py`), which
+      blocks requests (and redirects) to private/loopback/link-local/
+      reserved/metadata addresses — SSRF protection for operator-supplied
+      seed URLs.
     """
 
     def __init__(
@@ -91,7 +96,9 @@ class WebCrawlerRepo:
 
         queue: list[tuple[str, int]] = [(seed_url, 0)]
 
-        async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=True) as client:
+        # follow_redirects=False: safe_get() follows redirects itself, one hop
+        # at a time, re-validating the destination address at every hop.
+        async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=False) as client:
             while queue and len(visited) < self._max_pages:
                 url, current_depth = queue.pop(0)
 
@@ -128,7 +135,7 @@ class WebCrawlerRepo:
     ) -> tuple[CrawledPage | None, list[str]]:
         """Fetch *url*, extract readable text, and collect outbound links in one pass."""
         try:
-            response = await client.get(url)
+            response = await safe_get(client, url)
             response.raise_for_status()
         except Exception as exc:
             logger.warning(f"WebCrawlerRepo: could not fetch '{url}' — {exc}")

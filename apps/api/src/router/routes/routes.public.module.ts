@@ -1,3 +1,4 @@
+import { ConversationModule } from '@app/modules/conversation/conversation.module';
 import { ConversationRepositoryModule } from '@app/modules/conversation/repository/conversation.repository.module';
 import { AccountModule } from '@app/modules/account/account.module';
 import { PlatformWebhookPublicController } from '@app/modules/platform/controllers/platform-webhook.public.controller';
@@ -64,6 +65,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         TurnstileModule,
         PlatformModule,
         ConversationRepositoryModule,
+        ConversationModule,
         AccountModule,
         WaitlistModule,
         ChatbotModule,

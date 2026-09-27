@@ -9,10 +9,11 @@ export function AccountCallback() {
     const params = new URLSearchParams(location.search);
     const code = params.get("code");
     const error = params.get("error");
+    const state = params.get("state");
 
     if (code) {
       window.opener.postMessage(
-        { type: "oauth-success", payload: { code } },
+        { type: "oauth-success", payload: { code, state } },
         window.location.origin,
       );
     } else if (error) {

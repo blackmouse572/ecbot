@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import {
     ENUM_FOLLOWUP_PROCESS,
     ENUM_FOLLOWUP_STATUS,
@@ -95,11 +96,73 @@ describe('FollowupService', () => {
         expect(followupRepository.rows).toEqual([]);
     });
 
+    it('schedule() rejects with a 400 once the conversation already has 5 pending follow-ups', async () => {
+        const rows = Array.from({ length: 5 }, (_, i) =>
+            followupRow({ id: `f-${i}` })
+        );
+        const { service, cloudTasksClient, followupRepository } =
+            buildService(rows);
+
+        const promise = service.schedule(jobData, 30);
+
+        await expect(promise).rejects.toBeInstanceOf(BadRequestException);
+        await expect(promise).rejects.toThrow(
+            'followup.schedule.error.tooManyPending'
+        );
+        expect(cloudTasksClient.enqueue).not.toHaveBeenCalled();
+        expect(followupRepository.rows).toHaveLength(5);
+    });
+
+    it('schedule() still allows scheduling with 4 pending follow-ups (below the cap)', async () => {
+        const rows = Array.from({ length: 4 }, (_, i) =>
+            followupRow({ id: `f-${i}` })
+        );
+        const { service, cloudTasksClient } = buildService(rows);
+
+        await expect(service.schedule(jobData, 30)).resolves.toEqual(
+            expect.any(String)
+        );
+        expect(cloudTasksClient.enqueue).toHaveBeenCalled();
+    });
+
+    it('schedule() counts FAILED follow-ups (still pending retry) toward the cap', async () => {
+        const rows = [
+            ...Array.from({ length: 4 }, (_, i) =>
+                followupRow({ id: `f-${i}` })
+            ),
+            followupRow({
+                id: 'f-failed',
+                status: ENUM_FOLLOWUP_STATUS.FAILED,
+            }),
+        ];
+        const { service, cloudTasksClient } = buildService(rows);
+
+        await expect(service.schedule(jobData, 30)).rejects.toBeInstanceOf(
+            BadRequestException
+        );
+        expect(cloudTasksClient.enqueue).not.toHaveBeenCalled();
+    });
+
+    it("schedule() ignores another conversation's pending follow-ups when counting the cap", async () => {
+        const rows = Array.from({ length: 5 }, (_, i) =>
+            followupRow({
+                id: `f-${i}`,
+                conversation: { id: 'other-conv', senderName: 'Bob' },
+            })
+        );
+        const { service, cloudTasksClient } = buildService(rows);
+
+        await expect(service.schedule(jobData, 30)).resolves.toEqual(
+            expect.any(String)
+        );
+        expect(cloudTasksClient.enqueue).toHaveBeenCalled();
+    });
+
     it('cancel() deletes the Cloud Task and records CANCELLED', async () => {
         const rows = [followupRow({ id: 'f-1' })];
         const { service, cloudTasksClient } = buildService(rows);
 
-        expect(await service.cancel('f-1')).toBe(true);
+        expect(await service.cancel('f-1', 'conv-1')).toBe(true);
         expect(cloudTasksClient.deleteTask).toHaveBeenCalledWith(
             'followup',
             'followup-f-1'
@@ -113,7 +176,7 @@ describe('FollowupService', () => {
             followupRow({ id: 'other' }),
         ]);
 
-        expect(await service.cancel('f-1')).toBe(false);
+        expect(await service.cancel('f-1', 'conv-1')).toBe(false);
         expect(cloudTasksClient.deleteTask).not.toHaveBeenCalled();
     });
 
@@ -125,7 +188,7 @@ describe('FollowupService', () => {
             }),
         ]);
 
-        expect(await service.cancel('f-1')).toBe(false);
+        expect(await service.cancel('f-1', 'conv-1')).toBe(false);
         expect(cloudTasksClient.deleteTask).not.toHaveBeenCalled();
     });
 
@@ -135,7 +198,7 @@ describe('FollowupService', () => {
         ];
         const { service, cloudTasksClient } = buildService(rows);
 
-        expect(await service.cancel('f-1')).toBe(true);
+        expect(await service.cancel('f-1', 'conv-1')).toBe(true);
         expect(cloudTasksClient.deleteTask).toHaveBeenCalledWith(
             'followup',
             'followup-f-1'
@@ -151,7 +214,16 @@ describe('FollowupService', () => {
             Object.assign(new Error('task disappeared'), { code: 5 })
         );
 
-        expect(await service.cancel('f-1')).toBe(true);
+        expect(await service.cancel('f-1', 'conv-1')).toBe(true);
+    });
+
+    it('cancel() returns false when the followup belongs to a different conversation', async () => {
+        const { service, cloudTasksClient } = buildService([
+            followupRow({ id: 'f-1', conversation: { id: 'conv-1' } }),
+        ]);
+
+        expect(await service.cancel('f-1', 'other-conv')).toBe(false);
+        expect(cloudTasksClient.deleteTask).not.toHaveBeenCalled();
     });
 
     it('findScheduledByConversation() + mapPending() return only pending followups with remaining minutes', async () => {
@@ -180,5 +252,54 @@ describe('FollowupService', () => {
         expect(service.mapPending(followups)).toEqual([
             { followupId: 'f-1', reason: 'payment_check', firesInMinutes: 20 },
         ]);
+    });
+
+    it('keeps the image a follow-up sends on the persisted message', async () => {
+        const insertPendingOutbound = jest.fn().mockResolvedValue(undefined);
+        const account = {
+            id: 'acc-1',
+            type: 'telegram',
+            chatbot: { id: 'cb-1', workspace: { id: 'ws-1' } },
+        };
+        const image = [{ type: 'image', url: 'https://kb/shirt.jpg' }];
+        const history = [{ role: 'user', content: '[image: A white shirt]' }];
+        const streamChat = jest.fn().mockResolvedValue({});
+        const turnContext = { build: jest.fn().mockResolvedValue({ history }) };
+        const service = new FollowupService(
+            {} as any,
+            makeFollowupRepository([]) as any,
+            { findOne: jest.fn().mockResolvedValue(account) } as any,
+            { streamChat } as any,
+            { insertPendingOutbound } as any,
+            { get: jest.fn().mockReturnValue({}) } as any,
+            { build: jest.fn().mockResolvedValue([]) } as any,
+            {
+                deliver: jest.fn(async (p: any) => {
+                    await p.onSegmentPersist('', image);
+                    return {};
+                }),
+            } as any,
+            {} as any,
+            turnContext as any
+        );
+        jest.spyOn(service as any, 'recordOutcome').mockResolvedValue(
+            undefined
+        );
+
+        await (service as any).generateAndDeliver(null, jobData);
+
+        // A follow-up answers no burst: all recent rows are its history.
+        expect(turnContext.build).toHaveBeenCalledWith(
+            'conv-1',
+            { texts: [] },
+            'cb-1'
+        );
+        expect(streamChat.mock.calls[0][0].history).toBe(history);
+
+        expect(insertPendingOutbound).toHaveBeenCalledWith(
+            'conv-1',
+            expect.any(String),
+            expect.objectContaining({ attachments: image })
+        );
     });
 });

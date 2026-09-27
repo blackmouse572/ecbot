@@ -13,10 +13,16 @@ export class ConversationDebounceDO {
   constructor(private state: DurableObjectState) {}
 
   async fetch(req: Request): Promise<Response> {
-    const body = await req.json<Meta & { text: string }>();
+    const body = await req.json<Meta & { text: string; messageId?: string }>();
     const texts = (await this.state.storage.get<string[]>("texts")) ?? [];
     texts.push(body.text);
     await this.state.storage.put("texts", texts);
+    // The saved rows of the burst, so apps/api finds them by id.
+    if (body.messageId) {
+      const ids = (await this.state.storage.get<string[]>("messageIds")) ?? [];
+      ids.push(body.messageId);
+      await this.state.storage.put("messageIds", ids);
+    }
     await this.state.storage.put("meta", {
       conversationId: body.conversationId,
       senderId: body.senderId,
@@ -30,12 +36,24 @@ export class ConversationDebounceDO {
 
   async alarm(): Promise<void> {
     const texts = (await this.state.storage.get<string[]>("texts")) ?? [];
+    const messageIds =
+      (await this.state.storage.get<string[]>("messageIds")) ?? [];
     const meta = await this.state.storage.get<Meta>("meta");
     await this.state.storage.deleteAll();
     if (!meta || texts.length === 0) return;
-    await postToServer("/api/v1/system/poc/reply", {
-      ...meta,
-      texts,
-    });
+    // Log, never retry: the reply may already be partly delivered to the
+    // customer, so a second run could answer them twice.
+    const tag = `[reply] conversation ${meta.conversationId}`;
+    try {
+      const res = await postToServer("/api/v1/system/poc/reply", {
+        ...meta,
+        texts,
+        messageIds,
+      });
+      if (!res.ok)
+        console.error(`${tag} -> ${res.status}: ${await res.text()}`);
+    } catch (err) {
+      console.error(`${tag} threw (${(err as Error).message})`);
+    }
   }
 }

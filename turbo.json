@@ -21,6 +21,10 @@
       "cache": false,
       "persistent": false
     },
+    "migrate:seed": {
+      "cache": false,
+      "persistent": false
+    },
     "migration:down": {
       "cache": false,
       "persistent": false
@@ -111,6 +115,11 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "api#dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["@repo/agent-blueprint#build"]
     },
     "test": {
       "cache": false,

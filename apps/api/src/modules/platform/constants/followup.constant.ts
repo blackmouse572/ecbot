@@ -6,6 +6,13 @@ export const FOLLOWUP_TASK_PREFIX = 'followup-';
 /** `outcome_reason` is varchar(255); error messages can be far longer. */
 export const OUTCOME_REASON_MAX_LENGTH = 255;
 
+/**
+ * Hard cap on concurrent pending follow-ups per conversation. Without this a
+ * prompt-injected bot can schedule unbounded proactive messages to a customer
+ * (spam) and burn AI-generation quota when they all fire.
+ */
+export const MAX_PENDING_FOLLOWUPS_PER_CONVERSATION = 5;
+
 export enum ENUM_FOLLOWUP_PROCESS {
     FIRE = 'fire',
 }

@@ -1,5 +1,6 @@
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from eccho_ai.core.security import require_internal_token
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.models.chat import Chatbots
 from eccho_ai.modules.rag.models import RAGChatbotLinksRequest, RAGRetrieveRequest, RAGTextIngestRequest, RAGUrlIngestRequest
@@ -8,7 +9,9 @@ from eccho_ai.modules.rag.services import RAGIngestService
 from eccho_ai.core.postgres import PostgresRepo
 
 
-router = APIRouter(prefix="/rag", tags=["RAG"])
+router = APIRouter(
+    prefix="/rag", tags=["RAG"], dependencies=[Depends(require_internal_token)]
+)
 rag_ingest_service = RAGIngestService()
 rag_retrieval_service = RAGRetrievalService()
 

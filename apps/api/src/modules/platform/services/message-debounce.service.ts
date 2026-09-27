@@ -5,6 +5,8 @@ import { ReplyGenerationService } from './reply-generation.service';
 
 interface PendingBurst {
     texts: string[];
+    /** Saved rows of `texts` (a message without an external id has none). */
+    messageIds: string[];
     senderId: string;
     customerId: string;
     contactPointId: string;
@@ -43,7 +45,8 @@ export class MessageDebounceService implements OnModuleDestroy {
         senderId: string,
         customerId: string,
         contactPointId: string,
-        text: string
+        text: string,
+        messageId?: string
     ): Promise<void> {
         // Advance the generation lease: any reply generation already in flight
         // for this conversation is now superseded and will discard itself.
@@ -53,6 +56,7 @@ export class MessageDebounceService implements OnModuleDestroy {
         if (existing) {
             clearTimeout(existing.timer);
             existing.texts.push(text);
+            if (messageId) existing.messageIds.push(messageId);
             existing.senderId = senderId;
             existing.customerId = customerId;
             existing.contactPointId = contactPointId;
@@ -62,6 +66,7 @@ export class MessageDebounceService implements OnModuleDestroy {
 
         this.pending.set(conversationId, {
             texts: [text],
+            messageIds: messageId ? [messageId] : [],
             senderId,
             customerId,
             contactPointId,
@@ -90,6 +95,7 @@ export class MessageDebounceService implements OnModuleDestroy {
             customerId: burst.customerId,
             contactPointId: burst.contactPointId,
             texts: burst.texts,
+            messageIds: burst.messageIds,
         });
     }
 }

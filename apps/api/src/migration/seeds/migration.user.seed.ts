@@ -44,7 +44,7 @@ export class MigrationUserSeed {
     @CreateRequestContext<MigrationUserSeed>(seed => seed.em)
     async seeds(): Promise<void> {
         const password = 'aaAA@123';
-        const passwordHash = this.authService.createPassword(password);
+        const passwordHash = await this.authService.createPassword(password);
         const superAdminRole: RoleEntity =
             await this.roleService.findOneByName('superadmin');
         const adminRole: RoleEntity =

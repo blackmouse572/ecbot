@@ -6,7 +6,8 @@
     "testMatch": ["<rootDir>/test/**/*.spec.ts"],
     "setupFilesAfterEnv": ["<rootDir>/test/modules/account/setup.ts"],
     "moduleNameMapper": {
-        "^@app/(.+)$": "<rootDir>/src/$1"
+        "^@app/(.+)$": "<rootDir>/src/$1",
+        "^@repo/agent-blueprint$": "<rootDir>/../../packages/agent-blueprint/src/index.ts"
     },
     "collectCoverage": true,
     "coverageDirectory": "coverage",

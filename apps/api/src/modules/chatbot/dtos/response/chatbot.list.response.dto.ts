@@ -58,6 +58,19 @@ export class ChatbotListResponseDto extends DatabaseDto {
     generalKnowledge?: string;
 
     @ApiProperty({
+        required: false,
+        type: 'object',
+        additionalProperties: true,
+        nullable: true,
+    } as any)
+    @Expose()
+    agentProfile?: Record<string, unknown>;
+
+    @ApiProperty({ required: false, nullable: true })
+    @Expose()
+    extraInstructions?: string;
+
+    @ApiProperty({
         description: 'Chatbot status',
         enum: ENUM_CHATBOT_STATUS,
         type: String,

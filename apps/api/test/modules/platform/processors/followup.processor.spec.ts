@@ -1,3 +1,4 @@
+import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
 import { ENUM_MESSAGE_DIRECTION } from '@app/modules/conversation/enums/message.enum';
 import {
@@ -23,6 +24,11 @@ function makeService(overrides: any = {}) {
         {
             get: jest.fn().mockReturnValue(overrides.conversationService),
         } as any,
+        new TurnContextService(
+            overrides.messageRepository,
+            { resolve: async (list: unknown[] = []) => list } as any,
+            {} as any
+        ),
         // `meter: null` builds the service without one — the public build.
         overrides.meter === null
             ? undefined

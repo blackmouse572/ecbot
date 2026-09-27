@@ -2,8 +2,13 @@ import { type PropsWithChildren, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { SidebarContext } from "./sidebar-context";
 
-export const SidebarProvider = ({ children }: PropsWithChildren) => {
-  const [desktop, setDesktop] = useState(true);
+type SidebarProviderProps = PropsWithChildren<{
+  /** Initial desktop-open state. Defaults to `true` so existing callers are unchanged. */
+  defaultDesktopOpen?: boolean;
+}>;
+
+export const SidebarProvider = ({ children, defaultDesktopOpen = true }: SidebarProviderProps) => {
+  const [desktop, setDesktop] = useState(defaultDesktopOpen);
   const [mobile, setMobile] = useState(false);
 
   const { pathname } = useLocation();

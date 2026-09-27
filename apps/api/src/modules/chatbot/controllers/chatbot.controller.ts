@@ -82,6 +82,7 @@ import { ChatbotCreateRequestDto } from '../dtos/request/chatbot.create.request.
 import { ChatbotLinkAccountRequestDto } from '../dtos/request/chatbot.link-account.request.dto';
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
 import { ChatbotGetDetailResponseDto } from '../dtos/response/chatbot.detail.response.dto';
+import { ChatbotLinkAccountResponseDto } from '../dtos/response/chatbot.link-account.response.dto';
 import { ChatbotListResponseDto } from '../dtos/response/chatbot.list.response.dto';
 import { ChatbotModelResponseDto } from '../dtos/response/chatbot.model.response.dto';
 import { ENUM_CHATBOT_STATUS, ENUM_CHATBOT_TYPE } from '../enums/chatbot.enum';
@@ -676,7 +677,7 @@ export class ChatbotController {
         @Param('id') id: string,
         @Body() body: ChatbotLinkAccountRequestDto,
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
-    ): Promise<IResponse<ChatbotListResponseDto>> {
+    ): Promise<IResponse<ChatbotLinkAccountResponseDto>> {
         const chatbot = await this.chatbotService.findOne({
             id: id,
             workspace: workspace.id,
@@ -690,7 +691,7 @@ export class ChatbotController {
             });
         }
 
-        const updatedChatbot = await this.chatbotService.linkBatchAccounts(
+        const result = await this.chatbotService.linkBatchAccounts(
             chatbot,
             body.accounts,
             {
@@ -705,9 +706,7 @@ export class ChatbotController {
                 name: chatbot.name,
             },
         });
-        return {
-            data: this.chatbotService.mapList([updatedChatbot])[0],
-        };
+        return { data: result };
     }
 
     @ChatbotUnlinkAccountDoc()

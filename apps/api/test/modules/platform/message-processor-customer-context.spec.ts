@@ -22,7 +22,8 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         resetFallbackCount: jest.fn(),
     };
     const messageRepository = {
-        upsertByExternalId: jest.fn(),
+        // The saved inbound row; its id travels with the burst.
+        upsertByExternalId: jest.fn().mockResolvedValue({ id: 'm-in' }),
         insertPendingOutbound: jest.fn(),
         markOutboundSent: jest.fn(),
         markOutboundFailed: jest.fn(),
@@ -103,7 +104,8 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
             mockModuleRef as any,
             chatbotAIService as any,
             lease as any,
-            { claim: jest.fn().mockResolvedValue(true) } as any
+            { claim: jest.fn().mockResolvedValue(true) } as any,
+            {} as any
         );
         processor.onModuleInit();
 
@@ -140,13 +142,14 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         await processor.process(baseEvent);
 
         expect(messageDebounceService.schedule).toHaveBeenCalledTimes(1);
-        // schedule(conversationId, senderId, customerId, contactPointId, text)
+        // schedule(conversationId, senderId, customerId, contactPointId, text, messageId)
         expect(messageDebounceService.schedule).toHaveBeenCalledWith(
             'conv-existing',
             'sender-fb-1',
             'cust-42',
             'cp-42',
-            'Hello'
+            'Hello',
+            'm-in'
         );
     });
 
@@ -193,14 +196,7 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
             global.fetch = originalFetch;
         });
 
-        it('bumps the generation lease and POSTs the debounce payload to the edge Worker', async () => {
-            process.env.POC_EDGE_DEBOUNCE_URL = 'https://edge.test';
-            process.env.POC_EDGE_INTERNAL_SECRET = 'top-secret';
-            const fetchMock = jest
-                .fn()
-                .mockResolvedValue({ ok: true } as Response);
-            global.fetch = fetchMock as any;
-
+        const givenAnOpenConversation = () => {
             customerService.resolveContactPoint.mockResolvedValue({
                 contactPoint: { id: 'cp-42', customer: { id: 'cust-42' } },
                 customerId: 'cust-42',
@@ -213,10 +209,58 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
                 senderId: 'sender-fb-1',
                 senderName: null,
                 senderAvatar: null,
-                senderProfileFetchedAt: new Date(), // fresh — skip profile fetch
+                senderProfileFetchedAt: new Date(), // fresh, skip profile fetch
                 contactPoint: { id: 'cp-42' },
                 fallbackCount: 0,
             });
+        };
+
+        // A refused or failed hand-off used to be swallowed: the message was
+        // saved, the typing indicator started, and the bot never replied.
+        it.each([
+            [
+                'the edge refuses the call (403)',
+                () =>
+                    jest
+                        .fn()
+                        .mockResolvedValue({
+                            ok: false,
+                            status: 403,
+                        } as Response),
+            ],
+            [
+                'the edge is unreachable',
+                () => jest.fn().mockRejectedValue(new Error('fetch failed')),
+            ],
+        ])(
+            'falls back to the in-process debounce when %s',
+            async (_case, makeFetch) => {
+                process.env.POC_EDGE_DEBOUNCE_URL = 'https://edge.test';
+                global.fetch = makeFetch() as any;
+                givenAnOpenConversation();
+
+                await processor.process(baseEvent);
+
+                expect(messageDebounceService.schedule).toHaveBeenCalledWith(
+                    'conv-existing',
+                    'sender-fb-1',
+                    'cust-42',
+                    'cp-42',
+                    'Hello',
+                    'm-in'
+                );
+            }
+        );
+
+        it('bumps the generation lease and POSTs the debounce payload to the edge Worker', async () => {
+            process.env.POC_EDGE_DEBOUNCE_URL = 'https://edge.test';
+            process.env.POC_EDGE_INTERNAL_SECRET = 'top-secret';
+            const fetchMock = jest
+                .fn()
+                .mockResolvedValue({ ok: true } as Response);
+            global.fetch = fetchMock as any;
+
+            givenAnOpenConversation();
 
             await processor.process(baseEvent);
 
@@ -235,6 +279,7 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
                         customerId: 'cust-42',
                         contactPointId: 'cp-42',
                         text: 'Hello',
+                        messageId: 'm-in',
                     }),
                 })
             );

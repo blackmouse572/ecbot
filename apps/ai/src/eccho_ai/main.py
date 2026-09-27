@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException
 from eccho_ai.core.app_configs import SWAGGER_CONFIG
 from eccho_ai.core.app_logger import configure_logging, get_logger
 from eccho_ai.core.postgres import PostgresRepo
+from eccho_ai.core.security import log_if_internal_token_missing
 from eccho_ai.core.variables import (
     AppVars,  # noqa: F401. Import to load environment variables
 )
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
     # Startup
     boot_started_at = time.perf_counter()
     configure_logging(AppVars.LOG_LEVEL)
+    log_if_internal_token_missing()
 
     # Fail fast on a bad AGENT_PROMPT_PATH instead of at the first chat request.
     system_prompt_template()
@@ -93,10 +95,12 @@ app.add_middleware(RequestLogicMiddleware)
 # ====================================
 from eccho_ai.modules.chat.routers import router as chat_router
 from eccho_ai.modules.customer.routers import router as customer_router
+from eccho_ai.modules.decision.routers import router as decision_router
 from eccho_ai.modules.rag.routers import router as rag_router
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(customer_router, prefix="/api")
+app.include_router(decision_router, prefix="/api")
 app.include_router(rag_router, prefix="/api")
 
 

@@ -39,10 +39,8 @@ beforeEach(() => {
 });
 
 describe("useRequestPasswordReset", () => {
-  it("returns the reset token so the caller can move on to the OTP step", async () => {
-    requestV1.mockResolvedValue({
-      data: { data: { token: TOKEN, to: "a@b.com", expiredDate: "", url: "" } },
-    });
+  it("resolves without returning a token — the API never puts one on this response", async () => {
+    requestV1.mockResolvedValue({ data: { data: undefined } });
 
     const { result } = wrap(() => useRequestPasswordReset());
     const created = await result.current.requestReset("a@b.com");
@@ -50,16 +48,18 @@ describe("useRequestPasswordReset", () => {
     expect(requestV1).toHaveBeenCalledWith(
       expect.objectContaining({ body: { email: "a@b.com" } }),
     );
-    expect(created.token).toBe(TOKEN);
+    expect(created).toBeUndefined();
   });
 
-  it("throws when the email has no active account", async () => {
-    requestV1.mockResolvedValue({ error: { message: "user.error.notFound" } });
+  it("still rejects on a genuine transport/server error, for the caller to fall back to the generic state", async () => {
+    requestV1.mockResolvedValue({
+      error: { message: "http.serverError.internalServerError" },
+    });
 
     const { result } = wrap(() => useRequestPasswordReset());
 
-    await expect(result.current.requestReset("nobody@b.com")).rejects.toEqual({
-      message: "user.error.notFound",
+    await expect(result.current.requestReset("a@b.com")).rejects.toEqual({
+      message: "http.serverError.internalServerError",
     });
   });
 });

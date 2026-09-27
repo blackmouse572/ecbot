@@ -1,3 +1,4 @@
+import { MessageMediaService } from '../../../src/modules/conversation/services/message-media.service';
 import {
     NotFoundException,
     UnprocessableEntityException,
@@ -11,11 +12,16 @@ import { ConversationEntity } from '../../../src/modules/conversation/repository
 import { MessageEntity } from '../../../src/modules/conversation/repository/entities/message.entity';
 import { ConversationMessagingService } from '../../../src/modules/conversation/services/conversation-messaging.service';
 
+const mockS3 = {
+    signGetUrl: jest.fn(async (key: string) => `https://s3/${key}?sig`),
+};
+
 describe('ConversationMessagingService', () => {
     let service: ConversationMessagingService;
 
     const mockConversationRepository = {
         findOneById: jest.fn(),
+        findOneByIdInWorkspace: jest.fn(),
     };
 
     const mockMessageRepository = {
@@ -53,7 +59,8 @@ describe('ConversationMessagingService', () => {
             mockMessageRepository as any,
             mockUserRepository as any,
             mockToolInvocationRepository as any,
-            { get: jest.fn(() => mockPlatformRegistry) } as any
+            { get: jest.fn(() => mockPlatformRegistry) } as any,
+            new MessageMediaService(mockS3 as any)
         );
 
     const facebookAccount = {
@@ -69,6 +76,8 @@ describe('ConversationMessagingService', () => {
         account: facebookAccount,
     };
 
+    const workspaceId = 'workspace-1';
+
     beforeEach(() => {
         jest.clearAllMocks();
 
@@ -83,7 +92,7 @@ describe('ConversationMessagingService', () => {
             const clientNonce = 'some-uuid';
             const platformMessageId = 'mid.abc123';
 
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.insertPendingOutbound.mockResolvedValue({
@@ -100,10 +109,16 @@ describe('ConversationMessagingService', () => {
 
             const result = await service.sendOperatorReply(
                 'conv-1',
+                workspaceId,
                 'operator-user-id',
                 'Hello from operator'
             );
 
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId, {
+                populate: ['account'],
+            });
             expect(mockPlatformRegistry.get).toHaveBeenCalledWith(
                 ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE
             );
@@ -137,7 +152,7 @@ describe('ConversationMessagingService', () => {
         });
 
         it('should mark the message as failed and throw when the platform send fails', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.insertPendingOutbound.mockResolvedValue({
@@ -152,7 +167,12 @@ describe('ConversationMessagingService', () => {
             );
 
             await expect(
-                service.sendOperatorReply('conv-1', 'operator-user-id', 'Hello')
+                service.sendOperatorReply(
+                    'conv-1',
+                    workspaceId,
+                    'operator-user-id',
+                    'Hello'
+                )
             ).rejects.toThrow(UnprocessableEntityException);
 
             expect(mockMessageRepository.markOutboundFailed).toHaveBeenCalled();
@@ -162,11 +182,14 @@ describe('ConversationMessagingService', () => {
         });
 
         it('should throw NotFoundException when the conversation does not exist', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(null);
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
 
             await expect(
                 service.sendOperatorReply(
                     'conv-ghost',
+                    workspaceId,
                     'operator-user-id',
                     'Hello'
                 )
@@ -177,12 +200,37 @@ describe('ConversationMessagingService', () => {
             ).not.toHaveBeenCalled();
         });
 
-        it('persists attachments in the DB record but sends plain text to the platform adapter', async () => {
-            const attachments = [
-                { type: 'image', url: 'https://example.com/img.png' },
-            ];
+        it('should throw NotFoundException (not the account/adapter path) when the conversation belongs to another workspace', async () => {
+            // The repository's own workspace filter is what makes this a 404,
+            // not a special-cased comparison here — same as "does not exist".
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
 
-            mockConversationRepository.findOneById.mockResolvedValue(
+            await expect(
+                service.sendOperatorReply(
+                    'conv-1',
+                    'workspace-other',
+                    'operator-user-id',
+                    'Hello'
+                )
+            ).rejects.toThrow(NotFoundException);
+
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', 'workspace-other', {
+                populate: ['account'],
+            });
+            expect(mockPlatformRegistry.get).not.toHaveBeenCalled();
+            expect(
+                mockMessageRepository.insertPendingOutbound
+            ).not.toHaveBeenCalled();
+        });
+
+        // Operators cannot attach images: attachments were stored but never
+        // delivered, so the inbox showed images the customer never got.
+        it('stores and sends an operator reply as text only', async () => {
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.insertPendingOutbound.mockResolvedValue({
@@ -195,18 +243,15 @@ describe('ConversationMessagingService', () => {
 
             await service.sendOperatorReply(
                 'conv-1',
+                workspaceId,
                 'operator-user-id',
-                'See attached',
-                attachments
+                'See attached'
             );
 
             expect(
-                mockMessageRepository.insertPendingOutbound
-            ).toHaveBeenCalledWith(
-                'conv-1',
-                expect.any(String),
-                expect.objectContaining({ attachments })
-            );
+                mockMessageRepository.insertPendingOutbound.mock.calls[0][2]
+                    .attachments
+            ).toBeUndefined();
             expect(mockAdapter.sendMessage).toHaveBeenCalledWith(
                 facebookAccount,
                 'user-psid-456',
@@ -224,10 +269,11 @@ describe('ConversationMessagingService', () => {
             externalId: 'mid.abc123',
             authorType: ENUM_MESSAGE_AUTHOR.USER,
             authorId: 'user-psid-456',
+            conversation: { id: 'c' },
         };
 
         it('reacts via the adapter and persists the reaction', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.findOne.mockResolvedValue(message);
@@ -240,12 +286,18 @@ describe('ConversationMessagingService', () => {
 
             await service.reactToMessage({
                 conversationId: 'conv-1',
+                workspaceId,
                 messageId: 'msg-1',
                 emoji: '❤',
                 action: 'react',
                 operatorUserId: 'operator-user-id',
             });
 
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId, {
+                populate: ['account'],
+            });
             expect(mockAdapter.addReaction).toHaveBeenCalledWith(
                 facebookAccount,
                 'user-psid-456',
@@ -266,7 +318,7 @@ describe('ConversationMessagingService', () => {
         });
 
         it('throws when the adapter does not support outbound reactions', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.findOne.mockResolvedValue(message);
@@ -275,6 +327,7 @@ describe('ConversationMessagingService', () => {
             await expect(
                 service.reactToMessage({
                     conversationId: 'conv-1',
+                    workspaceId,
                     messageId: 'msg-1',
                     emoji: '❤',
                     action: 'react',
@@ -287,11 +340,14 @@ describe('ConversationMessagingService', () => {
         });
 
         it('throws NotFoundException when the conversation does not exist', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(null);
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
 
             await expect(
                 service.reactToMessage({
                     conversationId: 'conv-ghost',
+                    workspaceId,
                     messageId: 'msg-1',
                     emoji: '❤',
                     action: 'react',
@@ -300,8 +356,32 @@ describe('ConversationMessagingService', () => {
             ).rejects.toThrow(NotFoundException);
         });
 
+        it('throws NotFoundException when the conversation belongs to another workspace', async () => {
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                service.reactToMessage({
+                    conversationId: 'conv-1',
+                    workspaceId: 'workspace-other',
+                    messageId: 'msg-1',
+                    emoji: '❤',
+                    action: 'react',
+                    operatorUserId: 'operator-user-id',
+                })
+            ).rejects.toThrow(NotFoundException);
+
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', 'workspace-other', {
+                populate: ['account'],
+            });
+            expect(mockAdapter.addReaction).not.toHaveBeenCalled();
+        });
+
         it('throws NotFoundException when the message does not exist', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockMessageRepository.findOne.mockResolvedValue(null);
@@ -309,6 +389,7 @@ describe('ConversationMessagingService', () => {
             await expect(
                 service.reactToMessage({
                     conversationId: 'conv-1',
+                    workspaceId,
                     messageId: 'msg-ghost',
                     emoji: '❤',
                     action: 'react',
@@ -338,19 +419,26 @@ describe('ConversationMessagingService', () => {
                 },
             ];
 
-            mockConversationRepository.findOneById.mockResolvedValue({
-                id: 'conv-1',
-            });
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                {
+                    id: 'conv-1',
+                }
+            );
             mockMessageRepository.findByConversation.mockResolvedValue(
                 messages
             );
             mockMessageRepository.countByConversation.mockResolvedValue(137);
 
-            const result = await service.listMessages('conv-1', {
+            const result = await service.listMessages('conv-1', workspaceId, {
                 limit: 50,
                 offset: 0,
             });
 
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', workspaceId, {
+                populate: ['chatbot'],
+            });
             expect(
                 mockMessageRepository.findByConversation
             ).toHaveBeenCalledWith('conv-1', {
@@ -364,24 +452,47 @@ describe('ConversationMessagingService', () => {
         });
 
         it('should throw NotFoundException when the conversation does not exist', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue(null);
-
-            await expect(service.listMessages('conv-ghost')).rejects.toThrow(
-                NotFoundException
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
             );
+
+            await expect(
+                service.listMessages('conv-ghost', workspaceId)
+            ).rejects.toThrow(NotFoundException);
 
             expect(
                 mockMessageRepository.findByConversation
             ).not.toHaveBeenCalled();
         });
 
-        it('should return an empty array when the conversation has no messages yet', async () => {
-            mockConversationRepository.findOneById.mockResolvedValue({
-                id: 'conv-1',
+        it('should throw NotFoundException when the conversation belongs to another workspace', async () => {
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                service.listMessages('conv-1', 'workspace-other')
+            ).rejects.toThrow(NotFoundException);
+
+            expect(
+                mockConversationRepository.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', 'workspace-other', {
+                populate: ['chatbot'],
             });
+            expect(
+                mockMessageRepository.findByConversation
+            ).not.toHaveBeenCalled();
+        });
+
+        it('should return an empty array when the conversation has no messages yet', async () => {
+            mockConversationRepository.findOneByIdInWorkspace.mockResolvedValue(
+                {
+                    id: 'conv-1',
+                }
+            );
             mockMessageRepository.findByConversation.mockResolvedValue([]);
 
-            const result = await service.listMessages('conv-1');
+            const result = await service.listMessages('conv-1', workspaceId);
 
             expect(result.messages).toHaveLength(0);
         });
@@ -432,16 +543,17 @@ describe('ConversationMessagingService', () => {
             ({
                 authorId: 'a-1',
                 authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
+                conversation: { id: 'c' },
                 ...overrides,
             }) as MessageEntity;
 
-        it('uses operator full name from the user-name map', () => {
+        it('uses operator full name from the user-name map', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'op-1',
                 authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
             });
-            const dto = service.mapMessage(
+            const dto = await service.mapMessage(
                 msg,
                 undefined,
                 new Map([['op-1', 'Ada Lovelace']])
@@ -451,7 +563,7 @@ describe('ConversationMessagingService', () => {
 
         // Imported page messages (adapter.reconcile / message_echoes) are
         // OPERATOR but carry the platform's page id, not an eccho user uuid.
-        it('names an imported page message after the account, not the raw page id', () => {
+        it('names an imported page message after the account, not the raw page id', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: '111848957952146',
@@ -461,7 +573,7 @@ describe('ConversationMessagingService', () => {
                 account: { name: 'PeaceMaker and Insensitive' },
             } as any;
 
-            const dto = service.mapMessage(msg, conversation, new Map());
+            const dto = await service.mapMessage(msg, conversation, new Map());
 
             expect(dto.author).toEqual({
                 id: '111848957952146',
@@ -469,14 +581,14 @@ describe('ConversationMessagingService', () => {
             });
         });
 
-        it('falls back to author id when operator is missing from the map', () => {
+        it('falls back to author id when operator is missing from the map', async () => {
             const service = buildService();
             const msg = buildMessage({ authorId: 'op-2' });
-            const dto = service.mapMessage(msg, undefined, new Map());
+            const dto = await service.mapMessage(msg, undefined, new Map());
             expect(dto.author).toEqual({ id: 'op-2', name: 'op-2' });
         });
 
-        it('uses chatbot name for BOT messages when conversation.chatbot is populated', () => {
+        it('uses chatbot name for BOT messages when conversation.chatbot is populated', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'bot-1',
@@ -485,24 +597,24 @@ describe('ConversationMessagingService', () => {
             const conversation = {
                 chatbot: { name: 'Ecbot Assistant' },
             } as ConversationEntity;
-            const dto = service.mapMessage(msg, conversation);
+            const dto = await service.mapMessage(msg, conversation);
             expect(dto.author).toEqual({
                 id: 'bot-1',
                 name: 'Ecbot Assistant',
             });
         });
 
-        it('falls back to author id for BOT when chatbot is not populated', () => {
+        it('falls back to author id for BOT when chatbot is not populated', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'bot-1',
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
             });
-            const dto = service.mapMessage(msg, undefined);
+            const dto = await service.mapMessage(msg, undefined);
             expect(dto.author).toEqual({ id: 'bot-1', name: 'bot-1' });
         });
 
-        it('uses conversation.senderName for USER messages', () => {
+        it('uses conversation.senderName for USER messages', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'u-1',
@@ -511,18 +623,51 @@ describe('ConversationMessagingService', () => {
             const conversation = {
                 senderName: 'Jane Doe',
             } as ConversationEntity;
-            const dto = service.mapMessage(msg, conversation);
+            const dto = await service.mapMessage(msg, conversation);
             expect(dto.author).toEqual({ id: 'u-1', name: 'Jane Doe' });
         });
 
-        it('falls back to author id for USER when senderName is absent', () => {
+        it('falls back to author id for USER when senderName is absent', async () => {
             const service = buildService();
             const msg = buildMessage({
                 authorId: 'u-1',
                 authorType: ENUM_MESSAGE_AUTHOR.USER,
             });
-            const dto = service.mapMessage(msg, {} as ConversationEntity);
+            const dto = await service.mapMessage(msg, {} as ConversationEntity);
             expect(dto.author).toEqual({ id: 'u-1', name: 'u-1' });
+        });
+    });
+
+    describe('attachments (via mapMessage)', () => {
+        it('exposes image attachments as { type, url } for the inbox', async () => {
+            const dto = await buildService().mapMessage({
+                authorId: 'bot-1',
+                authorType: ENUM_MESSAGE_AUTHOR.BOT,
+                conversation: { id: 'c' },
+                attachments: [
+                    // Already parsed by MessageAttachmentsType when read.
+                    { type: 'image', url: 'https://cdn/s.jpg' },
+                    { type: 'image', key: 'conversations/c/a.jpg' },
+                ],
+            } as unknown as MessageEntity);
+
+            expect(dto.attachments).toEqual([
+                { type: 'image', url: 'https://cdn/s.jpg' },
+                {
+                    type: 'image',
+                    url: 'https://s3/conversations/c/a.jpg?sig',
+                },
+            ]);
+        });
+
+        it('defaults to an empty list', async () => {
+            const dto = await buildService().mapMessage({
+                authorId: 'bot-1',
+                authorType: ENUM_MESSAGE_AUTHOR.BOT,
+                conversation: { id: 'c' },
+            } as unknown as MessageEntity);
+
+            expect(dto.attachments).toEqual([]);
         });
     });
 });

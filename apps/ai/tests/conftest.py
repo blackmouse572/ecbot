@@ -41,6 +41,12 @@ load_dotenv(env_path)
 # a real database are marked `integration` and supply a real URL.
 os.environ.setdefault("POSTGRES_URL", "postgresql://user:pass@localhost:5432/eccho_test")
 
+# Every chat/customer/rag route requires a matching X-Internal-Token header
+# (see `core/security.py`). Give the shared clients below a default token +
+# header so existing tests don't each need to know about auth.
+TEST_INTERNAL_TOKEN = "test-internal-token"
+os.environ.setdefault("API_INTERNAL_TOKEN", TEST_INTERNAL_TOKEN)
+
 # 3. Import app ONLY AFTER paths and envs are loaded.
 #    Wrapped in try/except so that DB-less environments can still run
 #    fixtures that don't require the full FastAPI app (e.g. pg_store_factory).
@@ -62,7 +68,9 @@ def client():
     """Provides a global TestClient for all tests."""
     if not _APP_AVAILABLE:
         pytest.skip("FastAPI app unavailable — check env vars / DB config")
-    with TestClient(_fastapi_app) as c:
+    with TestClient(
+        _fastapi_app, headers={"X-Internal-Token": TEST_INTERNAL_TOKEN}
+    ) as c:
         yield c
 
 
@@ -87,7 +95,11 @@ async def async_client() -> AsyncIterator[Any]:
     import httpx
 
     transport = httpx.ASGITransport(_fastapi_app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=transport,
+        base_url="http://test",
+        headers={"X-Internal-Token": TEST_INTERNAL_TOKEN},
+    ) as c:
         yield c
 
 

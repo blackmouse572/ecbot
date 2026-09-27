@@ -15,6 +15,7 @@ export * from "./list-summary";
 export * from "./logo-box";
 export * from "./logo-box-spinner";
 export * from "./progress-bar";
+export * from "./questionnaire";
 export * from "./section";
 export * from "./sidebar-collapsible-section";
 export * from "./single-accordion";

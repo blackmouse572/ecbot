@@ -15,7 +15,9 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
   const { t } = useTranslation();
   const update = useUpdateChatbot();
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(item.generalKnowledge ?? "");
+  const [draft, setDraft] = useState(
+    item.extraInstructions ?? (item.agentProfile ? "" : item.generalKnowledge ?? ""),
+  );
 
   const handleSave = async () => {
     try {
@@ -23,7 +25,8 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
         id: item.id,
         body: {
           name: item.name,
-          generalKnowledge: draft,
+          extraInstructions: draft,
+          agentProfile: item.agentProfile ?? undefined,
           accounts: item.accounts.map((a) => a.id),
           type: item.type,
           autoRead: item.autoRead,
@@ -46,20 +49,26 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
   };
 
   const handleCancel = () => {
-    setDraft(item.generalKnowledge ?? "");
+    setDraft(
+      item.extraInstructions ??
+        (item.agentProfile ? "" : item.generalKnowledge ?? ""),
+    );
     setEditing(false);
   };
 
   return (
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between p-6 py-4">
-        <Heading>{t("chatbot.edit.generalKnowledge")}</Heading>
+        <Heading>{t("agentBuilder.ui.extraInstructions")}</Heading>
         {!editing && (
           <IconButton
             variant="transparent"
             size="small"
             onClick={() => {
-              setDraft(item.generalKnowledge ?? "");
+              setDraft(
+                item.extraInstructions ??
+                  (item.agentProfile ? "" : item.generalKnowledge ?? ""),
+              );
               setEditing(true);
             }}
           >
@@ -74,7 +83,7 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
             className="rounded-none border-t-0 border-x-0"
             value={draft}
             onChange={setDraft}
-            placeholder={t("chatbot.edit.generalKnowledgePlaceholder")}
+            placeholder={t("agentBuilder.ui.extraInstructionsHint")}
             format="markdown"
           />
           <div className="flex justify-end gap-2 p-6 pb-4 pt-0">

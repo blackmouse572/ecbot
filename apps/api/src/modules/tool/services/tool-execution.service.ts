@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    ForbiddenException,
     Injectable,
     Logger,
     NotFoundException,
@@ -7,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.repository';
 import { ToolInvocationRepository } from 'src/modules/tool/repository/repositories/tool-invocation.repository';
+import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import {
     HttpToolExecutorService,
     ExecutionResult,
@@ -35,6 +37,7 @@ export class ToolExecutionService {
     constructor(
         private readonly toolRepo: ToolRepository,
         private readonly invocationRepo: ToolInvocationRepository,
+        private readonly chatbotToolRepo: ChatbotToolRepository,
         private readonly http: HttpToolExecutorService,
         private readonly mcp: McpToolExecutorService
     ) {}
@@ -56,6 +59,28 @@ export class ToolExecutionService {
         if (!tool) {
             this.logger.warn(`Tool not found: ${toolId}`);
             throw new NotFoundException('tool.get.error.notFound');
+        }
+
+        const link = await this.chatbotToolRepo.findOneByChatbotAndTool(
+            cmd.chatbotId,
+            toolId
+        );
+        if (!link || !link.enabled) {
+            this.logger.warn(
+                `Tool ${toolId} is not enabled for chatbot ${cmd.chatbotId}`
+            );
+            throw new ForbiddenException('tool.execute.error.notLinked');
+        }
+        if (
+            actionName &&
+            link.enabledActions &&
+            link.enabledActions.length > 0 &&
+            !link.enabledActions.includes(actionName)
+        ) {
+            this.logger.warn(
+                `Action ${actionName} on tool ${toolId} is not enabled for chatbot ${cmd.chatbotId}`
+            );
+            throw new ForbiddenException('tool.execute.error.notLinked');
         }
 
         let result: ExecutionResult;

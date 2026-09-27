@@ -1,4 +1,5 @@
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
+import { raw } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Duration } from 'luxon';
@@ -34,7 +35,11 @@ export class ResetPasswordService implements IResetPasswordService {
     private readonly referenceLength: number;
     private readonly referencePrefix: string;
 
-    private readonly prefixUrl: string;
+    private readonly homeUrl: string;
+
+    // Failed OTP attempts allowed on `/verify/:token` before the row is
+    // locked (isActive=false) and ATTEMPT_MAX is thrown.
+    private readonly maxOtpAttempt = 5;
 
     constructor(
         private readonly resetPasswordRepository: ResetPasswordRepository,
@@ -61,9 +66,16 @@ export class ResetPasswordService implements IResetPasswordService {
             'resetPassword.reference.prefix'
         );
 
-        this.prefixUrl = this.configService.get<string>(
-            'resetPassword.prefixUrl'
-        );
+        this.homeUrl = (
+            this.configService.get<string>('home.url') ?? ''
+        ).replace(/\/$/, '');
+    }
+
+    // Same shape as chatbot.controller.ts's share-link URL: strip the
+    // trailing slash from home.url, then append the frontend route the
+    // token query param belongs to (apps/app reads `?token=` only).
+    buildResetPasswordUrl(token: string): string {
+        return `${this.homeUrl}/reset-password?token=${token}`;
     }
 
     async findAll(
@@ -135,10 +147,11 @@ export class ResetPasswordService implements IResetPasswordService {
             return {
                 resetPassword: check,
                 created: {
-                    url: `${this.prefixUrl}/${check.token}`,
+                    url: this.buildResetPasswordUrl(check.token),
                     expiredDate: check.expiredDate,
                     token: check.token,
-                    to: this.helperStringService.censor(check.user.id),
+                    otp: check.otp,
+                    to: this.helperStringService.censor(check.to),
                 },
             };
         }
@@ -193,9 +206,10 @@ export class ResetPasswordService implements IResetPasswordService {
         return {
             resetPassword: created,
             created: {
-                url: `${this.prefixUrl}/${created.token}`,
+                url: this.buildResetPasswordUrl(created.token),
                 expiredDate: created.expiredDate,
                 token: created.token,
+                otp: created.otp,
                 to: this.helperStringService.censor(email),
             },
         };
@@ -229,6 +243,37 @@ export class ResetPasswordService implements IResetPasswordService {
         repository.isActive = false;
 
         return this.resetPasswordRepository.save(repository, options);
+    }
+
+    async incrementOtpAttempt(
+        repository: ResetPasswordEntity,
+        options?: IDatabaseSaveOptions
+    ): Promise<ResetPasswordEntity> {
+        const nextAttempt = repository.otpAttempt + 1;
+        const staysActive =
+            repository.isActive && nextAttempt < this.maxOtpAttempt;
+
+        // Atomic at the DB level (`otp_attempt = otp_attempt + 1`), not a
+        // read-modify-write — concurrent wrong-OTP guesses on the same row
+        // can't race a stale in-memory count past the attempt cap. The two
+        // fields below mirror this exact SQL expression for this request's
+        // immediate branching; every later request re-reads the real
+        // (correctly atomic) DB state through the entity pipes regardless.
+        await this.resetPasswordRepository.updateRaw(
+            { id: repository.id },
+            {
+                otpAttempt: raw('otp_attempt + 1'),
+                isActive: raw(
+                    `is_active and otp_attempt + 1 < ${this.maxOtpAttempt}`
+                ),
+            },
+            options
+        );
+
+        repository.otpAttempt = nextAttempt;
+        repository.isActive = staysActive;
+
+        return repository;
     }
 
     async inactive(
@@ -271,9 +316,7 @@ export class ResetPasswordService implements IResetPasswordService {
         { email }: ResetPasswordCreateRequestDto
     ): ResetPasswordCreteResponseDto {
         return {
-            url: `${this.prefixUrl}/${resetPassword.token}`,
             expiredDate: resetPassword.expiredDate,
-            token: resetPassword.token,
             to: this.helperStringService.censor(email),
         };
     }

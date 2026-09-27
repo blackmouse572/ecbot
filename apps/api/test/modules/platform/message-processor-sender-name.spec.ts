@@ -103,7 +103,8 @@ describe('MessageProcessorService — sender name from the webhook', () => {
             mockModuleRef as any,
             chatbotAIService as any,
             lease as any,
-            { claim: jest.fn().mockResolvedValue(true) } as any
+            { claim: jest.fn().mockResolvedValue(true) } as any,
+            {} as any
         );
         processor.onModuleInit();
 

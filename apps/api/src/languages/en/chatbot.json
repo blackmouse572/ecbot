@@ -22,7 +22,10 @@
         "shareLinkExpired": "This preview link has expired.",
         "shareLinkNotConfigured": "Preview sharing is not configured on this server.",
         "previewNotAvailable": "This chatbot is not available for preview.",
-        "previewSessionLimit": "You've reached the message limit for this preview. Please try again later."
+        "previewSessionLimit": "You've reached the message limit for this preview. Please try again later.",
+        "invalidAgentProfile": "The agent builder answers are not valid.",
+        "accountsNotFound": "One or more accounts don't belong to this workspace.",
+        "accountsTaken": "One or more channels are already connected to another chatbot. Disconnect them there first."
     },
     "active": "Chatbot activated successfully.",
     "inactive": "Chatbot deactivated successfully.",

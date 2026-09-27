@@ -6,10 +6,13 @@ export function ScrollArea({
   children,
   scrollFade = false,
   scrollbarGutter = false,
+  viewportClassName,
   ...props
 }: ScrollAreaPrimitive.ScrollAreaProps & {
   scrollFade?: boolean;
   scrollbarGutter?: boolean;
+  /** Extra classes for the viewport, e.g. `[&>div]:!h-full` to let content fill the height. */
+  viewportClassName?: string;
 }): React.ReactElement {
   return (
     <ScrollAreaPrimitive.Root
@@ -18,11 +21,18 @@ export function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         className={clx(
-          "h-full rounded-[inherit] outline-none transition-shadows focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-slate-200 data-has-overflow-y:overscroll-y-contain data-has-overflow-x:overscroll-x-contain",
+          // Radix wraps the viewport's children in its own shrink-to-fit div
+          // (`min-width:100%;display:table`); force it back to a normal
+          // block so percentage-width content resolves against the
+          // viewport instead of that inflated wrapper (same fix as
+          // MessageScrollerViewport). Every current caller renders
+          // width-dependent content, so this is on by default.
+          "h-full rounded-[inherit] outline-none transition-shadows focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-slate-200 data-has-overflow-y:overscroll-y-contain data-has-overflow-x:overscroll-x-contain [&>div]:!block [&>div]:!min-w-0 [&>div]:!w-full",
           scrollFade &&
             "mask-t-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-start)))] mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] mask-l-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-start)))] mask-r-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-end)))] [--fade-size:1.5rem]",
           scrollbarGutter &&
             "data-has-overflow-y:pe-2.5 data-has-overflow-x:pb-2.5",
+          viewportClassName,
         )}
         data-slot="scroll-area-viewport"
       >

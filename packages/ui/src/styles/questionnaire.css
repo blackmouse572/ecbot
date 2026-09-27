@@ -1,0 +1,32 @@
+/* ============================================================================
+   Questionnaire utilities: the refused-pick nudge (section F.6 of the agent
+   builder walkthrough fixes). Lives with the @repo/ui common/questionnaire
+   component that consumes it. Any app rendering Questionnaire must import
+   this file, e.g. `@import "@repo/ui/styles/questionnaire.css";`.
+
+   Defined as a Tailwind `@utility` (not a plain class) so it can be combined
+   with the `data-[refused]:` / `motion-reduce:` variants applied in
+   questionnaire.tsx.
+   ========================================================================== */
+
+@keyframes questionnaire-refused-nudge {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(3px);
+  }
+  50% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@utility animate-refused-nudge {
+  animation: questionnaire-refused-nudge 200ms var(--ease-out);
+}

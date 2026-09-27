@@ -1,0 +1,465 @@
+import { act, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useState } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const unlinkAccountsMock = vi.fn();
+const linkAccount = vi.fn();
+const linkChatbotAccount = vi.fn();
+const unlinkChatbotAccount = vi.fn();
+const provisionWebsiteWidget = vi.fn();
+
+// Captures each platform's onSuccess/onError/onClosed so a test can
+// simulate the OAuth popup completing, the way the real hook would via
+// postMessage (or the popup closing/being blocked).
+type OAuthHandlers = { onSuccess?: (d: { code: string }) => void; onError?: (e: string) => void; onClosed?: () => void };
+const oAuthHandlers: Record<string, OAuthHandlers> = {};
+const oAuthClick = vi.fn();
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: (key: string, opts?: { name?: string }) => (opts?.name ? `${key} ${opts.name}` : key) }),
+}));
+
+vi.mock("@/hooks/api", () => ({
+  useUnlinkAccounts: (...args: unknown[]) => unlinkAccountsMock(...args),
+  useLinkAccount: () => ({ mutateAsync: linkAccount, isPending: false }),
+  useLinkChatbotAccount: () => ({ mutateAsync: linkChatbotAccount, isPending: false }),
+  useUnlinkChatbotAccount: () => ({ mutateAsync: unlinkChatbotAccount, isPending: false }),
+  useProvisionWebsiteWidget: () => ({ mutateAsync: provisionWebsiteWidget, isPending: false }),
+}));
+
+vi.mock("@/hooks/use-oauth-login", () => ({
+  useOAuthLogin: (platform: string, handlers: OAuthHandlers) => {
+    oAuthHandlers[platform] = handlers;
+    return { handleLinkClick: () => oAuthClick(platform) };
+  },
+}));
+
+import type { LinkedAccountRef } from "../builder-state";
+import { ChannelConnect } from "./channel-connect";
+
+const onAccountsLinked = vi.fn();
+const onAccountsUnlinked = vi.fn();
+const onAnswer = vi.fn();
+
+const renderConnect = (channels: string[] = [], linkedAccounts: LinkedAccountRef[] = []) =>
+  render(
+    <ChannelConnect
+      chatbotId="bot-1"
+      agentName="Linh"
+      channels={channels}
+      linkedAccounts={linkedAccounts}
+      onAccountsLinked={onAccountsLinked}
+      onAccountsUnlinked={onAccountsUnlinked}
+      onAnswer={onAnswer}
+    />,
+  );
+
+// Mirrors how BuilderThread actually feeds `linkedAccounts` back in: it
+// dispatches the reducer's `accountsLinked` action, whose new state flows
+// back down as a new prop. Used where a test needs to see the resulting
+// chip, not just that the callback fired.
+function StatefulHarness({ channels = [] as string[] }) {
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccountRef[]>([]);
+  return (
+    <ChannelConnect
+      chatbotId="bot-1"
+      agentName="Linh"
+      channels={channels}
+      linkedAccounts={linkedAccounts}
+      onAccountsLinked={(accounts) => {
+        onAccountsLinked(accounts);
+        setLinkedAccounts((prev) => [...prev, ...accounts.filter((a) => !prev.some((p) => p.id === a.id))]);
+      }}
+      onAccountsUnlinked={onAccountsUnlinked}
+      onAnswer={onAnswer}
+    />
+  );
+}
+
+beforeEach(() => {
+  unlinkAccountsMock.mockReset().mockReturnValue({ accounts: [] });
+  linkAccount.mockReset();
+  // By default every requested id links cleanly (server reports it back
+  // under `linked`, nothing `skipped`); tests that need an id refused, or
+  // an unexpected response shape, override this per-call.
+  linkChatbotAccount.mockReset().mockImplementation((body: { accounts: string[] }) =>
+    Promise.resolve({ data: { data: { linked: body.accounts, skipped: [] } } }),
+  );
+  unlinkChatbotAccount.mockReset().mockResolvedValue({});
+  provisionWebsiteWidget.mockReset();
+  onAccountsLinked.mockReset();
+  onAccountsUnlinked.mockReset();
+  onAnswer.mockReset();
+  oAuthClick.mockReset();
+  for (const k of Object.keys(oAuthHandlers)) delete oAuthHandlers[k];
+});
+
+describe("ChannelConnect", () => {
+  it("links the account and shows a chip after an OAuth success", async () => {
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" } } });
+
+    const user = userEvent.setup();
+    render(<StatefulHarness />);
+
+    await user.click(screen.getByText("agentBuilder.channels.messenger"));
+    expect(oAuthClick).toHaveBeenCalledWith("FACEBOOK_ACCOUNT");
+
+    await oAuthHandlers.FACEBOOK_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkAccount).toHaveBeenCalledWith({ code: "auth-code", platform: "FACEBOOK_ACCOUNT" }));
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-1"] }));
+    expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" }]);
+    // The chip actually renders once the account flows back into state,
+    // the same way BuilderThread's reducer feeds it back in practice.
+    expect(await screen.findByText("Lotus Spa")).toBeInTheDocument();
+  });
+
+  it("links only the Facebook pages a response returns, never the user-level account", async () => {
+    linkAccount.mockResolvedValue({
+      data: {
+        data: {
+          id: "acc-user",
+          name: "Owner",
+          type: "FACEBOOK_ACCOUNT",
+          pages: [{ id: "page-1", name: "Lotus Page", type: "FACEBOOK_PAGE" }],
+        },
+      },
+    });
+
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.messenger"));
+    await oAuthHandlers.FACEBOOK_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["page-1"] }));
+    expect(linkChatbotAccount).not.toHaveBeenCalledWith(expect.objectContaining({ accounts: expect.arrayContaining(["acc-user"]) }));
+  });
+
+  it("no stealing: shows a notice and does not add a server-skipped id to local state", async () => {
+    // The server (not the client) is the source of truth on ownership now:
+    // it refuses ids already on another chatbot and reports them back under
+    // `skipped` instead of the client pre-checking an unlinked-accounts list
+    // (fix round 2: that pre-check only ever saw page 1 and was unreliable).
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-taken", name: "Taken Account", type: "ZALO_ACCOUNT" } } });
+    linkChatbotAccount.mockResolvedValue({
+      data: { data: { linked: [], skipped: [{ id: "acc-taken", name: "Taken Account" }] } },
+    });
+
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-taken"] }));
+    expect(onAccountsLinked).not.toHaveBeenCalled();
+    expect(await screen.findByText("agentBuilder.ui.channelInUse Taken Account")).toBeInTheDocument();
+  });
+
+  it("links a freshly authorized account regardless of how many other unlinked accounts the workspace has", async () => {
+    // No client-side list fetch gates this path any more, so a workspace
+    // with far more than one pagination page of unlinked accounts can't
+    // wrongly refuse a legitimate connect (fix round 2).
+    unlinkAccountsMock.mockReturnValue({
+      accounts: Array.from({ length: 25 }, (_, i) => ({ id: `other-${i}`, name: `Other ${i}`, type: "ZALO_ACCOUNT" })),
+    });
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-new", name: "New Account", type: "ZALO_ACCOUNT" } } });
+
+    const user = userEvent.setup();
+    render(<StatefulHarness />);
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-new"] }));
+    expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-new", name: "New Account", type: "ZALO_ACCOUNT" }]);
+    expect(await screen.findByText("New Account")).toBeInTheDocument();
+  });
+
+  it("shows the inline error when the OAuth popup errors", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    oAuthHandlers.ZALO_ACCOUNT.onError?.("popup closed");
+
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+    expect(linkChatbotAccount).not.toHaveBeenCalled();
+    // Busy clears so the card can be retried.
+    expect(screen.getByText("agentBuilder.channels.zalo").closest("button")).toBeEnabled();
+  });
+
+  it("shows the popup-blocked error too (window.open returning null reports onError)", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.messenger"));
+    oAuthHandlers.FACEBOOK_ACCOUNT.onError?.("popup-blocked");
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+  });
+
+  it("clears busy without an error when the popup is closed manually", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.messenger"));
+    expect(screen.getByText("agentBuilder.channels.messenger").closest("button")).toBeDisabled();
+
+    act(() => oAuthHandlers.FACEBOOK_ACCOUNT.onClosed?.());
+
+    expect(screen.queryByText("agentBuilder.ui.connectFailed")).not.toBeInTheDocument();
+    expect(screen.getByText("agentBuilder.channels.messenger").closest("button")).toBeEnabled();
+  });
+
+  it("disables the other OAuth card while one OAuth flow is pending", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.messenger"));
+
+    expect(screen.getByText("agentBuilder.channels.zalo").closest("button")).toBeDisabled();
+
+    act(() => oAuthHandlers.FACEBOOK_ACCOUNT.onClosed?.());
+    expect(screen.getByText("agentBuilder.channels.zalo").closest("button")).toBeEnabled();
+  });
+
+  it("links a Telegram bot token", async () => {
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-tg", name: "Lotus Bot", type: "TELEGRAM_BOT" } } });
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.telegram"));
+    const token = `123456:${"A".repeat(40)}`;
+    await user.type(screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"), token);
+    await user.click(screen.getByRole("button", { name: "accounts.create.connect.telegram.cta" }));
+
+    await waitFor(() => expect(linkAccount).toHaveBeenCalledWith({ code: token, platform: "TELEGRAM_BOT" }));
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-tg"] }));
+    expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-tg", name: "Lotus Bot", type: "TELEGRAM_BOT" }]);
+  });
+
+  it("provisions a website widget, links it and shows the issued key panel once, then allows a second one", async () => {
+    provisionWebsiteWidget.mockResolvedValue({ id: "acc-widget", widgetKey: "wk_123" });
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+    await user.type(screen.getByLabelText("accounts.create.provision.nameLabel"), " Nail Spa");
+    await user.type(screen.getByLabelText("agentBuilder.ui.widgetOriginsLabel"), "https://lotus.example.com");
+    await user.click(screen.getByRole("button", { name: "accounts.create.provision.cta" }));
+
+    await waitFor(() => expect(provisionWebsiteWidget).toHaveBeenCalled());
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-widget"] }));
+    expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-widget", type: "WEBSITE_WIDGET", name: "Linh Nail Spa" }]);
+    expect(await screen.findByDisplayValue("wk_123")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "actions.close" }));
+    // Reopening the website card shows a fresh provision form, not the last
+    // widget's issued panel again.
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+    expect(screen.getByLabelText("accounts.create.provision.nameLabel")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("wk_123")).not.toBeInTheDocument();
+  });
+
+  it("links an existing unlinked account via Use", async () => {
+    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
+    const user = userEvent.setup();
+    renderConnect();
+
+    expect(screen.getByText("agentBuilder.ui.existingChannels")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "agentBuilder.ui.useChannel" }));
+
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-9"] }));
+    expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }]);
+  });
+
+  it("only lists useUnlinkAccounts results under 'use an existing channel' (no stealing)", () => {
+    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-free", name: "Free Account", type: "ZALO_ACCOUNT" }] });
+    renderConnect();
+    expect(screen.getByText("Free Account")).toBeInTheDocument();
+    expect(unlinkAccountsMock).toHaveBeenCalled();
+  });
+
+  it("unlinks and removes the chip", async () => {
+    const user = userEvent.setup();
+    renderConnect([], [{ id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" }]);
+
+    expect(screen.getByText("Lotus Spa")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "agentBuilder.ui.unlinkChannel Lotus Spa" }));
+
+    await waitFor(() => expect(unlinkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-1"] }));
+    expect(onAccountsUnlinked).toHaveBeenCalledWith(["acc-1"]);
+  });
+
+  it("writes the channels derived from linked accounts plus coming-soon picks on Next", async () => {
+    const user = userEvent.setup();
+    renderConnect([], [{ id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" }]);
+
+    await user.click(screen.getByText("agentBuilder.channels.instagram"));
+    await user.click(screen.getByRole("button", { name: "actions.next" }));
+
+    expect(onAnswer).toHaveBeenCalledWith(expect.arrayContaining(["messenger", "instagram"]));
+    expect(onAnswer.mock.calls[0][0]).toHaveLength(2);
+  });
+
+  it("labels the skip action 'Connect later'", () => {
+    renderConnect();
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.connectLater" })).toBeInTheDocument();
+  });
+
+  it("fails closed: an id the response reports in neither linked nor skipped adds no chip, and shows connectFailed (item 4)", async () => {
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-x", name: "Mystery Account", type: "ZALO_ACCOUNT" } } });
+    linkChatbotAccount.mockResolvedValue({ data: { data: { linked: [], skipped: [] } } });
+
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-x"] }));
+    expect(onAccountsLinked).not.toHaveBeenCalled();
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+  });
+
+  it("fails closed: an undefined response body links nothing and shows connectFailed (item 4)", async () => {
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-y", name: "No Response", type: "ZALO_ACCOUNT" } } });
+    linkChatbotAccount.mockResolvedValue({});
+
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalled());
+    expect(onAccountsLinked).not.toHaveBeenCalled();
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+  });
+
+  it("excludes user-level FACEBOOK_ACCOUNT rows from 'use an existing channel' (only pages are a channel)", () => {
+    unlinkAccountsMock.mockReturnValue({
+      accounts: [
+        { id: "acc-user", name: "Owner Account", type: "FACEBOOK_ACCOUNT" },
+        { id: "acc-page", name: "Lotus Page", type: "FACEBOOK_PAGE" },
+      ],
+    });
+    renderConnect();
+    expect(screen.queryByText("Owner Account")).not.toBeInTheDocument();
+    expect(screen.getByText("Lotus Page")).toBeInTheDocument();
+  });
+
+  it("disables every other account action while one change is in flight (item 5)", async () => {
+    let resolveLink: (v: unknown) => void = () => {};
+    linkChatbotAccount.mockReturnValue(new Promise((r) => { resolveLink = r; }));
+    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
+
+    const user = userEvent.setup();
+    renderConnect([], [{ id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" }]);
+    await user.click(screen.getByRole("button", { name: "agentBuilder.ui.useChannel" }));
+
+    // A link is now in flight: every other account action is locked, not
+    // just the one clicked (a single `busy` value covers them all).
+    expect(screen.getByText("agentBuilder.channels.messenger").closest("button")).toBeDisabled();
+    expect(screen.getByText("agentBuilder.channels.telegram").closest("button")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.unlinkChannel Lotus Spa" })).toBeDisabled();
+
+    resolveLink({ data: { data: { linked: ["acc-9"], skipped: [] } } });
+    await waitFor(() => expect(screen.getByText("agentBuilder.channels.messenger").closest("button")).toBeEnabled());
+  });
+
+  it("resets the widget name and origins after the issued panel closes", async () => {
+    provisionWebsiteWidget.mockResolvedValue({ id: "acc-widget", widgetKey: "wk_123" });
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+    await user.clear(screen.getByLabelText("accounts.create.provision.nameLabel"));
+    await user.type(screen.getByLabelText("accounts.create.provision.nameLabel"), "Custom Name");
+    await user.type(screen.getByLabelText("agentBuilder.ui.widgetOriginsLabel"), "https://lotus.example.com");
+    await user.click(screen.getByRole("button", { name: "accounts.create.provision.cta" }));
+    await screen.findByDisplayValue("wk_123");
+
+    await user.click(screen.getByRole("button", { name: "actions.close" }));
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+
+    expect(screen.getByLabelText("accounts.create.provision.nameLabel")).toHaveValue("Linh");
+    expect(screen.getByLabelText("agentBuilder.ui.widgetOriginsLabel")).toHaveValue("");
+  });
+
+  it("labels a coming-soon chip's remove button distinctly from an unlink (item 7)", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.tiktok"));
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.removeChannel agentBuilder.channels.tiktok" })).toBeInTheDocument();
+  });
+  it("disables Next and Connect later while a link is pending", async () => {
+    let resolveLink: (v: unknown) => void = () => {};
+    linkChatbotAccount.mockReturnValue(new Promise((r) => { resolveLink = r; }));
+    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
+
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByRole("button", { name: "agentBuilder.ui.useChannel" }));
+
+    expect(screen.getByRole("button", { name: "actions.next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.connectLater" })).toBeDisabled();
+
+    resolveLink({ data: { data: { linked: ["acc-9"], skipped: [] } } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "actions.next" })).toBeEnabled());
+  });
+
+  it("disables Next and Connect later while an OAuth popup is pending", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.messenger"));
+
+    expect(screen.getByRole("button", { name: "actions.next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "agentBuilder.ui.connectLater" })).toBeDisabled();
+  });
+
+  it("still shows the issued widget key once when linking the provisioned widget fails", async () => {
+    provisionWebsiteWidget.mockResolvedValue({ id: "acc-widget", widgetKey: "wk_456" });
+    linkChatbotAccount.mockRejectedValue(new Error("link failed"));
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+    await user.type(screen.getByLabelText("agentBuilder.ui.widgetOriginsLabel"), "https://lotus.example.com");
+    await user.click(screen.getByRole("button", { name: "accounts.create.provision.cta" }));
+
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("wk_456")).toBeInTheDocument();
+    expect(onAccountsLinked).not.toHaveBeenCalled();
+  });
+
+  it("shows connectFailed when the OAuth link response carries no account", async () => {
+    linkAccount.mockResolvedValue({ data: { data: null } });
+    const user = userEvent.setup();
+    renderConnect();
+    await user.click(screen.getByText("agentBuilder.channels.zalo"));
+    await oAuthHandlers.ZALO_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+    expect(linkChatbotAccount).not.toHaveBeenCalled();
+  });
+
+  it("shows connectFailed when the Telegram link response carries no account", async () => {
+    linkAccount.mockResolvedValue({ data: {} });
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.telegram"));
+    await user.type(screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"), `123456:${"A".repeat(40)}`);
+    await user.click(screen.getByRole("button", { name: "accounts.create.connect.telegram.cta" }));
+
+    expect(await screen.findByText("agentBuilder.ui.connectFailed")).toBeInTheDocument();
+    expect(linkChatbotAccount).not.toHaveBeenCalled();
+  });
+
+  it("excludes API_CHANNEL accounts from 'use an existing channel'", () => {
+    unlinkAccountsMock.mockReturnValue({
+      accounts: [
+        { id: "acc-api", name: "Server Channel", type: "API_CHANNEL" },
+        { id: "acc-zalo", name: "Lotus Zalo", type: "ZALO_ACCOUNT" },
+      ],
+    });
+    renderConnect();
+    expect(screen.queryByText("Server Channel")).not.toBeInTheDocument();
+    expect(screen.getByText("Lotus Zalo")).toBeInTheDocument();
+  });
+});

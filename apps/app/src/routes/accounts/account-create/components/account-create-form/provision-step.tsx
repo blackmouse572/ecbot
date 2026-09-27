@@ -1,17 +1,15 @@
+import { isHttpUrl, splitOrigins } from "@/components/channel-connect/website-origins";
 import {
   useProvisionApiChannel,
   useProvisionWebsiteWidget,
 } from "@/hooks/api/accounts";
-import { Alert, Button, Heading, Input, Text, toast } from "@medusajs/ui";
+import { Button, Heading, Input, Text, toast } from "@medusajs/ui";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { CopyField } from "./copy-field";
-// Kept in a separate module so this file exports only components — a mixed
+import type { Issued } from "@/components/account-connect/issued";
+// Kept in a separate module so this file exports only components: a mixed
 // module breaks Fast Refresh.
-import type {
-  Issued,
-  ProvisionedPlatform,
-} from "./provisioned-platforms";
+import type { ProvisionedPlatform } from "./provisioned-platforms";
 import { Form } from "@repo/ui/common-components";
 
 type FormValues = {
@@ -210,82 +208,4 @@ export function ProvisionStep({
       </Form>
     </div>
   );
-}
-
-/** The wizard's final step for an eccho-issued channel. */
-export function IssuedPanel({
-  issued,
-  onDone,
-}: {
-  issued: Issued;
-  onDone: () => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="flex w-full max-w-[720px] flex-col gap-y-6">
-      <div>
-        <Heading>{t("accounts.create.provision.issuedTitle")}</Heading>
-        <Text size="small" className="text-ui-fg-subtle">
-          {t("accounts.create.provision.issuedDescription")}
-        </Text>
-      </div>
-
-      {issued.kind === "API_CHANNEL" ? (
-        <>
-          <Alert variant="warning">
-            {t("accounts.create.provision.apiChannel.secretWarning")}
-          </Alert>
-          <CopyField
-            label={t("accounts.create.provision.apiChannel.accountKeyLabel")}
-            value={issued.accountKey}
-            hint={t("accounts.create.provision.apiChannel.accountKeyHint")}
-          />
-          <CopyField
-            label={t("accounts.create.provision.apiChannel.secretLabel")}
-            value={issued.signingSecret}
-            hint={t("accounts.create.provision.apiChannel.secretHint")}
-          />
-        </>
-      ) : (
-        <>
-          <CopyField
-            label={t("accounts.create.provision.websiteWidget.keyLabel")}
-            value={issued.widgetKey}
-          />
-          <CopyField
-            label={t("accounts.create.provision.websiteWidget.snippetLabel")}
-            value={embedSnippet(issued.widgetKey)}
-            hint={t("accounts.create.provision.websiteWidget.snippetHint")}
-            multiline
-          />
-        </>
-      )}
-
-      <div>
-        <Button type="button" onClick={onDone}>
-          {t("actions.close")}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function embedSnippet(widgetKey: string): string {
-  return `<script src="${window.location.origin}/widget.js" data-widget-key="${widgetKey}" async></script>`;
-}
-
-function splitOrigins(value: string): string[] {
-  return value
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-}
-
-function isHttpUrl(value: string): boolean {
-  try {
-    return /^https?:$/.test(new URL(value).protocol);
-  } catch {
-    return false;
-  }
 }

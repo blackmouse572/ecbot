@@ -17,7 +17,8 @@
         "notAnApiChannel": "This account is not an API channel, so it has no signing secret to rotate.",
         "invalidAllowedOrigin": "One of the allowed sites is not a valid URL. Use the full address, e.g. https://shop.example.com.",
         "apiChannelCallbackUrlMissing": "This API channel has no callback URL configured, so replies cannot be delivered.",
-        "notAWebsiteWidget": "This account is not a website widget, so it has no allowed-origins list to update."
+        "notAWebsiteWidget": "This account is not a website widget, so it has no allowed-origins list to update.",
+        "workspaceMismatch": "This account already belongs to a different workspace."
     },
     "provisionApiChannel": "API channel created. Copy the signing secret now — it won't be shown again.",
     "rotateApiChannelSecret": "A new signing secret has been issued. The previous one no longer works.",

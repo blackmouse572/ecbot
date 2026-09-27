@@ -55,6 +55,19 @@ export class MessageReactionResponseDto {
     at: string;
 }
 
+/** A media attachment on a message — a customer's photo or an image the
+ *  bot sent. `url` is absent when the platform only gave a file id. */
+export class MessageAttachmentResponseDto {
+    @ApiProperty({
+        description: 'Attachment kind',
+        example: 'image',
+    })
+    type: string;
+
+    @ApiPropertyOptional({ description: 'Media URL, when known' })
+    url?: string;
+}
+
 export class MessageGetResponseDto {
     @Expose()
     @ApiProperty({ description: 'Message ID' })
@@ -123,6 +136,13 @@ export class MessageGetResponseDto {
         items: { type: 'object' },
     })
     toolCalls?: ToolCallSerialization[];
+
+    @ApiPropertyOptional({
+        type: () => MessageAttachmentResponseDto,
+        isArray: true,
+        description: 'Images and other media on this message',
+    })
+    attachments?: MessageAttachmentResponseDto[];
 
     @Expose()
     @ApiPropertyOptional({

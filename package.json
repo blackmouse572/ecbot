@@ -8,6 +8,8 @@
     "start:prod": "turbo run start:prod",
     "test:api": "turbo run test --filter api",
     "generate:client": "turbo run generate:client --filter api",
+    "setup:local": "node scripts/setup-local.mjs",
+    "setup:local:test": "node --test scripts/setup-local/lib.test.mjs",
     "generate:keys": "turbo run generate:keys",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

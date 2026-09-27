@@ -39,6 +39,23 @@ describe("partsToRenderModel", () => {
     expect(model.toolCalls[0].output).toEqual({ ok: true });
   });
 
+  it("shows send_image as its image (file part), not as a tool card", () => {
+    const model = partsToRenderModel([
+      {
+        type: "tool-send_image",
+        toolCallId: "inv1",
+        state: "output-available",
+        input: { url: "https://cdn/s.jpg" },
+        output: { ok: true, url: "https://cdn/s.jpg" },
+      },
+      { type: "file", url: "https://cdn/s.jpg", mediaType: "image/*" },
+    ]);
+    expect(model.toolCalls).toEqual([]);
+    expect(model.files).toEqual([
+      { url: "https://cdn/s.jpg", mediaType: "image/*", filename: undefined },
+    ]);
+  });
+
   it("collects file parts with url/mediaType/filename", () => {
     const model = partsToRenderModel([
       { type: "text", text: "here you go" },

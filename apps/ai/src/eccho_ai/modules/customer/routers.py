@@ -7,8 +7,9 @@ filtered out on the apps/api side and never appear in `available_tags`.
 """
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from eccho_ai.core.security import require_internal_token
 from eccho_ai.core.variables import AppVars
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.modules.customer.models import (
@@ -21,7 +22,11 @@ from eccho_ai.llm.providers.chat_model import build_chat_model
 
 
 logger = logging.getLogger("uvicorn.info")
-router = APIRouter(prefix="/customer", tags=["Customer"])
+router = APIRouter(
+    prefix="/customer",
+    tags=["Customer"],
+    dependencies=[Depends(require_internal_token)],
+)
 
 
 SYSTEM_PROMPT = """\

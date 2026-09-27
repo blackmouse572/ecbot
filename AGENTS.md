@@ -22,6 +22,7 @@ Run from the repo root. The full list lives in the root `package.json` scripts.
 
 | Command                                                        | What it does                                                |
 | -------------------------------------------------------------- | ----------------------------------------------------------- |
+| `pnpm setup:local`                                             | Create and fill the local `.env` files, keys and CORS       |
 | `pnpm dev` / `pnpm --filter api dev` / `pnpm --filter app dev` | Dev servers (all, API only, SPA only)                       |
 | `pnpm build`                                                   | Build all                                                   |
 | `pnpm lint` / `pnpm format`                                    | Lint / Prettier                                             |
@@ -37,6 +38,10 @@ Run from the repo root. The full list lives in the root `package.json` scripts.
 - Work test-first: write a failing test (red), make it pass with the simplest code (green), then refactor.
 - Ship the minimum code that solves the asked problem: no speculative features, configurability, or single-use abstractions. If 200 lines could be 50, rewrite it.
 - For a large or multi-step task, invoke the `using-superpowers` skill first (if available) to pick the process skill.
+</important>
+
+<important if="you are setting up or running the project locally, or local sign-in, CORS, API-key, JWKS or Turnstile errors are blocking you">
+Invoke the `local-setup` skill. It runs `pnpm setup:local` and asks the user only for credentials.
 </important>
 
 <important if="you are writing or editing code under apps/api">

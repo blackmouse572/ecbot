@@ -10,13 +10,14 @@ import {
   useRef,
   useState,
 } from "react";
+import { ScrollAreaPrimitive, ScrollBar } from "../../ui/scroll-area";
 
 // ============================================================================
-// MessageScroller — intent-aware chat transcript scroller. Replaces
+// MessageScroller: intent-aware chat transcript scroller. Replaces
 // `use-stick-to-bottom`: it follows the live edge ONLY while the reader is
 // already at the bottom, releases the moment they scroll up, preserves scroll
 // position when older messages are prepended, and exposes `onReachTop` for
-// infinite-scroll pagination. Pure refs/observers — no external dependency.
+// infinite-scroll pagination. Pure refs/observers, no external dependency.
 // ============================================================================
 
 // Treat "within this many px of the bottom" as at-bottom (rounding slack).
@@ -175,13 +176,23 @@ export const MessageScrollerViewport = ({
   }, [viewportRef, contentRef, stickRef, recomputeAtBottom]);
 
   return (
-    <div
-      ref={viewportRef}
-      className={clx("scroll-fade-y min-h-0 flex-1 overflow-y-auto", className)}
-      {...props}
-    >
-      <div ref={contentRef}>{children}</div>
-    </div>
+    <ScrollAreaPrimitive.Root className={clx("min-h-0 flex-1", className)}>
+      <ScrollAreaPrimitive.Viewport
+        ref={viewportRef}
+        // Radix wraps the viewport's children in its own shrink-to-fit div
+        // (`min-width:100%;display:table`). With only a vertical scrollbar
+        // registered, overflow-x is hidden, so a long unbroken token (a URL
+        // in a message) can inflate that wrapper's width and push
+        // percentage-width children (chat bubbles) past the clipped edge.
+        // Force it back to a normal block so widths resolve against the
+        // viewport instead.
+        className="scroll-fade-y size-full rounded-[inherit] [&>div]:!block [&>div]:!min-w-0 [&>div]:!w-full"
+        {...props}
+      >
+        <div ref={contentRef}>{children}</div>
+      </ScrollAreaPrimitive.Viewport>
+      <ScrollBar orientation="vertical" />
+    </ScrollAreaPrimitive.Root>
   );
 };
 

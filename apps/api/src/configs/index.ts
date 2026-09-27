@@ -1,3 +1,4 @@
+import AgentBuilderConfig from 'src/configs/agent-builder.config';
 import AiConfig from 'src/configs/ai.config';
 import AppConfig from 'src/configs/app.config';
 import AuthConfig from 'src/configs/auth.config';
@@ -52,4 +53,5 @@ export default [
     TurnstileConfig,
     ChatbotConfig,
     BillingConfig,
+    AgentBuilderConfig,
 ];

@@ -1,3 +1,4 @@
+import { AccountRepositoryModule } from '@app/modules/account/repository/account.repository.module';
 import { ChatbotRepositoryModule } from '@app/modules/chatbot/repository/chatbot.repository.module';
 import { ChatbotService } from '@app/modules/chatbot/services/chatbot.service';
 import { HttpModule } from '@nestjs/axios';
@@ -17,6 +18,7 @@ import { ChatbotShareTokenService } from './services/chatbot-share-token.service
 @Module({
     imports: [
         ChatbotRepositoryModule,
+        AccountRepositoryModule,
         WorkSpaceModule,
         ToolModule,
         AiCacheModule,

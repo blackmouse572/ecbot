@@ -1,4 +1,9 @@
+import { NotImplementedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import {
+    REQUEST_CUSTOM_TIMEOUT_META_KEY,
+    REQUEST_CUSTOM_TIMEOUT_VALUE_META_KEY,
+} from '../../../src/common/request/constants/request.constant';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { PocSystemController } from '../../../src/modules/platform/controllers/poc.system.controller';
 import { PlatformAdapterRegistry } from '../../../src/modules/platform/services/platform-adapter.registry';
@@ -78,6 +83,33 @@ describe('PocSystemController.inbound', () => {
         expect(res).toEqual({ processed: 0 });
     });
 
+    it('acks and drops platforms whose adapter is not built yet, so the edge does not retry them', async () => {
+        verifySignature.mockImplementation(() => {
+            throw new NotImplementedException();
+        });
+        const res = await controller.inbound({
+            platform: 'tiktok',
+            rawBody: '{}',
+            headers: {},
+        });
+        expect(parse).not.toHaveBeenCalled();
+        expect(process).not.toHaveBeenCalled();
+        expect(res).toEqual({ processed: 0 });
+    });
+
+    it('still throws other verification errors', async () => {
+        verifySignature.mockImplementation(() => {
+            throw new Error('boom');
+        });
+        await expect(
+            controller.inbound({
+                platform: 'zalo',
+                rawBody: '{}',
+                headers: {},
+            })
+        ).rejects.toThrow('boom');
+    });
+
     it('reply endpoint delegates to ReplyGenerationService.run', async () => {
         await controller.reply({
             conversationId: 'c',
@@ -93,5 +125,16 @@ describe('PocSystemController.inbound', () => {
             contactPointId: 'cp',
             texts: ['a', 'b'],
         });
+    });
+
+    it('allows a full agent turn on the reply endpoint', () => {
+        const handler = PocSystemController.prototype.reply;
+
+        expect(
+            Reflect.getMetadata(REQUEST_CUSTOM_TIMEOUT_META_KEY, handler)
+        ).toBe(true);
+        expect(
+            Reflect.getMetadata(REQUEST_CUSTOM_TIMEOUT_VALUE_META_KEY, handler)
+        ).toBe('300s');
     });
 });

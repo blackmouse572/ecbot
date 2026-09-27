@@ -55,7 +55,8 @@ describe('ReplyGenerationService — guardrail block handling', () => {
             streaming,
             mockModuleRef as any,
             ormStub(),
-            {} as any // manifestBuilder
+            {} as any, // manifestBuilder
+            { resolve: async () => [] } as any // messageMedia
         );
     });
 

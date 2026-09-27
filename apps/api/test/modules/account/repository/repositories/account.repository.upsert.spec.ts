@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountRepository } from '@app/modules/account/repository/repositories/account.repository';
 import { EntityManager } from '@mikro-orm/postgresql';
@@ -42,5 +43,28 @@ describe('AccountRepository.upsert', () => {
         } as Partial<AccountEntity>);
 
         expect(em.create).toHaveBeenCalled();
+    });
+
+    // Regression: an externalId re-linked under a different workspace must
+    // not silently move the account (and its conversation history) between
+    // tenants — this is how a hijacked externalId would steal an account.
+    it('throws ConflictException when the same externalId already belongs to a different workspace', async () => {
+        const existing = {
+            id: 'account-1',
+            externalId: 'ext-1',
+            workspace: { id: 'workspace-1' },
+            deletedAt: null,
+        } as AccountEntity;
+        jest.spyOn(repo as any, 'findOne').mockResolvedValue(existing);
+
+        await expect(
+            repo.upsert({
+                externalId: 'ext-1',
+                workspace: { id: 'workspace-2' } as any,
+                name: 'Hijacked',
+            } as Partial<AccountEntity>)
+        ).rejects.toThrow(ConflictException);
+
+        expect(em.persistAndFlush).not.toHaveBeenCalled();
     });
 });

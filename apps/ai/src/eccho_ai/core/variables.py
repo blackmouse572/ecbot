@@ -39,6 +39,9 @@ class _AppVars(BaseSettings):
     FIRECRAWL_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    # Bounds a single chat-model call (the chatbot's own model, via build_chat_model)
+    # so a hung upstream can't hang the agent loop indefinitely.
+    CHAT_MODEL_TIMEOUT_SECONDS: float = 60.0
 
     # Postgres - required
     POSTGRES_URL: SecretStr
@@ -48,6 +51,11 @@ class _AppVars(BaseSettings):
     AI_SERVICE_API_KEY: SecretStr = Field(default=SecretStr(""))
     AI_SERVICE_API_SECRET: SecretStr = Field(default=SecretStr(""))
     API_BASE_URL: str = Field(default="http://localhost:3000")
+
+    # Shared secret checked on every inbound apps/api -> apps/ai call
+    # (`X-Internal-Token`, see `core/security.py`). Must match apps/api's own
+    # API_INTERNAL_TOKEN. Empty means the service fails closed (503).
+    API_INTERNAL_TOKEN: SecretStr = Field(default=SecretStr(""))
 
     # Langsmith tracing - optional
     LANGSMITH_TRACING: bool = Field(default=False)
@@ -100,6 +108,18 @@ class _AppVars(BaseSettings):
     GUARDRAIL_MODEL: str = "google/gemini-2.5-flash"
     CLASSIFIER_MODEL: str = "google/gemini-2.5-flash"
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
+    # OpenRouter model that answers agent-builder decisions (System One-shaped).
+    DECISION_MODEL: str = "google/gemini-2.5-flash"
+    # Describes inbound customer images (must accept image input).
+    VISION_MODEL: str = "google/gemini-2.5-flash"
+    # Images one burst can have described (a Telegram album or Messenger
+    # multi-select holds up to 10).
+    VISION_MAX_IMAGES: int = 10
+    # Catalog images from the operator instructions shown alongside, so the
+    # description can name the product a customer photo shows.
+    VISION_MAX_CATALOG_IMAGES: int = 6
+    # KEEP IN SYNC with apps/api MESSAGE_MEDIA_MAX_BYTES (what it stores).
+    VISION_MAX_IMAGE_BYTES: int = 5 * 1024 * 1024
     # OpenRouter image-generation model.
     IMAGE_MODEL: str = "google/gemini-2.5-flash-image"
 
