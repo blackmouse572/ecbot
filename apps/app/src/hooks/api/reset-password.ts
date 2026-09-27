@@ -4,7 +4,6 @@ import {
   resetPasswordPublicControllerRequestV1,
   resetPasswordPublicControllerResetV1,
   resetPasswordPublicControllerVerifyV1,
-  type ResetPasswordCreteResponseDto,
 } from "@repo/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -49,7 +48,7 @@ export const useResetPasswordToken = (token: string) => {
       if (response.error) {
         throw response.error;
       }
-      return (response.data as A).data as ResetPasswordCreteResponseDto;
+      return (response.data as A).data;
     },
   });
 
