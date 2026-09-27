@@ -1,3 +1,4 @@
+import { RequestTimeout } from '@app/common/request/decorators/request.decorator';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { ApiKeySystemProtected } from '@app/modules/api-key/decorators/api-key.decorator';
 import {
@@ -122,8 +123,11 @@ export class PocSystemController {
         return { processed: events.length };
     }
 
+    // Runs the whole agent turn (LLM + tools) before answering, so the 30s
+    // default would abort it mid-stream — as it did behind a cold `ai` start.
     @Post('/reply')
     @ApiKeySystemProtected()
+    @RequestTimeout('300s')
     async reply(@Body() dto: PocReplyDto): Promise<{ ok: true }> {
         await this.replyGeneration.run(dto);
         return { ok: true };
