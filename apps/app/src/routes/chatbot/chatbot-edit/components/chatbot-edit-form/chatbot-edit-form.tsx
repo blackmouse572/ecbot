@@ -37,7 +37,7 @@ export function ChatbotEditForm() {
       ...rest,
       extraInstructions:
         chatbot.extraInstructions ??
-        (chatbot.agentProfile ? "" : chatbot.generalKnowledge ?? ""),
+        (chatbot.agentProfile ? "" : (chatbot.generalKnowledge ?? "")),
       accounts: accounts.map((account: AccountListResponseDto) => account.id),
     });
   }, [chatbot]);
@@ -49,8 +49,13 @@ export function ChatbotEditForm() {
     }
 
     try {
+      // The update merges and JSON drops undefined, so a cleared field goes
+      // out as null; otherwise the stored value would stay.
+      const cleared = Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [key, value ?? null]),
+      );
       const body: ChatbotUpdateRequestDto = {
-        ...(data as A),
+        ...(cleared as A),
         name: data.name,
         extraInstructions: data.extraInstructions ?? "",
         agentProfile: chatbot?.agentProfile ?? undefined,
