@@ -223,7 +223,7 @@ export const workspaceMemberControllerMemberDetailsV1 = <ThrowOnError extends bo
 /**
  * Get all users that not belong to the workspace
  *
- * This endpoint retrieves all users who are not members of the specified workspace, allowing the owner to invite them.
+ * This endpoint retrieves users eligible to invite: a fuzzy name search over users who already share a workspace with the caller, or an exact match by email for anyone else on the platform when the search value is a full email address.
  */
 export const workspaceMemberControllerGetAvailableInviteMembersV1 = <ThrowOnError extends boolean = false>(options: Options<WorkspaceMemberControllerGetAvailableInviteMembersV1Data, ThrowOnError>): RequestResult<WorkspaceMemberControllerGetAvailableInviteMembersV1Responses, WorkspaceMemberControllerGetAvailableInviteMembersV1Errors, ThrowOnError> => (options.client ?? client).get<WorkspaceMemberControllerGetAvailableInviteMembersV1Responses, WorkspaceMemberControllerGetAvailableInviteMembersV1Errors, ThrowOnError>({
     responseType: 'json',
@@ -324,6 +324,8 @@ export const authPublicControllerSignUpV1 = <ThrowOnError extends boolean = fals
 
 /**
  * request otp for reset password
+ *
+ * Always returns the same empty ack, whether or not the email belongs to an account — prevents account enumeration. The reset link/OTP is delivered by email only.
  */
 export const resetPasswordPublicControllerRequestV1 = <ThrowOnError extends boolean = false>(options: Options<ResetPasswordPublicControllerRequestV1Data, ThrowOnError>): RequestResult<ResetPasswordPublicControllerRequestV1Responses, ResetPasswordPublicControllerRequestV1Errors, ThrowOnError> => (options.client ?? client).post<ResetPasswordPublicControllerRequestV1Responses, ResetPasswordPublicControllerRequestV1Errors, ThrowOnError>({
     responseType: 'json',

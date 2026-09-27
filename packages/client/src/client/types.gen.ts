@@ -615,11 +615,6 @@ export type AuthSignUpRequestDto = {
     turnstileToken?: string;
 };
 
-export type ResetPasswordCreteResponseDto = {
-    expiredDate: string;
-    to: string;
-};
-
 export type ResetPasswordCreateRequestDto = {
     email: string;
 };
@@ -2792,11 +2787,11 @@ export type AwsS3PresignResponseDto = {
 };
 
 export type UserUploadPhotoRequestDto = {
+    mime: 'image/jpg' | 'image/jpeg' | 'image/png' | 'image/webp';
     /**
-     * Unit in bytes
+     * Unit in bytes, max 5MB
      */
     size: number;
-    mime: 'image/jpg' | 'image/jpeg' | 'image/png';
 };
 
 export type AwsS3PresignRequestDto = {
@@ -8761,7 +8756,9 @@ export type FollowupSystemControllerCancelV1Data = {
     path: {
         id: string;
     };
-    query?: never;
+    query: {
+        conversationId: string;
+    };
     url: '/api/v1/system/followups/{id}';
 };
 

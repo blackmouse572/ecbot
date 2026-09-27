@@ -77,7 +77,7 @@ class ApiClient:
         return self._parse("GET", url, resp)
 
     async def delete(self, path: str, params: dict[str, Any] | None = None) -> Any:
-        url = self._base_url + (path if path.startswith("/") else "/" + path)
+        url = self._url(path)
         try:
             resp = await self._client.delete(
                 url, params=params, headers=self._headers()
