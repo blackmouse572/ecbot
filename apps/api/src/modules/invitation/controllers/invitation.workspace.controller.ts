@@ -62,6 +62,7 @@ import {
     ENUM_INVITATION_STATUS_CODE_ERROR,
 } from '../enums/invitation.enum';
 import { InvitationService } from '../services/invitation.service';
+import { buildInvitationLink } from '../utils/invitation-link.util';
 
 @ApiTags('modules.workspace.invitation')
 @Controller({
@@ -71,6 +72,7 @@ import { InvitationService } from '../services/invitation.service';
 export class InvitationWorkspaceController {
     private readonly invitationTokenSecret: string;
     private readonly invitationTokenExpired: string;
+    private readonly homeUrl: string;
 
     constructor(
         private readonly invitationService: InvitationService,
@@ -85,6 +87,10 @@ export class InvitationWorkspaceController {
         this.invitationTokenExpired = this.configService.get<string>(
             'workspace.invitationExpired'
         );
+        // Same pattern as workspace.owner.controller.ts: the invite link must
+        // come from the configured home.url, never a caller-controlled Origin
+        // header, which let a caller point the link at a host they own.
+        this.homeUrl = this.configService.get<string>('home.url') ?? '';
     }
 
     @InvitationListDoc()
@@ -300,8 +306,7 @@ export class InvitationWorkspaceController {
         const expirationMs = this.parseExpiration(expirationTime);
         const newExpiresAt = new Date(Date.now() + expirationMs);
 
-        // TODO: Get the actual client URL from request or config
-        const newInvitationLink = `https://app.example.com/join?token=${newToken}`;
+        const newInvitationLink = buildInvitationLink(this.homeUrl, newToken);
 
         const updatedInvitation = await this.invitationService.regenerateToken(
             invitationId,

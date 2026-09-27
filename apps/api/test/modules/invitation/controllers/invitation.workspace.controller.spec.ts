@@ -28,9 +28,11 @@ describe('InvitationWorkspaceController', () => {
     const mockPaginationService = { totalPage: jest.fn().mockReturnValue(1) };
     const mockJwtService = { sign: jest.fn().mockReturnValue('new-jwt') };
     const mockConfigService = {
-        get: jest.fn((key: string) =>
-            key === 'workspace.invitationKey' ? 'secret' : '7d'
-        ),
+        get: jest.fn((key: string) => {
+            if (key === 'workspace.invitationKey') return 'secret';
+            if (key === 'home.url') return 'https://app.configured.test';
+            return '7d';
+        }),
     };
     const mockActivityService = { createByUserWithWorkspace: jest.fn() };
 
@@ -177,6 +179,23 @@ describe('InvitationWorkspaceController', () => {
                 'new-jwt',
                 expect.any(Date),
                 expect.stringContaining('new-jwt')
+            );
+        });
+
+        it('builds the link from the configured client URL', async () => {
+            mockInvitationService.findOneById.mockResolvedValue(inWorkspace());
+            mockInvitationService.regenerateToken.mockResolvedValue({
+                id: 'i',
+            });
+            mockInvitationService.mapDetail.mockResolvedValue({ id: 'i' });
+
+            await controller.regenerateInvitation('user', workspace, 'x', user);
+
+            expect(mockInvitationService.regenerateToken).toHaveBeenCalledWith(
+                'x',
+                'new-jwt',
+                expect.any(Date),
+                'https://app.configured.test/join?tokens=new-jwt'
             );
         });
     });
