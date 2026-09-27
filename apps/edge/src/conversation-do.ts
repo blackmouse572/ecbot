@@ -41,10 +41,19 @@ export class ConversationDebounceDO {
     const meta = await this.state.storage.get<Meta>("meta");
     await this.state.storage.deleteAll();
     if (!meta || texts.length === 0) return;
-    await postToServer("/api/v1/system/poc/reply", {
-      ...meta,
-      texts,
-      messageIds,
-    });
+    // Log, never retry: the reply may already be partly delivered to the
+    // customer, so a second run could answer them twice.
+    const tag = `[reply] conversation ${meta.conversationId}`;
+    try {
+      const res = await postToServer("/api/v1/system/poc/reply", {
+        ...meta,
+        texts,
+        messageIds,
+      });
+      if (!res.ok)
+        console.error(`${tag} -> ${res.status}: ${await res.text()}`);
+    } catch (err) {
+      console.error(`${tag} threw (${(err as Error).message})`);
+    }
   }
 }

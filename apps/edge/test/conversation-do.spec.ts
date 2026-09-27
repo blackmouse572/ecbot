@@ -108,4 +108,52 @@ describe("ConversationDebounceDO", () => {
       messageIds: ["m-1", "m-2"],
     });
   });
+
+  // A reply that failed server-side must not look like success: the customer
+  // got nothing, and a silent 408 is what hid the WhatsApp timeout.
+  it("logs a failed /poc/reply with its status and conversation", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("Request Timeout", { status: 408 })),
+    );
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const state = mkState();
+    await state.storage.put("texts", ["hi"]);
+    await state.storage.put("meta", {
+      conversationId: "c",
+      senderId: "s",
+      customerId: "cu",
+      contactPointId: "cp",
+    });
+    await new ConversationDebounceDO(state as any).alarm();
+    expect(error).toHaveBeenCalledWith(
+      "[reply] conversation c -> 408: Request Timeout",
+    );
+    error.mockRestore();
+  });
+
+  it("logs, rather than throws, when /poc/reply cannot be reached", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new Error("network down");
+      }),
+    );
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const state = mkState();
+    await state.storage.put("texts", ["hi"]);
+    await state.storage.put("meta", {
+      conversationId: "c",
+      senderId: "s",
+      customerId: "cu",
+      contactPointId: "cp",
+    });
+    await expect(
+      new ConversationDebounceDO(state as any).alarm(),
+    ).resolves.toBeUndefined();
+    expect(error).toHaveBeenCalledWith(
+      "[reply] conversation c threw (network down)",
+    );
+    error.mockRestore();
+  });
 });
