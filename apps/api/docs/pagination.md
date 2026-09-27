@@ -43,7 +43,7 @@ The module provides several decorators to simplify controller implementation:
     - `options.defaultPerPage`: Set default items per page (default: 20)
     - `options.defaultOrderBy`: Set default field to order by (default: 'createdAt')
     - `options.defaultOrderDirection`: Set default order direction (default: 'asc')
-    - `options.availableSearch`: Array of fields available for searching
+    - `options.availableSearch`: Array of fields available for searching. Search is a case-insensitive contains, so list only text columns that exist on the entity (a dotted path such as `user.name` searches a relation); a regex on a uuid or a missing property returns 500.
     - `options.availableOrderBy`: Array of fields available for ordering
 
 - **@PaginationQueryFilterEqual(field, options?)**: Filter by exact match
