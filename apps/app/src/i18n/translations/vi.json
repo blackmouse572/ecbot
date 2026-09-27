@@ -1011,7 +1011,10 @@
       "widgetOriginsLabel": "Các website được phép hiển thị chat (mỗi dòng một địa chỉ)",
       "channelInUse": "{{name}} đang được dùng cho agent khác. Hãy gỡ liên kết ở đó trước để dùng tại đây.",
       "unlinkChannel": "Gỡ liên kết {{name}}",
-      "removeChannel": "Bỏ {{name}}"
+      "removeChannel": "Bỏ {{name}}",
+      "changeTypeTitle": "Đổi loại hình kinh doanh?",
+      "changeTypeDescription": "Agent này đang hoạt động. Đổi loại hình sẽ đặt lại các câu trả lời phụ thuộc vào nó, như mục tiêu, quy tắc và thông tin cần thu thập, và khách hàng sẽ thấy thay đổi ngay khi lưu.",
+      "changeTypeConfirm": "Đổi loại hình"
     },
     "groups": {
       "identity": "Về doanh nghiệp",

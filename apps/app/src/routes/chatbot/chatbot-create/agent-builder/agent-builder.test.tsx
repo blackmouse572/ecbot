@@ -57,6 +57,7 @@ const unlinkChatbotAccount = vi.fn();
 const provisionWebsiteWidget = vi.fn();
 const oAuthLoginClick = vi.fn();
 const setCloseOnEscape = vi.fn();
+const prompt = vi.fn();
 
 // `to-chatbot-payload.ts` pulls in `../../constants`, which imports `@/i18n`
 // and initializes it with the real translation resources. Mocking
@@ -89,7 +90,11 @@ vi.mock("@/hooks/use-oauth-login", () => ({
 }));
 vi.mock("@medusajs/ui", async () => {
   const actual = await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
-  return { ...actual, toast: { ...actual.toast, error: (...args: unknown[]) => toastError(...args) } };
+  return {
+    ...actual,
+    toast: { ...actual.toast, error: (...args: unknown[]) => toastError(...args) },
+    usePrompt: () => prompt,
+  };
 });
 vi.mock("@/hooks/api/agent-builder", () => ({
   useAgentBuilderSuggest: () => ({ mutateAsync: suggest, isPending: false }),
@@ -395,6 +400,51 @@ describe("AgentBuilder", () => {
       await act(async () => finishFirst());
       await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
       expect(update.mock.calls[1][0].body.agentProfile.businessName).toBe("Lotus Nails");
+    });
+
+    // Changing the type resets the answers that depend on it, and autosave
+    // would push that straight to a live bot, so it asks first.
+    describe("changing the business type", () => {
+      const changeTypeToFashion = async () => {
+        await userEvent.click(screen.getByText(/businessType\.lead/));
+        await userEvent.click(screen.getByRole("radio", { name: /agentBuilder\.types\.fashion/ }));
+        await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+      };
+
+      it("asks first on a live bot, and keeps the old type when cancelled", async () => {
+        prompt.mockReset().mockResolvedValue(false);
+        chatbot.mockReturnValue({ chatbot: bot({ status: "active" }) });
+        render(tree());
+
+        await changeTypeToFashion();
+
+        await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
+        expect(prompt.mock.calls[0][0]).toMatchObject({ title: "agentBuilder.ui.changeTypeTitle" });
+        await settle();
+        expect(update).not.toHaveBeenCalled();
+      });
+
+      it("applies the new type on a live bot once confirmed", async () => {
+        prompt.mockReset().mockResolvedValue(true);
+        chatbot.mockReturnValue({ chatbot: bot({ status: "active" }) });
+        render(tree());
+
+        await changeTypeToFashion();
+
+        await waitFor(() => expect(update).toHaveBeenCalled());
+        expect(update.mock.calls.at(-1)?.[0].body.agentProfile.businessType).toBe("fashion");
+      });
+
+      it("does not ask on a draft that is not live yet", async () => {
+        prompt.mockReset();
+        chatbot.mockReturnValue({ chatbot: bot() });
+        render(tree());
+
+        await changeTypeToFashion();
+
+        await waitFor(() => expect(update).toHaveBeenCalled());
+        expect(prompt).not.toHaveBeenCalled();
+      });
     });
 
     it("sends no update when a refetch only changes read-only fields", async () => {

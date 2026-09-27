@@ -983,7 +983,10 @@
       "widgetOriginsLabel": "Websites allowed to show the chat (one per line)",
       "channelInUse": "{{name}} is already used by another agent. Unlink it there first to use it here.",
       "unlinkChannel": "Unlink {{name}}",
-      "removeChannel": "Remove {{name}}"
+      "removeChannel": "Remove {{name}}",
+      "changeTypeTitle": "Change the business type?",
+      "changeTypeDescription": "This agent is live. A new business type resets the answers that depend on it, such as goals, rules and what to collect, and customers see the change as soon as it saves.",
+      "changeTypeConfirm": "Change type"
     },
     "groups": {
       "identity": "About your business",

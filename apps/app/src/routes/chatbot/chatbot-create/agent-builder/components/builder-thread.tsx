@@ -1,5 +1,5 @@
-import { buildQuestionGroups } from "@repo/agent-blueprint";
-import { Button, clx } from "@medusajs/ui";
+import { buildQuestionGroups, type Question } from "@repo/agent-blueprint";
+import { Button, clx, usePrompt } from "@medusajs/ui";
 import {
   Marker, MarkerContent, Message, MessageContent, MessageScroller, MessageScrollerButton,
   MessageScrollerContent, MessageScrollerItem, MessageScrollerViewport,
@@ -26,6 +26,7 @@ export function BuilderThread(builder: AgentBuilderController) {
   const { t } = useTranslation();
   const { state, dispatch } = builder;
   const reduceMotion = useReducedMotion();
+  const prompt = usePrompt();
 
   const profile = state.profile;
 
@@ -34,6 +35,22 @@ export function BuilderThread(builder: AgentBuilderController) {
   if (!profile) {
     return <Hero loading={builder.starting} onDescribe={builder.startFromDescription} onTemplate={builder.startFromTemplate} />;
   }
+
+  // A new type resets the answers that depend on it, and autosave sends that
+  // to a live bot at once, so the owner confirms first.
+  const answer = async (question: Question, value: unknown) => {
+    const changesLiveType = state.finished && question.id === "businessType" && value !== profile.businessType;
+    if (changesLiveType) {
+      const confirmed = await prompt({
+        title: t("agentBuilder.ui.changeTypeTitle"),
+        description: t("agentBuilder.ui.changeTypeDescription"),
+        confirmText: t("agentBuilder.ui.changeTypeConfirm"),
+        cancelText: t("actions.cancel"),
+      });
+      if (!confirmed) return;
+    }
+    dispatch({ type: "answer", question, value });
+  };
 
   const all = steps(profile);
   const current = currentStep(state);
@@ -97,7 +114,7 @@ export function BuilderThread(builder: AgentBuilderController) {
                           profile={profile}
                           suggestion={state.suggestion}
                           position={{ current: all.findIndex((s) => s.question.id === question.id) + 1, total: all.length }}
-                          onAnswer={(value) => dispatch({ type: "answer", question, value })}
+                          onAnswer={(value) => answer(question, value)}
                           onSkip={() => dispatch({ type: "skip", question })}
                           chatbotId={state.chatbotId}
                           linkedAccounts={state.linkedAccounts}
