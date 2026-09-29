@@ -1,7 +1,7 @@
 import { getBusinessType } from "./business-types";
 import {
-  ADDRESS_STYLE, AFTER_HOURS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN,
-  PERSONALITY, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
+  ADDRESS_STYLE, AFTER_HOURS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
+  NO_FACTS_PROVIDED, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
 } from "./libraries";
 import { PRESETS } from "./presets";
 import type { AgentProfile } from "./profile";
@@ -56,10 +56,13 @@ export function compilePrompt(profile: AgentProfile, options: CompileOptions = {
     ...profile.goals.map((g, i) => `  ${i + 1}. ${promptOf(GOALS, g)}`),
   ]);
 
+  // "First conversation" read as every turn to models, which re-introduced
+  // themselves each reply and skipped what the customer said (#173).
   const initialization = section("Initialization", [
     profile.greeting.trim()
-      ? `Start the first conversation with: "${plain(profile.greeting)}"`
-      : `Start the first conversation by introducing yourself as ${agent} from ${business} in one short sentence, then ask how you can help.`,
+      ? `Only in your first reply of a conversation, open with: "${plain(profile.greeting)}", then respond to what the customer said.`
+      : `Only in your first reply of a conversation, introduce yourself as ${agent} from ${business} in one short sentence, then respond to what the customer said (if they only said hello, ask how you can help).`,
+    "After that, never greet or introduce yourself again.",
   ]);
 
   const personality = profile.personality.map((p) => promptOf(PERSONALITY, p));
@@ -76,12 +79,12 @@ export function compilePrompt(profile: AgentProfile, options: CompileOptions = {
     .map(([id, v]) => `${promptOf(FACTS, id)}: ${plain(v as string)}`);
   const knowledge = section("Knowledge", facts.length
     ? facts.map((f, i) => (type.mode === "detailed" ? `${i + 1}. ${f}` : `- ${f}`))
-    : ["No business facts were provided. Rely on the knowledge base and never guess."]);
+    : [NO_FACTS_PROVIDED]);
 
   const process = type.personal ? "" : section("Process", numbered([
     "Understand what the customer needs. Ask at most one question at a time.",
     profile.collect.length ? `Before confirming anything, collect: ${unambiguousList(profile.collect.map((c) => promptOf(COLLECT, c)))}.` : "",
-    "Read the key details back and wait for a clear yes before you confirm.",
+    "Read the key details back and wait for a clear yes before you confirm, and before you call any tool that creates, changes or cancels an order, booking or payment.",
     profile.handoffWhen.length ? `Hand the conversation to a person when ${list(profile.handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.` : "",
     type.mode === "detailed" ? "Explain step by step and check that the customer understood before moving on." : "",
   ]));
@@ -91,12 +94,16 @@ export function compilePrompt(profile: AgentProfile, options: CompileOptions = {
     `${profile.rules.length + 1}. When you are not sure: ${promptOf(UNSURE, profile.unsure)}`,
   ]);
 
+  const hoursKnown = allowedFacts.includes("opening_hours") && !!profile.facts.opening_hours?.trim();
+  const afterHours = profile.afterHours === "share_hours" && !hoursKnown
+    ? HOURS_NOT_PROVIDED
+    : promptOf(AFTER_HOURS, profile.afterHours);
   const interaction = section("Interaction protocol", [
     `- ${promptOf(REPLY_LENGTH, profile.replyLength)}`,
     `- ${profile.emoji ? "Use an emoji now and then when it fits the mood." : "Do not use emoji."}`,
     profile.primaryLanguage === "vi" && profile.addressStyle ? `- ${promptOf(ADDRESS_STYLE, profile.addressStyle)}` : "",
     `- ${profile.followUpQuestions ? "End with a short question that helps the conversation move forward." : "Do not add follow-up questions unless you need information."}`,
-    type.personal ? "" : `- Outside opening hours: ${promptOf(AFTER_HOURS, profile.afterHours)}`,
+    type.personal ? "" : `- Outside opening hours: ${afterHours}`,
   ]);
 
   const tools = section("Tools", (options.toolGuides ?? []).flatMap((t) => [
