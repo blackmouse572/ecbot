@@ -100,6 +100,16 @@ HANDOFF_UNAVAILABLE = (
     "Tags and handing off to staff are not available in this chat. "
     "Do not tell the customer a staff member will take over."
 )
+# Returned when apps/api fails on a live channel: the feature exists, this call
+# just did not go through.
+FOLLOWUP_FAILED = (
+    "The follow-up could not be scheduled. "
+    "Do not promise a reminder: tell the customer you could not set it right now."
+)
+HANDOFF_FAILED = (
+    "The tag could not be applied. "
+    "Do not tell the customer a staff member will take over."
+)
 
 
 def _truncate(value: Any, n: int = 80) -> str:
@@ -328,7 +338,7 @@ async def apply_customer_tag(name: str) -> dict[str, Any]:
             "error",
             (time.perf_counter() - started) * 1000,
         )
-        return {"error": str(exc), "instruction": HANDOFF_UNAVAILABLE}
+        return {"error": str(exc), "instruction": HANDOFF_FAILED}
 
 
 @tool
@@ -399,7 +409,7 @@ async def schedule_followup(delay_minutes: int, prompt: str, reason: str) -> dic
     except ApiClientError as exc:
         _log_call("schedule_followup", _truncate(reason), "error",
                   (time.perf_counter() - started) * 1000)
-        return {"error": str(exc), "instruction": FOLLOWUP_UNAVAILABLE}
+        return {"error": str(exc), "instruction": FOLLOWUP_FAILED}
 
 
 @tool

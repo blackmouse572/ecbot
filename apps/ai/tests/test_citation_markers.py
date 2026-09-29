@@ -28,3 +28,12 @@ def test_stream_releases_non_marker_bracket():
 
 def test_stream_flushes_unfinished_tail():
     assert _stream(["Ends with [KB"]) == "Ends with [KB"
+
+
+def test_marker_at_line_start_leaves_no_leading_space():
+    assert strip_citation_markers("[KB-1] Next\n[KB-2] Then") == "Next\nThen"
+
+
+def test_stream_marker_at_reply_start_leaves_no_leading_space():
+    assert _stream(["[KB", "-1] Next line"]) == "Next line"
+    assert _stream(["Intro.\n", "[KB-1] Next"]) == "Intro.\nNext"

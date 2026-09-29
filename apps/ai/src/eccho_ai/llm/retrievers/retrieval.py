@@ -82,6 +82,12 @@ class RetrievedChunk:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
+def _public_source_url(chunk: "RetrievedChunk") -> str | None:
+    """The web page a chunk came from, or None. Never the chunk's `source`:
+    for uploaded files and text items that is the storage file name / title."""
+    return chunk.metadata.get("document", {}).get("source_url") or None
+
+
 @dataclass
 class RAGRetrievalResult:
     query: str
@@ -96,9 +102,7 @@ class RAGRetrievalResult:
     def source_attributions(self) -> list[dict[str, Any]]:
         sources: list[dict[str, Any]] = []
         for index, chunk in enumerate(self.chunks, start=1):
-            document_metadata = chunk.metadata.get("document", {})
-            chunk_metadata = chunk.metadata.get("chunk", {})
-            source_url = document_metadata.get("source_url") or chunk_metadata.get("source")
+            source_url = _public_source_url(chunk)
             sources.append(
                 {
                     "id": f"KB-{index}",
@@ -171,9 +175,7 @@ class RAGRetrievalService:
         max_chars = AppVars.RAG_RETRIEVAL_CONTEXT_MAX_CHARS
 
         for index, chunk in enumerate(chunks, start=1):
-            document_metadata = chunk.metadata.get("document", {})
-            chunk_metadata = chunk.metadata.get("chunk", {})
-            source_url = document_metadata.get("source_url") or chunk_metadata.get("source")
+            source_url = _public_source_url(chunk)
             # Only the label (and a public page URL) — storage filenames and ids
             # are internal and must not end up quoted to the customer.
             header = f"[KB-{index}]"

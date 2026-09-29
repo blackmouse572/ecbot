@@ -112,6 +112,19 @@ async def test_kb_citation_markers_never_reach_the_customer():
 
 
 @pytest.mark.asyncio
+async def test_source_url_part_is_labelled_with_the_url_not_the_file_name():
+    async def fake_events():
+        yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk("hi")}}
+
+    sources = [{"id": "KB-1", "source_url": "https://shop.vn/a", "filename": "123-a.docx"}]
+    frames = [f async for f in events_to_ui_parts(fake_events(), request_id="m1", sources=sources)]
+    parts = [json.loads(f[len("data: "):]) for f in frames if f.startswith("data: {")]
+    source = next(p for p in parts if p["type"] == "source-url")
+    assert source["title"] == "https://shop.vn/a"
+    assert "123-a.docx" not in json.dumps(source)
+
+
+@pytest.mark.asyncio
 async def test_open_text_run_is_closed_before_error_on_raise():
     async def fake_events():
         yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk("partial")}}
