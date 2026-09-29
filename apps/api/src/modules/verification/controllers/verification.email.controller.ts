@@ -80,9 +80,13 @@ export class VerificationEmailController {
             });
         }
 
-        // An expired or attempt-locked code leaves no active row: issue a
-        // fresh one so an unverified user is never stuck (login refuses them).
-        const verification = existing ?? (await this.reissueEmail(user));
+        // Issue a fresh code on every resend the user may have one: re-sending
+        // the active code could mail one with seconds left, and an expired or
+        // attempt-locked code leaves no active row at all (login refuses an
+        // unverified user, so they must never be stuck).
+        const verification = canIssue
+            ? await this.reissueEmail(user)
+            : existing;
 
         await this.cloudTasksClient
             .enqueue(
@@ -152,6 +156,17 @@ export class VerificationEmailController {
                 : null;
         const user = userTask.status === 'fulfilled' ? userTask.value : null;
         if (!verification) {
+            const expired =
+                await this.verificationService.findOneExpiredLatestEmailByUser(
+                    id,
+                    email
+                );
+            if (expired) {
+                throw new BadRequestException({
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.EXPIRED,
+                    message: 'verification.error.expired',
+                });
+            }
             throw new NotFoundException({
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'verification.error.notFound',

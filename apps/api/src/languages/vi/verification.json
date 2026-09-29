@@ -10,6 +10,7 @@
         "otpNotMatch": "Mã xác minh không khớp.",
         "attemptMax": "Nhập sai quá nhiều lần. Mã xác minh này đã bị khóa.",
         "userEmailVerified": "Email này đã được xác minh rồi.",
-        "userMobileNumberVerified": "Số điện thoại di động này đã được xác minh rồi."
+        "userMobileNumberVerified": "Số điện thoại di động này đã được xác minh rồi.",
+        "expired": "Mã này đã hết hạn. Nhấn Gửi lại để nhận mã mới."
     }
 }

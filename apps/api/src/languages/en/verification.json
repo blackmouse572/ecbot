@@ -10,6 +10,7 @@
         "otpNotMatch": "Verification code does not match.",
         "attemptMax": "Too many failed attempts. This verification code has been locked.",
         "userEmailVerified": "This email has already been verified.",
-        "userMobileNumberVerified": "This mobile number has already been verified."
+        "userMobileNumberVerified": "This mobile number has already been verified.",
+        "expired": "This code has expired. Tap Resend to get a new one."
     }
 }

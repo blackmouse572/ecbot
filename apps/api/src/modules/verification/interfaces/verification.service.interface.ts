@@ -48,6 +48,11 @@ export interface IVerificationService {
         email: string,
         options?: IDatabaseFindOneOptions
     ): Promise<VerificationEntity>;
+    findOneExpiredLatestEmailByUser(
+        user: string,
+        email: string,
+        options?: IDatabaseFindOneOptions
+    ): Promise<VerificationEntity>;
     validateOtp(verification: VerificationEntity, otp: string): boolean;
     verify(
         repository: VerificationEntity,

@@ -211,6 +211,31 @@ export class VerificationService implements IVerificationService {
         );
     }
 
+    // The same user/email binding as findOneActiveLatestEmailByUser, for a
+    // row that is still active and unverified but has expired, so a verify
+    // attempt can say "expired, resend" instead of "not found".
+    async findOneExpiredLatestEmailByUser(
+        user: string,
+        email: string,
+        options?: IDatabaseFindOneOptions
+    ): Promise<VerificationEntity> {
+        return this.verificationRepository.findOne<VerificationEntity>(
+            {
+                user,
+                to: email,
+                isActive: true,
+                isVerify: false,
+                expiredDate: {
+                    $lt: this.helperDateService.create(),
+                },
+            },
+            {
+                ...options,
+                order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC },
+            }
+        );
+    }
+
     validateOtp(verification: VerificationEntity, otp: string): boolean {
         return verification.otp === otp;
     }
