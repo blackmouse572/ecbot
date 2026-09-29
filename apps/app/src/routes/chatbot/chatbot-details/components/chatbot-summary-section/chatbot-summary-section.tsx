@@ -11,10 +11,7 @@ import {
   CHATBOT_LANGUAGES,
   CHATBOT_MODEL_PROVIDERS,
 } from "@/routes/chatbot/constants";
-import type {
-  ChatbotGetDetailResponseDto,
-  ChatbotUpdateRequestDto,
-} from "@repo/client";
+import type { ChatbotGetDetailResponseDto } from "@repo/client";
 import { useTranslation } from "react-i18next";
 import {
   IconShieldCheckFilled,
@@ -31,45 +28,14 @@ type ToggleableField =
   | "guardrailModelEnabled"
   | "guardrailEscalateOnBlock";
 
-const buildUpdatePayload = (
-  item: ChatbotGetDetailResponseDto,
-  overrides: Partial<ChatbotUpdateRequestDto>,
-): ChatbotUpdateRequestDto => ({
-  name: item.name,
-  type: item.type,
-  avatar: item.avatar,
-  generalKnowledge: item.generalKnowledge,
-  accounts: item.accounts?.map((account) => account.id) ?? [],
-  typingIndicator: item.typingIndicator,
-  autoRead: item.autoRead,
-  primaryLanguage: item.primaryLanguage,
-  deferedLanguage: item.deferedLanguage,
-  welcomeMessage: item.welcomeMessage,
-  fallbackMessage: item.fallbackMessage,
-  handoffMessage: item.handoffMessage,
-  handoffKeywords: item.handoffKeywords,
-  handoffFallbackThreshold: item.handoffFallbackThreshold,
-  guardrailEnabled: item.guardrailEnabled,
-  guardrailModelEnabled: item.guardrailModelEnabled,
-  guardrailCustomInstruction: item.guardrailCustomInstruction,
-  guardrailEscalateOnBlock: item.guardrailEscalateOnBlock,
-  modelTextName: item.modelTextName,
-  modelTemperature: item.modelTemperature,
-  maxTokens: item.maxTokens,
-  ...overrides,
-});
-
 export const ChatbotSummarySection = ({ item }: ChatbotSummarySectionProps) => {
   const { t } = useTranslation();
   const { getFullDate } = useDate();
   const update = useUpdateChatbot();
 
-  // Every switch sends the whole chatbot back, with one field overridden.
+  // The update merges, so a switch sends only the field it flips.
   const onToggle = (key: ToggleableField) => (checked: boolean) =>
-    update.mutate({
-      id: item.id,
-      body: buildUpdatePayload(item, { [key]: checked }),
-    });
+    update.mutate({ id: item.id, body: { [key]: checked } });
 
   const primaryLanguageLabel =
     CHATBOT_LANGUAGES[item.primaryLanguage as keyof typeof CHATBOT_LANGUAGES] ??

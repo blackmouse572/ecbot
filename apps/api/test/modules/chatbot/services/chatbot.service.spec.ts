@@ -1,4 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { ChatbotEntity } from '../../../../src/modules/chatbot/repository/entities/chatbot.entity';
 import { ChatbotService } from '../../../../src/modules/chatbot/services/chatbot.service';
 import { ChatbotCreateRequestDto } from '../../../../src/modules/chatbot/dtos/request/chatbot.create.request.dto';
 import {
@@ -46,6 +48,30 @@ describe('ChatbotService', () => {
 
             expect(entity.modelProvider).toBe('openai');
             expect((entity as any).accounts).toBeUndefined();
+        });
+
+        it('leaves unsent flags to the entity defaults', () => {
+            const dto = plainToInstance(ChatbotCreateRequestDto, {
+                name: 'b',
+                type: ENUM_CHATBOT_TYPE.BEAUTY,
+                primaryLanguage: ENUM_CHATBOT_LANGUAGE.EN,
+                modelTextName: 'openai/gpt-5.4',
+                workspace: 'workspace-id-1',
+            });
+
+            const entity = plainToInstance(
+                ChatbotEntity,
+                service.buildCreateEntity(dto)
+            );
+
+            expect(entity).toMatchObject({
+                typingIndicator: true,
+                autoRead: true,
+                modelTemperature: 1.0,
+                guardrailEnabled: false,
+                guardrailModelEnabled: false,
+                guardrailEscalateOnBlock: true,
+            });
         });
     });
 

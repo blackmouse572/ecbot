@@ -16,30 +16,15 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
   const update = useUpdateChatbot();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(
-    item.extraInstructions ?? (item.agentProfile ? "" : item.generalKnowledge ?? ""),
+    item.extraInstructions ??
+      (item.agentProfile ? "" : (item.generalKnowledge ?? "")),
   );
 
   const handleSave = async () => {
     try {
       await update.mutateAsync({
         id: item.id,
-        body: {
-          name: item.name,
-          extraInstructions: draft,
-          agentProfile: item.agentProfile ?? undefined,
-          accounts: item.accounts.map((a) => a.id),
-          type: item.type,
-          autoRead: item.autoRead,
-          typingIndicator: item.typingIndicator,
-          primaryLanguage: item.primaryLanguage,
-          deferedLanguage: item.deferedLanguage ?? undefined,
-          welcomeMessage: item.welcomeMessage ?? undefined,
-          fallbackMessage: item.fallbackMessage ?? undefined,
-          modelTextName: item.modelTextName,
-          modelTemperature: item.modelTemperature,
-          maxTokens: item.maxTokens ?? undefined,
-          handoffFallbackThreshold: item.handoffFallbackThreshold,
-        },
+        body: { extraInstructions: draft },
       });
       toast.success(t("chatbot.details.generalKnowledgeSaved"));
       setEditing(false);
@@ -51,7 +36,7 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
   const handleCancel = () => {
     setDraft(
       item.extraInstructions ??
-        (item.agentProfile ? "" : item.generalKnowledge ?? ""),
+        (item.agentProfile ? "" : (item.generalKnowledge ?? "")),
     );
     setEditing(false);
   };
@@ -67,7 +52,7 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
             onClick={() => {
               setDraft(
                 item.extraInstructions ??
-                  (item.agentProfile ? "" : item.generalKnowledge ?? ""),
+                  (item.agentProfile ? "" : (item.generalKnowledge ?? "")),
               );
               setEditing(true);
             }}

@@ -1,6 +1,5 @@
 // Every editable field the update endpoint accepts, excluding the token
-// caps (not editable here). Kept as an explicit list so an unsent field is
-// still picked as `undefined` rather than dropped by a rest spread.
+// caps and status (not editable here).
 export const CHATBOT_EDITABLE_FIELDS = [
     'name',
     'accounts',

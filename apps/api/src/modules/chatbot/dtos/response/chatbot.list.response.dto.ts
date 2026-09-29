@@ -223,6 +223,7 @@ export class ChatbotListResponseDto extends DatabaseDto {
         type: String,
         required: false,
     })
+    @Expose()
     handoffMessage: string | null;
 
     @ApiProperty({

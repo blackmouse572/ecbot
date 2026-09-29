@@ -196,13 +196,20 @@ export class ChatbotService implements IChatbotService {
             '/'
         )[0] as ENUM_CHATBOT_MODEL_PROVIDER;
         const promptFields = this.resolvePromptFields(fieldsWithoutAccounts);
+        // SWC emits declared DTO fields as own `undefined` properties; left
+        // in, they would overwrite ChatbotEntity's defaults (autoRead, ...).
+        const sentFields = Object.fromEntries(
+            Object.entries(fieldsWithoutAccounts).filter(
+                ([, value]) => value !== undefined
+            )
+        );
 
         // The spread below merges `agentProfile?: Record<string, unknown>`
         // (the DTO) with `agentProfile?: AgentProfile` (resolvePromptFields);
         // TS widens optional-property spreads to a union, so the assertion
         // below just re-states the method's own declared return type.
         return {
-            ...fieldsWithoutAccounts,
+            ...sentFields,
             ...promptFields,
             modelProvider,
         } as ChatbotCreateEntityFields;
@@ -339,8 +346,8 @@ export class ChatbotService implements IChatbotService {
         const hasAccountUpdates =
             Array.isArray(accountIds) && accountIds.length > 0;
 
-        // Take the prompt keys out so an `undefined` from pickFields can
-        // never overwrite them; resolvePromptFields decides instead.
+        // Take the prompt keys out; resolvePromptFields decides what to
+        // write so the compiled prompt stays in step with the profile.
         const {
             agentProfile: _agentProfile,
             extraInstructions: _extraInstructions,

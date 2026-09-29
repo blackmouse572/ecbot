@@ -295,8 +295,11 @@ describe('ChatbotController', () => {
             });
         });
 
-        it('passes every editable key to the service, undefined when unsent', async () => {
-            const partialDto = { name: 'Only Name' } as ChatbotUpdateRequestDto;
+        it('passes only the keys the body sent to the service', async () => {
+            const partialDto = {
+                name: 'Only Name',
+                dailyTokenCap: 10,
+            } as ChatbotUpdateRequestDto;
             mockChatbotService.findOne.mockResolvedValue(mockChatbot);
             mockChatbotService.update.mockResolvedValue(mockChatbot);
             mockChatbotService.mapList.mockReturnValue([mockChatbot]);
@@ -312,16 +315,30 @@ describe('ChatbotController', () => {
             );
 
             const editableFields = mockChatbotService.update.mock.calls[0][1];
-            expect(Object.keys(editableFields)).toHaveLength(24);
-            expect(editableFields).toHaveProperty('handoffMessage', undefined);
-            expect(editableFields).not.toHaveProperty('dailyTokenCap');
-            expect(editableFields).not.toHaveProperty('monthlyTokenCap');
-            expect(editableFields).toHaveProperty('agentProfile', undefined);
-            expect(editableFields).toHaveProperty(
-                'extraInstructions',
+            expect(editableFields).toStrictEqual({ name: 'Only Name' });
+        });
+
+        it('passes null through so a client can clear a field', async () => {
+            const dto = {
+                welcomeMessage: null,
+            } as unknown as ChatbotUpdateRequestDto;
+            mockChatbotService.findOne.mockResolvedValue(mockChatbot);
+            mockChatbotService.update.mockResolvedValue(mockChatbot);
+            mockChatbotService.mapList.mockReturnValue([mockChatbot]);
+            mockActivityService.createByUserWithWorkspace.mockResolvedValue(
                 undefined
             );
-            expect(editableFields).not.toHaveProperty('status');
+
+            await controller.update(
+                mockWorkspace,
+                mockChatbot.id,
+                dto,
+                mockUser
+            );
+
+            expect(mockChatbotService.update.mock.calls[0][1]).toStrictEqual({
+                welcomeMessage: null,
+            });
         });
     });
 
