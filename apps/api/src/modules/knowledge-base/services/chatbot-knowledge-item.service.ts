@@ -127,8 +127,11 @@ export class ChatbotKnowledgeItemService {
                 }
                 await em.persistAndFlush(existing);
                 // Notify apps/ai of updated chatbot associations (best-effort).
-                const restoredLinks =
-                    await this.findByKnowledgeItem(knowledgeItemId);
+                const restoredLinks = await this.findByKnowledgeItem(
+                    knowledgeItemId,
+                    undefined,
+                    { em }
+                );
                 const restoredChatbotIds = restoredLinks.map(l => l.chatbot.id);
                 void this.ragSyncService.updateChatbotLinks(
                     knowledgeItemId,
@@ -158,8 +161,14 @@ export class ChatbotKnowledgeItemService {
 
         await em.persistAndFlush(link);
 
-        // Notify apps/ai of updated chatbot associations (best-effort).
-        const links = await this.findByKnowledgeItem(knowledgeItemId);
+        // Notify apps/ai of updated chatbot associations (best-effort). Read on
+        // the same `em`: the default one cannot see the uncommitted link, sent
+        // chatbot_ids: [] and un-linked the item in the vector store (#118).
+        const links = await this.findByKnowledgeItem(
+            knowledgeItemId,
+            undefined,
+            { em }
+        );
         const chatbotIds = links.map(l => l.chatbot.id);
         void this.ragSyncService.updateChatbotLinks(
             knowledgeItemId,
@@ -195,8 +204,11 @@ export class ChatbotKnowledgeItemService {
             await em.persistAndFlush(link);
 
             // Notify apps/ai of updated chatbot associations (best-effort).
-            const remainingLinks =
-                await this.findByKnowledgeItem(knowledgeItemId);
+            const remainingLinks = await this.findByKnowledgeItem(
+                knowledgeItemId,
+                undefined,
+                { em }
+            );
             const remainingChatbotIds = remainingLinks.map(l => l.chatbot.id);
             void this.ragSyncService.updateChatbotLinks(
                 knowledgeItemId,
