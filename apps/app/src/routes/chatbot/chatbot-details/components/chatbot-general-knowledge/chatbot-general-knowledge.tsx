@@ -1,7 +1,14 @@
 import { TipTapEditor } from "@/components/common/tiptap-editor/tiptap-editor";
 import { useUpdateChatbot } from "@/hooks/api/chatbot";
 import { Pencil } from "@medusajs/icons";
-import { Button, Container, Heading, IconButton, toast } from "@medusajs/ui";
+import {
+  Button,
+  Container,
+  Heading,
+  IconButton,
+  Text,
+  toast,
+} from "@medusajs/ui";
 import type { ChatbotGetDetailResponseDto } from "@repo/client";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -15,10 +22,13 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
   const { t } = useTranslation();
   const update = useUpdateChatbot();
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(
+  // Builder agents keep their compiled prompt in generalKnowledge; this section
+  // is only the extra instructions (#172). Legacy agents have no profile, so
+  // their generalKnowledge is what the owner wrote.
+  const saved =
     item.extraInstructions ??
-      (item.agentProfile ? "" : (item.generalKnowledge ?? "")),
-  );
+    (item.agentProfile ? "" : (item.generalKnowledge ?? ""));
+  const [draft, setDraft] = useState(saved);
 
   const handleSave = async () => {
     try {
@@ -34,10 +44,7 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
   };
 
   const handleCancel = () => {
-    setDraft(
-      item.extraInstructions ??
-        (item.agentProfile ? "" : (item.generalKnowledge ?? "")),
-    );
+    setDraft(saved);
     setEditing(false);
   };
 
@@ -50,10 +57,7 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
             variant="transparent"
             size="small"
             onClick={() => {
-              setDraft(
-                item.extraInstructions ??
-                  (item.agentProfile ? "" : (item.generalKnowledge ?? "")),
-              );
+              setDraft(saved);
               setEditing(true);
             }}
           >
@@ -84,6 +88,10 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
             </Button>
           </div>
         </div>
+      ) : !saved.trim() ? (
+        <Text size="small" className="p-6 py-4 text-ui-fg-muted">
+          {t("agentBuilder.ui.extraInstructionsHint")}
+        </Text>
       ) : (
         <div className="scroll-fade-y max-h-96 overflow-y-auto p-6 py-4 prose max-w-none txt-compact-small text-ui-fg-subtle">
           <ReactMarkdown
@@ -96,7 +104,7 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
               ),
             }}
           >
-            {item.generalKnowledge ?? ""}
+            {saved}
           </ReactMarkdown>
         </div>
       )}

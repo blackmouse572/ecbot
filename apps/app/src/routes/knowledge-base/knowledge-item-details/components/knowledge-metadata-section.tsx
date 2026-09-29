@@ -7,6 +7,7 @@ import { useDate } from "../../../../hooks/use-date";
 import { KnowledgeItemTypeCell } from "../../knowledge-base-list/components/knowledge-base-list-table/knowledge-item-type-cell";
 import { KnowledgeItemStatusCell } from "../../knowledge-base-list/components/knowledge-base-list-table/knowledge-item-status-cell";
 import { UserLink } from "../../../../components/common";
+import { localizeIngestError } from "../../utils/localize-ingest-error";
 import { KnowledgeItemTagListCell } from "../../knowledge-base-list/components/knowledge-base-list-table/knowledge-item-tag-list-cell";
 
 type KnowledgeMetadataSectionProps = {
@@ -47,7 +48,7 @@ export const KnowledgeMetadataSection = ({
         {item.errorMessage && (
           <SectionRow
             title={t("fields.errorMessage")}
-            value={item.errorMessage}
+            value={localizeIngestError(item.errorMessage, t)}
           />
         )}
         <SectionRow
