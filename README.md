@@ -26,14 +26,14 @@ Most open-source agent builders stop at Messenger and WhatsApp. Ecbot ships Zalo
 
 ## Channels
 
-| Channel            | Status                                                                          |
-| ------------------ | ------------------------------------------------------------------------------- |
-| Facebook Messenger | Shipped                                                                         |
-| Zalo OA            | Shipped                                                                         |
-| Telegram           | Shipped                                                                         |
-| WhatsApp Business  | Shipped                                                                         |
-| Website widget     | Shipped                                                                         |
-| REST API channel   | Shipped                                                                         |
+| Channel            | Status                                                                         |
+| ------------------ | ------------------------------------------------------------------------------ |
+| Facebook Messenger | Shipped                                                                        |
+| Zalo OA            | Shipped                                                                        |
+| Telegram           | Shipped                                                                        |
+| WhatsApp Business  | Shipped                                                                        |
+| Website widget     | Shipped                                                                        |
+| REST API channel   | Shipped                                                                        |
 | Instagram          | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/22) |
 | TikTok Shop        | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/23) |
 | Shopee             | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/24) |
