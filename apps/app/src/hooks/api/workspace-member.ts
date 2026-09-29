@@ -168,10 +168,14 @@ const rethrowJoinError = (error: A): never => {
   throw error;
 };
 
-const resetAfterJoin = (client: QueryClientHandle, onSuccess?: () => void) => {
+// Refetch, don't reset: a reset empties the workspace list, ProtectedRoute
+// renders nothing while it loads, and the join page remounts and joins again.
+const refreshAfterJoin = (
+  client: QueryClientHandle,
+  onSuccess?: () => void,
+) => {
   onSuccess?.();
-  client.cancelQueries();
-  client.resetQueries();
+  client.invalidateQueries();
 };
 
 export function useJoinWorkspace(options?: { onSuccess: () => void }) {
@@ -195,7 +199,7 @@ export function useJoinWorkspace(options?: { onSuccess: () => void }) {
           }
           return rethrowJoinError(error);
         }),
-    onSuccess: () => resetAfterJoin(client, options?.onSuccess),
+    onSuccess: () => refreshAfterJoin(client, options?.onSuccess),
   });
 
   return mutation;
@@ -215,7 +219,7 @@ export function useJoinWorkspaceWithInvitationCode(options?: {
       })
         .then((response) => response.data)
         .catch(rethrowJoinError),
-    onSuccess: () => resetAfterJoin(client, options?.onSuccess),
+    onSuccess: () => refreshAfterJoin(client, options?.onSuccess),
   });
 
   return mutation;
