@@ -1,5 +1,6 @@
 import { AIChatCard } from "@/components/ai-chat/ai-chat-card";
 import { AIChatInput } from "@/components/ai-chat/ai-chat-input";
+import { TestChatNotice } from "@/components/ai-chat/test-chat-notice";
 import { workspaceChatTransport } from "@/components/ai-chat/use-ai-chat-stream";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useAuthToken } from "@/modules/auth";
@@ -38,6 +39,7 @@ export function TestPanel({ chatbotId, profile, extraInstructions, agentDisplayN
         <AIChatCard
           key={chatbotId}
           heading={tryAgentLabel}
+          subheading={<TestChatNotice />}
           chatbotId={chatbotId}
           transport={transport}
           canSubmit={!!token}

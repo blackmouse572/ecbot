@@ -13,17 +13,16 @@ from langchain_core.tools import StructuredTool
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.variables import AppVars
+from eccho_ai.llm.tools.constants import (
+    S3_MAX_BYTES,
+    S3_REGION,
+    S3_TIMEOUT_SECONDS,
+    SKILL_ACTIVE_STATUS,
+    SKILL_LOAD_FAILED,
+)
 from eccho_ai.models.chat import Chatbots
 
 logger = get_logger(__name__)
-
-_S3_TIMEOUT_SECONDS = 10.0
-# Mirrors SKILL_INSTRUCTIONS_MAX_LENGTH on the api side — bounds what a single
-# `load_skill` call can stream into the model context.
-_S3_MAX_BYTES = 64_000
-_SKILL_ACTIVE = "ACTIVE"
-# Explicit region avoids minio-py's slow GetBucketLocation probe (works for R2 + MinIO).
-_S3_REGION = "us-east-1"
 
 # Module-level (per-process) memoization of skill bodies, shared across requests —
 # build_skills() is called fresh on every chat turn, so a closure-local memo dict
@@ -49,13 +48,13 @@ def _download_from_s3(bucket: str, key: str) -> bytes:
         access_key=AppVars.MINIO_ACCESS_KEY.get_secret_value(),
         secret_key=AppVars.MINIO_SECRET_KEY.get_secret_value(),
         secure=secure,
-        region=_S3_REGION,
+        region=S3_REGION,
     )
     response = client.get_object(bucket, key)
     try:
         # Read one byte past the cap so we can detect (and truncate) an
         # oversized object without buffering the whole thing.
-        return response.read(_S3_MAX_BYTES + 1)
+        return response.read(S3_MAX_BYTES + 1)
     finally:
         response.close()
         response.release_conn()
@@ -65,11 +64,11 @@ async def _download_text(bucket: str, key: str) -> str:
     loop = asyncio.get_event_loop()
     data = await asyncio.wait_for(
         loop.run_in_executor(None, _download_from_s3, bucket, key),
-        timeout=_S3_TIMEOUT_SECONDS,
+        timeout=S3_TIMEOUT_SECONDS,
     )
-    if len(data) > _S3_MAX_BYTES:
-        logger.warning("skill_body_truncated", bucket=bucket, key=key, max_bytes=_S3_MAX_BYTES)
-        data = data[:_S3_MAX_BYTES]
+    if len(data) > S3_MAX_BYTES:
+        logger.warning("skill_body_truncated", bucket=bucket, key=key, max_bytes=S3_MAX_BYTES)
+        data = data[:S3_MAX_BYTES]
     return data.decode("utf-8", errors="ignore")
 
 
@@ -81,7 +80,7 @@ def build_skills(chatbot: Chatbots) -> list[StructuredTool]:
         if not cs.enabled:
             continue
         skill = cs.skill
-        if skill is None or skill.status != _SKILL_ACTIVE:
+        if skill is None or skill.status != SKILL_ACTIVE_STATUS:
             continue
         if not skill.s3_bucket or not skill.s3_key:
             continue
@@ -119,7 +118,7 @@ def build_skills(chatbot: Chatbots) -> list[StructuredTool]:
                 slug=slug,
                 error=str(e),
             )
-            return f"Skill '{slug}' is temporarily unavailable. Proceed without it."
+            return SKILL_LOAD_FAILED.format(slug=slug)
         _skill_body_cache[cache_key] = text
         return text
 

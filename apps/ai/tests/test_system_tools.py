@@ -69,7 +69,9 @@ async def test_update_customer_profile_errors_when_no_context(monkeypatch):
 async def test_apply_customer_tag_errors_when_no_context(monkeypatch):
     monkeypatch.setattr(system_tools_module, "_get_customer_id", lambda: None)
     result = await apply_customer_tag.ainvoke({"name": "VIP"})
-    assert result == {"error": "no customer context"}
+    assert result["error"] == "no customer context"
+    # Test chat has no customer: the agent must not promise a staff handoff.
+    assert "staff" in result["instruction"]
 
 
 async def test_remove_customer_tag_errors_when_no_context(monkeypatch):
@@ -192,7 +194,9 @@ async def test_schedule_followup_no_context_returns_error(monkeypatch):
     result = await schedule_followup.ainvoke(
         {"delay_minutes": 30, "prompt": "check payment", "reason": "payment_check"}
     )
-    assert result == {"error": "no conversation context"}
+    assert result["error"] == "no conversation context"
+    # Test chat has no conversation: the agent must not promise a reminder.
+    assert "Do not promise" in result["instruction"]
 
 
 async def test_schedule_followup_posts_full_payload(monkeypatch):
@@ -274,3 +278,37 @@ async def test_cancel_followup_no_conversation_id_returns_error(monkeypatch):
     _patch_followup_ctx(monkeypatch, {"conversation_id": None})
     result = await cancel_followup.ainvoke({"followup_id": "f-1"})
     assert result == {"error": "no conversation context"}
+
+
+# ─── API failures on a live channel (review of #193) ─────────────────────────
+
+
+def _stub_api_client_failing(monkeypatch):
+    class _Stub:
+        async def post(self, path, json):
+            raise system_tools_module.ApiClientError("apps/api 503")
+
+    monkeypatch.setattr(
+        system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _Stub())
+    )
+
+
+async def test_apply_customer_tag_api_error_does_not_claim_chat_unsupported(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id="conv-1")
+    _stub_api_client_failing(monkeypatch)
+    result = await apply_customer_tag.ainvoke({"name": "Needs human"})
+    assert result["error"] == "apps/api 503"
+    assert "not available in this chat" not in result["instruction"]
+    assert "Do not" in result["instruction"]
+
+
+async def test_schedule_followup_api_error_does_not_claim_chat_unsupported(monkeypatch):
+    _patch_followup_ctx(monkeypatch, {"conversation_id": "conv-1", "chatbot_id": "cb-1",
+                                      "user_id": "u", "provider_id": "p", "customer_id": "c",
+                                      "contact_point_id": "cp"})
+    _stub_api_client_failing(monkeypatch)
+    result = await schedule_followup.ainvoke(
+        {"delay_minutes": 30, "prompt": "remind", "reason": "reminder"}
+    )
+    assert "not available in this chat" not in result["instruction"]
+    assert "Do not promise" in result["instruction"]

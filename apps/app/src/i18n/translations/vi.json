@@ -780,6 +780,7 @@
     "chat": {
       "heading": "Chat Thử",
       "refreshHint": "Làm mới sẽ xóa chat. Nhấn Xóa để bắt đầu lại.",
+      "liveOnlyNotice": "Chat thử: nhắc hẹn và chuyển cho nhân viên chỉ hoạt động trên kênh thật.",
       "clear": "Xóa",
       "restart": "Bắt Đầu Lại",
       "inputPlaceholder": "Nhập tin nhắn của bạn...",
