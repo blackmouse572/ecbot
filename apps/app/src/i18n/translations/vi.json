@@ -325,7 +325,10 @@
       "projects": "Dự án",
       "members": "Thành viên",
       "workspaces": "Không gian làm việc",
-      "lastActive": "Hoạt động lần cuối"
+      "lastActive": "Hoạt động lần cuối",
+      "chatbots": "Chatbot",
+      "accounts": "Tài khoản đã kết nối",
+      "conversations": "Hội thoại"
     },
     "recentActivities": "Hoạt động gần đây"
   },
