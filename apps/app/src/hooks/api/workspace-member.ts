@@ -24,6 +24,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { WORKSPACE_MEMBER_EXIST_STATUS_CODE } from "@/routes/join/constants";
 import { useWorkspaceParams } from "../use-workspace-params";
 import { invitationQueryKey } from "./invitations";
 import { usersQueryKeys } from "./users";
@@ -183,7 +184,17 @@ export function useJoinWorkspace(options?: { onSuccess: () => void }) {
         throwOnError: true,
       })
         .then((response) => response.data)
-        .catch(rethrowJoinError),
+        .catch((error: A) => {
+          // Already a member means the invitation's goal is met (a repeated
+          // or retried request), so it is a successful join, not an error.
+          if (
+            error.response?.data?.statusCode ===
+            WORKSPACE_MEMBER_EXIST_STATUS_CODE
+          ) {
+            return undefined;
+          }
+          return rethrowJoinError(error);
+        }),
     onSuccess: () => resetAfterJoin(client, options?.onSuccess),
   });
 

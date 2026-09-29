@@ -53,7 +53,7 @@ export function WorkSpaceOwnerCreateDoc(): MethodDecorator {
             jwtAccessToken: true,
         }),
         DocRequest({
-            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.FORM_DATA,
             dto: WorkSpaceCreateRequestDto,
         }),
         DocGuard({
@@ -97,7 +97,7 @@ export function WorkSpaceOwnerUpdateDoc(): MethodDecorator {
             role: true,
         }),
         DocRequest({
-            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.FORM_DATA,
             dto: WorkSpaceUpdateRequestDto,
             params: WorkspaceDocParamsId,
         }),

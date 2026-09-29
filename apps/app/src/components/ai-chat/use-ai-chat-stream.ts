@@ -236,7 +236,9 @@ export function buildChatStreamRequest({
       .map((part) => (part as { text: string }).text)
       .join("") ?? "";
 
-  const headers = { ...((clientConfig.headers ?? {}) as Record<string, unknown>) };
+  const headers = {
+    ...((clientConfig.headers ?? {}) as Record<string, unknown>),
+  };
   if (transport.includeCredentials) {
     if (token) headers.Authorization = `Bearer ${token}`;
   } else {
@@ -309,7 +311,10 @@ export function useAiChat({
     if (!shouldInvalidate) return;
     for (const message of chat.messages) {
       for (const part of message.parts as UIMessagePartLike[]) {
-        if (part.type.startsWith("tool-") && part.state === "output-available") {
+        if (
+          part.type.startsWith("tool-") &&
+          part.state === "output-available"
+        ) {
           const toolCallId = part.toolCallId as string;
           if (!invalidatedToolCallIds.current.has(toolCallId)) {
             invalidatedToolCallIds.current.add(toolCallId);

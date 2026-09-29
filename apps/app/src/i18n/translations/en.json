@@ -299,7 +299,12 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "recentActivities": "Recent Activity"
+    "recentActivities": "Recent Activity",
+    "stats": {
+      "chatbots": "Chatbots",
+      "accounts": "Connected accounts",
+      "conversations": "Conversations"
+    }
   },
   "onboard": {
     "select": {

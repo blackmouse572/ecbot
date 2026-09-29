@@ -124,7 +124,7 @@
     "test": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["^test:api", "^lint"]
+      "dependsOn": ["^lint"]
     },
     "start:prod": {
       "cache": false,

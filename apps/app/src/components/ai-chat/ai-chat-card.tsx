@@ -1,5 +1,9 @@
 import "@/styles/streamdown.css";
-import { ArrowPathMini, DocumentText, ExclamationCircle } from "@medusajs/icons";
+import {
+  ArrowPathMini,
+  DocumentText,
+  ExclamationCircle,
+} from "@medusajs/icons";
 import { Button, clx, Container, Heading, Text } from "@medusajs/ui";
 import {
   Attachment,
@@ -27,6 +31,7 @@ import { useTranslation } from "react-i18next";
 import { AIChatProvider, useAIChat } from "./ai-chat-provider";
 import { AIChatSources } from "./ai-chat-sources";
 import { BuildingLoader } from "./ai-loader";
+import { chatErrorMessage } from "./chat-error-message";
 import { ToolCallList } from "./tool-call-list";
 import {
   type ChatTransportConfig,
@@ -185,7 +190,7 @@ function AIChatMessages() {
                   <ExclamationCircle />
                 </MarkerIcon>
                 <MarkerContent className="whitespace-normal">
-                  {error?.message || t("chatbot.chat.error")}
+                  {chatErrorMessage(error, t("chatbot.chat.error"))}
                 </MarkerContent>
               </Marker>
             </MessageContent>

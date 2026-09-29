@@ -83,7 +83,7 @@ export function KnowledgeItemWorkspaceCreateDoc(): MethodDecorator {
                 ...WorkspaceDocParamsId,
                 ...KnowledgeBaseDocParamsKnowledgeBaseId,
             ],
-            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.FORM_DATA,
             dto: KnowledgeItemCreateRequestDto,
         }),
         DocAuth({

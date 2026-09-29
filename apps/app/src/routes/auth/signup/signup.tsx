@@ -1,6 +1,7 @@
 import { LinkButton } from "@/components/common";
 import { useCountriesShare } from "@/hooks/api";
 import { useSignUpWithEmailPass } from "@/hooks/api/auth";
+import { readApiError } from "@/libs/api-error";
 import { ROUTES } from "@/routes/constants";
 import { Button, toast } from "@medusajs/ui";
 import { RegisterForm } from "@repo/auth/components";
@@ -40,31 +41,24 @@ function SignUpPage() {
   >["onSubmit"] = async (data) => {
     const { email, password, name, country, turnstileToken } = data;
 
-    await signUp(
-      {
-        email,
-        password,
-        name,
-        country,
-        turnstileToken,
-      },
-      {
-        onError: (error) => {
-          toast.error(error.message);
-        },
-        onSuccess: (userId) => {
-          if (!userId) {
-            toast.error(t("errors.signUpFailed"));
-            return;
-          }
-          toast.success(t("success.message"));
-          navigate({
-            pathname: `/${ROUTES.VerifyEmail}`,
-            search: `?email=${email}&userId=${userId}`,
-          });
-        },
-      },
-    );
+    let userId: string | undefined;
+    try {
+      userId = await signUp({ email, password, name, country, turnstileToken });
+    } catch (error) {
+      // Show the API's own reason: the field errors go under their fields.
+      const { message, fields } = readApiError(error);
+      toast.error(message ?? t("errors.signUpFailed"));
+      return fields;
+    }
+    if (!userId) {
+      toast.error(t("errors.signUpFailed"));
+      return;
+    }
+    toast.success(t("success.message"));
+    navigate({
+      pathname: `/${ROUTES.VerifyEmail}`,
+      search: `?email=${email}&userId=${userId}`,
+    });
   };
 
   if (isError) {
