@@ -81,7 +81,10 @@ async def test_load_skill_graceful_degrade_on_s3_error(monkeypatch):
     monkeypatch.setattr(skills_mod, "_download_from_s3", boom)
     tool = build_skills(_chatbot([_cs(_skill("book-slot"))]))[0]
     out = await tool.coroutine("book-slot")
-    assert "temporarily unavailable" in out
+    assert "could not be loaded" in out
+    # The agent must not improvise the skill's procedure or promise to follow up.
+    assert "Do not guess" in out
+    assert "Proceed without it" not in out
 
 
 async def test_load_skill_truncates_oversized_body(monkeypatch):

@@ -89,6 +89,19 @@ def _get_followup_context() -> dict[str, Any] | None:
     }
 
 
+# Returned with a failed follow-up / tag call so the model tells the customer
+# it cannot do this here instead of promising it (e.g. the dashboard test chat,
+# which has no conversation or customer).
+FOLLOWUP_UNAVAILABLE = (
+    "Reminders and follow-up messages are not available in this chat. "
+    "Do not promise one: tell the customer you cannot set a reminder here."
+)
+HANDOFF_UNAVAILABLE = (
+    "Tags and handing off to staff are not available in this chat. "
+    "Do not tell the customer a staff member will take over."
+)
+
+
 def _truncate(value: Any, n: int = 80) -> str:
     s = str(value)
     return s if len(s) <= n else s[: n - 1] + "…"
@@ -203,7 +216,9 @@ async def list_customer_fields() -> list[str]:
 
 @tool
 async def set_customer_field(key: str, value: str) -> dict[str, Any]:
-    """Set a free-form field `key` to `value` on the customer's metadata."""
+    """Save a detail the customer shared about themselves under `key` (e.g.
+    `address`, `size`, `allergy`). Call it in the same turn they share it.
+    Use update_customer_profile for name, phone, email and language."""
     started = time.perf_counter()
     customer_id = _get_customer_id()
     if not customer_id:
@@ -238,7 +253,8 @@ async def update_customer_profile(
     email: str | None = None,
     language: str | None = None,
 ) -> dict[str, Any]:
-    """Patch the customer's structured profile (name / phone / email / language)."""
+    """Save the customer's name, phone, email or language as soon as they
+    share any of them. Pass only the fields they gave."""
     started = time.perf_counter()
     customer_id = _get_customer_id()
     if not customer_id:
@@ -285,7 +301,7 @@ async def apply_customer_tag(name: str) -> dict[str, Any]:
     customer_id = _get_customer_id()
     if not customer_id:
         _log_call("apply_customer_tag", _truncate(name), "no_context", 0)
-        return {"error": "no customer context"}
+        return {"error": "no customer context", "instruction": HANDOFF_UNAVAILABLE}
     conversation_id = _get_session_id()
     payload: dict[str, Any] = {"tagName": name}
     if conversation_id:
@@ -312,7 +328,7 @@ async def apply_customer_tag(name: str) -> dict[str, Any]:
             "error",
             (time.perf_counter() - started) * 1000,
         )
-        return {"error": str(exc)}
+        return {"error": str(exc), "instruction": HANDOFF_UNAVAILABLE}
 
 
 @tool
@@ -349,8 +365,10 @@ async def remove_customer_tag(name: str) -> dict[str, Any]:
 async def schedule_followup(delay_minutes: int, prompt: str, reason: str) -> dict[str, Any]:
     """Schedule a proactive follow-up message to the user after `delay_minutes`.
 
-    Use when the follow-up rules warrant a check-in (e.g. confirm a payment 30
-    minutes later, or a delivery in 3 days). `prompt` is the instruction for
+    This is the only way to message the user later. Call it when the user asks
+    to be reminded or contacted later ("remind me in 30 minutes"), or when the
+    follow-up rules warrant a check-in (e.g. confirm a payment 30 minutes
+    later, or a delivery in 3 days). Never promise a reminder without it. `prompt` is the instruction for
     what to say/do when it fires; `reason` is a short slug used to identify and
     cancel this follow-up later (e.g. `payment_check`).
     """
@@ -358,7 +376,7 @@ async def schedule_followup(delay_minutes: int, prompt: str, reason: str) -> dic
     ctx = _get_followup_context()
     if not ctx or not ctx.get("conversation_id"):
         _log_call("schedule_followup", _truncate(reason), "no_context", 0)
-        return {"error": "no conversation context"}
+        return {"error": "no conversation context", "instruction": FOLLOWUP_UNAVAILABLE}
     try:
         result = await ApiClient.get_instance().post(
             "/system/followups",
@@ -381,7 +399,7 @@ async def schedule_followup(delay_minutes: int, prompt: str, reason: str) -> dic
     except ApiClientError as exc:
         _log_call("schedule_followup", _truncate(reason), "error",
                   (time.perf_counter() - started) * 1000)
-        return {"error": str(exc)}
+        return {"error": str(exc), "instruction": FOLLOWUP_UNAVAILABLE}
 
 
 @tool

@@ -69,7 +69,9 @@ async def test_update_customer_profile_errors_when_no_context(monkeypatch):
 async def test_apply_customer_tag_errors_when_no_context(monkeypatch):
     monkeypatch.setattr(system_tools_module, "_get_customer_id", lambda: None)
     result = await apply_customer_tag.ainvoke({"name": "VIP"})
-    assert result == {"error": "no customer context"}
+    assert result["error"] == "no customer context"
+    # Test chat has no customer: the agent must not promise a staff handoff.
+    assert "staff" in result["instruction"]
 
 
 async def test_remove_customer_tag_errors_when_no_context(monkeypatch):
@@ -192,7 +194,9 @@ async def test_schedule_followup_no_context_returns_error(monkeypatch):
     result = await schedule_followup.ainvoke(
         {"delay_minutes": 30, "prompt": "check payment", "reason": "payment_check"}
     )
-    assert result == {"error": "no conversation context"}
+    assert result["error"] == "no conversation context"
+    # Test chat has no conversation: the agent must not promise a reminder.
+    assert "Do not promise" in result["instruction"]
 
 
 async def test_schedule_followup_posts_full_payload(monkeypatch):
