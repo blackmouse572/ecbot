@@ -107,7 +107,8 @@ export class CustomerTagSystemController {
                     await this.conversationService.triggerHandoff(
                         conversation,
                         workspaceId,
-                        'tag_trigger'
+                        'tag_trigger',
+                        conversation.chatbot?.primaryLanguage
                     );
                     triggeredHandoff = true;
                 }

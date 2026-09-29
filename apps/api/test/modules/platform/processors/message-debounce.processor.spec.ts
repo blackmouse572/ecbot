@@ -154,6 +154,7 @@ describe('ReplyGenerationService — guardrail block handling', () => {
             fallbackMessage: 'Sorry.',
             guardrailEscalateOnBlock: true,
             handoffMessage: 'Connecting you to a human.',
+            primaryLanguage: 'vi',
             workspace: { id: 'ws-1' },
         };
         const conversation = { id: 'conv-1' };
@@ -167,7 +168,8 @@ describe('ReplyGenerationService — guardrail block handling', () => {
         expect(mockConversationService.triggerHandoff).toHaveBeenCalledWith(
             conversation,
             'ws-1',
-            'guardrail_output_model'
+            'guardrail_output_model',
+            'vi'
         );
     });
 
@@ -197,6 +199,7 @@ describe('ReplyGenerationService — guardrail block handling', () => {
             fallbackMessage: null,
             guardrailEscalateOnBlock: true,
             handoffMessage: 'Connecting you to a human.',
+            primaryLanguage: 'vi',
             workspace: { id: 'ws-1' },
         };
         await (service as any).handleGuardrailBlock(
@@ -210,7 +213,8 @@ describe('ReplyGenerationService — guardrail block handling', () => {
         expect(mockConversationService.triggerHandoff).toHaveBeenCalledWith(
             { id: 'conv-1' },
             'ws-1',
-            'guardrail_output_model'
+            'guardrail_output_model',
+            'vi'
         );
     });
 });

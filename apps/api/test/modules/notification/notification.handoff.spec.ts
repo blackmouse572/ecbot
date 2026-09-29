@@ -7,7 +7,13 @@ describe('NotificationService.createHandoff', () => {
     // Echo the key and properties so the test sees which strings were picked.
     const messageService = {
         setMessage: jest.fn(
-            (key: string, options?: { properties?: Record<string, string> }) =>
+            (
+                key: string,
+                options?: {
+                    customLanguage?: string;
+                    properties?: Record<string, string>;
+                }
+            ) =>
                 options?.properties
                     ? `${key}(${Object.values(options.properties).join(',')})`
                     : key
@@ -51,6 +57,22 @@ describe('NotificationService.createHandoff', () => {
             message:
                 'notification.handoff.message(notification.handoff.reason.other)',
         });
+    });
+
+    it("writes every string in the chatbot's language", async () => {
+        messageService.setMessage.mockClear();
+
+        await service.createHandoff('user-1', {
+            conversationId: 'conv-1',
+            workspaceId: 'ws-1',
+            reason: 'keyword_trigger',
+            language: 'vi',
+        });
+
+        expect(messageService.setMessage.mock.calls).toHaveLength(4);
+        for (const [, options] of messageService.setMessage.mock.calls) {
+            expect(options).toMatchObject({ customLanguage: 'vi' });
+        }
     });
 
     it.each([

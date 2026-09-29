@@ -67,7 +67,7 @@ describe('CustomerTagSystemController (#174)', () => {
     });
 
     describe('POST /apply with a triggersHandoff=true tag', () => {
-        it('assigns the tag AND calls triggerHandoff with (conversation, workspaceId, "tag_trigger", chatbot.handoffMessage)', async () => {
+        it('assigns the tag AND calls triggerHandoff with (conversation, workspaceId, "tag_trigger", chatbot language)', async () => {
             mockCustomerTagService.findOneByWorkspaceAndName.mockResolvedValue({
                 id: 'tag-handoff',
                 name: 'Needs human',
@@ -75,7 +75,10 @@ describe('CustomerTagSystemController (#174)', () => {
             });
             const conversation = {
                 id: 'conv-1',
-                chatbot: { handoffMessage: 'A human will jump in shortly.' },
+                chatbot: {
+                    handoffMessage: 'A human will jump in shortly.',
+                    primaryLanguage: 'vi',
+                },
             };
             mockConversationRepository.findOneById.mockResolvedValue(
                 conversation
@@ -94,7 +97,8 @@ describe('CustomerTagSystemController (#174)', () => {
             expect(mockConversationService.triggerHandoff).toHaveBeenCalledWith(
                 conversation,
                 'ws-1',
-                'tag_trigger'
+                'tag_trigger',
+                'vi'
             );
             expect(result).toEqual({ ok: true, triggeredHandoff: true });
         });

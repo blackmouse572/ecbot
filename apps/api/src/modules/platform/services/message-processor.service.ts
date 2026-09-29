@@ -275,7 +275,8 @@ export class MessageProcessorService implements OnModuleInit {
             await this.conversationService.triggerHandoff(
                 conversation,
                 chatbot.workspace.id,
-                'keyword_trigger'
+                'keyword_trigger',
+                chatbot.primaryLanguage
             );
             // The customer asked for a person: say one is coming, so they are
             // not left with no reply at all.

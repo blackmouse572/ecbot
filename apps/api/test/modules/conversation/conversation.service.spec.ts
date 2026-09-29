@@ -276,7 +276,8 @@ describe('ConversationService', () => {
             await service.triggerHandoff(
                 conversation as any,
                 'workspace-1',
-                'fallback_threshold'
+                'fallback_threshold',
+                'vi'
             );
 
             const [, patch] =
@@ -285,6 +286,10 @@ describe('ConversationService', () => {
             expect(patch.handoffAt).toBeInstanceOf(Date);
             expect(mockNotificationService.createHandoff).toHaveBeenCalledTimes(
                 1
+            );
+            expect(mockNotificationService.createHandoff).toHaveBeenCalledWith(
+                'user-1',
+                expect.objectContaining({ language: 'vi' })
             );
         });
     });

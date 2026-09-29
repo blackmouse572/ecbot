@@ -300,7 +300,8 @@ export class ReplyGenerationService {
                     await this.conversationService.triggerHandoff(
                         updated,
                         chatbot.workspace.id,
-                        'fallback_threshold'
+                        'fallback_threshold',
+                        chatbot.primaryLanguage
                     );
                     await this.sendHandoffReply(
                         chatbot,
@@ -425,7 +426,8 @@ export class ReplyGenerationService {
             await this.conversationService.triggerHandoff(
                 conversation,
                 chatbot.workspace.id,
-                reason
+                reason,
+                chatbot.primaryLanguage
             );
         }
     }

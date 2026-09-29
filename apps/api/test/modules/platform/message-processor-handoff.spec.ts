@@ -74,6 +74,7 @@ describe('MessageProcessorService — keyword handoff', () => {
             workspace: { id: 'workspace-1' },
             handoffKeywords: [],
             autoRead: false,
+            primaryLanguage: 'vi',
         },
     };
 
@@ -126,7 +127,8 @@ describe('MessageProcessorService — keyword handoff', () => {
         expect(conversationService.triggerHandoff).toHaveBeenCalledWith(
             conversationFixture,
             'workspace-1',
-            'keyword_trigger'
+            'keyword_trigger',
+            'vi'
         );
         expect(replyGeneration.sendHandoffReply).toHaveBeenCalledWith(
             accountFixture.chatbot,

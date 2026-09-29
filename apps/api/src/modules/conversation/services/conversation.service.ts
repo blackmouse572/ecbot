@@ -421,7 +421,8 @@ export class ConversationService implements IConversationService {
     async triggerHandoff(
         conversation: ConversationEntity,
         workspaceId: string,
-        reason: string
+        reason: string,
+        language?: string
     ): Promise<ConversationEntity> {
         // Auto-escalation: turn the bot off and raise the alarm (handoffAt + notification).
         // This is what distinguishes an escalation from a quiet manual takeover.
@@ -442,7 +443,12 @@ export class ConversationService implements IConversationService {
         }
 
         // Notify operators (all active workspace members)
-        await this.notifyOperators(conversation.id, workspaceId, reason);
+        await this.notifyOperators(
+            conversation.id,
+            workspaceId,
+            reason,
+            language
+        );
 
         return updated;
     }
@@ -450,7 +456,8 @@ export class ConversationService implements IConversationService {
     async notifyOperators(
         conversationId: string,
         workspaceId: string,
-        reason: string
+        reason: string,
+        language?: string
     ): Promise<void> {
         try {
             const members =
@@ -471,6 +478,7 @@ export class ConversationService implements IConversationService {
                         conversationId,
                         workspaceId,
                         reason,
+                        language,
                     })
                     .catch(err => {
                         this.logger.error(

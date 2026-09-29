@@ -392,13 +392,19 @@ export class NotificationService {
 
     /**
      * A conversation was handed to a person. The reason code (keyword_trigger,
-     * a guardrail name, ...) is turned into a sentence the owner can read.
+     * a guardrail name, ...) is turned into a sentence the owner can read, in
+     * `language` (the chatbot's) when given, else the server default.
      */
     async createHandoff(
         recipientId: string,
-        data: { conversationId: string; workspaceId: string; reason: string }
+        data: {
+            conversationId: string;
+            workspaceId: string;
+            reason: string;
+            language?: string;
+        }
     ): Promise<NotificationEntity> {
-        const { conversationId, workspaceId, reason } = data;
+        const { conversationId, workspaceId, reason, language } = data;
         const reasonKey = (
             NOTIFICATION_HANDOFF_REASONS as readonly string[]
         ).includes(reason)
@@ -406,13 +412,20 @@ export class NotificationService {
             : 'other';
 
         return this.create({
-            title: this.messageService.setMessage('notification.handoff.title'),
+            title: this.messageService.setMessage(
+                'notification.handoff.title',
+                {
+                    customLanguage: language,
+                }
+            ),
             message: this.messageService.setMessage(
                 'notification.handoff.message',
                 {
+                    customLanguage: language,
                     properties: {
                         reason: this.messageService.setMessage(
-                            `notification.handoff.reason.${reasonKey}`
+                            `notification.handoff.reason.${reasonKey}`,
+                            { customLanguage: language }
                         ),
                     },
                 }
@@ -423,7 +436,8 @@ export class NotificationService {
             metadata: {
                 actionUrl: `/conversations/${conversationId}`,
                 actionText: this.messageService.setMessage(
-                    'notification.handoff.actionText'
+                    'notification.handoff.actionText',
+                    { customLanguage: language }
                 ),
                 data: { conversationId, workspaceId, reason },
             },
