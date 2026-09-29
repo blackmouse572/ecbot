@@ -1,30 +1,12 @@
-"""Removes internal knowledge-base citation markers ("[KB-1]") from replies.
+"""Stream filter that removes internal knowledge-base citation markers ("[KB-1]").
 
 Retrieved chunks are labelled [KB-n] in the prompt so the model can tell them
 apart. Those labels mean nothing to a customer, so any that reach the reply
-are dropped: in one pass for the sync endpoint, and chunk by chunk on the
-stream, holding back a tail that could still be (or grow into) a marker.
+are dropped chunk by chunk, holding back a tail that could still be (or grow
+into) a marker. The sync endpoint uses `strip_citation_markers` directly.
 """
-import re
-
-_KB_ID = r"KB-\d+"
-# "[KB-1]", "[KB-1, KB-2]", "[KB-1; KB-2]", with the spaces around it.
-CITATION_RE = re.compile(rf"(?P<lead>[ \t]*)\[{_KB_ID}(?:\s*[,;]\s*{_KB_ID})*\](?P<trail>[ \t]*)")
-# A tail that is, or may still grow into, a marker: " [", "[KB-1, K", "[KB-1] ".
-_TAIL_RE = re.compile(r"[ \t]*\[[KB\-\d,;\s]*\]?[ \t]*\Z")
-_MAX_HELD = 64
-
-
-def strip_citation_markers(text: str, *, line_start: bool = True) -> str:
-    """`line_start`: whether `text` begins at the start of a line."""
-
-    def replace(match: re.Match[str]) -> str:
-        start = match.start()
-        at_line_start = (start == 0 and line_start) or (start > 0 and text[start - 1] == "\n")
-        # "[KB-1] Next" -> "Next"; "450k [KB-1]." -> "450k."; "a [KB-1] b" -> "a b"
-        return "" if at_line_start else match.group("trail")
-
-    return CITATION_RE.sub(replace, text)
+from eccho_ai.modules.chat.constants import CITATION_MAX_HELD, CITATION_TAIL_RE
+from eccho_ai.utils.citation_utils import strip_citation_markers
 
 
 class CitationMarkerFilter:
@@ -34,8 +16,8 @@ class CitationMarkerFilter:
 
     def feed(self, text: str) -> str:
         buffer = self._held + text
-        tail = _TAIL_RE.search(buffer)
-        if tail and len(buffer) - tail.start() <= _MAX_HELD:
+        tail = CITATION_TAIL_RE.search(buffer)
+        if tail and len(buffer) - tail.start() <= CITATION_MAX_HELD:
             head, self._held = buffer[: tail.start()], buffer[tail.start():]
         else:
             head, self._held = buffer, ""

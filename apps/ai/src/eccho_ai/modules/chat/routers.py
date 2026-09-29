@@ -11,7 +11,6 @@ from eccho_ai.llm.guardrails.secrets import scan_output_for_secrets
 from eccho_ai.middlewares.cassette_middleware import apply_cassette, cassette_name_for
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.llm.tools.image_urls import is_known_image_url
-from eccho_ai.modules.chat.citation_markers import strip_citation_markers
 from eccho_ai.modules.chat.images import describe_images
 from eccho_ai.modules.chat.models.chat_models import ChatRequest, ChatResponse, DescribeImagesRequest
 from eccho_ai.modules.chat.services import (
@@ -23,6 +22,7 @@ from eccho_ai.modules.chat.services import (
 )
 from eccho_ai.modules.chat.stream_pipeline import events_to_ui_parts
 from eccho_ai.modules.chat.ui_message_stream import STREAM_HEADER
+from eccho_ai.utils.citation_utils import strip_citation_markers
 
 logger = get_logger(__name__)
 

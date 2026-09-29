@@ -13,6 +13,7 @@ from langchain_core.tools import StructuredTool
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.variables import AppVars
+from eccho_ai.llm.tools.constants import SKILL_LOAD_FAILED
 from eccho_ai.models.chat import Chatbots
 
 logger = get_logger(__name__)
@@ -119,14 +120,7 @@ def build_skills(chatbot: Chatbots) -> list[StructuredTool]:
                 slug=slug,
                 error=str(e),
             )
-            # Not "proceed without it": the agent then improvised the skill's
-            # procedure and promised to get back to the customer later.
-            return (
-                f"Skill '{slug}' could not be loaded. Do not guess its procedure, "
-                "rules or offers, and do not promise to check and get back later. "
-                "Answer only what you know for sure; for the rest, tell the customer "
-                "you cannot handle it right now and offer a staff member."
-            )
+            return SKILL_LOAD_FAILED.format(slug=slug)
         _skill_body_cache[cache_key] = text
         return text
 

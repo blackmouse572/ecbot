@@ -1,7 +1,5 @@
-from eccho_ai.modules.chat.citation_markers import (
-    CitationMarkerFilter,
-    strip_citation_markers,
-)
+from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
+from eccho_ai.utils.citation_utils import strip_citation_markers
 
 
 def _stream(chunks: list[str]) -> str:

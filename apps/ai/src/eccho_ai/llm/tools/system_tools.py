@@ -23,6 +23,12 @@ from eccho_ai.models.customers import Customers
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 from eccho_ai.core.api_client import ApiClient, ApiClientError
 from eccho_ai.core.postgres import PostgresRepo
+from eccho_ai.llm.tools.constants import (
+    FOLLOWUP_FAILED,
+    FOLLOWUP_UNAVAILABLE,
+    HANDOFF_FAILED,
+    HANDOFF_UNAVAILABLE,
+)
 from eccho_ai.llm.tools.image_urls import is_known_image_url
 
 logger = logging.getLogger("uvicorn.info")
@@ -87,29 +93,6 @@ def _get_followup_context() -> dict[str, Any] | None:
         "contact_point_id": getattr(ctx, "contact_point_id", None),
         "trigger_message_id": getattr(ctx, "trigger_message_id", None),
     }
-
-
-# Returned with a failed follow-up / tag call so the model tells the customer
-# it cannot do this here instead of promising it (e.g. the dashboard test chat,
-# which has no conversation or customer).
-FOLLOWUP_UNAVAILABLE = (
-    "Reminders and follow-up messages are not available in this chat. "
-    "Do not promise one: tell the customer you cannot set a reminder here."
-)
-HANDOFF_UNAVAILABLE = (
-    "Tags and handing off to staff are not available in this chat. "
-    "Do not tell the customer a staff member will take over."
-)
-# Returned when apps/api fails on a live channel: the feature exists, this call
-# just did not go through.
-FOLLOWUP_FAILED = (
-    "The follow-up could not be scheduled. "
-    "Do not promise a reminder: tell the customer you could not set it right now."
-)
-HANDOFF_FAILED = (
-    "The tag could not be applied. "
-    "Do not tell the customer a staff member will take over."
-)
 
 
 def _truncate(value: Any, n: int = 80) -> str:

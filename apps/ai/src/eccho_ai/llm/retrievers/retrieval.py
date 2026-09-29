@@ -15,6 +15,7 @@ from eccho_ai.llm.retrievers.embeddings import get_embeddings_client
 from eccho_ai.llm.retrievers.retry import _RETRY
 from eccho_ai.llm.retrievers.text_processing import normalize_text
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
+from eccho_ai.utils.rag_utils import public_source_url
 
 
 @alru_cache(
@@ -82,12 +83,6 @@ class RetrievedChunk:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
-def _public_source_url(chunk: "RetrievedChunk") -> str | None:
-    """The web page a chunk came from, or None. Never the chunk's `source`:
-    for uploaded files and text items that is the storage file name / title."""
-    return chunk.metadata.get("document", {}).get("source_url") or None
-
-
 @dataclass
 class RAGRetrievalResult:
     query: str
@@ -102,7 +97,7 @@ class RAGRetrievalResult:
     def source_attributions(self) -> list[dict[str, Any]]:
         sources: list[dict[str, Any]] = []
         for index, chunk in enumerate(self.chunks, start=1):
-            source_url = _public_source_url(chunk)
+            source_url = public_source_url(chunk)
             sources.append(
                 {
                     "id": f"KB-{index}",
@@ -175,7 +170,7 @@ class RAGRetrievalService:
         max_chars = AppVars.RAG_RETRIEVAL_CONTEXT_MAX_CHARS
 
         for index, chunk in enumerate(chunks, start=1):
-            source_url = _public_source_url(chunk)
+            source_url = public_source_url(chunk)
             # Only the label (and a public page URL) — storage filenames and ids
             # are internal and must not end up quoted to the customer.
             header = f"[KB-{index}]"
