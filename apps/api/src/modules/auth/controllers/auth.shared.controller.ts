@@ -22,7 +22,7 @@ import type {
     Request as ExpressRequest,
     Response as ExpressResponse,
 } from 'express';
-import { uniqueId } from 'lodash';
+import { randomUUID } from 'crypto';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { MessageService } from 'src/common/message/services/message.service';
 import { Response } from 'src/common/response/decorators/response.decorator';
@@ -270,7 +270,7 @@ export class AuthSharedController {
                     ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD,
                     { send: { email: user.email, name: user.name } },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD}-${user.id}-${uniqueId('CP')}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD}-${user.id}-${randomUUID()}`,
                     }
                 )
                 .catch(err => {

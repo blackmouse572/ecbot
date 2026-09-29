@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { uniqueId } from 'lodash';
+import { randomUUID } from 'crypto';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
 import { Response } from 'src/common/response/decorators/response.decorator';
@@ -121,7 +121,7 @@ export class ResetPasswordPublicController {
                         data: resetPassword.created,
                     },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD}-${user.id}-${uniqueId('RP')}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD}-${user.id}-${randomUUID()}`,
                     }
                 )
                 .catch(err => {
@@ -286,7 +286,7 @@ export class ResetPasswordPublicController {
                     ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD,
                     { send: { email: user.email, name: user.name } },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD}-${user.id}-${uniqueId('CP')}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD}-${user.id}-${randomUUID()}`,
                     }
                 )
                 .catch(err => {

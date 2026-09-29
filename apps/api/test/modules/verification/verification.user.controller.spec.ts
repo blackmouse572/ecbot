@@ -109,7 +109,11 @@ describe('VerificationUserController — email dispatch', () => {
                     reference: 'ref-resend-1',
                 },
             },
-            { taskName: expect.stringMatching(/^VERIFICATION-user-1-VE\d+$/) }
+            {
+                taskName: expect.stringMatching(
+                    /^VERIFICATION-user-1-[0-9a-f-]{36}$/
+                ),
+            }
         );
     });
 
@@ -130,7 +134,11 @@ describe('VerificationUserController — email dispatch', () => {
                 send: { email: 'c@d.com', name: 'C' },
                 data: { reference: 'ref-verify-1' },
             },
-            { taskName: expect.stringMatching(/^EMAIL_VERIFIED-user-2-EV\d+$/) }
+            {
+                taskName: expect.stringMatching(
+                    /^EMAIL_VERIFIED-user-2-[0-9a-f-]{36}$/
+                ),
+            }
         );
     });
 
@@ -160,7 +168,7 @@ describe('VerificationUserController — email dispatch', () => {
             },
             {
                 taskName: expect.stringMatching(
-                    /^MOBILE_NUMBER_VERIFIED-user-3-MV\d+$/
+                    /^MOBILE_NUMBER_VERIFIED-user-3-[0-9a-f-]{36}$/
                 ),
             }
         );
@@ -200,7 +208,11 @@ describe('VerificationUserController — email dispatch', () => {
                     expiredAt: verification.expiredDate,
                 },
             },
-            { taskName: expect.stringMatching(/^VERIFICATION-user-4-SMS\d+$/) }
+            {
+                taskName: expect.stringMatching(
+                    /^VERIFICATION-user-4-[0-9a-f-]{36}$/
+                ),
+            }
         );
         expect(enqueue.mock.calls[0][3].taskName).not.toBe(
             enqueue.mock.calls[1][3].taskName

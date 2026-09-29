@@ -113,7 +113,11 @@ describe('ResetPasswordPublicController — email dispatch', () => {
                 send: { email: 'a@b.com', name: 'A' },
                 data: resetPassword.created,
             },
-            { taskName: expect.stringMatching(/^RESET_PASSWORD-user-1-RP\d+$/) }
+            {
+                taskName: expect.stringMatching(
+                    /^RESET_PASSWORD-user-1-[0-9a-f-]{36}$/
+                ),
+            }
         );
     });
 
@@ -330,7 +334,7 @@ describe('ResetPasswordPublicController — email dispatch', () => {
             { send: { email: 'c@d.com', name: 'C' } },
             {
                 taskName: expect.stringMatching(
-                    /^CHANGE_PASSWORD-user-2-CP\d+$/
+                    /^CHANGE_PASSWORD-user-2-[0-9a-f-]{36}$/
                 ),
             }
         );
