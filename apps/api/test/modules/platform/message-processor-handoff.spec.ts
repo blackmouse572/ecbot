@@ -8,7 +8,7 @@ jest.mock('../../../src/common/utils/fetch-as-base64.util', () => ({
 
 import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
 
-describe('MessageProcessorService — keyword handoff', () => {
+describe('MessageProcessorService keyword handoff', () => {
     let processor: MessageProcessorService;
 
     const accountService = { findOne: jest.fn() };

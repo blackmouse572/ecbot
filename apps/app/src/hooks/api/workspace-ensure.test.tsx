@@ -81,7 +81,7 @@ describe("useEnsureWorkspace — remembering the workspace in the URL", () => {
   });
 });
 
-describe("useEnsureWorkspace — a workspace missing from a stale list", () => {
+describe("useEnsureWorkspace with a workspace missing from a stale list", () => {
   beforeEach(() => {
     localStorage.clear();
   });
