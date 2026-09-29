@@ -2,7 +2,7 @@ import { useJoinWorkspace } from "@/hooks/api";
 import { House } from "@medusajs/icons";
 import { Button, Text } from "@medusajs/ui";
 import { IconFaceIdError, IconLoader2 } from "@tabler/icons-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 type JoinTabProps = {
@@ -11,8 +11,7 @@ type JoinTabProps = {
 export const JoinTab = ({ onJoinSuccess }: JoinTabProps) => {
   const { t } = useTranslation();
   const {
-    mutateAsync: joinWorkspace,
-    isPending,
+    mutate: joinWorkspace,
     error,
     isError,
   } = useJoinWorkspace({
@@ -21,22 +20,27 @@ export const JoinTab = ({ onJoinSuccess }: JoinTabProps) => {
   const [search] = useSearchParams();
   const token = search.get("tokens");
 
+  // An invitation token is single-use: redeem it once, even when StrictMode
+  // runs this effect twice. A second request would answer "already a member"
+  // and replace the success.
+  const sent = useRef(false);
   useEffect(() => {
-    if (token) {
+    if (token && !sent.current) {
+      sent.current = true;
       joinWorkspace(token);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token, joinWorkspace]);
 
   return (
     <div className="flex flex-col items-center p-16 h-full">
       <div className="flex w-full max-w-[720px] h-full flex-col gap-y-8 items-center justify-center">
-        {isPending && (
+        {isError ? (
+          <IconFaceIdError className="mx-auto text-ui-fg-muted" />
+        ) : (
           <IconLoader2 className="mx-auto animate-spin text-ui-fg-muted" />
         )}
-        {isError && <IconFaceIdError className="mx-auto text-ui-fg-muted" />}
 
-        {isPending ? (
+        {!isError ? (
           <div className="space-y-2">
             <Text
               size="xlarge"

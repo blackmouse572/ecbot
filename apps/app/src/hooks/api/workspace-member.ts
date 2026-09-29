@@ -173,6 +173,9 @@ const resetAfterJoin = (client: QueryClientHandle, onSuccess?: () => void) => {
   client.resetQueries();
 };
 
+/** API status code for "this user is already a member of the workspace". */
+const WORKSPACE_MEMBER_EXIST = 5206;
+
 export function useJoinWorkspace(options?: { onSuccess: () => void }) {
   const client = useQueryClient();
 
@@ -183,7 +186,14 @@ export function useJoinWorkspace(options?: { onSuccess: () => void }) {
         throwOnError: true,
       })
         .then((response) => response.data)
-        .catch(rethrowJoinError),
+        .catch((error: A) => {
+          // Already a member means the invitation's goal is met (a repeated
+          // or retried request), so it is a successful join, not an error.
+          if (error.response?.data?.statusCode === WORKSPACE_MEMBER_EXIST) {
+            return undefined;
+          }
+          return rethrowJoinError(error);
+        }),
     onSuccess: () => resetAfterJoin(client, options?.onSuccess),
   });
 
