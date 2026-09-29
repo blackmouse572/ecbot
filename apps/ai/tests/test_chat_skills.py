@@ -88,7 +88,7 @@ async def test_load_skill_graceful_degrade_on_s3_error(monkeypatch):
 
 
 async def test_load_skill_truncates_oversized_body(monkeypatch):
-    monkeypatch.setattr(skills_mod, "_S3_MAX_BYTES", 10)
+    monkeypatch.setattr(skills_mod, "S3_MAX_BYTES", 10)
     monkeypatch.setattr(skills_mod, "_download_from_s3", lambda b, k: b"x" * 20)
     tool = build_skills(_chatbot([_cs(_skill("book-slot"))]))[0]
     out = await tool.coroutine("book-slot")

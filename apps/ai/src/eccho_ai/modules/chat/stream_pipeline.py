@@ -12,19 +12,11 @@ from typing import Any
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.modules.chat import ui_message_stream as ui
 from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
+from eccho_ai.modules.chat.constants import GENERIC_STREAM_ERROR, SEND_IMAGE_TOOL
 from eccho_ai.modules.chat.image_markdown import Image, ImageMarkdownFilter, Piece
 from eccho_ai.modules.chat.prompt_leak import PROMPT_LEAK_REASON, PromptLeakFilter
 
 logger = get_logger(__name__)
-
-SEND_IMAGE_TOOL = "send_image"
-
-logger = get_logger(__name__)
-
-# Shown to clients on any stream-side failure (including a LangGraph
-# GraphRecursionError when the agent loop hits recursion_limit). Never the raw
-# exception text — that can leak internals, secrets, or stack-trace details.
-GENERIC_STREAM_ERROR = "Something went wrong while generating a response. Please try again."
 
 
 async def events_to_ui_parts(

@@ -28,3 +28,12 @@ SKILL_LOAD_FAILED = (
     "Answer only what you know for sure; for the rest, tell the customer "
     "you cannot handle it right now and offer a staff member."
 )
+
+# Skill bodies on S3 / MinIO (load_skill).
+S3_TIMEOUT_SECONDS = 10.0
+# Mirrors SKILL_INSTRUCTIONS_MAX_LENGTH on the api side — bounds what a single
+# `load_skill` call can stream into the model context.
+S3_MAX_BYTES = 64_000
+# Explicit region avoids minio-py's slow GetBucketLocation probe (works for R2 + MinIO).
+S3_REGION = "us-east-1"
+SKILL_ACTIVE_STATUS = "ACTIVE"
