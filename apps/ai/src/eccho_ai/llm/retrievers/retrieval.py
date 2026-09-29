@@ -47,7 +47,7 @@ def _score_with_cross_encoder(
     batch_size: int,
 ) -> list[float]:
     model = _load_cross_encoder(model_name)
-    pairs = [(query, chunk.content) for chunk in chunks]
+    pairs = [(query, _rerank_text(chunk)) for chunk in chunks]
     scores = model.predict(pairs, batch_size=batch_size, show_progress_bar=False)
 
     normalized_scores: list[float] = []
@@ -58,6 +58,12 @@ def _score_with_cross_encoder(
             score = score[0]
         normalized_scores.append(float(score))
     return normalized_scores
+
+
+def _rerank_text(chunk: "RetrievedChunk") -> str:
+    """Include the source label so title-only matches survive reranking."""
+    source = (chunk.metadata.get("chunk", {}).get("source") or "").strip()
+    return f"{source}\n{chunk.content}" if source else chunk.content
 
 
 def _sigmoid(value: float) -> float:
