@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { EntityManager } from '@mikro-orm/postgresql';
@@ -446,7 +447,7 @@ export class UserAdminController {
                             send: { email: user.email, name: user.name },
                         },
                         {
-                            taskName: `${ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BANNED}-${user.id}`,
+                            taskName: `${ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BANNED}-${user.id}-${randomUUID()}`,
                         }
                     );
                 } catch (err) {
