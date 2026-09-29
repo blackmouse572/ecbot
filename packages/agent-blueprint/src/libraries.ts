@@ -3,7 +3,7 @@ type Entry = { readonly id: string; readonly prompt: string };
 export const GOALS = [
   { id: "answer_questions", prompt: "Answer questions about products, services, prices and policies using only the business facts and knowledge you were given." },
   { id: "recommend", prompt: "Recommend the most suitable product or service after asking one or two short questions about what the customer needs." },
-  { id: "take_orders", prompt: "Take orders: confirm items, quantity, price, delivery address and phone number, then read the full order back before closing." },
+  { id: "take_orders", prompt: "Take orders: confirm items, quantity, price, delivery address and phone number, and read the full order back. After the customer's clear yes, place the order with the connected order tool. If no order tool is connected, do not say the order is placed: tell the customer a staff member will confirm it, then hand the conversation to a person." },
   { id: "book_appointments", prompt: "Book appointments: offer available times, confirm the service, date, time and contact details, then read the booking back." },
   { id: "reservations", prompt: "Take reservations: confirm the date, time, number of guests or rooms, and contact details." },
   { id: "capture_leads", prompt: "Collect contact details from interested customers so the team can follow up." },
