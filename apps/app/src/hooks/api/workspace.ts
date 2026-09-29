@@ -184,12 +184,7 @@ export function useCreateWorkspace() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: async (body: WorkSpaceCreateRequestDto) => {
-      return workspaceControllerCreateWorkSpaceV1({
-        body,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      return workspaceControllerCreateWorkSpaceV1({ body });
     },
     onSuccess: () => {
       client.invalidateQueries({
