@@ -13,7 +13,11 @@ interface IRegisterFormProps extends Omit<
   React.HTMLProps<HTMLFormElement>,
   "onSubmit"
 > {
-  onSubmit: (data: TRegisterForm) => Promise<void>;
+  /**
+   * Resolve with the API's per-field messages (keyed by request property) to
+   * show them under the matching fields.
+   */
+  onSubmit: (data: TRegisterForm) => Promise<TRegisterFieldErrors | void>;
   countries?: { label: string; value: string }[];
   /** Omit to render no widget — the form behaves exactly as before. */
   turnstile?: ITurnstileConfig;
@@ -51,6 +55,7 @@ type TRegisterSchema = z.infer<typeof RegisterSchema>;
 type TRegisterForm = Omit<TRegisterSchema, "confirmPassword"> & {
   turnstileToken?: string;
 };
+type TRegisterFieldErrors = Partial<Record<string, string>>;
 
 const RegisterForm: React.FC<IRegisterFormProps> = (
   props: IRegisterFormProps,
@@ -105,7 +110,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
       if (turnstileConfig && !turnstileToken) return;
 
       try {
-        await onSubmit({
+        const fieldErrors = await onSubmit({
           email,
           name,
           password,
@@ -113,6 +118,14 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
           country,
           turnstileToken,
         });
+        for (const [field, message] of Object.entries(fieldErrors ?? {})) {
+          if (message && field in RegisterSchema.shape) {
+            form.setError(field as keyof TRegisterSchema, {
+              type: "server",
+              message,
+            });
+          }
+        }
       } catch {
         // react-hook-form's handleSubmit has no try/finally around onValid —
         // an unhandled rejection here would skip its isSubmitting=false
@@ -198,6 +211,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
                       </Select.Content>
                     </Select>
                   </Form.Control>
+                  <Form.ErrorMessage />
                 </Form.Item>
               );
             }}
