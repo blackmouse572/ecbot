@@ -42,6 +42,18 @@ describe("createChatbotSchema numeric fields", () => {
     expect(result.success).toBe(true);
     expect(result.data?.maxTokens).toBeUndefined();
   });
+
+  // The column is NOT NULL, and the edit form sends a cleared field as null,
+  // which the API rejects. A cleared threshold goes back to the default.
+  it("returns a cleared handoff threshold to the default", () => {
+    const result = createChatbotSchema.safeParse({
+      ...base,
+      handoffFallbackThreshold: "",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.handoffFallbackThreshold).toBe(3);
+  });
 });
 
 describe("createChatbotSchema submitted keys", () => {

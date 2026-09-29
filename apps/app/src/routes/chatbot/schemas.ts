@@ -35,7 +35,11 @@ export const createChatbotSchema = z.object({
   maxTokens: optionalPositiveInt,
   handoffMessage: z.string().max(1000).nullish(),
   handoffKeywords: z.array(z.string()).nullish().default([]),
-  handoffFallbackThreshold: optionalPositiveInt,
+  // NOT NULL in the API with a default of 3, so a cleared input returns to 3.
+  handoffFallbackThreshold: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().int().positive().default(3),
+  ),
   guardrailEnabled: z.boolean().default(false),
   guardrailModelEnabled: z.boolean().default(false),
   guardrailCustomInstruction: z.string().max(2000).nullish(),
