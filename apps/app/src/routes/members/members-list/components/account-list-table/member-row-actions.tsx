@@ -31,7 +31,14 @@ export const MemberRowActions = ({ member }: MemberRowActionsProps) => {
     const title = t("members.removeMember.title");
     const description = t("members.removeMember.description");
 
-    if (!(await prompt({ title, description }))) {
+    const confirmed = await prompt({
+      title,
+      description,
+      variant: "danger",
+      confirmText: t("members.removeMember.confirmButton"),
+      cancelText: t("actions.cancel"),
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -60,7 +67,7 @@ export const MemberRowActions = ({ member }: MemberRowActionsProps) => {
       actions: [
         {
           icon: <Trash />,
-          label: t("actions.delete"),
+          label: t("members.removeMember.confirmButton"),
           disabled: currentUser?.id === member.user.id,
           onClick: removeFromWorkspace,
         },

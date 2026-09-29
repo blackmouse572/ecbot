@@ -2,7 +2,7 @@ import { clx } from "@medusajs/ui";
 import {
   NoRecords,
   TableSkeleton,
-  type NoResultsProps,
+  type NoRecordsProps,
 } from "@repo/ui/common-components";
 import { memo } from "react";
 import { DataTableQuery, type DataTableQueryProps } from "./data-table-query";
@@ -15,7 +15,7 @@ interface DataTableProps<TData>
   isLoading?: boolean;
   pageSize: number;
   queryObject?: Record<string, A>;
-  noRecords?: Pick<NoResultsProps, "title" | "message">;
+  noRecords?: Pick<NoRecordsProps, "title" | "message" | "action">;
 }
 
 // Maybe we should use the memoized version of DataTableRoot

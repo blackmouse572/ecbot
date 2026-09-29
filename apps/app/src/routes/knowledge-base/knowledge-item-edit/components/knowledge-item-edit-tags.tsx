@@ -1,6 +1,7 @@
 import { Combobox } from "@repo/ui/common-components";
 import { useKnowledgeTags } from "../../../../hooks/api";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 export type KnowledgeItemEditTag = {
   defaultValues: string[];
@@ -9,6 +10,7 @@ export type KnowledgeItemEditTag = {
 } & React.HTMLAttributes<HTMLDivElement>;
 export function KnowledgeItemEditTag(props: KnowledgeItemEditTag) {
   const { defaultValues, onAdd, knowledgeBaseId, ...rest } = props;
+  const { t } = useTranslation();
   const { tags, isLoading } = useKnowledgeTags(knowledgeBaseId);
   const options = useMemo(() => {
     if (isLoading) return [];
@@ -18,6 +20,7 @@ export function KnowledgeItemEditTag(props: KnowledgeItemEditTag) {
 
   return (
     <Combobox
+      placeholder={t("knowledge_item.tagPlaceholder")}
       {...rest}
       isFetchingNextPage={isLoading}
       options={options}

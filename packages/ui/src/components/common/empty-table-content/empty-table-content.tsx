@@ -2,6 +2,7 @@ import { ExclamationCircle, MagnifyingGlass, PlusMini } from "@medusajs/icons";
 import { Button, Text, clx } from "@medusajs/ui";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 export type NoResultsProps = {
   title?: string;
@@ -40,7 +41,7 @@ type ActionProps = {
   };
 };
 
-type NoRecordsProps = {
+export type NoRecordsProps = {
   title?: string;
   message?: string;
   className?: string;
@@ -48,22 +49,22 @@ type NoRecordsProps = {
   icon?: React.ReactNode;
 } & ActionProps;
 
+// Router links: `to` resolves like any route link (relative paths work) and
+// navigating keeps the SPA instead of reloading the page.
 const DefaultButton = ({ action }: ActionProps) =>
   action && (
-    <a href={action.to}>
-      <Button variant="secondary" size="small">
-        {action.label}
-      </Button>
-    </a>
+    <Button variant="secondary" size="small" asChild>
+      <Link to={action.to}>{action.label}</Link>
+    </Button>
   );
 
 const TransparentIconLeftButton = ({ action }: ActionProps) =>
   action && (
-    <a href={action.to}>
-      <Button variant="transparent" className="text-ui-fg-interactive">
+    <Button variant="transparent" className="text-ui-fg-interactive" asChild>
+      <Link to={action.to}>
         <PlusMini /> {action.label}
-      </Button>
-    </a>
+      </Link>
+    </Button>
   );
 
 export const NoRecords = ({

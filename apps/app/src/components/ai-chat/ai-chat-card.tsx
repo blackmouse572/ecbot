@@ -138,7 +138,7 @@ function AIChatMessages() {
                     <MarkerContent className="whitespace-normal">
                       {t("chatbot.chat.guardrail.blocked")}
                       {model.guardrail.reason
-                        ? ` — ${model.guardrail.reason}`
+                        ? ` ${t("chatbot.chat.guardrail.reason", { reason: model.guardrail.reason })}`
                         : ""}
                     </MarkerContent>
                   </Marker>

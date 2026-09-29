@@ -8,8 +8,8 @@ import {
 import type { FC } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import {} from "nuqs";
 import type { KnowledgeItemCreateFormValues } from "../schema";
+import { fileTitle } from "./file-title";
 
 interface FileFormProps {
   form: UseFormReturn<KnowledgeItemCreateFormValues>;
@@ -32,8 +32,7 @@ export const FileForm: FC<FileFormProps> = ({
     const currentTitle = form.getValues("title");
     const fileName = firstFile?.file?.name;
     if (!currentTitle?.trim() && fileName) {
-      const basename = fileName.replace(/\.[^/.]+$/, "") || fileName;
-      form.setValue("title", basename, {
+      form.setValue("title", fileTitle(fileName), {
         shouldDirty: true,
         shouldValidate: true,
       });

@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import "@/i18n";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 class ResizeObserverMock {
   observe() {}
@@ -14,6 +15,8 @@ if (!HTMLElement.prototype.scroll) {
   HTMLElement.prototype.scroll = () => {};
 }
 
+const data = vi.hoisted(() => ({ empty: false }));
+
 const chatbots = [
   { id: "a", name: "Alpha", status: "active", type: "beauty" },
   { id: "b", name: "Beta", status: "inactive", type: "fashion" },
@@ -23,8 +26,8 @@ const chatbots = [
 
 vi.mock("@/hooks/api", () => ({
   useChatbots: () => ({
-    chatbots,
-    count: chatbots.length,
+    chatbots: data.empty ? [] : chatbots,
+    count: data.empty ? 0 : chatbots.length,
     isLoading: false,
     isError: false,
     error: null,
@@ -45,7 +48,30 @@ vi.mock("react-router-dom", async () => {
 
 import { ChatbotListTable } from "./chatbot-list-table";
 
+const renderTable = () =>
+  render(
+    <MemoryRouter initialEntries={["/acme/chatbot"]}>
+      <Routes>
+        <Route path="/:workspaceSlug/chatbot" element={<ChatbotListTable />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+
 describe("ChatbotListTable", () => {
+  afterEach(() => {
+    data.empty = false;
+  });
+
+  it("offers a create button in the empty state", () => {
+    data.empty = true;
+    renderTable();
+
+    expect(screen.getByText("No chatbots yet")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Create chatbot" }),
+    ).toHaveAttribute("href", "/acme/chatbot/create");
+  });
+
   it("renders a select checkbox in the header and in every row", () => {
     render(
       <MemoryRouter initialEntries={["/acme/chatbot"]}>

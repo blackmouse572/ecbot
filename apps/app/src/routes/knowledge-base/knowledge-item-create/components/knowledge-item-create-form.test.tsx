@@ -70,4 +70,37 @@ describe("KnowledgeItemCreateForm", () => {
     );
     expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
   });
+
+  const renderFileForm = () =>
+    render(
+      <NuqsTestingAdapter searchParams="?t=FILE">
+        <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+      </NuqsTestingAdapter>,
+    );
+
+  it("selects the whole auto-filled title so typing replaces it", async () => {
+    const { container } = renderFileForm();
+    fireEvent.change(container.querySelector('input[type="file"]')!, {
+      target: {
+        files: [
+          new File(["q"], "kunmart-faq.pdf", { type: "application/pdf" }),
+        ],
+      },
+    });
+    const title = container.querySelector<HTMLInputElement>(
+      'input[name="title"]',
+    )!;
+    await waitFor(() => expect(title.value).toBe("kunmart-faq"));
+
+    fireEvent.focus(title);
+
+    expect([title.selectionStart, title.selectionEnd]).toEqual([0, 11]);
+  });
+
+  it("gives the tag picker a placeholder", () => {
+    renderFileForm();
+    expect(
+      screen.getByPlaceholderText("Enter tag name..."),
+    ).toBeInTheDocument();
+  });
 });

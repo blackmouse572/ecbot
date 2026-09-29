@@ -1,11 +1,12 @@
 import { Avatar, Text, Tooltip, clx } from "@medusajs/ui";
 import { Link as LinkIcon } from "@medusajs/icons";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ConversationGetResponseDto } from "@/hooks/api/conversations";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { StatusPill } from "../components/status-pill";
+import { HANDOFF_REASON_CODES } from "../constants";
 
 interface Props {
   conversation: ConversationGetResponseDto;
@@ -53,7 +54,12 @@ export const ConversationListItem = ({
   const senderAvatar = (conversation as A).senderAvatar as string | undefined;
   const account = conversation.account as A;
   const accountName = account?.name ?? account?.externalId ?? "";
-  const accountId = account?.id as string | undefined;
+  const handoffReason = conversation.handoffReason;
+  const handoffReasonLabel =
+    handoffReason &&
+    (HANDOFF_REASON_CODES as readonly string[]).includes(handoffReason)
+      ? t(`conversations.list.row.handoffReasons.${handoffReason}`)
+      : handoffReason;
   const chatbot = (conversation as A).chatbot as
     { id?: string; name?: string } | undefined;
 
@@ -117,20 +123,12 @@ export const ConversationListItem = ({
           </Text>
         </div>
         <div className="flex min-w-0 items-center gap-x-2">
-          {accountName &&
-            (accountId ? (
-              <Link
-                to={`/${workspaceSlug}/accounts/${accountId}`}
-                onClick={(e) => e.stopPropagation()}
-                className="txt-compact-xsmall text-ui-fg-subtle hover:text-ui-fg-base truncate transition-colors"
-              >
-                {accountName}
-              </Link>
-            ) : (
-              <Text size="xsmall" className="text-ui-fg-subtle truncate">
-                {accountName}
-              </Text>
-            ))}
+          {/* Plain text: a link here stole clicks meant for the row. */}
+          {accountName && (
+            <Text size="xsmall" className="text-ui-fg-subtle truncate">
+              {accountName}
+            </Text>
+          )}
           {showChatbot &&
             chatbot?.name &&
             (chatbot.id ? (
@@ -149,9 +147,9 @@ export const ConversationListItem = ({
         </div>
         <div className="flex items-center gap-x-2">
           <StatusPill conversation={conversation} />
-          {conversation.handoffReason && (
+          {handoffReasonLabel && (
             <Text size="xsmall" className="text-ui-fg-muted truncate">
-              {conversation.handoffReason}
+              {handoffReasonLabel}
             </Text>
           )}
           {(conversation as A).unreadCount > 0 && (

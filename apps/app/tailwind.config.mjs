@@ -44,6 +44,10 @@ module.exports = {
             "--tw-prose-pre-bg": "var(--bg-component)",
             "--tw-prose-th-borders": "var(--border-base)",
             "--tw-prose-td-borders": "var(--border-base)",
+            // Typography draws a literal ` around inline code; the code
+            // style alone marks it, and the backticks read as broken markdown.
+            "code::before": { content: "none" },
+            "code::after": { content: "none" },
           },
         },
       },

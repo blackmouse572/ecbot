@@ -13,6 +13,8 @@ export const ACTIVITY_SUBJECT_MESSAGE_MAP: Partial<
   "CHATBOT:update": "activities.chatbot.update",
   "CHATBOT:delete": "activities.chatbot.delete",
   "CHATBOT:clone_chatbot": "activities.chatbot.clone",
+  "WORKSPACE:create": "activities.workspace.create",
+  "WORKSPACE:update": "activities.workspace.update",
   "SKILL:create": "activities.skill.create",
   "SKILL:update": "activities.skill.update",
   "SKILL:delete": "activities.skill.delete",
@@ -36,17 +38,20 @@ export const ACTIVITY_SUBJECT_MESSAGE_MAP: Partial<
 };
 
 // Subject-agnostic fallback, used when no SUBJECT:action override exists above.
-export const ACTIVITY_MESSAGE_MAP: Partial<Record<ActivityAction, ParseKeys>> = {
-  create: "activities.generic.create",
-  update: "activities.generic.update",
-  delete: "activities.generic.delete",
-  invite_member: "activities.member.invite",
-  remove_member: "activities.member.remove",
-  approve_join_workspace: "activities.member.approve",
-  active_chatbot: "activities.chatbot.active",
-  archive_chatbot: "activities.chatbot.archive",
-  inactive_chatbot: "activities.chatbot.inactive",
-  unarchive_chatbot: "activities.chatbot.unarchive",
-  link_account_chatbot: "activities.chatbot.linkAccount",
-  unlink_account_chatbot: "activities.chatbot.unlinkAccount",
-};
+export const ACTIVITY_MESSAGE_MAP: Partial<Record<ActivityAction, ParseKeys>> =
+  {
+    create: "activities.generic.create",
+    update: "activities.generic.update",
+    delete: "activities.generic.delete",
+    join_workspace: "activities.workspace.join",
+    leave_workspace: "activities.workspace.leave",
+    invite_member: "activities.member.invite",
+    remove_member: "activities.member.remove",
+    approve_join_workspace: "activities.member.approve",
+    active_chatbot: "activities.chatbot.active",
+    archive_chatbot: "activities.chatbot.archive",
+    inactive_chatbot: "activities.chatbot.inactive",
+    unarchive_chatbot: "activities.chatbot.unarchive",
+    link_account_chatbot: "activities.chatbot.linkAccount",
+    unlink_account_chatbot: "activities.chatbot.unlinkAccount",
+  };

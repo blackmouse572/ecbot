@@ -6,7 +6,33 @@ import { allTranslationKeys, buildQuestionGroups, readAnswer, writeAnswer } from
 const ids = (p: ReturnType<typeof createProfile>) =>
   buildQuestionGroups(p).flatMap((g) => g.questions.map((q) => q.id));
 
+const question = (p: ReturnType<typeof createProfile>, id: string) =>
+  buildQuestionGroups(p).flatMap((g) => g.questions).find((q) => q.id === id)!;
+
 describe("buildQuestionGroups", () => {
+  it("gives the name and difference questions examples for the chosen business type", () => {
+    const shop = createProfile("ecommerce", "vi");
+    expect(question(shop, "businessName").placeholderKey).toBe("agentBuilder.examples.ecommerce.businessName");
+    expect(question(shop, "difference").placeholderKey).toBe("agentBuilder.examples.ecommerce.difference");
+    expect(question(createProfile("personal_email", "en"), "difference").placeholderKey)
+      .toBe("agentBuilder.examples.personal_email.difference");
+  });
+
+  it("uses the personal greeting example for personal types", () => {
+    expect(question(createProfile("beauty", "vi"), "greeting").placeholderKey).toBe("agentBuilder.questions.greeting.placeholder");
+    expect(question(createProfile("personal_tasks", "vi"), "greeting").placeholderKey)
+      .toBe("agentBuilder.questions.greeting.placeholderPersonal");
+  });
+
+  it("lists every per-type example key for translation", () => {
+    const keys = allTranslationKeys();
+    for (const t of BUSINESS_TYPES) {
+      expect(keys).toContain(`agentBuilder.examples.${t.id}.difference`);
+      if (!t.personal) expect(keys).toContain(`agentBuilder.examples.${t.id}.businessName`);
+    }
+    expect(keys).toContain("agentBuilder.questions.greeting.placeholderPersonal");
+  });
+
   it("builds six groups in order for an SMB type", () => {
     expect(buildQuestionGroups(createProfile("beauty", "vi")).map((g) => g.id))
       .toEqual(["identity", "essence", "facts", "process", "rules", "interaction"]);
@@ -34,7 +60,7 @@ describe("buildQuestionGroups", () => {
   it("shows the business placeholder only on the business name question, not the owner name", () => {
     const nameQ = (type: Parameters<typeof createProfile>[0]) =>
       buildQuestionGroups(createProfile(type, "en")).flatMap((g) => g.questions).find((q) => q.id === "businessName")!;
-    expect(nameQ("beauty").placeholderKey).toBe("agentBuilder.questions.businessName.placeholder");
+    expect(nameQ("beauty").placeholderKey).toBe("agentBuilder.examples.beauty.businessName");
     expect(nameQ("personal_scheduling").placeholderKey).toBeUndefined();
   });
 

@@ -1,5 +1,5 @@
 import {
-  confidenceLevel, readAnswer, type AgentProfile, type AgentSuggestion, type Question,
+  confidenceLevel, getBusinessType, readAnswer, type AgentProfile, type AgentSuggestion, type Question,
 } from "@repo/agent-blueprint";
 import { Badge, Text } from "@medusajs/ui";
 import {
@@ -79,6 +79,15 @@ export function QuestionTurn({
   const [value, setValue] = useState(() => toFormValue(question, readAnswer(profile, question.path)));
   const badge = badgeFor(question, suggestion);
   const choices = question.kind === "boolean" ? BOOLEAN_CHOICES : (question.choices ?? []);
+  // The greeting example reuses the names given so far, or the type's examples.
+  const placeholderNames = {
+    agentName: profile.agentName.trim() || t("agentBuilder.questions.agentName.placeholder"),
+    businessName: profile.businessName.trim() || t(
+      getBusinessType(profile.businessType).personal
+        ? "agentBuilder.examples.ownerName"
+        : `agentBuilder.examples.${profile.businessType}.businessName`,
+    ),
+  };
 
   if (question.id === "channels" && chatbotId) {
     return (
@@ -133,7 +142,7 @@ export function QuestionTurn({
               {question.kind === "text" ? (
                 <QuestionnaireInput
                   aria-label={t(question.titleKey)}
-                  placeholder={question.placeholderKey ? t(question.placeholderKey) : undefined}
+                  placeholder={question.placeholderKey ? t(question.placeholderKey, placeholderNames) : undefined}
                   multiline={question.multiline}
                   maxLength={question.multiline ? 1000 : 120}
                 />
