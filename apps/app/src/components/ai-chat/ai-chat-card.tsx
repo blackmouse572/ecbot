@@ -30,6 +30,7 @@ import { BuildingLoader } from "./ai-loader";
 import { ToolCallList } from "./tool-call-list";
 import {
   type ChatTransportConfig,
+  chatErrorMessage,
   isEmptyRenderModel,
   partsToRenderModel,
   type RenderModelFile,
@@ -185,7 +186,7 @@ function AIChatMessages() {
                   <ExclamationCircle />
                 </MarkerIcon>
                 <MarkerContent className="whitespace-normal">
-                  {error?.message || t("chatbot.chat.error")}
+                  {chatErrorMessage(error, t("chatbot.chat.error"))}
                 </MarkerContent>
               </Marker>
             </MessageContent>
