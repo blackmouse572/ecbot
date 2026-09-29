@@ -1,6 +1,6 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { createElement, type PropsWithChildren } from "react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { PolicyAbilityFactory } from "@repo/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -121,6 +121,39 @@ describe("useRefreshTokenEffect", () => {
     expect(logoutFn).toHaveBeenCalledWith({ to: "/login?redirect=%2F" });
   });
 
+  it("sends the user back to the page they are on now, not the first one", async () => {
+    refreshMutateAsync.mockResolvedValue({
+      data: null,
+      error: { statusCode: 401, message: "session expired" },
+    });
+    let go: (to: string) => void = () => {};
+    const routerWrapper = ({ children }: PropsWithChildren) =>
+      createElement(
+        MemoryRouter,
+        { initialEntries: ["/first"] },
+        createElement(
+          Routes,
+          null,
+          createElement(Route, { path: "*", element: children }),
+        ),
+      );
+
+    renderHook(
+      () => {
+        useRefreshTokenEffect();
+        go = useNavigate();
+      },
+      { wrapper: routerWrapper },
+    );
+    act(() => go("/kunmart/inbox?c=1"));
+
+    await capturedErrorHandler!(fakeAxiosError).catch(() => {});
+
+    expect(logoutFn).toHaveBeenCalledWith({
+      to: "/login?redirect=%2Fkunmart%2Finbox%3Fc%3D1",
+    });
+  });
+
   it("does not crash when the error has no request object (defensive optional chaining)", async () => {
     requestFn.mockResolvedValue({ data: {} });
     refreshMutateAsync.mockResolvedValue({
@@ -232,11 +265,7 @@ describe("useUserAbility", () => {
 
     renderHook(() => useUserAbility(), { wrapper });
 
-    expect(createForMember).toHaveBeenCalledWith(
-      [],
-      "WORKSPACE_MEMBER",
-      true,
-    );
+    expect(createForMember).toHaveBeenCalledWith([], "WORKSPACE_MEMBER", true);
   });
 
   it("infers ownership on a workspace route when the flag is absent", () => {

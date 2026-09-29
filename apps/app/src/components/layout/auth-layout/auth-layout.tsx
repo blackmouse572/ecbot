@@ -1,14 +1,25 @@
-import { useAuthToken } from "@/modules/auth";
+import { loginRedirectTarget, useAuthToken } from "@/modules/auth";
 import { ROUTES } from "@/routes/constants";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { AuthHero } from "./auth-hero";
 
 function AuthLayout() {
   const token = useAuthToken();
   const { pathname } = useLocation();
+  const [search] = useSearchParams();
 
+  // Login sets the token and navigates to the redirect itself, but this
+  // guard re-renders after that navigation and would win, so it must send
+  // the user to the same place.
   if (token) {
-    return <Navigate to="/" replace />;
+    return (
+      <Navigate to={loginRedirectTarget(search.get("redirect"))} replace />
+    );
   }
 
   const heroVariant = pathname.includes(ROUTES.SignUp) ? "signup" : "login";

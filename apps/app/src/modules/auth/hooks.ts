@@ -13,7 +13,7 @@ import {
 import { client, type AuthRefreshResponseDto } from "@repo/client";
 import { usePrompt } from "@medusajs/ui";
 import { useAtom, useAtomValue } from "jotai/react";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
 import { loginRedirectPath } from "./login-redirect";
@@ -38,6 +38,10 @@ export const useRefreshTokenEffect = () => {
   const logout = useLogout();
   const { mutateAsync: refreshToken } = useRefreshToken();
   const location = useLocation();
+  // The interceptor is registered once, so it reads the location through a
+  // ref to redirect back to the current page, not the first one.
+  const locationRef = useRef(location);
+  locationRef.current = location;
   const prompt = usePrompt();
   const { t } = useTranslation();
   const getRefreshToken: () => Promise<AuthRefreshResponseDto | null> =
@@ -94,7 +98,7 @@ export const useRefreshTokenEffect = () => {
       // resolves — a separate go(...) fired right after it would win the
       // race and then get clobbered by that trailing navigation. Route the
       // redirect through logout's own `{ to }` instead of a second call.
-      await logout({ to: loginRedirectPath(location) });
+      await logout({ to: loginRedirectPath(locationRef.current) });
       return Promise.reject(error);
     }
   }, []);

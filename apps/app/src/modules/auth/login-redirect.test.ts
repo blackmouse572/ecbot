@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginRedirectPath } from "./login-redirect";
+import { loginRedirectPath, loginRedirectTarget } from "./login-redirect";
 
 describe("loginRedirectPath", () => {
   it("keeps the query string, so an invite link survives the login detour", () => {
@@ -18,5 +18,23 @@ describe("loginRedirectPath", () => {
     expect(
       loginRedirectPath({ pathname: "/kunmart/dashboard", search: "" }),
     ).toBe("/login?redirect=%2Fkunmart%2Fdashboard");
+  });
+});
+
+describe("loginRedirectTarget", () => {
+  it("keeps a path on this site", () => {
+    expect(loginRedirectTarget("/join?tokens=a.b.c")).toBe(
+      "/join?tokens=a.b.c",
+    );
+  });
+
+  it.each([
+    null,
+    "",
+    "https://evil.example",
+    "//evil.example",
+    "/\\evil.example",
+  ])("falls back to home for %j", (redirect) => {
+    expect(loginRedirectTarget(redirect)).toBe("/");
   });
 });
