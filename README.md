@@ -14,9 +14,11 @@
 
 **The open-source AI sales agent for shops that sell in chat.**
 
-Your customer asks about a size on Messenger at 11pm, confirms the order on Zalo the next morning, and asks where the parcel is on Telegram. Ecbot answers all three as one agent that knows it is the same person. It checks stock and creates the order through your own API, and it hands the chat to your staff the moment the customer gets upset.
+Your customer asked about a dress on Facebook, ordered it on WhatsApp, and is now asking on Telegram where it is. To most chatbots, that's three strangers, and your staff scroll through three apps to piece the story together.
 
-Most open-source agent builders stop at Messenger and WhatsApp. Ecbot ships Zalo OA alongside them, replies in Vietnamese by default, and runs on your own server. The code in this repo is the same code that runs Ecbot Cloud, with nothing held back for a paid edition.
+Ecbot keeps one profile per person across multiple channels, so the agent and your staff pick up where the last chat stopped. The agent also finishes the sale. It checks stock, creates the order and books delivery through your own API, then hands the chat to a person when a customer gets upset or asks for one.
+
+It runs on your own server.
 
 **Who it is for**
 
