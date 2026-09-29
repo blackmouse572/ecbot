@@ -277,9 +277,19 @@ export class WorkspaceController {
         // An owner may have multiple workspaces. Slug uniqueness is still
         // enforced at the DB level and translated to a 409 in the service.
         // No image uploaded: the service seeds a default DiceBear avatar.
-        const avatarUrl = image
-            ? await this.uploadAvatarImage(image, user.id)
-            : undefined;
+        // The avatar is optional, so a failed upload must not block the
+        // workspace: fall back to that default and let the owner change it
+        // later.
+        let avatarUrl: string | undefined;
+        if (image) {
+            try {
+                avatarUrl = await this.uploadAvatarImage(image, user.id);
+            } catch (error: unknown) {
+                this.logger.warn(
+                    `Workspace avatar upload failed for user ${user.id}, using the default avatar: ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        }
 
         const newWorkspace = await this.workSpaceService.create(user, {
             ...body,
