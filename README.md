@@ -44,7 +44,6 @@ Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three s
 
 ## Why Ecbot
 
-- **Made for how Vietnam sells.** Zalo OA sits next to Messenger, Telegram and WhatsApp. Agents reply in Vietnamese unless you pick another language, and the operator UI and API come in Vietnamese and English.
 - **One customer across every app.** Ecbot keeps one profile per person, with each Messenger, Zalo or Telegram identity attached to it. When two profiles share a phone number or email, Ecbot suggests a merge and an operator confirms it. The agent then sees the whole history, tags and notes.
 - **An agent that does the work.** Point Ecbot at your REST endpoints, any MCP server, or a tool from the Composio marketplace. The agent looks up products, creates orders and books appointments inside the chat, and Ecbot logs each call so you can see what it did.
 - **Playbooks the agent loads on demand.** You write skills in markdown, such as "handle a refund: apologise, ask for the order code, check the order". The agent sees only each skill's name until a conversation needs it, which keeps the prompt short and the replies on track.
