@@ -24,7 +24,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "==> Building api"
-pnpm --filter api build
+pnpm turbo run build --filter api
 
 echo "==> Running migrations"
 (cd apps/api && npx mikro-orm migration:up)

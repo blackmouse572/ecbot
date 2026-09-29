@@ -8,8 +8,7 @@ describe('request.whitelistValidation message', () => {
         ['en', en],
         ['vi', vi],
     ])('is translated in %s', (_lang, messages) => {
-        const message = (messages as Record<string, string>)
-            .whitelistValidation;
+        const message = messages.whitelistValidation;
 
         expect(message).toContain('{property}');
         expect(message).not.toContain('—');
