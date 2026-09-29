@@ -9,5 +9,16 @@
     "error": {
         "notFound": "Không tìm thấy mục kiến thức.",
         "processing": "Item này đang được xử lý."
+    },
+    "notification": {
+        "ingestFailed": {
+            "title": "Xử lý kiến thức thất bại",
+            "message": "Không xử lý được \"{title}\", nên chatbot chưa dùng được nội dung này. Mở mục để xem lý do rồi xử lý lại."
+        },
+        "linkSyncFailed": {
+            "title": "Chatbot chưa dùng được kiến thức",
+            "message": "Không kết nối được \"{title}\" với chatbot, nên chatbot sẽ không tìm thấy nội dung này. Hãy gỡ mục khỏi chatbot rồi thêm lại."
+        },
+        "actionText": "Mở mục"
     }
 }
