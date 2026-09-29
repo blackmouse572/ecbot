@@ -18,7 +18,12 @@ def _chatbot(*actions: str):
 
 
 def test_detects_actions_that_change_data():
-    for name in ["create_order", "cancelOrder", "delete-all-orders", "book_slot", "update_customer", "place_order"]:
+    for name in [
+        "create_order", "cancelOrder", "delete-all-orders", "book_slot", "update_customer", "place_order",
+        # Review of #197: other verbs, and names where the verb is not first.
+        "confirm_order", "checkout", "process_payment", "schedule_appointment", "save_address",
+        "register_member", "apply_coupon", "transfer_funds", "order_create", "shopify_create_order",
+    ]:
         assert is_mutating_action(name), name
     for name in ["get_order_status", "list_orders", "get_menu", "check_availability", "search_products"]:
         assert not is_mutating_action(name), name

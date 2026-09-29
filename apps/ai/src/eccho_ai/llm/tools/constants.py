@@ -38,13 +38,15 @@ S3_MAX_BYTES = 64_000
 S3_REGION = "us-east-1"
 SKILL_ACTIVE_STATUS = "ACTIVE"
 
-# Operator (MCP/HTTP) actions whose first word is one of these change data.
+# Operator (MCP/HTTP) actions with any of these words in their name change data.
 # Discovered actions carry no read-only/destructive annotations, so the name is
 # the only signal (#182: the agent called create_order before the customer said yes).
+# Any word, not just the first: "order_create", "shopify_create_order".
 MUTATING_ACTION_VERBS = frozenset({
-    "add", "book", "cancel", "charge", "create", "delete", "edit", "insert",
-    "modify", "pay", "place", "refund", "remove", "reserve", "send", "set",
-    "submit", "update", "upsert", "write",
+    "add", "apply", "book", "cancel", "charge", "checkout", "confirm", "create",
+    "delete", "edit", "insert", "modify", "pay", "place", "process", "refund",
+    "register", "remove", "reserve", "save", "schedule", "send", "set", "submit",
+    "transfer", "update", "upsert", "write",
 })
 MUTATING_TOOL_NOTE = (
     "This action changes data. Only call it after you have read the details back "

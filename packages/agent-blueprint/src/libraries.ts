@@ -92,7 +92,7 @@ export const AFTER_HOURS = [
 
 // Replaces AFTER_HOURS "share_hours" when no opening hours were given: the
 // agent used to invent hours to "mention" (#112).
-export const HOURS_NOT_PROVIDED = "Reply as usual. Opening hours were not provided, so never state them.";
+export const HOURS_NOT_PROVIDED = "Reply as usual. Opening hours were not given here, so only state them if the knowledge base or a tool gives them.";
 
 export const NO_FACTS_PROVIDED = "No business facts were provided. Only state what the knowledge base or a tool gives you, and never guess.";
 

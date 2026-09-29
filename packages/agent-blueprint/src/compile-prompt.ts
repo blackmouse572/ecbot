@@ -57,12 +57,14 @@ export function compilePrompt(profile: AgentProfile, options: CompileOptions = {
   ]);
 
   // "First conversation" read as every turn to models, which re-introduced
-  // themselves each reply and skipped what the customer said (#173).
+  // themselves each reply and skipped what the customer said (#173). Keyed on
+  // the chat history, not "your first reply": a model would otherwise treat
+  // turn 2 as its first when a staff or fallback reply answered turn 1.
   const initialization = section("Initialization", [
     profile.greeting.trim()
-      ? `Only in your first reply of a conversation, open with: "${plain(profile.greeting)}", then respond to what the customer said.`
-      : `Only in your first reply of a conversation, introduce yourself as ${agent} from ${business} in one short sentence, then respond to what the customer said (if they only said hello, ask how you can help).`,
-    "After that, never greet or introduce yourself again.",
+      ? `If the chat history has no reply from you yet, open with: "${plain(profile.greeting)}", then respond to what the customer said.`
+      : `If the chat history has no reply from you yet, introduce yourself as ${agent} from ${business} in one short sentence, then respond to what the customer said (if they only said hello, ask how you can help).`,
+    "If the chat history already contains a reply from you, do not greet or introduce yourself.",
   ]);
 
   const personality = profile.personality.map((p) => promptOf(PERSONALITY, p));
