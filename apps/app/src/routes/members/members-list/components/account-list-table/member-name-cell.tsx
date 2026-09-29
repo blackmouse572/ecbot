@@ -1,10 +1,9 @@
 import { getAvatarFallback } from "@/components/utils/avatar-fallback";
-import { Avatar, Badge, clx, Text } from "@medusajs/ui";
+import { Avatar, clx, Text } from "@medusajs/ui";
 import type {
   UserShortResponseDto,
   WorkspaceMemberListResponseDto,
 } from "@repo/client";
-import { useTranslation } from "react-i18next";
 
 export type MemberAvatarNameProps = React.HTMLAttributes<HTMLDivElement> & {
   user: Pick<UserShortResponseDto, "name">;
@@ -32,25 +31,11 @@ export const MemberAvatarName = ({
   </div>
 );
 
-const OwnerBadge = () => {
-  const { t } = useTranslation();
-  const label = t("roles.types.workspaceOwner");
-
-  return (
-    <Badge size="2xsmall" color="purple" className="shrink-0 whitespace-nowrap">
-      {label}
-    </Badge>
-  );
-};
-
 type MembersNameCellProps = {
   member: Pick<WorkspaceMemberListResponseDto, "user" | "role">;
 };
 
-/** Identity column: the member, flagged when they own the workspace. */
+/** Identity column; the role column already says who owns the workspace. */
 export const MembersNameCell = ({ member }: MembersNameCellProps) => (
-  <div className="flex items-center gap-2">
-    <MemberAvatarName user={member.user} />
-    {member.role?.type === "WORKSPACE_OWNER" && <OwnerBadge />}
-  </div>
+  <MemberAvatarName user={member.user} />
 );

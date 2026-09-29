@@ -65,4 +65,12 @@ describe("ActivityItemDefault", () => {
       renderItem(activity("CUSTOMER_TAG", "delete", { id: "t1", name: "VIP" })),
     ).toContain("deleted VIP");
   });
+
+  it("names the workspace a member joined", () => {
+    expect(
+      renderItem(
+        activity("WORKSPACE", "join_workspace", { id: "w1", name: "Kunmart" }),
+      ),
+    ).toContain("joined workspace Kunmart");
+  });
 });

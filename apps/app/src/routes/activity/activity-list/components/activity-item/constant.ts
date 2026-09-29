@@ -43,6 +43,8 @@ export const ACTIVITY_MESSAGE_MAP: Partial<Record<ActivityAction, ParseKeys>> =
     create: "activities.generic.create",
     update: "activities.generic.update",
     delete: "activities.generic.delete",
+    join_workspace: "activities.workspace.join",
+    leave_workspace: "activities.workspace.leave",
     invite_member: "activities.member.invite",
     remove_member: "activities.member.remove",
     approve_join_workspace: "activities.member.approve",

@@ -698,7 +698,9 @@
     "you": "Bạn",
     "workspace": {
       "create": "đã tạo không gian làm việc <link/>",
-      "update": "đã cập nhật không gian làm việc <link/>"
+      "update": "đã cập nhật không gian làm việc <link/>",
+      "join": "đã tham gia không gian làm việc <link/>",
+      "leave": "đã rời không gian làm việc <link/>"
     }
   },
   "imports": {
@@ -1623,11 +1625,11 @@
   "members": {
     "title": "Đội ngũ",
     "removeMember": {
-      "title": "Loại bỏ thành viên",
-      "description": "Bạn có chắc chắn muốn loại bỏ thành viên này khỏi không gian làm việc không?",
-      "confirmButton": "Loại bỏ thành viên",
-      "success": "Đã loại bỏ thành viên thành công.",
-      "loading": "Đang loại bỏ thành viên..."
+      "title": "Xóa thành viên",
+      "description": "Xóa thành viên này khỏi không gian làm việc? Họ sẽ mất quyền truy cập ngay lập tức.",
+      "confirmButton": "Xóa thành viên",
+      "success": "Đã xóa thành viên.",
+      "loading": "Đang xóa thành viên..."
     },
     "inviteMember": {
       "action": "Mời",

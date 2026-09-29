@@ -47,7 +47,7 @@ describe("MemberRowActions", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove member" }));
 
     await waitFor(() =>
       expect(prompt).toHaveBeenCalledWith(

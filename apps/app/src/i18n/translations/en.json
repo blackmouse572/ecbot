@@ -693,7 +693,9 @@
     "you": "You",
     "workspace": {
       "create": "created workspace <link/>",
-      "update": "updated workspace <link/>"
+      "update": "updated workspace <link/>",
+      "join": "joined workspace <link/>",
+      "leave": "left workspace <link/>"
     }
   },
   "chatbot": {

@@ -67,7 +67,7 @@ export const MemberRowActions = ({ member }: MemberRowActionsProps) => {
       actions: [
         {
           icon: <Trash />,
-          label: t("actions.delete"),
+          label: t("members.removeMember.confirmButton"),
           disabled: currentUser?.id === member.user.id,
           onClick: removeFromWorkspace,
         },

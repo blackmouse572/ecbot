@@ -29,7 +29,23 @@ describe("member cells", () => {
     expect(screen.getByText("Sales")).toBeInTheDocument();
   });
 
-  it("keeps the owner badge on one line", () => {
+  it("translates the generated Member and Admin role names", async () => {
+    await i18n.changeLanguage("vi");
+    render(
+      <>
+        <MembersRoleCell
+          memberRole={{ name: "Member", type: "WORKSPACE_MEMBER" }}
+        />
+        <MembersRoleCell
+          memberRole={{ name: "Admin", type: "WORKSPACE_MEMBER" }}
+        />
+      </>,
+    );
+    expect(screen.getByText("Thành viên")).toBeInTheDocument();
+    expect(screen.getByText("Quản trị viên")).toBeInTheDocument();
+  });
+
+  it("does not repeat the owner label next to the name (the role column shows it)", () => {
     render(
       <MembersNameCell
         member={
@@ -40,7 +56,16 @@ describe("member cells", () => {
         }
       />,
     );
-    expect(screen.getByText("Workspace owner")).toHaveClass(
+    expect(screen.queryByText("Workspace owner")).not.toBeInTheDocument();
+  });
+
+  it("keeps the role badge on one line", () => {
+    render(
+      <MembersRoleCell
+        memberRole={{ name: "Owner - x", type: "WORKSPACE_OWNER" }}
+      />,
+    );
+    expect(screen.getByText("Workspace owner").closest("span")).toHaveClass(
       "whitespace-nowrap",
     );
   });
