@@ -10,12 +10,14 @@ from langchain_core.tools import StructuredTool
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.variables import AppVars
+from eccho_ai.llm.tools.constants import MUTATING_TOOL_NOTE
 from eccho_ai.models.chat import Chatbots, ChatbotTools
 from eccho_ai.modules.chat.models.agent_models import (
     AgentRequestContext,
     ToolExecutionRequest,
     ToolExecutionResponse,
 )
+from eccho_ai.utils.tool_utils import is_mutating_action
 
 logger = get_logger(__name__)
 
@@ -99,6 +101,10 @@ def _make_executor(tool_id: uuid.UUID, action: str):
     return __executor
 
 
+def _describe(action: str, description: str) -> str:
+    return f"{description}\n\n{MUTATING_TOOL_NOTE}" if is_mutating_action(action) else description
+
+
 def build_tools(chatbot: Chatbots) -> list[StructuredTool]:
     tools: list[StructuredTool] = []
     for chatbot_tool in chatbot.chatbot_tools:
@@ -122,7 +128,7 @@ def build_tools(chatbot: Chatbots) -> list[StructuredTool]:
                     # LLM-facing name to satisfy OpenAI's function-name regex.
                     coroutine=_make_executor(tool_id, action),
                     name=sanitize_tool_name(action),
-                    description=spec.get("description", ""),
+                    description=_describe(action, spec.get("description", "")),
                     args_schema=spec.get("inputSchema", {}),
                 )
             )

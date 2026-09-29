@@ -40,3 +40,15 @@ RAG_MESSAGE_TEMPLATE = (
     "{message}\n"
     "</user_question>"
 )
+
+# Wraps the user's message when retrieval found nothing (#119: the agent then
+# claimed stock and invented product variants). Formatted with `message`.
+NO_KNOWLEDGE_MESSAGE_TEMPLATE = (
+    "No knowledge-base entry matched this message. Do not state prices, stock, "
+    "availability, product variants, opening hours or policies unless they are written "
+    "in your instructions or a tool result; if they are not, say honestly that you do "
+    "not have that information.\n\n"
+    "<user_question>\n"
+    "{message}\n"
+    "</user_question>"
+)

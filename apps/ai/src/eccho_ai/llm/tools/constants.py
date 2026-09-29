@@ -37,3 +37,16 @@ S3_MAX_BYTES = 64_000
 # Explicit region avoids minio-py's slow GetBucketLocation probe (works for R2 + MinIO).
 S3_REGION = "us-east-1"
 SKILL_ACTIVE_STATUS = "ACTIVE"
+
+# Operator (MCP/HTTP) actions whose first word is one of these change data.
+# Discovered actions carry no read-only/destructive annotations, so the name is
+# the only signal (#182: the agent called create_order before the customer said yes).
+MUTATING_ACTION_VERBS = frozenset({
+    "add", "book", "cancel", "charge", "create", "delete", "edit", "insert",
+    "modify", "pay", "place", "refund", "remove", "reserve", "send", "set",
+    "submit", "update", "upsert", "write",
+})
+MUTATING_TOOL_NOTE = (
+    "This action changes data. Only call it after you have read the details back "
+    "to the customer and they clearly said yes in a later message."
+)
