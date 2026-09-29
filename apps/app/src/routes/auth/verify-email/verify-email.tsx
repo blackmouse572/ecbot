@@ -27,19 +27,24 @@ const VerifyEmailPage = () => {
   const verifyEmailFormRef =
     useRef<React.ComponentRef<typeof VerifyEmailForm>>(null);
 
+  // Auto-submit and the Verify button can both fire; one request at a time.
+  const isVerifying = useRef(false);
+
   const onVerify = async (otp: string) => {
     if (!email || !userId || !otp || otp.length < OTP_DIGIT_LENGTH) return;
-    verifyEmail(otp, {
-      onError: () => {
-        toast.error(t("errors.invalidOtp"));
-      },
-      onSuccess: () => {
-        toast.success(t("success.message"));
-        navigate(`/${ROUTES.Login}`, {
-          replace: true,
-        });
-      },
-    });
+    if (isVerifying.current) return;
+    isVerifying.current = true;
+    try {
+      await verifyEmail(otp);
+      toast.success(t("success.message"));
+      navigate(`/${ROUTES.Login}`, {
+        replace: true,
+      });
+    } catch {
+      toast.error(t("errors.invalidOtp"));
+    } finally {
+      isVerifying.current = false;
+    }
   };
 
   const resendOTP = async () => {
@@ -69,6 +74,8 @@ const VerifyEmailPage = () => {
       />
       <Button
         className="w-full"
+        disabled={isLoading}
+        isLoading={isLoading}
         onClick={() => {
           const formValue = verifyEmailFormRef.current?.submit() ?? { otp: "" };
           onVerify(formValue.otp);

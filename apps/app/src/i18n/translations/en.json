@@ -2232,7 +2232,7 @@
       },
       "reveal": {
         "title": "Credential created",
-        "warning": "Copy the secret now, it won't be shown again.",
+        "warning": "Copy the secret now. It won't be shown again.",
         "tokenLabel": "x-api-key",
         "copy": "Copy",
         "copied": "Copied to clipboard."
@@ -2608,7 +2608,7 @@
       "renewsOn": "Renews on",
       "hasCredit": "Extra credit available",
       "noCredit": "No extra credit",
-      "exhausted": "Quota used up, chatbots will reply with their fallback message."
+      "exhausted": "Quota used up. Chatbots will reply with their fallback message."
     },
     "trend": {
       "title": "Daily usage",
