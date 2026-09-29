@@ -1972,7 +1972,6 @@
     "status": "Trạng thái",
     "created_at": "Tạo vào",
     "updated_at": "Cập nhật vào",
-    "file_content": "Xem trước nội dung tệp",
     "details": "Chi tiết",
     "base_id": "ID Cơ sở Kiến thức",
     "timestamps": "Mốc thời gian",
@@ -1992,7 +1991,9 @@
     "editTags": "Chỉnh sửa thẻ",
     "preview_empty": "Chưa có nội dung",
     "preview_unsupported": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
-    "preview_error": "Không tải được mục này. Vui lòng thử lại."
+    "preview_error": "Không tải được mục này. Vui lòng thử lại.",
+    "learned_chunks_other": "Trợ lý đã học tệp này thành {{count}} phần.",
+    "not_learned_yet": "Chưa học. Trợ lý có thể dùng tệp này khi xử lý xong."
   },
   "conversations": {
     "title": "Hội thoại",
