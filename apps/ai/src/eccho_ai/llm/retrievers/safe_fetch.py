@@ -137,6 +137,12 @@ async def _assert_url_allowed(url: httpx.URL) -> None:
     await _assert_host_allowed(host)
 
 
+async def assert_public_url(url: str) -> None:
+    """Raise EgressBlockedError unless *url* is http(s) and resolves only to
+    public addresses (the same check `safe_get` applies to every hop)."""
+    await _assert_url_allowed(httpx.URL(url))
+
+
 async def _drain(response: httpx.Response) -> httpx.Response:
     """Read the response body, aborting once it exceeds MAX_BODY_BYTES, and
     return a fresh `httpx.Response` built through the public constructor.

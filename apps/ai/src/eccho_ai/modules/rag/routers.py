@@ -1,13 +1,17 @@
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.security import require_internal_token
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.models.chat import Chatbots
+from eccho_ai.modules.rag.constants import URL_FETCH_FAILED
 from eccho_ai.modules.rag.models import RAGChatbotLinksRequest, RAGRetrieveRequest, RAGTextIngestRequest, RAGUrlIngestRequest
 from eccho_ai.llm.retrievers.retrieval import RAGRetrievalService
 from eccho_ai.modules.rag.services import RAGIngestService
 from eccho_ai.core.postgres import PostgresRepo
 
+
+logger = get_logger(__name__)
 
 router = APIRouter(
     prefix="/rag", tags=["RAG"], dependencies=[Depends(require_internal_token)]
@@ -58,7 +62,10 @@ async def ingest_url(request: RAGUrlIngestRequest):
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"URL ingest failed: {exc}") from exc
+        # The raw scraper error ("Invalid URL", timeouts) means nothing to the
+        # owner who reads it on the item; keep it in the log instead.
+        logger.warning("url_ingest_failed", url=request.url, error=str(exc))
+        raise HTTPException(status_code=502, detail=URL_FETCH_FAILED) from exc
 
 
 @router.post("/ingest/text")
