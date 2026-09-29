@@ -12,9 +12,17 @@
   <a href="https://github.com/blackmouse572/ecbot/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/blackmouse572/ecbot?style=flat"></a>
 </p>
 
-Ecbot runs one AI agent on Messenger, Zalo, Telegram, WhatsApp, your website and a REST API. You set the persona, knowledge, tools and behaviour once. Operators read every conversation and can take over at any point.
+**The open-source AI sales agent for shops that sell in chat.**
 
-It is an open-source platform for customer service and chat commerce, and the same code runs Ecbot Cloud.
+Your customer asks about a size on Messenger at 11pm, confirms the order on Zalo the next morning, and asks where the parcel is on Telegram. Ecbot answers all three as one agent that knows it is the same person. It checks stock and creates the order through your own API, and it hands the chat to your staff the moment the customer gets upset.
+
+Most open-source agent builders stop at Messenger and WhatsApp. Ecbot ships Zalo OA alongside them, replies in Vietnamese by default, and runs on your own server. The code in this repo is the same code that runs Ecbot Cloud, with nothing held back for a paid edition.
+
+**Who it is for**
+
+- **Shops and service businesses** that take orders in chat and want replies at night and on weekends without hiring another shift.
+- **Agencies** that build chatbots for clients and want one self-hosted platform, with a workspace per client.
+- **Developers** who want a working agent stack (webhooks, queues, RAG, tool calls, handoff) to extend instead of writing one from scratch.
 
 ## Channels
 
@@ -32,17 +40,18 @@ It is an open-source platform for customer service and chat commerce, and the sa
 
 Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three slots are open and specced, which makes them good first contributions.
 
-## Features
+## Why Ecbot
 
-- **One agent on every channel.** The same agent answers on Facebook Messenger, Zalo OA, Telegram, WhatsApp Business, the website widget and the REST API channel. Instagram, TikTok Shop and Shopee are open adapter slots.
-- **Operator inbox with handoff.** Operators see every conversation and can take over at any time. The agent also hands off on a keyword, or when its confidence falls below a threshold you set.
-- **Knowledge base with RAG.** Upload files and pages. Embeddings sit next to the relational data in one Postgres (pgvector), and retrieval is scoped per agent.
-- **Tools and MCP.** Add tools from the Composio marketplace, a hosted MCP server, or any MCP URL you run. Tool calls happen inside the conversation.
-- **Guardrails.** Input and output checks with custom instructions. A blocked message escalates to a human.
-- **Follow-ups and customer context.** Rule-based follow-up messages, customer profiles and automatic tags.
-- **Workspaces and roles.** Multiple workspaces with role-based permissions, invitations, API keys and an activity log.
-- **Streaming and queues.** The AI service streams tokens to the channel. BullMQ runs background jobs, and a queue dashboard shows them.
-- **English and Vietnamese** in the operator UI and API responses.
+- **Made for how Vietnam sells.** Zalo OA sits next to Messenger, Telegram and WhatsApp. Agents reply in Vietnamese unless you pick another language, and the operator UI and API come in Vietnamese and English.
+- **One customer across every app.** Ecbot keeps one profile per person, with each Messenger, Zalo or Telegram identity attached to it. When two profiles share a phone number or email, Ecbot suggests a merge and an operator confirms it. The agent then sees the whole history, tags and notes.
+- **An agent that does the work.** Point Ecbot at your REST endpoints, any MCP server, or a tool from the Composio marketplace. The agent looks up products, creates orders and books appointments inside the chat, and Ecbot logs each call so you can see what it did.
+- **Playbooks the agent loads on demand.** You write skills in markdown, such as "handle a refund: apologise, ask for the order code, check the order". The agent sees only each skill's name until a conversation needs it, which keeps the prompt short and the replies on track.
+- **Your staff stay in charge.** The agent hands off when the customer asks for a person, when its confidence drops below your threshold, when a guardrail blocks a message, or when it tags the customer with a label you mark as urgent, such as "Angry". Operators reply from the same inbox.
+- **No dropped messages.** Ecbot writes each incoming message to a durable queue before it acknowledges the platform's webhook. If the server restarts halfway through a reply, the job picks up where it stopped.
+- **Set up from one sentence.** Describe your business ("a skincare shop in Da Nang that sells on Zalo") and the agent builder suggests a persona, tone, goals and rules for you to edit.
+- **Knowledge in the database you already run.** Upload files and pages. Ecbot stores embeddings in Postgres with pgvector, next to everything else, and scopes retrieval to each agent.
+
+Also included: input and output guardrails, rule-based follow-up messages, workspaces with roles and invitations, API keys, an activity log, token streaming to the channel, and a BullMQ queue dashboard.
 
 Self-hosted Ecbot has every feature Ecbot Cloud has. You supply two things: an LLM key (Ecbot routes through [OpenRouter](https://openrouter.ai), so set `OPENROUTER_API_KEY` and pay the provider directly) and, for Facebook, Zalo or TikTok, your own platform app with messaging permissions approved. Telegram, the website widget and the REST API channel need no approval, so start with one of those.
 
