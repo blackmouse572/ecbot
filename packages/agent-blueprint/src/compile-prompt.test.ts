@@ -136,6 +136,15 @@ describe("compilePrompt", () => {
     expect(out).toContain("before you call any tool that creates, changes or cancels an order, booking or payment");
   });
 
+  // #122: ecbot has no order module. Orders go through a connected commerce
+  // tool, and without one the agent must hand off instead of "confirming".
+  it("places orders with the connected order tool and hands off without one", () => {
+    const out = compilePrompt(sample("ecommerce", "en"));
+    expect(out).toContain("place the order with the connected order tool");
+    expect(out).toContain("If no order tool is connected, do not say the order is placed");
+    expect(out).not.toContain("then read the full order back before closing.");
+  });
+
   it("chooses a or an based on the following word", () => {
     expect(withArticle("online shop")).toBe("an online shop");
     expect(withArticle("hotel or homestay")).toBe("a hotel or homestay");
