@@ -304,6 +304,24 @@
       "chatbots": "Chatbots",
       "accounts": "Connected accounts",
       "conversations": "Conversations"
+    },
+    "gettingStarted": {
+      "title": "Get your assistant live",
+      "description": "Three steps to start answering your customers.",
+      "steps": {
+        "chatbot": {
+          "title": "Create your first assistant",
+          "description": "Answer a few questions about your business and it is ready to chat."
+        },
+        "account": {
+          "title": "Connect a channel",
+          "description": "Put it on your website, Telegram, Messenger or Zalo."
+        },
+        "conversation": {
+          "title": "Get your first conversation",
+          "description": "Chat with it yourself, or wait for your first customer."
+        }
+      }
     }
   },
   "onboard": {

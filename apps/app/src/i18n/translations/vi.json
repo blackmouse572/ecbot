@@ -330,7 +330,25 @@
       "accounts": "Tài khoản đã kết nối",
       "conversations": "Hội thoại"
     },
-    "recentActivities": "Hoạt động gần đây"
+    "recentActivities": "Hoạt động gần đây",
+    "gettingStarted": {
+      "title": "Đưa trợ lý vào hoạt động",
+      "description": "Ba bước để bắt đầu trả lời khách hàng.",
+      "steps": {
+        "chatbot": {
+          "title": "Tạo trợ lý đầu tiên",
+          "description": "Trả lời vài câu hỏi về cửa hàng là trợ lý sẵn sàng trò chuyện."
+        },
+        "account": {
+          "title": "Kết nối kênh",
+          "description": "Đặt trợ lý lên website, Telegram, Messenger hoặc Zalo."
+        },
+        "conversation": {
+          "title": "Nhận cuộc hội thoại đầu tiên",
+          "description": "Tự trò chuyện thử, hoặc chờ khách hàng đầu tiên."
+        }
+      }
+    }
   },
   "onboard": {
     "select": {
