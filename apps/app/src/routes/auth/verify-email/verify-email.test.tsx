@@ -1,13 +1,35 @@
+import "@/i18n";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const verifyEmail = vi.hoisted(() => vi.fn());
+const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
+
+vi.mock("@/hooks/api", () => ({
+  useVerifyEmailOtp: () => ({ verifyEmail, isLoading: false }),
+  useResendEmailOtp: () => ({
+    resendEmailOtp: async () => {},
+    isLoading: false,
+  }),
+}));
+
+vi.mock("@medusajs/ui", async () => {
+  const actual =
+    await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
+  return { ...actual, toast };
+});
+
 import { VerifyEmailPage } from "./verify-email";
 
-const verifyEmail = vi.fn();
+const apiError = (statusCode: number, message: string) =>
+  Object.assign(new Error("Request failed with status code 400"), {
+    response: { status: 400, data: { statusCode, message } },
+  });
 
 const renderPage = () =>
   render(
-    <MemoryRouter initialEntries={["/verify?email=a@b.co&userId=u1"]}>
+    <MemoryRouter initialEntries={["/verify-email?email=a@b.com&userId=u1"]}>
       <VerifyEmailPage />
     </MemoryRouter>,
   );
@@ -17,14 +39,10 @@ const typeCode = () =>
     fireEvent.change(box, { target: { value: String(i + 1) } });
   });
 
-vi.mock("@/hooks/api", () => ({
-  useVerifyEmailOtp: () => ({ verifyEmail, isLoading: false }),
-  useResendEmailOtp: () => ({ resendEmailOtp: vi.fn(), isLoading: false }),
-}));
-
 describe("VerifyEmailPage", () => {
   beforeEach(() => {
     verifyEmail.mockReset();
+    toast.error.mockReset();
   });
 
   it("submits on its own once all six digits are entered", async () => {
@@ -41,9 +59,7 @@ describe("VerifyEmailPage", () => {
     typeCode();
     await waitFor(() => expect(verifyEmail).toHaveBeenCalledTimes(1));
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "actions.verifyButton" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
 
     expect(verifyEmail).toHaveBeenCalledTimes(1);
   });
@@ -54,10 +70,54 @@ describe("VerifyEmailPage", () => {
     verifyEmail.mockRejectedValue(new Error("invalid"));
     renderPage();
     typeCode();
-    await waitFor(() => expect(verifyEmail).toHaveBeenCalled());
+    await waitFor(() => expect(toast.error).toHaveBeenCalled());
     await new Promise((r) => setTimeout(r, 0));
     process.off("unhandledRejection", unhandled);
 
     expect(unhandled).not.toHaveBeenCalled();
+  });
+
+  it("tells the user an expired code has expired, not that it is invalid", async () => {
+    verifyEmail.mockRejectedValue(
+      apiError(5061, "This code has expired. Tap Resend to get a new one."),
+    );
+    renderPage();
+    typeCode();
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "This code has expired. Tap Resend to get a new one.",
+      ),
+    );
+  });
+
+  it("says to wait instead of the throttler's raw message when rate limited", async () => {
+    verifyEmail.mockRejectedValue(
+      Object.assign(new Error("Too Many Request"), {
+        status: 429,
+        response: {
+          status: 429,
+          data: { statusCode: 429, message: "Too Many Request" },
+        },
+      }),
+    );
+    renderPage();
+    typeCode();
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Too many tries. Wait a minute, then try again.",
+      ),
+    );
+  });
+
+  it("falls back to the invalid-code message when the API sends no reason", async () => {
+    verifyEmail.mockRejectedValue(new Error("Network Error"));
+    renderPage();
+    typeCode();
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Invalid verification code."),
+    );
   });
 });

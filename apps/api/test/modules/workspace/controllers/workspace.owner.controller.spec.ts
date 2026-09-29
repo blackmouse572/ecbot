@@ -176,10 +176,27 @@ describe('WorkspaceController — avatar upload key shape (Task 14)', () => {
         expect(mockAwsS3Service.putItem).toHaveBeenCalledTimes(1);
         const call = mockAwsS3Service.putItem.mock.calls[0][0];
 
-        expect(call.key).toMatch(
-            /^workspace\/owner-1\/[0-9a-f-]{36}\.png$/
-        );
+        expect(call.key).toMatch(/^workspace\/owner-1\/[0-9a-f-]{36}\.png$/);
         expect(call.key).not.toContain('evil');
+    });
+
+    it('createWorkSpace still creates the workspace, with the default avatar, when the optional avatar upload fails', async () => {
+        mockAwsS3Service.putItem.mockRejectedValueOnce(
+            new Error('AccessDenied')
+        );
+
+        const result = await controller.createWorkSpace(
+            'owner-1',
+            { name: 'Acme' } as any,
+            image
+        );
+
+        // No image: the service seeds its default avatar.
+        expect(mockWorkSpaceService.create).toHaveBeenCalledWith(
+            { id: 'owner-1' },
+            { name: 'Acme', image: undefined }
+        );
+        expect(result).toEqual({ data: { id: 'ws-1' } });
     });
 
     it('updateWorkSpace keys the upload under workspace/{id}/<uuid>.<ext>, never the raw originalname', async () => {
@@ -195,9 +212,7 @@ describe('WorkspaceController — avatar upload key shape (Task 14)', () => {
         expect(mockAwsS3Service.putItem).toHaveBeenCalledTimes(1);
         const call = mockAwsS3Service.putItem.mock.calls[0][0];
 
-        expect(call.key).toMatch(
-            /^workspace\/owner-1\/[0-9a-f-]{36}\.png$/
-        );
+        expect(call.key).toMatch(/^workspace\/owner-1\/[0-9a-f-]{36}\.png$/);
         expect(call.key).not.toContain('evil');
     });
 });

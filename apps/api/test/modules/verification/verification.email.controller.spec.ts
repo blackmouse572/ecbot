@@ -12,6 +12,7 @@ describe('VerificationEmailController — email dispatch', () => {
 
     const enqueue = jest.fn();
     const findOneActiveLatestEmailByUser = jest.fn();
+    const findOneExpiredLatestEmailByUser = jest.fn();
     const findOneById = jest.fn();
     const validateOtp = jest.fn();
     const verify = jest.fn();
@@ -27,6 +28,7 @@ describe('VerificationEmailController — email dispatch', () => {
     beforeEach(async () => {
         enqueue.mockReset();
         findOneActiveLatestEmailByUser.mockReset();
+        findOneExpiredLatestEmailByUser.mockReset();
         findOneById.mockReset();
         validateOtp.mockReset();
         verify.mockReset();
@@ -47,6 +49,7 @@ describe('VerificationEmailController — email dispatch', () => {
                     provide: VerificationService,
                     useValue: {
                         findOneActiveLatestEmailByUser,
+                        findOneExpiredLatestEmailByUser,
                         validateOtp,
                         verify,
                         incrementOtpAttempt,
@@ -66,14 +69,53 @@ describe('VerificationEmailController — email dispatch', () => {
         enqueue.mockResolvedValue(undefined);
     });
 
-    it('resendVerificationEmail: enqueues VERIFICATION via CloudTasksQueueClient', async () => {
+    it('resendVerificationEmail: re-sends the active code while it has time left, so codes from earlier emails keep working', async () => {
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
         const verification = {
-            otp: '444444',
-            expiredDate: new Date('2026-06-01T00:00:00.000Z'),
-            reference: 'ref-email-resend-1',
+            otp: '222222',
+            expiredDate: new Date(Date.now() + 10 * 60 * 1000),
+            reference: 'ref-still-fresh',
         };
         findOneActiveLatestEmailByUser.mockResolvedValue(verification);
+        findOneById.mockResolvedValue(user);
+
+        await controller.resendVerificationEmail({
+            email: 'a@b.com',
+            id: 'user-1',
+        } as any);
+
+        expect(inactiveEmailManyByUser).not.toHaveBeenCalled();
+        expect(createEmailByUser).not.toHaveBeenCalled();
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.VERIFICATION,
+            {
+                send: { email: 'a@b.com', name: 'A' },
+                data: {
+                    otp: '222222',
+                    expiredAt: verification.expiredDate,
+                    reference: 'ref-still-fresh',
+                },
+            },
+            { taskName: expect.stringMatching(/^VERIFICATION-user-1-VE\d+$/) }
+        );
+    });
+
+    it('resendVerificationEmail: issues and enqueues a fresh code when the active one is about to expire', async () => {
+        // Re-sending a code with seconds left could mail one that is already
+        // expired on arrival.
+        const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
+        findOneActiveLatestEmailByUser.mockResolvedValue({
+            otp: '111111',
+            expiredDate: new Date(Date.now() + 60 * 1000),
+            reference: 'ref-about-to-expire',
+        });
+        const verification = {
+            otp: '444444',
+            expiredDate: new Date('2026-06-01T00:15:00.000Z'),
+            reference: 'ref-email-resend-1',
+        };
+        createEmailByUser.mockResolvedValue(verification);
         findOneById.mockResolvedValue(user);
 
         await controller.resendVerificationEmail({
@@ -85,6 +127,10 @@ describe('VerificationEmailController — email dispatch', () => {
             'user-1',
             'a@b.com'
         );
+        expect(inactiveEmailManyByUser).toHaveBeenCalledWith('user-1', {
+            em: expect.objectContaining({ begin }),
+        });
+        expect(commit).toHaveBeenCalledTimes(1);
         expect(enqueue).toHaveBeenCalledWith(
             'email',
             ENUM_SEND_EMAIL_PROCESS.VERIFICATION,
@@ -284,6 +330,7 @@ describe('VerificationEmailController — email dispatch', () => {
             reference: 'ref-email-resend-1',
         };
         findOneActiveLatestEmailByUser.mockResolvedValue(verification);
+        createEmailByUser.mockResolvedValue(verification);
         findOneById.mockResolvedValue(user);
         enqueue.mockRejectedValue(new Error('boom'));
 
@@ -342,12 +389,15 @@ describe('VerificationEmailController — email dispatch', () => {
         expect(validateOtp).not.toHaveBeenCalled();
     });
 
-    it('verifyEmail: an expired verification row is not accepted', async () => {
-        // Same contract as the cross-user case: the service query's
-        // `expiredDate: { $gte: now }` filter excludes an expired row, so it
-        // never reaches the controller — proven directly in
-        // verification.service.spec.ts.
+    it('verifyEmail: an expired code is rejected as EXPIRED so the user knows to resend', async () => {
+        // The active lookup excludes the expired row (its `expiredDate:
+        // { $gte: now }` filter, proven in verification.service.spec.ts); the
+        // expired lookup is scoped to the same user and email.
         findOneActiveLatestEmailByUser.mockResolvedValue(null);
+        findOneExpiredLatestEmailByUser.mockResolvedValue({
+            otp: '123456',
+            expiredDate: new Date('2026-06-01T00:00:00.000Z'),
+        });
         findOneById.mockResolvedValue({ id: 'user-1' });
 
         await expect(
@@ -358,8 +408,8 @@ describe('VerificationEmailController — email dispatch', () => {
             } as any)
         ).rejects.toMatchObject({
             response: {
-                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'verification.error.notFound',
+                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.EXPIRED,
+                message: 'verification.error.expired',
             },
         });
     });

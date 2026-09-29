@@ -1,6 +1,7 @@
 import { Container, Heading } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 import type { KnowledgeItemResponseDto } from "@repo/client";
+import { KnowledgeFilePreview } from "./knowledge-file-preview";
 import { KnowledgeItemContentActionType } from "./knowlege-item-content-action-type";
 
 type KnowledgeContentSectionProps = {
@@ -28,9 +29,7 @@ export const KnowledgeContentSection = ({
         <div className="rounded-md bg-ui-bg-subtle p-4">
           <div className="prose prose-sm max-w-none dark:prose-invert">
             {item.type === "FILE" ? (
-              <div className="flex items-center justify-center py-8 text-ui-fg-muted">
-                <p>{t("knowledge_item.file_content")}</p>
-              </div>
+              <KnowledgeFilePreview item={item} />
             ) : item.type === "URL" ? (
               <div className="space-y-2">
                 <p className="break-words text-sm text-ui-fg-base">

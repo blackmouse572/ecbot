@@ -12,6 +12,22 @@ if (!("ResizeObserver" in globalThis)) {
   };
 }
 
+// jsdom lacks IntersectionObserver, which the tag combobox (@repo/ui)
+// constructs on mount.
+if (!("IntersectionObserver" in globalThis)) {
+  globalThis.IntersectionObserver = class {
+    readonly root = null;
+    readonly rootMargin = "";
+    readonly thresholds = [];
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  };
+}
+
 afterEach(() => {
   cleanup();
 });

@@ -1,7 +1,7 @@
 import { SingleColumnPage } from "@repo/ui/layout";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
-import { RecentActivityListTable } from "./components";
+import { GettingStarted, RecentActivityListTable } from "./components";
 import { StatsContainer } from "./components/stats-container";
 import { StatsItem } from "./components/stats-item";
 import { useStatsData } from "./hooks/use-stats-data";
@@ -14,6 +14,7 @@ export function Dashboard() {
       <Helmet>
         <title>{t("app.nav.dashboard.header")} - Ecbot</title>
       </Helmet>
+      <GettingStarted />
       <StatsContainer>
         {data.map((item) => (
           <StatsItem

@@ -16,7 +16,11 @@ from eccho_ai.llm.agents.agent import AgentContext, get_agent  # re-exported
 from eccho_ai.llm.retrievers.retrieval import RAGRetrievalResult, RAGRetrievalService
 from eccho_ai.llm.tools.resolve import resolve_chatbot_tools
 from eccho_ai.models.chat import Chatbots
-from eccho_ai.modules.chat.constants import DEFAULT_MAX_TOOL_ITERATIONS, RAG_MESSAGE_TEMPLATE
+from eccho_ai.modules.chat.constants import (
+    DEFAULT_MAX_TOOL_ITERATIONS,
+    NO_KNOWLEDGE_MESSAGE_TEMPLATE,
+    RAG_MESSAGE_TEMPLATE,
+)
 from eccho_ai.modules.chat.customer_context import build_customer_context_block
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 from eccho_ai.modules.chat.models.chat_models import ChatRequest
@@ -56,8 +60,10 @@ async def get_rag_retrieval(chat_request: ChatRequest) -> RAGRetrievalResult | N
 
 
 def _build_rag_message(message: str, retrieval: RAGRetrievalResult | None) -> str:
-    if not retrieval or not retrieval.has_context:
+    if retrieval is None:
         return message
+    if not retrieval.has_context:
+        return NO_KNOWLEDGE_MESSAGE_TEMPLATE.format(message=message)
 
     return RAG_MESSAGE_TEMPLATE.format(context=retrieval.context, message=message)
 

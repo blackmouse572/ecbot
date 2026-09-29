@@ -288,7 +288,8 @@
         },
         "errors": {
           "invalidOtp": "Invalid verification code.",
-          "resendOtpFailed": "Failed to resend code. Try again."
+          "resendOtpFailed": "Failed to resend code. Try again.",
+          "tooManyAttempts": "Too many tries. Wait a minute, then try again."
         },
         "success": {
           "message": "Email verified successfully.",
@@ -304,6 +305,24 @@
       "chatbots": "Chatbots",
       "accounts": "Connected accounts",
       "conversations": "Conversations"
+    },
+    "gettingStarted": {
+      "title": "Get your assistant live",
+      "description": "Three steps to start answering your customers.",
+      "steps": {
+        "chatbot": {
+          "title": "Create your first assistant",
+          "description": "Answer a few questions about your business and it is ready to chat."
+        },
+        "account": {
+          "title": "Connect a channel",
+          "description": "Put it on your website, Telegram, Messenger or Zalo."
+        },
+        "conversation": {
+          "title": "Get your first conversation",
+          "description": "Message it from your website or a connected channel, or wait for your first customer."
+        }
+      }
     }
   },
   "onboard": {
@@ -1942,7 +1961,6 @@
     "status": "Status",
     "created_at": "Created At",
     "updated_at": "Updated At",
-    "file_content": "File content preview",
     "details": "Details",
     "base_id": "Knowledge Base ID",
     "timestamps": "Timestamps",
@@ -1963,7 +1981,11 @@
     },
     "preview_empty": "No content yet",
     "preview_unsupported": "This file type can't be previewed. Download it to view.",
-    "preview_error": "Couldn't load this item. Please try again."
+    "preview_error": "Couldn't load this item. Please try again.",
+    "learned_chunks_one": "The assistant learned this file as {{count}} section.",
+    "learned_chunks_other": "The assistant learned this file as {{count}} sections.",
+    "not_learned_yet": "Not learned yet. The assistant can use this file once processing completes.",
+    "learn_failed": "Could not learn this file. Try Process again."
   },
   "conversations": {
     "title": "Conversations",

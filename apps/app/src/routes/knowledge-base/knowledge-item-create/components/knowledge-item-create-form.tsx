@@ -97,14 +97,15 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
       toast.success(t("knowledge_item.create_success"));
       handleSuccess();
 
-      // URL items start as DRAFT — kick off ingestion right away instead of
-      // making the user find the "Process" action in the list.
+      // Every item starts as DRAFT, which the agent never uses. Kick off
+      // ingestion right away, for every type, instead of making the user find
+      // the "Process" action in the list.
       const createdId = created.data?.data?.id;
-      if (selectedType === "URL" && createdId) {
+      if (createdId) {
         try {
           await processItem({ knowledgeBaseId, id: createdId });
         } catch (processError) {
-          console.error("Error auto-processing URL item:", processError);
+          console.error("Error auto-processing knowledge item:", processError);
           toast.info(t("knowledge_item.process_after_create_error"));
         }
       }
