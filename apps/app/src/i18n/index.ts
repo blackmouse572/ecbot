@@ -53,6 +53,8 @@ i18n.use(initReactI18next).init({
   resources,
   interpolation: {
     skipOnVariables: false,
+    // React already escapes rendered text; escaping here double-encodes "&" etc.
+    escapeValue: false,
   },
 });
 

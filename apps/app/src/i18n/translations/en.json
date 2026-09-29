@@ -45,7 +45,7 @@
     },
     "form": {
       "namePlaceholder": "e.g. Refund policy",
-      "descriptionHint": "Short trigger hint — tells the agent when to load this skill.",
+      "descriptionHint": "Short trigger hint that tells the agent when to load this skill.",
       "instructions": "Instructions",
       "instructionsHint": "Full markdown instructions loaded when the skill applies.",
       "importHint": "Drop a .md file here or click to import"
@@ -441,7 +441,7 @@
           "accountKeyHint": "Send this as accountKey when you post a message.",
           "secretLabel": "Signing secret",
           "secretHint": "Verify x-eccho-signature with this key.",
-          "secretWarning": "The signing secret is shown once and cannot be retrieved again. Copy it now — if you lose it, rotate for a new one."
+          "secretWarning": "The signing secret is shown once and cannot be retrieved again. Copy it now. If you lose it, rotate for a new one."
         },
         "websiteWidget": {
           "title": "Add a website widget",
@@ -463,7 +463,7 @@
           "tokenLabel": "Bot Token",
           "tokenPlaceholder": "1234567890:AAF...",
           "tokenHint": "Create a bot and get the token via @BotFather",
-          "tokenInvalid": "Invalid token format — expected 1234567890:ABC...",
+          "tokenInvalid": "Invalid token format, expected 1234567890:ABC...",
           "cta": "Connect Bot"
         },
         "whatsapp": {
@@ -472,7 +472,7 @@
           "phoneNumberIdInvalid": "Phone number ID must contain digits only",
           "tokenLabel": "Access token",
           "tokenPlaceholder": "EAAG...",
-          "tokenHint": "Use a system user token issued for ecbot's Meta app, with access to your WhatsApp Business account. A token from your own Meta app won't receive messages — use \"Log in with Facebook\" instead.",
+          "tokenHint": "Use a system user token issued for ecbot's Meta app, with access to your WhatsApp Business account. A token from your own Meta app won't receive messages, so use \"Log in with Facebook\" instead.",
           "cta": "Connect WhatsApp",
           "tabs": {
             "oauth": "Log in with Facebook",
@@ -1635,7 +1635,7 @@
       "error": "Failed to delete workspace",
       "dangerZone": {
         "title": "Danger zone",
-        "description": "Deleting this workspace permanently removes all of its data — members, customers, chatbots and more. This cannot be undone.",
+        "description": "Deleting this workspace permanently removes all of its data (members, customers, chatbots and more). This cannot be undone.",
         "action": "Delete workspace"
       },
       "confirm": {
@@ -1715,7 +1715,9 @@
     },
     "unsaved": {
       "title": "Unsaved Changes",
-      "message": "You have unsaved changes. Do you want to leave without saving?"
+      "message": "You have unsaved changes. Do you want to leave without saving?",
+      "keepEditing": "Keep editing",
+      "discard": "Discard changes"
     },
     "plusCount": "+ {{count}}",
     "areYouSure": "Are you sure?",
@@ -2230,7 +2232,7 @@
       },
       "reveal": {
         "title": "Credential created",
-        "warning": "Copy the secret now — it won't be shown again.",
+        "warning": "Copy the secret now, it won't be shown again.",
         "tokenLabel": "x-api-key",
         "copy": "Copy",
         "copied": "Copied to clipboard."
@@ -2335,7 +2337,7 @@
     },
     "edit": {
       "title": "Edit tool",
-      "subtitle": "Update the tool configuration. Credentials are write-only — leave the field empty to keep the existing value.",
+      "subtitle": "Update the tool configuration. Credentials are write-only: leave the field empty to keep the existing value.",
       "submit": "Save changes",
       "success": "Tool updated.",
       "error": "Failed to update tool.",
@@ -2497,7 +2499,7 @@
       "providerTab": {
         "composio": "Composio",
         "eccho": "Ecbot",
-        "ecchoComingSoon": "Coming soon — first-party tools land in a follow-up."
+        "ecchoComingSoon": "Coming soon: first-party tools land in a follow-up."
       },
       "callback": {
         "installing": "Finishing install…",
@@ -2606,7 +2608,7 @@
       "renewsOn": "Renews on",
       "hasCredit": "Extra credit available",
       "noCredit": "No extra credit",
-      "exhausted": "Quota used up — chatbots will reply with their fallback message."
+      "exhausted": "Quota used up, chatbots will reply with their fallback message."
     },
     "trend": {
       "title": "Daily usage",
@@ -2643,7 +2645,7 @@
       "preview": "Warn the owner when less than {{percent}}% of the period quota is left."
     },
     "debug": {
-      "title": "Debug — development only",
+      "title": "Debug (development only)",
       "description": "Absolute token counts. Not served in production.",
       "quota": "Quota",
       "used": "Used this period",

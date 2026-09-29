@@ -25,7 +25,7 @@ export function KnowledgeItemStatusCell({
     return (
       <Tooltip content={errorMessage}>
         <div className="flex items-center gap-1 w-fit cursor-default">
-          <Badge color={statusConfig.color} size="2xsmall">
+          <Badge color={statusConfig.color} size="2xsmall" className="whitespace-nowrap">
             <IconAlertTriangleFilled className="size-3 mr-1" />
             {statusConfig.label}
           </Badge>
@@ -42,7 +42,7 @@ export function KnowledgeItemStatusCell({
           includeTime: true,
         })}
       >
-        <Badge color={statusConfig.color} size="2xsmall">
+        <Badge color={statusConfig.color} size="2xsmall" className="whitespace-nowrap">
           <IconCircleCheckFilled className="size-3 mr-1" />
           {statusConfig.label}
         </Badge>
@@ -51,7 +51,7 @@ export function KnowledgeItemStatusCell({
   }
   return (
     <div className="flex items-center gap-1">
-      <StatusBadge color={statusConfig.color}>{statusConfig.label}</StatusBadge>
+      <StatusBadge color={statusConfig.color} className="whitespace-nowrap">{statusConfig.label}</StatusBadge>
     </div>
   );
 }

@@ -65,6 +65,7 @@ const VerifyEmailPage = () => {
         ref={verifyEmailFormRef}
         length={OTP_DIGIT_LENGTH}
         email={email}
+        onVerify={onVerify}
       />
       <Button
         className="w-full"
