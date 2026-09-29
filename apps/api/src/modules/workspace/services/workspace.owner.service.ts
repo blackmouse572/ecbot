@@ -26,7 +26,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { StringValue } from 'ms';
 import { plainToInstance } from 'class-transformer';
-import slugify from 'slugify';
+import { toWorkspaceSlug } from '@app/modules/workspace/utils/workspace-slug.util';
 import { RoleService } from 'src/modules/role/services/role.service';
 import {
     WORKSPACE_DEFAULT_MEMBER_ROLES,
@@ -329,12 +329,17 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         data: WorkSpaceCreateRequestDto,
         options?: IDatabaseCreateOptions
     ): Promise<WorkspaceEntity> {
-        const { name, image } = data;
+        const { name, image, slug } = data;
         const em = options?.em || this.em;
 
         const entity = new WorkspaceEntity();
         entity.name = name;
-        entity.slug = slugify(name);
+        // The typed slug wins over one derived from the name. Always
+        // lowercase: the app's edit form accepts only lowercase slugs, so a
+        // capital here made the workspace settings unsavable.
+        entity.slug =
+            toWorkspaceSlug(slug || name) ||
+            this.helperStringService.random(8).toLowerCase();
         entity.avatar =
             image ||
             this.helperAvatarService.generateWorkspaceAvatar(entity.slug);

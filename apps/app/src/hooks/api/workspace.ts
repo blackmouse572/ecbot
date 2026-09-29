@@ -221,6 +221,10 @@ export function useEditWorkspace() {
       client.invalidateQueries({
         queryKey: workspaceQueryKeys.detail(workspaceSlug),
       });
+      // The list carries the slug, which an edit may have changed.
+      client.invalidateQueries({
+        queryKey: workspaceQueryKeys.list(),
+      });
     },
     onError: (error) => {
       if ("status" in error && error.status === 409) {

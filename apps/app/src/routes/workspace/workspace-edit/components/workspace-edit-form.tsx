@@ -1,56 +1,28 @@
 import { RouteDrawer, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
 import { useEditWorkspace } from "@/hooks/api/workspace";
-import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input } from "@medusajs/ui";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
 import { FileUpload, Form } from "@repo/ui/common-components";
-import { t } from "i18next";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import zod from "zod";
+import {
+  createWorkspaceEditSchema,
+  type WorkspaceEditFormData,
+} from "../schemas";
 
 type WorkspaceEditFormProps = {
   workspace: WorkSpaceGetResponseDto;
 };
 
-const WorkspaceEditSchema = zod.object({
-  name: zod
-    .string()
-    .min(1, t("errors.required"))
-    .max(255, t("errors.maxLength", { maxLength: 255 })),
-  slug: zod
-    .string()
-    .min(1, t("errors.required"))
-    .max(255, t("errors.maxLength", { maxLength: 255 }))
-    .regex(/^[a-z0-9-]+$/, t("errors.slug")),
-  avatar: zod
-    .object({
-      file: zod
-        .instanceof(File)
-        .refine(
-          (file) => file.size <= 1024 * 1024 * 5,
-          t("errors.maxFileSize", { maxFileSize: 5 }),
-        )
-        .optional(),
-      url: zod.string(),
-    })
-    .optional(),
-});
-
-type WorkspaceEditFormData = zod.infer<typeof WorkspaceEditSchema>;
-
 export function WorkspaceEditForm({ workspace }: WorkspaceEditFormProps) {
   const { t } = useTranslation();
   const { handleSuccess } = useRouteModal();
-  const navigate = useNavigate();
-  const { workspaceSlug } = useWorkspaceParams();
 
   const form = useForm<WorkspaceEditFormData>({
-    resolver: zodResolver(WorkspaceEditSchema),
+    resolver: zodResolver(createWorkspaceEditSchema(workspace.slug)),
     defaultValues: {
       name: workspace.name || "",
       slug: workspace.slug || "",
@@ -71,8 +43,8 @@ export function WorkspaceEditForm({ workspace }: WorkspaceEditFormProps) {
         // The update endpoint takes no avatar yet, and it rejects a body key
         // its DTO does not declare.
         await mutateAsync({ name, slug });
-        handleSuccess();
-        navigate(`/${workspaceSlug}/${ROUTES.Settings}/${ROUTES.Workspace}`);
+        // The slug is the URL: after a change, the old one no longer resolves.
+        handleSuccess(`/${slug}/${ROUTES.Settings}/${ROUTES.Workspace}`);
       } catch (error) {
         console.error("Failed to update workspace:", error);
       }
