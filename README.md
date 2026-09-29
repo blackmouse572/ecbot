@@ -8,6 +8,7 @@
   <a href="https://github.com/blackmouse572/ecbot/actions/workflows/test-ai.yml"><img alt="AI tests" src="https://img.shields.io/github/actions/workflow/status/blackmouse572/ecbot/test-ai.yml?branch=main&label=ai%20tests"></a>
   <a href="https://github.com/blackmouse572/ecbot/actions/workflows/lint-api.yml"><img alt="Lint" src="https://img.shields.io/github/actions/workflow/status/blackmouse572/ecbot/lint-api.yml?branch=main&label=lint"></a>
   <a href="./CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-16a34a"></a>
+  <a href="https://discord.gg/WaB5NjCycq"><img alt="Discord" src="https://img.shields.io/badge/Discord-join%20chat-5865f2?logo=discord&logoColor=white"></a>
   <a href="https://github.com/blackmouse572/ecbot/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/blackmouse572/ecbot?style=flat"></a>
 </p>
 
@@ -127,6 +128,10 @@ Conventions live in [`AGENTS.md`](./AGENTS.md) and `.github/instructions/`. Read
 ## Contributing
 
 Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md). Adapter slots are labelled `good first issue`.
+
+## Community
+
+Ask questions and share what you build on [Discord](https://discord.gg/WaB5NjCycq).
 
 ## Security
 
