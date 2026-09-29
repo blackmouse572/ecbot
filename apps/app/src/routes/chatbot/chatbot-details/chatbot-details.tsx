@@ -16,6 +16,7 @@ import { ChatbotToolInvocations } from "../components/chatbot-tool-invocations";
 import type { chatbotDetailsLoader } from "./loader";
 import { ChatbotGeneralKnowledgeSection } from "./components/chatbot-general-knowledge/chatbot-general-knowledge";
 import { AIChatCard } from "../../../components/ai-chat/ai-chat-card";
+import { TestChatNotice } from "../../../components/ai-chat/test-chat-notice";
 import { AIChatInput } from "../../../components/ai-chat/ai-chat-input";
 import { workspaceChatTransport } from "../../../components/ai-chat/use-ai-chat-stream";
 import { useAuthToken } from "@/modules/auth";
@@ -83,6 +84,7 @@ export function ChatbotDetails() {
           <ChatbotSummarySection item={chatbot} />
           <AIChatCard
             heading={t("chatbot.chat.heading")}
+            subheading={<TestChatNotice />}
             chatbotId={chatbot.id}
             renderInput={<AIChatInput />}
             transport={chatTransport}

@@ -787,6 +787,7 @@
     "chat": {
       "heading": "Test Chat",
       "refreshHint": "Refresh clears chat. Use Clear to start over.",
+      "liveOnlyNotice": "Test chat: reminders and handoff to staff only work on live channels.",
       "clear": "Clear",
       "restart": "Restart Chat",
       "inputPlaceholder": "Type your message...",
