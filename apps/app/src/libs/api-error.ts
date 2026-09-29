@@ -1,14 +1,4 @@
-export type ApiErrorDetails = {
-  /** The API's localized summary message, when the error carries one. */
-  message?: string;
-  /** First validation message per request property. */
-  fields: Record<string, string>;
-};
-
-type ApiErrorBody = {
-  message?: unknown;
-  errors?: Array<{ property?: unknown; message?: unknown }>;
-};
+import type { ApiErrorBody, ApiErrorDetails } from "@/types/api-error";
 
 /**
  * Read the API error body out of a failed `@repo/client` call. The client

@@ -204,33 +204,6 @@ export function widgetChatTransport(
   };
 }
 
-/**
- * The AI SDK transport throws the failed response body verbatim as
- * `error.message`. Show the API's own (localized) `message` from that body;
- * anything else (network failures, non-API bodies) gets the generic fallback,
- * so a visitor never sees raw JSON, paths or versions.
- */
-export function chatErrorMessage(
-  error: Error | undefined,
-  fallback: string,
-): string {
-  try {
-    const body: unknown = JSON.parse(error?.message ?? "");
-    if (
-      body &&
-      typeof body === "object" &&
-      "message" in body &&
-      typeof body.message === "string" &&
-      body.message
-    ) {
-      return body.message;
-    }
-  } catch {
-    // Not JSON: fall through to the generic message.
-  }
-  return fallback;
-}
-
 type ClientConfigLike = {
   baseURL?: string;
   headers?: Record<string, unknown>;
@@ -263,7 +236,9 @@ export function buildChatStreamRequest({
       .map((part) => (part as { text: string }).text)
       .join("") ?? "";
 
-  const headers = { ...((clientConfig.headers ?? {}) as Record<string, unknown>) };
+  const headers = {
+    ...((clientConfig.headers ?? {}) as Record<string, unknown>),
+  };
   if (transport.includeCredentials) {
     if (token) headers.Authorization = `Bearer ${token}`;
   } else {
@@ -336,7 +311,10 @@ export function useAiChat({
     if (!shouldInvalidate) return;
     for (const message of chat.messages) {
       for (const part of message.parts as UIMessagePartLike[]) {
-        if (part.type.startsWith("tool-") && part.state === "output-available") {
+        if (
+          part.type.startsWith("tool-") &&
+          part.state === "output-available"
+        ) {
           const toolCallId = part.toolCallId as string;
           if (!invalidatedToolCallIds.current.has(toolCallId)) {
             invalidatedToolCallIds.current.add(toolCallId);

@@ -8,20 +8,14 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import type { StatsItemProps } from "../components/stats-item";
-
-// Only the list total is needed, so fetch a single row.
-const COUNT_ONLY = { perPage: 1 };
-
-type CountQuery = { count: number; isLoading: boolean; isError: boolean };
-
-const countValue = ({ count, isLoading, isError }: CountQuery) =>
-  isLoading || isError ? "-" : count;
+import { STATS_COUNT_QUERY } from "../constants";
+import { countValue } from "../utils";
 
 export function useStatsData(): StatsItemProps[] {
   const { t } = useTranslation();
-  const chatbots = useChatbots(COUNT_ONLY);
-  const accounts = useAccounts(COUNT_ONLY);
-  const conversations = useConversations(COUNT_ONLY);
+  const chatbots = useChatbots(STATS_COUNT_QUERY);
+  const accounts = useAccounts(STATS_COUNT_QUERY);
+  const conversations = useConversations(STATS_COUNT_QUERY);
 
   return [
     {

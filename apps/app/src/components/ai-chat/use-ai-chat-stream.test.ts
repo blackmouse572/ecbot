@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   buildChatStreamRequest,
-  chatErrorMessage,
   isEmptyRenderModel,
   partsToRenderModel,
   shareChatTransport,
@@ -227,7 +226,11 @@ describe("chat transport configs", () => {
   };
 
   const messages = [
-    { id: "m1", role: "user" as const, parts: [{ type: "text", text: "hello" }] },
+    {
+      id: "m1",
+      role: "user" as const,
+      parts: [{ type: "text", text: "hello" }],
+    },
   ];
 
   it("posts a workspace turn to the authed stream proxy", () => {
@@ -242,7 +245,10 @@ describe("chat transport configs", () => {
     expect(request.api).toBe(
       "https://api.example.com/api/v1/shared/acme/chatbots/cb1/stream",
     );
-    expect(request.body).toEqual({ message: "hello", chat_session_id: "session-1" });
+    expect(request.body).toEqual({
+      message: "hello",
+      chat_session_id: "session-1",
+    });
   });
 
   it("attaches the given token as a Bearer header on the workspace transport", () => {
@@ -360,7 +366,12 @@ describe("chat transport configs", () => {
   // it rejects a body key its DTO does not declare.
   it("posts a widget turn as text with only the keys its endpoint declares", () => {
     const request = buildChatStreamRequest({
-      transport: widgetChatTransport("wk", "v1", "https://shop.example", () => "ts"),
+      transport: widgetChatTransport(
+        "wk",
+        "v1",
+        "https://shop.example",
+        () => "ts",
+      ),
       clientConfig,
       token: null,
       id: "s",
@@ -375,26 +386,5 @@ describe("chat transport configs", () => {
       "visitorId",
     ]);
     expect(request.body).toMatchObject({ text: "hello", visitorId: "v1" });
-  });
-});
-
-describe("chatErrorMessage", () => {
-  const fallback = "Something went wrong. Please try again.";
-
-  it("shows the API's message, not the raw JSON body", () => {
-    const body = JSON.stringify({
-      statusCode: 5040,
-      message: "The AI backend is currently unavailable. Please try again later.",
-      _metadata: { path: "/api/v1/public/widget/k/messages", repoVersion: "1.0.0" },
-    });
-    expect(chatErrorMessage(new Error(body), fallback)).toBe(
-      "The AI backend is currently unavailable. Please try again later.",
-    );
-  });
-
-  it("falls back when the error is not an API body", () => {
-    expect(chatErrorMessage(new Error("Failed to fetch"), fallback)).toBe(fallback);
-    expect(chatErrorMessage(new Error('{"statusCode":500}'), fallback)).toBe(fallback);
-    expect(chatErrorMessage(undefined, fallback)).toBe(fallback);
   });
 });
