@@ -15,6 +15,17 @@ export class MigrationCountrySeed {
         try {
             const data = [
                 {
+                    name: 'Vietnam',
+                    alpha2Code: 'VN',
+                    alpha3Code: 'VNM',
+                    fipsCode: 'VM',
+                    numericCode: '704',
+                    phoneCode: ['84'],
+                    continent: 'Asia',
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                    currency: 'VND',
+                },
+                {
                     name: 'Indonesia',
                     alpha2Code: 'ID',
                     alpha3Code: 'IDN',

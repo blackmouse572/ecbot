@@ -1,3 +1,6 @@
 // The API throttles verify and resend; its 429 message is a generic English
 // "Too Many Request", so the auth pages show their own copy instead.
 export const TOO_MANY_REQUESTS_STATUS = 429;
+
+// Preselected on sign-up for the Vietnamese UI (the product's home market).
+export const VIETNAM_ALPHA2_CODE = "VN";

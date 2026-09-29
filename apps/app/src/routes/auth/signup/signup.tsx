@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { SocialLogin } from "../components/social-login";
+import { signupDefaultCountryId } from "../utils";
 
 const REGISTER_FORM_ID = "register-form";
 
@@ -86,6 +87,7 @@ function SignUpPage() {
         locale={locale === "vi" ? "vi" : "en"}
         onSubmittingChange={setIsSubmitting}
         countries={countryList}
+        defaultCountry={signupDefaultCountryId(countries ?? [], locale)}
         messages={{
           emailPlaceholder: t("fields.email"),
           namePlaceholder: t("fields.name"),
