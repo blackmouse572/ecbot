@@ -102,6 +102,22 @@ describe('KnowledgeIngestTaskService', () => {
             { message: 'Request failed with status code 502' },
             'Request failed with status code 502',
         ],
+        // Review of #202: apps/ai wraps HTTPException as AppResponse
+        // { status, msg, data, error }, with no `detail`.
+        [
+            {
+                response: {
+                    data: {
+                        status: 400,
+                        msg: 'This page is not publicly reachable.',
+                        data: null,
+                        error: null,
+                    },
+                },
+                message: 'Request failed with status code 400',
+            },
+            'This page is not publicly reachable.',
+        ],
         ['plain string error', 'plain string error'],
     ])('extracts message from %p as %p', async (error, expected) => {
         const { extractIngestErrorMessage } =

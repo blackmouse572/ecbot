@@ -16,7 +16,11 @@ from tenacity import retry
 
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.retrievers.embeddings import get_embeddings_client
-from eccho_ai.llm.retrievers.safe_fetch import EgressBlockedError, assert_public_url
+from eccho_ai.llm.retrievers.safe_fetch import (
+    EgressBlockedError,
+    HostUnresolvableError,
+    assert_public_url,
+)
 from eccho_ai.llm.retrievers.retry import _RETRY, _retryable  # noqa: F401 (re-exported for tests)
 from eccho_ai.modules.rag.constants import URL_NOT_PUBLIC
 from eccho_ai.modules.rag.models import RAGDocumentResponse, RAGIngestResponse
@@ -106,6 +110,9 @@ class RAGIngestService:
         # bare "Invalid URL" that surfaced as a 502 and was retried (#165).
         try:
             await assert_public_url(normalized_url)
+        except HostUnresolvableError:
+            # Not a private address: let it fail as an unreadable page (502).
+            raise
         except EgressBlockedError as exc:
             raise ValueError(URL_NOT_PUBLIC) from exc
 

@@ -41,3 +41,26 @@ async def test_scraper_failure_is_a_502_with_a_readable_message(monkeypatch):
         await routers.ingest_url(RAGUrlIngestRequest(url="https://shop.vn/x", knowledge_item_id="item-1"))
     assert exc.value.status_code == 502
     assert exc.value.detail == URL_FETCH_FAILED
+
+
+async def test_unresolvable_host_is_not_reported_as_non_public(monkeypatch):
+    # Review of #202: a typo'd domain or a DNS blip is not a private address;
+    # it must take the readable 502 path, not the permanent "not public" 400.
+    import socket
+
+    def no_dns(*_args, **_kwargs):
+        raise socket.gaierror("Name or service not known")
+
+    monkeypatch.setattr(socket, "getaddrinfo", no_dns)
+    service = RAGIngestService()
+    monkeypatch.setattr(service, "_scrape_url", lambda **_: (_ for _ in ()).throw(AssertionError("no scrape")))
+
+    with pytest.raises(Exception) as exc:
+        await service.ingest_url(url="https://shpo-typo.vn/menu", knowledge_item_id="item-1")
+    assert not isinstance(exc.value, ValueError)
+
+    monkeypatch.setattr(routers, "rag_ingest_service", service)
+    with pytest.raises(HTTPException) as http_exc:
+        await routers.ingest_url(RAGUrlIngestRequest(url="https://shpo-typo.vn/menu", knowledge_item_id="item-1"))
+    assert http_exc.value.status_code == 502
+    assert http_exc.value.detail == URL_FETCH_FAILED

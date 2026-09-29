@@ -43,6 +43,11 @@ export function extractIngestErrorMessage(err: any): string {
     if (Array.isArray(detail) && detail.length > 0) {
         return JSON.stringify(detail);
     }
+    // apps/ai wraps HTTPException as AppResponse { status, msg, data, error }.
+    const msg = err?.response?.data?.msg;
+    if (typeof msg === 'string' && msg.length > 0) {
+        return msg;
+    }
     return (err as Error)?.message ?? String(err);
 }
 

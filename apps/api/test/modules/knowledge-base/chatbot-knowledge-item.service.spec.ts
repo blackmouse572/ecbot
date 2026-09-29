@@ -1,9 +1,9 @@
 import { ChatbotKnowledgeItemService } from 'src/modules/knowledge-base/services/chatbot-knowledge-item.service';
+import { ENUM_KNOWLEDGE_FAILURE_KIND } from 'src/modules/knowledge-base/constants/knowledge-ingest.constant';
 
-// #118 / #92: the link was written on the request's transactional EntityManager,
-// but the chatbot ids for the vector store were read on the default one, which
-// cannot see the uncommitted row, so apps/ai got chatbot_ids: [] and retrieval
-// never returned the item.
+// #118 / #92: the vector store was told the item's chatbot ids from a read
+// that could not see the new link, so it got chatbot_ids: [] and retrieval
+// never returned the item. The sync now runs after the controller commits.
 describe('ChatbotKnowledgeItemService link sync', () => {
     const makeSessionEm = (existing: unknown) => ({
         getRepository: jest.fn().mockReturnValue({
@@ -21,23 +21,39 @@ describe('ChatbotKnowledgeItemService link sync', () => {
         const ragSyncService = {
             updateChatbotLinks: jest.fn().mockResolvedValue(undefined),
         };
+        const failureNotifier = {
+            notifyFailed: jest.fn().mockResolvedValue(undefined),
+        };
         const service = new ChatbotKnowledgeItemService(
             {} as any,
             repository as any,
-            ragSyncService as any
+            ragSyncService as any,
+            failureNotifier as any
         );
-        return { service, repository, ragSyncService };
+        return { service, repository, ragSyncService, failureNotifier };
     };
 
-    it('reads the links on the session EntityManager after linking', async () => {
-        const { service, repository, ragSyncService } = setup();
-        const em = makeSessionEm(null);
+    it('does not touch the vector store while the link is uncommitted', async () => {
+        const { service, ragSyncService } = setup();
 
-        await service.linkItem('cb-1', 'item-1', { em: em as any });
+        await service.linkItem('cb-1', 'item-1', {
+            em: makeSessionEm(null) as any,
+        });
+        await service.unlinkItem('cb-1', 'item-1', {
+            em: makeSessionEm({ id: 'link-1', deletedAt: null }) as any,
+        });
+
+        expect(ragSyncService.updateChatbotLinks).not.toHaveBeenCalled();
+    });
+
+    it('syncs the committed chatbot ids for the item', async () => {
+        const { service, repository, ragSyncService } = setup();
+
+        await service.syncChatbotLinks('item-1');
 
         expect(repository.find).toHaveBeenCalledWith(
             expect.objectContaining({ knowledgeItem: 'item-1' }),
-            expect.objectContaining({ em })
+            expect.anything()
         );
         expect(ragSyncService.updateChatbotLinks).toHaveBeenCalledWith(
             'item-1',
@@ -45,15 +61,18 @@ describe('ChatbotKnowledgeItemService link sync', () => {
         );
     });
 
-    it('reads the remaining links on the session EntityManager after unlinking', async () => {
-        const { service, repository } = setup();
-        const em = makeSessionEm({ id: 'link-1', deletedAt: null });
+    it('notifies the owner instead of throwing when the sync cannot be queued', async () => {
+        const { service, ragSyncService, failureNotifier } = setup();
+        ragSyncService.updateChatbotLinks.mockRejectedValue(
+            new Error('queue down')
+        );
 
-        await service.unlinkItem('cb-1', 'item-1', { em: em as any });
-
-        expect(repository.find).toHaveBeenCalledWith(
-            expect.objectContaining({ knowledgeItem: 'item-1' }),
-            expect.objectContaining({ em })
+        await expect(
+            service.syncChatbotLinks('item-1')
+        ).resolves.toBeUndefined();
+        expect(failureNotifier.notifyFailed).toHaveBeenCalledWith(
+            'item-1',
+            ENUM_KNOWLEDGE_FAILURE_KIND.LINK_SYNC
         );
     });
 });
