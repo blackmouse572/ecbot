@@ -7,7 +7,7 @@ import { KnowledgeBaseService } from '@app/modules/knowledge-base/services/knowl
 import { CustomerTagService } from '@app/modules/customer/services/customer-tag.service';
 import { RoleService } from '@app/modules/role/services/role.service';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -24,7 +24,11 @@ describe('WorkspaceOwnerService', () => {
     const workspace = { id: randomUUID(), name: 'Acme' };
     const url = 'https://app.example.com';
 
-    const mockWorkspaceRepository = { findOne: jest.fn(), getTotal: jest.fn() };
+    const mockWorkspaceRepository = {
+        findOne: jest.fn(),
+        getTotal: jest.fn(),
+        updateEntity: jest.fn(async (_where: unknown, data: unknown) => data),
+    };
     const mockWorkspaceMemberRepository = { create: jest.fn() };
     const mockConfigService = {
         get: jest.fn((key: string) =>
@@ -259,5 +263,40 @@ describe('WorkspaceOwnerService', () => {
         ])('parses %s', (input, expected) => {
             expect((service as any).parseExpiration(input)).toBe(expected);
         });
+    });
+
+    describe('update', () => {
+        const current = () =>
+            ({ id: 'ws-1', name: 'Old', slug: 'Old-Slug', avatar: '' }) as any;
+
+        it('keeps a current slug that has capitals, so a rename still saves', async () => {
+            const updated = await service.update(current(), {
+                name: 'New',
+                slug: 'Old-Slug',
+            });
+
+            expect(updated).toMatchObject({ name: 'New', slug: 'Old-Slug' });
+        });
+
+        it('accepts a changed slug that is already slug-safe', async () => {
+            const updated = await service.update(current(), {
+                name: 'Old',
+                slug: 'new-slug',
+            });
+
+            expect(updated).toMatchObject({ slug: 'new-slug' });
+        });
+
+        it.each(['New-Slug', 'new slug', 'bếp-nhà'])(
+            'rejects a changed slug that is not slug-safe (%s)',
+            async slug => {
+                await expect(
+                    service.update(current(), { name: 'Old', slug })
+                ).rejects.toBeInstanceOf(BadRequestException);
+                expect(
+                    mockWorkspaceRepository.updateEntity
+                ).not.toHaveBeenCalled();
+            }
+        );
     });
 });

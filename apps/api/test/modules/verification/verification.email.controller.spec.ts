@@ -97,7 +97,11 @@ describe('VerificationEmailController — email dispatch', () => {
                     reference: 'ref-still-fresh',
                 },
             },
-            { taskName: expect.stringMatching(/^VERIFICATION-user-1-VE\d+$/) }
+            {
+                taskName: expect.stringMatching(
+                    /^VERIFICATION-user-1-[0-9a-f-]{36}$/
+                ),
+            }
         );
     });
 
@@ -142,7 +146,11 @@ describe('VerificationEmailController — email dispatch', () => {
                     reference: 'ref-email-resend-1',
                 },
             },
-            { taskName: expect.stringMatching(/^VERIFICATION-user-1-VE\d+$/) }
+            {
+                taskName: expect.stringMatching(
+                    /^VERIFICATION-user-1-[0-9a-f-]{36}$/
+                ),
+            }
         );
     });
 
@@ -197,7 +205,7 @@ describe('VerificationEmailController — email dispatch', () => {
                 },
                 {
                     taskName: expect.stringMatching(
-                        /^VERIFICATION-user-1-VE\d+$/
+                        /^VERIFICATION-user-1-[0-9a-f-]{36}$/
                     ),
                 }
             );
@@ -318,7 +326,11 @@ describe('VerificationEmailController — email dispatch', () => {
                 send: { email: 'c@d.com', name: 'C' },
                 data: { reference: 'ref-email-verify-1' },
             },
-            { taskName: expect.stringMatching(/^EMAIL_VERIFIED-user-2-EV\d+$/) }
+            {
+                taskName: expect.stringMatching(
+                    /^EMAIL_VERIFIED-user-2-[0-9a-f-]{36}$/
+                ),
+            }
         );
     });
 

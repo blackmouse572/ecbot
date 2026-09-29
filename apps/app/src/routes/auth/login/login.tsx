@@ -4,6 +4,7 @@ import {
   useSignInWithEmailPass,
 } from "@/hooks/api/auth";
 import { useAuth } from "@/modules/auth";
+import { loginRedirectTarget } from "@/modules/auth/login-redirect";
 import { ROUTES } from "@/routes";
 import { Button, Checkbox, Label, toast, usePrompt } from "@medusajs/ui";
 import { LoginForm } from "@repo/auth/components";
@@ -66,12 +67,9 @@ function LoginPage() {
         onSuccess: (data) => {
           toast.success(t("success.message"));
           setAuth(data.accessToken);
-          const redirect = search.get("redirect");
-          if (redirect) {
-            navigate(redirect, { replace: true });
-          } else {
-            navigate("/", { replace: true });
-          }
+          navigate(loginRedirectTarget(search.get("redirect")), {
+            replace: true,
+          });
         },
       },
     );

@@ -1,5 +1,6 @@
 import { useWorkspaceList } from "@/hooks/api/workspace";
 import {
+  loginRedirectPath,
   useAuthToken,
   useRefreshTokenEffect,
   useUserAbility,
@@ -28,7 +29,7 @@ export const ProtectedRoute = () => {
   useRefreshTokenEffect();
 
   if (!token) {
-    return <Navigate to={`/login?redirect=${location.pathname}`} replace />;
+    return <Navigate to={loginRedirectPath(location)} replace />;
   }
 
   if (isLoading) {

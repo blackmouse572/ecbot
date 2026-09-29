@@ -84,7 +84,7 @@ describe('AuthAdminController.updatePassword', () => {
             },
             {
                 taskName: expect.stringMatching(
-                    /^TEMPORARY_PASSWORD-user-1-TP\d+$/
+                    /^TEMPORARY_PASSWORD-user-1-[0-9a-f-]{36}$/
                 ),
             }
         );

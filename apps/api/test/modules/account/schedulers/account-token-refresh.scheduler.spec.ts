@@ -282,7 +282,9 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
                 },
             },
             {
-                taskName: `${ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED}-account-uuid-1`,
+                taskName: expect.stringMatching(
+                    /^ACCOUNT_BLOCKED-account-uuid-1-[0-9a-f-]{36}$/
+                ),
             }
         );
     });

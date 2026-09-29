@@ -8,6 +8,7 @@ import {
     ENUM_MESSAGE_DIRECTION,
 } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
+import { ReplyGenerationService } from './reply-generation.service';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
 import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
@@ -275,8 +276,18 @@ export class MessageProcessorService implements OnModuleInit {
                 conversation,
                 chatbot.workspace.id,
                 'keyword_trigger',
-                chatbot.handoffMessage
+                chatbot.primaryLanguage
             );
+            // The customer asked for a person: say one is coming, so they are
+            // not left with no reply at all.
+            await this.moduleRef
+                .get(ReplyGenerationService)
+                .sendHandoffReply(
+                    chatbot,
+                    account,
+                    event.senderId,
+                    conversation.id
+                );
             return;
         }
 

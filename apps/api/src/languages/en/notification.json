@@ -46,5 +46,16 @@
         "title": "Workspace needs attention",
         "message": "Workspace \"{workspaceName}\" was created without a billing plan, so its chatbots will not reply yet. Contact support to finish setup.",
         "actionText": "Contact support"
+    },
+    "handoff": {
+        "title": "A customer needs a person",
+        "message": "{reason}. The assistant has stopped replying in this conversation until you turn it back on.",
+        "actionText": "View conversation",
+        "reason": {
+            "keyword_trigger": "The customer asked to talk to a staff member",
+            "fallback_threshold": "The assistant could not answer several messages in a row",
+            "tag_trigger": "The customer was tagged as needing a staff member",
+            "other": "The assistant flagged a message it should not answer"
+        }
     }
 }

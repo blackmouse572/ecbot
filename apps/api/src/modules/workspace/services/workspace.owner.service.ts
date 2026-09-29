@@ -15,6 +15,7 @@ import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
+    BadRequestException,
     ConflictException,
     Inject,
     Injectable,
@@ -26,11 +27,12 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { StringValue } from 'ms';
 import { plainToInstance } from 'class-transformer';
-import slugify from 'slugify';
+import { toWorkspaceSlug } from '@app/modules/workspace/utils/workspace-slug.util';
 import { RoleService } from 'src/modules/role/services/role.service';
 import {
     WORKSPACE_DEFAULT_MEMBER_ROLES,
     WORKSPACE_INVITATION_CODE_LENGTH,
+    WORKSPACE_SLUG_PATTERN,
 } from '../constants/workspace.constant';
 import { WorkSpaceCreateRequestDto } from '../dtos/request/workspace.create.request';
 import { WorkSpaceInviteMemberRequestDto } from '../dtos/request/workspace.invite-member.request';
@@ -329,12 +331,17 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         data: WorkSpaceCreateRequestDto,
         options?: IDatabaseCreateOptions
     ): Promise<WorkspaceEntity> {
-        const { name, image } = data;
+        const { name, image, slug } = data;
         const em = options?.em || this.em;
 
         const entity = new WorkspaceEntity();
         entity.name = name;
-        entity.slug = slugify(name);
+        // The typed slug wins over one derived from the name. Always
+        // lowercase: the app's edit form accepts only lowercase slugs, so a
+        // capital here made the workspace settings unsavable.
+        entity.slug =
+            toWorkspaceSlug(slug || name) ||
+            this.helperStringService.random(8).toLowerCase();
         entity.avatar =
             image ||
             this.helperAvatarService.generateWorkspaceAvatar(entity.slug);
@@ -597,6 +604,14 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         options?: IDatabaseUpdateOptions
     ) {
         const { name, image, slug } = data;
+        // The current slug may carry capitals from before slugs were
+        // lowercased; only a changed slug has to be slug-safe.
+        if (slug !== workspace.slug && !WORKSPACE_SLUG_PATTERN.test(slug)) {
+            throw new BadRequestException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.INVALID_SLUG,
+                message: 'workspace.error.invalidSlug',
+            });
+        }
         workspace.name = name;
         workspace.avatar = image || '';
         workspace.slug = slug;

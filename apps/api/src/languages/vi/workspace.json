@@ -14,7 +14,8 @@
         "memberNotFound": "Không tìm thấy thành viên này trong không gian làm việc.",
         "exist": "Người dùng này đã là chủ sở hữu của một không gian khác rồi.",
         "missingWorkspaceId": "Thiếu thông tin user hoặc workspaceId trong request.",
-        "invalidInvitationCode": "Mã mời không hợp lệ. Có thể đã hết hạn hoặc sai rồi."
+        "invalidInvitationCode": "Mã mời không hợp lệ. Có thể đã hết hạn hoặc sai rồi.",
+        "invalidSlug": "Đường dẫn không gian làm việc chỉ được dùng chữ thường, số và dấu gạch ngang."
     },
     "owner": {
         "inviteMember": {

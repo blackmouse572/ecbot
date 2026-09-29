@@ -7,7 +7,7 @@ import {
     Put,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { uniqueId } from 'lodash';
+import { randomUUID } from 'crypto';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
 import { Response } from 'src/common/response/decorators/response.decorator';
@@ -111,7 +111,7 @@ export class AuthAdminController {
                         },
                     },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD}-${user.id}-${uniqueId('TP')}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD}-${user.id}-${randomUUID()}`,
                     }
                 )
                 .catch(err => {

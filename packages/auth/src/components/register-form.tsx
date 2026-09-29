@@ -19,6 +19,8 @@ interface IRegisterFormProps extends Omit<
    */
   onSubmit: (data: TRegisterForm) => Promise<TRegisterFieldErrors | void>;
   countries?: { label: string; value: string }[];
+  /** Country id preselected in the country picker. */
+  defaultCountry?: string;
   /** Omit to render no widget — the form behaves exactly as before. */
   turnstile?: ITurnstileConfig;
   /**
@@ -64,6 +66,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
     onSubmit,
     messages,
     countries,
+    defaultCountry,
     turnstile: turnstileConfig,
     onSubmittingChange,
     ...formProps
@@ -74,6 +77,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
     defaultValues: {
       email: "",
       password: "",
+      country: defaultCountry,
     },
   });
 

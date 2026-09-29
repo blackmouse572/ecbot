@@ -77,3 +77,31 @@ export const useCountriesShare = (
     count: data?._metadata?.pagination?.total ?? 0,
   };
 };
+
+/**
+ * Every country, for pickers such as sign-up. The API caps a page at 100, so
+ * this follows the pages until the last one. Countries rarely change, so the
+ * list is kept for the whole session.
+ */
+export const useAllCountriesShare = () => {
+  const { data, ...rest } = useQuery({
+    queryKey: countryQueryKeys.list({ all: true }),
+    staleTime: Infinity,
+    queryFn: async () => {
+      const countries: CountryListResponseDto[] = [];
+      for (let page = 1; ; page++) {
+        const res = await countrySharedControllerListPublicV1({
+          query: { page, perPage: 100 },
+        });
+        const body = res.data as CountrySharedControllerListPublicV1Response;
+        const rows = (body?.data ?? []) as CountryListResponseDto[];
+        countries.push(...rows);
+        const totalPage = body?._metadata?.pagination?.totalPage ?? 1;
+        if (rows.length === 0 || page >= totalPage) break;
+      }
+      return countries.sort((a, b) => a.name.localeCompare(b.name));
+    },
+  });
+
+  return { ...rest, countries: data };
+};

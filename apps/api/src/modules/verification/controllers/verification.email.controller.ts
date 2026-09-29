@@ -22,7 +22,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { uniqueId } from 'lodash';
+import { randomUUID } from 'crypto';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
 import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
@@ -107,7 +107,7 @@ export class VerificationEmailController {
                     },
                 },
                 {
-                    taskName: `${ENUM_SEND_EMAIL_PROCESS.VERIFICATION}-${user.id}-${uniqueId('VE')}`,
+                    taskName: `${ENUM_SEND_EMAIL_PROCESS.VERIFICATION}-${user.id}-${randomUUID()}`,
                 }
             )
             .catch(err => {
@@ -229,7 +229,7 @@ export class VerificationEmailController {
                         data: { reference: verification.reference },
                     },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.EMAIL_VERIFIED}-${user.id}-${uniqueId('EV')}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.EMAIL_VERIFIED}-${user.id}-${randomUUID()}`,
                     }
                 )
                 .catch(err => {

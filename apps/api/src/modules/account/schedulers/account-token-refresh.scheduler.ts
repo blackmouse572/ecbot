@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { ContextualCron } from '@app/common/database/decorators/contextual-cron.decorator';
 import { OAuthPlatformFactory } from '@app/common/oauth/oauth-platform.factory';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
@@ -75,7 +76,7 @@ export class AccountTokenRefreshScheduler {
                         data: { accountName: account.name, reconnectUrl },
                     },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED}-${account.id}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED}-${account.id}-${randomUUID()}`,
                     }
                 ),
             ]);

@@ -104,12 +104,11 @@ export class CustomerTagSystemController {
                         `Tag ${tag.name} triggers handoff but conversation ${dto.conversationId} not found`
                     );
                 } else {
-                    const chatbot: any = (conversation as any).chatbot;
                     await this.conversationService.triggerHandoff(
                         conversation,
                         workspaceId,
                         'tag_trigger',
-                        chatbot?.handoffMessage
+                        conversation.chatbot?.primaryLanguage
                     );
                     triggeredHandoff = true;
                 }

@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { uniqueId } from 'lodash';
+import { randomUUID } from 'crypto';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { IResponse } from 'src/common/response/interfaces/response.interface';
@@ -173,7 +173,7 @@ export class VerificationUserController {
                         },
                     },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.VERIFICATION}-${user.id}-${uniqueId('VE')}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.VERIFICATION}-${user.id}-${randomUUID()}`,
                     }
                 )
                 .catch(err => {
@@ -255,7 +255,7 @@ export class VerificationUserController {
                     },
                 },
                 {
-                    taskName: `${ENUM_SEND_SMS_PROCESS.VERIFICATION}-${user.id}-${uniqueId('SMS')}`,
+                    taskName: `${ENUM_SEND_SMS_PROCESS.VERIFICATION}-${user.id}-${randomUUID()}`,
                 }
             );
 
@@ -347,7 +347,7 @@ export class VerificationUserController {
                         data: { reference: verification.reference },
                     },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.EMAIL_VERIFIED}-${user.id}-${uniqueId('EV')}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.EMAIL_VERIFIED}-${user.id}-${randomUUID()}`,
                     }
                 )
                 .catch(err => {
@@ -445,7 +445,7 @@ export class VerificationUserController {
                         },
                     },
                     {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.MOBILE_NUMBER_VERIFIED}-${user.id}-${uniqueId('MV')}`,
+                        taskName: `${ENUM_SEND_EMAIL_PROCESS.MOBILE_NUMBER_VERIFIED}-${user.id}-${randomUUID()}`,
                     }
                 )
                 .catch(err => {

@@ -129,7 +129,7 @@ describe('AuthSharedController.changePassword', () => {
             { send: { email: 'a@b.com', name: 'A' } },
             {
                 taskName: expect.stringMatching(
-                    /^CHANGE_PASSWORD-user-1-CP\d+$/
+                    /^CHANGE_PASSWORD-user-1-[0-9a-f-]{36}$/
                 ),
             }
         );

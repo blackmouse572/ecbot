@@ -99,7 +99,10 @@ describe('UserAdminController.create', () => {
         existByEmail.mockResolvedValue(false);
         findOneByIdCountry.mockResolvedValue({ id: 'country-1' });
         createPasswordRandom.mockReturnValue('Temp123!');
-        createPassword.mockResolvedValue({ password: 'hashed', passwordExpired });
+        createPassword.mockResolvedValue({
+            password: 'hashed',
+            passwordExpired,
+        });
         create.mockResolvedValue(created);
         createEmailByUser.mockResolvedValue(verification);
         createByAdminPasswordHistory.mockResolvedValue(undefined);
@@ -229,7 +232,11 @@ describe('UserAdminController.updateStatus', () => {
             'email',
             ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BANNED,
             { send: { email: 'target@x.com', name: 'Target' } },
-            { taskName: 'ACCOUNT_BANNED-user-2' }
+            {
+                taskName: expect.stringMatching(
+                    /^ACCOUNT_BANNED-user-2-[0-9a-f-]{36}$/
+                ),
+            }
         );
     });
 
