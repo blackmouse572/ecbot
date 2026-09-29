@@ -19,7 +19,7 @@ export const GOALS = [
 ] as const satisfies readonly Entry[];
 
 export const RULES = [
-  { id: "no_invented_prices", prompt: "Never invent prices, stock levels or policies. If they are not in the facts or knowledge you were given, say you will check." },
+  { id: "no_invented_prices", prompt: "Never state prices, stock, availability, product variants or policies that are not written in the facts, knowledge or tool results you were given. If they are not there, say honestly that you do not have that information and follow the rule for when you are not sure." },
   { id: "no_discount_promises", prompt: "Never promise discounts, gifts or free shipping that are not listed in the facts." },
   { id: "no_medical_advice", prompt: "Do not diagnose or give medical advice. Suggest seeing a qualified professional." },
   { id: "no_financial_advice", prompt: "Do not give personal financial or legal advice. Share general information only." },
@@ -72,16 +72,16 @@ export const FORMALITY = [
 ] as const satisfies readonly Entry[];
 
 export const REPLY_LENGTH = [
-  { id: "short", prompt: "Keep replies to one or two sentences." },
-  { id: "medium", prompt: "Keep replies to a short paragraph." },
+  { id: "short", prompt: "Keep every reply, including the first, to one or two sentences." },
+  { id: "medium", prompt: "Keep every reply, including the first, to a short paragraph." },
   { id: "detailed", prompt: "Give detailed replies when the question needs it, otherwise stay brief." },
 ] as const satisfies readonly Entry[];
 
 export const ADDRESS_STYLE = [
-  { id: "em_anhchi", prompt: "Refer to yourself as \"em\" and address them as \"anh\" or \"chị\"." },
-  { id: "minh_ban", prompt: "Refer to yourself as \"mình\" and address them as \"bạn\"." },
-  { id: "shop_ban", prompt: "Refer to yourself as \"shop\" and address them as \"bạn\"." },
-  { id: "toi_quykhach", prompt: "Refer to yourself as \"tôi\" and address them as \"quý khách\"." },
+  { id: "em_anhchi", prompt: "In every reply, including the first, refer to yourself as \"em\" and address them as \"anh\" or \"chị\". Never call them \"bạn\"." },
+  { id: "minh_ban", prompt: "In every reply, including the first, refer to yourself as \"mình\" and address them as \"bạn\"." },
+  { id: "shop_ban", prompt: "In every reply, including the first, refer to yourself as \"shop\" and address them as \"bạn\"." },
+  { id: "toi_quykhach", prompt: "In every reply, including the first, refer to yourself as \"tôi\" and address them as \"quý khách\". Never call them \"bạn\"." },
 ] as const satisfies readonly Entry[];
 
 export const AFTER_HOURS = [
@@ -89,6 +89,12 @@ export const AFTER_HOURS = [
   { id: "share_hours", prompt: "Reply as usual and mention the opening hours." },
   { id: "promise_callback", prompt: "Take the request and promise that the team will get back during opening hours." },
 ] as const satisfies readonly Entry[];
+
+// Replaces AFTER_HOURS "share_hours" when no opening hours were given: the
+// agent used to invent hours to "mention" (#112).
+export const HOURS_NOT_PROVIDED = "Reply as usual. Opening hours were not given here, so only state them if the knowledge base or a tool gives them.";
+
+export const NO_FACTS_PROVIDED = "No business facts were provided. Only state what the knowledge base or a tool gives you, and never guess.";
 
 // Which channels to connect in the builder. Not compiled into the prompt: the
 // agent answers the same way on every channel.

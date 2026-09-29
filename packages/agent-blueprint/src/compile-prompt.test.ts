@@ -76,7 +76,7 @@ describe("compilePrompt", () => {
 
   it("says so when no facts were given", () => {
     const out = compilePrompt({ ...sample("beauty"), facts: {} });
-    expect(out).toContain("No business facts were provided. Rely on the knowledge base and never guess.");
+    expect(out).toContain("No business facts were provided. Only state what the knowledge base or a tool gives you, and never guess.");
   });
 
   it("turns markdown headings in user text into plain text", () => {
@@ -93,6 +93,47 @@ describe("compilePrompt", () => {
   it("numbers knowledge in detailed mode and bullets it in simple mode", () => {
     expect(compilePrompt(sample("healthcare"))).toMatch(/## Knowledge\n1\. /);
     expect(compilePrompt(sample("beauty"))).toMatch(/## Knowledge\n- /);
+  });
+
+  // #173: greet once, not on every turn, and still answer the first message.
+  it("greets only in the first reply and answers the message in the same reply", () => {
+    const out = compilePrompt(sample("beauty", "en"));
+    // Review of #197: "your first reply" let the model treat turn 2 as its first
+    // when an earlier reply (staff, fallback) had no introduction.
+    expect(out).not.toContain("Only in your first reply");
+    expect(out).toContain("If the chat history already contains a reply from you, do not greet or introduce yourself.");
+    expect(out).toContain("respond to what the customer said");
+    const custom = compilePrompt({ ...sample("beauty", "en"), greeting: "Hi, I am Linh" });
+    expect(custom).toContain('If the chat history has no reply from you yet, open with: "Hi, I am Linh"');
+  });
+
+  // #158: the configured address style and length hold from the first reply.
+  it("applies address style and reply length to every reply, including the first", () => {
+    const out = compilePrompt(sample("beauty", "vi"));
+    expect(out).toContain('In every reply, including the first, refer to yourself as "em" and address them as "anh" or "chị". Never call them "bạn".');
+    expect(out).toContain("Keep every reply, including the first, to one or two sentences.");
+  });
+
+  // #112: "mention the opening hours" without hours made the agent invent them.
+  it("never asks the agent to mention opening hours that were not provided", () => {
+    const out = compilePrompt({ ...sample("ecommerce", "en"), afterHours: "share_hours" });
+    expect(out).not.toContain("mention the opening hours");
+    expect(out).toContain("Opening hours were not given here, so only state them if the knowledge base or a tool gives them.");
+    const withHours = compilePrompt({ ...sample("restaurant", "en"), afterHours: "share_hours" });
+    expect(withHours).toContain("Reply as usual and mention the opening hours.");
+  });
+
+  // #119: no guessing stock or variants, and no "I will check" promise.
+  it("forbids stating stock, variants or prices that are not in the facts", () => {
+    const out = compilePrompt(sample("ecommerce", "en"));
+    expect(out).toContain("Never state prices, stock, availability, product variants or policies");
+    expect(out).not.toContain("say you will check");
+  });
+
+  // #182: confirmation comes before the tool call that places the order.
+  it("requires a clear yes before any tool that creates or changes something", () => {
+    const out = compilePrompt(sample("ecommerce", "en"));
+    expect(out).toContain("before you call any tool that creates, changes or cancels an order, booking or payment");
   });
 
   it("chooses a or an based on the following word", () => {

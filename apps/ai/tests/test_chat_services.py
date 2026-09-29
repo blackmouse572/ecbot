@@ -55,7 +55,14 @@ class _Retrieval:
 
 def test_rag_message_passthrough_when_no_context():
     assert _build_rag_message("hi", None) == "hi"
-    assert _build_rag_message("hi", _Retrieval("", has_context=False)) == "hi"
+
+
+def test_rag_message_warns_when_no_knowledge_matched():
+    # #119: with nothing retrieved the agent invented stock and variants.
+    msg = _build_rag_message("Có Friso Gold số 3 không?", _Retrieval("", has_context=False))
+    assert "Có Friso Gold số 3 không?" in msg
+    assert "No knowledge-base entry matched" in msg
+    assert "stock" in msg
 
 
 def test_rag_message_wraps_context_in_consistent_delimiters():
