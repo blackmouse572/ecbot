@@ -14,10 +14,9 @@ export async function createChatbot(
       headers: { Authorization: `Bearer ${accessToken}` },
       data: {
         name,
-        systemPrompt: "You are a helpful assistant.",
-        // modelProvider/modelTextName are required; pin DeepSeek so recorded
-        // cassettes replay against the same provider endpoint.
-        modelProvider: "deepseek",
+        // Pin DeepSeek so recorded cassettes replay against the same
+        // provider endpoint. Send only keys the create DTO declares: the
+        // API rejects any other with 422.
         modelTextName: "deepseek-v4-flash",
       },
     },

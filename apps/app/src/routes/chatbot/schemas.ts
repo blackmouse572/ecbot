@@ -9,7 +9,6 @@ const optionalPositiveInt = z.preprocess(
 );
 
 export const createChatbotSchema = z.object({
-  id: z.string().optional(),
   name: z.string().min(1, t("errors.chatbot.nameRequired")).max(255),
   extraInstructions: z.string().max(5000).default(""),
   accounts: z.array(z.string()).default([]),

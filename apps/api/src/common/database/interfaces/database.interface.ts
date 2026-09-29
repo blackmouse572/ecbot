@@ -7,7 +7,8 @@ import {
 import { IPaginationOrder } from 'src/common/pagination/interfaces/pagination.interface';
 
 export interface IDatabaseQueryContainOptions {
-    fullWord: boolean;
+    fullWord?: boolean;
+    ignoreCase?: boolean;
 }
 
 // Find

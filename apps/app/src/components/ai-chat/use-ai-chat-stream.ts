@@ -144,6 +144,11 @@ export type ChatTransportConfig = {
    * invalidating the memoized transport.
    */
   extraBody?: Record<string, unknown> | (() => Record<string, unknown>);
+  /**
+   * Body keys for the typed message and the session id. Defaults to
+   * `{ message, chat_session_id }`; the API rejects a key its DTO lacks.
+   */
+  messageBody?: (message: string, sessionId: string) => Record<string, unknown>;
   /** Public routes are unguarded — sending credentials there is noise at best. */
   includeCredentials: boolean;
   /** Tool-invocation invalidation is an authed query; skip it when anonymous. */
@@ -192,6 +197,8 @@ export function widgetChatTransport(
       parentOrigin,
       turnstileToken: getTurnstileToken?.(),
     }),
+    // The widget keys its session by visitor, so it sends no session id.
+    messageBody: (text) => ({ text }),
     includeCredentials: false,
     invalidateToolInvocations: false,
   };
@@ -248,7 +255,13 @@ export function buildChatStreamRequest({
     // path prefix on the base URL, which an absolute-path `new URL` drops.
     api: `${(clientConfig.baseURL ?? "").replace(/\/$/, "")}${transport.path}`,
     headers: headers as HeadersInit,
-    body: { ...extraBody, message, chat_session_id: id },
+    body: {
+      ...extraBody,
+      ...(transport.messageBody?.(message, id) ?? {
+        message,
+        chat_session_id: id,
+      }),
+    },
   };
 }
 

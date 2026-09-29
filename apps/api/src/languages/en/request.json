@@ -1,6 +1,7 @@
 {
     "validation": "There are validation errors.",
     "unknownValue": "Unknown value is not allowed.",
+    "whitelistValidation": "{property} is not a field this request accepts.",
     "min": "{property} has fewer elements than the minimum allowed.",
     "max": "{property} has more elements than the maximum allowed.",
     "maxLength": "{property} exceeds the maximum length allowed.",

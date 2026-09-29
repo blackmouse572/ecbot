@@ -1,5 +1,5 @@
 import { ApiHideProperty } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { IPaginationOrder } from 'src/common/pagination/interfaces/pagination.interface';
 
@@ -21,6 +21,13 @@ export class PaginationListDto {
 
     @ApiHideProperty()
     _availableOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE[];
+
+    // Declared so the global pipe keeps it for PaginationSearchPipe; the
+    // `_`-prefixed fields above stay undecorated, so a client can't set them.
+    @IsOptional()
+    @IsString()
+    @ApiHideProperty()
+    search?: string;
 
     @IsOptional()
     @ApiHideProperty()

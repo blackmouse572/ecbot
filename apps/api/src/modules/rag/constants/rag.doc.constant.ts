@@ -2,11 +2,8 @@ import { WorkspaceDocParamsId } from '@app/modules/workspace/constants/workspace
 import { ApiParamOptions, ApiQueryOptions } from '@nestjs/swagger';
 import { ENUM_RAG_STATUS } from '../enums/rag.status.enum';
 
-export const RAG_SEARCHABLE_FIELDS: string[] = [
-    'status',
-    'chatbot',
-    'attachment.originalname',
-];
+// Text columns only: a regex on the `chatbot` uuid fails in Postgres.
+export const RAG_SEARCHABLE_FIELDS: string[] = ['status', 'attachment.key'];
 
 export const BasedRAGDocParams: ApiParamOptions[] = [
     ...WorkspaceDocParamsId,

@@ -18,7 +18,7 @@ import {
 import { ENUM_ROLE_STATUS_CODE_ERROR } from '@app/modules/role/enums/role.status-code.enum';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { RoleService } from '@app/modules/role/services/role.service';
-import { USER_DEFAULT_AVAILABLE_SEARCH } from '@app/modules/user/constants/user.list.constant';
+import { WORKSPACE_MEMBER_AVAILABLE_SEARCH } from '@app/modules/workspace/constants/workspace.constant';
 import { UserProtected } from '@app/modules/user/decorators/user.decorator';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
 import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
@@ -282,7 +282,7 @@ export class WorkspaceMemberController {
         @AuthJwtPayload('user') _userId: string,
         @WorkspacePayload() workspace: WorkspaceEntity,
         @PaginationQuery({
-            availableSearch: USER_DEFAULT_AVAILABLE_SEARCH,
+            availableSearch: WORKSPACE_MEMBER_AVAILABLE_SEARCH,
         })
         { _search, _limit, _offset, _order }: PaginationListDto
     ) {

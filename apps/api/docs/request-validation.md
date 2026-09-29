@@ -13,6 +13,7 @@ This documentation explains the features and usage of:
 - [Overview](#overview)
 - [Table of Contents](#table-of-contents)
     - [Components](#components)
+    - [Global Validation Pipe](#global-validation-pipe)
     - [Custom Validators](#custom-validators)
     - [Validation Exception Handling](#validation-exception-handling)
     - [Request Timeout](#request-timeout)
@@ -30,6 +31,13 @@ The request validation system in `/common/request` consists of several key compo
 3. **Request Pipes**: The `RequestRequiredPipe` in `src/common/request/pipes/request.required.pipe.ts` ensures that required parameters are present
 4. **Request Decorators**: The `@RequestTimeout()` decorator in `src/common/request/decorators/request.decorator.ts` allows for custom timeout settings
 5. **Request Timeout Interceptor**: The interceptor in `src/common/request/interceptors/request.timeout.interceptor.ts` handles request timeouts
+
+## Global Validation Pipe
+
+`RequestValidationPipe` (`src/common/request/pipes/request.validation.pipe.ts`) is registered as the app-wide `APP_PIPE`. Its options live in `REQUEST_VALIDATION_PIPE_OPTIONS` (`src/common/request/constants/request.constant.ts`): `transform`, `whitelist`, `forbidNonWhitelisted`, `skipUndefinedProperties` and `forbidUnknownValues`, with failures raised as a 422 `RequestValidationException`.
+
+- **Bodies (and whole-object params) are strict.** A key the DTO does not declare with a class-validator decorator fails the request with 422 and the `request.whitelistValidation` message. A property with only `@ApiProperty` counts as undeclared, so give every accepted field a validator. Clients must send only the fields the DTO declares, not a spread of a fetched entity.
+- **Query strings only strip.** A list query carries filter keys that separate `@Query('field')` params read, and the whole-query `PaginationListDto` cannot declare them all, so undeclared query keys are dropped without an error.
 
 ## Custom Validators
 

@@ -1,6 +1,8 @@
-import { ValidationPipe } from '@nestjs/common';
+import { ArgumentMetadata, HttpStatus } from '@nestjs/common';
 import { IsOptional, IsString } from 'class-validator';
-import { REQUEST_VALIDATION_PIPE_OPTIONS } from '@app/common/request/request.module';
+import { PaginationListDto } from '@app/common/pagination/dtos/pagination.list.dto';
+import { RequestValidationException } from '@app/common/request/exceptions/request.validation.exception';
+import { RequestValidationPipe } from '@app/common/request/pipes/request.validation.pipe';
 
 class SampleRequestDto {
     @IsString()
@@ -11,43 +13,73 @@ class SampleRequestDto {
     optional?: string;
 }
 
-describe('Global ValidationPipe - whitelist (S-8)', () => {
-    const pipe = new ValidationPipe(REQUEST_VALIDATION_PIPE_OPTIONS);
+const as = (
+    type: ArgumentMetadata['type'],
+    metatype: ArgumentMetadata['metatype'] = SampleRequestDto
+): ArgumentMetadata => ({ type, metatype, data: undefined });
 
-    const metadata = {
-        type: 'body' as const,
-        metatype: SampleRequestDto,
-        data: '',
-    };
+describe('Global RequestValidationPipe - whitelist', () => {
+    const pipe = new RequestValidationPipe();
 
-    it('strips body keys the DTO does not declare', async () => {
-        const result = await pipe.transform(
-            { declared: 'x', extra: 1 },
-            metadata
-        );
+    describe('body', () => {
+        it('rejects a key the DTO does not declare with 422', async () => {
+            const error = await pipe
+                .transform({ declared: 'x', extra: 1 }, as('body'))
+                .catch((e: unknown) => e);
 
-        expect(result).toBeInstanceOf(SampleRequestDto);
-        expect(result.declared).toBe('x');
-        expect(result).not.toHaveProperty('extra');
+            expect(error).toBeInstanceOf(RequestValidationException);
+            expect((error as RequestValidationException).httpStatus).toBe(
+                HttpStatus.UNPROCESSABLE_ENTITY
+            );
+            expect(
+                (error as RequestValidationException).errors.map(
+                    e => e.property
+                )
+            ).toEqual(['extra']);
+        });
+
+        it('accepts declared keys, including optional ones', async () => {
+            const result = await pipe.transform(
+                { declared: 'x', optional: 'y' },
+                as('body')
+            );
+
+            expect(result).toBeInstanceOf(SampleRequestDto);
+            expect(result).toMatchObject({ declared: 'x', optional: 'y' });
+        });
     });
 
-    it('keeps declared keys, including optional ones', async () => {
-        const result = await pipe.transform(
-            { declared: 'x', optional: 'y', extra: 'z' },
-            metadata
-        );
+    // A list query carries filter keys that separate @Query('field') params
+    // read, so the whole-query DTO cannot declare them all: strip, not 422.
+    describe('query', () => {
+        it('strips a key the DTO does not declare', async () => {
+            const result = await pipe.transform(
+                { declared: 'x', status: 'active' },
+                as('query')
+            );
 
-        expect(result.declared).toBe('x');
-        expect(result.optional).toBe('y');
-        expect(result).not.toHaveProperty('extra');
-    });
+            expect(result.declared).toBe('x');
+            expect(result).not.toHaveProperty('status');
+        });
 
-    // Ruling for this plan: stripping, not rejecting. The SPA and admin build
-    // PATCH bodies by spreading fetched objects, so `forbidNonWhitelisted`
-    // would turn every stray field into a 422.
-    it('does not reject a body that carries undeclared keys', async () => {
-        await expect(
-            pipe.transform({ declared: 'x', extra: 1 }, metadata)
-        ).resolves.toBeDefined();
+        it('keeps search for the pagination pipes', async () => {
+            const result = await pipe.transform(
+                { search: 'lotus', page: '2', status: 'active' },
+                as('query', PaginationListDto)
+            );
+
+            expect(result).toMatchObject({ search: 'lotus', page: '2' });
+            expect(result).not.toHaveProperty('status');
+        });
+
+        it('never takes the internal pagination keys from the client', async () => {
+            const result = await pipe.transform(
+                { _search: { id: 'x' }, _limit: 1000 },
+                as('query', PaginationListDto)
+            );
+
+            expect(result).not.toHaveProperty('_search');
+            expect(result).not.toHaveProperty('_limit');
+        });
     });
 });

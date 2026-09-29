@@ -10,6 +10,8 @@ import {
 import { RoleCreateRequestDto } from '@app/modules/role/dtos/request/role.create.request.dto';
 
 export const WORKSPACE_DEFAULT_AVAILABLE_SEARCH = ['name', 'slug'];
+// A member row holds no name of its own; search the joined user.
+export const WORKSPACE_MEMBER_AVAILABLE_SEARCH = ['user.name', 'user.email'];
 export const WORKSPACE_EXCLUDE_OWNER_META_KEY = 'WorkspaceExcludeOwnerMetaKey';
 export const WORKSPACE_POLICY_ABILITY_META_KEY =
     'WorkspacePolicyAbilityMetaKey';

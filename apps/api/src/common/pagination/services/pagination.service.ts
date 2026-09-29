@@ -78,7 +78,9 @@ export class PaginationService implements IPaginationService {
 
         return {
             $or: availableSearch.map(val =>
-                DatabaseHelperQueryContain(val, searchValue)
+                DatabaseHelperQueryContain(val, searchValue, {
+                    ignoreCase: true,
+                })
             ),
         };
     }

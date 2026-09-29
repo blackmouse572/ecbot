@@ -1,6 +1,7 @@
 {
     "validation": "Có một số lỗi xác thực. Kiểm tra lại thông tin nhé!",
     "unknownValue": "Giá trị không rõ nguồn gốc không được phép.",
+    "whitelistValidation": "Yêu cầu này không nhận trường {property}.",
     "min": "{property} có ít phần tử hơn mức tối thiểu cho phép.",
     "max": "{property} có nhiều phần tử hơn mức tối đa cho phép. Hơi quá rồi!",
     "maxLength": "{property} vượt quá độ dài tối đa cho phép. Ngắn gọn hơn nhé!",
