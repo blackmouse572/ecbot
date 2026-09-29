@@ -1,6 +1,7 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { Command } from 'nestjs-command';
+import { COUNTRY_SEED_DATA } from 'src/migration/data/country.data';
 import { CountryEntity } from 'src/modules/country/repository/entities/country.entity';
 
 @Injectable()
@@ -13,41 +14,21 @@ export class MigrationCountrySeed {
     })
     async seeds(): Promise<void> {
         try {
-            const data = [
-                {
-                    name: 'Vietnam',
-                    alpha2Code: 'VN',
-                    alpha3Code: 'VNM',
-                    fipsCode: 'VM',
-                    numericCode: '704',
-                    phoneCode: ['84'],
-                    continent: 'Asia',
-                    timeZone: 'Asia/Ho_Chi_Minh',
-                    currency: 'VND',
-                },
-                {
-                    name: 'Indonesia',
-                    alpha2Code: 'ID',
-                    alpha3Code: 'IDN',
-                    fipsCode: 'ID',
-                    numericCode: '360',
-                    phoneCode: ['62'],
-                    continent: 'Asia',
-                    timeZone: 'Asia/Jakarta',
-                    currency: 'IDR',
-                },
-            ];
-
             // Fork for a request-scoped context (global EM is disallowed — see
             // DatabaseOptionService.allowGlobalContext=false).
             const em = this.em.fork();
-            for (const countryData of data) {
-                const existing = await em.findOne(CountryEntity, {
-                    alpha2Code: countryData.alpha2Code,
-                });
-                if (existing) continue;
-                const country = em.create(CountryEntity, countryData);
-                em.persist(country);
+            const existing = new Set(
+                (
+                    await em.find(
+                        CountryEntity,
+                        {},
+                        { fields: ['alpha2Code'] }
+                    )
+                ).map(country => country.alpha2Code)
+            );
+            for (const countryData of COUNTRY_SEED_DATA) {
+                if (existing.has(countryData.alpha2Code)) continue;
+                em.persist(em.create(CountryEntity, countryData));
             }
 
             await em.flush();

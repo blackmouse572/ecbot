@@ -1,5 +1,5 @@
 import { LinkButton } from "@/components/common";
-import { useCountriesShare } from "@/hooks/api";
+import { useAllCountriesShare } from "@/hooks/api";
 import { useSignUpWithEmailPass } from "@/hooks/api/auth";
 import { readApiError } from "@/libs/api-error";
 import { ROUTES } from "@/routes/constants";
@@ -24,7 +24,7 @@ function SignUpPage() {
   });
   const locale = i18n.language;
   const navigate = useNavigate();
-  const { countries, isError, error, isFetching } = useCountriesShare();
+  const { countries, isError, error, isFetching } = useAllCountriesShare();
   const { signUp, isLoading } = useSignUpWithEmailPass();
   // Covers the turnstile wait too — isLoading alone only turns on once the
   // network call starts, leaving a gap where a fast double-click still fires.
