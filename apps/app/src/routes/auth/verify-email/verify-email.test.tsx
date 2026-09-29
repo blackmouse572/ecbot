@@ -1,20 +1,13 @@
 import "@/i18n";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { forwardRef, useImperativeHandle } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const verifyFailure = vi.hoisted(() => ({ error: undefined as unknown }));
+const verifyEmail = vi.hoisted(() => vi.fn());
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 
 vi.mock("@/hooks/api", () => ({
-  useVerifyEmailOtp: () => ({
-    verifyEmail: (
-      _otp: string,
-      { onError }: { onError: (e: unknown) => void },
-    ) => onError(verifyFailure.error),
-    isLoading: false,
-  }),
+  useVerifyEmailOtp: () => ({ verifyEmail, isLoading: false }),
   useResendEmailOtp: () => ({
     resendEmailOtp: async () => {},
     isLoading: false,
@@ -26,13 +19,6 @@ vi.mock("@medusajs/ui", async () => {
     await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
   return { ...actual, toast };
 });
-
-vi.mock("@repo/auth/components", () => ({
-  VerifyEmailForm: forwardRef((_props, ref) => {
-    useImperativeHandle(ref, () => ({ submit: () => ({ otp: "123456" }) }));
-    return null;
-  }),
-}));
 
 import { VerifyEmailPage } from "./verify-email";
 
@@ -48,46 +34,90 @@ const renderPage = () =>
     </MemoryRouter>,
   );
 
+const typeCode = () =>
+  screen.getAllByRole("textbox").forEach((box, i) => {
+    fireEvent.change(box, { target: { value: String(i + 1) } });
+  });
+
 describe("VerifyEmailPage", () => {
-  beforeEach(() => toast.error.mockReset());
+  beforeEach(() => {
+    verifyEmail.mockReset();
+    toast.error.mockReset();
+  });
 
-  it("tells the user an expired code has expired, not that it is invalid", () => {
-    verifyFailure.error = apiError(
-      5061,
-      "This code has expired. Tap Resend to get a new one.",
-    );
+  it("submits on its own once all six digits are entered", async () => {
+    verifyEmail.mockResolvedValue(true);
     renderPage();
+    typeCode();
+
+    await waitFor(() => expect(verifyEmail).toHaveBeenCalledWith("123456"));
+  });
+
+  it("does not send the code again when Verify is clicked mid-request", async () => {
+    verifyEmail.mockReturnValue(new Promise(() => {}));
+    renderPage();
+    typeCode();
+    await waitFor(() => expect(verifyEmail).toHaveBeenCalledTimes(1));
 
     fireEvent.click(screen.getByRole("button", { name: "Verify" }));
 
-    expect(toast.error).toHaveBeenCalledWith(
-      "This code has expired. Tap Resend to get a new one.",
+    expect(verifyEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not leave a rejected promise unhandled on a wrong code", async () => {
+    const unhandled = vi.fn();
+    process.on("unhandledRejection", unhandled);
+    verifyEmail.mockRejectedValue(new Error("invalid"));
+    renderPage();
+    typeCode();
+    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 0));
+    process.off("unhandledRejection", unhandled);
+
+    expect(unhandled).not.toHaveBeenCalled();
+  });
+
+  it("tells the user an expired code has expired, not that it is invalid", async () => {
+    verifyEmail.mockRejectedValue(
+      apiError(5061, "This code has expired. Tap Resend to get a new one."),
+    );
+    renderPage();
+    typeCode();
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "This code has expired. Tap Resend to get a new one.",
+      ),
     );
   });
 
-  it("says to wait instead of the throttler's raw message when rate limited", () => {
-    verifyFailure.error = Object.assign(new Error("Too Many Request"), {
-      status: 429,
-      response: {
+  it("says to wait instead of the throttler's raw message when rate limited", async () => {
+    verifyEmail.mockRejectedValue(
+      Object.assign(new Error("Too Many Request"), {
         status: 429,
-        data: { statusCode: 429, message: "Too Many Request" },
-      },
-    });
+        response: {
+          status: 429,
+          data: { statusCode: 429, message: "Too Many Request" },
+        },
+      }),
+    );
     renderPage();
+    typeCode();
 
-    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
-
-    expect(toast.error).toHaveBeenCalledWith(
-      "Too many tries. Wait a minute, then try again.",
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Too many tries. Wait a minute, then try again.",
+      ),
     );
   });
 
-  it("falls back to the invalid-code message when the API sends no reason", () => {
-    verifyFailure.error = new Error("Network Error");
+  it("falls back to the invalid-code message when the API sends no reason", async () => {
+    verifyEmail.mockRejectedValue(new Error("Network Error"));
     renderPage();
+    typeCode();
 
-    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
-
-    expect(toast.error).toHaveBeenCalledWith("Invalid verification code.");
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Invalid verification code."),
+    );
   });
 });
