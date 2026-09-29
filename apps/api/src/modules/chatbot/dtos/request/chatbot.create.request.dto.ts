@@ -17,10 +17,13 @@ import {
     ENUM_CHATBOT_STATUS,
     ENUM_CHATBOT_TYPE,
 } from '../../enums/chatbot.enum';
+import { IsOptionalNotNull } from 'src/common/request/validations/request.is-optional-not-null.validation';
 
 // No field carries a default initializer: ChatbotEntity holds the defaults,
 // and an initializer here would be inherited by ChatbotUpdateRequestDto and
 // overwrite the stored value whenever a partial update leaves the key out.
+// A field whose column is NOT NULL uses @IsOptionalNotNull, not @IsOptional,
+// so null fails validation instead of reaching the database.
 export class ChatbotCreateRequestDto {
     @IsString()
     @IsNotEmpty()
@@ -113,7 +116,7 @@ export class ChatbotCreateRequestDto {
         required: false,
     })
     @IsBoolean()
-    @IsOptional()
+    @IsOptionalNotNull()
     typingIndicator?: boolean;
 
     @ApiProperty({
@@ -123,7 +126,7 @@ export class ChatbotCreateRequestDto {
         required: false,
     })
     @IsBoolean()
-    @IsOptional()
+    @IsOptionalNotNull()
     autoRead?: boolean;
 
     @IsString()
@@ -179,7 +182,7 @@ export class ChatbotCreateRequestDto {
     })
     modelTextName: string;
 
-    @IsOptional()
+    @IsOptionalNotNull()
     @Min(0)
     @Max(2)
     @IsNumber()
@@ -225,7 +228,7 @@ export class ChatbotCreateRequestDto {
     })
     monthlyTokenCap?: number;
 
-    @IsOptional()
+    @IsOptionalNotNull()
     @IsNumber()
     @Min(1)
     @ApiProperty({
@@ -259,7 +262,7 @@ export class ChatbotCreateRequestDto {
     handoffKeywords?: string[];
 
     @IsBoolean()
-    @IsOptional()
+    @IsOptionalNotNull()
     @ApiProperty({
         description:
             'Enable guardrail screening of inbound messages and bot replies',
@@ -270,7 +273,7 @@ export class ChatbotCreateRequestDto {
     guardrailEnabled?: boolean;
 
     @IsBoolean()
-    @IsOptional()
+    @IsOptionalNotNull()
     @ApiProperty({
         description:
             'Enable built-in Gemini Flash classifier tier (requires guardrailEnabled)',
@@ -292,7 +295,7 @@ export class ChatbotCreateRequestDto {
     guardrailCustomInstruction?: string;
 
     @IsBoolean()
-    @IsOptional()
+    @IsOptionalNotNull()
     @ApiProperty({
         description:
             'Trigger escalation (handoff) when a guardrail blocks. When false, block is silent and bot stays enabled.',
