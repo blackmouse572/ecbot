@@ -45,7 +45,7 @@
     },
     "form": {
       "namePlaceholder": "vd: Chính sách hoàn tiền",
-      "descriptionHint": "Gợi ý ngắn — cho agent biết khi nào nạp skill này.",
+      "descriptionHint": "Gợi ý ngắn, cho agent biết khi nào nạp skill này.",
       "instructions": "Hướng dẫn",
       "instructionsHint": "Nội dung markdown đầy đủ, nạp khi skill phù hợp.",
       "importHint": "Kéo thả file .md vào đây hoặc bấm để nhập"
@@ -486,7 +486,7 @@
           "accountKeyHint": "Gửi giá trị này dưới dạng accountKey khi gửi tin nhắn.",
           "secretLabel": "Signing secret",
           "secretHint": "Xác thực x-eccho-signature bằng key này.",
-          "secretWarning": "Signing secret chỉ hiển thị một lần và không thể lấy lại. Hãy sao chép ngay — nếu mất, hãy xoay để tạo secret mới."
+          "secretWarning": "Signing secret chỉ hiển thị một lần và không thể lấy lại. Hãy sao chép ngay. Nếu mất, hãy xoay để tạo secret mới."
         },
         "websiteWidget": {
           "title": "Thêm website widget",
@@ -508,7 +508,7 @@
           "tokenLabel": "Bot Token",
           "tokenPlaceholder": "1234567890:AAF...",
           "tokenHint": "Tạo bot và lấy token qua @BotFather",
-          "tokenInvalid": "Sai định dạng token — phải có dạng 1234567890:ABC...",
+          "tokenInvalid": "Sai định dạng token, phải có dạng 1234567890:ABC...",
           "cta": "Kết nối Bot"
         },
         "whatsapp": {
@@ -517,7 +517,7 @@
           "phoneNumberIdInvalid": "Phone number ID chỉ được chứa chữ số",
           "tokenLabel": "Access token",
           "tokenPlaceholder": "EAAG...",
-          "tokenHint": "Dùng token system user được cấp cho Meta app của ecbot, có quyền truy cập tài khoản WhatsApp Business của bạn. Token từ Meta app riêng của bạn sẽ không nhận được tin nhắn — hãy dùng \"Đăng nhập bằng Facebook\".",
+          "tokenHint": "Dùng token system user được cấp cho Meta app của ecbot, có quyền truy cập tài khoản WhatsApp Business của bạn. Token từ Meta app riêng của bạn sẽ không nhận được tin nhắn, hãy dùng \"Đăng nhập bằng Facebook\".",
           "cta": "Kết nối WhatsApp",
           "tabs": {
             "oauth": "Đăng nhập bằng Facebook",
@@ -1705,7 +1705,7 @@
       "error": "Không thể xóa không gian làm việc",
       "dangerZone": {
         "title": "Vùng nguy hiểm",
-        "description": "Xóa không gian làm việc này sẽ xóa vĩnh viễn toàn bộ dữ liệu — thành viên, khách hàng, chatbot và nhiều hơn nữa. Hành động này không thể hoàn tác.",
+        "description": "Xóa không gian làm việc này sẽ xóa vĩnh viễn toàn bộ dữ liệu (thành viên, khách hàng, chatbot và nhiều hơn nữa). Hành động này không thể hoàn tác.",
         "action": "Xóa không gian làm việc"
       },
       "confirm": {
@@ -1760,7 +1760,9 @@
     },
     "unsaved": {
       "title": "Thay đổi chưa lưu",
-      "message": "Bạn có thay đổi chưa lưu. Bạn có muốn rời đi mà không lưu không?"
+      "message": "Bạn có thay đổi chưa lưu. Bạn có muốn rời đi mà không lưu không?",
+      "keepEditing": "Tiếp tục chỉnh sửa",
+      "discard": "Bỏ thay đổi"
     },
     "plusCount": "+ {{count}}",
     "areYouSure": "Bạn có chắc không?",
@@ -2282,7 +2284,7 @@
       },
       "reveal": {
         "title": "Đã tạo credential",
-        "warning": "Sao chép secret ngay — nó sẽ không hiển thị lại.",
+        "warning": "Sao chép secret ngay, nó sẽ không hiển thị lại.",
         "tokenLabel": "x-api-key",
         "copy": "Sao chép",
         "copied": "Đã sao chép."
@@ -2387,7 +2389,7 @@
     },
     "edit": {
       "title": "Chỉnh sửa công cụ",
-      "subtitle": "Cập nhật cấu hình. Thông tin xác thực chỉ ghi — để trống để giữ giá trị hiện tại.",
+      "subtitle": "Cập nhật cấu hình. Thông tin xác thực chỉ ghi: để trống để giữ giá trị hiện tại.",
       "submit": "Lưu thay đổi",
       "success": "Đã cập nhật công cụ.",
       "error": "Không cập nhật được công cụ.",
@@ -2549,7 +2551,7 @@
       "providerTab": {
         "composio": "Composio",
         "eccho": "Ecbot",
-        "ecchoComingSoon": "Sắp ra mắt — công cụ nội bộ sẽ có trong bản cập nhật tới."
+        "ecchoComingSoon": "Sắp ra mắt: công cụ nội bộ sẽ có trong bản cập nhật tới."
       },
       "callback": {
         "installing": "Đang hoàn tất cài đặt…",
@@ -2658,7 +2660,7 @@
       "renewsOn": "Làm mới vào",
       "hasCredit": "Còn credit bổ sung",
       "noCredit": "Không còn credit bổ sung",
-      "exhausted": "Đã hết quota — chatbot sẽ trả lời bằng fallback message."
+      "exhausted": "Đã hết quota, chatbot sẽ trả lời bằng fallback message."
     },
     "trend": {
       "title": "Usage theo ngày",
@@ -2695,7 +2697,7 @@
       "preview": "Cảnh báo chủ workspace khi còn dưới {{percent}}% quota của kỳ."
     },
     "debug": {
-      "title": "Debug — chỉ có ở môi trường dev",
+      "title": "Debug (chỉ có ở môi trường dev)",
       "description": "Số token tuyệt đối. Không trả về ở production.",
       "quota": "Quota",
       "used": "Đã dùng kỳ này",

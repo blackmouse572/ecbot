@@ -23,6 +23,11 @@ vi.mock("@repo/client", async () => {
       join.calls += 1;
       return answer();
     },
+    // A real request takes a moment, long enough for a loading render.
+    workspaceControllerGetListWorkSpaceV1: () =>
+      new Promise((resolve) =>
+        setTimeout(() => resolve({ data: { data: [] } }), 10),
+      ),
   };
 });
 
@@ -37,7 +42,15 @@ vi.mock("@/components/modals", () => {
   };
 });
 
+import { useWorkspaceList } from "@/hooks/api";
 import { JoinForm } from "./join-form";
+
+// Mirrors ProtectedRoute, which wraps /join: it renders nothing while the
+// workspace list loads, so a join that resets that query remounts the page.
+const WorkspaceListGate = ({ children }: { children: ReactNode }) => {
+  const { isLoading } = useWorkspaceList();
+  return isLoading ? null : <>{children}</>;
+};
 
 const apiError = (status: number, statusCode: number, message: string) =>
   Object.assign(new Error(`HTTP ${status}`), {
@@ -55,7 +68,9 @@ const renderJoin = () =>
     <StrictMode>
       <QueryClientProvider client={new QueryClient()}>
         <MemoryRouter initialEntries={["/join?tokens=invite-token"]}>
-          <JoinForm />
+          <WorkspaceListGate>
+            <JoinForm />
+          </WorkspaceListGate>
         </MemoryRouter>
       </QueryClientProvider>
     </StrictMode>,
@@ -77,6 +92,17 @@ describe("JoinForm", () => {
     expect(
       screen.queryByText("This member is already in the workspace"),
     ).not.toBeInTheDocument();
+  });
+
+  it("does not join again after the workspace list refreshes", async () => {
+    join.answers = [joined, alreadyMember];
+
+    renderJoin();
+
+    expect(await screen.findByText("Workspace joined")).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(join.calls).toBe(1);
+    expect(screen.getByText("Workspace joined")).toBeInTheDocument();
   });
 
   it("treats an already-member answer as a successful join", async () => {

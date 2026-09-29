@@ -393,14 +393,28 @@ class PgVectorStore:
                     d.local_path AS stored_path,
                     d.metadata AS document_metadata,
                     d.created_at AS document_created_at,
-                    ts_rank_cd(to_tsvector('simple', c.content), q.query) AS fts_rank
+                    ts_rank_cd(
+                        to_tsvector(
+                            'simple',
+                            concat_ws(' ', c.metadata->>'source', c.content)
+                        ),
+                        q.query
+                    ) AS fts_rank
                 FROM rag_document_chunks c
                 JOIN rag_documents d ON d.id = c.document_id
                 CROSS JOIN q
                 WHERE
                     d.status = 'COMPLETED'
                     AND (d.metadata->'chatbot_ids' ? $2 OR d.metadata->>'chatbot_id' = $2)
-                    AND to_tsvector('simple', c.content) @@ q.query
+                    -- Search the raw chunk source label, not only the sanitized filename.
+                    AND to_tsvector(
+                        'simple',
+                        concat_ws(
+                            ' ',
+                            c.metadata->>'source',
+                            c.content
+                        )
+                    ) @@ q.query
                 ORDER BY fts_rank DESC, c.chunk_index ASC
                 LIMIT $3
                 """,

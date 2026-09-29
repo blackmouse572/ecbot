@@ -75,10 +75,10 @@ export const RouteModalForm = <TFieldValues extends FieldValues = A>({
           </Prompt.Header>
           <Prompt.Footer>
             <Prompt.Cancel onClick={handleCancel} type="button">
-              {t("actions.cancel")}
+              {t("general.unsaved.keepEditing")}
             </Prompt.Cancel>
             <Prompt.Action onClick={handleContinue} type="button">
-              {t("actions.continued")}
+              {t("general.unsaved.discard")}
             </Prompt.Action>
           </Prompt.Footer>
         </Prompt.Content>
