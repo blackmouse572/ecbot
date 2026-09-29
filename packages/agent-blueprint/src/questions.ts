@@ -77,16 +77,20 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
       titleKey: personal ? "agentBuilder.questions.ownerName.title" : "agentBuilder.questions.businessName.title",
       askKey: personal ? "agentBuilder.questions.ownerName.ask" : "agentBuilder.questions.businessName.ask",
       leadKey: personal ? "agentBuilder.questions.ownerName.lead" : "agentBuilder.questions.businessName.lead",
-      placeholderKey: personal ? undefined : "agentBuilder.questions.businessName.placeholder",
+      placeholderKey: personal ? undefined : `agentBuilder.examples.${type.id}.businessName`,
     }),
     q("agentName", "text", { required: true, placeholderKey: "agentBuilder.questions.agentName.placeholder" }),
     ...(personal ? [] : [q("channels", "multi", { choices: choicesOf("channels") })]),
     q("goals", "multi", { required: true, descriptionKey: "agentBuilder.questions.goals.description", choices: choicesOf("goals", goalIds) }),
-    q("greeting", "text", { multiline: true, placeholderKey: "agentBuilder.questions.greeting.placeholder" }),
+    // The app fills {{agentName}} / {{businessName}} with the answers so far.
+    q("greeting", "text", {
+      multiline: true,
+      placeholderKey: personal ? "agentBuilder.questions.greeting.placeholderPersonal" : "agentBuilder.questions.greeting.placeholder",
+    }),
   ];
 
   const essence: Question[] = [
-    q("difference", "text", { multiline: true, placeholderKey: "agentBuilder.questions.difference.placeholder" }),
+    q("difference", "text", { multiline: true, placeholderKey: `agentBuilder.examples.${type.id}.difference` }),
     q("personality", "multi", { max: 2, descriptionKey: "agentBuilder.questions.personality.description", choices: choicesOf("personality") }),
     q("formality", "single", { required: true, choices: choicesOf("formality") }),
   ];
@@ -151,8 +155,8 @@ export function allTranslationKeys(): string[] {
     "replyLength", "emoji", "addressStyle", "followUpQuestions", "afterHours",
   ];
   const withExtras: Record<string, string[]> = {
-    businessName: ["placeholder"], agentName: ["placeholder"], goals: ["description"],
-    greeting: ["placeholder"], difference: ["placeholder"], personality: ["description"],
+    agentName: ["placeholder"], goals: ["description"],
+    greeting: ["placeholder", "placeholderPersonal"], personality: ["description"],
   };
   const keys = questionIds.flatMap((id) => [
     `agentBuilder.questions.${id}.title`,
@@ -162,6 +166,11 @@ export function allTranslationKeys(): string[] {
   ]);
   for (const [lib, entries] of Object.entries(LIBRARIES)) {
     for (const e of entries) keys.push(`agentBuilder.${lib}.${e.id}`);
+  }
+  keys.push("agentBuilder.examples.ownerName");
+  for (const t of BUSINESS_TYPES) {
+    keys.push(`agentBuilder.examples.${t.id}.difference`);
+    if (!t.personal) keys.push(`agentBuilder.examples.${t.id}.businessName`);
   }
   for (const f of FACTS) keys.push(`agentBuilder.facts.${f.id}.title`, `agentBuilder.facts.${f.id}.placeholder`);
   for (const g of ["identity", "essence", "facts", "process", "rules", "interaction"]) keys.push(`agentBuilder.groups.${g}`);

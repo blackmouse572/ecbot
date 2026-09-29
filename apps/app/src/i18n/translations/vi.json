@@ -471,10 +471,10 @@
       },
       "provision": {
         "copied": "Đã sao chép",
-        "cta": "Tạo channel",
+        "cta": "Tạo kênh",
         "nameLabel": "Tên",
         "namePlaceholder": "vd. Partner CRM",
-        "issuedTitle": "Đã tạo channel",
+        "issuedTitle": "Đã tạo kênh",
         "issuedDescription": "Hãy lưu lại các giá trị này ở nơi an toàn trước khi đóng cửa sổ.",
         "apiChannel": {
           "title": "Kết nối API channel",
@@ -496,7 +496,8 @@
           "originsInvalid": "Nhập đầy đủ URL, vd: https://shop.example.com",
           "keyLabel": "Widget key",
           "snippetLabel": "Đoạn mã nhúng",
-          "snippetHint": "Dán đoạn này trước thẻ đóng </body> trên mọi trang cần hiển thị widget."
+          "snippetHint": "Dán đoạn này trước thẻ đóng </body> trên mọi trang cần hiển thị widget.",
+          "issuedDescription": "Dán đoạn mã này vào website để hiện khung chat. Khóa này công khai nên bạn không cần giữ bí mật."
         }
       },
       "connect": {
@@ -534,19 +535,19 @@
     "details": {
       "statuses": {
         "active": {
-          "label": "Hoạt động ",
-          "title": "Đã xác minh",
-          "description": "Tài khoản của bạn đã được xác minh. Bạn có thể bắt đầu thêm cookie và gán cho liên kết."
+          "label": "Hoạt động",
+          "title": "Đã kết nối",
+          "description": "Kênh này đã kết nối và sẵn sàng nhận tin nhắn."
         },
         "inactive": {
-          "label": "Không hoạt động ",
-          "title": "Chưa xác minh",
-          "description": "Tài khoản của bạn chưa được xác minh. Vui lòng thêm cookie và gán cho liên kết để kích hoạt."
+          "label": "Không hoạt động",
+          "title": "Chưa kết nối",
+          "description": "Kênh này chưa được kết nối. Hãy kết nối lại để bắt đầu nhận tin nhắn."
         },
         "blocked": {
-          "label": "Bị chặn ",
+          "label": "Bị chặn",
           "title": "Bị chặn",
-          "description": "Tài khoản của bạn đã bị chặn từ Facebook. Nếu bạn nghĩ đây là một lỗi, hãy <b>đánh dấu hoạt động</b>. Hoặc xóa tài khoản này"
+          "description": "Nền tảng đã chặn kênh này. Bạn có thể xóa kênh, hoặc đánh dấu đã xử lý nếu bạn nghĩ đây là nhầm lẫn."
         }
       },
       "types": {
@@ -634,29 +635,29 @@
       "all": "Tất cả hoạt động"
     },
     "list": {
-      "noRecordsMessage": "Chưa có hoạt động nào. Hãy bắt đầu làm gì đó! 🚀"
+      "noRecordsMessage": "Chưa có hoạt động nào."
     },
     "account": {
-      "create": "đã liên kết tài khoản {{name}} (chào mừng!)",
-      "update": "đã cập nhật tài khoản {{name}} (tuyệt vời!)",
-      "delete": "đã xóa tài khoản {{name}} (tạm biệt!)"
+      "create": "đã liên kết tài khoản {{name}}",
+      "update": "đã cập nhật tài khoản {{name}}",
+      "delete": "đã xóa tài khoản {{name}}"
     },
     "chatbot": {
-      "create": "đã tạo chatbot {{name}} (chào robot mới!)",
-      "update": "đã cập nhật chatbot {{name}} (nâng cấp thành công!)",
-      "delete": "đã xóa chatbot {{name}} (tạm biệt robot!)",
-      "linkAccount": "đã liên kết tài khoản <account/> với chatbot <link/> (kết nối hoàn tất!)",
-      "unlinkAccount": "đã hủy liên kết tài khoản <account/> khỏi chatbot <link/> (chia tay!)",
-      "active": "đã kích hoạt chatbot <link/> (robot đã thức dậy!)",
-      "inactive": "đã vô hiệu hóa chatbot <link/> (robot đi ngủ)",
-      "archive": "đã lưu trữ chatbot <link/> (vào kho)",
-      "unarchive": "đã bỏ lưu trữ chatbot <link/> (trở lại làm việc!)",
+      "create": "đã tạo chatbot <link/>",
+      "update": "đã cập nhật chatbot <link/>",
+      "delete": "đã xóa chatbot <link/>",
+      "linkAccount": "đã liên kết tài khoản <account/> với chatbot <link/>",
+      "unlinkAccount": "đã hủy liên kết tài khoản <account/> khỏi chatbot <link/>",
+      "active": "đã bật chatbot <link/>",
+      "inactive": "đã tắt chatbot <link/>",
+      "archive": "đã lưu trữ chatbot <link/>",
+      "unarchive": "đã bỏ lưu trữ chatbot <link/>",
       "clone": "đã nhân bản chatbot <link/>"
     },
     "member": {
-      "invite": "đã mời thành viên <link/> (chào mừng người mới!)",
-      "remove": "đã xóa thành viên <link/> (tạm biệt!)",
-      "approve": "đã phê duyệt thành viên <link/> (chính thức là thành viên!)"
+      "invite": "đã mời thành viên <link/>",
+      "remove": "đã xóa thành viên <link/>",
+      "approve": "đã duyệt thành viên <link/>"
     },
     "skill": {
       "create": "đã tạo kỹ năng <link/>",
@@ -689,11 +690,16 @@
       "mergeDismiss": "đã bỏ qua đề xuất gộp khách hàng {{name}}"
     },
     "generic": {
-      "create": "đã tạo {{name}}",
-      "update": "đã cập nhật {{name}}",
+      "create": "đã tạo <link/>",
+      "update": "đã cập nhật <link/>",
       "delete": "đã xóa {{name}}"
     },
-    "unknown": "đã làm điều gì đó bí ẩn 🤔"
+    "unknown": "đã thực hiện một thao tác",
+    "you": "Bạn",
+    "workspace": {
+      "create": "đã tạo không gian làm việc <link/>",
+      "update": "đã cập nhật không gian làm việc <link/>"
+    }
   },
   "imports": {
     "title": "Nhập danh sách tài khoản",
@@ -808,7 +814,8 @@
         "label": "Nguồn"
       },
       "guardrail": {
-        "blocked": "Tin nhắn này đã bị chặn bởi lớp bảo vệ an toàn."
+        "blocked": "Tin nhắn này đã bị chặn bởi lớp bảo vệ an toàn.",
+        "reason": "Lý do: {{reason}}"
       },
       "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
       "share": {
@@ -841,7 +848,9 @@
       "poweredBy": "Powered by eccho"
     },
     "list": {
-      "noRecordsMessage": "Không tìm thấy chatbot nào. Thời gian tạo robot đầu tiên! 🤖",
+      "noRecordsTitle": "Chưa có chatbot nào",
+      "noRecordsMessage": "Tạo chatbot đầu tiên để bắt đầu trả lời khách hàng của bạn.",
+      "createFirst": "Tạo chatbot",
       "action": {
         "stop": "Dừng (tạm nghỉ)",
         "delete": "Xóa",
@@ -1055,7 +1064,6 @@
       },
       "businessName": {
         "title": "Tên doanh nghiệp của bạn là gì?",
-        "placeholder": "Lotus Nail Spa",
         "ask": "Tuyệt! Doanh nghiệp của bạn tên là gì?",
         "lead": "Tên doanh nghiệp của tôi là:"
       },
@@ -1083,13 +1091,13 @@
       },
       "greeting": {
         "title": "Agent nên chào như thế nào? (không bắt buộc)",
-        "placeholder": "Chào bạn! Mình là Linh từ Lotus Nail Spa. Mình có thể giúp gì cho bạn?",
+        "placeholder": "Chào bạn! Mình là {{agentName}} từ {{businessName}}. Mình có thể giúp gì cho bạn?",
+        "placeholderPersonal": "Chào bạn! Mình là {{agentName}}, trợ lý của {{businessName}}. Mình có thể giúp gì cho bạn?",
         "ask": "Agent nên chào khách như thế nào? Bạn có thể bỏ qua.",
         "lead": "Agent sẽ chào khách:"
       },
       "difference": {
         "title": "Điều gì làm bạn khác biệt? (không bắt buộc)",
-        "placeholder": "Mẫu vẽ tay, 10 năm kinh nghiệm, có chỗ đậu xe miễn phí",
         "ask": "Điều gì làm doanh nghiệp của bạn đặc biệt? Bạn có thể bỏ qua.",
         "lead": "Điểm đặc biệt của chúng tôi:"
       },
@@ -1148,6 +1156,88 @@
         "title": "Ngoài giờ làm việc, agent nên làm gì?",
         "ask": "Ngoài giờ làm việc thì agent nên làm gì?",
         "lead": "Ngoài giờ làm việc:"
+      }
+    },
+    "examples": {
+      "ownerName": "anh Minh",
+      "restaurant": {
+        "businessName": "Bếp Nhà Mơ",
+        "difference": "Món nhà nấu, nguyên liệu tươi mỗi sáng, giao miễn phí trong 3 km"
+      },
+      "beauty": {
+        "businessName": "Lotus Nail Spa",
+        "difference": "Mẫu vẽ tay, 10 năm kinh nghiệm, có chỗ đậu xe miễn phí"
+      },
+      "healthcare": {
+        "businessName": "Nha khoa An Tâm",
+        "difference": "Bác sĩ 15 năm kinh nghiệm, nhận lịch cuối tuần, báo giá rõ ràng trước khi làm"
+      },
+      "fashion": {
+        "businessName": "Mây Boutique",
+        "difference": "Mẫu thiết kế số lượng ít, sửa đồ miễn phí, đổi hàng trong 7 ngày"
+      },
+      "cosmetics": {
+        "businessName": "Hana Beauty",
+        "difference": "Hàng nhập chính hãng, soi da miễn phí, có mẫu thử trước khi mua"
+      },
+      "ecommerce": {
+        "businessName": "Kunmart",
+        "difference": "Hàng chính hãng, giao trong ngày nội thành, đổi trả trong 7 ngày"
+      },
+      "real_estate": {
+        "businessName": "Nhà Việt Land",
+        "difference": "Chỉ nhận nhà có pháp lý rõ ràng, kiểm tra giấy tờ miễn phí, môi giới rành từng quận"
+      },
+      "education": {
+        "businessName": "Anh ngữ Sao Mai",
+        "difference": "Lớp nhỏ 8 học viên, giáo viên bản ngữ, học thử miễn phí"
+      },
+      "hotel": {
+        "businessName": "Đồi Thông Homestay",
+        "difference": "Phòng nhìn ra đồi thông, có bữa sáng, đón sân bay miễn phí"
+      },
+      "travel": {
+        "businessName": "Việt Xanh Travel",
+        "difference": "Đoàn nhỏ, hướng dẫn viên địa phương, hủy miễn phí trước 7 ngày"
+      },
+      "fitness": {
+        "businessName": "FitZone Gym",
+        "difference": "Mở cửa 5h đến 22h, buổi PT đầu miễn phí, phòng tắm và tủ đồ sạch sẽ"
+      },
+      "automotive": {
+        "businessName": "Minh Phát Motor",
+        "difference": "Phụ tùng chính hãng, bảo hành 12 tháng, đưa đón xe bảo dưỡng miễn phí"
+      },
+      "finance": {
+        "businessName": "Bảo hiểm An Phúc",
+        "difference": "Tư vấn viên 10 năm kinh nghiệm, hỗ trợ từng hồ sơ bồi thường, không ép mua"
+      },
+      "home_services": {
+        "businessName": "Dịch vụ Nhà Sạch",
+        "difference": "Nhân viên được đào tạo, báo giá cố định trước khi làm, làm lại miễn phí nếu chưa hài lòng"
+      },
+      "studio_events": {
+        "businessName": "Nắng Studio",
+        "difference": "Studio ánh sáng tự nhiên, trả ảnh chỉnh sửa trong 3 ngày, có sẵn trang phục"
+      },
+      "health_foods": {
+        "businessName": "Xanh Organic",
+        "difference": "Sản phẩm hữu cơ có chứng nhận, rõ nguồn gốc, có chuyên gia dinh dưỡng tư vấn"
+      },
+      "personal_scheduling": {
+        "difference": "Buổi sáng để tập trung làm việc, không họp vào thứ Sáu, chừa 15 phút giữa các cuộc gọi"
+      },
+      "personal_email": {
+        "difference": "Trả lời ngắn gọn, thân thiện, ký tên bằng tên của tôi, đánh dấu thư từ sếp"
+      },
+      "personal_tasks": {
+        "difference": "Nhắc tôi từ tối hôm trước, gom việc theo dự án, không nhắc vào Chủ nhật"
+      },
+      "personal_research": {
+        "difference": "Ghi rõ nguồn, ưu tiên nguồn tiếng Việt, tóm tắt không quá một trang"
+      },
+      "personal_crm": {
+        "difference": "Nhớ ngày sinh nhật, ghi lại nơi quen biết, nhắc tôi hỏi thăm sau 2 tuần"
       }
     },
     "types": {
@@ -1535,6 +1625,7 @@
     "removeMember": {
       "title": "Loại bỏ thành viên",
       "description": "Bạn có chắc chắn muốn loại bỏ thành viên này khỏi không gian làm việc không?",
+      "confirmButton": "Loại bỏ thành viên",
       "success": "Đã loại bỏ thành viên thành công.",
       "loading": "Đang loại bỏ thành viên..."
     },
@@ -1733,6 +1824,7 @@
     "domain": "Thanh toán"
   },
   "general": {
+    "notSet": "Chưa có",
     "emojiTooltip": "Biểu tượng cảm xúc",
     "emojiSearch": "Tìm biểu tượng…",
     "emojiNoResults": "Không tìm thấy biểu tượng.",
@@ -2040,7 +2132,12 @@
         "unassigned": "Chưa gán"
       },
       "row": {
-        "mergeSuggestionBadge": "Có gợi ý gộp đang chờ"
+        "mergeSuggestionBadge": "Có gợi ý gộp đang chờ",
+        "handoffReasons": {
+          "keyword_trigger": "Khách yêu cầu gặp nhân viên",
+          "tag_trigger": "Thẻ khách hàng cần nhân viên xử lý",
+          "fallback_threshold": "Bot không trả lời được"
+        }
       }
     },
     "status": {
@@ -2116,6 +2213,7 @@
           "phone": "Số điện thoại",
           "email": "Email",
           "language": "Ngôn ngữ",
+          "languagePlaceholder": "Mã ngôn ngữ, ví dụ vi",
           "notes": "Ghi chú"
         },
         "contactPoints": {

@@ -233,7 +233,9 @@ export function CustomerSidePanel({
                       <Input
                         {...field}
                         value={field.value ?? ""}
-                        placeholder="en, vi"
+                        placeholder={t(
+                          "conversations.customer.panel.fields.languagePlaceholder",
+                        )}
                       />
                     </Form.Control>
                     <Form.ErrorMessage />

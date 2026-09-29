@@ -92,7 +92,9 @@ export const ChatbotListTable = () => {
           { key: "updatedAt", label: t("fields.updatedAt") },
         ]}
         noRecords={{
+          title: t("chatbot.list.noRecordsTitle"),
           message: t("chatbot.list.noRecordsMessage"),
+          action: { to: "create", label: t("chatbot.list.createFirst") },
         }}
       />
       <Outlet />

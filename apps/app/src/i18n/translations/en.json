@@ -470,7 +470,8 @@
           "originsInvalid": "Enter full URLs, e.g. https://shop.example.com",
           "keyLabel": "Widget key",
           "snippetLabel": "Embed snippet",
-          "snippetHint": "Paste this before the closing </body> tag on every page that should show the widget."
+          "snippetHint": "Paste this before the closing </body> tag on every page that should show the widget.",
+          "issuedDescription": "Paste this code into your website to show the chat. The key is public, so there is nothing to keep secret."
         }
       },
       "connect": {
@@ -509,18 +510,18 @@
       "statuses": {
         "active": {
           "label": "Active",
-          "title": "Account had been synced",
-          "description": "We have verified this account. You can start to add cookies and assign to link."
+          "title": "Connected",
+          "description": "This channel is connected and ready to receive messages."
         },
         "inactive": {
           "label": "Inactive",
-          "title": "Account not verified",
-          "description": "Your account has not been verified"
+          "title": "Not connected",
+          "description": "This channel is not connected yet. Reconnect it to start receiving messages."
         },
         "blocked": {
-          "label": "Banned",
-          "title": "Banned",
-          "description": "Seem like this account had been banned from Facebook. You can delete this account.If you believe this is a mistake, mark as resolved"
+          "label": "Blocked",
+          "title": "Blocked",
+          "description": "The platform has blocked this channel. You can delete it, or mark it as resolved if you think this is a mistake."
         }
       },
       "types": {
@@ -632,63 +633,68 @@
       "noRecordsMessage": "No activities found"
     },
     "account": {
-      "create": "has linked account {{name}}",
-      "update": "has updated account {{name}}",
-      "delete": "has deleted account {{name}}"
+      "create": "linked account {{name}}",
+      "update": "updated account {{name}}",
+      "delete": "deleted account {{name}}"
     },
     "chatbot": {
-      "create": "has created chatbot <link/>",
-      "update": "has updated chatbot <link/>",
-      "delete": "has deleted chatbot <link/>",
-      "linkAccount": "has linked account <account/> to chatbot <link/>",
-      "unlinkAccount": "has unlinked account <account/> from chatbot <link/>",
-      "active": "has activated chatbot <link/>",
-      "inactive": "has deactivated chatbot <link/>",
-      "archive": "has archived chatbot <link/>",
-      "unarchive": "has unarchived chatbot <link/>",
-      "clone": "has cloned chatbot <link/>"
+      "create": "created chatbot <link/>",
+      "update": "updated chatbot <link/>",
+      "delete": "deleted chatbot <link/>",
+      "linkAccount": "linked account <account/> to chatbot <link/>",
+      "unlinkAccount": "unlinked account <account/> from chatbot <link/>",
+      "active": "activated chatbot <link/>",
+      "inactive": "deactivated chatbot <link/>",
+      "archive": "archived chatbot <link/>",
+      "unarchive": "unarchived chatbot <link/>",
+      "clone": "cloned chatbot <link/>"
     },
     "member": {
-      "invite": "has invited member <link/>",
-      "remove": "has removed member <link/>",
-      "approve": "has approved member <link/>"
+      "invite": "invited member <link/>",
+      "remove": "removed member <link/>",
+      "approve": "approved member <link/>"
     },
     "skill": {
-      "create": "has created skill <link/>",
-      "update": "has updated skill <link/>",
-      "delete": "has deleted skill {{name}}",
-      "enable": "has enabled skill {{name}} for a chatbot",
-      "disable": "has disabled skill {{name}} for a chatbot"
+      "create": "created skill <link/>",
+      "update": "updated skill <link/>",
+      "delete": "deleted skill {{name}}",
+      "enable": "enabled skill {{name}} for a chatbot",
+      "disable": "disabled skill {{name}} for a chatbot"
     },
     "knowledgeBase": {
-      "create": "has uploaded document <link/>",
-      "update": "has updated document <link/>",
-      "delete": "has deleted document {{name}}"
+      "create": "uploaded document <link/>",
+      "update": "updated document <link/>",
+      "delete": "deleted document {{name}}"
     },
     "tool": {
-      "startInstall": "has started installing tool {{name}}",
-      "completeInstall": "has installed tool {{name}}",
-      "enable": "has enabled tool {{name}} for a chatbot",
-      "disable": "has disabled tool {{name}} for a chatbot"
+      "startInstall": "started installing tool {{name}}",
+      "completeInstall": "installed tool {{name}}",
+      "enable": "enabled tool {{name}} for a chatbot",
+      "disable": "disabled tool {{name}} for a chatbot"
     },
     "role": {
-      "active": "has activated role <link/>",
-      "inactive": "has deactivated role <link/>"
+      "active": "activated role <link/>",
+      "inactive": "deactivated role <link/>"
     },
     "apiKey": {
-      "reset": "has reset API key {{name}}"
+      "reset": "reset API key {{name}}"
     },
     "customer": {
-      "unmerge": "has unmerged customer {{name}}",
-      "mergeConfirm": "has confirmed merging customer {{name}}",
-      "mergeDismiss": "has dismissed merge suggestion for customer {{name}}"
+      "unmerge": "unmerged customer {{name}}",
+      "mergeConfirm": "confirmed merging customer {{name}}",
+      "mergeDismiss": "dismissed the merge suggestion for customer {{name}}"
     },
     "generic": {
-      "create": "has created {{name}}",
-      "update": "has updated {{name}}",
-      "delete": "has deleted {{name}}"
+      "create": "created <link/>",
+      "update": "updated <link/>",
+      "delete": "deleted {{name}}"
     },
-    "unknown": "has done something"
+    "unknown": "did something",
+    "you": "You",
+    "workspace": {
+      "create": "created workspace <link/>",
+      "update": "updated workspace <link/>"
+    }
   },
   "chatbot": {
     "batch": {
@@ -820,7 +826,8 @@
         "label": "Sources"
       },
       "guardrail": {
-        "blocked": "This message was blocked by a safety guardrail."
+        "blocked": "This message was blocked by a safety guardrail.",
+        "reason": "Reason: {{reason}}"
       },
       "error": "Something went wrong. Please try again.",
       "share": {
@@ -853,7 +860,9 @@
       "poweredBy": "Powered by eccho"
     },
     "list": {
-      "noRecordsMessage": "No chatbots found",
+      "noRecordsTitle": "No chatbots yet",
+      "noRecordsMessage": "Create your first chatbot to start answering your customers.",
+      "createFirst": "Create chatbot",
       "action": {
         "stop": "Stop",
         "delete": "Delete",
@@ -1029,7 +1038,6 @@
       },
       "businessName": {
         "title": "What is your business called?",
-        "placeholder": "Lotus Nail Spa",
         "ask": "Great! What should we call your business?",
         "lead": "My business name is:"
       },
@@ -1057,13 +1065,13 @@
       },
       "greeting": {
         "title": "How should it greet people? (optional)",
-        "placeholder": "Hi! This is Linh from Lotus Nail Spa. How can I help?",
+        "placeholder": "Hi! This is {{agentName}} from {{businessName}}. How can I help?",
+        "placeholderPersonal": "Hi! This is {{agentName}}, {{businessName}}'s assistant. How can I help?",
         "ask": "How should your agent say hello? You can skip this.",
         "lead": "My agent greets people with:"
       },
       "difference": {
         "title": "What makes you different? (optional)",
-        "placeholder": "Hand-painted designs, 10 years of experience, free parking",
         "ask": "What makes your business special? You can skip this.",
         "lead": "What makes us special:"
       },
@@ -1122,6 +1130,88 @@
         "title": "What should it do outside opening hours?",
         "ask": "What should happen outside opening hours?",
         "lead": "Outside opening hours:"
+      }
+    },
+    "examples": {
+      "ownerName": "Minh",
+      "restaurant": {
+        "businessName": "Bếp Nhà Mơ",
+        "difference": "Home-style recipes, fresh ingredients every morning, free delivery within 3 km"
+      },
+      "beauty": {
+        "businessName": "Lotus Nail Spa",
+        "difference": "Hand-painted designs, 10 years of experience, free parking"
+      },
+      "healthcare": {
+        "businessName": "Nha khoa An Tâm",
+        "difference": "Dentists with 15 years of experience, weekend appointments, clear prices up front"
+      },
+      "fashion": {
+        "businessName": "Mây Boutique",
+        "difference": "Designs made in small batches, free alterations, 7-day exchanges"
+      },
+      "cosmetics": {
+        "businessName": "Hana Beauty",
+        "difference": "Genuine imported products, free skin check, samples before you buy"
+      },
+      "ecommerce": {
+        "businessName": "Kunmart",
+        "difference": "Genuine goods, same-day delivery in the city, 7-day returns"
+      },
+      "real_estate": {
+        "businessName": "Nhà Việt Land",
+        "difference": "Verified listings only, free legal checks, agents who know every district"
+      },
+      "education": {
+        "businessName": "Sao Mai English",
+        "difference": "Small classes of 8, native teachers, a free trial lesson"
+      },
+      "hotel": {
+        "businessName": "Đồi Thông Homestay",
+        "difference": "Rooms facing the pine hills, breakfast included, free airport pickup"
+      },
+      "travel": {
+        "businessName": "Việt Xanh Travel",
+        "difference": "Small groups, local guides, free cancellation up to 7 days before"
+      },
+      "fitness": {
+        "businessName": "FitZone Gym",
+        "difference": "Open 5am to 10pm, a free first PT session, clean showers and lockers"
+      },
+      "automotive": {
+        "businessName": "Minh Phát Motor",
+        "difference": "Genuine parts, 12-month warranty, free pickup for servicing"
+      },
+      "finance": {
+        "businessName": "An Phúc Insurance",
+        "difference": "Advisers with 10 years of experience, help with every claim, no pressure to buy"
+      },
+      "home_services": {
+        "businessName": "Nhà Sạch Service",
+        "difference": "Trained staff, fixed prices before we start, redo for free if you're not happy"
+      },
+      "studio_events": {
+        "businessName": "Nắng Studio",
+        "difference": "Natural-light studio, edited photos in 3 days, outfits included"
+      },
+      "health_foods": {
+        "businessName": "Xanh Organic",
+        "difference": "Certified organic products, clear origins, advice from a nutritionist"
+      },
+      "personal_scheduling": {
+        "difference": "Mornings are for deep work, no meetings on Fridays, keep 15 minutes between calls"
+      },
+      "personal_email": {
+        "difference": "Short, friendly replies, sign off with my first name, flag anything from my boss"
+      },
+      "personal_tasks": {
+        "difference": "Remind me the evening before, group tasks by project, no reminders on Sundays"
+      },
+      "personal_research": {
+        "difference": "Cite sources, prefer Vietnamese sources, keep summaries under a page"
+      },
+      "personal_crm": {
+        "difference": "Remember birthdays, note how we met, remind me to follow up after 2 weeks"
       }
     },
     "types": {
@@ -1486,10 +1576,11 @@
   "members": {
     "title": "The Team",
     "removeMember": {
-      "title": "Say Goodbye to Member",
-      "description": "Are you sure you want to remove this team member? They'll miss the fun!",
-      "success": "Member has left the building!",
-      "loading": "Saying goodbye..."
+      "title": "Remove member",
+      "description": "Remove this member from the workspace? They will lose access right away.",
+      "confirmButton": "Remove member",
+      "success": "Member removed.",
+      "loading": "Removing member..."
     },
     "inviteMember": {
       "action": "Invite Member",
@@ -1708,6 +1799,7 @@
     "preview": "Preview"
   },
   "general": {
+    "notSet": "Not set",
     "emojiTooltip": "Emoji",
     "emojiSearch": "Search emoji…",
     "emojiNoResults": "No emoji found.",
@@ -2010,7 +2102,12 @@
         "unassigned": "Unassigned"
       },
       "row": {
-        "mergeSuggestionBadge": "Pending merge suggestion"
+        "mergeSuggestionBadge": "Pending merge suggestion",
+        "handoffReasons": {
+          "keyword_trigger": "Customer asked for staff",
+          "tag_trigger": "Customer tag needs staff",
+          "fallback_threshold": "Bot could not answer"
+        }
       }
     },
     "status": {
@@ -2086,6 +2183,7 @@
           "phone": "Phone",
           "email": "Email",
           "language": "Language",
+          "languagePlaceholder": "Language code, for example vi",
           "notes": "Notes"
         },
         "contactPoints": {

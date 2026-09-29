@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, toast } from "@medusajs/ui";
 import { ChipGroup, Form } from "@repo/ui/common-components";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useMemo, useState, type FC } from "react";
+import { useMemo, useRef, useState, type FC } from "react";
 import { useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
@@ -13,6 +13,7 @@ import {
   useProcessKnowledgeItem,
 } from "../../../../hooks/api";
 import { FileForm, TextForm, UrlForm } from "./forms";
+import { fileTitle } from "./forms/file-title";
 import { KnowledgeItemTypeSelector } from "./knowledge-item-type-selector/index";
 import { KnowledgeItemTypeEnum } from "./knowledge-item-type-selector/knowledge-item-type-selector";
 import {
@@ -54,6 +55,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
     }
   }, [selectedType]);
 
+  const keepTitleSelection = useRef(false);
   const form = useForm<KnowledgeItemCreateFormValues>({
     // The schema swaps with the selected type, so it can't be tied to the
     // form's static shape — this is the one place that gap is bridged.
@@ -182,6 +184,25 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                         <Form.Control>
                           <Input
                             {...field}
+                            onFocus={(e) => {
+                              // A title filled in from the file name is a
+                              // suggestion: select it so typing replaces it.
+                              const file = form.getValues("file");
+                              if (
+                                file &&
+                                field.value === fileTitle(file.file.name)
+                              ) {
+                                e.currentTarget.select();
+                                keepTitleSelection.current = true;
+                              }
+                            }}
+                            onMouseUp={(e) => {
+                              // The click that focused the field would
+                              // otherwise drop the caret and undo the select.
+                              if (keepTitleSelection.current)
+                                e.preventDefault();
+                              keepTitleSelection.current = false;
+                            }}
                             placeholder={t("knowledge_item.title_placeholder")}
                             aria-invalid={!!fieldState.error}
                             aria-errormessage={fieldState.error?.message}

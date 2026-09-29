@@ -166,10 +166,11 @@ const useColumns = ({
 };
 
 function CustomerCell({ name, id }: { name?: string | null; id?: string }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col">
       <Text size="small" weight="plus" leading="compact">
-        {name?.trim() || (id ? `#${id.slice(0, 8)}` : "—")}
+        {name?.trim() || (id ? `#${id.slice(0, 8)}` : t("general.notSet"))}
       </Text>
       {id && (
         <Text size="xsmall" className="text-ui-fg-muted truncate">

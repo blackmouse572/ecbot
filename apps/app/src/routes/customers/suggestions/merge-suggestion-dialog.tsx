@@ -173,8 +173,8 @@ export function MergeSuggestionDialog({ suggestion, onClose }: Props) {
                         }
                         className="mt-1 grid grid-cols-2 gap-x-2"
                       >
-                        <FieldOption value="A" text={String(av || "—")} />
-                        <FieldOption value="B" text={String(bv || "—")} />
+                        <FieldOption value="A" text={String(av || t("general.notSet"))} />
+                        <FieldOption value="B" text={String(bv || t("general.notSet"))} />
                       </RadioGroup>
                     </div>
                   );

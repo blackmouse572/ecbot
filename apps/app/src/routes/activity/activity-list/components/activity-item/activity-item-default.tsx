@@ -62,26 +62,6 @@ export function ActivityItemDefault({ item }: Props) {
     }
   };
 
-  const getInterpolation = () => {
-    const name = getDisplayName();
-    const link = getLink();
-    switch (item.action) {
-      case "create":
-      case "update":
-        return {
-          name: link ? (
-            <LinkButton asChild>
-              <Link to={link}>{name}</Link>
-            </LinkButton>
-          ) : (
-            name
-          ),
-        };
-      default:
-        return { name };
-    }
-  };
-
   const getComponents = (): Record<string, React.ReactElement> => {
     const metadata = (item.metadata as A) || {};
     const name = getDisplayName();
@@ -147,7 +127,7 @@ export function ActivityItemDefault({ item }: Props) {
           &nbsp;
           <Trans
             i18nKey={getMessage() as A}
-            {...getInterpolation()}
+            values={{ name: getDisplayName() }}
             components={getComponents()}
           />
         </ActivityItem.Title>

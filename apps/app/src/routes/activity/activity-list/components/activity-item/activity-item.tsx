@@ -3,6 +3,7 @@ import { useDate } from "@/hooks/use-date";
 import { Avatar, clx } from "@medusajs/ui";
 import type { UserProfileResponseDto } from "@repo/client";
 import type React from "react";
+import { useTranslation } from "react-i18next";
 import type { LinkProps } from "react-router-dom";
 
 const Root = ({
@@ -48,12 +49,13 @@ const Name = ({
   user: Pick<UserProfileResponseDto, "id" | "name" | "email" | "photo">;
 }) => {
   const { user: me } = useMe();
+  const { t } = useTranslation();
   return (
     <span
       {...props}
       className={clx("txt-compact-small text-ui-fg-base", className)}
     >
-      {me?.id === user.id ? "You" : user.name || user.email}
+      {me?.id === user.id ? t("activities.you") : user.name || user.email}
     </span>
   );
 };

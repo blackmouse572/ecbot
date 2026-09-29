@@ -21,7 +21,11 @@ export function IssuedPanel({
       <div>
         <Heading>{t("accounts.create.provision.issuedTitle")}</Heading>
         <Text size="small" className="text-ui-fg-subtle">
-          {t("accounts.create.provision.issuedDescription")}
+          {/* A widget key sits in the page source, so there is nothing to
+              keep secret; only API channel credentials are shown once. */}
+          {issued.kind === "API_CHANNEL"
+            ? t("accounts.create.provision.issuedDescription")
+            : t("accounts.create.provision.websiteWidget.issuedDescription")}
         </Text>
       </div>
 

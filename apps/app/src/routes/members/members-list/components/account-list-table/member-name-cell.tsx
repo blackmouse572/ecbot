@@ -37,7 +37,7 @@ const OwnerBadge = () => {
   const label = t("roles.types.workspaceOwner");
 
   return (
-    <Badge size="2xsmall" color="purple">
+    <Badge size="2xsmall" color="purple" className="shrink-0 whitespace-nowrap">
       {label}
     </Badge>
   );
