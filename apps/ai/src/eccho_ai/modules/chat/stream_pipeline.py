@@ -11,6 +11,7 @@ from typing import Any
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.modules.chat import ui_message_stream as ui
+from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
 from eccho_ai.modules.chat.image_markdown import Image, ImageMarkdownFilter, Piece
 from eccho_ai.modules.chat.prompt_leak import PROMPT_LEAK_REASON, PromptLeakFilter
 
@@ -60,6 +61,7 @@ async def events_to_ui_parts(
         usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
         images = ImageMarkdownFilter(image_url_allowed) if image_url_allowed else None
         leak = PromptLeakFilter()
+        citations = CitationMarkerFilter()
         leaked = False
         tool_names: dict[str, str] = {}
 
@@ -69,10 +71,11 @@ async def events_to_ui_parts(
             if safe is None:
                 leaked = True
                 return []
+            safe = citations.feed(safe)
             return await images.feed(safe) if images else [safe]
 
         async def flush_screens() -> list[Piece]:
-            held = leak.flush()
+            held = citations.feed(leak.flush()) + citations.flush()
             pieces = (await images.feed(held) if images else [held]) if held else []
             return pieces + (await images.flush() if images else [])
 

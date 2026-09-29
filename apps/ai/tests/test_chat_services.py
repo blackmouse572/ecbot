@@ -62,6 +62,9 @@ def test_rag_message_wraps_context_in_consistent_delimiters():
     msg = _build_rag_message("q", _Retrieval("some KB text"))
     assert "<knowledge_base_context>" in msg
     assert "</knowledge_base_context>" in msg
+    # Citations are internal: the model is told not to write them (#120).
+    assert "Nguồn" not in msg
+    assert "never write them" in msg
     assert "some KB text" in msg
 
 

@@ -97,6 +97,21 @@ async def test_sources_and_metadata_emitted_before_finish():
 
 
 @pytest.mark.asyncio
+async def test_kb_citation_markers_never_reach_the_customer():
+    async def fake_events():
+        for piece in ["Friso Gold is 450k [K", "B-1]. Returns in 7 days", " [KB-2]."]:
+            yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk(piece)}}
+
+    frames = [f async for f in events_to_ui_parts(fake_events(), request_id="m1")]
+    text = "".join(
+        json.loads(f[len("data: "):])["delta"]
+        for f in frames
+        if f.startswith("data: {") and json.loads(f[len("data: "):])["type"] == "text-delta"
+    )
+    assert text == "Friso Gold is 450k. Returns in 7 days."
+
+
+@pytest.mark.asyncio
 async def test_open_text_run_is_closed_before_error_on_raise():
     async def fake_events():
         yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk("partial")}}

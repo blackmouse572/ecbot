@@ -174,11 +174,9 @@ class RAGRetrievalService:
             document_metadata = chunk.metadata.get("document", {})
             chunk_metadata = chunk.metadata.get("chunk", {})
             source_url = document_metadata.get("source_url") or chunk_metadata.get("source")
-            header = (
-                f"[KB-{index}] source={chunk.filename}; "
-                f"document_id={chunk.document_id}; "
-                f"chunk={chunk.chunk_index}; score={chunk.rerank_score:.3f}"
-            )
+            # Only the label (and a public page URL) — storage filenames and ids
+            # are internal and must not end up quoted to the customer.
+            header = f"[KB-{index}]"
             if source_url:
                 header += f"; url={source_url}"
             block = f"{header}\n{chunk.content.strip()}"
