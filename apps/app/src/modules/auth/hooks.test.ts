@@ -118,7 +118,7 @@ describe("useRefreshTokenEffect", () => {
     // firing logout() would win the race and then get clobbered by that
     // trailing bare "/login". The redirect must be routed through logout's
     // own `{ to }` param instead of a second, independent navigation.
-    expect(logoutFn).toHaveBeenCalledWith({ to: "/login?redirect=/" });
+    expect(logoutFn).toHaveBeenCalledWith({ to: "/login?redirect=%2F" });
   });
 
   it("does not crash when the error has no request object (defensive optional chaining)", async () => {

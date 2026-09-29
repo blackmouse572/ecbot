@@ -16,6 +16,7 @@ import { useAtom, useAtomValue } from "jotai/react";
 import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
+import { loginRedirectPath } from "./login-redirect";
 import { logoutGuard, tokenAtom } from "./state";
 
 // Module-level singletons: ensure only one refresh request is in-flight at a
@@ -93,7 +94,7 @@ export const useRefreshTokenEffect = () => {
       // resolves — a separate go(...) fired right after it would win the
       // race and then get clobbered by that trailing navigation. Route the
       // redirect through logout's own `{ to }` instead of a second call.
-      await logout({ to: `/login?redirect=${location.pathname}` });
+      await logout({ to: loginRedirectPath(location) });
       return Promise.reject(error);
     }
   }, []);
