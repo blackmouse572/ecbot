@@ -21,6 +21,7 @@ describe('ConversationService', () => {
 
     const mockNotificationService = {
         create: jest.fn(),
+        createHandoff: jest.fn(),
     };
 
     const mockChatbotAIService = {
@@ -270,7 +271,7 @@ describe('ConversationService', () => {
             mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
                 [{ user: { id: 'user-1' } }]
             );
-            mockNotificationService.create.mockResolvedValue({});
+            mockNotificationService.createHandoff.mockResolvedValue({});
 
             await service.triggerHandoff(
                 conversation as any,
@@ -282,7 +283,9 @@ describe('ConversationService', () => {
                 mockConversationRepository.updateEntity.mock.calls[0];
             expect(patch.botEnabled).toBe(false);
             expect(patch.handoffAt).toBeInstanceOf(Date);
-            expect(mockNotificationService.create).toHaveBeenCalledTimes(1);
+            expect(mockNotificationService.createHandoff).toHaveBeenCalledTimes(
+                1
+            );
         });
     });
 
@@ -531,23 +534,27 @@ describe('ConversationService', () => {
             mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
                 members
             );
-            mockNotificationService.create.mockResolvedValue({});
+            mockNotificationService.createHandoff.mockResolvedValue({});
 
             await service.notifyOperators(
                 'conv-1',
                 'workspace-1',
-                'Customer requested human',
-                'Connecting you with an agent'
+                'keyword_trigger'
             );
 
             expect(
                 mockWorkspaceMemberRepository.findActiveByWorkspace
             ).toHaveBeenCalledWith('workspace-1');
-            expect(mockNotificationService.create).toHaveBeenCalledTimes(2);
-            expect(mockNotificationService.create).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    recipient: 'user-1',
-                })
+            expect(mockNotificationService.createHandoff).toHaveBeenCalledTimes(
+                2
+            );
+            expect(mockNotificationService.createHandoff).toHaveBeenCalledWith(
+                'user-1',
+                {
+                    conversationId: 'conv-1',
+                    workspaceId: 'workspace-1',
+                    reason: 'keyword_trigger',
+                }
             );
         });
 
@@ -555,15 +562,15 @@ describe('ConversationService', () => {
             mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
                 []
             );
-            mockNotificationService.create.mockResolvedValue({});
-
             await service.notifyOperators(
                 'conv-1',
                 'workspace-1',
                 'Test reason'
             );
 
-            expect(mockNotificationService.create).not.toHaveBeenCalled();
+            expect(
+                mockNotificationService.createHandoff
+            ).not.toHaveBeenCalled();
         });
     });
 

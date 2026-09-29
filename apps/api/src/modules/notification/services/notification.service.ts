@@ -16,6 +16,7 @@ import {
 } from '../enums/notification.enum';
 import { NotificationEntity } from '../repository/entities/notification.entity';
 import { NotificationRepository } from '../repository/repositories/notification.repository';
+import { NOTIFICATION_HANDOFF_REASONS } from '@app/modules/notification/constants/notification.handoff.constant';
 
 @Injectable()
 export class NotificationService {
@@ -385,6 +386,46 @@ export class NotificationService {
                 actionText: this.messageService.setMessage(
                     'notification.workspaceNoPlan.actionText'
                 ),
+            },
+        });
+    }
+
+    /**
+     * A conversation was handed to a person. The reason code (keyword_trigger,
+     * a guardrail name, ...) is turned into a sentence the owner can read.
+     */
+    async createHandoff(
+        recipientId: string,
+        data: { conversationId: string; workspaceId: string; reason: string }
+    ): Promise<NotificationEntity> {
+        const { conversationId, workspaceId, reason } = data;
+        const reasonKey = (
+            NOTIFICATION_HANDOFF_REASONS as readonly string[]
+        ).includes(reason)
+            ? reason
+            : 'other';
+
+        return this.create({
+            title: this.messageService.setMessage('notification.handoff.title'),
+            message: this.messageService.setMessage(
+                'notification.handoff.message',
+                {
+                    properties: {
+                        reason: this.messageService.setMessage(
+                            `notification.handoff.reason.${reasonKey}`
+                        ),
+                    },
+                }
+            ),
+            type: NotificationType.WARNING,
+            priority: NotificationPriority.HIGH,
+            recipient: recipientId,
+            metadata: {
+                actionUrl: `/conversations/${conversationId}`,
+                actionText: this.messageService.setMessage(
+                    'notification.handoff.actionText'
+                ),
+                data: { conversationId, workspaceId, reason },
             },
         });
     }

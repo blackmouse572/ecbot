@@ -167,8 +167,7 @@ describe('ReplyGenerationService — guardrail block handling', () => {
         expect(mockConversationService.triggerHandoff).toHaveBeenCalledWith(
             conversation,
             'ws-1',
-            'guardrail_output_model',
-            'Connecting you to a human.'
+            'guardrail_output_model'
         );
     });
 
@@ -211,8 +210,7 @@ describe('ReplyGenerationService — guardrail block handling', () => {
         expect(mockConversationService.triggerHandoff).toHaveBeenCalledWith(
             { id: 'conv-1' },
             'ws-1',
-            'guardrail_output_model',
-            'Connecting you to a human.'
+            'guardrail_output_model'
         );
     });
 });

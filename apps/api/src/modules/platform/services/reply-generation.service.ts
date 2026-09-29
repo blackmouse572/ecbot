@@ -11,6 +11,10 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
 import { MESSAGE_TYPING_REFRESH_MS } from '../constants/message-debounce.constant';
+import {
+    HANDOFF_DEFAULT_REPLY,
+    HANDOFF_DEFAULT_REPLY_LANGUAGE,
+} from '../constants/handoff.constant';
 import { text as toText } from '../interfaces/message-model';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { TurnContextService } from './turn-context.service';
@@ -296,8 +300,13 @@ export class ReplyGenerationService {
                     await this.conversationService.triggerHandoff(
                         updated,
                         chatbot.workspace.id,
-                        'fallback_threshold',
-                        chatbot.handoffMessage
+                        'fallback_threshold'
+                    );
+                    await this.sendHandoffReply(
+                        chatbot,
+                        account,
+                        senderId,
+                        conversationId
                     );
                     return;
                 }
@@ -331,7 +340,46 @@ export class ReplyGenerationService {
         conversationId: string
     ): Promise<boolean> {
         if (!chatbot.fallbackMessage) return false;
+        return this.sendBotText(
+            chatbot,
+            account,
+            senderId,
+            conversationId,
+            chatbot.fallbackMessage
+        );
+    }
 
+    /**
+     * Tell the customer a person is taking over: the chatbot's handoff
+     * message, or a default in its language when it has none. Without it the
+     * bot just stops and the customer is left hanging.
+     */
+    async sendHandoffReply(
+        chatbot: any,
+        account: any,
+        senderId: string,
+        conversationId: string
+    ): Promise<boolean> {
+        const text =
+            chatbot.handoffMessage ||
+            HANDOFF_DEFAULT_REPLY[chatbot.primaryLanguage] ||
+            HANDOFF_DEFAULT_REPLY[HANDOFF_DEFAULT_REPLY_LANGUAGE];
+        return this.sendBotText(
+            chatbot,
+            account,
+            senderId,
+            conversationId,
+            text
+        );
+    }
+
+    private async sendBotText(
+        chatbot: any,
+        account: any,
+        senderId: string,
+        conversationId: string,
+        text: string
+    ): Promise<boolean> {
         const clientNonce = randomUUID();
         await this.messageRepository.insertPendingOutbound(
             conversationId,
@@ -339,7 +387,7 @@ export class ReplyGenerationService {
             {
                 authorType: ENUM_MESSAGE_AUTHOR.BOT,
                 authorId: chatbot.id,
-                text: chatbot.fallbackMessage,
+                text,
                 dateSent: new Date(),
             }
         );
@@ -348,7 +396,7 @@ export class ReplyGenerationService {
             const { externalId } = await adapter.sendMessage(
                 account,
                 senderId,
-                toText(chatbot.fallbackMessage)
+                toText(text)
             );
             await this.messageRepository.markOutboundSent(
                 clientNonce,
@@ -357,7 +405,7 @@ export class ReplyGenerationService {
             return true;
         } catch (err) {
             this.logger.error(
-                `Fallback send failed for conversation ${conversationId}: ${(err as Error).message}`
+                `Bot message send failed for conversation ${conversationId}: ${(err as Error).message}`
             );
             await this.messageRepository.markOutboundFailed(clientNonce);
             return false;
@@ -377,8 +425,7 @@ export class ReplyGenerationService {
             await this.conversationService.triggerHandoff(
                 conversation,
                 chatbot.workspace.id,
-                reason,
-                chatbot.handoffMessage
+                reason
             );
         }
     }

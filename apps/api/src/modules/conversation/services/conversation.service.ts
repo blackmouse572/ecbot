@@ -12,10 +12,6 @@ import { wrap } from '@mikro-orm/core';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
-import {
-    NotificationPriority,
-    NotificationType,
-} from '../../notification/enums/notification.enum';
 import { ENUM_CONVERSATION_STATUS } from '../enums/conversation.enum';
 import {
     IConversationFindOrCreate,
@@ -425,8 +421,7 @@ export class ConversationService implements IConversationService {
     async triggerHandoff(
         conversation: ConversationEntity,
         workspaceId: string,
-        reason: string,
-        handoffMessage?: string
+        reason: string
     ): Promise<ConversationEntity> {
         // Auto-escalation: turn the bot off and raise the alarm (handoffAt + notification).
         // This is what distinguishes an escalation from a quiet manual takeover.
@@ -447,12 +442,7 @@ export class ConversationService implements IConversationService {
         }
 
         // Notify operators (all active workspace members)
-        await this.notifyOperators(
-            conversation.id,
-            workspaceId,
-            reason,
-            handoffMessage
-        );
+        await this.notifyOperators(conversation.id, workspaceId, reason);
 
         return updated;
     }
@@ -460,8 +450,7 @@ export class ConversationService implements IConversationService {
     async notifyOperators(
         conversationId: string,
         workspaceId: string,
-        reason: string,
-        handoffMessage?: string
+        reason: string
     ): Promise<void> {
         try {
             const members =
@@ -478,19 +467,10 @@ export class ConversationService implements IConversationService {
 
             const notificationPromises = members.map(member =>
                 this.notificationService
-                    .create({
-                        title: 'Conversation Handoff Required',
-                        message: handoffMessage
-                            ? `${handoffMessage} (Reason: ${reason})`
-                            : `A customer conversation requires human attention. Reason: ${reason}`,
-                        type: NotificationType.WARNING,
-                        priority: NotificationPriority.HIGH,
-                        recipient: member.user.id,
-                        metadata: {
-                            actionUrl: `/conversations/${conversationId}`,
-                            actionText: 'View Conversation',
-                            data: { conversationId, workspaceId, reason },
-                        },
+                    .createHandoff(member.user.id, {
+                        conversationId,
+                        workspaceId,
+                        reason,
                     })
                     .catch(err => {
                         this.logger.error(

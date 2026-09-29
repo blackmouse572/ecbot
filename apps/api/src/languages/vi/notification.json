@@ -46,5 +46,16 @@
         "title": "Workspace cần được xử lý",
         "message": "Workspace \"{workspaceName}\" được tạo mà chưa có billing plan nên chatbot chưa trả lời được. Liên hệ support để hoàn tất.",
         "actionText": "Liên hệ support"
+    },
+    "handoff": {
+        "title": "Khách hàng cần người hỗ trợ",
+        "message": "{reason}. Trợ lý đã ngừng trả lời trong cuộc hội thoại này cho đến khi bạn bật lại.",
+        "actionText": "Xem hội thoại",
+        "reason": {
+            "keyword_trigger": "Khách hàng muốn nói chuyện với nhân viên",
+            "fallback_threshold": "Trợ lý không trả lời được nhiều tin nhắn liên tiếp",
+            "tag_trigger": "Khách hàng được gắn thẻ cần nhân viên hỗ trợ",
+            "other": "Trợ lý gặp một tin nhắn không nên tự trả lời"
+        }
     }
 }

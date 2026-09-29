@@ -94,8 +94,7 @@ describe('CustomerTagSystemController (#174)', () => {
             expect(mockConversationService.triggerHandoff).toHaveBeenCalledWith(
                 conversation,
                 'ws-1',
-                'tag_trigger',
-                'A human will jump in shortly.'
+                'tag_trigger'
             );
             expect(result).toEqual({ ok: true, triggeredHandoff: true });
         });
