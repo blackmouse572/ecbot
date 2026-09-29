@@ -15,6 +15,7 @@ import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
+    BadRequestException,
     ConflictException,
     Inject,
     Injectable,
@@ -31,6 +32,7 @@ import { RoleService } from 'src/modules/role/services/role.service';
 import {
     WORKSPACE_DEFAULT_MEMBER_ROLES,
     WORKSPACE_INVITATION_CODE_LENGTH,
+    WORKSPACE_SLUG_PATTERN,
 } from '../constants/workspace.constant';
 import { WorkSpaceCreateRequestDto } from '../dtos/request/workspace.create.request';
 import { WorkSpaceInviteMemberRequestDto } from '../dtos/request/workspace.invite-member.request';
@@ -602,6 +604,14 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         options?: IDatabaseUpdateOptions
     ) {
         const { name, image, slug } = data;
+        // The current slug may carry capitals from before slugs were
+        // lowercased; only a changed slug has to be slug-safe.
+        if (slug !== workspace.slug && !WORKSPACE_SLUG_PATTERN.test(slug)) {
+            throw new BadRequestException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.INVALID_SLUG,
+                message: 'workspace.error.invalidSlug',
+            });
+        }
         workspace.name = name;
         workspace.avatar = image || '';
         workspace.slug = slug;

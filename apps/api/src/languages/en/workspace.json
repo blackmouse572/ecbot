@@ -14,7 +14,8 @@
         "memberNotFound": "Member not found in workspace.",
         "exist": "This user is already an owner of a workspace.",
         "missingWorkspaceId": "User or workspaceId is missing in the request param",
-        "invalidInvitationCode": "Invalid invitation code."
+        "invalidInvitationCode": "Invalid invitation code.",
+        "invalidSlug": "Use only lowercase letters, numbers and hyphens in the workspace URL."
     },
     "owner": {
         "inviteMember": {

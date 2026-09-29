@@ -1,7 +1,6 @@
 import { t } from "i18next";
 import zod from "zod";
-
-const SLUG_PATTERN = /^[a-z0-9-]+$/;
+import { SLUG_MAX_LENGTH, SLUG_PATTERN } from "./constants";
 
 /**
  * Edit-form schema for one workspace. Its current slug is accepted as-is:
@@ -18,7 +17,10 @@ export const createWorkspaceEditSchema = (currentSlug: string) =>
     slug: zod
       .string()
       .min(1, t("errors.required"))
-      .max(255, t("errors.maxLength", { maxLength: 255 }))
+      .max(
+        SLUG_MAX_LENGTH,
+        t("errors.maxLength", { maxLength: SLUG_MAX_LENGTH }),
+      )
       .refine(
         (slug) => slug === currentSlug || SLUG_PATTERN.test(slug),
         t("errors.slug"),

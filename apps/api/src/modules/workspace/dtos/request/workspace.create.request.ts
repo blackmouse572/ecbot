@@ -6,6 +6,7 @@ import {
     MaxLength,
     MinLength,
 } from 'class-validator';
+import { WORKSPACE_SLUG_MAX_LENGTH } from '../../constants/workspace.constant';
 
 export class WorkSpaceCreateRequestDto {
     @ApiProperty({
@@ -20,12 +21,12 @@ export class WorkSpaceCreateRequestDto {
 
     @ApiProperty({
         example: 'my-workspace',
-        maxLength: 255,
+        maxLength: WORKSPACE_SLUG_MAX_LENGTH,
         required: false,
     })
     @IsOptional()
     @IsString()
-    @MaxLength(255)
+    @MaxLength(WORKSPACE_SLUG_MAX_LENGTH)
     slug?: string;
 
     @IsOptional()

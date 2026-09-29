@@ -1,3 +1,4 @@
+import { WORKSPACE_SLUG_MAX_LENGTH } from '@app/modules/workspace/constants/workspace.constant';
 import { toWorkspaceSlug } from '@app/modules/workspace/utils/workspace-slug.util';
 
 describe('toWorkspaceSlug', () => {
@@ -15,5 +16,12 @@ describe('toWorkspaceSlug', () => {
 
     it('returns an empty string when nothing slug-safe is left', () => {
         expect(toWorkspaceSlug('!!!')).toBe('');
+    });
+
+    it('fits the slug column, without a trailing hyphen', () => {
+        const slug = toWorkspaceSlug(`${'a'.repeat(99)} ${'b'.repeat(200)}`);
+
+        expect(slug).toBe('a'.repeat(99));
+        expect(slug.length).toBeLessThanOrEqual(WORKSPACE_SLUG_MAX_LENGTH);
     });
 });

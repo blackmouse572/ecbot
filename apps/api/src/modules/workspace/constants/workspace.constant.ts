@@ -24,6 +24,10 @@ export const WORKSPACE_DEFAULT_SELECT = {
 
 export const WORKSPACE_INVITATION_CODE_LENGTH = 6;
 
+// The slug column is varchar(100). The pattern matches the app's edit form.
+export const WORKSPACE_SLUG_MAX_LENGTH = 100;
+export const WORKSPACE_SLUG_PATTERN = /^[a-z0-9-]+$/;
+
 export const WORKSPACE_DEFAULT_MEMBER_ROLES: RoleCreateRequestDto[] = [
     {
         name: 'Member',
