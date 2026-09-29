@@ -108,3 +108,12 @@ export const KB_QUERY_PARAMS = [
   "search",
   "order",
 ];
+
+// Errors apps/ai stores on a failed item (apps/ai modules/rag/constants.py),
+// mapped to translation keys. Anything else is shown as stored.
+export const KB_INGEST_ERROR_KEYS: Record<string, string> = {
+  "This page is not publicly reachable. Use a link anyone can open on the internet, not localhost or a private network address.":
+    "knowledge_item.ingestErrors.urlNotPublic",
+  "Could not read this page. Check that the link opens in a browser without signing in, then process it again.":
+    "knowledge_item.ingestErrors.urlFetchFailed",
+};

@@ -11,6 +11,7 @@ import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '../enums/knowledge-base-item-status.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '../enums/knowledge-base-item-type.enum';
 import {
+    ENUM_KNOWLEDGE_FAILURE_KIND,
     ENUM_RAG_INGEST_PROCESS,
     RAG_INGEST_HTTP_TIMEOUT_MS,
     RAG_INGEST_MAX_ATTEMPTS,
@@ -19,6 +20,7 @@ import {
 import { KnowledgeIngestTaskDto } from '../dtos/knowledge-ingest.task.dto';
 import { KnowledgeItemService } from './knowledge-item.service';
 import { ChatbotKnowledgeItemService } from './chatbot-knowledge-item.service';
+import { KnowledgeFailureNotifierService } from './knowledge-failure-notifier.service';
 
 export function classifyIngestError(err: any): 'permanent' | 'transient' {
     const status = err?.response?.status;
@@ -41,6 +43,11 @@ export function extractIngestErrorMessage(err: any): string {
     if (Array.isArray(detail) && detail.length > 0) {
         return JSON.stringify(detail);
     }
+    // apps/ai wraps HTTPException as AppResponse { status, msg, data, error }.
+    const msg = err?.response?.data?.msg;
+    if (typeof msg === 'string' && msg.length > 0) {
+        return msg;
+    }
     return (err as Error)?.message ?? String(err);
 }
 
@@ -54,7 +61,8 @@ export class KnowledgeIngestTaskService {
         private readonly chatbotKnowledgeItemService: ChatbotKnowledgeItemService,
         private readonly awsS3Service: AwsS3Service,
         private readonly httpService: HttpService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly failureNotifier: KnowledgeFailureNotifierService
     ) {
         this.aiBackendUrl =
             this.configService.get<string>('ai.backend.url') ??
@@ -113,6 +121,15 @@ export class KnowledgeIngestTaskService {
                 this.logger.error(
                     `reindex-links failed item=${knowledgeItemId} kind=${kind}: ${message}`
                 );
+                // A lost link sync leaves the item invisible to the chatbot's
+                // retrieval (#92): tell the owner once it will not be retried.
+                const finalAttempt = retryCount + 1 >= RAG_INGEST_MAX_ATTEMPTS;
+                if (kind === 'permanent' || finalAttempt) {
+                    await this.failureNotifier.notifyFailed(
+                        knowledgeItemId,
+                        ENUM_KNOWLEDGE_FAILURE_KIND.LINK_SYNC
+                    );
+                }
                 if (kind === 'permanent') return;
                 throw err;
             }
@@ -146,6 +163,10 @@ export class KnowledgeIngestTaskService {
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.FAILED,
             errorMessage,
         });
+        await this.failureNotifier.notifyFailed(
+            id,
+            ENUM_KNOWLEDGE_FAILURE_KIND.INGEST
+        );
     }
 
     private async chatbotIdsFor(knowledgeItemId: string): Promise<string[]> {

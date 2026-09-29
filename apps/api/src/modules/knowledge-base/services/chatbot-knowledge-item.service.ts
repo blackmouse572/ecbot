@@ -5,7 +5,7 @@ import {
     IDatabaseSoftDeleteOptions,
 } from '@app/common/database/interfaces/database.interface';
 import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, Logger } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ChatbotEntity } from 'src/modules/chatbot/repository/entities/chatbot.entity';
 import { ChatbotKnowledgeItemEntity } from '../repository/entities/chatbot-knowledge-item.entity';
@@ -13,13 +13,18 @@ import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entit
 import { ChatbotKnowledgeItemRepository } from '../repository/repositories/chatbot-knowledge-item.repository';
 import { ChatbotKnowledgeItemResponseDto } from '../dtos/response/chatbot-knowledge-item.response.dto';
 import { RagSyncService } from './rag-sync.service';
+import { KnowledgeFailureNotifierService } from './knowledge-failure-notifier.service';
+import { ENUM_KNOWLEDGE_FAILURE_KIND } from '../constants/knowledge-ingest.constant';
 
 @Injectable()
 export class ChatbotKnowledgeItemService {
+    private readonly logger = new Logger(ChatbotKnowledgeItemService.name);
+
     constructor(
         private readonly em: EntityManager,
         private readonly chatbotKnowledgeItemRepository: ChatbotKnowledgeItemRepository,
-        private readonly ragSyncService: RagSyncService
+        private readonly ragSyncService: RagSyncService,
+        private readonly failureNotifier: KnowledgeFailureNotifierService
     ) {}
 
     async findByChatbot(
@@ -126,14 +131,6 @@ export class ChatbotKnowledgeItemService {
                     );
                 }
                 await em.persistAndFlush(existing);
-                // Notify apps/ai of updated chatbot associations (best-effort).
-                const restoredLinks =
-                    await this.findByKnowledgeItem(knowledgeItemId);
-                const restoredChatbotIds = restoredLinks.map(l => l.chatbot.id);
-                void this.ragSyncService.updateChatbotLinks(
-                    knowledgeItemId,
-                    restoredChatbotIds
-                );
                 return existing;
             }
             throw new ConflictException(
@@ -157,14 +154,6 @@ export class ChatbotKnowledgeItemService {
         }
 
         await em.persistAndFlush(link);
-
-        // Notify apps/ai of updated chatbot associations (best-effort).
-        const links = await this.findByKnowledgeItem(knowledgeItemId);
-        const chatbotIds = links.map(l => l.chatbot.id);
-        void this.ragSyncService.updateChatbotLinks(
-            knowledgeItemId,
-            chatbotIds
-        );
 
         return link;
     }
@@ -193,14 +182,30 @@ export class ChatbotKnowledgeItemService {
                 );
             }
             await em.persistAndFlush(link);
+        }
+    }
 
-            // Notify apps/ai of updated chatbot associations (best-effort).
-            const remainingLinks =
-                await this.findByKnowledgeItem(knowledgeItemId);
-            const remainingChatbotIds = remainingLinks.map(l => l.chatbot.id);
-            void this.ragSyncService.updateChatbotLinks(
+    /**
+     * Tell apps/ai which chatbots the item now belongs to. Call it after the
+     * link change is committed: it reads the committed links, so the vector
+     * store never gets chatbot_ids from an uncommitted or rolled-back change
+     * (#118). Never throws; if the sync cannot be queued the owner is
+     * notified, since the chatbot would otherwise silently miss the item.
+     */
+    async syncChatbotLinks(knowledgeItemId: string): Promise<void> {
+        try {
+            const links = await this.findByKnowledgeItem(knowledgeItemId);
+            await this.ragSyncService.updateChatbotLinks(
                 knowledgeItemId,
-                remainingChatbotIds
+                links.map(l => l.chatbot.id)
+            );
+        } catch (err: unknown) {
+            this.logger.error(
+                `link sync failed item=${knowledgeItemId}: ${String(err)}`
+            );
+            await this.failureNotifier.notifyFailed(
+                knowledgeItemId,
+                ENUM_KNOWLEDGE_FAILURE_KIND.LINK_SYNC
             );
         }
     }

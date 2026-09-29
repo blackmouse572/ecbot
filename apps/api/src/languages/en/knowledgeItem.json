@@ -9,5 +9,16 @@
     "error": {
         "notFound": "Knowledge item not found.",
         "processing": "This item is already being processed."
+    },
+    "notification": {
+        "ingestFailed": {
+            "title": "Knowledge item failed",
+            "message": "\"{title}\" could not be processed, so your chatbots cannot use it. Open it to see why, then process it again."
+        },
+        "linkSyncFailed": {
+            "title": "Knowledge item not available to chatbots",
+            "message": "\"{title}\" could not be connected to your chatbots, so they will not find it. Remove it from the chatbot and add it again."
+        },
+        "actionText": "Open item"
     }
 }

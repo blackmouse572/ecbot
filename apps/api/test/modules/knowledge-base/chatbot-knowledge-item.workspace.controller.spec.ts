@@ -5,7 +5,10 @@ describe('ChatbotKnowledgeItemWorkspaceController.link', () => {
     let controller: ChatbotKnowledgeItemWorkspaceController;
     let chatbotService: { findOne: jest.Mock };
     let knowledgeItemRepository: { findOne: jest.Mock };
-    let chatbotKnowledgeItemService: { linkItem: jest.Mock };
+    let chatbotKnowledgeItemService: {
+        linkItem: jest.Mock;
+        syncChatbotLinks: jest.Mock;
+    };
     let em: { fork: jest.Mock };
     let session: {
         begin: jest.Mock;
@@ -20,7 +23,10 @@ describe('ChatbotKnowledgeItemWorkspaceController.link', () => {
     beforeEach(() => {
         chatbotService = { findOne: jest.fn() };
         knowledgeItemRepository = { findOne: jest.fn() };
-        chatbotKnowledgeItemService = { linkItem: jest.fn() };
+        chatbotKnowledgeItemService = {
+            linkItem: jest.fn(),
+            syncChatbotLinks: jest.fn().mockResolvedValue(undefined),
+        };
         session = {
             begin: jest.fn(),
             commit: jest.fn(),
@@ -51,6 +57,9 @@ describe('ChatbotKnowledgeItemWorkspaceController.link', () => {
         ).rejects.toThrow(NotFoundException);
 
         expect(chatbotKnowledgeItemService.linkItem).not.toHaveBeenCalled();
+        expect(
+            chatbotKnowledgeItemService.syncChatbotLinks
+        ).not.toHaveBeenCalled();
         expect(session.rollback).toHaveBeenCalled();
     });
 
@@ -73,5 +82,14 @@ describe('ChatbotKnowledgeItemWorkspaceController.link', () => {
 
         expect(result.data.id).toBe('link-1');
         expect(session.commit).toHaveBeenCalled();
+        // Review of #202: the vector store is synced only after the commit,
+        // so a failed commit cannot re-link the item there.
+        expect(
+            chatbotKnowledgeItemService.syncChatbotLinks
+        ).toHaveBeenCalledWith('item-1');
+        expect(session.commit.mock.invocationCallOrder[0]).toBeLessThan(
+            chatbotKnowledgeItemService.syncChatbotLinks.mock
+                .invocationCallOrder[0]
+        );
     });
 });

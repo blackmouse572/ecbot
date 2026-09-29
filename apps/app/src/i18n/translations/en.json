@@ -783,8 +783,8 @@
       "accountLinkFailed": "Failed to link account",
       "generalKnowledgeSaved": "General knowledge saved",
       "generalKnowledgeSaveFailed": "Failed to save general knowledge",
-      "typingIndicator": "Typing Indicator",
-      "autoRead": "Auto Read",
+      "typingIndicator": "Show typing",
+      "autoRead": "Mark as read",
       "generalKnowledge": "General knowledge",
       "account": {
         "active": "Active"
@@ -1933,6 +1933,10 @@
     }
   },
   "knowledge_item": {
+    "ingestErrors": {
+      "urlNotPublic": "This page is not public. Use a link anyone can open on the internet, not localhost or a private network address.",
+      "urlFetchFailed": "Could not read this page. Check that the link opens in a browser without signing in, then process it again."
+    },
     "create_title": "Create Knowledge Item",
     "create_description": "Add a new knowledge item to your knowledge base. Choose from text, URL, or file sources.",
     "select_type_label": "Select Type",

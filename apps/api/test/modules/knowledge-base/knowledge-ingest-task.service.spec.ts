@@ -6,6 +6,7 @@ import {
     RAG_INGEST_HTTP_TIMEOUT_MS,
     RAG_INGEST_MAX_ATTEMPTS,
     RAG_INGEST_SENTRY_QUEUE,
+    ENUM_KNOWLEDGE_FAILURE_KIND,
 } from '@app/modules/knowledge-base/constants/knowledge-ingest.constant';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '@app/modules/knowledge-base/enums/knowledge-base-item-type.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '@app/modules/knowledge-base/enums/knowledge-base-item-status.enum';
@@ -26,6 +27,7 @@ describe('KnowledgeIngestTaskService', () => {
     const httpPatch = jest.fn();
     const httpDelete = jest.fn();
     const getItemBuffer = jest.fn();
+    const notifyFailed = jest.fn().mockResolvedValue(undefined);
     const configService = {
         get: jest.fn((key: string) =>
             key === 'ai.internalToken'
@@ -60,7 +62,8 @@ describe('KnowledgeIngestTaskService', () => {
             { findByKnowledgeItem } as any,
             { getItemBuffer } as any,
             { post: httpPost, patch: httpPatch, delete: httpDelete } as any,
-            configService as any
+            configService as any,
+            { notifyFailed } as any
         );
     });
 
@@ -98,6 +101,22 @@ describe('KnowledgeIngestTaskService', () => {
         [
             { message: 'Request failed with status code 502' },
             'Request failed with status code 502',
+        ],
+        // Review of #202: apps/ai wraps HTTPException as AppResponse
+        // { status, msg, data, error }, with no `detail`.
+        [
+            {
+                response: {
+                    data: {
+                        status: 400,
+                        msg: 'This page is not publicly reachable.',
+                        data: null,
+                        error: null,
+                    },
+                },
+                message: 'Request failed with status code 400',
+            },
+            'This page is not publicly reachable.',
         ],
         ['plain string error', 'plain string error'],
     ])('extracts message from %p as %p', async (error, expected) => {
@@ -421,5 +440,91 @@ describe('KnowledgeIngestTaskService', () => {
 
     it('preserves the former BullMQ Sentry queue tag literal', () => {
         expect(RAG_INGEST_SENTRY_QUEUE).toBe('RAG_INGEST_QUEUE');
+    });
+
+    // The owner is told when knowledge fails, so a broken item is not silent.
+    describe('failure notifications', () => {
+        const failWith = (status: number, message = 'boom') =>
+            throwError(() =>
+                Object.assign(new Error(message), { response: { status } })
+            );
+
+        it('notifies on a permanent ingest failure', async () => {
+            httpPost.mockReturnValue(failWith(400, 'bad document'));
+            await service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                0
+            );
+            expect(notifyFailed).toHaveBeenCalledWith(
+                'item-1',
+                ENUM_KNOWLEDGE_FAILURE_KIND.INGEST
+            );
+        });
+
+        it('notifies on the final ingest retry only', async () => {
+            httpPost.mockReturnValue(failWith(503));
+            const job = {
+                jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                knowledgeItemId: 'item-1',
+            } as any;
+            await expect(service.handle(job, 0)).rejects.toBeDefined();
+            expect(notifyFailed).not.toHaveBeenCalled();
+            await expect(
+                service.handle(job, RAG_INGEST_MAX_ATTEMPTS - 1)
+            ).rejects.toBeDefined();
+            expect(notifyFailed).toHaveBeenCalledWith(
+                'item-1',
+                ENUM_KNOWLEDGE_FAILURE_KIND.INGEST
+            );
+        });
+
+        it('notifies when a link sync fails permanently', async () => {
+            httpPatch.mockReturnValue(failWith(400));
+            await service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.REINDEX_LINKS,
+                    knowledgeItemId: 'item-1',
+                    chatbotIds: ['cb-1'],
+                } as any,
+                0
+            );
+            expect(notifyFailed).toHaveBeenCalledWith(
+                'item-1',
+                ENUM_KNOWLEDGE_FAILURE_KIND.LINK_SYNC
+            );
+        });
+
+        it('notifies when a link sync still fails on the final retry', async () => {
+            httpPatch.mockReturnValue(failWith(503));
+            const job = {
+                jobName: ENUM_RAG_INGEST_PROCESS.REINDEX_LINKS,
+                knowledgeItemId: 'item-1',
+                chatbotIds: ['cb-1'],
+            } as any;
+            await expect(service.handle(job, 0)).rejects.toBeDefined();
+            expect(notifyFailed).not.toHaveBeenCalled();
+            await expect(
+                service.handle(job, RAG_INGEST_MAX_ATTEMPTS - 1)
+            ).rejects.toBeDefined();
+            expect(notifyFailed).toHaveBeenCalledWith(
+                'item-1',
+                ENUM_KNOWLEDGE_FAILURE_KIND.LINK_SYNC
+            );
+        });
+
+        it('does not notify when deleting a removed item fails', async () => {
+            httpDelete.mockReturnValue(failWith(400));
+            await service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.DELETE,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                0
+            );
+            expect(notifyFailed).not.toHaveBeenCalled();
+        });
     });
 });

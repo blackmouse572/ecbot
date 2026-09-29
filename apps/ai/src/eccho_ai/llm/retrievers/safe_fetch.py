@@ -65,6 +65,14 @@ class EgressBlockedError(Exception):
     """Raised when a fetch target (or a redirect hop) is not allowed."""
 
 
+class HostUnresolvableError(EgressBlockedError):
+    """The host did not resolve (typo, DNS failure), so it could not be checked.
+
+    Still blocks the fetch, but callers can tell it apart from a host that
+    resolved to a private address.
+    """
+
+
 def _is_disallowed_ip(address: str) -> bool:
     """True if *address* must not be connected to.
 
@@ -105,12 +113,12 @@ async def _assert_host_allowed(hostname: str) -> None:
     try:
         infos = await loop.run_in_executor(None, socket.getaddrinfo, hostname, None)
     except socket.gaierror as exc:
-        raise EgressBlockedError(
+        raise HostUnresolvableError(
             f"Egress blocked: could not resolve host '{hostname}': {exc}"
         ) from exc
 
     if not infos:
-        raise EgressBlockedError(
+        raise HostUnresolvableError(
             f"Egress blocked: host '{hostname}' resolved to no addresses"
         )
 
@@ -135,6 +143,12 @@ async def _assert_url_allowed(url: httpx.URL) -> None:
     if not host:
         raise EgressBlockedError("Egress blocked: URL has no hostname")
     await _assert_host_allowed(host)
+
+
+async def assert_public_url(url: str) -> None:
+    """Raise EgressBlockedError unless *url* is http(s) and resolves only to
+    public addresses (the same check `safe_get` applies to every hop)."""
+    await _assert_url_allowed(httpx.URL(url))
 
 
 async def _drain(response: httpx.Response) -> httpx.Response:

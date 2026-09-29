@@ -59,4 +59,43 @@ describe("ChatbotGeneralKnowledgeSection", () => {
       }),
     );
   });
+
+  // #172: the section is "Extra instructions", so it must not show the whole
+  // compiled system prompt that the builder generates.
+  it("shows the extra instructions, not the compiled prompt, for builder agents", () => {
+    render(
+      <ChatbotGeneralKnowledgeSection
+        item={
+          {
+            ...item,
+            agentProfile: { version: 1 },
+            extraInstructions: "Closed on Mondays.",
+            generalKnowledge:
+              "# Linh · Lotus\n## Requirements\nCompiled prompt",
+          } as unknown as ChatbotGetDetailResponseDto
+        }
+      />,
+    );
+    expect(screen.getByText("Closed on Mondays.")).toBeInTheDocument();
+    expect(screen.queryByText(/Compiled prompt/)).not.toBeInTheDocument();
+  });
+
+  it("shows the hint when a builder agent has no extra instructions", () => {
+    render(
+      <ChatbotGeneralKnowledgeSection
+        item={
+          {
+            ...item,
+            agentProfile: { version: 1 },
+            extraInstructions: null,
+            generalKnowledge: "Compiled prompt",
+          } as unknown as ChatbotGetDetailResponseDto
+        }
+      />,
+    );
+    expect(
+      screen.getByText("agentBuilder.ui.extraInstructionsHint"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Compiled prompt")).not.toBeInTheDocument();
+  });
 });

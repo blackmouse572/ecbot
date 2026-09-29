@@ -5,7 +5,9 @@ import {
   IconAlertTriangleFilled,
   IconCircleCheckFilled,
 } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { useDate } from "../../../../../hooks/use-date";
+import { localizeIngestError } from "../../../utils/localize-ingest-error";
 
 export function KnowledgeItemStatusCell({
   status,
@@ -17,13 +19,14 @@ export function KnowledgeItemStatusCell({
   processedAt?: KnowledgeItemResponseDto["processedAt"];
 }) {
   const { getFullDate } = useDate();
+  const { t } = useTranslation();
   const statusConfig =
     KB_STATUS_CONFIG[status as keyof typeof KB_STATUS_CONFIG] ||
     KB_STATUS_CONFIG.DRAFT;
 
   if (status === "FAILED" && errorMessage) {
     return (
-      <Tooltip content={errorMessage}>
+      <Tooltip content={localizeIngestError(errorMessage, t)}>
         <div className="flex items-center gap-1 w-fit cursor-default">
           <Badge
             color={statusConfig.color}

@@ -80,7 +80,7 @@ interface AccountListProps {
 }
 
 export function AccountList({
-  title = "Accounts",
+  title,
   item,
   linkedCount,
   accounts,
@@ -122,7 +122,7 @@ export function AccountList({
         <div className="flex items-start justify-between px-6 pt-4 pb-2">
           <div>
             <Heading level="h3" className="text-lg font-semibold">
-              {title}
+              {title ?? t("accounts.title")}
             </Heading>
             {linkedCount !== undefined && (
               <Text size="small" className="text-ui-fg-muted">

@@ -947,8 +947,8 @@
       "account": {
         "active": "Hoạt động"
       },
-      "autoRead": "Tự đọc",
-      "typingIndicator": "Đang nhập",
+      "autoRead": "Tự đánh dấu đã xem",
+      "typingIndicator": "Hiện đang soạn tin",
       "noAccounts": "Chưa có tài khoản liên kết",
       "noAccountsDescription": "Chatbot của bạn đã sẵn sàng, nhưng cần các tài khoản để bắt đầu! Hãy chỉnh sửa chatbot để liên kết tài khoản của bạn."
     },
@@ -1964,6 +1964,10 @@
     }
   },
   "knowledge_item": {
+    "ingestErrors": {
+      "urlNotPublic": "Trang này không công khai. Hãy dùng đường link ai cũng mở được trên internet, không phải localhost hay địa chỉ mạng nội bộ.",
+      "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại."
+    },
     "create_title": "Tạo Mục Kiến Thức",
     "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",
     "select_type_label": "Chọn Loại",

@@ -211,6 +211,10 @@ export class ChatbotKnowledgeItemWorkspaceController {
             );
 
             await session.commit();
+            // After the commit, so a rolled-back link never reaches the vector store.
+            await this.chatbotKnowledgeItemService.syncChatbotLinks(
+                knowledgeItemId
+            );
 
             return {
                 data: plainToInstance(DatabaseIdResponseDto, { id: link.id }),
@@ -297,6 +301,9 @@ export class ChatbotKnowledgeItemWorkspaceController {
             );
 
             await session.commit();
+            await this.chatbotKnowledgeItemService.syncChatbotLinks(
+                knowledgeItemId
+            );
         } catch (err: unknown) {
             await session.rollback();
 

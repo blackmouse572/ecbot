@@ -12,7 +12,10 @@ import { UsageEventService } from './usage-event.service';
 import { RagSyncService } from './rag-sync.service';
 import { KnowledgeIngestService } from './knowledge-ingest.service';
 import { KnowledgeIngestTaskService } from './knowledge-ingest-task.service';
+import { KnowledgeFailureNotifierService } from './knowledge-failure-notifier.service';
 import { KnowledgeBaseRepositoryModule } from '../repository/knowledge-base.repository.module';
+import { NotificationModule } from '@app/modules/notification/notification.module';
+import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/workspace.repository.module';
 
 @Module({
     imports: [
@@ -20,6 +23,8 @@ import { KnowledgeBaseRepositoryModule } from '../repository/knowledge-base.repo
         HttpModule,
         AwsModule,
         CloudTasksQueueModule,
+        NotificationModule,
+        WorkspaceRepositoryModule,
     ],
     providers: [
         KnowledgeBaseService,
@@ -32,6 +37,7 @@ import { KnowledgeBaseRepositoryModule } from '../repository/knowledge-base.repo
         RagSyncService,
         KnowledgeIngestService,
         KnowledgeIngestTaskService,
+        KnowledgeFailureNotifierService,
     ],
     exports: [
         KnowledgeBaseService,
