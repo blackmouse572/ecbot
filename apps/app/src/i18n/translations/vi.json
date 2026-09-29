@@ -288,7 +288,8 @@
         },
         "errors": {
           "invalidOtp": "Mã xác minh không hợp lệ. Vui lòng thử lại.",
-          "resendOtpFailed": "Không thể gửi lại mã xác minh. Vui lòng thử lại sau."
+          "resendOtpFailed": "Không thể gửi lại mã xác minh. Vui lòng thử lại sau.",
+          "tooManyAttempts": "Bạn đã thử quá nhiều lần. Đợi một phút rồi thử lại."
         },
         "success": {
           "message": "Email của bạn đã được xác minh thành công.",
@@ -345,7 +346,7 @@
         },
         "conversation": {
           "title": "Nhận cuộc hội thoại đầu tiên",
-          "description": "Tự trò chuyện thử, hoặc chờ khách hàng đầu tiên."
+          "description": "Nhắn thử từ website hoặc kênh đã kết nối, hoặc chờ khách hàng đầu tiên."
         }
       }
     }
@@ -2011,7 +2012,8 @@
     "preview_unsupported": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
     "preview_error": "Không tải được mục này. Vui lòng thử lại.",
     "learned_chunks_other": "Trợ lý đã học tệp này thành {{count}} phần.",
-    "not_learned_yet": "Chưa học. Trợ lý có thể dùng tệp này khi xử lý xong."
+    "not_learned_yet": "Chưa học. Trợ lý có thể dùng tệp này khi xử lý xong.",
+    "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại."
   },
   "conversations": {
     "title": "Hội thoại",

@@ -65,6 +65,23 @@ describe("VerifyEmailPage", () => {
     );
   });
 
+  it("says to wait instead of the throttler's raw message when rate limited", () => {
+    verifyFailure.error = Object.assign(new Error("Too Many Request"), {
+      status: 429,
+      response: {
+        status: 429,
+        data: { statusCode: 429, message: "Too Many Request" },
+      },
+    });
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
+
+    expect(toast.error).toHaveBeenCalledWith(
+      "Too many tries. Wait a minute, then try again.",
+    );
+  });
+
   it("falls back to the invalid-code message when the API sends no reason", () => {
     verifyFailure.error = new Error("Network Error");
     renderPage();

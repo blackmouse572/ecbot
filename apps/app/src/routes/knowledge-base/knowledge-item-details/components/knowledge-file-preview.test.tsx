@@ -53,6 +53,14 @@ describe("KnowledgeFilePreview", () => {
     ).toBeInTheDocument();
   });
 
+  it("says the file could not be learned when processing failed", () => {
+    render(<KnowledgeFilePreview item={fileItem({ status: "FAILED" })} />);
+
+    expect(
+      screen.getByText("Could not learn this file. Try Process again."),
+    ).toBeInTheDocument();
+  });
+
   it("renders a PDF inline", () => {
     render(
       <KnowledgeFilePreview

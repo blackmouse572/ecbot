@@ -28,7 +28,7 @@ export const GettingStarted: FC = () => {
           const content = (
             <>
               {step.done ? (
-                <CheckCircleSolid className="text-ui-tag-green-icon shrink-0" />
+                <CheckCircleSolid className="text-ui-tag-green-icon size-5 shrink-0" />
               ) : (
                 <span className="txt-compact-small-plus text-ui-fg-muted flex size-5 shrink-0 items-center justify-center rounded-full border">
                   {index + 1}

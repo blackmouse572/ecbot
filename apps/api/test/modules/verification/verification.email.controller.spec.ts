@@ -69,13 +69,45 @@ describe('VerificationEmailController — email dispatch', () => {
         enqueue.mockResolvedValue(undefined);
     });
 
-    it('resendVerificationEmail: issues and enqueues a fresh code even while the current one is still active', async () => {
-        // Re-sending the active code could mail one with seconds left, so the
-        // newest email must always carry a full-lifetime code.
+    it('resendVerificationEmail: re-sends the active code while it has time left, so codes from earlier emails keep working', async () => {
+        const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
+        const verification = {
+            otp: '222222',
+            expiredDate: new Date(Date.now() + 10 * 60 * 1000),
+            reference: 'ref-still-fresh',
+        };
+        findOneActiveLatestEmailByUser.mockResolvedValue(verification);
+        findOneById.mockResolvedValue(user);
+
+        await controller.resendVerificationEmail({
+            email: 'a@b.com',
+            id: 'user-1',
+        } as any);
+
+        expect(inactiveEmailManyByUser).not.toHaveBeenCalled();
+        expect(createEmailByUser).not.toHaveBeenCalled();
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.VERIFICATION,
+            {
+                send: { email: 'a@b.com', name: 'A' },
+                data: {
+                    otp: '222222',
+                    expiredAt: verification.expiredDate,
+                    reference: 'ref-still-fresh',
+                },
+            },
+            { taskName: expect.stringMatching(/^VERIFICATION-user-1-VE\d+$/) }
+        );
+    });
+
+    it('resendVerificationEmail: issues and enqueues a fresh code when the active one is about to expire', async () => {
+        // Re-sending a code with seconds left could mail one that is already
+        // expired on arrival.
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
         findOneActiveLatestEmailByUser.mockResolvedValue({
             otp: '111111',
-            expiredDate: new Date('2026-06-01T00:00:10.000Z'),
+            expiredDate: new Date(Date.now() + 60 * 1000),
             reference: 'ref-about-to-expire',
         });
         const verification = {

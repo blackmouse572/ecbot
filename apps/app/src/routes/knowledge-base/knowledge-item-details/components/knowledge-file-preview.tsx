@@ -46,7 +46,9 @@ export const KnowledgeFilePreview: FC<KnowledgeFilePreviewProps> = ({
       <Text size="small" className="text-ui-fg-subtle">
         {item.status === "COMPLETED"
           ? t("knowledge_item.learned_chunks", { count: chunkCount })
-          : t("knowledge_item.not_learned_yet")}
+          : item.status === "FAILED"
+            ? t("knowledge_item.learn_failed")
+            : t("knowledge_item.not_learned_yet")}
       </Text>
     </div>
   );

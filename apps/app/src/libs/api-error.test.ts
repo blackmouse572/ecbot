@@ -21,6 +21,7 @@ describe("readApiError", () => {
     });
 
     expect(readApiError(error)).toEqual({
+      status: 422,
       message: "Validation error",
       fields: {
         email: "Email contains invalid characters",
@@ -31,9 +32,14 @@ describe("readApiError", () => {
 
   it("returns no message or fields for an error without an API body", () => {
     expect(readApiError(new Error("Network Error"))).toEqual({
+      status: undefined,
       message: undefined,
       fields: {},
     });
-    expect(readApiError(undefined)).toEqual({ message: undefined, fields: {} });
+    expect(readApiError(undefined)).toEqual({
+      status: undefined,
+      message: undefined,
+      fields: {},
+    });
   });
 });
