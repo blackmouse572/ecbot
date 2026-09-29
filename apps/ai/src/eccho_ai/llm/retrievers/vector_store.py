@@ -400,7 +400,17 @@ class PgVectorStore:
                 WHERE
                     d.status = 'COMPLETED'
                     AND (d.metadata->'chatbot_ids' ? $2 OR d.metadata->>'chatbot_id' = $2)
-                    AND to_tsvector('simple', c.content) @@ q.query
+                    -- Include the source label so queries such as "refund policy"
+                    -- can find a document whose title carries the user's wording.
+                    AND to_tsvector(
+                        'simple',
+                        concat_ws(
+                            ' ',
+                            c.content,
+                            d.source_filename,
+                            d.metadata->>'source'
+                        )
+                    ) @@ q.query
                 ORDER BY fts_rank DESC, c.chunk_index ASC
                 LIMIT $3
                 """,
