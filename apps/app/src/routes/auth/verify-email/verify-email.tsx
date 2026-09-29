@@ -1,5 +1,7 @@
 import { useResendEmailOtp, useVerifyEmailOtp } from "@/hooks/api";
+import { readApiError } from "@/libs/api-error";
 import { ROUTES } from "@/routes/constants";
+import { TOO_MANY_REQUESTS_STATUS } from "../constants";
 import { Button, toast } from "@medusajs/ui";
 import { VerifyEmailForm } from "@repo/auth/components";
 import { LinkButton } from "@repo/ui/common-components";
@@ -30,8 +32,15 @@ const VerifyEmailPage = () => {
   const onVerify = async (otp: string) => {
     if (!email || !userId || !otp || otp.length < OTP_DIGIT_LENGTH) return;
     verifyEmail(otp, {
-      onError: () => {
-        toast.error(t("errors.invalidOtp"));
+      // Show the API's reason (e.g. the code expired, tap Resend), which the
+      // bare "invalid code" message used to hide.
+      onError: (error) => {
+        const { status, message } = readApiError(error);
+        toast.error(
+          status === TOO_MANY_REQUESTS_STATUS
+            ? t("errors.tooManyAttempts")
+            : (message ?? t("errors.invalidOtp")),
+        );
       },
       onSuccess: () => {
         toast.success(t("success.message"));
@@ -45,8 +54,13 @@ const VerifyEmailPage = () => {
   const resendOTP = async () => {
     if (!email || !userId) return;
     await resendEmailOtp(undefined, {
-      onError: () => {
-        toast.error(t("errors.resendOtpFailed"));
+      onError: (error) => {
+        const { status, message } = readApiError(error);
+        toast.error(
+          status === TOO_MANY_REQUESTS_STATUS
+            ? t("errors.tooManyAttempts")
+            : (message ?? t("errors.resendOtpFailed")),
+        );
       },
       onSuccess: () => {
         toast.success(t("success.resendOtp"));

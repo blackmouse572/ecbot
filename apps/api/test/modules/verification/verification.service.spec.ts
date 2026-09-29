@@ -68,6 +68,25 @@ describe('VerificationService', () => {
         });
     });
 
+    describe('findOneExpiredLatestEmailByUser', () => {
+        it('scopes the lookup to the caller user id, the email, an active unverified row that has expired, newest first', async () => {
+            const service = build();
+            findOne.mockResolvedValue(null);
+
+            await service.findOneExpiredLatestEmailByUser('user-1', 'a@b.com');
+
+            expect(findOne).toHaveBeenCalledTimes(1);
+            const [find, options] = findOne.mock.calls[0];
+            expect(find.user).toBe('user-1');
+            expect(find.to).toBe('a@b.com');
+            expect(find.isActive).toBe(true);
+            expect(find.isVerify).toBe(false);
+            expect(find.expiredDate).toHaveProperty('$lt');
+            expect(find.expiredDate.$lt).toBeInstanceOf(Date);
+            expect(options.order).toEqual({ createdAt: 'DESC' });
+        });
+    });
+
     describe('incrementOtpAttempt', () => {
         it('increments otpAttempt and keeps the row active under the limit', async () => {
             const service = build();

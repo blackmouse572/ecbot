@@ -1,6 +1,7 @@
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
 import { useCreateWorkspace } from "@/hooks/api/workspace";
+import { readApiError } from "@/libs/api-error";
 import { Alert, Button, Input, toast } from "@medusajs/ui";
 import { FileUpload, Form } from "@repo/ui/common-components";
 import { useState } from "react";
@@ -53,48 +54,38 @@ export const OnboardCreateForm = () => {
     },
   });
 
-  const { mutateAsync: createWorkspace, error } = useCreateWorkspace();
+  const { mutateAsync: createWorkspace } = useCreateWorkspace();
   const navigate = useNavigate();
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const handleSubmit = form.handleSubmit(
     async (data) => {
       setAlertMessage(null);
-      // The server generates the slug, so redirect using the returned
-      // workspace rather than the submitted handler.
-      const request = createWorkspace({
-        name: data.name,
-        slug: data.handler,
-        image: data.avatar?.file,
-      }).then((res) => res.data);
-
-      toast.promise(request, {
-        loading: t("onboard.create.toast.loading"),
-        error: error?.message || t("onboard.create.toast.error"),
-        success: t("onboard.create.toast.success"),
-      });
-
       try {
-        const body = (await request) as { data?: { slug?: string } };
-        const slug = body?.data?.slug;
+        const res = await createWorkspace({
+          name: data.name,
+          slug: data.handler,
+          image: data.avatar?.file,
+        });
+        toast.success(t("onboard.create.toast.success"));
+        // The server generates the slug, so redirect using the returned
+        // workspace rather than the submitted handler.
+        const slug = (res.data as { data?: { slug?: string } })?.data?.slug;
         if (slug) {
           handleSuccess(`/${slug}`);
         }
       } catch (e) {
         // 409 = slug already taken. Highlight the field and show a banner.
-        // Other errors are surfaced via toast.promise above.
-        if (
-          e &&
-          typeof e === "object" &&
-          "status" in e &&
-          (e as { status?: number }).status === 409
-        ) {
+        if ((e as { status?: number })?.status === 409) {
           setAlertMessage(t("onboard.create.errors.slugTaken"));
           form.setError("handler", {
             type: "manual",
             message: t("onboard.create.errors.slugTaken"),
           });
+          return;
         }
+        // Anything else: show the API's reason, not a bare "could not create".
+        toast.error(readApiError(e).message ?? t("onboard.create.toast.error"));
       }
     },
     (e) => {
@@ -196,7 +187,9 @@ export const OnboardCreateForm = () => {
               {t("actions.cancel")}
             </Button>
           </RouteFocusModal.Close>
-          <Button type="submit">{t("actions.create")}</Button>
+          <Button type="submit" isLoading={form.formState.isSubmitting}>
+            {t("actions.create")}
+          </Button>
         </RouteFocusModal.Footer>
       </KeyboundForm>
     </RouteFocusModal.Form>

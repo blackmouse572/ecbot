@@ -1,7 +1,7 @@
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
 import { RequestEmailPipe } from '@app/common/request/pipes/request.email.pipe';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
-import { VERIFICATION_EMAIL_TTL } from '@app/modules/verification/constants/verification.email.constant';
+import { VERIFICATION_EMAIL_RESEND_MIN_REMAINING_MS } from '@app/modules/verification/constants/verification.email.constant';
 import {
     VerificationEmailResendEmailDoc,
     VerificationEmailVerifyEmailDoc,
@@ -80,9 +80,19 @@ export class VerificationEmailController {
             });
         }
 
-        // An expired or attempt-locked code leaves no active row: issue a
-        // fresh one so an unverified user is never stuck (login refuses them).
-        const verification = existing ?? (await this.reissueEmail(user));
+        // Re-send the active code while it has time left, so a code from an
+        // earlier email keeps working. Otherwise issue a fresh one: a code
+        // about to expire could arrive already expired, and an expired or
+        // attempt-locked code leaves no active row at all (login refuses an
+        // unverified user, so they must never be stuck).
+        const keepExisting =
+            !!existing &&
+            (!canIssue ||
+                existing.expiredDate.getTime() - Date.now() >=
+                    VERIFICATION_EMAIL_RESEND_MIN_REMAINING_MS);
+        const verification = keepExisting
+            ? existing
+            : await this.reissueEmail(user);
 
         await this.cloudTasksClient
             .enqueue(
@@ -152,6 +162,17 @@ export class VerificationEmailController {
                 : null;
         const user = userTask.status === 'fulfilled' ? userTask.value : null;
         if (!verification) {
+            const expired =
+                await this.verificationService.findOneExpiredLatestEmailByUser(
+                    id,
+                    email
+                );
+            if (expired) {
+                throw new BadRequestException({
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.EXPIRED,
+                    message: 'verification.error.expired',
+                });
+            }
             throw new NotFoundException({
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'verification.error.notFound',
