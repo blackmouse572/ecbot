@@ -152,10 +152,14 @@ export function useEnsureWorkspace() {
       return;
     }
 
-    // If the workspaceSlug is invalid, redirect to the resolved workspace
+    // If the workspaceSlug is invalid, redirect to the resolved workspace.
+    // A slug missing from the list is only invalid if the workspace itself
+    // did not load: a just-created workspace loads before the cached list
+    // catches up, and must not bounce the user to another workspace.
     if (
       workspaces.length > 0 &&
       workspaceSlug &&
+      !workspace &&
       !workspaces.some((w) => w.slug === workspaceSlug)
     ) {
       const fallbackSlug = resolveWorkspaceSlug(workspaces, lastSlug);
@@ -165,6 +169,7 @@ export function useEnsureWorkspace() {
     }
   }, [
     workspaces,
+    workspace,
     isLoadingWorkspaces,
     isLoadingWorkspace,
     workspaceSlug,
@@ -186,11 +191,12 @@ export function useCreateWorkspace() {
     mutationFn: async (body: WorkSpaceCreateRequestDto) => {
       return workspaceControllerCreateWorkSpaceV1({ body });
     },
-    onSuccess: () => {
+    // Returned, so the create resolves only once the list includes the new
+    // workspace and the caller can navigate straight to it.
+    onSuccess: () =>
       client.invalidateQueries({
         queryKey: workspaceQueryKeys.list(),
-      });
-    },
+      }),
     onError: (error) => {
       if ("status" in error && error.status === 409) {
         client.invalidateQueries();
