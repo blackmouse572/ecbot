@@ -116,4 +116,48 @@ export const shots = [
       { id: "handoff", target: "th >> text=/^(Triggers handoff|Chuyển cho nhân viên)$/", up: 1, pad: 2 },
     ],
   },
+  {
+    name: "customer-suggestions",
+    path: "/:ws/customers/suggestions",
+    marks: [
+      { id: "nav", target: "role=link[name=/^(Suggestion|Gợi ý)/]", pad: 4 },
+      { id: "status", target: "text=/^(Pending|Chờ xử lý)$/", pad: 6 },
+    ],
+  },
+  {
+    name: "skills",
+    path: "/:ws/skills",
+    marks: [
+      { id: "browse", target: "text=/^(Browse templates|Duyệt mẫu)$/", up: 1, pad: 2 },
+      { id: "create", target: "text=/^(Create|Tạo mới)$/", up: 1, pad: 2 },
+      { id: "skill", target: "text=/^Refund policy$/", up: 1, pad: 4 },
+    ],
+  },
+  {
+    name: "skill-templates",
+    path: "/:ws/skills/browse",
+    marks: [
+      { id: "search", target: "input[placeholder]", pad: 4 },
+      { id: "copy", target: "role=button[name=/^(Copy|Sao chép)$/]", nth: 1, pad: 4 },
+    ],
+  },
+  {
+    name: "usage",
+    path: "/:ws/usage",
+    setup: async (page) => {
+      // The debug card only exists in development builds.
+      await page.evaluate(() => {
+        const heading = [...document.querySelectorAll("main *")].find(
+          (el) => el.childElementCount === 0 && /^Debug/.test(el.textContent ?? ""),
+        );
+        heading?.closest("section, [class*=shadow], [class*=rounded]")?.remove();
+      });
+    },
+    marks: [
+      { id: "range", target: "role=combobox", pad: 4 },
+      { id: "plan", target: "text=/^(Plan)$/", up: 3, pad: 2 },
+      { id: "breakdown", target: "text=/^(Daily usage|Usage theo ngày)$/", up: 1, to: "text=/^(By platform|Theo platform)$/", pad: 4 },
+      { id: "alerts", target: "text=/^(Alert settings|Cấu hình cảnh báo)$/", up: 0, pad: 6 },
+    ],
+  },
 ];

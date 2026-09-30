@@ -1,0 +1,70 @@
+---
+title: Project structure
+description: Ecbot is a pnpm and Turborepo monorepo with a NestJS API, a React web app, a Python AI service and shared packages. Here is where everything lives.
+faq:
+  - q: Where do I add a new API endpoint?
+    a: In the matching module under apps/api/src/modules. Then run pnpm generate:client so the web app gets a typed client for it.
+  - q: How does the API talk to the AI service?
+    a: Over HTTP with a shared key pair. The API sends chat turns and knowledge jobs to the AI service, and the AI service calls the API back for tools, customer data and follow-ups.
+  - q: Which commands run the tests?
+    a: pnpm test:api for the API, pnpm --filter app test for the web app, uv run pytest in apps/ai, and pnpm --filter docs test for the docs.
+---
+
+Ecbot is a monorepo managed with pnpm workspaces and Turborepo. The `apps` folder holds the deployable services: a NestJS API, a React web app, a Python AI service, an edge worker and these docs. The `packages` folder holds code they share, such as the generated API client and the UI kit. Run every command from the repository root.
+
+```txt
+apps/
+  api/      NestJS 11 API: Postgres + MikroORM, Redis, JWT auth and permissions
+  app/      React 19 web app: Vite, Tailwind 4, TanStack Query, React Router
+  ai/       Python AI service: FastAPI + LangChain, replies, tools, knowledge base
+  edge/     Cloudflare Worker that receives and queues channel webhooks
+  docs/     This site: Next.js + Fumadocs, English and Vietnamese
+packages/
+  agent-blueprint/  Agent builder questions, presets and prompt compiler
+  client/           API client generated from the API's OpenAPI spec
+  ui/               Shared components and design tokens
+  auth/             Shared auth and permission helpers
+  eslint-config/, typescript-config/, favicons/
+```
+
+## API (apps/api)
+
+- `src/modules/*`: one module per feature, such as `chatbot`, `knowledge-base`, `platform` (channels), `customer`, `tool`, `skill` and `conversation`.
+- `src/common/*`: database, pagination, files and the SDKs for each chat platform.
+- `src/router`: mounts the modules under route prefixes.
+- `src/worker`: the Cloud Tasks client for background jobs.
+- `src/migration`: migrations and seeds.
+
+Routes start with `/api/v1` and a prefix that sets who may call them:
+
+| Prefix | Caller |
+| --- | --- |
+| `/public` | Anyone, such as login, sign-up and channel webhooks. |
+| `/workspace`, `/shared` | Signed-in workspace members. |
+| `/user` | The signed-in user's own account. |
+| `/admin` | Platform admins. |
+| `/system` | Internal calls from the AI service and Cloud Tasks. |
+
+## Web app (apps/app)
+
+- `src/routes/*`: pages, grouped by feature.
+- `src/hooks/api`: data hooks built on the generated client.
+- `src/i18n/translations`: `en.json` and `vi.json`.
+- `src/components`, `src/modules`, `src/providers`: shared UI and state.
+
+When you change an API route or DTO, run `pnpm generate:client`. It reads the OpenAPI spec the API writes at startup and regenerates `packages/client`.
+
+## AI service (apps/ai)
+
+- `llm/agents`, `llm/prompts`: the agent loop and its prompt.
+- `llm/tools`: the tools the agent can call, including follow-ups, customer profile and skills.
+- `llm/guardrails`: message screening.
+- `llm/retrievers`, `modules/rag`: knowledge base search and document ingestion.
+- `modules/chat`, `modules/customer`: chat turns and the end-of-conversation classifier.
+
+## How a message flows
+
+1. A channel webhook reaches the API (through the edge worker for some channels).
+2. The API finds the customer and conversation, checks handoff rules, and asks the AI service for a reply.
+3. The AI service runs the agent: it searches the knowledge base, loads skills, and calls tools through the API.
+4. The API sends the reply back through the channel and stores the messages.

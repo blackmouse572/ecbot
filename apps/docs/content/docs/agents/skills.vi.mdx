@@ -1,0 +1,51 @@
+---
+title: Kỹ năng (Skills)
+description: Kỹ năng là hướng dẫn viết sẵn giúp agent xử lý một loại yêu cầu, như hoàn tiền hay khiếu nại, và chỉ được tải khi cuộc trò chuyện cần đến.
+faq:
+  - q: Làm sao agent biết khi nào dùng kỹ năng?
+    a: Agent luôn thấy tên và mô tả của các kỹ năng đã gắn. Khi cuộc trò chuyện khớp với một mô tả, agent tải toàn bộ hướng dẫn của kỹ năng đó cho lượt trả lời.
+  - q: Tôi có sửa được mẫu có sẵn không?
+    a: Mẫu được sao chép vào không gian làm việc của bạn trước. Bản sao thuộc về bạn, nên bạn có thể đổi tên, mô tả và hướng dẫn tùy ý.
+  - q: Một kỹ năng dài tối đa bao nhiêu?
+    a: Tên tối đa 150 ký tự, mô tả tối đa 500 ký tự và phần hướng dẫn tối đa 64.000 ký tự. Hướng dẫn ngắn, chia từng bước sẽ hiệu quả nhất.
+---
+
+Kỹ năng là quy trình viết sẵn mà agent làm theo cho một loại yêu cầu, ví dụ xử lý hoàn tiền hoặc trấn an khách đang bực. Kỹ năng không tự gọi hệ thống khác; nó cho agent biết cần hỏi gì, kiểm tra gì và được hứa gì, và có thể chỉ rõ nên dùng [công cụ](/docs/agents/tools) nào.
+
+## Kỹ năng của bạn
+
+Mở **Skills** trong nhóm **Trợ lý AI** ở thanh bên.
+
+<Screenshot name="skills" alt="Danh sách kỹ năng với nút Duyệt mẫu và Tạo mới">
+  <Mark id="browse">**Duyệt mẫu** hiện các kỹ năng có sẵn để sao chép.</Mark>
+  <Mark id="create">**Tạo mới** để viết một kỹ năng từ đầu.</Mark>
+  <Mark id="skill">Các kỹ năng của bạn. Mở một kỹ năng để sửa hoặc tắt.</Mark>
+</Screenshot>
+
+## Bắt đầu từ mẫu
+
+<Screenshot name="skill-templates" alt="Danh sách mẫu với Xử lý khiếu nại và Chính sách hoàn tiền">
+  <Mark id="search">Tìm mẫu theo tên.</Mark>
+  <Mark id="copy">**Sao chép** mở mẫu trong một biểu mẫu. Xem lại rồi tạo bản sao của riêng bạn.</Mark>
+</Screenshot>
+
+## Viết một kỹ năng
+
+- **Tên**: nhãn ngắn, ví dụ "Đơn giao trễ".
+- **Mô tả**: khi nào dùng kỹ năng, ví dụ "Dùng khi khách báo đơn chưa tới." Agent đọc phần này để quyết định có tải kỹ năng hay không, nên hãy viết cụ thể.
+- **Hướng dẫn**: các bước, viết bằng Markdown. Bạn cũng có thể thả tệp `.md` vào để nhập.
+
+Ví dụ phần hướng dẫn:
+
+```md
+Khi khách báo đơn giao trễ:
+1. Xin lỗi khách ngắn gọn.
+2. Hỏi mã đơn và tra cứu.
+3. Báo trạng thái hiện tại và ngày dự kiến giao.
+4. Nếu trễ hơn 3 ngày, tặng khách voucher 10%.
+Không hứa ngày giao mà trạng thái đơn không cho thấy.
+```
+
+## Gắn kỹ năng cho agent
+
+Mở trang của agent, đến phần **Skills** và thêm kỹ năng. Bạn có thể tắt một kỹ năng cho riêng một agent mà không cần xóa nó.

@@ -1,0 +1,26 @@
+---
+title: Usage
+description: The Usage page shows how much of your plan's AI quota your agents used, broken down by day, agent and channel, with alerts before you run out.
+faq:
+  - q: What happens when the quota is used up?
+    a: Agents stop generating replies and send their fallback message instead, until the quota renews or extra credit is added.
+  - q: What counts as usage?
+    a: AI tokens used for replies on channels, follow-ups, the website widget and the test chat all count toward the quota.
+  - q: Is the Usage page in the self-hosted version?
+    a: No. Usage metering and plans are part of the hosted Ecbot at ecbot.dev. A self-hosted install does not limit or record AI usage.
+---
+
+The **Usage** page shows how much AI your agents used in the current plan period and where it went. Every reply your agents write uses AI tokens, and your plan includes a quota that renews each period. Check this page to see which agent or channel uses the most, and set an alert so you hear about it before the quota runs out.
+
+<Screenshot name="usage" alt="The token usage page with plan, quota, daily usage and breakdowns">
+  <Mark id="range">Pick the date range: the last 7, 30 or 90 days, or all time.</Mark>
+  <Mark id="plan">Your plan, its status, the renewal date and how much of the quota is used.</Mark>
+  <Mark id="breakdown">Usage per day, per agent and per channel.</Mark>
+  <Mark id="alerts">**Alert settings** sends you a warning when the remaining quota drops below the level you choose.</Mark>
+</Screenshot>
+
+Use **Export CSV** to download the numbers for the selected range.
+
+## When the quota runs out
+
+Agents keep answering, but with their fallback message instead of an AI reply, until the quota renews or extra credit is added. Set the fallback message in the agent's **Behavior** settings (see [Agents](/docs/agents)) so customers know someone will get back to them.

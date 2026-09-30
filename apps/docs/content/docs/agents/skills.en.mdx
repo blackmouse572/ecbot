@@ -1,0 +1,51 @@
+---
+title: Skills
+description: Skills are written instructions that teach your agent how to handle one kind of request, such as a refund or a complaint, loaded only when needed.
+faq:
+  - q: How does the agent know when to use a skill?
+    a: The agent always sees each attached skill's name and description. When a conversation matches a description, it loads the full instructions for that turn.
+  - q: Can I edit a template?
+    a: Templates are copied into your workspace first. The copy is yours, so you can change its name, description and instructions freely.
+  - q: How long can a skill be?
+    a: The name can be up to 150 characters, the description up to 500 and the instructions up to 64,000 characters. Shorter, step-by-step instructions work best.
+---
+
+A skill is a written procedure your agent follows for one kind of request, for example handling a refund or calming an upset customer. Skills do not call other systems by themselves; they tell the agent what to ask, what to check and what to promise, and they can name the [tools](/docs/agents/tools) to use.
+
+## Your skills
+
+Open **Skills** under **Agents** in the sidebar.
+
+<Screenshot name="skills" alt="The skills list with the Browse templates and Create buttons">
+  <Mark id="browse">**Browse templates** shows ready-made skills you can copy.</Mark>
+  <Mark id="create">**Create** starts a skill from scratch.</Mark>
+  <Mark id="skill">Your skills. Open one to edit or turn it off.</Mark>
+</Screenshot>
+
+## Start from a template
+
+<Screenshot name="skill-templates" alt="The template list with Complaint handling and Refund policy">
+  <Mark id="search">Search the templates by name.</Mark>
+  <Mark id="copy">**Copy** opens the template in a form. Review it, then create your own copy.</Mark>
+</Screenshot>
+
+## Write a skill
+
+- **Name**: a short label, such as "Late delivery".
+- **Description**: when to use the skill, for example "Use when a customer says an order has not arrived." The agent reads this to decide when to load the skill, so make it specific.
+- **Instructions**: the steps, written in Markdown. You can also drop in a `.md` file to import it.
+
+Example instructions:
+
+```md
+When a customer says an order is late:
+1. Apologize briefly.
+2. Ask for the order code and look it up.
+3. Tell them the current status and the expected date.
+4. If it is more than 3 days late, offer a 10% voucher.
+Never promise a delivery date that the order status does not show.
+```
+
+## Attach a skill to an agent
+
+Open the agent's page, go to the **Skills** section and add the skill. You can turn an attached skill off for one agent without deleting it.

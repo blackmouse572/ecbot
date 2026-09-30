@@ -195,6 +195,46 @@
       }
     }
   },
+  "customer-suggestions": {
+    "en": {
+      "src": "/_docs/screenshots/en/customer-suggestions.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "nav": {
+          "x": 0.56,
+          "y": 24.11,
+          "w": 14.1,
+          "h": 4
+        },
+        "status": {
+          "x": 87.92,
+          "y": 9.8,
+          "w": 4.35,
+          "h": 3.56
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/customer-suggestions.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "nav": {
+          "x": 0.56,
+          "y": 24.11,
+          "w": 14.1,
+          "h": 4
+        },
+        "status": {
+          "x": 87.92,
+          "y": 9.8,
+          "w": 4.77,
+          "h": 3.56
+        }
+      }
+    }
+  },
   "customer-tags": {
     "en": {
       "src": "/_docs/screenshots/en/customer-tags.png",
@@ -327,6 +367,98 @@
       }
     }
   },
+  "skill-templates": {
+    "en": {
+      "src": "/_docs/screenshots/en/skill-templates.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "search": {
+          "x": 20.28,
+          "y": 18.09,
+          "w": 59.44,
+          "h": 4.44
+        },
+        "copy": {
+          "x": 51.32,
+          "y": 35.09,
+          "w": 5.24,
+          "h": 4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/skill-templates.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "search": {
+          "x": 20.28,
+          "y": 18.09,
+          "w": 59.44,
+          "h": 4.44
+        },
+        "copy": {
+          "x": 51.32,
+          "y": 35.09,
+          "w": 6.96,
+          "h": 4
+        }
+      }
+    }
+  },
+  "skills": {
+    "en": {
+      "src": "/_docs/screenshots/en/skills.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "browse": {
+          "x": 82.75,
+          "y": 8.78,
+          "w": 14.89,
+          "h": 3.56
+        },
+        "create": {
+          "x": 82.75,
+          "y": 8.78,
+          "w": 14.89,
+          "h": 3.56
+        },
+        "skill": {
+          "x": 20.56,
+          "y": 27.22,
+          "w": 6.3,
+          "h": 3.11
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/skills.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "browse": {
+          "x": 85.12,
+          "y": 8.78,
+          "w": 12.52,
+          "h": 3.56
+        },
+        "create": {
+          "x": 85.12,
+          "y": 8.78,
+          "w": 12.52,
+          "h": 3.56
+        },
+        "skill": {
+          "x": 20.56,
+          "y": 27.22,
+          "w": 6.3,
+          "h": 3.11
+        }
+      }
+    }
+  },
   "tool-types": {
     "en": {
       "src": "/_docs/screenshots/en/tool-types.png",
@@ -375,6 +507,70 @@
           "y": 21.87,
           "w": 15.28,
           "h": 23.69
+        }
+      }
+    }
+  },
+  "usage": {
+    "en": {
+      "src": "/_docs/screenshots/en/usage.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "range": {
+          "x": 74.2,
+          "y": 6.78,
+          "w": 11.67,
+          "h": 4
+        },
+        "plan": {
+          "x": 15.97,
+          "y": 13.76,
+          "w": 83.33,
+          "h": 20.64
+        },
+        "breakdown": {
+          "x": 15.83,
+          "y": 35.07,
+          "w": 83.61,
+          "h": 28.62
+        },
+        "alerts": {
+          "x": 85.72,
+          "y": 6.56,
+          "w": 7.57,
+          "h": 4.44
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/usage.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "range": {
+          "x": 72.77,
+          "y": 6.78,
+          "w": 11.67,
+          "h": 4
+        },
+        "plan": {
+          "x": 15.97,
+          "y": 13.76,
+          "w": 83.33,
+          "h": 20.64
+        },
+        "breakdown": {
+          "x": 15.83,
+          "y": 35.07,
+          "w": 83.61,
+          "h": 28.62
+        },
+        "alerts": {
+          "x": 84.3,
+          "y": 6.56,
+          "w": 9.85,
+          "h": 4.44
         }
       }
     }

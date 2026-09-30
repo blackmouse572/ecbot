@@ -11,14 +11,14 @@ pnpm --filter docs preview     # serve out/ through the worker (wrangler dev)
 
 ## Writing a page
 
-Pages live in `content/docs/<slug>.<lang>.mdx`, one file per language, and the order is set in `meta.<lang>.json`. `test/content.test.ts` enforces the rules below, because search engines and answer engines quote these parts directly:
+Pages live in `content/docs/`, one file per language: `<slug>.<lang>.mdx`. A folder is a sidebar group; its `index.<lang>.mdx` is the page the group title opens, and its `meta.<lang>.json` sets the group title and page order. `test/content.test.ts` enforces the rules below, because search engines and answer engines quote these parts directly:
 
 - every page exists in both `en` and `vi`;
 - `title` fits in 48 characters (it gets the " | Ecbot Docs" suffix);
 - `description` is 50 to 160 characters;
 - the first block is a plain paragraph of at most 70 words that answers the page's question;
 - `faq` has at least 3 entries (rendered after the body and published as FAQPage JSON-LD);
-- no em dash, and links to other pages use `/docs/<slug>` (the reader's language is added for you).
+- no em dash, and links to other pages use `/docs/<path>`, for example `/docs/agents/skills` (the reader's language is added for you).
 
 Only describe what the app does today. Write for shop owners, with the labels the app shows in that language.
 

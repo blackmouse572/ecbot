@@ -1,0 +1,70 @@
+---
+title: Cấu trúc dự án
+description: Ecbot là một monorepo pnpm và Turborepo gồm API NestJS, ứng dụng web React, dịch vụ AI Python và các package dùng chung. Đây là vị trí của từng phần.
+faq:
+  - q: Tôi thêm endpoint API mới ở đâu?
+    a: Trong module tương ứng ở apps/api/src/modules. Sau đó chạy pnpm generate:client để ứng dụng web có client kèm kiểu dữ liệu cho endpoint đó.
+  - q: API giao tiếp với dịch vụ AI như thế nào?
+    a: Qua HTTP với một cặp khóa dùng chung. API gửi lượt chat và tác vụ kiến thức cho dịch vụ AI, còn dịch vụ AI gọi ngược về API để dùng công cụ, dữ liệu khách hàng và nhắc hẹn.
+  - q: Chạy kiểm thử bằng lệnh nào?
+    a: pnpm test:api cho API, pnpm --filter app test cho ứng dụng web, uv run pytest trong apps/ai, và pnpm --filter docs test cho trang tài liệu.
+---
+
+Ecbot là một monorepo quản lý bằng pnpm workspaces và Turborepo. Thư mục `apps` chứa các dịch vụ triển khai được: API NestJS, ứng dụng web React, dịch vụ AI Python, một edge worker và trang tài liệu này. Thư mục `packages` chứa mã dùng chung, như client API được sinh tự động và bộ giao diện. Hãy chạy mọi lệnh từ thư mục gốc của repo.
+
+```txt
+apps/
+  api/      API NestJS 11: Postgres + MikroORM, Redis, xác thực JWT và phân quyền
+  app/      Ứng dụng web React 19: Vite, Tailwind 4, TanStack Query, React Router
+  ai/       Dịch vụ AI Python: FastAPI + LangChain, trả lời, công cụ, cơ sở kiến thức
+  edge/     Cloudflare Worker nhận và xếp hàng webhook của các kênh
+  docs/     Trang này: Next.js + Fumadocs, tiếng Anh và tiếng Việt
+packages/
+  agent-blueprint/  Câu hỏi, mẫu có sẵn và bộ dựng prompt của trình tạo agent
+  client/           Client API sinh từ đặc tả OpenAPI của API
+  ui/               Component và design token dùng chung
+  auth/             Hàm hỗ trợ xác thực và phân quyền dùng chung
+  eslint-config/, typescript-config/, favicons/
+```
+
+## API (apps/api)
+
+- `src/modules/*`: mỗi tính năng một module, như `chatbot`, `knowledge-base`, `platform` (các kênh), `customer`, `tool`, `skill` và `conversation`.
+- `src/common/*`: cơ sở dữ liệu, phân trang, tệp và SDK của từng nền tảng chat.
+- `src/router`: gắn các module vào tiền tố đường dẫn.
+- `src/worker`: client Cloud Tasks cho tác vụ nền.
+- `src/migration`: migration và dữ liệu mẫu.
+
+Đường dẫn bắt đầu bằng `/api/v1` và một tiền tố quy định ai được gọi:
+
+| Tiền tố | Bên gọi |
+| --- | --- |
+| `/public` | Bất kỳ ai, ví dụ đăng nhập, đăng ký và webhook của kênh. |
+| `/workspace`, `/shared` | Thành viên đã đăng nhập của không gian làm việc. |
+| `/user` | Tài khoản của chính người dùng đã đăng nhập. |
+| `/admin` | Quản trị viên nền tảng. |
+| `/system` | Lệnh gọi nội bộ từ dịch vụ AI và Cloud Tasks. |
+
+## Ứng dụng web (apps/app)
+
+- `src/routes/*`: các trang, nhóm theo tính năng.
+- `src/hooks/api`: hook dữ liệu dựng trên client được sinh tự động.
+- `src/i18n/translations`: `en.json` và `vi.json`.
+- `src/components`, `src/modules`, `src/providers`: giao diện và trạng thái dùng chung.
+
+Khi đổi một đường dẫn hoặc DTO của API, hãy chạy `pnpm generate:client`. Lệnh này đọc đặc tả OpenAPI mà API ghi ra khi khởi động và sinh lại `packages/client`.
+
+## Dịch vụ AI (apps/ai)
+
+- `llm/agents`, `llm/prompts`: vòng lặp của agent và prompt của nó.
+- `llm/tools`: các công cụ agent gọi được, gồm nhắc hẹn, hồ sơ khách và kỹ năng.
+- `llm/guardrails`: sàng lọc tin nhắn.
+- `llm/retrievers`, `modules/rag`: tìm kiếm cơ sở kiến thức và nạp tài liệu.
+- `modules/chat`, `modules/customer`: lượt chat và bộ phân loại khi kết thúc cuộc trò chuyện.
+
+## Một tin nhắn đi qua hệ thống như thế nào
+
+1. Webhook của kênh đến API (một số kênh đi qua edge worker trước).
+2. API tìm khách hàng và cuộc trò chuyện, kiểm tra quy tắc chuyển cho nhân viên, rồi nhờ dịch vụ AI viết câu trả lời.
+3. Dịch vụ AI chạy agent: tìm trong cơ sở kiến thức, tải kỹ năng và gọi công cụ thông qua API.
+4. API gửi câu trả lời qua kênh và lưu lại tin nhắn.

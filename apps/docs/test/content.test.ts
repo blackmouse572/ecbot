@@ -12,16 +12,18 @@ import shots from "../generated/screenshots.json";
 const DIR = path.join(__dirname, "../content/docs");
 const LANGS = ["en", "vi"];
 
-const pages = fs
-  .readdirSync(DIR)
+const pages = (fs.readdirSync(DIR, { recursive: true }) as string[])
   .filter((f) => f.endsWith(".mdx"))
   .map((file) => {
-    const [slug, lang] = file.replace(/\.mdx$/, "").split(".");
+    // "agents/skills.en.mdx" -> base "agents/skills", url path "agents/skills";
+    // "agents/index.en.mdx" -> url path "agents"; "index.en.mdx" -> "".
+    const [base, lang] = file.replace(/\.mdx$/, "").split(".");
     const { data, content } = matter(fs.readFileSync(path.join(DIR, file), "utf8"));
-    return { file, slug: slug!, lang: lang!, data, content };
+    const urlPath = base!.replace(/(^|\/)index$/, "");
+    return { file, slug: base!, urlPath, lang: lang!, data, content };
   });
 
-const slugs = new Set(pages.map((p) => p.slug));
+const urlPaths = new Set(pages.map((p) => p.urlPath));
 
 describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
   it("is named <slug>.<lang>.mdx", () => {
@@ -61,7 +63,7 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
 
   it("links only to docs pages that exist", () => {
     for (const [, target] of content.matchAll(/\]\(\/docs\/?([^)#\s]*)/g)) {
-      expect(slugs.has(target || "index"), `broken link /docs/${target}`).toBe(true);
+      expect(urlPaths.has(target!.replace(/\/$/, "")), `broken link /docs/${target}`).toBe(true);
     }
   });
 

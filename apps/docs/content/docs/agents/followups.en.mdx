@@ -1,0 +1,39 @@
+---
+title: Follow-ups
+description: Follow-ups let your agent message a customer again later, such as a reminder to pay or a check-in after delivery, on the same channel.
+faq:
+  - q: How far ahead can a follow-up be scheduled?
+    a: From 1 minute up to 30 days. Each conversation can have at most 5 follow-ups waiting at the same time.
+  - q: Can I edit a scheduled follow-up?
+    a: No. You can cancel a scheduled follow-up from the Followups page or from the customer panel in the conversation. The agent can schedule a new one.
+  - q: Why was a follow-up skipped?
+    a: A follow-up is skipped when, at send time, the conversation no longer exists, it was resolved, the agent was turned off or the agent was disconnected.
+---
+
+A follow-up is a message your agent schedules to send a customer later, on the same channel as the conversation. A customer can ask for one ("remind me tomorrow to transfer the money"), or you can tell the agent when to schedule them. When the time comes, the agent rereads the conversation and writes a fresh message instead of sending a fixed text.
+
+## Tell the agent when to follow up
+
+Open the agent's form and fill in **Follow-up rules**, up to 2,000 characters. For example:
+
+```md
+- If a customer asks for a reminder, schedule it at the time they asked for.
+- If a customer took an order but has not paid, follow up after 24 hours.
+- Do not follow up more than once on the same topic.
+```
+
+The agent can also list and cancel its own pending follow-ups, for example when the customer says they already paid.
+
+## See and cancel follow-ups
+
+Open **Followups** under **Agents** in the sidebar. Each row shows the agent, the customer, the reason, the status and when it will be sent. Filter by agent or status, open the conversation, or **Cancel** a follow-up that is still scheduled.
+
+| Status | Meaning |
+| --- | --- |
+| **Scheduled** | Waiting to be sent. |
+| **Completed** | The message was sent. |
+| **Skipped** | Not sent, because the conversation was resolved or removed, or the agent was turned off or disconnected. |
+| **Failed** | Sending failed. It is retried automatically. |
+| **Cancelled** | Cancelled by you or by the agent. |
+
+A customer's follow-ups also show in the customer panel of the conversation, where you can read the planned message or cancel it.

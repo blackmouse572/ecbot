@@ -1,5 +1,5 @@
 ---
-title: Trình tạo agent
+title: Trợ lý AI
 description: Trình tạo agent biến vài câu mô tả shop thành một agent chạy được, bằng cách hỏi từng câu về giọng điệu, thông tin shop và quy tắc.
 faq:
   - q: Sau khi tạo xong tôi có sửa câu trả lời được không?
@@ -22,8 +22,8 @@ Trình tạo agent dựng một agent từ vài câu mô tả về shop của b�
 
 - **Về doanh nghiệp**: loại hình kinh doanh, tên shop, tên agent, lời chào và điểm khác biệt của shop.
 - **Giọng điệu**: những từ mô tả thương hiệu và mức độ trang trọng khi nói chuyện.
-- **Thông tin shop**: phí và thời gian giao hàng, cách giao, cách thanh toán, đổi trả và bảo hành. Thông tin ngắn để ở đây, còn tài liệu dài thì đưa vào [cơ sở kiến thức](/docs/knowledge-base).
-- **Cách làm việc**: những thông tin agent cần hỏi khi khách muốn mua, và khi nào agent chuyển cuộc trò chuyện cho bạn. Xem trang [Khách hàng và chuyển cho nhân viên](/docs/customers-and-handoff).
+- **Thông tin shop**: phí và thời gian giao hàng, cách giao, cách thanh toán, đổi trả và bảo hành. Thông tin ngắn để ở đây, còn tài liệu dài thì đưa vào [cơ sở kiến thức](/docs/agents/knowledge-base).
+- **Cách làm việc**: những thông tin agent cần hỏi khi khách muốn mua, và khi nào agent chuyển cuộc trò chuyện cho bạn. Xem trang [Khách hàng và chuyển cho nhân viên](/docs/customers).
 - **Quy tắc**: những việc agent không bao giờ được làm, và cách xử lý khi không chắc chắn.
 - **Phong cách trò chuyện**: độ dài câu trả lời, emoji, câu hỏi gợi mở và cách xử lý ngoài giờ mở cửa.
 
@@ -40,3 +40,16 @@ Trang của agent chứa mọi thứ agent dùng. Bạn liên kết tài liệu,
 </Screenshot>
 
 Hãy viết thông tin shop như khi bạn dặn một nhân viên mới. Nếu shop không có giờ mở cửa (ví dụ chỉ bán online), hãy ghi rõ để agent không tự bịa ra giờ.
+
+## Cài đặt agent
+
+Khung **Tóm tắt** trên trang của agent gom các cài đặt bạn có thể đổi sau khi tạo:
+
+| Mục | Nội dung |
+| --- | --- |
+| **Hành vi** | Hiển thị trạng thái đang nhập, tự động đánh dấu đã đọc, ngôn ngữ chính và ngôn ngữ dự phòng, tin nhắn chào mừng, và tin nhắn dự phòng gửi khi agent không trả lời được. |
+| **Mô hình AI** | Nhà cung cấp và mô hình AI, mức sáng tạo (mặc định 1.0) và độ dài tối đa của câu trả lời. |
+| **Cài đặt chuyển tiếp cho nhân sự** | Từ khóa chuyển tiếp bổ sung (cách nhau bằng dấu phẩy), số lần trả lời thất bại liên tiếp trước khi chuyển cho nhân viên (mặc định 3), và ghi chú hiện trong thông báo gửi nhân viên. |
+| **Cài đặt Guardrail** | Bật guardrail để sàng lọc mọi tin nhắn đến, thêm quy tắc sàng lọc riêng, và chọn có chuyển cho nhân viên khi tin nhắn bị chặn hay không (mặc định bật). |
+
+Công tắc ở đầu trang dùng để bật hoặc tắt agent. Biểu mẫu của agent còn có mục **Quy tắc nhắc hẹn**, cho agent biết khi nào nên hẹn nhắc khách. Xem trang [Nhắc hẹn](/docs/agents/followups).

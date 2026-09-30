@@ -1,0 +1,75 @@
+---
+title: Configuration
+description: Every Ecbot app reads its settings from a .env file. This page lists the files, the variables that matter, and what pnpm setup:local fills in for you.
+faq:
+  - q: Which variables must I set by hand?
+    a: Only OPENROUTER_API_KEY is required for replies. Email, channel, crawling and marketplace keys are optional and enable those features. pnpm setup:local fills everything that only needs to match between apps.
+  - q: How do I check my configuration?
+    a: Run pnpm setup:local --check. It lists missing or inconsistent values without changing anything.
+  - q: Why does Telegram say the webhook URL is invalid?
+    a: API_BACKEND_URL must be a public HTTPS address that reaches your API. Use a tunnel such as cloudflared when you run locally.
+---
+
+Each app in the repository reads its settings from its own `.env` file: `apps/api/.env`, `apps/app/.env` and `apps/ai/.env`. Each has a commented `.env.example` next to it. Run `pnpm setup:local` to create the files and fill every value that only has to be consistent between apps; you then add the keys only you can get.
+
+## pnpm setup:local
+
+| Flag | What it does |
+| --- | --- |
+| *(none)* | Creates missing `.env` files, fills generated values, and prompts for the keys you must supply. |
+| `--yes` | Accepts the defaults without prompting and lists the keys you still need. |
+| `--check` | Reports missing or mismatched values and changes nothing. |
+| `--origin <url>` | Adds another origin the API accepts, for example a second frontend. Repeatable. |
+| `--client-env <path>` | Writes the default API key pair into another frontend's `.env` too. |
+
+Filled for you: the JWT signing keys (written to `apps/api/keys`) and key ids, CORS origins, the API key pair shared by the API and the web app, the key pair between the API and the AI service, and internal secrets.
+
+## API (apps/api/.env)
+
+| Group | Variables | Purpose |
+| --- | --- | --- |
+| App | `APP_*`, `HOME_URL`, `HTTP_PORT` | Name, web app URL used in emails and links, port (8080). |
+| Public URL | `API_BACKEND_URL` | Public origin of the API, used for channel webhooks such as Telegram. |
+| CORS | `MIDDLEWARE_CORS_ORIGIN` | Allowed web app origins. |
+| Database | `DATABASE_URL` | Postgres with the pgvector extension. |
+| Auth | `AUTH_JWT_*` | JWKS URL, key ids and key paths. |
+| Redis | `REDIS_*` | Cache and queues. |
+| Storage | `AWS_S3_PUBLIC_*`, `AWS_S3_PRIVATE_*` | Buckets for uploads, knowledge files and skills. |
+| Email | `RESEND_API_KEY`, `EMAIL_FROM` | Sign-up codes, invitations and alerts. |
+| Channels | `FACEBOOK_*`, `ZALO_*`, `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Channel apps and webhook verification. |
+| AI service | `AI_BACKEND_URL`, `AI_SERVICE_API_KEY`, `AI_SERVICE_API_SECRET`, `API_INTERNAL_TOKEN` | Calls between the API and the AI service. |
+| Background jobs | `CLOUD_TASKS_*` | Cloud Tasks project, queues, and `CLOUD_TASKS_EMULATOR_HOST` for local runs. |
+| Marketplace | `COMPOSIO_*` | Marketplace tools. |
+| Security | `TURNSTILE_SECRET_KEY`, `OAUTH_TOKEN_ENCRYPT_KEY` | Bot protection on sign-up and login, and encryption of stored channel tokens. |
+
+## Web app (apps/app/.env)
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_API_URL` | API origin, for example `http://localhost:8080`. |
+| `VITE_API_KEY`, `VITE_API_KEY_SECRET` | The API key pair the app sends with every request. |
+| `VITE_TURNSTILE_SITE_KEY` | Bot protection widget. |
+| `VITE_FACEBOOK_*`, `VITE_WHATSAPP_CONFIG_ID`, `VITE_ZALO_*` | Sign-in popups for connecting channels. |
+
+## AI service (apps/ai/.env)
+
+| Variable | Purpose |
+| --- | --- |
+| `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL` | The language models. Required. |
+| `POSTGRES_URL`, `RAG_POSTGRES_URL` | Database and vector store for the knowledge base. |
+| `API_BASE_URL`, `AI_SERVICE_API_KEY`, `AI_SERVICE_API_SECRET`, `API_INTERNAL_TOKEN` | Calls back to the API. Must match the API's values. |
+| `EMBEDDING_MODEL`, `EMBEDDING_DIMENSIONS`, `CHUNK_SIZE`, `CHUNK_OVERLAP` | How documents are split and embedded. |
+| `FIRECRAWL_API_KEY` | Reading web pages added as URL items. |
+| `ENV`, `LOG_LEVEL`, `LANGSMITH_*` | Environment, logging and optional tracing. |
+
+## Ports
+
+| Service | Port |
+| --- | --- |
+| API | 8080 |
+| Web app | 5173 |
+| AI service | 8000 |
+| Docs | 5175 |
+| Postgres / Redis | 5432 / 6379 |
+| Cloud Tasks emulator | 8123 |
+| JWKS server / Bull board | 3011 / 3010 |
