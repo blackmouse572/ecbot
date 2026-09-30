@@ -19,7 +19,7 @@
     "clean": "git clean -xdf .turbo dist node_modules"
   },
   "dependencies": {
-    "zod": "4.2.0"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
