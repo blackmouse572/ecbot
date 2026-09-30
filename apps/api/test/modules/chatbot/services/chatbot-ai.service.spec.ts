@@ -1,3 +1,4 @@
+import { AI_STREAM_IDLE_TIMEOUT_MS } from 'src/modules/chatbot/constants/chatbot-ai.constant';
 import {
     AIChatHistoryMessage,
     ChatbotAIService,
@@ -47,17 +48,33 @@ describe('ChatbotAIService', () => {
         );
     });
 
+    // The module-wide 60s axios timeout is a socket idle timer that stays
+    // armed while the reply streams, so a slow tool roundtrip aborted it.
+    it('gives the reply stream its own idle timeout, longer than the 60s default', async () => {
+        post.mockResolvedValue({ data: {} });
+
+        await service.streamChat({} as any);
+
+        expect(post.mock.calls[0][2]).toMatchObject({
+            timeout: AI_STREAM_IDLE_TIMEOUT_MS,
+        });
+        expect(AI_STREAM_IDLE_TIMEOUT_MS).toBeGreaterThan(60_000);
+    });
+
     it('sends both the GCP ID token and the internal token header on deleteSession', async () => {
         del.mockResolvedValue({});
 
         await service.deleteSession('session-1');
 
-        expect(del).toHaveBeenCalledWith('http://ai:8000/api/chat/session/session-1', {
-            headers: {
-                Authorization: 'Bearer gcp-id-token',
-                'X-Internal-Token': 'internal-token',
-            },
-        });
+        expect(del).toHaveBeenCalledWith(
+            'http://ai:8000/api/chat/session/session-1',
+            {
+                headers: {
+                    Authorization: 'Bearer gcp-id-token',
+                    'X-Internal-Token': 'internal-token',
+                },
+            }
+        );
     });
 
     // Compile-time contract (checked by tsc): apps/ai rejects a 'system'

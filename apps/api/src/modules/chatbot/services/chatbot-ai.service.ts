@@ -9,6 +9,7 @@ import {
     parseWireTokenUsage,
     TokenUsageDelta,
 } from '../interfaces/token-usage-wire.interface';
+import { AI_STREAM_IDLE_TIMEOUT_MS } from '../constants/chatbot-ai.constant';
 
 export interface AIChatHistoryMessage {
     role: 'user' | 'assistant';
@@ -62,7 +63,12 @@ export class ChatbotAIService {
         const response = await this.httpService.axiosRef.post(
             `${this.aiBackendUrl}/api/chat/stream`,
             params,
-            { responseType: 'stream', signal, headers }
+            {
+                responseType: 'stream',
+                signal,
+                headers,
+                timeout: AI_STREAM_IDLE_TIMEOUT_MS,
+            }
         );
         return response.data as IncomingMessage;
     }
