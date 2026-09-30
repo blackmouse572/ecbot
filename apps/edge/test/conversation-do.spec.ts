@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { ConversationDebounceDO } from "../src/conversation-do";
+import {
+  ConversationDebounceDO,
+  REPLY_POST_TIMEOUT_MS,
+} from "../src/conversation-do";
 
 function mkState() {
   const store = new Map<string, unknown>();
@@ -155,5 +158,30 @@ describe("ConversationDebounceDO", () => {
       "[reply] conversation c threw (network down)",
     );
     error.mockRestore();
+  });
+
+  // The inbound post has a time limit; the reply post had none, so a hung
+  // server held the alarm open and the failure was never logged.
+  it("gives /poc/reply a time limit a little past the server's own", async () => {
+    const fetchMock = vi.fn(async () => new Response("ok", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const state = mkState();
+    await state.storage.put("texts", ["hi"]);
+    await state.storage.put("meta", {
+      conversationId: "c",
+      senderId: "s",
+      customerId: "cu",
+      contactPointId: "cp",
+    });
+
+    await new ConversationDebounceDO(state as any).alarm();
+
+    expect(timeout).toHaveBeenCalledWith(REPLY_POST_TIMEOUT_MS);
+    expect(REPLY_POST_TIMEOUT_MS).toBeGreaterThan(300_000);
+    expect((fetchMock.mock.calls[0] as any[])[1].signal).toBeInstanceOf(
+      AbortSignal,
+    );
+    timeout.mockRestore();
   });
 });

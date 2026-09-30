@@ -1,6 +1,9 @@
 import { postToServer } from "./server-client";
 
 const DEBOUNCE_MS = 4000; // mirror MESSAGE_DEBOUNCE_MS; tune in POC
+// apps/api lets /poc/reply run a full agent turn for up to 300s; wait a little
+// longer, then give up and log, so a hung server does not hold the alarm.
+export const REPLY_POST_TIMEOUT_MS = 310_000;
 
 interface Meta {
   conversationId: string;
@@ -45,11 +48,11 @@ export class ConversationDebounceDO {
     // customer, so a second run could answer them twice.
     const tag = `[reply] conversation ${meta.conversationId}`;
     try {
-      const res = await postToServer("/api/v1/system/poc/reply", {
-        ...meta,
-        texts,
-        messageIds,
-      });
+      const res = await postToServer(
+        "/api/v1/system/poc/reply",
+        { ...meta, texts, messageIds },
+        AbortSignal.timeout(REPLY_POST_TIMEOUT_MS),
+      );
       if (!res.ok)
         console.error(`${tag} -> ${res.status}: ${await res.text()}`);
     } catch (err) {
