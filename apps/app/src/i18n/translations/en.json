@@ -244,7 +244,10 @@
         },
         "checkEmail": {
           "title": "Check your email",
-          "description": "If an account exists for that email, we've sent a link and code to reset your password."
+          "description": "If an account exists for that email, we've sent a link and code to reset your password.",
+          "resend": "Resend email",
+          "resendIn": "Resend in {{seconds}}s",
+          "resent": "We sent the email again."
         }
       },
       "resetPassword": {

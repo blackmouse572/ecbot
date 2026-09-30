@@ -1,13 +1,15 @@
 import { LinkButton } from "@/components/common";
 import { useRequestPasswordReset } from "@/hooks/api";
+import { useCountdown } from "@/hooks/use-countdown";
 import { ROUTES } from "@/routes/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@medusajs/ui";
+import { Button, toast } from "@medusajs/ui";
 import { HoneypotField, useHoneypot } from "@repo/auth/components";
 import { Form, Input } from "@repo/ui/common-components";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Trans, useTranslation } from "react-i18next";
+import { RESEND_COOLDOWN_SECONDS } from "../constants";
 import { forgotPasswordSchema, type TForgotPasswordSchema } from "../schemas";
 
 const I18N_PREFIX = "app.auth.forgotPassword";
@@ -16,25 +18,38 @@ function ForgotPasswordPage() {
   const { t } = useTranslation(undefined, { keyPrefix: I18N_PREFIX });
   const { requestReset, isLoading } = useRequestPasswordReset();
   const honeypot = useHoneypot();
-  const [submitted, setSubmitted] = useState(false);
+  // The email the reset was sent to; set once the form is submitted.
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const countdown = useCountdown();
 
   const form = useForm<TForgotPasswordSchema>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: "" },
   });
 
-  const onSubmit = form.handleSubmit(async ({ email }) => {
-    if (honeypot.isTrapped()) return;
+  const sendReset = async (email: string) => {
     try {
       await requestReset(email);
     } catch {
       // No enumeration: a failed request shows the exact same state as a
       // successful one — never reveal whether the email has an account.
     }
-    setSubmitted(true);
+    setSentTo(email);
+    countdown.start(RESEND_COOLDOWN_SECONDS);
+  };
+
+  const onSubmit = form.handleSubmit(async ({ email }) => {
+    if (honeypot.isTrapped()) return;
+    await sendReset(email);
   });
 
-  if (submitted) {
+  const onResend = async () => {
+    if (!sentTo) return;
+    await sendReset(sentTo);
+    toast.success(t("checkEmail.resent"));
+  };
+
+  if (sentTo) {
     return (
       <div className="flex w-[280px] flex-col items-center gap-y-4 text-center">
         <div className="flex flex-col gap-y-1">
@@ -45,6 +60,17 @@ function ForgotPasswordPage() {
             {t("checkEmail.description")}
           </p>
         </div>
+        <Button
+          variant="secondary"
+          className="w-full"
+          disabled={countdown.secondsLeft > 0}
+          isLoading={isLoading}
+          onClick={onResend}
+        >
+          {countdown.secondsLeft > 0
+            ? t("checkEmail.resendIn", { seconds: countdown.secondsLeft })
+            : t("checkEmail.resend")}
+        </Button>
         <p className="txt-compact-small text-ui-fg-muted">
           <Trans
             i18nKey={`${I18N_PREFIX}.actions.backToLogin`}

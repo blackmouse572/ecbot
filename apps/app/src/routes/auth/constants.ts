@@ -4,3 +4,7 @@ export const TOO_MANY_REQUESTS_STATUS = 429;
 
 // Preselected on sign-up for the Vietnamese UI (the product's home market).
 export const VIETNAM_ALPHA2_CODE = "VN";
+
+// Wait before the forgot-password page offers Resend. The API allows 5 reset
+// requests a minute, so one a minute stays well inside it.
+export const RESEND_COOLDOWN_SECONDS = 60;

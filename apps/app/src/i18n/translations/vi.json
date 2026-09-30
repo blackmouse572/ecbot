@@ -244,7 +244,10 @@
         },
         "checkEmail": {
           "title": "Kiểm tra email của bạn",
-          "description": "Nếu email này có tài khoản, chúng tôi đã gửi liên kết và mã để đặt lại mật khẩu."
+          "description": "Nếu email này có tài khoản, chúng tôi đã gửi liên kết và mã để đặt lại mật khẩu.",
+          "resend": "Gửi lại email",
+          "resendIn": "Gửi lại sau {{seconds}} giây",
+          "resent": "Chúng tôi đã gửi lại email."
         }
       },
       "resetPassword": {
