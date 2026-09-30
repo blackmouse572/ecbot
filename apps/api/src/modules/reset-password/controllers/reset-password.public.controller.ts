@@ -91,7 +91,10 @@ export class ResetPasswordPublicController {
             await this.resetPasswordService.checkActiveLatestEmailByUser(
                 user.id
             );
+        // A reset is still active (the page's Resend lands here): send the
+        // same link and code again rather than nothing.
         if (checkLatest) {
+            this.enqueueResetEmail(user, checkLatest.created);
             return ack;
         }
 
@@ -112,23 +115,7 @@ export class ResetPasswordPublicController {
                     { em: session }
                 );
 
-            this.cloudTasksClient
-                .enqueue(
-                    'email',
-                    ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
-                    {
-                        send: { email: user.email, name: user.name },
-                        data: resetPassword.created,
-                    },
-                    {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD}-${user.id}-${randomUUID()}`,
-                    }
-                )
-                .catch(err => {
-                    this.logger.warn(
-                        `Email queue failed after reset-password request for user [${user.id}] job [${ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD}] (non-fatal): ${(err as Error)?.message}`
-                    );
-                });
+            this.enqueueResetEmail(user, resetPassword.created);
 
             await session.commit();
 
@@ -307,5 +294,29 @@ export class ResetPasswordPublicController {
                 _error: err,
             });
         }
+    }
+
+    /** Queue the reset email; a queue failure is logged, never thrown. */
+    private enqueueResetEmail(
+        user: UserEntity,
+        created: IResetPasswordRequest['created']
+    ): void {
+        this.cloudTasksClient
+            .enqueue(
+                'email',
+                ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
+                {
+                    send: { email: user.email, name: user.name },
+                    data: created,
+                },
+                {
+                    taskName: `${ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD}-${user.id}-${randomUUID()}`,
+                }
+            )
+            .catch(err => {
+                this.logger.warn(
+                    `Email queue failed after reset-password request for user [${user.id}] job [${ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD}] (non-fatal): ${(err as Error)?.message}`
+                );
+            });
     }
 }
