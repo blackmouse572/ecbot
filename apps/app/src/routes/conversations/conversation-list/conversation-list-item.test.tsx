@@ -4,7 +4,10 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { ConversationListItem } from "./conversation-list-item";
 
-const renderRow = (handoffReason: string | null) =>
+const renderRow = (
+  handoffReason: string | null,
+  chatbot?: { id?: string; name?: string },
+) =>
   render(
     <MemoryRouter initialEntries={["/acme/conversations"]}>
       <Routes>
@@ -26,12 +29,13 @@ const renderRow = (handoffReason: string | null) =>
                   updatedAt: "2026-06-15T00:00:00Z",
                   botEnabled: false,
                   handoffReason,
+                  chatbot,
                 } as never
               }
               basePath="/acme/conversations"
               isActive={false}
               hasNewHandoff={false}
-              showChatbot={false}
+              showChatbot={!!chatbot}
             />
           }
         />
@@ -54,5 +58,13 @@ describe("ConversationListItem", () => {
   it("does not make the channel name a separate link inside the row", () => {
     renderRow(null);
     expect(screen.getByText("Kunmart Bot").closest("a")).toBeNull();
+  });
+
+  it("links the chatbot name to its chatbot page", () => {
+    renderRow(null, { id: "bot-1", name: "Sales Bot" });
+    expect(screen.getByText("Sales Bot").closest("a")).toHaveAttribute(
+      "href",
+      "/acme/chatbot/bot-1",
+    );
   });
 });

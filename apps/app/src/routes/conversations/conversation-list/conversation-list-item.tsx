@@ -1,6 +1,6 @@
 import { Avatar, Text, Tooltip, clx } from "@medusajs/ui";
 import { Link as LinkIcon } from "@medusajs/icons";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ConversationGetResponseDto } from "@/hooks/api/conversations";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
