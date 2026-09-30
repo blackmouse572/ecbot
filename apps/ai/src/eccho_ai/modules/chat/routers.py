@@ -20,6 +20,7 @@ from eccho_ai.modules.chat.services import (
     get_agent_input,
     get_rag_retrieval,
 )
+from eccho_ai.modules.chat.stream_keepalive import with_keepalive
 from eccho_ai.modules.chat.stream_pipeline import events_to_ui_parts
 from eccho_ai.modules.chat.ui_message_stream import STREAM_HEADER
 from eccho_ai.utils.citation_utils import strip_citation_markers
@@ -252,13 +253,17 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
             )
         return None
 
+    # Keepalives cover the quiet stretches (tool calls, a cold model), which
+    # apps/api's idle timeout and proxies would otherwise cut.
     return StreamingResponse(
-        events_to_ui_parts(
-            _agent_events(),
-            request_id=request_id,
-            output_guardrail=_check_output_guardrail,
-            sources=source_attributions,
-            image_url_allowed=lambda url: is_known_image_url(ctx.chatbot, url),
+        with_keepalive(
+            events_to_ui_parts(
+                _agent_events(),
+                request_id=request_id,
+                output_guardrail=_check_output_guardrail,
+                sources=source_attributions,
+                image_url_allowed=lambda url: is_known_image_url(ctx.chatbot, url),
+            )
         ),
         media_type="text/event-stream",
         headers=dict([STREAM_HEADER]),
