@@ -133,7 +133,31 @@ describe("compilePrompt", () => {
   // #182: confirmation comes before the tool call that places the order.
   it("requires a clear yes before any tool that creates or changes something", () => {
     const out = compilePrompt(sample("ecommerce", "en"));
-    expect(out).toContain("before you call any tool that creates, changes or cancels an order, booking or payment");
+    expect(out).toContain("Before you create, change or cancel an order, booking or payment, read the key details back and wait for a clear yes.");
+  });
+
+  // Wizard test findings: "wait for a clear yes before you confirm" had no
+  // object, so agents asked for a yes before every product search.
+  it("never asks for a yes before a read-only lookup", () => {
+    const out = compilePrompt(sample("ecommerce", "en"));
+    expect(out).not.toContain("wait for a clear yes before you confirm,");
+    expect(out).toContain("without asking first");
+  });
+
+  // Wizard test findings: nothing told the agent to use its tools, and
+  // "only the business facts and knowledge" argued against calling them.
+  it("tells the agent to look things up with its tools before answering", () => {
+    const out = compilePrompt({ ...sample("ecommerce", "en"), goals: ["answer_questions"] });
+    expect(out).toContain("using only the business facts, knowledge and tool results you were given");
+    expect(out).toContain("If you have a tool that looks up products, prices, stock or orders, call it before you answer or recommend");
+    expect(out).toContain("share the product link");
+  });
+
+  // Wizard test findings: a free gift written in "what makes you different"
+  // sits in Essence, so a rule scoped to "the facts" forbade mentioning it.
+  it("lets the agent mention promises written anywhere in its prompt", () => {
+    const out = compilePrompt(sample("ecommerce", "en"));
+    expect(out).toContain("Never promise discounts, gifts or free shipping that are not written in this prompt or in tool results.");
   });
 
   // #122: ecbot has no order module. Orders go through a connected commerce
