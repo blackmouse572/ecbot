@@ -29,6 +29,7 @@ import {
     AiUsageMeter,
     ENUM_AI_USAGE_SOURCE,
 } from '@app/app/ai-usage-meter.interface';
+import { ReplyOutcome } from '../interfaces/reply-outcome.interface';
 
 export interface ReplyInput {
     conversationId: string;
@@ -39,6 +40,15 @@ export interface ReplyInput {
     /** The saved rows of `texts`, in order (see ITurnBurst). */
     messageIds?: string[];
 }
+
+const skipped = (reason: string): ReplyOutcome => ({
+    status: 'skipped',
+    reason,
+});
+const failed = (reason: string): ReplyOutcome => ({ status: 'failed', reason });
+/** Delivered when the last send reached the customer, else not delivered. */
+const delivered = (sent: boolean): ReplyOutcome =>
+    sent ? { status: 'delivered' } : failed('not_delivered');
 
 @Injectable()
 export class ReplyGenerationService {
@@ -71,12 +81,12 @@ export class ReplyGenerationService {
      * uses a disposable identity map, discarded when the turn settles — the same
      * seam `ContextualWorkerHost` provided around the processor's `handle`.
      */
-    async run(input: ReplyInput): Promise<void> {
-        if (input.texts.length === 0) return;
-        await RequestContext.create(this.orm.em, () => this.execute(input));
+    async run(input: ReplyInput): Promise<ReplyOutcome> {
+        if (input.texts.length === 0) return skipped('no_texts');
+        return RequestContext.create(this.orm.em, () => this.execute(input));
     }
 
-    private async execute(input: ReplyInput): Promise<void> {
+    private async execute(input: ReplyInput): Promise<ReplyOutcome> {
         const { conversationId, senderId, customerId, contactPointId, texts } =
             input;
 
@@ -87,15 +97,16 @@ export class ReplyGenerationService {
 
         const conversation =
             await this.conversationService.findOneById(conversationId);
-        if (!conversation) return;
-        if (!conversation.botEnabled) return;
-        if (conversation.status === ENUM_CONVERSATION_STATUS.RESOLVED) return;
+        if (!conversation) return skipped('no_conversation');
+        if (!conversation.botEnabled) return skipped('bot_disabled');
+        if (conversation.status === ENUM_CONVERSATION_STATUS.RESOLVED)
+            return skipped('conversation_resolved');
 
         const account = await this.accountService.findOne(
             { id: (conversation.account as any).id ?? conversation.account },
             { populate: ['chatbot', 'chatbot.workspace'] } as any
         );
-        if (!account?.chatbot) return;
+        if (!account?.chatbot) return skipped('no_chatbot');
 
         const chatbot = account.chatbot;
         const adapter = this.registry.get(account.type);
@@ -160,13 +171,14 @@ export class ReplyGenerationService {
                 this.logger.log(
                     `Token budget blocked conversation ${conversationId}: ${budget.reason}`
                 );
-                await this.sendFallback(
-                    chatbot,
-                    account,
-                    senderId,
-                    conversationId
+                return delivered(
+                    await this.sendFallback(
+                        chatbot,
+                        account,
+                        senderId,
+                        conversationId
+                    )
                 );
-                return;
             }
 
             const ac = new AbortController();
@@ -263,27 +275,28 @@ export class ReplyGenerationService {
                 });
             }
 
-            if (!deliveryResult) return;
+            if (!deliveryResult) return failed('stream_failed');
 
             if (deliveryResult.superseded && !deliveryResult.anySent) {
                 this.logger.debug(
                     `Generation superseded for conversation ${conversationId} — discarding`
                 );
-                return;
+                return skipped('superseded');
             }
 
             if (deliveryResult.guardrailBlocked) {
                 this.logger.log(
                     `Guardrail block in conversation ${conversationId}: ${deliveryResult.guardrailReason}`
                 );
-                await this.handleGuardrailBlock(
-                    deliveryResult.guardrailReason,
-                    chatbot,
-                    account,
-                    senderId,
-                    conversation
+                return delivered(
+                    await this.handleGuardrailBlock(
+                        deliveryResult.guardrailReason,
+                        chatbot,
+                        account,
+                        senderId,
+                        conversation
+                    )
                 );
-                return;
             }
 
             let anySent = deliveryResult.anySent;
@@ -303,15 +316,16 @@ export class ReplyGenerationService {
                         'fallback_threshold',
                         chatbot.primaryLanguage
                     );
-                    await this.sendHandoffReply(
-                        chatbot,
-                        account,
-                        senderId,
-                        conversationId
+                    return delivered(
+                        await this.sendHandoffReply(
+                            chatbot,
+                            account,
+                            senderId,
+                            conversationId
+                        )
                     );
-                    return;
                 }
-                if (!chatbot.fallbackMessage) return;
+                if (!chatbot.fallbackMessage) return failed('no_reply');
                 anySent = await this.sendFallback(
                     chatbot,
                     account,
@@ -324,6 +338,7 @@ export class ReplyGenerationService {
                 await this.conversationService.resetFallbackCount(
                     conversationId
                 );
+            return delivered(anySent);
         } finally {
             stopTyping();
         }
@@ -419,8 +434,13 @@ export class ReplyGenerationService {
         account: any,
         senderId: string,
         conversation: any
-    ): Promise<void> {
-        await this.sendFallback(chatbot, account, senderId, conversation.id);
+    ): Promise<boolean> {
+        const sent = await this.sendFallback(
+            chatbot,
+            account,
+            senderId,
+            conversation.id
+        );
 
         if (chatbot.guardrailEscalateOnBlock) {
             await this.conversationService.triggerHandoff(
@@ -430,5 +450,6 @@ export class ReplyGenerationService {
                 chatbot.primaryLanguage
             );
         }
+        return sent;
     }
 }

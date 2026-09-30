@@ -23,7 +23,7 @@ describe('ReplyGenerationService.run', () => {
                 contactPointId: 'cp',
                 texts: [],
             })
-        ).resolves.toBeUndefined();
+        ).resolves.toEqual({ status: 'skipped', reason: 'no_texts' });
     });
 
     it('captures the current lease epoch before streaming', async () => {
@@ -48,7 +48,7 @@ describe('ReplyGenerationService.run', () => {
             {} as any,
             {} as any
         );
-        await svc.run({
+        const outcome = await svc.run({
             conversationId: 'c',
             senderId: 's',
             customerId: 'cu',
@@ -56,6 +56,10 @@ describe('ReplyGenerationService.run', () => {
             texts: ['hi'],
         });
         expect(lease.current).toHaveBeenCalledWith('c');
+        expect(outcome).toEqual({
+            status: 'skipped',
+            reason: 'no_conversation',
+        });
     });
 
     /** A service whose Turn context is `context`; apps/ai's stream fails. */
@@ -104,6 +108,17 @@ describe('ReplyGenerationService.run', () => {
             });
         return { run, streamChat, turnContext };
     }
+
+    // The edge logs a non-2xx /poc/reply; a swallowed stream error used to
+    // look like success, so the silent bot left no trace anywhere.
+    it('reports a failed stream as failed, not as done', async () => {
+        const { run } = serviceWith({ history: [], message: 'x' });
+
+        await expect(run()).resolves.toEqual({
+            status: 'failed',
+            reason: 'stream_failed',
+        });
+    });
 
     // Burst and history rules are TurnContextService's (its own spec); here
     // only that the Turn sends apps/ai what the context built.

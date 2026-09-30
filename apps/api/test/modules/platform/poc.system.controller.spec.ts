@@ -1,3 +1,4 @@
+import { BadGatewayException } from '@nestjs/common';
 import { NotImplementedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -25,7 +26,7 @@ describe('PocSystemController.inbound', () => {
         parse.mockReset();
         verifySignature.mockReset();
         process.mockReset();
-        run.mockReset();
+        run.mockReset().mockResolvedValue({ status: 'delivered' });
         registry.get.mockClear();
         registry.has.mockClear();
         const module: TestingModule = await Test.createTestingModule({
@@ -124,6 +125,47 @@ describe('PocSystemController.inbound', () => {
             customerId: 'cu',
             contactPointId: 'cp',
             texts: ['a', 'b'],
+        });
+    });
+
+    it('answers 502 with the reason when nothing reached the customer', async () => {
+        run.mockResolvedValueOnce({
+            status: 'failed',
+            reason: 'stream_failed',
+        });
+
+        const reply = controller.reply({
+            conversationId: 'c',
+            senderId: 's',
+            customerId: 'cu',
+            contactPointId: 'cp',
+            texts: ['a'],
+        });
+
+        await expect(reply).rejects.toBeInstanceOf(BadGatewayException);
+        await expect(reply).rejects.toMatchObject({
+            response: { data: { reason: 'stream_failed' } },
+        });
+    });
+
+    it('answers 200 with the outcome for a delivered or skipped reply', async () => {
+        run.mockResolvedValueOnce({
+            status: 'skipped',
+            reason: 'bot_disabled',
+        });
+
+        await expect(
+            controller.reply({
+                conversationId: 'c',
+                senderId: 's',
+                customerId: 'cu',
+                contactPointId: 'cp',
+                texts: ['a'],
+            })
+        ).resolves.toEqual({
+            ok: true,
+            status: 'skipped',
+            reason: 'bot_disabled',
         });
     });
 
