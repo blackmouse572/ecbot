@@ -19,6 +19,7 @@ exports[`route map — public table > matches the path list captured from main b
   "/:workspaceSlug/conversations",
   "/:workspaceSlug/conversations/:id",
   "/:workspaceSlug/customer-tags",
+  "/:workspaceSlug/customers",
   "/:workspaceSlug/customers/suggestions",
   "/:workspaceSlug/dashboard",
   "/:workspaceSlug/followups",

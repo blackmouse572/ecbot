@@ -1,6 +1,7 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
   customerWorkspaceControllerGetV1,
+  customerWorkspaceControllerListV1,
   customerWorkspaceControllerUpdateV1,
 } from "@repo/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,8 +31,37 @@ export type CustomerUpdateRequestDto = {
   profileSummary?: string | null;
 };
 
+export type CustomerListQuery = {
+  page?: number;
+  perPage?: number;
+  search?: string;
+};
+
 export const customerQueryKeys = {
-  ...queryKeysFactory<typeof CUSTOMER_QUERY_KEY, never>(CUSTOMER_QUERY_KEY),
+  ...queryKeysFactory<typeof CUSTOMER_QUERY_KEY, CustomerListQuery>(
+    CUSTOMER_QUERY_KEY,
+  ),
+};
+
+export const useCustomers = (query: CustomerListQuery = {}) => {
+  const { workspace } = useWorkspace();
+  const slug = workspace?.slug;
+
+  const { data, ...rest } = useQuery({
+    queryKey: customerQueryKeys.list(query),
+    enabled: !!slug,
+    queryFn: () =>
+      customerWorkspaceControllerListV1({
+        path: { workspace: slug! },
+        query,
+      }).then((res) => res.data),
+  });
+
+  return {
+    ...rest,
+    customers: (data?.data as CustomerGetResponseDto[] | undefined) ?? [],
+    count: data?._metadata?.pagination?.total ?? 0,
+  };
 };
 
 export const useCustomer = (id: string | undefined | null) => {

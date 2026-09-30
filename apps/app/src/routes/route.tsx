@@ -429,6 +429,14 @@ function getRouteMaps(): RouteObject[] {
               ],
             },
             {
+              path: ROUTES.Customers,
+              handle: {
+                breadcrumb: () => t("customers.title"),
+              },
+              ErrorBoundary: ErrorBoundary,
+              lazy: () => import("./customers/customer-list"),
+            },
+            {
               path: ROUTES.CustomerSuggestions,
               handle: {
                 breadcrumb: () => t("customers.suggestions.title"),
