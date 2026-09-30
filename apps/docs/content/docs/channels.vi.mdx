@@ -1,0 +1,47 @@
+---
+title: Kênh
+description: Kết nối agent với Facebook Messenger, Zalo, Telegram, WhatsApp hoặc khung chat website để agent trả lời ngay tại nơi khách vẫn nhắn cho shop.
+faq:
+  - q: Một agent có trả lời trên nhiều kênh được không?
+    a: Được. Bạn có thể kết nối bao nhiêu kênh tùy ý vào cùng một agent. Hồ sơ và nhãn của mỗi khách được dùng chung giữa các kênh mà khách nhắn tới.
+  - q: Mã khóa của khung chat website có cần giữ bí mật không?
+    a: Không. Mã khóa này vốn hiện trong mã nguồn trang web. Thứ bảo vệ nó là danh sách website được phép, nên chỉ tên miền của bạn mới tải được khung chat.
+  - q: Instagram, Shopee hay TikTok Shop đã dùng được chưa?
+    a: Chưa. Trong ứng dụng, các nền tảng này có nhãn Sắp có. Hiện Ecbot hỗ trợ Facebook Messenger, Zalo, Telegram, WhatsApp, khung chat website và kênh REST API.
+---
+
+Kênh là ứng dụng chat nơi agent trả lời khách. Ecbot kết nối được với Facebook Messenger, Zalo, Telegram, WhatsApp, khung chat trên website và kênh REST API cho lập trình viên. Một agent có thể trả lời trên tất cả các kênh, và mỗi trang hay bot đã kết nối được gọi là một tài khoản.
+
+## Kết nối một kênh
+
+Mở **Kênh** ở thanh bên và chọn **Liên kết tài khoản**. Chọn nền tảng:
+
+<Screenshot name="channel-platforms" alt="Màn hình chọn nền tảng với Facebook, Zalo, Telegram, WhatsApp, Website và API">
+  <Mark id="facebook">Các nền tảng dùng được sẽ mở một bước kết nối ngắn.</Mark>
+  <Mark id="roadmap">Những nền tảng có nhãn **Sắp có** sẽ ra mắt sau và chưa kết nối được.</Mark>
+  <Mark id="website">**Website** cho bạn một khung chat để dán vào trang web.</Mark>
+</Screenshot>
+
+Sau khi kết nối, mở trang của agent và liên kết tài khoản đó để agent trả lời tin nhắn.
+
+## Khung chat website
+
+1. Chọn **Website**.
+2. Thêm mọi địa chỉ website sẽ hiện khung chat, ví dụ `https://shopcuaban.vn`.
+3. Sao chép đoạn mã nhúng và dán vào trước thẻ `</body>` trên website của bạn.
+
+Khung chat chỉ tải được trên những địa chỉ bạn đã cho phép.
+
+## Telegram
+
+1. Trong Telegram, nhắn cho [@BotFather](https://t.me/BotFather), gửi `/newbot` và làm theo hướng dẫn.
+2. Sao chép mã token mà BotFather gửi cho bạn.
+3. Trong Ecbot, chọn **Telegram** và dán mã token vào.
+
+## Facebook Messenger, Zalo và WhatsApp
+
+Chọn **Facebook**, **Zalo** hoặc **WhatsApp** và đăng nhập bằng tài khoản quản lý Facebook Page, Zalo OA hoặc số WhatsApp Business của bạn. Chọn mục cần kết nối, rồi liên kết với agent.
+
+## REST API
+
+Kênh API cho phép ứng dụng riêng của bạn gửi tin nhắn của khách đến agent và nhận câu trả lời. Kênh này dành cho lập trình viên, và trang của kênh hiển thị mã khóa cùng địa chỉ endpoint.

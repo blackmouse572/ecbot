@@ -1,0 +1,382 @@
+{
+  "agent-page": {
+    "en": {
+      "src": "/_docs/screenshots/en/agent-page.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "knowledge": {
+          "x": 15.97,
+          "y": 49.27,
+          "w": 51.67,
+          "h": 23.44
+        },
+        "tools": {
+          "x": 15.97,
+          "y": 73.6,
+          "w": 51.67,
+          "h": 9.53
+        },
+        "test-chat": {
+          "x": 68.47,
+          "y": 4.89,
+          "w": 30.83,
+          "h": 67.11
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/agent-page.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "knowledge": {
+          "x": 15.97,
+          "y": 49.24,
+          "w": 51.67,
+          "h": 23.44
+        },
+        "tools": {
+          "x": 15.97,
+          "y": 73.58,
+          "w": 51.67,
+          "h": 9.53
+        },
+        "test-chat": {
+          "x": 68.47,
+          "y": 2.56,
+          "w": 30.83,
+          "h": 67.11
+        }
+      }
+    }
+  },
+  "builder-question": {
+    "en": {
+      "src": "/_docs/screenshots/en/builder-question.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "answer": {
+          "x": 29.65,
+          "y": 24.75,
+          "w": 40.69,
+          "h": 69.64
+        },
+        "progress": {
+          "x": 29.51,
+          "y": 86.7,
+          "w": 40.97,
+          "h": 3.02
+        },
+        "next": {
+          "x": 66.84,
+          "y": 90.61,
+          "w": 3.65,
+          "h": 4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/builder-question.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "answer": {
+          "x": 29.65,
+          "y": 24.81,
+          "w": 40.69,
+          "h": 69.64
+        },
+        "progress": {
+          "x": 29.51,
+          "y": 86.76,
+          "w": 40.97,
+          "h": 3.02
+        },
+        "next": {
+          "x": 67.26,
+          "y": 90.67,
+          "w": 3.23,
+          "h": 4
+        }
+      }
+    }
+  },
+  "builder-start": {
+    "en": {
+      "src": "/_docs/screenshots/en/builder-start.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "describe": {
+          "x": 27.5,
+          "y": 37.55,
+          "w": 45,
+          "h": 15.11
+        },
+        "templates": {
+          "x": 30.9,
+          "y": 59.32,
+          "w": 30.67,
+          "h": 17.51
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/builder-start.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "describe": {
+          "x": 27.5,
+          "y": 37.55,
+          "w": 45,
+          "h": 15.11
+        },
+        "templates": {
+          "x": 32.64,
+          "y": 59.32,
+          "w": 34.18,
+          "h": 17.51
+        }
+      }
+    }
+  },
+  "channel-platforms": {
+    "en": {
+      "src": "/_docs/screenshots/en/channel-platforms.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "facebook": {
+          "x": 29.65,
+          "y": 24.64,
+          "w": 8.01,
+          "h": 4.89
+        },
+        "roadmap": {
+          "x": 55.07,
+          "y": 24.64,
+          "w": 10.79,
+          "h": 4.89
+        },
+        "website": {
+          "x": 55.07,
+          "y": 53.31,
+          "w": 9.98,
+          "h": 4.89
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/channel-platforms.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "facebook": {
+          "x": 29.65,
+          "y": 24.64,
+          "w": 8.01,
+          "h": 4.89
+        },
+        "roadmap": {
+          "x": 55.07,
+          "y": 24.64,
+          "w": 9.59,
+          "h": 4.89
+        },
+        "website": {
+          "x": 55.07,
+          "y": 53.31,
+          "w": 9.98,
+          "h": 4.89
+        }
+      }
+    }
+  },
+  "customer-tags": {
+    "en": {
+      "src": "/_docs/screenshots/en/customer-tags.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "create": {
+          "x": 91.71,
+          "y": 9.8,
+          "w": 6.07,
+          "h": 4
+        },
+        "handoff": {
+          "x": 15.97,
+          "y": 16.27,
+          "w": 83.33,
+          "h": 5.78
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/customer-tags.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "create": {
+          "x": 92.21,
+          "y": 9.8,
+          "w": 5.56,
+          "h": 4
+        },
+        "handoff": {
+          "x": 15.97,
+          "y": 16.27,
+          "w": 83.33,
+          "h": 5.78
+        }
+      }
+    }
+  },
+  "knowledge-base": {
+    "en": {
+      "src": "/_docs/screenshots/en/knowledge-base.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "create": {
+          "x": 93.2,
+          "y": 8.33,
+          "w": 4.72,
+          "h": 4.44
+        },
+        "status": {
+          "x": 34.33,
+          "y": 20.56,
+          "w": 12.8,
+          "h": 14.89
+        },
+        "draft": {
+          "x": 34.05,
+          "y": 27,
+          "w": 4.63,
+          "h": 3.56
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/knowledge-base.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "create": {
+          "x": 92.62,
+          "y": 8.33,
+          "w": 5.3,
+          "h": 4.44
+        },
+        "status": {
+          "x": 34.33,
+          "y": 20.56,
+          "w": 12.35,
+          "h": 14.89
+        },
+        "draft": {
+          "x": 34.05,
+          "y": 27,
+          "w": 6.39,
+          "h": 3.56
+        }
+      }
+    }
+  },
+  "knowledge-base-create": {
+    "en": {
+      "src": "/_docs/screenshots/en/knowledge-base-create.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "type": {
+          "x": 24.72,
+          "y": 16.22,
+          "w": 50.56,
+          "h": 8.09
+        },
+        "formats": {
+          "x": 39.76,
+          "y": 59.47,
+          "w": 20.49,
+          "h": 3.11
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/knowledge-base-create.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "type": {
+          "x": 24.72,
+          "y": 16.22,
+          "w": 50.56,
+          "h": 10.4
+        },
+        "formats": {
+          "x": 40.16,
+          "y": 61.78,
+          "w": 19.67,
+          "h": 3.11
+        }
+      }
+    }
+  },
+  "tool-types": {
+    "en": {
+      "src": "/_docs/screenshots/en/tool-types.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "http": {
+          "x": 26.53,
+          "y": 21.87,
+          "w": 15.28,
+          "h": 23.69
+        },
+        "mcp": {
+          "x": 42.36,
+          "y": 21.87,
+          "w": 15.28,
+          "h": 23.69
+        },
+        "marketplace": {
+          "x": 58.19,
+          "y": 21.87,
+          "w": 15.28,
+          "h": 23.69
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/tool-types.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "http": {
+          "x": 26.53,
+          "y": 21.87,
+          "w": 15.28,
+          "h": 23.69
+        },
+        "mcp": {
+          "x": 42.36,
+          "y": 21.87,
+          "w": 15.28,
+          "h": 23.69
+        },
+        "marketplace": {
+          "x": 58.19,
+          "y": 21.87,
+          "w": 15.28,
+          "h": 23.69
+        }
+      }
+    }
+  }
+}

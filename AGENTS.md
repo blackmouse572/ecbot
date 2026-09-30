@@ -9,6 +9,7 @@ apps/
   api/      NestJS 11 backend: PostgreSQL + MikroORM, Redis + BullMQ, JWT/CASL
   app/      Main React 19 SPA: Vite, Tailwind 4, TanStack Query, React Router v7
   ai/       Chatbot / AI module (see apps/ai/README.md)
+  docs/     User docs site: Next.js static export + Fumadocs, en/vi (see apps/docs/README.md)
 packages/
   ui/               @repo/ui: shared components on @medusajs/ui + design tokens
   client/           @repo/client: generated API client

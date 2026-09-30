@@ -1,0 +1,47 @@
+---
+title: Channels
+description: Connect your agent to Facebook Messenger, Zalo, Telegram, WhatsApp or a chat widget on your website so it replies where customers already message you.
+faq:
+  - q: Can one agent reply on several channels?
+    a: Yes. Connect as many channels as you need to the same agent. Each customer's profile and tags are shared across the channels they write from.
+  - q: Is the website widget key a secret?
+    a: No. The widget key is visible in your site's code by design. What protects it is the list of allowed websites, so only your own domains can load the widget.
+  - q: Do Instagram, Shopee or TikTok Shop work yet?
+    a: Not yet. They are marked Roadmap in the app. Today Ecbot supports Facebook Messenger, Zalo, Telegram, WhatsApp, the website widget and a REST API channel.
+---
+
+A channel is a chat app where your agent replies to customers. Ecbot connects to Facebook Messenger, Zalo, Telegram, WhatsApp, a chat widget for your website and a REST API channel for developers. One agent can reply on all of them, and each connected page or bot is called an account.
+
+## Connect a channel
+
+Open **Channels** in the sidebar and choose **Connect Account**. Pick a platform:
+
+<Screenshot name="channel-platforms" alt="The platform picker with Facebook, Zalo, Telegram, WhatsApp, Website and API">
+  <Mark id="facebook">Available platforms open a short connect step.</Mark>
+  <Mark id="roadmap">Platforms marked **Roadmap** are coming later and cannot be connected yet.</Mark>
+  <Mark id="website">**Website** gives you a chat widget to paste into your site.</Mark>
+</Screenshot>
+
+After connecting, open the agent's page and link the account so the agent answers its messages.
+
+## Website widget
+
+1. Choose **Website**.
+2. Add every site address that will show the widget, for example `https://yourshop.vn`.
+3. Copy the embed code and paste it before `</body>` on your site.
+
+The widget only loads on the addresses you allowed.
+
+## Telegram
+
+1. In Telegram, message [@BotFather](https://t.me/BotFather), send `/newbot` and follow the steps.
+2. Copy the token BotFather gives you.
+3. In Ecbot, choose **Telegram** and paste the token.
+
+## Facebook Messenger, Zalo and WhatsApp
+
+Choose **Facebook**, **Zalo** or **WhatsApp** and sign in with the account that manages your Facebook Page, Zalo OA or WhatsApp Business number. Pick what to connect, then link it to your agent.
+
+## REST API
+
+The API channel lets your own app send customer messages to the agent and receive replies. It is meant for developers; the channel page shows the keys and endpoint.

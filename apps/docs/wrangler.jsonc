@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Serves the static export. Routes (ecbot.dev/en/docs*, /vi/docs*, /docs*,
+  // /_docs/*) are set in the Cloudflare dashboard, see README.md.
+  "name": "ecbot-docs",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2025-04-01",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./out",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": true
+  }
+}
