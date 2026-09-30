@@ -294,47 +294,43 @@ describe('ConversationService', () => {
         });
     });
 
+    // Returns the keyword that matched, so the cheap model can be told why
+    // the message was flagged before it confirms the handoff.
     describe('detectHandoffKeywords', () => {
-        it('should detect default handoff keywords in message', () => {
+        it('returns the default keyword that matched', () => {
             expect(
                 service.detectHandoffKeywords('I want to speak to a human', [])
-            ).toBe(true);
-            expect(
-                service.detectHandoffKeywords('connect me to an agent', [])
-            ).toBe(true);
+            ).toBe('human');
             expect(
                 service.detectHandoffKeywords('I need customer service', [])
-            ).toBe(true);
+            ).toBe('customer service');
         });
 
-        it('should detect custom keywords', () => {
+        it('returns a matched custom keyword', () => {
             expect(
-                service.detectHandoffKeywords('I want to escalate this issue', [
-                    'escalate',
+                service.detectHandoffKeywords('gặp chủ shop giúp mình', [
+                    'chủ shop',
                 ])
-            ).toBe(true);
+            ).toBe('chủ shop');
         });
 
-        it('should return false for normal messages', () => {
+        it('returns null for a message with no keyword', () => {
             expect(
                 service.detectHandoffKeywords('What are your store hours?', [])
-            ).toBe(false);
+            ).toBeNull();
             expect(
                 service.detectHandoffKeywords('Track my order please', [])
-            ).toBe(false);
+            ).toBeNull();
         });
 
-        it('should be case insensitive', () => {
+        it('matches case-insensitively', () => {
             expect(service.detectHandoffKeywords('I WANT A HUMAN', [])).toBe(
-                true
+                'human'
             );
-            expect(
-                service.detectHandoffKeywords('Get me an AGENT please', [])
-            ).toBe(true);
         });
 
-        it('should return false for empty message', () => {
-            expect(service.detectHandoffKeywords('', [])).toBe(false);
+        it('returns null for an empty message', () => {
+            expect(service.detectHandoffKeywords('', [])).toBeNull();
         });
     });
 

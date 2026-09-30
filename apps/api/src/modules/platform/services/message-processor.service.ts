@@ -8,6 +8,7 @@ import {
     ENUM_MESSAGE_DIRECTION,
 } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
+import { HandoffIntentService } from './handoff-intent.service';
 import { ReplyGenerationService } from './reply-generation.service';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
@@ -263,14 +264,21 @@ export class MessageProcessorService implements OnModuleInit {
             return;
         }
 
+        // A keyword only flags the message: ordinary questions contain them
+        // too ("hỗ trợ", "chuyển khoản"), so the cheap model confirms the
+        // customer wants a person. Otherwise the agent answers as usual.
+        const handoffKeyword = this.conversationService.detectHandoffKeywords(
+            effectiveText,
+            chatbot.handoffKeywords ?? []
+        );
         if (
-            this.conversationService.detectHandoffKeywords(
-                effectiveText,
-                chatbot.handoffKeywords ?? []
-            )
+            handoffKeyword &&
+            (await this.moduleRef
+                .get(HandoffIntentService)
+                .wantsPerson(effectiveText, handoffKeyword))
         ) {
             this.logger.log(
-                `Handoff keyword detected in conversation ${conversation.id}`
+                `Handoff keyword confirmed in conversation ${conversation.id}`
             );
             await this.conversationService.triggerHandoff(
                 conversation,

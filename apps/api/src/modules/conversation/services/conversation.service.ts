@@ -311,14 +311,17 @@ export class ConversationService implements IConversationService {
         return { triggered, conversation: updated };
     }
 
-    detectHandoffKeywords(message: string, keywords: string[]): boolean {
-        if (!message) return false;
+    /** The first handoff keyword the message contains, or null. */
+    detectHandoffKeywords(message: string, keywords: string[]): string | null {
+        if (!message) return null;
 
         const lowerMessage = message.toLowerCase();
         const allKeywords = [...DEFAULT_HANDOFF_KEYWORDS, ...keywords];
 
-        return allKeywords.some(keyword =>
-            lowerMessage.includes(keyword.toLowerCase())
+        return (
+            allKeywords.find(keyword =>
+                lowerMessage.includes(keyword.toLowerCase())
+            ) ?? null
         );
     }
 

@@ -43,7 +43,7 @@ export interface IConversationService {
         senderId: string,
         fallbackThreshold: number
     ): Promise<{ triggered: boolean; conversation: ConversationEntity }>;
-    detectHandoffKeywords(message: string, keywords: string[]): boolean;
+    detectHandoffKeywords(message: string, keywords: string[]): string | null;
     touchLastMessage(
         chatbotId: string,
         accountId: string,
