@@ -49,15 +49,15 @@ This writes `public/_docs/screenshots/<lang>/<name>.png` and `generated/screensh
 
 ## Deploy
 
-The site deploys with Cloudflare Workers Builds, using `wrangler.jsonc`:
+Cloudflare Workers Builds deploys the `ecbot-docs` Worker (eccho account) through the Cloudflare GitHub app, set up like the other eccho Workers. There is no manual deploy.
 
-- **Build command:** `pnpm --filter docs build`
-- **Deploy command:** `pnpm --filter docs exec wrangler deploy`
-- **Build variable:** `NEXT_PUBLIC_SITE_URL` (default `https://ecbot.dev`)
-- **Routes** on the `ecbot.dev` zone, pointed at this worker:
-  - `ecbot.dev/en/docs*`
-  - `ecbot.dev/vi/docs*`
-  - `ecbot.dev/docs*`
-  - `ecbot.dev/_docs/*`
+| | Production (`main`) | Preview (other branches) |
+| --- | --- | --- |
+| Build | `pnpm run build --filter docs` | `pnpm run build --filter docs` |
+| Deploy | `npx wrangler deploy --config apps/docs/wrangler.jsonc` | `npx wrangler preview --config apps/docs/wrangler.jsonc` |
 
-The marketing site owns the rest of the domain. That's why the Next assets are served from `/_docs/_next` instead of `/_next`. A bare `/docs` link redirects to the visitor's language (using the `NEXT_LOCALE` cookie, then `Accept-Language`). On the marketing site, `robots.txt` should list `/docs/sitemap.xml`, and its `llms.txt` should link `/docs/llms.txt`.
+A preview build gets its own preview URL, which Cloudflare posts on the pull request.
+
+Both only start for changes under `apps/docs/**`, `packages/favicons/**` and `packages/typescript-config/**`, or to the root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` and `turbo.json`. Changes that do not affect the site are skipped: the README, `AGENTS.md`/`CLAUDE.md`, lint and test config, tests, and the screenshot capture script and config. Build variables: `NODE_VERSION=22` and `NEXT_PUBLIC_SITE_URL=https://ecbot.dev`.
+
+`wrangler.jsonc` holds the routes, so each deploy applies them: `ecbot.dev/en/docs*`, `ecbot.dev/vi/docs*`, `ecbot.dev/docs*` and `ecbot.dev/_docs/*`. The marketing site owns the rest of the domain as a Custom Domain, and routes run in front of it. That is also why the Next assets are served from `/_docs/_next` instead of `/_next`. A bare `/docs` link redirects to the visitor's language (the `NEXT_LOCALE` cookie, then `Accept-Language`). Production has no `workers.dev` URL.

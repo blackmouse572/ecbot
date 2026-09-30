@@ -1,15 +1,30 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Serves the static export. Routes (ecbot.dev/en/docs*, /vi/docs*, /docs*,
-  // /_docs/*) are set in the Cloudflare dashboard, see README.md.
+  // Serves the static export. Deployed by Cloudflare Workers Builds on every
+  // push to main that touches the docs (see README.md, "Deploy").
   "name": "ecbot-docs",
+  "account_id": "0ab91776133407eb0975919bc56f6ef4",
   "main": "./worker/index.ts",
   "compatibility_date": "2025-04-01",
   "observability": { "enabled": true },
+  // Production is only reachable through the ecbot.dev routes below. Preview
+  // builds (non-main branches) get their own preview URL.
+  "workers_dev": false,
+  "preview_urls": true,
+  // Required by `wrangler preview`; the docs need no preview-only settings.
+  "previews": {},
   "assets": {
     "directory": "./out",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     "run_worker_first": true
-  }
+  },
+  // The marketing site owns ecbot.dev as a Custom Domain. Routes run in front
+  // of it, so these paths reach this Worker and everything else stays there.
+  "routes": [
+    { "pattern": "ecbot.dev/en/docs*", "zone_name": "ecbot.dev" },
+    { "pattern": "ecbot.dev/vi/docs*", "zone_name": "ecbot.dev" },
+    { "pattern": "ecbot.dev/docs*", "zone_name": "ecbot.dev" },
+    { "pattern": "ecbot.dev/_docs/*", "zone_name": "ecbot.dev" }
+  ]
 }
