@@ -8,9 +8,14 @@ export const HANDOFF_DEFAULT_REPLY: Record<string, string> = {
 
 export const HANDOFF_DEFAULT_REPLY_LANGUAGE = 'en';
 
-// A keyword match hands off only when the decision model is at least this sure
-// the customer asked for a person; below it the agent answers the message.
+// A default-keyword match hands off when the decision model is at least this
+// sure the customer asked for a person; an unsure answer or a sure "no" leaves
+// the message to the agent.
 export const HANDOFF_INTENT_MIN_CONFIDENCE = 0.8;
+
+// The check runs before any reply, with the typing indicator on: give up
+// sooner than the agent builder's 15s, and hand off as before.
+export const HANDOFF_INTENT_TIMEOUT_MS = 5000;
 
 export const HANDOFF_INTENT_QUESTION_ID = 'wants_person';
 export const HANDOFF_INTENT_WANTS_PERSON = 'wants_person';

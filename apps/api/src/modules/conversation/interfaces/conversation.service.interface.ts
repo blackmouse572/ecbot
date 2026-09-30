@@ -43,7 +43,10 @@ export interface IConversationService {
         senderId: string,
         fallbackThreshold: number
     ): Promise<{ triggered: boolean; conversation: ConversationEntity }>;
-    detectHandoffKeywords(message: string, keywords: string[]): string | null;
+    detectHandoffKeywords(
+        message: string,
+        keywords: string[]
+    ): IHandoffKeywordMatch | null;
     touchLastMessage(
         chatbotId: string,
         accountId: string,
@@ -69,4 +72,13 @@ export interface IConversationService {
         conversationIds: string[],
         workspaceId: string
     ): Promise<Map<string, number>>;
+}
+
+/**
+ * A handoff keyword found in a customer message. `custom` is one of the
+ * chatbot owner's keywords, `default` one of the built-in list.
+ */
+export interface IHandoffKeywordMatch {
+    keyword: string;
+    source: 'custom' | 'default';
 }

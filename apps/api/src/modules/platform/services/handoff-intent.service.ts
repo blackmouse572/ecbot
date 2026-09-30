@@ -4,6 +4,7 @@ import type { SystemOneQuestion } from '@repo/agent-blueprint';
 import {
     HANDOFF_INTENT_MIN_CONFIDENCE,
     HANDOFF_INTENT_QUESTION_ID,
+    HANDOFF_INTENT_TIMEOUT_MS,
     HANDOFF_INTENT_WANTS_PERSON,
 } from '../constants/handoff.constant';
 
@@ -22,9 +23,9 @@ const QUESTIONS: Record<string, SystemOneQuestion> = {
 };
 
 /**
- * Confirms, with the cheap decision model, that a message flagged by a handoff
- * keyword really asks for a person. Keywords alone handed off ordinary
- * questions ("Shop có hỗ trợ ship COD không?").
+ * Checks, with the cheap decision model, that a message flagged by a default
+ * handoff keyword really asks for a person. Default keywords alone handed off
+ * ordinary questions ("Shop có hỗ trợ ship COD không?").
  */
 @Injectable()
 export class HandoffIntentService {
@@ -33,30 +34,39 @@ export class HandoffIntentService {
     constructor(private readonly aiDecision: AiDecisionService) {}
 
     /**
-     * True only on a confident yes. Unsure, no answer or a failed call are all
-     * false: the agent then answers, and can still hand off through its tag
-     * tool, while a wrong handoff would silence the bot and page every member.
+     * True on a confident yes, and when the check cannot answer (the call
+     * fails or the model returns nothing): the agent runs on the same service
+     * and would fail too, so hand off as before. A confident no or an unsure
+     * answer is false: the agent replies, and can still hand off through its
+     * tag tool.
      */
     async wantsPerson(message: string, keyword: string): Promise<boolean> {
+        let answer;
         try {
             const answers = await this.aiDecision.systemOne(
-                `Customer message: "${message}"\nHandoff keyword found: "${keyword}"`,
-                QUESTIONS
+                `Customer message: ${JSON.stringify(message)}\nHandoff keyword found: ${JSON.stringify(keyword)}`,
+                QUESTIONS,
+                HANDOFF_INTENT_TIMEOUT_MS
             );
-            const answer = answers[HANDOFF_INTENT_QUESTION_ID];
-            if (answer?.type !== 'choice') return false;
-            this.logger.log(
-                `Handoff intent for keyword "${keyword}": ${answer.choice} (${answer.confidence})`
-            );
-            return (
-                answer.choice === HANDOFF_INTENT_WANTS_PERSON &&
-                answer.confidence >= HANDOFF_INTENT_MIN_CONFIDENCE
-            );
+            answer = answers[HANDOFF_INTENT_QUESTION_ID];
         } catch (err: unknown) {
             this.logger.warn(
-                `Handoff intent check failed, leaving it to the agent: ${(err as Error)?.message}`
+                `Handoff intent check failed for keyword "${keyword}", handing off: ${(err as Error)?.message}`
             );
-            return false;
+            return true;
         }
+        if (answer?.type !== 'choice') {
+            this.logger.warn(
+                `Handoff intent check gave no answer for keyword "${keyword}", handing off`
+            );
+            return true;
+        }
+        this.logger.log(
+            `Handoff intent for keyword "${keyword}": ${answer.choice} (${answer.confidence})`
+        );
+        return (
+            answer.choice === HANDOFF_INTENT_WANTS_PERSON &&
+            answer.confidence >= HANDOFF_INTENT_MIN_CONFIDENCE
+        );
     }
 }

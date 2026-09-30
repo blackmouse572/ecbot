@@ -18,18 +18,23 @@ describe('MessageProcessorService keyword handoff', () => {
         updateSenderProfile: jest.fn(),
         touchLastMessage: jest.fn(),
         updateStatus: jest.fn(),
-        detectHandoffKeywords: jest.fn((): string | null => 'staff'),
+        detectHandoffKeywords: jest.fn(
+            (): { keyword: string; source: string } | null => ({
+                keyword: 'staff',
+                source: 'default',
+            })
+        ),
         triggerHandoff: jest.fn(),
     };
     const messageRepository = {
         upsertByExternalId: jest.fn(),
     };
-    const registry = {
-        get: jest.fn(() => ({
-            fetchSenderProfile: jest.fn(),
-            markRead: jest.fn(),
-        })),
+    const adapter = {
+        fetchSenderProfile: jest.fn(),
+        markRead: jest.fn(),
+        startTyping: jest.fn().mockResolvedValue(undefined),
     };
+    const registry = { get: jest.fn(() => adapter) };
     const customerService = {
         resolveContactPoint: jest.fn(),
         updateContactPointProfile: jest.fn(),
@@ -76,6 +81,7 @@ describe('MessageProcessorService keyword handoff', () => {
             workspace: { id: 'workspace-1' },
             handoffKeywords: [],
             autoRead: false,
+            typingIndicator: true,
             primaryLanguage: 'vi',
         },
     };
@@ -123,7 +129,10 @@ describe('MessageProcessorService keyword handoff', () => {
             customerId: 'cust-1',
         });
         conversationService.findOrCreate.mockResolvedValue(conversationFixture);
-        conversationService.detectHandoffKeywords.mockReturnValue('staff');
+        conversationService.detectHandoffKeywords.mockReturnValue({
+            keyword: 'staff',
+            source: 'default',
+        });
         handoffIntent.wantsPerson.mockResolvedValue(true);
     });
 
@@ -168,5 +177,35 @@ describe('MessageProcessorService keyword handoff', () => {
 
         expect(handoffIntent.wantsPerson).not.toHaveBeenCalled();
         expect(conversationService.triggerHandoff).not.toHaveBeenCalled();
+    });
+
+    // Owners add their own keywords to route topics to staff ("đổi trả",
+    // "khiếu nại"); the model reads those as ordinary requests, so they stay
+    // deterministic.
+    it("hands off on the owner's own keyword without asking the model", async () => {
+        conversationService.detectHandoffKeywords.mockReturnValue({
+            keyword: 'đổi trả',
+            source: 'custom',
+        });
+
+        await processor.process(baseEvent);
+
+        expect(handoffIntent.wantsPerson).not.toHaveBeenCalled();
+        expect(conversationService.triggerHandoff).toHaveBeenCalled();
+        expect(replyGeneration.sendHandoffReply).toHaveBeenCalled();
+    });
+
+    // The check can take seconds; the customer should see the bot typing.
+    it('starts the typing indicator before checking a default keyword', async () => {
+        await processor.process(baseEvent);
+
+        expect(adapter.startTyping).toHaveBeenCalledWith(
+            accountFixture,
+            'sender-fb-1',
+            true
+        );
+        expect(adapter.startTyping.mock.invocationCallOrder[0]).toBeLessThan(
+            handoffIntent.wantsPerson.mock.invocationCallOrder[0]
+        );
     });
 });

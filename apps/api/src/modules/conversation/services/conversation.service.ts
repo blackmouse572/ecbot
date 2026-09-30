@@ -16,6 +16,7 @@ import { ENUM_CONVERSATION_STATUS } from '../enums/conversation.enum';
 import {
     IConversationFindOrCreate,
     IConversationService,
+    IHandoffKeywordMatch,
 } from '../interfaces/conversation.service.interface';
 import { ConversationGetResponseDto } from '../dtos/response/conversation.get.response.dto';
 import { ConversationEntity } from '../repository/entities/conversation.entity';
@@ -311,18 +312,24 @@ export class ConversationService implements IConversationService {
         return { triggered, conversation: updated };
     }
 
-    /** The first handoff keyword the message contains, or null. */
-    detectHandoffKeywords(message: string, keywords: string[]): string | null {
+    /**
+     * The handoff keyword the message contains, and whether it is the owner's
+     * own (checked first, it wins) or from the default list. Null if none.
+     */
+    detectHandoffKeywords(
+        message: string,
+        keywords: string[]
+    ): IHandoffKeywordMatch | null {
         if (!message) return null;
 
         const lowerMessage = message.toLowerCase();
-        const allKeywords = [...DEFAULT_HANDOFF_KEYWORDS, ...keywords];
+        const find = (list: string[]) =>
+            list.find(keyword => lowerMessage.includes(keyword.toLowerCase()));
 
-        return (
-            allKeywords.find(keyword =>
-                lowerMessage.includes(keyword.toLowerCase())
-            ) ?? null
-        );
+        const custom = find(keywords);
+        if (custom) return { keyword: custom, source: 'custom' };
+        const fallback = find(DEFAULT_HANDOFF_KEYWORDS);
+        return fallback ? { keyword: fallback, source: 'default' } : null;
     }
 
     async touchLastMessage(
