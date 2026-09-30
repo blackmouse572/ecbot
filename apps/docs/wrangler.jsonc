@@ -7,9 +7,10 @@
   "main": "./worker/index.ts",
   "compatibility_date": "2025-04-01",
   "observability": { "enabled": true },
-  // Only reachable through the ecbot.dev routes below.
+  // Production is only reachable through the ecbot.dev routes below. Preview
+  // builds (non-main branches) get their own preview URL.
   "workers_dev": false,
-  "preview_urls": false,
+  "preview_urls": true,
   "assets": {
     "directory": "./out",
     "binding": "ASSETS",
