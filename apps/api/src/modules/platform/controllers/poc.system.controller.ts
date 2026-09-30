@@ -2,8 +2,10 @@ import { RequestTimeout } from '@app/common/request/decorators/request.decorator
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { ApiKeySystemProtected } from '@app/modules/api-key/decorators/api-key.decorator';
 import {
+    BadGatewayException,
     Body,
     Controller,
+    HttpStatus,
     Logger,
     NotImplementedException,
     Post,
@@ -21,6 +23,7 @@ import { PLATFORM_SLUG_TO_TYPE } from '../constants/platform-slug.constant';
 import { MessageProcessorService } from '../services/message-processor.service';
 import { PlatformAdapterRegistry } from '../services/platform-adapter.registry';
 import { ReplyGenerationService } from '../services/reply-generation.service';
+import { ReplyOutcome } from '../interfaces/reply-outcome.interface';
 
 class PocInboundDto {
     @IsString()
@@ -128,9 +131,20 @@ export class PocSystemController {
     @Post('/reply')
     @ApiKeySystemProtected()
     @RequestTimeout('300s')
-    async reply(@Body() dto: PocReplyDto): Promise<{ ok: true }> {
-        await this.replyGeneration.run(dto);
-        return { ok: true };
+    async reply(
+        @Body() dto: PocReplyDto
+    ): Promise<{ ok: true } & Exclude<ReplyOutcome, { status: 'failed' }>> {
+        const outcome = await this.replyGeneration.run(dto);
+        // The customer got nothing: a non-2xx lets the edge log it instead of
+        // a 200 that looked like success.
+        if (outcome.status === 'failed') {
+            throw new BadGatewayException({
+                statusCode: HttpStatus.BAD_GATEWAY,
+                message: 'http.serverError.badGateway',
+                data: { reason: outcome.reason },
+            });
+        }
+        return { ok: true, ...outcome };
     }
 
     /**

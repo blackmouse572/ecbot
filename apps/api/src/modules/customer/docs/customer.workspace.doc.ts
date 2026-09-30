@@ -12,6 +12,17 @@ import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.reques
 import { ContactPointGetResponseDto } from '../dtos/response/contact-point.get.response.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
 
+export function CustomerWorkspaceListDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'List the customers of a workspace' }),
+        DocRequest({ params: [...WorkspaceDocParamsId] }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocResponsePaging<CustomerGetResponseDto>('customer.workspace.list', {
+            dto: CustomerGetResponseDto,
+        })
+    );
+}
+
 export function CustomerWorkspaceGetDoc(): MethodDecorator {
     return applyDecorators(
         Doc({ summary: 'Get a customer' }),

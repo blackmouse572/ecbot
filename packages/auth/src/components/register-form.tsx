@@ -229,7 +229,8 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
               <Form.Item>
                 <Form.Control>
                   <Input
-                    type="number"
+                    type="text"
+                    autoComplete="off"
                     errorMessage={fieldState.error?.message}
                     {...field}
                     className="bg-ui-bg-field-component"

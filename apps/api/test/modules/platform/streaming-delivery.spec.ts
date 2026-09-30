@@ -261,6 +261,46 @@ describe('StreamingDelivery.deliver (UI Message Stream)', () => {
         expect(res).toMatchObject({ anySent: true, superseded: false });
     });
 
+    // apps/ai's keepalive comment (sent while a turn is quiet) is not a part:
+    // it must neither end up in the reply nor break it, on either path.
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        'ignores keepalive comments between parts (%s)',
+        async (_path, chatbot) => {
+            const adapter = makeAdapter();
+            const persisted: string[] = [];
+            const res = await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot: chatbot as any,
+                stream: sse([
+                    line({ type: 'text-start', id: 't1' }),
+                    ': keepalive\n',
+                    '\n',
+                    line({ type: 'text-delta', id: 't1', delta: 'hello ' }),
+                    ': keepalive\n',
+                    line({ type: 'text-delta', id: 't1', delta: 'world' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async t => {
+                    persisted.push(t);
+                    return 'nonce';
+                },
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(persisted).toEqual(['hello world']);
+            expect(res).toMatchObject({ anySent: true, superseded: false });
+        }
+    );
+
     it('reports an AI error frame without delivering partial text', async () => {
         const adapter = makeAdapter();
         const sd = new StreamingDelivery();

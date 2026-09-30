@@ -1,4 +1,10 @@
-import { fireEvent, render as rtlRender, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render as rtlRender,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { ReactElement } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -44,6 +50,7 @@ vi.mock("@/hooks/api", () => ({
   useRequestPasswordReset: () => ({ requestReset, isLoading: false }),
 }));
 
+import { RESEND_COOLDOWN_SECONDS } from "../constants";
 import { ForgotPasswordPage } from "./forgot-password";
 
 const fillAndSubmit = () => {
@@ -88,5 +95,40 @@ describe("ForgotPasswordPage", () => {
       expect(screen.getByText("checkEmail.title")).toBeTruthy(),
     );
     expect(navigateSpy).not.toHaveBeenCalled();
+  });
+
+  it("offers Resend only after the countdown, then sends to the same email again", async () => {
+    // Advances on its own too, so waitFor still polls.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      render(<ForgotPasswordPage />);
+      fillAndSubmit();
+      await waitFor(() =>
+        expect(screen.getByText("checkEmail.title")).toBeTruthy(),
+      );
+
+      const waiting = screen.getByRole("button", {
+        name: "checkEmail.resendIn",
+      });
+      expect(waiting).toBeDisabled();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(RESEND_COOLDOWN_SECONDS * 1000);
+      });
+      const resend = screen.getByRole("button", { name: "checkEmail.resend" });
+      expect(resend).toBeEnabled();
+
+      await act(async () => {
+        fireEvent.click(resend);
+      });
+
+      expect(requestReset).toHaveBeenCalledTimes(2);
+      expect(requestReset).toHaveBeenLastCalledWith("person@example.com");
+      expect(
+        screen.getByRole("button", { name: "checkEmail.resendIn" }),
+      ).toBeDisabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

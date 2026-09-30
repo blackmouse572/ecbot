@@ -32,6 +32,10 @@ export interface ICustomerService {
         find?: Record<string, any>,
         options?: IDatabaseFindAllOptions
     ): Promise<CustomerEntity[]>;
+    countByWorkspace(
+        workspaceId: string,
+        find?: Record<string, any>
+    ): Promise<number>;
     update(id: string, patch: ICustomerUpdate): Promise<CustomerEntity>;
     resolveContactPoint(
         params: IResolveContactPoint

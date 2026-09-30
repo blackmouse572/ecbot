@@ -20,6 +20,9 @@ import { CustomerWorkspaceController } from '../../../src/modules/customer/contr
 //     through whatever the framework gave it).
 
 const mockCustomerService = {
+    findByWorkspace: jest.fn(),
+    countByWorkspace: jest.fn(),
+    mapList: jest.fn(),
     findOneById: jest.fn(),
     findOneByIdInWorkspace: jest.fn(),
     update: jest.fn(),
@@ -34,11 +37,18 @@ const mockActivityService = {
     createByUserWithWorkspace: jest.fn(),
 };
 
+const mockPaginationService = {
+    totalPage: jest.fn((total: number, limit: number) =>
+        Math.ceil(total / limit)
+    ),
+};
+
 function buildController(): CustomerWorkspaceController {
     return new CustomerWorkspaceController(
         mockCustomerService as any,
         mockMergeSuggestionService as any,
-        mockActivityService as any
+        mockActivityService as any,
+        mockPaginationService as any
     );
 }
 
@@ -69,6 +79,46 @@ describe('CustomerWorkspaceController', () => {
         jest.clearAllMocks();
         controller = buildController();
         mockCustomerService.mapGet.mockReturnValue(mappedDto);
+    });
+
+    describe('GET /:workspace/customers', () => {
+        it('lists the workspace customers a page at a time, with the search', async () => {
+            mockCustomerService.findByWorkspace.mockResolvedValue([
+                customerEntity,
+            ]);
+            mockCustomerService.countByWorkspace.mockResolvedValue(45);
+            mockCustomerService.mapList.mockReturnValue([mappedDto]);
+            const search = { $or: [{ name: { $ilike: '%ali%' } }] };
+
+            const result = await controller.list(
+                { id: 'ws-1' } as any,
+                {
+                    _search: search,
+                    _limit: 20,
+                    _offset: 20,
+                    _order: { createdAt: 'desc' },
+                } as any
+            );
+
+            expect(mockCustomerService.findByWorkspace).toHaveBeenCalledWith(
+                'ws-1',
+                search,
+                {
+                    paging: { limit: 20, offset: 20 },
+                    // id breaks ties, so rows with the same createdAt keep
+                    // their place from page to page.
+                    order: { createdAt: 'desc', id: 'DESC' },
+                }
+            );
+            expect(mockCustomerService.countByWorkspace).toHaveBeenCalledWith(
+                'ws-1',
+                search
+            );
+            expect(result).toEqual({
+                _pagination: { total: 45, totalPage: 3 },
+                data: [mappedDto],
+            });
+        });
     });
 
     describe('GET /:workspace/customers/:id', () => {

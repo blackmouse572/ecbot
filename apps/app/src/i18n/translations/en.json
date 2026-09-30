@@ -244,7 +244,10 @@
         },
         "checkEmail": {
           "title": "Check your email",
-          "description": "If an account exists for that email, we've sent a link and code to reset your password."
+          "description": "If an account exists for that email, we've sent a link and code to reset your password.",
+          "resend": "Resend email",
+          "resendIn": "Resend in {{seconds}}s",
+          "resent": "We sent the email again."
         }
       },
       "resetPassword": {
@@ -2295,7 +2298,15 @@
         "label": "Suggestion"
       }
     },
-    "title": "Customers"
+    "title": "Customers",
+    "list": {
+      "description": "Everyone your chatbots have talked to. Search by name, phone or email.",
+      "unnamed": "Unnamed customer",
+      "phone": "Phone",
+      "firstSeen": "First seen",
+      "emptyTitle": "No customers yet",
+      "emptyMessage": "Customers appear here once they message one of your channels."
+    }
   },
   "settings": {
     "customerTags": {

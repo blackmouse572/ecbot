@@ -22,6 +22,7 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import {
   EnvFile,
+  emulatorReachability,
   isPlaceholder,
   mergeCorsOrigins,
   missingManual,
@@ -277,6 +278,21 @@ if (
   const p = randomApiKeyPair();
   env.api.set("CLOUD_TASKS_SYSTEM_API_KEY", `${p.key}:${p.secret}`);
   report.filled.push("CLOUD_TASKS_SYSTEM_API_KEY (generated pair)");
+}
+
+{
+  const patch = emulatorReachability({
+    emulatorHost: env.api.get("CLOUD_TASKS_EMULATOR_HOST"),
+    httpHost: env.api.get("HTTP_HOST"),
+    httpPort,
+    backendUrl: env.api.get("API_BACKEND_URL"),
+  });
+  for (const [key, value] of Object.entries(patch)) {
+    env.api.set(key, value);
+    report.filled.push(
+      `${key} = ${value} (so the Cloud Tasks emulator reaches the API)`,
+    );
+  }
 }
 
 // --- 4. Values only you can supply ------------------------------------------

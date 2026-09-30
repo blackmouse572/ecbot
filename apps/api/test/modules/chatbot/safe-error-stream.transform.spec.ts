@@ -39,6 +39,21 @@ describe('SafeErrorStream', () => {
         expect(out).not.toContain('agent error');
     });
 
+    // apps/ai sends an SSE comment while a turn is quiet (tool call, cold
+    // model); the browser's AI SDK parser skips it, so it must reach it as is.
+    it('passes a keepalive comment through untouched', async () => {
+        const frames =
+            'data: {"type":"text-start","id":"t1"}\n\n' +
+            ': keepalive\n\n' +
+            'data: {"type":"text-delta","id":"t1","delta":"hi"}\n\n' +
+            'data: [DONE]\n\n';
+        const out = await collect(
+            new SafeErrorStream({ logRawError: () => {} }),
+            [Buffer.from(frames)]
+        );
+        expect(out).toBe(frames);
+    });
+
     it('forwards non-error frames byte-for-byte', async () => {
         const frames =
             'data: {"type":"text-start","id":"t1"}\n\n' +

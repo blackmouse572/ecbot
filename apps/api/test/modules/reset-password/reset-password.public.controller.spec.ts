@@ -191,24 +191,37 @@ describe('ResetPasswordPublicController — email dispatch', () => {
         expect(requestEmailByUser).not.toHaveBeenCalled();
     });
 
-    it('request: returns the same empty ack when a reset is already pending and enqueues nothing again', async () => {
+    // The forgot-password page offers Resend after 60s, well inside the 5
+    // minutes a reset stays active: sending nothing there made Resend a lie.
+    it('request: re-sends the active reset (same token and OTP) and returns the same empty ack', async () => {
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
+        const created = {
+            url: 'https://app.example.com/reset-password?token=tok-1',
+            token: 'tok-1',
+            otp: '482913',
+            expiredDate: new Date(),
+            to: '*@b.com',
+        };
         findOneActiveByEmail.mockResolvedValue(user);
         checkActiveLatestEmailByUser.mockResolvedValue({
             resetPassword: {},
-            created: {
-                url: 'https://app.example.com/reset-password?token=tok-1',
-                token: 'tok-1',
-                expiredDate: new Date(),
-                to: '*@b.com',
-            },
+            created,
         });
 
         await expect(
             controller.request({ email: 'a@b.com' } as any)
         ).resolves.toEqual({ data: undefined });
 
-        expect(enqueue).not.toHaveBeenCalled();
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
+            { send: { email: 'a@b.com', name: 'A' }, data: created },
+            {
+                taskName: expect.stringMatching(
+                    /^RESET_PASSWORD-user-1-[0-9a-f-]{36}$/
+                ),
+            }
+        );
         expect(requestEmailByUser).not.toHaveBeenCalled();
         expect(fork).not.toHaveBeenCalled();
     });

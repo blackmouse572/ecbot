@@ -244,7 +244,10 @@
         },
         "checkEmail": {
           "title": "Kiểm tra email của bạn",
-          "description": "Nếu email này có tài khoản, chúng tôi đã gửi liên kết và mã để đặt lại mật khẩu."
+          "description": "Nếu email này có tài khoản, chúng tôi đã gửi liên kết và mã để đặt lại mật khẩu.",
+          "resend": "Gửi lại email",
+          "resendIn": "Gửi lại sau {{seconds}} giây",
+          "resent": "Chúng tôi đã gửi lại email."
         }
       },
       "resetPassword": {
@@ -2325,7 +2328,15 @@
         "label": "Gợi ý"
       }
     },
-    "title": "Khách hàng"
+    "title": "Khách hàng",
+    "list": {
+      "description": "Tất cả khách hàng đã trò chuyện với chatbot của bạn. Tìm theo tên, số điện thoại hoặc email.",
+      "unnamed": "Khách chưa có tên",
+      "phone": "Số điện thoại",
+      "firstSeen": "Lần đầu liên hệ",
+      "emptyTitle": "Chưa có khách hàng nào",
+      "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn."
+    }
   },
   "settings": {
     "customerTags": {

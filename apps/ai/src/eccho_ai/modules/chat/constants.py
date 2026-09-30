@@ -52,3 +52,9 @@ NO_KNOWLEDGE_MESSAGE_TEMPLATE = (
     "{message}\n"
     "</user_question>"
 )
+
+# SSE comment sent while a turn is quiet (a tool roundtrip, a cold model), so
+# apps/api's idle timeout and any proxy in between keep the stream open.
+# Readers skip lines that are not `data:`.
+KEEPALIVE_FRAME = ": keepalive\n\n"
+KEEPALIVE_INTERVAL_SECONDS = 15.0
