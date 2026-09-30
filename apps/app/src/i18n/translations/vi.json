@@ -2395,7 +2395,8 @@
         "created": "Đã tạo credential.",
         "createFailed": "Tạo credential thất bại.",
         "deleted": "Đã xoá credential.",
-        "deleteFailed": "Xoá credential thất bại."
+        "deleteFailed": "Xoá credential thất bại.",
+        "rotateFailed": "Đổi secret thất bại."
       },
       "reveal": {
         "title": "Đã tạo credential",
@@ -2410,6 +2411,15 @@
           "body": "Thao tác này sẽ thu hồi vĩnh viễn credential. Mọi client đang dùng key này sẽ không thể xác thực.",
           "confirm": "Xoá",
           "cancel": "Huỷ"
+        }
+      },
+      "rotate": {
+        "action": "Đổi secret",
+        "title": "Đã đổi secret",
+        "confirm": {
+          "title": "Đổi secret này?",
+          "body": "Secret hiện tại sẽ ngừng hoạt động ngay. Mọi client đang dùng secret này cần chuyển sang secret mới.",
+          "confirm": "Đổi secret"
         }
       }
     }
