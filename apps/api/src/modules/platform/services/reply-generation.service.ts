@@ -49,6 +49,17 @@ const failed = (reason: string): ReplyOutcome => ({ status: 'failed', reason });
 /** Delivered when the last send reached the customer, else not delivered. */
 const delivered = (sent: boolean): ReplyOutcome =>
     sent ? { status: 'delivered' } : failed('not_delivered');
+/**
+ * After the fallback line was due: with no line configured, the silence is
+ * the owner's choice (skipped), not a failure the edge should log.
+ */
+const fallbackOutcome = (
+    chatbot: { fallbackMessage?: string | null },
+    sent: boolean
+): ReplyOutcome =>
+    chatbot.fallbackMessage
+        ? delivered(sent)
+        : skipped('no_fallback_configured');
 
 @Injectable()
 export class ReplyGenerationService {
@@ -171,7 +182,8 @@ export class ReplyGenerationService {
                 this.logger.log(
                     `Token budget blocked conversation ${conversationId}: ${budget.reason}`
                 );
-                return delivered(
+                return fallbackOutcome(
+                    chatbot,
                     await this.sendFallback(
                         chatbot,
                         account,
@@ -288,7 +300,8 @@ export class ReplyGenerationService {
                 this.logger.log(
                     `Guardrail block in conversation ${conversationId}: ${deliveryResult.guardrailReason}`
                 );
-                return delivered(
+                return fallbackOutcome(
+                    chatbot,
                     await this.handleGuardrailBlock(
                         deliveryResult.guardrailReason,
                         chatbot,

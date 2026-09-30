@@ -120,6 +120,27 @@ describe('ReplyGenerationService.run', () => {
         });
     });
 
+    // Out of quota with no fallback line is silence the owner chose, not a
+    // failure: a 502 there made the edge log errors for it.
+    it('reports an exhausted budget with no fallback message as skipped', async () => {
+        const meter = {
+            check: jest
+                .fn()
+                .mockResolvedValue({ allowed: false, reason: 'quota' }),
+            record: jest.fn(),
+        };
+        const { run, streamChat } = serviceWith(
+            { history: [], message: 'x' },
+            meter
+        );
+
+        await expect(run()).resolves.toEqual({
+            status: 'skipped',
+            reason: 'no_fallback_configured',
+        });
+        expect(streamChat).not.toHaveBeenCalled();
+    });
+
     // Burst and history rules are TurnContextService's (its own spec); here
     // only that the Turn sends apps/ai what the context built.
     it('sends apps/ai the Turn context for the burst', async () => {
