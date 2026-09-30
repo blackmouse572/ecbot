@@ -111,8 +111,15 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       const answered = typeChanged ? ["businessType"] : addOnce(state.answered, action.question.id);
       return { ...state, profile, answered, editing: null };
     }
-    case "skip":
-      return { ...state, answered: addOnce(state.answered, action.question.id), editing: null };
+    case "skip": {
+      if (!state.profile) return state;
+      // Skip means "no answer": drop whatever auto-fill or the preset
+      // pre-ticked. A yes/no question has no empty value, so it keeps its default.
+      const { kind, path, required } = action.question;
+      const empty = kind === "multi" ? [] : kind === "text" ? "" : undefined;
+      const profile = required || empty === undefined ? state.profile : writeAnswer(state.profile, path, empty);
+      return { ...state, profile, answered: addOnce(state.answered, action.question.id), editing: null };
+    }
     case "edit":
       return { ...state, editing: action.questionId };
     case "restart":

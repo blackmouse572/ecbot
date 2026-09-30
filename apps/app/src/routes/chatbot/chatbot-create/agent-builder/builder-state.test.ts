@@ -33,6 +33,23 @@ describe("builderReducer", () => {
     expect(currentStep(s)?.question.id).toBe("businessName");
   });
 
+  // Wizard test findings: skipping a pre-ticked question kept the ticks, so
+  // the prompt carried instructions the owner had declined.
+  it("stores nothing when an optional question is skipped", () => {
+    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === "collect");
+    expect(s0.profile!.collect.length).toBeGreaterThan(0);
+    const s1 = builderReducer(s0, { type: "skip", question: currentStep(s0)!.question });
+    expect(s1.profile!.collect).toEqual([]);
+    expect(s1.answered).toContain("collect");
+  });
+
+  it("clears an auto-filled text answer when it is skipped", () => {
+    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === "difference");
+    const filled = { ...s0, profile: { ...s0.profile!, difference: "Auto-filled" } };
+    const s1 = builderReducer(filled, { type: "skip", question: currentStep(filled)!.question });
+    expect(s1.profile!.difference).toBe("");
+  });
+
   it("records an answer and moves to the next question", () => {
     const s0 = started();
     const s1 = builderReducer(s0, { type: "answer", question: currentStep(s0)!.question, value: "beauty" });

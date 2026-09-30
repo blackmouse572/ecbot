@@ -269,6 +269,16 @@ describe("ChannelConnect", () => {
     expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }]);
   });
 
+  // Wizard test findings: the list loads late, and above the grid it pushed
+  // the channel cards down mid-click.
+  it("lists existing channels below the channel cards so they never shift", () => {
+    unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-9", name: "Lotus Zalo", type: "ZALO_ACCOUNT" }] });
+    renderConnect();
+    const card = screen.getByText("agentBuilder.channels.messenger");
+    const list = screen.getByText("agentBuilder.ui.existingChannels");
+    expect(card.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("only lists useUnlinkAccounts results under 'use an existing channel' (no stealing)", () => {
     unlinkAccountsMock.mockReturnValue({ accounts: [{ id: "acc-free", name: "Free Account", type: "ZALO_ACCOUNT" }] });
     renderConnect();
