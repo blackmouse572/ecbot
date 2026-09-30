@@ -22,4 +22,19 @@ describe("useCountdown", () => {
     act(() => vi.advanceTimersByTime(5000));
     expect(result.current.secondsLeft).toBe(0);
   });
+
+  // A tick rendered late (a busy or throttled tab) found the clock already
+  // past the end while its own `now` was not, and stopped at "1s".
+  it("still reaches zero when a tick renders after the end time", () => {
+    const { result } = renderHook(() => useCountdown());
+    act(() => result.current.start(2));
+
+    act(() => {
+      vi.advanceTimersByTime(1000); // the tick: 1s left
+      vi.setSystemTime(Date.now() + 1100); // it renders after the end
+    });
+    act(() => vi.advanceTimersByTime(2000));
+
+    expect(result.current.secondsLeft).toBe(0);
+  });
 });

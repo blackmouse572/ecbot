@@ -10,7 +10,9 @@ export function useCountdown() {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    if (endsAt <= Date.now()) return;
+    // Compare with the rendered `now`: Date.now() can already be past the
+    // end while `now` is not, which stopped the ticks at "1s".
+    if (endsAt <= now) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [endsAt, now]);
