@@ -95,6 +95,11 @@
         "VITE_TURNSTILE_SITE_KEY"
       ]
     },
+    "docs#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".source/**", "out/**"],
+      "env": ["NEXT_PUBLIC_SITE_URL"]
+    },
     "web#build": {
       "dependsOn": ["^build"],
       "outputs": ["out/**"],

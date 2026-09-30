@@ -1,0 +1,54 @@
+---
+title: Khách hàng
+description: Mỗi người nhắn cho agent đều có một hồ sơ khách hàng dùng chung trên mọi kênh. Gộp hồ sơ trùng và để nhân viên tiếp quản cuộc trò chuyện.
+faq:
+  - q: Xem thông tin của khách ở đâu?
+    a: Mở cuộc trò chuyện trong mục Hội thoại. Khung thông tin khách bên cạnh hiện tên, số điện thoại, email, ngôn ngữ, ghi chú, kênh liên hệ, nhãn và nhắc hẹn của khách.
+  - q: Nếu hai hồ sơ có cùng số điện thoại thì sao?
+    a: Ecbot tạo một gợi ý trong mục Gợi ý. Bạn chọn giữ hồ sơ nào và dùng thông tin nào, hoặc bỏ qua. Việc gộp có thể hoàn tác bằng Tách gộp.
+  - q: Sau khi chuyển cho nhân viên, agent còn trả lời không?
+    a: Không. Agent tạm dừng trong cuộc trò chuyện đó và nhân viên nhận thông báo. Hãy trả lời trong cuộc trò chuyện, rồi chọn Khôi phục tự động để giao lại cho agent.
+---
+
+Mỗi người nhắn tin cho agent trở thành một khách hàng trong Ecbot. Hồ sơ lưu tên, thông tin liên hệ, ghi chú và nhãn, và được dùng chung trên các kênh, nên khách nhắn qua Messenger rồi sau đó qua Zalo vẫn có thể được xem là một người. Bạn xem và sửa hồ sơ ngay bên cạnh mỗi cuộc trò chuyện.
+
+## Hồ sơ khách hàng
+
+Hồ sơ được tạo ở lần đầu tiên một người nhắn vào kênh của bạn. Sau đó hồ sơ tự được bổ sung:
+
+- tên lấy từ ứng dụng chat nếu có;
+- agent lưu tên, số điện thoại, email và ngôn ngữ khách cung cấp, cùng các thông tin khác bạn dặn agent thu thập (ví dụ địa chỉ giao hàng);
+- sau khi cuộc trò chuyện kết thúc, Ecbot gắn các nhãn như Hot lead hay Returning customer, và viết một đoạn tóm tắt ngắn cho agent.
+
+Agent không bao giờ lưu thông tin thanh toán. Để xem hoặc sửa hồ sơ, mở **Hội thoại**, chọn một cuộc trò chuyện và dùng khung thông tin khách ở bên cạnh. Khung này hiện tên, số điện thoại, email, ngôn ngữ và ghi chú, cùng **Kênh liên hệ** (các ứng dụng chat khách đã nhắn từ đó), **Nhãn** và nhắc hẹn của khách.
+
+## Gộp khách hàng trùng
+
+Khi hai hồ sơ trong không gian làm việc có cùng số điện thoại hoặc email, Ecbot gợi ý gộp chúng và báo cho nhân viên.
+
+<Screenshot name="customer-suggestions" alt="Trang gợi ý khách hàng với các gợi ý chờ xử lý">
+  <Mark id="nav">**Gợi ý** trong nhóm **Khách hàng** ở thanh bên. Số trên nhãn cho biết có bao nhiêu gợi ý đang chờ.</Mark>
+  <Mark id="status">Các gợi ý đang chờ bạn. Mỗi dòng hiện hai khách hàng và số điện thoại hoặc email bị trùng.</Mark>
+</Screenshot>
+
+Chọn **Xem xét** ở một gợi ý, chọn khách hàng giữ lại và giữ tên, số điện thoại, email, ngôn ngữ, ghi chú của hồ sơ nào, rồi bấm **Xác nhận gộp**. Các cuộc trò chuyện và kênh liên hệ sẽ chuyển sang hồ sơ được giữ. Chọn **Bỏ qua** nếu đó là hai người khác nhau. Nếu lỡ gộp nhầm, mở khung thông tin khách và chọn **Tách gộp**.
+
+## Hội thoại và chuyển cho nhân viên
+
+Mở **Hội thoại** để đọc mọi cuộc trò chuyện. Mỗi cuộc trò chuyện có một trạng thái:
+
+| Trạng thái | Ý nghĩa |
+| --- | --- |
+| **Bot đang trả lời** | Agent đang trả lời khách. |
+| **Cần bạn xử lý** | Agent đã chuyển cuộc trò chuyện cho nhân viên. |
+| **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. |
+| **Đã đóng** | Cuộc trò chuyện đã kết thúc. Tin nhắn mới của khách sẽ mở lại. |
+
+Agent chuyển cuộc trò chuyện cho nhân viên khi:
+
+- khách muốn gặp người thật, với các từ như "nhân viên", "tư vấn viên" hoặc các từ khóa bạn thêm trong **Cài đặt chuyển tiếp cho nhân sự** của agent;
+- agent trả lời thất bại nhiều lần liên tiếp (mặc định 3 lần);
+- khách được gắn một nhãn có bật chuyển cho nhân viên, xem trang [Nhãn khách hàng](/docs/customers/tags);
+- guardrail chặn một tin nhắn và agent được cài để chuyển khi bị chặn.
+
+Khi chuyển, agent ngừng trả lời trong cuộc trò chuyện đó và mọi người trong không gian làm việc nhận thông báo. Bạn trả lời ngay trong cuộc trò chuyện, dùng **Tạm dừng bot** để tự tiếp quản, **Đóng hội thoại** khi xong việc, hoặc **Khôi phục tự động** để agent trả lời lại.

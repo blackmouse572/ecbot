@@ -1,0 +1,75 @@
+---
+title: Cấu hình
+description: Mỗi ứng dụng Ecbot đọc cấu hình từ một tệp .env. Trang này liệt kê các tệp, những biến quan trọng và phần pnpm setup:local tự điền cho bạn.
+faq:
+  - q: Tôi phải tự điền những biến nào?
+    a: Chỉ OPENROUTER_API_KEY là bắt buộc để có câu trả lời. Các khóa email, kênh, đọc web và kho công cụ là tùy chọn và bật các tính năng tương ứng. pnpm setup:local điền mọi giá trị chỉ cần khớp giữa các ứng dụng.
+  - q: Làm sao kiểm tra cấu hình?
+    a: Chạy pnpm setup:local --check. Lệnh liệt kê các giá trị còn thiếu hoặc không khớp mà không thay đổi gì.
+  - q: Vì sao Telegram báo địa chỉ webhook không hợp lệ?
+    a: API_BACKEND_URL phải là địa chỉ HTTPS công khai trỏ tới API của bạn. Khi chạy trên máy, hãy dùng một tunnel như cloudflared.
+---
+
+Mỗi ứng dụng trong repo đọc cấu hình từ tệp `.env` riêng: `apps/api/.env`, `apps/app/.env` và `apps/ai/.env`. Mỗi tệp có một `.env.example` kèm chú thích bên cạnh. Chạy `pnpm setup:local` để tạo các tệp và điền mọi giá trị chỉ cần khớp giữa các ứng dụng; sau đó bạn thêm những khóa chỉ bạn mới lấy được.
+
+## pnpm setup:local
+
+| Tùy chọn | Tác dụng |
+| --- | --- |
+| *(không có)* | Tạo các tệp `.env` còn thiếu, điền giá trị tự sinh và hỏi những khóa bạn phải cung cấp. |
+| `--yes` | Dùng giá trị mặc định, không hỏi, và liệt kê các khóa bạn còn cần. |
+| `--check` | Báo các giá trị còn thiếu hoặc không khớp, không thay đổi gì. |
+| `--origin <url>` | Thêm một origin khác mà API chấp nhận, ví dụ một frontend thứ hai. Dùng được nhiều lần. |
+| `--client-env <path>` | Ghi cặp khóa API mặc định vào tệp `.env` của một frontend khác. |
+
+Được điền sẵn: khóa ký JWT (ghi vào `apps/api/keys`) và mã khóa, các CORS origin, cặp khóa API dùng chung giữa API và ứng dụng web, cặp khóa giữa API và dịch vụ AI, cùng các bí mật nội bộ.
+
+## API (apps/api/.env)
+
+| Nhóm | Biến | Mục đích |
+| --- | --- | --- |
+| Ứng dụng | `APP_*`, `HOME_URL`, `HTTP_PORT` | Tên, địa chỉ ứng dụng web dùng trong email và đường dẫn, cổng (8080). |
+| Địa chỉ công khai | `API_BACKEND_URL` | Origin công khai của API, dùng cho webhook của kênh như Telegram. |
+| CORS | `MIDDLEWARE_CORS_ORIGIN` | Các origin của ứng dụng web được phép. |
+| Cơ sở dữ liệu | `DATABASE_URL` | Postgres có tiện ích pgvector. |
+| Xác thực | `AUTH_JWT_*` | Địa chỉ JWKS, mã khóa và đường dẫn khóa. |
+| Redis | `REDIS_*` | Bộ nhớ đệm và hàng đợi. |
+| Lưu trữ | `AWS_S3_PUBLIC_*`, `AWS_S3_PRIVATE_*` | Bucket cho tệp tải lên, tài liệu kiến thức và kỹ năng. |
+| Email | `RESEND_API_KEY`, `EMAIL_FROM` | Mã đăng ký, lời mời và cảnh báo. |
+| Kênh | `FACEBOOK_*`, `ZALO_*`, `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Ứng dụng của các kênh và xác minh webhook. |
+| Dịch vụ AI | `AI_BACKEND_URL`, `AI_SERVICE_API_KEY`, `AI_SERVICE_API_SECRET`, `API_INTERNAL_TOKEN` | Giao tiếp giữa API và dịch vụ AI. |
+| Tác vụ nền | `CLOUD_TASKS_*` | Dự án và hàng đợi Cloud Tasks, cùng `CLOUD_TASKS_EMULATOR_HOST` khi chạy trên máy. |
+| Kho công cụ | `COMPOSIO_*` | Các công cụ trong kho công cụ. |
+| Bảo mật | `TURNSTILE_SECRET_KEY`, `OAUTH_TOKEN_ENCRYPT_KEY` | Chống bot khi đăng ký và đăng nhập, mã hóa token kênh được lưu. |
+
+## Ứng dụng web (apps/app/.env)
+
+| Biến | Mục đích |
+| --- | --- |
+| `VITE_API_URL` | Origin của API, ví dụ `http://localhost:8080`. |
+| `VITE_API_KEY`, `VITE_API_KEY_SECRET` | Cặp khóa API ứng dụng gửi kèm mọi yêu cầu. |
+| `VITE_TURNSTILE_SITE_KEY` | Tiện ích chống bot. |
+| `VITE_FACEBOOK_*`, `VITE_WHATSAPP_CONFIG_ID`, `VITE_ZALO_*` | Cửa sổ đăng nhập khi kết nối kênh. |
+
+## Dịch vụ AI (apps/ai/.env)
+
+| Biến | Mục đích |
+| --- | --- |
+| `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL` | Các mô hình ngôn ngữ. Bắt buộc. |
+| `POSTGRES_URL`, `RAG_POSTGRES_URL` | Cơ sở dữ liệu và kho vector cho cơ sở kiến thức. |
+| `API_BASE_URL`, `AI_SERVICE_API_KEY`, `AI_SERVICE_API_SECRET`, `API_INTERNAL_TOKEN` | Gọi ngược về API. Phải khớp với giá trị bên API. |
+| `EMBEDDING_MODEL`, `EMBEDDING_DIMENSIONS`, `CHUNK_SIZE`, `CHUNK_OVERLAP` | Cách chia nhỏ và nhúng tài liệu. |
+| `FIRECRAWL_API_KEY` | Đọc các trang web được thêm dạng URL. |
+| `ENV`, `LOG_LEVEL`, `LANGSMITH_*` | Môi trường, ghi log và theo dõi (tùy chọn). |
+
+## Cổng
+
+| Dịch vụ | Cổng |
+| --- | --- |
+| API | 8080 |
+| Ứng dụng web | 5173 |
+| Dịch vụ AI | 8000 |
+| Tài liệu | 5175 |
+| Postgres / Redis | 5432 / 6379 |
+| Trình giả lập Cloud Tasks | 8123 |
+| Máy chủ JWKS / Bull board | 3011 / 3010 |

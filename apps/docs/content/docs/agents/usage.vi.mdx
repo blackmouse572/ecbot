@@ -1,0 +1,26 @@
+---
+title: Usage
+description: Trang Usage cho biết agent đã dùng bao nhiêu quota AI của gói, chia theo ngày, theo agent và theo kênh, kèm cảnh báo trước khi hết.
+faq:
+  - q: Chuyện gì xảy ra khi hết quota?
+    a: Agent ngừng tạo câu trả lời bằng AI và gửi tin nhắn dự phòng, cho đến khi quota được làm mới hoặc bạn nạp thêm credit.
+  - q: Những gì được tính vào usage?
+    a: Token AI dùng để trả lời trên các kênh, gửi nhắc hẹn, trả lời trên khung chat website và trong khung chat thử đều được tính vào quota.
+  - q: Bản tự cài đặt có trang Usage không?
+    a: Không. Đo lượt dùng và gói cước chỉ có ở bản Ecbot chạy sẵn tại ecbot.dev. Bản tự cài đặt không giới hạn và không ghi lại lượt dùng AI.
+---
+
+Trang **Usage** cho biết agent đã dùng bao nhiêu AI trong kỳ hiện tại của gói và dùng vào đâu. Mỗi câu trả lời agent viết đều tốn token AI, và gói của bạn có một mức quota được làm mới mỗi kỳ. Hãy xem trang này để biết agent hoặc kênh nào dùng nhiều nhất, và đặt cảnh báo để được báo trước khi hết quota.
+
+<Screenshot name="usage" alt="Trang token usage với gói, quota đã dùng, usage theo ngày và các bảng phân tích">
+  <Mark id="range">Chọn khoảng thời gian: 7, 30, 90 ngày qua hoặc toàn bộ.</Mark>
+  <Mark id="plan">Gói của bạn, trạng thái, ngày làm mới và phần quota đã dùng.</Mark>
+  <Mark id="breakdown">Usage theo ngày, theo agent và theo kênh.</Mark>
+  <Mark id="alerts">**Cấu hình cảnh báo** gửi cho bạn thông báo khi quota còn lại xuống dưới mức bạn chọn.</Mark>
+</Screenshot>
+
+Bấm **Xuất CSV** để tải số liệu của khoảng thời gian đang chọn.
+
+## Khi hết quota
+
+Agent vẫn trả lời khách, nhưng bằng tin nhắn dự phòng thay vì câu trả lời của AI, cho đến khi quota được làm mới hoặc bạn nạp thêm credit. Hãy đặt tin nhắn dự phòng trong phần **Hành vi** của agent (xem trang [Trợ lý AI](/docs/agents)) để khách biết sẽ có người liên hệ lại.

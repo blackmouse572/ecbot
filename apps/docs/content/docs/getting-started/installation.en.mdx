@@ -1,0 +1,86 @@
+---
+title: Installation
+description: Run Ecbot on your own machine or server. Install the tools, fill the env files with one command, start the Docker services and run the apps.
+faq:
+  - q: Do I need to install Ecbot to use it?
+    a: No. The hosted Ecbot at ecbot.dev needs no installation. Install it yourself only to develop Ecbot or to run it on your own server.
+  - q: Which keys do I need?
+    a: Only an OpenRouter API key is required to get replies. Email (Resend), Facebook, Zalo, Firecrawl and Composio keys are optional and only needed for those features.
+  - q: Which accounts can I log in with locally?
+    a: The seed creates test users such as admin@mail.com and business@mail.com. Their password is set in apps/api/src/migration/seeds/migration.user.seed.ts.
+---
+
+Ecbot is open source, so you can run the whole stack yourself: the API, the web app and the AI service, backed by Postgres, Redis and a Cloud Tasks emulator in Docker. A setup script fills in the configuration, so a fresh checkout can be running in about 15 minutes. If you only want to use Ecbot, [set up your shop](/docs/getting-started/setup) on the hosted version instead.
+
+## Requirements
+
+- Node.js 22 and pnpm 9 (`corepack enable`).
+- Docker with Docker Compose.
+- Python 3.12 or newer and [uv](https://docs.astral.sh/uv/), for the AI service.
+- An [OpenRouter](https://openrouter.ai) API key.
+
+<Steps>
+<Step>
+
+### Get the code and install
+
+```bash
+git clone https://github.com/blackmouse572/ecbot.git
+cd ecbot
+pnpm install
+```
+
+</Step>
+<Step>
+
+### Create the env files
+
+```bash
+pnpm setup:local
+```
+
+The script creates `.env` for the API, the web app and the AI service from their `.env.example` files. It generates the JWT keys, internal secrets and matching API keys for you, and asks only for values you must supply, such as the OpenRouter key. It never overwrites a value you already set, so it is safe to run again. Use `pnpm setup:local --check` to list what is still missing. See [Configuration](/docs/dev/configuration) for every variable.
+
+</Step>
+<Step>
+
+### Start the services
+
+```bash
+docker compose up -d
+```
+
+This starts Postgres with pgvector (5432), Redis (6379), the JWKS server (3011), the Bull board (3010) and the Cloud Tasks emulator (8123).
+
+</Step>
+<Step>
+
+### Create the database
+
+```bash
+pnpm db:migrate:up
+pnpm db:seed
+```
+
+</Step>
+<Step>
+
+### Run the apps
+
+```bash
+pnpm dev:app                     # API on :8080 and web app on :5173
+cd apps/ai && uv sync && pnpm dev   # AI service on :8000
+```
+
+Open http://localhost:5173 and log in with a seed user.
+
+</Step>
+</Steps>
+
+## Background jobs
+
+Knowledge processing, emails and follow-ups run as Cloud Tasks. To run them locally, uncomment `CLOUD_TASKS_EMULATOR_HOST=localhost:8123` in `apps/api/.env`. The emulator runs in Docker and calls the API back at `API_BACKEND_URL`, so that address must be reachable from inside the container (on Linux, use the Docker bridge address rather than `localhost`).
+
+## Run everything in Docker
+
+The compose file also has profiles that run the apps in containers: `docker compose --profile app up -d` adds the API and web app, and `--profile full` adds the AI service too.

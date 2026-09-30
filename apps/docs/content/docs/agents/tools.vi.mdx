@@ -1,0 +1,33 @@
+---
+title: Công cụ
+description: Công cụ giúp agent kiểm tra tồn kho, tra cứu hay tạo đơn và đọc bảng tính trong hệ thống của shop, qua API riêng, máy chủ MCP hoặc kho công cụ.
+faq:
+  - q: Công cụ và kỹ năng khác nhau thế nào?
+    a: Công cụ làm một việc cụ thể, ví dụ tra tồn kho trong hệ thống của bạn. Kỹ năng là đoạn văn bản hướng dẫn cách xử lý một loại yêu cầu, và có thể chỉ cho agent biết nên dùng công cụ nào.
+  - q: Tôi kết nối được những ứng dụng nào trong kho công cụ?
+    a: Kho công cụ có các ứng dụng như Gmail, Google Sheets và KiotViet, kết nối chỉ bằng một lần đăng nhập. Mỗi ứng dụng liệt kê các thao tác nó hỗ trợ, và bạn chọn thao tác nào agent được phép dùng.
+  - q: Cho agent truy cập tài khoản của tôi có an toàn không?
+    a: Chỉ bật những thao tác agent cần để phục vụ khách. Khách có thể hỏi agent bất cứ điều gì, nên tránh bật các thao tác đọc tệp riêng tư hoặc thay đổi dữ liệu không liên quan đến công việc của agent.
+---
+
+Công cụ kết nối agent với các hệ thống khác để agent làm được nhiều việc hơn là trả lời câu hỏi. Có công cụ, agent có thể kiểm tra tồn kho, tra cứu đơn, tạo đơn hoặc đọc một bảng Google Sheets. Mỗi agent chỉ dùng những công cụ bạn thêm vào, và mỗi lần gọi đều được ghi lại để bạn xem agent đã làm gì.
+
+## Tạo công cụ
+
+Mở **Công cụ** trong nhóm **Trợ lý AI** ở thanh bên và chọn **Tạo mới**:
+
+<Screenshot name="tool-types" alt="Màn hình chọn loại công cụ: Công cụ HTTP, MCP tự cấu hình và Kho công cụ">
+  <Mark id="http">**Công cụ HTTP** gọi đến một endpoint trên máy chủ của bạn. Điền URL, phương thức và cách xác thực, rồi chạy thử để kiểm tra kết quả.</Mark>
+  <Mark id="mcp">**MCP tự cấu hình** kết nối với máy chủ dùng giao thức Model Context Protocol. Ecbot tự tìm các thao tác, và bạn bật những thao tác cần dùng.</Mark>
+  <Mark id="marketplace">**Kho công cụ** cài một ứng dụng có sẵn, như Google Sheets, chỉ bằng một lần đăng nhập.</Mark>
+</Screenshot>
+
+## Thêm công cụ cho agent
+
+Mở trang của agent, đến phần **Công cụ** và chọn **Thêm**. Với công cụ MCP và công cụ từ kho, bạn có thể bật hoặc tắt từng thao tác cho riêng agent này. Danh sách các lần gọi gần đây trên cùng trang cho biết mỗi lần agent gọi công cụ, kèm dữ liệu gửi đi và kết quả.
+
+## Viết mô tả công cụ cho rõ
+
+Agent quyết định khi nào gọi công cụ dựa vào tên và phần mô tả. Hãy nói công cụ trả về gì và dùng khi nào, ví dụ "Tra tồn kho theo tên sản phẩm hoặc mã SKU. Dùng trước khi báo khách là còn hàng."
+
+Để dạy agent cả một quy trình dùng nhiều công cụ, hãy viết một [kỹ năng](/docs/agents/skills).

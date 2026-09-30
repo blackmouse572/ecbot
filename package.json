@@ -5,6 +5,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:app": "turbo run dev --filter api --filter app",
+    "dev:docs": "turbo run dev --filter docs",
     "start:prod": "turbo run start:prod",
     "test:api": "turbo run test --filter api",
     "generate:client": "turbo run generate:client --filter api",

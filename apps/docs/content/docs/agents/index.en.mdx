@@ -1,0 +1,55 @@
+---
+title: Agents
+description: The agent builder turns a short description of your business into a working agent by asking one question at a time about tone, facts and rules.
+faq:
+  - q: Can I change the answers after the agent is created?
+    a: Yes. Each answer in the builder has an edit button, and the agent's page lets you change its instructions, knowledge and tools later. Changes apply to new messages.
+  - q: What does the formality setting do?
+    a: It sets how formal the agent sounds, from casual to polite. In Vietnamese it also decides how the agent addresses customers. Pick the style your staff already use in chat.
+  - q: What happens when the agent does not know an answer?
+    a: It follows your answer to the question about unsure cases, for example saying it will check and then passing the chat to you. Add the missing fact to the knowledge base so it can answer next time.
+---
+
+The agent builder creates an agent from a short description of your business. It asks one question at a time about your shop, how the agent should talk and when it should pass the chat to you, and fills in the answers it can work out from your description. A test chat sits beside the questions so you can try the agent before you turn it on.
+
+<Screenshot name="builder-question" alt="A builder question with an auto-filled answer and the question counter">
+  <Mark id="answer">Answers the builder filled in for you are marked **Auto-filled**. Check them and change anything that is wrong.</Mark>
+  <Mark id="progress">The counter shows how many questions are left.</Mark>
+  <Mark id="next">**Next** saves the answer and moves on.</Mark>
+</Screenshot>
+
+## What the builder asks
+
+- **About your business**: the type of business, its name, the agent's name, the greeting and what makes your shop different.
+- **Voice**: words that describe your brand and how formal the agent should sound.
+- **Business facts**: shipping fees and times, delivery, payment methods, returns and warranty. Short facts belong here; long documents belong in the [knowledge base](/docs/agents/knowledge-base).
+- **How it works**: the details the agent collects from a customer who is ready to buy, and when it hands the chat to you. See [Customers and handoff](/docs/customers).
+- **Rules**: things the agent must never do, and what it does when it is unsure.
+- **Conversation style**: reply length, emoji, follow-up questions and what to do outside opening hours.
+
+When you reach the end, try a few questions in the test chat, then choose **Activate agent**.
+
+## After the agent is created
+
+The agent's page holds everything the agent uses. Link documents, add tools and keep testing from one place:
+
+<Screenshot name="agent-page" alt="The agent page with the knowledge base and tools sections and the test chat">
+  <Mark id="knowledge">**Knowledge Base**: the documents this agent answers from. **Add** links more.</Mark>
+  <Mark id="tools">**Tools**: the systems this agent can use, such as your order API.</Mark>
+  <Mark id="test-chat">**Test Chat**: talk to the agent privately. Nothing here reaches customers.</Mark>
+</Screenshot>
+
+Write facts the way you would tell a new staff member. If your shop has no opening hours (for example, online only), say so, so the agent does not invent them.
+
+## Agent settings
+
+The **Summary** panel on the agent's page groups the settings you can change after the builder:
+
+| Section | What it controls |
+| --- | --- |
+| **Behavior** | Typing indicator, auto mark as read, primary and fallback language, welcome message, and the fallback message sent when the agent cannot reply. |
+| **AI Model** | The AI provider and model, temperature (how creative replies are, default 1.0) and the maximum reply length. |
+| **Handoff Settings** | Extra handoff keywords (comma separated), how many failed replies in a row pass the chat to your staff (default 3), and the note your staff see in the handoff notification. |
+| **Guardrail Settings** | Turn on guardrails to screen every incoming message, add your own screening rule, and choose whether a blocked message passes the chat to your staff (on by default). |
+
+The switch at the top of the page turns the agent on or off. The agent's form also has **Follow-up rules**, which tell the agent when to schedule a reminder. See [Follow-ups](/docs/agents/followups).

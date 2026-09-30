@@ -1,0 +1,47 @@
+---
+title: Cơ sở kiến thức
+description: Thêm tệp, trang web và ghi chú vào cơ sở kiến thức để agent trả lời đúng theo giá, chính sách và thông tin sản phẩm của shop.
+faq:
+  - q: Tôi tải lên được những loại tệp nào?
+    a: PDF, Word (DOCX), văn bản thường (TXT), HTML và Markdown. Với trang web, bạn thêm đường dẫn công khai của trang. Với thông tin ngắn, bạn thêm một mục dạng văn bản.
+  - q: Vì sao mục của tôi vẫn ở trạng thái Bản nháp?
+    a: Một mục chỉ được dùng sau khi đã xử lý. Mở menu của mục đó, chọn Xử lý, rồi chờ đến khi trạng thái chuyển sang Hoàn thành.
+  - q: Khách có thấy tên tệp của tôi không?
+    a: Không. Khách chỉ nhận được câu trả lời. Nguồn tham chiếu chỉ hiện trong khung chat thử của bạn để bạn kiểm tra câu trả lời lấy từ đâu.
+---
+
+Cơ sở kiến thức là nơi bạn đặt các tài liệu mà agent dùng để trả lời: bảng giá, thông tin sản phẩm, chính sách đổi trả và câu hỏi thường gặp. Mỗi mục được xử lý một lần rồi liên kết với agent. Agent tìm đúng phần liên quan trong tài liệu, nên trả lời theo thông tin của shop thay vì đoán.
+
+## Thêm một mục
+
+Mở **Cơ sở kiến thức** trong nhóm **Trợ lý AI** ở thanh bên.
+
+<Screenshot name="knowledge-base" alt="Danh sách cơ sở kiến thức với các mục đã xử lý và bản nháp">
+  <Mark id="create">**Tạo mới** để thêm một mục.</Mark>
+  <Mark id="status">**Trạng thái** cho biết mục đã sẵn sàng chưa. Chỉ những mục **Hoàn thành** mới được dùng.</Mark>
+  <Mark id="draft">Mục ở trạng thái **Bản nháp** chưa được dùng. Mở menu (**...**) của mục và chọn **Xử lý**.</Mark>
+</Screenshot>
+
+Chọn loại mục cần thêm:
+
+<Screenshot name="knowledge-base-create" alt="Biểu mẫu tạo mục với các lựa chọn Tệp, URL và Văn bản">
+  <Mark id="type">**Tệp** để tải tài liệu lên, **URL** để đọc một trang web, **Văn bản** để tự gõ ghi chú.</Mark>
+  <Mark id="formats">Tệp có thể là PDF, DOCX, TXT, HTML hoặc MD.</Mark>
+</Screenshot>
+
+Tệp tối đa 5 MB. Đường dẫn URL phải truy cập công khai được; agent không đọc được trang cần đăng nhập hoặc trang nằm trên máy tính của bạn. Dùng **Thư mục** và **Thẻ** để sắp xếp khi cơ sở kiến thức lớn dần.
+
+| Trạng thái | Ý nghĩa |
+| --- | --- |
+| **Bản nháp** | Đã lưu nhưng chưa xử lý. Agent chưa dùng. |
+| **Sẵn sàng** / **Đang xử lý** | Đang chờ hoặc đang được chia nhỏ và lập chỉ mục. |
+| **Hoàn thành** | Đã xử lý xong, agent đã liên kết có thể dùng. |
+| **Thất bại** | Không đọc được. Kiểm tra lại tệp hoặc URL rồi xử lý lại. |
+
+## Liên kết mục với agent
+
+Mở trang của agent, đến phần **Cơ sở kiến thức** và chọn **Thêm**. Chọn các mục mà agent này được dùng. Agent chỉ trả lời dựa trên những mục đã liên kết với nó.
+
+## Cập nhật thường xuyên
+
+Khi giá hoặc chính sách thay đổi, hãy sửa mục đó và xử lý lại. Những thông tin ngắn hay thay đổi (giờ mở cửa, phí giao hàng) có thể đặt trong phần thông tin shop của agent, xem trang [Trình tạo agent](/docs/agents).
