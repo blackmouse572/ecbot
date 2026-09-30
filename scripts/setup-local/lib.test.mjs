@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   EnvFile,
+  emulatorReachability,
   isPlaceholder,
   mergeCorsOrigins,
   missingManual,
@@ -175,6 +176,61 @@ describe("manual values", () => {
     assert.deepEqual(
       missingManual(files, { requiredOnly: true }).map((g) => g.group),
       ["LLM access"],
+    );
+  });
+});
+
+// The Cloud Tasks emulator runs in Docker and posts each task back to the API
+// on the host: that needs a host name the container resolves and a port the
+// API listens on beyond loopback.
+describe("emulatorReachability", () => {
+  const base = { httpHost: "localhost", httpPort: "8080" };
+
+  it("changes nothing while the emulator is off", () => {
+    assert.deepEqual(
+      emulatorReachability({ ...base, emulatorHost: "", backendUrl: "" }),
+      {},
+    );
+  });
+
+  it("points the tasks at the host and listens beyond loopback", () => {
+    assert.deepEqual(
+      emulatorReachability({
+        ...base,
+        emulatorHost: "localhost:8123",
+        backendUrl: "https://example.id",
+      }),
+      {
+        HTTP_HOST: "0.0.0.0",
+        API_BACKEND_URL: "http://host.docker.internal:8080",
+      },
+    );
+  });
+
+  it("also replaces a localhost backend URL, which the container cannot reach", () => {
+    assert.deepEqual(
+      emulatorReachability({
+        emulatorHost: "localhost:8123",
+        httpHost: "127.0.0.1",
+        httpPort: "3000",
+        backendUrl: "http://localhost:3000",
+      }),
+      {
+        HTTP_HOST: "0.0.0.0",
+        API_BACKEND_URL: "http://host.docker.internal:3000",
+      },
+    );
+  });
+
+  it("keeps a public backend URL (a tunnel) and a host already listening widely", () => {
+    assert.deepEqual(
+      emulatorReachability({
+        emulatorHost: "localhost:8123",
+        httpHost: "0.0.0.0",
+        httpPort: "8080",
+        backendUrl: "https://abc.ngrok.app",
+      }),
+      {},
     );
   });
 });

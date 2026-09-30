@@ -107,6 +107,39 @@ export function isPlaceholder(value) {
 }
 
 /**
+ * What apps/api/.env needs so the Cloud Tasks emulator (in Docker) can post
+ * tasks back to the API on the host: a URL the container resolves
+ * (host.docker.internal, mapped in docker-compose.yml) and an API that listens
+ * beyond loopback. A public backend URL (a tunnel) is left alone. Returns only
+ * the keys to change; nothing while the emulator is off.
+ */
+export function emulatorReachability({
+  emulatorHost,
+  httpHost,
+  httpPort,
+  backendUrl,
+}) {
+  if (!emulatorHost) return {};
+  const patch = {};
+  const loopback = ["", "localhost", "127.0.0.1"];
+  if (loopback.includes(httpHost)) patch.HTTP_HOST = "0.0.0.0";
+  let backendHost = "";
+  try {
+    backendHost = new URL(backendUrl).hostname;
+  } catch {
+    // empty or not a URL: replace it below
+  }
+  if (
+    isPlaceholder(backendUrl) ||
+    backendHost === "example.id" ||
+    loopback.includes(backendHost)
+  ) {
+    patch.API_BACKEND_URL = `http://host.docker.internal:${httpPort}`;
+  }
+  return patch;
+}
+
+/**
  * Local origins the API should accept credentialed requests from.
  *
  * `*` is not a working default: the CORS middleware turns credentials off for
