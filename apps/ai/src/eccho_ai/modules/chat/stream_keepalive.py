@@ -7,7 +7,7 @@ agent's context variables consistent from frame to frame.
 """
 import asyncio
 import contextlib
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 
 from eccho_ai.modules.chat.constants import KEEPALIVE_FRAME, KEEPALIVE_INTERVAL_SECONDS
 
@@ -17,14 +17,17 @@ _END = object()
 
 
 async def with_keepalive(
-    frames: AsyncIterator[str], interval: float = KEEPALIVE_INTERVAL_SECONDS
+    frames: AsyncGenerator[str, None], interval: float = KEEPALIVE_INTERVAL_SECONDS
 ) -> AsyncIterator[str]:
     queue: asyncio.Queue[object] = asyncio.Queue(maxsize=1)
 
     async def pump() -> None:
         try:
-            async for frame in frames:
-                await queue.put(frame)
+            # aclosing: when the pump is cancelled while parked on the queue,
+            # the stream is closed right away, not left for the GC.
+            async with contextlib.aclosing(frames) as stream:
+                async for frame in stream:
+                    await queue.put(frame)
         except Exception as exc:  # re-raised on the consumer side
             await queue.put(exc)
             return

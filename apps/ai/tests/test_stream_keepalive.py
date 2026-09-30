@@ -64,3 +64,23 @@ async def test_closing_early_stops_the_turn():
     await stream.aclose()
 
     await asyncio.wait_for(stopped.wait(), timeout=1)
+
+
+async def test_closing_early_closes_a_stream_parked_between_frames():
+    # The pump can be waiting to hand over a frame, not inside the stream;
+    # the stream's own cleanup must still run right away.
+    stopped = asyncio.Event()
+
+    async def frames():
+        try:
+            for i in range(10):
+                yield f"data: {i}\n\n"
+        finally:
+            stopped.set()
+
+    stream = with_keepalive(frames(), interval=1)
+    assert await anext(stream) == "data: 0\n\n"
+    await asyncio.sleep(0.01)  # let the pump fill the queue and park
+    await stream.aclose()
+
+    assert stopped.is_set()

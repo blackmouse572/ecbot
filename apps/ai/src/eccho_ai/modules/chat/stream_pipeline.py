@@ -6,7 +6,7 @@ already-decided pieces (input guardrail reason, an output-guardrail check
 callback, collected RAG sources) and streams the returned frames.
 """
 import json
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from typing import Any
 
 from eccho_ai.core.app_logger import get_logger
@@ -27,7 +27,7 @@ async def events_to_ui_parts(
     output_guardrail: Callable[[str], Awaitable[str | None]] | None = None,
     sources: list[dict[str, Any]] | None = None,
     image_url_allowed: Callable[[str], Awaitable[bool]] | None = None,
-) -> AsyncIterator[str]:
+) -> AsyncGenerator[str, None]:
     """Yield UI Message Stream SSE frames for one agent turn.
 
     Order: start -> (guardrail data-part) | (text/reasoning/tool parts ->
