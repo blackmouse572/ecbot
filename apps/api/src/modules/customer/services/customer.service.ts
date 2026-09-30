@@ -63,6 +63,13 @@ export class CustomerService implements ICustomerService {
         );
     }
 
+    async countByWorkspace(
+        workspaceId: string,
+        find?: Record<string, any>
+    ): Promise<number> {
+        return this.customerRepository.countByWorkspace(workspaceId, find);
+    }
+
     async update(
         id: string,
         patch: ICustomerUpdate,

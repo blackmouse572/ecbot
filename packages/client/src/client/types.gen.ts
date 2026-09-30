@@ -24669,6 +24669,99 @@ export type ChatbotSkillWorkspaceControllerAttachV1Responses = {
 
 export type ChatbotSkillWorkspaceControllerAttachV1Response = ChatbotSkillWorkspaceControllerAttachV1Responses[keyof ChatbotSkillWorkspaceControllerAttachV1Responses];
 
+export type CustomerWorkspaceControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/customers';
+};
+
+export type CustomerWorkspaceControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerWorkspaceControllerListV1Error = CustomerWorkspaceControllerListV1Errors[keyof CustomerWorkspaceControllerListV1Errors];
+
+export type CustomerWorkspaceControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<CustomerGetResponseDto>;
+    };
+};
+
+export type CustomerWorkspaceControllerListV1Response = CustomerWorkspaceControllerListV1Responses[keyof CustomerWorkspaceControllerListV1Responses];
+
 export type CustomerWorkspaceControllerGetV1Data = {
     body?: never;
     headers?: {

@@ -1,6 +1,6 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { CustomerEntity } from '../entities/customer.entity';
 
@@ -10,17 +10,33 @@ export class CustomerRepository extends DatabaseRepository<CustomerEntity> {
         super(em, CustomerEntity);
     }
 
+    /** The workspace's customers, without deleted ones or merged-away duplicates. */
     async findByWorkspace(
         workspaceId: string,
         find?: Record<string, any>,
         options?: IDatabaseFindAllOptions
     ): Promise<CustomerEntity[]> {
-        const filter: Record<string, any> = {
+        return this.find(this.workspaceFilter(workspaceId, find), options);
+    }
+
+    async countByWorkspace(
+        workspaceId: string,
+        find?: Record<string, any>
+    ): Promise<number> {
+        return this.getTotal(this.workspaceFilter(workspaceId, find));
+    }
+
+    // A merge keeps the losing row with mergedIntoCustomerId set; listing it
+    // would show the same person twice.
+    private workspaceFilter(
+        workspaceId: string,
+        find?: Record<string, any>
+    ): FilterQuery<CustomerEntity> {
+        return {
             workspace: workspaceId,
             deletedAt: null,
+            mergedIntoCustomerId: null,
             ...find,
-        };
-
-        return this.find(filter as any, options);
+        } as FilterQuery<CustomerEntity>;
     }
 }

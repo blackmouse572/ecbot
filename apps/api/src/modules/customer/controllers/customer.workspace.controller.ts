@@ -1,4 +1,7 @@
-import { IResponse } from '@app/common/response/interfaces/response.interface';
+import {
+    IResponse,
+    IResponsePaging,
+} from '@app/common/response/interfaces/response.interface';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { ApiKeyProtected } from '@app/modules/api-key/decorators/api-key.decorator';
@@ -30,9 +33,17 @@ import {
     Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Response } from 'src/common/response/decorators/response.decorator';
+import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
+import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
+import { PaginationService } from 'src/common/pagination/services/pagination.service';
+import {
+    Response,
+    ResponsePaging,
+} from 'src/common/response/decorators/response.decorator';
+import { CUSTOMER_DEFAULT_AVAILABLE_SEARCH } from '../constants/customer.list.constant';
 import {
     CustomerWorkspaceGetDoc,
+    CustomerWorkspaceListDoc,
     CustomerWorkspaceUpdateDoc,
 } from '../docs/customer.workspace.doc';
 import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.request.dto';
@@ -49,8 +60,43 @@ export class CustomerWorkspaceController {
     constructor(
         private readonly customerService: CustomerService,
         private readonly mergeSuggestionService: CustomerMergeSuggestionService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly paginationService: PaginationService
     ) {}
+
+    @CustomerWorkspaceListDoc()
+    @ResponsePaging('customer.workspace.list')
+    @WorkspaceScopedProtected({
+        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Get('/')
+    async list(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @PaginationQuery({ availableSearch: CUSTOMER_DEFAULT_AVAILABLE_SEARCH })
+        { _search, _limit, _offset, _order }: PaginationListDto
+    ): Promise<IResponsePaging<CustomerGetResponseDto>> {
+        const find: Record<string, any> = { ..._search };
+
+        const [customers, total] = await Promise.all([
+            this.customerService.findByWorkspace(workspace.id, find, {
+                paging: { limit: _limit, offset: _offset },
+                order: _order,
+            }),
+            this.customerService.countByWorkspace(workspace.id, find),
+        ]);
+
+        return {
+            _pagination: {
+                total,
+                totalPage: this.paginationService.totalPage(total, _limit),
+            },
+            data: this.customerService.mapList(customers),
+        };
+    }
 
     @CustomerWorkspaceGetDoc()
     @Response('customer.workspace.get')
