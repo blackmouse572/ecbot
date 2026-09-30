@@ -1,0 +1,39 @@
+---
+title: Nhãn khách hàng
+description: Nhãn khách hàng đánh dấu khách là VIP, Hot lead hay Angry. Agent và Ecbot tự gắn nhãn, và một số nhãn sẽ chuyển cuộc trò chuyện cho nhân viên.
+faq:
+  - q: Không gian làm việc mới có sẵn những nhãn nào?
+    a: Hot lead, New lead, Returning customer, VIP, Positive, Negative, Complaint và Angry. Complaint và Angry mặc định bật chuyển cho nhân viên.
+  - q: Ai gắn nhãn cho khách?
+    a: Agent trong lúc chat, Ecbot sau khi cuộc trò chuyện kết thúc, và nhân viên gắn tay trong khung thông tin khách.
+  - q: Tôi có đổi tên hoặc xóa nhãn mặc định được không?
+    a: Được. Nhãn mặc định là nhãn bình thường trong không gian làm việc của bạn. Bạn sửa hoặc xóa chúng như mọi nhãn tự tạo.
+---
+
+Nhãn khách hàng là các nhãn như VIP, Hot lead hay Angry giúp nhân viên phân loại khách. Mỗi không gian làm việc có danh sách nhãn riêng. Agent và Ecbot tự gắn nhãn, nhân viên có thể gắn tay, và một nhãn có thể được cài để chuyển cuộc trò chuyện cho nhân viên ngay khi khách được gắn nhãn đó.
+
+## Quản lý nhãn
+
+Mở **Nhãn khách hàng** trong nhóm **Khách hàng** ở thanh bên.
+
+<Screenshot name="customer-tags" alt="Danh sách nhãn khách hàng với cột Chuyển cho nhân viên">
+  <Mark id="create">**Tạo nhãn** để thêm nhãn mới.</Mark>
+  <Mark id="handoff">Cột **Chuyển cho nhân viên** đánh dấu những nhãn sẽ chuyển cuộc trò chuyện cho nhân viên ngay khi khách được gắn nhãn đó.</Mark>
+</Screenshot>
+
+Mỗi nhãn có:
+
+- **Tên**, không trùng trong không gian làm việc (tối đa 64 ký tự);
+- **Biểu tượng**, một emoji hiện cạnh tên;
+- **Mô tả**, để agent đọc và quyết định khi nào gắn nhãn, nên hãy viết như một quy tắc, ví dụ "Khách hỏi mua sỉ từ 50 sản phẩm trở lên";
+- **Chuyển cho nhân viên**, để chuyển cuộc trò chuyện cho nhân viên khi nhãn được gắn.
+
+## Nhãn được gắn như thế nào
+
+| Ai | Khi nào |
+| --- | --- |
+| **Agent** | Trong lúc chat, khi phần mô tả khớp với điều khách nói. Gắn nhãn có bật chuyển cho nhân viên sẽ chuyển cuộc trò chuyện ngay. |
+| **Ecbot** | Sau khi cuộc trò chuyện được đóng hoặc im lặng 30 phút, Ecbot đọc các tin nhắn gần đây và cập nhật những nhãn không bật chuyển cho nhân viên. |
+| **Nhân viên** | Bất cứ lúc nào, bằng nút **Thêm nhãn** trong khung thông tin khách của cuộc trò chuyện. |
+
+Hãy dùng nhãn chuyển cho nhân viên cho những tín hiệu cần người xử lý ngay, như khách đang tức giận hoặc đang khiếu nại.

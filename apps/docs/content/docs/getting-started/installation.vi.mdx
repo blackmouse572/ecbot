@@ -1,0 +1,86 @@
+---
+title: Cài đặt
+description: Chạy Ecbot trên máy hoặc máy chủ của bạn. Cài công cụ, điền tệp env bằng một lệnh, khởi động dịch vụ Docker và chạy các ứng dụng.
+faq:
+  - q: Tôi có cần cài đặt Ecbot để sử dụng không?
+    a: Không. Bản Ecbot chạy sẵn tại ecbot.dev không cần cài đặt. Bạn chỉ tự cài khi muốn phát triển Ecbot hoặc chạy trên máy chủ riêng.
+  - q: Tôi cần những khóa nào?
+    a: Chỉ khóa API của OpenRouter là bắt buộc để có câu trả lời. Khóa email (Resend), Facebook, Zalo, Firecrawl và Composio là tùy chọn, chỉ cần khi dùng các tính năng đó.
+  - q: Tôi đăng nhập bằng tài khoản nào khi chạy trên máy?
+    a: Dữ liệu mẫu tạo sẵn các tài khoản thử như admin@mail.com và business@mail.com. Mật khẩu nằm trong apps/api/src/migration/seeds/migration.user.seed.ts.
+---
+
+Ecbot là mã nguồn mở, nên bạn có thể tự chạy toàn bộ hệ thống: API, ứng dụng web và dịch vụ AI, cùng Postgres, Redis và trình giả lập Cloud Tasks chạy trong Docker. Một lệnh thiết lập điền sẵn cấu hình, nên chỉ mất khoảng 15 phút để chạy được. Nếu chỉ muốn dùng Ecbot, hãy [thiết lập cho shop](/docs/getting-started/setup) trên bản chạy sẵn.
+
+## Yêu cầu
+
+- Node.js 22 và pnpm 9 (`corepack enable`).
+- Docker kèm Docker Compose.
+- Python 3.12 trở lên và [uv](https://docs.astral.sh/uv/), cho dịch vụ AI.
+- Khóa API của [OpenRouter](https://openrouter.ai).
+
+<Steps>
+<Step>
+
+### Tải mã nguồn và cài đặt
+
+```bash
+git clone https://github.com/blackmouse572/ecbot.git
+cd ecbot
+pnpm install
+```
+
+</Step>
+<Step>
+
+### Tạo các tệp env
+
+```bash
+pnpm setup:local
+```
+
+Lệnh này tạo tệp `.env` cho API, ứng dụng web và dịch vụ AI từ các tệp `.env.example`. Nó tự sinh khóa JWT, các bí mật nội bộ và các cặp khóa API khớp nhau, và chỉ hỏi những giá trị bạn phải tự cung cấp, như khóa OpenRouter. Lệnh không bao giờ ghi đè giá trị bạn đã đặt, nên chạy lại nhiều lần vẫn an toàn. Dùng `pnpm setup:local --check` để xem còn thiếu gì. Xem trang [Cấu hình](/docs/dev/configuration) để biết mọi biến.
+
+</Step>
+<Step>
+
+### Khởi động các dịch vụ
+
+```bash
+docker compose up -d
+```
+
+Lệnh này khởi động Postgres có pgvector (5432), Redis (6379), máy chủ JWKS (3011), Bull board (3010) và trình giả lập Cloud Tasks (8123).
+
+</Step>
+<Step>
+
+### Tạo cơ sở dữ liệu
+
+```bash
+pnpm db:migrate:up
+pnpm db:seed
+```
+
+</Step>
+<Step>
+
+### Chạy các ứng dụng
+
+```bash
+pnpm dev:app                     # API ở :8080 và ứng dụng web ở :5173
+cd apps/ai && uv sync && pnpm dev   # dịch vụ AI ở :8000
+```
+
+Mở http://localhost:5173 và đăng nhập bằng một tài khoản mẫu.
+
+</Step>
+</Steps>
+
+## Tác vụ chạy nền
+
+Xử lý cơ sở kiến thức, gửi email và nhắc hẹn chạy bằng Cloud Tasks. Để chạy trên máy, hãy bỏ dấu chú thích dòng `CLOUD_TASKS_EMULATOR_HOST=localhost:8123` trong `apps/api/.env`. Trình giả lập chạy trong Docker và gọi ngược về API qua `API_BACKEND_URL`, nên địa chỉ này phải truy cập được từ bên trong container (trên Linux, hãy dùng địa chỉ Docker bridge thay vì `localhost`).
+
+## Chạy tất cả trong Docker
+
+Tệp compose còn có các profile chạy ứng dụng trong container: `docker compose --profile app up -d` thêm API và ứng dụng web, còn `--profile full` thêm cả dịch vụ AI.

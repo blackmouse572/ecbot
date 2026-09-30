@@ -1,0 +1,39 @@
+---
+title: Nhắc hẹn
+description: Nhắc hẹn giúp agent nhắn lại cho khách vào lúc khác, như nhắc chuyển khoản hay hỏi thăm sau khi giao hàng, ngay trên kênh đang trò chuyện.
+faq:
+  - q: Có thể hẹn nhắc xa nhất bao lâu?
+    a: Từ 1 phút đến 30 ngày. Mỗi cuộc trò chuyện có tối đa 5 nhắc hẹn đang chờ cùng lúc.
+  - q: Tôi có sửa được nhắc hẹn đã lên lịch không?
+    a: Không. Bạn có thể hủy nhắc hẹn đã lên lịch ở trang Nhắc hẹn hoặc trong khung thông tin khách của cuộc trò chuyện. Agent có thể hẹn một nhắc hẹn mới.
+  - q: Vì sao một nhắc hẹn bị bỏ qua?
+    a: Nhắc hẹn bị bỏ qua khi đến giờ gửi mà cuộc trò chuyện không còn, đã được xử lý xong, agent đã bị tắt hoặc đã bị ngắt kết nối.
+---
+
+Nhắc hẹn là tin nhắn agent hẹn gửi lại cho khách vào lúc khác, trên cùng kênh của cuộc trò chuyện. Khách có thể tự nhờ ("mai nhắc chị chuyển khoản nhé"), hoặc bạn dặn agent khi nào cần hẹn nhắc. Đến giờ, agent đọc lại cuộc trò chuyện và viết một tin nhắn mới thay vì gửi một câu soạn sẵn.
+
+## Dặn agent khi nào cần nhắc
+
+Mở biểu mẫu của agent và điền **Quy tắc nhắc hẹn**, tối đa 2.000 ký tự. Ví dụ:
+
+```md
+- Nếu khách nhờ nhắc, hẹn đúng thời điểm khách yêu cầu.
+- Nếu khách đã đặt đơn nhưng chưa thanh toán, nhắc lại sau 24 giờ.
+- Không nhắc quá một lần cho cùng một việc.
+```
+
+Agent cũng có thể xem và hủy các nhắc hẹn đang chờ của chính nó, ví dụ khi khách báo đã chuyển khoản rồi.
+
+## Xem và hủy nhắc hẹn
+
+Mở **Nhắc hẹn** trong nhóm **Trợ lý AI** ở thanh bên. Mỗi dòng cho biết agent, khách hàng, lý do, trạng thái và thời điểm gửi. Bạn có thể lọc theo agent hoặc trạng thái, mở cuộc trò chuyện, hoặc **Hủy** một nhắc hẹn chưa gửi.
+
+| Trạng thái | Ý nghĩa |
+| --- | --- |
+| **Đã lên lịch** | Đang chờ gửi. |
+| **Đã gửi** | Tin nhắn đã được gửi. |
+| **Đã bỏ qua** | Không gửi, vì cuộc trò chuyện đã được xử lý xong hoặc không còn, hoặc agent đã bị tắt hay ngắt kết nối. |
+| **Thất bại** | Gửi không thành công. Hệ thống tự thử lại. |
+| **Đã hủy** | Bạn hoặc agent đã hủy. |
+
+Nhắc hẹn của mỗi khách cũng hiện trong khung thông tin khách của cuộc trò chuyện, nơi bạn có thể đọc tin nhắn dự kiến hoặc hủy nó.
