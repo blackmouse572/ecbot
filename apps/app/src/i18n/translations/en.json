@@ -2305,8 +2305,7 @@
       "phone": "Phone",
       "firstSeen": "First seen",
       "emptyTitle": "No customers yet",
-      "emptyMessage": "Customers appear here once they message one of your channels.",
-      "nav": "All customers"
+      "emptyMessage": "Customers appear here once they message one of your channels."
     }
   },
   "settings": {

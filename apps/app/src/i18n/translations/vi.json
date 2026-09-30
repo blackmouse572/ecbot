@@ -2335,8 +2335,7 @@
       "phone": "Số điện thoại",
       "firstSeen": "Lần đầu liên hệ",
       "emptyTitle": "Chưa có khách hàng nào",
-      "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn.",
-      "nav": "Tất cả khách hàng"
+      "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn."
     }
   },
   "settings": {

@@ -298,10 +298,6 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
       },
       items: [
         {
-          label: t("customers.list.nav"),
-          to: `${baseUrl}/${ROUTES.Customers}`,
-        },
-        {
           label: t("settings.customerTags.title"),
           to: `${baseUrl}/${ROUTES.CustomerTags}`,
         },
