@@ -105,7 +105,9 @@ describe('CustomerWorkspaceController', () => {
                 search,
                 {
                     paging: { limit: 20, offset: 20 },
-                    order: { createdAt: 'desc' },
+                    // id breaks ties, so rows with the same createdAt keep
+                    // their place from page to page.
+                    order: { createdAt: 'desc', id: 'DESC' },
                 }
             );
             expect(mockCustomerService.countByWorkspace).toHaveBeenCalledWith(

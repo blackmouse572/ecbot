@@ -33,6 +33,7 @@ import {
     Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
@@ -40,7 +41,10 @@ import {
     Response,
     ResponsePaging,
 } from 'src/common/response/decorators/response.decorator';
-import { CUSTOMER_DEFAULT_AVAILABLE_SEARCH } from '../constants/customer.list.constant';
+import {
+    CUSTOMER_DEFAULT_AVAILABLE_ORDER_BY,
+    CUSTOMER_DEFAULT_AVAILABLE_SEARCH,
+} from '../constants/customer.list.constant';
 import {
     CustomerWorkspaceGetDoc,
     CustomerWorkspaceListDoc,
@@ -76,7 +80,14 @@ export class CustomerWorkspaceController {
     @Get('/')
     async list(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @PaginationQuery({ availableSearch: CUSTOMER_DEFAULT_AVAILABLE_SEARCH })
+        @PaginationQuery({
+            availableSearch: CUSTOMER_DEFAULT_AVAILABLE_SEARCH,
+            availableOrderBy: CUSTOMER_DEFAULT_AVAILABLE_ORDER_BY,
+            defaultOrderBy: 'createdAt',
+            // Newest first: paging stops at page 20, so oldest-first hid new
+            // customers in a large workspace.
+            defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+        })
         { _search, _limit, _offset, _order }: PaginationListDto
     ): Promise<IResponsePaging<CustomerGetResponseDto>> {
         const find: Record<string, any> = { ..._search };
@@ -84,7 +95,12 @@ export class CustomerWorkspaceController {
         const [customers, total] = await Promise.all([
             this.customerService.findByWorkspace(workspace.id, find, {
                 paging: { limit: _limit, offset: _offset },
-                order: _order,
+                // id breaks ties, so rows with the same createdAt keep their
+                // place from page to page.
+                order: {
+                    ..._order,
+                    id: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+                },
             }),
             this.customerService.countByWorkspace(workspace.id, find),
         ]);
