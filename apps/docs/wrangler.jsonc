@@ -11,6 +11,8 @@
   // builds (non-main branches) get their own preview URL.
   "workers_dev": false,
   "preview_urls": true,
+  // Required by `wrangler preview`; the docs need no preview-only settings.
+  "previews": {},
   "assets": {
     "directory": "./out",
     "binding": "ASSETS",
