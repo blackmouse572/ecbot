@@ -11,7 +11,7 @@ from langchain_core.tools import StructuredTool
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.tools.constants import MUTATING_TOOL_NOTE
-from eccho_ai.models.chat import Chatbots, ChatbotTools
+from eccho_ai.models.chat import Chatbots, ChatbotTools, Tools
 from eccho_ai.modules.chat.models.agent_models import (
     AgentRequestContext,
     ToolExecutionRequest,
@@ -43,7 +43,7 @@ def _resolve_enabled_actions(chatbot_tool: ChatbotTools) -> list[str]:
     return chatbot_tool.enabled_actions
 
 
-def _make_executor(tool_id: uuid.UUID, action: str):
+def _make_executor(tool_id: uuid.UUID, action: str | None):
     async def __executor(
         runtime: ToolRuntime[AgentRequestContext], **kwargs: Any
     ) -> ToolExecutionResponse:
@@ -105,10 +105,25 @@ def _describe(action: str, description: str) -> str:
     return f"{description}\n\n{MUTATING_TOOL_NOTE}" if is_mutating_action(action) else description
 
 
+def _build_http_tool(tool: Tools) -> StructuredTool:
+    # An HTTP tool is one endpoint with no actions: the API runs it by tool id alone
+    # and never fills discovered_actions, so the schema comes from the tool itself.
+    return StructuredTool.from_function(
+        coroutine=_make_executor(tool.id, None),
+        name=sanitize_tool_name(tool.slug),
+        description=_describe(tool.slug, tool.description or ""),
+        args_schema=tool.http_input_schema or {"type": "object", "properties": {}},
+    )
+
+
 def build_tools(chatbot: Chatbots) -> list[StructuredTool]:
     tools: list[StructuredTool] = []
     for chatbot_tool in chatbot.chatbot_tools:
         if not chatbot_tool.enabled:
+            continue
+
+        if chatbot_tool.tool.kind == "HTTP":
+            tools.append(_build_http_tool(chatbot_tool.tool))
             continue
 
         tool_id = chatbot_tool.tool.id
