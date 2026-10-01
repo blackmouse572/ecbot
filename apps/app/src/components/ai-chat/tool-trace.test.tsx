@@ -8,7 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ToolTrace } from "./tool-trace";
 
 const call = (over: Partial<ChatToolCall> = {}): ChatToolCall => ({
@@ -31,7 +31,11 @@ const render = (ui: ReactElement) =>
 const row = (name: RegExp) => screen.getByRole("button", { name });
 
 describe("ToolTrace", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("says Calling while a call runs and Called with its time once it returns", async () => {
+    // Real time must not pass the reported 312ms while the test renders.
+    vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-10-01T10:00:00Z"));
     const { rerender } = render(
       <ToolTrace
         toolCalls={[call({ status: "running", durationMs: undefined })]}
@@ -121,5 +125,31 @@ describe("ToolTrace", () => {
     const detail = screen.getByRole("region", { name: /lookup_order/ });
     expect(within(detail).getByText("Error")).toBeInTheDocument();
     expect(within(detail).getByText('"HTTP 409"')).toBeInTheDocument();
+  });
+
+  describe("step timer", () => {
+    afterEach(() => vi.useRealTimers());
+
+    it("holds its count when the server reports a shorter time", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-10-01T10:00:00.000Z"));
+      const running = call({ status: "running", durationMs: undefined });
+      const { rerender } = render(<ToolTrace toolCalls={[running]} running />);
+
+      vi.setSystemTime(new Date("2026-10-01T10:00:00.600Z"));
+      rerender(<ToolTrace toolCalls={[call({ durationMs: 274 })]} running />);
+      expect(screen.getByText("600ms")).toBeInTheDocument();
+    });
+
+    it("uses the server's time when it is the longer one", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-10-01T10:00:00.000Z"));
+      const running = call({ status: "running", durationMs: undefined });
+      const { rerender } = render(<ToolTrace toolCalls={[running]} running />);
+
+      vi.setSystemTime(new Date("2026-10-01T10:00:00.100Z"));
+      rerender(<ToolTrace toolCalls={[call({ durationMs: 312 })]} running />);
+      expect(screen.getByText("312ms")).toBeInTheDocument();
+    });
   });
 });

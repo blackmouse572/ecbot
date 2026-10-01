@@ -13,9 +13,10 @@ export type ToolTimings = {
 
 /**
  * Times a turn's tool calls on the client, so every step can count up from 0
- * while it runs. The server's `durationMs` wins once a registry tool returns;
- * built-ins report none, so their client-measured time stays. Calls first
- * seen already finished (history) have no client time.
+ * while it runs. Once a registry tool returns, the step shows the server's
+ * `durationMs` unless the live count already passed it (it never counts
+ * backwards); built-ins report none, so their client-measured time stays.
+ * Calls first seen already finished (history) show the server's time.
  */
 export function useToolTimings(
   toolCalls: ChatToolCall[],
@@ -48,10 +49,16 @@ export function useToolTimings(
     span ? Math.max(0, (span.end ?? now) - span.start) : undefined;
 
   return {
-    callMs: (call) =>
-      call.status !== "running" && call.durationMs !== undefined
+    callMs: (call) => {
+      const seen = measure(spans.current.get(call.invocationId));
+      if (call.status === "running" || call.durationMs === undefined)
+        return seen;
+      // A finished call never counts backwards: the server's time can be a
+      // little shorter than what the live counter already showed.
+      return seen === undefined
         ? call.durationMs
-        : measure(spans.current.get(call.invocationId)),
+        : Math.max(call.durationMs, seen);
+    },
     turnMs: measure(turn.current),
   };
 }
