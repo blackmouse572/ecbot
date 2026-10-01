@@ -82,3 +82,56 @@ describe("AIChatCard turn", () => {
     chat.messages = [];
   });
 });
+
+describe("AIChatCard for a customer", () => {
+  it("shows the customer the reply only, never how the agent got there", () => {
+    chat.status = "ready";
+    chat.messages = [
+      {
+        id: "u1",
+        role: "user",
+        parts: [{ type: "text", text: "Còn hàng không?" }],
+      },
+      {
+        id: "a1",
+        role: "assistant",
+        parts: [
+          { type: "data-knowledge", data: { count: 2 } },
+          { type: "reasoning", text: "checking stock" },
+          {
+            type: "tool-get_stock",
+            toolCallId: "r1",
+            state: "output-available",
+            input: {},
+            output: { internal_note: "VIP" },
+          },
+          { type: "data-tool-meta", id: "r1", data: { kind: "mcp" } },
+          { type: "text", text: "Còn hàng ạ" },
+          {
+            type: "source-url",
+            sourceId: "KB-1",
+            url: "https://shop/faq",
+            title: "faq",
+          },
+        ],
+      },
+    ];
+    render(
+      <TooltipProvider>
+        <AIChatCard
+          chatbotId="bot-1"
+          transport={transport}
+          audience="customer"
+        />
+      </TooltipProvider>,
+    );
+    expect(screen.getByText("Còn hàng ạ")).toBeInTheDocument();
+    expect(screen.queryByText(/get_stock/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/checking stock/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Sources")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { expanded: true }),
+    ).not.toBeInTheDocument();
+    chat.messages = [];
+  });
+});

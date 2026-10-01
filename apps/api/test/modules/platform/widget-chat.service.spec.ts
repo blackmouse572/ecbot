@@ -197,6 +197,16 @@ describe('WidgetChatService.handleTurn', () => {
         expect(messageRepository.markOutboundSent).toHaveBeenCalled();
     });
 
+    it('streams to the customer without the agent internals', async () => {
+        const { service, sseStream } = setup();
+
+        await service.handleTurn(res, turn);
+
+        expect(sseStream.pipe).toHaveBeenCalledWith(
+            expect.objectContaining({ audience: 'customer' })
+        );
+    });
+
     it('persists reply images as attachments', async () => {
         const { service, messageRepository, sseStream } = setup();
         sseStream.pipe.mockImplementationOnce(async ({ onFinalize }: any) => {

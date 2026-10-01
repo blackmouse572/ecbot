@@ -165,6 +165,9 @@ export class WidgetChatService {
             upstream,
             abort,
             logContext: `widget account ${account.id}`,
+            // The widget is the customer's chat: the reply only, never how the
+            // agent got there.
+            audience: 'customer',
             onFinalize: (assistantText, images) =>
                 this.persistReply(conversation.id, assistantText, images),
             onUsage: async usage => {

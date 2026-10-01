@@ -95,7 +95,17 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
   );
 }
 
-function AIChatMessages() {
+/**
+ * Who the card is for. The business (dashboard Test Chat, preview link) sees
+ * how the agent answered: tool calls, the knowledge search, reasoning and
+ * sources. A customer (the website widget) sees the reply only. apps/api also
+ * strips those parts from the widget's stream; this keeps the card safe on its
+ * own.
+ */
+export type ChatAudience = "owner" | "customer";
+
+function AIChatMessages({ audience }: { audience: ChatAudience }) {
+  const internals = audience === "owner";
   const { messages, status, error } = useAIChat();
   const { t } = useTranslation();
   const isLoading = status === "submitted" || status === "streaming";
@@ -120,11 +130,13 @@ function AIChatMessages() {
           !model.guardrail;
         const toolCalls = model.toolCalls.map(toolCallToChat);
         const showTrace =
-          isAssistant && (toolCalls.length > 0 || !!model.knowledgeCount);
+          internals &&
+          isAssistant &&
+          (toolCalls.length > 0 || !!model.knowledgeCount);
         const showBubble =
           showSpinner ||
           !!model.text ||
-          !!model.reasoning ||
+          (internals && !!model.reasoning) ||
           !!model.guardrail ||
           model.files.length > 0;
 
@@ -181,7 +193,7 @@ function AIChatMessages() {
                     // The reply takes the loader's place with a short blurred
                     // fade, so the two read as one change.
                     <div className={REPLY_ENTER}>
-                      {model.reasoning && (
+                      {internals && model.reasoning && (
                         <Text
                           size="xsmall"
                           className="text-ui-fg-subtle mb-1 whitespace-pre-wrap italic"
@@ -193,7 +205,9 @@ function AIChatMessages() {
                     </div>
                   )}
                   <MessageAttachments files={model.files} />
-                  {message.role === "assistant" && sources.length > 0 ? (
+                  {internals &&
+                  message.role === "assistant" &&
+                  sources.length > 0 ? (
                     <AIChatSources
                       sources={sources.map((s) => ({
                         id: s.sourceId,
@@ -257,6 +271,8 @@ export type AIChatCardProps = {
   /** Secondary line under the heading (e.g. how long a share link lasts). */
   subheading?: ReactNode;
   className?: string;
+  /** Defaults to `owner`; the website widget passes `customer`. */
+  audience?: ChatAudience;
 };
 
 export function AIChatCard(props: AIChatCardProps) {
@@ -269,6 +285,7 @@ export function AIChatCard(props: AIChatCardProps) {
     heading,
     subheading,
     className,
+    audience = "owner",
   } = props;
 
   return (
@@ -296,7 +313,7 @@ export function AIChatCard(props: AIChatCardProps) {
         <MessageScroller>
           <MessageScrollerViewport>
             <MessageScrollerContent>
-              <AIChatMessages />
+              <AIChatMessages audience={audience} />
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />
