@@ -40,3 +40,26 @@ describe("sign-up success toast", () => {
     },
   );
 });
+
+// #149: the product calls the feature "Agent" everywhere. agentBuilder keeps
+// "assistant" because there it names a kind of agent (personal assistant).
+describe("feature name", () => {
+  const leaves = (node: unknown, path: string[] = []): [string, string][] =>
+    typeof node === "string"
+      ? [[path.join("."), node]]
+      : Object.entries(node as object).flatMap(([key, value]) =>
+          leaves(value, [...path, key]),
+        );
+
+  it.each([
+    ["en", en, /\b(chatbots?|assistants?)\b/i],
+    ["vi", vi, /\b(chatbot|trợ lý)/i],
+  ])("%s copy never calls it a chatbot or assistant", (_, dict, pattern) => {
+    const offenders = leaves(dict)
+      .filter(([key]) => !key.startsWith("agentBuilder."))
+      .filter(([, value]) => pattern.test(value))
+      .map(([key]) => key);
+
+    expect(offenders).toEqual([]);
+  });
+});

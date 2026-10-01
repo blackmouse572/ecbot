@@ -28,13 +28,13 @@ const fileItem = (
   }) as KnowledgeItemResponseDto;
 
 describe("KnowledgeFilePreview", () => {
-  it("shows the file and how many sections the assistant learned", () => {
+  it("shows the file and how many sections the agent learned", () => {
     render(<KnowledgeFilePreview item={fileItem()} />);
 
     expect(screen.getByText("kunmart-doi-tra.docx")).toBeInTheDocument();
     expect(screen.getByText("DOCX, 2.00 KB")).toBeInTheDocument();
     expect(
-      screen.getByText("The assistant learned this file as 3 sections."),
+      screen.getByText("The agent learned this file as 3 sections."),
     ).toBeInTheDocument();
     expect(screen.queryByText("File content preview")).not.toBeInTheDocument();
   });
@@ -48,7 +48,7 @@ describe("KnowledgeFilePreview", () => {
 
     expect(
       screen.getByText(
-        "Not learned yet. The assistant can use this file once processing completes.",
+        "Not learned yet. The agent can use this file once processing completes.",
       ),
     ).toBeInTheDocument();
   });

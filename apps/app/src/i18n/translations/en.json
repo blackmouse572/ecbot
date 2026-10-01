@@ -31,7 +31,7 @@
     },
     "chatbotTab": {
       "title": "Skills",
-      "subtitle": "Know-how this chatbot can load on demand.",
+      "subtitle": "Know-how this agent can load on demand.",
       "addTitle": "Attach a skill",
       "selectLabel": "Select a skill",
       "noAvailable": "No more workspace skills to attach.",
@@ -305,16 +305,16 @@
     "title": "Dashboard",
     "recentActivities": "Recent Activity",
     "stats": {
-      "chatbots": "Chatbots",
+      "chatbots": "Agents",
       "accounts": "Connected accounts",
       "conversations": "Conversations"
     },
     "gettingStarted": {
-      "title": "Get your assistant live",
+      "title": "Get your agent live",
       "description": "Three steps to start answering your customers.",
       "steps": {
         "chatbot": {
-          "title": "Create your first assistant",
+          "title": "Create your first agent",
           "description": "Answer a few questions about your business and it is ready to chat."
         },
         "account": {
@@ -641,16 +641,16 @@
       "delete": "deleted account {{name}}"
     },
     "chatbot": {
-      "create": "created chatbot <link/>",
-      "update": "updated chatbot <link/>",
-      "delete": "deleted chatbot <link/>",
-      "linkAccount": "linked account <account/> to chatbot <link/>",
-      "unlinkAccount": "unlinked account <account/> from chatbot <link/>",
-      "active": "activated chatbot <link/>",
-      "inactive": "deactivated chatbot <link/>",
-      "archive": "archived chatbot <link/>",
-      "unarchive": "unarchived chatbot <link/>",
-      "clone": "cloned chatbot <link/>"
+      "create": "created agent <link/>",
+      "update": "updated agent <link/>",
+      "delete": "deleted agent <link/>",
+      "linkAccount": "linked account <account/> to agent <link/>",
+      "unlinkAccount": "unlinked account <account/> from agent <link/>",
+      "active": "activated agent <link/>",
+      "inactive": "deactivated agent <link/>",
+      "archive": "archived agent <link/>",
+      "unarchive": "unarchived agent <link/>",
+      "clone": "cloned agent <link/>"
     },
     "member": {
       "invite": "invited member <link/>",
@@ -661,8 +661,8 @@
       "create": "created skill <link/>",
       "update": "updated skill <link/>",
       "delete": "deleted skill {{name}}",
-      "enable": "enabled skill {{name}} for a chatbot",
-      "disable": "disabled skill {{name}} for a chatbot"
+      "enable": "enabled skill {{name}} for an agent",
+      "disable": "disabled skill {{name}} for an agent"
     },
     "knowledgeBase": {
       "create": "uploaded document <link/>",
@@ -672,8 +672,8 @@
     "tool": {
       "startInstall": "started installing tool {{name}}",
       "completeInstall": "installed tool {{name}}",
-      "enable": "enabled tool {{name}} for a chatbot",
-      "disable": "disabled tool {{name}} for a chatbot"
+      "enable": "enabled tool {{name}} for an agent",
+      "disable": "disabled tool {{name}} for an agent"
     },
     "role": {
       "active": "activated role <link/>",
@@ -705,8 +705,8 @@
     "batch": {
       "delete": {
         "label": "Delete",
-        "title": "Delete chatbot(s)",
-        "description": "Are you sure you want to delete {{count}} chatbot(s)? This action cannot be undone."
+        "title": "Delete agent(s)",
+        "description": "Are you sure you want to delete {{count}} agent(s)? This action cannot be undone."
       },
       "activate": {
         "label": "Activate"
@@ -715,13 +715,14 @@
         "label": "Deactivate"
       }
     },
-    "title": "Chatbot",
+    "title": "Agent",
     "create": {
-      "title": "Create chatbot",
-      "defaultName": "My assistance chatbot",
-      "name": "Chatbot Name",
+      "title": "Create agent",
+      "defaultName": "My agent",
+      "name": "Agent Name",
+      "namePlaceholder": "Enter agent name",
       "generalKnowledge": "General Knowledge",
-      "generalKnowledgePlaceholder": "What should your chatbot know about your business?",
+      "generalKnowledgePlaceholder": "What should your agent know about your business?",
       "linkAccounts": "Link Accounts",
       "select": "Select",
       "noAccountsAvailable": "No accounts available",
@@ -734,29 +735,29 @@
         "description": "Automatically mark messages as read to save time."
       },
       "primaryLanguage": "Primary Language",
-      "primaryLanguageHint": "The main language your chatbot will use to communicate with users.",
+      "primaryLanguageHint": "The main language your agent will use to communicate with users.",
       "deferedLanguage": "Fallback Language",
-      "deferedLanguageHint": "A backup language your chatbot can switch to if needed.",
+      "deferedLanguageHint": "A backup language your agent can switch to if needed.",
       "welcomeMessage": "Welcome Message",
-      "welcomeMessageHint": "The first message your chatbot will greet users with. This is optional.",
-      "welcomeMessagePlaceholder": "Enter a welcome message for your chatbot...",
+      "welcomeMessageHint": "The first message your agent will greet users with. This is optional.",
+      "welcomeMessagePlaceholder": "Enter a welcome message for your agent...",
       "fallbackMessage": "Fallback Message",
-      "fallbackMessageHint": "Message shown when the chatbot cannot answer a user's question.",
+      "fallbackMessageHint": "Message shown when the agent cannot answer a user's question.",
       "fallbackMessagePlaceholder": "Enter a fallback message when the bot cannot answer...",
       "modelProvider": "AI Provider",
       "model": "AI Model",
-      "modelHint": "Choose the AI model that powers your chatbot's responses.",
+      "modelHint": "Choose the AI model that powers your agent's responses.",
       "modelsLoading": "Loading models...",
       "temperature": "Temperature",
-      "temperatureHint": "Controls how creative or focused the chatbot's answers are. Higher values = more creative.",
+      "temperatureHint": "Controls how creative or focused the agent's answers are. Higher values = more creative.",
       "maxTokens": "Max Tokens",
-      "maxTokensHint": "The maximum length of each chatbot response.",
+      "maxTokensHint": "The maximum length of each agent response.",
       "create": "Create",
       "cancel": "Cancel",
-      "error": "Failed to create chatbot",
-      "success": "Chatbot created successfully",
-      "loading": "Creating chatbot...",
-      "description": "Create a new chatbot to assist you with your tasks. You can link it to your accounts and provide general knowledge for it to use.",
+      "error": "Failed to create agent",
+      "success": "Agent created successfully",
+      "loading": "Creating agent...",
+      "description": "Create a new agent to assist you with your tasks. You can link it to your accounts and provide general knowledge for it to use.",
       "advancedSettings": "Advanced Settings",
       "handoffSettings": "Handoff Settings",
       "handoffMessage": "Handoff Message",
@@ -782,7 +783,7 @@
       "followupRulesPlaceholder": "e.g. Follow up after 24 hours if the customer has not responded"
     },
     "details": {
-      "title": "Chatbot Details",
+      "title": "Agent Details",
       "summary": {
         "title": "Summary",
         "behaviorSection": "Behavior",
@@ -801,10 +802,10 @@
         "active": "Active"
       },
       "noAccounts": "No Linked Accounts Yet",
-      "noAccountsDescription": "Your chatbot is ready to go, but needs accounts to get started! Edit the chatbot to link your accounts."
+      "noAccountsDescription": "Your agent is ready to go, but needs accounts to get started! Edit the agent to link your accounts."
     },
     "edit": {
-      "title": "Edit chatbot",
+      "title": "Edit agent",
       "name": "Name",
       "description": "Description",
       "type": "Type",
@@ -815,9 +816,9 @@
       "noAccountsAvailable": "No accounts available",
       "save": "Save",
       "cancel": "Cancel",
-      "error": "Failed to update chatbot",
-      "success": "Chatbot updated successfully",
-      "loading": "Loading chatbot..."
+      "error": "Failed to update agent",
+      "success": "Agent updated successfully",
+      "loading": "Loading agent..."
     },
     "chat": {
       "heading": "Test Chat",
@@ -865,9 +866,9 @@
       "poweredBy": "Powered by eccho"
     },
     "list": {
-      "noRecordsTitle": "No chatbots yet",
-      "noRecordsMessage": "Create your first chatbot to start answering your customers.",
-      "createFirst": "Create chatbot",
+      "noRecordsTitle": "No agents yet",
+      "noRecordsMessage": "Create your first agent to start answering your customers.",
+      "createFirst": "Create agent",
       "action": {
         "stop": "Stop",
         "delete": "Delete",
@@ -875,14 +876,14 @@
       },
       "delete": {
         "confirm": {
-          "title": "Delete Chatbot",
+          "title": "Delete Agent",
           "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
-          "confirmButton": "Delete Chatbot"
+          "confirmButton": "Delete Agent"
         },
-        "success": "Chatbot deleted successfully",
-        "error": "Failed to delete chatbot"
+        "success": "Agent deleted successfully",
+        "error": "Failed to delete agent"
       },
-      "title": "Chatbot",
+      "title": "Agent",
       "actions": {
         "import": "Import",
         "create": "Create"
@@ -953,7 +954,7 @@
       "selectFile": "Select file",
       "empty": {
         "dragDrop": "Drag & drop files here to upload",
-        "uploadDesc": "Upload files to enable RAG capabilities for this chatbot."
+        "uploadDesc": "Upload files to enable RAG capabilities for this agent."
       },
       "delete": {
         "title": "Delete RAG file(s)",
@@ -969,15 +970,15 @@
       }
     },
     "clone": {
-      "title": "Clone Chatbot",
+      "title": "Clone Agent",
       "optionsLabel": "Also clone:",
       "cloneTools": "Tool configurations",
       "cloneKnowledgeItems": "Knowledge items",
       "cloneRags": "RAG documents",
       "more": "+{{count}} more",
       "confirm": "Clone",
-      "success": "Chatbot \"{{name}}\" cloned successfully",
-      "error": "Failed to clone chatbot"
+      "success": "Agent \"{{name}}\" cloned successfully",
+      "error": "Failed to clone agent"
     },
     "actions": {
       "clone": "Clone"
@@ -1523,14 +1524,14 @@
     "list": {
       "noRecordsMessage": "No followups found",
       "columns": {
-        "chatbot": "Chatbot",
+        "chatbot": "Agent",
         "customer": "Customer",
         "reason": "Reason",
         "firesIn": "Fires in",
         "status": "Status"
       },
       "filters": {
-        "chatbot": "Chatbot",
+        "chatbot": "Agent",
         "status": "Status"
       },
       "action": {
@@ -1559,7 +1560,7 @@
         "conversation_missing": "Conversation no longer exists",
         "bot_disabled": "Bot was turned off",
         "conversation_resolved": "Conversation was resolved",
-        "chatbot_missing": "Chatbot was disconnected"
+        "chatbot_missing": "Agent was disconnected"
       }
     }
   },
@@ -1636,7 +1637,7 @@
   },
   "roles": {
     "subjects": {
-      "chatbot": "Chatbot",
+      "chatbot": "Agent",
       "rag": "RAG",
       "knowledgeBase": "Knowledge Base",
       "customer": "Customer"
@@ -1750,7 +1751,7 @@
       "error": "Failed to delete workspace",
       "dangerZone": {
         "title": "Danger zone",
-        "description": "Deleting this workspace permanently removes all of its data (members, customers, chatbots and more). This cannot be undone.",
+        "description": "Deleting this workspace permanently removes all of its data (members, customers, agents and more). This cannot be undone.",
         "action": "Delete workspace"
       },
       "confirm": {
@@ -1891,12 +1892,12 @@
     "maxLength": "Let's keep it shorter - maximum {maxLength} characters please",
     "slug": "Only lowercase letters, numbers, and hyphens allowed here - keep it clean!",
     "chatbot": {
-      "nameRequired": "Your chatbot needs a name - give it some personality!",
-      "nameMinLength": "Chatbot name must be at least {min} characters.",
-      "primaryLanguageRequired": "Please select a primary language for your chatbot",
-      "modelRequired": "Please select an AI model for your chatbot",
-      "modelProviderRequired": "Please select an AI provider for your chatbot",
-      "modelTextNameRequired": "Please select an AI model for your chatbot"
+      "nameRequired": "Your agent needs a name - give it some personality!",
+      "nameMinLength": "Agent name must be at least {min} characters.",
+      "primaryLanguageRequired": "Please select a primary language for your agent",
+      "modelRequired": "Please select an AI model for your agent",
+      "modelProviderRequired": "Please select an AI provider for your agent",
+      "modelTextNameRequired": "Please select an AI model for your agent"
     }
   },
   "errorBoundary": {
@@ -2021,7 +2022,7 @@
     },
     "empty": {
       "title": "No knowledge items linked",
-      "description": "Add knowledge items to enhance your chatbot with context and information."
+      "description": "Add knowledge items to enhance your agent with context and information."
     },
     "actions": {
       "process": "Process",
@@ -2083,9 +2084,9 @@
     "preview_empty": "No content yet",
     "preview_unsupported": "This file type can't be previewed. Download it to view.",
     "preview_error": "Couldn't load this item. Please try again.",
-    "learned_chunks_one": "The assistant learned this file as {{count}} section.",
-    "learned_chunks_other": "The assistant learned this file as {{count}} sections.",
-    "not_learned_yet": "Not learned yet. The assistant can use this file once processing completes.",
+    "learned_chunks_one": "The agent learned this file as {{count}} section.",
+    "learned_chunks_other": "The agent learned this file as {{count}} sections.",
+    "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
     "learn_failed": "Could not learn this file. Try Process again."
   },
   "conversations": {
@@ -2098,8 +2099,8 @@
       "filter": {
         "status": "Status",
         "all": "All statuses",
-        "chatbot": "Chatbot",
-        "allChatbots": "All chatbots",
+        "chatbot": "Agent",
+        "allChatbots": "All agents",
         "account": "Account",
         "allAccounts": "All accounts",
         "groupBy": "Group by"
@@ -2107,7 +2108,7 @@
       "groupBy": {
         "none": "No grouping",
         "account": "By account",
-        "chatbot": "By chatbot",
+        "chatbot": "By agent",
         "unassigned": "Unassigned"
       },
       "row": {
@@ -2156,7 +2157,7 @@
     "actions": {
       "botLabel": "Bot",
       "viewProfile": "View profile",
-      "viewChatbot": "View chatbot",
+      "viewChatbot": "View agent",
       "pause": "Pause bot",
       "resolve": "Resolve",
       "restore": "Restore to auto",
@@ -2300,7 +2301,7 @@
     },
     "title": "Customers",
     "list": {
-      "description": "Everyone your chatbots have talked to. Search by name, phone or email.",
+      "description": "Everyone your agents have talked to. Search by name, phone or email.",
       "unnamed": "Unnamed customer",
       "phone": "Phone",
       "firstSeen": "First seen",
@@ -2399,11 +2400,11 @@
       "delete": {
         "label": "Delete",
         "title": "Delete tool(s)",
-        "description": "Are you sure you want to delete {{count}} tool(s)? Tools still attached to a chatbot will be skipped."
+        "description": "Are you sure you want to delete {{count}} tool(s)? Tools still attached to an agent will be skipped."
       }
     },
     "title": "Tools",
-    "subtitle": "Connect HTTP APIs and MCP servers your chatbot can call.",
+    "subtitle": "Connect HTTP APIs and MCP servers your agent can call.",
     "actions": {
       "browseMarketplace": "Browse marketplace",
       "create": "Create",
@@ -2477,7 +2478,7 @@
     },
     "create": {
       "title": "New HTTP tool",
-      "subtitle": "Describe an HTTP endpoint the chatbot can call as a tool.",
+      "subtitle": "Describe an HTTP endpoint the agent can call as a tool.",
       "submit": "Create tool",
       "success": "Tool created.",
       "error": "Failed to create tool."
@@ -2525,10 +2526,10 @@
       "button": "Delete tool",
       "success": "Tool deleted.",
       "error": "Failed to delete tool.",
-      "errorReferenced": "This tool is still attached to one or more chatbots. Remove it from all chatbots first, then delete.",
+      "errorReferenced": "This tool is still attached to one or more agents. Remove it from all agents first, then delete.",
       "confirm": {
         "title": "Delete tool?",
-        "description": "Chatbots using this tool will lose access. This cannot be undone.",
+        "description": "Agents using this tool will lose access. This cannot be undone.",
         "confirmButton": "Delete"
       }
     },
@@ -2671,16 +2672,16 @@
     },
     "invocations": {
       "title": "Recent invocations",
-      "subtitle": "Last 100 tool calls for this chatbot. Click a row to inspect the request and response.",
+      "subtitle": "Last 100 tool calls for this agent. Click a row to inspect the request and response.",
       "refresh": "Refresh",
-      "empty": "No invocations yet. The chatbot hasn't called any tools.",
+      "empty": "No invocations yet. The agent hasn't called any tools.",
       "input": "Input args",
       "output": "Output",
       "error": "Error"
     },
     "chatbotTab": {
       "title": "Tools",
-      "subtitle": "Enable workspace tools on this chatbot. MCP tools support per-action toggles.",
+      "subtitle": "Enable workspace tools on this agent. MCP tools support per-action toggles.",
       "enabled": "Enabled",
       "disabled": "Disabled",
       "enableSuccess": "Tool enabled.",
@@ -2696,7 +2697,7 @@
       "actionsAutoSaveError": "Failed to save action settings.",
       "empty": {
         "title": "No tools enabled",
-        "description": "Click 'Add' to connect a workspace tool to this chatbot."
+        "description": "Click 'Add' to connect a workspace tool to this agent."
       }
     },
     "addDrawer": {
@@ -2755,7 +2756,7 @@
       "renewsOn": "Renews on",
       "hasCredit": "Extra credit available",
       "noCredit": "No extra credit",
-      "exhausted": "Quota used up. Chatbots will reply with their fallback message."
+      "exhausted": "Quota used up. Agents will reply with their fallback message."
     },
     "trend": {
       "title": "Daily usage",
@@ -2764,8 +2765,8 @@
       "messages": "Messages"
     },
     "byChatbot": {
-      "title": "By chatbot",
-      "column": "Chatbot"
+      "title": "By agent",
+      "column": "Agent"
     },
     "byPlatform": {
       "title": "By platform",

@@ -31,7 +31,7 @@
     },
     "chatbotTab": {
       "title": "Skills",
-      "subtitle": "Know-how chatbot này nạp khi cần.",
+      "subtitle": "Know-how agent này nạp khi cần.",
       "addTitle": "Gắn skill",
       "selectLabel": "Chọn skill",
       "noAvailable": "Không còn skill workspace để gắn.",
@@ -330,22 +330,22 @@
       "members": "Thành viên",
       "workspaces": "Không gian làm việc",
       "lastActive": "Hoạt động lần cuối",
-      "chatbots": "Chatbot",
+      "chatbots": "Agent",
       "accounts": "Tài khoản đã kết nối",
       "conversations": "Hội thoại"
     },
     "recentActivities": "Hoạt động gần đây",
     "gettingStarted": {
-      "title": "Đưa trợ lý vào hoạt động",
+      "title": "Đưa agent vào hoạt động",
       "description": "Ba bước để bắt đầu trả lời khách hàng.",
       "steps": {
         "chatbot": {
-          "title": "Tạo trợ lý đầu tiên",
-          "description": "Trả lời vài câu hỏi về cửa hàng là trợ lý sẵn sàng trò chuyện."
+          "title": "Tạo agent đầu tiên",
+          "description": "Trả lời vài câu hỏi về cửa hàng là agent sẵn sàng trò chuyện."
         },
         "account": {
           "title": "Kết nối kênh",
-          "description": "Đặt trợ lý lên website, Telegram, Messenger hoặc Zalo."
+          "description": "Đặt agent lên website, Telegram, Messenger hoặc Zalo."
         },
         "conversation": {
           "title": "Nhận cuộc hội thoại đầu tiên",
@@ -646,16 +646,16 @@
       "delete": "đã xóa tài khoản {{name}}"
     },
     "chatbot": {
-      "create": "đã tạo chatbot <link/>",
-      "update": "đã cập nhật chatbot <link/>",
-      "delete": "đã xóa chatbot <link/>",
-      "linkAccount": "đã liên kết tài khoản <account/> với chatbot <link/>",
-      "unlinkAccount": "đã hủy liên kết tài khoản <account/> khỏi chatbot <link/>",
-      "active": "đã bật chatbot <link/>",
-      "inactive": "đã tắt chatbot <link/>",
-      "archive": "đã lưu trữ chatbot <link/>",
-      "unarchive": "đã bỏ lưu trữ chatbot <link/>",
-      "clone": "đã nhân bản chatbot <link/>"
+      "create": "đã tạo agent <link/>",
+      "update": "đã cập nhật agent <link/>",
+      "delete": "đã xóa agent <link/>",
+      "linkAccount": "đã liên kết tài khoản <account/> với agent <link/>",
+      "unlinkAccount": "đã hủy liên kết tài khoản <account/> khỏi agent <link/>",
+      "active": "đã bật agent <link/>",
+      "inactive": "đã tắt agent <link/>",
+      "archive": "đã lưu trữ agent <link/>",
+      "unarchive": "đã bỏ lưu trữ agent <link/>",
+      "clone": "đã nhân bản agent <link/>"
     },
     "member": {
       "invite": "đã mời thành viên <link/>",
@@ -666,8 +666,8 @@
       "create": "đã tạo kỹ năng <link/>",
       "update": "đã cập nhật kỹ năng <link/>",
       "delete": "đã xóa kỹ năng {{name}}",
-      "enable": "đã bật kỹ năng {{name}} cho chatbot",
-      "disable": "đã tắt kỹ năng {{name}} cho chatbot"
+      "enable": "đã bật kỹ năng {{name}} cho agent",
+      "disable": "đã tắt kỹ năng {{name}} cho agent"
     },
     "knowledgeBase": {
       "create": "đã tải lên tài liệu <link/>",
@@ -677,8 +677,8 @@
     "tool": {
       "startInstall": "đã bắt đầu cài đặt công cụ {{name}}",
       "completeInstall": "đã cài đặt công cụ {{name}}",
-      "enable": "đã bật công cụ {{name}} cho chatbot",
-      "disable": "đã tắt công cụ {{name}} cho chatbot"
+      "enable": "đã bật công cụ {{name}} cho agent",
+      "disable": "đã tắt công cụ {{name}} cho agent"
     },
     "role": {
       "active": "đã kích hoạt vai trò <link/>",
@@ -731,8 +731,8 @@
     "batch": {
       "delete": {
         "label": "Xóa",
-        "title": "Xóa chatbot",
-        "description": "Bạn có chắc muốn xóa {{count}} chatbot? Hành động này không thể hoàn tác."
+        "title": "Xóa agent",
+        "description": "Bạn có chắc muốn xóa {{count}} agent? Hành động này không thể hoàn tác."
       },
       "activate": {
         "label": "Kích hoạt"
@@ -741,48 +741,49 @@
         "label": "Ngừng kích hoạt"
       }
     },
-    "title": "Chatbot",
+    "title": "Agent",
     "create": {
-      "title": "Tạo chatbot",
-      "defaultName": "Chatbot hỗ trợ của tôi",
-      "name": "Tên chatbot",
+      "title": "Tạo agent",
+      "defaultName": "Agent của tôi",
+      "name": "Tên agent",
+      "namePlaceholder": "Nhập tên agent",
       "generalKnowledge": "Kiến thức về doanh nghiệp",
-      "generalKnowledgePlaceholder": "Chatbot nên biết gì về công ty bạn?",
+      "generalKnowledgePlaceholder": "Agent nên biết gì về công ty bạn?",
       "linkAccounts": "Kết nối tài khoản",
       "select": "Chọn",
       "noAccountsAvailable": "Chưa có tài khoản nào để liên kết",
       "typingIndicator": {
         "label": "Hiển thị trạng thái đang nhập",
-        "description": "Hiển thị 'đang nhập...' khi chatbot đang soạn tin nhắn mới."
+        "description": "Hiển thị 'đang nhập...' khi agent đang soạn tin nhắn mới."
       },
       "autoRead": {
         "label": "Tự động đánh dấu đã đọc",
         "description": "Tin nhắn sẽ tự động được đánh dấu đã đọc để tiết kiệm thời gian."
       },
       "primaryLanguage": "Ngôn ngữ chính",
-      "primaryLanguageHint": "Ngôn ngữ chính mà chatbot sẽ sử dụng để trò chuyện với khách hàng.",
+      "primaryLanguageHint": "Ngôn ngữ chính mà agent sẽ sử dụng để trò chuyện với khách hàng.",
       "deferedLanguage": "Ngôn ngữ dự phòng",
-      "deferedLanguageHint": "Ngôn ngữ dự phòng, chatbot sẽ chuyển sang khi cần thiết.",
+      "deferedLanguageHint": "Ngôn ngữ dự phòng, agent sẽ chuyển sang khi cần thiết.",
       "welcomeMessage": "Tin nhắn chào mừng",
       "welcomeMessageHint": "Tin nhắn đầu tiên gửi đến khách hàng khi họ bắt đầu trò chuyện. Có thể để trống.",
       "welcomeMessagePlaceholder": "Nhập lời chào thân thiện cho khách hàng...",
       "fallbackMessage": "Tin nhắn dự phòng",
-      "fallbackMessageHint": "Tin nhắn dùng khi chatbot không thể trả lời câu hỏi của khách hàng.",
-      "fallbackMessagePlaceholder": "Nhập nội dung khi chatbot không có câu trả lời phù hợp...",
+      "fallbackMessageHint": "Tin nhắn dùng khi agent không thể trả lời câu hỏi của khách hàng.",
+      "fallbackMessagePlaceholder": "Nhập nội dung khi agent không có câu trả lời phù hợp...",
       "modelProvider": "Nhà cung cấp AI",
       "model": "Mô hình AI",
-      "modelHint": "Chọn mô hình AI để chatbot trả lời thông minh hơn.",
+      "modelHint": "Chọn mô hình AI để agent trả lời thông minh hơn.",
       "modelsLoading": "Đang tải mô hình...",
       "temperature": "Mức sáng tạo",
       "temperatureHint": "Điều chỉnh mức sáng tạo của câu trả lời. Giá trị cao = sáng tạo hơn.",
       "maxTokens": "Độ dài tối đa",
-      "maxTokensHint": "Số ký tự tối đa cho mỗi câu trả lời của chatbot.",
+      "maxTokensHint": "Số ký tự tối đa cho mỗi câu trả lời của agent.",
       "create": "Tạo",
       "cancel": "Hủy",
-      "error": "Không thể tạo chatbot",
-      "success": "Tạo chatbot thành công",
-      "loading": "Đang tạo chatbot...",
-      "description": "Tạo một chatbot mới để hỗ trợ bạn. Bạn có thể liên kết nó với các tài khoản và cung cấp kiến thức chung để nó sử dụng.",
+      "error": "Không thể tạo agent",
+      "success": "Tạo agent thành công",
+      "loading": "Đang tạo agent...",
+      "description": "Tạo một agent mới để hỗ trợ bạn. Bạn có thể liên kết nó với các tài khoản và cung cấp kiến thức chung để nó sử dụng.",
       "advancedSettings": "Cài đặt nâng cao",
       "handoffSettings": "Cài đặt chuyển tiếp cho nhân sự",
       "handoffMessage": "Tin nhắn chuyển tiếp",
@@ -792,7 +793,7 @@
       "handoffKeywordsHint": "Các từ khóa cách nhau bằng dấu phẩy, khi xuất hiện trong tin nhắn sẽ tự động chuyển sang nhân viên.",
       "handoffKeywordsPlaceholder": "Ví dụ: nhân viên, hỗ trợ, người thật",
       "handoffFallbackThreshold": "Ngưỡng chuyển tiếp tự động",
-      "handoffFallbackThresholdHint": "Số lần chatbot không trả lời được liên tiếp trước khi tự động chuyển sang nhân viên hỗ trợ.",
+      "handoffFallbackThresholdHint": "Số lần agent không trả lời được liên tiếp trước khi tự động chuyển sang nhân viên hỗ trợ.",
       "guardrailSettings": "Cài đặt Guardrail",
       "guardrailEnabled": "Bật Guardrail",
       "guardrailEnabledHint": "Kiểm tra tin nhắn đến và phản hồi của bot để phát hiện tấn công, rò rỉ thông tin và vi phạm chính sách.",
@@ -853,9 +854,9 @@
       "poweredBy": "Powered by eccho"
     },
     "list": {
-      "noRecordsTitle": "Chưa có chatbot nào",
-      "noRecordsMessage": "Tạo chatbot đầu tiên để bắt đầu trả lời khách hàng của bạn.",
-      "createFirst": "Tạo chatbot",
+      "noRecordsTitle": "Chưa có agent nào",
+      "noRecordsMessage": "Tạo agent đầu tiên để bắt đầu trả lời khách hàng của bạn.",
+      "createFirst": "Tạo agent",
       "action": {
         "stop": "Dừng (tạm nghỉ)",
         "delete": "Xóa",
@@ -863,12 +864,12 @@
       },
       "delete": {
         "confirm": {
-          "title": "Xóa Chatbot",
-          "description": "Bạn có chắc chắn muốn xóa \"{{name}}\" không? Hành động này không thể hoàn tác (và robot sẽ buồn). 😢",
-          "confirmButton": "Xóa Chatbot"
+          "title": "Xóa Agent",
+          "description": "Bạn có chắc chắn muốn xóa \"{{name}}\" không? Hành động này không thể hoàn tác.",
+          "confirmButton": "Xóa Agent"
         },
-        "success": "Đã xóa chatbot thành công! 👋",
-        "error": "Không thể xóa chatbot. Hãy thử lại nhé!"
+        "success": "Đã xóa agent thành công! 👋",
+        "error": "Không thể xóa agent. Hãy thử lại nhé!"
       },
       "title": "Chat bot",
       "actions": {
@@ -929,21 +930,21 @@
       }
     },
     "edit": {
-      "title": "Chỉnh sửa chatbot",
+      "title": "Chỉnh sửa agent",
       "defaultName": "Hộp chat của tôi",
       "name": "Tên",
       "description": "Mô tả",
       "type": "Loại",
       "generalKnowledge": "Kiến thức chung",
-      "generalKnowledgePlaceholder": "Bạn muốn robot biết điều gì?",
+      "generalKnowledgePlaceholder": "Agent nên biết gì về cửa hàng của bạn?",
       "linkAccounts": "Liên kết tài khoản",
       "select": "Chọn",
       "noAccountsAvailable": "Không có tài khoản nào (hãy tạo một vài cái!)",
       "save": "Lưu",
       "cancel": "Hủy",
-      "error": "Không thể cập nhật chatbot. Hãy thử lại!",
-      "success": "Cập nhật chatbot thành công! 🎉",
-      "loading": "Đang tải chatbot... ⏳"
+      "error": "Không thể cập nhật agent. Hãy thử lại!",
+      "success": "Cập nhật agent thành công! 🎉",
+      "loading": "Đang tải agent... ⏳"
     },
     "details": {
       "linkedAccounts": "Tài khoản liên kết",
@@ -957,14 +958,14 @@
         "behaviorSection": "Hành vi",
         "aiModelSection": "Mô hình AI"
       },
-      "linkedAccountsDescription": "Quản lý tài khoản sắp tới (sự nghiệp robot)",
+      "linkedAccountsDescription": "Quản lý các tài khoản đã liên kết",
       "account": {
         "active": "Hoạt động"
       },
       "autoRead": "Tự đánh dấu đã xem",
       "typingIndicator": "Hiện đang soạn tin",
       "noAccounts": "Chưa có tài khoản liên kết",
-      "noAccountsDescription": "Chatbot của bạn đã sẵn sàng, nhưng cần các tài khoản để bắt đầu! Hãy chỉnh sửa chatbot để liên kết tài khoản của bạn."
+      "noAccountsDescription": "Agent của bạn đã sẵn sàng, nhưng cần các tài khoản để bắt đầu! Hãy chỉnh sửa agent để liên kết tài khoản của bạn."
     },
     "rag": {
       "title": "Nền tảng kiến thức",
@@ -979,11 +980,11 @@
       "selectFile": "Chọn tệp",
       "empty": {
         "dragDrop": "Kéo & thả tệp vào đây để tải lên",
-        "uploadDesc": "Tải lên tệp để kích hoạt tính năng RAG cho chatbot này (làm robot thông minh hơn)."
+        "uploadDesc": "Tải lên tệp để kích hoạt tính năng RAG cho agent này."
       },
       "delete": {
         "title": "Xóa tệp RAG",
-        "description": "Bạn có chắc chắn muốn xóa {{count}} tệp RAG? Hành động này không thể hoàn tác (robot sẽ quên những gì đã học). 🧠",
+        "description": "Bạn có chắc chắn muốn xóa {{count}} tệp RAG? Hành động này không thể hoàn tác.",
         "confirmText": "Xóa",
         "loading": "Đang xóa {{count}} tệp RAG... 🗑️",
         "success": "Đã xóa {{count}} tệp RAG thành công! 👋",
@@ -995,15 +996,15 @@
       }
     },
     "clone": {
-      "title": "Sao chép Chatbot",
+      "title": "Sao chép Agent",
       "optionsLabel": "Cũng sao chép:",
       "cloneTools": "Cấu hình công cụ",
       "cloneKnowledgeItems": "Kiến thức",
       "cloneRags": "Tài liệu RAG",
       "more": "+{{count}} nữa",
       "confirm": "Sao chép",
-      "success": "Chatbot \"{{name}}\" đã được sao chép thành công",
-      "error": "Sao chép chatbot thất bại"
+      "success": "Agent \"{{name}}\" đã được sao chép thành công",
+      "error": "Sao chép agent thất bại"
     },
     "actions": {
       "clone": "Sao chép"
@@ -1549,14 +1550,14 @@
     "list": {
       "noRecordsMessage": "Không có nhắc hẹn nào",
       "columns": {
-        "chatbot": "Chatbot",
+        "chatbot": "Agent",
         "customer": "Khách hàng",
         "reason": "Lý do",
         "firesIn": "Kích hoạt sau",
         "status": "Trạng thái"
       },
       "filters": {
-        "chatbot": "Chatbot",
+        "chatbot": "Agent",
         "status": "Trạng thái"
       },
       "action": {
@@ -1585,7 +1586,7 @@
         "conversation_missing": "Hội thoại không còn tồn tại",
         "bot_disabled": "Bot đã bị tắt",
         "conversation_resolved": "Hội thoại đã được xử lý xong",
-        "chatbot_missing": "Chatbot đã bị ngắt kết nối"
+        "chatbot_missing": "Agent đã bị ngắt kết nối"
       }
     }
   },
@@ -1683,7 +1684,7 @@
   },
   "roles": {
     "subjects": {
-      "chatbot": "Chatbot",
+      "chatbot": "Agent",
       "rag": "RAG",
       "knowledgeBase": "Cơ sở kiến thức",
       "customer": "Khách hàng"
@@ -1801,7 +1802,7 @@
       "error": "Không thể xóa không gian làm việc",
       "dangerZone": {
         "title": "Vùng nguy hiểm",
-        "description": "Xóa không gian làm việc này sẽ xóa vĩnh viễn toàn bộ dữ liệu (thành viên, khách hàng, chatbot và nhiều hơn nữa). Hành động này không thể hoàn tác.",
+        "description": "Xóa không gian làm việc này sẽ xóa vĩnh viễn toàn bộ dữ liệu (thành viên, khách hàng, agent và nhiều hơn nữa). Hành động này không thể hoàn tác.",
         "action": "Xóa không gian làm việc"
       },
       "confirm": {
@@ -1922,12 +1923,12 @@
     "maxLength": "Độ dài tối đa là {maxLength} ký tự",
     "slug": "Chỉ sử dụng chữ thường, số và dấu gạch ngang.",
     "chatbot": {
-      "nameRequired": "Tên chatbot là bắt buộc",
-      "nameMinLength": "Tên chatbot phải có ít nhất {min} ký tự",
-      "primaryLanguageRequired": "Vui lòng chọn ngôn ngữ chính cho chatbot của bạn",
-      "modelRequired": "Vui lòng chọn một mô hình AI cho chatbot của bạn",
-      "modelProviderRequired": "Vui lòng chọn nhà cung cấp AI cho chatbot của bạn",
-      "modelTextNameRequired": "Vui lòng chọn mô hình AI cho chatbot của bạn"
+      "nameRequired": "Tên agent là bắt buộc",
+      "nameMinLength": "Tên agent phải có ít nhất {min} ký tự",
+      "primaryLanguageRequired": "Vui lòng chọn ngôn ngữ chính cho agent của bạn",
+      "modelRequired": "Vui lòng chọn một mô hình AI cho agent của bạn",
+      "modelProviderRequired": "Vui lòng chọn nhà cung cấp AI cho agent của bạn",
+      "modelTextNameRequired": "Vui lòng chọn mô hình AI cho agent của bạn"
     }
   },
   "errorBoundary": {
@@ -2052,7 +2053,7 @@
     },
     "empty": {
       "title": "Không có mục kiến thức nào được liên kết",
-      "description": "Thêm các mục kiến thức để nâng cao chatbot của bạn bằng ngữ cảnh và thông tin."
+      "description": "Thêm các mục kiến thức để nâng cao agent của bạn bằng ngữ cảnh và thông tin."
     },
     "actions": {
       "process": "Xử lý",
@@ -2114,8 +2115,8 @@
     "preview_empty": "Chưa có nội dung",
     "preview_unsupported": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
     "preview_error": "Không tải được mục này. Vui lòng thử lại.",
-    "learned_chunks_other": "Trợ lý đã học tệp này thành {{count}} phần.",
-    "not_learned_yet": "Chưa học. Trợ lý có thể dùng tệp này khi xử lý xong.",
+    "learned_chunks_other": "Agent đã học tệp này thành {{count}} phần.",
+    "not_learned_yet": "Chưa học. Agent có thể dùng tệp này khi xử lý xong.",
     "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại."
   },
   "conversations": {
@@ -2128,8 +2129,8 @@
       "filter": {
         "status": "Trạng thái",
         "all": "Tất cả trạng thái",
-        "chatbot": "Chatbot",
-        "allChatbots": "Tất cả chatbot",
+        "chatbot": "Agent",
+        "allChatbots": "Tất cả agent",
         "account": "Tài khoản",
         "allAccounts": "Tất cả tài khoản",
         "groupBy": "Nhóm theo"
@@ -2137,7 +2138,7 @@
       "groupBy": {
         "none": "Không nhóm",
         "account": "Theo tài khoản",
-        "chatbot": "Theo chatbot",
+        "chatbot": "Theo agent",
         "unassigned": "Chưa gán"
       },
       "row": {
@@ -2186,7 +2187,7 @@
     "actions": {
       "botLabel": "Bot",
       "viewProfile": "Xem hồ sơ",
-      "viewChatbot": "Xem chatbot",
+      "viewChatbot": "Xem agent",
       "pause": "Tạm dừng bot",
       "resolve": "Đóng hội thoại",
       "restore": "Khôi phục tự động",
@@ -2330,7 +2331,7 @@
     },
     "title": "Khách hàng",
     "list": {
-      "description": "Tất cả khách hàng đã trò chuyện với chatbot của bạn. Tìm theo tên, số điện thoại hoặc email.",
+      "description": "Tất cả khách hàng đã trò chuyện với agent của bạn. Tìm theo tên, số điện thoại hoặc email.",
       "unnamed": "Khách chưa có tên",
       "phone": "Số điện thoại",
       "firstSeen": "Lần đầu liên hệ",
@@ -2429,11 +2430,11 @@
       "delete": {
         "label": "Xóa",
         "title": "Xóa tool",
-        "description": "Bạn có chắc muốn xóa {{count}} tool? Các tool vẫn đang gắn với chatbot sẽ được bỏ qua."
+        "description": "Bạn có chắc muốn xóa {{count}} tool? Các tool vẫn đang gắn với agent sẽ được bỏ qua."
       }
     },
     "title": "Công cụ",
-    "subtitle": "Kết nối các API HTTP và máy chủ MCP mà chatbot có thể gọi.",
+    "subtitle": "Kết nối các API HTTP và máy chủ MCP mà agent có thể gọi.",
     "actions": {
       "browseMarketplace": "Khám phá kho công cụ",
       "create": "Tạo",
@@ -2507,7 +2508,7 @@
     },
     "create": {
       "title": "Tạo công cụ HTTP",
-      "subtitle": "Mô tả một endpoint HTTP để chatbot có thể gọi như một công cụ.",
+      "subtitle": "Mô tả một endpoint HTTP để agent có thể gọi như một công cụ.",
       "submit": "Tạo công cụ",
       "success": "Đã tạo công cụ.",
       "error": "Không tạo được công cụ."
@@ -2555,10 +2556,10 @@
       "button": "Xóa công cụ",
       "success": "Đã xóa công cụ.",
       "error": "Không xóa được công cụ.",
-      "errorReferenced": "Công cụ này vẫn đang được gắn vào một hoặc nhiều chatbot. Hãy gỡ khỏi tất cả chatbot trước, rồi xóa.",
+      "errorReferenced": "Công cụ này vẫn đang được gắn vào một hoặc nhiều agent. Hãy gỡ khỏi tất cả agent trước, rồi xóa.",
       "confirm": {
         "title": "Xóa công cụ?",
-        "description": "Các chatbot đang sử dụng công cụ này sẽ mất quyền truy cập. Không thể hoàn tác.",
+        "description": "Các agent đang sử dụng công cụ này sẽ mất quyền truy cập. Không thể hoàn tác.",
         "confirmButton": "Xóa"
       }
     },
@@ -2701,16 +2702,16 @@
     },
     "invocations": {
       "title": "Lượt gọi gần đây",
-      "subtitle": "100 lượt gọi công cụ gần nhất của chatbot này. Bấm vào một dòng để xem chi tiết yêu cầu và phản hồi.",
+      "subtitle": "100 lượt gọi công cụ gần nhất của agent này. Bấm vào một dòng để xem chi tiết yêu cầu và phản hồi.",
       "refresh": "Tải lại",
-      "empty": "Chưa có lượt gọi nào. Chatbot chưa gọi công cụ.",
+      "empty": "Chưa có lượt gọi nào. Agent chưa gọi công cụ.",
       "input": "Tham số đầu vào",
       "output": "Kết quả",
       "error": "Lỗi"
     },
     "chatbotTab": {
       "title": "Công cụ",
-      "subtitle": "Bật/tắt các công cụ của workspace cho chatbot này. Công cụ MCP hỗ trợ chọn từng action.",
+      "subtitle": "Bật/tắt các công cụ của workspace cho agent này. Công cụ MCP hỗ trợ chọn từng action.",
       "enabled": "Đang bật",
       "disabled": "Đang tắt",
       "enableSuccess": "Đã bật công cụ.",
@@ -2726,7 +2727,7 @@
       "actionsAutoSaveError": "Không thể lưu cài đặt hành động.",
       "empty": {
         "title": "Chưa có công cụ nào được bật",
-        "description": "Nhấn 'Thêm' để kết nối một công cụ workspace với chatbot này."
+        "description": "Nhấn 'Thêm' để kết nối một công cụ workspace với agent này."
       }
     },
     "addDrawer": {
@@ -2741,10 +2742,10 @@
     "title": "Kênh"
   },
   "agents": {
-    "title": "Trợ lý AI"
+    "title": "Agent"
   },
   "recentAgents": {
-    "title": "Trợ lý gần đây"
+    "title": "Agent gần đây"
   },
   "sessions": {
     "domain": "Phiên đăng nhập",
@@ -2785,7 +2786,7 @@
       "renewsOn": "Làm mới vào",
       "hasCredit": "Còn credit bổ sung",
       "noCredit": "Không còn credit bổ sung",
-      "exhausted": "Đã hết quota, chatbot sẽ trả lời bằng fallback message."
+      "exhausted": "Đã hết quota, agent sẽ trả lời bằng fallback message."
     },
     "trend": {
       "title": "Usage theo ngày",
@@ -2794,8 +2795,8 @@
       "messages": "Tin nhắn"
     },
     "byChatbot": {
-      "title": "Theo chatbot",
-      "column": "Chatbot"
+      "title": "Theo agent",
+      "column": "Agent"
     },
     "byPlatform": {
       "title": "Theo platform",

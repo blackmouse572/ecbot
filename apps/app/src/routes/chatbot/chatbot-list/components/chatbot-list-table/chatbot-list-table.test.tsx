@@ -66,10 +66,11 @@ describe("ChatbotListTable", () => {
     data.empty = true;
     renderTable();
 
-    expect(screen.getByText("No chatbots yet")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Create chatbot" }),
-    ).toHaveAttribute("href", "/acme/chatbot/create");
+    expect(screen.getByText("No agents yet")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Create agent" })).toHaveAttribute(
+      "href",
+      "/acme/chatbot/create",
+    );
   });
 
   it("renders a select checkbox in the header and in every row", () => {
