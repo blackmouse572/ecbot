@@ -104,7 +104,7 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
         </span>{" "}
         <span className="bg-ui-bg-component txt-compact-xsmall text-ui-fg-subtle ml-auto shrink-0 rounded-md px-2 py-px">
           {tag}
-        </span>
+        </span>{" "}
         {elapsedMs !== undefined && (
           <NumberFlow
             value={`${Math.round(elapsedMs)}ms`}

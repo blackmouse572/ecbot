@@ -1,13 +1,20 @@
 /*
- * Chat bubbles for the AI chat card (ai-chat-card.tsx): the customer's
- * message in a soft neutral bubble, the bot's in interactive blue.
+ * Chat bubbles shared by the AI chat card (ai-chat-card.tsx) and the
+ * conversation inbox (message-bubble.tsx). Add `chat-bubble` plus one tone:
  *
- * The bot bubble re-points Medusa's fg/bg/border tokens to white tints, so
- * everything inside it (Streamdown markdown, source chips, the loader's
- * shimmer) reads on blue without per-component overrides.
+ *   --customer  the end customer: a soft neutral bubble
+ *   --bot       the AI agent: interactive blue
+ *   --operator  a staff reply: dark neutral, so it never reads as the bot
+ *
+ * The tail (the small corner) follows the side the bubble sits on, read from
+ * the `data-align` that Bubble (@repo/ui) sets on its row.
+ *
+ * Colored tones re-point Medusa's fg/bg/border tokens, so everything inside
+ * them (Streamdown markdown, source chips, the loader's shimmer) stays
+ * readable without per-component overrides.
  *
  * Plain CSS on purpose: unlayered rules win over the Tailwind utilities that
- * Bubble/MessageContent set (surface, radius, padding, shadow).
+ * MessageContent sets (surface, radius, padding, shadow, border).
  */
 
 :root {
@@ -18,11 +25,16 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     0 8px 18px -6px rgba(29, 78, 216, 0.5);
   /* --bg-base to zinc-100 */
-  --chat-user-from: rgba(255, 255, 255, 1);
-  --chat-user-to: rgba(244, 244, 245, 1);
-  --chat-user-shadow:
+  --chat-customer-from: rgba(255, 255, 255, 1);
+  --chat-customer-to: rgba(244, 244, 245, 1);
+  --chat-customer-shadow:
     inset 0 1px 0 rgba(0, 0, 0, 0.03), inset 0 0 0 1px rgba(0, 0, 0, 0.07),
     0 5px 14px -6px rgba(0, 0, 0, 0.08);
+  /* zinc-800 to zinc-900 (--contrast-bg-base) */
+  --chat-operator-from: rgba(39, 39, 42, 1);
+  --chat-operator-to: rgba(24, 24, 27, 1);
+  --chat-operator-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 18px -8px rgba(0, 0, 0, 0.35);
 }
 
 .dark {
@@ -30,35 +42,47 @@
   --chat-bot-from: rgba(37, 99, 235, 1);
   --chat-bot-to: rgba(29, 78, 216, 1);
   /* zinc-800 down to just under --bg-base */
-  --chat-user-from: rgba(39, 39, 42, 1);
-  --chat-user-to: rgba(30, 30, 33, 1);
-  --chat-user-shadow:
+  --chat-customer-from: rgba(39, 39, 42, 1);
+  --chat-customer-to: rgba(30, 30, 33, 1);
+  --chat-customer-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 0 0 1px rgba(255, 255, 255, 0.06),
     0 12px 22px -10px rgba(0, 0, 0, 0.6);
+  /* zinc-600 to zinc-700: lighter than the customer's bubble on a dark page */
+  --chat-operator-from: rgba(82, 82, 91, 1);
+  --chat-operator-to: rgba(63, 63, 70, 1);
+  --chat-operator-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 22px -10px rgba(0, 0, 0, 0.6);
 }
 
-.chat-bubble-user,
-.chat-bubble-bot {
+.chat-bubble {
   border: 0;
   border-radius: 1rem;
   font-size: 0.875rem;
   line-height: 1.625;
 }
 
-.chat-bubble-user {
+[data-align="start"] .chat-bubble {
+  border-bottom-left-radius: 0.25rem;
+}
+
+[data-align="end"] .chat-bubble {
   border-bottom-right-radius: 0.25rem;
+}
+
+.chat-bubble--customer {
   padding: 0.75rem 1rem;
   color: var(--fg-base);
   background-image: linear-gradient(
     to bottom,
-    var(--chat-user-from),
-    var(--chat-user-to)
+    var(--chat-customer-from),
+    var(--chat-customer-to)
   );
-  box-shadow: var(--chat-user-shadow);
+  box-shadow: var(--chat-customer-shadow);
 }
 
-.chat-bubble-bot {
+.chat-bubble--bot,
+.chat-bubble--operator {
   --fg-base: rgba(255, 255, 255, 0.95);
   --fg-subtle: rgba(255, 255, 255, 0.8);
   --fg-muted: rgba(255, 255, 255, 0.65);
@@ -70,13 +94,30 @@
   --bg-subtle: rgba(255, 255, 255, 0.14);
   --bg-component: rgba(255, 255, 255, 0.14);
 
-  border-bottom-left-radius: 0.25rem;
   padding: 0.625rem 1rem;
   color: var(--fg-base);
+}
+
+.chat-bubble--bot {
   background-image: linear-gradient(
     to bottom,
     var(--chat-bot-from),
     var(--chat-bot-to)
   );
   box-shadow: var(--chat-bot-shadow);
+}
+
+.chat-bubble--operator {
+  background-image: linear-gradient(
+    to bottom,
+    var(--chat-operator-from),
+    var(--chat-operator-to)
+  );
+  box-shadow: var(--chat-operator-shadow);
+}
+
+/* A message the platform rejected: a red ring that works on every tone. */
+.chat-bubble--failed {
+  outline: 1px solid var(--border-error);
+  outline-offset: 1px;
 }

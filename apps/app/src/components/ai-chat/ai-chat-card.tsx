@@ -49,8 +49,8 @@ import {
 // Customer and bot bubbles (styles/chat-bubble.css), each growing in from its
 // tail corner.
 const BUBBLE_CLASS = {
-  user: "chat-bubble-user origin-bottom-right",
-  assistant: "chat-bubble-bot origin-bottom-left",
+  user: "chat-bubble chat-bubble--customer origin-bottom-right",
+  assistant: "chat-bubble chat-bubble--bot origin-bottom-left",
 };
 const BUBBLE_ENTER =
   "transition-[opacity,transform] duration-330 ease-out starting:translate-y-2 starting:scale-96 starting:opacity-0 motion-reduce:starting:translate-y-0 motion-reduce:starting:scale-100";
