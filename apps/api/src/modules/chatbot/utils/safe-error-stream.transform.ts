@@ -18,6 +18,11 @@ export type SafeErrorStreamOptions = {
      * so an observability concern can't break the stream.
      */
     onFrame?: (frame: UiStreamFrame) => void;
+    /**
+     * Frames to leave out of the output. Observers still see them first, so
+     * transcript capture and metering are unaffected.
+     */
+    dropFrame?: (frame: UiStreamFrame) => boolean;
 };
 
 /**
@@ -31,11 +36,13 @@ export class SafeErrorStream extends Transform {
     private lineBuffer = '';
     private readonly logRawError: (rawErrorText: string) => void;
     private readonly onFrame?: (frame: UiStreamFrame) => void;
+    private readonly dropFrame?: (frame: UiStreamFrame) => boolean;
 
     constructor(options: SafeErrorStreamOptions) {
         super();
         this.logRawError = options.logRawError;
         this.onFrame = options.onFrame;
+        this.dropFrame = options.dropFrame;
     }
 
     override _transform(
@@ -75,6 +82,13 @@ export class SafeErrorStream extends Transform {
             return;
         }
         this.observe(parsed);
+        if (
+            parsed &&
+            typeof parsed === 'object' &&
+            this.dropFrame?.(parsed as UiStreamFrame)
+        ) {
+            return;
+        }
         if (!parsed || typeof parsed !== 'object' || parsed.type !== 'error') {
             this.push(line);
             return;

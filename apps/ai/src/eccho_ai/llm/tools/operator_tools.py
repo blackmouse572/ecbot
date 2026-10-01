@@ -11,6 +11,7 @@ from langchain_core.tools import StructuredTool
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.tools.constants import MUTATING_TOOL_NOTE
+from eccho_ai.modules.chat.constants import TOOL_META_KEY
 from eccho_ai.models.chat import Chatbots, ChatbotTools, Tools
 from eccho_ai.modules.chat.models.agent_models import (
     AgentRequestContext,
@@ -105,6 +106,15 @@ def _describe(action: str, description: str) -> str:
     return f"{description}\n\n{MUTATING_TOOL_NOTE}" if is_mutating_action(action) else description
 
 
+def _meta(tool: Tools) -> dict[str, Any]:
+    """Tells the chat stream which kind of tool this is (see TOOL_META_KEY)."""
+    meta: dict[str, Any] = {"kind": "http" if tool.kind == "HTTP" else "mcp"}
+    label = getattr(tool, "display_name", None)
+    if label:
+        meta["label"] = label
+    return {TOOL_META_KEY: meta}
+
+
 def _build_http_tool(tool: Tools) -> StructuredTool:
     # An HTTP tool is one endpoint with no actions: the API runs it by tool id alone
     # and never fills discovered_actions, so the schema comes from the tool itself.
@@ -113,6 +123,7 @@ def _build_http_tool(tool: Tools) -> StructuredTool:
         name=sanitize_tool_name(tool.slug),
         description=_describe(tool.slug, tool.description or ""),
         args_schema=tool.http_input_schema or {"type": "object", "properties": {}},
+        metadata=_meta(tool),
     )
 
 
@@ -145,6 +156,7 @@ def build_tools(chatbot: Chatbots) -> list[StructuredTool]:
                     name=sanitize_tool_name(action),
                     description=_describe(action, spec.get("description", "")),
                     args_schema=spec.get("inputSchema", {}),
+                    metadata=_meta(chatbot_tool.tool),
                 )
             )
     return tools

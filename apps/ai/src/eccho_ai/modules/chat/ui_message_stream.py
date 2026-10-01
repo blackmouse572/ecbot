@@ -91,8 +91,13 @@ def error(error_text: str) -> str:
     return _frame({"type": "error", "errorText": error_text})
 
 
-def data_part(name: str, data: dict) -> str:
-    return _frame({"type": f"data-{name}", "data": data})
+def data_part(name: str, data: dict, id: str | None = None) -> str:
+    # With an id the client keeps one part per id (a later part with the same
+    # id replaces it) and can tie it to the tool call of that id.
+    frame: dict = {"type": f"data-{name}", "data": data}
+    if id is not None:
+        frame = {"type": f"data-{name}", "id": id, "data": data}
+    return _frame(frame)
 
 
 def done() -> str:

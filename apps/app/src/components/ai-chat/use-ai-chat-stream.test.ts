@@ -388,3 +388,90 @@ describe("chat transport configs", () => {
     expect(request.body).toMatchObject({ text: "hello", visitorId: "v1" });
   });
 });
+
+describe("tool kinds", () => {
+  it("attaches the data-tool-meta part to the tool call with the same id", () => {
+    const model = partsToRenderModel([
+      {
+        type: "tool-get_order",
+        toolCallId: "r1",
+        state: "input-available",
+        input: { id: 7 },
+      },
+      {
+        type: "data-tool-meta",
+        id: "r1",
+        data: { kind: "mcp", label: "Shopify" },
+      },
+    ]);
+    expect(model.toolCalls[0].meta).toEqual({
+      kind: "mcp",
+      label: "Shopify",
+    });
+  });
+
+  it("reads the knowledge-search count", () => {
+    const model = partsToRenderModel([
+      { type: "data-knowledge", data: { count: 3 } },
+      { type: "text", text: "Hi" },
+    ]);
+    expect(model.knowledgeCount).toBe(3);
+  });
+
+  it("carries the kind and label onto the chat tool call", () => {
+    const chat = toolCallToChat({
+      toolCallId: "r1",
+      toolName: "get_order",
+      state: "input-available",
+      meta: { kind: "mcp", label: "Shopify" },
+    });
+    expect(chat).toMatchObject({
+      kind: "mcp",
+      label: "Shopify",
+    });
+  });
+
+  it("names built-in tools by their fixed names when the stream sent no kind", () => {
+    const kind = (toolName: string) =>
+      toolCallToChat({ toolCallId: "r", toolName }).kind;
+    expect(kind("load_skill")).toBe("skill");
+    expect(kind("schedule_followup")).toBe("followup");
+    expect(kind("apply_customer_tag")).toBe("tag");
+    expect(kind("get_customer_field")).toBe("customer");
+    expect(kind("lookup_order")).toBe("tool");
+  });
+
+  it("shows a tag that handed the chat to staff as a handoff", () => {
+    const chat = toolCallToChat({
+      toolCallId: "r1",
+      toolName: "apply_customer_tag",
+      input: { name: "needs-human" },
+      state: "output-available",
+      output: { applied: true, triggeredHandoff: true },
+      meta: { kind: "tag" },
+    });
+    expect(chat.kind).toBe("handoff");
+    expect(chat.status).toBe("success");
+    expect(chat.result).toEqual({ applied: true, triggeredHandoff: true });
+  });
+
+  it("treats a built-in tool's error object as a failed call", () => {
+    const chat = toolCallToChat({
+      toolCallId: "r1",
+      toolName: "schedule_followup",
+      state: "output-available",
+      output: { error: "no conversation context", instruction: "..." },
+    });
+    expect(chat.status).toBe("error");
+    expect(chat.error).toBe("no conversation context");
+  });
+
+  it("falls back to a plain tool for a kind this app does not know", () => {
+    const chat = toolCallToChat({
+      toolCallId: "r1",
+      toolName: "lookup",
+      meta: { kind: "webhook" as never },
+    });
+    expect(chat.kind).toBe("tool");
+  });
+});

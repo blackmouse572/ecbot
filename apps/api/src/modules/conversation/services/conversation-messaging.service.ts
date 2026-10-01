@@ -4,6 +4,7 @@ import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform
 import { ToolInvocationEntity } from '@app/modules/tool/repository/entities/tool-invocation.entity';
 import { ToolInvocationRepository } from '@app/modules/tool/repository/repositories/tool-invocation.repository';
 import { ENUM_TOOL_INVOCATION_STATUS } from '@app/modules/tool/enums/tool-invocation-status.enum';
+import { ENUM_TOOL_KIND } from '@app/modules/tool/enums/tool-kind.enum';
 import { UserRepository } from '@app/modules/user/repository/repositories/user.repository';
 import {
     Injectable,
@@ -323,6 +324,10 @@ export class ConversationMessagingService {
             result: inv.outputResult,
             error: inv.errorMessage,
             durationMs: inv.durationMs,
+            // A deleted tool leaves no kind to report.
+            ...(inv.tool?.kind && {
+                kind: inv.tool.kind === ENUM_TOOL_KIND.HTTP ? 'http' : 'mcp',
+            }),
         };
     }
 

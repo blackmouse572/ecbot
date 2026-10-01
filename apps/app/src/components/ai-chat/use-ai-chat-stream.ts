@@ -1,7 +1,15 @@
 import { toolsQueryKeys } from "@/hooks/api/tools";
-import { SEND_IMAGE_TOOL_PART } from "./constants";
+import {
+  BUILT_IN_TOOL_KINDS,
+  SEND_IMAGE_TOOL_PART,
+  TOOL_STEP_ICONS,
+} from "./constants";
 import { tokenAtom } from "@/modules/auth";
-import type { ChatToolCall, ChatToolCallStatus } from "@/types/chat-message";
+import type {
+  ChatToolCall,
+  ChatToolCallStatus,
+  ToolKind,
+} from "@/types/chat-message";
 import { useChat } from "@ai-sdk/react";
 import { client } from "@repo/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,12 +17,19 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import { getDefaultStore } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
 
+/** `data-tool-meta` payload: what kind of tool a call is (apps/ai TOOL_META_KEY). */
+export type ToolMeta = {
+  kind: ToolKind;
+  label?: string;
+};
+
 export type RenderModelToolCall = {
   toolCallId: string;
   toolName: string;
   input?: unknown;
   output?: unknown;
   state?: string;
+  meta?: ToolMeta;
 };
 
 // The backend's `tool-output-available` `output` is a full
@@ -28,6 +43,18 @@ type ToolExecutionOutput = {
   durationMs?: number;
 };
 
+// Built-in tools return their own object; a failure is `{ error }` (most
+// built-ins) or `{ ok: false, reason }` (send_image).
+type BuiltInOutput = {
+  error?: unknown;
+  ok?: boolean;
+  reason?: unknown;
+  triggeredHandoff?: boolean;
+};
+
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
 /**
  * Pure mapper from an AI-SDK tool part (as flattened by `partsToRenderModel`)
  * to the shared `ChatToolCall` render shape. Derives status/error/duration
@@ -35,22 +62,53 @@ type ToolExecutionOutput = {
  * involved so it's unit-testable in isolation.
  */
 export function toolCallToChat(tc: RenderModelToolCall): ChatToolCall {
-  const output = tc.output as ToolExecutionOutput | undefined;
-  const status: ChatToolCallStatus =
-    tc.state !== "output-available"
-      ? "running"
-      : output?.status === "error"
-        ? "error"
-        : "success";
+  const done = tc.state === "output-available";
+  // Registry tools answer with a ToolExecutionResponse; built-ins answer with
+  // their own object, which is the result itself.
+  const registry =
+    isObject(tc.output) && "invocationId" in tc.output
+      ? (tc.output as ToolExecutionOutput)
+      : undefined;
+  const builtIn =
+    !registry && isObject(tc.output) ? (tc.output as BuiltInOutput) : undefined;
+
+  let error: string | undefined = registry?.errorMessage;
+  if (builtIn && typeof builtIn.error === "string") error = builtIn.error;
+  if (builtIn?.ok === false)
+    error = typeof builtIn.reason === "string" ? builtIn.reason : "";
+  const failed = registry ? registry.status === "error" : error !== undefined;
+
+  const status: ChatToolCallStatus = !done
+    ? "running"
+    : failed
+      ? "error"
+      : "success";
+
+  // An AI service ahead of this app may send a kind it does not know yet.
+  const streamed = tc.meta?.kind;
+  const known =
+    streamed &&
+    streamed !== ("knowledge" as string) &&
+    streamed in TOOL_STEP_ICONS
+      ? streamed
+      : undefined;
+  let kind: ToolKind = known ?? BUILT_IN_TOOL_KINDS[tc.toolName] ?? "tool";
+  if (kind === "tag" && builtIn?.triggeredHandoff) kind = "handoff";
 
   return {
     invocationId: tc.toolCallId,
     toolName: tc.toolName,
     args: (tc.input as Record<string, unknown>) ?? {},
     status,
-    result: output?.result,
-    error: output?.errorMessage,
-    durationMs: output?.durationMs,
+    result: registry
+      ? registry.result
+      : done && !failed
+        ? tc.output
+        : undefined,
+    error: failed ? error : undefined,
+    durationMs: registry?.durationMs,
+    kind,
+    label: tc.meta?.label,
   };
 }
 
@@ -66,6 +124,8 @@ export type RenderModel = {
   toolCalls: RenderModelToolCall[];
   files: RenderModelFile[];
   guardrail?: { reason: string };
+  /** Knowledge-base sources found before the reply (`data-knowledge`). */
+  knowledgeCount?: number;
 };
 
 type UIMessagePartLike = { type: string; [key: string]: unknown };
@@ -96,6 +156,8 @@ export function partsToRenderModel(
   parts: readonly UIMessagePartLike[],
 ): RenderModel {
   const model: RenderModel = { text: "", toolCalls: [], files: [] };
+  // `data-tool-meta` may arrive before or after its tool part; match by id.
+  const metaById = new Map<string, ToolMeta>();
 
   for (const part of parts) {
     if (part.type === "text") {
@@ -112,6 +174,13 @@ export function partsToRenderModel(
     } else if (part.type === "data-guardrail") {
       const data = part.data as { reason: string } | undefined;
       model.guardrail = { reason: data?.reason ?? "" };
+    } else if (part.type === "data-tool-meta") {
+      const data = part.data as ToolMeta | undefined;
+      if (typeof part.id === "string" && data?.kind)
+        metaById.set(part.id, data);
+    } else if (part.type === "data-knowledge") {
+      const data = part.data as { count?: number } | undefined;
+      if (data?.count) model.knowledgeCount = data.count;
     } else if (
       part.type.startsWith("tool-") &&
       part.type !== SEND_IMAGE_TOOL_PART
@@ -126,6 +195,7 @@ export function partsToRenderModel(
     }
   }
 
+  for (const call of model.toolCalls) call.meta = metaById.get(call.toolCallId);
   return model;
 }
 

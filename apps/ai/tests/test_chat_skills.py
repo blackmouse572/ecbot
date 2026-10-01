@@ -50,6 +50,11 @@ def test_build_skills_returns_load_skill_tool_with_listing():
     assert "book-slot: đặt lịch" in tools[0].description
 
 
+def test_load_skill_tells_the_chat_stream_it_is_a_skill():
+    (tool,) = build_skills(_chatbot([_cs(_skill("book-slot"))]))
+    assert tool.metadata == {"eccho_tool": {"kind": "skill"}}
+
+
 async def test_load_skill_fetches_and_memoizes(monkeypatch):
     calls = []
 

@@ -127,4 +127,110 @@ describe('ChatbotAiSseStreamService', () => {
 
         expect(finalized).toBe('hello');
     });
+
+    describe('customer audience (website widget)', () => {
+        // Customers see the answer, never how it was produced: no tool names
+        // or results, knowledge searches, sources, reasoning or usage.
+        const turn = [
+            line({ type: 'start', messageId: 'm1' }),
+            line({ type: 'data-knowledge', data: { count: 2 } }),
+            line({ type: 'reasoning-start', id: 'r' }),
+            line({ type: 'reasoning-delta', id: 'r', delta: 'checking stock' }),
+            line({ type: 'reasoning-end', id: 'r' }),
+            line({ type: 'start-step' }),
+            line({
+                type: 'tool-input-start',
+                toolCallId: 'c1',
+                toolName: 'get_stock',
+            }),
+            line({
+                type: 'tool-input-available',
+                toolCallId: 'c1',
+                toolName: 'get_stock',
+                input: {},
+            }),
+            line({ type: 'data-tool-meta', id: 'c1', data: { kind: 'mcp' } }),
+            line({
+                type: 'tool-output-available',
+                toolCallId: 'c1',
+                output: { internal_note: 'VIP' },
+            }),
+            line({ type: 'finish-step' }),
+            line({
+                type: 'file',
+                url: 'https://cdn/s.jpg',
+                mediaType: 'image/*',
+            }),
+            line({ type: 'text-start', id: 't1' }),
+            line({ type: 'text-delta', id: 't1', delta: 'Còn hàng' }),
+            line({ type: 'text-end', id: 't1' }),
+            line({
+                type: 'source-url',
+                sourceId: 'KB-1',
+                url: 'https://shop/faq',
+            }),
+            usageLine({ input_tokens: 9, output_tokens: 1, total_tokens: 10 }),
+            line({ type: 'finish' }),
+        ];
+
+        const run = async (audience?: 'owner' | 'customer') => {
+            const res = makeRes();
+            let out = '';
+            res.on('data', (c: Buffer) => (out += c.toString()));
+            let finalized: string | undefined;
+            let images: string[] = [];
+            let reported: TokenUsageDelta | undefined;
+            await new ChatbotAiSseStreamService().pipe({
+                res,
+                upstream: upstreamOf(turn),
+                abort: new AbortController(),
+                logContext: 'test',
+                audience,
+                onFinalize: async (text, imgs) => {
+                    finalized = text;
+                    images = imgs;
+                },
+                onUsage: async usage => {
+                    reported = usage;
+                },
+            });
+            const types = out
+                .split('\n')
+                .filter(l => l.startsWith('data: '))
+                .map(l => JSON.parse(l.slice(6)).type as string);
+            return { types, out, finalized, images, reported };
+        };
+
+        it('sends the customer only the reply', async () => {
+            const { types, out } = await run('customer');
+            expect(types).toEqual([
+                'start',
+                'start-step',
+                'finish-step',
+                'file',
+                'text-start',
+                'text-delta',
+                'text-end',
+                'finish',
+            ]);
+            expect(out).not.toContain('get_stock');
+            expect(out).not.toContain('internal_note');
+        });
+
+        it('still saves the reply and meters the tokens', async () => {
+            const { finalized, images, reported } = await run('customer');
+            expect(finalized).toBe('Còn hàng');
+            expect(images).toEqual(['https://cdn/s.jpg']);
+            expect(reported).toEqual({
+                inputTokens: 9,
+                outputTokens: 1,
+                totalTokens: 10,
+            });
+        });
+
+        it('sends the owner everything', async () => {
+            const { types } = await run();
+            expect(types).toHaveLength(turn.length);
+        });
+    });
 });

@@ -19,9 +19,9 @@ export class MessageAuthorDto {
 
 /**
  * One persisted tool invocation joined under a BOT message in the
- * conversation-detail timeline. Shape mirrors the live ToolCallList
- * payload streamed to the preview-chat UI so the same component can render
- * both live and retrospective calls.
+ * conversation-detail timeline. Shape mirrors the app's `ChatToolCall`, which
+ * the live chat builds from the stream, so `ToolTrace` renders both live and
+ * saved calls.
  */
 export interface ToolCallSerialization {
     invocationId: string;
@@ -32,6 +32,8 @@ export interface ToolCallSerialization {
     result?: unknown;
     error?: string;
     durationMs: number;
+    /** Registry tool kind, lowercased like the live stream's `data-tool-meta`. */
+    kind?: 'http' | 'mcp';
 }
 
 /**
