@@ -91,7 +91,7 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
             />
           )}
         </span>
-        <span className="flex min-w-0 items-center gap-1">
+        <span className="flex min-w-0 items-baseline gap-1">
           <TextSwap
             text={verb}
             className={clx("shrink-0", failed && "text-ui-fg-error")}
