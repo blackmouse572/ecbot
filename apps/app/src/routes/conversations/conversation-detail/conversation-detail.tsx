@@ -1,5 +1,5 @@
 import { toast } from "@medusajs/ui";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -63,6 +63,16 @@ export function ConversationDetail() {
       el.classList.remove("bg-ui-tag-orange-bg", "rounded-md");
     }, 1500);
   }, []);
+
+  // Small screens: "view message" in the details screen closes it first, so
+  // the scroll waits until the thread is mounted again.
+  const pendingScrollRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (sidebarOpen || !pendingScrollRef.current) return;
+    const messageId = pendingScrollRef.current;
+    pendingScrollRef.current = null;
+    requestAnimationFrame(() => scrollToMessage(messageId));
+  }, [sidebarOpen, scrollToMessage]);
 
   // Mark the conversation as "viewed" so the handoff dot disappears on the list,
   // and record the operator's read state for the unread badge.
@@ -200,9 +210,8 @@ export function ConversationDetail() {
             conversationId={id}
             onBack={toggleSidebar}
             onViewMessage={(messageId) => {
+              pendingScrollRef.current = messageId;
               toggleSidebar();
-              // Wait a frame so the thread is mounted before scrolling.
-              requestAnimationFrame(() => scrollToMessage(messageId));
             }}
           />
         ) : (
