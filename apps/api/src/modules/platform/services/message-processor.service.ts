@@ -8,6 +8,7 @@ import {
     ENUM_MESSAGE_DIRECTION,
 } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
+import { HandoffIntentService } from './handoff-intent.service';
 import { ReplyGenerationService } from './reply-generation.service';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
@@ -263,14 +264,32 @@ export class MessageProcessorService implements OnModuleInit {
             return;
         }
 
-        if (
-            this.conversationService.detectHandoffKeywords(
-                effectiveText,
-                chatbot.handoffKeywords ?? []
-            )
-        ) {
+        let typing = false;
+        const startTyping = () => {
+            if (!chatbot.typingIndicator || typing) return;
+            typing = true;
+            adapter.startTyping(account, event.senderId, true).catch(() => {});
+        };
+
+        // The owner's own keywords route topics to staff and always hand off.
+        // A default keyword only flags the message: ordinary questions contain
+        // them too ("hỗ trợ", "chuyển khoản"), so the cheap model checks the
+        // customer wants a person; otherwise the agent answers as usual.
+        const handoffMatch = this.conversationService.detectHandoffKeywords(
+            effectiveText,
+            chatbot.handoffKeywords ?? []
+        );
+        let handOff = handoffMatch?.source === 'custom';
+        if (handoffMatch?.source === 'default') {
+            // The check can take seconds: show the customer the bot is typing.
+            startTyping();
+            handOff = await this.moduleRef
+                .get(HandoffIntentService)
+                .wantsPerson(effectiveText, handoffMatch.keyword);
+        }
+        if (handOff) {
             this.logger.log(
-                `Handoff keyword detected in conversation ${conversation.id}`
+                `Handoff keyword "${handoffMatch?.keyword}" (${handoffMatch?.source}) in conversation ${conversation.id}`
             );
             await this.conversationService.triggerHandoff(
                 conversation,
@@ -301,9 +320,7 @@ export class MessageProcessorService implements OnModuleInit {
         // dead for all of it. Safe at this point — bot-disabled and handoff both
         // returned above, so a reply really is coming. ReplyGenerationService
         // still owns the refresh interval and stopTyping().
-        if (chatbot.typingIndicator) {
-            adapter.startTyping(account, event.senderId, true).catch(() => {});
-        }
+        startTyping();
 
         const job = {
             conversationId: conversation.id,

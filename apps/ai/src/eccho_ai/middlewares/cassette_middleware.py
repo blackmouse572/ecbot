@@ -1,6 +1,6 @@
 """
 Cassette middleware for vcrpy integration.
-AI_CASSETTE_MODE: live (default/absent) | new_episodes | none
+AI_CASSETTE_MODE: live (default/absent) | new_episodes | none (always live when ENV=production)
 VCR_CASSETTE_DIR: path to cassette directory (default: e2e/cassettes relative to repo root)
 
 Usage:
@@ -22,6 +22,8 @@ import os
 from pathlib import Path
 from typing import TypedDict
 
+from eccho_ai.core.variables import AppVars
+
 
 class CassetteConfig(TypedDict):
     mode: str
@@ -31,6 +33,10 @@ class CassetteConfig(TypedDict):
 def get_cassette_config() -> CassetteConfig | None:
     mode = os.environ.get("AI_CASSETTE_MODE")
     if not mode or mode == "live":
+        return None
+    # Recordings are keyed by message text only, so in production a replay
+    # would serve one agent's answer to another agent and skip its tools.
+    if AppVars.is_production:
         return None
     return CassetteConfig(
         mode=mode,

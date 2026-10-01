@@ -6,7 +6,7 @@ import { AiDecisionService } from './services/ai-decision.service';
 @Module({
     imports: [HttpModule],
     providers: [AiDecisionService, AgentBuilderService],
-    exports: [AgentBuilderService],
+    exports: [AgentBuilderService, AiDecisionService],
     controllers: [], // per project convention, controllers register in routes.{access}.module.ts
 })
 export class AgentBuilderModule {}
