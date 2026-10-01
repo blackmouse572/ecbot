@@ -99,6 +99,8 @@
 }
 
 .chat-bubble--bot {
+  /* The loader's shimmer sweeps a little slower inside the bot bubble. */
+  --shimmer-duration: 2.67s;
   background-image: linear-gradient(
     to bottom,
     var(--chat-bot-from),

@@ -9,7 +9,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  CHAT_ACCORDION_DURATION,
+  CHAT_COLLAPSE_DURATION,
   CHAT_EASE_IN_OUT,
   CHAT_EASE_OUT,
   CHAT_SHIFT_DURATION,
@@ -84,7 +84,7 @@ export const ToolTrace: FC<Props> = ({
         className={clx(
           TOOL_TRACE_ROW,
           "txt-compact-small-plus hover:text-ui-fg-base cursor-pointer",
-          "transition-[opacity,transform,filter] duration-270 ease-out",
+          "transition-[opacity,translate,filter] delay-80 duration-270 ease-out",
           "starting:-translate-y-1.5 starting:opacity-0 starting:blur-[2px]",
           "motion-reduce:starting:translate-y-0 motion-reduce:starting:blur-none",
         )}
@@ -93,7 +93,7 @@ export const ToolTrace: FC<Props> = ({
           className={clx(
             "text-ui-fg-muted bg-ui-bg-base relative z-10 grid size-5 shrink-0 place-items-center rounded-full",
             // The line from this icon down to the first step folds away with the list.
-            "after:bg-ui-border-base after:absolute after:top-[10px] after:left-[9.5px] after:-z-10 after:h-5 after:w-px after:origin-top after:transition-transform after:duration-200 after:ease-out",
+            "after:bg-ui-border-base after:absolute after:top-[10px] after:left-[9.5px] after:-z-10 after:h-5 after:w-px after:origin-top after:transition-transform after:duration-270 after:ease-out",
             !open && "after:scale-y-0",
           )}
         >
@@ -102,7 +102,7 @@ export const ToolTrace: FC<Props> = ({
             {...TRACE_ICON}
             className={clx(
               running &&
-                "animate-[spin_1.6s_linear_infinite] motion-reduce:animate-none",
+                "animate-[spin_2.13s_linear_infinite] motion-reduce:animate-none",
             )}
           />
         </span>
@@ -116,7 +116,7 @@ export const ToolTrace: FC<Props> = ({
             size={14}
             stroke={2}
             className={clx(
-              "transition-transform duration-200 ease-out",
+              "transition-transform duration-270 ease-out",
               !open && "-rotate-90",
             )}
           />
@@ -137,7 +137,7 @@ export const ToolTrace: FC<Props> = ({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{
-              duration: reduce ? 0 : CHAT_ACCORDION_DURATION,
+              duration: reduce ? 0 : CHAT_COLLAPSE_DURATION,
               ease: CHAT_EASE_OUT,
             }}
           >

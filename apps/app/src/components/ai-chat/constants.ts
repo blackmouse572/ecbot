@@ -38,11 +38,13 @@ export const BUILT_IN_TOOL_KINDS: Record<string, ToolKind> = {
 export const CHAT_EASE_OUT = [0.23, 1, 0.32, 1] as const;
 export const CHAT_EASE_IN_OUT = [0.77, 0, 0.175, 1] as const;
 export const CHAT_SWAP_DURATION = 0.27;
+export const CHAT_SWAP_EXIT_DURATION = 0.2;
 export const CHAT_SHIFT_DURATION = 0.29;
+export const CHAT_COLLAPSE_DURATION = 0.27;
 export const CHAT_ACCORDION_DURATION = 0.32;
 
 // The live elapsed counter ticks at this rate while a call runs.
-export const ELAPSED_TICK_MS = 90;
+export const ELAPSED_TICK_MS = 120;
 
 // Icon per kind of step in the tool trace (`knowledge` is the RAG search row).
 export const TOOL_STEP_ICONS: Record<ToolKind | "knowledge", Icon> = {

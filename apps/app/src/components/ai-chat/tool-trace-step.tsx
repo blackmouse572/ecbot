@@ -78,16 +78,19 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
           )}
         >
           {running ? (
-            <IconLoader2 {...TRACE_ICON} className="animate-spin" />
+            <IconLoader2
+              {...TRACE_ICON}
+              className="animate-[spin_1.2s_linear_infinite] motion-reduce:animate-none"
+            />
           ) : failed ? (
             <IconCircleX
               {...TRACE_ICON}
-              className="starting:scale-90 starting:opacity-0 transition-[opacity,transform] duration-200 ease-out"
+              className="starting:scale-90 starting:opacity-0 transition-[opacity,scale] duration-270 ease-out"
             />
           ) : (
             <Icon
               {...TRACE_ICON}
-              className="starting:scale-90 starting:opacity-0 transition-[opacity,transform] duration-200 ease-out"
+              className="starting:scale-90 starting:opacity-0 transition-[opacity,scale] duration-270 ease-out"
             />
           )}
         </span>

@@ -52,8 +52,10 @@ const BUBBLE_CLASS = {
   user: "chat-bubble chat-bubble--customer origin-bottom-right",
   assistant: "chat-bubble chat-bubble--bot origin-bottom-left",
 };
+const REPLY_ENTER =
+  "transition-[opacity,filter] duration-270 ease-[ease] starting:opacity-0 starting:blur-[2px] motion-reduce:starting:blur-none";
 const BUBBLE_ENTER =
-  "transition-[opacity,transform] duration-330 ease-out starting:translate-y-2 starting:scale-96 starting:opacity-0 motion-reduce:starting:translate-y-0 motion-reduce:starting:scale-100";
+  "transition-[opacity,translate,scale] duration-330 ease-out starting:translate-y-2 starting:scale-96 starting:opacity-0 motion-reduce:starting:translate-y-0 motion-reduce:starting:scale-100";
 
 function MessageAttachments({ files }: { files: RenderModelFile[] }) {
   if (files.length === 0) {
@@ -176,7 +178,9 @@ function AIChatMessages() {
                       tone="inverted"
                     />
                   ) : (
-                    <>
+                    // The reply takes the loader's place with a short blurred
+                    // fade, so the two read as one change.
+                    <div className={REPLY_ENTER}>
                       {model.reasoning && (
                         <Text
                           size="xsmall"
@@ -186,7 +190,7 @@ function AIChatMessages() {
                         </Text>
                       )}
                       <MessageResponse>{model.text}</MessageResponse>
-                    </>
+                    </div>
                   )}
                   <MessageAttachments files={model.files} />
                   {message.role === "assistant" && sources.length > 0 ? (

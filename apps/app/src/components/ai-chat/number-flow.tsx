@@ -38,10 +38,10 @@ export const NumberFlow: FC<Props> = ({ value, className }) => {
           <span
             key={`d${fromRight}`}
             aria-hidden
-            className="inline-block h-[1.25em] overflow-hidden leading-[1.25em] transition-opacity duration-200 ease-out mask-y-from-75% starting:opacity-0"
+            className="inline-block h-[1.25em] overflow-hidden leading-[1.25em] transition-opacity duration-270 ease-out mask-y-from-75% starting:opacity-0"
           >
             <span
-              className="flex flex-col transition-transform duration-300 ease-out motion-reduce:transition-none"
+              className="flex flex-col transition-transform duration-320 ease-out motion-reduce:transition-none"
               // The roll offset is data, not styling: one tenth of the column per digit.
               style={{ transform: `translateY(-${Number(char) * 10}%)` }}
             >

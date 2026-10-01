@@ -1,7 +1,11 @@
 import { clx } from "@medusajs/ui";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { FC } from "react";
-import { CHAT_EASE_OUT, CHAT_SWAP_DURATION } from "./constants";
+import {
+  CHAT_EASE_OUT,
+  CHAT_SWAP_DURATION,
+  CHAT_SWAP_EXIT_DURATION,
+} from "./constants";
 
 type Props = {
   text: string;
@@ -39,7 +43,14 @@ export const TextSwap: FC<Props> = ({ text, className }) => {
             transform: "translateY(0px)",
             filter: "blur(0px)",
           }}
-          exit={lift(-6)}
+          // The old words leave a little faster than the new ones arrive.
+          exit={{
+            ...lift(-6),
+            transition: {
+              duration: CHAT_SWAP_EXIT_DURATION,
+              ease: CHAT_EASE_OUT,
+            },
+          }}
           transition={{ duration: CHAT_SWAP_DURATION, ease: CHAT_EASE_OUT }}
         >
           {text}
