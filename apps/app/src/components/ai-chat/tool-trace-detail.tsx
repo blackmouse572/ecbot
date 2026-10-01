@@ -1,5 +1,5 @@
 import type { ChatToolCall } from "@/types/chat-message";
-import { SquareTwoStack } from "@medusajs/icons";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { clx, IconButton, Tooltip } from "@medusajs/ui";
 import { type FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -68,7 +68,11 @@ export const ToolTraceDetail: FC<Props> = ({ call, id }) => {
             aria-label={t("chatbot.chat.trace.copy")}
             onClick={copy}
           >
-            <SquareTwoStack />
+            {copied ? (
+              <IconCheck size={15} stroke={1.75} />
+            ) : (
+              <IconCopy size={15} stroke={1.75} />
+            )}
           </IconButton>
         </Tooltip>
       </div>

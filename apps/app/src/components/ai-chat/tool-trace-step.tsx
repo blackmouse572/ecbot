@@ -1,5 +1,5 @@
 import type { ChatToolCall } from "@/types/chat-message";
-import { Loader, XCircle } from "@medusajs/icons";
+import { IconCircleX, IconLoader2 } from "@tabler/icons-react";
 import { clx } from "@medusajs/ui";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type FC, useId, useState } from "react";
@@ -10,6 +10,7 @@ import {
   CHAT_EASE_OUT,
   CHAT_SHIFT_DURATION,
   TOOL_STEP_ICONS,
+  TRACE_ICON,
 } from "./constants";
 import { NumberFlow } from "./number-flow";
 import { TextSwap } from "./text-swap";
@@ -77,11 +78,17 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
           )}
         >
           {running ? (
-            <Loader className="animate-spin" />
+            <IconLoader2 {...TRACE_ICON} className="animate-spin" />
           ) : failed ? (
-            <XCircle className="starting:scale-90 starting:opacity-0 transition-[opacity,transform] duration-200 ease-out" />
+            <IconCircleX
+              {...TRACE_ICON}
+              className="starting:scale-90 starting:opacity-0 transition-[opacity,transform] duration-200 ease-out"
+            />
           ) : (
-            <Icon className="size-[15px] starting:scale-90 starting:opacity-0 transition-[opacity,transform] duration-200 ease-out" />
+            <Icon
+              {...TRACE_ICON}
+              className="starting:scale-90 starting:opacity-0 transition-[opacity,transform] duration-200 ease-out"
+            />
           )}
         </span>
         <span className="flex min-w-0 items-center gap-1">

@@ -1,16 +1,16 @@
 import type { ToolKind } from "@/types/chat-message";
 import {
-  BookOpen,
-  Bolt,
-  Clock,
-  Photo,
-  ServerStack,
-  Tag,
-  User,
-  Users,
-} from "@medusajs/icons";
-import { IconFunction } from "@tabler/icons-react";
-import type { ComponentType, SVGProps } from "react";
+  type Icon,
+  IconBolt,
+  IconBook2,
+  IconClock,
+  IconFunction,
+  IconHeadset,
+  IconPhoto,
+  IconPlug,
+  IconTag,
+  IconUser,
+} from "@tabler/icons-react";
 
 // The agent's image tool; its result arrives as a `file` part rendered as the
 // image itself, so the tool call is not shown as a card.
@@ -45,18 +45,18 @@ export const CHAT_ACCORDION_DURATION = 0.32;
 export const ELAPSED_TICK_MS = 90;
 
 // Icon per kind of step in the tool trace (`knowledge` is the RAG search row).
-export const TOOL_STEP_ICONS: Record<
-  ToolKind | "knowledge",
-  ComponentType<SVGProps<SVGSVGElement>>
-> = {
+export const TOOL_STEP_ICONS: Record<ToolKind | "knowledge", Icon> = {
   http: IconFunction,
   tool: IconFunction,
-  mcp: ServerStack,
-  skill: Bolt,
-  customer: User,
-  tag: Tag,
-  handoff: Users,
-  followup: Clock,
-  image: Photo,
-  knowledge: BookOpen,
+  mcp: IconPlug,
+  skill: IconBolt,
+  customer: IconUser,
+  tag: IconTag,
+  handoff: IconHeadset,
+  followup: IconClock,
+  image: IconPhoto,
+  knowledge: IconBook2,
 };
+
+// Tabler icon size and stroke for the tool trace rows.
+export const TRACE_ICON = { size: 16, stroke: 1.75 } as const;

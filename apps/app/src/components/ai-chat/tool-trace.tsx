@@ -1,11 +1,11 @@
 import type { ChatToolCall } from "@/types/chat-message";
-import {
-  CheckCircle,
-  ChevronDownMini,
-  Loader,
-  Sparkles,
-} from "@medusajs/icons";
 import { clx } from "@medusajs/ui";
+import {
+  IconChevronDown,
+  IconCircleCheck,
+  IconLoader2,
+  IconSparkles,
+} from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type FC, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,6 +15,7 @@ import {
   CHAT_EASE_OUT,
   CHAT_SHIFT_DURATION,
   TOOL_STEP_ICONS,
+  TRACE_ICON,
 } from "./constants";
 import { NumberFlow } from "./number-flow";
 import { TextSwap } from "./text-swap";
@@ -28,6 +29,8 @@ type Props = {
   knowledgeCount?: number;
   /** The turn is still streaming. */
   running: boolean;
+  /** Start with the steps shown. History passes false: just the summary line. */
+  defaultOpen?: boolean;
 };
 
 const CALL_KINDS = new Set([
@@ -50,10 +53,11 @@ export const ToolTrace: FC<Props> = ({
   toolCalls,
   knowledgeCount,
   running,
+  defaultOpen = true,
 }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(defaultOpen);
   const timings = useToolTimings(toolCalls, running);
 
   const calls = toolCalls.filter((c) =>
@@ -76,7 +80,7 @@ export const ToolTrace: FC<Props> = ({
       : summary.charAt(0).toUpperCase() + summary.slice(1);
 
   return (
-    <div className="mb-2.5 w-full">
+    <div className="w-full">
       <button
         type="button"
         aria-expanded={open}
@@ -97,7 +101,11 @@ export const ToolTrace: FC<Props> = ({
             !open && "after:scale-y-0",
           )}
         >
-          {running ? <Loader className="animate-spin" /> : <Sparkles />}
+          {running ? (
+            <IconLoader2 {...TRACE_ICON} className="animate-spin" />
+          ) : (
+            <IconSparkles {...TRACE_ICON} />
+          )}
         </span>
         <TextSwap text={label} />{" "}
         <motion.span
@@ -105,7 +113,9 @@ export const ToolTrace: FC<Props> = ({
           transition={{ duration: CHAT_SHIFT_DURATION, ease: CHAT_EASE_IN_OUT }}
           className="text-ui-fg-muted shrink-0"
         >
-          <ChevronDownMini
+          <IconChevronDown
+            size={14}
+            stroke={2}
             className={clx(
               "transition-transform duration-200 ease-out",
               !open && "-rotate-90",
@@ -136,7 +146,7 @@ export const ToolTrace: FC<Props> = ({
               <div className={TOOL_TRACE_STEP}>
                 <div className={TOOL_TRACE_ROW}>
                   <span className="bg-ui-bg-base text-ui-fg-muted relative z-10 grid size-5 shrink-0 place-items-center rounded-full">
-                    <KnowledgeIcon className="size-[15px]" />
+                    <KnowledgeIcon {...TRACE_ICON} />
                   </span>
                   <span className="truncate">
                     {t("chatbot.chat.trace.knowledgeStep")}
@@ -158,7 +168,7 @@ export const ToolTrace: FC<Props> = ({
               <div className={TOOL_TRACE_STEP}>
                 <div className={TOOL_TRACE_ROW}>
                   <span className="bg-ui-bg-base text-ui-tag-green-icon relative z-10 grid size-5 shrink-0 place-items-center rounded-full">
-                    <CheckCircle />
+                    <IconCircleCheck {...TRACE_ICON} />
                   </span>
                   <span>{t("chatbot.chat.trace.done")}</span>
                 </div>

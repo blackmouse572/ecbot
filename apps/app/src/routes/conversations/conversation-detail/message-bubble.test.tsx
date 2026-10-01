@@ -310,7 +310,7 @@ describe("MessageBubble look", () => {
     );
   });
 
-  it("shows a bot reply's saved tool calls as the tool timeline", () => {
+  it("shows a bot reply's saved tool calls as the tool timeline", async () => {
     renderBubble({
       direction: "OUTBOUND",
       authorType: "BOT",
@@ -328,8 +328,18 @@ describe("MessageBubble look", () => {
         },
       ],
     });
+    // History starts on the summary line; the steps open on click.
+    const summary = screen.getByRole("button", {
+      name: /Chatbot\.chat\.trace\.tools/,
+    });
+    expect(summary).toHaveAttribute("aria-expanded", "false");
     expect(
-      screen.getByRole("button", {
+      screen.queryByText("chatbot.chat.trace.done"),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(summary);
+    expect(
+      await screen.findByRole("button", {
         name: /chatbot\.chat\.trace\.called get_order Shopify 274ms/,
       }),
     ).toBeInTheDocument();

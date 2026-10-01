@@ -211,9 +211,15 @@ export const MessageBubble = ({
         )}
       </div>
       {message.authorType === "BOT" && toolCalls && toolCalls.length > 0 && (
-        // Same width as the bubble, on the bot's side of the thread.
-        <div className="w-full max-w-[80%]">
-          <ToolTrace toolCalls={toolCalls.map(toTraceCall)} running={false} />
+        // Sized to its content on the bot's side, no wider than the bubble.
+        <div className="max-w-[80%]">
+          <ToolTrace
+            toolCalls={toolCalls.map(toTraceCall)}
+            running={false}
+            // The name line is right above: keep history to the summary
+            // until someone opens it.
+            defaultOpen={false}
+          />
         </div>
       )}
       {/* The picker sits on the bubble's inner side so it never gets pushed
