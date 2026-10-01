@@ -144,7 +144,7 @@ export const DataTableRoot = <TData,>({
         })}
       >
         {!noResults ? (
-          <Table className="relative w-full">
+          <Table className="relative w-full max-sm:whitespace-nowrap">
             {!noHeader && (
               <Table.Header className="border-t-0">
                 {table.getHeaderGroups().map((headerGroup) => {
@@ -384,7 +384,7 @@ const Pagination = (props: PaginationProps) => {
   return (
     <>
       <Table.Pagination
-        className="flex-shrink-0"
+        className="flex-shrink-0 [&_p]:whitespace-nowrap max-sm:flex-col max-sm:items-start max-sm:gap-y-1"
         {...props}
         translations={translations}
       />
