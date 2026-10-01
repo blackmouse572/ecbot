@@ -33,10 +33,14 @@ def test_cassette_config_none_when_mode_live(monkeypatch):
 
 def test_cassette_config_none_in_production(monkeypatch, tmp_path):
     # Recordings are keyed by message text only, so a replay in production
-    # would serve one agent's answer to another agent.
+    # would serve one agent's answer to another agent. ENV may come from
+    # .env only, so the check goes through AppVars, not os.environ.
     monkeypatch.setenv("AI_CASSETTE_MODE", "none")
     monkeypatch.setenv("VCR_CASSETTE_DIR", str(tmp_path))
-    monkeypatch.setenv("ENV", "production")
+    monkeypatch.delenv("ENV", raising=False)
+
+    from eccho_ai.core.variables import AppVars
+    monkeypatch.setattr(AppVars, "ENV", "production")
 
     from eccho_ai.middlewares.cassette_middleware import get_cassette_config
     assert get_cassette_config() is None

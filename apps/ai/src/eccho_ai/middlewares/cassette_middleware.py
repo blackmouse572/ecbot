@@ -22,6 +22,8 @@ import os
 from pathlib import Path
 from typing import TypedDict
 
+from eccho_ai.core.variables import AppVars
+
 
 class CassetteConfig(TypedDict):
     mode: str
@@ -34,7 +36,7 @@ def get_cassette_config() -> CassetteConfig | None:
         return None
     # Recordings are keyed by message text only, so in production a replay
     # would serve one agent's answer to another agent and skip its tools.
-    if os.environ.get("ENV") == "production":
+    if AppVars.is_production:
         return None
     return CassetteConfig(
         mode=mode,
