@@ -1,7 +1,7 @@
 import { toast } from "@medusajs/ui";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useConversation,
   useConversationMessages,
@@ -10,6 +10,8 @@ import {
   useSendOperatorReply,
 } from "@/hooks/api/conversations";
 import { useMe } from "@/hooks/api/users";
+import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { ROUTES } from "@/routes";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -25,7 +27,13 @@ import { useConversationSidebar } from "./use-conversation-sidebar";
 export function ConversationDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const { open: sidebarOpen, toggle: toggleSidebar } = useConversationSidebar();
+  const navigate = useNavigate();
+  const { workspaceSlug } = useWorkspaceParams();
+  const {
+    open: sidebarOpen,
+    toggle: toggleSidebar,
+    isMobile,
+  } = useConversationSidebar();
 
   const { user } = useMe();
   const currentOperatorId = (user as A)?.id as string | undefined;
@@ -55,6 +63,16 @@ export function ConversationDetail() {
       el.classList.remove("bg-ui-tag-orange-bg", "rounded-md");
     }, 1500);
   }, []);
+
+  // Small screens: "view message" in the details screen closes it first, so
+  // the scroll waits until the thread is mounted again.
+  const pendingScrollRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (sidebarOpen || !pendingScrollRef.current) return;
+    const messageId = pendingScrollRef.current;
+    pendingScrollRef.current = null;
+    requestAnimationFrame(() => scrollToMessage(messageId));
+  }, [sidebarOpen, scrollToMessage]);
 
   // Mark the conversation as "viewed" so the handoff dot disappears on the list,
   // and record the operator's read state for the unread badge.
@@ -139,7 +157,15 @@ export function ConversationDetail() {
 
   const threadInner = (
     <>
-      <ConversationHeader conversation={conversation} />
+      <ConversationHeader
+        conversation={conversation}
+        onBack={
+          isMobile
+            ? () => navigate(`/${workspaceSlug}/${ROUTES.Conversations}`)
+            : undefined
+        }
+        onOpenCustomer={isMobile && customerId ? toggleSidebar : undefined}
+      />
       <MessageList
         conversationId={id}
         messages={messages}
@@ -173,6 +199,27 @@ export function ConversationDetail() {
       onViewMessage={scrollToMessage}
     />
   );
+
+  if (isMobile) {
+    // Small screens stack the customer details over the thread, app style.
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {sidebarOpen && customerId ? (
+          <CustomerSidePanel
+            customerId={customerId}
+            conversationId={id}
+            onBack={toggleSidebar}
+            onViewMessage={(messageId) => {
+              pendingScrollRef.current = messageId;
+              toggleSidebar();
+            }}
+          />
+        ) : (
+          threadInner
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 overflow-hidden">
