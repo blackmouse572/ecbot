@@ -1,0 +1,82 @@
+/*
+ * Chat bubbles for the AI chat card (ai-chat-card.tsx): the customer's
+ * message in a soft neutral bubble, the bot's in interactive blue.
+ *
+ * The bot bubble re-points Medusa's fg/bg/border tokens to white tints, so
+ * everything inside it (Streamdown markdown, source chips, the loader's
+ * shimmer) reads on blue without per-component overrides.
+ *
+ * Plain CSS on purpose: unlayered rules win over the Tailwind utilities that
+ * Bubble/MessageContent set (surface, radius, padding, shadow).
+ */
+
+:root {
+  /* blue-500 (--bg-interactive) to blue-600 (--fg-interactive-hover) */
+  --chat-bot-from: rgba(59, 130, 246, 1);
+  --chat-bot-to: rgba(37, 99, 235, 1);
+  --chat-bot-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 18px -6px rgba(29, 78, 216, 0.5);
+  /* --bg-base to zinc-100 */
+  --chat-user-from: rgba(255, 255, 255, 1);
+  --chat-user-to: rgba(244, 244, 245, 1);
+  --chat-user-shadow:
+    inset 0 1px 0 rgba(0, 0, 0, 0.03), inset 0 0 0 1px rgba(0, 0, 0, 0.07),
+    0 5px 14px -6px rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  /* One step darker than light mode, so white text stays above 5:1 */
+  --chat-bot-from: rgba(37, 99, 235, 1);
+  --chat-bot-to: rgba(29, 78, 216, 1);
+  /* zinc-800 down to just under --bg-base */
+  --chat-user-from: rgba(39, 39, 42, 1);
+  --chat-user-to: rgba(30, 30, 33, 1);
+  --chat-user-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 12px 22px -10px rgba(0, 0, 0, 0.6);
+}
+
+.chat-bubble-user,
+.chat-bubble-bot {
+  border: 0;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+.chat-bubble-user {
+  border-bottom-right-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+  color: var(--fg-base);
+  background-image: linear-gradient(
+    to bottom,
+    var(--chat-user-from),
+    var(--chat-user-to)
+  );
+  box-shadow: var(--chat-user-shadow);
+}
+
+.chat-bubble-bot {
+  --fg-base: rgba(255, 255, 255, 0.95);
+  --fg-subtle: rgba(255, 255, 255, 0.8);
+  --fg-muted: rgba(255, 255, 255, 0.65);
+  --fg-interactive: rgba(255, 255, 255, 1);
+  --fg-interactive-hover: rgba(255, 255, 255, 0.85);
+  --fg-error: rgba(254, 205, 211, 1);
+  --border-base: rgba(255, 255, 255, 0.2);
+  --bg-base: rgba(255, 255, 255, 0.08);
+  --bg-subtle: rgba(255, 255, 255, 0.14);
+  --bg-component: rgba(255, 255, 255, 0.14);
+
+  border-bottom-left-radius: 0.25rem;
+  padding: 0.625rem 1rem;
+  color: var(--fg-base);
+  background-image: linear-gradient(
+    to bottom,
+    var(--chat-bot-from),
+    var(--chat-bot-to)
+  );
+  box-shadow: var(--chat-bot-shadow);
+}

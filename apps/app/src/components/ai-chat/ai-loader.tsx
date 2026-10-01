@@ -5,6 +5,8 @@ interface AiAssistantLoadingProps {
   className?: string;
   size?: number;
   state?: string;
+  /** `inverted`: white pixels, for a colored surface such as the bot bubble. */
+  tone?: "default" | "inverted";
 }
 
 const patterns = [
@@ -111,7 +113,19 @@ const colorMap = {
   "bg-zinc-600": "#52525b",
 };
 
-export function AiAssistantLoading() {
+// The same shades as white at matching strengths (darker zinc, more solid white).
+const invertedColorMap: typeof colorMap = {
+  "bg-zinc-200": "rgba(255, 255, 255, 0.35)",
+  "bg-zinc-300": "rgba(255, 255, 255, 0.5)",
+  "bg-zinc-400": "rgba(255, 255, 255, 0.65)",
+  "bg-zinc-500": "rgba(255, 255, 255, 0.8)",
+  "bg-zinc-600": "rgba(255, 255, 255, 0.95)",
+};
+
+export function AiAssistantLoading({
+  tone = "default",
+}: Pick<AiAssistantLoadingProps, "tone">) {
+  const colors = tone === "inverted" ? invertedColorMap : colorMap;
   const [currentPattern, setCurrentPattern] = useState(0);
   const reduceMotion = useReducedMotion();
 
@@ -148,7 +162,7 @@ export function AiAssistantLoading() {
               className={`[grid-area:${row}_/_${col}] shrink-0 size-[2px]`}
               animate={{
                 backgroundColor: square
-                  ? colorMap[square.color as keyof typeof colorMap]
+                  ? colors[square.color as keyof typeof colorMap]
                   : "rgba(0, 0, 0, 0)",
                 opacity: square ? 1 : 0,
               }}
@@ -167,10 +181,11 @@ export function AiAssistantLoading() {
 export const BuildingLoader: React.FC<AiAssistantLoadingProps> = ({
   className = "",
   state = "Loading",
+  tone = "default",
 }) => {
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
-      <AiAssistantLoading />
+      <AiAssistantLoading tone={tone} />
       {state ? <span className="shimmer text-sm">{state}</span> : null}
     </div>
   );
