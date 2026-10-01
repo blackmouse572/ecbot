@@ -86,7 +86,10 @@ export function compilePrompt(profile: AgentProfile, options: CompileOptions = {
   const process = type.personal ? "" : section("Process", numbered([
     "Understand what the customer needs. Ask at most one question at a time.",
     profile.collect.length ? `Before confirming anything, collect: ${unambiguousList(profile.collect.map((c) => promptOf(COLLECT, c)))}.` : "",
-    "Read the key details back and wait for a clear yes before you confirm, and before you call any tool that creates, changes or cancels an order, booking or payment.",
+    // Scoped to write actions: an open "wait for a yes before you confirm"
+    // made agents ask for a yes before every product search.
+    "If you have a tool that looks up products, prices, stock or orders, call it before you answer or recommend, without asking first, and share the product link when the result includes one.",
+    "Before you create, change or cancel an order, booking or payment, read the key details back and wait for a clear yes.",
     profile.handoffWhen.length ? `Hand the conversation to a person when ${list(profile.handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.` : "",
     type.mode === "detailed" ? "Explain step by step and check that the customer understood before moving on." : "",
   ]));

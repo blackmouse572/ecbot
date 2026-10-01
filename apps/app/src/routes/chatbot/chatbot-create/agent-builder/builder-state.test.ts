@@ -33,6 +33,39 @@ describe("builderReducer", () => {
     expect(currentStep(s)?.question.id).toBe("businessName");
   });
 
+  // Skipping must not drop the preset's safety rules, contact fields or
+  // handoff triggers; it only drops what auto-fill added on top of them.
+  it.each(["rules", "collect", "handoffWhen"] as const)("resets %s to the preset when skipped", (id) => {
+    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === id);
+    const preset = createProfile("beauty", "vi")[id];
+    expect(preset.length).toBeGreaterThan(0);
+    const filled = { ...s0, profile: { ...s0.profile!, [id]: [] } };
+    const s1 = builderReducer(filled, { type: "skip", question: currentStep(filled)!.question });
+    expect(s1.profile![id]).toEqual(preset);
+    expect(s1.answered).toContain(id);
+  });
+
+  it("drops rules auto-fill added when the rules question is skipped", () => {
+    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === "rules");
+    const filled = { ...s0, profile: { ...s0.profile!, rules: [...s0.profile!.rules, "no_competitors" as const] } };
+    const s1 = builderReducer(filled, { type: "skip", question: currentStep(filled)!.question });
+    expect(s1.profile!.rules).toEqual(createProfile("beauty", "vi").rules);
+    expect(s1.profile!.rules).toContain("no_medical_advice");
+  });
+
+  it("clears other optional choices when skipped", () => {
+    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === "personality");
+    const s1 = builderReducer(s0, { type: "skip", question: currentStep(s0)!.question });
+    expect(s1.profile!.personality).toEqual([]);
+  });
+
+  it("clears an auto-filled text answer when it is skipped", () => {
+    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === "difference");
+    const filled = { ...s0, profile: { ...s0.profile!, difference: "Auto-filled" } };
+    const s1 = builderReducer(filled, { type: "skip", question: currentStep(filled)!.question });
+    expect(s1.profile!.difference).toBe("");
+  });
+
   it("records an answer and moves to the next question", () => {
     const s0 = started();
     const s1 = builderReducer(s0, { type: "answer", question: currentStep(s0)!.question, value: "beauty" });

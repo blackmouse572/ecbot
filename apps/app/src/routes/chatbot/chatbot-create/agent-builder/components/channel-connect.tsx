@@ -273,36 +273,6 @@ export function ChannelConnect({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      {existingChannelAccounts.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <Text size="small" weight="plus">
-            {t("agentBuilder.ui.existingChannels")}
-          </Text>
-          <div className="flex flex-col gap-1">
-            {existingChannelAccounts.map((account) => (
-              <div
-                key={account.id}
-                className="flex items-center gap-2 rounded-md border border-ui-border-base bg-ui-bg-base px-3 py-2"
-              >
-                <PlatformIcon type={account.type} size={18} />
-                <Text size="small" className="flex-1 truncate">
-                  {account.name}
-                </Text>
-                <Button
-                  size="small"
-                  variant="secondary"
-                  isLoading={busy === account.id}
-                  disabled={accountsLocked}
-                  onClick={() => handleUseExisting(account)}
-                >
-                  {t("agentBuilder.ui.useChannel")}
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-2 gap-2">
         {GRID_CHANNELS.map((channel) => {
           const connect = CHANNEL_CONNECT[channel];
@@ -342,6 +312,38 @@ export function ChannelConnect({
           );
         })}
       </div>
+
+      {/* Below the cards: this list loads late, and above them it pushed the
+          cards down mid-click. */}
+      {existingChannelAccounts.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <Text size="small" weight="plus">
+            {t("agentBuilder.ui.existingChannels")}
+          </Text>
+          <div className="flex flex-col gap-1">
+            {existingChannelAccounts.map((account) => (
+              <div
+                key={account.id}
+                className="flex items-center gap-2 rounded-md border border-ui-border-base bg-ui-bg-base px-3 py-2"
+              >
+                <PlatformIcon type={account.type} size={18} />
+                <Text size="small" className="flex-1 truncate">
+                  {account.name}
+                </Text>
+                <Button
+                  size="small"
+                  variant="secondary"
+                  isLoading={busy === account.id}
+                  disabled={accountsLocked}
+                  onClick={() => handleUseExisting(account)}
+                >
+                  {t("agentBuilder.ui.useChannel")}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {expanded === "telegram" && (
         <div className="flex flex-col gap-2 rounded-md border border-ui-border-base bg-ui-bg-subtle p-3">

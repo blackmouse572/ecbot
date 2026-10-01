@@ -2365,7 +2365,8 @@
         "created": "Credential created.",
         "createFailed": "Failed to create credential.",
         "deleted": "Credential deleted.",
-        "deleteFailed": "Failed to delete credential."
+        "deleteFailed": "Failed to delete credential.",
+        "rotateFailed": "Rotating the secret failed."
       },
       "reveal": {
         "title": "Credential created",
@@ -2380,6 +2381,15 @@
           "body": "This permanently revokes the credential. Any client using this key will be unable to authenticate.",
           "confirm": "Delete",
           "cancel": "Cancel"
+        }
+      },
+      "rotate": {
+        "action": "Rotate secret",
+        "title": "Secret rotated",
+        "confirm": {
+          "title": "Rotate this secret?",
+          "body": "The current secret stops working right away. Any client using it must switch to the new one.",
+          "confirm": "Rotate"
         }
       }
     }

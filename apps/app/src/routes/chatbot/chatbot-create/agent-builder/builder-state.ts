@@ -1,5 +1,5 @@
 import {
-  buildQuestionGroups, writeAnswer,
+  buildQuestionGroups, createProfile, readAnswer, writeAnswer,
   type AgentProfile, type AgentSuggestion, type Question, type QuestionGroup,
 } from "@repo/agent-blueprint";
 import type { AccountGetDetailResponseDto } from "@repo/client";
@@ -73,6 +73,8 @@ export function isComplete(state: BuilderState): boolean {
   return !!state.profile && currentStep({ ...state, editing: null }) === null;
 }
 
+const KEEP_PRESET_ON_SKIP = new Set<string>(["rules", "collect", "handoffWhen"]);
+
 const addOnce = (list: string[], id: string) => (list.includes(id) ? list : [...list, id]);
 
 export function builderReducer(state: BuilderState, action: BuilderAction): BuilderState {
@@ -111,8 +113,19 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       const answered = typeChanged ? ["businessType"] : addOnce(state.answered, action.question.id);
       return { ...state, profile, answered, editing: null };
     }
-    case "skip":
-      return { ...state, answered: addOnce(state.answered, action.question.id), editing: null };
+    case "skip": {
+      if (!state.profile) return state;
+      // Skip means "no answer of my own": drop what auto-fill added. Safety
+      // rules, contact fields and handoff triggers fall back to the preset,
+      // other choices and text are cleared, and a yes/no keeps its default.
+      const { kind, path, required } = action.question;
+      const preset = createProfile(state.profile.businessType, state.profile.primaryLanguage);
+      const skipped = KEEP_PRESET_ON_SKIP.has(path.field)
+        ? readAnswer(preset, path)
+        : kind === "multi" ? [] : kind === "text" ? "" : undefined;
+      const profile = required || skipped === undefined ? state.profile : writeAnswer(state.profile, path, skipped);
+      return { ...state, profile, answered: addOnce(state.answered, action.question.id), editing: null };
+    }
     case "edit":
       return { ...state, editing: action.questionId };
     case "restart":
