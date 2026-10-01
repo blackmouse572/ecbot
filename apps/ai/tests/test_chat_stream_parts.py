@@ -250,14 +250,14 @@ async def test_tool_call_is_tagged_with_its_kind_from_the_tool_metadata():
     async def fake_events():
         yield {"event": "on_tool_start", "run_id": "r1", "name": "get_order",
                "metadata": {"langgraph_step": 2,
-                            "eccho_tool": {"kind": "mcp", "label": "Shopify", "provider": "composio"}},
+                            "eccho_tool": {"kind": "mcp", "label": "Shopify"}},
                "data": {"input": {"id": 7}}}
         yield {"event": "on_tool_end", "run_id": "r1", "data": {"output": _tool_msg("{}")}}
 
     parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
     meta = [p for p in parts if p["type"] == "data-tool-meta"]
     assert meta == [{"type": "data-tool-meta", "id": "r1",
-                     "data": {"kind": "mcp", "label": "Shopify", "provider": "composio"}}]
+                     "data": {"kind": "mcp", "label": "Shopify"}}]
     seq = [p["type"] for p in parts]
     assert seq.index("tool-input-start") < seq.index("data-tool-meta") < seq.index("tool-output-available")
 

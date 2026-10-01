@@ -47,23 +47,37 @@ const KnowledgeIcon = TOOL_STEP_ICONS.knowledge;
  * icons. Steps arrive one by one while the turn runs; "Done" closes it.
  */
 export const ToolTrace: FC<Props> = ({
-  toolCalls,
+  toolCalls: streamed,
   knowledgeCount,
   running,
 }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(true);
+  // A turn that ended (stopped, errored, aborted) before a call answered
+  // leaves it "running": show it as stopped instead of spinning forever.
+  const toolCalls = running
+    ? streamed
+    : streamed.map((c) =>
+        c.status === "running"
+          ? {
+              ...c,
+              status: "error" as const,
+              error: t("chatbot.chat.trace.stopped"),
+            }
+          : c,
+      );
   const timings = useToolTimings(toolCalls, running);
 
-  const calls = toolCalls.filter((c) =>
-    CALL_KINDS.has(c.kind ?? "tool"),
-  ).length;
+  // Every failed step counts as a tool, so "failed" never outnumbers "tools".
   const failed = toolCalls.filter((c) => c.status === "error").length;
+  const calls = toolCalls.filter(
+    (c) => c.status === "error" || CALL_KINDS.has(c.kind ?? "tool"),
+  ).length;
   const parts = [
     calls > 0 && t("chatbot.chat.trace.tools", { count: calls }),
     failed > 0 && t("chatbot.chat.trace.failed", { count: failed }),
-    toolCalls.some((c) => c.kind === "skill") &&
+    toolCalls.some((c) => c.kind === "skill" && c.status === "success") &&
       t("chatbot.chat.trace.loadedSkill"),
     knowledgeCount && t("chatbot.chat.trace.searchedKnowledge"),
     toolCalls.some((c) => c.kind === "handoff") &&

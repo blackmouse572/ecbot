@@ -17,6 +17,10 @@ import { TextSwap } from "./text-swap";
 import { ToolTraceDetail } from "./tool-trace-detail";
 import { TOOL_TRACE_ROW, TOOL_TRACE_STEP } from "./tool-trace-classes";
 
+// Under a second in ms ("274ms"), then seconds with one decimal ("28.7s").
+const formatElapsed = (ms: number) =>
+  ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`;
+
 type Props = {
   call: ChatToolCall;
   elapsedMs?: number;
@@ -35,7 +39,7 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
   const running = call.status === "running";
   const failed = call.status === "error";
   const kind = call.kind ?? "tool";
-  const Icon = TOOL_STEP_ICONS[kind];
+  const Icon = TOOL_STEP_ICONS[kind] ?? TOOL_STEP_ICONS.tool;
 
   const verb = running
     ? kind === "skill"
@@ -50,13 +54,20 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
           : t("chatbot.chat.trace.called");
   const slug = typeof call.args.slug === "string" ? call.args.slug : undefined;
   // A handoff reads as a sentence on its own ("Handed over to staff").
+  // HTTP tools go by their display name (the slug is internal), the same
+  // name history has; an MCP call shows the action, tagged with its tool.
   const name =
     kind === "skill" && slug
       ? slug
       : kind === "handoff" && !running
         ? ""
-        : call.toolName;
-  const tag = call.label ?? t(`chatbot.chat.trace.kind.${kind}`);
+        : kind === "http" && call.label
+          ? call.label
+          : call.toolName;
+  const tag =
+    kind === "http" || !call.label
+      ? t(`chatbot.chat.trace.kind.${kind}`)
+      : call.label;
 
   return (
     <div className={TOOL_TRACE_STEP}>
@@ -112,12 +123,12 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
             </motion.code>
           )}
         </span>{" "}
-        <span className="bg-ui-bg-component txt-compact-xsmall text-ui-fg-subtle ml-auto shrink-0 rounded-md px-2 py-px">
+        <span className="bg-ui-bg-component txt-compact-xsmall text-ui-fg-subtle ml-auto max-w-[40%] shrink-0 truncate rounded-md px-2 py-px">
           {tag}
         </span>{" "}
         {elapsedMs !== undefined && (
           <NumberFlow
-            value={`${Math.round(elapsedMs)}ms`}
+            value={formatElapsed(elapsedMs)}
             className={clx(
               "min-w-[42px] shrink-0 justify-end font-mono text-[11px]",
               failed ? "text-ui-fg-error" : "text-ui-fg-muted",

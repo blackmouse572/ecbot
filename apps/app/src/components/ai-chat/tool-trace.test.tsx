@@ -152,4 +152,67 @@ describe("ToolTrace", () => {
       expect(screen.getByText("312ms")).toBeInTheDocument();
     });
   });
+
+  it("stops a call the turn ended without an answer for", () => {
+    render(
+      <ToolTrace
+        toolCalls={[call({ status: "running", durationMs: undefined })]}
+        running={false}
+      />,
+    );
+    expect(row(/Failed lookup_order/)).toBeInTheDocument();
+    expect(screen.getByText("Done")).toBeInTheDocument();
+  });
+
+  it("never counts more failures than tools", () => {
+    render(
+      <ToolTrace
+        running={false}
+        toolCalls={[
+          call({ invocationId: "a" }),
+          call({
+            invocationId: "b",
+            kind: "skill",
+            toolName: "load_skill",
+            status: "error",
+            error: "x",
+          }),
+          call({ invocationId: "c", status: "error", error: "x" }),
+        ]}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /^3 tools, 2 failed/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a long call in seconds", () => {
+    render(
+      <ToolTrace toolCalls={[call({ durationMs: 28734 })]} running={false} />,
+    );
+    expect(screen.getByText("28.7s")).toBeInTheDocument();
+  });
+
+  it("names an HTTP tool by its display name and an MCP action by the action", () => {
+    render(
+      <ToolTrace
+        running={false}
+        toolCalls={[
+          call({
+            invocationId: "a",
+            toolName: "search-products",
+            label: "Product search",
+          }),
+          call({
+            invocationId: "b",
+            kind: "mcp",
+            toolName: "get_order",
+            label: "Shopify",
+          }),
+        ]}
+      />,
+    );
+    expect(row(/Called Product search HTTP/)).toBeInTheDocument();
+    expect(row(/Called get_order Shopify/)).toBeInTheDocument();
+  });
 });

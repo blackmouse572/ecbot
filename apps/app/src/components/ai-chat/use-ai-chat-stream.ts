@@ -1,5 +1,9 @@
 import { toolsQueryKeys } from "@/hooks/api/tools";
-import { BUILT_IN_TOOL_KINDS, SEND_IMAGE_TOOL_PART } from "./constants";
+import {
+  BUILT_IN_TOOL_KINDS,
+  SEND_IMAGE_TOOL_PART,
+  TOOL_STEP_ICONS,
+} from "./constants";
 import { tokenAtom } from "@/modules/auth";
 import type {
   ChatToolCall,
@@ -17,7 +21,6 @@ import { useEffect, useMemo, useRef } from "react";
 export type ToolMeta = {
   kind: ToolKind;
   label?: string;
-  provider?: string;
 };
 
 export type RenderModelToolCall = {
@@ -81,8 +84,15 @@ export function toolCallToChat(tc: RenderModelToolCall): ChatToolCall {
       ? "error"
       : "success";
 
-  let kind: ToolKind =
-    tc.meta?.kind ?? BUILT_IN_TOOL_KINDS[tc.toolName] ?? "tool";
+  // An AI service ahead of this app may send a kind it does not know yet.
+  const streamed = tc.meta?.kind;
+  const known =
+    streamed &&
+    streamed !== ("knowledge" as string) &&
+    streamed in TOOL_STEP_ICONS
+      ? streamed
+      : undefined;
+  let kind: ToolKind = known ?? BUILT_IN_TOOL_KINDS[tc.toolName] ?? "tool";
   if (kind === "tag" && builtIn?.triggeredHandoff) kind = "handoff";
 
   return {
@@ -99,7 +109,6 @@ export function toolCallToChat(tc: RenderModelToolCall): ChatToolCall {
     durationMs: registry?.durationMs,
     kind,
     label: tc.meta?.label,
-    provider: tc.meta?.provider,
   };
 }
 

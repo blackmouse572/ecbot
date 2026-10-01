@@ -15,7 +15,7 @@ CITATION_MAX_HELD = 64
 SEND_IMAGE_TOOL = "send_image"
 
 # Key on a StructuredTool's `metadata` that says what kind of tool it is
-# ({"kind": ..., "label"?: ..., "provider"?: ...}). LangChain passes tool
+# ({"kind": ..., "label"?: ...}). LangChain passes tool
 # metadata through to `on_tool_start`, and the stream forwards it to the client
 # as a `data-tool-meta` part so the chat can tell skills, MCP actions and HTTP
 # tools apart.

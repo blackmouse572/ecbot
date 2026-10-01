@@ -28,8 +28,6 @@ export type ChatToolCall = {
   kind?: ToolKind;
   /** Registry tool's display name (e.g. "Shopify"). */
   label?: string;
-  /** MCP provider, lowercased (e.g. "composio"). */
-  provider?: string;
 };
 
 // Sources come from the AI SDK's `source-url` UI message part

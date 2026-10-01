@@ -112,9 +112,6 @@ def _meta(tool: Tools) -> dict[str, Any]:
     label = getattr(tool, "display_name", None)
     if label:
         meta["label"] = label
-    provider = getattr(tool, "mcp_provider", None)
-    if provider:
-        meta["provider"] = str(provider).lower()
     return {TOOL_META_KEY: meta}
 
 

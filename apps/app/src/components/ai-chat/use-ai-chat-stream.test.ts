@@ -401,13 +401,12 @@ describe("tool kinds", () => {
       {
         type: "data-tool-meta",
         id: "r1",
-        data: { kind: "mcp", label: "Shopify", provider: "composio" },
+        data: { kind: "mcp", label: "Shopify" },
       },
     ]);
     expect(model.toolCalls[0].meta).toEqual({
       kind: "mcp",
       label: "Shopify",
-      provider: "composio",
     });
   });
 
@@ -419,17 +418,16 @@ describe("tool kinds", () => {
     expect(model.knowledgeCount).toBe(3);
   });
 
-  it("carries the kind, label and provider onto the chat tool call", () => {
+  it("carries the kind and label onto the chat tool call", () => {
     const chat = toolCallToChat({
       toolCallId: "r1",
       toolName: "get_order",
       state: "input-available",
-      meta: { kind: "mcp", label: "Shopify", provider: "composio" },
+      meta: { kind: "mcp", label: "Shopify" },
     });
     expect(chat).toMatchObject({
       kind: "mcp",
       label: "Shopify",
-      provider: "composio",
     });
   });
 
@@ -466,5 +464,14 @@ describe("tool kinds", () => {
     });
     expect(chat.status).toBe("error");
     expect(chat.error).toBe("no conversation context");
+  });
+
+  it("falls back to a plain tool for a kind this app does not know", () => {
+    const chat = toolCallToChat({
+      toolCallId: "r1",
+      toolName: "lookup",
+      meta: { kind: "webhook" as never },
+    });
+    expect(chat.kind).toBe("tool");
   });
 });

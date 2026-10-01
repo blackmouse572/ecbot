@@ -18,9 +18,10 @@
  */
 
 :root {
-  /* blue-500 (--bg-interactive) to blue-600 (--fg-interactive-hover) */
-  --chat-bot-from: rgba(59, 130, 246, 1);
-  --chat-bot-to: rgba(37, 99, 235, 1);
+  /* blue-600 to blue-700 in both themes: white text stays at 4.5:1 or more
+     even at the lightest (top) edge. */
+  --chat-bot-from: rgba(37, 99, 235, 1);
+  --chat-bot-to: rgba(29, 78, 216, 1);
   --chat-bot-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     0 8px 18px -6px rgba(29, 78, 216, 0.5);
@@ -38,9 +39,6 @@
 }
 
 .dark {
-  /* One step darker than light mode, so white text stays above 5:1 */
-  --chat-bot-from: rgba(37, 99, 235, 1);
-  --chat-bot-to: rgba(29, 78, 216, 1);
   /* zinc-800 down to just under --bg-base */
   --chat-customer-from: rgba(39, 39, 42, 1);
   --chat-customer-to: rgba(30, 30, 33, 1);
@@ -83,12 +81,14 @@
 
 .chat-bubble--bot,
 .chat-bubble--operator {
-  --fg-base: rgba(255, 255, 255, 0.95);
-  --fg-subtle: rgba(255, 255, 255, 0.8);
-  --fg-muted: rgba(255, 255, 255, 0.65);
+  /* All at 4.5:1 or more on blue-600, the lightest part of the bot bubble. */
+  --fg-base: rgba(255, 255, 255, 1);
+  --fg-subtle: rgba(255, 255, 255, 0.92);
+  --fg-muted: rgba(255, 255, 255, 0.9);
   --fg-interactive: rgba(255, 255, 255, 1);
-  --fg-interactive-hover: rgba(255, 255, 255, 0.85);
-  --fg-error: rgba(254, 205, 211, 1);
+  --fg-interactive-hover: rgba(255, 255, 255, 0.92);
+  /* rose-50 */
+  --fg-error: rgba(255, 241, 242, 1);
   --border-base: rgba(255, 255, 255, 0.2);
   --bg-base: rgba(255, 255, 255, 0.08);
   --bg-subtle: rgba(255, 255, 255, 0.14);

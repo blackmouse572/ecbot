@@ -328,9 +328,6 @@ export class ConversationMessagingService {
             ...(inv.tool?.kind && {
                 kind: inv.tool.kind === ENUM_TOOL_KIND.HTTP ? 'http' : 'mcp',
             }),
-            ...(inv.tool?.mcpProvider && {
-                provider: inv.tool.mcpProvider.toLowerCase(),
-            }),
         };
     }
 

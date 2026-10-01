@@ -118,9 +118,8 @@ def test_http_tool_tells_the_chat_stream_it_is_an_http_tool():
     assert tool.metadata == {"eccho_tool": {"kind": "http", "label": "Product search"}}
 
 
-def test_mcp_action_tells_the_chat_stream_its_tool_and_provider():
+def test_mcp_action_tells_the_chat_stream_its_tool():
     chatbot = _chatbot("get_order")
     chatbot.chatbot_tools[0].tool.display_name = "Shopify"
-    chatbot.chatbot_tools[0].tool.mcp_provider = "COMPOSIO"
     (tool,) = build_tools(chatbot)
-    assert tool.metadata == {"eccho_tool": {"kind": "mcp", "label": "Shopify", "provider": "composio"}}
+    assert tool.metadata == {"eccho_tool": {"kind": "mcp", "label": "Shopify"}}

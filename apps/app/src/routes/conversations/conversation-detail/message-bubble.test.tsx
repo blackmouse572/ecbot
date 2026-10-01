@@ -325,7 +325,6 @@ describe("MessageBubble look", () => {
           result: { status: "shipped" },
           durationMs: 274,
           kind: "mcp",
-          provider: "composio",
         },
       ],
     });

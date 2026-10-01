@@ -38,7 +38,7 @@ export function useToolTimings(
       span.end = at;
   }
 
-  const ticking = running || toolCalls.some((c) => c.status === "running");
+  const ticking = running;
   useEffect(() => {
     if (!ticking) return;
     const id = setInterval(() => setNow(Date.now()), ELAPSED_TICK_MS);

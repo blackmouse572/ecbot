@@ -840,6 +840,7 @@
         "called": "Called",
         "loadingSkill": "Loading skill",
         "loadedSkillStep": "Loaded skill",
+        "stopped": "The chat stopped before this call answered.",
         "failedStep": "Failed",
         "handedOverStep": "Handed over to staff",
         "knowledgeStep": "Searched knowledge base",

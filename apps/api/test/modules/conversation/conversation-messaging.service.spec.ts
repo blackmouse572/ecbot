@@ -693,7 +693,6 @@ describe('ConversationMessagingService', () => {
                     toolName: 'Shopify',
                     actionName: 'get_order',
                     kind: 'mcp',
-                    provider: 'composio',
                 }),
                 expect.objectContaining({
                     invocationId: 'b',
@@ -701,7 +700,6 @@ describe('ConversationMessagingService', () => {
                     kind: 'http',
                 }),
             ]);
-            expect(dto.toolCalls?.[1]).not.toHaveProperty('provider');
         });
     });
 
