@@ -11,6 +11,10 @@ import {
 import { ConversationEntity } from '../../../src/modules/conversation/repository/entities/conversation.entity';
 import { MessageEntity } from '../../../src/modules/conversation/repository/entities/message.entity';
 import { ConversationMessagingService } from '../../../src/modules/conversation/services/conversation-messaging.service';
+import { ENUM_MCP_PROVIDER } from '../../../src/modules/tool/enums/mcp-provider.enum';
+import { ENUM_TOOL_INVOCATION_STATUS } from '../../../src/modules/tool/enums/tool-invocation-status.enum';
+import { ENUM_TOOL_KIND } from '../../../src/modules/tool/enums/tool-kind.enum';
+import { ToolInvocationEntity } from '../../../src/modules/tool/repository/entities/tool-invocation.entity';
 
 const mockS3 = {
     signGetUrl: jest.fn(async (key: string) => `https://s3/${key}?sig`),
@@ -635,6 +639,69 @@ describe('ConversationMessagingService', () => {
             });
             const dto = await service.mapMessage(msg, {} as ConversationEntity);
             expect(dto.author).toEqual({ id: 'u-1', name: 'u-1' });
+        });
+    });
+
+    describe('tool calls (via mapMessages)', () => {
+        it('tells the inbox what kind of tool each saved call used', async () => {
+            const sent = new Date('2026-10-01T10:00:05Z');
+            const bot = {
+                authorId: 'bot-1',
+                authorType: ENUM_MESSAGE_AUTHOR.BOT,
+                conversation: { id: 'c' },
+                dateSent: sent,
+            } as unknown as MessageEntity;
+            const invocation = (over: Record<string, unknown>) =>
+                ({
+                    id: 'inv',
+                    actionName: undefined,
+                    inputArgs: {},
+                    status: ENUM_TOOL_INVOCATION_STATUS.SUCCESS,
+                    outputResult: {},
+                    durationMs: 12,
+                    createdAt: new Date('2026-10-01T10:00:01Z'),
+                    ...over,
+                }) as unknown as ToolInvocationEntity;
+
+            const [dto] = await buildService().mapMessages(
+                [bot],
+                undefined,
+                undefined,
+                [
+                    invocation({
+                        id: 'a',
+                        actionName: 'get_order',
+                        tool: {
+                            displayName: 'Shopify',
+                            kind: ENUM_TOOL_KIND.MCP,
+                            mcpProvider: ENUM_MCP_PROVIDER.COMPOSIO,
+                        },
+                    }),
+                    invocation({
+                        id: 'b',
+                        tool: {
+                            displayName: 'Product search',
+                            kind: ENUM_TOOL_KIND.HTTP,
+                        },
+                    }),
+                ]
+            );
+
+            expect(dto.toolCalls).toEqual([
+                expect.objectContaining({
+                    invocationId: 'a',
+                    toolName: 'Shopify',
+                    actionName: 'get_order',
+                    kind: 'mcp',
+                    provider: 'composio',
+                }),
+                expect.objectContaining({
+                    invocationId: 'b',
+                    toolName: 'Product search',
+                    kind: 'http',
+                }),
+            ]);
+            expect(dto.toolCalls?.[1]).not.toHaveProperty('provider');
         });
     });
 

@@ -32,6 +32,10 @@ export interface ToolCallSerialization {
     result?: unknown;
     error?: string;
     durationMs: number;
+    /** Registry tool kind, lowercased like the live stream's `data-tool-meta`. */
+    kind?: 'http' | 'mcp';
+    /** MCP provider, lowercased (e.g. `composio`); absent for HTTP tools. */
+    provider?: string;
 }
 
 /**
