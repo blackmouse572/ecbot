@@ -21,3 +21,22 @@ describe("i18n", () => {
     expect(JSON.stringify(messages)).not.toContain("\u2014");
   });
 });
+
+// After sign-up the page asks for the emailed code; a toast saying "log in"
+// pointed new users the wrong way.
+describe("sign-up success toast", () => {
+  it.each([
+    ["en", /code/i, /log in/i],
+    ["vi", /mã/i, /đăng nhập/i],
+  ])(
+    "%s points to the emailed code, not to logging in",
+    (lang, wants, avoids) => {
+      const message = i18n.t("app.auth.register.success.message", {
+        lng: lang,
+      });
+
+      expect(message).toMatch(wants);
+      expect(message).not.toMatch(avoids);
+    },
+  );
+});

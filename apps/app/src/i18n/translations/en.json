@@ -229,7 +229,7 @@
           "signUpFailed": "Registration failed. Please try again."
         },
         "success": {
-          "message": "Account created. Please verify your email."
+          "message": "Account created. Enter the code we emailed you."
         }
       },
       "forgotPassword": {

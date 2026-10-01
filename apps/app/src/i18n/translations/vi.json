@@ -229,7 +229,7 @@
           "signUpFailed": "Đăng ký không thành công. Vui lòng thử lại."
         },
         "success": {
-          "message": "Tài khoản của bạn đã được tạo thành công. Vui lòng đăng nhập để tiếp tục."
+          "message": "Tài khoản đã được tạo. Hãy nhập mã chúng tôi vừa gửi qua email."
         }
       },
       "forgotPassword": {
