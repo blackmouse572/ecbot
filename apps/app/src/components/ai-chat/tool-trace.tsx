@@ -1,10 +1,9 @@
 import type { ChatToolCall } from "@/types/chat-message";
 import { clx } from "@medusajs/ui";
 import {
+  IconAsterisk,
   IconChevronDown,
   IconCircleCheck,
-  IconLoader2,
-  IconSparkles,
 } from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type FC, useState } from "react";
@@ -98,11 +97,14 @@ export const ToolTrace: FC<Props> = ({
             !open && "after:scale-y-0",
           )}
         >
-          {running ? (
-            <IconLoader2 {...TRACE_ICON} className="animate-spin" />
-          ) : (
-            <IconSparkles {...TRACE_ICON} />
-          )}
+          {/* The asterisk turns slowly while the turn runs, then rests. */}
+          <IconAsterisk
+            {...TRACE_ICON}
+            className={clx(
+              running &&
+                "animate-[spin_1.6s_linear_infinite] motion-reduce:animate-none",
+            )}
+          />
         </span>
         <TextSwap text={label} />{" "}
         <motion.span
