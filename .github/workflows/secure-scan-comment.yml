@@ -16,7 +16,7 @@ jobs:
     if: github.event.workflow_run.event == 'pull_request'
     steps:
       - name: Download scan report artifact
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -48,7 +48,7 @@ jobs:
         run: unzip -o -j secure-scan-report.zip -d secure-scan-report
 
       - name: Upsert PR comment
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fs = require("fs");
