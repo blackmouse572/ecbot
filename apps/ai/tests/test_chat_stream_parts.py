@@ -243,3 +243,58 @@ async def test_a_reply_that_is_only_a_split_markdown_image_is_not_lost():
         fake_events(), request_id="m1", image_url_allowed=allowed)])
     assert [p["type"] for p in parts if p["type"].startswith("text")] == []
     assert {"type": "file", "url": "https://cdn/ok.jpg", "mediaType": "image/*"} in parts
+
+
+@pytest.mark.asyncio
+async def test_tool_call_is_tagged_with_its_kind_from_the_tool_metadata():
+    async def fake_events():
+        yield {"event": "on_tool_start", "run_id": "r1", "name": "get_order",
+               "metadata": {"langgraph_step": 2,
+                            "eccho_tool": {"kind": "mcp", "label": "Shopify", "provider": "composio"}},
+               "data": {"input": {"id": 7}}}
+        yield {"event": "on_tool_end", "run_id": "r1", "data": {"output": _tool_msg("{}")}}
+
+    parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
+    meta = [p for p in parts if p["type"] == "data-tool-meta"]
+    assert meta == [{"type": "data-tool-meta", "id": "r1",
+                     "data": {"kind": "mcp", "label": "Shopify", "provider": "composio"}}]
+    seq = [p["type"] for p in parts]
+    assert seq.index("tool-input-start") < seq.index("data-tool-meta") < seq.index("tool-output-available")
+
+
+@pytest.mark.asyncio
+async def test_built_in_tools_are_tagged_by_name():
+    async def fake_events():
+        for run_id, name in [("r1", "schedule_followup"), ("r2", "apply_customer_tag"),
+                             ("r3", "get_customer_field"), ("r4", "something_new")]:
+            yield {"event": "on_tool_start", "run_id": run_id, "name": name, "data": {"input": {}}}
+            yield {"event": "on_tool_end", "run_id": run_id, "data": {"output": _tool_msg("{}")}}
+
+    parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
+    kinds = {p["id"]: p["data"]["kind"] for p in parts if p["type"] == "data-tool-meta"}
+    assert kinds == {"r1": "followup", "r2": "tag", "r3": "customer", "r4": "tool"}
+
+
+@pytest.mark.asyncio
+async def test_knowledge_search_is_announced_before_the_reply():
+    # RAG runs before the agent, so it is not a tool call: a data part tells
+    # the client how many sources were found, without exposing file names.
+    async def fake_events():
+        yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk("Hi")}}
+
+    sources = [{"id": "KB-1", "source_url": None, "filename": "a.md"},
+               {"id": "KB-2", "source_url": None, "filename": "b.md"}]
+    parts = _parts([f async for f in events_to_ui_parts(
+        fake_events(), request_id="m1", sources=sources)])
+    seq = [p["type"] for p in parts]
+    assert {"type": "data-knowledge", "data": {"count": 2}} in parts
+    assert seq.index("data-knowledge") < seq.index("text-start")
+
+
+@pytest.mark.asyncio
+async def test_no_knowledge_part_without_sources():
+    async def fake_events():
+        yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk("Hi")}}
+
+    parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
+    assert all(p["type"] != "data-knowledge" for p in parts)

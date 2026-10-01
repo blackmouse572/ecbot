@@ -110,3 +110,17 @@ async def test_http_tool_call_runs_the_tool_without_an_action_name(monkeypatch):
     assert sent["args"] == {"q": "vanilla"}
     assert response["status"] == "success"
     assert response["result"] == {"total": 1}
+
+
+def test_http_tool_tells_the_chat_stream_it_is_an_http_tool():
+    _, chatbot = _http_chatbot(display_name="Product search")
+    (tool,) = build_tools(chatbot)
+    assert tool.metadata == {"eccho_tool": {"kind": "http", "label": "Product search"}}
+
+
+def test_mcp_action_tells_the_chat_stream_its_tool_and_provider():
+    chatbot = _chatbot("get_order")
+    chatbot.chatbot_tools[0].tool.display_name = "Shopify"
+    chatbot.chatbot_tools[0].tool.mcp_provider = "COMPOSIO"
+    (tool,) = build_tools(chatbot)
+    assert tool.metadata == {"eccho_tool": {"kind": "mcp", "label": "Shopify", "provider": "composio"}}

@@ -12,11 +12,24 @@ from typing import Any
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.modules.chat import ui_message_stream as ui
 from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
-from eccho_ai.modules.chat.constants import GENERIC_STREAM_ERROR, SEND_IMAGE_TOOL
+from eccho_ai.modules.chat.constants import (
+    GENERIC_STREAM_ERROR,
+    SEND_IMAGE_TOOL,
+    SYSTEM_TOOL_KINDS,
+    TOOL_META_KEY,
+)
 from eccho_ai.modules.chat.image_markdown import Image, ImageMarkdownFilter, Piece
 from eccho_ai.modules.chat.prompt_leak import PROMPT_LEAK_REASON, PromptLeakFilter
 
 logger = get_logger(__name__)
+
+
+def _tool_meta(event: dict, tool_name: str) -> dict[str, Any]:
+    """What kind of tool an `on_tool_start` event is for (see TOOL_META_KEY)."""
+    meta = (event.get("metadata") or {}).get(TOOL_META_KEY)
+    if isinstance(meta, dict) and meta.get("kind"):
+        return meta
+    return {"kind": SYSTEM_TOOL_KINDS.get(tool_name, "tool")}
 
 
 async def events_to_ui_parts(
@@ -46,6 +59,11 @@ async def events_to_ui_parts(
         if guardrail_reason is not None:
             yield ui.data_part("guardrail", {"reason": guardrail_reason})
             return
+
+        # Retrieval already ran before the agent. Only the count goes out: the
+        # widget shows parts to customers and file names are internal.
+        if sources:
+            yield ui.data_part("knowledge", {"count": len(sources)})
 
         text_run = 0
         reasoning_run = 0
@@ -156,6 +174,9 @@ async def events_to_ui_parts(
                 yield ui.tool_input_start(tool_call_id, tool_name)
                 yield ui.tool_input_available(
                     tool_call_id, tool_name, data.get("input", {})
+                )
+                yield ui.data_part(
+                    "tool-meta", _tool_meta(event, tool_name), id=tool_call_id
                 )
 
             elif evt_type == "on_tool_end":
