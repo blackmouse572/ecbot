@@ -21,6 +21,7 @@ import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { FollowupsSection } from "./components/followups-section";
 import {
+  ArrowLeft,
   ChevronDoubleLeft,
   ChevronDoubleRight,
   EllipsisHorizontal,
@@ -66,6 +67,9 @@ interface Props {
   isOpen?: boolean;
   onToggle?: () => void;
   onViewMessage?: (messageId: string) => void;
+  // Small screens: the panel is a full screen stacked over the thread, so it
+  // shows a back button instead of the collapse control.
+  onBack?: () => void;
 }
 
 export function CustomerSidePanel({
@@ -74,6 +78,7 @@ export function CustomerSidePanel({
   isOpen = true,
   onToggle,
   onViewMessage,
+  onBack,
 }: Props) {
   const { t } = useTranslation();
   const { customer, isLoading } = useCustomer(customerId);
@@ -147,16 +152,32 @@ export function CustomerSidePanel({
   return (
     <aside className="border-ui-border-base bg-ui-bg-subtle flex h-full w-full flex-col overflow-y-auto border-l">
       <div className="border-ui-border-base border-b px-4 py-3 flex items-center justify-between">
-        <Heading level="h3">{t("conversations.customer.panel.title")}</Heading>
+        <div className="flex items-center gap-x-2">
+          {onBack && (
+            <IconButton
+              size="small"
+              variant="transparent"
+              onClick={onBack}
+              aria-label={t("actions.back")}
+            >
+              <ArrowLeft />
+            </IconButton>
+          )}
+          <Heading level="h3">
+            {t("conversations.customer.panel.title")}
+          </Heading>
+        </div>
         <div className="flex items-center gap-x-1">
-          <IconButton
-            size="small"
-            variant="transparent"
-            onClick={onToggle}
-            aria-label={t("conversations.customer.panel.collapse")}
-          >
-            <ChevronDoubleRight />
-          </IconButton>
+          {!onBack && (
+            <IconButton
+              size="small"
+              variant="transparent"
+              onClick={onToggle}
+              aria-label={t("conversations.customer.panel.collapse")}
+            >
+              <ChevronDoubleRight />
+            </IconButton>
+          )}
           <CustomerActions customerId={customerId} />
         </div>
       </div>

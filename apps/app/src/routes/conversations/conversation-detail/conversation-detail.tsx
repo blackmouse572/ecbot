@@ -1,7 +1,7 @@
 import { toast } from "@medusajs/ui";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useConversation,
   useConversationMessages,
@@ -10,6 +10,8 @@ import {
   useSendOperatorReply,
 } from "@/hooks/api/conversations";
 import { useMe } from "@/hooks/api/users";
+import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { ROUTES } from "@/routes";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -25,7 +27,13 @@ import { useConversationSidebar } from "./use-conversation-sidebar";
 export function ConversationDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const { open: sidebarOpen, toggle: toggleSidebar } = useConversationSidebar();
+  const navigate = useNavigate();
+  const { workspaceSlug } = useWorkspaceParams();
+  const {
+    open: sidebarOpen,
+    toggle: toggleSidebar,
+    isMobile,
+  } = useConversationSidebar();
 
   const { user } = useMe();
   const currentOperatorId = (user as A)?.id as string | undefined;
@@ -139,7 +147,15 @@ export function ConversationDetail() {
 
   const threadInner = (
     <>
-      <ConversationHeader conversation={conversation} />
+      <ConversationHeader
+        conversation={conversation}
+        onBack={
+          isMobile
+            ? () => navigate(`/${workspaceSlug}/${ROUTES.Conversations}`)
+            : undefined
+        }
+        onOpenCustomer={isMobile && customerId ? toggleSidebar : undefined}
+      />
       <MessageList
         conversationId={id}
         messages={messages}
@@ -173,6 +189,28 @@ export function ConversationDetail() {
       onViewMessage={scrollToMessage}
     />
   );
+
+  if (isMobile) {
+    // Small screens stack the customer details over the thread, app style.
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {sidebarOpen && customerId ? (
+          <CustomerSidePanel
+            customerId={customerId}
+            conversationId={id}
+            onBack={toggleSidebar}
+            onViewMessage={(messageId) => {
+              toggleSidebar();
+              // Wait a frame so the thread is mounted before scrolling.
+              requestAnimationFrame(() => scrollToMessage(messageId));
+            }}
+          />
+        ) : (
+          threadInner
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 overflow-hidden">
