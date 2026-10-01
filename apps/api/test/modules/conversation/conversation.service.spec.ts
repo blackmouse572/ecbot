@@ -294,47 +294,50 @@ describe('ConversationService', () => {
         });
     });
 
+    // Returns the keyword that matched and where it came from: only the
+    // default list is checked with the decision model, an owner's own keyword
+    // (a topic they route to staff) always hands off.
     describe('detectHandoffKeywords', () => {
-        it('should detect default handoff keywords in message', () => {
+        it('returns a default keyword that matched', () => {
             expect(
                 service.detectHandoffKeywords('I want to speak to a human', [])
-            ).toBe(true);
-            expect(
-                service.detectHandoffKeywords('connect me to an agent', [])
-            ).toBe(true);
+            ).toEqual({ keyword: 'human', source: 'default' });
             expect(
                 service.detectHandoffKeywords('I need customer service', [])
-            ).toBe(true);
+            ).toEqual({ keyword: 'customer service', source: 'default' });
         });
 
-        it('should detect custom keywords', () => {
+        it("returns the owner's keyword as custom", () => {
             expect(
-                service.detectHandoffKeywords('I want to escalate this issue', [
-                    'escalate',
+                service.detectHandoffKeywords('Mình muốn đổi trả đơn hôm qua', [
+                    'đổi trả',
                 ])
-            ).toBe(true);
+            ).toEqual({ keyword: 'đổi trả', source: 'custom' });
         });
 
-        it('should return false for normal messages', () => {
+        it("prefers the owner's keyword when both match", () => {
+            expect(
+                service.detectHandoffKeywords(
+                    'Nhân viên ơi, mình muốn khiếu nại',
+                    ['khiếu nại']
+                )
+            ).toEqual({ keyword: 'khiếu nại', source: 'custom' });
+        });
+
+        it('returns null for a message with no keyword', () => {
             expect(
                 service.detectHandoffKeywords('What are your store hours?', [])
-            ).toBe(false);
-            expect(
-                service.detectHandoffKeywords('Track my order please', [])
-            ).toBe(false);
+            ).toBeNull();
         });
 
-        it('should be case insensitive', () => {
-            expect(service.detectHandoffKeywords('I WANT A HUMAN', [])).toBe(
-                true
+        it('matches case-insensitively', () => {
+            expect(service.detectHandoffKeywords('I WANT A HUMAN', [])).toEqual(
+                { keyword: 'human', source: 'default' }
             );
-            expect(
-                service.detectHandoffKeywords('Get me an AGENT please', [])
-            ).toBe(true);
         });
 
-        it('should return false for empty message', () => {
-            expect(service.detectHandoffKeywords('', [])).toBe(false);
+        it('returns null for an empty message', () => {
+            expect(service.detectHandoffKeywords('', [])).toBeNull();
         });
     });
 

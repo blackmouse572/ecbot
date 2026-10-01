@@ -19,7 +19,8 @@ export class AiDecisionService {
 
     async systemOne(
         state: string,
-        questions: Record<string, SystemOneQuestion>
+        questions: Record<string, SystemOneQuestion>,
+        timeoutMs?: number
     ): Promise<Record<string, SystemOneAnswer>> {
         const authHeaders = await getInternalAuthHeader(this.baseUrl);
         const resp = await firstValueFrom(
@@ -27,7 +28,7 @@ export class AiDecisionService {
                 `${this.baseUrl}/api/decision/system-one`,
                 { state, questions },
                 {
-                    timeout: this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
+                    timeout: timeoutMs ?? this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
                     headers: {
                         ...authHeaders,
                         'Content-Type': 'application/json',

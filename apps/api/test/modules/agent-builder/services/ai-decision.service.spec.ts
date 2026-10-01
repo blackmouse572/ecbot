@@ -27,4 +27,14 @@ describe('AiDecisionService', () => {
         const s = new AiDecisionService({ post: () => of({ data: {} }) } as any, config);
         await expect(s.systemOne('x', {})).resolves.toEqual({});
     });
+
+    // The handoff check runs before the customer sees any reply, so it cannot
+    // wait the agent builder's 15s.
+    it('uses a caller-given timeout over the configured one', async () => {
+        const post = jest.fn(() => of({ data: {} }));
+        const s = new AiDecisionService({ post } as any, config);
+        await s.systemOne('x', {}, 5000);
+        const [, , opts] = post.mock.calls[0] as unknown as [string, unknown, { timeout: number }];
+        expect(opts.timeout).toBe(5000);
+    });
 });

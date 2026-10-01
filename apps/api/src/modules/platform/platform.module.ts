@@ -41,6 +41,8 @@ import { WidgetChatService } from './services/widget-chat.service';
 import { WidgetSessionService } from './services/widget-session.service';
 import { TurnstileModule } from '@app/common/turnstile/turnstile.module';
 import { ConversationRepositoryModule } from '@app/modules/conversation/repository/conversation.repository.module';
+import { AgentBuilderModule } from '@app/modules/agent-builder/agent-builder.module';
+import { HandoffIntentService } from './services/handoff-intent.service';
 
 const ADAPTERS = [
     MessengerPlatformAdapter,
@@ -70,6 +72,7 @@ const ADAPTERS = [
         CustomerModule,
         TurnstileModule,
         ConversationRepositoryModule,
+        AgentBuilderModule,
     ],
     providers: [
         ...ADAPTERS,
@@ -90,6 +93,7 @@ const ADAPTERS = [
         InboundEventDedupeService,
         StreamingDelivery,
         ReplyGenerationService,
+        HandoffIntentService,
         TurnContextService,
         MessageDebounceService,
         MessageProcessorService,
