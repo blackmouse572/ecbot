@@ -193,6 +193,13 @@ export const MessageBubble = ({
 
   return (
     <Message from={role} id={id}>
+      {message.authorType === "BOT" && toolCalls && toolCalls.length > 0 && (
+        // The bot's turn opens with what it did, then who replied, then the
+        // reply. Sized to its content on the bot's side.
+        <div className="max-w-[80%]">
+          <ToolTrace toolCalls={toolCalls.map(toTraceCall)} running={false} />
+        </div>
+      )}
       <div
         className={clx(
           "text-ui-fg-muted flex items-center gap-x-1.5",
@@ -210,18 +217,6 @@ export const MessageBubble = ({
           </Tooltip>
         )}
       </div>
-      {message.authorType === "BOT" && toolCalls && toolCalls.length > 0 && (
-        // Sized to its content on the bot's side, no wider than the bubble.
-        <div className="max-w-[80%]">
-          <ToolTrace
-            toolCalls={toolCalls.map(toTraceCall)}
-            running={false}
-            // The name line is right above: keep history to the summary
-            // until someone opens it.
-            defaultOpen={false}
-          />
-        </div>
-      )}
       {/* The picker sits on the bubble's inner side so it never gets pushed
           against the viewport edge. */}
       <div

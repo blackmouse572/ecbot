@@ -29,8 +29,6 @@ type Props = {
   knowledgeCount?: number;
   /** The turn is still streaming. */
   running: boolean;
-  /** Start with the steps shown. History passes false: just the summary line. */
-  defaultOpen?: boolean;
 };
 
 const CALL_KINDS = new Set([
@@ -53,11 +51,10 @@ export const ToolTrace: FC<Props> = ({
   toolCalls,
   knowledgeCount,
   running,
-  defaultOpen = true,
 }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(true);
   const timings = useToolTimings(toolCalls, running);
 
   const calls = toolCalls.filter((c) =>
