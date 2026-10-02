@@ -77,6 +77,18 @@ describe("VerifyEmailPage", () => {
     expect(unhandled).not.toHaveBeenCalled();
   });
 
+  it("clears the boxes after a wrong code so the user can retry", async () => {
+    verifyEmail.mockRejectedValue(new Error("invalid"));
+    renderPage();
+    typeCode();
+
+    await waitFor(() =>
+      screen
+        .getAllByRole("textbox")
+        .forEach((box) => expect(box).toHaveValue("")),
+    );
+  });
+
   it("tells the user an expired code has expired, not that it is invalid", async () => {
     verifyEmail.mockRejectedValue(
       apiError(5061, "This code has expired. Tap Resend to get a new one."),
