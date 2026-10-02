@@ -84,6 +84,31 @@ describe('VerificationUserController — email dispatch', () => {
         enqueue.mockResolvedValue(undefined);
     });
 
+    it('resendEmail: writes the email in the request language', async () => {
+        findOneLatestEmailByUser.mockResolvedValue(null);
+        inactiveEmailManyByUser.mockResolvedValue(undefined);
+        createEmailByUser.mockResolvedValue({
+            otp: '111111',
+            expiredDate: new Date('2026-05-01T00:00:00.000Z'),
+            reference: 'ref-vi',
+        });
+        map.mockReturnValue({});
+
+        await controller.resendEmail(
+            { id: 'user-1', email: 'a@b.com', name: 'A' } as any,
+            'vi'
+        );
+
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.VERIFICATION,
+            expect.objectContaining({
+                data: expect.objectContaining({ language: 'vi' }),
+            }),
+            expect.anything()
+        );
+    });
+
     it('resendEmail: enqueues VERIFICATION via CloudTasksQueueClient after issuing a new OTP', async () => {
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
         const verification = {

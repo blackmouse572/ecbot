@@ -63,8 +63,20 @@ export class HelperDateService implements IHelperDateService {
         return DateTime.fromJSDate(date).setZone(this.defTz).toMillis();
     }
 
-    formatToRFC2822(date: Date): string {
-        return DateTime.fromJSDate(date).setZone(this.defTz).toRFC2822();
+    // Dates read back from a queued job arrive as ISO strings; fromJSDate on
+    // a string is invalid and rendered an empty date in emails.
+    formatToRFC2822(date: Date | string): string {
+        return DateTime.fromJSDate(new Date(date))
+            .setZone(this.defTz)
+            .toRFC2822();
+    }
+
+    /** A date and time for people to read, e.g. "Oct 1, 2026, 10:05 AM". */
+    formatToReadable(date: Date | string, locale: string): string {
+        return DateTime.fromJSDate(new Date(date))
+            .setZone(this.defTz)
+            .setLocale(locale)
+            .toLocaleString(DateTime.DATETIME_MED);
     }
 
     formatToIso(date: Date): string {

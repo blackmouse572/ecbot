@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+    IsEmail,
     IsBoolean,
     IsEnum,
     IsInt,
@@ -334,6 +335,10 @@ export class AppEnvDto {
     @IsOptional()
     @IsString()
     EMAIL_FROM?: string;
+
+    @IsOptional()
+    @IsEmail()
+    EMAIL_SUPPORT?: string;
 
     // Workspace invitation tokens
     @IsOptional()

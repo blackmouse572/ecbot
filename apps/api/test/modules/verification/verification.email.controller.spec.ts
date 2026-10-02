@@ -69,6 +69,33 @@ describe('VerificationEmailController — email dispatch', () => {
         enqueue.mockResolvedValue(undefined);
     });
 
+    it('resendVerificationEmail: writes the email in the request language', async () => {
+        findOneActiveLatestEmailByUser.mockResolvedValue({
+            otp: '222222',
+            expiredDate: new Date(Date.now() + 10 * 60 * 1000),
+            reference: 'ref-vi',
+        });
+        findOneById.mockResolvedValue({
+            id: 'user-1',
+            email: 'a@b.com',
+            name: 'A',
+        });
+
+        await controller.resendVerificationEmail(
+            { email: 'a@b.com', id: 'user-1' } as any,
+            'vi'
+        );
+
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.VERIFICATION,
+            expect.objectContaining({
+                data: expect.objectContaining({ language: 'vi' }),
+            }),
+            expect.anything()
+        );
+    });
+
     it('resendVerificationEmail: re-sends the active code while it has time left, so codes from earlier emails keep working', async () => {
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
         const verification = {

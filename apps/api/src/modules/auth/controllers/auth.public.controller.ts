@@ -5,6 +5,7 @@ import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
+    Headers,
     BadRequestException,
     Body,
     ConflictException,
@@ -461,7 +462,10 @@ export class AuthPublicController {
             password: passwordString,
             country,
             turnstileToken,
-        }: AuthSignUpRequestDto
+        }: AuthSignUpRequestDto,
+        // Normalized by AppCustomLanguageMiddleware; the verification email
+        // is written in it.
+        @Headers('x-custom-lang') language?: string
     ): Promise<IResponse<AuthSignUpResponseDto>> {
         // Before any user lookup, so bots get no enumeration signal.
         await this.turnstileService.verify(
@@ -563,6 +567,7 @@ export class AuthPublicController {
                                 otp: verification.otp,
                                 expiredAt: verification.expiredDate,
                                 reference: verification.reference,
+                                language,
                             },
                         },
                         {

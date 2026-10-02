@@ -4,7 +4,7 @@ import React from 'react';
 interface SendVerifiedEmailProps {
     name: string;
     reference: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -23,7 +23,7 @@ const SendVerifiedEmail: React.FC<SendVerifiedEmailProps> = ({
             <br />
             <p>Email is verified successfully</p>
             <p>Reference: {reference}.</p>
-            <p>Support Email: {supportEmail}.</p>
+            {supportEmail && <p>Support Email: {supportEmail}.</p>}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>.
             </p>
