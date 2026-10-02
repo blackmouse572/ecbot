@@ -2377,6 +2377,10 @@
           "confirm": "Xoá",
           "cancel": "Huỷ"
         }
+      },
+      "handoff": {
+        "yes": "Có",
+        "no": "Không"
       }
     },
     "clientCredentials": {

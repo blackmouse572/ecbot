@@ -2347,6 +2347,10 @@
           "confirm": "Delete",
           "cancel": "Cancel"
         }
+      },
+      "handoff": {
+        "yes": "Yes",
+        "no": "No"
       }
     },
     "clientCredentials": {

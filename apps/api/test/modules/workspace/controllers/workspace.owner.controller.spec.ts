@@ -180,6 +180,22 @@ describe('WorkspaceController — avatar upload key shape (Task 14)', () => {
         expect(call.key).not.toContain('evil');
     });
 
+    it('createWorkSpace passes the request language on, so default tags match it', async () => {
+        await controller.createWorkSpace(
+            'owner-1',
+            { name: 'Acme' } as any,
+            undefined,
+            'vi'
+        );
+
+        expect(mockWorkSpaceService.create).toHaveBeenCalledWith(
+            { id: 'owner-1' },
+            { name: 'Acme', image: undefined },
+            undefined,
+            'vi'
+        );
+    });
+
     it('createWorkSpace still creates the workspace, with the default avatar, when the optional avatar upload fails', async () => {
         mockAwsS3Service.putItem.mockRejectedValueOnce(
             new Error('AccessDenied')
@@ -194,7 +210,9 @@ describe('WorkspaceController — avatar upload key shape (Task 14)', () => {
         // No image: the service seeds its default avatar.
         expect(mockWorkSpaceService.create).toHaveBeenCalledWith(
             { id: 'owner-1' },
-            { name: 'Acme', image: undefined }
+            { name: 'Acme', image: undefined },
+            undefined,
+            undefined
         );
         expect(result).toEqual({ data: { id: 'ws-1' } });
     });

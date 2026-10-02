@@ -35,7 +35,8 @@ export interface IWorkspaceOwnerService {
     create(
         owner: UserEntity,
         data: WorkSpaceCreateRequestDto,
-        options?: IDatabaseCreateOptions
+        options?: IDatabaseCreateOptions,
+        language?: string
     ): Promise<WorkspaceEntity>;
 
     update(

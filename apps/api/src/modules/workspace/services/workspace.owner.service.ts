@@ -52,6 +52,7 @@ import { WorkspaceMemberRepository } from '../repository/repositories/workspace-
 import { WorkSpaceRepository } from '../repository/repositories/workspace.repository';
 import { WorkspaceMemberService } from './workspace.member.service';
 import { KnowledgeBaseService } from '@app/modules/knowledge-base/services/knowledge-base.service';
+import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 import { CUSTOMER_TAG_DEFAULTS } from '@app/modules/customer/constants/customer-tag.seed.constant';
 import { CustomerTagService } from '@app/modules/customer/services/customer-tag.service';
 import { ChatbotEntity } from '@app/modules/chatbot/repository/entities/chatbot.entity';
@@ -329,7 +330,8 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
     async create(
         owner: UserEntity,
         data: WorkSpaceCreateRequestDto,
-        options?: IDatabaseCreateOptions
+        options?: IDatabaseCreateOptions,
+        language?: string
     ): Promise<WorkspaceEntity> {
         const { name, image, slug } = data;
         const em = options?.em || this.em;
@@ -404,7 +406,10 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
             );
 
             // Seed default customer tags catalog for the workspace
-            for (const tag of CUSTOMER_TAG_DEFAULTS) {
+            const tagDefaults =
+                CUSTOMER_TAG_DEFAULTS[language as ENUM_MESSAGE_LANGUAGE] ??
+                CUSTOMER_TAG_DEFAULTS[ENUM_MESSAGE_LANGUAGE.EN];
+            for (const tag of tagDefaults) {
                 await this.customerTagService.create(
                     {
                         workspace: workspace.id,
