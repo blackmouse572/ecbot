@@ -98,7 +98,7 @@ export function ChatbotForm({
                     <Form.Label>{nameLabel}</Form.Label>
                     <Form.Control>
                       <Input
-                        placeholder="Enter chatbot name"
+                        placeholder={t("chatbot.create.namePlaceholder")}
                         {...field}
                         className="w-full"
                       />
@@ -130,7 +130,12 @@ export function ChatbotForm({
                       {t("agentBuilder.ui.extraInstructionsHint")}
                     </Form.Hint>
                     <Form.Control>
-                      <Textarea {...field} rows={5} maxLength={5000} className="w-full" />
+                      <Textarea
+                        {...field}
+                        rows={5}
+                        maxLength={5000}
+                        className="w-full"
+                      />
                     </Form.Control>
                     <Form.ErrorMessage />
                   </Form.Item>

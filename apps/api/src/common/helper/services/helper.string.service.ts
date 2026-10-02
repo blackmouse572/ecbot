@@ -107,7 +107,9 @@ export class HelperStringService implements IHelperStringService {
             };
         }
 
-        const allowedLocalPartChars = /^[a-zA-Z0-9-_.]+$/;
+        // "+" for plus-addressing (name+shop@gmail.com), which Gmail and
+        // Outlook support and RFC 5322 allows.
+        const allowedLocalPartChars = /^[a-zA-Z0-9-_.+]+$/;
         if (!allowedLocalPartChars.test(localPart)) {
             return {
                 validated: false,
