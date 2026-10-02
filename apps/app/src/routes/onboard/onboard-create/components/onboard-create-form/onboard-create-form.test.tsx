@@ -1,6 +1,6 @@
 import "@/i18n";
 import { Form } from "@repo/ui/common-components";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -94,5 +94,35 @@ describe("OnboardCreateForm", () => {
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("Storage is not available"),
     );
+  });
+
+  it("calls the slug a web address and previews it from the name", () => {
+    const { container } = renderForm();
+
+    expect(screen.getByText("Web address")).toBeInTheDocument();
+    expect(screen.queryByText(/slug/i)).not.toBeInTheDocument();
+
+    fireEvent.change(container.querySelector('input[name="name"]')!, {
+      target: { value: "Cửa hàng Kunmart" },
+    });
+
+    expect(
+      screen.getByText(`${window.location.origin}/cua-hang-kunmart`),
+    ).toBeInTheDocument();
+  });
+
+  it("previews the typed web address over the one from the name", () => {
+    const { container } = renderForm();
+
+    fireEvent.change(container.querySelector('input[name="name"]')!, {
+      target: { value: "Kunmart" },
+    });
+    fireEvent.change(container.querySelector('input[name="handler"]')!, {
+      target: { value: "kun-shop" },
+    });
+
+    expect(
+      screen.getByText(`${window.location.origin}/kun-shop`),
+    ).toBeInTheDocument();
   });
 });

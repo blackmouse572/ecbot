@@ -375,12 +375,12 @@
     "create": {
       "fields": {
         "name": "Tên không gian làm việc",
-        "handler": "Slug",
+        "handler": "Địa chỉ web",
         "avatar": "Ảnh đại diện"
       },
       "placeholders": {
         "name": "Ví dụ: Đội Siêu Nhân",
-        "handler": "ví dụ: super_heroes"
+        "handler": "ví dụ: cua-hang-cua-toi"
       },
       "toast": {
         "loading": "Đang tạo không gian làm việc...",
@@ -389,7 +389,10 @@
       },
       "errors": {
         "title": "Không thể tạo không gian làm việc",
-        "slugTaken": "Slug này đã được sử dụng. Vui lòng chọn slug khác."
+        "slugTaken": "Địa chỉ web này đã có người dùng. Vui lòng chọn địa chỉ khác."
+      },
+      "hints": {
+        "handler": "Không gian làm việc của bạn sẽ ở"
       }
     },
     "join": {
@@ -1807,7 +1810,7 @@
       },
       "confirm": {
         "title": "Xóa không gian làm việc",
-        "description": "Thao tác này sẽ xóa không gian làm việc và toàn bộ dữ liệu của nó. Nhập slug của không gian làm việc để xác nhận.",
+        "description": "Thao tác này sẽ xóa không gian làm việc và toàn bộ dữ liệu của nó. Nhập địa chỉ web của không gian làm việc để xác nhận.",
         "confirm": "Xóa"
       }
     },
@@ -1816,7 +1819,7 @@
     },
     "placeholders": {
       "name": "Nhập tên không gian làm việc",
-      "slug": "Nhập slug không gian làm việc"
+      "slug": "Nhập địa chỉ web"
     },
     "avatar": {
       "custom": "Ảnh đại diện tùy chỉnh",
@@ -1908,7 +1911,7 @@
     "joinedAt": "Ngày tham gia",
     "updatedAt": "Ngày cập nhật",
     "addedBy": "Được thêm bởi",
-    "slug": "Slug",
+    "slug": "Địa chỉ web",
     "type": "Loại",
     "optional": "Không bắt buộc",
     "role": "Vai trò",
