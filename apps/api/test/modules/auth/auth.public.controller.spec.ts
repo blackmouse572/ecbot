@@ -151,6 +151,28 @@ describe('AuthPublicController.signUp', () => {
         );
     });
 
+    // #141: the verification email is written in the sign-up's language.
+    it('passes the request language on to the verification email', async () => {
+        await controller.signUp(
+            {
+                email: 'new@user.com',
+                name: 'New User',
+                password: 'Passw0rd!',
+                country: 'country-1',
+            } as any,
+            'vi'
+        );
+
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.VERIFICATION,
+            expect.objectContaining({
+                data: expect.objectContaining({ language: 'vi' }),
+            }),
+            expect.anything()
+        );
+    });
+
     it('verifies the Turnstile token before touching the user service', async () => {
         await controller.signUp({
             email: 'new@user.com',

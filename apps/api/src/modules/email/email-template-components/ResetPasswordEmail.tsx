@@ -6,7 +6,7 @@ interface ResendPasswordEmailProps {
     url: string;
     otp: string;
     expiredDate: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -32,10 +32,12 @@ const ResetPasswordEmail: React.FC<ResendPasswordEmailProps> = ({
                 Your OTP code is <b>{otp}</b>.
             </p>
             <p>Expired until {expiredDate}.</p>
-            <p>
-                Support Email:{' '}
-                <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-            </p>
+            {supportEmail && (
+                <p>
+                    Support Email:{' '}
+                    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+                </p>
+            )}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>.
             </p>

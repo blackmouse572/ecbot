@@ -5,7 +5,7 @@ interface AccountBlockedEmailProps {
     name: string;
     accountName: string;
     reconnectUrl: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -31,10 +31,12 @@ const AccountBlockedEmail: React.FC<AccountBlockedEmailProps> = ({
                 Please reconnect it here:{' '}
                 <a href={reconnectUrl}>{reconnectUrl}</a>
             </p>
-            <p>
-                Support Email:{' '}
-                <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-            </p>
+            {supportEmail && (
+                <p>
+                    Support Email:{' '}
+                    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+                </p>
+            )}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>.
             </p>

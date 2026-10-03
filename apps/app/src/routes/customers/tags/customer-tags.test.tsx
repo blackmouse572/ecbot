@@ -186,6 +186,27 @@ describe("CustomerTags settings page", () => {
     expect(screen.getByText("upset")).toBeInTheDocument();
   });
 
+  // "Active"/"Inactive" under "Hand off to staff" read like the tag's own
+  // state (#190); the column answers a yes/no question.
+  it("says yes or no in the handoff column", () => {
+    useListMock.mockReturnValue({
+      tags: [vipTag, angryTag],
+      isLoading: false,
+    } as unknown as UseListReturn);
+
+    render(<CustomerTags />);
+
+    expect(
+      screen.getByText("settings.customerTags.handoff.yes"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("settings.customerTags.handoff.no"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("accounts.details.statuses.active.label"),
+    ).not.toBeInTheDocument();
+  });
+
   it("clicking 'Create tag' opens the Drawer form", async () => {
     useListMock.mockReturnValue({
       tags: [],

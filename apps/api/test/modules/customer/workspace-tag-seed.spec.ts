@@ -1,4 +1,5 @@
 import { CUSTOMER_TAG_DEFAULTS } from '../../../src/modules/customer/constants/customer-tag.seed.constant';
+import { ENUM_MESSAGE_LANGUAGE } from '../../../src/common/message/enums/message.enum';
 import {
     ENUM_POLICY_ACTION,
     ENUM_POLICY_SUBJECT,
@@ -113,7 +114,7 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         await service.create(owner, dto);
 
         expect(customerTagService.create).toHaveBeenCalledTimes(8);
-        expect(CUSTOMER_TAG_DEFAULTS).toHaveLength(8);
+        expect(CUSTOMER_TAG_DEFAULTS.en).toHaveLength(8);
     });
 
     it('creates default workspace roles with CUSTOMER manage permission', async () => {
@@ -145,7 +146,7 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
             seededByName.set(payload.name, payload);
         }
 
-        for (const expected of CUSTOMER_TAG_DEFAULTS) {
+        for (const expected of CUSTOMER_TAG_DEFAULTS.en) {
             const seeded = seededByName.get(expected.name);
             expect(seeded).toBeDefined();
             expect(seeded.workspace).toBe('ws-1');
@@ -153,6 +154,37 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
             expect(seeded.emoji).toBe(expected.emoji);
             expect(seeded.description).toBe(expected.description);
             expect(seeded.triggersHandoff).toBe(expected.triggersHandoff);
+        }
+    });
+
+    // A Vietnamese owner saw "Hot lead", "Angry"... in English (#190): the
+    // catalog is seeded in the language the owner created the workspace in.
+    it("seeds the tags in the creator's language", async () => {
+        await service.create(owner, dto, undefined, ENUM_MESSAGE_LANGUAGE.VI);
+
+        const seeded = customerTagService.create.mock.calls.map(
+            ([payload]: any[]) => payload
+        );
+        expect(seeded.map((tag: any) => tag.name)).toEqual(
+            CUSTOMER_TAG_DEFAULTS.vi.map(tag => tag.name)
+        );
+        expect(seeded.map((tag: any) => tag.name)).toContain('Khiếu nại');
+        expect(seeded.filter((tag: any) => tag.triggersHandoff).length).toBe(2);
+    });
+
+    it("keeps every language's catalog in step (same emoji and handoff flags)", () => {
+        for (const catalog of Object.values(CUSTOMER_TAG_DEFAULTS)) {
+            expect(
+                catalog.map(({ emoji, triggersHandoff }) => ({
+                    emoji,
+                    triggersHandoff,
+                }))
+            ).toEqual(
+                CUSTOMER_TAG_DEFAULTS.en.map(({ emoji, triggersHandoff }) => ({
+                    emoji,
+                    triggersHandoff,
+                }))
+            );
         }
     });
 

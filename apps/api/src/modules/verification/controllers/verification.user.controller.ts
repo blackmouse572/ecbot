@@ -6,6 +6,7 @@ import {
     Body,
     Controller,
     Get,
+    Headers,
     HttpCode,
     HttpStatus,
     InternalServerErrorException,
@@ -132,7 +133,8 @@ export class VerificationUserController {
     @Post('/resend/email')
     async resendEmail(
         @AuthJwtPayload<IAuthJwtAccessTokenPayload>('user', UserParsePipe)
-        user: UserEntity
+        user: UserEntity,
+        @Headers('x-custom-lang') language?: string
     ): Promise<IResponse<VerificationResponse>> {
         const latestVerification: VerificationEntity =
             await this.verificationService.findOneLatestEmailByUser(user.id);
@@ -170,6 +172,7 @@ export class VerificationUserController {
                             otp: verification.otp,
                             expiredAt: verification.expiredDate,
                             reference: verification.reference,
+                            language,
                         },
                     },
                     {

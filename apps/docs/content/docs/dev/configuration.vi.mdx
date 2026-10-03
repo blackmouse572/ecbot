@@ -35,7 +35,7 @@ Mỗi ứng dụng trong repo đọc cấu hình từ tệp `.env` riêng: `apps
 | Xác thực | `AUTH_JWT_*` | Địa chỉ JWKS, mã khóa và đường dẫn khóa. |
 | Redis | `REDIS_*` | Bộ nhớ đệm và hàng đợi. |
 | Lưu trữ | `AWS_S3_PUBLIC_*`, `AWS_S3_PRIVATE_*` | Bucket cho tệp tải lên, tài liệu kiến thức và kỹ năng. |
-| Email | `RESEND_API_KEY`, `EMAIL_FROM` | Mã đăng ký, lời mời và cảnh báo. |
+| Email | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_SUPPORT` | Mã đăng ký, lời mời và cảnh báo. `EMAIL_SUPPORT` là địa chỉ hỗ trợ hiển thị trong email; để trống thì email không có dòng này. |
 | Kênh | `FACEBOOK_*`, `ZALO_*`, `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Ứng dụng của các kênh và xác minh webhook. |
 | Dịch vụ AI | `AI_BACKEND_URL`, `AI_SERVICE_API_KEY`, `AI_SERVICE_API_SECRET`, `API_INTERNAL_TOKEN` | Giao tiếp giữa API và dịch vụ AI. |
 | Tác vụ nền | `CLOUD_TASKS_*` | Dự án và hàng đợi Cloud Tasks, cùng `CLOUD_TASKS_EMULATOR_HOST` khi chạy trên máy. |

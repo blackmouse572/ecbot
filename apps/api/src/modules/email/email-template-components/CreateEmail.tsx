@@ -5,7 +5,7 @@ interface CreateEmailProps {
     name: string;
     password: string;
     passwordExpiredAt: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -29,7 +29,7 @@ const CreateEmail: React.FC<CreateEmailProps> = ({
             </p>
             <p>Expired At {passwordExpiredAt}.</p>
             <br />
-            <p>Support Email: {supportEmail}.</p>
+            {supportEmail && <p>Support Email: {supportEmail}.</p>}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>.
             </p>

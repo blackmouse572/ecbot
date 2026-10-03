@@ -3,7 +3,7 @@ import React from 'react';
 
 interface ChangePasswordEmailProps {
     name: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -20,7 +20,7 @@ const ChangePasswordEmail: React.FC<ChangePasswordEmailProps> = ({
             <p>Hi{name},</p>
             <br />
             <p>Change password successfully.</p>
-            <p>Support Email: {supportEmail}.</p>
+            {supportEmail && <p>Support Email: {supportEmail}.</p>}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>.
             </p>

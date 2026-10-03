@@ -10,8 +10,9 @@ import { useNavigate } from "react-router-dom";
 
 import i18n from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import z from "zod/v4";
+import { toWorkspaceSlug } from "../../utils";
 
 const onboardCreateSchema = z.object({
   name: z
@@ -53,6 +54,12 @@ export const OnboardCreateForm = () => {
       handler: "",
     },
   });
+
+  const [name, handler] = useWatch({
+    control: form.control,
+    name: ["name", "handler"],
+  });
+  const previewSlug = toWorkspaceSlug(handler || name || "");
 
   const { mutateAsync: createWorkspace } = useCreateWorkspace();
   const navigate = useNavigate();
@@ -124,7 +131,7 @@ export const OnboardCreateForm = () => {
               <Form.Field
                 name="handler"
                 control={form.control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Form.Item>
                     <Form.Label optional>
                       {t("onboard.create.fields.handler")}
@@ -136,6 +143,16 @@ export const OnboardCreateForm = () => {
                         {...field}
                       />
                     </Form.Control>
+                    {/* Hidden while the typed address is rejected: the
+                        cleaned-up preview would not be what gets saved. */}
+                    {previewSlug && !fieldState.error && (
+                      <Form.Hint>
+                        {t("onboard.create.hints.handler")}{" "}
+                        <span className="text-ui-fg-base break-all">
+                          {`${window.location.origin}/${previewSlug}`}
+                        </span>
+                      </Form.Hint>
+                    )}
                     <Form.ErrorMessage />
                   </Form.Item>
                 )}

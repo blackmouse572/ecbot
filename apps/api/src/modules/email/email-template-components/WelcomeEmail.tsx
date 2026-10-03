@@ -4,7 +4,7 @@ import { Html, Head, Body, Text } from '@react-email/components';
 interface WelcomeEmailProps {
     name: string;
     email: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -22,7 +22,7 @@ const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
             <Text>Welcome {name},</Text>
             <br />
             <Text>Sign up success with email {email}.</Text>
-            <p>Support Email: {supportEmail}.</p>
+            {supportEmail && <p>Support Email: {supportEmail}.</p>}
             <p>Visit us: {homeUrl}.</p>
             <br />
             <p>By: {homeName}.</p>

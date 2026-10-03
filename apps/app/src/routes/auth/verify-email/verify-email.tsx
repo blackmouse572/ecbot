@@ -51,6 +51,7 @@ const VerifyEmailPage = () => {
           ? t("errors.tooManyAttempts")
           : (message ?? t("errors.invalidOtp")),
       );
+      verifyEmailFormRef.current?.reset();
     } finally {
       isVerifying.current = false;
     }

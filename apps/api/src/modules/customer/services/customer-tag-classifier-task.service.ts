@@ -1,3 +1,4 @@
+import { normalizeTagName } from '@app/modules/customer/utils/tag-name.util';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -181,19 +182,25 @@ export class CustomerTagClassifierTaskService {
             current_tags: currentTags,
         });
 
-        const availableNames = new Set(availableTags.map(t => t.name));
-        const handoffNames = new Set(
-            catalog.filter(t => t.triggersHandoff).map(t => t.name)
+        const availableNames = new Set(
+            availableTags.map(t => normalizeTagName(t.name))
         );
+        const handoffNames = new Set(
+            catalog
+                .filter(t => t.triggersHandoff)
+                .map(t => normalizeTagName(t.name))
+        );
+        const findTag = (name: string) =>
+            catalog.find(t => normalizeTagName(t.name) === name);
 
-        for (const name of result.tags_to_add ?? []) {
+        for (const name of (result.tags_to_add ?? []).map(normalizeTagName)) {
             if (!availableNames.has(name) || handoffNames.has(name)) {
                 this.logger.debug(
                     `classify: skipping unknown / handoff tag add "${name}" for customer=${customerId}`
                 );
                 continue;
             }
-            const tag = catalog.find(t => t.name === name);
+            const tag = findTag(name);
             if (!tag) continue;
             try {
                 await this.customerTagAssignmentService.apply(
@@ -207,10 +214,12 @@ export class CustomerTagClassifierTaskService {
             }
         }
 
-        const currentSet = new Set(currentTags);
-        for (const name of result.tags_to_remove ?? []) {
+        const currentSet = new Set(currentTags.map(normalizeTagName));
+        for (const name of (result.tags_to_remove ?? []).map(
+            normalizeTagName
+        )) {
             if (!currentSet.has(name) || handoffNames.has(name)) continue;
-            const tag = catalog.find(t => t.name === name);
+            const tag = findTag(name);
             if (!tag) continue;
             try {
                 await this.customerTagAssignmentService.remove(

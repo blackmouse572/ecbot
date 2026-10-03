@@ -7,7 +7,7 @@ interface LowTokenBalanceEmailProps {
     usedPercent: number;
     periodEnd: string;
     usageUrl: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -39,10 +39,12 @@ const LowTokenBalanceEmail: React.FC<LowTokenBalanceEmailProps> = ({
             <p>
                 Check usage here: <a href={usageUrl}>{usageUrl}</a>
             </p>
-            <p>
-                Support Email:{' '}
-                <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-            </p>
+            {supportEmail && (
+                <p>
+                    Support Email:{' '}
+                    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+                </p>
+            )}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>.
             </p>

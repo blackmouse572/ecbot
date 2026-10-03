@@ -5,7 +5,9 @@ to RESOLVED or after 30 minutes of inbound silence. Returns the tags to apply
 / remove and a one-paragraph profile summary. Handoff-trigger tags are
 filtered out on the apps/api side and never appear in `available_tags`.
 """
+
 import logging
+import unicodedata
 
 from fastapi import APIRouter, Depends
 
@@ -132,9 +134,23 @@ async def classify(req: ClassifyRequest) -> AppResponse[ClassifyResponse]:
 
     # Defense-in-depth: trim to known catalog / current sets. apps/api also
     # filters but we don't want to hand back a tag the catalog doesn't define.
-    available_names = {t.name for t in req.available_tags}
-    current_names = set(req.current_tags)
-    result.tags_to_add = [t for t in result.tags_to_add if t in available_names]
-    result.tags_to_remove = [t for t in result.tags_to_remove if t in current_names]
+    # Names are matched in NFC: Vietnamese diacritics may come back from the
+    # model decomposed (NFD). Each kept tag is spelled as the catalog spells it.
+    available_names = {_nfc(t.name): t.name for t in req.available_tags}
+    current_names = {_nfc(name): name for name in req.current_tags}
+    result.tags_to_add = [
+        available_names[_nfc(t)]
+        for t in result.tags_to_add
+        if _nfc(t) in available_names
+    ]
+    result.tags_to_remove = [
+        current_names[_nfc(t)]
+        for t in result.tags_to_remove
+        if _nfc(t) in current_names
+    ]
 
     return AppResponse(data=result)
+
+
+def _nfc(name: str) -> str:
+    return unicodedata.normalize("NFC", name)

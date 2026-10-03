@@ -349,12 +349,12 @@
     "create": {
       "fields": {
         "name": "Workspace Name",
-        "handler": "Workspace ID",
+        "handler": "Web address",
         "avatar": "Avatar"
       },
       "placeholders": {
         "name": "My Workspace",
-        "handler": "my-workspace-handle"
+        "handler": "my-shop"
       },
       "toast": {
         "loading": "Creating workspace...",
@@ -363,7 +363,10 @@
       },
       "errors": {
         "title": "Could not create workspace",
-        "slugTaken": "This slug is already taken. Please choose a different one."
+        "slugTaken": "This web address is already taken. Please choose another one."
+      },
+      "hints": {
+        "handler": "Your workspace will be at"
       }
     },
     "join": {
@@ -1756,7 +1759,7 @@
       },
       "confirm": {
         "title": "Delete workspace",
-        "description": "This will delete the workspace and all of its data. Type the workspace slug to confirm.",
+        "description": "This will delete the workspace and all of its data. Type the workspace web address to confirm.",
         "confirm": "Delete"
       }
     },
@@ -1765,7 +1768,7 @@
     },
     "placeholders": {
       "name": "Enter workspace name",
-      "slug": "Enter workspace slug"
+      "slug": "Enter a web address"
     },
     "avatar": {
       "custom": "Custom avatar",
@@ -1856,7 +1859,7 @@
     "joinedAt": "Joined At",
     "updatedAt": "Updated At",
     "addedBy": "Added By",
-    "slug": "Slug",
+    "slug": "Web address",
     "type": "Type",
     "optional": "Optional",
     "role": "Role",
@@ -2344,6 +2347,10 @@
           "confirm": "Delete",
           "cancel": "Cancel"
         }
+      },
+      "handoff": {
+        "yes": "Yes",
+        "no": "No"
       }
     },
     "clientCredentials": {

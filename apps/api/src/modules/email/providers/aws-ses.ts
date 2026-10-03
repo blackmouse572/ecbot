@@ -35,8 +35,10 @@ export class AwsSESProvider implements IEmailService {
         private readonly configService: ConfigService
     ) {
         this.fromEmail = this.configService.get<string>('email.fromEmail');
+        // Optional (EMAIL_SUPPORT); SES fails to render a template whose
+        // variable is missing, so an unset address goes out as "".
         this.supportEmail =
-            this.configService.get<string>('email.supportEmail');
+            this.configService.get<string>('email.supportEmail') ?? '';
 
         this.homeName = this.configService.get<string>('home.name');
         this.homeUrl = this.configService.get<string>('home.url');

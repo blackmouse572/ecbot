@@ -11,6 +11,7 @@ import { VerificationVerifyEmailRequestDto } from '@app/modules/verification/dto
 import { ENUM_VERIFICATION_STATUS_CODE_ERROR } from '@app/modules/verification/enums/verification.status-code.constant';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
+    Headers,
     BadRequestException,
     Body,
     ConflictException,
@@ -55,7 +56,8 @@ export class VerificationEmailController {
     @Post('/resend/email')
     async resendVerificationEmail(
         @Body(new RequestEmailPipe())
-        { email, id }: VerificationResendEmailRequestDto
+        { email, id }: VerificationResendEmailRequestDto,
+        @Headers('x-custom-lang') language?: string
     ): Promise<void> {
         const [existing, user] = await Promise.all([
             this.verificationService.findOneActiveLatestEmailByUser(id, email),
@@ -104,6 +106,7 @@ export class VerificationEmailController {
                         otp: verification.otp,
                         expiredAt: verification.expiredDate,
                         reference: verification.reference,
+                        language,
                     },
                 },
                 {

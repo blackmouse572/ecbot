@@ -63,4 +63,25 @@ describe('AwsSESProvider.sendResetPassword', () => {
         const [{ templateData }] = send.mock.calls[0];
         expect(templateData.otp).toBe('482913');
     });
+
+    // EMAIL_SUPPORT is optional now; SES fails to render a template whose
+    // variable is missing, so an unset address is sent as "".
+    it('sends an empty support address when none is configured', async () => {
+        configValues['email.supportEmail'] = undefined;
+        try {
+            await build().sendResetPassword(
+                { name: 'Jane', email: 'jane@b.com' } as any,
+                {
+                    url: 'https://app.example.com/reset-password?token=tok-1',
+                    otp: '482913',
+                    expiredDate: new Date('2026-08-30T05:29:50.057Z'),
+                } as any
+            );
+        } finally {
+            configValues['email.supportEmail'] = 'support@app.example.com';
+        }
+
+        const [{ templateData }] = send.mock.calls[0];
+        expect(templateData.supportEmail).toBe('');
+    });
 });

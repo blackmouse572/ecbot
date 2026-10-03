@@ -8,7 +8,9 @@ import { EmailSendDto } from 'src/modules/email/dtos/email.send.dto';
 import { EmailVerificationDto } from 'src/modules/email/dtos/email.verification.dto';
 import { EmailVerifiedDto } from 'src/modules/email/dtos/email.verified.dto';
 import { ResendEmailService } from 'src/modules/resend/services/resend-email.service';
+import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 import { renderTemplate } from '../constraint/templates';
+import { verificationEmailCopy } from '../email-template-components/verification-email.copy';
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
@@ -69,14 +71,15 @@ export class ResendProvider implements IEmailService {
     private async sendEmailTemplate<P extends object>(
         to: string,
         subject: EmailSubject,
-        templateData: P
+        templateData: P,
+        subjectLine: string = subject
     ): Promise<boolean> {
         try {
             const html = await renderTemplate(subject, templateData);
             const res = await this.resendEmailService.sendEmail({
                 from: this.fromEmail,
                 to,
-                subject,
+                subject: subjectLine,
                 html,
             });
 
@@ -144,17 +147,27 @@ export class ResendProvider implements IEmailService {
 
     async sendVerification(
         { name, email }: EmailSendDto,
-        { expiredAt, reference, otp }: EmailVerificationDto
+        { expiredAt, reference, otp, language }: EmailVerificationDto
     ): Promise<boolean> {
-        return this.sendEmailTemplate(email, EmailSubject.EmailVerification, {
-            name,
-            otp,
-            expiredAt: this.helperDateService.formatToRFC2822(expiredAt),
-            reference,
-            supportEmail: this.supportEmail,
-            homeUrl: this.homeUrl,
-            homeName: this.homeName,
-        });
+        const copy = verificationEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.EmailVerification,
+            {
+                name,
+                otp,
+                expiredAt: this.helperDateService.formatToReadable(
+                    expiredAt,
+                    language ?? ENUM_MESSAGE_LANGUAGE.EN
+                ),
+                reference,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject
+        );
     }
 
     async sendEmailVerified(

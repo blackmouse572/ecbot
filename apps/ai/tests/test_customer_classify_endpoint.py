@@ -7,7 +7,10 @@ The endpoint:
 We monkeypatch the build_chat_model binding inside `modules.customer.routers` so we
 never reach a real provider.
 """
+
 from __future__ import annotations
+
+import unicodedata
 
 from typing import Any
 
@@ -133,6 +136,36 @@ async def test_endpoint_trims_removed_tags_to_current_set(async_client, patch_ll
     assert resp.json()["data"]["tags_to_remove"] == ["VIP"]
 
 
+async def test_endpoint_keeps_tags_returned_in_another_unicode_form(
+    async_client, patch_llm
+):
+    # Vietnamese tag names have diacritics with two Unicode forms (NFC and
+    # NFD). A model may answer in the other form; the tag is still known and
+    # comes back spelled as the catalog spells it.
+    name = unicodedata.normalize("NFC", "Khách quay lại")
+    body = {
+        **VALID_BODY,
+        "available_tags": [{"name": name, "emoji": "🔁", "description": ""}],
+        "current_tags": [name],
+    }
+    decomposed = unicodedata.normalize("NFD", name)
+    patch_llm(
+        _FakeStructured(
+            returns=ClassifyResponse(
+                tags_to_add=[decomposed],
+                tags_to_remove=[decomposed],
+                profile_summary="x",
+            )
+        )
+    )
+
+    resp = await async_client.post("/api/customer/classify", json=body)
+
+    assert resp.status_code == 200
+    assert resp.json()["data"]["tags_to_add"] == [name]
+    assert resp.json()["data"]["tags_to_remove"] == [name]
+
+
 # ---------- LLM failure path ----------
 
 
@@ -181,7 +214,9 @@ async def test_classify_uses_classifier_model(async_client, monkeypatch):
         async def ainvoke(self, *_a: Any, **_kw: Any) -> ClassifyResponse:
             return ClassifyResponse()
 
-    def _fake_build(*, model_text_name: str, temperature: float, max_tokens=None) -> _Fake:
+    def _fake_build(
+        *, model_text_name: str, temperature: float, max_tokens=None
+    ) -> _Fake:
         captured["model_text_name"] = model_text_name
         captured["temperature"] = temperature
         return _Fake()

@@ -206,6 +206,41 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         expect(customerTagAssignmentService.remove).toHaveBeenCalledTimes(1);
     });
 
+    // Vietnamese default tags carry diacritics, which have two Unicode forms
+    // (precomposed NFC and decomposed NFD). A model may answer in the other
+    // form than the catalog stores; the names still have to match.
+    it('matches tag names whatever Unicode form the classifier returns', async () => {
+        const returning = {
+            id: 'tag-returning',
+            name: 'Khách quay lại'.normalize('NFC'),
+            emoji: null,
+            description: '',
+            triggersHandoff: false,
+        };
+        customerTagService.findAllByWorkspace.mockResolvedValue([returning]);
+        customerTagAssignmentService.listByCustomer.mockResolvedValue([
+            { tag: { id: 'tag-returning', name: returning.name } },
+        ]);
+        httpService.post.mockReturnValue(
+            classifierResponse({
+                tags_to_add: ['Khách quay lại'.normalize('NFD')],
+                tags_to_remove: ['Khách quay lại'.normalize('NFD')],
+                profile_summary: '',
+            })
+        );
+
+        await service.handle(dto() as any, 0);
+
+        expect(customerTagAssignmentService.apply).toHaveBeenCalledWith(
+            'cust-1',
+            'tag-returning'
+        );
+        expect(customerTagAssignmentService.remove).toHaveBeenCalledWith(
+            'cust-1',
+            'tag-returning'
+        );
+    });
+
     it('writes a trimmed profile summary', async () => {
         httpService.post.mockReturnValue(
             classifierResponse({ profile_summary: '  Loyal buyer.  ' })
