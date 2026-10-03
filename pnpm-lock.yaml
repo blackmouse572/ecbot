@@ -130,8 +130,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.12(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@react-email/render':
-        specifier: ^1.4.0
-        version: 1.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^2.1.0
+        version: 2.1.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@repo/agent-blueprint':
         specifier: workspace:*
         version: link:../../packages/agent-blueprint
@@ -5183,15 +5183,15 @@ packages:
       react: 19.3.0
       react-dom: 19.3.0
 
-  '@react-email/render@1.4.0':
-    resolution: {integrity: sha512-ZtJ3noggIvW1ZAryoui95KJENKdCzLmN5F7hyZY1F/17B1vwzuxHB7YkuCg0QqHjDivc5axqYEYdIOw4JIQdUw==}
-    engines: {node: '>=18.0.0'}
+  '@react-email/render@2.0.6':
+    resolution: {integrity: sha512-xOzaYkH3jLZKqN5MqrTXYnmqBYUnZSVbkxdb5PGGmDcK6sKDVMliaDiSwfXajRC9JtSHTcGc2tmGLHWuCgVpog==}
+    engines: {node: '>=20.0.0'}
     peerDependencies:
       react: 19.3.0
       react-dom: 19.3.0
 
-  '@react-email/render@2.0.6':
-    resolution: {integrity: sha512-xOzaYkH3jLZKqN5MqrTXYnmqBYUnZSVbkxdb5PGGmDcK6sKDVMliaDiSwfXajRC9JtSHTcGc2tmGLHWuCgVpog==}
+  '@react-email/render@2.1.0':
+    resolution: {integrity: sha512-F+zE3O6d6sW6Aj2UjvZAA17R7tJKM7kcq2mgV6k4HCT8jeLLFaVP2txMtH1lgqYFRMZ0Gxsd37q2PRyiXLXXxA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: 19.3.0
@@ -9167,6 +9167,9 @@ packages:
 
   html-void-elements@3.0.0:
     resolution: {integrity: sha512-bEqo66MRXsUGxWHV5IP0PUiAWwoEjba4VCzg0LjFJBpchPaTfyfCKTG6bc5F8ucKec3q5y6qOdGyYTSBEvhCrg==}
+
+  html5parser@3.0.0:
+    resolution: {integrity: sha512-iNpSopa+4YHX50UOk825tBy7MghmXHo/ZpLskBYN0kAr1xhH8GlIMk5bLRXcZlfP3AnLUcSuFMu8C4MdOUxA8A==}
 
   htmlparser2@8.0.2:
     resolution: {integrity: sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA==}
@@ -17702,17 +17705,18 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
       react-promise-suspense: 0.3.4
 
-  '@react-email/render@1.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@react-email/render@2.0.6(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       html-to-text: 9.0.5
       prettier: 3.9.9
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
-      react-promise-suspense: 0.3.4
 
-  '@react-email/render@2.0.6(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@react-email/render@2.1.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
+      entities: 4.5.0
       html-to-text: 9.0.5
+      html5parser: 3.0.0
       prettier: 3.9.9
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
@@ -22076,6 +22080,8 @@ snapshots:
   html-url-attributes@3.0.1: {}
 
   html-void-elements@3.0.0: {}
+
+  html5parser@3.0.0: {}
 
   htmlparser2@8.0.2:
     dependencies:
