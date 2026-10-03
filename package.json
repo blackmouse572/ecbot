@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "prettier": "^3.9.9",
-    "turbo": "^2.11.3",
+    "turbo": "^2.11.5",
     "typescript": "5.8.2"
   },
   "packageManager": "pnpm@9.15.9",
@@ -69,7 +69,7 @@
     }
   },
   "dependencies": {
-    "@turbo/gen": "^2.11.3",
+    "@turbo/gen": "^2.11.5",
     "slugify": "^1.6.9"
   }
 }
