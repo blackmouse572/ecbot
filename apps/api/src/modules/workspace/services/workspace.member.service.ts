@@ -346,10 +346,11 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
             caller.email.toLowerCase() !== invitation.inviteeEmail.toLowerCase()
         ) {
             // 403, not 401: apps/app retries a 401 as an expired session.
+            // The link is fine; it belongs to another account (#184).
             throw new ForbiddenException({
                 statusCode:
-                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
-                message: 'workspace.member.join.invalid',
+                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_OTHER_ACCOUNT,
+                message: 'workspace.member.join.otherAccount',
             });
         }
 

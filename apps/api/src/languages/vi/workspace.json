@@ -26,7 +26,8 @@
         "join": {
             "invalid": "Link mời không hợp lệ hoặc đã hết hạn. Thử liên hệ lại người gửi xem?",
             "success": "Chào mừng bạn đã gia nhập không gian làm việc! 🎊",
-            "error": "Tham gia không gian làm việc thất bại. Có gì đó không ổn..."
+            "error": "Tham gia không gian làm việc thất bại. Có gì đó không ổn...",
+            "otherAccount": "Lời mời này được gửi tới một địa chỉ email khác. Hãy đăng nhập bằng tài khoản đó để tham gia."
         },
         "leave": {
             "success": "Bạn đã rời khỏi không gian làm việc thành công. Tạm biệt! 👋",

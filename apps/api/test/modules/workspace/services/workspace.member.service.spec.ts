@@ -12,6 +12,7 @@ import { RoleService } from '../../../../src/modules/role/services/role.service'
 import { UserService } from '../../../../src/modules/user/services/user.service';
 import { InvitationService } from '../../../../src/modules/invitation/services/invitation.service';
 import { WorkspaceMemberService } from '../../../../src/modules/workspace/services/workspace.member.service';
+import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../../../../src/modules/workspace/enums/workspace.status-code.enum';
 import { WorkspaceMemberRepository } from '../../../../src/modules/workspace/repository/repositories/workspace-member.repository';
 import { WorkSpaceRepository } from '../../../../src/modules/workspace/repository/repositories/workspace.repository';
 
@@ -288,9 +289,17 @@ describe('WorkspaceMemberService', () => {
                 role: { id: roleId },
             });
 
-            await expect(
-                service.joinWorkspaceViaInvitation('token', userId)
-            ).rejects.toThrow(ForbiddenException);
+            const result = service.joinWorkspaceViaInvitation('token', userId);
+            await expect(result).rejects.toThrow(ForbiddenException);
+            // #184: say the invitation is for another account, not that the
+            // link is invalid or expired.
+            await expect(result).rejects.toMatchObject({
+                response: {
+                    statusCode:
+                        ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_OTHER_ACCOUNT,
+                    message: 'workspace.member.join.otherAccount',
+                },
+            });
             expect(mockInvitationService.accept).not.toHaveBeenCalled();
         });
 
