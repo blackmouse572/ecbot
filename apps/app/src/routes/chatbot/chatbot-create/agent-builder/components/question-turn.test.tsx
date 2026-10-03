@@ -59,3 +59,34 @@ describe("QuestionTurn placeholders", () => {
     );
   });
 });
+
+// #160: the handoff step never said how the owner finds out about a handoff.
+describe("QuestionTurn handoff step", () => {
+  beforeAll(() => i18n.changeLanguage("en"));
+
+  it("says the owner is notified in the app", () => {
+    const profile = createProfile("ecommerce", "en");
+    const question = buildQuestionGroups(profile)
+      .flatMap((g) => g.questions)
+      .find((q) => q.id === "handoffWhen")!;
+    render(
+      <QuestionTurn
+        question={question}
+        profile={profile}
+        suggestion={null}
+        position={{ current: 1, total: 20 }}
+        onAnswer={vi.fn()}
+        onSkip={vi.fn()}
+        chatbotId={null}
+        linkedAccounts={[]}
+        onAccountsLinked={vi.fn()}
+        onAccountsUnlinked={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/notification/i)).toBeInTheDocument();
+    expect(
+      i18n.t("agentBuilder.questions.handoffWhen.ask", { lng: "vi" }),
+    ).toMatch(/thông báo/i);
+  });
+});

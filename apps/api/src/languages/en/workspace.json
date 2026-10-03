@@ -26,7 +26,8 @@
         "join": {
             "invalid": "The invitation link is invalid or has expired.",
             "success": "You have successfully joined the workspace.",
-            "error": "Failed to join the workspace."
+            "error": "Failed to join the workspace.",
+            "otherAccount": "This invitation was sent to a different email address. Sign in with that account to join."
         },
         "leave": {
             "success": "You have successfully left the workspace.",

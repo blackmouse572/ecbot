@@ -3,6 +3,8 @@
         "validationDto": "The provided data does not meet validation criteria.",
         "mimeInvalid": "The file's MIME type is invalid.",
         "requiredParseFirst": "Please parse the data before proceeding.",
-        "required": "This field is required and cannot be left blank."
+        "required": "This field is required and cannot be left blank.",
+        "empty": "The file is empty.",
+        "contentMismatch": "The file's content does not match its type."
     }
 }
