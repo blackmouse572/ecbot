@@ -1128,7 +1128,7 @@
       },
       "handoffWhen": {
         "title": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn?",
-        "ask": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn?",
+        "ask": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn? Khi đó, bạn và đội ngũ sẽ nhận thông báo trong ứng dụng (biểu tượng chuông ở trên cùng) kèm đường dẫn tới cuộc trò chuyện.",
         "lead": "Chuyển cho tôi khi:"
       },
       "rules": {
