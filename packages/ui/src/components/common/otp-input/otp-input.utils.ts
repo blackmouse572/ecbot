@@ -13,9 +13,14 @@ export const toDigits = (code: string | undefined, length: number) =>
 export const isAllowedChar = (char: string, type: OTPInputType) =>
   ALLOWED_CHAR[type].test(char);
 
+/** The characters of `text` a box accepts, e.g. "Mã: 1 2 3" gives ["1","2","3"]. */
+export const allowedChars = (text: string, type: OTPInputType) =>
+  text.split("").filter((char) => isAllowedChar(char, type));
+
 /**
- * The character the user just typed into a box that may already hold one:
- * "53" or "35" after typing 3 over 5 both give "3".
+ * What the user just put into a box that may already hold a character:
+ * "53" after typing 3 over 5 gives "3"; a whole code autofilled into one box
+ * ("123456") is kept whole so it can be spread over the boxes.
  */
-export const typedChar = (raw: string, previous: string) =>
-  (previous ? raw.replace(previous, "") : raw).slice(-1);
+export const typedText = (raw: string, previous: string) =>
+  previous && raw.length > 1 ? raw.replace(previous, "") : raw;

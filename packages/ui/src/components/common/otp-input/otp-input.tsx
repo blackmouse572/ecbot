@@ -1,7 +1,12 @@
 import { Input } from "@medusajs/ui";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { OTPInputType } from "./otp-input.types";
-import { isAllowedChar, toDigits, typedChar } from "./otp-input.utils";
+import {
+  allowedChars,
+  isAllowedChar,
+  toDigits,
+  typedText,
+} from "./otp-input.utils";
 
 interface OTPInputProps {
   /**
@@ -28,6 +33,7 @@ const OTPInput = ({
   const [digits, setDigits] = useState(() => toDigits(value, length));
   const [prevValue, setPrevValue] = useState(value);
   const inputRefs = useRef<HTMLInputElement[]>([]);
+  const focusFirstAfterReset = useRef(false);
 
   // Follow the parent when it changes the code itself (a reset after a failed
   // verify), not when it is echoing what the user just typed.
@@ -35,8 +41,18 @@ const OTPInput = ({
     setPrevValue(value);
     if (value !== undefined && value !== digits.join("")) {
       setDigits(toDigits(value, length));
+      focusFirstAfterReset.current = value === "";
     }
   }
+
+  useEffect(() => {
+    if (focusFirstAfterReset.current) {
+      focusFirstAfterReset.current = false;
+      inputRefs.current[0]?.focus();
+    }
+  });
+
+  const focusBox = (index: number) => inputRefs.current[index]?.focus();
 
   const update = (next: string[]) => {
     setDigits(next);
@@ -45,51 +61,65 @@ const OTPInput = ({
     if (next.every((digit) => digit !== "")) onComplete?.(code);
   };
 
-  const focusBox = (index: number) => inputRefs.current[index]?.focus();
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    const char = typedChar(e.target.value, digits[index] ?? "");
-    if (!isAllowedChar(char, type)) return;
-
+  /** Writes `chars` into the boxes from `index` on, then moves past them. */
+  const fill = (index: number, chars: string[]) => {
+    if (!chars.length) return;
     const next = [...digits];
-    next[index] = char;
+    chars
+      .slice(0, length - index)
+      .forEach((char, i) => (next[index + i] = char));
     update(next);
-    if (index < length - 1) focusBox(index + 1);
+    focusBox(Math.min(index + chars.length, length - 1));
   };
 
+  const clear = (index: number) => {
+    const next = [...digits];
+    next[index] = "";
+    update(next);
+    focusBox(index);
+  };
+
+  // Keyboards with real keys: handled here so retyping the same digit, which
+  // leaves the input's value unchanged, still moves on.
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     index: number,
   ) => {
-    if (e.key !== "Backspace") return;
-    e.preventDefault();
-
-    // Clear this box; on an empty box, step back and clear the previous one.
-    const target = digits[index] || index === 0 ? index : index - 1;
-    const next = [...digits];
-    next[target] = "";
-    update(next);
-    focusBox(target);
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      // Clear this box; on an empty box, step back and clear the previous one.
+      clear(digits[index] || index === 0 ? index : index - 1);
+    } else if (e.key === "Delete") {
+      e.preventDefault();
+      clear(index);
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      if (isAllowedChar(e.key, type)) fill(index, [e.key]);
+    }
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const chars = e.clipboardData
-      .getData("text/plain")
-      .trim()
-      .slice(0, length)
-      .split("");
-    if (!chars.length || !chars.every((char) => isAllowedChar(char, type))) {
+  // Everything that skips keydown: Android keyboards (key "Unidentified"),
+  // SMS autofill writing the whole code into one box, cut.
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    const text = typedText(e.target.value, digits[index] ?? "");
+    if (!text) {
+      clear(index);
       return;
     }
+    fill(index, allowedChars(text, type));
+  };
 
-    const next = [...digits];
-    chars.forEach((char, i) => (next[i] = char));
-    update(next);
-    focusBox(Math.min(chars.length, length - 1));
+  const handlePaste = (
+    e: React.ClipboardEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    e.preventDefault();
+    const chars = allowedChars(e.clipboardData.getData("text/plain"), type);
+    // A whole code always starts at the first box, wherever it is pasted.
+    fill(chars.length >= length ? 0 : index, chars);
   };
 
   return (
@@ -105,7 +135,7 @@ const OTPInput = ({
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
           onFocus={(e) => e.target.select()}
-          onPaste={handlePaste}
+          onPaste={(e) => handlePaste(e, index)}
           ref={(el) => {
             if (el) inputRefs.current[index] = el;
           }}
