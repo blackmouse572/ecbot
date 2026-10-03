@@ -12,6 +12,7 @@ import {
     IsUrl,
     Min,
     MinLength,
+    ValidateIf,
 } from 'class-validator';
 import {
     ENUM_APP_ENVIRONMENT,
@@ -336,7 +337,8 @@ export class AppEnvDto {
     @IsString()
     EMAIL_FROM?: string;
 
-    @IsOptional()
+    // Empty means "no support line in emails", as in .env.example.
+    @ValidateIf((env: AppEnvDto) => !!env.EMAIL_SUPPORT)
     @IsEmail()
     EMAIL_SUPPORT?: string;
 
