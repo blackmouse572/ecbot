@@ -170,7 +170,10 @@ describe("manual values", () => {
       missing.map((g) => [g.group, g.values.map((v) => v.key)]).slice(0, 2),
       [
         ["LLM access", ["OPENROUTER_API_KEY"]],
-        ["Email (invitations, password reset)", ["EMAIL_FROM"]],
+        [
+          "Email (invitations, password reset)",
+          ["EMAIL_FROM", "EMAIL_SUPPORT"],
+        ],
       ],
     );
     assert.deepEqual(

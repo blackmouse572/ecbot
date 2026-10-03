@@ -208,6 +208,8 @@ export const MANUAL_VALUES = [
         key: "EMAIL_FROM",
         example: "Ecbot <noreply@yourdomain.com>",
       },
+      // Optional: shown as the support address in emails, left out if empty.
+      { file: "api", key: "EMAIL_SUPPORT", example: "support@yourdomain.com" },
     ],
   },
   {

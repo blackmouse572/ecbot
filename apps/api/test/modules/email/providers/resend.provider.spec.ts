@@ -84,6 +84,17 @@ describe('ResendProvider.sendVerification', () => {
         expect(props().expiredAt).toMatch(/2026/);
     });
 
+    // Sign-up is open to every country: without a zone, someone abroad
+    // reads the server's local time as their own.
+    it('labels the expiry time with its timezone', async () => {
+        await build().sendVerification(
+            { name: 'Chi', email: 'chi@b.com' },
+            data('vi')
+        );
+
+        expect(props().expiredAt).toMatch(/GMT\+7/);
+    });
+
     it('passes no support address when none is configured', async () => {
         await build().sendVerification(
             { name: 'Chi', email: 'chi@b.com' },
