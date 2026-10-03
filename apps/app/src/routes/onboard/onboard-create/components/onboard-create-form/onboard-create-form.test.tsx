@@ -125,4 +125,24 @@ describe("OnboardCreateForm", () => {
       screen.getByText(`${window.location.origin}/kun-shop`),
     ).toBeInTheDocument();
   });
+
+  it("hides the preview while the typed web address is invalid", async () => {
+    const { container } = renderForm();
+
+    fireEvent.change(container.querySelector('input[name="handler"]')!, {
+      target: { value: "My Shop" },
+    });
+    submit(container);
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "Only lowercase letters, numbers, and hyphens allowed here - keep it clean!",
+        ),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByText(`${window.location.origin}/my-shop`),
+    ).not.toBeInTheDocument();
+  });
 });

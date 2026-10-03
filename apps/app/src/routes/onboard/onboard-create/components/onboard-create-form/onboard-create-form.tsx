@@ -131,7 +131,7 @@ export const OnboardCreateForm = () => {
               <Form.Field
                 name="handler"
                 control={form.control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Form.Item>
                     <Form.Label optional>
                       {t("onboard.create.fields.handler")}
@@ -143,7 +143,9 @@ export const OnboardCreateForm = () => {
                         {...field}
                       />
                     </Form.Control>
-                    {previewSlug && (
+                    {/* Hidden while the typed address is rejected: the
+                        cleaned-up preview would not be what gets saved. */}
+                    {previewSlug && !fieldState.error && (
                       <Form.Hint>
                         {t("onboard.create.hints.handler")}{" "}
                         <span className="text-ui-fg-base break-all">
