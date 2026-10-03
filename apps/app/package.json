@@ -52,7 +52,7 @@
     "react-dom": "19.3.0",
     "react-helmet-async": "^2.0.5",
     "react-hook-form": "7.88.0",
-    "react-i18next": "^15.7.4",
+    "react-i18next": "^17.0.15",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.4",
     "recharts": "3.8.0",
