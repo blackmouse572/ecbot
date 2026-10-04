@@ -14396,22 +14396,6 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
-        "impersonated_by": {
-          "name": "impersonated_by",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "uuid"
-        },
         "user_id": {
           "name": "user_id",
           "type": "uuid",
@@ -14667,6 +14651,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "impersonated_by": {
+          "name": "impersonated_by",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
         }
       },
       "name": "sessions",
