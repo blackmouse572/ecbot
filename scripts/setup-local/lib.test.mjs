@@ -6,6 +6,8 @@ import {
   emulatorReachability,
   isPlaceholder,
   mergeCorsOrigins,
+  normalizeAiEnv,
+  resolveInternalToken,
   missingManual,
   randomApiKeyPair,
   resolvePair,
@@ -235,5 +237,68 @@ describe("emulatorReachability", () => {
       }),
       {},
     );
+  });
+});
+
+// #134: an .env made before API_INTERNAL_TOKEN existed passed --check, then
+// apps/api refused to boot and apps/ai answered every call with 503.
+describe("resolveInternalToken", () => {
+  const make = () => "generated";
+
+  it("generates one token for both apps when neither has one", () => {
+    assert.deepEqual(
+      resolveInternalToken({ api: "", ai: "", generate: make }),
+      {
+        value: "generated",
+        writeApi: true,
+        writeAi: true,
+      },
+    );
+  });
+
+  it("copies the API's token to the AI service", () => {
+    assert.deepEqual(
+      resolveInternalToken({ api: "tok", ai: "", generate: make }),
+      { value: "tok", writeApi: false, writeAi: true },
+    );
+  });
+
+  it("copies the AI service's token to the API", () => {
+    assert.deepEqual(
+      resolveInternalToken({ api: "", ai: "tok", generate: make }),
+      { value: "tok", writeApi: true, writeAi: false },
+    );
+  });
+
+  it("makes a mismatched AI token match the API's", () => {
+    assert.deepEqual(
+      resolveInternalToken({ api: "a", ai: "b", generate: make }),
+      { value: "a", writeApi: false, writeAi: true },
+    );
+  });
+
+  it("leaves matching tokens alone", () => {
+    assert.deepEqual(
+      resolveInternalToken({ api: "tok", ai: "tok", generate: make }),
+      { value: "tok", writeApi: false, writeAi: false },
+    );
+  });
+});
+
+// apps/ai accepts only development, staging and production.
+describe("normalizeAiEnv", () => {
+  it("maps the old short names", () => {
+    assert.equal(normalizeAiEnv("dev"), "development");
+    assert.equal(normalizeAiEnv("prod"), "production");
+    assert.equal(normalizeAiEnv("stage"), "staging");
+  });
+
+  it("falls back to development for anything else it does not accept", () => {
+    assert.equal(normalizeAiEnv("local"), "development");
+    assert.equal(normalizeAiEnv(""), "development");
+  });
+
+  it("leaves an accepted value alone", () => {
+    assert.equal(normalizeAiEnv("staging"), null);
   });
 });

@@ -15,6 +15,8 @@ export type ChatToolCall = {
 // (`{ sourceId, url, title }`), so only these fields are guaranteed.
 export type RagSource = {
   id: string;
+  /** The knowledge item's (or web page's) name; never a storage file name. */
+  title?: string;
   filename?: string;
   sourceUrl?: string | null;
 };

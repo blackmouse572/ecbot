@@ -44,6 +44,7 @@ class RAGIngestService:
         chunk_size: int | None = None,
         chunk_overlap: int | None = None,
         metadata: dict | None = None,
+        title: str | None = None,
     ) -> RAGIngestResponse:
         chunk_size = chunk_size or AppVars.RAG_CHUNK_SIZE
         chunk_overlap = chunk_overlap if chunk_overlap is not None else AppVars.RAG_CHUNK_OVERLAP
@@ -67,6 +68,8 @@ class RAGIngestService:
             **(metadata or {}),
             "knowledge_item_id": knowledge_item_id,
             "chatbot_ids": chatbot_ids or [],
+            # Shown to operators as the source name (#204).
+            **({"title": title} if title else {}),
         }
         chunk_count = await self._ingest_document(
             document_id=document_id,
@@ -104,6 +107,7 @@ class RAGIngestService:
         only_main_content: bool = True,
         max_age: int | None = 172800000,
         parsers: list[str] | None = None,
+        title: str | None = None,
     ) -> RAGIngestResponse:
         normalized_url = self._normalize_url(url)
         # Checked here, before the scraper: it failed on a private URL with a
@@ -151,6 +155,7 @@ class RAGIngestService:
             "source_type": "url",
             "source_url": normalized_url,
             "firecrawl": scrape_metadata,
+            "title": title or scrape_metadata.get("title"),
         }
         document = Document(
             page_content=text,
@@ -223,6 +228,7 @@ class RAGIngestService:
             "chatbot_ids": chatbot_ids or [],
             "knowledge_base_id": knowledge_base_id,
             "source_type": "text",
+            "title": title,
         }
         chunk_count = await self._ingest_document(
             document_id=document_id, document=document, source_filename=source_filename,

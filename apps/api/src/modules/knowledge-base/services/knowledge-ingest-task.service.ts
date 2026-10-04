@@ -254,6 +254,8 @@ export class KnowledgeIngestTaskService {
         form.append('chatbot_ids', chatbotIds.join(','));
         if (item.knowledgeBase?.id)
             form.append('knowledge_base_id', item.knowledgeBase.id);
+        // Shown to operators as the source name, not the storage name (#204).
+        if (item.title) form.append('title', item.title);
 
         const resp = await firstValueFrom(
             this.httpService.post(
@@ -278,6 +280,7 @@ export class KnowledgeIngestTaskService {
                     knowledge_item_id: item.id,
                     chatbot_ids: chatbotIds,
                     knowledge_base_id: item.knowledgeBase?.id,
+                    title: item.title,
                 },
                 {
                     timeout: RAG_INGEST_HTTP_TIMEOUT_MS,

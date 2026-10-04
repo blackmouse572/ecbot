@@ -205,6 +205,8 @@ describe('KnowledgeIngestTaskService', () => {
                 url: 'https://example.test/doc',
                 knowledge_item_id: 'item-1',
                 chatbot_ids: [],
+                // #204: shown to operators as the source name.
+                title: 'URL',
             }),
             expect.objectContaining({
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
@@ -251,6 +253,31 @@ describe('KnowledgeIngestTaskService', () => {
                 }),
                 maxBodyLength: Infinity,
             })
+        );
+    });
+
+    // #204: the AI keeps the title so a source reads as the item's name, not
+    // the storage file name.
+    it('sends the knowledge item title with an uploaded file', async () => {
+        findOneById.mockResolvedValue({
+            id: 'item-1',
+            type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE,
+            title: 'Chính sách đổi trả',
+            attachment: { key: 'documents/file.pdf', mime: 'application/pdf' },
+            knowledgeBase: { id: 'kb-1' },
+        });
+
+        await service.handle(
+            {
+                jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                knowledgeItemId: 'item-1',
+            } as any,
+            0
+        );
+
+        const form = httpPost.mock.calls[0][1];
+        expect(form.getBuffer().toString()).toContain(
+            'name="title"\r\n\r\nChính sách đổi trả'
         );
     });
 

@@ -248,3 +248,29 @@ export function missingManual(files, { requiredOnly = false } = {}) {
     }))
     .filter((group) => group.values.length);
 }
+
+/**
+ * The token apps/api presents to apps/ai (API_INTERNAL_TOKEN); both .env files
+ * must hold the same one. apps/api's wins when they differ, the other side is
+ * copied when only one has it, and a new one is generated when neither does.
+ */
+export function resolveInternalToken({ api, ai, generate }) {
+  const value = api || ai || generate();
+  return { value, writeApi: api !== value, writeAi: ai !== value };
+}
+
+const AI_ENVS = ["development", "staging", "production"];
+const AI_ENV_ALIASES = {
+  dev: "development",
+  prod: "production",
+  stage: "staging",
+};
+
+/**
+ * apps/ai's ENV accepts only development, staging and production. Returns the
+ * value to write, or null when the current one is accepted.
+ */
+export function normalizeAiEnv(value) {
+  if (AI_ENVS.includes(value)) return null;
+  return AI_ENV_ALIASES[value] ?? "development";
+}

@@ -30,6 +30,8 @@ import type React from "react";
 import { useTranslation } from "react-i18next";
 import { AIChatProvider, useAIChat } from "./ai-chat-provider";
 import { AIChatSources } from "./ai-chat-sources";
+import { metadataSources } from "./message-sources";
+import type { RagSource } from "@/types/chat-message";
 import { BuildingLoader } from "./ai-loader";
 import { chatErrorMessage } from "./chat-error-message";
 import { ToolCallList } from "./tool-call-list";
@@ -84,7 +86,11 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
   );
 }
 
-function AIChatMessages() {
+function AIChatMessages({
+  showKnowledgeSources,
+}: {
+  showKnowledgeSources?: boolean;
+}) {
   const { messages, status, error } = useAIChat();
   const { t } = useTranslation();
   const isLoading = status === "submitted" || status === "streaming";
@@ -95,9 +101,18 @@ function AIChatMessages() {
       {displayMessages.map((message, index) => {
         const isLastMessage = index === displayMessages.length - 1;
         const model = partsToRenderModel(message.parts);
-        const sources = message.parts.filter(
-          (part): part is SourceUrlUIPart => part.type === "source-url",
-        );
+        // Operators see every source; customers only web pages (#204).
+        const sources: RagSource[] = showKnowledgeSources
+          ? metadataSources(message.metadata)
+          : message.parts
+              .filter(
+                (part): part is SourceUrlUIPart => part.type === "source-url",
+              )
+              .map((s) => ({
+                id: s.sourceId,
+                title: s.title,
+                sourceUrl: s.url,
+              }));
         const showSpinner =
           isLoading &&
           isLastMessage &&
@@ -159,13 +174,7 @@ function AIChatMessages() {
                 )}
                 <MessageAttachments files={model.files} />
                 {message.role === "assistant" && sources.length > 0 ? (
-                  <AIChatSources
-                    sources={sources.map((s) => ({
-                      id: s.sourceId,
-                      filename: s.title,
-                      sourceUrl: s.url,
-                    }))}
-                  />
+                  <AIChatSources sources={sources} />
                 ) : null}
               </MessageContent>
             </Message>
@@ -216,6 +225,11 @@ export type AIChatCardProps = {
   /** Secondary line under the heading (e.g. how long a share link lasts). */
   subheading?: ReactNode;
   className?: string;
+  /**
+   * List every knowledge source behind an answer (files and text items too).
+   * Operators only: the widget and the public preview leave it off.
+   */
+  showKnowledgeSources?: boolean;
 };
 
 export function AIChatCard(props: AIChatCardProps) {
@@ -228,6 +242,7 @@ export function AIChatCard(props: AIChatCardProps) {
     heading,
     subheading,
     className,
+    showKnowledgeSources,
   } = props;
 
   return (
@@ -255,7 +270,7 @@ export function AIChatCard(props: AIChatCardProps) {
         <MessageScroller>
           <MessageScrollerViewport>
             <MessageScrollerContent>
-              <AIChatMessages />
+              <AIChatMessages showKnowledgeSources={showKnowledgeSources} />
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />

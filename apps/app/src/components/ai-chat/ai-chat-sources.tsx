@@ -13,7 +13,7 @@ export function AIChatSources({ sources }: { sources: RagSource[] }) {
         {sources.map((s) => {
           const chip = (
             <span className="bg-ui-bg-subtle text-ui-fg-subtle rounded-md px-2 py-0.5 text-xs">
-              {s.id} · {s.filename}
+              {[s.id, s.title ?? s.filename].filter(Boolean).join(" · ")}
             </span>
           );
           return s.sourceUrl ? (
