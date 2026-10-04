@@ -2,6 +2,7 @@ export * from "./business-types";
 export * from "./compile-prompt";
 export * from "./libraries";
 export * from "./migrate-profile";
+export * from "./prefill";
 export * from "./presets";
 export * from "./profile";
 export * from "./questions";

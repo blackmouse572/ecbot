@@ -1,5 +1,5 @@
 import {
-  buildQuestionGroups, createProfile, readAnswer, writeAnswer,
+  buildQuestionGroups, createProfile, prefillFromText, readAnswer, writeAnswer,
   type AgentProfile, type AgentSuggestion, type Question, type QuestionGroup,
 } from "@repo/agent-blueprint";
 import type { AccountGetDetailResponseDto } from "@repo/client";
@@ -87,7 +87,12 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         // updates that draft instead of creating a second one.
         chatbotId: state.chatbotId,
         linkedAccounts: state.linkedAccounts,
-        profile: action.profile,
+        // Answers already given in the description (the business name, a
+        // return policy) are filled in, not asked again (#150, #156).
+        profile:
+          action.source === "describe" && action.description
+            ? prefillFromText(action.profile, action.description)
+            : action.profile,
         suggestion: action.suggestion,
         source: action.source,
         describeText: action.source === "describe" ? (action.description ?? null) : null,
@@ -107,7 +112,12 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
     case "answer": {
       if (!state.profile) return state;
       const typeChanged = action.question.id === "businessType" && action.value !== state.profile.businessType;
-      const profile = writeAnswer(state.profile, action.question.path, action.value);
+      const written = writeAnswer(state.profile, action.question.path, action.value);
+      // "What makes you different" often states a policy asked later (#156).
+      const profile =
+        action.question.id === "difference" && typeof action.value === "string"
+          ? prefillFromText(written, action.value)
+          : written;
       // A new business type brings new presets and questions, so only the
       // type itself stays answered.
       const answered = typeChanged ? ["businessType"] : addOnce(state.answered, action.question.id);
