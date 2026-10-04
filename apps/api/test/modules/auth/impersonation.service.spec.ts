@@ -67,4 +67,31 @@ describe('ImpersonationService', () => {
         const service = build();
         await expect(service.consume('nope')).resolves.toBeNull();
     });
+
+    describe('remainingSeconds', () => {
+        it('reports the time left until expiresAt, not the full lifetime', () => {
+            // minted 45s ago with a 600s lifetime
+            expect(
+                ImpersonationService.remainingSeconds(
+                    { expiresIn: 600, expiresAt: 1_000_000 + 555_000 },
+                    1_000_000
+                )
+            ).toBe(555);
+        });
+
+        it('never goes negative', () => {
+            expect(
+                ImpersonationService.remainingSeconds(
+                    { expiresIn: 600, expiresAt: 500 },
+                    1_000_000
+                )
+            ).toBe(0);
+        });
+
+        it('falls back to expiresIn for handoffs stored without expiresAt', () => {
+            expect(
+                ImpersonationService.remainingSeconds({ expiresIn: 600 })
+            ).toBe(600);
+        });
+    });
 });

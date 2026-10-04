@@ -6,6 +6,7 @@ import {
     DocResponse,
 } from 'src/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
+import { AuthImpersonateEndRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-end.request.dto';
 import { AuthChangePasswordRequestDto } from 'src/modules/auth/dtos/request/auth.change-password.request.dto';
 import { AuthRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.refresh.response.dto';
 
@@ -57,6 +58,10 @@ export function AuthSharedImpersonateEndDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary: 'end an impersonation session',
+        }),
+        DocRequest({
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            dto: AuthImpersonateEndRequestDto,
         }),
         DocAuth({
             xApiKey: true,

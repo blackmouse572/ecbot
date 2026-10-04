@@ -9,6 +9,9 @@ export interface IImpersonationHandoff {
     roleType: string;
     accessToken: string;
     expiresIn: number;
+    // Absolute token expiry (ms epoch). The token is minted at click time but
+    // exchanged later, so clients need the remaining lifetime, not the full one.
+    expiresAt?: number;
     impersonatedBy: string;
     session: string;
     target: { id: string; name: string; email: string };
@@ -44,6 +47,15 @@ export class ImpersonationService {
             IMPERSONATION_CODE_TTL_MS
         );
         return code;
+    }
+
+    /** Seconds the handed-off token still has left, never negative. */
+    static remainingSeconds(
+        value: Pick<IImpersonationHandoff, 'expiresIn' | 'expiresAt'>,
+        now: number = Date.now()
+    ): number {
+        if (value.expiresAt === undefined) return value.expiresIn;
+        return Math.max(0, Math.floor((value.expiresAt - now) / 1000));
     }
 
     async consume(code: string): Promise<IImpersonationHandoff | null> {

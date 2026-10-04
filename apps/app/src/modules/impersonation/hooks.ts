@@ -11,10 +11,11 @@ export const useEndImpersonation = () => {
 
   return useCallback(
     async (reason: "manual" | "expired"): Promise<void> => {
-      // `reason` is accepted for call-site clarity; the endpoint takes no body.
-      void reason;
       try {
-        await authSharedControllerImpersonateEndV1({ throwOnError: false });
+        await authSharedControllerImpersonateEndV1({
+          body: { reason },
+          throwOnError: false,
+        });
       } catch {
         /* best-effort — the impersonation token may already be dead */
       }

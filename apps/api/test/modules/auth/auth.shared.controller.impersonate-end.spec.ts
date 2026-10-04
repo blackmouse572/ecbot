@@ -11,6 +11,10 @@ import { MessageService } from '@app/common/message/services/message.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { AuthImpersonateEndRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-end.request.dto';
+
 describe('AuthSharedController.impersonateEnd', () => {
     let controller: AuthSharedController;
 
@@ -73,6 +77,23 @@ describe('AuthSharedController.impersonateEnd', () => {
         );
     });
 
+    it('records the reason sent by the client (expired countdown)', async () => {
+        revokeIfActive.mockResolvedValue(true);
+
+        await controller.impersonateEnd(
+            { user: 'u1', session: 's1', impersonatedBy: 'admin-1' } as any,
+            { reason: 'expired' }
+        );
+
+        expect(createByAdmin).toHaveBeenCalledWith(
+            { id: 'u1' },
+            'admin-1',
+            expect.objectContaining({
+                metadata: { session: 's1', reason: 'expired' },
+            })
+        );
+    });
+
     it('is a no-op 200 when the session is already revoked or lost the race', async () => {
         revokeIfActive.mockResolvedValue(false);
 
@@ -97,5 +118,20 @@ describe('AuthSharedController.impersonateEnd', () => {
 
         expect(revokeIfActive).not.toHaveBeenCalled();
         expect(createByAdmin).not.toHaveBeenCalled();
+    });
+});
+
+describe('AuthImpersonateEndRequestDto', () => {
+    const run = (body: unknown) =>
+        validate(plainToInstance(AuthImpersonateEndRequestDto, body));
+
+    it('accepts an empty body, manual and expired', async () => {
+        await expect(run({})).resolves.toHaveLength(0);
+        await expect(run({ reason: 'manual' })).resolves.toHaveLength(0);
+        await expect(run({ reason: 'expired' })).resolves.toHaveLength(0);
+    });
+
+    it('rejects any other reason (cannot forge expired_swept)', async () => {
+        await expect(run({ reason: 'expired_swept' })).resolves.toHaveLength(1);
     });
 });

@@ -574,6 +574,9 @@ export type AuthImpersonateUserDto = {
 export type AuthImpersonateExchangeResponseDto = {
     tokenType: string;
     roleType: 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'WORKSPACE_OWNER' | 'WORKSPACE_MEMBER';
+    /**
+     * Seconds the token has left (measured from when it was minted, not from this response)
+     */
     expiresIn: number;
     accessToken: string;
     /**
@@ -2879,6 +2882,13 @@ export type AuthChangePasswordRequestDto = {
      * old string password
      */
     oldPassword: string;
+};
+
+export type AuthImpersonateEndRequestDto = {
+    /**
+     * Why the session is ending. `expired` is sent by the client when the countdown runs out.
+     */
+    reason?: 'manual' | 'expired';
 };
 
 export type AccountProvisionApiChannelResponseDto = {
@@ -15269,7 +15279,7 @@ export type AuthSharedControllerChangePasswordV1Responses = {
 export type AuthSharedControllerChangePasswordV1Response = AuthSharedControllerChangePasswordV1Responses[keyof AuthSharedControllerChangePasswordV1Responses];
 
 export type AuthSharedControllerImpersonateEndV1Data = {
-    body?: never;
+    body: AuthImpersonateEndRequestDto;
     headers?: {
         /**
          * Custom language header
@@ -15308,6 +15318,13 @@ export type AuthSharedControllerImpersonateEndV1Errors = {
      * 408
      */
     408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
         message?: unknown;
         statusCode?: number;
     };

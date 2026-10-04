@@ -47,6 +47,25 @@ describe("useEndImpersonation", () => {
     );
   });
 
+  it("sends the end reason to the API", async () => {
+    const store = createStore();
+    store.set(impersonationAtom, {
+      accessToken: "jwt",
+      expiresAt: Date.now() + 5_000,
+      impersonatedBy: "a",
+      user: { id: "u9", name: "B", email: "b@x.com" },
+    });
+    const { result } = renderHook(() => useEndImpersonation(), {
+      wrapper: withStore(store),
+    });
+
+    await result.current("expired");
+
+    expect(endCall).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { reason: "expired" } }),
+    );
+  });
+
   it("still clears + redirects when the end call throws", async () => {
     endCall.mockRejectedValue(new Error("network"));
     const store = createStore();

@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useCountdown } from "./use-countdown";
+import { END_LEAD_MS, useCountdown } from "./use-countdown";
 
 describe("useCountdown", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -20,5 +20,17 @@ describe("useCountdown", () => {
     const { result } = renderHook(() => useCountdown(Date.now() - 5_000));
     expect(result.current.label).toBe("0:00");
     expect(result.current.expired).toBe(true);
+  });
+
+  it("reports ending inside the lead window, before the token has expired", () => {
+    const start = Date.now();
+    const { result } = renderHook(() =>
+      useCountdown(start + END_LEAD_MS + 2_000),
+    );
+    expect(result.current.ending).toBe(false);
+
+    act(() => void vi.advanceTimersByTime(2_000));
+    expect(result.current.ending).toBe(true);
+    expect(result.current.expired).toBe(false);
   });
 });

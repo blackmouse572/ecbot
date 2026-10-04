@@ -1913,7 +1913,7 @@ export const authSharedControllerChangePasswordV1 = <ThrowOnError extends boolea
 /**
  * end an impersonation session
  */
-export const authSharedControllerImpersonateEndV1 = <ThrowOnError extends boolean = false>(options?: Options<AuthSharedControllerImpersonateEndV1Data, ThrowOnError>): RequestResult<AuthSharedControllerImpersonateEndV1Responses, AuthSharedControllerImpersonateEndV1Errors, ThrowOnError> => (options?.client ?? client).post<AuthSharedControllerImpersonateEndV1Responses, AuthSharedControllerImpersonateEndV1Errors, ThrowOnError>({
+export const authSharedControllerImpersonateEndV1 = <ThrowOnError extends boolean = false>(options: Options<AuthSharedControllerImpersonateEndV1Data, ThrowOnError>): RequestResult<AuthSharedControllerImpersonateEndV1Responses, AuthSharedControllerImpersonateEndV1Errors, ThrowOnError> => (options.client ?? client).post<AuthSharedControllerImpersonateEndV1Responses, AuthSharedControllerImpersonateEndV1Errors, ThrowOnError>({
     responseType: 'json',
     security: [{
             key: 'accessToken',
@@ -1921,7 +1921,11 @@ export const authSharedControllerImpersonateEndV1 = <ThrowOnError extends boolea
             type: 'http'
         }, { name: 'x-api-key', type: 'apiKey' }],
     url: '/api/v1/shared/auth/impersonate/end',
-    ...options
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

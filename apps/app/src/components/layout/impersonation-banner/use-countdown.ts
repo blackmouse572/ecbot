@@ -7,6 +7,10 @@ const fmt = (ms: number) => {
   return `${m}:${s.toString().padStart(2, "0")}`;
 };
 
+// End the session this long before the token expires: once it has expired the
+// API rejects /impersonate/end (401), so no audit row would be written.
+export const END_LEAD_MS = 3000;
+
 export function useCountdown(expiresAt: number) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -15,5 +19,5 @@ export function useCountdown(expiresAt: number) {
     return () => clearInterval(id);
   }, [expiresAt]);
   const ms = expiresAt - now;
-  return { ms, label: fmt(ms), expired: ms <= 0 };
+  return { ms, label: fmt(ms), expired: ms <= 0, ending: ms <= END_LEAD_MS };
 }

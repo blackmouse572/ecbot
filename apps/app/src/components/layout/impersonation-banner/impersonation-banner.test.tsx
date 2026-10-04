@@ -57,6 +57,37 @@ describe("ImpersonationBanner", () => {
     expect(endImpersonation).toHaveBeenCalledWith("manual");
   });
 
+  it("auto-ends as 'expired' inside the lead window, once, while the token is still valid", () => {
+    impersonation.current = {
+      accessToken: "jwt",
+      expiresAt: Date.now() + 2_000,
+      impersonatedBy: "admin-1",
+      user: { id: "u1", name: "Nguyen Van A", email: "a@example.com" },
+    };
+    const { rerender } = renderBanner();
+
+    expect(endImpersonation).toHaveBeenCalledTimes(1);
+    expect(endImpersonation).toHaveBeenCalledWith("expired");
+
+    rerender(
+      <I18nextProvider i18n={i18n}>
+        <ImpersonationBanner />
+      </I18nextProvider>,
+    );
+    expect(endImpersonation).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not auto-end while well before the lead window", () => {
+    impersonation.current = {
+      accessToken: "jwt",
+      expiresAt: Date.now() + 300_000,
+      impersonatedBy: "admin-1",
+      user: { id: "u1", name: "Nguyen Van A", email: "a@example.com" },
+    };
+    renderBanner();
+    expect(endImpersonation).not.toHaveBeenCalled();
+  });
+
   it("minimizes to a pill and restores, persisting the choice", () => {
     impersonation.current = {
       accessToken: "jwt",

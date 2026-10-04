@@ -557,6 +557,7 @@ export class UserAdminController {
 
         const code = await this.impersonationService.issue({
             ...issued,
+            expiresAt: Date.now() + issued.expiresIn * 1000,
             impersonatedBy: adminId,
             session: session.id,
             target: {

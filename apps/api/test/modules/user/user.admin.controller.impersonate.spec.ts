@@ -102,6 +102,8 @@ describe('UserAdminController.impersonate', () => {
         );
         expect(issue).toHaveBeenCalledWith(
             expect.objectContaining({
+                // absolute expiry so the exchange can report remaining time
+                expiresAt: expect.any(Number),
                 accessToken: 'signed.jwt',
                 impersonatedBy: 'admin-1',
                 session: 'session-1',

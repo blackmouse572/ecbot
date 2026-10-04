@@ -78,6 +78,25 @@ describe('AuthPublicController.impersonateExchange', () => {
         });
     });
 
+    it('returns the remaining token lifetime when the handoff was minted earlier', async () => {
+        jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
+        consume.mockResolvedValue({
+            tokenType: 'Bearer',
+            roleType: 'USER',
+            accessToken: 'jwt',
+            expiresIn: 600,
+            expiresAt: 1_000_000 + 555_000,
+            impersonatedBy: 'admin-1',
+            session: 's1',
+            target: { id: 'u1', name: 'A', email: 'a@x.com' },
+        });
+
+        const res = await controller.impersonateExchange({ code: 'c' } as any);
+
+        expect(res.data.expiresIn).toBe(555);
+        jest.restoreAllMocks();
+    });
+
     it('401s a consumed / unknown code', async () => {
         consume.mockResolvedValue(null);
 

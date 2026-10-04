@@ -17,15 +17,15 @@ export function ImpersonationBanner() {
   const endImpersonation = useEndImpersonation();
   const { t } = useTranslation();
   const { x, minimized, setMinimized, consumeDrag, dragHandlers } = useBannerUi();
-  const { ms, label, expired } = useCountdown(impersonation?.expiresAt ?? 0);
+  const { ms, label, expired, ending } = useCountdown(impersonation?.expiresAt ?? 0);
 
   const endedRef = useRef(false);
   useEffect(() => {
-    if (impersonation && expired && !endedRef.current) {
+    if (impersonation && ending && !endedRef.current) {
       endedRef.current = true;
       void endImpersonation("expired");
     }
-  }, [impersonation, expired, endImpersonation]);
+  }, [impersonation, ending, endImpersonation]);
 
   if (!impersonation) return null;
 

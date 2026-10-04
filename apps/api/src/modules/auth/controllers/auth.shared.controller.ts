@@ -41,6 +41,7 @@ import {
     AuthSharedLogoutDoc,
     AuthSharedRefreshDoc,
 } from 'src/modules/auth/docs/auth.shared.doc';
+import { AuthImpersonateEndRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-end.request.dto';
 import { AuthChangePasswordRequestDto } from 'src/modules/auth/dtos/request/auth.change-password.request.dto';
 import { AuthRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.refresh.response.dto';
 import {
@@ -303,7 +304,8 @@ export class AuthSharedController {
     @Post('/impersonate/end')
     async impersonateEnd(
         @AuthJwtPayload<IAuthJwtAccessTokenPayload>()
-        { user, session, impersonatedBy }: IAuthJwtAccessTokenPayload
+        { user, session, impersonatedBy }: IAuthJwtAccessTokenPayload,
+        @Body() { reason = 'manual' }: AuthImpersonateEndRequestDto = {}
     ): Promise<IResponse<null>> {
         if (!impersonatedBy) {
             throw new ForbiddenException({
@@ -322,7 +324,7 @@ export class AuthSharedController {
                 {
                     action: ENUM_ACTIVITY_ACTION.IMPERSONATE_END,
                     subject: ENUM_POLICY_SUBJECT.USER,
-                    metadata: { session, reason: 'manual' },
+                    metadata: { session, reason },
                 }
             );
         }
