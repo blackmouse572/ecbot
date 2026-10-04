@@ -290,7 +290,9 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         expect(Sentry.captureException).not.toHaveBeenCalled();
     });
 
-    it('captures Sentry on the final attempt and rethrows for Cloud Tasks', async () => {
+    // A throw here let Cloud Tasks retry past the limit, an LLM call each
+    // time (same as #170); the final attempt is acknowledged instead.
+    it('captures Sentry and stops retrying on the final attempt', async () => {
         const error = new Error('apps/ai 500');
         httpService.post.mockReturnValue(throwError(() => error));
 
@@ -299,7 +301,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
                 dto() as any,
                 CUSTOMER_TAG_CLASSIFIER_MAX_ATTEMPTS - 1
             )
-        ).rejects.toBe(error);
+        ).resolves.toBeUndefined();
         expect(Sentry.captureException).toHaveBeenCalledWith(error, {
             tags: {
                 queue: CUSTOMER_TAG_CLASSIFIER_SENTRY_QUEUE,

@@ -83,6 +83,9 @@ export class CustomerTagClassifierTaskService {
                         conversation_id: dto.conversationId,
                     },
                 });
+                // Acknowledge: a throw made Cloud Tasks retry past the limit,
+                // an LLM call each time.
+                return;
             }
             throw err;
         }
