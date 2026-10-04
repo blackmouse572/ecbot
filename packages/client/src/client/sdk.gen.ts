@@ -269,12 +269,12 @@ export const helloPublicControllerHello = <ThrowOnError extends boolean = false>
 });
 
 /**
- * Login with email and password
+ * Exchange a single-use impersonation code for an access token
  */
-export const authPublicControllerLoginWithCredentialV1 = <ThrowOnError extends boolean = false>(options: Options<AuthPublicControllerLoginWithCredentialV1Data, ThrowOnError>): RequestResult<AuthPublicControllerLoginWithCredentialV1Responses, AuthPublicControllerLoginWithCredentialV1Errors, ThrowOnError> => (options.client ?? client).post<AuthPublicControllerLoginWithCredentialV1Responses, AuthPublicControllerLoginWithCredentialV1Errors, ThrowOnError>({
+export const authPublicControllerImpersonateExchangeV1 = <ThrowOnError extends boolean = false>(options: Options<AuthPublicControllerImpersonateExchangeV1Data, ThrowOnError>): RequestResult<AuthPublicControllerImpersonateExchangeV1Responses, AuthPublicControllerImpersonateExchangeV1Errors, ThrowOnError> => (options.client ?? client).post<AuthPublicControllerImpersonateExchangeV1Responses, AuthPublicControllerImpersonateExchangeV1Errors, ThrowOnError>({
     responseType: 'json',
     security: [{ name: 'x-api-key', type: 'apiKey' }],
-    url: '/api/v1/public/auth/login/credential',
+    url: '/api/v1/public/auth/impersonate/exchange',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -283,12 +283,12 @@ export const authPublicControllerLoginWithCredentialV1 = <ThrowOnError extends b
 });
 
 /**
- * Exchange a single-use impersonation code for an access token
+ * Login with email and password
  */
-export const authPublicControllerImpersonateExchangeV1 = <ThrowOnError extends boolean = false>(options: Options<AuthPublicControllerImpersonateExchangeV1Data, ThrowOnError>): RequestResult<AuthPublicControllerImpersonateExchangeV1Responses, AuthPublicControllerImpersonateExchangeV1Errors, ThrowOnError> => (options.client ?? client).post<AuthPublicControllerImpersonateExchangeV1Responses, AuthPublicControllerImpersonateExchangeV1Errors, ThrowOnError>({
+export const authPublicControllerLoginWithCredentialV1 = <ThrowOnError extends boolean = false>(options: Options<AuthPublicControllerLoginWithCredentialV1Data, ThrowOnError>): RequestResult<AuthPublicControllerLoginWithCredentialV1Responses, AuthPublicControllerLoginWithCredentialV1Errors, ThrowOnError> => (options.client ?? client).post<AuthPublicControllerLoginWithCredentialV1Responses, AuthPublicControllerLoginWithCredentialV1Errors, ThrowOnError>({
     responseType: 'json',
     security: [{ name: 'x-api-key', type: 'apiKey' }],
-    url: '/api/v1/public/auth/impersonate/exchange',
+    url: '/api/v1/public/auth/login/credential',
     ...options,
     headers: {
         'Content-Type': 'application/json',
