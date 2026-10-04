@@ -15,7 +15,7 @@ from eccho_ai.llm.retrievers.embeddings import get_embeddings_client
 from eccho_ai.llm.retrievers.retry import _RETRY
 from eccho_ai.llm.retrievers.text_processing import normalize_text
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
-from eccho_ai.utils.rag_utils import public_source_url
+from eccho_ai.utils.rag_utils import public_source_url, source_title
 
 
 @alru_cache(
@@ -109,6 +109,7 @@ class RAGRetrievalResult:
                     "id": f"KB-{index}",
                     "document_id": chunk.document_id,
                     "filename": chunk.filename,
+                    "title": source_title(chunk),
                     "chunk_index": chunk.chunk_index,
                     "source_url": source_url,
                     "score": chunk.rerank_score,

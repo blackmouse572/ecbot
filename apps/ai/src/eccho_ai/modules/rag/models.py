@@ -44,6 +44,8 @@ class RAGRetrieveRequest(BaseModel):
 class RAGUrlIngestRequest(BaseModel):
     url: str
     knowledge_item_id: str
+    # The knowledge item's name, shown to operators as the source (#204).
+    title: str | None = None
     chatbot_ids: list[str] = Field(default_factory=list)
     knowledge_base_id: str | None = None
     chunk_size: int | None = None

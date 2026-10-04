@@ -90,6 +90,7 @@ export function ChatbotDetails() {
             transport={chatTransport}
             canSubmit={!!token}
             renderHeaderActions={<ChatbotShareDialog chatbotId={chatbot.id} />}
+            showKnowledgeSources
           />
         </TwoColumnPage.Sidebar>
       </TwoColumnPage>

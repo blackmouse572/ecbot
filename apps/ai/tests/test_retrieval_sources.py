@@ -24,3 +24,22 @@ def test_web_page_keeps_its_source_url():
     assert "url=https://shop.vn/doi-tra" in context
     result = RAGRetrievalResult(query="q", chunks=[chunk], context=context)
     assert result.source_attributions[0]["source_url"] == "https://shop.vn/doi-tra"
+
+
+# #204: operators see every source as "KB-n · <title>", never the storage name.
+def test_source_has_the_knowledge_item_title():
+    chunk = _chunk({"title": "Chính sách đổi trả"}, {"source": "1790661848627-kunmart-doi-tra.docx"})
+    result = RAGRetrievalResult(query="q", chunks=[chunk], context="")
+    assert result.source_attributions[0]["title"] == "Chính sách đổi trả"
+
+
+def test_web_page_falls_back_to_its_page_title():
+    chunk = _chunk({"source_url": "https://shop.vn/doi-tra"}, {"title": "Đổi trả | Kunmart"})
+    result = RAGRetrievalResult(query="q", chunks=[chunk], context="")
+    assert result.source_attributions[0]["title"] == "Đổi trả | Kunmart"
+
+
+def test_old_upload_without_title_reads_its_name_without_the_storage_prefix():
+    chunk = _chunk({}, {})
+    result = RAGRetrievalResult(query="q", chunks=[chunk], context="")
+    assert result.source_attributions[0]["title"] == "kunmart-doi-tra"
