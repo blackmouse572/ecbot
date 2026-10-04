@@ -4,14 +4,23 @@ import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { PolicyAbilityFactory } from "@repo/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { promptFn, logoutFn, refreshMutateAsync, requestFn, mockUseMe } =
-  vi.hoisted(() => ({
-    promptFn: vi.fn(),
-    logoutFn: vi.fn(),
-    refreshMutateAsync: vi.fn(),
-    requestFn: vi.fn(),
-    mockUseMe: vi.fn(),
-  }));
+const {
+  promptFn,
+  logoutFn,
+  refreshMutateAsync,
+  requestFn,
+  mockUseMe,
+  endImpersonation,
+  impersonationMock,
+} = vi.hoisted(() => ({
+  promptFn: vi.fn(),
+  logoutFn: vi.fn(),
+  refreshMutateAsync: vi.fn(),
+  requestFn: vi.fn(),
+  mockUseMe: vi.fn(),
+  endImpersonation: vi.fn(),
+  impersonationMock: { current: null as unknown },
+}));
 
 let capturedErrorHandler: ((error: A) => A) | null = null;
 
@@ -52,6 +61,12 @@ vi.mock("@/hooks/api", () => ({
   USER_BLOCKED_FORBIDDEN_STATUS_CODE: 5159,
 }));
 
+vi.mock("@/modules/impersonation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/impersonation/state")>()),
+  useImpersonation: () => impersonationMock.current,
+  useEndImpersonation: () => endImpersonation,
+}));
+
 import { useRefreshTokenEffect, useUserAbility } from "./hooks";
 import { logoutGuard } from "./state";
 
@@ -70,6 +85,8 @@ describe("useRefreshTokenEffect", () => {
     logoutFn.mockReset();
     refreshMutateAsync.mockReset();
     requestFn.mockReset();
+    endImpersonation.mockReset();
+    impersonationMock.current = null;
     capturedErrorHandler = null;
     logoutGuard.current = false;
   });
@@ -225,6 +242,42 @@ describe("useRefreshTokenEffect", () => {
 
     expect(refreshMutateAsync).not.toHaveBeenCalled();
     expect(logoutFn).not.toHaveBeenCalled();
+  });
+
+  it("ends impersonation instead of refreshing on a 401 while impersonating", async () => {
+    impersonationMock.current = {
+      accessToken: "imp",
+      expiresAt: Date.now() + 1000,
+      impersonatedBy: "a",
+      user: { id: "u1", name: "A", email: "a@x.com" },
+    };
+
+    renderHook(() => useRefreshTokenEffect(), { wrapper });
+    expect(capturedErrorHandler).toBeTruthy();
+
+    await capturedErrorHandler!(fakeAxiosError).catch(() => {});
+
+    expect(endImpersonation).toHaveBeenCalledWith("expired");
+    expect(refreshMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("does not loop on a 401 from the impersonate/end call itself", async () => {
+    impersonationMock.current = {
+      accessToken: "imp",
+      expiresAt: Date.now() + 1000,
+      impersonatedBy: "a",
+      user: { id: "u1", name: "A", email: "a@x.com" },
+    };
+
+    renderHook(() => useRefreshTokenEffect(), { wrapper });
+
+    await capturedErrorHandler!({
+      ...fakeAxiosError,
+      request: { responseURL: "/api/v1/shared/auth/impersonate/end" },
+    }).catch(() => {});
+
+    expect(endImpersonation).not.toHaveBeenCalled();
+    expect(refreshMutateAsync).not.toHaveBeenCalled();
   });
 });
 

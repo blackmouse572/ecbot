@@ -11,12 +11,18 @@ import {
   type PolicyAbility,
 } from "@repo/auth";
 import { client, type AuthRefreshResponseDto } from "@repo/client";
+import {
+  impersonationAtom,
+  useEndImpersonation,
+  useImpersonation,
+} from "@/modules/impersonation";
 import { usePrompt } from "@medusajs/ui";
 import { useAtom, useAtomValue } from "jotai/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
 import { loginRedirectPath } from "./login-redirect";
+import { pickAuthToken } from "./pick-auth-token";
 import { logoutGuard, tokenAtom } from "./state";
 
 // Module-level singletons: ensure only one refresh request is in-flight at a
@@ -26,8 +32,9 @@ let pendingRefresh: Promise<AuthRefreshResponseDto | null> | null = null;
 let lastRefreshErrorStatusCode: number | null = null;
 
 export const useAuthToken = () => {
+  const impersonation = useAtomValue(impersonationAtom);
   const token = useAtomValue(tokenAtom);
-  return token;
+  return pickAuthToken(impersonation, token);
 };
 export const useAuth = () => {
   return useAtom(tokenAtom);
@@ -44,6 +51,13 @@ export const useRefreshTokenEffect = () => {
   locationRef.current = location;
   const prompt = usePrompt();
   const { t } = useTranslation();
+  // The interceptor is registered once, so it reads these through refs.
+  const impersonation = useImpersonation();
+  const endImpersonation = useEndImpersonation();
+  const impersonationRef = useRef(impersonation);
+  const endImpersonationRef = useRef(endImpersonation);
+  impersonationRef.current = impersonation;
+  endImpersonationRef.current = endImpersonation;
   const getRefreshToken: () => Promise<AuthRefreshResponseDto | null> =
     async () => {
       try {
@@ -113,8 +127,15 @@ export const useRefreshTokenEffect = () => {
         if (
           error.response?.status === 401 &&
           !error.request?.responseURL?.includes("/shared/auth/refresh") &&
+          !error.request?.responseURL?.includes("/impersonate/end") &&
           !logoutGuard.current
         ) {
+          // While impersonating there is no refresh cookie and renewal is
+          // unwanted: a 401 ends the impersonation session instead.
+          if (impersonationRef.current) {
+            void endImpersonationRef.current("expired");
+            return Promise.reject(error);
+          }
           // Deduplicate concurrent refresh calls: if a refresh is already
           // in-flight, reuse its promise instead of firing another request.
           return interceptResponse(error);

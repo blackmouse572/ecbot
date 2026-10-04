@@ -51,6 +51,7 @@ exports[`route map — public table > matches the path list captured from main b
   "/:workspaceSlug/tools/new/mcp",
   "/auth/:platform/callback",
   "/forgot-password",
+  "/impersonate",
   "/join",
   "/login",
   "/onboard",

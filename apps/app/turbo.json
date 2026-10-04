@@ -6,6 +6,7 @@
       "env": [
         "VITE_API_KEY",
         "VITE_API_KEY_SECRET",
+        "VITE_ADMIN_URL",
         "VITE_API_URL",
         "VITE_ECCHO_EDITION",
         "VITE_FACEBOOK_APP_ID",

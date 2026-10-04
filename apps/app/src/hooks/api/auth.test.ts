@@ -4,12 +4,20 @@ import { createElement, type PropsWithChildren } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { logoutFn, setAuthFn, setLastWorkspaceSlugFn, navigateFn } =
-  vi.hoisted(() => ({
+const {
+  logoutFn,
+  setAuthFn,
+  setLastWorkspaceSlugFn,
+  navigateFn,
+  endImpersonationFn,
+  impersonationMock,
+} = vi.hoisted(() => ({
     logoutFn: vi.fn(),
     setAuthFn: vi.fn(),
     setLastWorkspaceSlugFn: vi.fn(),
     navigateFn: vi.fn(),
+    endImpersonationFn: vi.fn(),
+    impersonationMock: { current: null as unknown },
   }));
 
 vi.mock("@repo/client", () => ({
@@ -19,6 +27,11 @@ vi.mock("@repo/client", () => ({
 vi.mock("@/modules/auth", () => ({
   useAuth: () => [null, setAuthFn],
   logoutGuard: { current: false },
+}));
+
+vi.mock("@/modules/impersonation", () => ({
+  useImpersonation: () => impersonationMock.current,
+  useEndImpersonation: () => endImpersonationFn,
 }));
 
 vi.mock("@/modules/workspace", () => ({
@@ -48,6 +61,8 @@ describe("useLogout", () => {
     setAuthFn.mockReset();
     setLastWorkspaceSlugFn.mockReset();
     navigateFn.mockReset();
+    endImpersonationFn.mockReset();
+    impersonationMock.current = null;
     logoutGuard.current = false;
   });
 
@@ -100,5 +115,21 @@ describe("useLogout", () => {
     await result.current({ to: "/goodbye" });
 
     expect(navigateFn).toHaveBeenCalledWith("/goodbye");
+  });
+
+  it("ends an active impersonation instead of calling the cookie logout", async () => {
+    impersonationMock.current = {
+      accessToken: "imp",
+      expiresAt: Date.now() + 1000,
+      impersonatedBy: "a",
+      user: { id: "u1", name: "A", email: "a@x.com" },
+    };
+
+    const { result } = renderHook(() => useLogout(), { wrapper });
+    await result.current();
+
+    expect(endImpersonationFn).toHaveBeenCalledWith("manual");
+    expect(logoutFn).not.toHaveBeenCalled();
+    expect(setAuthFn).not.toHaveBeenCalled();
   });
 });
