@@ -5,6 +5,7 @@
         "requiredParseFirst": "Vui lòng phân tích dữ liệu trước khi tiếp tục.",
         "required": "Trường này là bắt buộc và không được để trống.",
         "empty": "Tệp trống.",
-        "contentMismatch": "Nội dung tệp không khớp với loại tệp."
+        "contentMismatch": "Nội dung tệp không khớp với loại tệp.",
+        "textNotUtf8": "Tệp văn bản không ở dạng UTF-8. Hãy lưu lại tệp ở dạng UTF-8 rồi tải lên lần nữa."
     }
 }

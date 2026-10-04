@@ -5,6 +5,7 @@
         "requiredParseFirst": "Please parse the data before proceeding.",
         "required": "This field is required and cannot be left blank.",
         "empty": "The file is empty.",
-        "contentMismatch": "The file's content does not match its type."
+        "contentMismatch": "The file's content does not match its type.",
+        "textNotUtf8": "The text file is not UTF-8. Save it as UTF-8 and upload it again."
     }
 }

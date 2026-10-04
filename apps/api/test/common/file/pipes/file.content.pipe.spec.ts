@@ -76,4 +76,41 @@ describe('FileContentPipe', () => {
 
         await expect(pipe.transform(real)).resolves.toBe(real);
     });
+
+    // PDF readers accept the header anywhere in the first 1024 bytes.
+    it('accepts a PDF whose header follows a few leading bytes', async () => {
+        const pdf = file(
+            ENUM_FILE_MIME_DOCUMENT.PDF,
+            Buffer.from('\r\n%PDF-1.7\n...')
+        );
+
+        await expect(pipe.transform(pdf)).resolves.toBe(pdf);
+    });
+
+    // Windows Notepad's "Unicode" is UTF-16; the AI side reads text as UTF-8.
+    it('asks for UTF-8 when a text file is UTF-16', async () => {
+        const utf16 = Buffer.concat([
+            Buffer.from([0xff, 0xfe]),
+            Buffer.from('Menu', 'utf16le'),
+        ]);
+        const result = pipe.transform(file(ENUM_FILE_MIME_DOCUMENT.TXT, utf16));
+
+        await expect(result).rejects.toBeInstanceOf(
+            UnsupportedMediaTypeException
+        );
+        await expect(result).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_FILE_STATUS_CODE_ERROR.TEXT_NOT_UTF8,
+                message: 'file.error.textNotUtf8',
+            },
+        });
+    });
+
+    it('checks a text type that carries a charset parameter', async () => {
+        await expect(
+            pipe.transform(
+                file('text/plain; charset=utf-8', Buffer.from('MZ\x00\x00'))
+            )
+        ).rejects.toBeInstanceOf(UnsupportedMediaTypeException);
+    });
 });
