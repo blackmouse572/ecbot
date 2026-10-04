@@ -303,6 +303,23 @@ describe('WorkspaceMemberService', () => {
             expect(mockInvitationService.accept).not.toHaveBeenCalled();
         });
 
+        it('keeps the generic message when the caller no longer exists', async () => {
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'someone@mail.com',
+                role: { id: roleId },
+            });
+            mockUserService.findOneById.mockResolvedValue(null);
+
+            await expect(
+                service.joinWorkspaceViaInvitation('token', userId)
+            ).rejects.toMatchObject({
+                response: { message: 'workspace.member.join.invalid' },
+            });
+        });
+
         it('should reject with 404 when no invitation row matches the token', async () => {
             mockInvitationService.findOneByToken.mockResolvedValue(null);
 

@@ -341,8 +341,15 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         // authenticated as that exact user — never someone who merely knows
         // the token. Compare against the caller's own (JWT-authenticated) id.
         const caller = await this.userService.findOneById(userId);
+        if (!caller) {
+            // 403, not 401: apps/app retries a 401 as an expired session.
+            throw new ForbiddenException({
+                statusCode:
+                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
+                message: 'workspace.member.join.invalid',
+            });
+        }
         if (
-            !caller ||
             caller.email.toLowerCase() !== invitation.inviteeEmail.toLowerCase()
         ) {
             // 403, not 401: apps/app retries a 401 as an expired session.

@@ -393,6 +393,9 @@
     "success": {
       "title": "Workspace joined",
       "description": "Congratulations! You have successfully joined the workspace."
+    },
+    "actions": {
+      "switchAccount": "Sign in with another account"
     }
   },
   "accounts": {

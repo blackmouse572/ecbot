@@ -125,4 +125,27 @@ describe("JoinForm", () => {
       await screen.findByText("The invitation link is invalid"),
     ).toBeInTheDocument();
   });
+
+  // #184: the invitation is for another account; offer to switch rather
+  // than only "Home".
+  it("offers to sign in with another account when the invite is for someone else", async () => {
+    join.answers = [
+      () =>
+        Promise.reject(
+          apiError(
+            403,
+            5214,
+            "This invitation was sent to a different email address.",
+          ),
+        ),
+    ];
+
+    renderJoin();
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Sign in with another account",
+      }),
+    ).toBeInTheDocument();
+  });
 });

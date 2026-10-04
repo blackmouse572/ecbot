@@ -418,6 +418,9 @@
     "success": {
       "title": "Chào mừng bạn đến với đội! 🎉",
       "description": "Chúc mừng! Bạn đã tham gia không gian làm việc thành công. Hãy bắt đầu làm việc nhóm thôi!"
+    },
+    "actions": {
+      "switchAccount": "Đăng nhập bằng tài khoản khác"
     }
   },
   "accounts": {
