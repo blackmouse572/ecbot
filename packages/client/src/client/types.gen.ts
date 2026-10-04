@@ -592,6 +592,40 @@ export type AuthLoginRequestDto = {
     rememberMe?: boolean;
 };
 
+export type AuthImpersonateResponseDto = {
+    /**
+     * Single-use hand-off code
+     */
+    code: string;
+    /**
+     * Seconds
+     */
+    expiresIn: number;
+};
+
+export type AuthImpersonateExchangeRequestDto = {
+    /**
+     * Single-use hand-off code
+     */
+    code: string;
+};
+
+export type AuthImpersonateExchangeResponseDto = {
+    tokenType: string;
+    roleType: 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'WORKSPACE_OWNER' | 'WORKSPACE_MEMBER';
+    expiresIn: number;
+    accessToken: string;
+    /**
+     * Acting admin user id
+     */
+    impersonatedBy: string;
+    user: {
+        id: string;
+        name: string;
+        email: string;
+    };
+};
+
 export type AuthSignUpResponseDto = {
     userId: string;
 };
@@ -6504,6 +6538,77 @@ export type AuthPublicControllerLoginWithCredentialV1Responses = {
 
 export type AuthPublicControllerLoginWithCredentialV1Response = AuthPublicControllerLoginWithCredentialV1Responses[keyof AuthPublicControllerLoginWithCredentialV1Responses];
 
+export type AuthPublicControllerImpersonateExchangeV1Data = {
+    body: AuthImpersonateExchangeRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/public/auth/impersonate/exchange';
+};
+
+export type AuthPublicControllerImpersonateExchangeV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthPublicControllerImpersonateExchangeV1Error = AuthPublicControllerImpersonateExchangeV1Errors[keyof AuthPublicControllerImpersonateExchangeV1Errors];
+
+export type AuthPublicControllerImpersonateExchangeV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthImpersonateExchangeResponseDto;
+    };
+};
+
+export type AuthPublicControllerImpersonateExchangeV1Response = AuthPublicControllerImpersonateExchangeV1Responses[keyof AuthPublicControllerImpersonateExchangeV1Responses];
+
 export type AuthPublicControllerLoginWithGoogleV1Data = {
     body?: never;
     headers?: {
@@ -12146,6 +12251,85 @@ export type UserAdminControllerUpdateStatusV1Responses = {
 
 export type UserAdminControllerUpdateStatusV1Response = UserAdminControllerUpdateStatusV1Responses[keyof UserAdminControllerUpdateStatusV1Responses];
 
+export type UserAdminControllerImpersonateV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        user: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/user/impersonate/{user}';
+};
+
+export type UserAdminControllerImpersonateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserAdminControllerImpersonateV1Error = UserAdminControllerImpersonateV1Errors[keyof UserAdminControllerImpersonateV1Errors];
+
+export type UserAdminControllerImpersonateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthImpersonateResponseDto;
+    };
+};
+
+export type UserAdminControllerImpersonateV1Response = UserAdminControllerImpersonateV1Responses[keyof UserAdminControllerImpersonateV1Responses];
+
 export type AuthAdminControllerUpdatePasswordV1Data = {
     body?: never;
     headers?: {
@@ -15081,6 +15265,72 @@ export type AuthSharedControllerChangePasswordV1Responses = {
 };
 
 export type AuthSharedControllerChangePasswordV1Response = AuthSharedControllerChangePasswordV1Responses[keyof AuthSharedControllerChangePasswordV1Responses];
+
+export type AuthSharedControllerImpersonateEndV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared/auth/impersonate/end';
+};
+
+export type AuthSharedControllerImpersonateEndV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthSharedControllerImpersonateEndV1Error = AuthSharedControllerImpersonateEndV1Errors[keyof AuthSharedControllerImpersonateEndV1Errors];
+
+export type AuthSharedControllerImpersonateEndV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthSharedControllerImpersonateEndV1Response = AuthSharedControllerImpersonateEndV1Responses[keyof AuthSharedControllerImpersonateEndV1Responses];
 
 export type CountrySharedControllerListPublicV1Data = {
     body?: never;
