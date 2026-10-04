@@ -84,9 +84,15 @@ describe("QuestionTurn handoff step", () => {
       />,
     );
 
-    expect(screen.getByText(/notification/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "When should your agent hand the chat over to you? When it does, you and your team get a notification in the app (the bell at the top) with a link to the chat.",
+      ),
+    ).toBeInTheDocument();
     expect(
       i18n.t("agentBuilder.questions.handoffWhen.ask", { lng: "vi" }),
-    ).toMatch(/thông báo/i);
+    ).toBe(
+      "Khi nào agent nên chuyển cuộc trò chuyện cho bạn? Khi đó, bạn và đội ngũ sẽ nhận thông báo trong ứng dụng (biểu tượng chuông ở trên cùng) kèm đường dẫn tới cuộc trò chuyện.",
+    );
   });
 });
