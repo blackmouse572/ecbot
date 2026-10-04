@@ -1,3 +1,4 @@
+import { migrateProfile } from "./migrate-profile";
 import { getBusinessType } from "./business-types";
 import {
   ADDRESS_STYLE, AFTER_HOURS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
@@ -40,7 +41,8 @@ function section(title: string, body: string[]): string {
   return lines.length ? `## ${title}\n${lines.join("\n")}` : "";
 }
 
-export function compilePrompt(profile: AgentProfile, options: CompileOptions = {}): string {
+export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}): string {
+  const profile = migrateProfile(stored);
   const type = getBusinessType(profile.businessType);
   const agent = plain(profile.agentName) || "the assistant";
   const business = plain(profile.businessName) || (type.personal ? "the owner" : "the business");

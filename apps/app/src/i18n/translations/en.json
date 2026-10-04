@@ -393,6 +393,9 @@
     "success": {
       "title": "Workspace joined",
       "description": "Congratulations! You have successfully joined the workspace."
+    },
+    "actions": {
+      "switchAccount": "Sign in with another account"
     }
   },
   "accounts": {
@@ -1102,7 +1105,7 @@
       },
       "handoffWhen": {
         "title": "When should it pass the chat to you?",
-        "ask": "When should your agent hand the chat over to you?",
+        "ask": "When should your agent hand the chat over to you? When it does, you and your team get a notification in the app (the bell at the top) with a link to the chat.",
         "lead": "Hand over to me when:"
       },
       "rules": {

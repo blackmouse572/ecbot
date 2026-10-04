@@ -1,10 +1,12 @@
-import { useJoinWorkspace } from "@/hooks/api";
+import { useJoinWorkspace, useLogout } from "@/hooks/api";
+import { loginRedirectPath } from "@/modules/auth/login-redirect";
+import { INVITATION_OTHER_ACCOUNT_STATUS_CODE } from "../../constants";
 import { House } from "@medusajs/icons";
 import { Button, Text } from "@medusajs/ui";
 import { IconFaceIdError, IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 type JoinTabProps = {
   onJoinSuccess: () => void;
 };
@@ -19,6 +21,11 @@ export const JoinTab = ({ onJoinSuccess }: JoinTabProps) => {
   });
   const [search] = useSearchParams();
   const token = search.get("tokens");
+  const location = useLocation();
+  const logout = useLogout();
+  const forAnotherAccount =
+    (error as { statusCode?: number } | null)?.statusCode ===
+    INVITATION_OTHER_ACCOUNT_STATUS_CODE;
 
   // An invitation token is single-use: redeem it once, even when StrictMode
   // runs this effect twice. A second request would answer "already a member"
@@ -74,6 +81,14 @@ export const JoinTab = ({ onJoinSuccess }: JoinTabProps) => {
               {error?.message || t("errorBoundary.defaultMessage")}
             </Text>
             <div className="flex gap-4 py-4 items-center justify-center">
+              {forAnotherAccount && (
+                <Button
+                  variant="secondary"
+                  onClick={() => logout({ to: loginRedirectPath(location) })}
+                >
+                  {t("join.actions.switchAccount")}
+                </Button>
+              )}
               <Link to="/">
                 <Button>
                   <House />

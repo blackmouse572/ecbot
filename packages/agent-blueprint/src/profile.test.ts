@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { compilePrompt } from "./compile-prompt";
+import { migrateProfile } from "./migrate-profile";
 import { agentProfileSchema, applyPreset, createProfile, type AgentProfile } from "./profile";
 
 describe("createProfile", () => {
@@ -48,3 +50,43 @@ describe("agentProfileSchema", () => {
 // Compile-time check: unknown fact ids are not allowed
 // @ts-expect-error unknown fact ids are not allowed
 const _typo: AgentProfile["facts"] = { not_a_fact: "x" };
+
+// #155 dropped "delivery" from the online store preset; agents saved before
+// then still have their answer there, and it must not vanish from the prompt
+// or from the builder.
+describe("migrateProfile", () => {
+  const withFacts = (facts: AgentProfile["facts"]) => ({
+    ...createProfile("ecommerce", "en"),
+    facts,
+  });
+
+  it("moves an online store's old delivery answer into shipping", () => {
+    expect(
+      migrateProfile(withFacts({ delivery: "GHN, 2 to 3 days" })).facts
+        .shipping_fee,
+    ).toBe("GHN, 2 to 3 days");
+  });
+
+  it("keeps a shipping answer the owner already gave", () => {
+    expect(
+      migrateProfile(
+        withFacts({ delivery: "old", shipping_fee: "30k nationwide" }),
+      ).facts.shipping_fee,
+    ).toBe("30k nationwide");
+  });
+
+  it("leaves restaurants, which still ask about delivery, alone", () => {
+    const restaurant = {
+      ...createProfile("restaurant", "en"),
+      facts: { delivery: "Grab within 5 km" },
+    };
+
+    expect(migrateProfile(restaurant)).toEqual(restaurant);
+  });
+
+  it("keeps the old answer in the compiled prompt", () => {
+    expect(compilePrompt(withFacts({ delivery: "GHN, 2 to 3 days" }))).toContain(
+      "GHN, 2 to 3 days",
+    );
+  });
+});

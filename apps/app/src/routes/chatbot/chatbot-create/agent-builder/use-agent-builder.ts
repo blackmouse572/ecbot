@@ -1,5 +1,5 @@
 import {
-  applySuggestion, createProfile, type AgentProfile, type BusinessTypeId,
+  applySuggestion, createProfile, migrateProfile, type AgentProfile, type BusinessTypeId,
 } from "@repo/agent-blueprint";
 import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto } from "@repo/client";
 import { useCreateChatbot, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
@@ -71,7 +71,9 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
     if (!hydrateFrom?.agentProfile) return;
     if (hydratedId.current === hydrateFrom.id) return;
     hydratedId.current = hydrateFrom.id;
-    const profile = hydrateFrom.agentProfile as unknown as AgentProfile;
+    // An answer to a question the builder no longer asks shows in the one
+    // that replaced it (#155).
+    const profile = migrateProfile(hydrateFrom.agentProfile as unknown as AgentProfile);
     const accounts = (hydrateFrom.accounts ?? []).map((a) => ({ id: a.id, type: a.type, name: a.name }));
     lastSaved.current = JSON.stringify(toChatbotPayload(profile, extraInstructions, base));
     dispatch({ type: "hydrate", profile, chatbotId: hydrateFrom.id, finished: hydrateFrom.status === "active", accounts });

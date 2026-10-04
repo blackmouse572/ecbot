@@ -418,6 +418,9 @@
     "success": {
       "title": "Chào mừng bạn đến với đội! 🎉",
       "description": "Chúc mừng! Bạn đã tham gia không gian làm việc thành công. Hãy bắt đầu làm việc nhóm thôi!"
+    },
+    "actions": {
+      "switchAccount": "Đăng nhập bằng tài khoản khác"
     }
   },
   "accounts": {
@@ -1128,7 +1131,7 @@
       },
       "handoffWhen": {
         "title": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn?",
-        "ask": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn?",
+        "ask": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn? Khi đó, bạn và đội ngũ sẽ nhận thông báo trong ứng dụng (biểu tượng chuông ở trên cùng) kèm đường dẫn tới cuộc trò chuyện.",
         "lead": "Chuyển cho tôi khi:"
       },
       "rules": {

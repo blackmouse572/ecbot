@@ -1,3 +1,4 @@
+import { FileContentPipe } from 'src/common/file/pipes/file.content.pipe';
 import { ENUM_REQUEST_STATUS_CODE_ERROR } from 'src/common/request/enums/request.status-code.enum';
 import {
     PaginationQuery,
@@ -303,7 +304,8 @@ export class KnowledgeItemWorkspaceController {
                 ENUM_FILE_MIME_DOCUMENT.MD,
                 ENUM_FILE_MIME_DOCUMENT.TXT,
                 ENUM_FILE_MIME_DOCUMENT.HTML,
-            ])
+            ]),
+            new FileContentPipe()
         )
         file?: Express.Multer.File
     ): Promise<IResponse<DatabaseIdResponseDto>> {
