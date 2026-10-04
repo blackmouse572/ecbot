@@ -39,6 +39,8 @@ export class AuthService implements IAuthService {
     private readonly jwtRefreshTokenPublicKey: string;
     private readonly jwtRefreshTokenExpirationTime: number;
 
+    private readonly jwtImpersonateTokenExpirationTime: number;
+
     private readonly jwtPrefix: string;
     private readonly jwtAudience: string;
     private readonly jwtIssuer: string;
@@ -105,6 +107,10 @@ export class AuthService implements IAuthService {
             'auth.jwt.refreshToken.expirationTime'
         );
 
+        this.jwtImpersonateTokenExpirationTime = this.configService.get<number>(
+            'auth.jwt.impersonateToken.expirationTime'
+        );
+
         this.jwtPrefix = this.configService.get<string>('auth.jwt.prefix');
         this.jwtAudience = this.configService.get<string>('auth.jwt.audience');
         this.jwtIssuer = this.configService.get<string>('auth.jwt.issuer');
@@ -149,11 +155,12 @@ export class AuthService implements IAuthService {
 
     createAccessToken(
         subject: string,
-        payload: IAuthJwtAccessTokenPayload
+        payload: IAuthJwtAccessTokenPayload,
+        options?: { expiresIn?: number }
     ): string {
         return this.jwtService.sign(payload, {
             privateKey: this.jwtAccessTokenPrivateKey,
-            expiresIn: this.jwtAccessTokenExpirationTime,
+            expiresIn: options?.expiresIn ?? this.jwtAccessTokenExpirationTime,
             audience: this.jwtAudience,
             issuer: this.jwtIssuer,
             subject,
@@ -310,6 +317,49 @@ export class AuthService implements IAuthService {
             loginFrom,
             loginDate,
             rememberMe,
+        };
+    }
+
+    createPayloadImpersonationToken(
+        data: UserEntity,
+        session: string,
+        impersonatedBy: string
+    ): IAuthJwtAccessTokenPayload {
+        return {
+            user: data.id,
+            type: data.role.type,
+            role: data.role.id,
+            email: data.email,
+            session,
+            loginDate: this.helperDateService.create(),
+            loginFrom: ENUM_AUTH_LOGIN_FROM.IMPERSONATE,
+            impersonatedBy,
+        };
+    }
+
+    createImpersonationToken(
+        user: UserEntity,
+        session: string,
+        impersonatedBy: string
+    ): Omit<AuthLoginResponseDto, 'refreshToken'> {
+        const payloadAccessToken = this.createPayloadImpersonationToken(
+            user,
+            session,
+            impersonatedBy
+        );
+        const accessToken = this.createAccessToken(
+            user.id,
+            payloadAccessToken,
+            {
+                expiresIn: this.jwtImpersonateTokenExpirationTime,
+            }
+        );
+
+        return {
+            tokenType: this.jwtPrefix,
+            roleType: user.role.type,
+            expiresIn: this.jwtImpersonateTokenExpirationTime,
+            accessToken,
         };
     }
 

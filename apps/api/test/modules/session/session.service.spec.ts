@@ -23,9 +23,11 @@ describe('SessionService (geo + activity additions)', () => {
         backward: jest.fn(() => new Date('2026-07-07T11:59:00.000Z')),
     };
     const mockConfig = {
-        get: jest.fn((key: string) =>
-            key.includes('expirationTime') ? 3600 : 'x'
-        ),
+        get: jest.fn((key: string) => {
+            if (key === 'auth.jwt.impersonateToken.expirationTime') return 600;
+            if (key.includes('expirationTime')) return 3600;
+            return 'x';
+        }),
     };
     const mockCloudTasksClient = {
         enqueue: jest.fn(async () => undefined),
@@ -69,6 +71,73 @@ describe('SessionService (geo + activity additions)', () => {
             expect(created.ip).toBe('8.8.8.8');
             expect(created.country).toBeUndefined();
             expect(created.status).toBe(ENUM_SESSION_STATUS.ACTIVE);
+        });
+    });
+
+    describe('createImpersonation', () => {
+        it('creates an ACTIVE session flagged with impersonatedBy and a 10-min horizon', async () => {
+            const service = build();
+            mockDate.forward.mockReturnValueOnce(
+                new Date('2026-07-07T12:10:00.000Z')
+            );
+            const request: any = {
+                hostname: 'h',
+                ip: '8.8.8.8',
+                protocol: 'https',
+                originalUrl: '/v1/user/impersonate/u2',
+                method: 'POST',
+                headers: {},
+            };
+
+            await service.createImpersonation(request, {
+                user: 'u2',
+                impersonatedBy: 'admin-1',
+            });
+
+            const created = mockRepo.create.mock.calls[0][0];
+            expect(created.impersonatedBy).toBe('admin-1');
+            expect(created.status).toBe(ENUM_SESSION_STATUS.ACTIVE);
+            expect(created.expiredAt).toEqual(
+                new Date('2026-07-07T12:10:00.000Z')
+            );
+            // forward() called with the impersonation TTL (600s here), not the
+            // refresh-token TTL (3600s). Assert via Luxon's public Duration API.
+            const [, durationArg] = mockDate.forward.mock.calls[0] as any[];
+            expect(durationArg.as('seconds')).toBe(600);
+        });
+    });
+
+    describe('setLoginSession with overrideTtlMs', () => {
+        it('uses the override TTL when provided', async () => {
+            const service = build();
+
+            await service.setLoginSession(
+                { id: 'u2' } as any,
+                { id: 's2' } as any,
+                600_000
+            );
+
+            const [, , ttl] = mockCache.set.mock.calls[0] as any[];
+            expect(ttl).toBe(600_000);
+        });
+    });
+
+    describe('revokeIfActive', () => {
+        it('returns true and clears the login key when the UPDATE flips a row', async () => {
+            nativeUpdate.mockResolvedValueOnce(1);
+
+            await expect(build().revokeIfActive('s1')).resolves.toBe(true);
+
+            const [, filter, update] = nativeUpdate.mock.calls[0];
+            expect(filter).toEqual({ id: 's1', status: 'ACTIVE' });
+            expect(update).toMatchObject({ status: 'REVOKED' });
+            expect(mockCache.del).toHaveBeenCalled();
+        });
+
+        it('returns false when the session was no longer ACTIVE', async () => {
+            nativeUpdate.mockResolvedValueOnce(0);
+
+            await expect(build().revokeIfActive('s1')).resolves.toBe(false);
         });
     });
 

@@ -37,6 +37,7 @@ import {
 } from 'src/modules/auth/decorators/auth.jwt.decorator';
 import {
     AuthSharedChangePasswordDoc,
+    AuthSharedImpersonateEndDoc,
     AuthSharedLogoutDoc,
     AuthSharedRefreshDoc,
 } from 'src/modules/auth/docs/auth.shared.doc';
@@ -46,6 +47,7 @@ import {
     IAuthJwtAccessTokenPayload,
     IAuthJwtRefreshTokenPayload,
 } from 'src/modules/auth/interfaces/auth.interface';
+import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
 import { ENUM_PASSWORD_HISTORY_TYPE } from 'src/modules/password-history/enums/password-history.enum';
@@ -290,5 +292,41 @@ export class AuthSharedController {
                 _error: err,
             });
         }
+    }
+
+    @AuthSharedImpersonateEndDoc()
+    @Response('auth.impersonateEnd')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @HttpCode(HttpStatus.OK)
+    @Post('/impersonate/end')
+    async impersonateEnd(
+        @AuthJwtPayload<IAuthJwtAccessTokenPayload>()
+        { user, session, impersonatedBy }: IAuthJwtAccessTokenPayload
+    ): Promise<IResponse<null>> {
+        if (!impersonatedBy) {
+            throw new ForbiddenException({
+                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.JWT_ACCESS_TOKEN,
+                message: 'auth.error.accessTokenUnauthorized',
+            });
+        }
+
+        // Only the caller whose UPDATE transitions ACTIVE -> REVOKED audits
+        // the end, so a double-click or concurrent end logs it once.
+        const revoked = await this.sessionService.revokeIfActive(session);
+        if (revoked) {
+            await this.activityService.createByAdmin(
+                this.em.getReference(UserEntity, user),
+                impersonatedBy,
+                {
+                    action: ENUM_ACTIVITY_ACTION.IMPERSONATE_END,
+                    subject: ENUM_POLICY_SUBJECT.USER,
+                    metadata: { session, reason: 'manual' },
+                }
+            );
+        }
+
+        return { data: null };
     }
 }

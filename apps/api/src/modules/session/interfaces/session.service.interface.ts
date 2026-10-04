@@ -53,6 +53,11 @@ export interface ISessionService {
         { user }: SessionCreateRequestDto,
         options?: IDatabaseCreateOptions
     ): Promise<SessionEntity>;
+    createImpersonation(
+        request: Request,
+        params: { user: string; impersonatedBy: string },
+        options?: IDatabaseCreateOptions
+    ): Promise<SessionEntity>;
     mapList(
         userLogins: SessionEntity[] | SessionEntity[]
     ): SessionListResponseDto[];
@@ -62,8 +67,13 @@ export interface ISessionService {
     ): SessionAdminListResponseDto[];
     touchLastActive(id: string): Promise<void>;
     findLoginSession(_id: string): Promise<string>;
-    setLoginSession(user: UserEntity, session: SessionEntity): Promise<void>;
+    setLoginSession(
+        user: UserEntity,
+        session: SessionEntity,
+        overrideTtlMs?: number
+    ): Promise<void>;
     deleteLoginSession(_id: string): Promise<void>;
+    revokeIfActive(id: string): Promise<boolean>;
     processDeleteLoginSession(session: string): Promise<void>;
     resetLoginSession(): Promise<void>;
     updateRevoke(

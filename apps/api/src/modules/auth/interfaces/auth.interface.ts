@@ -20,6 +20,8 @@ export interface IAuthJwtAccessTokenPayload {
     session: string;
     role: string;
     type: ENUM_POLICY_ROLE_TYPE;
+    // Set only on impersonation tokens — the acting admin's user id.
+    impersonatedBy?: string;
     iat?: number;
     nbf?: number;
     exp?: number;
@@ -30,7 +32,7 @@ export interface IAuthJwtAccessTokenPayload {
 
 export type IAuthJwtRefreshTokenPayload = Omit<
     IAuthJwtAccessTokenPayload,
-    'role' | 'type' | 'email'
+    'role' | 'type' | 'email' | 'impersonatedBy'
 > & {
     // Whether the refresh-token cookie should survive a browser restart.
     // Baked into the JWT at login so it round-trips through every silent

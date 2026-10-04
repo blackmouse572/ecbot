@@ -53,6 +53,20 @@ The Activity module is designed to be used across the application to track impor
     });
     ```
 
+### Impersonation activities
+
+`IMPERSONATE_START` / `IMPERSONATE_END` (subject `USER`) bracket an admin
+impersonation session. Written via `activityService.createByAdmin(targetUser, adminId, …)`.
+
+| Action | When | `metadata` |
+| --- | --- | --- |
+| `impersonate_start` | `POST /user/impersonate/:user` succeeds | `{ session, sessionExpiresAt, targetEmail }` |
+| `impersonate_end` | `POST /auth/impersonate/end` (Exit / countdown) | `{ session, reason: 'manual' }` |
+| `impersonate_end` | hourly sweep of a session that expired with no clean end | `{ session, reason: 'expired_swept' }` |
+
+The impersonation session itself is a row in `sessions` with `impersonated_by`
+set to the acting admin's id and `expired_at` 10 minutes out.
+
 ## Password History Module
 
 ### Overview

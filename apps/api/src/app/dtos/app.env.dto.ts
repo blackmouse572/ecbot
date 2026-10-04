@@ -200,6 +200,11 @@ export class AppEnvDto {
 
     @IsOptional()
     @IsString()
+    @MinLength(1)
+    AUTH_JWT_IMPERSONATE_TOKEN_EXPIRED?: string;
+
+    @IsOptional()
+    @IsString()
     AWS_S3_PUBLIC_CREDENTIAL_KEY?: string;
 
     @IsOptional()

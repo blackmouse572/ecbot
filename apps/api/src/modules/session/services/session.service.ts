@@ -32,6 +32,7 @@ const SESSION_ACTIVE_THROTTLE_SECONDS = 60;
 @Injectable()
 export class SessionService implements ISessionService {
     private readonly refreshTokenExpiration: number;
+    private readonly impersonateExpiration: number;
     private readonly appName: string;
 
     private readonly sessionKeyPrefix: string;
@@ -46,6 +47,9 @@ export class SessionService implements ISessionService {
     ) {
         this.refreshTokenExpiration = this.configService.get<number>(
             'auth.jwt.refreshToken.expirationTime'
+        )!;
+        this.impersonateExpiration = this.configService.get<number>(
+            'auth.jwt.impersonateToken.expirationTime'
         )!;
         this.appName = this.configService.get<string>('app.name')!;
 
@@ -165,6 +169,41 @@ export class SessionService implements ISessionService {
         return this.sessionRepository.create<SessionEntity>(create, options);
     }
 
+    async createImpersonation(
+        request: Request,
+        { user, impersonatedBy }: { user: string; impersonatedBy: string },
+        options?: IDatabaseCreateOptions
+    ): Promise<SessionEntity> {
+        const today = this.helperDateService.create();
+        const expiredAt: Date = this.helperDateService.forward(
+            today,
+            Duration.fromObject({
+                seconds: this.impersonateExpiration,
+            })
+        );
+
+        const create = new SessionEntity();
+        create.user = this.sessionRepository
+            .getEntityManager()
+            .getReference(UserEntity, user);
+        create.impersonatedBy = impersonatedBy;
+        create.hostname = request.hostname;
+        create.ip = request.ip ?? '0.0.0.0';
+        create.protocol = request.protocol;
+        create.originalUrl = request.originalUrl;
+        create.method = request.method;
+
+        create.userAgent = request.headers['user-agent'] as string;
+        create.xForwardedFor = request.headers['x-forwarded-for'] as string;
+        create.xForwardedHost = request.headers['x-forwarded-host'] as string;
+        create.xForwardedPorto = request.headers['x-forwarded-porto'] as string;
+
+        create.status = ENUM_SESSION_STATUS.ACTIVE;
+        create.expiredAt = expiredAt;
+
+        return this.sessionRepository.create<SessionEntity>(create, options);
+    }
+
     // Bump lastActiveAt on the current session. Runs on every authenticated
     // request, so it is gated by a short-lived cache key: within the throttle
     // window a cheap cache hit short-circuits before any DB round-trip.
@@ -227,7 +266,8 @@ export class SessionService implements ISessionService {
 
     async setLoginSession(
         user: UserEntity,
-        session: SessionEntity
+        session: SessionEntity,
+        overrideTtlMs?: number
     ): Promise<void> {
         this.logger.debug(`Setting login for user [${user.id}]`);
         const key = `${this.appName}:${this.sessionKeyPrefix}:${session.id}`;
@@ -237,7 +277,7 @@ export class SessionService implements ISessionService {
         await this.cacheManager.set(
             key,
             { user: user.id },
-            this.refreshTokenExpiration * 1000
+            overrideTtlMs ?? this.refreshTokenExpiration * 1000
         );
 
         return;
@@ -267,6 +307,25 @@ export class SessionService implements ISessionService {
         await this.sessionRepository.getEntityManager().flush();
 
         return repository;
+    }
+
+    // Atomic ACTIVE -> REVOKED transition: true only for the caller whose
+    // UPDATE actually flipped the row, so concurrent callers can't both
+    // report (and audit) the same revoke.
+    async revokeIfActive(id: string): Promise<boolean> {
+        const affected = await this.sessionRepository
+            .getEntityManager()
+            .nativeUpdate(
+                SessionEntity,
+                { id, status: ENUM_SESSION_STATUS.ACTIVE },
+                {
+                    status: ENUM_SESSION_STATUS.REVOKED,
+                    revokeAt: this.helperDateService.create(),
+                }
+            );
+        await this.deleteLoginSession(id);
+
+        return affected > 0;
     }
 
     async processDeleteLoginSession(session: string): Promise<void> {

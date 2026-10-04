@@ -52,3 +52,16 @@ export function AuthSharedChangePasswordDoc(): MethodDecorator {
         DocResponse('auth.changePassword')
     );
 }
+
+export function AuthSharedImpersonateEndDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'end an impersonation session',
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocResponse('auth.impersonateEnd')
+    );
+}

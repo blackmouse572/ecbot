@@ -4,12 +4,13 @@ import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { AuthJwtAccessStrategy } from 'src/modules/auth/guards/jwt/strategies/auth.jwt.access.strategy';
 import { AuthJwtRefreshStrategy } from 'src/modules/auth/guards/jwt/strategies/auth.jwt.refresh.strategy';
 import { AuthService } from 'src/modules/auth/services/auth.service';
+import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
 import { SessionModule } from 'src/modules/session/session.module';
 import { Algorithm } from 'jsonwebtoken';
 
 @Module({
-    providers: [AuthService],
-    exports: [AuthService],
+    providers: [AuthService, ImpersonationService],
+    exports: [AuthService, ImpersonationService],
     controllers: [],
     imports: [
         JwtModule.registerAsync({
