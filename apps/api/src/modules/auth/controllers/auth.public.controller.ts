@@ -19,6 +19,7 @@ import {
     Post,
     Req,
     Res,
+    UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -38,19 +39,24 @@ import {
     AuthSocialGoogleProtected,
 } from 'src/modules/auth/decorators/auth.social.decorator';
 import {
+    AuthPublicImpersonateExchangeDoc,
     AuthPublicLoginCredentialDoc,
     AuthPublicLoginSocialAppleDoc,
     AuthPublicLoginSocialGoogleDoc,
     AuthPublicSignUpDoc,
 } from 'src/modules/auth/docs/auth.public.doc';
+import { AuthImpersonateExchangeRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-exchange.request.dto';
 import { AuthLoginRequestDto } from 'src/modules/auth/dtos/request/auth.login.request.dto';
 import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
+import { AuthImpersonateExchangeResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate-exchange.response.dto';
 import { AuthLoginResponseDto } from 'src/modules/auth/dtos/response/auth.login.response.dto';
+import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import {
     IAuthSocialApplePayload,
     IAuthSocialGooglePayload,
 } from 'src/modules/auth/interfaces/auth.interface';
 import { AuthService } from 'src/modules/auth/services/auth.service';
+import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
 import { ENUM_COUNTRY_STATUS_CODE_ERROR } from 'src/modules/country/enums/country.status-code.enum';
 import { CountryService } from 'src/modules/country/services/country.service';
 import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
@@ -86,8 +92,41 @@ export class AuthPublicController {
         private readonly sessionService: SessionService,
         private readonly activityService: ActivityService,
         private readonly messageService: MessageService,
-        private readonly turnstileService: TurnstileService
+        private readonly turnstileService: TurnstileService,
+        private readonly impersonationService: ImpersonationService
     ) {}
+
+    @AuthPublicImpersonateExchangeDoc()
+    @Response('auth.impersonateExchange')
+    @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
+    @HttpCode(HttpStatus.OK)
+    @Post('/impersonate/exchange')
+    async impersonateExchange(
+        @Body() { code }: AuthImpersonateExchangeRequestDto
+    ): Promise<IResponse<AuthImpersonateExchangeResponseDto>> {
+        const value = await this.impersonationService.consume(code);
+        if (!value) {
+            throw new UnauthorizedException({
+                statusCode:
+                    ENUM_AUTH_STATUS_CODE_ERROR.IMPERSONATE_CODE_INVALID,
+                message: 'auth.error.impersonateCodeInvalid',
+            });
+        }
+
+        return {
+            data: {
+                tokenType: value.tokenType,
+                roleType:
+                    value.roleType as AuthImpersonateExchangeResponseDto['roleType'],
+                expiresIn: ImpersonationService.remainingSeconds(value),
+                sessionEndsAt: value.sessionEndsAt,
+                accessToken: value.accessToken,
+                impersonatedBy: value.impersonatedBy,
+                user: value.target,
+            },
+        };
+    }
 
     @AuthPublicLoginCredentialDoc()
     @Response('auth.loginWithCredential')

@@ -17,6 +17,10 @@ export class SessionEntity extends DatabaseEntityBase {
     @Property({ type: 'timestamptz', nullable: true })
     revokeAt?: Date;
 
+    // Set only on impersonation sessions — the acting admin's user id.
+    @Property({ type: 'uuid', nullable: true })
+    impersonatedBy?: string;
+
     @ManyToOne(() => UserEntity, { eager: false })
     user: UserEntity;
 

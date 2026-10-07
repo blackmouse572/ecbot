@@ -17,6 +17,8 @@ export const ROUTES = {
   ResetPassword: "reset-password",
   // Public, login-free chatbot preview behind a signed share link.
   SharedPreview: "preview/:token",
+  // Login-free bootstrap that exchanges an impersonation code, then redirects.
+  Impersonate: "impersonate",
   // Loaded inside the iframe that public/widget.js injects on a customer site.
   Widget: "widget/:key",
   Settings: "settings",

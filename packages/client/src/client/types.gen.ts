@@ -565,6 +565,38 @@ export type HelloResponseDto = {
     timestamp: number;
 };
 
+export type AuthImpersonateUserDto = {
+    id: string;
+    name: string;
+    email: string;
+};
+
+export type AuthImpersonateExchangeResponseDto = {
+    tokenType: string;
+    roleType: 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'WORKSPACE_OWNER' | 'WORKSPACE_MEMBER';
+    /**
+     * Seconds the token has left (measured from when it was minted, not from this response)
+     */
+    expiresIn: number;
+    accessToken: string;
+    /**
+     * Absolute end of the whole session (ms epoch); renewal stops here
+     */
+    sessionEndsAt: number;
+    /**
+     * Acting admin user id
+     */
+    impersonatedBy: string;
+    user: AuthImpersonateUserDto;
+};
+
+export type AuthImpersonateExchangeRequestDto = {
+    /**
+     * Single-use hand-off code
+     */
+    code: string;
+};
+
 export type AuthLoginResponseDto = {
     tokenType: string;
     roleType: 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'WORKSPACE_OWNER' | 'WORKSPACE_MEMBER';
@@ -1638,6 +1670,17 @@ export type UserUpdateStatusRequestDto = {
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
 };
 
+export type AuthImpersonateResponseDto = {
+    /**
+     * Single-use hand-off code
+     */
+    code: string;
+    /**
+     * Seconds
+     */
+    expiresIn: number;
+};
+
 export type SessionListResponseDto = {
     /**
      * Alias id of api key
@@ -1884,7 +1927,7 @@ export type ActivityListResponseDto = {
      */
     deletedBy?: UserMetaResponseDto;
     user: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable';
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     by: UserShortResponseDto;
     metadata?: {
@@ -2843,6 +2886,20 @@ export type AuthChangePasswordRequestDto = {
      * old string password
      */
     oldPassword: string;
+};
+
+export type AuthImpersonateRefreshResponseDto = {
+    tokenType: string;
+    roleType: 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'WORKSPACE_OWNER' | 'WORKSPACE_MEMBER';
+    /**
+     * Seconds the new access token is valid for (capped by the session lifetime)
+     */
+    expiresIn: number;
+    accessToken: string;
+    /**
+     * Absolute end of the whole session (ms epoch); renewal stops here
+     */
+    sessionEndsAt: number;
 };
 
 export type AccountProvisionApiChannelResponseDto = {
@@ -6432,6 +6489,77 @@ export type HelloPublicControllerHelloResponses = {
 };
 
 export type HelloPublicControllerHelloResponse = HelloPublicControllerHelloResponses[keyof HelloPublicControllerHelloResponses];
+
+export type AuthPublicControllerImpersonateExchangeV1Data = {
+    body: AuthImpersonateExchangeRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/public/auth/impersonate/exchange';
+};
+
+export type AuthPublicControllerImpersonateExchangeV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthPublicControllerImpersonateExchangeV1Error = AuthPublicControllerImpersonateExchangeV1Errors[keyof AuthPublicControllerImpersonateExchangeV1Errors];
+
+export type AuthPublicControllerImpersonateExchangeV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthImpersonateExchangeResponseDto;
+    };
+};
+
+export type AuthPublicControllerImpersonateExchangeV1Response = AuthPublicControllerImpersonateExchangeV1Responses[keyof AuthPublicControllerImpersonateExchangeV1Responses];
 
 export type AuthPublicControllerLoginWithCredentialV1Data = {
     body: AuthLoginRequestDto;
@@ -12146,6 +12274,85 @@ export type UserAdminControllerUpdateStatusV1Responses = {
 
 export type UserAdminControllerUpdateStatusV1Response = UserAdminControllerUpdateStatusV1Responses[keyof UserAdminControllerUpdateStatusV1Responses];
 
+export type UserAdminControllerImpersonateV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        user: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/user/impersonate/{user}';
+};
+
+export type UserAdminControllerImpersonateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserAdminControllerImpersonateV1Error = UserAdminControllerImpersonateV1Errors[keyof UserAdminControllerImpersonateV1Errors];
+
+export type UserAdminControllerImpersonateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthImpersonateResponseDto;
+    };
+};
+
+export type UserAdminControllerImpersonateV1Response = UserAdminControllerImpersonateV1Responses[keyof UserAdminControllerImpersonateV1Responses];
+
 export type AuthAdminControllerUpdatePasswordV1Data = {
     body?: never;
     headers?: {
@@ -15081,6 +15288,139 @@ export type AuthSharedControllerChangePasswordV1Responses = {
 };
 
 export type AuthSharedControllerChangePasswordV1Response = AuthSharedControllerChangePasswordV1Responses[keyof AuthSharedControllerChangePasswordV1Responses];
+
+export type AuthSharedControllerImpersonateEndV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared/auth/impersonate/end';
+};
+
+export type AuthSharedControllerImpersonateEndV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthSharedControllerImpersonateEndV1Error = AuthSharedControllerImpersonateEndV1Errors[keyof AuthSharedControllerImpersonateEndV1Errors];
+
+export type AuthSharedControllerImpersonateEndV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthSharedControllerImpersonateEndV1Response = AuthSharedControllerImpersonateEndV1Responses[keyof AuthSharedControllerImpersonateEndV1Responses];
+
+export type AuthSharedControllerImpersonateRefreshV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared/auth/impersonate/refresh';
+};
+
+export type AuthSharedControllerImpersonateRefreshV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthSharedControllerImpersonateRefreshV1Error = AuthSharedControllerImpersonateRefreshV1Errors[keyof AuthSharedControllerImpersonateRefreshV1Errors];
+
+export type AuthSharedControllerImpersonateRefreshV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthImpersonateRefreshResponseDto;
+    };
+};
+
+export type AuthSharedControllerImpersonateRefreshV1Response = AuthSharedControllerImpersonateRefreshV1Responses[keyof AuthSharedControllerImpersonateRefreshV1Responses];
 
 export type CountrySharedControllerListPublicV1Data = {
     body?: never;

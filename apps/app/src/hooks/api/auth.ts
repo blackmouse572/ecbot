@@ -1,4 +1,5 @@
 import { logoutGuard, useAuth } from "@/modules/auth";
+import { useEndImpersonation, useImpersonation } from "@/modules/impersonation";
 import { useSetLastWorkspaceSlug } from "@/modules/workspace";
 import {
   authPublicControllerLoginWithCredentialV1,
@@ -202,8 +203,19 @@ export const useLogout = () => {
   const navigate = useNavigate();
   const [_, setAuth] = useAuth();
   const queryClient = useQueryClient();
+  const impersonation = useImpersonation();
+  const endImpersonation = useEndImpersonation();
 
   const logout = async (options?: { to?: string }) => {
+    // An impersonation tab has no refresh cookie of its own: "log out" there
+    // means ending the impersonation (revokes the server session, clears the
+    // tab-scoped token, and returns to the admin portal), never a cookie
+    // logout that would hit the operator's own session.
+    if (impersonation) {
+      await endImpersonation();
+      return;
+    }
+
     logoutGuard.current = true;
     try {
       await authSharedControllerLogoutV1({

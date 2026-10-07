@@ -1,3 +1,4 @@
+import { ImpersonationBanner } from "@/components/layout/impersonation-banner";
 import { useWorkspaceList } from "@/hooks/api/workspace";
 import {
   loginRedirectPath,
@@ -63,6 +64,9 @@ export const ProtectedRoute = () => {
           {/* <SearchProvider> */}
           <Outlet />
           {/* </SearchProvider> */}
+          {/* Mounted here, not in a layout, so it also covers /onboard/* and
+              /join, which render outside MainLayout. */}
+          <ImpersonationBanner />
         </NavAccessProvider>
       </AbilityProvider>
     </SidebarProvider>

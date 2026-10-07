@@ -7,12 +7,16 @@ import {
     Body,
     ConflictException,
     Controller,
+    ForbiddenException,
     Get,
+    HttpCode,
+    HttpStatus,
     Logger,
     NotFoundException,
     Patch,
     Post,
     Put,
+    Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
@@ -24,6 +28,7 @@ import {
 } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
+import { IRequestApp } from 'src/common/request/interfaces/request.interface';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
 import {
     Response,
@@ -43,7 +48,9 @@ import {
     IAuthJwtRefreshTokenPayload,
     IAuthPassword,
 } from 'src/modules/auth/interfaces/auth.interface';
+import { AuthImpersonateResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate.response.dto';
 import { AuthService } from 'src/modules/auth/services/auth.service';
+import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
 import { ENUM_COUNTRY_STATUS_CODE_ERROR } from 'src/modules/country/enums/country.status-code.enum';
 import { CountryService } from 'src/modules/country/services/country.service';
 import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
@@ -60,6 +67,7 @@ import {
 } from 'src/modules/policy/enums/policy.enum';
 import { ENUM_ROLE_STATUS_CODE_ERROR } from 'src/modules/role/enums/role.status-code.enum';
 import { RoleService } from 'src/modules/role/services/role.service';
+import { SessionService } from 'src/modules/session/services/session.service';
 import {
     USER_DEFAULT_AVAILABLE_SEARCH,
     USER_DEFAULT_POLICY_ROLE_TYPE,
@@ -72,6 +80,7 @@ import {
 import {
     UserAdminCreateDoc,
     UserAdminGetDoc,
+    UserAdminImpersonateDoc,
     UserAdminListDoc,
     UserAdminUpdateDoc,
     UserAdminUpdateStatusDoc,
@@ -87,7 +96,10 @@ import {
 } from 'src/modules/user/enums/user.enum';
 import { ENUM_USER_STATUS_CODE_ERROR } from 'src/modules/user/enums/user.status-code.enum';
 import { UserNotSelfPipe } from 'src/modules/user/pipes/user.not-self.pipe';
-import { UserParsePipe } from 'src/modules/user/pipes/user.parse.pipe';
+import {
+    UserActiveParsePipe,
+    UserParsePipe,
+} from 'src/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { UserService } from 'src/modules/user/services/user.service';
 import { VerificationService } from 'src/modules/verification/services/verification.service';
@@ -108,6 +120,8 @@ export class UserAdminController {
         private readonly paginationService: PaginationService,
         private readonly roleService: RoleService,
         private readonly authService: AuthService,
+        private readonly impersonationService: ImpersonationService,
+        private readonly sessionService: SessionService,
         private readonly userService: UserService,
         private readonly countryService: CountryService,
         private readonly passwordHistoryService: PasswordHistoryService,
@@ -468,5 +482,102 @@ export class UserAdminController {
                 },
             },
         };
+    }
+
+    @UserAdminImpersonateDoc()
+    @Response('user.impersonate')
+    @PolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.USER,
+        action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
+    })
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @HttpCode(HttpStatus.OK)
+    @Post('/impersonate/:user')
+    async impersonate(
+        @UserParam(
+            'user',
+            RequestRequiredPipe,
+            UserActiveParsePipe,
+            UserNotSelfPipe
+        )
+        target: UserEntity,
+        @AuthJwtPayload('user') adminId: string,
+        @Req() request: IRequestApp
+    ): Promise<IResponse<AuthImpersonateResponseDto>> {
+        if (target.role.type !== ENUM_POLICY_ROLE_TYPE.USER) {
+            throw new ForbiddenException({
+                statusCode:
+                    ENUM_USER_STATUS_CODE_ERROR.IMPERSONATE_TARGET_INVALID,
+                message: 'user.error.impersonateTargetInvalid',
+            });
+        }
+        if (target.status !== ENUM_USER_STATUS.ACTIVE) {
+            throw new ForbiddenException({
+                statusCode:
+                    ENUM_USER_STATUS_CODE_ERROR.IMPERSONATE_TARGET_INVALID,
+                message: 'user.error.impersonateTargetInvalid',
+            });
+        }
+
+        const { session, issued } = await this.em.transactional(async em => {
+            const session = await this.sessionService.createImpersonation(
+                request,
+                { user: target.id, impersonatedBy: adminId },
+                { em }
+            );
+            // Only the holder of the newest nonce may renew the session.
+            const nonce = this.impersonationService.newNonce();
+            const issued = this.authService.createImpersonationToken(
+                target,
+                session.id,
+                adminId,
+                nonce
+            );
+            await this.sessionService.setLoginSession(
+                target,
+                session,
+                issued.expiresIn * 1000
+            );
+            await this.impersonationService.storeNonce(
+                session.id,
+                nonce,
+                issued.expiresIn * 1000
+            );
+            await this.activityService.createByAdmin(
+                target,
+                adminId,
+                {
+                    action: ENUM_ACTIVITY_ACTION.IMPERSONATE_START,
+                    subject: ENUM_POLICY_SUBJECT.USER,
+                    metadata: {
+                        session: session.id,
+                        sessionExpiresAt: session.expiredAt,
+                        targetEmail: target.email,
+                    },
+                },
+                { em }
+            );
+            return { session, issued };
+        });
+
+        const code = await this.impersonationService.issue({
+            ...issued,
+            expiresAt: Date.now() + issued.expiresIn * 1000,
+            sessionEndsAt: this.impersonationService.sessionEndsAt(
+                session.createdAt
+            ),
+            impersonatedBy: adminId,
+            session: session.id,
+            target: {
+                id: target.id,
+                name: target.name,
+                email: target.email,
+            },
+        });
+
+        return { data: { code, expiresIn: issued.expiresIn } };
     }
 }

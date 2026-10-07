@@ -7,6 +7,7 @@ vi.mock("@repo/client", () => ({
   client: { instance: { interceptors: { request: { use: requestUse } } } },
 }));
 
+import { impersonationAtom } from "@/modules/impersonation";
 import { tokenAtom } from "./state";
 import { registerAuthRequestInterceptor } from "./request-interceptor";
 
@@ -18,10 +19,41 @@ describe("registerAuthRequestInterceptor", () => {
   beforeEach(() => {
     requestUse.mockClear();
     getDefaultStore().set(tokenAtom, null);
+    getDefaultStore().set(impersonationAtom, null);
   });
 
   it("stamps Authorization from the current token synchronously", () => {
     getDefaultStore().set(tokenAtom, "my-token");
+    registerAuthRequestInterceptor();
+
+    const config = getRegisteredHandler()({ url: "/api/v1/user/me", headers: {} });
+
+    expect(config.headers.Authorization).toBe("Bearer my-token");
+  });
+
+  it("stamps the impersonation token over the real one while it is live", () => {
+    getDefaultStore().set(tokenAtom, "my-token");
+    getDefaultStore().set(impersonationAtom, {
+      accessToken: "imp-token",
+      expiresAt: Date.now() + 60_000,
+      impersonatedBy: "a",
+      user: { id: "u1", name: "A", email: "a@x.com" },
+    });
+    registerAuthRequestInterceptor();
+
+    const config = getRegisteredHandler()({ url: "/api/v1/user/me", headers: {} });
+
+    expect(config.headers.Authorization).toBe("Bearer imp-token");
+  });
+
+  it("falls back to the real token when the impersonation token expired", () => {
+    getDefaultStore().set(tokenAtom, "my-token");
+    getDefaultStore().set(impersonationAtom, {
+      accessToken: "imp-token",
+      expiresAt: Date.now() - 1,
+      impersonatedBy: "a",
+      user: { id: "u1", name: "A", email: "a@x.com" },
+    });
     registerAuthRequestInterceptor();
 
     const config = getRegisteredHandler()({ url: "/api/v1/user/me", headers: {} });

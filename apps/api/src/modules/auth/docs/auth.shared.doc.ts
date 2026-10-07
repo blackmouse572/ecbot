@@ -6,6 +6,7 @@ import {
     DocResponse,
 } from 'src/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
+import { AuthImpersonateRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate-refresh.response.dto';
 import { AuthChangePasswordRequestDto } from 'src/modules/auth/dtos/request/auth.change-password.request.dto';
 import { AuthRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.refresh.response.dto';
 
@@ -50,5 +51,34 @@ export function AuthSharedChangePasswordDoc(): MethodDecorator {
             dto: AuthChangePasswordRequestDto,
         }),
         DocResponse('auth.changePassword')
+    );
+}
+
+export function AuthSharedImpersonateEndDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'end an impersonation session',
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocResponse('auth.impersonateEnd')
+    );
+}
+
+export function AuthSharedImpersonateRefreshDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'renew an impersonation access token',
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocResponse<AuthImpersonateRefreshResponseDto>(
+            'auth.impersonateRefresh',
+            { dto: AuthImpersonateRefreshResponseDto }
+        )
     );
 }

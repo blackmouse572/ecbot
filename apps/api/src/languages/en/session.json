@@ -7,6 +7,7 @@
     },
     "error": {
         "notFound": "Sorry, we couldn't find the session.",
+        "expired": "This session has ended or reached its maximum length.",
         "forbiddenRevoke": "You cannot revoke your current session."
     }
 }

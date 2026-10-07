@@ -10,6 +10,7 @@
     "deleteSelf": "Người dùng đã được xóa thành công. Tạm biệt!",
     "updateMobileNumber": "Số điện thoại đã được cập nhật thành công.",
     "updateClaimUsername": "Tên người dùng đã được claim thành công! Bây giờ nó là của bạn rồi.",
+    "impersonate": "Đã bắt đầu phiên đăng nhập thay mặt người dùng.",
     "error": {
         "mobileNumberExist": "Số điện thoại này đã tồn tại rồi. Thử số khác xem?",
         "emailExist": "Email này đã có chủ rồi. Bạn có nhớ nhầm không?",
@@ -22,6 +23,7 @@
         "statusInvalid": "Trạng thái người dùng không hợp lệ.",
         "usernameExist": "Tên người dùng này đã được sử dụng rồi. Hãy nghĩ ra cái tên độc đáo hơn!",
         "emailNotVerified": "Email chưa được xác minh. Kiểm tra hộp thư xem?",
-        "photoKeyInvalid": "Key ảnh này không thuộc về bạn."
+        "photoKeyInvalid": "Key ảnh này không thuộc về bạn.",
+        "impersonateTargetInvalid": "Không thể đăng nhập thay mặt tài khoản này."
     }
 }

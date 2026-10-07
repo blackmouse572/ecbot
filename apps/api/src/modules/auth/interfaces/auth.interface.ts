@@ -20,6 +20,12 @@ export interface IAuthJwtAccessTokenPayload {
     session: string;
     role: string;
     type: ENUM_POLICY_ROLE_TYPE;
+    // Set only on impersonation tokens — the acting admin's user id.
+    impersonatedBy?: string;
+    // Set only on impersonation tokens: the newest token of the session. Only
+    // the holder of the latest nonce may renew, so a leaked older token cannot
+    // keep a session alive in parallel with the operator's tab.
+    impersonationNonce?: string;
     iat?: number;
     nbf?: number;
     exp?: number;
@@ -30,7 +36,7 @@ export interface IAuthJwtAccessTokenPayload {
 
 export type IAuthJwtRefreshTokenPayload = Omit<
     IAuthJwtAccessTokenPayload,
-    'role' | 'type' | 'email'
+    'role' | 'type' | 'email' | 'impersonatedBy' | 'impersonationNonce'
 > & {
     // Whether the refresh-token cookie should survive a browser restart.
     // Baked into the JWT at login so it round-trips through every silent

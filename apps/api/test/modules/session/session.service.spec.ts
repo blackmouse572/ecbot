@@ -6,7 +6,13 @@ describe('SessionService (geo + activity additions)', () => {
     const persist = jest.fn();
     const flush = jest.fn(async () => undefined);
     const getReference = jest.fn((_e: any, id: string) => ({ id }));
-    const em = { getReference, nativeUpdate, persist, flush };
+    const findOneOrFail = jest.fn();
+    const tem = { nativeUpdate, findOneOrFail, getReference };
+    const transactional = jest.fn(async (fn: (e: any) => Promise<unknown>) =>
+        fn(tem)
+    );
+    const em = { getReference, nativeUpdate, persist, flush, transactional };
+    const createByAdmin = jest.fn(async () => undefined);
 
     const mockRepo = {
         create: jest.fn(async (e: any) => e),
@@ -23,9 +29,13 @@ describe('SessionService (geo + activity additions)', () => {
         backward: jest.fn(() => new Date('2026-07-07T11:59:00.000Z')),
     };
     const mockConfig = {
-        get: jest.fn((key: string) =>
-            key.includes('expirationTime') ? 3600 : 'x'
-        ),
+        get: jest.fn((key: string) => {
+            if (key === 'auth.jwt.impersonateToken.expirationTime') return 600;
+            if (key === 'auth.jwt.impersonateSession.expirationTime')
+                return 28800;
+            if (key.includes('expirationTime')) return 3600;
+            return 'x';
+        }),
     };
     const mockCloudTasksClient = {
         enqueue: jest.fn(async () => undefined),
@@ -46,7 +56,8 @@ describe('SessionService (geo + activity additions)', () => {
             mockConfig as any,
             mockDate as any,
             mockRepo as any,
-            mockMessageService as any
+            mockMessageService as any,
+            { createByAdmin } as any
         );
 
     beforeEach(() => jest.clearAllMocks());
@@ -69,6 +80,200 @@ describe('SessionService (geo + activity additions)', () => {
             expect(created.ip).toBe('8.8.8.8');
             expect(created.country).toBeUndefined();
             expect(created.status).toBe(ENUM_SESSION_STATUS.ACTIVE);
+        });
+    });
+
+    describe('createImpersonation', () => {
+        it('creates an ACTIVE session flagged with impersonatedBy and a token-length horizon (rolling) ', async () => {
+            const service = build();
+            mockDate.forward.mockReturnValueOnce(
+                new Date('2026-07-07T12:10:00.000Z')
+            );
+            const request: any = {
+                hostname: 'h',
+                ip: '8.8.8.8',
+                protocol: 'https',
+                originalUrl: '/v1/user/impersonate/u2',
+                method: 'POST',
+                headers: {},
+            };
+
+            await service.createImpersonation(request, {
+                user: 'u2',
+                impersonatedBy: 'admin-1',
+            });
+
+            const created = mockRepo.create.mock.calls[0][0];
+            expect(created.impersonatedBy).toBe('admin-1');
+            expect(created.status).toBe(ENUM_SESSION_STATUS.ACTIVE);
+            expect(created.expiredAt).toEqual(
+                new Date('2026-07-07T12:10:00.000Z')
+            );
+            // forward() called with the per-token TTL (600s here): the horizon
+            // rolls forward on each renewal, the absolute cap is enforced
+            // separately from createdAt. Not the refresh-token TTL (3600s).
+            const [, durationArg] = mockDate.forward.mock.calls[0] as any[];
+            expect(durationArg.as('seconds')).toBe(600);
+        });
+    });
+
+    describe('setLoginSession with overrideTtlMs', () => {
+        it('uses the override TTL when provided', async () => {
+            const service = build();
+
+            await service.setLoginSession(
+                { id: 'u2' } as any,
+                { id: 's2' } as any,
+                600_000
+            );
+
+            const [, , ttl] = mockCache.set.mock.calls[0] as any[];
+            expect(ttl).toBe(600_000);
+        });
+    });
+
+    describe('endImpersonation', () => {
+        const row = { user: { id: 'u1' }, impersonatedBy: 'admin-1' };
+
+        it('revokes, audits in the same transaction and clears the login key when the UPDATE flips a row', async () => {
+            nativeUpdate.mockResolvedValueOnce(1);
+            findOneOrFail.mockResolvedValueOnce(row);
+
+            await expect(
+                build().endImpersonation('s1', 'manual')
+            ).resolves.toBe(true);
+
+            const [, filter, update] = nativeUpdate.mock.calls[0];
+            expect(filter).toMatchObject({ id: 's1', status: 'ACTIVE' });
+            expect(update).toMatchObject({ status: 'REVOKED' });
+            expect(createByAdmin).toHaveBeenCalledWith(
+                { id: 'u1' },
+                'admin-1',
+                expect.objectContaining({
+                    action: 'impersonate_end',
+                    metadata: { session: 's1', reason: 'manual' },
+                }),
+                { em: tem }
+            );
+            expect(mockCache.del).toHaveBeenCalled();
+        });
+
+        it('records the reason it was given', async () => {
+            nativeUpdate.mockResolvedValueOnce(1);
+            findOneOrFail.mockResolvedValueOnce(row);
+
+            await build().endImpersonation('s1', 'ineligible');
+
+            expect(createByAdmin).toHaveBeenCalledWith(
+                expect.anything(),
+                'admin-1',
+                expect.objectContaining({
+                    metadata: { session: 's1', reason: 'ineligible' },
+                }),
+                expect.anything()
+            );
+        });
+
+        it('returns false and audits nothing when the session was no longer ACTIVE', async () => {
+            nativeUpdate.mockResolvedValueOnce(0);
+
+            await expect(
+                build().endImpersonation('s1', 'manual')
+            ).resolves.toBe(false);
+            expect(createByAdmin).not.toHaveBeenCalled();
+        });
+
+        it('lets an audit failure roll the transaction back instead of ending an unlogged session', async () => {
+            nativeUpdate.mockResolvedValueOnce(1);
+            findOneOrFail.mockResolvedValueOnce(row);
+            createByAdmin.mockRejectedValueOnce(new Error('audit down'));
+
+            await expect(
+                build().endImpersonation('s1', 'manual')
+            ).rejects.toThrow('audit down');
+        });
+    });
+
+    describe('extendImpersonation', () => {
+        it('moves the expiry only for a still-ACTIVE session', async () => {
+            nativeUpdate.mockResolvedValueOnce(1);
+            const at = new Date('2026-10-07T10:10:00Z');
+
+            await expect(build().extendImpersonation('s1', at)).resolves.toBe(
+                true
+            );
+
+            const [, filter, update] = nativeUpdate.mock.calls[0];
+            expect(filter).toEqual({ id: 's1', status: 'ACTIVE' });
+            expect(update).toEqual({ expiredAt: at });
+        });
+
+        it('reports false when the session was revoked meanwhile', async () => {
+            nativeUpdate.mockResolvedValueOnce(0);
+
+            await expect(
+                build().extendImpersonation('s1', new Date())
+            ).resolves.toBe(false);
+        });
+    });
+
+    describe('impersonation sessions ended by other routes are audited too', () => {
+        it('updateRevoke (user / admin revoke) audits impersonate_end as "revoked"', async () => {
+            await build().updateRevoke({
+                id: 's1',
+                user: { id: 'u1' },
+                impersonatedBy: 'admin-1',
+            } as any);
+
+            expect(createByAdmin).toHaveBeenCalledWith(
+                { id: 'u1' },
+                'admin-1',
+                expect.objectContaining({
+                    metadata: { session: 's1', reason: 'revoked' },
+                }),
+                undefined
+            );
+        });
+
+        it('updateRevoke does not audit a normal session', async () => {
+            await build().updateRevoke({
+                id: 's1',
+                user: { id: 'u1' },
+            } as any);
+
+            expect(createByAdmin).not.toHaveBeenCalled();
+        });
+
+        it('a failing audit write never blocks the revoke itself', async () => {
+            createByAdmin.mockRejectedValueOnce(new Error('audit down'));
+
+            await expect(
+                build().updateRevoke({
+                    id: 's1',
+                    user: { id: 'u1' },
+                    impersonatedBy: 'admin-1',
+                } as any)
+            ).resolves.toBeDefined();
+        });
+
+        it('updateManyRevokeByUser (password change, delete account, revoke all) audits only the ACTIVE impersonation sessions it flips', async () => {
+            mockRepo.find.mockResolvedValueOnce([
+                { id: 'a', status: 'ACTIVE', impersonatedBy: 'admin-1' },
+                { id: 'b', status: 'ACTIVE' },
+                { id: 'c', status: 'REVOKED', impersonatedBy: 'admin-2' },
+            ] as never);
+
+            await build().updateManyRevokeByUser('u1');
+
+            expect(createByAdmin).toHaveBeenCalledTimes(1);
+            expect(createByAdmin).toHaveBeenCalledWith(
+                { id: 'u1' },
+                'admin-1',
+                expect.objectContaining({
+                    metadata: { session: 'a', reason: 'revoked' },
+                }),
+                undefined
+            );
         });
     });
 

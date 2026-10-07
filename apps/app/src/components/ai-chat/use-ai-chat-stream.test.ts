@@ -1,8 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { getDefaultStore } from "jotai";
+import { afterEach, describe, it, expect } from "vitest";
+import { tokenAtom } from "@/modules/auth";
+import { impersonationAtom } from "@/modules/impersonation";
 import {
   buildChatStreamRequest,
   isEmptyRenderModel,
   partsToRenderModel,
+  readStreamAuthToken,
   shareChatTransport,
   toolCallToChat,
   widgetChatTransport,
@@ -386,5 +390,40 @@ describe("chat transport configs", () => {
       "visitorId",
     ]);
     expect(request.body).toMatchObject({ text: "hello", visitorId: "v1" });
+  });
+});
+
+describe("readStreamAuthToken", () => {
+  const store = getDefaultStore();
+  afterEach(() => {
+    store.set(tokenAtom, null);
+    store.set(impersonationAtom, null);
+  });
+
+  it("uses the operator token when not impersonating", () => {
+    store.set(tokenAtom, "own");
+    expect(readStreamAuthToken()).toBe("own");
+  });
+
+  it("prefers a live impersonation token over the operator token", () => {
+    store.set(tokenAtom, "own");
+    store.set(impersonationAtom, {
+      accessToken: "imp",
+      expiresAt: Date.now() + 60_000,
+      impersonatedBy: "admin",
+      user: { id: "u1", name: "A", email: "a@x.com" },
+    });
+    expect(readStreamAuthToken()).toBe("imp");
+  });
+
+  it("ignores an expired impersonation token", () => {
+    store.set(tokenAtom, "own");
+    store.set(impersonationAtom, {
+      accessToken: "imp",
+      expiresAt: Date.now() - 1,
+      impersonatedBy: "admin",
+      user: { id: "u1", name: "A", email: "a@x.com" },
+    });
+    expect(readStreamAuthToken()).toBe("own");
   });
 });

@@ -685,6 +685,14 @@ function getRouteMaps(): RouteObject[] {
       ErrorBoundary: ErrorBoundary,
       lazy: () => import("./widget"),
     },
+    // Login-free bootstrap: exchanges the one-time code from the admin portal
+    // for a tab-scoped impersonation token, so it cannot sit behind
+    // ProtectedRoute or AuthLayout (which bounces signed-in users).
+    {
+      path: ROUTES.Impersonate,
+      ErrorBoundary: ErrorBoundary,
+      lazy: () => import("./impersonate"),
+    },
     {
       path: "*",
       lazy: () => import("./not-found"),

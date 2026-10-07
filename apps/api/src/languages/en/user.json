@@ -10,6 +10,7 @@
     "deleteSelf": "User deleted successfully.",
     "updateMobileNumber": "Mobile number updated successfully.",
     "updateClaimUsername": "Username claimed successfully.",
+    "impersonate": "Impersonation session started.",
     "error": {
         "mobileNumberExist": "This mobile number already exists.",
         "emailExist": "This email already exists.",
@@ -22,6 +23,7 @@
         "statusInvalid": "Invalid user status.",
         "usernameExist": "This username has already been taken.",
         "emailNotVerified": "Email not verified.",
-        "photoKeyInvalid": "This photo key does not belong to you."
+        "photoKeyInvalid": "This photo key does not belong to you.",
+        "impersonateTargetInvalid": "This account cannot be impersonated."
     }
 }

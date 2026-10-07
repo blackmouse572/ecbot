@@ -7,6 +7,8 @@ import { DatabaseService } from '@app/common/database/services/database.service'
 import { HelperArrayService } from '@app/common/helper/services/helper.array.service';
 import { RoleService } from '@app/modules/role/services/role.service';
 import { AuthService } from '@app/modules/auth/services/auth.service';
+import { ImpersonationService } from '@app/modules/auth/services/impersonation.service';
+import { SessionService } from '@app/modules/session/services/session.service';
 import { UserService } from '@app/modules/user/services/user.service';
 import { CountryService } from '@app/modules/country/services/country.service';
 import { PasswordHistoryService } from '@app/modules/password-history/services/password-history.service';
@@ -73,6 +75,8 @@ describe('UserAdminController.create', () => {
                     provide: AuthService,
                     useValue: { createPasswordRandom, createPassword },
                 },
+                { provide: ImpersonationService, useValue: {} },
+                { provide: SessionService, useValue: {} },
                 { provide: UserService, useValue: { existByEmail, create } },
                 {
                     provide: CountryService,
@@ -204,6 +208,8 @@ describe('UserAdminController.updateStatus', () => {
                 { provide: HelperArrayService, useValue: {} },
                 { provide: RoleService, useValue: {} },
                 { provide: AuthService, useValue: {} },
+                { provide: ImpersonationService, useValue: {} },
+                { provide: SessionService, useValue: {} },
                 { provide: UserService, useValue: { updateStatus } },
                 { provide: CountryService, useValue: {} },
                 { provide: PasswordHistoryService, useValue: {} },

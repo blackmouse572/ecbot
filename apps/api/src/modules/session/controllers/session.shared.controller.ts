@@ -59,9 +59,13 @@ export class SessionSharedController {
         @PaginationQueryFilterInEnum('status', undefined, ENUM_SESSION_STATUS)
         _status?: Record<string, any>
     ): Promise<IResponsePaging<SessionListResponseDto>> {
+        // Impersonation sessions belong to the acting admin, not the user: they
+        // carry the admin's id, IP and user agent, and the user must not be able
+        // to see or revoke them from here.
         const find: Record<string, any> = {
             ..._search,
             ...(_status ? _status : {}),
+            impersonatedBy: null,
         };
 
         const sessions: SessionEntity[] =

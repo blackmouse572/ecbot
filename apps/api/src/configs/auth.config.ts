@@ -31,6 +31,26 @@ export default registerAs(
                     ) / 1000,
             },
 
+            impersonateToken: {
+                expirationTime:
+                    ms(
+                        (process.env
+                            .AUTH_JWT_IMPERSONATE_TOKEN_EXPIRED as ms.StringValue) ??
+                            '10m'
+                    ) / 1000,
+            },
+
+            // Absolute cap on an impersonation session. The access token above
+            // is renewed (POST /shared/auth/impersonate/refresh) until this.
+            impersonateSession: {
+                expirationTime:
+                    ms(
+                        (process.env
+                            .AUTH_JWT_IMPERSONATE_SESSION_EXPIRED as ms.StringValue) ??
+                            '8h'
+                    ) / 1000,
+            },
+
             algorithm: 'ES512',
             jwksUri: process.env.AUTH_JWT_JWKS_URI,
 
