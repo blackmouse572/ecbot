@@ -2254,7 +2254,7 @@ export type AccountListResponseDto = {
     /**
      * Which platform this channel belongs to
      */
-    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
     /**
      * Workspace that owns the channel
      */
@@ -2341,7 +2341,7 @@ export type AccountGetDetailResponseDto = {
     /**
      * Which platform this channel belongs to
      */
-    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
     /**
      * Workspace that owns the channel
      */
@@ -2380,7 +2380,7 @@ export type AccountCreateRequestDto = {
     /**
      * Which platform this channel belongs to
      */
-    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
     /**
      * Avatar URL of the channel
      */
@@ -2427,7 +2427,7 @@ export type AccountUpdateRequestDto = {
     /**
      * Which platform this channel belongs to
      */
-    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
     /**
      * Avatar URL of the channel
      */
@@ -3948,7 +3948,7 @@ export type AccountUpdateAllowedOriginsRequestDto = {
 
 export type AccountLinkRequestDto = {
     code: string;
-    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'ZALO_ACCOUNT' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'WHATSAPP_BUSINESS';
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'ZALO_ACCOUNT' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
 };
 
 export type BatchFailureDto = {
@@ -5301,7 +5301,7 @@ export type AccountGetResponseDto = {
     /**
      * Which platform this channel belongs to
      */
-    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
     /**
      * Workspace that owns the channel
      */
@@ -6200,7 +6200,7 @@ export type ContactPointGetResponseDto = {
      * Delete by
      */
     deletedBy?: UserMetaResponseDto;
-    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
     externalSenderId: string;
     displaySenderName?: string | null;
     senderAvatar?: string | null;
@@ -15478,7 +15478,7 @@ export type AccountAdminControllerListV1Data = {
         /**
          * Keep only channels of this platform
          */
-        type?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+        type?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
         /**
          * Keep only the children of this parent account
          */
@@ -20616,7 +20616,7 @@ export type AccountControllerListV1Data = {
         /**
          * Keep only channels of this platform
          */
-        type?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+        type?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
         /**
          * Keep only the children of this parent account
          */
