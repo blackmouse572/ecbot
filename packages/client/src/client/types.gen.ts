@@ -580,6 +580,10 @@ export type AuthImpersonateExchangeResponseDto = {
     expiresIn: number;
     accessToken: string;
     /**
+     * Absolute end of the whole session (ms epoch); renewal stops here
+     */
+    sessionEndsAt: number;
+    /**
      * Acting admin user id
      */
     impersonatedBy: string;
@@ -2884,13 +2888,6 @@ export type AuthChangePasswordRequestDto = {
     oldPassword: string;
 };
 
-export type AuthImpersonateEndRequestDto = {
-    /**
-     * Why the session is ending. `expired` is sent by the client when the countdown runs out.
-     */
-    reason?: 'manual' | 'expired';
-};
-
 export type AuthImpersonateRefreshResponseDto = {
     tokenType: string;
     roleType: 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'WORKSPACE_OWNER' | 'WORKSPACE_MEMBER';
@@ -2899,6 +2896,10 @@ export type AuthImpersonateRefreshResponseDto = {
      */
     expiresIn: number;
     accessToken: string;
+    /**
+     * Absolute end of the whole session (ms epoch); renewal stops here
+     */
+    sessionEndsAt: number;
 };
 
 export type AccountProvisionApiChannelResponseDto = {
@@ -15289,7 +15290,7 @@ export type AuthSharedControllerChangePasswordV1Responses = {
 export type AuthSharedControllerChangePasswordV1Response = AuthSharedControllerChangePasswordV1Responses[keyof AuthSharedControllerChangePasswordV1Responses];
 
 export type AuthSharedControllerImpersonateEndV1Data = {
-    body: AuthImpersonateEndRequestDto;
+    body?: never;
     headers?: {
         /**
          * Custom language header
@@ -15328,13 +15329,6 @@ export type AuthSharedControllerImpersonateEndV1Errors = {
      * 408
      */
     408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 422
-     */
-    422: ResponseDto & {
         message?: unknown;
         statusCode?: number;
     };
