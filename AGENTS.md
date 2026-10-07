@@ -53,7 +53,7 @@ Invoke the `eccho-backend` skill before writing code.
 Invoke the `eccho-frontend` skill before writing code.
 </important>
 
-<important if="you are adding or changing a chat channel (Messenger, Instagram, WhatsApp, Zalo, TikTok, Shopee, Telegram, API channel, website widget)">
+<important if="you are adding or changing a chat channel (Messenger, Instagram, WhatsApp, Threads, Zalo, TikTok, Shopee, Telegram, API channel, website widget)">
 Invoke the `eccho-platform-adapters` skill before writing code.
 </important>
 
