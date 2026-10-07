@@ -594,6 +594,10 @@
         "whatsappBusiness": {
           "label": "WhatsApp Business",
           "description": "A WhatsApp Business number connected through the Cloud API."
+        },
+        "threadsAccount": {
+          "label": "Threads",
+          "description": "A Threads profile. The bot answers replies to its posts and posts that mention it."
         }
       },
       "apiChannel": {

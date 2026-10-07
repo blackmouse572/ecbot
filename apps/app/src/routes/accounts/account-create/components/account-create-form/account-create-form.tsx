@@ -113,6 +113,12 @@ const PLATFORMS: PlatformMeta[] = [
     icon: <img src="/icons/whatsapp.svg" alt="WhatsApp" className="size-8" />,
   },
   {
+    value: "THREADS_ACCOUNT",
+    label: "Threads",
+    description: "Replies & mentions",
+    icon: <img src="/icons/threads.svg" alt="Threads" className="size-8" />,
+  },
+  {
     value: "WEBSITE_WIDGET",
     label: "Website",
     description: "Embeddable chat widget",

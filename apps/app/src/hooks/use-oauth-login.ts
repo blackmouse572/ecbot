@@ -70,6 +70,27 @@ function getInstagramConfig(state: string): PlatformConfig {
   };
 }
 
+// Threads Login: replies and mentions arrive by webhook once the profile
+// grants these, and the bot answers with threads_manage_replies.
+function getThreadsConfig(state: string): PlatformConfig {
+  const params = new URLSearchParams({
+    client_id: import.meta.env.VITE_THREADS_APP_ID,
+    redirect_uri: import.meta.env.VITE_THREADS_REDIRECT_URI,
+    scope: [
+      "threads_basic",
+      "threads_read_replies",
+      "threads_manage_replies",
+      "threads_manage_mentions",
+    ].join(","),
+    response_type: "code",
+    state,
+  });
+  return {
+    url: `https://threads.net/oauth/authorize?${params}`,
+    windowTitle: "Threads Login",
+  };
+}
+
 function getZaloConfig(state: string): PlatformConfig {
   const appId = import.meta.env.VITE_ZALO_APP_ID;
   const redirectUri = import.meta.env.VITE_ZALO_REDIRECT_URI;
@@ -105,6 +126,7 @@ const PLATFORM_CONFIGS: Record<string, (state: string) => PlatformConfig> = {
   TIKTOK_SHOP: getTikTokShopConfig,
   SHOPEE_SHOP: getShopeeConfig,
   WHATSAPP_BUSINESS: getWhatsAppConfig,
+  THREADS_ACCOUNT: getThreadsConfig,
 };
 
 // Platforms whose authorize URL we build ourselves, so we can bind a
@@ -115,6 +137,7 @@ const STATEFUL_PLATFORMS = new Set([
   "INSTAGRAM_ACCOUNT",
   "ZALO_ACCOUNT",
   "TIKTOK_SHOP",
+  "THREADS_ACCOUNT",
 ]);
 
 function oauthStateKey(platform: string) {
