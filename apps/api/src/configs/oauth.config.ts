@@ -15,6 +15,11 @@ export default registerAs(
             appSecret: process.env.INSTAGRAM_APP_SECRET,
             redirectUri: process.env.INSTAGRAM_REDIRECT_URI,
         },
+        threads: {
+            appId: process.env.THREADS_APP_ID,
+            appSecret: process.env.THREADS_APP_SECRET,
+            redirectUri: process.env.THREADS_REDIRECT_URI,
+        },
         zalo: {
             appId: process.env.ZALO_APP_ID,
             appSecret: process.env.ZALO_APP_SECRET,
