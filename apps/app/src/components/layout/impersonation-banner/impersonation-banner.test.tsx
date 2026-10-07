@@ -14,6 +14,7 @@ const impersonation = {
 vi.mock("@/modules/impersonation", () => ({
   useImpersonation: () => impersonation.current,
   useEndImpersonation: () => endImpersonation,
+  useImpersonationRefresh: () => undefined,
 }));
 
 import i18n from "@/i18n";
@@ -57,27 +58,22 @@ describe("ImpersonationBanner", () => {
     expect(endImpersonation).toHaveBeenCalledWith("manual");
   });
 
-  it("auto-ends as 'expired' inside the lead window, once, while the token is still valid", () => {
+  it("shows no countdown (the session renews in the background)", () => {
     impersonation.current = {
       accessToken: "jwt",
       expiresAt: Date.now() + 2_000,
       impersonatedBy: "admin-1",
       user: { id: "u1", name: "Nguyen Van A", email: "a@example.com" },
     };
-    const { rerender } = renderBanner();
+    renderBanner();
 
-    expect(endImpersonation).toHaveBeenCalledTimes(1);
-    expect(endImpersonation).toHaveBeenCalledWith("expired");
-
-    rerender(
-      <I18nextProvider i18n={i18n}>
-        <ImpersonationBanner />
-      </I18nextProvider>,
-    );
-    expect(endImpersonation).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
+    // nearly-expired tokens must not end the session from the banner either:
+    // renewal (or its failure) is the refresh hook's job
+    expect(endImpersonation).not.toHaveBeenCalled();
   });
 
-  it("does not auto-end while well before the lead window", () => {
+  it("exposes Exit and Minimize as labelled icon buttons", () => {
     impersonation.current = {
       accessToken: "jwt",
       expiresAt: Date.now() + 300_000,
@@ -85,7 +81,18 @@ describe("ImpersonationBanner", () => {
       user: { id: "u1", name: "Nguyen Van A", email: "a@example.com" },
     };
     renderBanner();
-    expect(endImpersonation).not.toHaveBeenCalled();
+
+    const exit = screen.getByRole("button", {
+      name: i18n.t("impersonation.banner.exit"),
+    });
+    const minimize = screen.getByRole("button", {
+      name: i18n.t("impersonation.banner.minimize"),
+    });
+    // icon-only: the visible text is not the label
+    expect(exit).toHaveTextContent("");
+    expect(minimize).toHaveTextContent("");
+    expect(exit.querySelector("svg")).not.toBeNull();
+    expect(minimize.querySelector("svg")).not.toBeNull();
   });
 
   it("minimizes to a pill and restores, persisting the choice", () => {

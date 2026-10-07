@@ -404,7 +404,8 @@ Here's a comprehensive list of supported environment variables:
 - **`AUTH_JWT_ACCESS_TOKEN_PUBLIC_KEY_PATH`** (required): Path to public key for access token
 - **`AUTH_JWT_ACCESS_TOKEN_EXPIRED`** (required): Access token expiration time (e.g., 1h)
 
-- **`AUTH_JWT_IMPERSONATE_TOKEN_EXPIRED`** (optional, default `10m`): Lifetime of the access token issued for an admin impersonation session (e.g., 10m). Impersonation tokens have no refresh token
+- **`AUTH_JWT_IMPERSONATE_TOKEN_EXPIRED`** (optional, default `10m`): Lifetime of a single impersonation access token. The app renews it in the background via `POST /shared/auth/impersonate/refresh`, so this is not the session length. Impersonation uses no refresh-token cookie (it would overwrite the operator's own login)
+- **`AUTH_JWT_IMPERSONATE_SESSION_EXPIRED`** (optional, default `8h`): Absolute cap on an impersonation session; renewal stops and the session ends at this point
 
 - **`AUTH_JWT_REFRESH_TOKEN_KID`** (required): Key ID for refresh token
 - **`AUTH_JWT_REFRESH_TOKEN_PRIVATE_KEY_PATH`** (required): Path to private key for refresh token

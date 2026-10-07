@@ -340,8 +340,17 @@ export class AuthService implements IAuthService {
     createImpersonationToken(
         user: UserEntity,
         session: string,
-        impersonatedBy: string
+        impersonatedBy: string,
+        maxSeconds?: number
     ): Omit<AuthLoginResponseDto, 'refreshToken'> {
+        // Never outlive the session's absolute cap.
+        const expiresIn = Math.max(
+            1,
+            Math.min(
+                this.jwtImpersonateTokenExpirationTime,
+                maxSeconds ?? Number.POSITIVE_INFINITY
+            )
+        );
         const payloadAccessToken = this.createPayloadImpersonationToken(
             user,
             session,
@@ -351,14 +360,14 @@ export class AuthService implements IAuthService {
             user.id,
             payloadAccessToken,
             {
-                expiresIn: this.jwtImpersonateTokenExpirationTime,
+                expiresIn,
             }
         );
 
         return {
             tokenType: this.jwtPrefix,
             roleType: user.role.type,
-            expiresIn: this.jwtImpersonateTokenExpirationTime,
+            expiresIn,
             accessToken,
         };
     }

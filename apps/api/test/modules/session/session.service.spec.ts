@@ -25,6 +25,7 @@ describe('SessionService (geo + activity additions)', () => {
     const mockConfig = {
         get: jest.fn((key: string) => {
             if (key === 'auth.jwt.impersonateToken.expirationTime') return 600;
+            if (key === 'auth.jwt.impersonateSession.expirationTime') return 28800;
             if (key.includes('expirationTime')) return 3600;
             return 'x';
         }),
@@ -75,7 +76,7 @@ describe('SessionService (geo + activity additions)', () => {
     });
 
     describe('createImpersonation', () => {
-        it('creates an ACTIVE session flagged with impersonatedBy and a 10-min horizon', async () => {
+        it('creates an ACTIVE session flagged with impersonatedBy and the impersonation session cap as its horizon', async () => {
             const service = build();
             mockDate.forward.mockReturnValueOnce(
                 new Date('2026-07-07T12:10:00.000Z')
@@ -100,10 +101,10 @@ describe('SessionService (geo + activity additions)', () => {
             expect(created.expiredAt).toEqual(
                 new Date('2026-07-07T12:10:00.000Z')
             );
-            // forward() called with the impersonation TTL (600s here), not the
-            // refresh-token TTL (3600s). Assert via Luxon's public Duration API.
+            // forward() called with the session cap (28800s here), not the
+            // per-token TTL (600s) or the refresh-token TTL (3600s).
             const [, durationArg] = mockDate.forward.mock.calls[0] as any[];
-            expect(durationArg.as('seconds')).toBe(600);
+            expect(durationArg.as('seconds')).toBe(28800);
         });
     });
 

@@ -8,7 +8,6 @@
     },
     "banner": {
       "label": "USER VIEW MODE",
-      "endsIn": "ends in {{time}}",
       "exit": "Exit",
       "expand": "Expand user view controls",
       "minimize": "Minimize"

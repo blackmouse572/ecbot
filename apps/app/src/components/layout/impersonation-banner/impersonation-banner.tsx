@@ -1,42 +1,44 @@
-import { clx } from "@medusajs/ui";
-import { useEffect, useRef } from "react";
+import { ArrowRightOnRectangle, Eye, Minus } from "@medusajs/icons";
+import { clx, IconButton } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
-import { useEndImpersonation, useImpersonation } from "@/modules/impersonation";
+import {
+  useEndImpersonation,
+  useImpersonation,
+  useImpersonationRefresh,
+} from "@/modules/impersonation";
 
 import { useBannerUi } from "./use-banner-drag";
-import { useCountdown } from "./use-countdown";
 
 const SHELL =
   "fixed left-1/2 top-[9px] z-[60] flex items-center gap-x-2 rounded-lg border px-2.5 py-1.5 " +
   "text-[12px] font-semibold shadow-lg select-none touch-none";
 const PALETTE = "border-[#6f5223] bg-[#2b1d0c] text-[#ffd9a3]";
 
+const ICON_BUTTON =
+  "!size-6 !rounded-md !border-0 !bg-transparent !shadow-none text-[#ffcf8c] " +
+  "hover:!bg-[#4a3413] active:!bg-[#5a4018] focus-visible:!shadow-none";
+
 export function ImpersonationBanner() {
   const impersonation = useImpersonation();
   const endImpersonation = useEndImpersonation();
   const { t } = useTranslation();
-  const { x, minimized, setMinimized, consumeDrag, dragHandlers } = useBannerUi();
-  const { ms, label, expired, ending } = useCountdown(impersonation?.expiresAt ?? 0);
-
-  const endedRef = useRef(false);
-  useEffect(() => {
-    if (impersonation && ending && !endedRef.current) {
-      endedRef.current = true;
-      void endImpersonation("expired");
-    }
-  }, [impersonation, ending, endImpersonation]);
+  const { x, minimized, setMinimized, consumeDrag, dragHandlers } =
+    useBannerUi();
+  // Renews the impersonation token in the background (like a normal login), so
+  // there is nothing to count down: the session lasts until the operator exits.
+  useImpersonationRefresh();
 
   if (!impersonation) return null;
 
   const style = { transform: `translateX(calc(-50% + ${x}px))` };
-  const lowTime = ms > 0 && ms < 60_000;
 
   if (minimized) {
     return (
       <button
         type="button"
         aria-label={t("impersonation.banner.expand")}
+        title={t("impersonation.banner.expand")}
         className={clx(SHELL, PALETTE, "rounded-full")}
         style={style}
         onClick={(e) => {
@@ -49,8 +51,7 @@ export function ImpersonationBanner() {
         onPointerMove={dragHandlers.onPointerMove}
         onPointerUp={dragHandlers.onPointerUp}
       >
-        <span className="size-1.5 rounded-full bg-[#ff9d1e]" />
-        <span className="tabular-nums">{label}</span>
+        <Eye className="size-4 text-[#ffb454]" />
       </button>
     );
   }
@@ -69,38 +70,36 @@ export function ImpersonationBanner() {
       <span className="font-normal text-[#ffe9cf]">
         {impersonation.user.name} · {impersonation.user.email}
       </span>
-      <span className="text-[#6f5223]">·</span>
-      <span
-        className={clx(
-          "tabular-nums",
-          lowTime || expired ? "text-red-400" : "text-[#ffcf8c]",
-        )}
-      >
-        {t("impersonation.banner.endsIn", { time: label })}
-      </span>
-      <button
+      <IconButton
         type="button"
-        className="rounded bg-[#ffb020] px-2 py-0.5 font-bold text-[#2b1d0c]"
+        size="2xsmall"
+        variant="transparent"
+        aria-label={t("impersonation.banner.exit")}
+        title={t("impersonation.banner.exit")}
+        className={ICON_BUTTON}
         onClick={(e) => {
           e.stopPropagation();
           void endImpersonation("manual");
         }}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        {t("impersonation.banner.exit")}
-      </button>
-      <button
+        <ArrowRightOnRectangle />
+      </IconButton>
+      <IconButton
         type="button"
+        size="2xsmall"
+        variant="transparent"
         aria-label={t("impersonation.banner.minimize")}
-        className="px-1 text-[#c79350]"
+        title={t("impersonation.banner.minimize")}
+        className={ICON_BUTTON}
         onClick={(e) => {
           e.stopPropagation();
           setMinimized(true);
         }}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        ▁
-      </button>
+        <Minus />
+      </IconButton>
     </div>
   );
 }

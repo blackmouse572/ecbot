@@ -90,4 +90,32 @@ describe('AuthService.createImpersonationToken', () => {
             subject: 'target-user-id',
         });
     });
+
+    it('caps the token lifetime at the seconds left in the session', () => {
+        const service = build();
+
+        const result = service.createImpersonationToken(
+            target,
+            'session-id',
+            'acting-admin-id',
+            45
+        );
+
+        expect(result.expiresIn).toBe(45);
+        const [, options] = sign.mock.calls[sign.mock.calls.length - 1];
+        expect(options.expiresIn).toBe(45);
+    });
+
+    it('never signs a token with a non-positive lifetime', () => {
+        const service = build();
+
+        const result = service.createImpersonationToken(
+            target,
+            'session-id',
+            'acting-admin-id',
+            0
+        );
+
+        expect(result.expiresIn).toBe(1);
+    });
 });

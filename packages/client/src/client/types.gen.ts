@@ -2891,6 +2891,16 @@ export type AuthImpersonateEndRequestDto = {
     reason?: 'manual' | 'expired';
 };
 
+export type AuthImpersonateRefreshResponseDto = {
+    tokenType: string;
+    roleType: 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'WORKSPACE_OWNER' | 'WORKSPACE_MEMBER';
+    /**
+     * Seconds the new access token is valid for (capped by the session lifetime)
+     */
+    expiresIn: number;
+    accessToken: string;
+};
+
 export type AccountProvisionApiChannelResponseDto = {
     /**
      * Account id
@@ -15350,6 +15360,73 @@ export type AuthSharedControllerImpersonateEndV1Responses = {
 };
 
 export type AuthSharedControllerImpersonateEndV1Response = AuthSharedControllerImpersonateEndV1Responses[keyof AuthSharedControllerImpersonateEndV1Responses];
+
+export type AuthSharedControllerImpersonateRefreshV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared/auth/impersonate/refresh';
+};
+
+export type AuthSharedControllerImpersonateRefreshV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthSharedControllerImpersonateRefreshV1Error = AuthSharedControllerImpersonateRefreshV1Errors[keyof AuthSharedControllerImpersonateRefreshV1Errors];
+
+export type AuthSharedControllerImpersonateRefreshV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthImpersonateRefreshResponseDto;
+    };
+};
+
+export type AuthSharedControllerImpersonateRefreshV1Response = AuthSharedControllerImpersonateRefreshV1Responses[keyof AuthSharedControllerImpersonateRefreshV1Responses];
 
 export type CountrySharedControllerListPublicV1Data = {
     body?: never;

@@ -8,7 +8,6 @@
     },
     "banner": {
       "label": "USER VIEW MODE",
-      "endsIn": "kết thúc sau {{time}}",
       "exit": "Thoát",
       "expand": "Mở rộng điều khiển chế độ xem người dùng",
       "minimize": "Thu nhỏ"

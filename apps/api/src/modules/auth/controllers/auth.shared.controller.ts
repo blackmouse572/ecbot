@@ -38,9 +38,11 @@ import {
 import {
     AuthSharedChangePasswordDoc,
     AuthSharedImpersonateEndDoc,
+    AuthSharedImpersonateRefreshDoc,
     AuthSharedLogoutDoc,
     AuthSharedRefreshDoc,
 } from 'src/modules/auth/docs/auth.shared.doc';
+import { AuthImpersonateRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate-refresh.response.dto';
 import { AuthImpersonateEndRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-end.request.dto';
 import { AuthChangePasswordRequestDto } from 'src/modules/auth/dtos/request/auth.change-password.request.dto';
 import { AuthRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.refresh.response.dto';
@@ -330,5 +332,71 @@ export class AuthSharedController {
         }
 
         return { data: null };
+    }
+    // Sliding renewal for impersonation. Deliberately not the cookie-based
+    // /refresh: that cookie is the operator's own login at this origin and an
+    // impersonation session must never overwrite it. Renews only while the
+    // session row is ACTIVE and inside its absolute cap, and re-arms the Redis
+    // kill switch so revoking the session still cuts access immediately.
+    @AuthSharedImpersonateRefreshDoc()
+    @Response('auth.impersonateRefresh')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @HttpCode(HttpStatus.OK)
+    @Post('/impersonate/refresh')
+    async impersonateRefresh(
+        @AuthJwtPayload<IAuthJwtAccessTokenPayload>()
+        { user, session, impersonatedBy }: IAuthJwtAccessTokenPayload
+    ): Promise<IResponse<AuthImpersonateRefreshResponseDto>> {
+        if (!impersonatedBy) {
+            throw new ForbiddenException({
+                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.JWT_ACCESS_TOKEN,
+                message: 'auth.error.accessTokenUnauthorized',
+            });
+        }
+
+        const sessionEntity =
+            await this.sessionService.findOneActiveById(session);
+        const remainingMs = sessionEntity
+            ? sessionEntity.expiredAt.getTime() - Date.now()
+            : 0;
+        if (!sessionEntity || remainingMs <= 0) {
+            throw new UnauthorizedException({
+                statusCode: ENUM_SESSION_STATUS_CODE_ERROR.EXPIRED,
+                message: 'session.error.expired',
+            });
+        }
+
+        const target = await this.userService.findOneById(user, {
+            populate: ['role'],
+        });
+        if (!target || target.status !== ENUM_USER_STATUS.ACTIVE) {
+            throw new UnauthorizedException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'user.error.notFound',
+            });
+        }
+
+        const issued = this.authService.createImpersonationToken(
+            target,
+            session,
+            impersonatedBy,
+            Math.floor(remainingMs / 1000)
+        );
+        await this.sessionService.setLoginSession(
+            target,
+            sessionEntity,
+            issued.expiresIn * 1000
+        );
+
+        return {
+            data: {
+                tokenType: issued.tokenType,
+                roleType: issued.roleType,
+                expiresIn: issued.expiresIn,
+                accessToken: issued.accessToken,
+            },
+        };
     }
 }

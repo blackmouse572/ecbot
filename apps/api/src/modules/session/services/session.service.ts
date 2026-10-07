@@ -32,7 +32,7 @@ const SESSION_ACTIVE_THROTTLE_SECONDS = 60;
 @Injectable()
 export class SessionService implements ISessionService {
     private readonly refreshTokenExpiration: number;
-    private readonly impersonateExpiration: number;
+    private readonly impersonateSessionExpiration: number;
     private readonly appName: string;
 
     private readonly sessionKeyPrefix: string;
@@ -48,8 +48,8 @@ export class SessionService implements ISessionService {
         this.refreshTokenExpiration = this.configService.get<number>(
             'auth.jwt.refreshToken.expirationTime'
         )!;
-        this.impersonateExpiration = this.configService.get<number>(
-            'auth.jwt.impersonateToken.expirationTime'
+        this.impersonateSessionExpiration = this.configService.get<number>(
+            'auth.jwt.impersonateSession.expirationTime'
         )!;
         this.appName = this.configService.get<string>('app.name')!;
 
@@ -178,7 +178,7 @@ export class SessionService implements ISessionService {
         const expiredAt: Date = this.helperDateService.forward(
             today,
             Duration.fromObject({
-                seconds: this.impersonateExpiration,
+                seconds: this.impersonateSessionExpiration,
             })
         );
 
