@@ -17,12 +17,18 @@ import {
 } from 'src/common/database/interfaces/database.interface';
 import { HelperDateService } from 'src/common/helper/services/helper.date.service';
 import { MessageService } from 'src/common/message/services/message.service';
+import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
+import { ActivityService } from 'src/modules/activity/services/activity.service';
+import { ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { SessionCreateRequestDto } from 'src/modules/session/dtos/request/session.create.request.dto';
 import { SessionAdminListResponseDto } from 'src/modules/session/dtos/response/session.admin-list.response.dto';
 import { SessionListResponseDto } from 'src/modules/session/dtos/response/session.list.response.dto';
 import { UserMetaResponseDto } from 'src/modules/user/dtos/response/user.meta.response.dto';
 import { ENUM_SESSION_STATUS } from 'src/modules/session/enums/session.enum';
-import { ISessionService } from 'src/modules/session/interfaces/session.service.interface';
+import {
+    ImpersonationEndReason,
+    ISessionService,
+} from 'src/modules/session/interfaces/session.service.interface';
 import { SessionEntity } from 'src/modules/session/repository/entities/session.entity';
 import { SessionRepository } from 'src/modules/session/repository/repositories/session.repository';
 
@@ -32,7 +38,7 @@ const SESSION_ACTIVE_THROTTLE_SECONDS = 60;
 @Injectable()
 export class SessionService implements ISessionService {
     private readonly refreshTokenExpiration: number;
-    private readonly impersonateSessionExpiration: number;
+    private readonly impersonateTokenExpiration: number;
     private readonly appName: string;
 
     private readonly sessionKeyPrefix: string;
@@ -43,13 +49,14 @@ export class SessionService implements ISessionService {
         private readonly configService: ConfigService,
         private readonly helperDateService: HelperDateService,
         private readonly sessionRepository: SessionRepository,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly activityService: ActivityService
     ) {
         this.refreshTokenExpiration = this.configService.get<number>(
             'auth.jwt.refreshToken.expirationTime'
         )!;
-        this.impersonateSessionExpiration = this.configService.get<number>(
-            'auth.jwt.impersonateSession.expirationTime'
+        this.impersonateTokenExpiration = this.configService.get<number>(
+            'auth.jwt.impersonateToken.expirationTime'
         )!;
         this.appName = this.configService.get<string>('app.name')!;
 
@@ -178,7 +185,7 @@ export class SessionService implements ISessionService {
         const expiredAt: Date = this.helperDateService.forward(
             today,
             Duration.fromObject({
-                seconds: this.impersonateSessionExpiration,
+                seconds: this.impersonateTokenExpiration,
             })
         );
 
@@ -253,7 +260,8 @@ export class SessionService implements ISessionService {
             // Not on the entity, so plainToInstance can't map it — the admin
             // UI needs this to gate the single-row Revoke action, since
             // revoking your own current session 403s.
-            dto.isCurrent = !!currentSessionId && session.id === currentSessionId;
+            dto.isCurrent =
+                !!currentSessionId && session.id === currentSessionId;
             return dto;
         });
     }
@@ -306,25 +314,107 @@ export class SessionService implements ISessionService {
         this.sessionRepository.getEntityManager().persist(repository);
         await this.sessionRepository.getEntityManager().flush();
 
+        // Revoked by the user, an admin or a password change rather than by
+        // ending the impersonation: it still has to be audited.
+        if (repository.impersonatedBy) {
+            await this.auditImpersonationEnd(
+                {
+                    id: repository.id,
+                    user: repository.user.id,
+                    impersonatedBy: repository.impersonatedBy,
+                },
+                'revoked'
+            );
+        }
+
         return repository;
     }
 
-    // Atomic ACTIVE -> REVOKED transition: true only for the caller whose
-    // UPDATE actually flipped the row, so concurrent callers can't both
-    // report (and audit) the same revoke.
-    async revokeIfActive(id: string): Promise<boolean> {
-        const affected = await this.sessionRepository
-            .getEntityManager()
-            .nativeUpdate(
+    // Best effort: a failed audit write must never block a revoke, which is a
+    // security action. Atomic paths (endImpersonation) write inside their own
+    // transaction instead.
+    private async auditImpersonationEnd(
+        session: { id: string; user: string; impersonatedBy: string },
+        reason: ImpersonationEndReason,
+        options?: IDatabaseCreateOptions
+    ): Promise<void> {
+        const em = this.sessionRepository.getEntityManager();
+        const write = () =>
+            this.activityService.createByAdmin(
+                em.getReference(UserEntity, session.user),
+                session.impersonatedBy,
+                {
+                    action: ENUM_ACTIVITY_ACTION.IMPERSONATE_END,
+                    subject: ENUM_POLICY_SUBJECT.USER,
+                    metadata: { session: session.id, reason },
+                },
+                options
+            );
+        if (options) {
+            await write();
+            return;
+        }
+        try {
+            await write();
+        } catch (err) {
+            this.logger.error(
+                `Failed to audit end of impersonation session [${session.id}]: ${(err as Error)?.message}`
+            );
+        }
+    }
+
+    // Atomic ACTIVE -> REVOKED transition for an impersonation session. True
+    // only for the caller whose UPDATE actually flipped the row, and the audit
+    // row is written in the same transaction, so a session is never revoked
+    // without being logged and is never logged twice.
+    async endImpersonation(
+        id: string,
+        reason: ImpersonationEndReason
+    ): Promise<boolean> {
+        const em = this.sessionRepository.getEntityManager();
+        const ended = await em.transactional(async tem => {
+            const affected = await tem.nativeUpdate(
                 SessionEntity,
-                { id, status: ENUM_SESSION_STATUS.ACTIVE },
+                {
+                    id,
+                    status: ENUM_SESSION_STATUS.ACTIVE,
+                    impersonatedBy: { $ne: null },
+                },
                 {
                     status: ENUM_SESSION_STATUS.REVOKED,
                     revokeAt: this.helperDateService.create(),
                 }
             );
+            if (affected === 0) return false;
+
+            const row = await tem.findOneOrFail(SessionEntity, { id });
+            await this.auditImpersonationEnd(
+                {
+                    id,
+                    user: row.user.id,
+                    impersonatedBy: row.impersonatedBy!,
+                },
+                reason,
+                { em: tem }
+            );
+            return true;
+        });
         await this.deleteLoginSession(id);
 
+        return ended;
+    }
+
+    // Rolling expiry for an impersonation session: the sweep then finds an
+    // abandoned session soon after its last token dies. Conditional on ACTIVE,
+    // so false means the session was revoked in the meantime.
+    async extendImpersonation(id: string, expiredAt: Date): Promise<boolean> {
+        const affected = await this.sessionRepository
+            .getEntityManager()
+            .nativeUpdate(
+                SessionEntity,
+                { id, status: ENUM_SESSION_STATUS.ACTIVE },
+                { expiredAt }
+            );
         return affected > 0;
     }
 
@@ -347,6 +437,11 @@ export class SessionService implements ISessionService {
         const today = this.helperDateService.create();
         const sessions = await this.findAllByUser(user, undefined, options);
         const promises = sessions.map(e => this.deleteLoginSession(e.id));
+        // Impersonation sessions that are about to be flipped by this revoke-all
+        // (password change, account deletion, admin "revoke all").
+        const impersonated = sessions.filter(
+            e => e.status === ENUM_SESSION_STATUS.ACTIVE && e.impersonatedBy
+        );
 
         await Promise.all(promises);
 
@@ -365,6 +460,13 @@ export class SessionService implements ISessionService {
             },
             options
         );
+
+        for (const e of impersonated) {
+            await this.auditImpersonationEnd(
+                { id: e.id, user, impersonatedBy: e.impersonatedBy! },
+                'revoked'
+            );
+        }
 
         return updated.length > 0;
     }

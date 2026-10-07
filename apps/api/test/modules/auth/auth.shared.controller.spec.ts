@@ -7,6 +7,7 @@ import { PasswordHistoryService } from '@app/modules/password-history/services/p
 import { SessionService } from '@app/modules/session/services/session.service';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { MessageService } from '@app/common/message/services/message.service';
+import { ImpersonationService } from '@app/modules/auth/services/impersonation.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
@@ -90,6 +91,7 @@ describe('AuthSharedController.changePassword', () => {
                     useValue: { createByUser: createByUserActivity },
                 },
                 { provide: MessageService, useValue: {} },
+                { provide: ImpersonationService, useValue: {} },
             ],
         }).compile();
 
@@ -207,6 +209,7 @@ describe('AuthSharedController.refresh', () => {
                 { provide: SessionService, useValue: { findLoginSession } },
                 { provide: ActivityService, useValue: {} },
                 { provide: MessageService, useValue: {} },
+                { provide: ImpersonationService, useValue: {} },
             ],
         }).compile();
 
@@ -334,6 +337,7 @@ describe('AuthSharedController.logout', () => {
                 },
                 { provide: ActivityService, useValue: {} },
                 { provide: MessageService, useValue: {} },
+                { provide: ImpersonationService, useValue: {} },
             ],
         }).compile();
 

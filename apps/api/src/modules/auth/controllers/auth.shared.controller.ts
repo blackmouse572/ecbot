@@ -42,8 +42,9 @@ import {
     AuthSharedLogoutDoc,
     AuthSharedRefreshDoc,
 } from 'src/modules/auth/docs/auth.shared.doc';
+import { AllowImpersonation } from 'src/modules/auth/decorators/auth.impersonation.decorator';
+import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
 import { AuthImpersonateRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate-refresh.response.dto';
-import { AuthImpersonateEndRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-end.request.dto';
 import { AuthChangePasswordRequestDto } from 'src/modules/auth/dtos/request/auth.change-password.request.dto';
 import { AuthRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.refresh.response.dto';
 import {
@@ -79,7 +80,8 @@ export class AuthSharedController {
         private readonly passwordHistoryService: PasswordHistoryService,
         private readonly sessionService: SessionService,
         private readonly activityService: ActivityService,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly impersonationService: ImpersonationService
     ) {}
 
     @AuthSharedRefreshDoc()
@@ -299,6 +301,7 @@ export class AuthSharedController {
 
     @AuthSharedImpersonateEndDoc()
     @Response('auth.impersonateEnd')
+    @AllowImpersonation()
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -306,8 +309,7 @@ export class AuthSharedController {
     @Post('/impersonate/end')
     async impersonateEnd(
         @AuthJwtPayload<IAuthJwtAccessTokenPayload>()
-        { user, session, impersonatedBy }: IAuthJwtAccessTokenPayload,
-        @Body() { reason = 'manual' }: AuthImpersonateEndRequestDto = {}
+        { session, impersonatedBy }: IAuthJwtAccessTokenPayload
     ): Promise<IResponse<null>> {
         if (!impersonatedBy) {
             throw new ForbiddenException({
@@ -316,30 +318,24 @@ export class AuthSharedController {
             });
         }
 
-        // Only the caller whose UPDATE transitions ACTIVE -> REVOKED audits
-        // the end, so a double-click or concurrent end logs it once.
-        const revoked = await this.sessionService.revokeIfActive(session);
-        if (revoked) {
-            await this.activityService.createByAdmin(
-                this.em.getReference(UserEntity, user),
-                impersonatedBy,
-                {
-                    action: ENUM_ACTIVITY_ACTION.IMPERSONATE_END,
-                    subject: ENUM_POLICY_SUBJECT.USER,
-                    metadata: { session, reason },
-                }
-            );
-        }
+        // The server decides why it ended; the token holder does not get to
+        // label their own end. Revoke and audit happen in one transaction, and
+        // only the call that actually flipped the row writes the record.
+        const row = await this.sessionService.findOneById(session);
+        const reason =
+            row && row.expiredAt.getTime() <= Date.now() ? 'expired' : 'manual';
+        await this.sessionService.endImpersonation(session, reason);
 
         return { data: null };
     }
+
     // Sliding renewal for impersonation. Deliberately not the cookie-based
     // /refresh: that cookie is the operator's own login at this origin and an
-    // impersonation session must never overwrite it. Renews only while the
-    // session row is ACTIVE and inside its absolute cap, and re-arms the Redis
-    // kill switch so revoking the session still cuts access immediately.
+    // impersonation session must never overwrite it. All the checks live in
+    // ImpersonationService.renew.
     @AuthSharedImpersonateRefreshDoc()
     @Response('auth.impersonateRefresh')
+    @AllowImpersonation()
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -347,48 +343,17 @@ export class AuthSharedController {
     @Post('/impersonate/refresh')
     async impersonateRefresh(
         @AuthJwtPayload<IAuthJwtAccessTokenPayload>()
-        { user, session, impersonatedBy }: IAuthJwtAccessTokenPayload
+        payload: IAuthJwtAccessTokenPayload
     ): Promise<IResponse<AuthImpersonateRefreshResponseDto>> {
-        if (!impersonatedBy) {
+        if (!payload.impersonatedBy) {
             throw new ForbiddenException({
                 statusCode: ENUM_AUTH_STATUS_CODE_ERROR.JWT_ACCESS_TOKEN,
                 message: 'auth.error.accessTokenUnauthorized',
             });
         }
 
-        const sessionEntity =
-            await this.sessionService.findOneActiveById(session);
-        const remainingMs = sessionEntity
-            ? sessionEntity.expiredAt.getTime() - Date.now()
-            : 0;
-        if (!sessionEntity || remainingMs <= 0) {
-            throw new UnauthorizedException({
-                statusCode: ENUM_SESSION_STATUS_CODE_ERROR.EXPIRED,
-                message: 'session.error.expired',
-            });
-        }
-
-        const target = await this.userService.findOneById(user, {
-            populate: ['role'],
-        });
-        if (!target || target.status !== ENUM_USER_STATUS.ACTIVE) {
-            throw new UnauthorizedException({
-                statusCode: ENUM_USER_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'user.error.notFound',
-            });
-        }
-
-        const issued = this.authService.createImpersonationToken(
-            target,
-            session,
-            impersonatedBy,
-            Math.floor(remainingMs / 1000)
-        );
-        await this.sessionService.setLoginSession(
-            target,
-            sessionEntity,
-            issued.expiresIn * 1000
-        );
+        const { issued, sessionEndsAt } =
+            await this.impersonationService.renew(payload);
 
         return {
             data: {
@@ -396,6 +361,7 @@ export class AuthSharedController {
                 roleType: issued.roleType,
                 expiresIn: issued.expiresIn,
                 accessToken: issued.accessToken,
+                sessionEndsAt,
             },
         };
     }

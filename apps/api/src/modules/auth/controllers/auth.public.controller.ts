@@ -120,6 +120,7 @@ export class AuthPublicController {
                 roleType:
                     value.roleType as AuthImpersonateExchangeResponseDto['roleType'],
                 expiresIn: ImpersonationService.remainingSeconds(value),
+                sessionEndsAt: value.sessionEndsAt,
                 accessToken: value.accessToken,
                 impersonatedBy: value.impersonatedBy,
                 user: value.target,

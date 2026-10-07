@@ -61,11 +61,27 @@ impersonation session. Written via `activityService.createByAdmin(targetUser, ad
 | Action | When | `metadata` |
 | --- | --- | --- |
 | `impersonate_start` | `POST /user/impersonate/:user` succeeds | `{ session, sessionExpiresAt, targetEmail }` |
-| `impersonate_end` | `POST /auth/impersonate/end` (Exit / countdown) | `{ session, reason: 'manual' }` |
-| `impersonate_end` | hourly sweep of a session that expired with no clean end | `{ session, reason: 'expired_swept' }` |
+| `impersonate_end` | `POST /auth/impersonate/end` (Exit or logout) | `{ session, reason: 'manual' }`, or `'expired'` if the session was already past its expiry |
+| `impersonate_end` | a renewal refused: session cap reached | `{ session, reason: 'expired' }` |
+| `impersonate_end` | a renewal refused: the target or the admin is no longer eligible (blocked, role changed) | `{ session, reason: 'ineligible' }` |
+| `impersonate_end` | the session is revoked by another route: the user, an admin, "revoke all", a password change or account deletion | `{ session, reason: 'revoked' }` |
+| `impersonate_end` | hourly sweep of a session that was abandoned (tab closed) | `{ session, reason: 'expired_swept' }` |
+
+Every way a session can end writes exactly one `impersonate_end` row: the
+revoke and the audit row share a transaction, and the sweep audits only the rows
+its own `UPDATE ... RETURNING` changed.
 
 The impersonation session itself is a row in `sessions` with `impersonated_by`
-set to the acting admin's id and `expired_at` 10 minutes out.
+set to the acting admin's id. Its `expired_at` rolls forward with each renewed
+access token (`AUTH_JWT_IMPERSONATE_TOKEN_EXPIRED`), so an abandoned session is
+swept soon after its last token dies; the absolute cap
+(`AUTH_JWT_IMPERSONATE_SESSION_EXPIRED`) is measured from `created_at`.
+
+**Impersonation is read-only.** A token carrying `impersonatedBy` may only use
+`GET`/`HEAD`/`OPTIONS`, plus the handlers marked `@AllowImpersonation()`
+(`/impersonate/end`, `/impersonate/refresh`). Anything else is refused with
+status code `5009`, so "user view mode" cannot delete the account, revoke
+sessions or reset API keys in the user's name.
 
 ## Password History Module
 

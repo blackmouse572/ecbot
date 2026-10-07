@@ -17,4 +17,11 @@ export class AuthImpersonateRefreshResponseDto {
 
     @ApiProperty()
     accessToken: string;
+
+    @ApiProperty({
+        example: 1791130000000,
+        description:
+            'Absolute end of the whole session (ms epoch); renewal stops here',
+    })
+    sessionEndsAt: number;
 }

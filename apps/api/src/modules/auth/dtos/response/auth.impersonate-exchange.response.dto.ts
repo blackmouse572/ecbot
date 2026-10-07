@@ -1,16 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AuthImpersonateUserDto } from 'src/modules/auth/dtos/response/auth.impersonate-user.response.dto';
 import { ENUM_POLICY_ROLE_TYPE } from 'src/modules/policy/enums/policy.enum';
-
-class AuthImpersonateUserDto {
-    @ApiProperty()
-    id: string;
-
-    @ApiProperty()
-    name: string;
-
-    @ApiProperty()
-    email: string;
-}
 
 export class AuthImpersonateExchangeResponseDto {
     @ApiProperty({ example: 'Bearer' })
@@ -28,6 +18,13 @@ export class AuthImpersonateExchangeResponseDto {
 
     @ApiProperty()
     accessToken: string;
+
+    @ApiProperty({
+        example: 1791130000000,
+        description:
+            'Absolute end of the whole session (ms epoch); renewal stops here',
+    })
+    sessionEndsAt: number;
 
     @ApiProperty({ description: 'Acting admin user id' })
     impersonatedBy: string;

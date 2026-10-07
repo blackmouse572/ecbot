@@ -25,6 +25,9 @@ describe('UserAdminController.impersonate', () => {
     const setLoginSession = jest.fn();
     const createImpersonationToken = jest.fn();
     const issue = jest.fn();
+    const newNonce = jest.fn(() => 'nonce-1');
+    const storeNonce = jest.fn(async () => undefined);
+    const sessionEndsAt = jest.fn(() => 1_791_130_000_000);
     const createByAdmin = jest.fn();
     const transactional = jest.fn((cb: any) => cb({}));
 
@@ -54,7 +57,10 @@ describe('UserAdminController.impersonate', () => {
                     provide: AuthService,
                     useValue: { createImpersonationToken },
                 },
-                { provide: ImpersonationService, useValue: { issue } },
+                {
+                    provide: ImpersonationService,
+                    useValue: { issue, newNonce, storeNonce, sessionEndsAt },
+                },
                 {
                     provide: SessionService,
                     useValue: { createImpersonation, setLoginSession },
@@ -100,10 +106,20 @@ describe('UserAdminController.impersonate', () => {
             expect.objectContaining({ id: 'session-1' }),
             600_000
         );
+        // the token is bound to a nonce, and only that nonce may renew it
+        expect(createImpersonationToken).toHaveBeenCalledWith(
+            activeUser,
+            'session-1',
+            'admin-1',
+            'nonce-1'
+        );
+        expect(storeNonce).toHaveBeenCalledWith('session-1', 'nonce-1', 600_000);
         expect(issue).toHaveBeenCalledWith(
             expect.objectContaining({
                 // absolute expiry so the exchange can report remaining time
                 expiresAt: expect.any(Number),
+                // and when the whole session ends, so the app can stop renewing
+                sessionEndsAt: 1_791_130_000_000,
                 accessToken: 'signed.jwt',
                 impersonatedBy: 'admin-1',
                 session: 'session-1',

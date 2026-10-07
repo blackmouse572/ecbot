@@ -528,14 +528,22 @@ export class UserAdminController {
                 { user: target.id, impersonatedBy: adminId },
                 { em }
             );
+            // Only the holder of the newest nonce may renew the session.
+            const nonce = this.impersonationService.newNonce();
             const issued = this.authService.createImpersonationToken(
                 target,
                 session.id,
-                adminId
+                adminId,
+                nonce
             );
             await this.sessionService.setLoginSession(
                 target,
                 session,
+                issued.expiresIn * 1000
+            );
+            await this.impersonationService.storeNonce(
+                session.id,
+                nonce,
                 issued.expiresIn * 1000
             );
             await this.activityService.createByAdmin(
@@ -558,6 +566,9 @@ export class UserAdminController {
         const code = await this.impersonationService.issue({
             ...issued,
             expiresAt: Date.now() + issued.expiresIn * 1000,
+            sessionEndsAt: this.impersonationService.sessionEndsAt(
+                session.createdAt
+            ),
             impersonatedBy: adminId,
             session: session.id,
             target: {

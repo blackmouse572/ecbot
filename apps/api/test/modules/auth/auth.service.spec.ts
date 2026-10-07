@@ -64,7 +64,8 @@ describe('AuthService.createImpersonationToken', () => {
         const result = service.createImpersonationToken(
             target,
             'session-id',
-            'acting-admin-id'
+            'acting-admin-id',
+            'nonce-1'
         );
 
         expect(result).toEqual({
@@ -84,6 +85,7 @@ describe('AuthService.createImpersonationToken', () => {
             session: 'session-id',
             loginFrom: ENUM_AUTH_LOGIN_FROM.IMPERSONATE,
             impersonatedBy: 'acting-admin-id',
+            impersonationNonce: 'nonce-1',
         });
         expect(options).toMatchObject({
             expiresIn: 600,
@@ -98,6 +100,7 @@ describe('AuthService.createImpersonationToken', () => {
             target,
             'session-id',
             'acting-admin-id',
+            'nonce-1',
             45
         );
 
@@ -113,6 +116,7 @@ describe('AuthService.createImpersonationToken', () => {
             target,
             'session-id',
             'acting-admin-id',
+            'nonce-1',
             0
         );
 

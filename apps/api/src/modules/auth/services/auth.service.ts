@@ -323,7 +323,8 @@ export class AuthService implements IAuthService {
     createPayloadImpersonationToken(
         data: UserEntity,
         session: string,
-        impersonatedBy: string
+        impersonatedBy: string,
+        impersonationNonce: string
     ): IAuthJwtAccessTokenPayload {
         return {
             user: data.id,
@@ -334,6 +335,7 @@ export class AuthService implements IAuthService {
             loginDate: this.helperDateService.create(),
             loginFrom: ENUM_AUTH_LOGIN_FROM.IMPERSONATE,
             impersonatedBy,
+            impersonationNonce,
         };
     }
 
@@ -341,6 +343,7 @@ export class AuthService implements IAuthService {
         user: UserEntity,
         session: string,
         impersonatedBy: string,
+        impersonationNonce: string,
         maxSeconds?: number
     ): Omit<AuthLoginResponseDto, 'refreshToken'> {
         // Never outlive the session's absolute cap.
@@ -354,7 +357,8 @@ export class AuthService implements IAuthService {
         const payloadAccessToken = this.createPayloadImpersonationToken(
             user,
             session,
-            impersonatedBy
+            impersonatedBy,
+            impersonationNonce
         );
         const accessToken = this.createAccessToken(
             user.id,

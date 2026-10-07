@@ -8,130 +8,84 @@ import { PasswordHistoryService } from '@app/modules/password-history/services/p
 import { SessionService } from '@app/modules/session/services/session.service';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { MessageService } from '@app/common/message/services/message.service';
+import { ImpersonationService } from '@app/modules/auth/services/impersonation.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
-import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
-
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
-import { AuthImpersonateEndRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-end.request.dto';
 
 describe('AuthSharedController.impersonateEnd', () => {
     let controller: AuthSharedController;
 
-    const revokeIfActive = jest.fn();
-    const createByAdmin = jest.fn();
-    const fork = jest.fn();
-    const getReference = jest.fn((_entity: unknown, id: string) => ({ id }));
+    const findOneById = jest.fn();
+    const endImpersonation = jest.fn();
 
     beforeEach(async () => {
-        revokeIfActive.mockReset();
-        createByAdmin.mockReset();
-        fork.mockReset();
-        getReference.mockClear();
+        findOneById.mockReset();
+        endImpersonation.mockReset().mockResolvedValue(true);
 
         const module: TestingModule = await Test.createTestingModule({
             controllers: [AuthSharedController],
             providers: [
-                {
-                    provide: EntityManager,
-                    useValue: { fork, getReference },
-                },
+                { provide: EntityManager, useValue: {} },
                 { provide: CloudTasksQueueClient, useValue: {} },
                 { provide: UserService, useValue: {} },
                 { provide: AuthService, useValue: {} },
                 { provide: PasswordHistoryService, useValue: {} },
                 {
                     provide: SessionService,
-                    useValue: { revokeIfActive },
+                    useValue: { findOneById, endImpersonation },
                 },
-                {
-                    provide: ActivityService,
-                    useValue: { createByAdmin },
-                },
+                { provide: ActivityService, useValue: {} },
                 { provide: MessageService, useValue: {} },
+                { provide: ImpersonationService, useValue: {} },
             ],
         }).compile();
 
         controller = module.get(AuthSharedController);
     });
 
-    it('revokes the session and logs impersonate_end for an impersonation token', async () => {
-        revokeIfActive.mockResolvedValue(true);
+    const payload = {
+        user: 'u1',
+        session: 's1',
+        impersonatedBy: 'admin-1',
+    } as any;
 
-        await expect(
-            controller.impersonateEnd({
-                user: 'u1',
-                session: 's1',
-                impersonatedBy: 'admin-1',
-            } as any)
-        ).resolves.toEqual({ data: null });
+    it('ends the session as "manual" while the token is still live', async () => {
+        findOneById.mockResolvedValue({
+            expiredAt: new Date(Date.now() + 60_000),
+        });
 
-        expect(revokeIfActive).toHaveBeenCalledWith('s1');
-        expect(createByAdmin).toHaveBeenCalledWith(
-            { id: 'u1' },
-            'admin-1',
-            expect.objectContaining({
-                action: ENUM_ACTIVITY_ACTION.IMPERSONATE_END,
-                metadata: { session: 's1', reason: 'manual' },
-            })
-        );
+        await expect(controller.impersonateEnd(payload)).resolves.toEqual({
+            data: null,
+        });
+
+        expect(endImpersonation).toHaveBeenCalledWith('s1', 'manual');
     });
 
-    it('records the reason sent by the client (expired countdown)', async () => {
-        revokeIfActive.mockResolvedValue(true);
+    it('decides the reason itself: a session past its expiry ends as "expired"', async () => {
+        findOneById.mockResolvedValue({
+            expiredAt: new Date(Date.now() - 1_000),
+        });
 
-        await controller.impersonateEnd(
-            { user: 'u1', session: 's1', impersonatedBy: 'admin-1' } as any,
-            { reason: 'expired' }
-        );
+        await controller.impersonateEnd(payload);
 
-        expect(createByAdmin).toHaveBeenCalledWith(
-            { id: 'u1' },
-            'admin-1',
-            expect.objectContaining({
-                metadata: { session: 's1', reason: 'expired' },
-            })
-        );
+        expect(endImpersonation).toHaveBeenCalledWith('s1', 'expired');
     });
 
-    it('is a no-op 200 when the session is already revoked or lost the race', async () => {
-        revokeIfActive.mockResolvedValue(false);
+    it('is a no-op 200 when the session was already ended (the service reports false)', async () => {
+        findOneById.mockResolvedValue({
+            expiredAt: new Date(Date.now() + 60_000),
+        });
+        endImpersonation.mockResolvedValue(false);
 
-        await expect(
-            controller.impersonateEnd({
-                user: 'u1',
-                session: 's1',
-                impersonatedBy: 'admin-1',
-            } as any)
-        ).resolves.toEqual({ data: null });
-
-        expect(createByAdmin).not.toHaveBeenCalled();
+        await expect(controller.impersonateEnd(payload)).resolves.toEqual({
+            data: null,
+        });
     });
 
     it('403s a normal (non-impersonation) token', async () => {
         await expect(
-            controller.impersonateEnd({
-                user: 'u1',
-                session: 's1',
-            } as any)
+            controller.impersonateEnd({ user: 'u1', session: 's1' } as any)
         ).rejects.toBeInstanceOf(ForbiddenException);
 
-        expect(revokeIfActive).not.toHaveBeenCalled();
-        expect(createByAdmin).not.toHaveBeenCalled();
-    });
-});
-
-describe('AuthImpersonateEndRequestDto', () => {
-    const run = (body: unknown) =>
-        validate(plainToInstance(AuthImpersonateEndRequestDto, body));
-
-    it('accepts an empty body, manual and expired', async () => {
-        await expect(run({})).resolves.toHaveLength(0);
-        await expect(run({ reason: 'manual' })).resolves.toHaveLength(0);
-        await expect(run({ reason: 'expired' })).resolves.toHaveLength(0);
-    });
-
-    it('rejects any other reason (cannot forge expired_swept)', async () => {
-        await expect(run({ reason: 'expired_swept' })).resolves.toHaveLength(1);
+        expect(endImpersonation).not.toHaveBeenCalled();
     });
 });
