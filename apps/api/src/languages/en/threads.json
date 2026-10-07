@@ -1,0 +1,7 @@
+{
+    "error": {
+        "invalidCredential": "Threads rejected this login. Please connect again.",
+        "unreachable": "Could not reach Threads. Please try again.",
+        "noReplyTarget": "There is no Threads post from this person to reply to."
+    }
+}
