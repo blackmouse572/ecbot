@@ -243,3 +243,32 @@ describe("AccountCreateForm — WhatsApp manual credential", () => {
     );
   });
 });
+
+describe("AccountCreateForm: Threads", () => {
+  it("warns that Threads answers are public replies, then opens Threads Login", async () => {
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+
+    await user.click(screen.getByText("Threads"));
+    expect(
+      screen.getByText("accounts.create.connect.threads.notice"),
+    ).toBeTruthy();
+
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(
+      screen.getByRole("button", { name: "accounts.create.connect.cta" }),
+    );
+    expect(oauthLogin.platform).toBe("THREADS_ACCOUNT");
+    expect(oauthLogin.handleLinkClick).toHaveBeenCalled();
+  });
+
+  it("shows no Threads notice for other platforms", async () => {
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+
+    await user.click(screen.getByText("WhatsApp"));
+    expect(
+      screen.queryByText("accounts.create.connect.threads.notice"),
+    ).toBeNull();
+  });
+});

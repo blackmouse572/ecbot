@@ -10,6 +10,7 @@ import { KeyboundForm } from "@/components/utils/keybound-form";
 import { useLinkAccount } from "@/hooks/api";
 import { useOAuthLogin } from "@/hooks/use-oauth-login";
 import {
+  Alert,
   Avatar,
   Button,
   Checkbox,
@@ -452,6 +453,9 @@ function ConnectStep({
       </div>
 
       <div className="flex w-full flex-col gap-y-4">
+        {platform === "THREADS_ACCOUNT" && (
+          <Alert>{t("accounts.create.connect.threads.notice")}</Alert>
+        )}
         {isTelegram ? (
           <Form.Field
             name="botToken"
