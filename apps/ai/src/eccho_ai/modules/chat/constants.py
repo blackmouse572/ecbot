@@ -14,6 +14,27 @@ CITATION_MAX_HELD = 64
 # Tool whose successful result is also sent to the client as a `file` part.
 SEND_IMAGE_TOOL = "send_image"
 
+# Key on a StructuredTool's `metadata` that says what kind of tool it is
+# ({"kind": ..., "label"?: ...}). LangChain passes tool
+# metadata through to `on_tool_start`, and the stream forwards it to the client
+# as a `data-tool-meta` part so the chat can tell skills, MCP actions and HTTP
+# tools apart.
+TOOL_META_KEY = "eccho_tool"
+
+# Built-in tools carry no metadata; their names are fixed (llm/tools/system_tools.py).
+SYSTEM_TOOL_KINDS = {
+    "get_customer_field": "customer",
+    "list_customer_fields": "customer",
+    "set_customer_field": "customer",
+    "update_customer_profile": "customer",
+    "apply_customer_tag": "tag",
+    "remove_customer_tag": "tag",
+    "schedule_followup": "followup",
+    "list_pending_followups": "followup",
+    "cancel_followup": "followup",
+    "send_image": "image",
+}
+
 # Shown to clients on any stream-side failure (including a LangGraph
 # GraphRecursionError when the agent loop hits recursion_limit). Never the raw
 # exception text — that can leak internals, secrets, or stack-trace details.

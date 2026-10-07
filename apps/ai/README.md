@@ -118,6 +118,8 @@ Supported part types (streamed as `data: <serialized-part>\n\n`):
 - **Reasoning (model reasoning/CoT):** `reasoning-start`, `reasoning-delta`, `reasoning-end`
 - **Tool calls:** `tool-input-available` (tool name + args), `tool-output-available` (tool result)
 - **Metadata:** `source-url` (RAG citations), `message-metadata` (token usage, latency)
+- **Tool kind (custom):** `data-tool-meta`, sent right after `tool-input-available` with `id` = the tool call id and `data` = `{kind, label?}`. `kind` is `http` or `mcp` (registry tools, from the tool's `metadata`), `skill` (`load_skill`), or `customer` / `tag` / `followup` / `image` for built-ins (by name), else `tool`. See `TOOL_META_KEY` in `modules/chat/constants.py`.
+- **Knowledge search (custom):** `data-knowledge` `{count}`, sent after `start` when retrieval found sources. RAG runs before the agent, so it is not a tool call; file names stay out of it because the widget shows parts to customers.
 - **Guardrails (custom):** `data-guardrail` (content policy filter results). Reason `prompt_leak`: the reply began reproducing the system prompt (`modules/chat/prompt_leak.py`), so the stream is cut at the first marker and apps/api sends the fallback message.
 - **Errors & termination:** `error` (stream-side failure), `data: [DONE]` (final terminator)
 

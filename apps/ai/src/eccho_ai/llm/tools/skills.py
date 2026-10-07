@@ -21,6 +21,7 @@ from eccho_ai.llm.tools.constants import (
     SKILL_LOAD_FAILED,
 )
 from eccho_ai.models.chat import Chatbots
+from eccho_ai.modules.chat.constants import TOOL_META_KEY
 
 logger = get_logger(__name__)
 
@@ -127,5 +128,6 @@ def build_skills(chatbot: Chatbots) -> list[StructuredTool]:
             coroutine=load_skill,
             name="load_skill",
             description=description,
+            metadata={TOOL_META_KEY: {"kind": "skill"}},
         )
     ]

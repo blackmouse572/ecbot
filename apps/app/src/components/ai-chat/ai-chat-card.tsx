@@ -1,4 +1,5 @@
 import "@/styles/streamdown.css";
+import "@/styles/chat-bubble.css";
 import {
   ArrowPathMini,
   DocumentText,
@@ -34,7 +35,7 @@ import { metadataSources } from "./message-sources";
 import type { RagSource } from "@/types/chat-message";
 import { BuildingLoader } from "./ai-loader";
 import { chatErrorMessage } from "./chat-error-message";
-import { ToolCallList } from "./tool-call-list";
+import { ToolTrace } from "./tool-trace";
 import {
   type ChatTransportConfig,
   isEmptyRenderModel,
@@ -43,10 +44,20 @@ import {
   toolCallToChat,
 } from "./use-ai-chat-stream";
 
-// `ToolCallList` is shared with the platform conversation view, which reads
-// persisted `ChatToolCall` records from the API. The live streaming render
-// model has a different (AI SDK) shape, so `toolCallToChat` (pure, unit-tested)
-// adapts it at the boundary instead of reshaping the shared component.
+// The live streaming render model has the AI SDK's shape; `toolCallToChat`
+// (pure, unit-tested) adapts each call to the shared `ChatToolCall` shape that
+// `ToolTrace` renders.
+
+// Customer and bot bubbles (styles/chat-bubble.css), each growing in from its
+// tail corner.
+const BUBBLE_CLASS = {
+  user: "chat-bubble chat-bubble--customer origin-bottom-right",
+  assistant: "chat-bubble chat-bubble--bot origin-bottom-left",
+};
+const REPLY_ENTER =
+  "transition-[opacity,filter] duration-270 ease-[ease] starting:opacity-0 starting:blur-[2px] motion-reduce:starting:blur-none";
+const BUBBLE_ENTER =
+  "transition-[opacity,translate,scale] duration-330 ease-out starting:translate-y-2 starting:scale-96 starting:opacity-0 motion-reduce:starting:translate-y-0 motion-reduce:starting:scale-100";
 
 function MessageAttachments({ files }: { files: RenderModelFile[] }) {
   if (files.length === 0) {
@@ -86,11 +97,23 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
   );
 }
 
+/**
+ * Who the card is for. The business (dashboard Test Chat, preview link) sees
+ * how the agent answered: tool calls, the knowledge search and reasoning. A
+ * customer (the website widget) sees the reply and, like every chat, links to
+ * the public web pages it used (#204). apps/api also strips the internals
+ * from the widget's stream; this keeps the card safe on its own.
+ */
+export type ChatAudience = "owner" | "customer";
+
 function AIChatMessages({
+  audience,
   showKnowledgeSources,
 }: {
+  audience: ChatAudience;
   showKnowledgeSources?: boolean;
 }) {
+  const internals = audience === "owner";
   const { messages, status, error } = useAIChat();
   const { t } = useTranslation();
   const isLoading = status === "submitted" || status === "streaming";
@@ -102,24 +125,38 @@ function AIChatMessages({
         const isLastMessage = index === displayMessages.length - 1;
         const model = partsToRenderModel(message.parts);
         // Operators see every source; customers only web pages (#204).
-        const sources: RagSource[] = showKnowledgeSources
-          ? metadataSources(message.metadata)
-          : message.parts
-              .filter(
-                (part): part is SourceUrlUIPart => part.type === "source-url",
-              )
-              .map((s) => ({
-                id: s.sourceId,
-                title: s.title,
-                sourceUrl: s.url,
-              }));
+        const sources: RagSource[] =
+          showKnowledgeSources && internals
+            ? metadataSources(message.metadata)
+            : message.parts
+                .filter(
+                  (part): part is SourceUrlUIPart => part.type === "source-url",
+                )
+                .map((s) => ({
+                  id: s.sourceId,
+                  title: s.title,
+                  sourceUrl: s.url,
+                }));
+        const isAssistant = message.role === "assistant";
+        // The loader bubble stays put for the whole turn; tool steps are
+        // added above it as the agent decides to call them.
         const showSpinner =
           isLoading &&
           isLastMessage &&
-          message.role === "assistant" &&
+          isAssistant &&
           !model.text &&
-          !model.guardrail &&
-          model.toolCalls.length === 0;
+          !model.guardrail;
+        const toolCalls = model.toolCalls.map(toolCallToChat);
+        const showTrace =
+          internals &&
+          isAssistant &&
+          (toolCalls.length > 0 || !!model.knowledgeCount);
+        const showBubble =
+          showSpinner ||
+          !!model.text ||
+          (internals && !!model.reasoning) ||
+          !!model.guardrail ||
+          model.files.length > 0;
 
         // A stream that fails before producing output leaves an empty
         // assistant message in `messages`; the `stream-error` marker below is
@@ -139,44 +176,58 @@ function AIChatMessages({
             scrollAnchor={message.role === "user"}
           >
             <Message from={message.role}>
-              <MessageContent>
-                {model.toolCalls.length > 0 && (
-                  <ToolCallList
-                    toolCalls={model.toolCalls.map(toolCallToChat)}
-                  />
-                )}
-                {model.guardrail ? (
-                  <Marker className="text-ui-fg-error">
-                    <MarkerIcon className="text-ui-fg-error">
-                      <ExclamationCircle />
-                    </MarkerIcon>
-                    <MarkerContent className="whitespace-normal">
-                      {t("chatbot.chat.guardrail.blocked")}
-                      {model.guardrail.reason
-                        ? ` ${t("chatbot.chat.guardrail.reason", { reason: model.guardrail.reason })}`
-                        : ""}
-                    </MarkerContent>
-                  </Marker>
-                ) : showSpinner ? (
-                  <BuildingLoader state={t("chatbot.chat.thinking")} />
-                ) : (
-                  <>
-                    {model.reasoning && (
-                      <Text
-                        size="xsmall"
-                        className="text-ui-fg-subtle mb-1 whitespace-pre-wrap italic"
-                      >
-                        {model.reasoning}
-                      </Text>
-                    )}
-                    <MessageResponse>{model.text}</MessageResponse>
-                  </>
-                )}
-                <MessageAttachments files={model.files} />
-                {message.role === "assistant" && sources.length > 0 ? (
-                  <AIChatSources sources={sources} />
-                ) : null}
-              </MessageContent>
+              {showTrace && (
+                <ToolTrace
+                  toolCalls={toolCalls}
+                  knowledgeCount={model.knowledgeCount}
+                  running={isLoading && isLastMessage}
+                />
+              )}
+              {showBubble && (
+                <MessageContent
+                  className={clx(
+                    BUBBLE_CLASS[isAssistant ? "assistant" : "user"],
+                    BUBBLE_ENTER,
+                  )}
+                >
+                  {model.guardrail ? (
+                    <Marker className="text-ui-fg-error">
+                      <MarkerIcon className="text-ui-fg-error">
+                        <ExclamationCircle />
+                      </MarkerIcon>
+                      <MarkerContent className="whitespace-normal">
+                        {t("chatbot.chat.guardrail.blocked")}
+                        {model.guardrail.reason
+                          ? ` ${t("chatbot.chat.guardrail.reason", { reason: model.guardrail.reason })}`
+                          : ""}
+                      </MarkerContent>
+                    </Marker>
+                  ) : showSpinner ? (
+                    <BuildingLoader
+                      state={t("chatbot.chat.thinking")}
+                      tone="inverted"
+                    />
+                  ) : (
+                    // The reply takes the loader's place with a short blurred
+                    // fade, so the two read as one change.
+                    <div className={REPLY_ENTER}>
+                      {internals && model.reasoning && (
+                        <Text
+                          size="xsmall"
+                          className="text-ui-fg-subtle mb-1 whitespace-pre-wrap italic"
+                        >
+                          {model.reasoning}
+                        </Text>
+                      )}
+                      <MessageResponse>{model.text}</MessageResponse>
+                    </div>
+                  )}
+                  <MessageAttachments files={model.files} />
+                  {message.role === "assistant" && sources.length > 0 ? (
+                    <AIChatSources sources={sources} />
+                  ) : null}
+                </MessageContent>
+              )}
             </Message>
           </MessageScrollerItem>
         );
@@ -184,8 +235,13 @@ function AIChatMessages({
       {status === "submitted" && (
         <MessageScrollerItem key="pending">
           <Message from="assistant">
-            <MessageContent>
-              <BuildingLoader state={t("chatbot.chat.thinking")} />
+            <MessageContent
+              className={clx(BUBBLE_CLASS.assistant, BUBBLE_ENTER)}
+            >
+              <BuildingLoader
+                state={t("chatbot.chat.thinking")}
+                tone="inverted"
+              />
             </MessageContent>
           </Message>
         </MessageScrollerItem>
@@ -225,6 +281,8 @@ export type AIChatCardProps = {
   /** Secondary line under the heading (e.g. how long a share link lasts). */
   subheading?: ReactNode;
   className?: string;
+  /** Defaults to `owner`; the website widget passes `customer`. */
+  audience?: ChatAudience;
   /**
    * List every knowledge source behind an answer (files and text items too).
    * Operators only: the widget and the public preview leave it off.
@@ -242,6 +300,7 @@ export function AIChatCard(props: AIChatCardProps) {
     heading,
     subheading,
     className,
+    audience = "owner",
     showKnowledgeSources,
   } = props;
 
@@ -270,7 +329,10 @@ export function AIChatCard(props: AIChatCardProps) {
         <MessageScroller>
           <MessageScrollerViewport>
             <MessageScrollerContent>
-              <AIChatMessages showKnowledgeSources={showKnowledgeSources} />
+              <AIChatMessages
+                audience={audience}
+                showKnowledgeSources={showKnowledgeSources}
+              />
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />

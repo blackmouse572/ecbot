@@ -45,6 +45,15 @@ def test_guardrail_is_a_data_part():
     }
 
 
+def test_data_part_carries_an_id_when_given():
+    # The id lets the client attach the part to the tool call it describes.
+    assert _payload(ui.data_part("tool-meta", {"kind": "mcp"}, id="run-1")) == {
+        "type": "data-tool-meta",
+        "id": "run-1",
+        "data": {"kind": "mcp"},
+    }
+
+
 def test_error_shape():
     assert _payload(ui.error("boom")) == {"type": "error", "errorText": "boom"}
 

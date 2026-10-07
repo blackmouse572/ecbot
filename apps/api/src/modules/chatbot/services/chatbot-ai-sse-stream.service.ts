@@ -3,6 +3,7 @@ import { Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
 import { pipeline } from 'stream';
 import { AssistantTranscriptCollector } from '../utils/assistant-transcript.collector';
+import { isAgentInternalFrame } from '../utils/customer-stream.filter';
 import { SafeErrorStream } from '../utils/safe-error-stream.transform';
 import { TokenUsageDelta } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
 
@@ -25,6 +26,12 @@ export interface ISseStreamParams {
      * or failed reply is never persisted but its tokens were still burned.
      */
     onUsage?: (usage: TokenUsageDelta) => Promise<void>;
+    /**
+     * Who reads the stream. `customer` (the website widget) gets the reply
+     * only: tool calls, the knowledge search, sources, reasoning and usage are
+     * left out (`isAgentInternalFrame`). Defaults to `owner` (the dashboard).
+     */
+    audience?: 'owner' | 'customer';
 }
 
 /**
@@ -43,6 +50,7 @@ export class ChatbotAiSseStreamService {
     async pipe(params: ISseStreamParams): Promise<void> {
         const { res, upstream, abort, logContext, onFinalize, onUsage } =
             params;
+        const audience = params.audience ?? 'owner';
 
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
@@ -57,6 +65,8 @@ export class ChatbotAiSseStreamService {
                     `Chat stream error for ${logContext}: ${rawErrorText}`
                 ),
             onFrame: frame => collector.onFrame(frame),
+            dropFrame:
+                audience === 'customer' ? isAgentInternalFrame : undefined,
         });
 
         let finalized = false;

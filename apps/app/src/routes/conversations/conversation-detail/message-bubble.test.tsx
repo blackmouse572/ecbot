@@ -275,3 +275,67 @@ describe("MessageBubble images", () => {
     expect(container.querySelector(".whitespace-pre-wrap")).toBeNull();
   });
 });
+
+describe("MessageBubble look", () => {
+  const renderBubble = (
+    message: Partial<React.ComponentProps<typeof MessageBubble>["message"]> &
+      Record<string, unknown>,
+  ) =>
+    render(
+      <TooltipProvider>
+        <MessageBubble
+          message={
+            { ...baseMessage, ...message } as React.ComponentProps<
+              typeof MessageBubble
+            >["message"]
+          }
+        />
+      </TooltipProvider>,
+    );
+
+  it("gives the customer, the bot and an operator their own bubble", () => {
+    const tone = (message: Record<string, unknown>) => {
+      const { unmount } = renderBubble(message);
+      const bubble = screen.getByText("hello");
+      const cls = bubble.className;
+      unmount();
+      return cls;
+    };
+    expect(tone({})).toContain("chat-bubble--customer");
+    expect(tone({ direction: "OUTBOUND", authorType: "BOT" })).toContain(
+      "chat-bubble--bot",
+    );
+    expect(tone({ direction: "OUTBOUND", authorType: "OPERATOR" })).toContain(
+      "chat-bubble--operator",
+    );
+  });
+
+  it("shows a bot reply's saved tool calls as the tool timeline", () => {
+    renderBubble({
+      direction: "OUTBOUND",
+      authorType: "BOT",
+      author: { id: "bot-1", name: "Parker Support" },
+      toolCalls: [
+        {
+          invocationId: "a",
+          toolName: "Shopify",
+          actionName: "get_order",
+          args: { order: "10482" },
+          status: "success",
+          result: { status: "shipped" },
+          durationMs: 274,
+          kind: "mcp",
+        },
+      ],
+    });
+    // The turn opens with the expanded tool list, above the sender line.
+    const step = screen.getByRole("button", {
+      name: /chatbot\.chat\.trace\.called get_order Shopify 274ms/,
+    });
+    const sender = screen.getByText("Parker Support");
+    expect(
+      step.compareDocumentPosition(sender) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByText("chatbot.chat.trace.done")).toBeInTheDocument();
+  });
+});

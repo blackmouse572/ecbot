@@ -129,6 +129,8 @@ export function Widget() {
         // query key, which the widget transport disables anyway.
         chatbotId="website-widget"
         transport={transport}
+        // A customer gets the reply only, never the agent's tool calls.
+        audience="customer"
         renderInput={
           <>
             {/* Rendered inside AIChatCard's provider — the transcript sync

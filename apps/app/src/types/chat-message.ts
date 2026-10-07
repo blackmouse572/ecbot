@@ -1,5 +1,21 @@
 export type ChatToolCallStatus = "running" | "success" | "error";
 
+/**
+ * What a tool call does, as sent by the AI service in `data-tool-meta`:
+ * registry tools (`http`, `mcp`), a skill load, or a built-in. `handoff` is a
+ * tag that handed the chat to staff; `tool` is a call of unknown kind.
+ */
+export type ToolKind =
+  | "http"
+  | "mcp"
+  | "skill"
+  | "customer"
+  | "tag"
+  | "handoff"
+  | "followup"
+  | "image"
+  | "tool";
+
 export type ChatToolCall = {
   invocationId: string;
   toolName: string;
@@ -9,6 +25,9 @@ export type ChatToolCall = {
   result?: unknown;
   error?: string;
   durationMs?: number;
+  kind?: ToolKind;
+  /** Registry tool's display name (e.g. "Shopify"). */
+  label?: string;
 };
 
 // Sources come from the AI SDK's `source-url` UI message part

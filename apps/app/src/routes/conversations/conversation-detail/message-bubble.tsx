@@ -1,3 +1,4 @@
+import "@/styles/chat-bubble.css";
 import {
   ArrowPath,
   BellAlert,
@@ -15,7 +16,7 @@ import {
   MessageContent,
   ReactionPicker,
 } from "@repo/ui/common-components";
-import { ToolCallList } from "@/components/ai-chat/tool-call-list";
+import { ToolTrace } from "@/components/ai-chat/tool-trace";
 import type {
   MessageAuthorType,
   MessageGetResponseDto,
@@ -69,6 +70,22 @@ const authorKey = (type: MessageAuthorType) => {
   }
 };
 
+// Customer, bot and staff each get their own bubble (styles/chat-bubble.css).
+const bubbleTone = (message: MessageGetResponseDto) =>
+  message.direction === "INBOUND"
+    ? "chat-bubble--customer"
+    : message.authorType === "BOT"
+      ? "chat-bubble--bot"
+      : "chat-bubble--operator";
+
+// Saved calls name the tool by its display name; an MCP call also has the
+// action the agent ran, which is what the timeline shows, with the tool's
+// name as its tag.
+const toTraceCall = (call: ChatToolCall): ChatToolCall =>
+  call.actionName
+    ? { ...call, toolName: call.actionName, label: call.toolName }
+    : call;
+
 const formatTime = (iso: string) => {
   try {
     return new Date(iso).toLocaleTimeString(undefined, {
@@ -96,8 +113,7 @@ export const MessageBubble = ({
   const isPending = message.status === "PENDING";
   const clientNonce = (message as A)._clientNonce as string | undefined;
   const author = (message as A).author as
-    | { id: string; name: string }
-    | undefined;
+    { id: string; name: string } | undefined;
   const { toolCalls, attachments } = message as MessageWithToolCalls;
 
   // Group reactions by emoji for the chip row; track whether the current
@@ -177,6 +193,13 @@ export const MessageBubble = ({
 
   return (
     <Message from={role} id={id}>
+      {message.authorType === "BOT" && toolCalls && toolCalls.length > 0 && (
+        // The bot's turn opens with what it did, then who replied, then the
+        // reply. Sized to its content on the bot's side.
+        <div className="max-w-[80%]">
+          <ToolTrace toolCalls={toolCalls.map(toTraceCall)} running={false} />
+        </div>
+      )}
       <div
         className={clx(
           "text-ui-fg-muted flex items-center gap-x-1.5",
@@ -194,9 +217,6 @@ export const MessageBubble = ({
           </Tooltip>
         )}
       </div>
-      {message.authorType === "BOT" && toolCalls && toolCalls.length > 0 && (
-        <ToolCallList toolCalls={toolCalls} />
-      )}
       {/* The picker sits on the bubble's inner side so it never gets pushed
           against the viewport edge. */}
       <div
@@ -209,9 +229,10 @@ export const MessageBubble = ({
         {message.text ? (
           <MessageContent
             className={clx(
-              "whitespace-pre-wrap",
+              "chat-bubble whitespace-pre-wrap",
+              bubbleTone(message),
               isPending && "opacity-70",
-              isFailed && "border-ui-border-error opacity-80",
+              isFailed && "chat-bubble--failed opacity-80",
             )}
           >
             {message.text}
