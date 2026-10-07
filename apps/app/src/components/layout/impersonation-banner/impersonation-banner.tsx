@@ -79,7 +79,7 @@ export function ImpersonationBanner() {
         className={ICON_BUTTON}
         onClick={(e) => {
           e.stopPropagation();
-          void endImpersonation("manual");
+          void endImpersonation();
         }}
         onPointerDown={(e) => e.stopPropagation()}
       >

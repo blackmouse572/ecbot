@@ -6,6 +6,8 @@ export type ImpersonationSession = {
   accessToken: string;
   /** epoch ms — computed at exchange time from expiresIn */
   expiresAt: number;
+  /** epoch ms, absolute end of the whole session; absent in older stored sessions */
+  sessionEndsAt?: number;
   impersonatedBy: string;
   user: { id: string; name: string; email: string };
 };

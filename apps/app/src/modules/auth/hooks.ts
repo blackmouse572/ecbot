@@ -128,12 +128,16 @@ export const useRefreshTokenEffect = () => {
           error.response?.status === 401 &&
           !error.request?.responseURL?.includes("/shared/auth/refresh") &&
           !error.request?.responseURL?.includes("/impersonate/end") &&
+          !error.request?.responseURL?.includes("/impersonate/refresh") &&
           !logoutGuard.current
         ) {
           // While impersonating there is no refresh cookie and renewal is
-          // unwanted: a 401 ends the impersonation session instead.
+          // unwanted: a 401 ends the impersonation session instead. The
+          // impersonate/end and impersonate/refresh calls are excluded above:
+          // useImpersonationRefresh handles a 401 on its own refresh, and
+          // ending twice would call end twice.
           if (impersonationRef.current) {
-            void endImpersonationRef.current("expired");
+            void endImpersonationRef.current();
             return Promise.reject(error);
           }
           // Deduplicate concurrent refresh calls: if a refresh is already

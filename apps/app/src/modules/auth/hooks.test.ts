@@ -257,7 +257,7 @@ describe("useRefreshTokenEffect", () => {
 
     await capturedErrorHandler!(fakeAxiosError).catch(() => {});
 
-    expect(endImpersonation).toHaveBeenCalledWith("expired");
+    expect(endImpersonation).toHaveBeenCalledWith();
     expect(refreshMutateAsync).not.toHaveBeenCalled();
   });
 
@@ -274,6 +274,25 @@ describe("useRefreshTokenEffect", () => {
     await capturedErrorHandler!({
       ...fakeAxiosError,
       request: { responseURL: "/api/v1/shared/auth/impersonate/end" },
+    }).catch(() => {});
+
+    expect(endImpersonation).not.toHaveBeenCalled();
+    expect(refreshMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("leaves a 401 on the impersonate/refresh call to useImpersonationRefresh", async () => {
+    impersonationMock.current = {
+      accessToken: "imp",
+      expiresAt: Date.now() + 1000,
+      impersonatedBy: "a",
+      user: { id: "u1", name: "A", email: "a@x.com" },
+    };
+
+    renderHook(() => useRefreshTokenEffect(), { wrapper });
+
+    await capturedErrorHandler!({
+      ...fakeAxiosError,
+      request: { responseURL: "/api/v1/shared/auth/impersonate/refresh" },
     }).catch(() => {});
 
     expect(endImpersonation).not.toHaveBeenCalled();

@@ -1,8 +1,7 @@
 {
   "impersonation": {
-    "bootstrap": { "loading": "Đang mở chế độ xem người dùng…" },
     "error": {
-      "title": "Không thể sử dụng liên kết mạo danh này",
+      "title": "Không thể sử dụng liên kết đăng nhập thay mặt này",
       "body": "Liên kết có thể đã hết hạn hoặc đã được mở. Hãy bắt đầu phiên mới từ trang quản trị.",
       "back": "Quay lại trang quản trị"
     },

@@ -1,6 +1,5 @@
 {
   "impersonation": {
-    "bootstrap": { "loading": "Starting the user view…" },
     "error": {
       "title": "This impersonation link can't be used",
       "body": "It may have expired or already been opened. Start a new session from the admin portal.",

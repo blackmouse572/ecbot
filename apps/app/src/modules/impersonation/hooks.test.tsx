@@ -14,7 +14,7 @@ vi.mock("@repo/client", () => ({
 const replace = vi.fn();
 vi.stubGlobal("location", { replace } as never);
 
-import { impersonationAtom } from "./state";
+import { ADMIN_URL, impersonationAtom } from "./state";
 import {
   nextRefreshDelay,
   useEndImpersonation,
@@ -33,7 +33,7 @@ describe("useEndImpersonation", () => {
     sessionStorage.clear();
   });
 
-  it("calls end, clears the atom, redirects to the admin user page", async () => {
+  it("calls end with no body, clears the atom, redirects to the admin user page", async () => {
     const store = createStore();
     store.set(impersonationAtom, {
       accessToken: "jwt",
@@ -45,32 +45,36 @@ describe("useEndImpersonation", () => {
       wrapper: withStore(store),
     });
 
-    await result.current("manual");
+    await result.current();
 
     expect(endCall).toHaveBeenCalledTimes(1);
+    expect(endCall).toHaveBeenCalledWith({ throwOnError: false });
     expect(store.get(impersonationAtom)).toBeNull();
     expect(replace).toHaveBeenCalledWith(
-      `${import.meta.env.VITE_ADMIN_URL ?? ""}/users/u1`,
+      ADMIN_URL ? `${ADMIN_URL}/users/u1` : "/",
     );
   });
 
-  it("sends the end reason to the API", async () => {
+  it("redirects to the app root when no admin URL is configured", async () => {
+    vi.stubEnv("VITE_ADMIN_URL", "");
+    vi.resetModules();
+    const { useEndImpersonation: useEnd } = await import("./hooks");
+    const { impersonationAtom: atom } = await import("./state");
     const store = createStore();
-    store.set(impersonationAtom, {
+    store.set(atom, {
       accessToken: "jwt",
       expiresAt: Date.now() + 5_000,
       impersonatedBy: "a",
       user: { id: "u9", name: "B", email: "b@x.com" },
     });
-    const { result } = renderHook(() => useEndImpersonation(), {
+    const { result } = renderHook(() => useEnd(), {
       wrapper: withStore(store),
     });
 
-    await result.current("expired");
+    await result.current();
 
-    expect(endCall).toHaveBeenCalledWith(
-      expect.objectContaining({ body: { reason: "expired" } }),
-    );
+    expect(replace).toHaveBeenCalledWith("/");
+    vi.unstubAllEnvs();
   });
 
   it("still clears + redirects when the end call throws", async () => {
@@ -86,26 +90,44 @@ describe("useEndImpersonation", () => {
       wrapper: withStore(store),
     });
 
-    await result.current("expired");
+    await result.current();
 
     expect(store.get(impersonationAtom)).toBeNull();
     expect(replace).toHaveBeenCalledWith(
-      `${import.meta.env.VITE_ADMIN_URL ?? ""}/users/u9`,
+      ADMIN_URL ? `${ADMIN_URL}/users/u9` : "/",
     );
   });
 });
 
 describe("nextRefreshDelay", () => {
+  const now = 1_000_000;
+
   it("renews a minute before expiry for normal lifetimes", () => {
-    expect(nextRefreshDelay(1_000_000 + 600_000, 1_000_000)).toBe(540_000);
+    expect(nextRefreshDelay(now + 600_000, undefined, now)).toBe(540_000);
+    expect(nextRefreshDelay(now + 600_000, now + 3_600_000, now)).toBe(540_000);
   });
 
   it("renews at the halfway point for very short tokens", () => {
-    expect(nextRefreshDelay(1_000_000 + 30_000, 1_000_000)).toBe(15_000);
+    expect(nextRefreshDelay(now + 30_000, undefined, now)).toBe(15_000);
   });
 
-  it("never schedules in the past or in a tight loop", () => {
-    expect(nextRefreshDelay(1_000_000 - 5_000, 1_000_000)).toBe(1_000);
+  it("never schedules in the past", () => {
+    expect(nextRefreshDelay(now - 5_000, undefined, now)).toBe(0);
+  });
+
+  it("never schedules later than a second before expiry", () => {
+    expect(nextRefreshDelay(now + 1_500, undefined, now)).toBe(500);
+  });
+
+  it("schedules one final call at the end when the token runs to the session cap", () => {
+    expect(nextRefreshDelay(now + 600_000, now + 600_000, now)).toBe(599_000);
+    // within the 1.5s tolerance of the cap
+    expect(nextRefreshDelay(now + 600_000, now + 601_000, now)).toBe(599_000);
+    expect(nextRefreshDelay(now + 600_000, now + 601_500, now)).toBe(599_000);
+  });
+
+  it("clamps the final call to now when the end is imminent", () => {
+    expect(nextRefreshDelay(now + 500, now + 500, now)).toBe(0);
   });
 });
 
@@ -148,6 +170,42 @@ describe("useImpersonationRefresh", () => {
     expect(endCall).not.toHaveBeenCalled();
   });
 
+  it("stores the new sessionEndsAt and keeps sessions without one working", async () => {
+    const store = seed(120_000);
+    refreshCall.mockResolvedValue({
+      data: {
+        data: { accessToken: "new", expiresIn: 600, sessionEndsAt: 9_999_999 },
+      },
+      response: { status: 200 },
+    });
+    renderHook(() => useImpersonationRefresh(), { wrapper: withStore(store) });
+
+    expect(store.get(impersonationAtom)?.sessionEndsAt).toBeUndefined();
+    await act(async () => void (await vi.advanceTimersByTimeAsync(60_000)));
+
+    expect(store.get(impersonationAtom)?.sessionEndsAt).toBe(9_999_999);
+  });
+
+  it("makes exactly one final call when the token runs to the session cap", async () => {
+    const store = createStore();
+    store.set(impersonationAtom, {
+      accessToken: "old",
+      expiresAt: Date.now() + 120_000,
+      sessionEndsAt: Date.now() + 120_000,
+      impersonatedBy: "a",
+      user: { id: "u9", name: "B", email: "b@x.com" },
+    });
+    refreshCall.mockResolvedValue({ error: {}, response: { status: 401 } });
+    renderHook(() => useImpersonationRefresh(), { wrapper: withStore(store) });
+
+    await act(async () => void (await vi.advanceTimersByTimeAsync(118_000)));
+    expect(refreshCall).not.toHaveBeenCalled();
+
+    await act(async () => void (await vi.advanceTimersByTimeAsync(1_500)));
+    expect(refreshCall).toHaveBeenCalledTimes(1);
+    expect(endCall).toHaveBeenCalledTimes(1);
+  });
+
   it("ends the session when the server rejects the renewal (revoked / capped)", async () => {
     const store = seed(120_000);
     refreshCall.mockResolvedValue({
@@ -158,9 +216,7 @@ describe("useImpersonationRefresh", () => {
 
     await act(async () => void (await vi.advanceTimersByTimeAsync(60_000)));
 
-    expect(endCall).toHaveBeenCalledWith(
-      expect.objectContaining({ body: { reason: "expired" } }),
-    );
+    expect(endCall).toHaveBeenCalledWith({ throwOnError: false });
     expect(store.get(impersonationAtom)).toBeNull();
   });
 

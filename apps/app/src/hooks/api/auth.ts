@@ -212,7 +212,7 @@ export const useLogout = () => {
     // tab-scoped token, and returns to the admin portal), never a cookie
     // logout that would hit the operator's own session.
     if (impersonation) {
-      await endImpersonation("manual");
+      await endImpersonation();
       return;
     }
 

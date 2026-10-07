@@ -55,7 +55,7 @@ describe("ImpersonationBanner", () => {
     fireEvent.click(
       screen.getByRole("button", { name: i18n.t("impersonation.banner.exit") }),
     );
-    expect(endImpersonation).toHaveBeenCalledWith("manual");
+    expect(endImpersonation).toHaveBeenCalledWith();
   });
 
   it("shows no countdown (the session renews in the background)", () => {

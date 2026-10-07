@@ -128,7 +128,7 @@ describe("useLogout", () => {
     const { result } = renderHook(() => useLogout(), { wrapper });
     await result.current();
 
-    expect(endImpersonationFn).toHaveBeenCalledWith("manual");
+    expect(endImpersonationFn).toHaveBeenCalledWith();
     expect(logoutFn).not.toHaveBeenCalled();
     expect(setAuthFn).not.toHaveBeenCalled();
   });

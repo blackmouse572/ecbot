@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { createStore, Provider } from "jotai";
 import { MemoryRouter } from "react-router-dom";
@@ -48,6 +49,7 @@ describe("ImpersonateBootstrap", () => {
           tokenType: "Bearer",
           roleType: "USER",
           expiresIn: 600,
+          sessionEndsAt: 1_900_000_000_000,
           accessToken: "imp-jwt",
           impersonatedBy: "admin-1",
           user: { id: "u1", name: "A", email: "a@x.com" },
@@ -65,7 +67,39 @@ describe("ImpersonateBootstrap", () => {
     const s = store.get(impersonationAtom);
     expect(s?.accessToken).toBe("imp-jwt");
     expect(s?.expiresAt).toBeGreaterThan(Date.now());
+    expect(s?.sessionEndsAt).toBe(1_900_000_000_000);
     expect(replaceState).toHaveBeenCalled();
+  });
+
+  it("sends the single-use code only once under StrictMode", async () => {
+    exchange.mockResolvedValue({
+      data: {
+        data: {
+          expiresIn: 600,
+          accessToken: "imp-jwt",
+          impersonatedBy: "admin-1",
+          user: { id: "u1", name: "A", email: "a@x.com" },
+        },
+      },
+      error: undefined,
+    });
+    const store = createStore();
+    (window.location as never as { search: string }).search = "?code=abc";
+    render(
+      <StrictMode>
+        <Provider store={store}>
+          <I18nextProvider i18n={i18n}>
+            <MemoryRouter initialEntries={["/impersonate?code=abc"]}>
+              <ImpersonateBootstrap />
+            </MemoryRouter>
+          </I18nextProvider>
+        </Provider>
+      </StrictMode>,
+    );
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    expect(exchange).toHaveBeenCalledTimes(1);
+    expect(store.get(impersonationAtom)?.accessToken).toBe("imp-jwt");
   });
 
   it("shows the error view for a missing code", async () => {
