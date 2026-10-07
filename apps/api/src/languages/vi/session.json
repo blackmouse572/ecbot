@@ -7,6 +7,7 @@
     },
     "error": {
         "notFound": "Xin lỗi, chúng tôi không thể tìm thấy phiên.",
+        "expired": "Phiên này đã kết thúc hoặc đã đạt thời lượng tối đa.",
         "forbiddenRevoke": "Bạn không thể thu hồi phiên hiện tại của mình."
     }
 }

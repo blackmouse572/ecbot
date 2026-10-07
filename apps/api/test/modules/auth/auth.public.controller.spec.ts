@@ -16,6 +16,7 @@ import { TurnstileService } from '@app/common/turnstile/services/turnstile.servi
 import { ApiKeyService } from '@app/modules/api-key/services/api-key.service';
 import { HelperDateService } from '@app/common/helper/services/helper.date.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
+import { ImpersonationService } from '@app/modules/auth/services/impersonation.service';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_TURNSTILE_ACTION } from '@app/common/turnstile/enums/turnstile.action.enum';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
@@ -95,6 +96,7 @@ describe('AuthPublicController.signUp', () => {
                     provide: TurnstileService,
                     useValue: { verify: verifyTurnstile },
                 },
+                { provide: ImpersonationService, useValue: {} },
             ],
         }).compile();
 
@@ -148,6 +150,28 @@ describe('AuthPublicController.signUp', () => {
                 },
             },
             { taskName: 'VERIFICATION-user-1-verification-1' }
+        );
+    });
+
+    // #141: the verification email is written in the sign-up's language.
+    it('passes the request language on to the verification email', async () => {
+        await controller.signUp(
+            {
+                email: 'new@user.com',
+                name: 'New User',
+                password: 'Passw0rd!',
+                country: 'country-1',
+            } as any,
+            'vi'
+        );
+
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.VERIFICATION,
+            expect.objectContaining({
+                data: expect.objectContaining({ language: 'vi' }),
+            }),
+            expect.anything()
         );
     });
 
@@ -294,6 +318,7 @@ describe('AuthPublicController.loginWithCredential', () => {
                     provide: TurnstileService,
                     useValue: { verify: verifyLoginTurnstile },
                 },
+                { provide: ImpersonationService, useValue: {} },
             ],
         }).compile();
 

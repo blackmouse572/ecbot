@@ -40,6 +40,7 @@ import {
     Controller,
     Delete,
     Get,
+    Headers,
     Logger,
     NotFoundException,
     Post,
@@ -264,7 +265,10 @@ export class WorkspaceController {
                 ENUM_FILE_MIME_IMAGE.WEBP,
             ])
         )
-        image?: Express.Multer.File
+        image?: Express.Multer.File,
+        // Normalized by AppCustomLanguageMiddleware; picks the language the
+        // default customer tags are seeded in.
+        @Headers('x-custom-lang') language?: string
     ): Promise<IResponse<WorkSpaceGetResponseDto>> {
         const user = await this.userService.findOneById(userId);
         if (!user) {
@@ -291,10 +295,12 @@ export class WorkspaceController {
             }
         }
 
-        const newWorkspace = await this.workSpaceService.create(user, {
-            ...body,
-            image: avatarUrl,
-        });
+        const newWorkspace = await this.workSpaceService.create(
+            user,
+            { ...body, image: avatarUrl },
+            undefined,
+            language
+        );
 
         await this.activityService.createByUserWithWorkspace(
             user,

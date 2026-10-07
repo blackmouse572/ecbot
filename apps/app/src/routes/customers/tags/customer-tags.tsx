@@ -189,8 +189,8 @@ const useColumns = ({
         cell: ({ row }) => (
           <StatusBadge color={row.original.triggersHandoff ? "green" : "grey"}>
             {row.original.triggersHandoff
-              ? t("accounts.details.statuses.active.label")
-              : t("accounts.details.statuses.inactive.label")}
+              ? t("settings.customerTags.handoff.yes")
+              : t("settings.customerTags.handoff.no")}
           </StatusBadge>
         ),
       }),

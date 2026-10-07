@@ -7,8 +7,10 @@ import {
     DocResponse,
 } from 'src/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
+import { AuthImpersonateExchangeRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-exchange.request.dto';
 import { AuthLoginRequestDto } from 'src/modules/auth/dtos/request/auth.login.request.dto';
 import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
+import { AuthImpersonateExchangeResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate-exchange.response.dto';
 import { AuthLoginResponseDto } from 'src/modules/auth/dtos/response/auth.login.response.dto';
 
 export function AuthPublicLoginCredentialDoc(): MethodDecorator {
@@ -24,6 +26,26 @@ export function AuthPublicLoginCredentialDoc(): MethodDecorator {
         DocResponse<AuthLoginResponseDto>('auth.loginWithCredential', {
             dto: AuthLoginResponseDto,
         })
+    );
+}
+
+export function AuthPublicImpersonateExchangeDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                'Exchange a single-use impersonation code for an access token',
+        }),
+        DocAuth({ xApiKey: true }),
+        DocRequest({
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            dto: AuthImpersonateExchangeRequestDto,
+        }),
+        DocResponse<AuthImpersonateExchangeResponseDto>(
+            'auth.impersonateExchange',
+            {
+                dto: AuthImpersonateExchangeResponseDto,
+            }
+        )
     );
 }
 

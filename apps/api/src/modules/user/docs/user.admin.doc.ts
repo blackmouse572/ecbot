@@ -9,6 +9,7 @@ import {
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
+import { AuthImpersonateResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate.response.dto';
 import {
     UserDocParamsId,
     UserDocQueryCountry,
@@ -119,5 +120,17 @@ export function UserAdminUpdateDoc(): MethodDecorator {
         }),
         DocGuard({ role: true, policy: true }),
         DocResponse('user.update')
+    );
+}
+
+export function UserAdminImpersonateDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'impersonate a user' }),
+        DocRequest({ params: UserDocParamsId }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ role: true, policy: true }),
+        DocResponse<AuthImpersonateResponseDto>('user.impersonate', {
+            dto: AuthImpersonateResponseDto,
+        })
     );
 }

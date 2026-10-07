@@ -144,7 +144,7 @@ export const DataTableRoot = <TData,>({
         })}
       >
         {!noResults ? (
-          <Table className="relative w-full">
+          <Table className="relative w-full max-sm:whitespace-nowrap">
             {!noHeader && (
               <Table.Header className="border-t-0">
                 {table.getHeaderGroups().map((headerGroup) => {
@@ -184,9 +184,9 @@ export const DataTableRoot = <TData,>({
                                 : undefined,
                             }}
                             className={clx({
-                              "bg-ui-bg-subtle sticky left-0 after:absolute after:inset-y-0 after:right-0 after:h-full after:w-px after:bg-transparent after:content-['']":
+                              "bg-ui-bg-subtle sm:sticky sm:left-0 after:absolute after:inset-y-0 after:right-0 after:h-full after:w-px after:bg-transparent after:content-['']":
                                 isStickyHeader,
-                              "left-[68px]":
+                              "sm:left-[68px]":
                                 isStickyHeader && hasSelect && !isSelectHeader,
                               "after:bg-ui-border-base":
                                 showStickyBorder &&
@@ -272,11 +272,11 @@ export const DataTableRoot = <TData,>({
                           key={cell.id}
                           className={clx("h-100%", {
                             "!pl-0 !pr-0": shouldRenderAsLink,
-                            "bg-ui-bg-base group-data-[selected=true]/row:bg-ui-bg-highlight group-data-[selected=true]/row:group-hover/row:bg-ui-bg-highlight-hover group-hover/row:bg-ui-bg-base-hover transition-fg group-has-[[data-row-link]:focus-visible]:bg-ui-bg-base-hover sticky left-0 after:absolute after:inset-y-0 after:right-0 after:h-full after:w-px after:bg-transparent after:content-['']":
+                            "bg-ui-bg-base group-data-[selected=true]/row:bg-ui-bg-highlight group-data-[selected=true]/row:group-hover/row:bg-ui-bg-highlight-hover group-hover/row:bg-ui-bg-base-hover transition-fg group-has-[[data-row-link]:focus-visible]:bg-ui-bg-base-hover sm:sticky sm:left-0 after:absolute after:inset-y-0 after:right-0 after:h-full after:w-px after:bg-transparent after:content-['']":
                               isStickyCell,
                             "bg-ui-bg-subtle group-hover/row:bg-ui-bg-subtle-hover":
                               isOdd && isStickyCell,
-                            "left-[68px]": hasLeftOffset,
+                            "sm:left-[68px]": hasLeftOffset,
                             "after:bg-ui-border-base":
                               showStickyBorder && isStickyCell && !isSelectCell,
                             "!bg-ui-bg-disabled !hover:bg-ui-bg-disabled":
@@ -384,7 +384,7 @@ const Pagination = (props: PaginationProps) => {
   return (
     <>
       <Table.Pagination
-        className="flex-shrink-0"
+        className="flex-shrink-0 [&_p]:whitespace-nowrap max-sm:flex-col max-sm:items-start max-sm:gap-y-1"
         {...props}
         translations={translations}
       />

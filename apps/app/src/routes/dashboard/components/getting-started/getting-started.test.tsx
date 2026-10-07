@@ -39,14 +39,14 @@ describe("GettingStarted", () => {
     counts.conversations = 0;
   });
 
-  it("points a brand-new workspace at creating its first assistant", () => {
+  it("points a brand-new workspace at creating its first agent", () => {
     renderCard();
 
-    expect(screen.getByText("Create your first assistant")).toBeInTheDocument();
+    expect(screen.getByText("Create your first agent")).toBeInTheDocument();
     expect(screen.getByText("Connect a channel")).toBeInTheDocument();
     expect(screen.getByText("Get your first conversation")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Create your first assistant/ }),
+      screen.getByRole("link", { name: /Create your first agent/ }),
     ).toHaveAttribute("href", "/kunmart/chatbot/create");
   });
 
@@ -55,7 +55,7 @@ describe("GettingStarted", () => {
     renderCard();
 
     expect(
-      screen.queryByRole("link", { name: /Create your first assistant/ }),
+      screen.queryByRole("link", { name: /Create your first agent/ }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Connect a channel/ }),

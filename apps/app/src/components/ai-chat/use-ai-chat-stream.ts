@@ -4,7 +4,8 @@ import {
   SEND_IMAGE_TOOL_PART,
   TOOL_STEP_ICONS,
 } from "./constants";
-import { tokenAtom } from "@/modules/auth";
+import { pickAuthToken, tokenAtom } from "@/modules/auth";
+import { impersonationAtom } from "@/modules/impersonation";
 import type {
   ChatToolCall,
   ChatToolCallStatus,
@@ -338,6 +339,15 @@ export function buildChatStreamRequest({
 }
 
 /**
+ * The bearer token a chat stream should send: a live impersonation token wins
+ * over the operator's own, same rule as every other request.
+ */
+export const readStreamAuthToken = (): string | null => {
+  const store = getDefaultStore();
+  return pickAuthToken(store.get(impersonationAtom), store.get(tokenAtom));
+};
+
+/**
  * Wraps `@ai-sdk/react`'s `useChat` with a transport that talks to eccho's
  * chatbot stream endpoints, reusing the shared `@repo/client` axios config for
  * the base URL, auth and API-key headers.
@@ -363,7 +373,7 @@ export function useAiChat({
             // Read fresh at send time (not memoized) — same freshness the
             // old code got from reading client.getConfig() live, before
             // Authorization moved off the shared client config.
-            token: getDefaultStore().get(tokenAtom),
+            token: readStreamAuthToken(),
             id,
             messages,
           }),

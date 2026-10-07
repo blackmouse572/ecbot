@@ -18,11 +18,13 @@ import {
     RAG_INGEST_SENTRY_QUEUE,
 } from '../constants/knowledge-ingest.constant';
 import { KnowledgeIngestTaskDto } from '../dtos/knowledge-ingest.task.dto';
+import { PermanentIngestError } from '../errors/permanent-ingest.error';
 import { KnowledgeItemService } from './knowledge-item.service';
 import { ChatbotKnowledgeItemService } from './chatbot-knowledge-item.service';
 import { KnowledgeFailureNotifierService } from './knowledge-failure-notifier.service';
 
 export function classifyIngestError(err: any): 'permanent' | 'transient' {
+    if (err instanceof PermanentIngestError) return 'permanent';
     const status = err?.response?.status;
     if (typeof status === 'number') {
         if (status === 408 || status === 429) return 'transient';
@@ -98,6 +100,9 @@ export class KnowledgeIngestTaskService {
                             knowledge_item_id: knowledgeItemId,
                         },
                     });
+                    // Acknowledge: a throw here made Cloud Tasks retry far
+                    // past RAG_INGEST_MAX_ATTEMPTS (#170).
+                    return;
                 }
                 throw err;
             }
@@ -130,7 +135,7 @@ export class KnowledgeIngestTaskService {
                         ENUM_KNOWLEDGE_FAILURE_KIND.LINK_SYNC
                     );
                 }
-                if (kind === 'permanent') return;
+                if (kind === 'permanent' || finalAttempt) return;
                 throw err;
             }
         } else if (dto.jobName === ENUM_RAG_INGEST_PROCESS.DELETE) {
@@ -152,7 +157,8 @@ export class KnowledgeIngestTaskService {
                 this.logger.error(
                     `delete failed item=${knowledgeItemId} kind=${kind}: ${message}`
                 );
-                if (kind === 'permanent') return;
+                const finalAttempt = retryCount + 1 >= RAG_INGEST_MAX_ATTEMPTS;
+                if (kind === 'permanent' || finalAttempt) return;
                 throw err;
             }
         }
@@ -229,8 +235,8 @@ export class KnowledgeIngestTaskService {
 
     private async ingestFile(item: any, chatbotIds: string[]): Promise<any> {
         if (!item.attachment?.key) {
-            throw new Error(
-                'Knowledge item has no attachment — cannot ingest file'
+            throw new PermanentIngestError(
+                'Knowledge item has no attachment, cannot ingest file'
             );
         }
         const buffer = await this.awsS3Service.getItemBuffer(
@@ -248,6 +254,8 @@ export class KnowledgeIngestTaskService {
         form.append('chatbot_ids', chatbotIds.join(','));
         if (item.knowledgeBase?.id)
             form.append('knowledge_base_id', item.knowledgeBase.id);
+        // Shown to operators as the source name, not the storage name (#204).
+        if (item.title) form.append('title', item.title);
 
         const resp = await firstValueFrom(
             this.httpService.post(
@@ -272,6 +280,7 @@ export class KnowledgeIngestTaskService {
                     knowledge_item_id: item.id,
                     chatbot_ids: chatbotIds,
                     knowledge_base_id: item.knowledgeBase?.id,
+                    title: item.title,
                 },
                 {
                     timeout: RAG_INGEST_HTTP_TIMEOUT_MS,

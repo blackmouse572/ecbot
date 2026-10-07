@@ -161,9 +161,13 @@ export function useInviteUser() {
 }
 
 /** The join endpoints surface their message on `error.response.data`. */
+// Keeps the API's statusCode so the page can react to a specific case
+// (e.g. an invitation sent to another account).
 const rethrowJoinError = (error: A): never => {
   if (error.response?.data) {
-    throw new Error(error.response.data.message);
+    throw Object.assign(new Error(error.response.data.message), {
+      statusCode: error.response.data.statusCode as number | undefined,
+    });
   }
   throw error;
 };

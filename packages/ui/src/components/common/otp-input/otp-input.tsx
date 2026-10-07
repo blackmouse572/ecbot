@@ -1,6 +1,12 @@
 import { Input } from "@medusajs/ui";
-import { isNumberOnly, isTextOnly } from "@repo/ui/utils";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { OTPInputType } from "./otp-input.types";
+import {
+  allowedChars,
+  isAllowedChar,
+  toDigits,
+  typedText,
+} from "./otp-input.utils";
 
 interface OTPInputProps {
   /**
@@ -10,8 +16,9 @@ interface OTPInputProps {
   length?: number;
   onComplete?: (otp: string) => void;
   onChange?: (otp: string) => void;
+  /** Pass it to control the boxes, e.g. set "" to clear them after a failed verify. */
   value?: string;
-  type?: "number" | "text" | "both";
+  type?: OTPInputType;
   size?: React.ComponentProps<typeof Input>["size"];
 }
 
@@ -23,87 +30,96 @@ const OTPInput = ({
   type = "number",
   size = "base",
 }: OTPInputProps) => {
-  const [otp, setOtp] = useState<string[]>(
-    value ? value.split("") : Array(length).fill(""),
-  );
+  const [digits, setDigits] = useState(() => toDigits(value, length));
+  const [prevValue, setPrevValue] = useState(value);
   const inputRefs = useRef<HTMLInputElement[]>([]);
+  const focusFirstAfterReset = useRef(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    const value = e.target.value;
-
-    // Only allow single digit
-    if ((type === "number" || type === "both") && isNumberOnly(value)) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-      onChange?.(newOtp.join(""));
-
-      // Auto-focus next input
-      if (index < length - 1 && value) {
-        inputRefs.current[index + 1]?.focus();
-      }
-
-      // Check if all fields are filled
-      if (newOtp.every((digit) => digit !== "")) {
-        onComplete?.(newOtp.join(""));
-      }
-    } else if ((type === "text" || type === "both") && isTextOnly(value)) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-      onChange?.(newOtp.join(""));
-      // Auto-focus next input
-      if (index < length - 1 && value) {
-        inputRefs.current[index + 1]?.focus();
-      }
-
-      // Check if all fields are filled
-      if (newOtp.every((digit) => digit !== "")) {
-        onComplete?.(newOtp.join(""));
-      }
-    } else if (value === "") {
-      // Clear the current input if backspace is pressed
-      const newOtp = [...otp];
-      newOtp[index] = "";
-      setOtp(newOtp);
-      onChange?.(newOtp.join(""));
+  // Follow the parent when it changes the code itself (a reset after a failed
+  // verify), not when it is echoing what the user just typed.
+  if (value !== prevValue) {
+    setPrevValue(value);
+    if (value !== undefined && value !== digits.join("")) {
+      setDigits(toDigits(value, length));
+      focusFirstAfterReset.current = value === "";
     }
+  }
+
+  useEffect(() => {
+    if (focusFirstAfterReset.current) {
+      focusFirstAfterReset.current = false;
+      inputRefs.current[0]?.focus();
+    }
+  });
+
+  const focusBox = (index: number) => inputRefs.current[index]?.focus();
+
+  const update = (next: string[]) => {
+    setDigits(next);
+    const code = next.join("");
+    onChange?.(code);
+    if (next.every((digit) => digit !== "")) onComplete?.(code);
   };
 
+  /** Writes `chars` into the boxes from `index` on, then moves past them. */
+  const fill = (index: number, chars: string[]) => {
+    if (!chars.length) return;
+    const next = [...digits];
+    chars
+      .slice(0, length - index)
+      .forEach((char, i) => (next[index + i] = char));
+    update(next);
+    focusBox(Math.min(index + chars.length, length - 1));
+  };
+
+  const clear = (index: number) => {
+    const next = [...digits];
+    next[index] = "";
+    update(next);
+    focusBox(index);
+  };
+
+  // Keyboards with real keys: handled here so retyping the same digit, which
+  // leaves the input's value unchanged, still moves on.
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     index: number,
   ) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      // Move focus to previous input on backspace
-      inputRefs.current[index - 1]?.focus();
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      // Clear this box; on an empty box, step back and clear the previous one.
+      clear(digits[index] || index === 0 ? index : index - 1);
+    } else if (e.key === "Delete") {
+      e.preventDefault();
+      clear(index);
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      if (isAllowedChar(e.key, type)) fill(index, [e.key]);
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasteData = e.clipboardData.getData("text/plain").slice(0, length);
-    const validationRegex =
-      type === "number"
-        ? /^\d+$/
-        : type === "text"
-          ? /^[a-zA-Z]+$/
-          : /^[a-zA-Z0-9]+$/;
-
-    if (validationRegex.test(pasteData)) {
-      const newOtp = [...otp];
-      pasteData.split("").forEach((char, i) => {
-        if (i < length) newOtp[i] = char;
-      });
-      setOtp(newOtp);
-      onChange?.(newOtp.join(""));
-      if (pasteData.length === length) {
-        onComplete?.(pasteData);
-      }
+  // Everything that skips keydown: Android keyboards (key "Unidentified"),
+  // SMS autofill writing the whole code into one box, cut.
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    const text = typedText(e.target.value, digits[index] ?? "");
+    if (!text) {
+      clear(index);
+      return;
     }
+    fill(index, allowedChars(text, type));
+  };
+
+  const handlePaste = (
+    e: React.ClipboardEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    e.preventDefault();
+    const chars = allowedChars(e.clipboardData.getData("text/plain"), type);
+    // A whole code always starts at the first box, wherever it is pasted.
+    fill(chars.length >= length ? 0 : index, chars);
   };
 
   return (
@@ -112,12 +128,14 @@ const OTPInput = ({
         <Input
           key={`otp-input-${index}`}
           type="text"
+          inputMode={type === "number" ? "numeric" : "text"}
+          autoComplete={index === 0 ? "one-time-code" : "off"}
           size={size}
-          maxLength={1}
-          value={otp[index]}
+          value={digits[index]}
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
-          onPaste={handlePaste}
+          onFocus={(e) => e.target.select()}
+          onPaste={(e) => handlePaste(e, index)}
           ref={(el) => {
             if (el) inputRefs.current[index] = el;
           }}

@@ -3,7 +3,7 @@ import React from 'react';
 
 interface AccountBannedEmailProps {
     name: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -20,10 +20,12 @@ const AccountBannedEmail: React.FC<AccountBannedEmailProps> = ({
             <p>Hi {name},</p>
             <br />
             <p>Your account has been suspended by an administrator.</p>
-            <p>
-                If you believe this is a mistake, please contact us at{' '}
-                <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-            </p>
+            {supportEmail && (
+                <p>
+                    If you believe this is a mistake, please contact us at{' '}
+                    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+                </p>
+            )}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>.
             </p>

@@ -7,8 +7,13 @@ import {
 import { ROUTES } from "@/routes/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, toast } from "@medusajs/ui";
-import { HoneypotField, OTPInput, useHoneypot } from "@repo/auth/components";
-import { CircularLoading, Form, Input } from "@repo/ui/common-components";
+import { HoneypotField, useHoneypot } from "@repo/auth/components";
+import {
+  CircularLoading,
+  Form,
+  Input,
+  OTPInput,
+} from "@repo/ui/common-components";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -27,6 +32,7 @@ function ResetPasswordPage() {
   const email = searchParams.get("email") ?? "";
 
   const [otpVerified, setOtpVerified] = useState(false);
+  const [otp, setOtp] = useState("");
   const honeypot = useHoneypot();
 
   const { isLoading: isCheckingToken, isError: isTokenInvalid } =
@@ -46,6 +52,7 @@ function ResetPasswordPage() {
       setOtpVerified(true);
     } catch {
       toast.error(t("errors.invalidOtp"));
+      setOtp("");
     }
   };
 
@@ -162,7 +169,12 @@ function ResetPasswordPage() {
         </Form>
       ) : (
         <>
-          <OTPInput length={OTP_DIGIT_LENGTH} onComplete={onVerify} />
+          <OTPInput
+            length={OTP_DIGIT_LENGTH}
+            value={otp}
+            onChange={setOtp}
+            onComplete={onVerify}
+          />
           {isVerifying && (
             <p className="txt-compact-small text-ui-fg-muted">
               {t("actions.verifying")}

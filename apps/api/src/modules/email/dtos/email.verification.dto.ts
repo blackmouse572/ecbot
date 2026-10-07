@@ -18,4 +18,11 @@ export class EmailVerificationDto {
         required: true,
     })
     reference: string;
+
+    @ApiProperty({
+        required: false,
+        example: 'vi',
+        description: 'Language to write the email in; English otherwise',
+    })
+    language?: string;
 }

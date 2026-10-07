@@ -5,7 +5,7 @@ interface MobileNumberVerificationEmailProps {
     name: string;
     mobileNumber: string;
     reference: string;
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
 }
@@ -21,7 +21,7 @@ const MobileNumberVerificationEmail: React.FC<
             <p>Mobile Number is verified successfully.</p>
             <p>Mobile Number: {mobileNumber}.</p>
             <p>Reference: {reference}.</p>
-            <p>Support Email: {supportEmail}.</p>
+            {supportEmail && <p>Support Email: {supportEmail}.</p>}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>.
             </p>

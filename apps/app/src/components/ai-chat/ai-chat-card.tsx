@@ -31,6 +31,8 @@ import type React from "react";
 import { useTranslation } from "react-i18next";
 import { AIChatProvider, useAIChat } from "./ai-chat-provider";
 import { AIChatSources } from "./ai-chat-sources";
+import { metadataSources } from "./message-sources";
+import type { RagSource } from "@/types/chat-message";
 import { BuildingLoader } from "./ai-loader";
 import { chatErrorMessage } from "./chat-error-message";
 import { ToolTrace } from "./tool-trace";
@@ -97,14 +99,20 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
 
 /**
  * Who the card is for. The business (dashboard Test Chat, preview link) sees
- * how the agent answered: tool calls, the knowledge search, reasoning and
- * sources. A customer (the website widget) sees the reply only. apps/api also
- * strips those parts from the widget's stream; this keeps the card safe on its
- * own.
+ * how the agent answered: tool calls, the knowledge search and reasoning. A
+ * customer (the website widget) sees the reply and, like every chat, links to
+ * the public web pages it used (#204). apps/api also strips the internals
+ * from the widget's stream; this keeps the card safe on its own.
  */
 export type ChatAudience = "owner" | "customer";
 
-function AIChatMessages({ audience }: { audience: ChatAudience }) {
+function AIChatMessages({
+  audience,
+  showKnowledgeSources,
+}: {
+  audience: ChatAudience;
+  showKnowledgeSources?: boolean;
+}) {
   const internals = audience === "owner";
   const { messages, status, error } = useAIChat();
   const { t } = useTranslation();
@@ -116,9 +124,19 @@ function AIChatMessages({ audience }: { audience: ChatAudience }) {
       {displayMessages.map((message, index) => {
         const isLastMessage = index === displayMessages.length - 1;
         const model = partsToRenderModel(message.parts);
-        const sources = message.parts.filter(
-          (part): part is SourceUrlUIPart => part.type === "source-url",
-        );
+        // Operators see every source; customers only web pages (#204).
+        const sources: RagSource[] =
+          showKnowledgeSources && internals
+            ? metadataSources(message.metadata)
+            : message.parts
+                .filter(
+                  (part): part is SourceUrlUIPart => part.type === "source-url",
+                )
+                .map((s) => ({
+                  id: s.sourceId,
+                  title: s.title,
+                  sourceUrl: s.url,
+                }));
         const isAssistant = message.role === "assistant";
         // The loader bubble stays put for the whole turn; tool steps are
         // added above it as the agent decides to call them.
@@ -205,16 +223,8 @@ function AIChatMessages({ audience }: { audience: ChatAudience }) {
                     </div>
                   )}
                   <MessageAttachments files={model.files} />
-                  {internals &&
-                  message.role === "assistant" &&
-                  sources.length > 0 ? (
-                    <AIChatSources
-                      sources={sources.map((s) => ({
-                        id: s.sourceId,
-                        filename: s.title,
-                        sourceUrl: s.url,
-                      }))}
-                    />
+                  {message.role === "assistant" && sources.length > 0 ? (
+                    <AIChatSources sources={sources} />
                   ) : null}
                 </MessageContent>
               )}
@@ -273,6 +283,11 @@ export type AIChatCardProps = {
   className?: string;
   /** Defaults to `owner`; the website widget passes `customer`. */
   audience?: ChatAudience;
+  /**
+   * List every knowledge source behind an answer (files and text items too).
+   * Operators only: the widget and the public preview leave it off.
+   */
+  showKnowledgeSources?: boolean;
 };
 
 export function AIChatCard(props: AIChatCardProps) {
@@ -286,6 +301,7 @@ export function AIChatCard(props: AIChatCardProps) {
     subheading,
     className,
     audience = "owner",
+    showKnowledgeSources,
   } = props;
 
   return (
@@ -313,7 +329,10 @@ export function AIChatCard(props: AIChatCardProps) {
         <MessageScroller>
           <MessageScrollerViewport>
             <MessageScrollerContent>
-              <AIChatMessages audience={audience} />
+              <AIChatMessages
+                audience={audience}
+                showKnowledgeSources={showKnowledgeSources}
+              />
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />

@@ -21,8 +21,8 @@ export const DataTableQuery = <TData,>({
 }: DataTableQueryProps<TData>) => {
   return (
     (search || orderBy || filters || prefix) && (
-      <div className="flex items-start justify-between gap-x-4 px-6 py-4">
-        <div className="w-full max-w-[60%]">
+      <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-4">
+        <div className="min-w-0 sm:w-full sm:max-w-[60%]">
           {filters && filters.length > 0 && (
             <DataTableFilter filters={filters} prefix={prefix} />
           )}

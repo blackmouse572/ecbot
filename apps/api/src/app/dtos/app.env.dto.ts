@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+    IsEmail,
     IsBoolean,
     IsEnum,
     IsInt,
@@ -11,6 +12,7 @@ import {
     IsUrl,
     Min,
     MinLength,
+    ValidateIf,
 } from 'class-validator';
 import {
     ENUM_APP_ENVIRONMENT,
@@ -198,6 +200,16 @@ export class AppEnvDto {
 
     @IsOptional()
     @IsString()
+    @MinLength(1)
+    AUTH_JWT_IMPERSONATE_TOKEN_EXPIRED?: string;
+
+    @IsOptional()
+    @IsString()
+    @MinLength(1)
+    AUTH_JWT_IMPERSONATE_SESSION_EXPIRED?: string;
+
+    @IsOptional()
+    @IsString()
     AWS_S3_PUBLIC_CREDENTIAL_KEY?: string;
 
     @IsOptional()
@@ -334,6 +346,11 @@ export class AppEnvDto {
     @IsOptional()
     @IsString()
     EMAIL_FROM?: string;
+
+    // Empty means "no support line in emails", as in .env.example.
+    @ValidateIf((env: AppEnvDto) => !!env.EMAIL_SUPPORT)
+    @IsEmail()
+    EMAIL_SUPPORT?: string;
 
     // Workspace invitation tokens
     @IsOptional()

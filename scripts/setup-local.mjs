@@ -25,10 +25,12 @@ import {
   emulatorReachability,
   isPlaceholder,
   mergeCorsOrigins,
+  normalizeAiEnv,
   missingManual,
   MANUAL_VALUES,
   randomApiKeyPair,
   resolvePair,
+  resolveInternalToken,
   splitPair,
 } from "./setup-local/lib.mjs";
 
@@ -271,6 +273,35 @@ if (env.ai) {
   }
 }
 
+// Without these the services refuse to boot (#134): apps/api requires
+// API_INTERNAL_TOKEN and apps/ai must hold the same one, and apps/ai accepts
+// only development/staging/production as ENV.
+const bootFixes = [];
+if (env.ai) {
+  const token = resolveInternalToken({
+    api: env.api.get("API_INTERNAL_TOKEN"),
+    ai: env.ai.get("API_INTERNAL_TOKEN"),
+    generate: () => hex(32),
+  });
+  if (token.writeApi) env.api.set("API_INTERNAL_TOKEN", token.value);
+  if (token.writeAi) env.ai.set("API_INTERNAL_TOKEN", token.value);
+  if (token.writeApi || token.writeAi) {
+    bootFixes.push("API_INTERNAL_TOKEN (shared by apps/api and apps/ai)");
+  }
+
+  const aiEnv = normalizeAiEnv(env.ai.get("ENV"));
+  if (aiEnv) {
+    bootFixes.push(
+      `ENV = ${aiEnv} in apps/ai/.env (was "${env.ai.get("ENV")}")`,
+    );
+    env.ai.set("ENV", aiEnv);
+  }
+} else if (!env.api.get("API_INTERNAL_TOKEN")) {
+  env.api.set("API_INTERNAL_TOKEN", hex(32));
+  bootFixes.push("API_INTERNAL_TOKEN in apps/api/.env");
+}
+report.filled.push(...bootFixes);
+
 if (
   env.api.has("CLOUD_TASKS_SYSTEM_API_KEY") &&
   !splitPair(env.api.get("CLOUD_TASKS_SYSTEM_API_KEY"))
@@ -438,4 +469,8 @@ Next:
   pnpm dev:app                    # api :${httpPort} + app :5173`);
 }
 
-process.exit(opts.check && (requiredMissing.length || needKeys) ? 1 : 0);
+process.exit(
+  opts.check && (requiredMissing.length || needKeys || bootFixes.length)
+    ? 1
+    : 0,
+);

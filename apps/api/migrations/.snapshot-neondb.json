@@ -743,7 +743,9 @@
             "tool_start_install",
             "tool_complete_install",
             "chatbot_skill_enable",
-            "chatbot_skill_disable"
+            "chatbot_skill_disable",
+            "impersonate_start",
+            "impersonate_end"
           ],
           "mappedType": "enum"
         },
@@ -14649,6 +14651,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "impersonated_by": {
+          "name": "impersonated_by",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
         }
       },
       "name": "sessions",

@@ -44,3 +44,19 @@ describe("catalog", () => {
     expect(promptOf(ADDRESS_STYLE, "em_anhchi")).toContain('"chị"');
   });
 });
+
+// #155: the online store asked "Shipping fees and times" and then "Do you
+// deliver? How?" (a restaurant question). One delivery question per preset.
+describe("presets", () => {
+  it("never ask about shipping and delivery separately", () => {
+    const both = Object.entries(PRESETS)
+      .filter(
+        ([, preset]) =>
+          preset.facts.includes("shipping_fee") &&
+          preset.facts.includes("delivery"),
+      )
+      .map(([id]) => id);
+
+    expect(both).toEqual([]);
+  });
+});

@@ -189,10 +189,7 @@ describe("ChatbotForm model select", () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderForm({ onSubmit });
 
-    await user.type(
-      screen.getByPlaceholderText("Enter chatbot name"),
-      "My bot",
-    );
+    await user.type(screen.getByPlaceholderText("Enter agent name"), "My bot");
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
@@ -231,11 +228,11 @@ describe("ChatbotForm model select", () => {
     );
 
     // The defaults seed a generated name, so clear it to get invalid input.
-    await user.clear(screen.getByPlaceholderText("Enter chatbot name"));
+    await user.clear(screen.getByPlaceholderText("Enter agent name"));
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     await waitFor(() =>
-      expect(screen.getByPlaceholderText("Enter chatbot name")).toHaveAttribute(
+      expect(screen.getByPlaceholderText("Enter agent name")).toHaveAttribute(
         "aria-invalid",
         "true",
       ),

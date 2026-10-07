@@ -1,5 +1,6 @@
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
+import { readApiError } from "@/libs/api-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, toast } from "@medusajs/ui";
 import { ChipGroup, Form } from "@repo/ui/common-components";
@@ -113,7 +114,11 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
       }
     } catch (error) {
       console.error("Error creating knowledge item:", error);
-      toast.error(t("knowledge_item.create_error"));
+      // Show the API's reason (an empty file, a file that is not really a
+      // PDF, ...) over the generic message.
+      toast.error(
+        readApiError(error).message ?? t("knowledge_item.create_error"),
+      );
     } finally {
       setIsLoading(false);
       setUploadProgress(0);

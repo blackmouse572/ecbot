@@ -8,7 +8,8 @@
     "batchProcess": "Đã đưa các knowledge item vào hàng đợi xử lý.",
     "error": {
         "notFound": "Không tìm thấy mục kiến thức.",
-        "processing": "Item này đang được xử lý."
+        "processing": "Item này đang được xử lý.",
+        "fileRequired": "Hãy đính kèm tệp để tạo mục dạng tệp."
     },
     "notification": {
         "ingestFailed": {

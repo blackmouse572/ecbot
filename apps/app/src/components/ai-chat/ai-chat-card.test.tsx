@@ -128,10 +128,52 @@ describe("AIChatCard for a customer", () => {
     expect(screen.getByText("Còn hàng ạ")).toBeInTheDocument();
     expect(screen.queryByText(/get_stock/)).not.toBeInTheDocument();
     expect(screen.queryByText(/checking stock/)).not.toBeInTheDocument();
-    expect(screen.queryByText("Sources")).not.toBeInTheDocument();
+    // A public web page the answer used is still linked (#204).
+    expect(screen.getByText("KB-1 · faq")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { expanded: true }),
     ).not.toBeInTheDocument();
     chat.messages = [];
+  });
+});
+
+// #204: operators see every source that fed the answer, by name; customers
+// (the widget) never see uploaded files or text items.
+describe("AIChatCard sources", () => {
+  const answer = {
+    id: "m1",
+    role: "assistant",
+    parts: [{ type: "text", text: "Đổi trả trong 7 ngày." }],
+    metadata: {
+      sources: [
+        {
+          id: "KB-1",
+          title: "Chính sách đổi trả",
+          filename: "1790661848627-doi-tra.docx",
+          source_url: null,
+        },
+      ],
+    },
+  };
+
+  it("lists every source by title in Test chat", () => {
+    chat.messages = [answer];
+    render(
+      <AIChatCard
+        chatbotId="bot-1"
+        transport={transport}
+        showKnowledgeSources
+      />,
+    );
+
+    expect(screen.getByText("KB-1 · Chính sách đổi trả")).toBeInTheDocument();
+    expect(screen.queryByText(/1790661848627/)).not.toBeInTheDocument();
+  });
+
+  it("shows no uploaded-file source to customers", () => {
+    chat.messages = [answer];
+    render(<AIChatCard chatbotId="bot-1" transport={transport} />);
+
+    expect(screen.queryByText(/Chính sách đổi trả/)).not.toBeInTheDocument();
   });
 });

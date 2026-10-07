@@ -205,6 +205,8 @@ describe('KnowledgeIngestTaskService', () => {
                 url: 'https://example.test/doc',
                 knowledge_item_id: 'item-1',
                 chatbot_ids: [],
+                // #204: shown to operators as the source name.
+                title: 'URL',
             }),
             expect.objectContaining({
                 timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
@@ -251,6 +253,31 @@ describe('KnowledgeIngestTaskService', () => {
                 }),
                 maxBodyLength: Infinity,
             })
+        );
+    });
+
+    // #204: the AI keeps the title so a source reads as the item's name, not
+    // the storage file name.
+    it('sends the knowledge item title with an uploaded file', async () => {
+        findOneById.mockResolvedValue({
+            id: 'item-1',
+            type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE,
+            title: 'Chính sách đổi trả',
+            attachment: { key: 'documents/file.pdf', mime: 'application/pdf' },
+            knowledgeBase: { id: 'kb-1' },
+        });
+
+        await service.handle(
+            {
+                jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                knowledgeItemId: 'item-1',
+            } as any,
+            0
+        );
+
+        const form = httpPost.mock.calls[0][1];
+        expect(form.getBuffer().toString()).toContain(
+            'name="title"\r\n\r\nChính sách đổi trả'
         );
     });
 
@@ -411,7 +438,9 @@ describe('KnowledgeIngestTaskService', () => {
         expect(Sentry.captureException).not.toHaveBeenCalled();
     });
 
-    it('marks the item failed and captures Sentry on the final retry', async () => {
+    // #170: rethrowing here let Cloud Tasks retry far past the limit
+    // ("attempt=12/3"). The final attempt is acknowledged instead.
+    it('marks the item failed, captures Sentry and stops retrying on the final retry', async () => {
         const error = Object.assign(new Error('AI unavailable'), {
             response: { status: 503 },
         });
@@ -425,7 +454,7 @@ describe('KnowledgeIngestTaskService', () => {
                 } as any,
                 RAG_INGEST_MAX_ATTEMPTS - 1
             )
-        ).rejects.toBe(error);
+        ).resolves.toBeUndefined();
         expect(updateStatus).toHaveBeenLastCalledWith('item-1', {
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.FAILED,
             errorMessage: 'AI unavailable',
@@ -436,6 +465,71 @@ describe('KnowledgeIngestTaskService', () => {
                 knowledge_item_id: 'item-1',
             },
         });
+    });
+
+    it('acknowledges a delivery that arrives past the retry limit', async () => {
+        httpPost.mockReturnValue(
+            throwError(() =>
+                Object.assign(new Error('AI unavailable'), {
+                    response: { status: 503 },
+                })
+            )
+        );
+
+        await expect(
+            service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                RAG_INGEST_MAX_ATTEMPTS + 8
+            )
+        ).resolves.toBeUndefined();
+    });
+
+    it('fails a FILE item with no attachment once, without retrying', async () => {
+        findOneById.mockResolvedValue({
+            id: 'item-1',
+            type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE,
+            attachment: null,
+            knowledgeBase: { id: 'kb-1' },
+        });
+
+        await expect(
+            service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                0
+            )
+        ).resolves.toBeUndefined();
+        expect(updateStatus).toHaveBeenLastCalledWith(
+            'item-1',
+            expect.objectContaining({
+                status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.FAILED,
+            })
+        );
+    });
+
+    it('stops retrying a delete on the final retry', async () => {
+        httpDelete.mockReturnValue(
+            throwError(() =>
+                Object.assign(new Error('AI unavailable'), {
+                    response: { status: 503 },
+                })
+            )
+        );
+
+        await expect(
+            service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.DELETE,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                RAG_INGEST_MAX_ATTEMPTS - 1
+            )
+        ).resolves.toBeUndefined();
     });
 
     it('preserves the former BullMQ Sentry queue tag literal', () => {
@@ -474,7 +568,7 @@ describe('KnowledgeIngestTaskService', () => {
             expect(notifyFailed).not.toHaveBeenCalled();
             await expect(
                 service.handle(job, RAG_INGEST_MAX_ATTEMPTS - 1)
-            ).rejects.toBeDefined();
+            ).resolves.toBeUndefined();
             expect(notifyFailed).toHaveBeenCalledWith(
                 'item-1',
                 ENUM_KNOWLEDGE_FAILURE_KIND.INGEST
@@ -508,7 +602,7 @@ describe('KnowledgeIngestTaskService', () => {
             expect(notifyFailed).not.toHaveBeenCalled();
             await expect(
                 service.handle(job, RAG_INGEST_MAX_ATTEMPTS - 1)
-            ).rejects.toBeDefined();
+            ).resolves.toBeUndefined();
             expect(notifyFailed).toHaveBeenCalledWith(
                 'item-1',
                 ENUM_KNOWLEDGE_FAILURE_KIND.LINK_SYNC

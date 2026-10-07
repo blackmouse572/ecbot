@@ -191,7 +191,11 @@ export const DataTableFilter = ({
                   <Funnel />
                 </IconButton>
               ) : (
-                <Button size="small" variant="secondary">
+                <Button
+                  size="small"
+                  variant="secondary"
+                  className="shrink-0 whitespace-nowrap"
+                >
                   {t("filters.addFilter")}
                 </Button>
               )}

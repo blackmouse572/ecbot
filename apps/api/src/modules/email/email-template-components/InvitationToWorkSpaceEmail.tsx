@@ -2,7 +2,7 @@ import { Body, Head, Html } from '@react-email/components';
 import React from 'react';
 
 interface InvitationToWorkSpaceEmailProps {
-    supportEmail: string;
+    supportEmail?: string;
     homeUrl: string;
     homeName: string;
     invitationLink: string;
@@ -26,11 +26,13 @@ const InvitationToWorkSpaceEmail: React.FC<InvitationToWorkSpaceEmailProps> = ({
             <p>
                 <a href={invitationLink}>{invitationLink}</a>
             </p>
-            <p>
-                If you have any questions or didn’t expect this invitation, feel
-                free to contact us at{' '}
-                <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-            </p>
+            {supportEmail && (
+                <p>
+                    If you have any questions or didn’t expect this invitation,
+                    feel free to contact us at{' '}
+                    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+                </p>
+            )}
             <p>
                 Visit us: <a href={homeUrl}>{homeUrl}</a>
             </p>

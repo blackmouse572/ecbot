@@ -171,3 +171,35 @@ describe("builderReducer", () => {
     expect(s.linkedAccounts).toEqual([a1]);
   });
 });
+
+// #150, #156: answers given in free text earlier are not asked again.
+describe("prefill from free text", () => {
+  it("fills the business name from the opening description", () => {
+    const s = builderReducer(initialBuilderState, {
+      type: "start",
+      profile: createProfile("ecommerce", "en"),
+      suggestion: null,
+      source: "describe",
+      description: "We sell snacks online, the shop is called Kunmart.",
+    });
+
+    expect(s.profile!.businessName).toBe("Kunmart");
+  });
+
+  it("fills the return policy from the 'what makes you different' answer", () => {
+    const start = builderReducer(initialBuilderState, {
+      type: "start",
+      profile: createProfile("ecommerce", "en"),
+      suggestion: null,
+      source: "template",
+    });
+    const atDifference = answerAllUntil(start, (x) => currentStep(x)?.question.id === "difference");
+    const s = builderReducer(atDifference, {
+      type: "answer",
+      question: currentStep(atDifference)!.question,
+      value: "Handmade bags, 7-day returns",
+    });
+
+    expect(s.profile!.facts.return_policy).toBe("7-day returns");
+  });
+});

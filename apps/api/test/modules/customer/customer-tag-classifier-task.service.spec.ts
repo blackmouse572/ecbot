@@ -206,6 +206,41 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         expect(customerTagAssignmentService.remove).toHaveBeenCalledTimes(1);
     });
 
+    // Vietnamese default tags carry diacritics, which have two Unicode forms
+    // (precomposed NFC and decomposed NFD). A model may answer in the other
+    // form than the catalog stores; the names still have to match.
+    it('matches tag names whatever Unicode form the classifier returns', async () => {
+        const returning = {
+            id: 'tag-returning',
+            name: 'Khách quay lại'.normalize('NFC'),
+            emoji: null,
+            description: '',
+            triggersHandoff: false,
+        };
+        customerTagService.findAllByWorkspace.mockResolvedValue([returning]);
+        customerTagAssignmentService.listByCustomer.mockResolvedValue([
+            { tag: { id: 'tag-returning', name: returning.name } },
+        ]);
+        httpService.post.mockReturnValue(
+            classifierResponse({
+                tags_to_add: ['Khách quay lại'.normalize('NFD')],
+                tags_to_remove: ['Khách quay lại'.normalize('NFD')],
+                profile_summary: '',
+            })
+        );
+
+        await service.handle(dto() as any, 0);
+
+        expect(customerTagAssignmentService.apply).toHaveBeenCalledWith(
+            'cust-1',
+            'tag-returning'
+        );
+        expect(customerTagAssignmentService.remove).toHaveBeenCalledWith(
+            'cust-1',
+            'tag-returning'
+        );
+    });
+
     it('writes a trimmed profile summary', async () => {
         httpService.post.mockReturnValue(
             classifierResponse({ profile_summary: '  Loyal buyer.  ' })
@@ -255,7 +290,9 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         expect(Sentry.captureException).not.toHaveBeenCalled();
     });
 
-    it('captures Sentry on the final attempt and rethrows for Cloud Tasks', async () => {
+    // A throw here let Cloud Tasks retry past the limit, an LLM call each
+    // time (same as #170); the final attempt is acknowledged instead.
+    it('captures Sentry and stops retrying on the final attempt', async () => {
         const error = new Error('apps/ai 500');
         httpService.post.mockReturnValue(throwError(() => error));
 
@@ -264,7 +301,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
                 dto() as any,
                 CUSTOMER_TAG_CLASSIFIER_MAX_ATTEMPTS - 1
             )
-        ).rejects.toBe(error);
+        ).resolves.toBeUndefined();
         expect(Sentry.captureException).toHaveBeenCalledWith(error, {
             tags: {
                 queue: CUSTOMER_TAG_CLASSIFIER_SENTRY_QUEUE,

@@ -8,7 +8,8 @@
     "batchProcess": "Knowledge items queued for processing.",
     "error": {
         "notFound": "Knowledge item not found.",
-        "processing": "This item is already being processed."
+        "processing": "This item is already being processed.",
+        "fileRequired": "Attach a file to create a file item."
     },
     "notification": {
         "ingestFailed": {

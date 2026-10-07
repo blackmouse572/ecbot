@@ -97,7 +97,8 @@ export class ActivityService {
     async createByAdmin(
         user: UserEntity,
         byUserId: string,
-        { action, subject, metadata }: ActivityCreateRequest
+        { action, subject, metadata }: ActivityCreateRequest,
+        options?: IDatabaseCreateOptions
     ): Promise<ActivityEntity> {
         const create: ActivityEntity = new ActivityEntity();
         create.action = action;
@@ -108,7 +109,7 @@ export class ActivityService {
             .getEntityManager()
             .getReference(UserEntity, byUserId);
 
-        return this.activityRepository.create(create);
+        return this.activityRepository.create(create, options);
     }
 
     async deleteMany(find?: Record<string, any>): Promise<boolean> {

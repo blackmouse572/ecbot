@@ -1,3 +1,5 @@
+import { FileContentPipe } from 'src/common/file/pipes/file.content.pipe';
+import { ENUM_REQUEST_STATUS_CODE_ERROR } from 'src/common/request/enums/request.status-code.enum';
 import {
     PaginationQuery,
     PaginationQueryFilterContainInArray,
@@ -30,6 +32,7 @@ import {
     Param,
     Post,
     Put,
+    UnprocessableEntityException,
     UploadedFile,
     UseInterceptors,
 } from '@nestjs/common';
@@ -301,10 +304,19 @@ export class KnowledgeItemWorkspaceController {
                 ENUM_FILE_MIME_DOCUMENT.MD,
                 ENUM_FILE_MIME_DOCUMENT.TXT,
                 ENUM_FILE_MIME_DOCUMENT.HTML,
-            ])
+            ]),
+            new FileContentPipe()
         )
         file?: Express.Multer.File
     ): Promise<IResponse<DatabaseIdResponseDto>> {
+        // Without this, the item was saved and only failed later at ingest.
+        if (dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE && !file) {
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
+                message: 'knowledgeItem.error.fileRequired',
+            });
+        }
+
         const session = this.em.fork();
         await session.begin();
 

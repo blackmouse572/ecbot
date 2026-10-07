@@ -1,5 +1,5 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
-import { OTPInput } from "./OTP-input";
+import { OTPInput } from "@repo/ui/common-components";
+import { forwardRef, useImperativeHandle, useState } from "react";
 
 interface IVerifyEmailFormProps extends Pick<
   React.ComponentProps<typeof OTPInput>,
@@ -18,27 +18,30 @@ interface IVerifyEmailFormRef {
   submit: () => {
     otp: string;
   };
+  /** Empties the boxes, e.g. after a wrong code. */
+  reset: () => void;
 }
 
 const VerifyEmailForm = forwardRef<IVerifyEmailFormRef, IVerifyEmailFormProps>(
-  ({ email, length, onVerify }, ref) => {
-    const otpInputRef = useRef<React.ComponentRef<typeof OTPInput>>(null);
+  ({ length, onVerify }, ref) => {
+    const [otp, setOtp] = useState("");
 
-    const onComplete = async (otp: string) => {
-      await onVerify?.(otp);
+    const onComplete = async (code: string) => {
+      await onVerify?.(code);
     };
 
     useImperativeHandle(ref, () => ({
-      submit: () => {
-        const otp: string = otpInputRef.current?.submit()?.join("") || "";
-        return {
-          otp,
-        };
-      },
+      submit: () => ({ otp }),
+      reset: () => setOtp(""),
     }));
 
     return (
-      <OTPInput ref={otpInputRef} length={length} onComplete={onComplete} />
+      <OTPInput
+        length={length}
+        value={otp}
+        onChange={setOtp}
+        onComplete={onComplete}
+      />
     );
   },
 );

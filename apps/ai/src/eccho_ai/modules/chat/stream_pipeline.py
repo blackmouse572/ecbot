@@ -241,9 +241,9 @@ async def events_to_ui_parts(
         for source in sources or []:
             source_url = source.get("source_url")
             if source_url:
-                # Labelled with the page URL: the widget shows these parts to
-                # customers, and the filename is an internal storage name.
-                yield ui.source_url(source["id"], source_url, source_url)
+                # Labelled with the page title (else its URL), never the
+                # filename, an internal storage name (#204).
+                yield ui.source_url(source["id"], source_url, source.get("title") or source_url)
         yield ui.message_metadata({"usage": usage, "sources": sources or []})
 
     except Exception as e:

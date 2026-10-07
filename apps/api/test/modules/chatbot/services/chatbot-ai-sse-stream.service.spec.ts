@@ -201,7 +201,7 @@ describe('ChatbotAiSseStreamService', () => {
             return { types, out, finalized, images, reported };
         };
 
-        it('sends the customer only the reply', async () => {
+        it('sends the customer only the reply and its public web links', async () => {
             const { types, out } = await run('customer');
             expect(types).toEqual([
                 'start',
@@ -211,6 +211,7 @@ describe('ChatbotAiSseStreamService', () => {
                 'text-start',
                 'text-delta',
                 'text-end',
+                'source-url',
                 'finish',
             ]);
             expect(out).not.toContain('get_stock');

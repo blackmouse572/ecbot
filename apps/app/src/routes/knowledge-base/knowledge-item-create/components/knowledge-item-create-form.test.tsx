@@ -8,12 +8,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   created: [] as unknown[],
   processed: [] as unknown[],
+  createError: null as unknown,
 }));
+const toast = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+}));
+
+vi.mock("@medusajs/ui", async () => {
+  const actual =
+    await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
+  return { ...actual, toast };
+});
 
 vi.mock("../../../../hooks/api", () => ({
   useKnowledgeTags: () => ({ tags: [], isLoading: false }),
   useCreateKnowledgeItem: () => ({
     mutateAsync: async (data: unknown) => {
+      if (api.createError) throw api.createError;
       api.created.push(data);
       return { data: { data: { id: "item-1" } } };
     },
@@ -45,6 +58,36 @@ describe("KnowledgeItemCreateForm", () => {
   beforeEach(() => {
     api.created = [];
     api.processed = [];
+    api.createError = null;
+    toast.error.mockReset();
+  });
+
+  // #168: the API now says why a file is refused (empty, not really a PDF);
+  // a generic "Failed to create" hid it.
+  it("shows the API's reason when the item is refused", async () => {
+    api.createError = Object.assign(new Error("Request failed"), {
+      response: {
+        status: 422,
+        data: { statusCode: 5026, message: "The file is empty." },
+      },
+    });
+    const { container } = render(
+      <NuqsTestingAdapter searchParams="?t=TEXT">
+        <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+      </NuqsTestingAdapter>,
+    );
+
+    fireEvent.change(container.querySelector('input[name="title"]')!, {
+      target: { value: "Return policy" },
+    });
+    fireEvent.change(container.querySelector('textarea[name="content"]')!, {
+      target: { value: "Returns are accepted within 7 days." },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("The file is empty."),
+    );
   });
 
   it("starts processing a new TEXT item right away instead of leaving it a draft", async () => {

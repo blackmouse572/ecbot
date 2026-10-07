@@ -28,6 +28,7 @@ async def upload_document(
     chunk_size: int | None = Form(default=None),
     chunk_overlap: int | None = Form(default=None),
     knowledge_base_id: str | None = Form(default=None),
+    title: str | None = Form(default=None),
 ):
     parsed_chatbot_ids = [s.strip() for s in (chatbot_ids or "").split(",") if s.strip()]
     try:
@@ -38,6 +39,7 @@ async def upload_document(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             metadata={"knowledge_base_id": knowledge_base_id} if knowledge_base_id else {},
+            title=title,
         )
         return AppResponse(data=result)
     except ValueError as exc:
@@ -56,6 +58,7 @@ async def ingest_url(request: RAGUrlIngestRequest):
             only_main_content=request.only_main_content,
             max_age=request.max_age,
             parsers=request.parsers,
+            title=request.title,
             metadata={"knowledge_base_id": request.knowledge_base_id} if request.knowledge_base_id else {},
         )
         return AppResponse(data=result)
