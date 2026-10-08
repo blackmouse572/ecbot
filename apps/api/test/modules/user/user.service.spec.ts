@@ -254,10 +254,7 @@ describe('UserService - exact email lookups (Task 12)', () => {
 describe('UserService.updateNotifications', () => {
     it('stores the choice on the user', async () => {
         const persistAndFlush = jest.fn();
-        const service = Object.create(
-            require('@app/modules/user/services/user.service').UserService
-                .prototype
-        );
+        const service = Object.create(UserService.prototype);
         service.em = { persistAndFlush };
         const user = { id: 'u-1', handoffEmails: true } as any;
 
