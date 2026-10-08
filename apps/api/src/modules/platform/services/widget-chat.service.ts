@@ -14,6 +14,7 @@ import {
     Inject,
     Injectable,
     InternalServerErrorException,
+    Logger,
     Optional,
     UnprocessableEntityException,
 } from '@nestjs/common';
@@ -30,6 +31,7 @@ import {
 import { TurnContextService } from './turn-context.service';
 import { HandoffIntentService } from './handoff-intent.service';
 import { handoffReplyText } from '../utils/handoff-reply.util';
+import { shouldHandOff } from '../utils/handoff-decision.util';
 
 export interface IWidgetTurn {
     /** WEBSITE_WIDGET account with `chatbot` and `workspace` populated. */
@@ -60,6 +62,8 @@ export interface IWidgetTurn {
  */
 @Injectable()
 export class WidgetChatService {
+    private readonly logger = new Logger(WidgetChatService.name);
+
     constructor(
         private readonly customerService: CustomerService,
         private readonly conversationService: ConversationService,
@@ -122,21 +126,18 @@ export class WidgetChatService {
             return;
         }
 
-        // The same check platform channels run (MessageProcessorService): the
-        // owner's keywords always hand off, a default keyword only when the
-        // visitor really asks for a person (#233).
+        // The same rule platform channels use (#233).
         const handoffMatch = this.conversationService.detectHandoffKeywords(
             text,
             chatbot.handoffKeywords ?? []
         );
-        const handOff =
-            handoffMatch?.source === 'custom' ||
-            (handoffMatch?.source === 'default' &&
-                (await this.handoffIntent.wantsPerson(
-                    text,
-                    handoffMatch.keyword
-                )));
+        const handOff = await shouldHandOff(handoffMatch, text, (t, keyword) =>
+            this.handoffIntent.wantsPerson(t, keyword)
+        );
         if (handOff) {
+            this.logger.log(
+                `Handoff keyword "${handoffMatch?.keyword}" (${handoffMatch?.source}) in widget conversation ${conversation.id}`
+            );
             await this.conversationService.triggerHandoff(
                 conversation,
                 account.workspace.id,
