@@ -25,6 +25,7 @@ describe('AuthLoginSessionService.open', () => {
         jest.clearAllMocks();
         create.mockResolvedValue({ id: 'sess-1' });
         createToken.mockReturnValue(token);
+        createByUser.mockResolvedValue(undefined);
     });
 
     it('creates the session, sets the refresh cookie, commits and logs the login', async () => {
@@ -54,5 +55,12 @@ describe('AuthLoginSessionService.open', () => {
         expect(rollback).toHaveBeenCalled();
         expect(setRefreshTokenCookie).not.toHaveBeenCalled();
         expect(createByUser).not.toHaveBeenCalled();
+    });
+
+    it('still returns the token when only the activity write fails', async () => {
+        createByUser.mockRejectedValue(new Error('audit down'));
+
+        await expect(service.open(user, req, res)).resolves.toBe(token);
+        expect(setRefreshTokenCookie).toHaveBeenCalled();
     });
 });

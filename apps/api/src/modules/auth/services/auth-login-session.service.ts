@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Response as ExpressResponse } from 'express';
 import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
 import { ActivityService } from 'src/modules/activity/services/activity.service';
@@ -18,6 +18,8 @@ import { IRequestApp } from 'src/common/request/interfaces/request.interface';
  */
 @Injectable()
 export class AuthLoginSessionService {
+    private readonly logger = new Logger(AuthLoginSessionService.name);
+
     constructor(
         private readonly em: EntityManager,
         private readonly authService: AuthService,
@@ -63,11 +65,19 @@ export class AuthLoginSessionService {
             throw err;
         }
 
-        await this.activityService.createByUser(userWithRole, {
-            action: ENUM_ACTIVITY_ACTION.CREATE,
-            subject: ENUM_POLICY_SUBJECT.AUTH,
-            metadata: { id: userWithRole.id, name: userWithRole.email },
-        });
+        // The session is committed and the cookie set: a failed audit write
+        // must not take the token away from the caller.
+        await this.activityService
+            .createByUser(userWithRole, {
+                action: ENUM_ACTIVITY_ACTION.CREATE,
+                subject: ENUM_POLICY_SUBJECT.AUTH,
+                metadata: { id: userWithRole.id, name: userWithRole.email },
+            })
+            .catch((err: unknown) =>
+                this.logger.warn(
+                    `Login activity for user [${userWithRole.id}] not recorded: ${(err as Error)?.message}`
+                )
+            );
         return token;
     }
 }
