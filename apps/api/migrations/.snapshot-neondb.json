@@ -745,7 +745,10 @@
             "chatbot_skill_enable",
             "chatbot_skill_disable",
             "impersonate_start",
-            "impersonate_end"
+            "impersonate_end",
+            "login",
+            "login_failed",
+            "view"
           ],
           "mappedType": "enum"
         },
@@ -828,6 +831,38 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 45,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
         }
       },
       "name": "activities",
@@ -940,7 +975,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "set null"
+          "deleteRule": "no action"
         },
         "activities_deleted_by_id_foreign": {
           "columnNames": [
@@ -953,7 +988,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "set null"
+          "deleteRule": "no action"
         },
         "activities_updated_by_id_foreign": {
           "columnNames": [
@@ -966,7 +1001,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "set null"
+          "deleteRule": "no action"
         },
         "activities_user_id_foreign": {
           "columnNames": [
@@ -992,7 +1027,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "set null"
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {},

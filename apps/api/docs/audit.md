@@ -53,6 +53,52 @@ The Activity module is designed to be used across the application to track impor
     });
     ```
 
+4. **Reads of personal data**: one `VIEW` row per detail read, keyed by the JWT user id (no user lookup)
+    ```typescript
+    this.activityService.createView(userId, workspace, ENUM_POLICY_SUBJECT.CUSTOMER, {
+        id: customer.id,
+    });
+    ```
+
+### Request context
+
+Every row carries `ipAddress` and `userAgent`. `ActivityService` fills them
+from the current request through `ClsService` (`request.ip`, which honours
+`trust proxy`, and the `user-agent` header), so call sites pass nothing. Rows
+written outside a request (seeds, workers) leave both `null`.
+
+### Authentication and read actions
+
+| Action | Subject | When | `metadata` |
+| --- | --- | --- | --- |
+| `login` | `AUTH` | credential, Google or Apple login succeeds | `{ id, name }` (user id, email) |
+| `login_failed` | `AUTH` | login rejected for an **existing** user | `{ id, name, reason }` |
+| `view` | `CONVERSATION` | `GET /:workspace/conversations/:id` | `{ id }` |
+| `view` | `CONVERSATION` | `GET /:workspace/conversations/:id/messages` | `{ id, resource: 'messages' }` |
+| `view` | `CUSTOMER` | `GET /:workspace/customers/:id` | `{ id }` |
+
+`reason` is one of `invalid_password`, `locked`, `blocked`, `inactive`,
+`role_inactive`, `email_not_verified`, `password_expired`. An unknown email
+writes nothing, and the HTTP response is unchanged (a failed audit insert is
+logged and swallowed), so the audit log does not leak which accounts exist.
+List pages are not logged.
+
+### Immutability
+
+`activities` is append-only (migration `20261008110000_audit_log_append_only`):
+
+- A trigger (`activities_reject_change`) raises on every `UPDATE`, `DELETE`
+  and `TRUNCATE`, for every role including the application's. `DROP TABLE`
+  (`pnpm db:migrate:fresh`) still works.
+- Every FK from `activities` (`user`, `by`, `workspace`, `created_by`,
+  `updated_by`, `deleted_by`) is `ON DELETE NO ACTION`: `SET NULL` would be an
+  update and `CASCADE` a delete. Users and workspaces are soft-deleted or
+  anonymised, never hard-deleted; the workspace soft-delete cascade in
+  `WorkspaceOwnerService.delete` deliberately skips `activities`.
+- There is no delete method on `ActivityService`. The user seed's `remove`
+  refuses to run once audit rows exist; reset a dev database with
+  `pnpm db:migrate:fresh`.
+
 ### Impersonation activities
 
 `IMPERSONATE_START` / `IMPERSONATE_END` (subject `USER`) bracket an admin

@@ -94,7 +94,9 @@ export class MigrationActivitySeed {
         await this.em.flush();
     }
 
+    // No-op: the activities audit log is append-only (a trigger rejects
+    // DELETE/TRUNCATE). Reset a dev database with `pnpm db:migrate:fresh`.
     async remove(): Promise<void> {
-        await this.em.nativeDelete(ActivityEntity, {});
+        return;
     }
 }

@@ -106,9 +106,11 @@ pnpm db:seed
 # Equivalent, filtered directly to the API workspace
 pnpm --filter api migrate:seed
 
-# Remove seeded data
+# Remove seeded data (only before any audit rows exist, see below)
 pnpm --filter api migrate:remove
 ```
+
+The `activities` audit log is append-only (see [audit.md](./audit.md#immutability)), and seeded users always have audit rows, so `remove:user` refuses to run once they exist. Reset a dev database with `pnpm db:migrate:fresh` instead.
 
 `migrate:seed` is defined in `apps/api/package.json` and chains the individual commands in dependency order:
 

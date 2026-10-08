@@ -174,8 +174,17 @@ export class MigrationUserSeed {
     }
 
     async remove(): Promise<void> {
+        // The audit log is append-only: a trigger rejects DELETE/TRUNCATE on
+        // `activities` and its user FKs are ON DELETE NO ACTION, so users with
+        // audit history cannot be hard-deleted. Fail early with a clear hint
+        // instead of a foreign-key error halfway through.
+        if ((await this.activityService.getTotal()) > 0) {
+            throw new Error(
+                'The activities audit log is append-only, so seeded users cannot be removed. Reset the database with `pnpm db:migrate:fresh` instead.'
+            );
+        }
+
         try {
-            await this.activityService.deleteMany();
             await this.passwordHistoryService.deleteMany();
             await this.sessionService.resetLoginSession();
             await this.sessionService.deleteMany();

@@ -4,6 +4,7 @@ import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enum
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { WorkspaceEntity } from '../../../src/modules/workspace/repository/entities/workspace.entity';
 import { ConversationGetResponseDto } from '../../../src/modules/conversation/dtos/response/conversation.get.response.dto';
+import { ENUM_POLICY_SUBJECT } from '../../../src/modules/policy/enums/policy.enum';
 
 const mockConversationService = {
     findByWorkspace: jest.fn(),
@@ -35,6 +36,7 @@ const mockConversationMessagingService = {
 
 const mockActivityService = {
     createByUserWithWorkspace: jest.fn(),
+    createView: jest.fn(),
 };
 
 function buildController(): ConversationWorkspaceController {
@@ -451,6 +453,7 @@ describe('ConversationWorkspaceController', () => {
             const result = await controller.listMessages(
                 workspace,
                 'conv-1',
+                operatorId,
                 1,
                 50
             );
@@ -467,6 +470,12 @@ describe('ConversationWorkspaceController', () => {
                 50
             );
             expect(result._pagination.totalPage).toBe(3);
+            expect(mockActivityService.createView).toHaveBeenCalledWith(
+                operatorId,
+                workspace,
+                ENUM_POLICY_SUBJECT.CONVERSATION,
+                { id: 'conv-1', resource: 'messages' }
+            );
         });
 
         it('propagates the 404 thrown by the messaging service for a cross-workspace id', async () => {
@@ -478,18 +487,44 @@ describe('ConversationWorkspaceController', () => {
             );
 
             await expect(
-                controller.listMessages(workspace, 'conv-other-workspace', 1, 50)
+                controller.listMessages(
+                    workspace,
+                    'conv-other-workspace',
+                    operatorId,
+                    1,
+                    50
+                )
             ).rejects.toBeInstanceOf(NotFoundException);
+            expect(mockActivityService.createView).not.toHaveBeenCalled();
         });
     });
 
     describe('get', () => {
+        it('records a VIEW of the conversation in the audit trail', async () => {
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                mockConversation
+            );
+
+            await controller.get(workspace, 'conv-1', operatorId);
+
+            expect(mockActivityService.createView).toHaveBeenCalledWith(
+                operatorId,
+                workspace,
+                ENUM_POLICY_SUBJECT.CONVERSATION,
+                { id: 'conv-1' }
+            );
+        });
+
         it('should return mapped conversation when found', async () => {
             mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
                 mockConversation
             );
 
-            const result = await controller.get(workspace, 'conv-1');
+            const result = await controller.get(
+                workspace,
+                'conv-1',
+                operatorId
+            );
 
             // The detail endpoint also populates contactPoint + its customer so
             // mapGet can surface customerId without risking ReferenceNotInitializedError.
@@ -515,8 +550,9 @@ describe('ConversationWorkspaceController', () => {
             );
 
             await expect(
-                controller.get(workspace, 'nonexistent-id')
+                controller.get(workspace, 'nonexistent-id', operatorId)
             ).rejects.toThrow(NotFoundException);
+            expect(mockActivityService.createView).not.toHaveBeenCalled();
         });
 
         it('should throw NotFoundException (same as non-existent) when conversation belongs to another workspace', async () => {
@@ -525,7 +561,7 @@ describe('ConversationWorkspaceController', () => {
             );
 
             await expect(
-                controller.get(workspace, 'conv-in-other-workspace')
+                controller.get(workspace, 'conv-in-other-workspace', operatorId)
             ).rejects.toThrow(NotFoundException);
 
             expect(
@@ -766,12 +802,7 @@ describe('ConversationWorkspaceController', () => {
 
             expect(
                 mockConversationMessagingService.sendOperatorReply
-            ).toHaveBeenCalledWith(
-                'conv-1',
-                workspaceId,
-                operatorId,
-                dto.text
-            );
+            ).toHaveBeenCalledWith('conv-1', workspaceId, operatorId, dto.text);
             expect(
                 mockConversationService.findOneByIdInWorkspace
             ).toHaveBeenCalledWith('conv-1', workspaceId);
