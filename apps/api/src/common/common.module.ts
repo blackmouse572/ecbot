@@ -1,6 +1,5 @@
 import KeyvRedis from '@keyv/redis';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { BullModule } from '@nestjs/bullmq';
 import { CacheModule, CacheOptions } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -24,7 +23,6 @@ import { AuthModule } from 'src/modules/auth/auth.module';
 import { PolicyModule } from 'src/modules/policy/policy.module';
 import { FacebookModule } from './facebook/facebook.module';
 import { ComposioModule } from './composio/composio.module';
-import { BullRedisConnectionProvider } from './redis/bull-redis-connection.provider';
 import { RedisAvailabilityModule } from './redis/redis-availability.module';
 import { REDIS_AVAILABLE } from './redis/redis-availability.provider';
 
@@ -50,24 +48,6 @@ import { REDIS_AVAILABLE } from './redis/redis-availability.provider';
             inject: [DatabaseOptionService],
             useFactory: (databaseService: DatabaseOptionService) =>
                 databaseService.createMikroOrmOptions(),
-        }),
-        BullModule.forRootAsync({
-            imports: [ConfigModule],
-            // Shared ioredis client; quit on shutdown by its provider.
-            inject: [BullRedisConnectionProvider],
-            useFactory: (bullRedisConnection: BullRedisConnectionProvider) => ({
-                connection: bullRedisConnection.client,
-                skipStalledCheck: true, // Skip stalled job checks for lower Redis usage
-                defaultJobOptions: {
-                    backoff: {
-                        type: 'exponential',
-                        delay: 3000,
-                    },
-                    attempts: 3,
-                    removeOnComplete: true, // Clean up completed jobs
-                    removeOnFail: { count: 10 }, // Keep only 10 failed jobs
-                },
-            }),
         }),
         CacheModule.registerAsync({
             isGlobal: true,

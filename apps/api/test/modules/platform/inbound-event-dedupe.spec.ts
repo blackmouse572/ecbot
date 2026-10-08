@@ -1,10 +1,12 @@
 import { InboundEventDedupeService } from '../../../src/modules/platform/services/inbound-event-dedupe.service';
+import { INBOUND_EVENT_DEDUPE_TTL_SECONDS } from '../../../src/modules/platform/constants/inbound-event-dedupe.constant';
+import { RECONCILE_LOOKBACK_SECONDS } from '../../../src/modules/platform/constants/inbound-reconciliation.constant';
 
 /**
  * Minimal in-memory fake of the ioredis subset the seam uses (SET NX EX),
- * mirroring generation-lease.spec.ts's fakeQueue pattern.
+ * mirroring generation-lease.spec.ts's fakeRedis pattern.
  */
-function fakeQueue() {
+function fakeRedis() {
     const store = new Set<string>();
     const client = {
         async set(
@@ -22,14 +24,14 @@ function fakeQueue() {
             return store.delete(key) ? 1 : 0;
         },
     };
-    return { getBackend: () => ({ client: Promise.resolve(client) }) } as any;
+    return { client } as any;
 }
 
 describe('InboundEventDedupeService (candidate 1)', () => {
     let dedupe: InboundEventDedupeService;
 
     beforeEach(() => {
-        dedupe = new InboundEventDedupeService(fakeQueue(), true);
+        dedupe = new InboundEventDedupeService(fakeRedis(), true);
     });
 
     it('claims a (platform, externalMessageId) pair the first time it is seen', async () => {
@@ -63,7 +65,7 @@ describe('InboundEventDedupeService — no Redis at boot', () => {
     let dedupe: InboundEventDedupeService;
 
     beforeEach(() => {
-        dedupe = new InboundEventDedupeService(fakeQueue(), false);
+        dedupe = new InboundEventDedupeService(fakeRedis(), false);
     });
 
     afterEach(() => {
@@ -85,7 +87,7 @@ describe('InboundEventDedupeService — no Redis at boot', () => {
 describe('InboundEventDedupeService — in-memory sweep lifecycle', () => {
     it('does not schedule a sweep when Redis is available', () => {
         const setIntervalSpy = jest.spyOn(global, 'setInterval');
-        new InboundEventDedupeService(fakeQueue(), true);
+        new InboundEventDedupeService(fakeRedis(), true);
         expect(setIntervalSpy).not.toHaveBeenCalled();
         setIntervalSpy.mockRestore();
     });
@@ -93,7 +95,7 @@ describe('InboundEventDedupeService — in-memory sweep lifecycle', () => {
     it('schedules a sweep when Redis is unavailable and clears it on destroy', () => {
         const setIntervalSpy = jest.spyOn(global, 'setInterval');
         const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-        const dedupe = new InboundEventDedupeService(fakeQueue(), false);
+        const dedupe = new InboundEventDedupeService(fakeRedis(), false);
         expect(setIntervalSpy).toHaveBeenCalledTimes(1);
 
         dedupe.onModuleDestroy();
@@ -103,5 +105,15 @@ describe('InboundEventDedupeService — in-memory sweep lifecycle', () => {
 
         setIntervalSpy.mockRestore();
         clearIntervalSpy.mockRestore();
+    });
+});
+
+describe('INBOUND_EVENT_DEDUPE_TTL_SECONDS', () => {
+    it('outlives the reconciliation lookback so a backfilled message is never re-run', () => {
+        // Cloud Tasks only rejects a reused task name for ~1h, so this claim is
+        // the only dedupe for reconciliation backfill.
+        expect(INBOUND_EVENT_DEDUPE_TTL_SECONDS).toBeGreaterThan(
+            RECONCILE_LOOKBACK_SECONDS
+        );
     });
 });

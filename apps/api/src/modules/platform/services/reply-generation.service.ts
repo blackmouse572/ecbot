@@ -86,11 +86,10 @@ export class ReplyGenerationService {
     }
 
     /**
-     * A BullMQ job runs outside the HTTP request context, and so does an HTTP
-     * caller that fans this work out. Fork a fresh EntityManager and run the
+     * A debounce timer or an HTTP caller that fans this work out runs outside
+     * the request's ORM context. Fork a fresh EntityManager and run the
      * generation inside its RequestContext so every ORM read/write in `execute`
-     * uses a disposable identity map, discarded when the turn settles — the same
-     * seam `ContextualWorkerHost` provided around the processor's `handle`.
+     * uses a disposable identity map, discarded when the turn settles.
      */
     async run(input: ReplyInput): Promise<ReplyOutcome> {
         if (input.texts.length === 0) return skipped('no_texts');

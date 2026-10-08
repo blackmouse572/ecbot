@@ -71,10 +71,11 @@ it shows how the registry is consumed: `registry.get(account.type).sendMessage(.
 
 - **Durability and dedupe** — the webhook controller enqueues every event via
   `InboundInboxService.accept()` **before** it ACKs (receipt-before-ACK,
-  ADR-0007). The BullMQ jobId is `${platform}-${externalMessageId}` and its
-  26h retention _is_ the redelivery dedupe. A second, shared Redis claim
-  (`InboundEventDedupeService`) sits inside `MessageProcessorService.process()`
-  so every ingress path is covered. Events with no `externalMessageId` are
+  ADR-0008). That creates a Cloud Task on the `inbound-event` queue named
+  after a hash of `platform` + `externalMessageId`, so Cloud Tasks rejects a
+  redelivery within ~1h. The 26h Redis claim (`InboundEventDedupeService`)
+  inside `MessageProcessorService.process()` covers longer windows and every
+  ingress path. Events with no `externalMessageId` are
   dropped as unde-dupable.
 
 - **Slug → type map** — `apps/api/src/modules/platform/constants/platform-slug.constant.ts`
@@ -175,7 +176,7 @@ Adapters are HTTP clients with normalization on top. Do **not** put any of the
 following inside one:
 
 - DB writes (`MessageRepository`, `ConversationService` own those).
-- Handoff detection, LLM calls, BullMQ queueing.
+- Handoff detection, LLM calls, Cloud Tasks queueing.
 - Controller or routing logic.
 
 `MessageProcessorService` coordinates persistence, handoff and reply generation.
@@ -189,8 +190,8 @@ following inside one:
 4. GET handshake (Meta-style platforms only):
    `curl "https://<host>/v1/webhooks/<slug>?hub.mode=subscribe&hub.verify_token=…&hub.challenge=ping"` → `ping`.
 5. POST a captured payload with a valid signature → `200 EVENT_RECEIVED`, and a
-   BullMQ job lands on `INBOUND_EVENT_QUEUE`.
-6. POST the same payload again → no second Turn (the jobId retention and the
+   Cloud Task lands on the `inbound-event` queue (local: the emulator).
+6. POST the same payload again → no second Turn (the task name and the
    Redis claim both dedupe it).
 7. POST with a tampered body → 403.
 8. The account has a `chatbot` attached — `MessageProcessorService` silently

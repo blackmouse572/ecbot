@@ -9,9 +9,9 @@ import type { CloudTasksClient } from '@google-cloud/tasks';
 export const CLOUD_TASKS_CLIENT = 'CLOUD_TASKS_CLIENT';
 
 export interface CloudTasksEnqueueOptions {
-    /** Cloud Tasks rejects a duplicate task name for ~1h — replaces BullMQ's jobId dedup. */
+    /** Cloud Tasks rejects a duplicate task name for ~1h after the task ran or was deleted. */
     taskName?: string;
-    /** Delivery delay, replaces BullMQ's `delay` option. */
+    /** Delivery delay. */
     scheduleTime?: Date;
 }
 

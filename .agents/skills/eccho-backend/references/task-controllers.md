@@ -1,6 +1,6 @@
 # Cloud Tasks callback controllers (`.task`)
 
-Endpoints that Google Cloud Tasks calls back after `CloudTasksQueueClient.enqueue()` schedules a job. They are the target of the ongoing BullMQ to Cloud Tasks processor migration (see `apps/api/docs/background-processing.md`). One controller per migrated processor: `<feature>.task.controller.ts`.
+Endpoints that Google Cloud Tasks calls back after `CloudTasksQueueClient.enqueue()` schedules a job (see `apps/api/docs/background-processing.md`). One controller per queue: `<feature>.task.controller.ts`.
 
 Reference implementation: `modules/email/controllers/email.task.controller.ts` + `modules/email/docs/email.task.doc.ts`.
 

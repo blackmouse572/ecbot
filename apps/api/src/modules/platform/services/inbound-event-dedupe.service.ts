@@ -1,8 +1,6 @@
 import { REDIS_AVAILABLE } from '@app/common/redis/redis-availability.provider';
+import { RedisConnectionProvider } from '@app/common/redis/redis-connection.provider';
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { INBOUND_EVENT_QUEUE } from '../constants/inbound-event.constant';
 import {
     INBOUND_EVENT_DEDUPE_KEY_PREFIX,
     INBOUND_EVENT_DEDUPE_TTL_SECONDS,
@@ -16,7 +14,7 @@ const IN_MEMORY_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
 /**
  * The single shared dedupe seam for inbound platform events (candidate 1,
  * architecture review 2026-08-06). Backed by an atomic Redis SET NX
- * (reusing the inbound event queue's ioredis client, same as
+ * (on the shared RedisConnectionProvider client, same as
  * GenerationLeaseService) — or an in-process Map when Redis was unreachable
  * at boot (single-instance-only correctness, same caveat as elsewhere in the
  * fallback mode).
@@ -27,8 +25,7 @@ export class InboundEventDedupeService implements OnModuleDestroy {
     private readonly sweepTimer?: NodeJS.Timeout;
 
     constructor(
-        @InjectQueue(INBOUND_EVENT_QUEUE)
-        private readonly queue: Queue,
+        private readonly redis: RedisConnectionProvider,
         @Inject(REDIS_AVAILABLE)
         private readonly redisAvailable: boolean
     ) {
@@ -55,28 +52,6 @@ export class InboundEventDedupeService implements OnModuleDestroy {
         return `${INBOUND_EVENT_DEDUPE_KEY_PREFIX}:${platform}:${externalMessageId}`;
     }
 
-    private async client(): Promise<{
-        set(
-            key: string,
-            value: string,
-            ex: 'EX',
-            ttl: number,
-            nx: 'NX'
-        ): Promise<'OK' | null>;
-        del(key: string): Promise<number>;
-    }> {
-        return (await this.queue.getBackend().client) as unknown as {
-            set(
-                key: string,
-                value: string,
-                ex: 'EX',
-                ttl: number,
-                nx: 'NX'
-            ): Promise<'OK' | null>;
-            del(key: string): Promise<number>;
-        };
-    }
-
     /**
      * True the first time this (platform, externalMessageId) pair is seen;
      * false on redelivery — callers must skip all downstream side effects.
@@ -95,8 +70,7 @@ export class InboundEventDedupeService implements OnModuleDestroy {
             return true;
         }
 
-        const client = await this.client();
-        const result = await client.set(
+        const result = await this.redis.client.set(
             key,
             '1',
             'EX',
@@ -108,7 +82,7 @@ export class InboundEventDedupeService implements OnModuleDestroy {
 
     /**
      * Drop the claim so the pair can be claimed again. Called when the Turn
-     * that holds the claim fails: without it the BullMQ retry reads the claim
+     * that holds the claim fails: without it the Cloud Tasks retry reads the claim
      * as a platform redelivery and skips the message for good.
      */
     async release(platform: string, externalMessageId: string): Promise<void> {
@@ -119,7 +93,6 @@ export class InboundEventDedupeService implements OnModuleDestroy {
             return;
         }
 
-        const client = await this.client();
-        await client.del(key);
+        await this.redis.client.del(key);
     }
 }

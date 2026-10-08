@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { BullRedisConnectionProvider } from './bull-redis-connection.provider';
+import { RedisConnectionProvider } from './redis-connection.provider';
 import {
     REDIS_AVAILABLE,
     probeRedisAvailability,
@@ -8,7 +8,7 @@ import {
 
 /**
  * Global so any module can `@Inject(REDIS_AVAILABLE)` (or inject
- * BullRedisConnectionProvider) without importing this one directly (same
+ * RedisConnectionProvider) without importing this one directly (same
  * pattern as ConfigModule.forRoot({ isGlobal: true })).
  */
 @Global()
@@ -20,8 +20,8 @@ import {
             inject: [ConfigService],
             useFactory: probeRedisAvailability,
         },
-        BullRedisConnectionProvider,
+        RedisConnectionProvider,
     ],
-    exports: [REDIS_AVAILABLE, BullRedisConnectionProvider],
+    exports: [REDIS_AVAILABLE, RedisConnectionProvider],
 })
 export class RedisAvailabilityModule {}

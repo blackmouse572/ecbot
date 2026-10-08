@@ -18,7 +18,7 @@ The instructions are organized by workspace and purpose:
 - **[API Authentication & Authorization](./instructions/api/auth.instructions.md)** - JWT, RBAC, CASL, protection decorators
 - **[API Database](./instructions/api/database.instructions.md)** - MikroORM, repositories, entities, migrations
 - **[API Response & Validation](./instructions/api/response.instructions.md)** - Response handling, validation, error handling
-- **[API Background Jobs](./instructions/api/jobs.instructions.md)** - BullMQ processors and queue management
+- **[API Background Jobs](./instructions/api/jobs.instructions.md)** - Cloud Tasks jobs and task controllers
 
 ### Frontend Apps
 

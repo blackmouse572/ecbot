@@ -189,8 +189,7 @@ Controller pipeline:
 3. `adapter.webhook.parse(rawBody)` — normalize the body into `PlatformWebhookEvent[]`.
 4. For each event with `externalMessageId`: `WebhookDedupeService.seenAndMark` (Redis, 5 min TTL).
 5. Dispatch — currently logged with a TODO. When `MessageProcessorService` lands it consumes
-   the event here. Existing platform-specific BullMQ flows (e.g. `FacebookHandlerService`) are
-   not affected.
+   the event here.
 
 Raw body access requires `rawBody: true` on `NestFactory.create` (already enabled in
 `src/main.ts`). Signature verification reads `req.rawBody` directly to avoid drift from

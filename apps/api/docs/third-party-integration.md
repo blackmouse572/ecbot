@@ -7,7 +7,7 @@ The ACK NestJS Boilerplate integrates with various third-party services to provi
 | Amazon Web Service | S3, SES, Pinpoint              | File storage, Email, SMS                  |
 | Database           | MongoDB                        | Primary data storage                      |
 | Caching            | Redis                          | Caching, Session storage                  |
-| Queue              | BullMQ + Redis                 | Background processing                     |
+| Queue              | Google Cloud Tasks             | Background processing                     |
 | Authentication     | JWT, Google OAuth, Apple OAuth | User authentication                       |
 | Monitoring         | Sentry                         | Error tracking and performance monitoring |
 | Logging            | Pino                           | Structured logging                        |
@@ -24,7 +24,7 @@ The ACK NestJS Boilerplate integrates with various third-party services to provi
         - [MongoDB](#mongodb)
         - [Redis](#redis)
     - [Background Processing](#background-processing)
-        - [BullMQ](#bullmq)
+        - [Cloud Tasks](#cloud-tasks)
     - [Authentication](#authentication)
         - [JWT Authentication](#jwt-authentication)
         - [Social Authentication](#social-authentication)
@@ -73,7 +73,7 @@ The ACK NestJS Boilerplate integrates with various third-party services to provi
     - `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD`, `REDIS_TLS_ENABLE`
 - **Implementation**:
     - Caching: Uses `CacheModule` with `KeyvRedis` store
-    - Queue: Used by BullMQ for background processing
+    - Short-lived keys: inbound dedupe, channel rate limit, generation lease (`RedisConnectionProvider`)
 - **Features**:
     - Configurable TTL (Time-To-Live)
     - TLS support for secure connections
@@ -81,14 +81,12 @@ The ACK NestJS Boilerplate integrates with various third-party services to provi
 
 ## Background Processing
 
-### BullMQ
+### Cloud Tasks
 
-- **Purpose**: Reliable background job processing
-- **Implementation**: Uses Redis as the queue backend
-- **Configuration**:
-    - Default job options with exponential backoff
-    - Retry mechanism (3 attempts)
-- **Use Cases**: Email sending, SMS delivery, and other resource-intensive tasks
+- **Purpose**: Reliable background job processing; each task POSTs back to the API's `/api/v1/system/tasks/<queue>`
+- **Environment Variables**: `CLOUD_TASKS_PROJECT_ID`, `CLOUD_TASKS_LOCATION`, `CLOUD_TASKS_SYSTEM_API_KEY`, `CLOUD_TASKS_EMULATOR_HOST`
+- **Implementation**: `CloudTasksQueueClient` (`src/worker/`); retries come from each queue's config
+- **Use Cases**: Inbound webhook events, email, SMS, follow-ups, knowledge ingest, tag classification. See `background-processing.md`
 
 ## Authentication
 
