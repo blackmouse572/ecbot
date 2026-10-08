@@ -46,7 +46,7 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
     const customerTagClassifierService = {
         scheduleAfterMessage: jest.fn().mockResolvedValue(undefined),
     };
-    // The AI reply runs in a debounced BullMQ job; process() only schedules it
+    // The AI reply runs in a debounced job; process() only schedules it
     // and threads the customer context through.
     const messageDebounceService = {
         schedule: jest.fn().mockResolvedValue(undefined),
@@ -177,7 +177,7 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         expect(contactPointId).toBe('cp-new');
     });
 
-    describe('POC_EDGE_DEBOUNCE_URL flag ON — routes to the edge Worker instead of BullMQ', () => {
+    describe('POC_EDGE_DEBOUNCE_URL flag ON — routes to the edge Worker instead of the in-process debounce', () => {
         const originalEnv = process.env.POC_EDGE_DEBOUNCE_URL;
         const originalSecret = process.env.POC_EDGE_INTERNAL_SECRET;
         const originalFetch = global.fetch;

@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiKeySystemProtected } from '@app/modules/api-key/decorators/api-key.decorator';
+import { ApiKeyCloudTasksProtected } from '@app/modules/api-key/decorators/api-key.decorator';
 import { RequestTimeout } from 'src/common/request/decorators/request.decorator';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { IResponse } from 'src/common/response/interfaces/response.interface';
@@ -16,7 +16,7 @@ export class FollowupTaskController {
 
     @FollowupTaskHandleDoc()
     @Response('followup.task.processed')
-    @ApiKeySystemProtected()
+    @ApiKeyCloudTasksProtected()
     @RequestTimeout('300s')
     @Post('/followup')
     async handle(@Body() dto: FollowupTaskDto): Promise<IResponse> {

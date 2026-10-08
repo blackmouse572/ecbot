@@ -19,7 +19,6 @@ modules/[feature]/
 ├── enums/                 # TypeScript enums
 ├── guards/                # Feature-specific guards
 ├── interfaces/            # TypeScript interfaces
-├── processors/            # BullMQ background job processors
 ├── repositories/          # Data access layer (Repository pattern)
 ├── services/              # Business logic
 └── [feature].module.ts    # Module definition

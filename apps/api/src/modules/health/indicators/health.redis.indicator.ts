@@ -1,18 +1,16 @@
 import { REDIS_AVAILABLE } from '@app/common/redis/redis-availability.provider';
-import { InjectQueue } from '@nestjs/bullmq';
+import { RedisConnectionProvider } from '@app/common/redis/redis-connection.provider';
 import { Inject, Injectable } from '@nestjs/common';
 import {
     HealthIndicatorResult,
     HealthIndicatorService,
 } from '@nestjs/terminus';
-import { Queue } from 'bullmq';
-import { INBOUND_EVENT_QUEUE } from 'src/modules/platform/constants/inbound-event.constant';
 
 /**
- * Pings the Redis that backs BullMQ by reusing the Inbound Inbox queue's own
- * connection (no extra Redis connection). A healthy ping means the durable
- * inbox, dedupe, and every other BullMQ queue can reach Redis — the readiness
- * signal a load balancer gates rolling deploys on (#129 / ADR-0007).
+ * Pings Redis over the shared RedisConnectionProvider client (no extra
+ * connection). A healthy ping means inbound dedupe, the channel rate limit
+ * and the generation lease can reach Redis, the readiness signal a load
+ * balancer gates rolling deploys on (#129).
  *
  * When the instance intentionally booted without Redis (in-memory fallback
  * mode), reports healthy without pinging — that instance was never going to
@@ -22,8 +20,7 @@ import { INBOUND_EVENT_QUEUE } from 'src/modules/platform/constants/inbound-even
 @Injectable()
 export class HealthRedisIndicator {
     constructor(
-        @InjectQueue(INBOUND_EVENT_QUEUE)
-        private readonly queue: Queue,
+        private readonly redis: RedisConnectionProvider,
         private readonly healthIndicatorService: HealthIndicatorService,
         @Inject(REDIS_AVAILABLE)
         private readonly redisAvailable: boolean
@@ -37,12 +34,7 @@ export class HealthRedisIndicator {
         }
 
         try {
-            // BullMQ's IRedisClient interface doesn't surface `ping`, but the
-            // concrete client (ioredis) does.
-            const client = (await this.queue.getBackend().client) as unknown as {
-                ping(): Promise<string>;
-            };
-            const pong = await client.ping();
+            const pong: string = await this.redis.client.ping();
 
             if (pong !== 'PONG') {
                 return indicator.down(

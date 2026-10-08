@@ -139,7 +139,7 @@ describe('MessageProcessorService — inbound event dedupe (candidate 1)', () =>
     });
 
     // The claim marks "this turn ran". A turn that throws must release
-    // it, or the BullMQ retry sees a redelivery and drops the message forever.
+    // it, or the Cloud Tasks retry sees a redelivery and drops the message forever.
     it('releases the claim when the turn throws, so the retry reruns it', async () => {
         dedupe.claim.mockResolvedValue(true);
         conversationService.findOrCreate.mockRejectedValue(

@@ -1,6 +1,6 @@
 import { Body, Controller, Headers, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiKeySystemProtected } from '@app/modules/api-key/decorators/api-key.decorator';
+import { ApiKeyCloudTasksProtected } from '@app/modules/api-key/decorators/api-key.decorator';
 import { RequestTimeout } from 'src/common/request/decorators/request.decorator';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { IResponse } from 'src/common/response/interfaces/response.interface';
@@ -17,7 +17,7 @@ export class CustomerTagClassifierTaskController {
 
     @CustomerTagClassifierTaskHandleDoc()
     @Response('customerTagClassifier.task.processed')
-    @ApiKeySystemProtected()
+    @ApiKeyCloudTasksProtected()
     @RequestTimeout('300s')
     @Post('/customer-tag-classifier')
     async handle(
