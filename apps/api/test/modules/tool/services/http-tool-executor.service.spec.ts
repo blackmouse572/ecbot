@@ -216,6 +216,44 @@ describe('HttpToolExecutorService', () => {
         expect(init.body).toBeUndefined();
     });
 
+    it('sends GET arguments as the query string (#232)', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.GET,
+            httpUrl: 'https://api.example.com/stock',
+        });
+        await svc.execute(tool, { item: 'floral dress', size: 'L' });
+        const [url] = fetchSpy.mock.calls[0];
+        expect(String(url)).toBe(
+            'https://api.example.com/stock?item=floral+dress&size=L'
+        );
+    });
+
+    it('sends DELETE arguments as the query string, JSON-encoding objects', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.DELETE,
+            httpUrl: 'https://api.example.com/orders?v=2',
+        });
+        await svc.execute(tool, { id: 7, tags: ['a'], skip: undefined });
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(new URL(url).searchParams.get('v')).toBe('2');
+        expect(new URL(url).searchParams.get('id')).toBe('7');
+        expect(new URL(url).searchParams.get('tags')).toBe('["a"]');
+        expect(new URL(url).searchParams.has('skip')).toBe(false);
+        expect(init.body).toBeUndefined();
+    });
+
+    it('sends GET arguments as the query string when testing a config', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        await svc.executeWithConfig(
+            { httpMethod: 'GET', httpUrl: 'https://api.example.com/stock' },
+            { item: 'dress' }
+        );
+        const [url] = fetchSpy.mock.calls[0];
+        expect(String(url)).toBe('https://api.example.com/stock?item=dress');
+    });
+
     it('sends JSON-stringified args as body for POST requests', async () => {
         fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
         const tool = makeTool({ httpMethod: ENUM_HTTP_METHOD.POST });

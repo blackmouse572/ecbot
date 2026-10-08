@@ -3,6 +3,10 @@ import { HelperEgressService } from 'src/common/helper/services/helper.egress.se
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
 import { ENUM_TOOL_INVOCATION_STATUS } from 'src/modules/tool/enums/tool-invocation-status.enum';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import {
+    appendQueryArgs,
+    HTTP_TOOL_QUERY_METHODS,
+} from 'src/modules/tool/utils/http-tool-query.util';
 
 export interface ExecutionResult {
     status: ENUM_TOOL_INVOCATION_STATUS;
@@ -58,12 +62,12 @@ export class HttpToolExecutorService {
         }
 
         const method = tool.httpMethod ?? 'POST';
+        const inQuery = HTTP_TOOL_QUERY_METHODS.includes(method);
+        if (inQuery) url = appendQueryArgs(url, args);
         const init: RequestInit = {
             method,
             headers,
-            body: ['GET', 'DELETE'].includes(method)
-                ? undefined
-                : JSON.stringify(args),
+            body: inQuery ? undefined : JSON.stringify(args),
         };
 
         const attempts = tool.maxRetries ?? 1;
@@ -168,12 +172,12 @@ export class HttpToolExecutorService {
         }
 
         const method = config.httpMethod ?? 'POST';
+        const inQuery = HTTP_TOOL_QUERY_METHODS.includes(method);
+        if (inQuery) url = appendQueryArgs(url, args);
         const init: RequestInit = {
             method,
             headers,
-            body: ['GET', 'DELETE'].includes(method)
-                ? undefined
-                : JSON.stringify(args),
+            body: inQuery ? undefined : JSON.stringify(args),
         };
 
         const attempts = config.maxRetries ?? 1;
