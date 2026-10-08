@@ -39,6 +39,7 @@ import {
     ENUM_USER_SIGN_UP_FROM,
     ENUM_USER_STATUS,
 } from 'src/modules/user/enums/user.enum';
+import { IUserMfaUpdate } from 'src/modules/user/interfaces/user.interface';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { UserRepository } from 'src/modules/user/repository/repositories/user.repository';
 
@@ -577,6 +578,15 @@ export class UserService {
     ): Promise<UserEntity> {
         user.passwordAttempt = passwordAttempt;
         await (options?.em || this.em).persistAndFlush(user);
+        return user;
+    }
+
+    async updateMfa(
+        user: UserEntity,
+        data: IUserMfaUpdate
+    ): Promise<UserEntity> {
+        Object.assign(user, data);
+        await this.em.persistAndFlush(user);
         return user;
     }
 

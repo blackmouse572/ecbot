@@ -3,6 +3,7 @@ import {
   USER_BLOCKED_FORBIDDEN_STATUS_CODE,
   useSignInWithEmailPass,
 } from "@/hooks/api/auth";
+import { isMfaChallenge } from "@/hooks/api/mfa";
 import { useAuth } from "@/modules/auth";
 import { loginRedirectTarget } from "@/modules/auth/login-redirect";
 import { ROUTES } from "@/routes";
@@ -12,6 +13,7 @@ import { lazy, Suspense, useId, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SocialLogin } from "../components/social-login";
+import { LoginMfaStep } from "./login-mfa-step";
 
 const LOGIN_FORM_ID = "login-form";
 
@@ -40,6 +42,16 @@ function LoginPage() {
   // network call starts, leaving a gap where a fast double-click still fires.
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isBusy = isPending || isSubmitting;
+  // Set when the password was right but the account has MFA on.
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+
+  const completeLogin = (accessToken: string) => {
+    toast.success(t("success.message"));
+    setAuth(accessToken);
+    navigate(loginRedirectTarget(search.get("redirect")), {
+      replace: true,
+    });
+  };
 
   const onSubmit: React.ComponentProps<typeof LoginForm>["onSubmit"] = async (
     data,
@@ -65,15 +77,25 @@ function LoginPage() {
           toast.error(error?.message ?? t("failed.message"));
         },
         onSuccess: (data) => {
-          toast.success(t("success.message"));
-          setAuth(data.accessToken);
-          navigate(loginRedirectTarget(search.get("redirect")), {
-            replace: true,
-          });
+          if (isMfaChallenge(data)) {
+            setMfaToken(data.mfaToken);
+            return;
+          }
+          completeLogin(data.accessToken);
         },
       },
     );
   };
+
+  if (mfaToken) {
+    return (
+      <LoginMfaStep
+        mfaToken={mfaToken}
+        onSuccess={completeLogin}
+        onRestart={() => setMfaToken(null)}
+      />
+    );
+  }
 
   return (
     <div className="flex w-[280px] flex-col gap-y-4">

@@ -125,4 +125,27 @@ export class UserGetResponseDto extends DatabaseDto {
     })
     @Type(() => UserVerificationResponseDto)
     verification: UserVerificationResponseDto;
+
+    @ApiProperty({
+        required: true,
+        example: false,
+        description: 'Whether TOTP multi-factor authentication is on',
+    })
+    mfaEnabled: boolean;
+
+    @ApiHideProperty()
+    @Exclude()
+    mfaSecret?: string;
+
+    @ApiHideProperty()
+    @Exclude()
+    mfaPendingSecret?: string;
+
+    @ApiHideProperty()
+    @Exclude()
+    mfaRecoveryCodes?: string[];
+
+    @ApiHideProperty()
+    @Exclude()
+    mfaLastTimeStep?: number;
 }

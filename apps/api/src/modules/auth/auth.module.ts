@@ -7,6 +7,7 @@ import { AuthJwtAccessStrategy } from 'src/modules/auth/guards/jwt/strategies/au
 import { AuthJwtRefreshStrategy } from 'src/modules/auth/guards/jwt/strategies/auth.jwt.refresh.strategy';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
+import { MfaService } from 'src/modules/auth/services/mfa.service';
 import { SessionModule } from 'src/modules/session/session.module';
 import { UserModule } from 'src/modules/user/user.module';
 import { Algorithm } from 'jsonwebtoken';
@@ -15,12 +16,13 @@ import { Algorithm } from 'jsonwebtoken';
     providers: [
         AuthService,
         ImpersonationService,
+        MfaService,
         {
             provide: APP_INTERCEPTOR,
             useClass: AuthImpersonationReadOnlyInterceptor,
         },
     ],
-    exports: [AuthService, ImpersonationService],
+    exports: [AuthService, ImpersonationService, MfaService],
     controllers: [],
     imports: [
         SessionModule,

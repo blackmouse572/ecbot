@@ -12,6 +12,7 @@ import { ActivityModule } from 'src/modules/activity/activity.module';
 import { ActivitySharedController } from 'src/modules/activity/controllers/activity.shared.controller';
 import { ApiKeyModule } from 'src/modules/api-key/api-key.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
+import { AuthMfaSharedController } from 'src/modules/auth/controllers/auth.mfa.shared.controller';
 import { AuthSharedController } from 'src/modules/auth/controllers/auth.shared.controller';
 import { AwsModule } from 'src/modules/aws/aws.module';
 import { CountryModule } from 'src/modules/country/country.module';
@@ -28,6 +29,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
     controllers: [
         UserSharedController,
         AuthSharedController,
+        AuthMfaSharedController,
         CountrySharedController,
         SessionSharedController,
         PasswordHistorySharedController,

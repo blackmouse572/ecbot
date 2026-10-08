@@ -41,14 +41,17 @@ import {
 import {
     AuthPublicImpersonateExchangeDoc,
     AuthPublicLoginCredentialDoc,
+    AuthPublicLoginMfaDoc,
     AuthPublicLoginSocialAppleDoc,
     AuthPublicLoginSocialGoogleDoc,
     AuthPublicSignUpDoc,
 } from 'src/modules/auth/docs/auth.public.doc';
 import { AuthImpersonateExchangeRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-exchange.request.dto';
+import { AuthLoginMfaRequestDto } from 'src/modules/auth/dtos/request/auth.login-mfa.request.dto';
 import { AuthLoginRequestDto } from 'src/modules/auth/dtos/request/auth.login.request.dto';
 import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
 import { AuthImpersonateExchangeResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate-exchange.response.dto';
+import { AuthLoginMfaChallengeResponseDto } from 'src/modules/auth/dtos/response/auth.login-mfa-challenge.response.dto';
 import { AuthLoginResponseDto } from 'src/modules/auth/dtos/response/auth.login.response.dto';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import {
@@ -57,6 +60,8 @@ import {
 } from 'src/modules/auth/interfaces/auth.interface';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
+import { MfaService } from 'src/modules/auth/services/mfa.service';
+import { AUTH_MFA_CHALLENGE_TTL_SECONDS } from 'src/modules/auth/constants/auth.mfa.constant';
 import { ENUM_COUNTRY_STATUS_CODE_ERROR } from 'src/modules/country/enums/country.status-code.enum';
 import { CountryService } from 'src/modules/country/services/country.service';
 import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
@@ -93,7 +98,8 @@ export class AuthPublicController {
         private readonly activityService: ActivityService,
         private readonly messageService: MessageService,
         private readonly turnstileService: TurnstileService,
-        private readonly impersonationService: ImpersonationService
+        private readonly impersonationService: ImpersonationService,
+        private readonly mfaService: MfaService
     ) {}
 
     @AuthPublicImpersonateExchangeDoc()
@@ -139,7 +145,9 @@ export class AuthPublicController {
         { email, password, turnstileToken, rememberMe }: AuthLoginRequestDto,
         @Req() request: IRequestApp,
         @Res({ passthrough: true }) res: ExpressResponse
-    ): Promise<IResponse<AuthLoginResponseDto>> {
+    ): Promise<
+        IResponse<AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto>
+    > {
         // Before any user lookup, so bots get no enumeration signal.
         await this.turnstileService.verify(
             turnstileToken,
@@ -224,7 +232,11 @@ export class AuthPublicController {
             });
         }
 
-        await this.userService.resetPasswordAttempt(user);
+        // With MFA on, the count is only cleared once the second factor
+        // passes, so failed codes keep adding up toward the lockout.
+        if (!user.mfaEnabled) {
+            await this.userService.resetPasswordAttempt(user);
+        }
 
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
@@ -235,63 +247,78 @@ export class AuthPublicController {
             });
         }
 
-        const databaseSession = this.em.fork();
-        await databaseSession.begin();
+        if (user.mfaEnabled) {
+            return { data: await this.createMfaChallenge(user, rememberMe) };
+        }
 
-        try {
-            const session = await this.sessionService.create(
-                request,
-                {
-                    user: user.id,
-                },
-                { em: databaseSession }
-            );
+        return {
+            data: await this.issueLogin(userWithRole, request, res, rememberMe),
+        };
+    }
 
-            await this.sessionService.setLoginSession(userWithRole, session);
-
-            const token = this.authService.createToken(
-                userWithRole,
-                session.id,
-                rememberMe
-            );
-
-            this.authService.setRefreshTokenCookie(
-                res,
-                token.refreshToken,
-                rememberMe
-            );
-
-            await databaseSession.commit();
-
-            await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: {
-                    id: user.id,
-                    name: user.email,
-                },
-            });
-
-            return {
-                data: token,
-            };
-        } catch (err: unknown) {
-            try {
-                await databaseSession.rollback();
-            } catch {
-                /* ignore rollback error */
-            }
-            this.logger.error(
-                `Error during login with credential for user [${user.id}]: ${err}`,
-                err instanceof Error ? err.stack : undefined
-            );
-
-            throw new InternalServerErrorException({
-                statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
-                message: 'http.serverError.internalServerError',
-                _error: err,
+    @AuthPublicLoginMfaDoc()
+    @Response('auth.loginWithMfa')
+    @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
+    @HttpCode(HttpStatus.OK)
+    @Post('/login/mfa')
+    async loginWithMfa(
+        @Body() { mfaToken, code }: AuthLoginMfaRequestDto,
+        @Req() request: IRequestApp,
+        @Res({ passthrough: true }) res: ExpressResponse
+    ): Promise<IResponse<AuthLoginResponseDto>> {
+        const challenge = await this.mfaService.findChallenge(mfaToken);
+        const user: UserEntity | null = challenge
+            ? await this.userService.findOneById(challenge.user)
+            : null;
+        if (!challenge || !user) {
+            throw new UnauthorizedException({
+                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_CHALLENGE_INVALID,
+                message: 'auth.error.mfaChallengeInvalid',
             });
         }
+
+        // Wrong codes count toward the same lockout as wrong passwords.
+        if (
+            this.authService.getPasswordAttempt() &&
+            user.passwordAttempt >= this.authService.getPasswordMaxAttempt()
+        ) {
+            await this.mfaService.deleteChallenge(mfaToken);
+            throw new ForbiddenException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
+                message: 'auth.error.passwordAttemptMax',
+            });
+        }
+
+        if (!(await this.mfaService.verify(user, code))) {
+            await this.userService.increasePasswordAttempt(user);
+            throw this.mfaService.invalidCodeError();
+        }
+
+        await this.mfaService.deleteChallenge(mfaToken);
+
+        // The account may have changed in the minutes since the first step.
+        const userWithRole: UserEntity = await this.userService.join(user);
+        if (
+            user.status !== ENUM_USER_STATUS.ACTIVE ||
+            !userWithRole.role.isActive
+        ) {
+            throw new ForbiddenException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
+                message: 'user.error.inactive',
+            });
+        }
+
+        await this.userService.resetPasswordAttempt(user);
+
+        return {
+            data: await this.issueLogin(
+                userWithRole,
+                request,
+                res,
+                challenge.rememberMe
+            ),
+        };
     }
 
     @AuthPublicLoginSocialGoogleDoc()
@@ -302,7 +329,9 @@ export class AuthPublicController {
         @AuthJwtPayload<IAuthSocialGooglePayload>('email')
         email: string,
         @Req() request: IRequestApp
-    ): Promise<IResponse<AuthLoginResponseDto>> {
+    ): Promise<
+        IResponse<AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto>
+    > {
         const user: UserEntity = await this.userService.findOneByEmail(email);
         if (!user) {
             throw new NotFoundException({
@@ -334,7 +363,9 @@ export class AuthPublicController {
             });
         }
 
-        await this.userService.resetPasswordAttempt(user);
+        if (!user.mfaEnabled) {
+            await this.userService.resetPasswordAttempt(user);
+        }
 
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
@@ -343,6 +374,10 @@ export class AuthPublicController {
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
                 message: 'auth.error.passwordExpired',
             });
+        }
+
+        if (user.mfaEnabled) {
+            return { data: await this.createMfaChallenge(user) };
         }
 
         const databaseSession = this.em.fork();
@@ -400,7 +435,9 @@ export class AuthPublicController {
         @AuthJwtPayload<IAuthSocialApplePayload>('email')
         email: string,
         @Req() request: IRequestApp
-    ): Promise<IResponse<AuthLoginResponseDto>> {
+    ): Promise<
+        IResponse<AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto>
+    > {
         const user: UserEntity = await this.userService.findOneByEmail(email);
         if (!user) {
             throw new NotFoundException({
@@ -432,7 +469,9 @@ export class AuthPublicController {
             });
         }
 
-        await this.userService.resetPasswordAttempt(user);
+        if (!user.mfaEnabled) {
+            await this.userService.resetPasswordAttempt(user);
+        }
 
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
@@ -441,6 +480,10 @@ export class AuthPublicController {
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
                 message: 'auth.error.passwordExpired',
             });
+        }
+
+        if (user.mfaEnabled) {
+            return { data: await this.createMfaChallenge(user) };
         }
 
         const databaseSession = this.em.fork();
@@ -639,6 +682,86 @@ export class AuthPublicController {
             } catch {
                 /* ignore rollback error */
             }
+            throw new InternalServerErrorException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
+                message: 'http.serverError.internalServerError',
+                _error: err,
+            });
+        }
+    }
+
+    private async createMfaChallenge(
+        user: UserEntity,
+        rememberMe?: boolean
+    ): Promise<AuthLoginMfaChallengeResponseDto> {
+        const mfaToken = await this.mfaService.createChallenge({
+            user: user.id,
+            rememberMe,
+        });
+        return {
+            mfaRequired: true,
+            mfaToken,
+            expiresIn: AUTH_MFA_CHALLENGE_TTL_SECONDS,
+        };
+    }
+
+    // Opens the session, mints the tokens and sets the refresh cookie: the
+    // last step of a password login, or of the MFA step that follows one.
+    private async issueLogin(
+        userWithRole: UserEntity,
+        request: IRequestApp,
+        res: ExpressResponse,
+        rememberMe?: boolean
+    ): Promise<AuthLoginResponseDto> {
+        const databaseSession = this.em.fork();
+        await databaseSession.begin();
+
+        try {
+            const session = await this.sessionService.create(
+                request,
+                {
+                    user: userWithRole.id,
+                },
+                { em: databaseSession }
+            );
+
+            await this.sessionService.setLoginSession(userWithRole, session);
+
+            const token = this.authService.createToken(
+                userWithRole,
+                session.id,
+                rememberMe
+            );
+
+            this.authService.setRefreshTokenCookie(
+                res,
+                token.refreshToken,
+                rememberMe
+            );
+
+            await databaseSession.commit();
+
+            await this.activityService.createByUser(userWithRole, {
+                action: ENUM_ACTIVITY_ACTION.CREATE,
+                subject: ENUM_POLICY_SUBJECT.AUTH,
+                metadata: {
+                    id: userWithRole.id,
+                    name: userWithRole.email,
+                },
+            });
+
+            return token;
+        } catch (err: unknown) {
+            try {
+                await databaseSession.rollback();
+            } catch {
+                /* ignore rollback error */
+            }
+            this.logger.error(
+                `Error during login for user [${userWithRole.id}]: ${err}`,
+                err instanceof Error ? err.stack : undefined
+            );
+
             throw new InternalServerErrorException({
                 statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
                 message: 'http.serverError.internalServerError',

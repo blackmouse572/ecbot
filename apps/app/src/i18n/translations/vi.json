@@ -216,6 +216,20 @@
         },
         "failed": {
           "message": "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn và thử lại."
+        },
+        "mfa": {
+          "title": "Xác minh hai bước",
+          "description": "Nhập mã 6 chữ số trong ứng dụng xác thực của bạn.",
+          "recoveryDescription": "Nhập một trong các mã khôi phục bạn đã lưu.",
+          "recoveryPlaceholder": "Mã khôi phục",
+          "useRecoveryCode": "Dùng mã khôi phục",
+          "useAuthenticator": "Dùng ứng dụng xác thực",
+          "verifyButton": "Xác minh",
+          "back": "Quay lại đăng nhập",
+          "errors": {
+            "invalidCode": "Mã không đúng. Vui lòng thử lại.",
+            "tooManyAttempts": "Bạn đã thử quá nhiều lần. Vui lòng đợi một phút rồi thử lại."
+          }
         }
       },
       "register": {
@@ -1795,6 +1809,44 @@
         "error": "Đã xảy ra lỗi khi xóa tài khoản của bạn.",
         "confirmButton": "Xóa tài khoản của tôi",
         "cancelButton": "Hủy"
+      }
+    },
+    "mfa": {
+      "domain": "Xác minh hai bước",
+      "description": "Mỗi lần đăng nhập, bạn sẽ nhập thêm mã từ ứng dụng xác thực.",
+      "status": {
+        "on": "Đang bật",
+        "off": "Đang tắt"
+      },
+      "actions": {
+        "enable": "Bật",
+        "disable": "Tắt",
+        "confirm": "Xác nhận",
+        "cancel": "Hủy",
+        "done": "Tôi đã lưu mã"
+      },
+      "setup": {
+        "scan": "Mở ứng dụng xác thực (Google Authenticator, Microsoft Authenticator, Authy...) và thêm tài khoản bằng khóa thiết lập bên dưới.",
+        "secretLabel": "Khóa thiết lập",
+        "uriLabel": "Liên kết thiết lập",
+        "enterCode": "Nhập mã 6 chữ số hiển thị trong ứng dụng."
+      },
+      "recovery": {
+        "title": "Lưu các mã khôi phục",
+        "description": "Nếu mất điện thoại, bạn có thể dùng mỗi mã một lần thay cho mã trong ứng dụng. Các mã này chỉ hiển thị lần này.",
+        "copyAll": "Sao chép tất cả mã"
+      },
+      "disable": {
+        "description": "Nhập mật khẩu và mã từ ứng dụng (hoặc một mã khôi phục) để tắt xác minh hai bước.",
+        "password": "Mật khẩu hiện tại",
+        "code": "Mã xác thực hoặc mã khôi phục"
+      },
+      "success": {
+        "enabled": "Đã bật xác minh hai bước.",
+        "disabled": "Đã tắt xác minh hai bước."
+      },
+      "errors": {
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
       }
     }
   },

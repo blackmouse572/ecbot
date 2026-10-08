@@ -10,6 +10,7 @@ export * from "./customer-tags";
 export * from "./customers";
 export * from "./knowledge-base";
 export * from "./knowledge-tag";
+export * from "./mfa";
 export * from "./notifications";
 export * from "./reset-password";
 export * from "./sessions";
