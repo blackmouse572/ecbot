@@ -2,6 +2,7 @@ import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 
 export interface IVerificationEmailCopy {
     subject: string;
+    heading: string;
     greeting: (name?: string) => string;
     intro: string;
     expires: (expiredAt: string) => string;
@@ -17,6 +18,7 @@ const COPY: Record<
 > = {
     [ENUM_MESSAGE_LANGUAGE.EN]: homeName => ({
         subject: 'Email Verification',
+        heading: 'Verify your email',
         greeting: name => (name ? `Hi ${name},` : 'Hi,'),
         intro: 'Use this code to verify your email address:',
         expires: expiredAt => `The code expires at ${expiredAt}.`,
@@ -27,6 +29,7 @@ const COPY: Record<
     }),
     [ENUM_MESSAGE_LANGUAGE.VI]: homeName => ({
         subject: 'Mã xác minh email của bạn',
+        heading: 'Xác minh email của bạn',
         greeting: name => (name ? `Chào ${name},` : 'Chào bạn,'),
         intro: 'Dùng mã này để xác minh địa chỉ email của bạn:',
         expires: expiredAt => `Mã hết hạn lúc ${expiredAt}.`,

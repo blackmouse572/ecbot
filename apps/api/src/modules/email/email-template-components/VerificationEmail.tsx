@@ -1,5 +1,8 @@
-import { Body, Head, Html } from '@react-email/components';
+import { Text } from '@react-email/components';
 import React from 'react';
+import EmailCode from './EmailCode';
+import EmailLayout from './EmailLayout';
+import { EMAIL_THEME as T } from './email-theme';
 import { verificationEmailCopy } from './verification-email.copy';
 
 interface VerificationEmailProps {
@@ -26,37 +29,39 @@ const VerificationEmail: React.FC<VerificationEmailProps> = ({
     const copy = verificationEmailCopy(language, homeName);
 
     return (
-        <Html lang={language ?? 'en'}>
-            <Head />
-            <Body style={{ fontFamily: 'Arial, sans-serif', color: '#111' }}>
-                <p>{copy.greeting(name)}</p>
-                <p>{copy.intro}</p>
-                <p
-                    style={{
-                        fontSize: '28px',
-                        fontWeight: 'bold',
-                        letterSpacing: '6px',
-                    }}
-                >
-                    {otp}
-                </p>
-                {expiredAt && <p>{copy.expires(expiredAt)}</p>}
-                <p>{copy.ignore}</p>
-                {supportEmail && (
-                    <p>
-                        {copy.support}{' '}
-                        <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-                    </p>
-                )}
-                <p style={{ color: '#666', fontSize: '12px' }}>
-                    {copy.reference}: {reference}
-                </p>
-                <p>
-                    <a href={homeUrl}>{copy.signOff}</a>
-                </p>
-            </Body>
-        </Html>
+        <EmailLayout
+            language={language}
+            preview={`${copy.intro} ${otp}`}
+            heading={copy.heading}
+            homeUrl={homeUrl}
+            homeName={homeName}
+            supportEmail={supportEmail}
+            supportLabel={copy.support}
+            signOff={copy.signOff}
+        >
+            <Text style={body}>{copy.greeting(name)}</Text>
+            <Text style={body}>{copy.intro}</Text>
+            <EmailCode code={otp} />
+            {expiredAt && <Text style={body}>{copy.expires(expiredAt)}</Text>}
+            <Text style={muted}>{copy.ignore}</Text>
+            <Text style={muted}>
+                {copy.reference}: {reference}
+            </Text>
+        </EmailLayout>
     );
+};
+
+const body: React.CSSProperties = {
+    margin: '0 0 12px',
+    fontSize: '14px',
+    lineHeight: '20px',
+    color: T.fgSubtle,
+};
+
+const muted: React.CSSProperties = {
+    ...body,
+    fontSize: '12px',
+    color: T.fgMuted,
 };
 
 export default VerificationEmail;
