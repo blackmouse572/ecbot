@@ -174,11 +174,13 @@ export class AuthPublicController {
             // here would turn the lockout into an unlimited-guess "is this
             // the right password" oracle (a 403 for the right password vs.
             // a 400 for a wrong one), which defeats the point of locking.
+            await this.recordLoginFailed(user, 'locked');
             throw this.buildInvalidCredentialError();
         }
 
         if (!validate) {
             await this.userService.increasePasswordAttempt(user);
+            await this.recordLoginFailed(user, 'invalid_password');
 
             // Identical to the unknown-email error above — no attempt
             // count, no lockout hint — a guesser can't distinguish "wrong
@@ -200,11 +202,13 @@ export class AuthPublicController {
         }
 
         if (user.status === ENUM_USER_STATUS.BLOCKED) {
+            await this.recordLoginFailed(user, 'blocked');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.BLOCKED_FORBIDDEN,
                 message: 'user.error.blocked',
             });
         } else if (user.status !== ENUM_USER_STATUS.ACTIVE) {
+            await this.recordLoginFailed(user, 'inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'user.error.inactive',
@@ -213,11 +217,13 @@ export class AuthPublicController {
 
         const userWithRole: UserEntity = await this.userService.join(user);
         if (!userWithRole.role.isActive) {
+            await this.recordLoginFailed(user, 'role_inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_ROLE_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'role.error.inactive',
             });
         } else if (userWithRole.verification.email !== true) {
+            await this.recordLoginFailed(user, 'email_not_verified');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.EMAIL_NOT_VERIFIED,
                 message: 'user.error.emailNotVerified',
@@ -229,6 +235,7 @@ export class AuthPublicController {
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
         if (checkPasswordExpired) {
+            await this.recordLoginFailed(user, 'password_expired');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
                 message: 'auth.error.passwordExpired',
@@ -264,7 +271,7 @@ export class AuthPublicController {
             await databaseSession.commit();
 
             await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
+                action: ENUM_ACTIVITY_ACTION.LOGIN,
                 subject: ENUM_POLICY_SUBJECT.AUTH,
                 metadata: {
                     id: user.id,
@@ -310,11 +317,13 @@ export class AuthPublicController {
                 message: 'user.error.notFound',
             });
         } else if (user.status === ENUM_USER_STATUS.BLOCKED) {
+            await this.recordLoginFailed(user, 'blocked');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.BLOCKED_FORBIDDEN,
                 message: 'user.error.blocked',
             });
         } else if (user.status !== ENUM_USER_STATUS.ACTIVE) {
+            await this.recordLoginFailed(user, 'inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'user.error.inactive',
@@ -323,11 +332,13 @@ export class AuthPublicController {
 
         const userWithRole: UserEntity = await this.userService.join(user);
         if (!userWithRole.role.isActive) {
+            await this.recordLoginFailed(user, 'role_inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_ROLE_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'role.error.inactive',
             });
         } else if (userWithRole.verification.email !== true) {
+            await this.recordLoginFailed(user, 'email_not_verified');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.EMAIL_NOT_VERIFIED,
                 message: 'user.error.emailNotVerified',
@@ -339,6 +350,7 @@ export class AuthPublicController {
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
         if (checkPasswordExpired) {
+            await this.recordLoginFailed(user, 'password_expired');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
                 message: 'auth.error.passwordExpired',
@@ -362,7 +374,7 @@ export class AuthPublicController {
             await databaseSession.commit();
 
             await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
+                action: ENUM_ACTIVITY_ACTION.LOGIN,
                 subject: ENUM_POLICY_SUBJECT.AUTH,
                 metadata: {
                     id: user.id,
@@ -408,11 +420,13 @@ export class AuthPublicController {
                 message: 'user.error.notFound',
             });
         } else if (user.status === ENUM_USER_STATUS.BLOCKED) {
+            await this.recordLoginFailed(user, 'blocked');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.BLOCKED_FORBIDDEN,
                 message: 'user.error.blocked',
             });
         } else if (user.status !== ENUM_USER_STATUS.ACTIVE) {
+            await this.recordLoginFailed(user, 'inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'user.error.inactive',
@@ -421,11 +435,13 @@ export class AuthPublicController {
 
         const userWithRole: UserEntity = await this.userService.join(user);
         if (!userWithRole.role.isActive) {
+            await this.recordLoginFailed(user, 'role_inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_ROLE_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'role.error.inactive',
             });
         } else if (userWithRole.verification.email !== true) {
+            await this.recordLoginFailed(user, 'email_not_verified');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.EMAIL_NOT_VERIFIED,
                 message: 'user.error.emailNotVerified',
@@ -437,6 +453,7 @@ export class AuthPublicController {
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
         if (checkPasswordExpired) {
+            await this.recordLoginFailed(user, 'password_expired');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
                 message: 'auth.error.passwordExpired',
@@ -459,7 +476,7 @@ export class AuthPublicController {
             await databaseSession.commit();
 
             await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
+                action: ENUM_ACTIVITY_ACTION.LOGIN,
                 subject: ENUM_POLICY_SUBJECT.AUTH,
                 metadata: {
                     id: user.id,
@@ -659,5 +676,25 @@ export class AuthPublicController {
             // account, not just a wrong password.
             message: 'auth.error.invalidCredential',
         });
+    }
+
+    // Audit a rejected login for an account that exists (an unknown email
+    // writes nothing). A failed insert is logged and swallowed, so the
+    // caller still gets the exact error it would have got without auditing.
+    private async recordLoginFailed(
+        user: UserEntity,
+        reason: string
+    ): Promise<void> {
+        try {
+            await this.activityService.createByUser(user, {
+                action: ENUM_ACTIVITY_ACTION.LOGIN_FAILED,
+                subject: ENUM_POLICY_SUBJECT.AUTH,
+                metadata: { id: user.id, name: user.email, reason },
+            });
+        } catch (err: unknown) {
+            this.logger.error(
+                `Failed to audit rejected login for user [${user.id}]: ${err}`
+            );
+        }
     }
 }

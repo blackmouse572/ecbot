@@ -7,15 +7,22 @@ import { FilterQuery } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { isObject } from 'lodash';
+import { CLS_REQ, ClsService } from 'nestjs-cls';
+import { IRequestApp } from 'src/common/request/interfaces/request.interface';
 import { ActivityCreateRequest } from 'src/modules/activity/dtos/request/activity.create.response.dto';
 import { ActivityListResponseDto } from 'src/modules/activity/dtos/response/activity.list.response.dto';
+import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
 import { ActivityEntity } from 'src/modules/activity/repository/entities/activity.entity';
 import { ActivityRepository } from 'src/modules/activity/repository/repositories/activity.repository';
+import { ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 
 @Injectable()
 export class ActivityService {
-    constructor(private readonly activityRepository: ActivityRepository) {}
+    constructor(
+        private readonly activityRepository: ActivityRepository,
+        private readonly cls: ClsService
+    ) {}
 
     async findAll(
         find?: FilterQuery<NoInfer<ActivityEntity>>,
@@ -68,12 +75,7 @@ export class ActivityService {
         { action, subject, metadata }: ActivityCreateRequest,
         options?: IDatabaseCreateOptions
     ): Promise<ActivityEntity> {
-        const create: ActivityEntity = new ActivityEntity();
-        create.action = action;
-        create.subject = subject;
-        create.metadata = metadata;
-        create.user = user;
-        create.by = user;
+        const create = this.build(user, user, { action, subject, metadata });
 
         return this.activityRepository.create(create, options);
     }
@@ -83,12 +85,7 @@ export class ActivityService {
         workspace: WorkspaceEntity,
         { action, subject, metadata }: ActivityCreateRequest
     ): Promise<ActivityEntity> {
-        const create: ActivityEntity = new ActivityEntity();
-        create.action = action;
-        create.subject = subject;
-        create.metadata = metadata;
-        create.user = user;
-        create.by = user;
+        const create = this.build(user, user, { action, subject, metadata });
         create.workspace = workspace;
 
         return this.activityRepository.create(create);
@@ -100,21 +97,56 @@ export class ActivityService {
         { action, subject, metadata }: ActivityCreateRequest,
         options?: IDatabaseCreateOptions
     ): Promise<ActivityEntity> {
+        const by = this.activityRepository
+            .getEntityManager()
+            .getReference(UserEntity, byUserId);
+        const create = this.build(user, by, { action, subject, metadata });
+
+        return this.activityRepository.create(create, options);
+    }
+
+    // A read of personal data (conversation, customer). Takes the user id
+    // from the JWT so the read path costs one insert and no user lookup.
+    async createView(
+        userId: string,
+        workspace: WorkspaceEntity,
+        subject: ENUM_POLICY_SUBJECT,
+        metadata: Record<string, any>
+    ): Promise<ActivityEntity> {
+        const user = this.activityRepository
+            .getEntityManager()
+            .getReference(UserEntity, userId);
+        const create = this.build(user, user, {
+            action: ENUM_ACTIVITY_ACTION.VIEW,
+            subject,
+            metadata,
+        });
+        create.workspace = workspace;
+
+        return this.activityRepository.create(create);
+    }
+
+    // Stamps the caller's IP and user agent from the current request, so no
+    // call site passes them; outside a request (seeds, workers) both stay
+    // empty. `request.ip` honours the `trust proxy` hops set in main.ts, the
+    // same source SessionService records for sessions.
+    private build(
+        user: UserEntity,
+        by: UserEntity,
+        { action, subject, metadata }: ActivityCreateRequest
+    ): ActivityEntity {
+        const request = this.cls.get<IRequestApp | undefined>(CLS_REQ);
+
         const create: ActivityEntity = new ActivityEntity();
         create.action = action;
         create.subject = subject;
         create.metadata = metadata;
         create.user = user;
-        create.by = this.activityRepository
-            .getEntityManager()
-            .getReference(UserEntity, byUserId);
+        create.by = by;
+        create.ipAddress = request?.ip;
+        create.userAgent = request?.headers?.['user-agent'];
 
-        return this.activityRepository.create(create, options);
-    }
-
-    async deleteMany(find?: Record<string, any>): Promise<boolean> {
-        await this.activityRepository.deleteMany(find);
-        return true;
+        return create;
     }
 
     mapList(userHistories: ActivityEntity[]): ActivityListResponseDto[] {

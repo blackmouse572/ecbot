@@ -126,7 +126,8 @@ export class CustomerWorkspaceController {
     @Get('/:id')
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @Param('id') id: string
+        @Param('id') id: string,
+        @AuthJwtPayload('user') userId: string
     ): Promise<IResponse<CustomerGetResponseDto>> {
         // BOLA guard — never return a customer from a different workspace,
         // collapse missing + cross-workspace into the same 404.
@@ -140,6 +141,12 @@ export class CustomerWorkspaceController {
                 statusCode: 404,
             });
         }
+        await this.activityService.createView(
+            userId,
+            workspace,
+            ENUM_POLICY_SUBJECT.CUSTOMER,
+            { id: customer.id }
+        );
         return { data: this.customerService.mapGet(customer) };
     }
 

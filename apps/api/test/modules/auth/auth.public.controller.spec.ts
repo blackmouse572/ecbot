@@ -20,6 +20,8 @@ import { ImpersonationService } from '@app/modules/auth/services/impersonation.s
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_TURNSTILE_ACTION } from '@app/common/turnstile/enums/turnstile.action.enum';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 
 describe('AuthPublicController.signUp', () => {
     let controller: AuthPublicController;
@@ -608,5 +610,101 @@ describe('AuthPublicController.loginWithCredential', () => {
         );
 
         expect(rehashPassword).not.toHaveBeenCalled();
+    });
+
+    describe('audit trail', () => {
+        const login = (password = 'pass') =>
+            controller
+                .loginWithCredential(
+                    { email: 'ok@x.com', password } as any,
+                    {} as any,
+                    {} as any
+                )
+                .catch(err => err);
+
+        const failedWith = (user: any, reason: string) =>
+            expect(createByUserActivity).toHaveBeenCalledWith(user, {
+                action: ENUM_ACTIVITY_ACTION.LOGIN_FAILED,
+                subject: ENUM_POLICY_SUBJECT.AUTH,
+                metadata: { id: user.id, name: user.email, reason },
+            });
+
+        it('records a successful login as LOGIN', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+
+            await login();
+
+            expect(createByUserActivity).toHaveBeenCalledWith(
+                activeUser,
+                expect.objectContaining({
+                    action: ENUM_ACTIVITY_ACTION.LOGIN,
+                    subject: ENUM_POLICY_SUBJECT.AUTH,
+                })
+            );
+        });
+
+        it('records a wrong password as LOGIN_FAILED', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            validateUser.mockResolvedValue(false);
+
+            await login('wrong');
+
+            failedWith(activeUser, 'invalid_password');
+        });
+
+        it('records an attempt on a locked account as LOGIN_FAILED', async () => {
+            const locked = { ...activeUser, passwordAttempt: 5 };
+            findOneByEmail.mockResolvedValue(locked);
+            getPasswordAttempt.mockReturnValue(true);
+
+            await login();
+
+            failedWith(locked, 'locked');
+        });
+
+        it('records a blocked or inactive account as LOGIN_FAILED', async () => {
+            const blocked = { ...activeUser, status: 'BLOCKED' };
+            findOneByEmail.mockResolvedValue(blocked);
+            await login();
+            failedWith(blocked, 'blocked');
+
+            const inactive = { ...activeUser, status: 'INACTIVE' };
+            findOneByEmail.mockResolvedValue(inactive);
+            await login();
+            failedWith(inactive, 'inactive');
+        });
+
+        it('records an unverified email as LOGIN_FAILED', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            join.mockResolvedValue({
+                ...activeUser,
+                verification: { email: false },
+            });
+
+            await login();
+
+            failedWith(activeUser, 'email_not_verified');
+        });
+
+        it('records nothing for an unknown email', async () => {
+            findOneByEmail.mockResolvedValue(undefined);
+
+            await login();
+
+            expect(createByUserActivity).not.toHaveBeenCalled();
+        });
+
+        it('returns the same error when the audit insert fails', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            validateUser.mockResolvedValue(false);
+            createByUserActivity.mockRejectedValue(new Error('db down'));
+
+            const error = await login('wrong');
+
+            expect(error.response).toStrictEqual({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+                message: 'auth.error.invalidCredential',
+            });
+        });
     });
 });
