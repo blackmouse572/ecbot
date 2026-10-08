@@ -117,12 +117,14 @@ export const useVerifyEmailOtp = (email: string, userId: string) => {
       };
       const response = await verificationEmailControllerVerifyEmailV1({
         body: payload,
+        // The API signs the new user in and sets the refresh cookie (#143).
+        withCredentials: true,
       });
       if (response.error) {
         console.error("[useVerifyEmailOtp] error: ", response.error);
         throw response.error;
       }
-      return true;
+      return (response.data as A)?.data as AuthLoginResponseDto | undefined;
     },
   });
 

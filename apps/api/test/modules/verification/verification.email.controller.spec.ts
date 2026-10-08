@@ -6,6 +6,10 @@ import { UserService } from '@app/modules/user/services/user.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_VERIFICATION_STATUS_CODE_ERROR } from '@app/modules/verification/enums/verification.status-code.constant';
+import { AuthService } from '@app/modules/auth/services/auth.service';
+import { SessionService } from '@app/modules/session/services/session.service';
+import { ActivityService } from '@app/modules/activity/services/activity.service';
+import { ENUM_USER_STATUS } from '@app/modules/user/enums/user.enum';
 
 describe('VerificationEmailController — email dispatch', () => {
     let controller: VerificationEmailController;
@@ -24,6 +28,13 @@ describe('VerificationEmailController — email dispatch', () => {
     const commit = jest.fn();
     const rollback = jest.fn();
     const fork = jest.fn(() => ({ begin, commit, rollback }));
+    const join = jest.fn();
+    const createSession = jest.fn();
+    const setLoginSession = jest.fn();
+    const createToken = jest.fn();
+    const setRefreshTokenCookie = jest.fn();
+    const checkPasswordExpired = jest.fn();
+    const createByUser = jest.fn();
 
     beforeEach(async () => {
         enqueue.mockReset();
@@ -40,6 +51,17 @@ describe('VerificationEmailController — email dispatch', () => {
         commit.mockReset();
         rollback.mockReset();
         fork.mockClear();
+        for (const m of [
+            join,
+            createSession,
+            setLoginSession,
+            createToken,
+            setRefreshTokenCookie,
+            checkPasswordExpired,
+            createByUser,
+        ]) {
+            m.mockReset();
+        }
 
         const module: TestingModule = await Test.createTestingModule({
             controllers: [VerificationEmailController],
@@ -59,9 +81,22 @@ describe('VerificationEmailController — email dispatch', () => {
                 },
                 {
                     provide: UserService,
-                    useValue: { findOneById, updateVerificationEmail },
+                    useValue: { findOneById, updateVerificationEmail, join },
                 },
                 { provide: EntityManager, useValue: { fork } },
+                {
+                    provide: AuthService,
+                    useValue: {
+                        createToken,
+                        setRefreshTokenCookie,
+                        checkPasswordExpired,
+                    },
+                },
+                {
+                    provide: SessionService,
+                    useValue: { create: createSession, setLoginSession },
+                },
+                { provide: ActivityService, useValue: { createByUser } },
             ],
         }).compile();
 
@@ -503,6 +538,86 @@ describe('VerificationEmailController — email dispatch', () => {
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
                 message: 'verification.error.attemptMax',
             },
+        });
+    });
+
+    describe('verifyEmail: signs the new user in (#143)', () => {
+        const user = {
+            id: 'user-9',
+            email: 'n@e.w',
+            name: 'N',
+            status: ENUM_USER_STATUS.ACTIVE,
+        };
+        const req = {} as any;
+        const res = {} as any;
+        const token = { accessToken: 'at', refreshToken: 'rt' };
+
+        beforeEach(() => {
+            findOneActiveLatestEmailByUser.mockResolvedValue({
+                reference: 'ref-9',
+            });
+            findOneById.mockResolvedValue(user);
+            validateOtp.mockReturnValue(true);
+            enqueue.mockResolvedValue(undefined);
+            checkPasswordExpired.mockReturnValue(false);
+            createSession.mockResolvedValue({ id: 'sess-1' });
+            createToken.mockReturnValue(token);
+            createByUser.mockResolvedValue(undefined);
+        });
+
+        it('returns a login token and sets the refresh cookie, like a login', async () => {
+            join.mockResolvedValue({ ...user, role: { isActive: true } });
+
+            const result = await controller.verifyEmail(
+                { email: 'n@e.w', id: 'user-9', otp: '123456' } as any,
+                req,
+                res
+            );
+
+            expect(createSession).toHaveBeenCalledWith(
+                req,
+                { user: 'user-9' },
+                expect.anything()
+            );
+            expect(createToken).toHaveBeenCalledWith(
+                expect.objectContaining({ id: 'user-9' }),
+                'sess-1',
+                false
+            );
+            expect(setRefreshTokenCookie).toHaveBeenCalledWith(
+                res,
+                'rt',
+                false
+            );
+            expect(result).toEqual({ data: token });
+        });
+
+        it('verifies but does not sign in when the role is inactive', async () => {
+            join.mockResolvedValue({ ...user, role: { isActive: false } });
+
+            const result = await controller.verifyEmail(
+                { email: 'n@e.w', id: 'user-9', otp: '123456' } as any,
+                req,
+                res
+            );
+
+            expect(updateVerificationEmail).toHaveBeenCalled();
+            expect(createSession).not.toHaveBeenCalled();
+            expect(result).toBeUndefined();
+        });
+
+        it('verifies but does not sign in when the password has expired', async () => {
+            join.mockResolvedValue({ ...user, role: { isActive: true } });
+            checkPasswordExpired.mockReturnValue(true);
+
+            const result = await controller.verifyEmail(
+                { email: 'n@e.w', id: 'user-9', otp: '123456' } as any,
+                req,
+                res
+            );
+
+            expect(createSession).not.toHaveBeenCalled();
+            expect(result).toBeUndefined();
         });
     });
 });

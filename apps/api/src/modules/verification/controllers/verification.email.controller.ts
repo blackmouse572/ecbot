@@ -20,7 +20,19 @@ import {
     Logger,
     NotFoundException,
     Post,
+    Req,
+    Res,
 } from '@nestjs/common';
+import type { Response as ExpressResponse } from 'express';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
+import { ActivityService } from '@app/modules/activity/services/activity.service';
+import { AuthLoginResponseDto } from '@app/modules/auth/dtos/response/auth.login.response.dto';
+import { AuthService } from '@app/modules/auth/services/auth.service';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
+import { SessionService } from '@app/modules/session/services/session.service';
+import { ENUM_USER_STATUS } from '@app/modules/user/enums/user.enum';
+import { IRequestApp } from 'src/common/request/interfaces/request.interface';
+import { IResponse } from 'src/common/response/interfaces/response.interface';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { randomUUID } from 'crypto';
@@ -46,7 +58,10 @@ export class VerificationEmailController {
         private readonly cloudTasksClient: CloudTasksQueueClient,
         private readonly verificationService: VerificationService,
         private readonly userService: UserService,
-        private readonly em: EntityManager
+        private readonly em: EntityManager,
+        private readonly authService: AuthService,
+        private readonly sessionService: SessionService,
+        private readonly activityService: ActivityService
     ) {}
 
     @VerificationEmailResendEmailDoc()
@@ -153,8 +168,10 @@ export class VerificationEmailController {
     @Post('/verify/email')
     async verifyEmail(
         @Body(new RequestEmailPipe())
-        { email, id, otp }: VerificationVerifyEmailRequestDto
-    ): Promise<void> {
+        { email, id, otp }: VerificationVerifyEmailRequestDto,
+        @Req() request?: IRequestApp,
+        @Res({ passthrough: true }) res?: ExpressResponse
+    ): Promise<IResponse<AuthLoginResponseDto> | void> {
         const [verificationTask, userTask] = await Promise.allSettled([
             this.verificationService.findOneActiveLatestEmailByUser(id, email),
             this.userService.findOneById(id),
@@ -240,7 +257,6 @@ export class VerificationEmailController {
                         `Email queue failed after verify-email for user [${user.id}] job [${ENUM_SEND_EMAIL_PROCESS.EMAIL_VERIFIED}] (non-fatal): ${(err as Error)?.message}`
                     );
                 });
-            return;
         } catch (err: unknown) {
             await session.rollback();
 
@@ -250,5 +266,71 @@ export class VerificationEmailController {
                 _error: err,
             });
         }
+
+        // The code proves the visitor owns the address, so sign them in
+        // rather than send them to the login form to type it all again (#143).
+        const token = await this.signInVerifiedUser(user, request, res);
+        return token ? { data: token } : undefined;
+    }
+
+    /**
+     * Opens a session for a user who just verified their email, with the same
+     * checks and steps as a credential login. Returns nothing when the user
+     * could not log in either (inactive, role off, password expired) or the
+     * session fails: their email is verified, and they can still log in.
+     */
+    private async signInVerifiedUser(
+        user: UserEntity,
+        request: IRequestApp | undefined,
+        res: ExpressResponse | undefined
+    ): Promise<AuthLoginResponseDto | undefined> {
+        if (!request || !res || user.status !== ENUM_USER_STATUS.ACTIVE) {
+            return undefined;
+        }
+        const userWithRole = await this.userService.join(user);
+        if (
+            !userWithRole?.role?.isActive ||
+            this.authService.checkPasswordExpired(user.passwordExpired)
+        ) {
+            return undefined;
+        }
+
+        const databaseSession = this.em.fork();
+        await databaseSession.begin();
+        let token: AuthLoginResponseDto;
+        try {
+            const session = await this.sessionService.create(
+                request,
+                { user: user.id },
+                { em: databaseSession }
+            );
+            await this.sessionService.setLoginSession(userWithRole, session);
+            token = this.authService.createToken(
+                userWithRole,
+                session.id,
+                false
+            );
+            await databaseSession.commit();
+        } catch (err: unknown) {
+            try {
+                await databaseSession.rollback();
+            } catch {
+                /* ignore rollback error */
+            }
+            this.logger.warn(
+                `Sign-in after email verification failed for user [${user.id}] (non-fatal): ${(err as Error)?.message}`
+            );
+            return undefined;
+        }
+
+        this.authService.setRefreshTokenCookie(res, token.refreshToken, false);
+        await this.activityService
+            .createByUser(user, {
+                action: ENUM_ACTIVITY_ACTION.CREATE,
+                subject: ENUM_POLICY_SUBJECT.AUTH,
+                metadata: { id: user.id, name: user.email },
+            })
+            .catch(() => undefined);
+        return token;
     }
 }
