@@ -1,5 +1,6 @@
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { ENUM_FILE_MIME_IMAGE } from '@app/common/file/enums/file.enum';
+import { USER_TERMS_VERSION } from '@app/modules/user/constants/user.constant';
 
 // Global setup (test/modules/account/setup.ts) stubs UserService with an
 // empty class for specs that only need it as a DI placeholder. This spec
@@ -248,5 +249,58 @@ describe('UserService - exact email lookups (Task 12)', () => {
             expect(result.passwordAttempt).toBe(3);
             expect(mockEm.persistAndFlush).toHaveBeenCalledWith(user);
         });
+    });
+});
+
+// Consent record (GDPR Art 7, Decree 13/2023 Art 11): a public sign-up stores
+// when the user accepted the Terms and Privacy Policy, and which version.
+describe('UserService.signUp - terms acceptance', () => {
+    const acceptedAt = new Date('2026-10-08T13:00:00.000Z');
+    const em = {
+        create: jest.fn((_entity: unknown, data: Record<string, unknown>) => ({
+            ...data,
+        })),
+        getReference: jest.fn((_entity: unknown, id: string) => ({ id })),
+        persistAndFlush: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const service = new UserService(
+        {} as any,
+        em as any,
+        { create: jest.fn(() => acceptedAt) } as any,
+        { get: jest.fn() } as any,
+        {} as any,
+        { generateUserAvatar: jest.fn(() => 'avatar-url') } as any
+    );
+
+    const signUp = () =>
+        service.signUp(
+            'role-1',
+            {
+                email: 'New@User.com',
+                name: 'New User',
+                country: 'country-1',
+                password: 'Passw0rd!',
+                acceptTerms: true,
+            },
+            {
+                passwordHash: 'hash',
+                passwordExpired: new Date('2099-01-01'),
+                passwordCreated: new Date('2026-01-01'),
+                salt: 'salt',
+            }
+        );
+
+    it('stores termsAcceptedAt and the current termsVersion', async () => {
+        const user = await signUp();
+
+        expect(user.termsAcceptedAt).toBe(acceptedAt);
+        expect(user.termsVersion).toBe(USER_TERMS_VERSION);
+    });
+
+    it('does not copy the acceptTerms request flag onto the entity', async () => {
+        const user = await signUp();
+
+        expect(user).not.toHaveProperty('acceptTerms');
     });
 });

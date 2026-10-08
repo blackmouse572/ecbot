@@ -193,6 +193,23 @@ describe('AuthPublicController.signUp', () => {
         );
     });
 
+    it('passes acceptTerms on to UserService.signUp so the consent is recorded', async () => {
+        await controller.signUp({
+            email: 'new@user.com',
+            name: 'New User',
+            password: 'Passw0rd!',
+            country: 'country-1',
+            acceptTerms: true,
+        } as any);
+
+        expect(signUp).toHaveBeenCalledWith(
+            'role-1',
+            expect.objectContaining({ acceptTerms: true }),
+            expect.anything(),
+            expect.anything()
+        );
+    });
+
     it('rejects sign-up without creating a user when Turnstile fails', async () => {
         verifyTurnstile.mockRejectedValue(new ForbiddenException());
 

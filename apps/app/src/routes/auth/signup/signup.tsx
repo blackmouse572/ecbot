@@ -1,4 +1,4 @@
-import { LinkButton } from "@/components/common";
+import { LegalText, LinkButton } from "@/components/common";
 import { useAllCountriesShare } from "@/hooks/api";
 import { useSignUpWithEmailPass } from "@/hooks/api/auth";
 import { readApiError } from "@/libs/api-error";
@@ -40,11 +40,21 @@ function SignUpPage() {
   const onSubmit: React.ComponentProps<
     typeof RegisterForm
   >["onSubmit"] = async (data) => {
-    const { email, password, name, country, turnstileToken } = data;
+    const { email, password, name, country, acceptTerms, turnstileToken } =
+      data;
 
     let userId: string | undefined;
     try {
-      userId = await signUp({ email, password, name, country, turnstileToken });
+      // TODO(client): drop the cast once `pnpm generate:client` adds
+      // acceptTerms to AuthSignUpRequestDto.
+      userId = await signUp({
+        email,
+        password,
+        name,
+        country,
+        acceptTerms,
+        turnstileToken,
+      } as Parameters<typeof signUp>[0]);
     } catch (error) {
       // Show the API's own reason: the field errors go under their fields.
       const { message, fields } = readApiError(error);
@@ -99,6 +109,10 @@ function SignUpPage() {
             error: {
               notMatchPassword: t("errors.passwordMismatch"),
             },
+          },
+          acceptTerms: {
+            label: <LegalText i18nKey={`${I18N_PREFIX}.fields.acceptTerms`} />,
+            required: t("errors.acceptTermsRequired"),
           },
         }}
         turnstile={

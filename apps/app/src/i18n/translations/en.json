@@ -227,7 +227,8 @@
           "password": "Password",
           "referral-code": "Referral Code (optional)",
           "confirm-password": "Confirm Password",
-          "country": "Country"
+          "country": "Country",
+          "acceptTerms": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>"
         },
         "actions": {
           "registerButton": "Create new account",
@@ -239,7 +240,8 @@
           "turnstileVerifying": "Verifying, please wait...",
           "emailExists": "Email already registered. Please sign in.",
           "passwordMismatch": "Passwords do not match.",
-          "signUpFailed": "Registration failed. Please try again."
+          "signUpFailed": "Registration failed. Please try again.",
+          "acceptTermsRequired": "Please agree to the Terms of Service and Privacy Policy to continue."
         },
         "success": {
           "message": "Account created. Enter the code we emailed you."
@@ -439,7 +441,7 @@
     "link": {
       "title": "Link Account",
       "description": "Connect to your Facebook account and pages, select the pages you want to manage.",
-      "acceptTerms": "By linking your account, you agree to our terms of service and privacy policy.",
+      "acceptTerms": "By linking your account, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
       "error": "An error occurred while linking your account. {{error}}",
       "invalidState": "This connection attempt could not be verified. Please try linking your account again.",
       "success": {
@@ -2866,5 +2868,15 @@
       "CANCELED": "Canceled",
       "EXPIRED": "Expired"
     }
+  },
+  "widget": {
+    "invalid": "This chat is not available.",
+    "invalidHint": "Check the widget key on this website, or contact the site owner.",
+    "originNotAllowed": "This chat is not enabled on this website.",
+    "turnstile": {
+      "required": "Please complete the verification first.",
+      "failed": "Verification failed. Reload the page and try again."
+    },
+    "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>"
   }
 }

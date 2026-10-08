@@ -227,7 +227,8 @@
           "password": "Mật khẩu",
           "referral-code": "Mã giới thiệu (tùy chọn)",
           "confirm-password": "Xác nhận mật khẩu",
-          "country": "Quốc gia"
+          "country": "Quốc gia",
+          "acceptTerms": "Tôi đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy>"
         },
         "actions": {
           "registerButton": "Tạo tài khoản mới",
@@ -239,7 +240,8 @@
           "turnstileVerifying": "Đang xác minh, vui lòng đợi...",
           "emailExists": "Đã có tài khoản với email này.",
           "passwordMismatch": "Mật khẩu không khớp.",
-          "signUpFailed": "Đăng ký không thành công. Vui lòng thử lại."
+          "signUpFailed": "Đăng ký không thành công. Vui lòng thử lại.",
+          "acceptTermsRequired": "Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách quyền riêng tư để tiếp tục."
         },
         "success": {
           "message": "Tài khoản đã được tạo. Hãy nhập mã chúng tôi vừa gửi qua email."
@@ -465,7 +467,7 @@
     "link": {
       "title": "Liên kết tài khoản",
       "description": "Kết nối với tài khoản và trang Facebook của bạn, chọn các trang bạn muốn quản lý. Dễ như ăn bánh! 🍰",
-      "acceptTerms": "Bằng cách liên kết tài khoản của bạn, bạn đồng ý với các điều khoản dịch vụ và chính sách quyền riêng tư của chúng tôi.",
+      "acceptTerms": "Khi liên kết tài khoản, bạn đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy> của chúng tôi.",
       "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}} (Đừng lo, chúng ta sẽ sửa nó!)",
       "invalidState": "Không thể xác minh yêu cầu liên kết này. Vui lòng thử liên kết tài khoản lại nhé!",
       "success": {
@@ -2896,5 +2898,15 @@
       "CANCELED": "Đã huỷ",
       "EXPIRED": "Hết hạn"
     }
+  },
+  "widget": {
+    "invalid": "Khung chat này hiện không khả dụng.",
+    "invalidHint": "Hãy kiểm tra mã widget trên website này, hoặc liên hệ chủ website.",
+    "originNotAllowed": "Khung chat này chưa được bật cho website này.",
+    "turnstile": {
+      "required": "Vui lòng hoàn tất xác minh trước.",
+      "failed": "Xác minh thất bại. Tải lại trang và thử lại."
+    },
+    "aiNotice": "Bạn đang trò chuyện với AI. Tin nhắn của bạn được xử lý để trả lời bạn. <privacy>Chính sách quyền riêng tư</privacy>"
   }
 }

@@ -1,0 +1,47 @@
+---
+title: Subprocessors
+description: The third-party service providers that Ecbot uses to process personal data, what each one does, which data it receives and where it processes it.
+faq:
+  - q: Are the chat platforms I connect subprocessors?
+    a: Not of Ecbot. Meta, Zalo, TikTok, Shopee and Telegram are services you choose to connect and use under your own agreement with them. We list them so you know where messages go.
+  - q: Which provider sees my customers' messages?
+    a: OpenRouter and the model provider it routes to receive the conversation, customer context and knowledge base passages needed to write each reply. AWS stores the data.
+  - q: How do I hear about changes to this list?
+    a: We update this page and notify workspace owners at least 30 days before a new subprocessor starts processing customer data.
+---
+
+**Draft, not yet in force: this list must be reviewed by legal counsel before publication.** Ecbot uses the service providers below to run the service. Each one processes personal data only to provide its part of Ecbot, under a written agreement with data protection terms. This list is part of the [Data Processing Agreement](/docs/legal/data-processing-agreement).
+
+Last updated: 2026-10-08.
+
+## Subprocessors
+
+| Provider | Purpose | Personal data | Location |
+| --- | --- | --- | --- |
+| OpenRouter, Inc. | Routes AI requests to model providers, including Google Gemini and others, to generate replies, tags, summaries and embeddings | Chat content, customer context and profile, knowledge base passages | United States, and the model provider's regions |
+| Downstream AI model providers (for example Google) | Run the models OpenRouter routes to | Same as OpenRouter, per request | United States and other regions |
+| LangSmith (LangChain, Inc.) | Optional tracing of AI requests for debugging, when enabled | Prompts and outputs, which can contain chat content | United States **[confirm region]** |
+| Firecrawl (Mendable, Inc.) | Crawls websites you add to the knowledge base | Public content of the pages you choose | United States |
+| Composio | Connects third-party tools you enable for an agent | Data the agent sends to the tool, such as order or contact details | United States **[confirm]** |
+| Amazon Web Services | Hosting, database and file storage (S3), email (SES), SMS (Pinpoint) | All service data; email addresses and phone numbers for messages | Asia Pacific (Jakarta, ap-southeast-3) by default |
+| Resend | Sends service emails, such as verification codes | Name, email address, email content | United States |
+| Google Cloud | Background task queue (Cloud Tasks); Google sign-in (OAuth) | Task payloads with record IDs; Google account email and name | **[region]** |
+| Sentry (Functional Software, Inc.) | Error monitoring, with sending of personal data turned off | Technical error data; IP address may be processed | United States **[confirm]** |
+| Stripe | Subscription billing and payments | Billing name, email, address, payment details | United States, Ireland |
+| Cloudflare | Hosting of the app and docs, network protection, Turnstile anti-bot checks | IP address, browser data, request metadata | Global network |
+
+## Channels you connect
+
+When you connect a channel, messages pass between Ecbot and that platform. These platforms act under their own terms with you and your customers, not as Ecbot's subprocessors.
+
+| Platform | Data exchanged |
+| --- | --- |
+| Meta (Facebook Messenger, Instagram, WhatsApp) | Messages, sender profile (name, avatar, ID) |
+| Zalo (VNG) | Messages, sender profile |
+| TikTok Shop | Messages, buyer profile, order context |
+| Shopee | Messages, buyer profile, order context |
+| Telegram | Messages, sender profile |
+
+## Changes
+
+We notify workspace owners at least **30 days** before adding or replacing a subprocessor that processes customer data. To object, write to **[DPO email]** or security@ecbot.dev.

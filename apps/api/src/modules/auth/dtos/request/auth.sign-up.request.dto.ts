@@ -7,6 +7,7 @@ import {
     MinLength,
 } from 'class-validator';
 import { IsPassword } from 'src/common/request/validations/request.is-password.validation';
+import { IsTermsAccepted } from 'src/common/request/validations/request.is-terms-accepted.validation';
 import { UserCreateRequestDto } from 'src/modules/user/dtos/request/user.create.request.dto';
 
 export class AuthSignUpRequestDto extends OmitType(UserCreateRequestDto, [
@@ -33,4 +34,13 @@ export class AuthSignUpRequestDto extends OmitType(UserCreateRequestDto, [
     @IsOptional()
     @IsString()
     turnstileToken?: string;
+
+    @ApiProperty({
+        required: true,
+        example: true,
+        description:
+            'Must be true: the user accepts the Terms of Service and Privacy Policy',
+    })
+    @IsTermsAccepted()
+    acceptTerms: boolean;
 }

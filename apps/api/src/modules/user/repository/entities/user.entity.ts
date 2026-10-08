@@ -68,6 +68,14 @@ export class UserEntity extends DatabaseEntityBase {
     @Enum(() => ENUM_USER_SIGN_UP_FROM)
     signUpFrom: ENUM_USER_SIGN_UP_FROM;
 
+    // Consent record: when the user accepted the Terms of Service and Privacy
+    // Policy, and which version. Null for users created before it was recorded.
+    @Property({ type: 'timestamptz', nullable: true })
+    termsAcceptedAt?: Date;
+
+    @Property({ type: 'varchar', length: 20, nullable: true })
+    termsVersion?: string;
+
     @Property({ type: 'varchar' })
     @Exclude()
     salt: string;
