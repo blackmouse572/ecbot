@@ -30,4 +30,6 @@ export enum ENUM_ACTIVITY_ACTION {
     CHATBOT_SKILL_DISABLE = 'chatbot_skill_disable',
     IMPERSONATE_START = 'impersonate_start',
     IMPERSONATE_END = 'impersonate_end',
+    EXPORT = 'export',
+    ERASE = 'erase',
 }

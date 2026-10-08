@@ -1,0 +1,8 @@
+{
+    "workspace": {
+        "erase": "Đã xóa vĩnh viễn khách hàng và toàn bộ cuộc trò chuyện của họ."
+    },
+    "error": {
+        "notFound": "Không tìm thấy khách hàng."
+    }
+}

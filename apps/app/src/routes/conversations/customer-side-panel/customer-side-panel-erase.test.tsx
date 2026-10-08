@@ -2,10 +2,9 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// The Unmerge action lives in the Customer side panel's overflow menu. The
-// production gating is: the menu item is always rendered (the service throws
-// 404 server-side when there's no merged suggestion to undo). The test asserts
-// the click path: open menu -> confirm Prompt -> call useUnmergeCustomer.
+// Data subject rights live in the Customer side panel's overflow menu:
+// "Export data" downloads a JSON copy, "Delete customer and all
+// conversations" erases them permanently after a danger confirm.
 
 class ResizeObserverMock {
   observe() {}
@@ -20,15 +19,28 @@ const removeMutate = vi.fn();
 const updateMutateAsync = vi.fn();
 const unmergeMutateAsync = vi.fn();
 const promptFn = vi.fn();
+const exportMutateAsync = vi.fn();
+const eraseMutateAsync = vi.fn();
+const downloadJson = vi.fn();
 
 vi.mock("@/hooks/api/customers", () => ({
-  useExportCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
-  useEraseCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useCustomer: vi.fn(),
   useUpdateCustomer: vi.fn(() => ({
     mutateAsync: updateMutateAsync,
     isPending: false,
   })),
+  useExportCustomer: vi.fn(() => ({
+    mutateAsync: exportMutateAsync,
+    isPending: false,
+  })),
+  useEraseCustomer: vi.fn(() => ({
+    mutateAsync: eraseMutateAsync,
+    isPending: false,
+  })),
+}));
+
+vi.mock("@/utils", () => ({
+  downloadJson: (...args: unknown[]) => downloadJson(...args),
 }));
 
 vi.mock("@/hooks/api/contact-points", () => ({
@@ -64,7 +76,11 @@ vi.mock("@medusajs/ui", async () => {
     await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
   return {
     ...actual,
-    toast: { success: vi.fn(), error: vi.fn() },
+    toast: {
+      success: vi.fn(),
+      error: vi.fn(),
+      promise: vi.fn((p: Promise<unknown>) => p),
+    },
     usePrompt: () => promptFn,
   };
 });
@@ -110,6 +126,11 @@ beforeEach(() => {
   updateMutateAsync.mockReset();
   unmergeMutateAsync.mockReset().mockResolvedValue({ suggestionId: "sugg-1" });
   promptFn.mockReset();
+  exportMutateAsync
+    .mockReset()
+    .mockResolvedValue({ customer: { id: "cust-1" } });
+  eraseMutateAsync.mockReset().mockResolvedValue({ conversations: 2 });
+  downloadJson.mockReset();
 
   useCustomerMock.mockReturnValue({
     customer: customerFixture,
@@ -133,83 +154,60 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("CustomerSidePanel — Unmerge action", () => {
-  it("renders the overflow menu trigger (the ellipsis IconButton)", () => {
+const flush = async () => {
+  for (let i = 0; i < 5; i++) await Promise.resolve();
+};
+
+const openMenuItem = async (name: string) => {
+  const user = userEvent.setup();
+  await user.click(
+    screen.getByRole("button", {
+      name: "conversations.customer.panel.actions.more",
+    }),
+  );
+  await user.click(await screen.findByRole("menuitem", { name }));
+};
+
+describe("CustomerSidePanel: export and erase actions", () => {
+  it("Export data downloads the customer JSON", async () => {
     render(<CustomerSidePanel customerId="cust-1" />);
 
-    const moreBtn = screen.getByRole("button", {
-      name: "conversations.customer.panel.actions.more",
-    });
-    expect(moreBtn).toBeInTheDocument();
+    await openMenuItem("conversations.customer.panel.exportData.action");
+    await flush();
+
+    expect(exportMutateAsync).toHaveBeenCalledTimes(1);
+    expect(downloadJson).toHaveBeenCalledWith(
+      { customer: { id: "cust-1" } },
+      "customer-cust-1.json",
+    );
   });
 
-  it("opening the menu reveals the Unmerge action (always visible — server-side gates with 404)", async () => {
-    const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
-
-    const moreBtn = screen.getByRole("button", {
-      name: "conversations.customer.panel.actions.more",
-    });
-    await user.click(moreBtn);
-
-    const unmergeItem = await screen.findByRole("menuitem", {
-      name: "conversations.customer.panel.unmerge.action",
-    });
-    expect(unmergeItem).toBeInTheDocument();
-  });
-
-  it("clicking Unmerge opens a confirm Prompt with the danger variant; confirming calls useUnmergeCustomer", async () => {
+  it("Delete asks for a danger confirmation that explains it is permanent", async () => {
     promptFn.mockResolvedValue(true);
-    const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
-
-    await user.click(
-      screen.getByRole("button", {
-        name: "conversations.customer.panel.actions.more",
-      }),
+    const onErased = vi.fn();
+    render(
+      <CustomerSidePanel customerId="cust-1" onCustomerErased={onErased} />,
     );
 
-    const unmergeItem = await screen.findByRole("menuitem", {
-      name: "conversations.customer.panel.unmerge.action",
-    });
-    await user.click(unmergeItem);
+    await openMenuItem("conversations.customer.panel.erase.action");
+    await flush();
 
-    expect(promptFn).toHaveBeenCalledTimes(1);
-    const promptArgs = promptFn.mock.calls[0][0];
-    expect(promptArgs.variant).toBe("danger");
-
-    // promptFn is async; let microtasks flush before asserting on the side effect.
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(unmergeMutateAsync).toHaveBeenCalledTimes(1);
+    const args = promptFn.mock.calls[0][0];
+    expect(args.variant).toBe("danger");
+    expect(args.description).toBe(
+      "conversations.customer.panel.erase.confirm.body",
+    );
+    expect(eraseMutateAsync).toHaveBeenCalledTimes(1);
+    expect(onErased).toHaveBeenCalledTimes(1);
   });
 
-  it("cancelling the prompt does NOT call useUnmergeCustomer", async () => {
+  it("cancelling the confirmation deletes nothing", async () => {
     promptFn.mockResolvedValue(false);
-    const user = userEvent.setup();
     render(<CustomerSidePanel customerId="cust-1" />);
 
-    await user.click(
-      screen.getByRole("button", {
-        name: "conversations.customer.panel.actions.more",
-      }),
-    );
-    const unmergeItem = await screen.findByRole("menuitem", {
-      name: "conversations.customer.panel.unmerge.action",
-    });
-    await user.click(unmergeItem);
+    await openMenuItem("conversations.customer.panel.erase.action");
+    await flush();
 
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(promptFn).toHaveBeenCalledTimes(1);
-    expect(unmergeMutateAsync).not.toHaveBeenCalled();
-  });
-
-  it("useUnmergeCustomer is bound to the current customerId", () => {
-    render(<CustomerSidePanel customerId="cust-1" />);
-    // The hook was called with the customerId from the side-panel prop.
-    expect(useUnmergeMock).toHaveBeenCalledWith("cust-1");
+    expect(eraseMutateAsync).not.toHaveBeenCalled();
   });
 });

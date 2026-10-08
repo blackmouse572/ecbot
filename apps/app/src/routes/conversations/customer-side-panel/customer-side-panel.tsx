@@ -14,9 +14,12 @@ import {
 } from "@/hooks/api/customer-tags";
 import {
   useCustomer,
+  useEraseCustomer,
+  useExportCustomer,
   useUpdateCustomer,
   type CustomerUpdateRequestDto,
 } from "@/hooks/api/customers";
+import { downloadJson } from "@/utils";
 import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { FollowupsSection } from "./components/followups-section";
@@ -70,6 +73,9 @@ interface Props {
   // Small screens: the panel is a full screen stacked over the thread, so it
   // shows a back button instead of the collapse control.
   onBack?: () => void;
+  // Called after the customer and their conversations were erased, so the
+  // page can leave a conversation that no longer exists.
+  onCustomerErased?: () => void;
 }
 
 export function CustomerSidePanel({
@@ -79,6 +85,7 @@ export function CustomerSidePanel({
   onToggle,
   onViewMessage,
   onBack,
+  onCustomerErased,
 }: Props) {
   const { t } = useTranslation();
   const { customer, isLoading } = useCustomer(customerId);
@@ -178,7 +185,10 @@ export function CustomerSidePanel({
               <ChevronDoubleRight />
             </IconButton>
           )}
-          <CustomerActions customerId={customerId} />
+          <CustomerActions
+            customerId={customerId}
+            onErased={onCustomerErased}
+          />
         </div>
       </div>
 
@@ -441,10 +451,48 @@ function TagChip({
   );
 }
 
-function CustomerActions({ customerId }: { customerId: string }) {
+function CustomerActions({
+  customerId,
+  onErased,
+}: {
+  customerId: string;
+  onErased?: () => void;
+}) {
   const { t } = useTranslation();
   const prompt = usePrompt();
   const unmerge = useUnmergeCustomer(customerId);
+  const exportData = useExportCustomer(customerId);
+  const erase = useEraseCustomer(customerId);
+
+  const handleExport = () =>
+    toast.promise(
+      exportData
+        .mutateAsync()
+        .then((data) => downloadJson(data, `customer-${customerId}.json`)),
+      {
+        loading: t("conversations.customer.panel.exportData.loading"),
+        success: t("conversations.customer.panel.exportData.success"),
+        error: t("conversations.customer.panel.exportData.error"),
+      },
+    );
+
+  const handleErase = async () => {
+    const confirmed = await prompt({
+      title: t("conversations.customer.panel.erase.confirm.title"),
+      description: t("conversations.customer.panel.erase.confirm.body"),
+      confirmText: t("conversations.customer.panel.erase.confirm.confirm"),
+      cancelText: t("conversations.customer.panel.erase.confirm.cancel"),
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    try {
+      await erase.mutateAsync();
+      toast.success(t("conversations.customer.panel.erase.toast.success"));
+      onErased?.();
+    } catch {
+      toast.error(t("conversations.customer.panel.erase.toast.failed"));
+    }
+  };
 
   const handleUnmerge = async () => {
     const confirmed = await prompt({
@@ -477,6 +525,20 @@ function CustomerActions({ customerId }: { customerId: string }) {
       <DropdownMenu.Content>
         <DropdownMenu.Item onClick={handleUnmerge} disabled={unmerge.isPending}>
           {t("conversations.customer.panel.unmerge.action")}
+        </DropdownMenu.Item>
+        <DropdownMenu.Item
+          onClick={handleExport}
+          disabled={exportData.isPending}
+        >
+          {t("conversations.customer.panel.exportData.action")}
+        </DropdownMenu.Item>
+        <DropdownMenu.Separator />
+        <DropdownMenu.Item
+          onClick={handleErase}
+          disabled={erase.isPending}
+          className="text-ui-fg-error"
+        >
+          {t("conversations.customer.panel.erase.action")}
         </DropdownMenu.Item>
       </DropdownMenu.Content>
     </DropdownMenu>

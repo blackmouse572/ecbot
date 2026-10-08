@@ -24,6 +24,7 @@ import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/work
 import {
     Body,
     Controller,
+    Delete,
     Get,
     HttpCode,
     HttpStatus,
@@ -46,12 +47,15 @@ import {
     CUSTOMER_DEFAULT_AVAILABLE_SEARCH,
 } from '../constants/customer.list.constant';
 import {
+    CustomerWorkspaceEraseDoc,
     CustomerWorkspaceGetDoc,
     CustomerWorkspaceListDoc,
     CustomerWorkspaceUpdateDoc,
 } from '../docs/customer.workspace.doc';
 import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.request.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
+import { ICustomerErasureSummary } from '../interfaces/customer-erasure.interface';
+import { CustomerErasureService } from '../services/customer-erasure.service';
 import { CustomerMergeSuggestionService } from '../services/customer-merge-suggestion.service';
 import { CustomerService } from '../services/customer.service';
 
@@ -65,7 +69,8 @@ export class CustomerWorkspaceController {
         private readonly customerService: CustomerService,
         private readonly mergeSuggestionService: CustomerMergeSuggestionService,
         private readonly activityService: ActivityService,
-        private readonly paginationService: PaginationService
+        private readonly paginationService: PaginationService,
+        private readonly erasureService: CustomerErasureService
     ) {}
 
     @CustomerWorkspaceListDoc()
@@ -205,5 +210,32 @@ export class CustomerWorkspaceController {
             },
         });
         return { data: { suggestionId: suggestion.id } };
+    }
+
+    @CustomerWorkspaceEraseDoc()
+    @Response('customer.workspace.erase')
+    @WorkspaceScopedProtected({
+        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        action: [ENUM_POLICY_ACTION.DELETE],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Delete('/:id')
+    async erase(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('id') id: string,
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+    ): Promise<IResponse<ICustomerErasureSummary>> {
+        // Permanent: the customer, merged duplicates, contact points,
+        // conversations, messages and stored media. Scoped to this workspace.
+        const summary = await this.erasureService.erase(id, workspace.id);
+        // Counts only: the audit row must not keep the erased personal data.
+        await this.activityService.createByUserWithWorkspace(user, workspace, {
+            action: ENUM_ACTIVITY_ACTION.ERASE,
+            subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+            metadata: { id, ...summary },
+        });
+        return { data: summary };
     }
 }

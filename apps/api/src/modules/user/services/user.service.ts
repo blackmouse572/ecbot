@@ -725,6 +725,30 @@ export class UserService {
     ): Promise<void> {
         await this.userRepository.softDelete(find, options);
     }
+    /**
+     * Account deletion keeps the row (activity and other FKs point at it) but
+     * overwrites everything that identifies the person. The email becomes a
+     * unique, non-routable placeholder so the unique index still holds.
+     */
+    async anonymize(
+        user: UserEntity,
+        options?: IDatabaseUpdateOptions
+    ): Promise<void> {
+        await this.userRepository.updateEntity(
+            { id: user.id },
+            {
+                email: `deleted+${user.id}@invalid`,
+                name: 'Deleted user',
+                username: null,
+                mobileNumber: null,
+                photo: null,
+                avatar: this.helperAvatarService.generateUserAvatar(user.id),
+                gender: null,
+            },
+            options
+        );
+    }
+
     createRandomFilenamePhoto(
         userId: string,
         options: { mime: ENUM_FILE_MIME_IMAGE; size: number }

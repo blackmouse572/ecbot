@@ -1,10 +1,12 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
+  client,
   customerWorkspaceControllerGetV1,
   customerWorkspaceControllerListV1,
   customerWorkspaceControllerUpdateV1,
 } from "@repo/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { conversationQueryKeys } from "./conversations";
 import { useWorkspace } from "./workspace";
 
 export const CUSTOMER_QUERY_KEY = "customer" as const;
@@ -97,6 +99,57 @@ export const useUpdateCustomer = (id: string | undefined | null) => {
           queryKey: customerQueryKeys.detail(id),
         });
       }
+    },
+  });
+};
+
+// The two calls below are not in the generated client yet: replace them with
+// the generated functions after the next `pnpm generate:client`.
+const CUSTOMER_URL = "/api/v1/workspace/{workspace}/customers/{id}";
+
+export type CustomerErasureSummary = {
+  customers: number;
+  contactPoints: number;
+  conversations: number;
+  messages: number;
+  mediaFiles: number;
+};
+
+/** Everything stored about one customer, for a data subject request. */
+export const useExportCustomer = (id: string | undefined | null) => {
+  const { workspace } = useWorkspace();
+  const slug = workspace?.slug;
+
+  return useMutation({
+    mutationFn: () =>
+      client
+        .get<{ 200: { data: unknown } }, unknown, true>({
+          url: `${CUSTOMER_URL}/export`,
+          path: { workspace: slug!, id: id! },
+          responseType: "json",
+        })
+        .then((res) => res.data.data),
+  });
+};
+
+/** Permanently deletes the customer with all conversations and messages. */
+export const useEraseCustomer = (id: string | undefined | null) => {
+  const { workspace } = useWorkspace();
+  const slug = workspace?.slug;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () =>
+      client
+        .delete<{ 200: { data: CustomerErasureSummary } }, unknown, true>({
+          url: CUSTOMER_URL,
+          path: { workspace: slug!, id: id! },
+          responseType: "json",
+        })
+        .then((res) => res.data.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: conversationQueryKeys.all });
     },
   });
 };

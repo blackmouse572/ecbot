@@ -1748,6 +1748,14 @@
         "confirmButton": "Delete my account",
         "cancelButton": "Cancel"
       }
+    },
+    "exportData": {
+      "domain": "Download my data",
+      "description": "Get a copy of your profile, workspaces, sign-in sessions and activity as a JSON file.",
+      "button": "Download my data",
+      "loading": "Preparing your data...",
+      "success": "Your data has been downloaded.",
+      "error": "We could not prepare your data. Please try again."
     }
   },
   "changePassword": {
@@ -2293,7 +2301,26 @@
           }
         },
         "collapse": "Collapse sidebar",
-        "expand": "Expand sidebar"
+        "expand": "Expand sidebar",
+        "exportData": {
+          "action": "Export data",
+          "loading": "Preparing the customer data...",
+          "success": "Customer data downloaded.",
+          "error": "Could not export the customer data."
+        },
+        "erase": {
+          "action": "Delete customer and all conversations",
+          "confirm": {
+            "title": "Delete this customer permanently?",
+            "body": "This permanently deletes the customer, their contact details, every conversation and message, and the images they sent. You cannot undo this.",
+            "confirm": "Delete permanently",
+            "cancel": "Cancel"
+          },
+          "toast": {
+            "success": "Customer and all conversations deleted.",
+            "failed": "Could not delete the customer."
+          }
+        }
       }
     },
     "image": "Image"

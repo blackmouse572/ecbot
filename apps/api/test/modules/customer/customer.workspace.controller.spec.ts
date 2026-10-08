@@ -37,6 +37,10 @@ const mockActivityService = {
     createByUserWithWorkspace: jest.fn(),
 };
 
+const mockErasureService = {
+    erase: jest.fn(),
+};
+
 const mockPaginationService = {
     totalPage: jest.fn((total: number, limit: number) =>
         Math.ceil(total / limit)
@@ -48,7 +52,8 @@ function buildController(): CustomerWorkspaceController {
         mockCustomerService as any,
         mockMergeSuggestionService as any,
         mockActivityService as any,
-        mockPaginationService as any
+        mockPaginationService as any,
+        mockErasureService as any
     );
 }
 
@@ -231,6 +236,54 @@ describe('CustomerWorkspaceController', () => {
             // Exactly one positional arg shape — no mutation of the patch body:
             const [, patch] = mockCustomerService.update.mock.calls[0];
             expect(Object.keys(patch)).toEqual(['name']);
+        });
+    });
+
+    describe('DELETE /:workspace/customers/:id', () => {
+        const summary = {
+            customers: 1,
+            contactPoints: 2,
+            conversations: 3,
+            messages: 40,
+            mediaFiles: 5,
+        };
+
+        it('erases inside the route workspace and returns the counts', async () => {
+            mockErasureService.erase.mockResolvedValue(summary);
+
+            const res = await controller.erase(
+                { id: 'ws-1' } as any,
+                'cust-1',
+                user
+            );
+
+            expect(mockErasureService.erase).toHaveBeenCalledWith(
+                'cust-1',
+                'ws-1'
+            );
+            expect(res).toEqual({ data: summary });
+        });
+
+        it('audits the erasure with counts only, no personal data', async () => {
+            mockErasureService.erase.mockResolvedValue(summary);
+
+            await controller.erase({ id: 'ws-1' } as any, 'cust-1', user);
+
+            const [, , activity] =
+                mockActivityService.createByUserWithWorkspace.mock.calls[0];
+            expect(activity.action).toBe('erase');
+            expect(activity.metadata).toEqual({ id: 'cust-1', ...summary });
+        });
+
+        it('does not audit when the customer is not found', async () => {
+            mockErasureService.erase.mockRejectedValue(new NotFoundException());
+
+            await expect(
+                controller.erase({ id: 'ws-1' } as any, 'cust-x', user)
+            ).rejects.toBeInstanceOf(NotFoundException);
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
         });
     });
 });

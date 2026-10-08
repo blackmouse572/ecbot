@@ -49,6 +49,18 @@ export function CustomerWorkspaceUpdateDoc(): MethodDecorator {
     );
 }
 
+export function CustomerWorkspaceEraseDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                'Permanently delete a customer with their contact points, conversations, messages and media',
+        }),
+        DocRequest({ params: [...WorkspaceDocParamsId] }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocResponse('customer.workspace.erase')
+    );
+}
+
 export function ContactPointWorkspaceListByCustomerDoc(): MethodDecorator {
     return applyDecorators(
         Doc({ summary: 'List contact points for a customer' }),

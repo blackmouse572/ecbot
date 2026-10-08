@@ -745,7 +745,9 @@
             "chatbot_skill_enable",
             "chatbot_skill_disable",
             "impersonate_start",
-            "impersonate_end"
+            "impersonate_end",
+            "export",
+            "erase"
           ],
           "mappedType": "enum"
         },
