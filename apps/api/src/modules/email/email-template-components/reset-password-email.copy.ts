@@ -2,6 +2,7 @@ import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 
 export interface IResetPasswordEmailCopy {
     subject: string;
+    heading: string;
     greeting: (name?: string) => string;
     intro: string;
     action: string;
@@ -18,6 +19,7 @@ const COPY: Record<
 > = {
     [ENUM_MESSAGE_LANGUAGE.EN]: homeName => ({
         subject: `Reset your ${homeName} password`,
+        heading: 'Reset your password',
         greeting: name => (name ? `Hi ${name},` : 'Hi,'),
         intro: 'We got a request to reset your password. Open this link to choose a new one:',
         action: 'Choose a new password',
@@ -29,6 +31,7 @@ const COPY: Record<
     }),
     [ENUM_MESSAGE_LANGUAGE.VI]: homeName => ({
         subject: `Đặt lại mật khẩu ${homeName}`,
+        heading: 'Đặt lại mật khẩu',
         greeting: name => (name ? `Chào ${name},` : 'Chào bạn,'),
         intro: 'Chúng tôi nhận được yêu cầu đặt lại mật khẩu của bạn. Mở liên kết này để chọn mật khẩu mới:',
         action: 'Chọn mật khẩu mới',

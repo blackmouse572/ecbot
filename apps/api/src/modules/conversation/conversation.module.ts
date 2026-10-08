@@ -11,6 +11,8 @@ import { ConversationMessagingService } from './services/conversation-messaging.
 import { ConversationService } from './services/conversation.service';
 import { MessageMediaService } from './services/message-media.service';
 import { AwsModule } from '@app/modules/aws/aws.module';
+import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
+import { HandoffEmailService } from './services/handoff-email.service';
 
 @Module({
     imports: [
@@ -23,8 +25,10 @@ import { AwsModule } from '@app/modules/aws/aws.module';
         ToolModule,
         CustomerModule,
         AwsModule,
+        CloudTasksQueueModule,
     ],
     providers: [
+        HandoffEmailService,
         ConversationService,
         ConversationMessagingService,
         MessageMediaService,

@@ -2,6 +2,7 @@ import { queryKeysFactory } from "@/libs/query-factory";
 import {
   userSharedControllerGetUserProfileV1,
   userSharedControllerProfileV1,
+  userSharedControllerUpdateNotificationsV1,
   userUserControllerDeleteV1,
   workspaceControllerProfileV1,
   type UserProfileResponseDto,
@@ -45,6 +46,24 @@ export function useMe() {
     data,
     user,
   };
+}
+
+/** Saves the user's email-notification choices (handover emails). */
+export function useUpdateNotificationSettings() {
+  const client = useQueryClient();
+  const { mutateAsync, ...rest } = useMutation({
+    mutationFn: async (body: { handoffEmails: boolean }) => {
+      const response = await userSharedControllerUpdateNotificationsV1({
+        body,
+      });
+      if (response.error) throw response.error;
+      return true;
+    },
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: [USERS_QUERY_KEY, "me"] }),
+  });
+
+  return { updateNotifications: mutateAsync, ...rest };
 }
 
 export function useDeleteProfile() {

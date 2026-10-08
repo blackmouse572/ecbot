@@ -1,5 +1,9 @@
-import { Body, Head, Html } from '@react-email/components';
+import { Text } from '@react-email/components';
 import React from 'react';
+import EmailButton from './EmailButton';
+import EmailLayout from './EmailLayout';
+import { accountBlockedEmailCopy } from './account-blocked-email.copy';
+import { EMAIL_BODY } from './email-text.styles';
 
 interface AccountBlockedEmailProps {
     name: string;
@@ -8,8 +12,10 @@ interface AccountBlockedEmailProps {
     supportEmail?: string;
     homeUrl: string;
     homeName: string;
+    language?: string;
 }
 
+/** A channel's token could not be refreshed: ask the owner to reconnect it. */
 const AccountBlockedEmail: React.FC<AccountBlockedEmailProps> = ({
     name,
     accountName,
@@ -17,33 +23,29 @@ const AccountBlockedEmail: React.FC<AccountBlockedEmailProps> = ({
     supportEmail,
     homeUrl,
     homeName,
-}) => (
-    <Html>
-        <Head />
-        <Body>
-            <p>Hi {name},</p>
-            <br />
-            <p>
-                Your connected account <strong>{accountName}</strong> has been
-                disconnected because we could not refresh its access token.
-            </p>
-            <p>
-                Please reconnect it here:{' '}
-                <a href={reconnectUrl}>{reconnectUrl}</a>
-            </p>
-            {supportEmail && (
-                <p>
-                    Support Email:{' '}
-                    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-                </p>
-            )}
-            <p>
-                Visit us: <a href={homeUrl}>{homeUrl}</a>.
-            </p>
-            <br />
-            <p>By: {homeName}.</p>
-        </Body>
-    </Html>
-);
+    language,
+}) => {
+    const copy = accountBlockedEmailCopy(language, homeName);
+
+    return (
+        <EmailLayout
+            language={language}
+            preview={copy.intro(accountName)}
+            heading={copy.heading}
+            homeUrl={homeUrl}
+            homeName={homeName}
+            supportEmail={supportEmail}
+            supportLabel={copy.support}
+            signOff={copy.signOff}
+        >
+            <Text style={EMAIL_BODY}>{copy.greeting(name)}</Text>
+            <Text style={EMAIL_BODY}>{copy.intro(accountName)}</Text>
+            <Text style={EMAIL_BODY}>{copy.impact}</Text>
+            <div style={{ margin: '24px 0' }}>
+                <EmailButton href={reconnectUrl}>{copy.action}</EmailButton>
+            </div>
+        </EmailLayout>
+    );
+};
 
 export default AccountBlockedEmail;

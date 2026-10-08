@@ -10,4 +10,6 @@ export { default as InvitationToWorkSpaceEmail } from './InvitationToWorkSpaceEm
 export { default as AccountBlockedEmail } from './AccountBlockedEmail';
 export { default as AccountBannedEmail } from './AccountBannedEmail';
 export { default as LowTokenBalanceEmail } from './LowTokenBalanceEmail';
+export { default as HandoffEmail } from './HandoffEmail';
+export { default as MemberJoinedEmail } from './MemberJoinedEmail';
 export * from './render-teamplates';

@@ -19,6 +19,8 @@ export async function renderTemplate<P extends object>(
         CreateEmail,
         InvitationToWorkSpaceEmail,
         LowTokenBalanceEmail,
+        HandoffEmail,
+        MemberJoinedEmail,
         MobileNumberVerificationEmail,
         ResetPasswordEmail,
         VerificationEmail,
@@ -41,6 +43,8 @@ export async function renderTemplate<P extends object>(
         [EmailSubject.AccountBlocked]: AccountBlockedEmail,
         [EmailSubject.AccountBanned]: AccountBannedEmail,
         [EmailSubject.LowTokenBalance]: LowTokenBalanceEmail,
+        [EmailSubject.Handoff]: HandoffEmail,
+        [EmailSubject.MemberJoined]: MemberJoinedEmail,
     };
 
     return renderEmail(templates[subject], props);

@@ -20,6 +20,9 @@ import { WorkspaceOwnerService } from './services/workspace.owner.service';
 import { WorkspaceRequestService } from './services/workspace.request.service';
 import { KnowledgeBaseServicesModule } from '../knowledge-base/services/services.module';
 import { CustomerModule } from '../customer/customer.module';
+import { UserRepositoryModule } from '../user/repository/user.repository.module';
+import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
+import { MemberJoinedEmailService } from './services/member-joined-email.service';
 
 @Module({
     imports: [
@@ -37,6 +40,8 @@ import { CustomerModule } from '../customer/customer.module';
         RequestRepositoryModule,
         KnowledgeBaseServicesModule,
         CustomerModule,
+        UserRepositoryModule,
+        CloudTasksQueueModule,
     ],
     providers: [
         WorkspaceOwnerService,
@@ -44,6 +49,7 @@ import { CustomerModule } from '../customer/customer.module';
         WorkspaceRequestService,
         AwsS3Service,
         WorkspacePolicyGuard,
+        MemberJoinedEmailService,
     ],
     controllers: [WorkspaceController, WorkspaceMemberController],
     exports: [

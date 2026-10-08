@@ -1,5 +1,8 @@
-import { Body, Head, Html } from '@react-email/components';
+import { Text } from '@react-email/components';
 import React from 'react';
+import EmailCode from './EmailCode';
+import EmailLayout from './EmailLayout';
+import { EMAIL_BODY, EMAIL_MUTED } from './email-text.styles';
 import { verificationEmailCopy } from './verification-email.copy';
 
 interface VerificationEmailProps {
@@ -26,36 +29,29 @@ const VerificationEmail: React.FC<VerificationEmailProps> = ({
     const copy = verificationEmailCopy(language, homeName);
 
     return (
-        <Html lang={language ?? 'en'}>
-            <Head />
-            <Body style={{ fontFamily: 'Arial, sans-serif', color: '#111' }}>
-                <p>{copy.greeting(name)}</p>
-                <p>{copy.intro}</p>
-                <p
-                    style={{
-                        fontSize: '28px',
-                        fontWeight: 'bold',
-                        letterSpacing: '6px',
-                    }}
-                >
-                    {otp}
-                </p>
-                {expiredAt && <p>{copy.expires(expiredAt)}</p>}
-                <p>{copy.ignore}</p>
-                {supportEmail && (
-                    <p>
-                        {copy.support}{' '}
-                        <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-                    </p>
-                )}
-                <p style={{ color: '#666', fontSize: '12px' }}>
-                    {copy.reference}: {reference}
-                </p>
-                <p>
-                    <a href={homeUrl}>{copy.signOff}</a>
-                </p>
-            </Body>
-        </Html>
+        <EmailLayout
+            language={language}
+            // Never the code: a correct code signs the user in, and the
+            // preview shows on lock screens.
+            preview={copy.intro}
+            heading={copy.heading}
+            homeUrl={homeUrl}
+            homeName={homeName}
+            supportEmail={supportEmail}
+            supportLabel={copy.support}
+            signOff={copy.signOff}
+        >
+            <Text style={EMAIL_BODY}>{copy.greeting(name)}</Text>
+            <Text style={EMAIL_BODY}>{copy.intro}</Text>
+            <EmailCode code={otp} />
+            {expiredAt && (
+                <Text style={EMAIL_BODY}>{copy.expires(expiredAt)}</Text>
+            )}
+            <Text style={EMAIL_MUTED}>{copy.ignore}</Text>
+            <Text style={EMAIL_MUTED}>
+                {copy.reference}: {reference}
+            </Text>
+        </EmailLayout>
     );
 };
 

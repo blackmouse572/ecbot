@@ -1774,11 +1774,14 @@
     },
     "notifications": {
       "domain": "Notifications",
-      "description": "Manage your notification preferences",
+      "description": "Choose which emails you get.",
       "fields": {
         "emailNotifications": "Email Notifications",
         "pushNotifications": "Push Notifications"
-      }
+      },
+      "handoffEmails": "Email me when a customer needs a person",
+      "handoffEmailsHint": "Sent when an agent hands a conversation over to your team. You still see it in the app.",
+      "saveFailed": "Could not save your choice. Please try again."
     }
   },
   "workspace": {

@@ -11,6 +11,8 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { WorkspaceMemberController } from '../../../../src/modules/workspace/controllers/workspace.member.controller';
 
+const mockMemberJoinedEmail = { send: jest.fn() };
+
 // Unit tests for the controller's delegation + workspace-scoping. Auth/membership
 // guards and the transactional join flow (POST /join) are covered by the e2e suite.
 
@@ -48,7 +50,8 @@ describe('WorkspaceMemberController', () => {
             mockRoleService as any,
             mockPaginationService as any,
             mockActivityService as any,
-            {} as any // workspaceRequestService
+            {} as any, // workspaceRequestService
+            mockMemberJoinedEmail as any
         );
     });
 
@@ -234,7 +237,8 @@ describe('WorkspaceMemberController', () => {
                 mockRoleService as any,
                 mockPaginationService as any,
                 mockActivityService as any,
-                {} as any // workspaceRequestService
+                {} as any, // workspaceRequestService
+                mockMemberJoinedEmail as any
             );
         });
 
@@ -262,6 +266,11 @@ describe('WorkspaceMemberController', () => {
                 mockMemberService.joinWorkspaceViaInvitation
             ).toHaveBeenCalledWith('token', caller.id, { em: mockEm });
             expect(mockEm.commit).toHaveBeenCalled();
+            // The owner hears about the new member once the join is committed.
+            expect(mockMemberJoinedEmail.send).toHaveBeenCalledWith(
+                targetWorkspace.id,
+                caller.id
+            );
             expect(mockEm.rollback).not.toHaveBeenCalled();
             expect(
                 mockActivityService.createByUserWithWorkspace
@@ -280,6 +289,7 @@ describe('WorkspaceMemberController', () => {
 
             expect(mockEm.rollback).toHaveBeenCalled();
             expect(mockEm.commit).not.toHaveBeenCalled();
+            expect(mockMemberJoinedEmail.send).not.toHaveBeenCalled();
         });
     });
 
@@ -317,7 +327,8 @@ describe('WorkspaceMemberController', () => {
                 mockRoleService as any,
                 mockPaginationService as any,
                 mockActivityService as any,
-                {} as any // workspaceRequestService
+                {} as any, // workspaceRequestService
+                mockMemberJoinedEmail as any
             );
         });
 

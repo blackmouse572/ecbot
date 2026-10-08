@@ -243,6 +243,10 @@ export type WorkspaceGetProfileResponseDto = {
     role: RoleGetResponseDto;
     country: CountryShortResponseDto;
     mobileNumber?: UserMobileNumberResponseDto;
+    /**
+     * Email me when a customer is handed over to a person
+     */
+    handoffEmails: boolean;
     workspaceMember?: WorkspaceMemberGetProfileResponseDto;
     /**
      * Whether the profile owner owns this workspace
@@ -1219,7 +1223,7 @@ export type EmailTaskDto = {
     data?: {
         [key: string]: unknown;
     };
-    jobName: 'CHANGE_PASSWORD' | 'TEMPORARY_PASSWORD' | 'WELCOME' | 'CREATE' | 'RESET_PASSWORD' | 'VERIFICATION' | 'EMAIL_VERIFIED' | 'MOBILE_NUMBER_VERIFIED' | 'INVITE_TO_WORKSPACE' | 'ACCOUNT_BLOCKED' | 'ACCOUNT_BANNED' | 'LOW_TOKEN_BALANCE';
+    jobName: 'CHANGE_PASSWORD' | 'TEMPORARY_PASSWORD' | 'WELCOME' | 'CREATE' | 'RESET_PASSWORD' | 'VERIFICATION' | 'EMAIL_VERIFIED' | 'MOBILE_NUMBER_VERIFIED' | 'INVITE_TO_WORKSPACE' | 'ACCOUNT_BLOCKED' | 'ACCOUNT_BANNED' | 'LOW_TOKEN_BALANCE' | 'HANDOFF' | 'MEMBER_JOINED';
 };
 
 export type SmsSendRequestDto = {
@@ -1646,6 +1650,10 @@ export type UserProfileResponseDto = {
     role: RoleGetResponseDto;
     country: CountryShortResponseDto;
     mobileNumber?: UserMobileNumberResponseDto;
+    /**
+     * Email me when a customer is handed over to a person
+     */
+    handoffEmails: boolean;
 };
 
 export type UserCreateRequestDto = {
@@ -2841,6 +2849,13 @@ export type UserUpdateProfileRequestDto = {
      * Image file to upload
      */
     image?: Blob | File;
+};
+
+export type UserUpdateNotificationsRequestDto = {
+    /**
+     * Email me when a customer is handed over to a person
+     */
+    handoffEmails: boolean;
 };
 
 export type AwsS3PresignResponseDto = {
@@ -15023,6 +15038,79 @@ export type UserSharedControllerUpdateProfileV1Responses = {
 };
 
 export type UserSharedControllerUpdateProfileV1Response = UserSharedControllerUpdateProfileV1Responses[keyof UserSharedControllerUpdateProfileV1Responses];
+
+export type UserSharedControllerUpdateNotificationsV1Data = {
+    body: UserUpdateNotificationsRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared/user/profile/notifications';
+};
+
+export type UserSharedControllerUpdateNotificationsV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserSharedControllerUpdateNotificationsV1Error = UserSharedControllerUpdateNotificationsV1Errors[keyof UserSharedControllerUpdateNotificationsV1Errors];
+
+export type UserSharedControllerUpdateNotificationsV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserSharedControllerUpdateNotificationsV1Response = UserSharedControllerUpdateNotificationsV1Responses[keyof UserSharedControllerUpdateNotificationsV1Responses];
 
 export type UserSharedControllerUploadPhotoProfileV1Data = {
     body: UserUploadPhotoRequestDto;

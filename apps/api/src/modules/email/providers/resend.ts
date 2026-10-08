@@ -12,6 +12,11 @@ import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 import { renderTemplate } from '../constraint/templates';
 import { resetPasswordEmailCopy } from '../email-template-components/reset-password-email.copy';
 import { verificationEmailCopy } from '../email-template-components/verification-email.copy';
+import { accountBlockedEmailCopy } from '../email-template-components/account-blocked-email.copy';
+import { handoffEmailCopy } from '../email-template-components/handoff-email.copy';
+import { memberJoinedEmailCopy } from '../email-template-components/member-joined-email.copy';
+import { EmailHandoffDto } from '../dtos/email.handoff.dto';
+import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
@@ -228,16 +233,80 @@ export class ResendProvider implements IEmailService {
 
     async sendAccountBlocked(
         { name, email }: EmailSendDto,
-        { accountName, reconnectUrl }: EmailAccountBlockedDto
+        { accountName, reconnectUrl, language }: EmailAccountBlockedDto
     ): Promise<boolean> {
-        return this.sendEmailTemplate(email, EmailSubject.AccountBlocked, {
-            name,
-            accountName,
-            reconnectUrl: `${this.homeUrl}${reconnectUrl}`,
-            supportEmail: this.supportEmail,
-            homeUrl: this.homeUrl,
-            homeName: this.homeName,
-        });
+        const copy = accountBlockedEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.AccountBlocked,
+            {
+                name,
+                accountName,
+                reconnectUrl: `${this.homeUrl}${reconnectUrl}`,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject(accountName)
+        );
+    }
+
+    async sendHandoff(
+        { email }: EmailSendDto,
+        {
+            chatbotName,
+            workspaceName,
+            reason,
+            conversationUrl,
+            language,
+        }: EmailHandoffDto
+    ): Promise<boolean> {
+        const copy = handoffEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.Handoff,
+            {
+                chatbotName,
+                workspaceName,
+                reason,
+                conversationUrl: `${this.homeUrl}${conversationUrl}`,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject(chatbotName)
+        );
+    }
+
+    async sendMemberJoined(
+        { name, email }: EmailSendDto,
+        {
+            memberName,
+            memberEmail,
+            workspaceName,
+            membersUrl,
+            language,
+        }: EmailMemberJoinedDto
+    ): Promise<boolean> {
+        const copy = memberJoinedEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.MemberJoined,
+            {
+                name,
+                memberName,
+                memberEmail,
+                workspaceName,
+                membersUrl: `${this.homeUrl}${membersUrl}`,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject(memberName, workspaceName)
+        );
     }
 
     async sendAccountBanned({ name, email }: EmailSendDto): Promise<boolean> {

@@ -73,6 +73,15 @@ export class EmailTaskController {
             case ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BANNED:
                 await this.emailService.sendAccountBanned(dto.send);
                 break;
+            case ENUM_SEND_EMAIL_PROCESS.HANDOFF:
+                await this.emailService.sendHandoff(dto.send, dto.data as any);
+                break;
+            case ENUM_SEND_EMAIL_PROCESS.MEMBER_JOINED:
+                await this.emailService.sendMemberJoined(
+                    dto.send,
+                    dto.data as any
+                );
+                break;
         }
 
         return {};

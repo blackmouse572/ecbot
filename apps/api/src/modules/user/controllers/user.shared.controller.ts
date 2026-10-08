@@ -1,3 +1,4 @@
+import { UserUpdateNotificationsRequestDto } from 'src/modules/user/dtos/request/user.update-notifications.request.dto';
 import { RequestRequiredPipe } from '@app/common/request/pipes/request.required.pipe';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
@@ -51,6 +52,7 @@ import {
     UserSharedProfileDoc,
     UserSharedUpdatePhotoProfileDoc,
     UserSharedUpdateProfileDoc,
+    UserSharedUpdateNotificationsDoc,
     UserSharedUploadPhotoProfileDoc,
 } from 'src/modules/user/docs/user.shared.doc';
 import { ENUM_USER_STATUS_CODE_ERROR } from 'src/modules/user/enums/user.status-code.enum';
@@ -202,6 +204,20 @@ export class UserSharedController {
         }
 
         return;
+    }
+
+    @UserSharedUpdateNotificationsDoc()
+    @Response('user.updateNotifications')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Put('/profile/notifications')
+    async updateNotifications(
+        @AuthJwtPayload<IAuthJwtAccessTokenPayload>('user', UserParsePipe)
+        user: UserEntity,
+        @Body() body: UserUpdateNotificationsRequestDto
+    ): Promise<void> {
+        await this.userService.updateNotifications(user, body);
     }
 
     @UserSharedUploadPhotoProfileDoc()

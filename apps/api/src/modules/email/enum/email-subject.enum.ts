@@ -10,4 +10,6 @@ export enum EmailSubject {
     AccountBlocked = 'Account Connection Blocked',
     AccountBanned = 'Account Suspended',
     LowTokenBalance = 'Token quota running low',
+    Handoff = 'A customer needs a person',
+    MemberJoined = 'New workspace member',
 }

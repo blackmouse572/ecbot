@@ -1,3 +1,4 @@
+import { UserUpdateNotificationsRequestDto } from 'src/modules/user/dtos/request/user.update-notifications.request.dto';
 import { CountryEntity } from '@app/modules/country/repository/entities/country.entity';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { EntityManager, FilterQuery, InferEntity } from '@mikro-orm/postgresql';
@@ -614,6 +615,18 @@ export class UserService {
     ): Promise<UserEntity> {
         const em = options?.em || this.em;
         Object.assign(user, data);
+        await em.persistAndFlush(user);
+        return user;
+    }
+
+    /** The user's own email-notification choices (handover emails). */
+    async updateNotifications(
+        user: UserEntity,
+        { handoffEmails }: UserUpdateNotificationsRequestDto,
+        options?: IDatabaseUpdateOptions
+    ): Promise<UserEntity> {
+        const em = options?.em || this.em;
+        user.handoffEmails = handoffEmails;
         await em.persistAndFlush(user);
         return user;
     }
