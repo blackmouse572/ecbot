@@ -13,6 +13,7 @@ import { RagSyncService } from './rag-sync.service';
 import { KnowledgeIngestService } from './knowledge-ingest.service';
 import { KnowledgeIngestTaskService } from './knowledge-ingest-task.service';
 import { KnowledgeFailureNotifierService } from './knowledge-failure-notifier.service';
+import { KnowledgeStorageQuotaService } from './knowledge-storage-quota.service';
 import { KnowledgeBaseRepositoryModule } from '../repository/knowledge-base.repository.module';
 import { NotificationModule } from '@app/modules/notification/notification.module';
 import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/workspace.repository.module';
@@ -38,6 +39,7 @@ import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/wor
         KnowledgeIngestService,
         KnowledgeIngestTaskService,
         KnowledgeFailureNotifierService,
+        KnowledgeStorageQuotaService,
     ],
     exports: [
         KnowledgeBaseService,
@@ -50,6 +52,7 @@ import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/wor
         RagSyncService,
         KnowledgeIngestService,
         KnowledgeIngestTaskService,
+        KnowledgeStorageQuotaService,
     ],
 })
 export class KnowledgeBaseServicesModule {}

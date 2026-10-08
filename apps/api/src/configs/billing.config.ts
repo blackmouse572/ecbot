@@ -17,6 +17,10 @@ export default registerAs('billing', (): Record<string, any> => ({
     freePlanTokenQuota: Number(
         process.env.BILLING_FREE_PLAN_TOKEN_QUOTA ?? 1_000_000
     ),
+    /** Knowledge base storage granted to the bootstrap `free` plan, in bytes (2 GB). */
+    freePlanKbStorageBytes: Number(
+        process.env.BILLING_FREE_PLAN_KB_STORAGE_BYTES ?? 2 * 1024 ** 3
+    ),
     /** Default low-balance warning point, as a percent of the period quota. */
     defaultLowBalanceThreshold: Number(
         process.env.BILLING_LOW_BALANCE_THRESHOLD ?? 20

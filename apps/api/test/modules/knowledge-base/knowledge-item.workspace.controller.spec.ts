@@ -9,6 +9,7 @@ describe('KnowledgeItemWorkspaceController.create', () => {
     let controller: KnowledgeItemWorkspaceController;
     let em: { fork: jest.Mock };
     let knowledgeItemService: { create: jest.Mock };
+    let knowledgeStorageQuotaService: { assertCanStore: jest.Mock };
 
     const user = { id: 'user-1' } as any;
     const workspace = { id: 'workspace-1' } as any;
@@ -16,6 +17,7 @@ describe('KnowledgeItemWorkspaceController.create', () => {
     beforeEach(() => {
         em = { fork: jest.fn() };
         knowledgeItemService = { create: jest.fn() };
+        knowledgeStorageQuotaService = { assertCanStore: jest.fn() };
         controller = new KnowledgeItemWorkspaceController(
             em as any,
             knowledgeItemService as any,
@@ -24,8 +26,30 @@ describe('KnowledgeItemWorkspaceController.create', () => {
             {} as any,
             {} as any,
             {} as any,
-            {} as any
+            {} as any,
+            knowledgeStorageQuotaService as any
         );
+    });
+
+    it('refuses a file that would pass the plan storage limit, before saving anything', async () => {
+        const refusal = new UnprocessableEntityException({
+            message: 'knowledgeItem.error.storageLimitExceeded',
+        });
+        knowledgeStorageQuotaService.assertCanStore.mockRejectedValue(refusal);
+
+        const result = controller.create(
+            user,
+            workspace,
+            'kb-1',
+            { type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE, title: 'x' } as any,
+            { size: 1234 } as any
+        );
+
+        await expect(result).rejects.toBe(refusal);
+        expect(
+            knowledgeStorageQuotaService.assertCanStore
+        ).toHaveBeenCalledWith('workspace-1', 1234);
+        expect(em.fork).not.toHaveBeenCalled();
     });
 
     it('refuses a FILE item with no file attached (422)', async () => {

@@ -9,7 +9,8 @@
     "error": {
         "notFound": "Knowledge item not found.",
         "processing": "This item is already being processed.",
-        "fileRequired": "Attach a file to create a file item."
+        "fileRequired": "Attach a file to create a file item.",
+        "storageLimitExceeded": "This file would go over your plan's knowledge storage. Delete some files or upgrade your plan to add more."
     },
     "notification": {
         "ingestFailed": {

@@ -1,5 +1,5 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { EntityManager, raw } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '../../enums/knowledge-base-item-status.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '../../enums/knowledge-base-item-type.enum';
@@ -72,5 +72,19 @@ export class KnowledgeItemRepository extends DatabaseRepository<KnowledgeItemEnt
             }
             return total;
         }, 0);
+    }
+
+    /** Bytes of uploaded files across every live knowledge base in the workspace. */
+    async getStorageUsageByWorkspace(workspaceId: string): Promise<number> {
+        const row = await this.em
+            .createQueryBuilder(KnowledgeItemEntity, 'i')
+            .select(raw('coalesce(sum(i.attachment_size), 0) as total'))
+            .join('i.knowledgeBase', 'kb')
+            .where({
+                deletedAt: null,
+                knowledgeBase: { workspace: workspaceId, deletedAt: null },
+            })
+            .execute<{ total: string | number }>('get');
+        return Number(row?.total ?? 0);
     }
 }

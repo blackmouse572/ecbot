@@ -9,7 +9,8 @@
     "error": {
         "notFound": "Không tìm thấy mục kiến thức.",
         "processing": "Item này đang được xử lý.",
-        "fileRequired": "Hãy đính kèm tệp để tạo mục dạng tệp."
+        "fileRequired": "Hãy đính kèm tệp để tạo mục dạng tệp.",
+        "storageLimitExceeded": "Tệp này vượt quá dung lượng kiến thức của gói hiện tại. Hãy xóa bớt tệp hoặc nâng cấp gói để thêm."
     },
     "notification": {
         "ingestFailed": {

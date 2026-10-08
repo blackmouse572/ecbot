@@ -582,5 +582,9 @@ export class AppEnvDto {
 
     @IsOptional()
     @IsNumberString()
+    BILLING_FREE_PLAN_KB_STORAGE_BYTES?: string;
+
+    @IsOptional()
+    @IsNumberString()
     BILLING_LOW_BALANCE_THRESHOLD?: string;
 }
