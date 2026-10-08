@@ -36,6 +36,11 @@ function setup(overrides: Record<string, any> = {}) {
     const conversationService = {
         findOrCreate: jest.fn(async () => conversation),
         touchLastMessage: jest.fn(async () => {}),
+        detectHandoffKeywords: jest.fn(() => overrides.handoffMatch ?? null),
+        triggerHandoff: jest.fn(async () => {}),
+    };
+    const handoffIntent = {
+        wantsPerson: jest.fn(async () => overrides.wantsPerson ?? false),
     };
     const messageRepository = {
         upsertByExternalId: jest.fn(async () => ({ id: 'msg-in' })),
@@ -72,6 +77,7 @@ function setup(overrides: Record<string, any> = {}) {
         chatbotAIService as any,
         sseStream as any,
         turnContext,
+        handoffIntent as any,
         meter as any
     );
 
@@ -82,7 +88,8 @@ function setup(overrides: Record<string, any> = {}) {
         messageRepository as any,
         chatbotAIService as any,
         sseStream as any,
-        turnContext
+        turnContext,
+        handoffIntent as any
     );
 
     return {
@@ -95,6 +102,7 @@ function setup(overrides: Record<string, any> = {}) {
         chatbotAIService,
         sseStream,
         conversation,
+        handoffIntent,
     };
 }
 
@@ -321,5 +329,92 @@ describe('WidgetChatService token budget', () => {
         );
 
         expect(messageRepository.upsertByExternalId).toHaveBeenCalled();
+    });
+
+    describe('a visitor asking for a person (#233)', () => {
+        const personTurn = { ...turn, text: 'Can I talk to a real person?' };
+        const streamed = () =>
+            res.write.mock.calls.map((c: any[]) => c[0]).join('');
+
+        beforeEach(() => res.write.mockClear());
+
+        it("hands off on the owner's own keyword without asking the AI", async () => {
+            const {
+                service,
+                conversationService,
+                chatbotAIService,
+                conversation,
+            } = setup({
+                handoffMatch: { keyword: 'person', source: 'custom' },
+            });
+
+            await service.handleTurn(res, personTurn);
+
+            expect(conversationService.triggerHandoff).toHaveBeenCalledWith(
+                conversation,
+                'ws-1',
+                'keyword_trigger',
+                undefined
+            );
+            expect(chatbotAIService.streamChat).not.toHaveBeenCalled();
+        });
+
+        it('saves and streams the handoff reply, so the visitor knows staff will answer', async () => {
+            const { service, messageRepository } = setup({
+                handoffMatch: { keyword: 'person', source: 'custom' },
+            });
+
+            await service.handleTurn(res, personTurn);
+
+            const reply =
+                "I've passed your message to our staff. They will reply as soon as they can.";
+            expect(
+                messageRepository.insertPendingOutbound
+            ).toHaveBeenCalledWith(
+                'conv-1',
+                expect.any(String),
+                expect.objectContaining({
+                    authorType: ENUM_MESSAGE_AUTHOR.BOT,
+                    text: reply,
+                })
+            );
+            expect(streamed()).toContain(JSON.stringify(reply).slice(1, -1));
+        });
+
+        it('hands off on a default keyword once the intent check says they want a person', async () => {
+            const {
+                service,
+                conversationService,
+                chatbotAIService,
+                handoffIntent,
+            } = setup({
+                handoffMatch: { keyword: 'real person', source: 'default' },
+                wantsPerson: true,
+            });
+
+            await service.handleTurn(res, personTurn);
+
+            expect(handoffIntent.wantsPerson).toHaveBeenCalledWith(
+                'Can I talk to a real person?',
+                'real person'
+            );
+            expect(conversationService.triggerHandoff).toHaveBeenCalled();
+            expect(chatbotAIService.streamChat).not.toHaveBeenCalled();
+        });
+
+        it('lets the agent answer when a default keyword is part of an ordinary question', async () => {
+            const { service, conversationService, chatbotAIService } = setup({
+                handoffMatch: { keyword: 'support', source: 'default' },
+                wantsPerson: false,
+            });
+
+            await service.handleTurn(res, {
+                ...turn,
+                text: 'do you support COD?',
+            });
+
+            expect(conversationService.triggerHandoff).not.toHaveBeenCalled();
+            expect(chatbotAIService.streamChat).toHaveBeenCalled();
+        });
     });
 });

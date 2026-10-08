@@ -11,10 +11,7 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
 import { MESSAGE_TYPING_REFRESH_MS } from '../constants/message-debounce.constant';
-import {
-    HANDOFF_DEFAULT_REPLY,
-    HANDOFF_DEFAULT_REPLY_LANGUAGE,
-} from '../constants/handoff.constant';
+import { handoffReplyText } from '../utils/handoff-reply.util';
 import { text as toText } from '../interfaces/message-model';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { TurnContextService } from './turn-context.service';
@@ -389,16 +386,12 @@ export class ReplyGenerationService {
         senderId: string,
         conversationId: string
     ): Promise<boolean> {
-        const text =
-            chatbot.handoffMessage ||
-            HANDOFF_DEFAULT_REPLY[chatbot.primaryLanguage] ||
-            HANDOFF_DEFAULT_REPLY[HANDOFF_DEFAULT_REPLY_LANGUAGE];
         return this.sendBotText(
             chatbot,
             account,
             senderId,
             conversationId,
-            text
+            handoffReplyText(chatbot)
         );
     }
 

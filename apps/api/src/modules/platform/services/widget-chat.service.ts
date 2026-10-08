@@ -28,6 +28,8 @@ import {
     ENUM_AI_USAGE_SOURCE,
 } from '@app/app/ai-usage-meter.interface';
 import { TurnContextService } from './turn-context.service';
+import { HandoffIntentService } from './handoff-intent.service';
+import { handoffReplyText } from '../utils/handoff-reply.util';
 
 export interface IWidgetTurn {
     /** WEBSITE_WIDGET account with `chatbot` and `workspace` populated. */
@@ -65,6 +67,7 @@ export class WidgetChatService {
         private readonly chatbotAIService: ChatbotAIService,
         private readonly sseStream: ChatbotAiSseStreamService,
         private readonly turnContext: TurnContextService,
+        private readonly handoffIntent: HandoffIntentService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -116,6 +119,33 @@ export class WidgetChatService {
         // the operator's reply.
         if (!conversation.botEnabled) {
             this.endStreamQuietly(res);
+            return;
+        }
+
+        // The same check platform channels run (MessageProcessorService): the
+        // owner's keywords always hand off, a default keyword only when the
+        // visitor really asks for a person (#233).
+        const handoffMatch = this.conversationService.detectHandoffKeywords(
+            text,
+            chatbot.handoffKeywords ?? []
+        );
+        const handOff =
+            handoffMatch?.source === 'custom' ||
+            (handoffMatch?.source === 'default' &&
+                (await this.handoffIntent.wantsPerson(
+                    text,
+                    handoffMatch.keyword
+                )));
+        if (handOff) {
+            await this.conversationService.triggerHandoff(
+                conversation,
+                account.workspace.id,
+                'keyword_trigger',
+                chatbot.primaryLanguage
+            );
+            const reply = handoffReplyText(chatbot);
+            await this.persistReply(conversation.id, reply, []);
+            this.streamFallback(res, reply);
             return;
         }
 

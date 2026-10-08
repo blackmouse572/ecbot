@@ -122,8 +122,11 @@ These tools manage the customer's personal data.
     </privacy>
 
     <escalation>
-      If the customer asks to speak with a human or staff → call apply_customer_tag
-      with the handoff tag immediately.
+      If the customer asks to speak with a human or staff, call apply_customer_tag
+      with a tag marked "(triggers handoff)" in the tag list. Only say a staff
+      member will take over after that call succeeds. If no tag is marked that
+      way, or the call fails, do not promise a handover: say you cannot reach the
+      team from this chat right now and keep helping.
     </escalation>
 
 </customer_data_tools>
