@@ -47,7 +47,7 @@ export class MemberJoinedEmailService {
                         memberName: member.name || member.email,
                         memberEmail: member.email,
                         workspaceName: workspace.name,
-                        membersUrl: `/${workspace.slug}/members`,
+                        membersUrl: `/${workspace.slug}/settings/members`,
                         language:
                             this.cls.get<IRequestApp>(CLS_REQ)?.__language,
                     },

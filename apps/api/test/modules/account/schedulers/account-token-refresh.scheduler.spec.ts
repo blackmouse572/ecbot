@@ -259,7 +259,7 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
         ).toHaveBeenCalledWith(
             'owner-uuid-1',
             { id: 'account-uuid-1', name: 'My Zalo Account' },
-            '/my-workspace/accounts/account-uuid-1'
+            '/my-workspace/accounts'
         );
     });
 
@@ -282,7 +282,7 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
                 send: { email: 'owner@x.com', name: 'Owner' },
                 data: {
                     accountName: 'My Zalo Account',
-                    reconnectUrl: '/my-workspace/accounts/account-uuid-1',
+                    reconnectUrl: '/my-workspace/accounts',
                     language: 'vi',
                 },
             },

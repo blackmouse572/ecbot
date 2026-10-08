@@ -31,7 +31,9 @@ const VerificationEmail: React.FC<VerificationEmailProps> = ({
     return (
         <EmailLayout
             language={language}
-            preview={`${copy.intro} ${otp}`}
+            // Never the code: a correct code signs the user in, and the
+            // preview shows on lock screens.
+            preview={copy.intro}
             heading={copy.heading}
             homeUrl={homeUrl}
             homeName={homeName}

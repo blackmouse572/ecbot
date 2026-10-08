@@ -43,7 +43,7 @@ describe('MemberJoinedEmailService.send', () => {
                     memberName: 'Tran Linh',
                     memberEmail: 'linh@b.com',
                     workspaceName: 'Kunmart',
-                    membersUrl: '/kunmart/members',
+                    membersUrl: '/kunmart/settings/members',
                     language: 'vi',
                 },
             },

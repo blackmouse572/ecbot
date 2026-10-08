@@ -62,7 +62,8 @@ export class AccountTokenRefreshScheduler {
             // The chatbot's language, so the email reads like the shop's agent.
             await this.orm.em.populate(account, ['workspace.owner', 'chatbot']);
             const owner = account.workspace.owner;
-            const reconnectUrl = `/${account.workspace.slug}/accounts/${account.id}`;
+            // The channels list: there is no per-account page to link to.
+            const reconnectUrl = `/${account.workspace.slug}/accounts`;
 
             await Promise.all([
                 this.notificationService.createAccountBlocked(
