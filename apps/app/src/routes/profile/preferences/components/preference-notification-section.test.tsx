@@ -3,7 +3,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const updateNotifications = vi.hoisted(() => vi.fn());
-const me = vi.hoisted(() => ({ user: { handoffEmails: true } as any }));
+const me = vi.hoisted(() => ({
+  user: { handoffEmails: true } as { handoffEmails?: boolean },
+}));
 
 vi.mock("@/hooks/api", () => ({
   useMe: () => ({ user: me.user, isLoading: false }),
