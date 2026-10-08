@@ -30,7 +30,8 @@ import { UserUpdatePasswordAttemptRequestDto } from 'src/modules/user/dtos/reque
 import { UserUpdateProfileRequestDto } from 'src/modules/user/dtos/request/user.update-profile.dto';
 import { UserUpdateStatusRequestDto } from 'src/modules/user/dtos/request/user.update-status.request.dto';
 import { UserUpdateRequestDto } from 'src/modules/user/dtos/request/user.update.request.dto';
-import { UserCensorResponseDto } from 'src/modules/user/dtos/response/user.censor.response.dto';
+import { USER_TERMS_VERSION } from 'src/modules/user/constants/user.constant';
+import { UserCensorResponseDto } from'src/modules/user/dtos/response/user.censor.response.dto';
 import { UserGetResponseDto } from 'src/modules/user/dtos/response/user.get.response.dto';
 import { UserListResponseDto } from 'src/modules/user/dtos/response/user.list.response.dto';
 import { UserProfileResponseDto } from 'src/modules/user/dtos/response/user.profile.response.dto';
@@ -484,6 +485,7 @@ export class UserService {
             email,
             country,
             password: _rawPassword,
+            acceptTerms: _acceptTerms,
             avatar,
             ...others
         }: AuthSignUpRequestDto,
@@ -505,6 +507,9 @@ export class UserService {
             signUpDate: this.helperDateService.create(),
             passwordAttempt: 0,
             signUpFrom: ENUM_USER_SIGN_UP_FROM.PUBLIC,
+            // AuthSignUpRequestDto only validates with acceptTerms === true.
+            termsAcceptedAt: this.helperDateService.create(),
+            termsVersion: USER_TERMS_VERSION,
             status: ENUM_USER_STATUS.ACTIVE,
             salt,
             avatar:

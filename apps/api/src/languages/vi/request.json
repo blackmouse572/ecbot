@@ -28,6 +28,7 @@
     "isDate": "{property} phải là ngày hợp lệ.",
     "isPasswordStrong": "{property} phải là mật khẩu mạnh. Mạnh mẽ lên!",
     "IsPasswordConstraint": "{property} phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và chữ số.",
+    "isTermsAccepted": "{property} phải là true: vui lòng đồng ý với Điều khoản dịch vụ và Chính sách quyền riêng tư để tạo tài khoản.",
     "isPasswordMedium": "{property} phải là mật khẩu cường độ trung bình.",
     "isPasswordWeak": "{property} phải là mật khẩu yếu.",
     "isStartWith": "{property} phải bắt đầu bằng {value}.",

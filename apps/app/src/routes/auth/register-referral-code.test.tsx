@@ -13,6 +13,7 @@ const MESSAGES = {
     placeholder: "Confirm password",
     error: { notMatchPassword: "Passwords do not match" },
   },
+  acceptTerms: { label: "I agree", required: "Please agree" },
 };
 
 describe("RegisterForm referral code", () => {

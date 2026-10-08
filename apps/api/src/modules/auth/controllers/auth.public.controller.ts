@@ -518,6 +518,7 @@ export class AuthPublicController {
             password: passwordString,
             country,
             turnstileToken,
+            acceptTerms,
         }: AuthSignUpRequestDto,
         // Normalized by AppCustomLanguageMiddleware; the verification email
         // is written in it.
@@ -567,6 +568,7 @@ export class AuthPublicController {
                     name,
                     password: passwordString,
                     country,
+                    acceptTerms,
                 },
                 password,
                 { em: session }

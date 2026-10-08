@@ -48,6 +48,7 @@ export async function signUpUser(
       password: user.password,
       name: user.name,
       country: countryId,
+      acceptTerms: true,
       // Any non-empty token passes Cloudflare's always-pass test secret;
       // ignored entirely when TURNSTILE_SECRET_KEY is unset.
       turnstileToken: "e2e",

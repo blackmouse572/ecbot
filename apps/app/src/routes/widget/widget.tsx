@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useVisitorId } from "./use-visitor-id";
+import { WidgetAiNotice } from "./widget-ai-notice";
 import { useWidgetTranscript } from "./use-widget-transcript";
 
 // Empty (local dev / tests) renders no widget and the API, which is also
@@ -136,6 +137,7 @@ export function Widget() {
             {/* Rendered inside AIChatCard's provider — the transcript sync
                 needs the chat context, which the card owns. */}
             <TranscriptSync widgetKey={key} visitorId={visitorId} />
+            <WidgetAiNotice />
             <AIChatInput />
             <div className="px-4 pb-3 empty:hidden">
               <TurnstileField turnstile={turnstile} />

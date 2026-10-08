@@ -58,6 +58,7 @@ vi.mock("react-i18next", () => ({
     t: (key: string, opts?: { error?: string }) =>
       opts?.error ? `${key} ${opts.error}` : key,
   }),
+  Trans: ({ i18nKey }: { i18nKey: string }) => i18nKey,
 }));
 
 vi.mock("@medusajs/ui", async () => {
