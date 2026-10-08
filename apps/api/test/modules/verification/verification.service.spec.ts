@@ -161,7 +161,6 @@ describe('VerificationService', () => {
                 otpAttempt: { $lt: 5 },
             });
             expect(String(data.otpAttempt)).toContain('otp_attempt + 1');
-            expect(v.otpAttempt).toBe(3);
         });
 
         it('refuses when no guess is left (the update matched no row)', async () => {
@@ -169,27 +168,42 @@ describe('VerificationService', () => {
             const v = entity();
 
             await expect(build().claimOtpAttempt(v)).resolves.toBe(false);
-            expect(v.otpAttempt).toBe(2);
         });
     });
 
+    // #143 re-review: N parallel wrong guesses each held a stale counter, so
+    // the in-memory check never locked; the database decides instead.
     describe('lockIfAttemptsSpent', () => {
-        it('locks the code once its last guess is spent', async () => {
-            const v = { id: 'ver-1', otpAttempt: 5 } as VerificationEntity;
+        it('locks in SQL when the stored counter has reached the cap, whatever this request loaded', async () => {
+            const v = { id: 'ver-1', otpAttempt: 1 } as VerificationEntity;
 
             await expect(build().lockIfAttemptsSpent(v)).resolves.toBe(true);
             expect(updateRaw).toHaveBeenCalledWith(
-                { id: 'ver-1' },
+                { id: 'ver-1', isActive: true, otpAttempt: { $gte: 5 } },
                 { isActive: false },
                 undefined
             );
         });
 
-        it('leaves the code active while guesses remain', async () => {
-            const v = { id: 'ver-1', otpAttempt: 3 } as VerificationEntity;
+        it('leaves the code active while the stored counter is under the cap', async () => {
+            updateRaw.mockResolvedValue(0);
 
-            await expect(build().lockIfAttemptsSpent(v)).resolves.toBe(false);
-            expect(updateRaw).not.toHaveBeenCalled();
+            await expect(
+                build().lockIfAttemptsSpent({
+                    id: 'ver-1',
+                } as VerificationEntity)
+            ).resolves.toBe(false);
+        });
+    });
+
+    describe('hasAttemptsLeft', () => {
+        it('is false once the code has used all its guesses', () => {
+            expect(
+                build().hasAttemptsLeft({ otpAttempt: 5 } as VerificationEntity)
+            ).toBe(false);
+            expect(
+                build().hasAttemptsLeft({ otpAttempt: 4 } as VerificationEntity)
+            ).toBe(true);
         });
     });
 

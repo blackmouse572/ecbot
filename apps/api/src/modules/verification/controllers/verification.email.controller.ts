@@ -104,11 +104,14 @@ export class VerificationEmailController {
         // about to expire could arrive already expired, and an expired or
         // attempt-locked code leaves no active row at all (login refuses an
         // unverified user, so they must never be stuck).
+        // A code with no guesses left is never re-sent: it could only ever
+        // answer "too many attempts".
         const keepExisting =
             !!existing &&
             (!canIssue ||
-                existing.expiredDate.getTime() - Date.now() >=
-                    VERIFICATION_EMAIL_RESEND_MIN_REMAINING_MS);
+                (this.verificationService.hasAttemptsLeft(existing) &&
+                    existing.expiredDate.getTime() - Date.now() >=
+                        VERIFICATION_EMAIL_RESEND_MIN_REMAINING_MS));
         const verification = keepExisting
             ? existing
             : await this.reissueEmail(user);
@@ -147,7 +150,7 @@ export class VerificationEmailController {
         if (issued >= VERIFICATION_EMAIL_REISSUE_MAX_PER_HOUR) {
             throw new HttpException(
                 {
-                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.MAX_IN_DAY,
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.REISSUE_MAX,
                     message: 'verification.error.tooManyCodes',
                 },
                 HttpStatus.TOO_MANY_REQUESTS

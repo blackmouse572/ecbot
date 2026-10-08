@@ -300,23 +300,34 @@ export class VerificationService implements IVerificationService {
             { otpAttempt: raw('otp_attempt + 1') },
             options
         );
-        if (claimed !== 1) return false;
-        verification.otpAttempt += 1;
-        return true;
+        // The stored counter is the truth; lockIfAttemptsSpent reads it in SQL.
+        return claimed === 1;
     }
 
-    /** Locks the code once its last guess is spent. True when locked. */
+    /**
+     * Locks the code once its last guess is spent, judged by the stored
+     * counter: parallel wrong guesses each loaded a stale copy, so the
+     * in-memory value cannot decide. True when this call locked it.
+     */
     async lockIfAttemptsSpent(
         verification: VerificationEntity,
         options?: IDatabaseSaveOptions
     ): Promise<boolean> {
-        if (verification.otpAttempt < this.maxOtpAttempt) return false;
-        await this.verificationRepository.updateRaw(
-            { id: verification.id },
+        const locked = await this.verificationRepository.updateRaw(
+            {
+                id: verification.id,
+                isActive: true,
+                otpAttempt: { $gte: this.maxOtpAttempt },
+            },
             { isActive: false },
             options
         );
-        return true;
+        return locked === 1;
+    }
+
+    /** Whether the code still allows a guess (Resend must not re-send a spent one). */
+    hasAttemptsLeft(verification: VerificationEntity): boolean {
+        return verification.otpAttempt < this.maxOtpAttempt;
     }
 
     /**

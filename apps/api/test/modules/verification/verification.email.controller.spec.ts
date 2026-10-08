@@ -28,6 +28,7 @@ describe('VerificationEmailController — email dispatch', () => {
     const lockIfAttemptsSpent = jest.fn();
     const verifyOnce = jest.fn();
     const countEmailIssuedSince = jest.fn();
+    const hasAttemptsLeft = jest.fn();
     const inactiveEmailManyByUser = jest.fn();
     const createEmailByUser = jest.fn();
     const updateVerificationEmail = jest.fn();
@@ -55,6 +56,7 @@ describe('VerificationEmailController — email dispatch', () => {
         lockIfAttemptsSpent.mockReset().mockResolvedValue(false);
         verifyOnce.mockReset().mockResolvedValue(true);
         countEmailIssuedSince.mockReset().mockResolvedValue(0);
+        hasAttemptsLeft.mockReset().mockReturnValue(true);
         inactiveEmailManyByUser.mockReset();
         createEmailByUser.mockReset();
         updateVerificationEmail.mockReset();
@@ -90,6 +92,7 @@ describe('VerificationEmailController — email dispatch', () => {
                         lockIfAttemptsSpent,
                         verifyOnce,
                         countEmailIssuedSince,
+                        hasAttemptsLeft,
                         inactiveEmailManyByUser,
                         createEmailByUser,
                     },
@@ -735,11 +738,42 @@ describe('VerificationEmailController — email dispatch', () => {
         ).rejects.toMatchObject({
             status: 429,
             response: {
-                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.MAX_IN_DAY,
+                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.REISSUE_MAX,
                 message: 'verification.error.tooManyCodes',
             },
         });
         expect(createEmailByUser).not.toHaveBeenCalled();
         expect(enqueue).not.toHaveBeenCalled();
+    });
+
+    // #143 re-review: Resend kept re-sending a code with no guesses left,
+    // so the user could only ever get "too many attempts".
+    it('resendVerificationEmail: issues a fresh code when the active one has no guesses left', async () => {
+        const user = {
+            id: 'user-1',
+            email: 'a@b.com',
+            name: 'A',
+            verification: { email: false },
+        };
+        findOneActiveLatestEmailByUser.mockResolvedValue({
+            otp: '111111',
+            otpAttempt: 5,
+            expiredDate: new Date(Date.now() + 10 * 60 * 1000),
+        });
+        findOneById.mockResolvedValue(user);
+        hasAttemptsLeft.mockReturnValue(false);
+        createEmailByUser.mockResolvedValue({
+            otp: '222222',
+            expiredDate: new Date(Date.now() + 10 * 60 * 1000),
+            reference: 'ref-new',
+        });
+
+        await controller.resendVerificationEmail({
+            email: 'a@b.com',
+            id: 'user-1',
+        } as any);
+
+        expect(createEmailByUser).toHaveBeenCalled();
+        expect(enqueue.mock.calls[0][2].data.otp).toBe('222222');
     });
 });
