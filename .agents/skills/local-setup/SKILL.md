@@ -46,7 +46,7 @@ its Troubleshooting table when a step fails.
      the user's call.
      Then `pnpm setup:local --check` must exit 0.
 
-4. **Infrastructure.** `docker compose up -d database redis jwks-server`, then wait
+4. **Infrastructure.** `docker compose up -d database redis jwks-server cloud-tasks-emulator`, then wait
    until `docker compose ps` shows them healthy.
 
 5. **Schema and seed.** `pnpm db:migrate:up`, then `pnpm db:seed`. If the seed logs
@@ -81,6 +81,5 @@ its Troubleshooting table when a step fails.
    machine can reach Cloudflare. Match any failure to the install doc's
    Troubleshooting table and fix the cause. Don't just retry.
 
-8. **Hand over.** Give the URLs (app :5173, API docs :8080/docs, Bull Board
-   :3010), the demo login `admin@mail.com` / `aaAA@123`, and any optional
+8. **Hand over.** Give the URLs (app :5173, API docs :8080/docs), the demo login `admin@mail.com` / `aaAA@123`, and any optional
    group left unset with what it blocks.

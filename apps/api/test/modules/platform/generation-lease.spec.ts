@@ -4,7 +4,7 @@ import { GenerationLeaseService } from '../../../src/modules/platform/services/g
  * Minimal in-memory fake of the ioredis subset the lease uses (INCR/EXPIRE/GET).
  * This is the second adapter the seam justifies — Redis in prod, this in tests.
  */
-function fakeQueue() {
+function fakeRedis() {
     const store = new Map<string, number>();
     const client = {
         async incr(key: string) {
@@ -19,14 +19,14 @@ function fakeQueue() {
             return store.has(key) ? String(store.get(key)) : null;
         },
     };
-    return { getBackend: () => ({ client: Promise.resolve(client) }) } as any;
+    return { client } as any;
 }
 
 describe('GenerationLeaseService (candidate 2)', () => {
     let lease: GenerationLeaseService;
 
     beforeEach(() => {
-        lease = new GenerationLeaseService(fakeQueue(), true);
+        lease = new GenerationLeaseService(fakeRedis(), true);
     });
 
     it('starts at epoch 0 and bumps monotonically', async () => {
@@ -58,7 +58,7 @@ describe('GenerationLeaseService — no Redis at boot', () => {
     let lease: GenerationLeaseService;
 
     beforeEach(() => {
-        lease = new GenerationLeaseService(fakeQueue(), false);
+        lease = new GenerationLeaseService(fakeRedis(), false);
     });
 
     afterEach(() => {
@@ -85,7 +85,7 @@ describe('GenerationLeaseService — no Redis at boot', () => {
 describe('GenerationLeaseService — in-memory sweep lifecycle', () => {
     it('does not schedule a sweep when Redis is available', () => {
         const setIntervalSpy = jest.spyOn(global, 'setInterval');
-        new GenerationLeaseService(fakeQueue(), true);
+        new GenerationLeaseService(fakeRedis(), true);
         expect(setIntervalSpy).not.toHaveBeenCalled();
         setIntervalSpy.mockRestore();
     });
@@ -93,7 +93,7 @@ describe('GenerationLeaseService — in-memory sweep lifecycle', () => {
     it('schedules a sweep when Redis is unavailable and clears it on destroy', () => {
         const setIntervalSpy = jest.spyOn(global, 'setInterval');
         const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-        const lease = new GenerationLeaseService(fakeQueue(), false);
+        const lease = new GenerationLeaseService(fakeRedis(), false);
         expect(setIntervalSpy).toHaveBeenCalledTimes(1);
 
         lease.onModuleDestroy();

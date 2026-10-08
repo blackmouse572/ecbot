@@ -1255,6 +1255,13 @@ export type FollowupTaskDto = {
     followupId?: string;
 };
 
+export type InboundEventTaskDto = {
+    jobName: 'ingest';
+    event: {
+        [key: string]: unknown;
+    };
+};
+
 export type KnowledgeIngestTaskDto = {
     jobName: 'ingest' | 'reindex-links' | 'delete';
     knowledgeItemId: string;
@@ -9216,6 +9223,76 @@ export type FollowupTaskControllerHandleV1Responses = {
 };
 
 export type FollowupTaskControllerHandleV1Response = FollowupTaskControllerHandleV1Responses[keyof FollowupTaskControllerHandleV1Responses];
+
+export type InboundEventTaskControllerHandleV1Data = {
+    body: InboundEventTaskDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/system/tasks/inbound-event';
+};
+
+export type InboundEventTaskControllerHandleV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type InboundEventTaskControllerHandleV1Error = InboundEventTaskControllerHandleV1Errors[keyof InboundEventTaskControllerHandleV1Errors];
+
+export type InboundEventTaskControllerHandleV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type InboundEventTaskControllerHandleV1Response = InboundEventTaskControllerHandleV1Responses[keyof InboundEventTaskControllerHandleV1Responses];
 
 export type KnowledgeIngestTaskControllerHandleV1Data = {
     body: KnowledgeIngestTaskDto;

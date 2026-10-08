@@ -6,5 +6,12 @@
  */
 export const INBOUND_EVENT_DEDUPE_KEY_PREFIX = 'inbound-event-dedupe';
 
-/** TTL on the claim key; matches the BullMQ inbound-job dedup retention. */
-export const INBOUND_EVENT_DEDUPE_TTL_SECONDS = 24 * 60 * 60;
+/** Marks a pair InboundInboxService already turned into a Cloud Task. */
+export const INBOUND_EVENT_ENQUEUED_KEY_PREFIX = 'inbound-event-enqueued';
+
+/**
+ * TTL on the claim key. 26h = 25h reconciliation lookback + 1h buffer, which
+ * also covers Messenger's ~24h webhook retry window. Cloud Tasks only rejects
+ * a reused task name for ~1h, so this claim is the long-window dedupe.
+ */
+export const INBOUND_EVENT_DEDUPE_TTL_SECONDS = 26 * 60 * 60;

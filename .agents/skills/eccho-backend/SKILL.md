@@ -5,7 +5,7 @@ description: Rules, module layout, and doc routing for the ecbot `apps/api` Nest
 
 # ecbot Backend (`apps/api`)
 
-NestJS 11 modular monolith on the ACK NestJS boilerplate: PostgreSQL + MikroORM, Redis + BullMQ, JWT (ES512) + CASL/RBAC, i18n via `MessageService`. Guides live in `apps/api/docs/` (index: `readme.md`).
+NestJS 11 modular monolith on the ACK NestJS boilerplate: PostgreSQL + MikroORM, Redis, Google Cloud Tasks, JWT (ES512) + CASL/RBAC, i18n via `MessageService`. Guides live in `apps/api/docs/` (index: `readme.md`).
 
 **Workflow**: (1) read the matching doc from [References](#references), (2) copy the nearest existing module as a template, (3) apply every rule below whose condition matches your change. Done means each matching rule holds in the diff.
 
@@ -20,7 +20,7 @@ src/modules/[feature]/
 ├── dtos/            [feature].[action].dto.ts
 ├── docs/            [feature].[access].doc.ts
 ├── constants/       [feature].constant.ts, [feature].doc.constant.ts
-├── enums/ interfaces/ guards/ decorators/ processors/
+├── enums/ interfaces/ guards/ decorators/
 └── [feature].module.ts   providers/exports only; controllers[] stays empty
 ```
 
@@ -116,8 +116,8 @@ Naming: classes PascalCase with a suffix (`UserService`, `UserEntity`), enums `E
 - For a circular dependency, resolve one side lazily with `this.moduleRef.get(X, { strict: false })` in a getter (`strict: false` searches other modules). `forwardRef` leaks memory and makes init order non-deterministic. Pattern: `modules/conversation/services/conversation.service.ts`.
 </important>
 
-<important if="you are adding or changing a BullMQ processor">
-Read worker concurrency from an env var with a default: `concurrency: parseInt(process.env.WORKER_CONCURRENCY_<QUEUE> ?? '<n>')`, and declare the var in `src/app/dtos/app.env.dto.ts`. Pattern: `modules/platform/processors/inbound-event.processor.ts`. See `docs/background-processing.md`.
+<important if="you are adding a background job or queue">
+Use Cloud Tasks (`CloudTasksQueueClient.enqueue`) with a `.task` controller; there is no BullMQ. Add the queue to the emulator list in `docker-compose.yml`. See `docs/background-processing.md`.
 </important>
 
 ## References
@@ -144,7 +144,7 @@ Read the matching guide in `apps/api/docs/` before writing code for that area.
 | i18n / `MessageService`                                | `internationalization.md`                                   |
 | Pino logging                                           | `logger.md`                                                 |
 | App settings module                                    | `setting.md`                                                |
-| Queues, processors, Cloud Tasks                        | `background-processing.md`                                  |
+| Background jobs, Cloud Tasks                           | `background-processing.md`                                  |
 | Activity / audit logging, password history             | `audit.md`                                                  |
 | Third-party integrations                               | `third-party-integration.md`                                |
 | Workspace scoping                                      | `workspace.md`                                              |

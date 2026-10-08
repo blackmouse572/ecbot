@@ -6,7 +6,7 @@ AI chatbot platform for Vietnamese businesses, in a pnpm + Turborepo monorepo: N
 
 ```
 apps/
-  api/      NestJS 11 backend: PostgreSQL + MikroORM, Redis + BullMQ, JWT/CASL
+  api/      NestJS 11 backend: PostgreSQL + MikroORM, Redis, Cloud Tasks, JWT/CASL
   app/      Main React 19 SPA: Vite, Tailwind 4, TanStack Query, React Router v7
   ai/       Chatbot / AI module (see apps/ai/README.md)
   docs/     User docs site: Next.js static export + Fumadocs, en/vi (see apps/docs/README.md)

@@ -105,9 +105,9 @@ modules/[feature]/
 
 ### Background Processing (`src/worker`)
 
-- BullMQ with Redis for job processing
-- Processors in feature modules for better domain cohesion
-- Supports immediate, delayed, and recurring jobs
+- Google Cloud Tasks for jobs (`CloudTasksQueueClient`), consumed by `.task` controllers
+- Supports immediate and delayed jobs; recurring work uses `@ContextualCron`
+- See `background-processing.md`
 
 ### Configuration (`src/configs`)
 

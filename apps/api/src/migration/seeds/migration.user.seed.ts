@@ -40,7 +40,7 @@ export class MigrationUserSeed {
         describe: 'seed users',
     })
     // Establish a request context so this.em and the injected services resolve to
-    // a fork (allowGlobalContext=false); mirrors ContextualWorkerHost's seam.
+    // a fork (allowGlobalContext=false); mirrors @ContextualCron's seam.
     @CreateRequestContext<MigrationUserSeed>(seed => seed.em)
     async seeds(): Promise<void> {
         const password = 'aaAA@123';
