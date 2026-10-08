@@ -282,6 +282,72 @@ export class VerificationService implements IVerificationService {
         return repository;
     }
 
+    /**
+     * Claims one guess at the code in a single conditional update, before
+     * the code is compared: concurrent requests cannot get past the attempt
+     * cap. False when no guess is left. A correct guess also counts.
+     */
+    async claimOtpAttempt(
+        verification: VerificationEntity,
+        options?: IDatabaseSaveOptions
+    ): Promise<boolean> {
+        const claimed = await this.verificationRepository.updateRaw(
+            {
+                id: verification.id,
+                isActive: true,
+                otpAttempt: { $lt: this.maxOtpAttempt },
+            },
+            { otpAttempt: raw('otp_attempt + 1') },
+            options
+        );
+        if (claimed !== 1) return false;
+        verification.otpAttempt += 1;
+        return true;
+    }
+
+    /** Locks the code once its last guess is spent. True when locked. */
+    async lockIfAttemptsSpent(
+        verification: VerificationEntity,
+        options?: IDatabaseSaveOptions
+    ): Promise<boolean> {
+        if (verification.otpAttempt < this.maxOtpAttempt) return false;
+        await this.verificationRepository.updateRaw(
+            { id: verification.id },
+            { isActive: false },
+            options
+        );
+        return true;
+    }
+
+    /**
+     * Marks the code used only while it is still active, so of two requests
+     * with the right code, one wins. True for the winner.
+     */
+    async verifyOnce(
+        verification: VerificationEntity,
+        options?: IDatabaseSaveOptions
+    ): Promise<boolean> {
+        const updated = await this.verificationRepository.updateRaw(
+            { id: verification.id, isActive: true },
+            {
+                isActive: false,
+                isVerify: true,
+                verifyDate: this.helperDateService.create(),
+            },
+            options
+        );
+        return updated === 1;
+    }
+
+    /** How many email codes the user was issued since `since`. */
+    async countEmailIssuedSince(user: string, since: Date): Promise<number> {
+        return this.verificationRepository.getTotal({
+            user,
+            type: ENUM_VERIFICATION_TYPE.EMAIL,
+            createdAt: { $gte: since },
+        });
+    }
+
     async inactiveEmailManyByUser(
         user: string,
         options?: IDatabaseUpdateManyOptions

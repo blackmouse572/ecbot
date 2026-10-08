@@ -1,7 +1,11 @@
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
 import { RequestEmailPipe } from '@app/common/request/pipes/request.email.pipe';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
-import { VERIFICATION_EMAIL_RESEND_MIN_REMAINING_MS } from '@app/modules/verification/constants/verification.email.constant';
+import {
+    VERIFICATION_EMAIL_REISSUE_MAX_PER_HOUR,
+    VERIFICATION_EMAIL_REISSUE_WINDOW_MS,
+    VERIFICATION_EMAIL_RESEND_MIN_REMAINING_MS,
+} from '@app/modules/verification/constants/verification.email.constant';
 import {
     VerificationEmailResendEmailDoc,
     VerificationEmailVerifyEmailDoc,
@@ -13,6 +17,8 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import {
     Headers,
     BadRequestException,
+    HttpException,
+    HttpStatus,
     Body,
     ConflictException,
     Controller,
@@ -136,6 +142,22 @@ export class VerificationEmailController {
     }
 
     private async reissueEmail(user: UserEntity): Promise<VerificationEntity> {
+        // Each code allows 5 guesses; without a cap a locked code could be
+        // swapped for a fresh one forever, and a right guess signs in (#143).
+        const issued = await this.verificationService.countEmailIssuedSince(
+            user.id,
+            new Date(Date.now() - VERIFICATION_EMAIL_REISSUE_WINDOW_MS)
+        );
+        if (issued >= VERIFICATION_EMAIL_REISSUE_MAX_PER_HOUR) {
+            throw new HttpException(
+                {
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.MAX_IN_DAY,
+                    message: 'verification.error.tooManyCodes',
+                },
+                HttpStatus.TOO_MANY_REQUESTS
+            );
+        }
+
         const session = this.em.fork();
         await session.begin();
 
@@ -169,8 +191,8 @@ export class VerificationEmailController {
     async verifyEmail(
         @Body(new RequestEmailPipe())
         { email, id, otp }: VerificationVerifyEmailRequestDto,
-        @Req() request?: IRequestApp,
-        @Res({ passthrough: true }) res?: ExpressResponse
+        @Req() request: IRequestApp,
+        @Res({ passthrough: true }) res: ExpressResponse
     ): Promise<IResponse<AuthLoginResponseDto> | void> {
         const [verificationTask, userTask] = await Promise.allSettled([
             this.verificationService.findOneActiveLatestEmailByUser(id, email),
@@ -205,35 +227,52 @@ export class VerificationEmailController {
             });
         }
 
-        const check: boolean = this.verificationService.validateOtp(
-            verification,
-            otp
-        );
-        if (!check) {
-            const attempted =
-                await this.verificationService.incrementOtpAttempt(
+        // Claim the guess before comparing: a correct code now opens a
+        // session (#143), so concurrent guesses must not slip past the cap.
+        const claimed =
+            await this.verificationService.claimOtpAttempt(verification);
+        if (!claimed) {
+            throw new BadRequestException({
+                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
+                message: 'verification.error.attemptMax',
+            });
+        }
+
+        if (!this.verificationService.validateOtp(verification, otp)) {
+            const locked =
+                await this.verificationService.lockIfAttemptsSpent(
                     verification
                 );
-            if (!attempted.isActive) {
-                throw new BadRequestException({
-                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
-                    message: 'verification.error.attemptMax',
-                });
-            }
-
-            throw new BadRequestException({
-                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.OTP_NOT_MATCH,
-                message: 'verification.error.otpNotMatch',
-            });
+            throw new BadRequestException(
+                locked
+                    ? {
+                          statusCode:
+                              ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
+                          message: 'verification.error.attemptMax',
+                      }
+                    : {
+                          statusCode:
+                              ENUM_VERIFICATION_STATUS_CODE_ERROR.OTP_NOT_MATCH,
+                          message: 'verification.error.otpNotMatch',
+                      }
+            );
         }
 
         const session = this.em.fork();
         await session.begin();
 
         try {
-            await this.verificationService.verify(verification, {
-                em: session,
-            });
+            // Single use: of two requests with the right code, one wins.
+            const won = await this.verificationService.verifyOnce(
+                verification,
+                { em: session }
+            );
+            if (!won) {
+                throw new NotFoundException({
+                    statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
+                    message: 'verification.error.notFound',
+                });
+            }
             await this.userService.updateVerificationEmail(user, {
                 em: session,
             });
@@ -259,6 +298,8 @@ export class VerificationEmailController {
                 });
         } catch (err: unknown) {
             await session.rollback();
+            // A refused request (the code was already used) keeps its status.
+            if (err instanceof HttpException) throw err;
 
             throw new InternalServerErrorException({
                 statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
@@ -281,10 +322,10 @@ export class VerificationEmailController {
      */
     private async signInVerifiedUser(
         user: UserEntity,
-        request: IRequestApp | undefined,
-        res: ExpressResponse | undefined
+        request: IRequestApp,
+        res: ExpressResponse
     ): Promise<AuthLoginResponseDto | undefined> {
-        if (!request || !res || user.status !== ENUM_USER_STATUS.ACTIVE) {
+        if (user.status !== ENUM_USER_STATUS.ACTIVE) {
             return undefined;
         }
         const userWithRole = await this.userService.join(user);

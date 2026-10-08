@@ -18,10 +18,11 @@ describe('VerificationService', () => {
     const findOne = jest.fn();
     const save = jest.fn();
     const updateRaw = jest.fn();
+    const getTotal = jest.fn();
 
     const build = () =>
         new VerificationService(
-            { findOne, save, updateRaw } as any,
+            { findOne, save, updateRaw, getTotal } as any,
             new HelperDateService(configService),
             new HelperNumberService(),
             new HelperStringService(),
@@ -135,6 +136,96 @@ describe('VerificationService', () => {
             expect(find).toEqual({ id: 'ver-1' });
             expect(data.otpAttempt.sql).toBe('otp_attempt + 1');
             expect(data.isActive.sql).toBe('is_active and otp_attempt + 1 < 5');
+        });
+    });
+
+    // #143 review: auto sign-in made a guessed code open a session, so the
+    // attempt cap must hold when guesses arrive at the same moment.
+    describe('claimOtpAttempt', () => {
+        const entity = () =>
+            ({
+                id: 'ver-1',
+                otpAttempt: 2,
+                isActive: true,
+            }) as VerificationEntity;
+
+        it('claims a guess in one conditional update, before the code is compared', async () => {
+            const v = entity();
+
+            await expect(build().claimOtpAttempt(v)).resolves.toBe(true);
+
+            const [find, data] = updateRaw.mock.calls[0];
+            expect(find).toEqual({
+                id: 'ver-1',
+                isActive: true,
+                otpAttempt: { $lt: 5 },
+            });
+            expect(String(data.otpAttempt)).toContain('otp_attempt + 1');
+            expect(v.otpAttempt).toBe(3);
+        });
+
+        it('refuses when no guess is left (the update matched no row)', async () => {
+            updateRaw.mockResolvedValue(0);
+            const v = entity();
+
+            await expect(build().claimOtpAttempt(v)).resolves.toBe(false);
+            expect(v.otpAttempt).toBe(2);
+        });
+    });
+
+    describe('lockIfAttemptsSpent', () => {
+        it('locks the code once its last guess is spent', async () => {
+            const v = { id: 'ver-1', otpAttempt: 5 } as VerificationEntity;
+
+            await expect(build().lockIfAttemptsSpent(v)).resolves.toBe(true);
+            expect(updateRaw).toHaveBeenCalledWith(
+                { id: 'ver-1' },
+                { isActive: false },
+                undefined
+            );
+        });
+
+        it('leaves the code active while guesses remain', async () => {
+            const v = { id: 'ver-1', otpAttempt: 3 } as VerificationEntity;
+
+            await expect(build().lockIfAttemptsSpent(v)).resolves.toBe(false);
+            expect(updateRaw).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('verifyOnce', () => {
+        it('marks the code used only while it is still active, so one request wins', async () => {
+            const v = { id: 'ver-1' } as VerificationEntity;
+
+            await expect(build().verifyOnce(v)).resolves.toBe(true);
+            const [find, data] = updateRaw.mock.calls[0];
+            expect(find).toEqual({ id: 'ver-1', isActive: true });
+            expect(data).toMatchObject({ isActive: false, isVerify: true });
+            expect(data.verifyDate).toBeInstanceOf(Date);
+        });
+
+        it('reports a loss when another request used the code first', async () => {
+            updateRaw.mockResolvedValue(0);
+
+            await expect(
+                build().verifyOnce({ id: 'ver-1' } as VerificationEntity)
+            ).resolves.toBe(false);
+        });
+    });
+
+    describe('countEmailIssuedSince', () => {
+        it('counts the email codes issued to the user since a time', async () => {
+            getTotal.mockResolvedValue(3);
+            const since = new Date('2026-10-08T07:00:00Z');
+
+            await expect(
+                build().countEmailIssuedSince('user-1', since)
+            ).resolves.toBe(3);
+            const [find] = getTotal.mock.calls[0];
+            expect(find).toMatchObject({
+                user: 'user-1',
+                createdAt: { $gte: since },
+            });
         });
     });
 });
