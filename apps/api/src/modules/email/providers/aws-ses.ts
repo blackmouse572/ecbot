@@ -365,7 +365,7 @@ export class AwsSESProvider implements IEmailService {
 
     async sendResetPassword(
         { name, email }: EmailSendDto,
-        { expiredDate, url, otp }: EmailResetPasswordDto
+        { expiredDate, url }: EmailResetPasswordDto
     ): Promise<boolean> {
         try {
             await this.awsSESService.send({
@@ -382,7 +382,6 @@ export class AwsSESProvider implements IEmailService {
                     // pass it through unchanged (as resend.ts does), don't
                     // prefix it with homeUrl again.
                     url,
-                    otp,
                     expiredDate:
                         this.helperDateService.formatToIsoDate(expiredDate),
                 },

@@ -1,3 +1,4 @@
+import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ResetPasswordPublicController } from '@app/modules/reset-password/controllers/reset-password.public.controller';
@@ -97,7 +98,11 @@ describe('ResetPasswordPublicController — email dispatch', () => {
     it('request: enqueues RESET_PASSWORD via CloudTasksQueueClient before the request transaction commits', async () => {
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
         const resetPassword = {
-            created: { expiredDate: new Date(), to: '*@b.com' },
+            created: {
+                url: 'https://app.example.com/reset-password?token=tok-1',
+                expiredDate: new Date(),
+                to: '*@b.com',
+            },
         };
         findOneActiveByEmail.mockResolvedValue(user);
         checkActiveLatestEmailByUser.mockResolvedValue(null);
@@ -111,7 +116,11 @@ describe('ResetPasswordPublicController — email dispatch', () => {
             ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
             {
                 send: { email: 'a@b.com', name: 'A' },
-                data: resetPassword.created,
+                data: {
+                    url: resetPassword.created.url,
+                    expiredDate: resetPassword.created.expiredDate,
+                    language: undefined,
+                },
             },
             {
                 taskName: expect.stringMatching(
@@ -121,7 +130,7 @@ describe('ResetPasswordPublicController — email dispatch', () => {
         );
     });
 
-    it('request: the enqueued email payload carries the OTP (regression: /reset can never succeed without it)', async () => {
+    it('request: the email job carries the link, the expiry and the language, never the code or token (#187)', async () => {
         const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
         const resetPassword = {
             created: {
@@ -137,16 +146,14 @@ describe('ResetPasswordPublicController — email dispatch', () => {
         inactiveEmailManyByUser.mockResolvedValue(undefined);
         requestEmailByUser.mockResolvedValue(resetPassword);
 
-        await controller.request({ email: 'a@b.com' } as any);
+        await controller.request({ email: 'a@b.com' } as any, 'vi');
 
-        expect(enqueue).toHaveBeenCalledWith(
-            'email',
-            ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
-            expect.objectContaining({
-                data: expect.objectContaining({ otp: '482913' }),
-            }),
-            expect.anything()
-        );
+        const [, , payload] = enqueue.mock.calls[0];
+        expect(payload.data).toEqual({
+            url: 'https://app.example.com/reset-password?token=tok-1',
+            expiredDate: resetPassword.created.expiredDate,
+            language: 'vi',
+        });
     });
 
     it('request: always sends the reset email to user.email, never the request-body email', async () => {
@@ -215,7 +222,14 @@ describe('ResetPasswordPublicController — email dispatch', () => {
         expect(enqueue).toHaveBeenCalledWith(
             'email',
             ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
-            { send: { email: 'a@b.com', name: 'A' }, data: created },
+            {
+                send: { email: 'a@b.com', name: 'A' },
+                data: {
+                    url: created.url,
+                    expiredDate: created.expiredDate,
+                    language: undefined,
+                },
+            },
             {
                 taskName: expect.stringMatching(
                     /^RESET_PASSWORD-user-1-[0-9a-f-]{36}$/
@@ -398,5 +412,23 @@ describe('ResetPasswordPublicController — email dispatch', () => {
 
         expect(commit).toHaveBeenCalledTimes(1);
         expect(rollback).not.toHaveBeenCalled();
+    });
+});
+
+// #187: the link in the email is enough. Asking for the code from the same
+// email added a step and no security, so /reset no longer needs /verify.
+describe('ResetPasswordPublicController.reset pipes', () => {
+    it('does not require the code to be verified first', () => {
+        const args = Reflect.getMetadata(
+            ROUTE_ARGS_METADATA,
+            ResetPasswordPublicController,
+            'reset'
+        ) as Record<string, { pipes: unknown[] }>;
+        const pipes = Object.values(args)
+            .flatMap(a => a.pipes)
+            .map(p => (p as { name: string }).name);
+
+        expect(pipes).toContain('ResetPasswordActivePipe');
+        expect(pipes).not.toContain('ResetPasswordVerifiedPipe');
     });
 });

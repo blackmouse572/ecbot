@@ -11,6 +11,7 @@ import {
     NotFoundException,
     Param,
     Post,
+    Headers,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -22,6 +23,7 @@ import { IResponse } from 'src/common/response/interfaces/response.interface';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
 import { IAuthPassword } from 'src/modules/auth/interfaces/auth.interface';
 import { AuthService } from 'src/modules/auth/services/auth.service';
+import { EmailResetPasswordDto } from 'src/modules/email/dtos/email.reset-password.dto';
 import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
 import { ENUM_PASSWORD_HISTORY_TYPE } from 'src/modules/password-history/enums/password-history.enum';
 import { PasswordHistoryService } from 'src/modules/password-history/services/password-history.service';
@@ -41,7 +43,6 @@ import { ResetPasswordActivePipe } from 'src/modules/reset-password/pipes/reset-
 import { ResetPasswordDateExpiredPipe } from 'src/modules/reset-password/pipes/reset-password.date-expired.pipe';
 import { ResetPasswordExpiredPipe } from 'src/modules/reset-password/pipes/reset-password.expired.pipe';
 import { ResetPasswordParseByTokenPipe } from 'src/modules/reset-password/pipes/reset-password.parse.pipe';
-import { ResetPasswordVerifiedPipe } from 'src/modules/reset-password/pipes/reset-password.verified.pipe';
 import { ResetPasswordEntity } from 'src/modules/reset-password/repository/entities/reset-password.entity';
 import { ResetPasswordService } from 'src/modules/reset-password/services/reset-password.service';
 import { SessionService } from 'src/modules/session/services/session.service';
@@ -74,7 +75,8 @@ export class ResetPasswordPublicController {
     @HttpCode(HttpStatus.OK)
     @Post('/request')
     async request(
-        @Body() { email }: ResetPasswordCreateRequestDto
+        @Body() { email }: ResetPasswordCreateRequestDto,
+        @Headers('x-custom-lang') language?: string
     ): Promise<IResponse<void>> {
         // No enumeration: every outcome below (unknown email, already an
         // active pending reset, or a freshly created one) returns this same
@@ -94,7 +96,7 @@ export class ResetPasswordPublicController {
         // A reset is still active (the page's Resend lands here): send the
         // same link and code again rather than nothing.
         if (checkLatest) {
-            this.enqueueResetEmail(user, checkLatest.created);
+            this.enqueueResetEmail(user, checkLatest.created, language);
             return ack;
         }
 
@@ -115,7 +117,7 @@ export class ResetPasswordPublicController {
                     { em: session }
                 );
 
-            this.enqueueResetEmail(user, resetPassword.created);
+            this.enqueueResetEmail(user, resetPassword.created, language);
 
             await session.commit();
 
@@ -232,8 +234,7 @@ export class ResetPasswordPublicController {
             RequestRequiredPipe,
             ResetPasswordParseByTokenPipe,
             ResetPasswordActivePipe,
-            ResetPasswordDateExpiredPipe,
-            ResetPasswordVerifiedPipe
+            ResetPasswordDateExpiredPipe
         )
         resetPassword: ResetPasswordEntity,
         @Body()
@@ -299,15 +300,23 @@ export class ResetPasswordPublicController {
     /** Queue the reset email; a queue failure is logged, never thrown. */
     private enqueueResetEmail(
         user: UserEntity,
-        created: IResetPasswordRequest['created']
+        created: IResetPasswordRequest['created'],
+        language?: string
     ): void {
+        // The link alone resets the password (#187), so the job carries no
+        // code or bare token, only what the email shows.
+        const data: EmailResetPasswordDto = {
+            url: created.url,
+            expiredDate: created.expiredDate,
+            language,
+        };
         this.cloudTasksClient
             .enqueue(
                 'email',
                 ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD,
                 {
                     send: { email: user.email, name: user.name },
-                    data: created,
+                    data,
                 },
                 {
                     taskName: `${ENUM_SEND_EMAIL_PROCESS.RESET_PASSWORD}-${user.id}-${randomUUID()}`,
