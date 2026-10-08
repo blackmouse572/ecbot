@@ -295,6 +295,41 @@ describe('HttpToolExecutorService', () => {
         expect(result.status).toBe(ENUM_TOOL_INVOCATION_STATUS.ERROR);
     });
 
+    it.each(['API_KEY', 'api_key[]', 'Api_Key[0]'])(
+        'never lets an argument named %s slip past the query API key',
+        async name => {
+            fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+            const tool = makeTool({
+                httpMethod: ENUM_HTTP_METHOD.GET,
+                httpUrl: 'https://api.example.com/stock',
+                httpAuth: {
+                    type: 'api_key',
+                    placement: 'query',
+                    paramName: 'api_key',
+                },
+                httpCredential: 'cipher',
+            });
+            await svc.execute(tool, { [name]: 'attacker', item: 'dress' });
+            const url = String(fetchSpy.mock.calls[0][0]);
+            expect(url).not.toContain('attacker');
+            expect(url).toContain('item=dress');
+        }
+    );
+
+    it("sends the tool URL's own parameters exactly as written", async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.POST,
+            httpUrl: 'https://api.example.com/x?q=a%20b&flag',
+            httpAuth: { type: 'api_key', placement: 'query', paramName: 'key' },
+            httpCredential: 'cipher',
+        });
+        await svc.execute(tool, { a: 1 });
+        expect(String(fetchSpy.mock.calls[0][0])).toBe(
+            'https://api.example.com/x?q=a%20b&flag&key=decrypted-cipher'
+        );
+    });
+
     it('sends GET arguments as the query string when testing a config', async () => {
         fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
         await svc.executeWithConfig(
