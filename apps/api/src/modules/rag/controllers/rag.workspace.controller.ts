@@ -191,7 +191,7 @@ export class RAGWorkspaceController {
                     randomFilename,
                     payload.size,
                     {
-                        access: ENUM_AWS_S3_ACCESSIBILITY.PUBLIC,
+                        access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE,
                         expired: 900, // 15 minutes
                     }
                 );
@@ -236,7 +236,9 @@ export class RAGWorkspaceController {
         await session.begin();
 
         try {
-            const attachment = this.awsS3Service.mapPresign(body.attachment);
+            const attachment = this.awsS3Service.mapPresign(body.attachment, {
+                access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE,
+            });
             const created = await this.ragService.create(
                 {
                     chatbot: chatbotId,
@@ -315,8 +317,15 @@ export class RAGWorkspaceController {
                 actionBy: user.id,
             });
             const ragWithAttachment = await this.ragService.joinAttachment(rag);
+            // Files uploaded before the move to the private bucket still
+            // live in the public one, so delete from where it is stored.
             await this.awsS3Service.deleteItem(
-                ragWithAttachment.attachment.key
+                ragWithAttachment.attachment.key,
+                {
+                    access: this.awsS3Service.getAccessByBucket(
+                        ragWithAttachment.attachment.bucket
+                    ),
+                }
             );
             await this.activityService.createByUser(
                 user,

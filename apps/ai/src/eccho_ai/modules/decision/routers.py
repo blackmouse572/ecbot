@@ -7,16 +7,19 @@ decides is configuration (DECISION_MODEL), not code.
 import logging
 from typing import Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, create_model
 
+from eccho_ai.core.security import require_internal_token
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.providers.chat_model import build_chat_model
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.modules.decision.models import DecisionQuestion, DecisionRequest, DecisionResponse
 
 logger = logging.getLogger("uvicorn.info")
-router = APIRouter(prefix="/decision", tags=["Decision"])
+router = APIRouter(
+    prefix="/decision", tags=["Decision"], dependencies=[Depends(require_internal_token)]
+)
 
 SYSTEM_PROMPT = """\
 You answer typed questions about a piece of state, like a calibrated classifier.

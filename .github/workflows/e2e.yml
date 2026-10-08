@@ -52,7 +52,11 @@ jobs:
 
       - name: Generate JWT keys
         working-directory: apps/api
-        run: pnpm run generate:keys generate keys
+        # The API container runs as the non-root `node` user, which is not the
+        # runner's user, so the throwaway keys must be readable by others.
+        run: |
+          pnpm run generate:keys generate keys
+          chmod a+r keys/*
 
       - name: Generate ephemeral E2E keys
         run: |
@@ -143,7 +147,11 @@ jobs:
 
       - name: Generate JWT keys
         working-directory: apps/api
-        run: pnpm run generate:keys generate keys
+        # The API container runs as the non-root `node` user, which is not the
+        # runner's user, so the throwaway keys must be readable by others.
+        run: |
+          pnpm run generate:keys generate keys
+          chmod a+r keys/*
 
       - name: Generate ephemeral E2E keys
         run: |

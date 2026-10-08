@@ -127,6 +127,12 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             : this.config.public;
     }
 
+    getAccessByBucket(bucket: string): ENUM_AWS_S3_ACCESSIBILITY {
+        return bucket === this.config.private.bucket
+            ? ENUM_AWS_S3_ACCESSIBILITY.PRIVATE
+            : ENUM_AWS_S3_ACCESSIBILITY.PUBLIC;
+    }
+
     getFileInfo(key: string): IAwsS3FileInfo {
         const pathWithFilename: string = `/${key}`;
         const filename: string = key.substring(
@@ -459,7 +465,7 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             Bucket: config.bucket,
             Key: file.key,
             Body: content,
-            ACL: options?.acl ?? ObjectCannedACL.public_read,
+            ACL: options?.acl ?? ObjectCannedACL.private,
             ...(isPrivate && { ServerSideEncryption: 'AES256' }),
         });
 
@@ -651,7 +657,7 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             new CreateMultipartUploadCommand({
                 Bucket: config.bucket,
                 Key: file.key,
-                ACL: options?.acl ?? ObjectCannedACL.public_read,
+                ACL: options?.acl ?? ObjectCannedACL.private,
             });
 
         const response = await config.client.send<

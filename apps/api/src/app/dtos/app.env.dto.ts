@@ -143,6 +143,12 @@ export class AppEnvDto {
     @Type(() => Boolean)
     DATABASE_SSL?: boolean;
 
+    // PEM of a private CA for providers whose certificate is not publicly
+    // trusted; newlines may be escaped as \n.
+    @IsOptional()
+    @IsString()
+    DATABASE_SSL_CA?: string;
+
     @IsNotEmpty()
     @IsString()
     @MinLength(1)

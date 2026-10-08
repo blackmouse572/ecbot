@@ -7,7 +7,7 @@ jest.mock('@app/common/utils/gcp-id-token.util', () => ({
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
 import { AiDecisionService } from '../../../../src/modules/agent-builder/services/ai-decision.service';
 
-const config = { get: (k: string) => ({ 'ai.backend.url': 'http://ai:8000', 'agentBuilder.decisionTimeoutMs': 15000 } as Record<string, unknown>)[k] } as any;
+const config = { get: (k: string) => ({ 'ai.backend.url': 'http://ai:8000', 'agentBuilder.decisionTimeoutMs': 15000, 'ai.internalToken': 'internal' } as Record<string, unknown>)[k] } as any;
 
 describe('AiDecisionService', () => {
     it('posts state and questions to apps/ai and returns the answers', async () => {
@@ -20,7 +20,8 @@ describe('AiDecisionService', () => {
         expect(body).toEqual({ state: 'hello', questions: { a: { type: 'noul', instructions: 'q' } } });
         expect(opts.timeout).toBe(15000);
         expect(getInternalAuthHeader).toHaveBeenCalledWith('http://ai:8000');
-        expect(opts.headers).toEqual({ Authorization: 'Bearer id-token', 'Content-Type': 'application/json' });
+        // apps/ai rejects decision calls without the shared internal token.
+        expect(opts.headers).toEqual({ Authorization: 'Bearer id-token', 'X-Internal-Token': 'internal', 'Content-Type': 'application/json' });
     });
 
     it('returns no answers when apps/ai sends none', async () => {

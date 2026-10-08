@@ -9,5 +9,6 @@ export default registerAs(
 
         debug: process.env.DATABASE_DEBUG === 'true',
         ssl: process.env.DATABASE_SSL === 'true',
+        sslCa: process.env.DATABASE_SSL_CA,
     })
 );

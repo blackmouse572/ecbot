@@ -31,6 +31,13 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY . /app
 
+# Run as an unprivileged user. Code stays root-owned; only the RAG upload
+# directory (RAG_LOCAL_STORAGE_DIR) is writable.
+RUN useradd --system --uid 10001 --no-create-home app \
+    && mkdir -p /app/storage/rag_uploads \
+    && chown -R app:app /app/storage
+USER app
+
 EXPOSE 8000
 
 CMD ["uvicorn", "eccho_ai.main:app", "--host", "0.0.0.0", "--port", "8000"]

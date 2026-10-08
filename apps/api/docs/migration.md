@@ -110,7 +110,7 @@ export default defineConfig({
 });
 ```
 
-Connection is a single `DATABASE_URL` (not per-field host/port/user/password variables). `DATABASE_SSL=true` adds `rejectUnauthorized: false` to the driver options for managed Postgres providers that use self-signed certificates.
+Connection is a single `DATABASE_URL` (not per-field host/port/user/password variables). `DATABASE_SSL=true` turns on TLS and always verifies the server certificate. For a provider whose certificate is not publicly trusted, put its CA certificate (PEM, newlines may be escaped as `\n`) in `DATABASE_SSL_CA`.
 
 # The Schema Snapshot
 

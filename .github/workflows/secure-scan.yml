@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Semgrep diffs against the base branch to gate on new findings only.
+          fetch-depth: 0
 
       - name: Run Trivy scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -37,3 +40,21 @@ jobs:
         with:
           name: secure-scan-report
           path: summary.md
+
+      # The steps above only report. These fail the PR: a fixable HIGH or
+      # CRITICAL vulnerability or a committed secret, and any Semgrep finding
+      # the PR introduces (findings already on the base branch do not block).
+      - name: Gate on vulnerabilities and secrets
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: 1
+
+      - name: Gate on new Semgrep findings
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: semgrep scan --config p/default --error --baseline-commit "origin/$BASE_REF"

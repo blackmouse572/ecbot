@@ -1,12 +1,9 @@
 import { MikroOrmModuleOptions } from '@mikro-orm/nestjs';
-import {
-    Dictionary,
-    PoolConfig,
-    PostgreSqlDriver,
-} from '@mikro-orm/postgresql';
+import { PoolConfig, PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ENUM_APP_ENVIRONMENT } from 'src/app/enums/app.enum';
+import { DatabaseSslHelper } from 'src/common/database/helpers/database.ssl.helper';
 
 // Alias keeps the factory method's signature short.
 type PostgresOptions = MikroOrmModuleOptions<PostgreSqlDriver>;
@@ -47,17 +44,10 @@ export class DatabaseOptionService {
             };
         }
 
-        let driverOptions: Dictionary | undefined;
-
-        if (ssl) {
-            driverOptions = {
-                connection: {
-                    ssl: {
-                        rejectUnauthorized: false,
-                    },
-                },
-            };
-        }
+        const driverOptions = DatabaseSslHelper.driverOptions(
+            ssl,
+            this.configService.get<string>('database.sslCa')
+        );
         return {
             driver: PostgreSqlDriver,
             clientUrl: url,

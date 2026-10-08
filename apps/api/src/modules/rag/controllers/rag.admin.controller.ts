@@ -187,8 +187,15 @@ export class RAGAdminController {
             // Permanently delete the RAG entry
             await this.ragService.delete([{ rag }], { em: session });
             const ragWithAttachment = await this.ragService.joinAttachment(rag);
+            // Files uploaded before the move to the private bucket still
+            // live in the public one, so delete from where it is stored.
             await this.awsS3Service.deleteItem(
-                ragWithAttachment.attachment.key
+                ragWithAttachment.attachment.key,
+                {
+                    access: this.awsS3Service.getAccessByBucket(
+                        ragWithAttachment.attachment.bucket
+                    ),
+                }
             );
             // Log the deletion activity
             await this.activityService.createByUser(

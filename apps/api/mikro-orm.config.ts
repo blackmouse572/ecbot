@@ -1,4 +1,4 @@
-import { defineConfig, Dictionary } from '@mikro-orm/core';
+import { defineConfig } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations'; // or `@mikro-orm/migrations-mongodb`
 import { MikroOrmModuleOptions } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
@@ -6,6 +6,7 @@ import { config } from 'dotenv';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import slugify from 'slugify';
+import { DatabaseSslHelper } from './src/common/database/helpers/database.ssl.helper';
 
 // Load environment variables
 config();
@@ -26,17 +27,10 @@ const getMikroOrmConfig = (): MikroOrmModuleOptions => {
     const isDatabaseSslEnabled = process.env.DATABASE_SSL === 'true';
     const clientUrl = process.env.DATABASE_URL;
 
-    let driverOptions: Dictionary | undefined;
-
-    if (isDatabaseSslEnabled) {
-        driverOptions = {
-            connection: {
-                ssl: {
-                    rejectUnauthorized: false,
-                },
-            },
-        };
-    }
+    const driverOptions = DatabaseSslHelper.driverOptions(
+        isDatabaseSslEnabled,
+        process.env.DATABASE_SSL_CA
+    );
 
     return defineConfig({
         extensions: [Migrator],
