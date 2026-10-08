@@ -68,6 +68,10 @@ import { UsageEventEntity } from '@app/modules/knowledge-base/repository/entitie
 import { WorkspaceUsageEntity } from '@app/modules/knowledge-base/repository/entities/workspace-usage.entity';
 import { NotificationEntity } from '@app/modules/notification/repository/entities/notification.entity';
 import { EntityName } from '@mikro-orm/core';
+import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
+import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
+import { KnowledgeItemEntity } from '@app/modules/knowledge-base/repository/entities/knowledge-item.entity';
+import { KnowledgeItemChunkEntity } from '@app/modules/knowledge-base/repository/entities/knowledge-item-chunk.entity';
 
 @Injectable()
 export class WorkspaceOwnerService implements IWorkspaceOwnerService {
@@ -548,6 +552,30 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                     softDeleteData
                 );
             }
+
+            // Rows that reach the workspace through a parent, not a
+            // `workspace` FK: chat history and knowledge content.
+            const inWorkspace = { workspace: workspace.id };
+            await session.nativeUpdate(
+                MessageEntity,
+                { conversation: { chatbot: inWorkspace } },
+                softDeleteData
+            );
+            await session.nativeUpdate(
+                ConversationEntity,
+                { chatbot: inWorkspace },
+                softDeleteData
+            );
+            await session.nativeUpdate(
+                KnowledgeItemEntity,
+                { knowledgeBase: inWorkspace },
+                softDeleteData
+            );
+            // Chunks (text + embeddings) have no soft-delete columns, and a
+            // deleted workspace's knowledge must not stay searchable.
+            await session.nativeDelete(KnowledgeItemChunkEntity, {
+                knowledgeBaseItem: { knowledgeBase: inWorkspace },
+            });
 
             await session.nativeUpdate(
                 WorkspaceEntity,

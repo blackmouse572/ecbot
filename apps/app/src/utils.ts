@@ -61,6 +61,15 @@ export function downloadFile(file: File) {
   URL.revokeObjectURL(url);
 }
 
+/** Downloads `data` as a pretty-printed JSON file. */
+export function downloadJson(data: unknown, fileName: string) {
+  downloadFile(
+    new File([JSON.stringify(data, null, 2)], fileName, {
+      type: "application/json",
+    }),
+  );
+}
+
 export function toPrevPath({ state, search }: Location, defaultPath = "/") {
   if (state?.prevPath) return state.prevPath;
 

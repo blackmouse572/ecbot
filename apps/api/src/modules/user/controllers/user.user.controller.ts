@@ -7,6 +7,7 @@ import {
     Controller,
     Delete,
     InternalServerErrorException,
+    Logger,
     NotFoundException,
     Put,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { MessageService } from 'src/common/message/services/message.service';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { ActivityService } from 'src/modules/activity/services/activity.service';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
+import { AwsS3Service } from 'src/modules/aws/services/aws.s3.service';
 import {
     AuthJwtAccessProtected,
     AuthJwtPayload,
@@ -47,13 +49,16 @@ import { UserService } from 'src/modules/user/services/user.service';
     path: '/user',
 })
 export class UserUserController {
+    private readonly logger = new Logger(UserUserController.name);
+
     constructor(
         private readonly em: EntityManager,
         private readonly userService: UserService,
         private readonly activityService: ActivityService,
         private readonly messageService: MessageService,
         private readonly sessionService: SessionService,
-        private readonly countryService: CountryService
+        private readonly countryService: CountryService,
+        private readonly awsS3Service: AwsS3Service
     ) {}
 
     @UserUserDeleteDoc()
@@ -75,12 +80,21 @@ export class UserUserController {
                 actionBy: user.id,
             });
 
+            // Right to erasure: the row stays for the audit trail, the
+            // personal data does not.
+            await this.userService.anonymize(user, {
+                em: session,
+                actionBy: user.id,
+            });
+
             await this.activityService.createByUser(
                 user,
                 {
                     action: ENUM_ACTIVITY_ACTION.DELETE,
                     subject: ENUM_POLICY_SUBJECT.USER,
-                    metadata: { id: user.id, name: user.name },
+                    // No name: activity rows are append-only and outlive
+                    // the anonymised account.
+                    metadata: { id: user.id },
                 },
                 { em: session }
             );
@@ -98,6 +112,15 @@ export class UserUserController {
                 message: 'http.serverError.internalServerError',
                 _error: err,
             });
+        }
+
+        // Uploaded profile photos live under user/<id>/ in the public bucket.
+        try {
+            await this.awsS3Service.deleteDir(`user/${user.id}/`);
+        } catch (err: unknown) {
+            this.logger.error(
+                `user ${user.id} deleted but photo cleanup failed: ${(err as Error).message}`
+            );
         }
 
         return;

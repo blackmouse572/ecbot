@@ -33,4 +33,6 @@ export enum ENUM_ACTIVITY_ACTION {
     LOGIN = 'login',
     LOGIN_FAILED = 'login_failed',
     VIEW = 'view',
+    EXPORT = 'export',
+    ERASE = 'erase',
 }

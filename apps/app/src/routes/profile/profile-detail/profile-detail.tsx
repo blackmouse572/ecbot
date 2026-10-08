@@ -4,6 +4,7 @@ import {
   ProfileDeleteSection,
   ProfileGeneralSection,
   ProfileMfaSection,
+  ProfileExportSection,
 } from "./components";
 
 export const ProfileDetail = () => {
@@ -20,6 +21,7 @@ export const ProfileDetail = () => {
     <div className="flex flex-col gap-y-3">
       <ProfileGeneralSection user={user} />
       <ProfileMfaSection user={user} />
+      <ProfileExportSection />
       <ProfileDeleteSection user={user} />
     </div>
   );

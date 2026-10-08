@@ -1,5 +1,6 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
+  client,
   userSharedControllerGetUserProfileV1,
   userSharedControllerProfileV1,
   userUserControllerDeleteV1,
@@ -66,6 +67,21 @@ export function useDeleteProfile() {
     deleteProfile,
     ...rest,
   };
+}
+
+// Not in the generated client yet: replace with the generated function after
+// the next `pnpm generate:client`.
+const exportMyData = () =>
+  client
+    .get<{ 200: { data: unknown } }, unknown, true>({
+      url: "/api/v1/user/export/me",
+      responseType: "json",
+    })
+    .then((res) => res.data.data);
+
+/** Right of access: downloads everything we hold about the signed-in user. */
+export function useExportMyData() {
+  return useMutation({ mutationFn: exportMyData });
 }
 
 export const userQueryOptions = (userId: string) =>
