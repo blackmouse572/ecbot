@@ -75,6 +75,18 @@ export class CloudTasksQueueClient {
         });
     }
 
+    /**
+     * False when neither a GCP project nor an emulator is set: there is
+     * nowhere to create tasks, so callers that can degrade (the inbound
+     * inbox) run the work inline instead of failing.
+     */
+    isConfigured(): boolean {
+        return Boolean(
+            this.configService.get<string>('cloudTasks.projectId') ||
+            this.configService.get<string>('cloudTasks.emulatorHost')
+        );
+    }
+
     async enqueue(
         queue: string,
         jobName: string,

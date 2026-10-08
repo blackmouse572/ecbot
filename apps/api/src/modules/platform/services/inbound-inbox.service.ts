@@ -7,6 +7,7 @@ import {
     INBOUND_EVENT_QUEUE,
 } from '../constants/inbound-event.constant';
 import { PlatformWebhookEvent } from '../interfaces/platform-adapter.interface';
+import { InboundEventDedupeService } from './inbound-event-dedupe.service';
 import { MessageProcessorService } from './message-processor.service';
 
 /**
@@ -16,12 +17,9 @@ import { MessageProcessorService } from './message-processor.service';
  * which runs the Turn pipeline (MessageProcessorService.process) inside that
  * HTTP request, so the Turn gets full CPU even on a scale-to-zero instance.
  *
- * Falls back to firing the Turn directly when the task can't be created
- * (Cloud Tasks unreachable): same fire-and-forget shape as the task path's
- * fast ACK, so an outage doesn't also turn every webhook into a slow request
- * that risks the platform's timeout. This loses receipt-before-ACK and retry;
- * the inbound dedupe claim inside `process()` still protects against a
- * platform redelivery causing duplicate side effects.
+ * A failed enqueue throws, so the webhook returns 5xx and the platform
+ * redelivers (receipt-before-ACK). Only when Cloud Tasks isn't configured at
+ * all (no project, no emulator) is the Turn fired inline, fire-and-forget.
  */
 @Injectable()
 export class InboundInboxService {
@@ -29,6 +27,7 @@ export class InboundInboxService {
 
     constructor(
         private readonly cloudTasksClient: CloudTasksQueueClient,
+        private readonly dedupe: InboundEventDedupeService,
         private readonly messageProcessor: MessageProcessorService
     ) {}
 
@@ -52,14 +51,38 @@ export class InboundInboxService {
      * Durably enqueue one inbound event. Returns 'ignored' for events with no
      * externalMessageId (read receipts, delivery, typing): they carry no dedup
      * key and the Turn pipeline ignores them anyway.
+     *
+     * Throws if the enqueue fails so the controller can return 5xx and let the
+     * platform retry.
      */
     async accept(
         platform: ENUM_ACCOUNT_TYPE,
         event: PlatformWebhookEvent
     ): Promise<'accepted' | 'ignored'> {
-        if (!event.externalMessageId) return 'ignored';
+        const mid = event.externalMessageId;
+        if (!mid) return 'ignored';
 
-        const taskName = this.taskName(platform, event.externalMessageId);
+        // Already enqueued within the dedupe window (a redelivery, or the
+        // hourly reconciliation re-accepting recent messages).
+        if (!(await this.dedupe.claimEnqueue(platform, mid))) {
+            this.logger.debug(
+                `Inbound already enqueued: platform=${platform} mid=${mid}`
+            );
+            return 'accepted';
+        }
+
+        if (!this.cloudTasksClient.isConfigured()) {
+            this.messageProcessor
+                .process(event)
+                .catch(err =>
+                    this.logger.error(
+                        `Inline inbound processing failed (no Cloud Tasks): platform=${platform} kind=${event.kind} mid=${mid}: ${err}`
+                    )
+                );
+            return 'accepted';
+        }
+
+        const taskName = this.taskName(platform, mid);
         try {
             await this.cloudTasksClient.enqueue(
                 INBOUND_EVENT_QUEUE,
@@ -68,21 +91,12 @@ export class InboundInboxService {
                 { taskName }
             );
         } catch (err: unknown) {
-            this.logger.error(
-                `Inbound enqueue failed, running Turn inline: platform=${platform} kind=${event.kind} mid=${event.externalMessageId}: ${err}`
-            );
-            this.messageProcessor
-                .process(event)
-                .catch(turnErr =>
-                    this.logger.error(
-                        `Inline inbound processing failed: platform=${platform} kind=${event.kind} mid=${event.externalMessageId}: ${turnErr}`
-                    )
-                );
-            return 'accepted';
+            await this.dedupe.releaseEnqueue(platform, mid);
+            throw err;
         }
 
         this.logger.debug(
-            `Inbound accepted: platform=${platform} kind=${event.kind} mid=${event.externalMessageId} task=${taskName}`
+            `Inbound accepted: platform=${platform} kind=${event.kind} mid=${mid} task=${taskName}`
         );
         return 'accepted';
     }

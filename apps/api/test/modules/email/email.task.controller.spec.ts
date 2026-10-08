@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmailTaskController } from '../../../src/modules/email/controllers/email.task.controller';
 import { EmailService } from '../../../src/modules/email/services/email.service';
@@ -18,6 +19,8 @@ describe('EmailTaskController.handle', () => {
                     provide: EmailService,
                     useValue: { sendWelcome, sendVerification },
                 },
+                // ApiKeyCloudTasksProtected's guard reads the Cloud Tasks key.
+                { provide: ConfigService, useValue: { get: () => undefined } },
             ],
         }).compile();
         controller = module.get(EmailTaskController);

@@ -215,28 +215,6 @@ services:
       timeout: 30s
       retries: 5
 
-  # Bull dashboard for queue monitoring
-  redis-bullboard:
-    image: deadly0/bull-board:3.2.6
-    hostname: redis-bullboard
-    ports:
-      - 3010:3000
-    networks:
-      - app-network
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - BULL_PREFIX=bull
-      - USER_LOGIN=admin
-      - USER_PASSWORD=admin123
-    depends_on:
-      - redis
-    deploy:
-      resources:
-        limits:
-          cpus: "0.3"
-          memory: 128M
-
   cloud-tasks-emulator:
     # Pinned by digest: `latest` renamed -queue to -initial-queue, and the
     # emulator exits 2 on an unknown flag, so whether this container lived

@@ -117,3 +117,29 @@ describe('INBOUND_EVENT_DEDUPE_TTL_SECONDS', () => {
         );
     });
 });
+
+describe('InboundEventDedupeService enqueue marker', () => {
+    it('is separate from the Turn claim, so marking an enqueue never blocks the Turn', async () => {
+        const dedupe = new InboundEventDedupeService(fakeRedis(), true);
+
+        expect(await dedupe.claimEnqueue('TELEGRAM', 'msg-1')).toBe(true);
+        expect(await dedupe.claimEnqueue('TELEGRAM', 'msg-1')).toBe(false);
+        expect(await dedupe.claim('TELEGRAM', 'msg-1')).toBe(true);
+    });
+
+    it('can be released so a failed enqueue is retried', async () => {
+        const dedupe = new InboundEventDedupeService(fakeRedis(), true);
+
+        await dedupe.claimEnqueue('TELEGRAM', 'msg-1');
+        await dedupe.releaseEnqueue('TELEGRAM', 'msg-1');
+        expect(await dedupe.claimEnqueue('TELEGRAM', 'msg-1')).toBe(true);
+    });
+
+    it('works in-process when Redis was down at boot', async () => {
+        const dedupe = new InboundEventDedupeService(fakeRedis(), false);
+
+        expect(await dedupe.claimEnqueue('TELEGRAM', 'msg-1')).toBe(true);
+        expect(await dedupe.claimEnqueue('TELEGRAM', 'msg-1')).toBe(false);
+        dedupe.onModuleDestroy();
+    });
+});

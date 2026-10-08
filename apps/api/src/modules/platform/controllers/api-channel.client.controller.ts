@@ -64,8 +64,7 @@ export class ApiChannelClientController {
         if (!within) {
             throw new HttpException(
                 {
-                    statusCode:
-                        ENUM_API_CHANNEL_STATUS_CODE_ERROR.RATE_LIMITED,
+                    statusCode: ENUM_API_CHANNEL_STATUS_CODE_ERROR.RATE_LIMITED,
                     message: 'apiChannel.error.rateLimited',
                 },
                 HttpStatus.TOO_MANY_REQUESTS
@@ -100,7 +99,7 @@ export class ApiChannelClientController {
             );
         }
 
-        // Receipt-before-ACK (ADR-0007): make the event durable before replying,
+        // Receipt-before-ACK (ADR-0008): make the event durable before replying,
         // so a crash here never drops a message the caller believes we took.
         await this.inbox.accept(adapter.type, event);
 

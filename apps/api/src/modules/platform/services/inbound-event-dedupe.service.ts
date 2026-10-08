@@ -4,6 +4,7 @@ import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import {
     INBOUND_EVENT_DEDUPE_KEY_PREFIX,
     INBOUND_EVENT_DEDUPE_TTL_SECONDS,
+    INBOUND_EVENT_ENQUEUED_KEY_PREFIX,
 } from '../constants/inbound-event-dedupe.constant';
 
 // Bounds worst-case memory in fallback mode — unclaimed entries (the common
@@ -52,13 +53,50 @@ export class InboundEventDedupeService implements OnModuleDestroy {
         return `${INBOUND_EVENT_DEDUPE_KEY_PREFIX}:${platform}:${externalMessageId}`;
     }
 
+    private enqueueKey(platform: string, externalMessageId: string): string {
+        return `${INBOUND_EVENT_ENQUEUED_KEY_PREFIX}:${platform}:${externalMessageId}`;
+    }
+
     /**
      * True the first time this (platform, externalMessageId) pair is seen;
      * false on redelivery — callers must skip all downstream side effects.
      */
     async claim(platform: string, externalMessageId: string): Promise<boolean> {
-        const key = this.key(platform, externalMessageId);
+        return this.claimKey(this.key(platform, externalMessageId));
+    }
 
+    /**
+     * Drop the claim so the pair can be claimed again. Called when the Turn
+     * that holds the claim fails: without it the Cloud Tasks retry reads the claim
+     * as a platform redelivery and skips the message for good.
+     */
+    async release(platform: string, externalMessageId: string): Promise<void> {
+        await this.releaseKey(this.key(platform, externalMessageId));
+    }
+
+    /**
+     * True the first time InboundInboxService enqueues this pair. A Cloud
+     * Tasks name is only reserved for ~1h, so without this the hourly
+     * reconciliation sweep (25h lookback) would create a fresh task for every
+     * recent message on every run. Separate from `claim`, which the Turn
+     * itself takes.
+     */
+    async claimEnqueue(
+        platform: string,
+        externalMessageId: string
+    ): Promise<boolean> {
+        return this.claimKey(this.enqueueKey(platform, externalMessageId));
+    }
+
+    /** Drop the enqueue marker after a failed enqueue, so a redelivery retries. */
+    async releaseEnqueue(
+        platform: string,
+        externalMessageId: string
+    ): Promise<void> {
+        await this.releaseKey(this.enqueueKey(platform, externalMessageId));
+    }
+
+    private async claimKey(key: string): Promise<boolean> {
         if (!this.redisAvailable) {
             const now = Date.now();
             const expiresAt = this.inMemoryClaims.get(key);
@@ -80,14 +118,7 @@ export class InboundEventDedupeService implements OnModuleDestroy {
         return result === 'OK';
     }
 
-    /**
-     * Drop the claim so the pair can be claimed again. Called when the Turn
-     * that holds the claim fails: without it the Cloud Tasks retry reads the claim
-     * as a platform redelivery and skips the message for good.
-     */
-    async release(platform: string, externalMessageId: string): Promise<void> {
-        const key = this.key(platform, externalMessageId);
-
+    private async releaseKey(key: string): Promise<void> {
         if (!this.redisAvailable) {
             this.inMemoryClaims.delete(key);
             return;

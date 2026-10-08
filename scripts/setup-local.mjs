@@ -311,6 +311,14 @@ if (
   report.filled.push("CLOUD_TASKS_SYSTEM_API_KEY (generated pair)");
 }
 
+// Inbound webhooks and every background job go through Cloud Tasks, so local
+// dev needs the emulator (started by `docker compose up -d`). Only fills a
+// missing key: an explicit empty value is the user opting out.
+if (!env.api.has("CLOUD_TASKS_EMULATOR_HOST")) {
+  env.api.set("CLOUD_TASKS_EMULATOR_HOST", "localhost:8123");
+  report.filled.push("CLOUD_TASKS_EMULATOR_HOST = localhost:8123 (emulator)");
+}
+
 {
   const patch = emulatorReachability({
     emulatorHost: env.api.get("CLOUD_TASKS_EMULATOR_HOST"),
@@ -463,7 +471,7 @@ if (!opts.check && report.filled.some((f) => /API key pair/.test(f))) {
 if (!opts.check && !opts.noNextSteps) {
   log(`
 Next:
-  docker compose up -d            # Postgres (pgvector), Redis, JWKS server
+  docker compose up -d            # Postgres (pgvector), Redis, JWKS, Cloud Tasks emulator
   pnpm db:migrate:up
   pnpm db:seed                    # demo users: admin@mail.com / aaAA@123
   pnpm dev:app                    # api :${httpPort} + app :5173`);

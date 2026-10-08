@@ -9,6 +9,7 @@ import { IRequestApp } from 'src/common/request/interfaces/request.interface';
 import { API_KEY_X_TYPE_META_KEY } from 'src/modules/api-key/constants/api-key.constant';
 import { ApiKeyPayloadDto } from 'src/modules/api-key/dtos/api-key.payload.dto';
 import { ENUM_API_KEY_TYPE } from 'src/modules/api-key/enums/api-key.enum';
+import { ApiKeyXApiKeyCloudTasksGuard } from 'src/modules/api-key/guards/x-api-key/api-key.x-api-key.cloud-tasks.guard';
 import { ApiKeyXApiKeyGuard } from 'src/modules/api-key/guards/x-api-key/api-key.x-api-key.guard';
 import { ApiKeyXApiKeyTypeGuard } from 'src/modules/api-key/guards/x-api-key/api-key.x-api-key.type.guard';
 
@@ -24,6 +25,19 @@ export const ApiKeyPayload: () => ParameterDecorator = createParamDecorator(
 export function ApiKeySystemProtected(): ClassDecorator & MethodDecorator {
     return applyDecorators(
         UseGuards(ApiKeyXApiKeyGuard, ApiKeyXApiKeyTypeGuard),
+        SetMetadata(API_KEY_X_TYPE_META_KEY, [ENUM_API_KEY_TYPE.SYSTEM])
+    );
+}
+
+// For Cloud Tasks callbacks (`.task` controllers): SYSTEM type AND the
+// CLOUD_TASKS_SYSTEM_API_KEY key specifically.
+export function ApiKeyCloudTasksProtected(): MethodDecorator {
+    return applyDecorators(
+        UseGuards(
+            ApiKeyXApiKeyGuard,
+            ApiKeyXApiKeyTypeGuard,
+            ApiKeyXApiKeyCloudTasksGuard
+        ),
         SetMetadata(API_KEY_X_TYPE_META_KEY, [ENUM_API_KEY_TYPE.SYSTEM])
     );
 }

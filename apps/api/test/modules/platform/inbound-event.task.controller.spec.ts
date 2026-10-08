@@ -7,6 +7,8 @@ import {
     INBOUND_EVENT_QUEUE,
 } from '../../../src/modules/platform/constants/inbound-event.constant';
 import { InboundEventTaskDto } from '../../../src/modules/platform/dtos/inbound-event.task.dto';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { ApiKeyXApiKeyCloudTasksGuard } from '../../../src/modules/api-key/guards/x-api-key/api-key.x-api-key.cloud-tasks.guard';
 import { REQUEST_VALIDATION_PIPE_OPTIONS } from '../../../src/common/request/constants/request.constant';
 import {
     REQUEST_CUSTOM_TIMEOUT_META_KEY,
@@ -59,6 +61,15 @@ describe('InboundEventTaskController', () => {
                 InboundEventTaskController.prototype.handle
             )
         ).toBe(`/${INBOUND_EVENT_QUEUE}`);
+    });
+
+    it('accepts only the Cloud Tasks key, not any SYSTEM key', () => {
+        const guards = Reflect.getMetadata(
+            GUARDS_METADATA,
+            InboundEventTaskController.prototype.handle
+        );
+
+        expect(guards).toContain(ApiKeyXApiKeyCloudTasksGuard);
     });
 
     it('allows the Turn the same time budget as other AI task callbacks', () => {
