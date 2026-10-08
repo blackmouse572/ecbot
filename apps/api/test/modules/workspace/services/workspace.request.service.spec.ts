@@ -5,6 +5,8 @@ import {
 } from '../../../../src/modules/requests/constant/requests.constant';
 import { WorkspaceRequestService } from '../../../../src/modules/workspace/services/workspace.request.service';
 
+const mockMemberJoinedEmail = { send: jest.fn() };
+
 // Focused unit test for approve(): a request id must be looked up scoped to
 // the workspace it is being approved in. Without the scope, an owner of
 // workspace A could approve a join-request that actually targets workspace B
@@ -34,7 +36,8 @@ describe('WorkspaceRequestService — approve', () => {
             mockWorkspaceMemberService as any,
             mockNotificationService as any,
             mockActivityService as any,
-            mockMessageService as any
+            mockMessageService as any,
+            mockMemberJoinedEmail as any
         );
     });
 
@@ -75,5 +78,10 @@ describe('WorkspaceRequestService — approve', () => {
         expect(
             mockWorkspaceOwnerService.addMemberToWorkspace
         ).toHaveBeenCalledWith(workspace.id, 'user-1');
+        // The owner hears about the new member.
+        expect(mockMemberJoinedEmail.send).toHaveBeenCalledWith(
+            workspace.id,
+            'user-1'
+        );
     });
 });

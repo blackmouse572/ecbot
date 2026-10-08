@@ -8,6 +8,8 @@ import { EmailVerifiedDto } from 'src/modules/email/dtos/email.verified.dto';
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
+import { EmailHandoffDto } from '../dtos/email.handoff.dto';
+import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 
 export interface IEmailService {
     importChangePassword(): Promise<boolean>;
@@ -72,5 +74,10 @@ export interface IEmailService {
     sendLowTokenBalance(
         dto: EmailSendDto,
         data: EmailLowTokenBalanceDto
+    ): Promise<boolean>;
+    sendHandoff(dto: EmailSendDto, data: EmailHandoffDto): Promise<boolean>;
+    sendMemberJoined(
+        dto: EmailSendDto,
+        data: EmailMemberJoinedDto
     ): Promise<boolean>;
 }

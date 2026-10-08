@@ -2,7 +2,7 @@ import { Text } from '@react-email/components';
 import React from 'react';
 import EmailCode from './EmailCode';
 import EmailLayout from './EmailLayout';
-import { EMAIL_THEME as T } from './email-theme';
+import { EMAIL_BODY, EMAIL_MUTED } from './email-text.styles';
 import { verificationEmailCopy } from './verification-email.copy';
 
 interface VerificationEmailProps {
@@ -39,29 +39,18 @@ const VerificationEmail: React.FC<VerificationEmailProps> = ({
             supportLabel={copy.support}
             signOff={copy.signOff}
         >
-            <Text style={body}>{copy.greeting(name)}</Text>
-            <Text style={body}>{copy.intro}</Text>
+            <Text style={EMAIL_BODY}>{copy.greeting(name)}</Text>
+            <Text style={EMAIL_BODY}>{copy.intro}</Text>
             <EmailCode code={otp} />
-            {expiredAt && <Text style={body}>{copy.expires(expiredAt)}</Text>}
-            <Text style={muted}>{copy.ignore}</Text>
-            <Text style={muted}>
+            {expiredAt && (
+                <Text style={EMAIL_BODY}>{copy.expires(expiredAt)}</Text>
+            )}
+            <Text style={EMAIL_MUTED}>{copy.ignore}</Text>
+            <Text style={EMAIL_MUTED}>
                 {copy.reference}: {reference}
             </Text>
         </EmailLayout>
     );
-};
-
-const body: React.CSSProperties = {
-    margin: '0 0 12px',
-    fontSize: '14px',
-    lineHeight: '20px',
-    color: T.fgSubtle,
-};
-
-const muted: React.CSSProperties = {
-    ...body,
-    fontSize: '12px',
-    color: T.fgMuted,
 };
 
 export default VerificationEmail;

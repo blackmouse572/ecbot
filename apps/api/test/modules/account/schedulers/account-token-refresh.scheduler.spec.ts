@@ -252,6 +252,7 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
 
         expect(mockEm.populate).toHaveBeenCalledWith(account, [
             'workspace.owner',
+            'chatbot',
         ]);
         expect(
             mockNotificationService.createAccountBlocked
@@ -263,7 +264,10 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
     });
 
     it('enqueues an ACCOUNT_BLOCKED email for the workspace owner when refresh fails', async () => {
-        const account = makeMockAccount();
+        // In the language of the chatbot on the channel.
+        const account = makeMockAccount({
+            chatbot: { primaryLanguage: 'vi' },
+        });
         mockAccountRepository.findExpiringSoon.mockResolvedValue([account]);
         mockPlatformService.refreshCredentials.mockRejectedValueOnce(
             new Error('Token expired')
@@ -279,6 +283,7 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
                 data: {
                     accountName: 'My Zalo Account',
                     reconnectUrl: '/my-workspace/accounts/account-uuid-1',
+                    language: 'vi',
                 },
             },
             {

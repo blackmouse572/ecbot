@@ -1,3 +1,4 @@
+import { MemberJoinedEmailService } from '@app/modules/workspace/services/member-joined-email.service';
 import { PaginationQuery } from '@app/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from '@app/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from '@app/common/pagination/services/pagination.service';
@@ -84,7 +85,8 @@ export class WorkspaceMemberController {
         private readonly roleService: RoleService,
         private readonly paginationService: PaginationService,
         private readonly activityService: ActivityService,
-        private readonly workspaceRequestService: WorkspaceRequestService
+        private readonly workspaceRequestService: WorkspaceRequestService,
+        private readonly memberJoinedEmail: MemberJoinedEmailService
     ) {}
 
     @WorkspaceCreateJoinRequestDoc()
@@ -214,6 +216,7 @@ export class WorkspaceMemberController {
                 }
             );
             await em.commit();
+            await this.memberJoinedEmail.send(workspaceId, user.id);
             return;
         } catch (e) {
             this.logger.error(

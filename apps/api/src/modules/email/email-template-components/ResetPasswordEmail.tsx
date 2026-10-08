@@ -2,6 +2,7 @@ import { Link, Text } from '@react-email/components';
 import React from 'react';
 import EmailButton from './EmailButton';
 import EmailLayout from './EmailLayout';
+import { EMAIL_BODY, EMAIL_MUTED } from './email-text.styles';
 import { EMAIL_THEME as T } from './email-theme';
 import { resetPasswordEmailCopy } from './reset-password-email.copy';
 
@@ -38,15 +39,15 @@ const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
             supportLabel={copy.support}
             signOff={copy.signOff}
         >
-            <Text style={body}>{copy.greeting(name)}</Text>
-            <Text style={body}>{copy.intro}</Text>
+            <Text style={EMAIL_BODY}>{copy.greeting(name)}</Text>
+            <Text style={EMAIL_BODY}>{copy.intro}</Text>
             <div style={{ margin: '24px 0' }}>
                 <EmailButton href={url}>{copy.action}</EmailButton>
             </div>
             {expiredDate && (
-                <Text style={body}>{copy.expires(expiredDate)}</Text>
+                <Text style={EMAIL_BODY}>{copy.expires(expiredDate)}</Text>
             )}
-            <Text style={muted}>
+            <Text style={EMAIL_MUTED}>
                 {copy.pasteLink}
                 <br />
                 <Link
@@ -56,22 +57,9 @@ const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
                     {url}
                 </Link>
             </Text>
-            <Text style={muted}>{copy.ignore}</Text>
+            <Text style={EMAIL_MUTED}>{copy.ignore}</Text>
         </EmailLayout>
     );
-};
-
-const body: React.CSSProperties = {
-    margin: '0 0 12px',
-    fontSize: '14px',
-    lineHeight: '20px',
-    color: T.fgSubtle,
-};
-
-const muted: React.CSSProperties = {
-    ...body,
-    fontSize: '12px',
-    color: T.fgMuted,
 };
 
 export default ResetPasswordEmail;

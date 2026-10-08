@@ -1,3 +1,4 @@
+import { HandoffEmailService } from './handoff-email.service';
 import {
     IDatabaseFindAllOptions,
     IDatabaseFindOneOptions,
@@ -57,6 +58,10 @@ export class ConversationService implements IConversationService {
         private readonly customerTagClassifierService: CustomerTagClassifierService,
         private readonly moduleRef: ModuleRef
     ) {}
+
+    private get handoffEmail(): HandoffEmailService | undefined {
+        return this.moduleRef.get(HandoffEmailService, { strict: false });
+    }
 
     private get platformRegistry(): PlatformAdapterRegistry {
         return this.moduleRef.get(PlatformAdapterRegistry, { strict: false });
@@ -454,6 +459,13 @@ export class ConversationService implements IConversationService {
 
         // Notify operators (all active workspace members)
         await this.notifyOperators(
+            conversation.id,
+            workspaceId,
+            reason,
+            language
+        );
+        // And email the owner and whoever can see conversations.
+        await this.handoffEmail?.send(
             conversation.id,
             workspaceId,
             reason,
