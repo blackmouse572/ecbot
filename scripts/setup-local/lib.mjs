@@ -274,3 +274,11 @@ export function normalizeAiEnv(value) {
   if (AI_ENVS.includes(value)) return null;
   return AI_ENV_ALIASES[value] ?? "development";
 }
+
+/**
+ * OAUTH_TOKEN_ENCRYPT_KEY is an AES-256-GCM key read as hex, so it must be 32
+ * bytes: 64 hex characters (#231).
+ */
+export function isEnvelopeKey(value) {
+  return /^[0-9a-f]{64}$/i.test(value);
+}
