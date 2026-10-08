@@ -244,6 +244,57 @@ describe('HttpToolExecutorService', () => {
         expect(init.body).toBeUndefined();
     });
 
+    it('never lets an argument replace the query API key', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.GET,
+            httpUrl: 'https://api.example.com/stock',
+            httpAuth: {
+                type: 'api_key',
+                placement: 'query',
+                paramName: 'api_key',
+            },
+            httpCredential: 'cipher',
+        });
+        await svc.execute(tool, { api_key: 'attacker', item: 'dress' });
+        const params = new URL(String(fetchSpy.mock.calls[0][0])).searchParams;
+        expect(params.getAll('api_key')).toEqual(['decrypted-cipher']);
+        expect(params.get('item')).toBe('dress');
+    });
+
+    it("never lets an argument replace a parameter fixed in the tool's URL", async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.GET,
+            httpUrl: 'https://api.example.com/orders?shop_id=123',
+        });
+        await svc.execute(tool, { shop_id: '999', status: 'open' });
+        const params = new URL(String(fetchSpy.mock.calls[0][0])).searchParams;
+        expect(params.getAll('shop_id')).toEqual(['123']);
+        expect(params.get('status')).toBe('open');
+    });
+
+    it('sends booleans as true/false and keeps a URL fragment out of the query', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.GET,
+            httpUrl: 'https://api.example.com/stock#top',
+        });
+        await svc.execute(tool, { inStock: true, sale: false });
+        const url = new URL(String(fetchSpy.mock.calls[0][0]));
+        expect(url.searchParams.get('inStock')).toBe('true');
+        expect(url.searchParams.get('sale')).toBe('false');
+        expect(url.hash).toBe('#top');
+    });
+
+    it('returns an error result, not a throw, for a URL it cannot parse', async () => {
+        const result = await svc.executeWithConfig(
+            { httpMethod: 'GET', httpUrl: 'api.example.com/stock' },
+            { item: 'dress' }
+        );
+        expect(result.status).toBe(ENUM_TOOL_INVOCATION_STATUS.ERROR);
+    });
+
     it('sends GET arguments as the query string when testing a config', async () => {
         fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
         await svc.executeWithConfig(
