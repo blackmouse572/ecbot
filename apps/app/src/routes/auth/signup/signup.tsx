@@ -45,8 +45,6 @@ function SignUpPage() {
 
     let userId: string | undefined;
     try {
-      // TODO(client): drop the cast once `pnpm generate:client` adds
-      // acceptTerms to AuthSignUpRequestDto.
       userId = await signUp({
         email,
         password,
@@ -54,7 +52,7 @@ function SignUpPage() {
         country,
         acceptTerms,
         turnstileToken,
-      } as Parameters<typeof signUp>[0]);
+      });
     } catch (error) {
       // Show the API's own reason: the field errors go under their fields.
       const { message, fields } = readApiError(error);

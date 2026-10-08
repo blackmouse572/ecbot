@@ -1,9 +1,10 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
-  client,
+  customerWorkspaceControllerEraseV1,
   customerWorkspaceControllerGetV1,
   customerWorkspaceControllerListV1,
   customerWorkspaceControllerUpdateV1,
+  exportWorkspaceControllerCustomerV1,
 } from "@repo/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { conversationQueryKeys } from "./conversations";
@@ -103,10 +104,8 @@ export const useUpdateCustomer = (id: string | undefined | null) => {
   });
 };
 
-// The two calls below are not in the generated client yet: replace them with
-// the generated functions after the next `pnpm generate:client`.
-const CUSTOMER_URL = "/api/v1/workspace/{workspace}/customers/{id}";
-
+// The erase endpoint does not document its response body, so its summary
+// is typed here.
 export type CustomerErasureSummary = {
   customers: number;
   contactPoints: number;
@@ -122,13 +121,10 @@ export const useExportCustomer = (id: string | undefined | null) => {
 
   return useMutation({
     mutationFn: () =>
-      client
-        .get<{ 200: { data: unknown } }, unknown, true>({
-          url: `${CUSTOMER_URL}/export`,
-          path: { workspace: slug!, id: id! },
-          responseType: "json",
-        })
-        .then((res) => res.data.data),
+      exportWorkspaceControllerCustomerV1({
+        path: { workspace: slug!, id: id! },
+        throwOnError: true,
+      }).then((res) => res.data.data),
   });
 };
 
@@ -140,13 +136,14 @@ export const useEraseCustomer = (id: string | undefined | null) => {
 
   return useMutation({
     mutationFn: () =>
-      client
-        .delete<{ 200: { data: CustomerErasureSummary } }, unknown, true>({
-          url: CUSTOMER_URL,
-          path: { workspace: slug!, id: id! },
-          responseType: "json",
-        })
-        .then((res) => res.data.data),
+      customerWorkspaceControllerEraseV1({
+        path: { workspace: slug!, id: id! },
+        throwOnError: true,
+      }).then(
+        (res) =>
+          (res.data as { data?: CustomerErasureSummary }).data as
+            CustomerErasureSummary | undefined,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: conversationQueryKeys.all });

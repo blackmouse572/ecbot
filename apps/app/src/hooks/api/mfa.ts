@@ -1,11 +1,15 @@
-import type {
-  AuthLoginMfaChallengeResponseDto,
-  AuthLoginMfaRequestDto,
-  AuthMfaDisableRequestDto,
-  AuthMfaEnableResponseDto,
-  AuthMfaSetupResponseDto,
-} from "@/types/mfa";
-import { client, type AuthLoginResponseDto } from "@repo/client";
+import type { AuthLoginMfaChallengeResponseDto } from "@/types/mfa";
+import {
+  authMfaSharedControllerDisableV1,
+  authMfaSharedControllerEnableV1,
+  authMfaSharedControllerSetupV1,
+  authPublicControllerLoginWithMfaV1,
+  type AuthLoginMfaRequestDto,
+  type AuthLoginResponseDto,
+  type AuthMfaDisableRequestDto,
+  type AuthMfaEnableResponseDto,
+  type AuthMfaSetupResponseDto,
+} from "@repo/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usersQueryKeys } from "./users";
 
@@ -15,29 +19,6 @@ export type {
   AuthMfaSetupResponseDto,
 };
 
-// Untyped calls until `pnpm generate:client` adds the MFA endpoints; then
-// swap each `post(...)` for its generated `authMfaSharedController...V1` /
-// `authPublicControllerLoginWithMfaV1` function.
-const API_KEY = { name: "x-api-key", type: "apiKey" } as const;
-const BEARER = { key: "accessToken", scheme: "bearer", type: "http" } as const;
-
-async function post<T>(
-  url: string,
-  body?: unknown,
-  options?: { authenticated?: boolean; withCredentials?: boolean },
-): Promise<T> {
-  const response = await client.post<{ 200: { data: T } }, unknown, true>({
-    url,
-    body,
-    responseType: "json",
-    throwOnError: true,
-    withCredentials: options?.withCredentials,
-    security: options?.authenticated === false ? [API_KEY] : [BEARER, API_KEY],
-    headers: { "Content-Type": "application/json" },
-  });
-  return response.data.data;
-}
-
 export const isMfaChallenge = (
   data: AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto,
 ): data is AuthLoginMfaChallengeResponseDto =>
@@ -46,16 +27,20 @@ export const isMfaChallenge = (
 export const useLoginWithMfa = () =>
   useMutation({
     mutationFn: (body: AuthLoginMfaRequestDto) =>
-      post<AuthLoginResponseDto>("/api/v1/public/auth/login/mfa", body, {
-        authenticated: false,
+      authPublicControllerLoginWithMfaV1({
+        body,
+        throwOnError: true,
+        // The response sets the refresh-token cookie.
         withCredentials: true,
-      }),
+      }).then((res) => res.data.data as AuthLoginResponseDto),
   });
 
 export const useMfaSetup = () =>
   useMutation({
     mutationFn: () =>
-      post<AuthMfaSetupResponseDto>("/api/v1/shared/auth/mfa/setup"),
+      authMfaSharedControllerSetupV1({ throwOnError: true }).then(
+        (res) => res.data.data as AuthMfaSetupResponseDto,
+      ),
   });
 
 const useInvalidateMe = () => {
@@ -71,9 +56,10 @@ export const useMfaEnable = () => {
   const invalidateMe = useInvalidateMe();
   return useMutation({
     mutationFn: (code: string) =>
-      post<AuthMfaEnableResponseDto>("/api/v1/shared/auth/mfa/enable", {
-        code,
-      }),
+      authMfaSharedControllerEnableV1({
+        body: { code },
+        throwOnError: true,
+      }).then((res) => res.data.data as AuthMfaEnableResponseDto),
     onSuccess: invalidateMe,
   });
 };
@@ -81,8 +67,9 @@ export const useMfaEnable = () => {
 export const useMfaDisable = () => {
   const invalidateMe = useInvalidateMe();
   return useMutation({
-    mutationFn: (body: AuthMfaDisableRequestDto) =>
-      post<void>("/api/v1/shared/auth/mfa/disable", body),
+    mutationFn: async (body: AuthMfaDisableRequestDto) => {
+      await authMfaSharedControllerDisableV1({ body, throwOnError: true });
+    },
     onSuccess: invalidateMe,
   });
 };
