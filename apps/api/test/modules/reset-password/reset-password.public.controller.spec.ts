@@ -431,4 +431,18 @@ describe('ResetPasswordPublicController.reset pipes', () => {
         expect(pipes).toContain('ResetPasswordActivePipe');
         expect(pipes).not.toContain('ResetPasswordVerifiedPipe');
     });
+
+    it('refuses a link that a newer reset request retired (isActive, not just the clock)', () => {
+        const args = Reflect.getMetadata(
+            ROUTE_ARGS_METADATA,
+            ResetPasswordPublicController,
+            'reset'
+        ) as Record<string, { pipes: unknown[] }>;
+        const pipes = Object.values(args)
+            .flatMap(a => a.pipes)
+            .map(p => (p as { name: string }).name);
+
+        expect(pipes).toContain('ResetPasswordExpiredPipe');
+        expect(pipes).not.toContain('ResetPasswordDateExpiredPipe');
+    });
 });

@@ -40,7 +40,6 @@ import { ResetPasswordCreteResponseDto } from 'src/modules/reset-password/dtos/r
 import { ENUM_RESET_PASSWORD_STATUS_CODE_ERROR } from 'src/modules/reset-password/enums/reset-password.status-code.enum';
 import { IResetPasswordRequest } from 'src/modules/reset-password/interfaces/reset-password.interface';
 import { ResetPasswordActivePipe } from 'src/modules/reset-password/pipes/reset-password.active.pipe';
-import { ResetPasswordDateExpiredPipe } from 'src/modules/reset-password/pipes/reset-password.date-expired.pipe';
 import { ResetPasswordExpiredPipe } from 'src/modules/reset-password/pipes/reset-password.expired.pipe';
 import { ResetPasswordParseByTokenPipe } from 'src/modules/reset-password/pipes/reset-password.parse.pipe';
 import { ResetPasswordEntity } from 'src/modules/reset-password/repository/entities/reset-password.entity';
@@ -234,7 +233,7 @@ export class ResetPasswordPublicController {
             RequestRequiredPipe,
             ResetPasswordParseByTokenPipe,
             ResetPasswordActivePipe,
-            ResetPasswordDateExpiredPipe
+            ResetPasswordExpiredPipe
         )
         resetPassword: ResetPasswordEntity,
         @Body()

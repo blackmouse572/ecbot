@@ -5,6 +5,7 @@ export interface IResetPasswordEmailCopy {
     greeting: (name?: string) => string;
     intro: string;
     action: string;
+    pasteLink: string;
     expires: (expiredAt: string) => string;
     ignore: string;
     support: string;
@@ -20,6 +21,7 @@ const COPY: Record<
         greeting: name => (name ? `Hi ${name},` : 'Hi,'),
         intro: 'We got a request to reset your password. Open this link to choose a new one:',
         action: 'Choose a new password',
+        pasteLink: 'Or paste this link into your browser:',
         expires: expiredAt => `The link expires at ${expiredAt}.`,
         ignore: 'If you did not ask for this, ignore this email. Your password stays the same.',
         support: 'Questions? Write to',
@@ -30,6 +32,7 @@ const COPY: Record<
         greeting: name => (name ? `Chào ${name},` : 'Chào bạn,'),
         intro: 'Chúng tôi nhận được yêu cầu đặt lại mật khẩu của bạn. Mở liên kết này để chọn mật khẩu mới:',
         action: 'Chọn mật khẩu mới',
+        pasteLink: 'Hoặc dán liên kết này vào trình duyệt:',
         expires: expiredAt => `Liên kết hết hạn lúc ${expiredAt}.`,
         ignore: 'Nếu bạn không yêu cầu, hãy bỏ qua email này. Mật khẩu của bạn không thay đổi.',
         support: 'Cần hỗ trợ? Hãy gửi email tới',

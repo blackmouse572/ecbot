@@ -45,6 +45,13 @@ const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
                         {copy.action}
                     </a>
                 </p>
+                <p style={{ fontSize: '13px', color: '#444' }}>
+                    {copy.pasteLink}
+                    <br />
+                    <a href={url} style={{ wordBreak: 'break-all' }}>
+                        {url}
+                    </a>
+                </p>
                 {expiredDate && <p>{copy.expires(expiredDate)}</p>}
                 <p>{copy.ignore}</p>
                 {supportEmail && (
