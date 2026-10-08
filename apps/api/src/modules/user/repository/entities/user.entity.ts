@@ -91,6 +91,10 @@ export class UserEntity extends DatabaseEntityBase {
     @Property({ type: 'varchar', nullable: true })
     avatar?: string;
 
+    /** Email me when a customer is handed over to a person. */
+    @Property({ type: 'boolean', default: true })
+    handoffEmails: boolean = true;
+
     public get isEmailVerified(): boolean {
         return this.verification.email;
     }

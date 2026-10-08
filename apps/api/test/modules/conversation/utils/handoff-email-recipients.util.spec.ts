@@ -60,4 +60,30 @@ describe('handoffEmailRecipients', () => {
 
         expect(recipients.map(r => r.id)).toEqual(['owner']);
     });
+
+    it('skips people who turned handover emails off, users who are not active, and roles that are off', () => {
+        const recipients = handoffEmailRecipients(
+            [
+                {
+                    user: { ...user('quiet'), handoffEmails: false },
+                    role: role([ENUM_POLICY_SUBJECT.CONVERSATION]),
+                } as any,
+                {
+                    user: { ...user('blocked'), status: 'BLOCKED' },
+                    role: role([ENUM_POLICY_SUBJECT.CONVERSATION]),
+                } as any,
+                {
+                    user: user('stale-role'),
+                    role: {
+                        ...role([ENUM_POLICY_SUBJECT.CONVERSATION]),
+                        isActive: false,
+                    },
+                } as any,
+                member('agent', role([ENUM_POLICY_SUBJECT.CONVERSATION])),
+            ],
+            { ...user('owner'), handoffEmails: false } as any
+        );
+
+        expect(recipients.map(r => r.id)).toEqual(['agent']);
+    });
 });

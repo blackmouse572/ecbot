@@ -7,20 +7,23 @@ describe('HandoffEmailService.send', () => {
     const findConversation = jest.fn();
     const findWorkspace = jest.fn();
     const findMembers = jest.fn();
+    const claim = jest.fn();
     const service = new HandoffEmailService(
         { findOneById: findConversation } as any,
         { findActiveByWorkspace: findMembers } as any,
         { findOneById: findWorkspace } as any,
-        { enqueue } as any
+        { enqueue } as any,
+        { get: () => ({ claim }) } as any
     );
     const owner = { id: 'owner', email: 'owner@b.com', name: 'Owner' };
 
     beforeEach(() => {
         jest.clearAllMocks();
         enqueue.mockResolvedValue(undefined);
+        claim.mockResolvedValue(true);
         findConversation.mockResolvedValue({
             id: 'c-1',
-            chatbot: { name: 'Linh' },
+            chatbot: { name: 'Linh', workspace: { id: 'ws-1' } },
         });
         findWorkspace.mockResolvedValue({
             id: 'ws-1',
@@ -77,5 +80,36 @@ describe('HandoffEmailService.send', () => {
         await expect(
             service.send('c-1', 'ws-1', 'keyword_trigger')
         ).resolves.toBeUndefined();
+    });
+
+    // Email PR review: anyone on the widget can trigger handoffs, so the
+    // emails are capped per conversation and per workspace.
+    it('sends nothing once the conversation or the workspace is in its cooldown', async () => {
+        claim.mockResolvedValueOnce(false);
+
+        await service.send('c-1', 'ws-1', 'keyword_trigger');
+
+        expect(enqueue).not.toHaveBeenCalled();
+    });
+
+    it('checks the conversation window first, then the workspace one', async () => {
+        await service.send('c-1', 'ws-1', 'keyword_trigger');
+
+        expect(claim.mock.calls.map(c => c[0])).toEqual([
+            'handoff-email:conversation:c-1',
+            'handoff-email:workspace:ws-1',
+        ]);
+    });
+
+    it('sends nothing for a conversation outside the given workspace', async () => {
+        findConversation.mockResolvedValue({
+            id: 'c-1',
+            chatbot: { name: 'Linh', workspace: { id: 'other-ws' } },
+        });
+
+        await service.send('c-1', 'ws-1', 'keyword_trigger');
+
+        expect(enqueue).not.toHaveBeenCalled();
+        expect(claim).not.toHaveBeenCalled();
     });
 });

@@ -130,3 +130,26 @@ describe('UserSharedController — avatar upload hardening (Task 14)', () => {
         });
     });
 });
+
+// Handover emails can be turned off per person (email PR review).
+describe('UserSharedController.updateNotifications', () => {
+    const updateNotifications = jest.fn();
+    const controller = new UserSharedController(
+        {} as any,
+        {} as any,
+        { updateNotifications } as any,
+        {} as any,
+        {} as any,
+        {} as any
+    );
+
+    it("saves the caller's handover-email choice", async () => {
+        const user = { id: 'user-1' } as any;
+
+        await controller.updateNotifications(user, { handoffEmails: false });
+
+        expect(updateNotifications).toHaveBeenCalledWith(user, {
+            handoffEmails: false,
+        });
+    });
+});

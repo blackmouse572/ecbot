@@ -33,4 +33,11 @@ export class UserProfileResponseDto extends OmitType(UserGetResponseDto, [
     })
     @Type(() => UserMobileNumberResponseDto)
     mobileNumber?: UserMobileNumberResponseDto;
+
+    @ApiProperty({
+        required: true,
+        example: true,
+        description: 'Email me when a customer is handed over to a person',
+    })
+    handoffEmails: boolean;
 }

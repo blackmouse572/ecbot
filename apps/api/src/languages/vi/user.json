@@ -25,5 +25,6 @@
         "emailNotVerified": "Email chưa được xác minh. Kiểm tra hộp thư xem?",
         "photoKeyInvalid": "Key ảnh này không thuộc về bạn.",
         "impersonateTargetInvalid": "Không thể đăng nhập thay mặt tài khoản này."
-    }
+    },
+    "updateNotifications": "Đã lưu cài đặt thông báo."
 }

@@ -464,8 +464,10 @@ export class ConversationService implements IConversationService {
             reason,
             language
         );
-        // And email the owner and whoever can see conversations.
-        await this.handoffEmail?.send(
+        // And email the owner and whoever can see conversations. Not awaited:
+        // the customer's handoff reply must not wait on email lookups (send
+        // never rejects).
+        void this.handoffEmail?.send(
             conversation.id,
             workspaceId,
             reason,

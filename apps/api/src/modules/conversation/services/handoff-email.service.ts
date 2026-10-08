@@ -7,12 +7,22 @@ import { WorkspaceMemberRepository } from '@app/modules/workspace/repository/rep
 import { WorkSpaceRepository } from '@app/modules/workspace/repository/repositories/workspace.repository';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { Injectable, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { ChannelRateLimitService } from '@app/modules/platform/services/channel-rate-limit.service';
+import {
+    HANDOFF_EMAIL_CONVERSATION_WINDOW_SECONDS,
+    HANDOFF_EMAIL_KEY_PREFIX,
+    HANDOFF_EMAIL_WORKSPACE_LIMIT,
+    HANDOFF_EMAIL_WORKSPACE_WINDOW_SECONDS,
+} from '@app/modules/conversation/constants/handoff-email.constant';
 import { randomUUID } from 'crypto';
 
 /**
  * Emails the team when a conversation is handed to a person: the workspace
- * owner and every active member whose role can see conversations. Runs next
- * to the in-app notification and never fails the handoff.
+ * owner and every active member whose role can see conversations, unless
+ * they turned these off. Capped per conversation and per workspace (the
+ * widget is public). Runs next to the in-app notification, never fails the
+ * handoff.
  */
 @Injectable()
 export class HandoffEmailService {
@@ -22,8 +32,32 @@ export class HandoffEmailService {
         private readonly conversationRepository: ConversationRepository,
         private readonly workspaceMemberRepository: WorkspaceMemberRepository,
         private readonly workspaceRepository: WorkSpaceRepository,
-        private readonly cloudTasksClient: CloudTasksQueueClient
+        private readonly cloudTasksClient: CloudTasksQueueClient,
+        private readonly moduleRef: ModuleRef
     ) {}
+
+    // Lives in the platform module, which imports this one: resolved lazily.
+    private get rateLimit(): ChannelRateLimitService {
+        return this.moduleRef.get(ChannelRateLimitService, { strict: false });
+    }
+
+    /** Both windows must have room: the conversation's, then the workspace's. */
+    private async withinCaps(
+        conversationId: string,
+        workspaceId: string
+    ): Promise<boolean> {
+        const conversationOk = await this.rateLimit.claim(
+            `${HANDOFF_EMAIL_KEY_PREFIX}:conversation:${conversationId}`,
+            1,
+            HANDOFF_EMAIL_CONVERSATION_WINDOW_SECONDS
+        );
+        if (!conversationOk) return false;
+        return this.rateLimit.claim(
+            `${HANDOFF_EMAIL_KEY_PREFIX}:workspace:${workspaceId}`,
+            HANDOFF_EMAIL_WORKSPACE_LIMIT,
+            HANDOFF_EMAIL_WORKSPACE_WINDOW_SECONDS
+        );
+    }
 
     async send(
         conversationId: string,
@@ -46,6 +80,19 @@ export class HandoffEmailService {
                 ),
             ]);
             if (!conversation || !workspace) return;
+            // Defence in depth: callers pass both ids separately.
+            if (conversation.chatbot?.workspace?.id !== workspaceId) {
+                this.logger.warn(
+                    `Handoff email skipped: conversation ${conversationId} is not in workspace ${workspaceId}`
+                );
+                return;
+            }
+            if (!(await this.withinCaps(conversationId, workspaceId))) {
+                this.logger.log(
+                    `Handoff email for conversation ${conversationId} skipped: cooldown (in-app notification still sent)`
+                );
+                return;
+            }
 
             const recipients = handoffEmailRecipients(
                 members as any,
