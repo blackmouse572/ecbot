@@ -99,6 +99,29 @@ export class UserEntity extends DatabaseEntityBase {
     @Property({ type: 'varchar', nullable: true })
     avatar?: string;
 
+    @Property({ type: 'boolean', default: false })
+    mfaEnabled: boolean = false;
+
+    // TOTP secrets, envelope-encrypted (AES-256-GCM). The pending one waits
+    // for its first code before it replaces mfaSecret.
+    @Property({ type: 'text', nullable: true })
+    @Exclude()
+    mfaSecret?: string | null;
+
+    @Property({ type: 'text', nullable: true })
+    @Exclude()
+    mfaPendingSecret?: string | null;
+
+    // SHA-256 hashes of the unused recovery codes.
+    @Property({ type: 'jsonb', nullable: true })
+    @Exclude()
+    mfaRecoveryCodes?: string[] | null;
+
+    // Last accepted TOTP time step, so a code can't be replayed.
+    @Property({ type: 'integer', nullable: true })
+    @Exclude()
+    mfaLastTimeStep?: number | null;
+
     public get isEmailVerified(): boolean {
         return this.verification.email;
     }

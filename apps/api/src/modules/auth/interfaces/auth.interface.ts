@@ -58,3 +58,10 @@ export type IAuthSocialApplePayload = Pick<
     IAuthSocialGooglePayload,
     'email' | 'emailVerified'
 >;
+
+// What the MFA login step needs to finish a login the password (or social)
+// step already accepted.
+export interface IAuthMfaChallenge {
+    user: string;
+    rememberMe?: boolean;
+}

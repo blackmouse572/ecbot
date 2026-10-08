@@ -1,6 +1,7 @@
 import { logoutGuard, useAuth } from "@/modules/auth";
 import { useEndImpersonation, useImpersonation } from "@/modules/impersonation";
 import { useSetLastWorkspaceSlug } from "@/modules/workspace";
+import type { AuthLoginMfaChallengeResponseDto } from "@/types/mfa";
 import {
   authPublicControllerLoginWithCredentialV1,
   authPublicControllerSignUpV1,
@@ -33,7 +34,7 @@ export const USER_BLOCKED_FORBIDDEN_STATUS_CODE = 5159;
 
 export const useSignInWithEmailPass = (
   options?: UseMutationOptions<
-    AuthLoginResponseDto,
+    AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto,
     AuthLoginError,
     AuthLoginRequestDto
   >,
@@ -49,7 +50,9 @@ export const useSignInWithEmailPass = (
         console.error("[useSignInWithEmailPass] error: ", response.error);
         throw response.error as A as AuthLoginError;
       }
-      return (response.data as A).data as AuthLoginResponseDto;
+      // An MFA challenge comes back in place of tokens when MFA is on.
+      return (response.data as A).data as
+        AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto;
     },
     onSuccess: async (data, variables, context) => {
       options?.onSuccess?.(data, variables, context);

@@ -18,3 +18,14 @@ export interface IUserEntity extends Omit<
     country: CountryEntity;
     mobileNumber?: IUserMobileNumberEntity;
 }
+
+export type IUserMfaUpdate = Partial<
+    Pick<
+        UserEntity,
+        | 'mfaEnabled'
+        | 'mfaSecret'
+        | 'mfaPendingSecret'
+        | 'mfaRecoveryCodes'
+        | 'mfaLastTimeStep'
+    >
+>;

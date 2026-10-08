@@ -216,6 +216,20 @@
         },
         "failed": {
           "message": "Login failed. Please try again."
+        },
+        "mfa": {
+          "title": "Two-step verification",
+          "description": "Enter the 6-digit code from your authenticator app.",
+          "recoveryDescription": "Enter one of the recovery codes you saved.",
+          "recoveryPlaceholder": "Recovery code",
+          "useRecoveryCode": "Use a recovery code instead",
+          "useAuthenticator": "Use your authenticator app instead",
+          "verifyButton": "Verify",
+          "back": "Back to sign in",
+          "errors": {
+            "invalidCode": "That code is not valid. Please try again.",
+            "tooManyAttempts": "Too many attempts. Please wait a minute and try again."
+          }
         }
       },
       "register": {
@@ -1749,6 +1763,44 @@
         "error": "An error occurred while deleting your account.",
         "confirmButton": "Delete my account",
         "cancelButton": "Cancel"
+      }
+    },
+    "mfa": {
+      "domain": "Two-step verification",
+      "description": "Ask for a code from your authenticator app each time you sign in.",
+      "status": {
+        "on": "On",
+        "off": "Off"
+      },
+      "actions": {
+        "enable": "Turn on",
+        "disable": "Turn off",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "done": "I saved my codes"
+      },
+      "setup": {
+        "scan": "Open an authenticator app (Google Authenticator, Microsoft Authenticator, Authy...) and add an account with the setup key below.",
+        "secretLabel": "Setup key",
+        "uriLabel": "Setup link",
+        "enterCode": "Enter the 6-digit code the app shows."
+      },
+      "recovery": {
+        "title": "Save your recovery codes",
+        "description": "If you lose your phone, each code works once in place of an app code. This is the only time they are shown.",
+        "copyAll": "Copy all codes"
+      },
+      "disable": {
+        "description": "Enter your password and a code from your app (or a recovery code) to turn off two-step verification.",
+        "password": "Current password",
+        "code": "Authenticator or recovery code"
+      },
+      "success": {
+        "enabled": "Two-step verification is on.",
+        "disabled": "Two-step verification is off."
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again."
       }
     }
   },
