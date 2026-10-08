@@ -14,6 +14,7 @@ import {
     Inject,
     Injectable,
     InternalServerErrorException,
+    Logger,
     Optional,
     UnprocessableEntityException,
 } from '@nestjs/common';
@@ -28,6 +29,9 @@ import {
     ENUM_AI_USAGE_SOURCE,
 } from '@app/app/ai-usage-meter.interface';
 import { TurnContextService } from './turn-context.service';
+import { HandoffIntentService } from './handoff-intent.service';
+import { handoffReplyText } from '../utils/handoff-reply.util';
+import { shouldHandOff } from '../utils/handoff-decision.util';
 
 export interface IWidgetTurn {
     /** WEBSITE_WIDGET account with `chatbot` and `workspace` populated. */
@@ -58,6 +62,8 @@ export interface IWidgetTurn {
  */
 @Injectable()
 export class WidgetChatService {
+    private readonly logger = new Logger(WidgetChatService.name);
+
     constructor(
         private readonly customerService: CustomerService,
         private readonly conversationService: ConversationService,
@@ -65,6 +71,7 @@ export class WidgetChatService {
         private readonly chatbotAIService: ChatbotAIService,
         private readonly sseStream: ChatbotAiSseStreamService,
         private readonly turnContext: TurnContextService,
+        private readonly handoffIntent: HandoffIntentService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -116,6 +123,30 @@ export class WidgetChatService {
         // the operator's reply.
         if (!conversation.botEnabled) {
             this.endStreamQuietly(res);
+            return;
+        }
+
+        // The same rule platform channels use (#233).
+        const handoffMatch = this.conversationService.detectHandoffKeywords(
+            text,
+            chatbot.handoffKeywords ?? []
+        );
+        const handOff = await shouldHandOff(handoffMatch, text, (t, keyword) =>
+            this.handoffIntent.wantsPerson(t, keyword)
+        );
+        if (handOff) {
+            this.logger.log(
+                `Handoff keyword "${handoffMatch?.keyword}" (${handoffMatch?.source}) in widget conversation ${conversation.id}`
+            );
+            await this.conversationService.triggerHandoff(
+                conversation,
+                account.workspace.id,
+                'keyword_trigger',
+                chatbot.primaryLanguage
+            );
+            const reply = handoffReplyText(chatbot);
+            await this.persistReply(conversation.id, reply, []);
+            this.streamFallback(res, reply);
             return;
         }
 

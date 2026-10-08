@@ -7257,6 +7257,7 @@ export type VerificationEmailControllerVerifyEmailV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
+        data?: AuthLoginResponseDto;
     };
 };
 

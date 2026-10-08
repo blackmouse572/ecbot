@@ -7,13 +7,11 @@ const TOKEN = "reset-token-123";
 
 const requestV1 = vi.fn();
 const getV1 = vi.fn();
-const verifyV1 = vi.fn();
 const resetV1 = vi.fn();
 
 vi.mock("@repo/client", () => ({
   resetPasswordPublicControllerRequestV1: (...args: A[]) => requestV1(...args),
   resetPasswordPublicControllerGetV1: (...args: A[]) => getV1(...args),
-  resetPasswordPublicControllerVerifyV1: (...args: A[]) => verifyV1(...args),
   resetPasswordPublicControllerResetV1: (...args: A[]) => resetV1(...args),
 }));
 
@@ -21,7 +19,6 @@ import {
   useRequestPasswordReset,
   useResetPassword,
   useResetPasswordToken,
-  useVerifyPasswordResetOtp,
 } from "./reset-password";
 
 const wrap = <T>(hook: () => T) => {
@@ -79,34 +76,6 @@ describe("useResetPasswordToken", () => {
     wrap(() => useResetPasswordToken(""));
 
     expect(getV1).not.toHaveBeenCalled();
-  });
-});
-
-describe("useVerifyPasswordResetOtp", () => {
-  it("sends the otp against the token", async () => {
-    verifyV1.mockResolvedValue({ data: { data: null } });
-
-    const { result } = wrap(() => useVerifyPasswordResetOtp(TOKEN));
-    await result.current.verifyOtp("123456");
-
-    expect(verifyV1).toHaveBeenCalledWith(
-      expect.objectContaining({
-        path: { token: TOKEN },
-        body: { otp: "123456" },
-      }),
-    );
-  });
-
-  it("throws on an otp mismatch", async () => {
-    verifyV1.mockResolvedValue({
-      error: { message: "resetPassword.error.otpNotMatch" },
-    });
-
-    const { result } = wrap(() => useVerifyPasswordResetOtp(TOKEN));
-
-    await expect(result.current.verifyOtp("000000")).rejects.toEqual({
-      message: "resetPassword.error.otpNotMatch",
-    });
   });
 });
 

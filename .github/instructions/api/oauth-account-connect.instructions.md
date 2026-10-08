@@ -100,7 +100,7 @@ const plain = this.helperEncryptionService.aes256Decrypt(
 Encryption keys come from env vars loaded via `OAuthConfig` (`src/configs/oauth.config.ts`):
 
 ```
-OAUTH_TOKEN_ENCRYPT_KEY=   # 32-character key
+OAUTH_TOKEN_ENCRYPT_KEY=   # 32 bytes as 64 hex characters (openssl rand -hex 32)
 OAUTH_TOKEN_ENCRYPT_IV=    # 16-character IV
 ```
 

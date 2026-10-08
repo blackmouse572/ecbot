@@ -104,3 +104,81 @@ describe('ResendProvider.sendVerification', () => {
         expect(props().supportEmail).toBeUndefined();
     });
 });
+
+// #187: the reset email carried a link and a code, was English-only, and
+// shared a generic subject with every other email.
+describe('ResendProvider.sendResetPassword', () => {
+    const sendEmail = jest.fn();
+    const render = renderTemplate as jest.Mock;
+    const values: Record<string, any> = {
+        'email.fromEmail': 'Ecbot <noreply@ecbot.dev>',
+        'home.name': 'Ecbot',
+        'home.url': 'https://app.ecbot.dev',
+        'app.timezone': 'Asia/Ho_Chi_Minh',
+    };
+    const config = { get: (key: string) => values[key] } as any;
+    const provider = new ResendProvider(
+        { sendEmail } as any,
+        config,
+        new HelperDateService(config)
+    );
+    // From the queue as JSON: the date is a string.
+    const data = (language?: string) =>
+        ({
+            url: 'https://app.ecbot.dev/reset-password?token=abc',
+            otp: '482913',
+            expiredDate: '2026-10-01T03:05:00.000Z',
+            language,
+        }) as any;
+    const props = () => render.mock.calls[0][1];
+
+    beforeEach(() => {
+        render.mockClear();
+        sendEmail.mockReset();
+        sendEmail.mockResolvedValue({ error: null });
+    });
+
+    it('sends a Vietnamese user the Vietnamese email with its own subject', async () => {
+        await provider.sendResetPassword(
+            { name: 'Chi', email: 'chi@b.com' },
+            data('vi')
+        );
+
+        expect(props()).toMatchObject({ language: 'vi' });
+        expect(sendEmail.mock.calls[0][0].subject).toBe(
+            'Đặt lại mật khẩu Ecbot'
+        );
+    });
+
+    it('names the product in the English subject too', async () => {
+        await provider.sendResetPassword(
+            { name: 'Chi', email: 'chi@b.com' },
+            data()
+        );
+
+        expect(sendEmail.mock.calls[0][0].subject).toBe(
+            'Reset your Ecbot password'
+        );
+    });
+
+    it('shows when the link expires, with its timezone', async () => {
+        await provider.sendResetPassword(
+            { name: 'Chi', email: 'chi@b.com' },
+            data()
+        );
+
+        expect(props().expiredDate).toMatch(/Oct 1, 2026.*10:05.*GMT\+7/);
+    });
+
+    it('sends only the link: the page no longer asks for a code', async () => {
+        await provider.sendResetPassword(
+            { name: 'Chi', email: 'chi@b.com' },
+            data()
+        );
+
+        expect(props().url).toBe(
+            'https://app.ecbot.dev/reset-password?token=abc'
+        );
+        expect(props()).not.toHaveProperty('otp');
+    });
+});

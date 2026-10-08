@@ -1,50 +1,71 @@
 import { Body, Head, Html } from '@react-email/components';
 import React from 'react';
+import { resetPasswordEmailCopy } from './reset-password-email.copy';
 
-interface ResendPasswordEmailProps {
+interface ResetPasswordEmailProps {
     name: string;
     url: string;
-    otp: string;
     expiredDate: string;
     supportEmail?: string;
     homeUrl: string;
     homeName: string;
+    language?: string;
 }
 
-const ResetPasswordEmail: React.FC<ResendPasswordEmailProps> = ({
+// The link alone resets the password (#187): no code to copy across.
+const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
     name,
     url,
-    otp,
     expiredDate,
     supportEmail,
     homeUrl,
     homeName,
-}) => (
-    <Html>
-        <Head />
-        <Body>
-            <p>Hi {name},</p>
-            <br />
-            <p>
-                Your reset password link is here <a href={url}>{url}</a>
-            </p>
-            <p>
-                Your OTP code is <b>{otp}</b>.
-            </p>
-            <p>Expired until {expiredDate}.</p>
-            {supportEmail && (
+    language,
+}) => {
+    const copy = resetPasswordEmailCopy(language, homeName);
+
+    return (
+        <Html lang={language ?? 'en'}>
+            <Head />
+            <Body style={{ fontFamily: 'Arial, sans-serif', color: '#111' }}>
+                <p>{copy.greeting(name)}</p>
+                <p>{copy.intro}</p>
                 <p>
-                    Support Email:{' '}
-                    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+                    <a
+                        href={url}
+                        style={{
+                            display: 'inline-block',
+                            padding: '10px 16px',
+                            background: '#111',
+                            color: '#fff',
+                            borderRadius: '6px',
+                            textDecoration: 'none',
+                        }}
+                    >
+                        {copy.action}
+                    </a>
                 </p>
-            )}
-            <p>
-                Visit us: <a href={homeUrl}>{homeUrl}</a>.
-            </p>
-            <br />
-            <p>By: {homeName}.</p>
-        </Body>
-    </Html>
-);
+                <p style={{ fontSize: '13px', color: '#444' }}>
+                    {copy.pasteLink}
+                    <br />
+                    <a href={url} style={{ wordBreak: 'break-all' }}>
+                        {url}
+                    </a>
+                </p>
+                {expiredDate && <p>{copy.expires(expiredDate)}</p>}
+                <p>{copy.ignore}</p>
+                {supportEmail && (
+                    <p>
+                        {copy.support}{' '}
+                        <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+                    </p>
+                )}
+                <p>
+                    <a href={homeUrl}>{copy.signOff}</a>
+                </p>
+            </Body>
+        </Html>
+    );
+};
 
 export default ResetPasswordEmail;

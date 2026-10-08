@@ -6,6 +6,8 @@ import { AuthImpersonationReadOnlyInterceptor } from 'src/modules/auth/intercept
 import { AuthJwtAccessStrategy } from 'src/modules/auth/guards/jwt/strategies/auth.jwt.access.strategy';
 import { AuthJwtRefreshStrategy } from 'src/modules/auth/guards/jwt/strategies/auth.jwt.refresh.strategy';
 import { AuthService } from 'src/modules/auth/services/auth.service';
+import { AuthLoginSessionService } from 'src/modules/auth/services/auth-login-session.service';
+import { ActivityModule } from 'src/modules/activity/activity.module';
 import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
 import { SessionModule } from 'src/modules/session/session.module';
 import { UserModule } from 'src/modules/user/user.module';
@@ -14,16 +16,18 @@ import { Algorithm } from 'jsonwebtoken';
 @Module({
     providers: [
         AuthService,
+        AuthLoginSessionService,
         ImpersonationService,
         {
             provide: APP_INTERCEPTOR,
             useClass: AuthImpersonationReadOnlyInterceptor,
         },
     ],
-    exports: [AuthService, ImpersonationService],
+    exports: [AuthService, AuthLoginSessionService, ImpersonationService],
     controllers: [],
     imports: [
         SessionModule,
+        ActivityModule,
         UserModule,
         JwtModule.registerAsync({
             inject: [ConfigService],

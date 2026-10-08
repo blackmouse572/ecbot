@@ -247,17 +247,17 @@
       },
       "forgotPassword": {
         "title": "Forgot your password?",
-        "description": "Enter your email and we'll send you a code to reset it",
+        "description": "Enter your email and we'll send you a link to reset it",
         "fields": {
           "email": "Email"
         },
         "actions": {
-          "submit": "Send reset code",
+          "submit": "Send reset link",
           "backToLogin": "Remembered it? <0>Login</0>"
         },
         "checkEmail": {
           "title": "Check your email",
-          "description": "If an account exists for that email, we've sent a link and code to reset your password.",
+          "description": "If an account exists for that email, we've sent a link to reset your password.",
           "resend": "Resend email",
           "resendIn": "Resend in {{seconds}}s",
           "resent": "We sent the email again."
@@ -266,27 +266,22 @@
       "resetPassword": {
         "title": "Reset your password",
         "description": "Choose a new password for your account",
-        "otp": {
-          "description": "Enter the {{digit}}-digit code we sent to"
-        },
         "fields": {
           "newPassword": "New password",
           "confirmPassword": "Confirm new password"
         },
         "actions": {
           "resetButton": "Reset password",
-          "verifying": "Verifying…",
-          "requestNew": "Request a new code",
+          "requestNew": "Request a new link",
           "backToLogin": "Back to login"
         },
         "errors": {
-          "invalidOtp": "That code is not correct or has expired.",
           "passwordMismatch": "Passwords do not match.",
-          "resetFailed": "Could not reset your password. Request a new code and try again."
+          "resetFailed": "Could not reset your password. Request a new link and try again."
         },
         "expired": {
           "title": "This reset link has expired",
-          "description": "Reset codes are only valid for a short time. Request a new one to continue."
+          "description": "Reset links are only valid for a short time. Request a new one to continue."
         },
         "success": {
           "message": "Password updated. You can sign in with it now."

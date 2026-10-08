@@ -10,6 +10,7 @@ import { EmailVerifiedDto } from 'src/modules/email/dtos/email.verified.dto';
 import { ResendEmailService } from 'src/modules/resend/services/resend-email.service';
 import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 import { renderTemplate } from '../constraint/templates';
+import { resetPasswordEmailCopy } from '../email-template-components/reset-password-email.copy';
 import { verificationEmailCopy } from '../email-template-components/verification-email.copy';
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
@@ -132,17 +133,26 @@ export class ResendProvider implements IEmailService {
 
     async sendResetPassword(
         { name, email }: EmailSendDto,
-        { expiredDate, url, otp }: EmailResetPasswordDto
+        { expiredDate, url, language }: EmailResetPasswordDto
     ): Promise<boolean> {
-        return this.sendEmailTemplate(email, EmailSubject.ResetPassword, {
-            name,
-            url,
-            otp,
-            expiredDate: this.helperDateService.formatToRFC2822(expiredDate),
-            supportEmail: this.supportEmail,
-            homeUrl: this.homeUrl,
-            homeName: this.homeName,
-        });
+        const copy = resetPasswordEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.ResetPassword,
+            {
+                name,
+                url,
+                expiredDate: this.helperDateService.formatToReadable(
+                    expiredDate,
+                    language ?? ENUM_MESSAGE_LANGUAGE.EN
+                ),
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject
+        );
     }
 
     async sendVerification(

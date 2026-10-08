@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { AuthPublicController } from '@app/modules/auth/controllers/auth.public.controller';
 import { UserService } from '@app/modules/user/services/user.service';
+import { AuthLoginSessionService } from '@app/modules/auth/services/auth-login-session.service';
 import { AuthService } from '@app/modules/auth/services/auth.service';
 import { CountryService } from '@app/modules/country/services/country.service';
 import { RoleService } from '@app/modules/role/services/role.service';
@@ -97,6 +98,7 @@ describe('AuthPublicController.signUp', () => {
                     useValue: { verify: verifyTurnstile },
                 },
                 { provide: ImpersonationService, useValue: {} },
+                AuthLoginSessionService,
             ],
         }).compile();
 
@@ -319,6 +321,7 @@ describe('AuthPublicController.loginWithCredential', () => {
                     useValue: { verify: verifyLoginTurnstile },
                 },
                 { provide: ImpersonationService, useValue: {} },
+                AuthLoginSessionService,
             ],
         }).compile();
 

@@ -6,8 +6,15 @@ import { UserService } from '@app/modules/user/services/user.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_VERIFICATION_STATUS_CODE_ERROR } from '@app/modules/verification/enums/verification.status-code.constant';
+import { AuthService } from '@app/modules/auth/services/auth.service';
+import { AuthLoginSessionService } from '@app/modules/auth/services/auth-login-session.service';
+import { SessionService } from '@app/modules/session/services/session.service';
+import { ActivityService } from '@app/modules/activity/services/activity.service';
+import { ENUM_USER_STATUS } from '@app/modules/user/enums/user.enum';
 
 describe('VerificationEmailController — email dispatch', () => {
+    const req = {} as any;
+    const res = {} as any;
     let controller: VerificationEmailController;
 
     const enqueue = jest.fn();
@@ -17,6 +24,11 @@ describe('VerificationEmailController — email dispatch', () => {
     const validateOtp = jest.fn();
     const verify = jest.fn();
     const incrementOtpAttempt = jest.fn();
+    const claimOtpAttempt = jest.fn();
+    const lockIfAttemptsSpent = jest.fn();
+    const verifyOnce = jest.fn();
+    const countEmailIssuedSince = jest.fn();
+    const hasAttemptsLeft = jest.fn();
     const inactiveEmailManyByUser = jest.fn();
     const createEmailByUser = jest.fn();
     const updateVerificationEmail = jest.fn();
@@ -24,6 +36,13 @@ describe('VerificationEmailController — email dispatch', () => {
     const commit = jest.fn();
     const rollback = jest.fn();
     const fork = jest.fn(() => ({ begin, commit, rollback }));
+    const join = jest.fn();
+    const createSession = jest.fn();
+    const setLoginSession = jest.fn();
+    const createToken = jest.fn();
+    const setRefreshTokenCookie = jest.fn();
+    const checkPasswordExpired = jest.fn();
+    const createByUser = jest.fn();
 
     beforeEach(async () => {
         enqueue.mockReset();
@@ -33,6 +52,11 @@ describe('VerificationEmailController — email dispatch', () => {
         validateOtp.mockReset();
         verify.mockReset();
         incrementOtpAttempt.mockReset();
+        claimOtpAttempt.mockReset().mockResolvedValue(true);
+        lockIfAttemptsSpent.mockReset().mockResolvedValue(false);
+        verifyOnce.mockReset().mockResolvedValue(true);
+        countEmailIssuedSince.mockReset().mockResolvedValue(0);
+        hasAttemptsLeft.mockReset().mockReturnValue(true);
         inactiveEmailManyByUser.mockReset();
         createEmailByUser.mockReset();
         updateVerificationEmail.mockReset();
@@ -40,6 +64,17 @@ describe('VerificationEmailController — email dispatch', () => {
         commit.mockReset();
         rollback.mockReset();
         fork.mockClear();
+        for (const m of [
+            join,
+            createSession,
+            setLoginSession,
+            createToken,
+            setRefreshTokenCookie,
+            checkPasswordExpired,
+            createByUser,
+        ]) {
+            m.mockReset();
+        }
 
         const module: TestingModule = await Test.createTestingModule({
             controllers: [VerificationEmailController],
@@ -53,15 +88,34 @@ describe('VerificationEmailController — email dispatch', () => {
                         validateOtp,
                         verify,
                         incrementOtpAttempt,
+                        claimOtpAttempt,
+                        lockIfAttemptsSpent,
+                        verifyOnce,
+                        countEmailIssuedSince,
+                        hasAttemptsLeft,
                         inactiveEmailManyByUser,
                         createEmailByUser,
                     },
                 },
                 {
                     provide: UserService,
-                    useValue: { findOneById, updateVerificationEmail },
+                    useValue: { findOneById, updateVerificationEmail, join },
                 },
                 { provide: EntityManager, useValue: { fork } },
+                {
+                    provide: AuthService,
+                    useValue: {
+                        createToken,
+                        setRefreshTokenCookie,
+                        checkPasswordExpired,
+                    },
+                },
+                {
+                    provide: SessionService,
+                    useValue: { create: createSession, setLoginSession },
+                },
+                { provide: ActivityService, useValue: { createByUser } },
+                AuthLoginSessionService,
             ],
         }).compile();
 
@@ -336,11 +390,15 @@ describe('VerificationEmailController — email dispatch', () => {
         updateVerificationEmail.mockResolvedValue(undefined);
         commit.mockResolvedValue(undefined);
 
-        await controller.verifyEmail({
-            email: 'c@d.com',
-            id: 'user-2',
-            otp: '555555',
-        } as any);
+        await controller.verifyEmail(
+            {
+                email: 'c@d.com',
+                id: 'user-2',
+                otp: '555555',
+            } as any,
+            req,
+            res
+        );
 
         expect(findOneActiveLatestEmailByUser).toHaveBeenCalledWith(
             'user-2',
@@ -393,11 +451,15 @@ describe('VerificationEmailController — email dispatch', () => {
         enqueue.mockRejectedValue(new Error('boom'));
 
         await expect(
-            controller.verifyEmail({
-                email: 'c@d.com',
-                id: 'user-2',
-                otp: '555555',
-            } as any)
+            controller.verifyEmail(
+                {
+                    email: 'c@d.com',
+                    id: 'user-2',
+                    otp: '555555',
+                } as any,
+                req,
+                res
+            )
         ).resolves.toBeUndefined();
 
         expect(commit).toHaveBeenCalledTimes(1);
@@ -414,11 +476,15 @@ describe('VerificationEmailController — email dispatch', () => {
         findOneById.mockResolvedValue({ id: 'attacker-id' });
 
         await expect(
-            controller.verifyEmail({
-                email: 'victim@b.com',
-                id: 'attacker-id',
-                otp: '000000',
-            } as any)
+            controller.verifyEmail(
+                {
+                    email: 'victim@b.com',
+                    id: 'attacker-id',
+                    otp: '000000',
+                } as any,
+                req,
+                res
+            )
         ).rejects.toMatchObject({
             response: {
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
@@ -440,11 +506,15 @@ describe('VerificationEmailController — email dispatch', () => {
         findOneById.mockResolvedValue({ id: 'user-1' });
 
         await expect(
-            controller.verifyEmail({
-                email: 'a@b.com',
-                id: 'user-1',
-                otp: '123456',
-            } as any)
+            controller.verifyEmail(
+                {
+                    email: 'a@b.com',
+                    id: 'user-1',
+                    otp: '123456',
+                } as any,
+                req,
+                res
+            )
         ).rejects.toMatchObject({
             response: {
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.EXPIRED,
@@ -459,50 +529,251 @@ describe('VerificationEmailController — email dispatch', () => {
         findOneActiveLatestEmailByUser.mockResolvedValue(verification);
         findOneById.mockResolvedValue(user);
         validateOtp.mockReturnValue(false);
-        incrementOtpAttempt.mockResolvedValue({
-            ...verification,
-            otpAttempt: 3,
-            isActive: true,
-        });
 
         await expect(
-            controller.verifyEmail({
-                email: 'c@d.com',
-                id: 'user-2',
-                otp: '000000',
-            } as any)
+            controller.verifyEmail(
+                { email: 'c@d.com', id: 'user-2', otp: '000000' } as any,
+                req,
+                res
+            )
         ).rejects.toMatchObject({
             response: {
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.OTP_NOT_MATCH,
                 message: 'verification.error.otpNotMatch',
             },
         });
-        expect(incrementOtpAttempt).toHaveBeenCalledWith(verification);
+        expect(claimOtpAttempt).toHaveBeenCalledWith(verification);
+        expect(lockIfAttemptsSpent).toHaveBeenCalledWith(verification);
     });
 
-    it('verifyEmail: the 5th wrong OTP locks the row and throws ATTEMPT_MAX instead of OTP_NOT_MATCH', async () => {
-        const user = { id: 'user-2', email: 'c@d.com', name: 'C' };
-        const verification = { id: 'ver-1', otp: '111111' };
-        findOneActiveLatestEmailByUser.mockResolvedValue(verification);
-        findOneById.mockResolvedValue(user);
+    it('verifyEmail: the wrong guess that spends the last attempt locks the row and throws ATTEMPT_MAX', async () => {
+        findOneActiveLatestEmailByUser.mockResolvedValue({ id: 'ver-1' });
+        findOneById.mockResolvedValue({ id: 'user-2', email: 'c@d.com' });
         validateOtp.mockReturnValue(false);
-        incrementOtpAttempt.mockResolvedValue({
-            ...verification,
-            otpAttempt: 5,
-            isActive: false,
-        });
+        lockIfAttemptsSpent.mockResolvedValue(true);
 
         await expect(
-            controller.verifyEmail({
-                email: 'c@d.com',
-                id: 'user-2',
-                otp: '000000',
-            } as any)
+            controller.verifyEmail(
+                { email: 'c@d.com', id: 'user-2', otp: '000000' } as any,
+                req,
+                res
+            )
         ).rejects.toMatchObject({
             response: {
                 statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
                 message: 'verification.error.attemptMax',
             },
         });
+    });
+
+    // #143 review: N simultaneous requests used to each compare a guess
+    // before any of them counted it.
+    it('verifyEmail: claims the guess before comparing, and compares nothing once no guess is left', async () => {
+        findOneActiveLatestEmailByUser.mockResolvedValue({ id: 'ver-1' });
+        findOneById.mockResolvedValue({ id: 'user-2', email: 'c@d.com' });
+        claimOtpAttempt.mockResolvedValue(false);
+
+        await expect(
+            controller.verifyEmail(
+                { email: 'c@d.com', id: 'user-2', otp: '123456' } as any,
+                req,
+                res
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.ATTEMPT_MAX,
+            },
+        });
+        expect(validateOtp).not.toHaveBeenCalled();
+    });
+
+    it('verifyEmail: of two requests with the right code, the one that loses is refused and opens no session', async () => {
+        findOneActiveLatestEmailByUser.mockResolvedValue({ id: 'ver-1' });
+        findOneById.mockResolvedValue({ id: 'user-2', email: 'c@d.com' });
+        validateOtp.mockReturnValue(true);
+        verifyOnce.mockResolvedValue(false);
+
+        await expect(
+            controller.verifyEmail(
+                { email: 'c@d.com', id: 'user-2', otp: '123456' } as any,
+                req,
+                res
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.NOT_FOUND,
+            },
+        });
+        expect(rollback).toHaveBeenCalled();
+        expect(updateVerificationEmail).not.toHaveBeenCalled();
+    });
+
+    describe('verifyEmail: signs the new user in (#143)', () => {
+        const user = {
+            id: 'user-9',
+            email: 'n@e.w',
+            name: 'N',
+            status: ENUM_USER_STATUS.ACTIVE,
+        };
+        const req = {} as any;
+        const res = {} as any;
+        const token = { accessToken: 'at', refreshToken: 'rt' };
+
+        beforeEach(() => {
+            findOneActiveLatestEmailByUser.mockResolvedValue({
+                reference: 'ref-9',
+            });
+            findOneById.mockResolvedValue(user);
+            validateOtp.mockReturnValue(true);
+            enqueue.mockResolvedValue(undefined);
+            checkPasswordExpired.mockReturnValue(false);
+            createSession.mockResolvedValue({ id: 'sess-1' });
+            createToken.mockReturnValue(token);
+            createByUser.mockResolvedValue(undefined);
+        });
+
+        it('returns a login token and sets the refresh cookie, like a login', async () => {
+            join.mockResolvedValue({ ...user, role: { isActive: true } });
+
+            const result = await controller.verifyEmail(
+                { email: 'n@e.w', id: 'user-9', otp: '123456' } as any,
+                req,
+                res
+            );
+
+            expect(createSession).toHaveBeenCalledWith(
+                req,
+                { user: 'user-9' },
+                expect.anything()
+            );
+            expect(createToken).toHaveBeenCalledWith(
+                expect.objectContaining({ id: 'user-9' }),
+                'sess-1',
+                false
+            );
+            expect(setRefreshTokenCookie).toHaveBeenCalledWith(
+                res,
+                'rt',
+                false
+            );
+            expect(result).toEqual({ data: token });
+        });
+
+        it.each([ENUM_USER_STATUS.BLOCKED, ENUM_USER_STATUS.INACTIVE])(
+            'verifies but does not sign in a %s user',
+            async status => {
+                findOneById.mockResolvedValue({ ...user, status });
+                join.mockResolvedValue({ ...user, role: { isActive: true } });
+
+                const result = await controller.verifyEmail(
+                    { email: 'n@e.w', id: 'user-9', otp: '123456' } as any,
+                    req,
+                    res
+                );
+
+                expect(createSession).not.toHaveBeenCalled();
+                expect(result).toBeUndefined();
+            }
+        );
+
+        it('never opens a session on a wrong code', async () => {
+            validateOtp.mockReturnValue(false);
+
+            await expect(
+                controller.verifyEmail(
+                    { email: 'n@e.w', id: 'user-9', otp: '000000' } as any,
+                    req,
+                    res
+                )
+            ).rejects.toBeDefined();
+            expect(createSession).not.toHaveBeenCalled();
+            expect(setRefreshTokenCookie).not.toHaveBeenCalled();
+        });
+
+        it('verifies but does not sign in when the role is inactive', async () => {
+            join.mockResolvedValue({ ...user, role: { isActive: false } });
+
+            const result = await controller.verifyEmail(
+                { email: 'n@e.w', id: 'user-9', otp: '123456' } as any,
+                req,
+                res
+            );
+
+            expect(updateVerificationEmail).toHaveBeenCalled();
+            expect(createSession).not.toHaveBeenCalled();
+            expect(result).toBeUndefined();
+        });
+
+        it('verifies but does not sign in when the password has expired', async () => {
+            join.mockResolvedValue({ ...user, role: { isActive: true } });
+            checkPasswordExpired.mockReturnValue(true);
+
+            const result = await controller.verifyEmail(
+                { email: 'n@e.w', id: 'user-9', otp: '123456' } as any,
+                req,
+                res
+            );
+
+            expect(createSession).not.toHaveBeenCalled();
+            expect(result).toBeUndefined();
+        });
+    });
+
+    // #143 review: a locked or expired code used to be reissued without
+    // limit, so the 5-guess cap only slowed a brute force down.
+    it('resendVerificationEmail: refuses a fresh code after too many this hour', async () => {
+        findOneActiveLatestEmailByUser.mockResolvedValue(null);
+        findOneById.mockResolvedValue({
+            id: 'user-1',
+            email: 'a@b.com',
+            verification: { email: false },
+        });
+        countEmailIssuedSince.mockResolvedValue(5);
+
+        await expect(
+            controller.resendVerificationEmail({
+                email: 'a@b.com',
+                id: 'user-1',
+            } as any)
+        ).rejects.toMatchObject({
+            status: 429,
+            response: {
+                statusCode: ENUM_VERIFICATION_STATUS_CODE_ERROR.REISSUE_MAX,
+                message: 'verification.error.tooManyCodes',
+            },
+        });
+        expect(createEmailByUser).not.toHaveBeenCalled();
+        expect(enqueue).not.toHaveBeenCalled();
+    });
+
+    // #143 re-review: Resend kept re-sending a code with no guesses left,
+    // so the user could only ever get "too many attempts".
+    it('resendVerificationEmail: issues a fresh code when the active one has no guesses left', async () => {
+        const user = {
+            id: 'user-1',
+            email: 'a@b.com',
+            name: 'A',
+            verification: { email: false },
+        };
+        findOneActiveLatestEmailByUser.mockResolvedValue({
+            otp: '111111',
+            otpAttempt: 5,
+            expiredDate: new Date(Date.now() + 10 * 60 * 1000),
+        });
+        findOneById.mockResolvedValue(user);
+        hasAttemptsLeft.mockReturnValue(false);
+        createEmailByUser.mockResolvedValue({
+            otp: '222222',
+            expiredDate: new Date(Date.now() + 10 * 60 * 1000),
+            reference: 'ref-new',
+        });
+
+        await controller.resendVerificationEmail({
+            email: 'a@b.com',
+            id: 'user-1',
+        } as any);
+
+        expect(createEmailByUser).toHaveBeenCalled();
+        expect(enqueue.mock.calls[0][2].data.otp).toBe('222222');
     });
 });

@@ -216,4 +216,19 @@ describe('ResetPasswordService', () => {
             expect(data.isActive.sql).toBe('is_active and otp_attempt + 1 < 5');
         });
     });
+
+    // #187 review: /reset now checks isActive, so a newer request (which
+    // deactivates older rows) really retires the older link. An app that
+    // still calls /verify first must not lose its link to that check.
+    describe('verify', () => {
+        it('records the verification but keeps the link usable', async () => {
+            save.mockImplementation(async (e: unknown) => e);
+            const row = { id: 'rp-1', isActive: true } as any;
+
+            const saved = await build().verify(row);
+
+            expect(saved.verifyDate).toBeInstanceOf(Date);
+            expect(saved.isActive).toBe(true);
+        });
+    });
 });

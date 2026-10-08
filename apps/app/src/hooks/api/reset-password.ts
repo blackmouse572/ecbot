@@ -3,7 +3,6 @@ import {
   resetPasswordPublicControllerGetV1,
   resetPasswordPublicControllerRequestV1,
   resetPasswordPublicControllerResetV1,
-  resetPasswordPublicControllerVerifyV1,
 } from "@repo/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -53,25 +52,6 @@ export const useResetPasswordToken = (token: string) => {
   });
 
   return { ...rest, resetPassword: data };
-};
-
-export const useVerifyPasswordResetOtp = (token: string) => {
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: async (otp: string) => {
-      const response = await resetPasswordPublicControllerVerifyV1({
-        path: { token },
-        body: { otp },
-        throwOnError: false,
-      });
-      if (response.error) {
-        console.error("[useVerifyPasswordResetOtp] error: ", response.error);
-        throw response.error;
-      }
-      return true;
-    },
-  });
-
-  return { verifyOtp: mutateAsync, isLoading: isPending };
 };
 
 export const useResetPassword = (token: string) => {
