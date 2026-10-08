@@ -7,6 +7,7 @@ import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_VERIFICATION_STATUS_CODE_ERROR } from '@app/modules/verification/enums/verification.status-code.constant';
 import { AuthService } from '@app/modules/auth/services/auth.service';
+import { AuthLoginSessionService } from '@app/modules/auth/services/auth-login-session.service';
 import { SessionService } from '@app/modules/session/services/session.service';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { ENUM_USER_STATUS } from '@app/modules/user/enums/user.enum';
@@ -111,6 +112,7 @@ describe('VerificationEmailController — email dispatch', () => {
                     useValue: { create: createSession, setLoginSession },
                 },
                 { provide: ActivityService, useValue: { createByUser } },
+                AuthLoginSessionService,
             ],
         }).compile();
 

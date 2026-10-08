@@ -30,12 +30,9 @@ import {
     Res,
 } from '@nestjs/common';
 import type { Response as ExpressResponse } from 'express';
-import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
-import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { AuthLoginResponseDto } from '@app/modules/auth/dtos/response/auth.login.response.dto';
 import { AuthService } from '@app/modules/auth/services/auth.service';
-import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
-import { SessionService } from '@app/modules/session/services/session.service';
+import { AuthLoginSessionService } from '@app/modules/auth/services/auth-login-session.service';
 import { ENUM_USER_STATUS } from '@app/modules/user/enums/user.enum';
 import { IRequestApp } from 'src/common/request/interfaces/request.interface';
 import { IResponse } from 'src/common/response/interfaces/response.interface';
@@ -66,8 +63,7 @@ export class VerificationEmailController {
         private readonly userService: UserService,
         private readonly em: EntityManager,
         private readonly authService: AuthService,
-        private readonly sessionService: SessionService,
-        private readonly activityService: ActivityService
+        private readonly authLoginSessionService: AuthLoginSessionService
     ) {}
 
     @VerificationEmailResendEmailDoc()
@@ -336,42 +332,18 @@ export class VerificationEmailController {
             return undefined;
         }
 
-        const databaseSession = this.em.fork();
-        await databaseSession.begin();
-        let token: AuthLoginResponseDto;
         try {
-            const session = await this.sessionService.create(
-                request,
-                { user: user.id },
-                { em: databaseSession }
-            );
-            await this.sessionService.setLoginSession(userWithRole, session);
-            token = this.authService.createToken(
+            return await this.authLoginSessionService.open(
                 userWithRole,
-                session.id,
+                request,
+                res,
                 false
             );
-            await databaseSession.commit();
         } catch (err: unknown) {
-            try {
-                await databaseSession.rollback();
-            } catch {
-                /* ignore rollback error */
-            }
             this.logger.warn(
                 `Sign-in after email verification failed for user [${user.id}] (non-fatal): ${(err as Error)?.message}`
             );
             return undefined;
         }
-
-        this.authService.setRefreshTokenCookie(res, token.refreshToken, false);
-        await this.activityService
-            .createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: { id: user.id, name: user.email },
-            })
-            .catch(() => undefined);
-        return token;
     }
 }

@@ -56,6 +56,7 @@ import {
     IAuthSocialGooglePayload,
 } from 'src/modules/auth/interfaces/auth.interface';
 import { AuthService } from 'src/modules/auth/services/auth.service';
+import { AuthLoginSessionService } from 'src/modules/auth/services/auth-login-session.service';
 import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
 import { ENUM_COUNTRY_STATUS_CODE_ERROR } from 'src/modules/country/enums/country.status-code.enum';
 import { CountryService } from 'src/modules/country/services/country.service';
@@ -93,7 +94,8 @@ export class AuthPublicController {
         private readonly activityService: ActivityService,
         private readonly messageService: MessageService,
         private readonly turnstileService: TurnstileService,
-        private readonly impersonationService: ImpersonationService
+        private readonly impersonationService: ImpersonationService,
+        private readonly authLoginSessionService: AuthLoginSessionService
     ) {}
 
     @AuthPublicImpersonateExchangeDoc()
@@ -235,52 +237,15 @@ export class AuthPublicController {
             });
         }
 
-        const databaseSession = this.em.fork();
-        await databaseSession.begin();
-
         try {
-            const session = await this.sessionService.create(
-                request,
-                {
-                    user: user.id,
-                },
-                { em: databaseSession }
-            );
-
-            await this.sessionService.setLoginSession(userWithRole, session);
-
-            const token = this.authService.createToken(
+            const token = await this.authLoginSessionService.open(
                 userWithRole,
-                session.id,
-                rememberMe
-            );
-
-            this.authService.setRefreshTokenCookie(
+                request,
                 res,
-                token.refreshToken,
                 rememberMe
             );
-
-            await databaseSession.commit();
-
-            await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: {
-                    id: user.id,
-                    name: user.email,
-                },
-            });
-
-            return {
-                data: token,
-            };
+            return { data: token };
         } catch (err: unknown) {
-            try {
-                await databaseSession.rollback();
-            } catch {
-                /* ignore rollback error */
-            }
             this.logger.error(
                 `Error during login with credential for user [${user.id}]: ${err}`,
                 err instanceof Error ? err.stack : undefined
