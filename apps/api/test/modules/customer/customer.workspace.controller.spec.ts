@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { CustomerWorkspaceController } from '../../../src/modules/customer/controllers/customer.workspace.controller';
+import { ENUM_ACTIVITY_ACTION } from '../../../src/modules/activity/enums/activity.enum';
 import { ENUM_POLICY_SUBJECT } from '../../../src/modules/policy/enums/policy.enum';
 
 // The unit-level test covers the controller's own logic. Cross-workspace tenant
@@ -215,6 +216,18 @@ describe('CustomerWorkspaceController', () => {
             );
             expect(result.data.name).toBe('New Name');
             expect(result.data.email).toBe('new@example.com');
+            // The audit log is append-only: it keeps ids, not names.
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                user,
+                { id: 'ws-1' },
+                {
+                    action: ENUM_ACTIVITY_ACTION.UPDATE,
+                    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                    metadata: { id: updated.id },
+                }
+            );
         });
 
         it('propagates NotFoundException from the service when target customer is gone', async () => {

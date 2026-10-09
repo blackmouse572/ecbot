@@ -24,6 +24,7 @@ Database seeding — the custom `nestjs-command` seed classes that populate init
   - [Execute Migrations](#execute-migrations)
   - [Check Migration Status](#check-migration-status)
   - [Fresh Database Setup](#fresh-database-setup)
+  - [Locks on Busy Tables](#locks-on-busy-tables)
 - [Database Seeding (MikroORM CLI)](#database-seeding-mikroorm-cli)
 - [Environment Configuration](#environment-configuration)
   - [Environment-Specific Behavior](#environment-specific-behavior)
@@ -222,6 +223,42 @@ pnpm db:migrate:fresh
 
 # Drop and recreate schema (faster for local development, skips history)
 pnpm db:schema:fresh
+
+# From apps/api: migration:fresh, then the seeds
+pnpm migrate:fresh
+```
+
+Dropping the schema is the only way to clear the append-only `activities`
+audit log (see [audit.md](./audit.md#immutability)), so these commands are for
+local databases only and need the table owner.
+
+## Locks on Busy Tables
+
+`allOrNothing: true` runs every pending migration in **one** transaction, so
+an `ACCESS EXCLUSIVE` lock taken by an early migration is held until the last
+one commits, and every query on that table waits behind it. For a migration
+that alters a hot table (`users`, `workspaces`, `activities`):
+
+- Start it with `set local lock_timeout = '5s';`, so the deploy fails fast
+  instead of queueing behind a long transaction while every request queues
+  behind the deploy. Retry it at a quieter moment.
+- Keep `ALTER TABLE` metadata-only: nullable columns or constant defaults, no
+  type rewrites.
+- Add CHECK and FOREIGN KEY constraints with `NOT VALID` when existing rows
+  already satisfy them. New rows are still checked; only the scan of old rows
+  is skipped. Do not `VALIDATE` inside a migration: under `allOrNothing` it
+  would still run while the batch holds its locks.
+
+Validating afterwards is optional. It takes only `SHARE UPDATE EXCLUSIVE`, so
+reads and writes continue; run it once after the deploy if you want the
+constraints marked validated:
+
+```sql
+ALTER TABLE activities VALIDATE CONSTRAINT activities_action_check;
+ALTER TABLE activities VALIDATE CONSTRAINT activities_workspace_id_foreign;
+ALTER TABLE activities VALIDATE CONSTRAINT activities_created_by_id_foreign;
+ALTER TABLE activities VALIDATE CONSTRAINT activities_updated_by_id_foreign;
+ALTER TABLE activities VALIDATE CONSTRAINT activities_deleted_by_id_foreign;
 ```
 
 # Database Seeding (MikroORM CLI)

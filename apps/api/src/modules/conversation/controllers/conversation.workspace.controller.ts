@@ -364,12 +364,16 @@ export class ConversationWorkspaceController {
                 }
             );
 
-        await this.activityService.createView(
-            userId,
-            workspace,
-            ENUM_POLICY_SUBJECT.CONVERSATION,
-            { id: conversation.id, resource: 'messages' }
-        );
+        // Infinite scroll refetches every loaded page: the first page stands
+        // for the whole read.
+        if (offset === 0) {
+            await this.activityService.createView(
+                userId,
+                workspace,
+                ENUM_POLICY_SUBJECT.CONVERSATION,
+                { id: conversation.id, resource: 'messages' }
+            );
+        }
 
         const userNameMap =
             await this.conversationMessagingService.buildUserNameMap(messages);

@@ -181,10 +181,8 @@ export class CustomerWorkspaceController {
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,
             subject: ENUM_POLICY_SUBJECT.CUSTOMER,
-            metadata: {
-                id: updated.id,
-                name: updated.name,
-            },
+            // The audit log is append-only, so it keeps ids, not names.
+            metadata: { id: updated.id },
         });
         return { data: this.customerService.mapGet(updated) };
     }

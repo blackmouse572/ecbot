@@ -478,6 +478,31 @@ describe('ConversationWorkspaceController', () => {
             );
         });
 
+        it('logs a VIEW for the first page only, not for older pages', async () => {
+            mockConversationMessagingService.listMessages.mockResolvedValue({
+                messages: [],
+                conversation: mockConversation,
+                total: 137,
+            });
+            mockConversationMessagingService.buildUserNameMap.mockResolvedValue(
+                new Map()
+            );
+            mockConversationMessagingService.listToolInvocations.mockResolvedValue(
+                []
+            );
+            mockConversationMessagingService.mapMessages.mockReturnValue([]);
+
+            await controller.listMessages(
+                workspace,
+                'conv-1',
+                operatorId,
+                2,
+                50
+            );
+
+            expect(mockActivityService.createView).not.toHaveBeenCalled();
+        });
+
         it('propagates the 404 thrown by the messaging service for a cross-workspace id', async () => {
             mockConversationMessagingService.listMessages.mockRejectedValue(
                 new NotFoundException({

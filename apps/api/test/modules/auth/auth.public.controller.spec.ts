@@ -645,12 +645,16 @@ describe('AuthPublicController.loginWithCredential', () => {
                 )
                 .catch(err => err);
 
-        const failedWith = (user: any, reason: string) =>
-            expect(createByUserActivity).toHaveBeenCalledWith(user, {
+        // Strict: the append-only audit log keeps ids, never the email.
+        const failedWith = (user: any, reason: string) => {
+            const [who, body] = createByUserActivity.mock.calls.at(-1);
+            expect(who).toBe(user);
+            expect(body).toStrictEqual({
                 action: ENUM_ACTIVITY_ACTION.LOGIN_FAILED,
                 subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: { id: user.id, name: user.email, reason },
+                metadata: { id: user.id, reason },
             });
+        };
 
         it('records a successful login as LOGIN', async () => {
             findOneByEmail.mockResolvedValue(activeUser);

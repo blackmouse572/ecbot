@@ -53,28 +53,42 @@ The Activity module is designed to be used across the application to track impor
     });
     ```
 
-4. **Reads of personal data**: one `VIEW` row per detail read, keyed by the JWT user id (no user lookup)
+4. **Reads of personal data**: one `VIEW` row per actor, workspace, subject and record id every 10 minutes (`ACTIVITY_VIEW_DEDUPE_TTL_MS`), keyed by the JWT user id (no user lookup). Repeats inside the window cost one Redis check. `createView` never throws: a failed audit write is logged and the read still succeeds.
     ```typescript
-    this.activityService.createView(userId, workspace, ENUM_POLICY_SUBJECT.CUSTOMER, {
+    await this.activityService.createView(userId, workspace, ENUM_POLICY_SUBJECT.CUSTOMER, {
         id: customer.id,
     });
     ```
+
+Audit metadata holds ids, not names or emails: the table is append-only, so
+personal data copied into it could never be erased.
 
 ### Request context
 
 Every row carries `ipAddress` and `userAgent`. `ActivityService` fills them
 from the current request through `ClsService` (`request.ip`, which honours
-`trust proxy`, and the `user-agent` header), so call sites pass nothing. Rows
-written outside a request (seeds, workers) leave both `null`.
+`trust proxy`, and the `user-agent` header, cut to 512 characters), so call
+sites pass nothing. Rows written outside a request (seeds, workers) leave both
+`null`.
+
+`ipAddress` is only as good as `APP_TRUST_PROXY_HOPS`: set it to the exact
+number of proxies in front of the API (for example Cloudflare plus a load
+balancer is 2). Too low and every row records the proxy's address; too high
+and a client can forge its address through `X-Forwarded-For`. The API does not
+read `CF-Connecting-IP`.
+
+When the request carries an impersonation token, `by` is the acting admin
+(`impersonatedBy` from the JWT) and `metadata.impersonatedBy` holds the same
+id, so reads in "user view mode" are never attributed to the user.
 
 ### Authentication and read actions
 
 | Action | Subject | When | `metadata` |
 | --- | --- | --- | --- |
-| `login` | `AUTH` | credential, Google or Apple login succeeds | `{ id, name }` (user id, email) |
-| `login_failed` | `AUTH` | login rejected for an **existing** user | `{ id, name, reason }` |
+| `login` | `AUTH` | credential, Google or Apple login succeeds | `{ id }` (the older Google and Apple paths still add `name`, the email) |
+| `login_failed` | `AUTH` | login rejected for an **existing** user | `{ id, reason }` |
 | `view` | `CONVERSATION` | `GET /:workspace/conversations/:id` | `{ id }` |
-| `view` | `CONVERSATION` | `GET /:workspace/conversations/:id/messages` | `{ id, resource: 'messages' }` |
+| `view` | `CONVERSATION` | `GET /:workspace/conversations/:id/messages`, first page only | `{ id, resource: 'messages' }` |
 | `view` | `CUSTOMER` | `GET /:workspace/customers/:id` | `{ id }` |
 
 `reason` is one of `invalid_password`, `locked`, `blocked`, `inactive`,
@@ -85,11 +99,23 @@ List pages are not logged.
 
 ### Immutability
 
-`activities` is append-only (migration `20261008110000_audit_log_append_only`):
+`activities` is append-only (migration `20261008110000_audit_log_append_only`).
+The control is tamper-resistant, not tamper-proof:
 
 - A trigger (`activities_reject_change`) raises on every `UPDATE`, `DELETE`
   and `TRUNCATE`, for every role including the application's. `DROP TABLE`
   (`pnpm db:migrate:fresh`) still works.
+- The trigger only holds if the runtime role cannot remove it. The owner of
+  `activities` (and any superuser) can `ALTER TABLE ... DISABLE TRIGGER`,
+  `DROP TRIGGER` or drop the table. Run the API as a role that does **not**
+  own `activities`, keep the owner role for migrations only, and revoke the
+  rewrite privileges from the runtime role:
+
+  ```sql
+  -- once, as the owner; "app_runtime" is the role in the API's DATABASE_URL
+  GRANT SELECT, INSERT ON activities TO app_runtime;
+  REVOKE UPDATE, DELETE, TRUNCATE ON activities FROM app_runtime;
+  ```
 - Every FK from `activities` (`user`, `by`, `workspace`, `created_by`,
   `updated_by`, `deleted_by`) is `ON DELETE NO ACTION`: `SET NULL` would be an
   update and `CASCADE` a delete. Users and workspaces are soft-deleted or
@@ -97,7 +123,8 @@ List pages are not logged.
   `WorkspaceOwnerService.delete` deliberately skips `activities`.
 - There is no delete method on `ActivityService`. The user seed's `remove`
   refuses to run once audit rows exist; reset a dev database with
-  `pnpm db:migrate:fresh`.
+  `pnpm db:migrate:fresh` (drops the schema) and `pnpm db:seed`, or
+  `pnpm migrate:fresh` in `apps/api`, which runs both.
 
 ### Impersonation activities
 

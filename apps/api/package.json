@@ -31,7 +31,7 @@
         "package:check": "npx npm-check-updates -i",
         "generate:keys": "npx ts-node scripts/generate-keys.ts",
         "generate:client": "openapi-ts",
-        "migrate:fresh": "yarn migrate:remove && yarn migrate:seed",
+        "migrate:fresh": "npx mikro-orm migration:fresh && pnpm migrate:seed",
         "migrate:seed": "nestjs-command seed:country && nestjs-command seed:apikey && nestjs-command seed:role && nestjs-command seed:user",
         "migrate:seed:e2e": "nestjs-command seed:country && nestjs-command seed:apikey && nestjs-command seed:role && nestjs-command seed:user",
         "migrate:remove": "nestjs-command remove:user && nestjs-command remove:country && nestjs-command remove:apikey && nestjs-command remove:role",
