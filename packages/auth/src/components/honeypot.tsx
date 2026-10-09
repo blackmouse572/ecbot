@@ -10,10 +10,16 @@ import { forwardRef, useRef } from "react";
  * It is deliberately *not* `type="hidden"` or `display: none` — the well-known
  * bots skip both. Off-screen positioning keeps it in the accessibility-free,
  * keyboard-unreachable zone while staying a normal text input to a scraper.
+ *
+ * Browsers and password managers must never fill it: a filled decoy drops the
+ * submit silently, so a person whose autofill touched it clicks and nothing
+ * happens. Chrome ignores `autocomplete="off"` for names its heuristics know
+ * (website, url, email, phone, ...), so the name avoids them, and the data-*
+ * attributes opt out of 1Password, LastPass, Bitwarden and Dashlane.
  */
 
-/** Named to look worth filling. Never call it "honeypot" in the DOM. */
-const HONEYPOT_FIELD_NAME = "website";
+/** Not a name autofill recognises. Never call it "honeypot" in the DOM. */
+const HONEYPOT_FIELD_NAME = "referrer_note";
 
 const HoneypotField = forwardRef<HTMLInputElement, { name?: string }>(
   ({ name = HONEYPOT_FIELD_NAME }, ref) => (
@@ -28,6 +34,10 @@ const HoneypotField = forwardRef<HTMLInputElement, { name?: string }>(
         defaultValue=""
         tabIndex={-1}
         autoComplete="off"
+        data-1p-ignore=""
+        data-lpignore="true"
+        data-bwignore=""
+        data-form-type="other"
       />
     </div>
   ),
