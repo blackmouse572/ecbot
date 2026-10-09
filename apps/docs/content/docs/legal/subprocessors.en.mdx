@@ -23,19 +23,20 @@ Last updated: 2026-10-09.
 | Neon | Main PostgreSQL database | All stored service data, including conversations and customer profiles | Singapore (AWS ap-southeast-1) |
 | Upstash | Redis cache, sessions and rate limits | Session data, cached records, IP addresses for rate limits | Singapore (ap-southeast-1) |
 | Cloudflare | File storage (R2), hosting of the app and docs, network protection, Turnstile anti-bot checks | Uploaded files and chat media; IP address, browser data, request metadata | R2 bucket **[confirm location hint]**; global network |
+| Cloudflare (edge.ecbot.dev) | Workers, Queues and Durable Objects that receive Messenger and Telegram webhooks, queue them and keep short-lived conversation state to group messages before a reply; invocation logs on a sample of requests | Message content, sender IDs and profile data from connected channels | Global network; Durable Object storage **[confirm location]** |
+| Apple | Sign in with Apple | Apple ID email (which may be a private relay address) and name | United States |
 | OpenRouter, Inc. | Routes AI requests to model providers, including Google Gemini and others, to generate replies, tags, summaries and embeddings | Chat content, customer context and profile, knowledge base passages | United States, and the model provider's regions |
 | Downstream AI model providers (for example Google) | Run the models OpenRouter routes to | Same as OpenRouter, per request | United States and other regions |
 | LangSmith (LangChain, Inc.) | Tracing of every AI request in production, to check quality and debug | Prompts and outputs, which contain chat content, customer context and knowledge base passages | United States |
 | Firecrawl (Mendable, Inc.) | Crawls websites you add to the knowledge base | Public content of the pages you choose | United States |
 | Composio | Connects third-party tools you enable for an agent | Data the agent sends to the tool, such as order or contact details | United States **[confirm]** |
 | Resend | Sends service emails, such as verification codes | Name, email address, email content | United States |
-| Amazon Web Services | SMS (Pinpoint), and email (SES) as a backup to Resend **[confirm whether either is used in production]** | Phone numbers, email addresses and message content | **[region]** |
+| Amazon Web Services | Email (SES) as a backup to Resend, and SMS (Pinpoint) **[confirm whether Pinpoint is used in production]** | Phone numbers, email addresses and message content | Jakarta (ap-southeast-3) |
 | Sentry (Functional Software, Inc.) | Error monitoring, with sending of personal data turned off | Technical error data; IP address may be processed | United States **[confirm]** |
-| PostHog | Product analytics on the ecbot.dev website | Page views, clicks, browser data, IP address, cookie ID | **[confirm region: US or EU cloud]** |
-| Dodo Payments | Subscription billing and payments (main automatic provider) | Billing name, email, address, payment details | **[confirm]** |
-| Stripe | Subscription billing and payments | Billing name, email, address, payment details | United States, Ireland |
-| SePay | Bank transfer payments in Vietnam | Payer name, bank account details, transfer amount and reference | Vietnam |
-| ZaloPay (VNG) | Wallet and card payments in Vietnam | Payer name, phone number, payment details | Vietnam |
+| PostHog | Product analytics on the ecbot.dev website, without cookies until the visitor consents | Page views, clicks, browser data, IP address; a cookie ID only after consent | United States (US cloud) |
+| Dodo Payments | Subscription billing and payments | Billing name, email, address, payment details | **[confirm]** |
+
+Dodo Payments is the only payment provider turned on today. We may add Stripe, SePay (bank transfer in Vietnam) or ZaloPay (wallet and card payments in Vietnam); each will be listed here, with the usual notice, before it handles payments.
 
 ## Channels you connect
 

@@ -145,10 +145,6 @@ export interface IUserService {
         { passwordAttempt }: UserUpdatePasswordAttemptRequestDto,
         options?: IDatabaseSaveOptions
     ): Promise<UserEntity>;
-    increasePasswordAttempt(
-        repository: UserEntity,
-        options?: IDatabaseUpdateOptions
-    ): Promise<UserEntity>;
     resetPasswordAttempt(
         repository: UserEntity,
         options?: IDatabaseSaveOptions

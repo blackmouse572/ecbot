@@ -513,10 +513,8 @@ export class WorkspaceMemberController {
         await this.activityService.createByUserWithWorkspace(user, _workspace, {
             action: ENUM_ACTIVITY_ACTION.REMOVE_MEMBER,
             subject: ENUM_POLICY_SUBJECT.WORKSPACE,
-            metadata: {
-                _id: member.user.id,
-                name: member.user.name || member.user.email,
-            },
+            // Ids only: the audit log is append-only and outlives the account.
+            metadata: { _id: member.user.id },
         });
     }
 

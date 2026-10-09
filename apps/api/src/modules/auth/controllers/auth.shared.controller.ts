@@ -193,10 +193,15 @@ export class AuthSharedController {
     ): Promise<void> {
         let user = await this.userService.findOneById(userFromPayload);
 
-        const passwordAttempt: boolean = this.authService.getPasswordAttempt();
-        const passwordMaxAttempt: number =
-            this.authService.getPasswordMaxAttempt();
-        if (passwordAttempt && user.passwordAttempt >= passwordMaxAttempt) {
+        // Claim this guess before comparing, so parallel wrong passwords
+        // can't pass the cap.
+        if (
+            this.authService.getPasswordAttempt() &&
+            !(await this.userService.claimPasswordAttempt(
+                user,
+                this.authService.getPasswordMaxAttempt()
+            ))
+        ) {
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
                 message: 'auth.error.passwordAttemptMax',
@@ -208,15 +213,13 @@ export class AuthSharedController {
             user.password
         );
         if (!matchPassword) {
-            await this.userService.increasePasswordAttempt(user);
-
             throw new BadRequestException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
                 message: 'auth.error.passwordNotMatch',
             });
         }
 
-        await this.userService.resetPasswordAttempt(user);
+        await this.userService.clearPasswordAttempt(user);
 
         const password = await this.authService.createPassword(
             body.newPassword

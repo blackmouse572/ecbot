@@ -1,3 +1,4 @@
+import { ENUM_POLICY_ROLE_TYPE } from 'src/modules/policy/enums/policy.enum';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { AuthAdminController } from '@app/modules/auth/controllers/auth.admin.controller';
@@ -127,6 +128,7 @@ describe('AuthAdminController.resetMfa', () => {
         revokeSessionsAndNotify: jest.fn(),
     };
     const activityService = { createByAdmin: jest.fn() };
+    const userService = { clearPasswordAttempt: jest.fn() };
 
     beforeEach(async () => {
         jest.clearAllMocks();
@@ -136,7 +138,7 @@ describe('AuthAdminController.resetMfa', () => {
                 { provide: EntityManager, useValue: {} },
                 { provide: CloudTasksQueueClient, useValue: {} },
                 { provide: AuthService, useValue: {} },
-                { provide: UserService, useValue: {} },
+                { provide: UserService, useValue: userService },
                 { provide: PasswordHistoryService, useValue: {} },
                 { provide: MfaService, useValue: mfaService },
                 { provide: ActivityService, useValue: activityService },
@@ -146,15 +148,26 @@ describe('AuthAdminController.resetMfa', () => {
     });
 
     it('turns MFA off, signs the user out everywhere and audits the reset', async () => {
-        const user = { id: 'user-1', email: 'a@b.com', mfaEnabled: true };
+        const user = {
+            id: 'user-1',
+            email: 'a@b.com',
+            mfaEnabled: true,
+            role: { type: ENUM_POLICY_ROLE_TYPE.USER },
+        };
 
-        await controller.resetMfa('admin-1', user as any);
+        await controller.resetMfa(
+            'admin-1',
+            ENUM_POLICY_ROLE_TYPE.ADMIN,
+            user as any
+        );
 
         expect(mfaService.disable).toHaveBeenCalledWith(user);
         expect(mfaService.revokeSessionsAndNotify).toHaveBeenCalledWith(
             user,
             false
         );
+        // A user locked out by attempts gets a clean slate too.
+        expect(userService.clearPasswordAttempt).toHaveBeenCalledWith(user);
         expect(activityService.createByAdmin).toHaveBeenCalledWith(
             user,
             'admin-1',
@@ -171,9 +184,10 @@ describe('AuthAdminController.resetMfa', () => {
 
     it('refuses a user without MFA', async () => {
         await expect(
-            controller.resetMfa('admin-1', {
+            controller.resetMfa('admin-1', ENUM_POLICY_ROLE_TYPE.ADMIN, {
                 id: 'user-1',
                 mfaEnabled: false,
+                role: { type: ENUM_POLICY_ROLE_TYPE.USER },
             } as any)
         ).rejects.toMatchObject({
             response: {
@@ -181,5 +195,33 @@ describe('AuthAdminController.resetMfa', () => {
             },
         });
         expect(mfaService.disable).not.toHaveBeenCalled();
+    });
+
+    // Same hierarchy as impersonation: an admin may only act on users.
+    it.each([ENUM_POLICY_ROLE_TYPE.ADMIN, ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN])(
+        'refuses an ADMIN resetting a %s',
+        async targetType => {
+            await expect(
+                controller.resetMfa('admin-1', ENUM_POLICY_ROLE_TYPE.ADMIN, {
+                    id: 'user-2',
+                    mfaEnabled: true,
+                    role: { type: targetType },
+                } as any)
+            ).rejects.toMatchObject({
+                response: {
+                    statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_RESET_FORBIDDEN,
+                },
+            });
+            expect(mfaService.disable).not.toHaveBeenCalled();
+        }
+    );
+
+    it('lets a SUPER_ADMIN reset an admin', async () => {
+        await controller.resetMfa('root-1', ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN, {
+            id: 'user-2',
+            mfaEnabled: true,
+            role: { type: ENUM_POLICY_ROLE_TYPE.ADMIN },
+        } as any);
+        expect(mfaService.disable).toHaveBeenCalled();
     });
 });

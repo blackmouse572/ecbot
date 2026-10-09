@@ -137,11 +137,16 @@ export class ActivityService {
             });
             create.workspace = workspace;
 
-            const key = `${ACTIVITY_VIEW_CACHE_PREFIX}:${create.by.id}:${userId}:${workspace.id}:${subject}:${metadata.id}`;
-            if (await this.cache.get(key)) return;
+            // `resource` keeps a messages read apart from the detail read.
+            const key = `${ACTIVITY_VIEW_CACHE_PREFIX}:${create.by.id}:${userId}:${workspace.id}:${subject}:${metadata.id}:${metadata.resource ?? ''}`;
+            // A cache outage costs a duplicate row, never a missing one.
+            const seen = await this.cache.get(key).catch(() => undefined);
+            if (seen) return;
 
             await this.activityRepository.create(create);
-            await this.cache.set(key, true, ACTIVITY_VIEW_DEDUPE_TTL_MS);
+            await this.cache
+                .set(key, true, ACTIVITY_VIEW_DEDUPE_TTL_MS)
+                .catch(() => undefined);
         } catch (err: unknown) {
             this.logger.warn(
                 `View activity for user [${userId}] not recorded: ${(err as Error)?.message}`

@@ -36,10 +36,10 @@ Ecbot plays two roles:
 
 **Account users**
 
-- Identity and contact data: name, email address, country, optional phone number and avatar.
+- Identity and contact data: name, email address, country, optional phone number and avatar. If you sign in with Google or Apple, we receive the email address and name from that account (Apple may give a private relay address).
 - Account data: password hash, sign-up date, the date and version of the Terms and Privacy Policy you accepted, roles and workspace memberships.
 - Usage and security data: login sessions, IP address, device and browser details, activity logs, verification codes and anti-bot checks (Cloudflare Turnstile).
-- Billing data: plan, invoices and payment status. Card and bank details are handled by the payment provider you use (Dodo Payments, Stripe, SePay or ZaloPay) and never stored by Ecbot.
+- Billing data: plan, invoices and payment status. Card and bank details are handled by the payment provider you use (today Dodo Payments) and never stored by Ecbot.
 - Content you add: agent settings, knowledge base documents, website pages you ask us to crawl, and connected channel accounts.
 
 **End customers who chat with an agent** (processed for the business)
@@ -79,7 +79,7 @@ We share data only with the service providers that help us run Ecbot, under writ
 
 ## Transfers outside Vietnam and the EU
 
-Ecbot's infrastructure and providers are located outside Vietnam and outside the European Economic Area. The app runs on Google Cloud Run in Singapore (asia-southeast1), the database on Neon and the cache on Upstash in Singapore (ap-southeast-1), and files are stored on Cloudflare R2. Conversations are sent to AI and tracing providers that process them in the United States and elsewhere.
+Ecbot's infrastructure and providers are located outside Vietnam and outside the European Economic Area. The app runs on Google Cloud Run in Singapore (asia-southeast1), the database on Neon and the cache on Upstash in Singapore (ap-southeast-1), and files are stored on Cloudflare R2. Messages from Messenger and Telegram first pass through Cloudflare Workers on its global network, which queue them and briefly keep conversation state. Conversations are sent to AI and tracing providers that process them in the United States and elsewhere.
 
 For transfers out of the EEA we rely on the European Commission's Standard Contractual Clauses or an adequacy decision. For transfers out of Vietnam we prepare and keep the cross-border transfer impact assessment that Vietnamese law requires and file it with the Ministry of Public Security. **[Counsel to confirm the transfer mechanisms, the filing status and the rules under Law 91/2025/QH15.]**
 
@@ -113,7 +113,7 @@ We protect data with encryption in transit, access control by role, password has
 
 ## Cookies and local storage
 
-The app uses strictly necessary cookies and browser storage for sign-in, language and security. The website widget stores a random visitor ID so a visitor can continue a conversation. Our marketing website, ecbot.dev, uses PostHog product analytics, which sets cookies and records page views and clicks to help us understand how visitors use the site. We do not use advertising cookies. **[Counsel to confirm whether PostHog needs a consent banner for EU visitors.]**
+The app uses strictly necessary cookies and browser storage for sign-in, language and security. The website widget stores a random visitor ID so a visitor can continue a conversation. Our marketing website, ecbot.dev, uses PostHog product analytics (US cloud) to record page views and clicks so we understand how visitors use the site. It sets no cookies until a visitor agrees. We do not use advertising cookies. **[Counsel to confirm whether PostHog needs a consent banner for EU visitors.]**
 
 ## Children
 

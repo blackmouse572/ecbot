@@ -203,6 +203,43 @@ describe('ActivityService request context', () => {
         );
     });
 
+    // Opening a conversation reads its detail and its messages: both count.
+    it('dedupes the messages read apart from the detail read', async () => {
+        const repo = repository();
+        const service = new ActivityService(
+            repo as any,
+            cls(request) as any,
+            cache() as any
+        );
+
+        await service.createView('u1', workspace, 'CONVERSATION' as any, {
+            id: 'conv-1',
+        });
+        await service.createView('u1', workspace, 'CONVERSATION' as any, {
+            id: 'conv-1',
+            resource: 'messages',
+        });
+
+        expect(repo.create).toHaveBeenCalledTimes(2);
+    });
+
+    it('still records the VIEW when the dedupe cache is down', async () => {
+        const repo = repository();
+        const store = cache();
+        store.get.mockRejectedValueOnce(new Error('redis down'));
+        const service = new ActivityService(
+            repo as any,
+            cls(request) as any,
+            store as any
+        );
+
+        await service.createView('u1', workspace, 'CUSTOMER' as any, {
+            id: 'cust-1',
+        });
+
+        expect(repo.create).toHaveBeenCalledTimes(1);
+    });
+
     it('never fails the read when the VIEW cannot be written', async () => {
         const repo = repository();
         repo.create.mockRejectedValueOnce(new Error('db down'));

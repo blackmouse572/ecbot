@@ -3,6 +3,7 @@
     "title": "Vui lòng xem lại điều khoản mới",
     "description": "Để tiếp tục dùng Ecbot, vui lòng đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy>.",
     "accept": "Tôi đồng ý",
+    "signOut": "Đăng xuất",
     "error": "Không lưu được xác nhận của bạn. Vui lòng thử lại."
   },
   "impersonation": {

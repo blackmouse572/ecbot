@@ -17,8 +17,8 @@ describe('AuthSharedController.changePassword', () => {
 
     const enqueue = jest.fn();
     const findOneById = jest.fn();
-    const increasePasswordAttempt = jest.fn();
-    const resetPasswordAttempt = jest.fn();
+    const claimPasswordAttempt = jest.fn();
+    const clearPasswordAttempt = jest.fn();
     const updatePassword = jest.fn();
     const getPasswordAttempt = jest.fn();
     const getPasswordMaxAttempt = jest.fn();
@@ -36,8 +36,8 @@ describe('AuthSharedController.changePassword', () => {
     beforeEach(async () => {
         enqueue.mockReset();
         findOneById.mockReset();
-        increasePasswordAttempt.mockReset();
-        resetPasswordAttempt.mockReset();
+        claimPasswordAttempt.mockReset();
+        clearPasswordAttempt.mockReset();
         updatePassword.mockReset();
         getPasswordAttempt.mockReset();
         getPasswordMaxAttempt.mockReset();
@@ -61,8 +61,8 @@ describe('AuthSharedController.changePassword', () => {
                     provide: UserService,
                     useValue: {
                         findOneById,
-                        increasePasswordAttempt,
-                        resetPasswordAttempt,
+                        claimPasswordAttempt,
+                        clearPasswordAttempt,
                         updatePassword,
                     },
                 },
@@ -99,6 +99,51 @@ describe('AuthSharedController.changePassword', () => {
         enqueue.mockResolvedValue(undefined);
     });
 
+    // A wrong old password is counted by one conditional update before the
+    // compare, so parallel guesses can't pass the cap.
+    it('claims the guess before comparing and refuses once none is left', async () => {
+        const user = { id: 'user-1', password: 'old-hash', passwordAttempt: 5 };
+        findOneById.mockResolvedValue(user);
+        getPasswordAttempt.mockReturnValue(true);
+        getPasswordMaxAttempt.mockReturnValue(5);
+        claimPasswordAttempt.mockResolvedValue(false);
+        validateUser.mockResolvedValue(true);
+
+        await expect(
+            controller.changePassword(
+                { oldPassword: 'old', newPassword: 'new' } as any,
+                'user-1'
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
+            },
+        });
+        expect(claimPasswordAttempt).toHaveBeenCalledWith(user, 5);
+        expect(validateUser).not.toHaveBeenCalled();
+    });
+
+    it('keeps the claimed guess on a wrong old password', async () => {
+        const user = { id: 'user-1', password: 'old-hash', passwordAttempt: 0 };
+        findOneById.mockResolvedValue(user);
+        getPasswordAttempt.mockReturnValue(true);
+        getPasswordMaxAttempt.mockReturnValue(5);
+        claimPasswordAttempt.mockResolvedValue(true);
+        validateUser.mockResolvedValue(false);
+
+        await expect(
+            controller.changePassword(
+                { oldPassword: 'bad', newPassword: 'new' } as any,
+                'user-1'
+            )
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+            },
+        });
+        expect(clearPasswordAttempt).not.toHaveBeenCalled();
+    });
+
     it('enqueues CHANGE_PASSWORD via CloudTasksQueueClient after the password-change transaction commits', async () => {
         const user = {
             id: 'user-1',
@@ -111,7 +156,8 @@ describe('AuthSharedController.changePassword', () => {
         getPasswordAttempt.mockReturnValue(true);
         getPasswordMaxAttempt.mockReturnValue(5);
         validateUser.mockResolvedValue(true);
-        resetPasswordAttempt.mockResolvedValue(user);
+        claimPasswordAttempt.mockResolvedValue(true);
+        clearPasswordAttempt.mockResolvedValue(undefined);
         createPassword.mockResolvedValue({ password: 'new-hash' });
         findOneUsedByUser.mockResolvedValue(null);
         updatePassword.mockResolvedValue(user);
@@ -149,7 +195,8 @@ describe('AuthSharedController.changePassword', () => {
         getPasswordAttempt.mockReturnValue(true);
         getPasswordMaxAttempt.mockReturnValue(5);
         validateUser.mockResolvedValue(true);
-        resetPasswordAttempt.mockResolvedValue(user);
+        claimPasswordAttempt.mockResolvedValue(true);
+        clearPasswordAttempt.mockResolvedValue(undefined);
         createPassword.mockResolvedValue({ password: 'new-hash' });
         findOneUsedByUser.mockResolvedValue(null);
         updatePassword.mockResolvedValue(user);

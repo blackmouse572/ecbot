@@ -32,7 +32,10 @@ import { UserUpdatePasswordAttemptRequestDto } from 'src/modules/user/dtos/reque
 import { UserUpdateProfileRequestDto } from 'src/modules/user/dtos/request/user.update-profile.dto';
 import { UserUpdateStatusRequestDto } from 'src/modules/user/dtos/request/user.update-status.request.dto';
 import { UserUpdateRequestDto } from 'src/modules/user/dtos/request/user.update.request.dto';
-import { USER_TERMS_VERSION } from 'src/modules/user/constants/user.constant';
+import {
+    USER_TERMS_PROMPT_ENABLED,
+    USER_TERMS_VERSION,
+} from 'src/modules/user/constants/user.constant';
 import { UserCensorResponseDto } from 'src/modules/user/dtos/response/user.censor.response.dto';
 import { UserGetResponseDto } from 'src/modules/user/dtos/response/user.get.response.dto';
 import { UserListResponseDto } from 'src/modules/user/dtos/response/user.list.response.dto';
@@ -48,6 +51,8 @@ import { UserRepository } from 'src/modules/user/repository/repositories/user.re
 
 @Injectable()
 export class UserService {
+    // Read through the instance so tests can switch the prompt on.
+    private readonly termsPromptEnabled: boolean = USER_TERMS_PROMPT_ENABLED;
     private readonly usernamePrefix: string;
     private readonly usernamePattern: RegExp;
 
@@ -558,16 +563,6 @@ export class UserService {
         return user;
     }
 
-    async increasePasswordAttempt(
-        user: UserEntity,
-        options?: IDatabaseUpdateOptions
-    ): Promise<UserEntity> {
-        const em = options?.em || this.em;
-        user.passwordAttempt = ++user.passwordAttempt;
-        await em.persistAndFlush(user);
-        return user;
-    }
-
     async resetPasswordAttempt(
         user: UserEntity,
         options?: IDatabaseUpdateOptions
@@ -725,7 +720,7 @@ export class UserService {
     mapProfile(user: UserEntity): UserProfileResponseDto {
         const mapped = plainToInstance(UserProfileResponseDto, user);
         mapped.termsAcceptanceRequired =
-            user.termsVersion !== USER_TERMS_VERSION;
+            this.termsPromptEnabled && user.termsVersion !== USER_TERMS_VERSION;
         return mapped;
     }
 

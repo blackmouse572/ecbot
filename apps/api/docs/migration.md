@@ -55,6 +55,10 @@ pnpm db:schema:drop           # Drop database schema
 pnpm db:schema:update         # Update schema to match entities
 pnpm db:schema:fresh          # Drop and recreate schema
 
+# The fresh and drop commands refuse to run unless DATABASE_URL is a local
+# Postgres (localhost, 127.0.0.1, ::1, or the compose service name) and
+# APP_ENV is not production: see scripts/guard-local-database.ts.
+
 # Utility operations
 pnpm db:cache:clear           # Clear metadata cache
 pnpm db:generate-entities     # Generate entities from an existing database

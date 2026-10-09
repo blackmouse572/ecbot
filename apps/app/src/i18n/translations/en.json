@@ -3,6 +3,7 @@
     "title": "Please review our updated terms",
     "description": "To keep using Ecbot, please agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "accept": "I agree",
+    "signOut": "Sign out",
     "error": "Could not save your acceptance. Please try again."
   },
   "impersonation": {

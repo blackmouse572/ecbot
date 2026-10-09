@@ -244,8 +244,8 @@ describe('AuthPublicController.loginWithCredential', () => {
     const maybeRehashPassword = jest.fn();
     const verifyLoginTurnstile = jest.fn();
     const checkPasswordExpired = jest.fn();
-    const resetPasswordAttempt = jest.fn();
-    const increasePasswordAttempt = jest.fn();
+    const clearPasswordAttempt = jest.fn();
+    const claimPasswordAttempt = jest.fn();
     const rehashPassword = jest.fn();
     const join = jest.fn();
     const createToken = jest.fn();
@@ -276,8 +276,8 @@ describe('AuthPublicController.loginWithCredential', () => {
         runDummyPasswordCompare.mockReset();
         maybeRehashPassword.mockReset();
         checkPasswordExpired.mockReset();
-        resetPasswordAttempt.mockReset();
-        increasePasswordAttempt.mockReset();
+        clearPasswordAttempt.mockReset();
+        claimPasswordAttempt.mockReset();
         rehashPassword.mockReset();
         join.mockReset();
         createToken.mockReset();
@@ -302,8 +302,8 @@ describe('AuthPublicController.loginWithCredential', () => {
                     provide: UserService,
                     useValue: {
                         findOneByEmail,
-                        resetPasswordAttempt,
-                        increasePasswordAttempt,
+                        clearPasswordAttempt,
+                        claimPasswordAttempt,
                         rehashPassword,
                         join,
                     },
@@ -356,8 +356,12 @@ describe('AuthPublicController.loginWithCredential', () => {
         maybeRehashPassword.mockResolvedValue(null);
         verifyLoginTurnstile.mockResolvedValue(undefined);
         checkPasswordExpired.mockReturnValue(false);
-        resetPasswordAttempt.mockResolvedValue(undefined);
-        increasePasswordAttempt.mockResolvedValue(undefined);
+        clearPasswordAttempt.mockResolvedValue(undefined);
+        // Models the conditional UPDATE: a guess is claimed only under the cap.
+        claimPasswordAttempt.mockImplementation(
+            async (user: { passwordAttempt: number }, max: number) =>
+                user.passwordAttempt < max
+        );
         rehashPassword.mockResolvedValue(undefined);
         join.mockResolvedValue(activeUser);
         createSession.mockResolvedValue({ id: 'session-1' });
@@ -519,6 +523,7 @@ describe('AuthPublicController.loginWithCredential', () => {
 
     it('rejects a wrong password with the same statusCode/message as an unknown email, and no attempt count', async () => {
         findOneByEmail.mockResolvedValue(activeUser);
+        getPasswordAttempt.mockReturnValue(true);
         validateUser.mockResolvedValue(false);
 
         const error = await controller
@@ -534,7 +539,12 @@ describe('AuthPublicController.loginWithCredential', () => {
             message: 'auth.error.invalidCredential',
         });
         expect(error.response.data).toBeUndefined();
-        expect(increasePasswordAttempt).toHaveBeenCalledWith(activeUser);
+        expect(claimPasswordAttempt).toHaveBeenCalledWith(activeUser, 5);
+        // Claimed before the compare, so parallel guesses can't pass the cap.
+        expect(claimPasswordAttempt.mock.invocationCallOrder[0]).toBeLessThan(
+            validateUser.mock.invocationCallOrder[0]
+        );
+        expect(clearPasswordAttempt).not.toHaveBeenCalled();
     });
 
     it('does not increase the attempt counter or reveal lockout once already at max, on a wrong password', async () => {
@@ -559,7 +569,10 @@ describe('AuthPublicController.loginWithCredential', () => {
             },
         });
 
-        expect(increasePasswordAttempt).not.toHaveBeenCalled();
+        // The claim found no guess left, so nothing was counted.
+        await expect(claimPasswordAttempt.mock.results[0].value).resolves.toBe(
+            false
+        );
     });
 
     // Fix round 1: the original version of this test asserted the opposite
@@ -595,7 +608,10 @@ describe('AuthPublicController.loginWithCredential', () => {
         // Still ran the real compare, so a locked account's timing matches
         // an unlocked wrong-password rejection.
         expect(validateUser).toHaveBeenCalledWith('pass', undefined);
-        expect(increasePasswordAttempt).not.toHaveBeenCalled();
+        // The claim found no guess left, so nothing was counted.
+        await expect(claimPasswordAttempt.mock.results[0].value).resolves.toBe(
+            false
+        );
         expect(createToken).not.toHaveBeenCalled();
     });
 

@@ -3,6 +3,7 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import {
     BadRequestException,
     Controller,
+    ForbiddenException,
     HttpCode,
     HttpStatus,
     InternalServerErrorException,
@@ -11,6 +12,7 @@ import {
     Put,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { randomUUID } from 'crypto';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
@@ -82,13 +84,26 @@ export class AuthAdminController {
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @HttpCode(HttpStatus.OK)
     @Post('/update/:user/mfa/reset')
     async resetMfa(
         @AuthJwtPayload('user') updatedBy: string,
+        @AuthJwtPayload('type') updatedByType: ENUM_POLICY_ROLE_TYPE,
         @UserParam('user', RequestRequiredPipe, UserParsePipe, UserNotSelfPipe)
         user: UserEntity
     ): Promise<void> {
+        // Same hierarchy as impersonation: an admin acts only on users; only
+        // a super admin may reset another admin's second factor.
+        if (
+            user.role.type !== ENUM_POLICY_ROLE_TYPE.USER &&
+            updatedByType !== ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN
+        ) {
+            throw new ForbiddenException({
+                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_RESET_FORBIDDEN,
+                message: 'auth.error.mfaResetForbidden',
+            });
+        }
         if (!user.mfaEnabled) {
             throw new BadRequestException({
                 statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_NOT_ENABLED,
@@ -97,6 +112,8 @@ export class AuthAdminController {
         }
 
         await this.mfaService.disable(user);
+        // A user locked out by failed codes starts over with the new setup.
+        await this.userService.clearPasswordAttempt(user);
         await this.mfaService.revokeSessionsAndNotify(user, false);
         await this.activityService.createByAdmin(user, updatedBy, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,

@@ -29,7 +29,6 @@ describe('AuthPublicController MFA login', () => {
         findOneByEmail: jest.fn(),
         findOneById: jest.fn(),
         resetPasswordAttempt: jest.fn(),
-        increasePasswordAttempt: jest.fn(),
         // Models the conditional UPDATE on the stored counter.
         claimPasswordAttempt: jest.fn(async (_user: any, max: number) => {
             if (storedAttempts >= max) return false;
@@ -168,7 +167,7 @@ describe('AuthPublicController MFA login', () => {
                 {} as any
             );
 
-            expect(userService.resetPasswordAttempt).not.toHaveBeenCalled();
+            expect(userService.clearPasswordAttempt).not.toHaveBeenCalled();
         });
 
         it('still issues tokens directly when MFA is off', async () => {

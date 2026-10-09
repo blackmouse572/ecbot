@@ -36,10 +36,10 @@ Ecbot có hai vai trò:
 
 **Người dùng tài khoản**
 
-- Thông tin định danh và liên hệ: họ tên, email, quốc gia, số điện thoại và ảnh đại diện (không bắt buộc).
+- Thông tin định danh và liên hệ: họ tên, email, quốc gia, số điện thoại và ảnh đại diện (không bắt buộc). Nếu bạn đăng nhập bằng Google hoặc Apple, chúng tôi nhận email và tên từ tài khoản đó (Apple có thể cung cấp một địa chỉ chuyển tiếp ẩn danh).
 - Dữ liệu tài khoản: mật khẩu đã băm, ngày đăng ký, ngày và phiên bản Điều khoản và Chính sách quyền riêng tư bạn đã đồng ý, vai trò và không gian làm việc bạn tham gia.
 - Dữ liệu sử dụng và bảo mật: phiên đăng nhập, địa chỉ IP, thông tin thiết bị và trình duyệt, nhật ký hoạt động, mã xác minh và kết quả kiểm tra chống bot (Cloudflare Turnstile).
-- Dữ liệu thanh toán: gói dịch vụ, hóa đơn và trạng thái thanh toán. Thông tin thẻ và tài khoản ngân hàng do nhà cung cấp thanh toán bạn dùng (Dodo Payments, Stripe, SePay hoặc ZaloPay) xử lý, Ecbot không lưu.
+- Dữ liệu thanh toán: gói dịch vụ, hóa đơn và trạng thái thanh toán. Thông tin thẻ và tài khoản ngân hàng do nhà cung cấp thanh toán bạn dùng (hiện là Dodo Payments) xử lý, Ecbot không lưu.
 - Nội dung bạn thêm vào: thiết lập agent, tài liệu trong kho kiến thức, trang web bạn yêu cầu thu thập, và các tài khoản kênh đã kết nối.
 
 **Khách hàng cuối chat với agent** (xử lý thay cho doanh nghiệp)
@@ -79,7 +79,7 @@ Chúng tôi chỉ chia sẻ dữ liệu với các nhà cung cấp giúp vận h
 
 ## Chuyển dữ liệu ra ngoài Việt Nam và EU
 
-Hạ tầng và các nhà cung cấp của Ecbot đặt bên ngoài Việt Nam và bên ngoài Khu vực Kinh tế Châu Âu. Ứng dụng chạy trên Google Cloud Run tại Singapore (asia-southeast1), cơ sở dữ liệu trên Neon và bộ nhớ đệm trên Upstash tại Singapore (ap-southeast-1), và tệp được lưu trên Cloudflare R2. Cuộc trò chuyện được gửi đến các nhà cung cấp AI và theo dõi, xử lý tại Hoa Kỳ và nơi khác.
+Hạ tầng và các nhà cung cấp của Ecbot đặt bên ngoài Việt Nam và bên ngoài Khu vực Kinh tế Châu Âu. Ứng dụng chạy trên Google Cloud Run tại Singapore (asia-southeast1), cơ sở dữ liệu trên Neon và bộ nhớ đệm trên Upstash tại Singapore (ap-southeast-1), và tệp được lưu trên Cloudflare R2. Tin nhắn từ Messenger và Telegram đi qua Cloudflare Workers trên mạng lưới toàn cầu trước, nơi tin nhắn được đưa vào hàng đợi và trạng thái cuộc trò chuyện được giữ trong thời gian ngắn. Cuộc trò chuyện được gửi đến các nhà cung cấp AI và theo dõi, xử lý tại Hoa Kỳ và nơi khác.
 
 Khi chuyển dữ liệu ra khỏi EEA, chúng tôi dựa vào Điều khoản hợp đồng mẫu của Ủy ban Châu Âu hoặc quyết định công nhận mức bảo vệ tương đương. Khi chuyển dữ liệu ra khỏi Việt Nam, chúng tôi lập và lưu hồ sơ đánh giá tác động chuyển dữ liệu ra nước ngoài theo pháp luật Việt Nam và gửi Bộ Công an. **[Luật sư xác nhận cơ chế chuyển dữ liệu, tình trạng nộp hồ sơ và quy định theo Luật số 91/2025/QH15.]**
 
@@ -113,7 +113,7 @@ Chúng tôi bảo vệ dữ liệu bằng mã hóa khi truyền, phân quyền t
 
 ## Cookie và bộ nhớ trình duyệt
 
-Ứng dụng chỉ dùng cookie và bộ nhớ trình duyệt thật sự cần thiết cho đăng nhập, ngôn ngữ và bảo mật. Widget trên website lưu một mã khách truy cập ngẫu nhiên để khách có thể tiếp tục cuộc trò chuyện. Website giới thiệu của chúng tôi, ecbot.dev, dùng công cụ phân tích PostHog, công cụ này đặt cookie và ghi lại lượt xem trang và lượt nhấp để chúng tôi hiểu cách khách dùng website. Chúng tôi không dùng cookie quảng cáo. **[Luật sư xác nhận PostHog có cần hỏi ý kiến đồng ý của khách truy cập từ EU không.]**
+Ứng dụng chỉ dùng cookie và bộ nhớ trình duyệt thật sự cần thiết cho đăng nhập, ngôn ngữ và bảo mật. Widget trên website lưu một mã khách truy cập ngẫu nhiên để khách có thể tiếp tục cuộc trò chuyện. Website giới thiệu của chúng tôi, ecbot.dev, dùng công cụ phân tích PostHog (cloud Hoa Kỳ) để ghi lại lượt xem trang và lượt nhấp, giúp chúng tôi hiểu cách khách dùng website. Công cụ này không đặt cookie cho đến khi khách đồng ý. Chúng tôi không dùng cookie quảng cáo. **[Luật sư xác nhận PostHog có cần hỏi ý kiến đồng ý của khách truy cập từ EU không.]**
 
 ## Trẻ em
 

@@ -62,6 +62,10 @@ The Activity module is designed to be used across the application to track impor
 
 Audit metadata holds ids, not names or emails: the table is append-only, so
 personal data copied into it could never be erased.
+Entries that name another person keep only that person's id: member removal
+(`{ _id }`), invitation create, update and revoke (`{ id }` of the
+invitation), and impersonation start (`{ session, sessionExpiresAt }`, the
+target being the row's user).
 
 ### Request context
 
@@ -85,14 +89,15 @@ id, so reads in "user view mode" are never attributed to the user.
 
 | Action | Subject | When | `metadata` |
 | --- | --- | --- | --- |
-| `login` | `AUTH` | credential, Google or Apple login succeeds | `{ id }` (the older Google and Apple paths still add `name`, the email) |
+| `login` | `AUTH` | credential, Google or Apple login succeeds | `{ id }`, plus `method: 'totp' \| 'recovery'` when MFA was used |
 | `login_failed` | `AUTH` | login rejected for an **existing** user | `{ id, reason }` |
 | `view` | `CONVERSATION` | `GET /:workspace/conversations/:id` | `{ id }` |
 | `view` | `CONVERSATION` | `GET /:workspace/conversations/:id/messages`, first page only | `{ id, resource: 'messages' }` |
 | `view` | `CUSTOMER` | `GET /:workspace/customers/:id` | `{ id }` |
 
-`reason` is one of `invalid_password`, `locked`, `blocked`, `inactive`,
-`role_inactive`, `email_not_verified`, `password_expired`. An unknown email
+`reason` is one of `invalid_password`, `invalid_mfa_code`, `locked`,
+`blocked`, `inactive`, `role_inactive`, `email_not_verified`,
+`password_expired`. An unknown email
 writes nothing, and the HTTP response is unchanged (a failed audit insert is
 logged and swallowed), so the audit log does not leak which accounts exist.
 List pages are not logged.

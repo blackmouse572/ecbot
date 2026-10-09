@@ -3,6 +3,8 @@ import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const accept = vi.fn();
+const logout = vi.fn();
+vi.mock("@/hooks/api", () => ({ useLogout: () => logout }));
 const state = { required: false, impersonating: false };
 vi.mock("@/hooks/api/users", () => ({
   useTermsAcceptance: () => ({
@@ -31,6 +33,7 @@ describe("TermsAcceptancePrompt", () => {
   beforeEach(async () => {
     await i18n.changeLanguage("en");
     accept.mockReset().mockResolvedValue(undefined);
+    logout.mockReset();
     state.required = false;
     state.impersonating = false;
   });
@@ -61,5 +64,15 @@ describe("TermsAcceptancePrompt", () => {
     state.impersonating = true;
     renderPrompt();
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  // The dialog blocks the app, so it needs a way out besides agreeing.
+  it("lets the user sign out instead of agreeing", () => {
+    state.required = true;
+    renderPrompt();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(logout).toHaveBeenCalled();
+    expect(accept).not.toHaveBeenCalled();
   });
 });

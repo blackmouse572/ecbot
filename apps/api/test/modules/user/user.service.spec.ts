@@ -1,6 +1,9 @@
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { ENUM_FILE_MIME_IMAGE } from '@app/common/file/enums/file.enum';
-import { USER_TERMS_VERSION } from '@app/modules/user/constants/user.constant';
+import {
+    USER_TERMS_PROMPT_ENABLED,
+    USER_TERMS_VERSION,
+} from '@app/modules/user/constants/user.constant';
 
 // Global setup (test/modules/account/setup.ts) stubs UserService with an
 // empty class for specs that only need it as a DI placeholder. This spec
@@ -339,14 +342,30 @@ describe('UserService.acceptTerms', () => {
 });
 
 describe('UserService.mapProfile termsAcceptanceRequired', () => {
-    const service = Object.create(UserService.prototype);
+    // Off while the documents are drafts: nobody is asked to accept.
+    it('asks no one while the prompt is switched off', () => {
+        expect(USER_TERMS_PROMPT_ENABLED).toBe(false);
+        const mapped = Object.assign(Object.create(UserService.prototype), {
+            termsPromptEnabled: USER_TERMS_PROMPT_ENABLED,
+        }).mapProfile({ id: 'u-1' });
+        expect(mapped.termsAcceptanceRequired).toBe(false);
+    });
 
     it.each([
         [undefined, true],
         ['2020-01-01', true],
         [USER_TERMS_VERSION, false],
-    ])('termsVersion %s -> %s', (termsVersion, expected) => {
-        const mapped = service.mapProfile({ id: 'u-1', termsVersion });
-        expect(mapped.termsAcceptanceRequired).toBe(expected);
-    });
+    ])(
+        'with the prompt on, termsVersion %s -> %s',
+        (termsVersion, expected) => {
+            const enabled = Object.assign(
+                Object.create(UserService.prototype),
+                {
+                    termsPromptEnabled: true,
+                }
+            );
+            const mapped = enabled.mapProfile({ id: 'u-1', termsVersion });
+            expect(mapped.termsAcceptanceRequired).toBe(expected);
+        }
+    );
 });

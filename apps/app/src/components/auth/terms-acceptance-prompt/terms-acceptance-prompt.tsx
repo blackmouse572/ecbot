@@ -1,4 +1,5 @@
 import { LegalText } from "@/components/common";
+import { useLogout } from "@/hooks/api";
 import { useTermsAcceptance } from "@/hooks/api/users";
 import { useImpersonation } from "@/modules/impersonation";
 import { Prompt, toast } from "@medusajs/ui";
@@ -13,6 +14,7 @@ export const TermsAcceptancePrompt: FC = () => {
   const { t } = useTranslation();
   const impersonation = useImpersonation();
   const { required, accept, isPending } = useTermsAcceptance();
+  const logout = useLogout();
 
   // Consent is personal: an operator impersonating must not accept for the user.
   if (impersonation || !required) return null;
@@ -30,6 +32,10 @@ export const TermsAcceptancePrompt: FC = () => {
           </Prompt.Description>
         </Prompt.Header>
         <Prompt.Footer>
+          {/* The dialog blocks the app, so signing out is the way to decline. */}
+          <Prompt.Cancel type="button" onClick={() => logout()}>
+            {t("termsPrompt.signOut")}
+          </Prompt.Cancel>
           <Prompt.Action
             type="button"
             onClick={handleAccept}

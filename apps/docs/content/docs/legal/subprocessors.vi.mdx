@@ -23,19 +23,20 @@ Cập nhật lần cuối: 2026-10-09.
 | Neon | Cơ sở dữ liệu PostgreSQL chính | Toàn bộ dữ liệu dịch vụ được lưu, gồm cuộc trò chuyện và hồ sơ khách | Singapore (AWS ap-southeast-1) |
 | Upstash | Bộ nhớ đệm Redis, phiên đăng nhập và giới hạn truy cập | Dữ liệu phiên, bản ghi lưu đệm, địa chỉ IP để giới hạn truy cập | Singapore (ap-southeast-1) |
 | Cloudflare | Lưu trữ tệp (R2), lưu trữ ứng dụng và trang tài liệu, bảo vệ mạng, kiểm tra chống bot Turnstile | Tệp tải lên và tệp đa phương tiện trong chat; địa chỉ IP, thông tin trình duyệt, siêu dữ liệu yêu cầu | Bucket R2 **[xác nhận khu vực]**; mạng lưới toàn cầu |
+| Cloudflare (edge.ecbot.dev) | Workers, Queues và Durable Objects nhận webhook từ Messenger và Telegram, đưa vào hàng đợi và giữ trạng thái cuộc trò chuyện trong thời gian ngắn để gom tin nhắn trước khi trả lời; nhật ký gọi hàm trên một phần yêu cầu | Nội dung tin nhắn, ID người gửi và thông tin hồ sơ từ các kênh đã kết nối | Mạng lưới toàn cầu; nơi lưu Durable Object **[xác nhận vị trí]** |
+| Apple | Đăng nhập bằng Apple | Email Apple ID (có thể là địa chỉ chuyển tiếp ẩn danh) và tên | Hoa Kỳ |
 | OpenRouter, Inc. | Chuyển yêu cầu AI đến các nhà cung cấp mô hình, gồm Google Gemini và các bên khác, để tạo câu trả lời, nhãn, tóm tắt và embedding | Nội dung chat, thông tin và hồ sơ khách, đoạn trích kho kiến thức | Hoa Kỳ, và khu vực của nhà cung cấp mô hình |
 | Các nhà cung cấp mô hình AI phía sau (ví dụ Google) | Chạy các mô hình mà OpenRouter chuyển tới | Như OpenRouter, theo từng yêu cầu | Hoa Kỳ và các khu vực khác |
 | LangSmith (LangChain, Inc.) | Theo dõi mọi yêu cầu AI trên môi trường thật, để kiểm tra chất lượng và gỡ lỗi | Prompt và kết quả, có chứa nội dung chat, thông tin khách và đoạn trích kho kiến thức | Hoa Kỳ |
 | Firecrawl (Mendable, Inc.) | Thu thập nội dung website bạn thêm vào kho kiến thức | Nội dung công khai của các trang bạn chọn | Hoa Kỳ |
 | Composio | Kết nối công cụ bên thứ ba bạn bật cho agent | Dữ liệu agent gửi tới công cụ, như thông tin đơn hàng hoặc liên hệ | Hoa Kỳ **[xác nhận]** |
 | Resend | Gửi email dịch vụ, như mã xác minh | Tên, email, nội dung email | Hoa Kỳ |
-| Amazon Web Services | SMS (Pinpoint), và email (SES) dự phòng cho Resend **[xác nhận có dùng trên môi trường thật không]** | Số điện thoại, email và nội dung tin nhắn | **[khu vực]** |
+| Amazon Web Services | Email (SES) dự phòng cho Resend, và SMS (Pinpoint) **[xác nhận Pinpoint có dùng trên môi trường thật không]** | Số điện thoại, email và nội dung tin nhắn | Jakarta (ap-southeast-3) |
 | Sentry (Functional Software, Inc.) | Giám sát lỗi, đã tắt gửi dữ liệu cá nhân | Dữ liệu lỗi kỹ thuật; có thể xử lý địa chỉ IP | Hoa Kỳ **[xác nhận]** |
-| PostHog | Phân tích hành vi trên website ecbot.dev | Lượt xem trang, lượt nhấp, thông tin trình duyệt, địa chỉ IP, mã cookie | **[xác nhận khu vực: cloud Hoa Kỳ hoặc EU]** |
-| Dodo Payments | Thanh toán gói dịch vụ (nhà cung cấp tự động chính) | Tên, email, địa chỉ thanh toán, thông tin thanh toán | **[xác nhận]** |
-| Stripe | Thanh toán gói dịch vụ | Tên, email, địa chỉ thanh toán, thông tin thanh toán | Hoa Kỳ, Ireland |
-| SePay | Thanh toán chuyển khoản ngân hàng tại Việt Nam | Tên người trả, thông tin tài khoản ngân hàng, số tiền và nội dung chuyển khoản | Việt Nam |
-| ZaloPay (VNG) | Thanh toán qua ví và thẻ tại Việt Nam | Tên người trả, số điện thoại, thông tin thanh toán | Việt Nam |
+| PostHog | Phân tích hành vi trên website ecbot.dev, không dùng cookie cho đến khi khách đồng ý | Lượt xem trang, lượt nhấp, thông tin trình duyệt, địa chỉ IP; mã cookie chỉ sau khi khách đồng ý | Hoa Kỳ (cloud Hoa Kỳ) |
+| Dodo Payments | Thanh toán gói dịch vụ | Tên, email, địa chỉ thanh toán, thông tin thanh toán | **[xác nhận]** |
+
+Hiện Dodo Payments là nhà cung cấp thanh toán duy nhất đang bật. Chúng tôi có thể thêm Stripe, SePay (chuyển khoản ngân hàng tại Việt Nam) hoặc ZaloPay (thanh toán qua ví và thẻ tại Việt Nam); mỗi bên sẽ được liệt kê tại đây, kèm thông báo như thường lệ, trước khi xử lý thanh toán.
 
 ## Các kênh bạn kết nối
 

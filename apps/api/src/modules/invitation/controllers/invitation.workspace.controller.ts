@@ -235,10 +235,8 @@ export class InvitationWorkspaceController {
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,
             subject: ENUM_POLICY_SUBJECT.INVITATION,
-            metadata: {
-                id: updatedInvitation.id,
-                name: updatedInvitation.inviteeEmail,
-            },
+            // Ids only: the audit log is append-only and outlives the account.
+            metadata: { id: updatedInvitation.id },
         });
 
         return { data: mapped };
@@ -321,10 +319,8 @@ export class InvitationWorkspaceController {
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.CREATE,
             subject: ENUM_POLICY_SUBJECT.INVITATION,
-            metadata: {
-                id: updatedInvitation.id,
-                name: updatedInvitation.inviteeEmail,
-            },
+            // Ids only: the audit log is append-only and outlives the account.
+            metadata: { id: updatedInvitation.id },
         });
 
         return { data: mapped };
@@ -381,10 +377,8 @@ export class InvitationWorkspaceController {
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.DELETE,
             subject: ENUM_POLICY_SUBJECT.INVITATION,
-            metadata: {
-                id: revokedInvitation.id,
-                name: revokedInvitation.inviteeEmail,
-            },
+            // Ids only: the audit log is append-only and outlives the account.
+            metadata: { id: revokedInvitation.id },
         });
 
         return { data: mapped };

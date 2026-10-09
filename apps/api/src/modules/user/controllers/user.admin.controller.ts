@@ -555,7 +555,6 @@ export class UserAdminController {
                     metadata: {
                         session: session.id,
                         sessionExpiresAt: session.expiredAt,
-                        targetEmail: target.email,
                     },
                 },
                 { em }

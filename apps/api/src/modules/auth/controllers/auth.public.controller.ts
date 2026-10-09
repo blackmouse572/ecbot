@@ -165,11 +165,15 @@ export class AuthPublicController {
             throw this.buildInvalidCredentialError();
         }
 
-        const passwordAttempt: boolean = this.authService.getPasswordAttempt();
-        const passwordMaxAttempt: number =
-            this.authService.getPasswordMaxAttempt();
+        // Claim this guess in one conditional update before comparing, so
+        // parallel wrong passwords can't pass the cap, and no stale write
+        // can roll back guesses the MFA step has claimed meanwhile.
         const isPasswordLocked: boolean =
-            passwordAttempt && user.passwordAttempt >= passwordMaxAttempt;
+            this.authService.getPasswordAttempt() &&
+            !(await this.userService.claimPasswordAttempt(
+                user,
+                this.authService.getPasswordMaxAttempt()
+            ));
 
         // Always run the real compare, whatever the lock state, so a locked
         // account's response takes the same time as an unlocked one's.
@@ -189,7 +193,7 @@ export class AuthPublicController {
         }
 
         if (!validate) {
-            await this.userService.increasePasswordAttempt(user);
+            // The guess was already counted by the claim above.
             await this.recordLoginFailed(user, 'invalid_password');
 
             // Identical to the unknown-email error above — no attempt
@@ -243,7 +247,7 @@ export class AuthPublicController {
         // With MFA on, the count is only cleared once the second factor
         // passes, so failed codes keep adding up toward the lockout.
         if (!user.mfaEnabled) {
-            await this.userService.resetPasswordAttempt(user);
+            await this.userService.clearPasswordAttempt(user);
         }
 
         const checkPasswordExpired: boolean =
@@ -426,12 +430,20 @@ export class AuthPublicController {
 
             await databaseSession.commit();
 
-            await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.LOGIN,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                // The audit log is append-only, so it keeps ids, not emails.
-                metadata: { id: user.id },
-            });
+            // The session is committed: a failed audit write must not turn
+            // the login into a 500.
+            await this.activityService
+                .createByUser(user, {
+                    action: ENUM_ACTIVITY_ACTION.LOGIN,
+                    subject: ENUM_POLICY_SUBJECT.AUTH,
+                    // The audit log is append-only: ids, not emails.
+                    metadata: { id: user.id },
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Login activity for user [${user.id}] not recorded: ${(err as Error)?.message}`
+                    )
+                );
 
             const token = this.authService.createToken(
                 userWithRole,
@@ -534,12 +546,20 @@ export class AuthPublicController {
 
             await databaseSession.commit();
 
-            await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.LOGIN,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                // The audit log is append-only, so it keeps ids, not emails.
-                metadata: { id: user.id },
-            });
+            // The session is committed: a failed audit write must not turn
+            // the login into a 500.
+            await this.activityService
+                .createByUser(user, {
+                    action: ENUM_ACTIVITY_ACTION.LOGIN,
+                    subject: ENUM_POLICY_SUBJECT.AUTH,
+                    // The audit log is append-only: ids, not emails.
+                    metadata: { id: user.id },
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Login activity for user [${user.id}] not recorded: ${(err as Error)?.message}`
+                    )
+                );
 
             const token = this.authService.createToken(
                 userWithRole,
