@@ -281,18 +281,20 @@ export class AuthPublicController {
             ? await this.userService.findOneById(challenge.user)
             : null;
         if (!challenge || !user) {
-            throw new UnauthorizedException({
-                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_CHALLENGE_INVALID,
-                message: 'auth.error.mfaChallengeInvalid',
-            });
+            throw this.buildMfaChallengeInvalidError();
         }
 
-        // Wrong codes count toward the same lockout as wrong passwords.
+        // Wrong codes count toward the same lockout as wrong passwords. The
+        // guess is claimed in one conditional update before the code is
+        // checked, so parallel guesses cannot get past the cap.
         if (
             this.authService.getPasswordAttempt() &&
-            user.passwordAttempt >= this.authService.getPasswordMaxAttempt()
+            !(await this.userService.claimPasswordAttempt(
+                user,
+                this.authService.getPasswordMaxAttempt()
+            ))
         ) {
-            await this.mfaService.deleteChallenge(mfaToken);
+            await this.mfaService.consumeChallenge(mfaToken);
             await this.recordLoginFailed(user, 'locked');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
@@ -300,13 +302,17 @@ export class AuthPublicController {
             });
         }
 
-        if (!(await this.mfaService.verify(user, code))) {
-            await this.userService.increasePasswordAttempt(user);
+        const method = await this.mfaService.verify(user, code);
+        if (!method) {
             await this.recordLoginFailed(user, 'invalid_mfa_code');
             throw this.mfaService.invalidCodeError();
         }
 
-        await this.mfaService.deleteChallenge(mfaToken);
+        // Spent atomically: of two requests with valid codes for the same
+        // challenge, only one opens a session.
+        if (!(await this.mfaService.consumeChallenge(mfaToken))) {
+            throw this.buildMfaChallengeInvalidError();
+        }
 
         // The account may have changed in the minutes since the first step.
         const userWithRole: UserEntity = await this.userService.join(user);
@@ -319,15 +325,23 @@ export class AuthPublicController {
                 message: 'user.error.inactive',
             });
         }
+        if (this.authService.checkPasswordExpired(user.passwordExpired)) {
+            await this.recordLoginFailed(user, 'password_expired');
+            throw new ForbiddenException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
+                message: 'auth.error.passwordExpired',
+            });
+        }
 
-        await this.userService.resetPasswordAttempt(user);
+        await this.userService.clearPasswordAttempt(user);
 
         return {
             data: await this.issueLogin(
                 userWithRole,
                 request,
                 res,
-                challenge.rememberMe
+                challenge.rememberMe,
+                { method }
             ),
         };
     }
@@ -758,6 +772,13 @@ export class AuthPublicController {
                 _error: err,
             });
         }
+    }
+
+    private buildMfaChallengeInvalidError(): UnauthorizedException {
+        return new UnauthorizedException({
+            statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_CHALLENGE_INVALID,
+            message: 'auth.error.mfaChallengeInvalid',
+        });
     }
 
     // Shared by both the unknown-email and wrong-password branches of

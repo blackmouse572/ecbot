@@ -94,7 +94,8 @@ export interface ISessionService {
     ): Promise<SessionEntity>;
     updateManyRevokeByUser(
         user: string,
-        options?: IDatabaseUpdateManyOptions
+        options?: IDatabaseUpdateManyOptions,
+        exceptSession?: string
     ): Promise<boolean>;
     deleteMany(
         find?: Record<string, any>,

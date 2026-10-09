@@ -430,12 +430,15 @@ export class SessionService implements ISessionService {
         await this.updateRevoke(checkSession);
     }
 
+    /** Revokes every session of the user, or every other one with `exceptSession`. */
     async updateManyRevokeByUser(
         user: string,
-        options?: IDatabaseUpdateManyOptions
+        options?: IDatabaseUpdateManyOptions,
+        exceptSession?: string
     ): Promise<boolean> {
         const today = this.helperDateService.create();
-        const sessions = await this.findAllByUser(user, undefined, options);
+        const except = exceptSession ? { id: { $ne: exceptSession } } : {};
+        const sessions = await this.findAllByUser(user, except, options);
         const promises = sessions.map(e => this.deleteLoginSession(e.id));
         // Impersonation sessions that are about to be flipped by this revoke-all
         // (password change, account deletion, admin "revoke all").
@@ -453,6 +456,7 @@ export class SessionService implements ISessionService {
             {
                 user,
                 status: ENUM_SESSION_STATUS.ACTIVE,
+                ...except,
             },
             {
                 status: ENUM_SESSION_STATUS.REVOKED,

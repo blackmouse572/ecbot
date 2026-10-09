@@ -1,34 +1,33 @@
-import { useMfaSetup, type AuthMfaSetupResponseDto } from "@/hooks/api/mfa";
-import { readApiError } from "@/libs/api-error";
+import {
+  useMfaDisable,
+  useMfaRegenerateRecoveryCodes,
+  useMfaSetup,
+  type AuthMfaSetupResponseDto,
+} from "@/hooks/api/mfa";
 import { Badge, Button, Container, Heading, Text, toast } from "@medusajs/ui";
 import { useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
-import { MfaDisableForm } from "./mfa-disable-form";
+import { MfaCredentialsForm } from "./mfa-credentials-form";
 import { MfaRecoveryCodes } from "./mfa-recovery-codes";
 import { MfaSetupPanel } from "./mfa-setup-panel";
 import type { ProfileGeneralSectionProps } from "./profile-general-section";
 
 type Step =
   | { name: "idle" }
-  | { name: "setup"; setup: AuthMfaSetupResponseDto }
+  | { name: "confirm-password" }
+  | { name: "setup"; setup: AuthMfaSetupResponseDto; password: string }
   | { name: "recovery"; codes: string[] }
+  | { name: "regenerate" }
   | { name: "disable" };
 
 export const ProfileMfaSection: FC<ProfileGeneralSectionProps> = ({ user }) => {
   const { t } = useTranslation(undefined, { keyPrefix: "profile.mfa" });
-  const { mutateAsync: startSetup, isPending: isStarting } = useMfaSetup();
+  const setup = useMfaSetup();
+  const regenerate = useMfaRegenerateRecoveryCodes();
+  const disable = useMfaDisable();
   const [step, setStep] = useState<Step>({ name: "idle" });
-  // Read loosely until `pnpm generate:client` adds the field to the DTO.
-  const enabled = (user as { mfaEnabled?: boolean }).mfaEnabled === true;
+  const enabled = user.mfaEnabled;
   const toIdle = () => setStep({ name: "idle" });
-
-  const onEnable = async () => {
-    try {
-      setStep({ name: "setup", setup: await startSetup() });
-    } catch (error) {
-      toast.error(readApiError(error).message ?? t("errors.generic"));
-    }
-  };
 
   return (
     <Container className="divide-y p-0">
@@ -46,27 +45,49 @@ export const ProfileMfaSection: FC<ProfileGeneralSectionProps> = ({ user }) => {
         </div>
         {step.name === "idle" &&
           (enabled ? (
-            <Button
-              variant="secondary"
-              onClick={() => setStep({ name: "disable" })}
-            >
-              {t("actions.disable")}
-            </Button>
+            <div className="flex gap-x-2">
+              <Button
+                variant="secondary"
+                onClick={() => setStep({ name: "regenerate" })}
+              >
+                {t("actions.regenerate")}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setStep({ name: "disable" })}
+              >
+                {t("actions.disable")}
+              </Button>
+            </div>
           ) : (
             <Button
               variant="secondary"
-              onClick={onEnable}
-              isLoading={isStarting}
-              disabled={isStarting}
+              onClick={() => setStep({ name: "confirm-password" })}
             >
               {t("actions.enable")}
             </Button>
           ))}
       </div>
 
+      {step.name === "confirm-password" && (
+        <MfaCredentialsForm
+          description={t("setup.confirmPassword")}
+          submitLabel={t("actions.continue")}
+          isPending={setup.isPending}
+          onSubmit={async ({ password }) =>
+            setStep({
+              name: "setup",
+              setup: await setup.mutateAsync(password),
+              password,
+            })
+          }
+          onCancel={toIdle}
+        />
+      )}
       {step.name === "setup" && (
         <MfaSetupPanel
           setup={step.setup}
+          password={step.password}
           onEnabled={(codes) => setStep({ name: "recovery", codes })}
           onCancel={toIdle}
         />
@@ -74,8 +95,34 @@ export const ProfileMfaSection: FC<ProfileGeneralSectionProps> = ({ user }) => {
       {step.name === "recovery" && (
         <MfaRecoveryCodes codes={step.codes} onDone={toIdle} />
       )}
+      {step.name === "regenerate" && (
+        <MfaCredentialsForm
+          description={t("regenerate.description")}
+          submitLabel={t("actions.createCodes")}
+          withCode
+          isPending={regenerate.isPending}
+          onSubmit={async (body) => {
+            const { recoveryCodes } = await regenerate.mutateAsync(body);
+            toast.success(t("success.regenerated"));
+            setStep({ name: "recovery", codes: recoveryCodes });
+          }}
+          onCancel={toIdle}
+        />
+      )}
       {step.name === "disable" && (
-        <MfaDisableForm onDisabled={toIdle} onCancel={toIdle} />
+        <MfaCredentialsForm
+          description={t("disable.description")}
+          submitLabel={t("actions.disable")}
+          withCode
+          danger
+          isPending={disable.isPending}
+          onSubmit={async (body) => {
+            await disable.mutateAsync(body);
+            toast.success(t("success.disabled"));
+            toIdle();
+          }}
+          onCancel={toIdle}
+        />
       )}
     </Container>
   );

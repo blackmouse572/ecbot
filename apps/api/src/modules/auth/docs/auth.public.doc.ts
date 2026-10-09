@@ -1,8 +1,10 @@
 import { AuthSignUpResponseDto } from '@app/modules/auth/dtos/response/auth.signup.response.dto';
 import { applyDecorators, HttpStatus } from '@nestjs/common';
+import { ApiProduces } from '@nestjs/swagger';
 import {
     Doc,
     DocAuth,
+    DocOneOf,
     DocRequest,
     DocResponse,
 } from 'src/common/doc/decorators/doc.decorator';
@@ -12,10 +14,31 @@ import { AuthLoginMfaRequestDto } from 'src/modules/auth/dtos/request/auth.login
 import { AuthLoginRequestDto } from 'src/modules/auth/dtos/request/auth.login.request.dto';
 import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
 import { AuthImpersonateExchangeResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate-exchange.response.dto';
+import { AuthLoginMfaChallengeResponseDto } from 'src/modules/auth/dtos/response/auth.login-mfa-challenge.response.dto';
 import { AuthLoginResponseDto } from 'src/modules/auth/dtos/response/auth.login.response.dto';
 
 const MFA_CHALLENGE_NOTE =
     'When the user has MFA on, the data is { mfaRequired: true, mfaToken, expiresIn } instead of tokens; finish with POST /auth/login/mfa.';
+
+// Tokens, or the MFA challenge that replaces them when MFA is on.
+function DocLoginResponse(messagePath: string): MethodDecorator {
+    return applyDecorators(
+        ApiProduces('application/json'),
+        DocOneOf(
+            HttpStatus.OK,
+            {
+                messagePath,
+                statusCode: HttpStatus.OK,
+                dto: AuthLoginResponseDto,
+            },
+            {
+                messagePath,
+                statusCode: HttpStatus.OK,
+                dto: AuthLoginMfaChallengeResponseDto,
+            }
+        )
+    );
+}
 
 export function AuthPublicLoginMfaDoc(): MethodDecorator {
     return applyDecorators(
@@ -45,9 +68,7 @@ export function AuthPublicLoginCredentialDoc(): MethodDecorator {
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
             dto: AuthLoginRequestDto,
         }),
-        DocResponse<AuthLoginResponseDto>('auth.loginWithCredential', {
-            dto: AuthLoginResponseDto,
-        })
+        DocLoginResponse('auth.loginWithCredential')
     );
 }
 
@@ -75,11 +96,10 @@ export function AuthPublicLoginSocialGoogleDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary: 'Login with social google',
+            description: MFA_CHALLENGE_NOTE,
         }),
         DocAuth({ xApiKey: true, google: true }),
-        DocResponse<AuthLoginResponseDto>('auth.loginWithSocialGoogle', {
-            dto: AuthLoginResponseDto,
-        })
+        DocLoginResponse('auth.loginWithSocialGoogle')
     );
 }
 
@@ -87,11 +107,10 @@ export function AuthPublicLoginSocialAppleDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary: 'Login with social apple',
+            description: MFA_CHALLENGE_NOTE,
         }),
         DocAuth({ xApiKey: true, apple: true }),
-        DocResponse<AuthLoginResponseDto>('auth.loginWithSocialApple', {
-            dto: AuthLoginResponseDto,
-        })
+        DocLoginResponse('auth.loginWithSocialApple')
     );
 }
 

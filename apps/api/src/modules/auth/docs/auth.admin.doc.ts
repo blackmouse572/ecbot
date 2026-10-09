@@ -24,3 +24,21 @@ export function AuthAdminUpdatePasswordDoc(): MethodDecorator {
         DocResponse('auth.updatePassword')
     );
 }
+
+export function AuthAdminResetMfaDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                "admin turn off a user's MFA: clears the secret and recovery codes and signs out every session",
+        }),
+        DocRequest({
+            params: UserDocParamsId,
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocGuard({ role: true, policy: true }),
+        DocResponse('auth.mfaReset')
+    );
+}

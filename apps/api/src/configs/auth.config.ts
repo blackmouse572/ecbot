@@ -84,5 +84,13 @@ export default registerAs(
         xApiKey: {
             header: 'x-api-key',
         },
+
+        mfa: {
+            // HMAC key for the stored recovery-code hashes. Falls back to the
+            // token encryption key, so set it to rotate the two separately.
+            recoveryPepper:
+                process.env.AUTH_MFA_RECOVERY_PEPPER ||
+                process.env.OAUTH_TOKEN_ENCRYPT_KEY,
+        },
     })
 );

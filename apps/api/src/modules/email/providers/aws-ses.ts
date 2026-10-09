@@ -20,6 +20,7 @@ import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
+import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
 
 @Injectable()
 export class AwsSESProvider implements IEmailService {
@@ -758,6 +759,30 @@ export class AwsSESProvider implements IEmailService {
                 },
             });
 
+            return true;
+        } catch (err: unknown) {
+            this.logger.error(err);
+            return false;
+        }
+    }
+
+    async sendMfaChanged(
+        { name, email }: EmailSendDto,
+        { enabled }: EmailMfaChangedDto
+    ): Promise<boolean> {
+        try {
+            await this.awsSESService.send({
+                templateName: ENUM_SEND_EMAIL_PROCESS.MFA_CHANGED,
+                recipients: [email],
+                sender: this.fromEmail,
+                templateData: {
+                    homeName: this.homeName,
+                    name: title(name),
+                    supportEmail: this.supportEmail ?? '',
+                    homeUrl: this.homeUrl,
+                    enabled,
+                },
+            });
             return true;
         } catch (err: unknown) {
             this.logger.error(err);

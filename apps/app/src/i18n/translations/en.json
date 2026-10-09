@@ -1772,13 +1772,17 @@
         "disable": "Turn off",
         "confirm": "Confirm",
         "cancel": "Cancel",
-        "done": "I saved my codes"
+        "done": "I saved my codes",
+        "continue": "Continue",
+        "regenerate": "New recovery codes",
+        "createCodes": "Create codes"
       },
       "setup": {
-        "scan": "Open an authenticator app (Google Authenticator, Microsoft Authenticator, Authy...) and add an account with the setup key below.",
+        "scan": "Scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator, Authy...). Can't scan it? Add the account with the setup key below.",
         "secretLabel": "Setup key",
-        "uriLabel": "Setup link",
-        "enterCode": "Enter the 6-digit code the app shows."
+        "enterCode": "Enter the 6-digit code the app shows.",
+        "confirmPassword": "Enter your password to start setting up two-step verification.",
+        "qrLabel": "QR code for your authenticator app"
       },
       "recovery": {
         "title": "Save your recovery codes",
@@ -1786,16 +1790,22 @@
         "copyAll": "Copy all codes"
       },
       "disable": {
-        "description": "Enter your password and a code from your app (or a recovery code) to turn off two-step verification.",
-        "password": "Current password",
-        "code": "Authenticator or recovery code"
+        "description": "Enter your password and a code from your app (or a recovery code) to turn off two-step verification."
       },
       "success": {
         "enabled": "Two-step verification is on.",
-        "disabled": "Two-step verification is off."
+        "disabled": "Two-step verification is off.",
+        "regenerated": "New recovery codes created."
       },
       "errors": {
         "generic": "Something went wrong. Please try again."
+      },
+      "credentials": {
+        "password": "Current password",
+        "code": "Authenticator or recovery code"
+      },
+      "regenerate": {
+        "description": "Enter your password and a code from your app to create new recovery codes. Your old codes will stop working."
       }
     },
     "exportData": {

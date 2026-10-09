@@ -4,6 +4,7 @@ import {
     Body,
     Controller,
     ForbiddenException,
+    Headers,
     HttpCode,
     HttpStatus,
     Post,
@@ -21,10 +22,13 @@ import {
 import {
     AuthSharedMfaDisableDoc,
     AuthSharedMfaEnableDoc,
+    AuthSharedMfaRecoveryCodesDoc,
     AuthSharedMfaSetupDoc,
 } from 'src/modules/auth/docs/auth.shared.doc';
 import { AuthMfaDisableRequestDto } from 'src/modules/auth/dtos/request/auth.mfa-disable.request.dto';
 import { AuthMfaEnableRequestDto } from 'src/modules/auth/dtos/request/auth.mfa-enable.request.dto';
+import { AuthMfaRecoveryCodesRequestDto } from 'src/modules/auth/dtos/request/auth.mfa-recovery-codes.request.dto';
+import { AuthMfaSetupRequestDto } from 'src/modules/auth/dtos/request/auth.mfa-setup.request.dto';
 import { AuthMfaEnableResponseDto } from 'src/modules/auth/dtos/response/auth.mfa-enable.response.dto';
 import { AuthMfaSetupResponseDto } from 'src/modules/auth/dtos/response/auth.mfa-setup.response.dto';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
@@ -55,11 +59,14 @@ export class AuthMfaSharedController {
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @HttpCode(HttpStatus.OK)
     @Post('/setup')
     async setup(
-        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Body() { password }: AuthMfaSetupRequestDto
     ): Promise<IResponse<AuthMfaSetupResponseDto>> {
+        await this.checkCredentials(user, password);
         return { data: await this.mfaService.setup(user) };
     }
 
@@ -73,9 +80,17 @@ export class AuthMfaSharedController {
     @Post('/enable')
     async enable(
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
-        @Body() { code }: AuthMfaEnableRequestDto
+        @AuthJwtPayload('session') session: string,
+        @Body() { password, code }: AuthMfaEnableRequestDto,
+        @Headers('x-custom-lang') language?: string
     ): Promise<IResponse<AuthMfaEnableResponseDto>> {
-        const result = await this.mfaService.enable(user, code);
+        const result = await this.checkCredentials(user, password, () =>
+            this.mfaService.enable(user, code)
+        );
+        await this.mfaService.revokeSessionsAndNotify(user, true, {
+            keepSession: session,
+            language,
+        });
         await this.logActivity(user, 'enabled');
         return { data: result };
     }
@@ -90,17 +105,61 @@ export class AuthMfaSharedController {
     @Post('/disable')
     async disable(
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
-        @Body() { password, code }: AuthMfaDisableRequestDto
+        @AuthJwtPayload('session') session: string,
+        @Body() { password, code }: AuthMfaDisableRequestDto,
+        @Headers('x-custom-lang') language?: string
     ): Promise<void> {
-        if (!user.mfaEnabled) {
-            throw new BadRequestException({
-                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_NOT_ENABLED,
-                message: 'auth.error.mfaNotEnabled',
-            });
-        }
+        this.assertEnabled(user);
+        await this.checkCredentials(user, password, () =>
+            this.verifyCode(user, code)
+        );
+
+        await this.mfaService.disable(user);
+        await this.mfaService.revokeSessionsAndNotify(user, false, {
+            keepSession: session,
+            language,
+        });
+        await this.logActivity(user, 'disabled');
+    }
+
+    @AuthSharedMfaRecoveryCodesDoc()
+    @Response('auth.mfaRecoveryCodes')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
+    @HttpCode(HttpStatus.OK)
+    @Post('/recovery-codes')
+    async regenerateRecoveryCodes(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Body() { password, code }: AuthMfaRecoveryCodesRequestDto
+    ): Promise<IResponse<AuthMfaEnableResponseDto>> {
+        this.assertEnabled(user);
+        await this.checkCredentials(user, password, () =>
+            this.verifyCode(user, code)
+        );
+
+        const result = await this.mfaService.regenerateRecoveryCodes(user);
+        await this.logActivity(user, 'recovery_codes_regenerated');
+        return { data: result };
+    }
+
+    /**
+     * Claims one guess before checking the password (and `check`, when
+     * given), so parallel requests cannot pass the lockout. Wrong guesses
+     * keep their claim; a full success clears the count.
+     */
+    private async checkCredentials<T>(
+        user: UserEntity,
+        password: string,
+        check?: () => Promise<T>
+    ): Promise<T | undefined> {
         if (
             this.authService.getPasswordAttempt() &&
-            user.passwordAttempt >= this.authService.getPasswordMaxAttempt()
+            !(await this.userService.claimPasswordAttempt(
+                user,
+                this.authService.getPasswordMaxAttempt()
+            ))
         ) {
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
@@ -109,25 +168,35 @@ export class AuthMfaSharedController {
         }
 
         if (!(await this.authService.validateUser(password, user.password))) {
-            await this.userService.increasePasswordAttempt(user);
             throw new BadRequestException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
                 message: 'auth.error.passwordNotMatch',
             });
         }
+        const result = check ? await check() : undefined;
+
+        await this.userService.clearPasswordAttempt(user);
+        return result;
+    }
+
+    private async verifyCode(user: UserEntity, code: string): Promise<void> {
         if (!(await this.mfaService.verify(user, code))) {
-            await this.userService.increasePasswordAttempt(user);
             throw this.mfaService.invalidCodeError();
         }
+    }
 
-        await this.mfaService.disable(user);
-        await this.userService.resetPasswordAttempt(user);
-        await this.logActivity(user, 'disabled');
+    private assertEnabled(user: UserEntity): void {
+        if (!user.mfaEnabled) {
+            throw new BadRequestException({
+                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_NOT_ENABLED,
+                message: 'auth.error.mfaNotEnabled',
+            });
+        }
     }
 
     private async logActivity(
         user: UserEntity,
-        mfa: 'enabled' | 'disabled'
+        mfa: 'enabled' | 'disabled' | 'recovery_codes_regenerated'
     ): Promise<void> {
         await this.activityService.createByUser(user, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,
