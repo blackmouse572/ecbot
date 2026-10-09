@@ -26,6 +26,9 @@ services:
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     environment:
       AI_CASSETTE_MODE: new_episodes
+      # /app/storage belongs to the image's user, not the host user above.
+      RAG_LOCAL_STORAGE_DIR: /tmp/rag_uploads
+      HF_HOME: /tmp/hf
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?set DEEPSEEK_API_KEY to record cassettes}
     volumes:
       # Same target as the e2e override (/cassettes) but WITHOUT :ro so vcrpy can write.

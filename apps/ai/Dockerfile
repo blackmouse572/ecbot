@@ -24,17 +24,22 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:3.12-slim AS runtime
 
 ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HF_HOME=/app/storage/hf
 
 WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 COPY . /app
 
-# Run as an unprivileged user. Code stays root-owned; only the RAG upload
-# directory (RAG_LOCAL_STORAGE_DIR) is writable.
+# Run as an unprivileged user. Code stays root-owned; only /app/storage is
+# writable: RAG uploads (RAG_LOCAL_STORAGE_DIR) and the Hugging Face cache
+# (HF_HOME), where the reranker's CrossEncoder model downloads on first use.
+# Without a writable cache that download fails and RAG answers silently lose
+# the knowledge base.
 RUN useradd --system --uid 10001 --no-create-home app \
-    && mkdir -p /app/storage/rag_uploads \
+    && mkdir -p /app/storage/rag_uploads /app/storage/hf \
     && chown -R app:app /app/storage
 USER app
 
