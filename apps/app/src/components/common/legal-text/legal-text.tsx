@@ -7,16 +7,19 @@ type LegalTextProps = {
   i18nKey:
     | "app.auth.register.fields.acceptTerms"
     | "accounts.link.acceptTerms"
-    | "widget.aiNotice";
+    | "widget.aiNotice"
+    | "termsPrompt.description";
+  /** Overrides the Privacy Policy link, e.g. with a business's own policy. */
+  privacyUrl?: string;
 };
 
 /** A sentence with links to the Terms of Service and Privacy Policy docs pages. */
-export const LegalText: FC<LegalTextProps> = ({ i18nKey }) => (
+export const LegalText: FC<LegalTextProps> = ({ i18nKey, privacyUrl }) => (
   <Trans
     i18nKey={i18nKey}
     components={{
       terms: <LegalLink path="legal/terms-of-service" />,
-      privacy: <LegalLink path="legal/privacy-policy" />,
+      privacy: <LegalLink path="legal/privacy-policy" href={privacyUrl} />,
     }}
   />
 );

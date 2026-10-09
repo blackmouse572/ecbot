@@ -1,4 +1,10 @@
 {
+  "termsPrompt": {
+    "title": "Please review our updated terms",
+    "description": "To keep using Ecbot, please agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "accept": "I agree",
+    "error": "Could not save your acceptance. Please try again."
+  },
   "impersonation": {
     "error": {
       "title": "This impersonation link can't be used",
@@ -625,13 +631,17 @@
         "title": "Website widget",
         "keyLabel": "Widget key",
         "originsLabel": "Allowed sites",
+        "privacyLabel": "Your privacy policy",
+        "privacyDefault": "Not set, the widget links to Ecbot's privacy notice",
         "edit": {
-          "title": "Edit allowed sites",
-          "subtitle": "Sites allowed to embed this widget.",
+          "title": "Edit widget settings",
+          "subtitle": "Sites allowed to embed this widget, and the privacy policy it links to.",
+          "privacyHint": "You decide how your visitors' data is used, so the widget should link to your own privacy policy. Leave empty to link to Ecbot's notice.",
+          "privacyInvalid": "Enter a full https:// URL, e.g. https://shop.example.com/privacy",
           "originsHint": "Comma-separated. The widget refuses to load anywhere else.",
           "originsInvalid": "Enter full URLs, e.g. https://shop.example.com",
-          "success": "Allowed sites updated.",
-          "error": "Failed to update allowed sites."
+          "success": "Widget settings updated.",
+          "error": "Failed to update widget settings."
         }
       }
     },

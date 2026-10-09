@@ -13,6 +13,8 @@ export const docs = defineDocs({
     schema: pageSchema.extend({
       description: z.string(),
       faq: faqSchema.default([]),
+      // Reachable by URL, but kept out of search, the sitemap and llms-full.txt.
+      noindex: z.boolean().default(false),
     }),
     lastModified: true,
     postprocess: { includeProcessedMarkdown: true },
@@ -43,6 +45,11 @@ ${screenshotsToMarkdown(await page.data.getText("processed"), page.locale ?? i18
 function renderFaq(faq: { q: string; a: string }[]) {
   if (!faq.length) return "";
   return `\n\n## FAQ\n\n${faq.map((f) => `### ${f.q}\n\n${f.a}`).join("\n\n")}\n`;
+}
+
+/** Pages that search engines and AI assistants should see. */
+export function indexedPages(lang?: string) {
+  return source.getPages(lang).filter((page) => !page.data.noindex);
 }
 
 /** Locales this page exists in, for hreflang. */

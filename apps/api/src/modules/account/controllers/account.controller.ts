@@ -44,6 +44,7 @@ import {
 } from 'src/modules/auth/decorators/auth.jwt.decorator';
 import { ACCOUNT_SEARCHABLE_FIELDS } from '../constants/account.list.constant';
 import { AccountChatbotQueryFilter } from '../decorator/account.filter.decorator';
+import { WebsiteWidgetConfig } from '../interfaces/account-config.interface';
 import {
     AccountBatchDeleteSyncDoc,
     AccountGetDoc,
@@ -424,7 +425,8 @@ export class AccountController {
         await this.accountProvisionService.updateAllowedOrigins(
             account,
             body.allowedOrigins,
-            user.id
+            user.id,
+            body.privacyPolicyUrl
         );
 
         await this.activityService.createByUser(user, {
@@ -433,12 +435,13 @@ export class AccountController {
             metadata: { accountId: account.id, updated: 'allowedOrigins' },
         });
 
+        const config = account.config as WebsiteWidgetConfig;
         return {
             data: {
                 id: account.id,
                 widgetKey: account.externalId,
-                allowedOrigins: (account.config as { allowedOrigins: string[] })
-                    .allowedOrigins,
+                allowedOrigins: config.allowedOrigins,
+                privacyPolicyUrl: config.privacyPolicyUrl,
             },
         };
     }

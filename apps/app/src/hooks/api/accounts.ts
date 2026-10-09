@@ -22,6 +22,7 @@ import {
   type AccountProvisionApiChannelResponseDto,
   type AccountProvisionWebsiteWidgetRequestDto,
   type AccountProvisionWebsiteWidgetResponseDto,
+  type AccountUpdateAllowedOriginsRequestDto,
   type AccountUpdateAllowedOriginsResponseDto,
   type AccountUpdateCallbackUrlResponseDto,
   type AccountListResponseDto,
@@ -237,13 +238,21 @@ export const useUpdateApiChannelCallbackUrl = (accountId: string) => {
 };
 
 /** Replace a website widget's allowed embed origins. The widget key is unchanged. */
+/** `privacyPolicyUrl`: omit to keep, null to clear. */
+type WebsiteWidgetSettings = {
+  allowedOrigins: string[];
+  privacyPolicyUrl?: string | null;
+};
+
 export const useUpdateWebsiteWidgetAllowedOrigins = (accountId: string) => {
   const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (allowedOrigins: string[]) =>
+    mutationFn: (body: WebsiteWidgetSettings) =>
       accountControllerUpdateAllowedOriginsV1({
-        body: { allowedOrigins },
+        // privacyPolicyUrl is new in the API DTO; drop the cast once
+        // @repo/client is regenerated.
+        body: body as AccountUpdateAllowedOriginsRequestDto,
         path: { workspace: workspace?.id || "", accountId },
       }).then(
         (res) =>

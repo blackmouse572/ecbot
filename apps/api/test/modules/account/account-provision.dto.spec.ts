@@ -1,6 +1,7 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { AccountProvisionApiChannelRequestDto } from '../../../src/modules/account/dtos/request/account.provision-api-channel.request.dto';
+import { AccountUpdateAllowedOriginsRequestDto } from '../../../src/modules/account/dtos/request/account.update-allowed-origins.request.dto';
 
 async function errorsFor(callbackUrl: string): Promise<string[]> {
     const dto = plainToInstance(AccountProvisionApiChannelRequestDto, {
@@ -48,5 +49,33 @@ describe('AccountProvisionApiChannelRequestDto callbackUrl', () => {
 
     it('rejects a non-URL', async () => {
         await expect(errorsFor('not a url')).resolves.toEqual(['isUrl']);
+    });
+});
+
+describe('AccountUpdateAllowedOriginsRequestDto privacyPolicyUrl', () => {
+    async function privacyErrors(privacyPolicyUrl: unknown): Promise<string[]> {
+        const dto = plainToInstance(AccountUpdateAllowedOriginsRequestDto, {
+            allowedOrigins: ['https://shop.example.com'],
+            privacyPolicyUrl,
+        });
+        const errors = await validate(dto);
+        return errors.flatMap(e => Object.keys(e.constraints ?? {}));
+    }
+
+    it('accepts an HTTPS URL, null (clear) or nothing (keep)', async () => {
+        await expect(
+            privacyErrors('https://shop.example.com/privacy')
+        ).resolves.toEqual([]);
+        await expect(privacyErrors(null)).resolves.toEqual([]);
+        await expect(privacyErrors(undefined)).resolves.toEqual([]);
+    });
+
+    it('rejects a plaintext or non-URL value', async () => {
+        await expect(
+            privacyErrors('http://shop.example.com/privacy')
+        ).resolves.toContain('isUrl');
+        await expect(privacyErrors('javascript:alert(1)')).resolves.toContain(
+            'isUrl'
+        );
     });
 });

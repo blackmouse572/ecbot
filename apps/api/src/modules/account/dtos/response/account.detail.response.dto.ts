@@ -51,4 +51,17 @@ export class AccountGetDetailResponseDto extends AccountGetResponseDto {
                 ?.allowedOrigins
     )
     allowedOrigins?: string[];
+
+    @ApiPropertyOptional({
+        description:
+            "The business's own privacy policy, linked from the widget. WEBSITE_WIDGET only.",
+        example: 'https://shop.example.com/privacy',
+    })
+    @Expose()
+    @Transform(
+        ({ obj }: { obj: AccountEntity }) =>
+            configOf<WebsiteWidgetConfig>(obj, ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET)
+                ?.privacyPolicyUrl
+    )
+    privacyPolicyUrl?: string;
 }

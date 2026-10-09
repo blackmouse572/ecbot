@@ -27,6 +27,8 @@ export interface WebsiteWidgetConfig {
     /** Origins allowed to embed the widget, e.g. `https://shop.example.com`. */
     allowedOrigins: string[];
     theme?: WidgetTheme;
+    /** The business's own privacy policy, linked from the widget's AI notice. */
+    privacyPolicyUrl?: string;
 }
 
 export type AccountConfig = ApiChannelConfig | WebsiteWidgetConfig;

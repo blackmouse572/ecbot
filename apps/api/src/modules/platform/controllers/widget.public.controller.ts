@@ -103,6 +103,9 @@ export class WidgetPublicController {
                 // Returned so the widget can refuse to render on a page that is
                 // not on the list, without a second round trip.
                 allowedOrigins: config.allowedOrigins,
+                // The business is the controller for its visitors; the
+                // widget links this instead of Ecbot's notice when set.
+                privacyPolicyUrl: config.privacyPolicyUrl,
             },
         };
     }

@@ -1,34 +1,41 @@
 ---
 title: Subprocessors
 description: The third-party service providers that Ecbot uses to process personal data, what each one does, which data it receives and where it processes it.
+noindex: true
 faq:
   - q: Are the chat platforms I connect subprocessors?
     a: Not of Ecbot. Meta, Zalo, TikTok, Shopee and Telegram are services you choose to connect and use under your own agreement with them. We list them so you know where messages go.
-  - q: Which provider sees my customers' messages?
-    a: OpenRouter and the model provider it routes to receive the conversation, customer context and knowledge base passages needed to write each reply. AWS stores the data.
+  - q: Which providers see my customers' messages?
+    a: OpenRouter and the model provider it routes to receive the conversation, customer context and knowledge base passages needed to write each reply, and LangSmith receives the same prompts for tracing. Neon stores the data.
   - q: How do I hear about changes to this list?
     a: We update this page and notify workspace owners at least 30 days before a new subprocessor starts processing customer data.
 ---
 
 **Draft, not yet in force: this list must be reviewed by legal counsel before publication.** Ecbot uses the service providers below to run the service. Each one processes personal data only to provide its part of Ecbot, under a written agreement with data protection terms. This list is part of the [Data Processing Agreement](/docs/legal/data-processing-agreement).
 
-Last updated: 2026-10-08.
+Last updated: 2026-10-09.
 
 ## Subprocessors
 
 | Provider | Purpose | Personal data | Location |
 | --- | --- | --- | --- |
+| Google Cloud | Runs the Ecbot API and AI service (Cloud Run), background task queue (Cloud Tasks), Google sign-in (OAuth) | All service data while it is processed; task payloads with record IDs; Google account email and name | Singapore (asia-southeast1) |
+| Neon | Main PostgreSQL database | All stored service data, including conversations and customer profiles | Singapore (AWS ap-southeast-1) |
+| Upstash | Redis cache, sessions and rate limits | Session data, cached records, IP addresses for rate limits | Singapore (ap-southeast-1) |
+| Cloudflare | File storage (R2), hosting of the app and docs, network protection, Turnstile anti-bot checks | Uploaded files and chat media; IP address, browser data, request metadata | R2 bucket **[confirm location hint]**; global network |
 | OpenRouter, Inc. | Routes AI requests to model providers, including Google Gemini and others, to generate replies, tags, summaries and embeddings | Chat content, customer context and profile, knowledge base passages | United States, and the model provider's regions |
 | Downstream AI model providers (for example Google) | Run the models OpenRouter routes to | Same as OpenRouter, per request | United States and other regions |
-| LangSmith (LangChain, Inc.) | Optional tracing of AI requests for debugging, when enabled | Prompts and outputs, which can contain chat content | United States **[confirm region]** |
+| LangSmith (LangChain, Inc.) | Tracing of every AI request in production, to check quality and debug | Prompts and outputs, which contain chat content, customer context and knowledge base passages | United States |
 | Firecrawl (Mendable, Inc.) | Crawls websites you add to the knowledge base | Public content of the pages you choose | United States |
 | Composio | Connects third-party tools you enable for an agent | Data the agent sends to the tool, such as order or contact details | United States **[confirm]** |
-| Amazon Web Services | Hosting, database and file storage (S3), email (SES), SMS (Pinpoint) | All service data; email addresses and phone numbers for messages | Asia Pacific (Jakarta, ap-southeast-3) by default |
 | Resend | Sends service emails, such as verification codes | Name, email address, email content | United States |
-| Google Cloud | Background task queue (Cloud Tasks); Google sign-in (OAuth) | Task payloads with record IDs; Google account email and name | **[region]** |
+| Amazon Web Services | SMS (Pinpoint), and email (SES) as a backup to Resend **[confirm whether either is used in production]** | Phone numbers, email addresses and message content | **[region]** |
 | Sentry (Functional Software, Inc.) | Error monitoring, with sending of personal data turned off | Technical error data; IP address may be processed | United States **[confirm]** |
+| PostHog | Product analytics on the ecbot.dev website | Page views, clicks, browser data, IP address, cookie ID | **[confirm region: US or EU cloud]** |
+| Dodo Payments | Subscription billing and payments (main automatic provider) | Billing name, email, address, payment details | **[confirm]** |
 | Stripe | Subscription billing and payments | Billing name, email, address, payment details | United States, Ireland |
-| Cloudflare | Hosting of the app and docs, network protection, Turnstile anti-bot checks | IP address, browser data, request metadata | Global network |
+| SePay | Bank transfer payments in Vietnam | Payer name, bank account details, transfer amount and reference | Vietnam |
+| ZaloPay (VNG) | Wallet and card payments in Vietnam | Payer name, phone number, payment details | Vietnam |
 
 ## Channels you connect
 

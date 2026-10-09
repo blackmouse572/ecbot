@@ -50,6 +50,14 @@ export const AccountWebsiteWidgetSection = ({
           title={t("accounts.details.websiteWidget.originsLabel")}
           value={item.allowedOrigins?.join(", ")}
         />
+        <SectionRow
+          title={t("accounts.details.websiteWidget.privacyLabel")}
+          value={
+            // New in the API DTO; untyped until @repo/client is regenerated.
+            (item as { privacyPolicyUrl?: string }).privacyPolicyUrl ??
+            t("accounts.details.websiteWidget.privacyDefault")
+          }
+        />
       </Section>
       {item.accountKey && (
         <div className="px-6 py-4">

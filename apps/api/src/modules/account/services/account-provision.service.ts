@@ -143,7 +143,9 @@ export class AccountProvisionService {
     async updateAllowedOrigins(
         account: AccountEntity,
         allowedOrigins: string[],
-        actionBy: string
+        actionBy: string,
+        /** `undefined` keeps the current value, `null` clears it. */
+        privacyPolicyUrl?: string | null
     ): Promise<AccountEntity> {
         if (account.type !== ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET) {
             throw new BadRequestException({
@@ -153,10 +155,14 @@ export class AccountProvisionService {
             });
         }
 
-        account.config = {
+        const config: WebsiteWidgetConfig = {
             ...(account.config as WebsiteWidgetConfig),
             allowedOrigins: normaliseOrigins(allowedOrigins),
         };
+        if (privacyPolicyUrl !== undefined) {
+            config.privacyPolicyUrl = privacyPolicyUrl ?? undefined;
+        }
+        account.config = config;
 
         await this.accountRepository.save(account, { actionBy });
 

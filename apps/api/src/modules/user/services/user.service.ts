@@ -646,6 +646,18 @@ export class UserService {
         return user;
     }
 
+    /** Records acceptance of the current Terms and Privacy Policy. */
+    async acceptTerms(
+        user: UserEntity,
+        options?: IDatabaseUpdateOptions
+    ): Promise<UserEntity> {
+        const em = options?.em || this.em;
+        user.termsAcceptedAt = this.helperDateService.create();
+        user.termsVersion = USER_TERMS_VERSION;
+        await em.persistAndFlush(user);
+        return user;
+    }
+
     async updatePhoto(
         user: UserEntity,
         aws: AwsS3Dto,
@@ -691,7 +703,10 @@ export class UserService {
     }
 
     mapProfile(user: UserEntity): UserProfileResponseDto {
-        return plainToInstance(UserProfileResponseDto, user);
+        const mapped = plainToInstance(UserProfileResponseDto, user);
+        mapped.termsAcceptanceRequired =
+            user.termsVersion !== USER_TERMS_VERSION;
+        return mapped;
     }
 
     mapList(users: UserEntity[]): UserListResponseDto[] {
