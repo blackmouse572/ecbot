@@ -149,7 +149,7 @@ describe('Classifier wiring (#170)', () => {
             scheduleAfterMessage: jest.fn().mockResolvedValue(undefined),
             scheduleOnResolved: jest.fn().mockResolvedValue(undefined),
         };
-        // The AI reply now runs in a debounced BullMQ job; process() only schedules it.
+        // The AI reply runs in a debounced job; process() only schedules it.
         const messageDebounceService = {
             schedule: jest.fn().mockResolvedValue(undefined),
         };

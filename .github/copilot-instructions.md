@@ -18,7 +18,7 @@ The instructions are organized by workspace and purpose:
 - **[API Authentication & Authorization](./instructions/api/auth.instructions.md)** - JWT, RBAC, CASL, protection decorators
 - **[API Database](./instructions/api/database.instructions.md)** - MikroORM, repositories, entities, migrations
 - **[API Response & Validation](./instructions/api/response.instructions.md)** - Response handling, validation, error handling
-- **[API Background Jobs](./instructions/api/jobs.instructions.md)** - BullMQ processors and queue management
+- **[API Background Jobs](./instructions/api/jobs.instructions.md)** - Cloud Tasks jobs and task controllers
 
 ### Frontend Apps
 
@@ -43,7 +43,7 @@ The instructions are organized by workspace and purpose:
 
 ### Technology Stack
 
-- **Backend**: NestJS 11 + PostgreSQL + MikroORM + Redis + BullMQ
+- **Backend**: NestJS 11 + PostgreSQL + MikroORM + Redis + Google Cloud Tasks
 - **Frontend**: React 19 + Vite + Tailwind CSS 4 + TanStack Query
 - **Auth**: JWT (ES512) + CASL + RBAC
 - **Monorepo**: Turborepo + pnpm
@@ -85,7 +85,6 @@ modules/[feature]/
 ├── enums/                 # TypeScript enums
 ├── guards/                # Feature-specific guards
 ├── interfaces/            # TypeScript interfaces
-├── processors/            # BullMQ background job processors
 ├── repositories/          # Data access layer (Repository pattern)
 ├── services/              # Business logic
 └── [feature].module.ts    # Module definition
@@ -301,27 +300,24 @@ pnpm db:migrate:fresh
 pnpm db:seed
 ```
 
-### 10. Background Jobs (BullMQ)
+### 10. Background Jobs (Cloud Tasks)
 
-Place job processors in the feature module:
+Enqueue with `CloudTasksQueueClient` and handle in a `.task` controller:
 
 ```typescript
-// In module's processors/ folder
-@Processor("email-queue")
-export class EmailProcessor {
-  @Process("send-email")
-  async handleSendEmail(job: Job<EmailDto>) {
-    // Process job
-  }
-}
-
-// In service, add job to queue
-await this.emailQueue.add("send-email", emailData, {
-  delay: 5000, // Optional delay
-  attempts: 3,
-  backoff: { type: "exponential", delay: 2000 },
+// In a service
+await this.cloudTasksClient.enqueue(FOLLOWUP_QUEUE, ENUM_FOLLOWUP_PROCESS.FIRE, payload, {
+  taskName, // optional dedupe key, [A-Za-z0-9_-] only
+  scheduleTime, // optional delay
 });
+
+// modules/<feature>/controllers/<feature>.task.controller.ts
+@ApiKeyCloudTasksProtected()
+@Post("/followup")
+async handle(@Body() dto: FollowupTaskDto) { /* must be idempotent */ }
 ```
+
+See `apps/api/docs/background-processing.md`.
 
 ### 11. File Handling
 
@@ -752,7 +748,7 @@ pnpm format                       # Format code with Prettier
 1. **Use pagination** - Never return unbounded lists
 2. **Optimize database queries** - Use proper indexes, avoid N+1 queries
 3. **Cache responses** - Use Redis caching where appropriate
-4. **Background jobs** - Use BullMQ for heavy operations
+4. **Background jobs** - Use Cloud Tasks (`CloudTasksQueueClient`) for heavy operations
 5. **Connection pooling** - MikroORM handles this automatically
 6. **Lazy loading** - Load related entities only when needed
 7. **Compression** - Already enabled via middleware

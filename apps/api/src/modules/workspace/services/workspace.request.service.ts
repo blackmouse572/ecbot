@@ -1,3 +1,4 @@
+import { MemberJoinedEmailService } from './member-joined-email.service';
 import { MessageService } from '@app/common/message/services/message.service';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
@@ -33,7 +34,8 @@ export class WorkspaceRequestService {
         private readonly workspaceMemberService: WorkspaceMemberService,
         private readonly notificationService: NotificationService,
         private readonly activityService: ActivityService,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly memberJoinedEmail: MemberJoinedEmailService
     ) {}
 
     async createJoinWorkspaceRequest(
@@ -226,6 +228,11 @@ export class WorkspaceRequestService {
                         actionText: 'Go to Workspace',
                     },
                 });
+
+                await this.memberJoinedEmail.send(
+                    workspace.id,
+                    request.requestFrom.id
+                );
         }
     }
 }

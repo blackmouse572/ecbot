@@ -1,5 +1,9 @@
-import { Body, Head, Html } from '@react-email/components';
+import { Link, Text } from '@react-email/components';
 import React from 'react';
+import EmailButton from './EmailButton';
+import EmailLayout from './EmailLayout';
+import { EMAIL_BODY, EMAIL_MUTED } from './email-text.styles';
+import { EMAIL_THEME as T } from './email-theme';
 import { resetPasswordEmailCopy } from './reset-password-email.copy';
 
 interface ResetPasswordEmailProps {
@@ -25,46 +29,36 @@ const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
     const copy = resetPasswordEmailCopy(language, homeName);
 
     return (
-        <Html lang={language ?? 'en'}>
-            <Head />
-            <Body style={{ fontFamily: 'Arial, sans-serif', color: '#111' }}>
-                <p>{copy.greeting(name)}</p>
-                <p>{copy.intro}</p>
-                <p>
-                    <a
-                        href={url}
-                        style={{
-                            display: 'inline-block',
-                            padding: '10px 16px',
-                            background: '#111',
-                            color: '#fff',
-                            borderRadius: '6px',
-                            textDecoration: 'none',
-                        }}
-                    >
-                        {copy.action}
-                    </a>
-                </p>
-                <p style={{ fontSize: '13px', color: '#444' }}>
-                    {copy.pasteLink}
-                    <br />
-                    <a href={url} style={{ wordBreak: 'break-all' }}>
-                        {url}
-                    </a>
-                </p>
-                {expiredDate && <p>{copy.expires(expiredDate)}</p>}
-                <p>{copy.ignore}</p>
-                {supportEmail && (
-                    <p>
-                        {copy.support}{' '}
-                        <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-                    </p>
-                )}
-                <p>
-                    <a href={homeUrl}>{copy.signOff}</a>
-                </p>
-            </Body>
-        </Html>
+        <EmailLayout
+            language={language}
+            preview={copy.intro}
+            heading={copy.heading}
+            homeUrl={homeUrl}
+            homeName={homeName}
+            supportEmail={supportEmail}
+            supportLabel={copy.support}
+            signOff={copy.signOff}
+        >
+            <Text style={EMAIL_BODY}>{copy.greeting(name)}</Text>
+            <Text style={EMAIL_BODY}>{copy.intro}</Text>
+            <div style={{ margin: '24px 0' }}>
+                <EmailButton href={url}>{copy.action}</EmailButton>
+            </div>
+            {expiredDate && (
+                <Text style={EMAIL_BODY}>{copy.expires(expiredDate)}</Text>
+            )}
+            <Text style={EMAIL_MUTED}>
+                {copy.pasteLink}
+                <br />
+                <Link
+                    href={url}
+                    style={{ color: T.fgInteractive, wordBreak: 'break-all' }}
+                >
+                    {url}
+                </Link>
+            </Text>
+            <Text style={EMAIL_MUTED}>{copy.ignore}</Text>
+        </EmailLayout>
     );
 };
 

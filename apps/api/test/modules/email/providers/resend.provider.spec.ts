@@ -182,3 +182,88 @@ describe('ResendProvider.sendResetPassword', () => {
         expect(props()).not.toHaveProperty('otp');
     });
 });
+
+describe('ResendProvider team emails', () => {
+    const sendEmail = jest.fn();
+    const render = renderTemplate as jest.Mock;
+    const values: Record<string, any> = {
+        'email.fromEmail': 'Ecbot <noreply@ecbot.dev>',
+        'home.name': 'Ecbot',
+        'home.url': 'https://app.ecbot.dev',
+        'app.timezone': 'Asia/Ho_Chi_Minh',
+    };
+    const config = { get: (key: string) => values[key] } as any;
+    const provider = new ResendProvider(
+        { sendEmail } as any,
+        config,
+        new HelperDateService(config)
+    );
+    const props = () => render.mock.calls[0][1];
+    const subject = () => sendEmail.mock.calls[0][0].subject;
+
+    beforeEach(() => {
+        render.mockClear();
+        sendEmail.mockReset();
+        sendEmail.mockResolvedValue({ error: null });
+    });
+
+    it('handoff: links to the conversation and names the chatbot, in its language', async () => {
+        await provider.sendHandoff(
+            { name: 'Chi', email: 'chi@b.com' },
+            {
+                chatbotName: 'Linh',
+                workspaceName: 'Kunmart',
+                reason: 'keyword_trigger',
+                conversationUrl: '/kunmart/conversations/c-1',
+                language: 'vi',
+            }
+        );
+
+        expect(render).toHaveBeenCalledWith(
+            EmailSubject.Handoff,
+            expect.objectContaining({
+                conversationUrl:
+                    'https://app.ecbot.dev/kunmart/conversations/c-1',
+                reason: 'keyword_trigger',
+                language: 'vi',
+            })
+        );
+        expect(subject()).toBe('Khách hàng cần người hỗ trợ (Linh)');
+    });
+
+    it('member joined: tells the owner who joined, with a link to the members page', async () => {
+        await provider.sendMemberJoined(
+            { name: 'Chi', email: 'owner@b.com' },
+            {
+                memberName: 'Tran Linh',
+                memberEmail: 'linh@b.com',
+                workspaceName: 'Kunmart',
+                membersUrl: '/kunmart/members',
+            }
+        );
+
+        expect(props()).toMatchObject({
+            name: 'Chi',
+            memberName: 'Tran Linh',
+            membersUrl: 'https://app.ecbot.dev/kunmart/members',
+        });
+        expect(subject()).toBe('Tran Linh joined Kunmart');
+    });
+
+    it('channel disconnected: names the channel in the subject and the language', async () => {
+        await provider.sendAccountBlocked(
+            { name: 'Chi', email: 'owner@b.com' },
+            {
+                accountName: 'Kunmart Fanpage',
+                reconnectUrl: '/kunmart/accounts/a-1',
+                language: 'vi',
+            }
+        );
+
+        expect(props()).toMatchObject({
+            reconnectUrl: 'https://app.ecbot.dev/kunmart/accounts/a-1',
+            language: 'vi',
+        });
+        expect(subject()).toBe('Kết nối lại Kunmart Fanpage');
+    });
+});

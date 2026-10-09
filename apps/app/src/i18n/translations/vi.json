@@ -1825,11 +1825,14 @@
     },
     "notifications": {
       "domain": "Thông báo",
-      "description": "Quản lý tùy chọn thông báo của bạn",
+      "description": "Chọn những email bạn muốn nhận.",
       "fields": {
         "emailNotifications": "Thông báo qua email",
         "pushNotifications": "Thông báo đẩy"
-      }
+      },
+      "handoffEmails": "Gửi email cho tôi khi khách hàng cần người hỗ trợ",
+      "handoffEmailsHint": "Gửi khi agent chuyển một cuộc hội thoại cho đội của bạn. Bạn vẫn thấy thông báo trong ứng dụng.",
+      "saveFailed": "Không lưu được lựa chọn của bạn. Vui lòng thử lại."
     }
   },
   "workspace": {

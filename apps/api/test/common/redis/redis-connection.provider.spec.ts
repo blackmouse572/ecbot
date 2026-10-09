@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { BullRedisConnectionProvider } from '@app/common/redis/bull-redis-connection.provider';
+import { RedisConnectionProvider } from '@app/common/redis/redis-connection.provider';
 
 interface StubClient {
     status: string;
@@ -24,13 +24,13 @@ function fakeConfigService(): ConfigService {
     return { get: jest.fn(() => undefined) } as unknown as ConfigService;
 }
 
-function makeProvider(stub: StubClient): BullRedisConnectionProvider {
-    const provider = new BullRedisConnectionProvider(fakeConfigService(), true);
+function makeProvider(stub: StubClient): RedisConnectionProvider {
+    const provider = new RedisConnectionProvider(fakeConfigService(), true);
     (provider as unknown as { client: StubClient }).client = stub;
     return provider;
 }
 
-describe('BullRedisConnectionProvider.onModuleDestroy', () => {
+describe('RedisConnectionProvider.onModuleDestroy', () => {
     it('quits a live client', async () => {
         const stub: StubClient = {
             status: 'ready',
@@ -76,13 +76,13 @@ describe('BullRedisConnectionProvider.onModuleDestroy', () => {
     });
 });
 
-describe('BullRedisConnectionProvider construction', () => {
+describe('RedisConnectionProvider construction', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     it('disables retries when Redis was unavailable at boot', () => {
-        new BullRedisConnectionProvider(fakeConfigService(), false);
+        new RedisConnectionProvider(fakeConfigService(), false);
 
         const options = mockRedisCtor.mock.calls[0][0] as {
             retryStrategy: () => number | null;
@@ -94,7 +94,7 @@ describe('BullRedisConnectionProvider construction', () => {
         const warn = jest
             .spyOn(Logger.prototype, 'warn')
             .mockImplementation(() => undefined);
-        new BullRedisConnectionProvider(fakeConfigService(), true);
+        new RedisConnectionProvider(fakeConfigService(), true);
 
         const errorCall = mockOn.mock.calls.find(
             ([event]) => event === 'error'

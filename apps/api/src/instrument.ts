@@ -15,7 +15,7 @@ const unhandledLogger = new Logger('UnhandledError');
 
 // Sentry's default uncaughtException/unhandledRejection integrations fall
 // back to raw `console.error(value)`. For a non-Error rejection (e.g. an
-// in-flight ioredis/BullMQ command rejected on shutdown) that dumps the
+// in-flight ioredis command rejected on shutdown) that dumps the
 // whole object to stdout — one array element per line. Cloud Run bills that
 // as log ingestion: the 2026-09-09 incident was ~27GB / 47k lines from a
 // single rejection. Bound and format instead of ever handing a raw value

@@ -1,3 +1,4 @@
+import { UserUpdateNotificationsRequestDto } from 'src/modules/user/dtos/request/user.update-notifications.request.dto';
 import { applyDecorators } from '@nestjs/common';
 import {
     Doc,
@@ -43,6 +44,23 @@ export function UserSharedUpdateProfileDoc(): MethodDecorator {
             jwtAccessToken: true,
         }),
         DocResponse('user.updateProfile')
+    );
+}
+
+export function UserSharedUpdateNotificationsDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'update my email notification choices',
+        }),
+        DocRequest({
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            dto: UserUpdateNotificationsRequestDto,
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocResponse('user.updateNotifications')
     );
 }
 

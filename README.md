@@ -52,7 +52,7 @@ Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three s
 - **Set up from one sentence.** Describe your business ("a skincare shop in Da Nang that sells on Zalo") and the agent builder suggests a persona, tone, goals and rules for you to edit.
 - **Knowledge in the database you already run.** Upload files and pages. Ecbot stores embeddings in Postgres with pgvector, next to everything else, and scopes retrieval to each agent.
 
-Also included: input and output guardrails, rule-based follow-up messages, workspaces with roles and invitations, API keys, an activity log, token streaming to the channel, and a BullMQ queue dashboard.
+Also included: input and output guardrails, rule-based follow-up messages, workspaces with roles and invitations, API keys, an activity log, and token streaming to the channel.
 
 Self-hosted Ecbot has every feature Ecbot Cloud has. You supply two things: an LLM key (Ecbot routes through [OpenRouter](https://openrouter.ai), so set `OPENROUTER_API_KEY` and pay the provider directly) and, for Facebook, Zalo or TikTok, your own platform app with messaging permissions approved. Telegram, the website widget and the REST API channel need no approval, so start with one of those.
 
@@ -74,7 +74,7 @@ pnpm setup:local
 
 Creates `apps/api`, `apps/app` and `apps/ai` `.env` files and fills everything that only has to be consistent: JWT keys, CORS origins, internal secrets, and the API key pairs the apps share. It prompts only for values it cannot generate. `OPENROUTER_API_KEY` is the one you must supply, because Ecbot cannot call an LLM without it. It never overwrites a value you set, so you can re-run it. [Installation](apps/api/docs/installation.md) lists what it sets, its options and troubleshooting. Run it before Compose, because the JWKS server serves the keys it writes.
 
-**2. Bring up the infrastructure.** This starts Postgres with pgvector, Redis, a JWKS server, Bull Board and a Cloud Tasks emulator.
+**2. Bring up the infrastructure.** This starts Postgres with pgvector, Redis, a JWKS server and a Cloud Tasks emulator.
 
 ```bash
 docker compose up -d
@@ -104,7 +104,6 @@ pnpm --filter ai dev                  # AI service, in a second shell
 | API                | http://localhost:8080      |
 | API docs (Swagger) | http://localhost:8080/docs |
 | AI service         | http://localhost:8000      |
-| Queue dashboard    | http://localhost:3010      |
 
 To run the apps in containers too, use the Compose profiles: `docker compose --profile app up` for api + app, `--profile full` to include the AI service.
 
@@ -116,7 +115,7 @@ A [Turborepo](https://turbo.build/repo) + pnpm workspace.
 
 **Apps**
 
-- **`api`**: the backend (NestJS 11, PostgreSQL via MikroORM, Redis and BullMQ). It owns channels, conversations, knowledge, tools and the operator API.
+- **`api`**: the backend (NestJS 11, PostgreSQL via MikroORM, Redis and Cloud Tasks). It owns channels, conversations, knowledge, tools and the operator API.
 - **`app`**: the operator UI (React 19, Vite, TanStack Query, React Router v7).
 - **`ai`**: the agent runtime (Python 3.12, FastAPI, LangChain). It handles generation, RAG and guardrails, and `api` streams from it over HTTP.
 - **`edge`**: an optional Cloudflare Worker that receives platform webhooks and forwards them. Self-hosting works without it, so point webhooks straight at `api`.

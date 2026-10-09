@@ -10,6 +10,8 @@ import { IEmailService } from 'src/modules/email/interfaces/email.service.interf
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
+import { EmailHandoffDto } from '../dtos/email.handoff.dto';
+import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 
 @Injectable()
 export class EmailService implements IEmailService {
@@ -115,4 +117,10 @@ export class EmailService implements IEmailService {
 
     sendLowTokenBalance = (dto: EmailSendDto, data: EmailLowTokenBalanceDto) =>
         this.delegate('sendLowTokenBalance', dto, data);
+
+    sendHandoff = (dto: EmailSendDto, data: EmailHandoffDto) =>
+        this.delegate('sendHandoff', dto, data);
+
+    sendMemberJoined = (dto: EmailSendDto, data: EmailMemberJoinedDto) =>
+        this.delegate('sendMemberJoined', dto, data);
 }

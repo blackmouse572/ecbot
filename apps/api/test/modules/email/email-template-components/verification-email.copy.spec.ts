@@ -19,4 +19,13 @@ describe('verificationEmailCopy', () => {
             'The Ecbot team'
         );
     });
+
+    it('heads the email with what to do, in both languages', () => {
+        expect(verificationEmailCopy('en', 'Ecbot').heading).toBe(
+            'Verify your email'
+        );
+        expect(verificationEmailCopy('vi', 'Ecbot').heading).toBe(
+            'Xác minh email của bạn'
+        );
+    });
 });

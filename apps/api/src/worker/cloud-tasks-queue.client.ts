@@ -9,9 +9,9 @@ import type { CloudTasksClient } from '@google-cloud/tasks';
 export const CLOUD_TASKS_CLIENT = 'CLOUD_TASKS_CLIENT';
 
 export interface CloudTasksEnqueueOptions {
-    /** Cloud Tasks rejects a duplicate task name for ~1h — replaces BullMQ's jobId dedup. */
+    /** Cloud Tasks rejects a duplicate task name for ~1h after the task ran or was deleted. */
     taskName?: string;
-    /** Delivery delay, replaces BullMQ's `delay` option. */
+    /** Delivery delay. */
     scheduleTime?: Date;
 }
 
@@ -73,6 +73,18 @@ export class CloudTasksQueueClient {
             port: port ? Number(port) : 443,
             sslCreds: credentials.createInsecure(),
         });
+    }
+
+    /**
+     * False when neither a GCP project nor an emulator is set: there is
+     * nowhere to create tasks, so callers that can degrade (the inbound
+     * inbox) run the work inline instead of failing.
+     */
+    isConfigured(): boolean {
+        return Boolean(
+            this.configService.get<string>('cloudTasks.projectId') ||
+            this.configService.get<string>('cloudTasks.emulatorHost')
+        );
     }
 
     async enqueue(

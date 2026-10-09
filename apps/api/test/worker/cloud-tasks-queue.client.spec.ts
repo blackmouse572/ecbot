@@ -250,3 +250,28 @@ describe('CloudTasksQueueClient.enqueue', () => {
         });
     });
 });
+
+describe('CloudTasksQueueClient.isConfigured', () => {
+    const build = (values: Record<string, string | undefined>) =>
+        new CloudTasksQueueClient({
+            get: (key: string) => values[key],
+        } as unknown as ConfigService);
+
+    it('is true with a GCP project', () => {
+        expect(
+            build({ 'cloudTasks.projectId': 'eccho-prod' }).isConfigured()
+        ).toBe(true);
+    });
+
+    it('is true with only an emulator host', () => {
+        expect(
+            build({
+                'cloudTasks.emulatorHost': 'localhost:8123',
+            }).isConfigured()
+        ).toBe(true);
+    });
+
+    it('is false with neither', () => {
+        expect(build({}).isConfigured()).toBe(false);
+    });
+});

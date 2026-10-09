@@ -14,4 +14,13 @@ describe('resetPasswordEmailCopy', () => {
             'Hoặc dán liên kết này vào trình duyệt:'
         );
     });
+
+    it('heads the email with what to do, in both languages', () => {
+        expect(resetPasswordEmailCopy('en', 'Ecbot').heading).toBe(
+            'Reset your password'
+        );
+        expect(resetPasswordEmailCopy('vi', 'Ecbot').heading).toBe(
+            'Đặt lại mật khẩu'
+        );
+    });
 });

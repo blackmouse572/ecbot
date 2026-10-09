@@ -13,4 +13,11 @@ export class EmailAccountBlockedDto {
         description: 'Relative path to the account reconnect page',
     })
     reconnectUrl: string;
+
+    @ApiProperty({
+        required: false,
+        example: 'vi',
+        description: 'Language to write the email in; English otherwise',
+    })
+    language?: string;
 }

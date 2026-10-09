@@ -45,7 +45,7 @@ describe('MessageProcessorService — sender name from the webhook', () => {
     const customerTagClassifierService = {
         scheduleAfterMessage: jest.fn().mockResolvedValue(undefined),
     };
-    // The AI reply runs in a debounced BullMQ job; process() only schedules it
+    // The AI reply runs in a debounced job; process() only schedules it
     // and threads the customer context through.
     const messageDebounceService = {
         schedule: jest.fn().mockResolvedValue(undefined),

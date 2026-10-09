@@ -67,7 +67,7 @@ export class DatabaseOptionService {
             autoLoadEntities: true,
             driverOptions: driverOptions,
             // Every DB entry point must establish a request context: HTTP via the
-            // Nest middleware, BullMQ via ContextualWorkerHost, cron via
+            // Nest middleware (Cloud Tasks callbacks included), cron via
             // @ContextualCron. `false` makes an uncovered path throw loudly
             // instead of silently leaking into the never-cleared global identity
             // map (the >512MB OOM). Do NOT flip back to `true` to silence a

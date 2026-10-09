@@ -59,7 +59,7 @@ describe('MessageProcessorService — Customer + ContactPoint wiring (#172)', ()
     const customerTagClassifierService = {
         scheduleAfterMessage: jest.fn().mockResolvedValue(undefined),
     };
-    // The AI reply now runs in a debounced BullMQ job; the processor only
+    // The AI reply runs in a debounced job; the processor only
     // schedules it. Stub the scheduler so the wiring tests stay focused.
     const messageDebounceService = {
         schedule: jest.fn().mockResolvedValue(undefined),

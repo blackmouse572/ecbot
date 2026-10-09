@@ -63,7 +63,7 @@ _You can [request feature][ack-issues] or [report bug][ack-issues] with followin
 - [ ] Move some function in service layer into repository module, because a bit wrong implementation (high priority, in v8
 - [ ] 2FA Feats (high priority, in v8)
 - [ ] Reset password (medium priority, in v8)
-- [ ] Export Module in Background using bullmq (medium priority, in v8)
+- [ ] Export Module in Background using Cloud Tasks (medium priority, in v8)
 - [ ] Unit test (medium priority)
 - [ ] Add Github SSO (low priority)
 - [ ] Privacy Policy Module (versioning, lowest priority)
@@ -136,7 +136,7 @@ The project is built using the following technologies and versions:
 - Production ready 🔥
 - MongoDB integrate by using [mongoose][ref-mongoose] 🎉
 - Cached response with redis.
-- Queue bullmq with redis.
+- Background jobs with Google Cloud Tasks.
 - Logger with pino 🌲
 - SWC (Speedy Web Compiler) Compiler, fast compiler.
 - Authorization, Role, and session Management (can revoke).

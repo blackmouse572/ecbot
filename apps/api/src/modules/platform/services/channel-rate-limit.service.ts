@@ -1,13 +1,11 @@
 import { REDIS_AVAILABLE } from '@app/common/redis/redis-availability.provider';
-import { InjectQueue } from '@nestjs/bullmq';
+import { RedisConnectionProvider } from '@app/common/redis/redis-connection.provider';
 import {
     Inject,
     Injectable,
     Logger,
     OnModuleDestroy,
 } from '@nestjs/common';
-import { Queue } from 'bullmq';
-import { INBOUND_EVENT_QUEUE } from '../constants/inbound-event.constant';
 
 const KEY_PREFIX = 'channel-rate';
 
@@ -40,8 +38,7 @@ export class ChannelRateLimitService implements OnModuleDestroy {
     private readonly sweepTimer?: NodeJS.Timeout;
 
     constructor(
-        // Borrowed for its Redis connection only — nothing is enqueued here.
-        @InjectQueue(INBOUND_EVENT_QUEUE) private readonly queue: Queue,
+        private readonly redis: RedisConnectionProvider,
         @Inject(REDIS_AVAILABLE) private readonly redisAvailable: boolean
     ) {
         if (!redisAvailable) {
@@ -61,18 +58,6 @@ export class ChannelRateLimitService implements OnModuleDestroy {
         for (const [key, window] of this.inMemoryWindows) {
             if (window.expiresAt <= now) this.inMemoryWindows.delete(key);
         }
-    }
-
-    // BullMQ narrows the client type; the runtime instance is ioredis with the
-    // full Redis API. Centralised here so the cast appears once.
-    private async redisClient(): Promise<{
-        incr(key: string): Promise<number>;
-        expire(key: string, seconds: number): Promise<number>;
-    }> {
-        return (await this.queue.getBackend().client) as unknown as {
-            incr(key: string): Promise<number>;
-            expire(key: string, seconds: number): Promise<number>;
-        };
     }
 
     /**
@@ -95,7 +80,7 @@ export class ChannelRateLimitService implements OnModuleDestroy {
         }
 
         try {
-            const client = await this.redisClient();
+            const client = this.redis.client;
             const used = await client.incr(key);
             // Only the call that created the counter sets the expiry, so the
             // window is fixed rather than sliding forward on every request.

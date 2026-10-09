@@ -79,8 +79,7 @@ docker compose up -d
 ```
 
 Starts Postgres with pgvector (`:5432`), Redis (`:6379`), the JWKS server
-(`:3011`, serving `apps/api/keys/jwks.json`), Bull Board (`:3010`) and the Cloud
-Tasks emulator.
+(`:3011`, serving `apps/api/keys/jwks.json`) and the Cloud Tasks emulator.
 
 ## 4. Schema and seed
 

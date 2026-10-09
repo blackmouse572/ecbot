@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
@@ -33,6 +34,8 @@ describe('SmsTaskController.handle', () => {
             controllers: [SmsTaskController],
             providers: [
                 { provide: SmsService, useValue: { sendVerification } },
+                // ApiKeyCloudTasksProtected's guard reads the Cloud Tasks key.
+                { provide: ConfigService, useValue: { get: () => undefined } },
             ],
         }).compile();
         controller = module.get(SmsTaskController);

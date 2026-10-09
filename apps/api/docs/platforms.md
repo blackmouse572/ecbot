@@ -189,8 +189,7 @@ Controller pipeline:
 3. `adapter.webhook.parse(rawBody)` — normalize the body into `PlatformWebhookEvent[]`.
 4. For each event with `externalMessageId`: `WebhookDedupeService.seenAndMark` (Redis, 5 min TTL).
 5. Dispatch — currently logged with a TODO. When `MessageProcessorService` lands it consumes
-   the event here. Existing platform-specific BullMQ flows (e.g. `FacebookHandlerService`) are
-   not affected.
+   the event here.
 
 Raw body access requires `rawBody: true` on `NestFactory.create` (already enabled in
 `src/main.ts`). Signature verification reads `req.rawBody` directly to avoid drift from
@@ -367,7 +366,6 @@ that reason.
 - **Failure surface.** Stub adapters throw `NotImplementedException` (HTTP 501)
   for every method except the no-op `verifyChallenge`. Unknown slugs → 404.
   Registered slug but missing adapter → 400. Signature failure → 403.
-- **Future processor.** Dispatch step (controller line: `TODO(processor)`) will
-  hand events to a `MessageProcessorService` that handles persistence, handoff
-  detection, and LLM streaming. Until that lands, Facebook continues using the
-  existing `FacebookHandlerService` + BullMQ flow under `src/common/facebook/`.
+- **Processing.** The controller hands each event to `InboundInboxService.accept`,
+  which creates a Cloud Task; `MessageProcessorService` runs the Turn when the
+  task calls back (ADR-0008).
