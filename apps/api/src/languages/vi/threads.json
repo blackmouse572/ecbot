@@ -1,0 +1,7 @@
+{
+    "error": {
+        "invalidCredential": "Threads đã từ chối lần đăng nhập này. Vui lòng kết nối lại.",
+        "unreachable": "Không thể kết nối tới Threads. Vui lòng thử lại.",
+        "noReplyTarget": "Không có bài viết Threads nào của người này để trả lời."
+    }
+}

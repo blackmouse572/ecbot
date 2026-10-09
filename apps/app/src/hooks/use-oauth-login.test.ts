@@ -223,6 +223,43 @@ describe("useOAuthLogin — WhatsApp", () => {
   });
 });
 
+describe("useOAuthLogin — Threads", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    vi.stubEnv("VITE_THREADS_APP_ID", "TAPP");
+    vi.stubEnv(
+      "VITE_THREADS_REDIRECT_URI",
+      "https://app.test/auth/threads/callback",
+    );
+    vi.spyOn(window, "open").mockImplementation(() => fakePopup());
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("opens Threads Login with the reply and mention scopes and a bound state", () => {
+    const { result } = renderHook(() => useOAuthLogin("THREADS_ACCOUNT", {}));
+
+    result.current.handleLinkClick();
+
+    const openMock = window.open as ReturnType<typeof vi.fn>;
+    const url = new URL(openMock.mock.calls[0][0]);
+    expect(url.origin + url.pathname).toBe("https://threads.net/oauth/authorize");
+    expect(Object.fromEntries(url.searchParams)).toMatchObject({
+      client_id: "TAPP",
+      redirect_uri: "https://app.test/auth/threads/callback",
+      scope:
+        "threads_basic,threads_read_replies,threads_manage_replies,threads_manage_mentions",
+      response_type: "code",
+    });
+    expect(sessionStorage.getItem("oauth-state:THREADS_ACCOUNT")).toBe(
+      url.searchParams.get("state"),
+    );
+  });
+});
+
 function fakePopup(closed = false) {
   return { closed } as Window;
 }

@@ -227,7 +227,8 @@
             "TELEGRAM_BOT",
             "API_CHANNEL",
             "WEBSITE_WIDGET",
-            "WHATSAPP_BUSINESS"
+            "WHATSAPP_BUSINESS",
+            "THREADS_ACCOUNT"
           ],
           "mappedType": "enum"
         },
@@ -3693,7 +3694,8 @@
             "TELEGRAM_BOT",
             "API_CHANNEL",
             "WEBSITE_WIDGET",
-            "WHATSAPP_BUSINESS"
+            "WHATSAPP_BUSINESS",
+            "THREADS_ACCOUNT"
           ],
           "mappedType": "enum"
         },

@@ -541,6 +541,9 @@
             "oauth": "Đăng nhập bằng Facebook",
             "manual": "Nhập thủ công"
           }
+        },
+        "threads": {
+          "notice": "Threads không có tin nhắn riêng. Agent trả lời bình luận dưới bài viết của bạn và các bài viết nhắc đến bạn, và mọi câu trả lời là bình luận công khai mà ai cũng thấy. Câu trả lời chỉ gồm chữ, tối đa 500 ký tự."
         }
       }
     },
@@ -615,6 +618,10 @@
         "whatsappBusiness": {
           "label": "WhatsApp Business",
           "description": "Một số WhatsApp Business được kết nối qua Cloud API."
+        },
+        "threadsAccount": {
+          "label": "Threads",
+          "description": "Một hồ sơ Threads. Bot trả lời các bình luận dưới bài viết và các bài viết nhắc đến hồ sơ."
         }
       },
       "apiChannel": {

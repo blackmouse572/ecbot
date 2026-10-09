@@ -3,6 +3,7 @@ import { IOAuthPlatformService } from '@app/common/oauth/interfaces/oauth-platfo
 import { FacebookOAuthAdapterService } from '@app/common/oauth/services/facebook-oauth-adapter.service';
 import { ShopeeOAuthService } from '@app/common/shopee/services/shopee-oauth.service';
 import { TelegramOAuthService } from '@app/common/telegram/services/telegram-oauth.service';
+import { ThreadsOAuthService } from '@app/common/threads/services/threads-oauth.service';
 import { TikTokShopOAuthService } from '@app/common/tiktok-shop/services/tiktok-shop-oauth.service';
 import { WhatsAppOAuthService } from '@app/common/whatsapp/services/whatsapp-oauth.service';
 import { ZaloOAuthService } from '@app/common/zalo/services/zalo-oauth.service';
@@ -18,7 +19,8 @@ export class OAuthPlatformFactory {
         private readonly tiktokShopService: TikTokShopOAuthService,
         private readonly shopeeService: ShopeeOAuthService,
         private readonly telegramService: TelegramOAuthService,
-        private readonly whatsAppService: WhatsAppOAuthService
+        private readonly whatsAppService: WhatsAppOAuthService,
+        private readonly threadsService: ThreadsOAuthService
     ) {}
 
     getService(platform: ENUM_ACCOUNT_TYPE): IOAuthPlatformService {
@@ -37,6 +39,8 @@ export class OAuthPlatformFactory {
                 return this.telegramService;
             case ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS:
                 return this.whatsAppService;
+            case ENUM_ACCOUNT_TYPE.THREADS_ACCOUNT:
+                return this.threadsService;
             default:
                 throw new BadRequestException(
                     `Unsupported OAuth platform: ${platform}`

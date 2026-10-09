@@ -1,6 +1,6 @@
 ---
 name: eccho-platform-adapters
-description: Build or change an ecbot chat channel through the `apps/api` platform module (`PlatformAdapter`). Use for Messenger, Instagram, WhatsApp Business, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget: inbound webhooks, signature verification, event parsing, operator replies, sender profiles, channel OAuth, or adding a new channel.
+description: Build or change an ecbot chat channel through the `apps/api` platform module (`PlatformAdapter`). Use for Messenger, Instagram, WhatsApp Business, Threads, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget: inbound webhooks, signature verification, event parsing, operator replies, sender profiles, channel OAuth, or adding a new channel.
 ---
 
 # ecbot Platform Adapters
@@ -9,10 +9,10 @@ Every channel ecbot talks on lives at `apps/api/src/modules/platform/` as a
 single NestJS class extending the abstract `PlatformAdapter`, registered in
 `PlatformAdapterRegistry` and keyed by `ENUM_ACCOUNT_TYPE`.
 
-Nine channels are registered today, in two groups:
+Ten channels are registered today, in two groups:
 
-- **Platform channels** — Messenger, Instagram, WhatsApp Business, Zalo OA,
-  TikTok Shop, Shopee, Telegram. A third party pushes events to us and we call their API to reply.
+- **Platform channels** — Messenger, Instagram, WhatsApp Business, Threads,
+  Zalo OA, TikTok Shop, Shopee, Telegram. A third party pushes events to us and we call their API to reply.
   Inbound arrives through the shared webhook controller.
 - **eccho-issued channels** — the API channel and the website widget. There is
   no third-party platform: ecbot issues the credential and owns both ends. They
@@ -79,7 +79,7 @@ it shows how the registry is consumed: `registry.get(account.type).sendMessage(.
   dropped as unde-dupable.
 
 - **Slug → type map** — `apps/api/src/modules/platform/constants/platform-slug.constant.ts`
-  resolves a URL slug (`messenger`, `zalo`, `instagram`, `whatsapp`, `tiktok`,
+  resolves a URL slug (`messenger`, `zalo`, `instagram`, `whatsapp`, `threads`, `tiktok`,
   `shopee`, `telegram`, `api`, `website`) to an `ENUM_ACCOUNT_TYPE`. Add an entry when
   adding a channel.
 
@@ -90,6 +90,12 @@ it shows how the registry is consumed: `registry.get(account.type).sendMessage(.
 - **Tokens** — stored envelope-encrypted in `AccountEntity.accessToken`. Call
   `AccountService.decryptToken(account.accessToken)` before use. See
   `TelegramPlatformAdapter.token()`.
+
+- **Threads has no DMs** — inbound is the `replies` and `mentions` webhook
+  fields, and the webhook carries no author id, so `senderId` is the author's
+  username. `doSend` publishes a reply to that author's latest stored inbound
+  post (`MessageRepository.findLatestInboundBySender`); our own replies under
+  our posts come back on the webhook and `parse` drops them.
 
 - **`AccountEntity.config`** — a nullable jsonb column carrying per-channel
   settings for the eccho-issued channels only (`{callbackUrl, signingSecret}`
@@ -166,6 +172,7 @@ Then add the class to `ADAPTERS` in `platform.module.ts`; the `PLATFORM_ADAPTER`
 | TikTok Shop           | `x-tts-signature`                                  | `HMAC-SHA256(app_key + timestamp + body, appSecret)`      | no                    | TikTok Customer Service API                                 |
 | Shopee                | `authorization`                                    | `HMAC-SHA256(partner_id + path + timestamp, partner_key)` | no                    | Shopee Open Platform Chat API                               |
 | WhatsApp Business     | `x-hub-signature-256` (same Meta app as Messenger) | `HMAC-SHA256(rawBody, appSecret)`                         | yes (`hub.challenge`) | `https://graph.facebook.com/<v>/<phone_number_id>/messages` |
+| Threads               | `x-hub-signature-256`                              | `HMAC-SHA256(rawBody, threadsAppSecret)`                  | yes (`hub.challenge`) | `https://graph.threads.net/v1.0/<user_id>/threads` + `/threads_publish`, `reply_to_id` = the customer's latest post |
 | Telegram              | `x-telegram-bot-api-secret-token`                  | shared secret, compared timing-safe                       | no                    | `https://api.telegram.org/bot<token>/sendMessage`           |
 | API channel           | — (`ClientCredentialGuard` on `/client`)           | n/a — `verifySignature` returns false                     | no                    | the account's own `config.callbackUrl`                      |
 | Website widget        | — (widget key + Turnstile on `/public`)            | n/a — `verifySignature` returns false                     | no                    | none; delivery is the visitor's poll                        |

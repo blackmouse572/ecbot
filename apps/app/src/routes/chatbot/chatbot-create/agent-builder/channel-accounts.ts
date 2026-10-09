@@ -33,6 +33,9 @@ const ACCOUNT_TYPE_TO_CHANNEL: Record<AccountType, ChannelId | null> = {
   TIKTOK_SHOP: "tiktok",
   SHOPEE_SHOP: "shopee",
   API_CHANNEL: null,
+  // Linked from Accounts; the builder has no channel choice for them yet.
+  WHATSAPP_BUSINESS: null,
+  THREADS_ACCOUNT: null,
 };
 
 /** The reverse lookup: which channel choice a linked account's type belongs to. */

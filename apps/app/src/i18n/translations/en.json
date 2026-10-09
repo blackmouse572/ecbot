@@ -515,6 +515,9 @@
             "oauth": "Log in with Facebook",
             "manual": "Enter manually"
           }
+        },
+        "threads": {
+          "notice": "Threads has no private messages. Your agent answers replies to your posts and posts that mention you, and every answer is a public reply anyone can see. Answers are text only, up to 500 characters."
         }
       }
     },
@@ -589,6 +592,10 @@
         "whatsappBusiness": {
           "label": "WhatsApp Business",
           "description": "A WhatsApp Business number connected through the Cloud API."
+        },
+        "threadsAccount": {
+          "label": "Threads",
+          "description": "A Threads profile. The bot answers replies to its posts and posts that mention it."
         }
       },
       "apiChannel": {

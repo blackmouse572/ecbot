@@ -1,16 +1,18 @@
 ---
 title: Channels
-description: Connect your agent to Facebook Messenger, Zalo, Telegram, WhatsApp or a chat widget on your website so it replies where customers already message you.
+description: Connect your agent to Facebook Messenger, Zalo, Telegram, WhatsApp, Threads or a chat widget on your website so it replies where customers already message you.
 faq:
   - q: Can one agent reply on several channels?
     a: Yes. Connect as many channels as you need to the same agent. Each customer's profile and tags are shared across the channels they write from.
   - q: Is the website widget key a secret?
     a: No. The widget key is visible in your site's code by design. What protects it is the list of allowed websites, so only your own domains can load the widget.
   - q: Do Instagram, Shopee or TikTok Shop work yet?
-    a: Not yet. They are marked Roadmap in the app. Today Ecbot supports Facebook Messenger, Zalo, Telegram, WhatsApp, the website widget and a REST API channel.
+    a: Not yet. They are marked Roadmap in the app. Today Ecbot supports Facebook Messenger, Zalo, Telegram, WhatsApp, Threads, the website widget and a REST API channel.
+  - q: Can the agent read Threads direct messages?
+    a: No. Threads has no direct messages for apps. The agent answers replies to your posts and posts that mention you, and its answers are public replies anyone can see.
 ---
 
-A channel is a chat app where your agent replies to customers. Ecbot connects to Facebook Messenger, Zalo, Telegram, WhatsApp, a chat widget for your website and a REST API channel for developers. One agent can reply on all of them, and each connected page or bot is called an account.
+A channel is a chat app where your agent replies to customers. Ecbot connects to Facebook Messenger, Zalo, Telegram, WhatsApp, Threads, a chat widget for your website and a REST API channel for developers. One agent can reply on all of them, and each connected page or bot is called an account.
 
 ## Connect a channel
 
@@ -41,6 +43,19 @@ The widget only loads on the addresses you allowed.
 ## Facebook Messenger, Zalo and WhatsApp
 
 Choose **Facebook**, **Zalo** or **WhatsApp** and sign in with the account that manages your Facebook Page, Zalo OA or WhatsApp Business number. Pick what to connect, then link it to your agent.
+
+## Threads
+
+Threads works differently from the other channels: it has **no private messages**. Instead, the agent answers:
+
+- replies to your Threads posts, and
+- posts where someone mentions your profile.
+
+Each answer is posted as a **public reply** under that person's latest reply or mention, so anyone can read it. Answers are text only, up to 500 characters. Each person who writes to you gets their own conversation in Ecbot, named after their Threads username.
+
+To connect, choose **Threads**, sign in with your Threads profile and allow the requested permissions. Then link the account to your agent.
+
+Because every answer is public, tell your agent not to share order details, phone numbers or other private information on Threads. Ask the customer to continue on Messenger or another private channel instead.
 
 ## REST API
 

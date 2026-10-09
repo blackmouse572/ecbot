@@ -418,6 +418,21 @@ export class AppEnvDto {
     @IsString()
     INSTAGRAM_REDIRECT_URI?: string;
 
+    // Threads platform OAuth. THREADS_APP_SECRET also verifies the Threads
+    // webhook's x-hub-signature-256; the hub.verify_token is
+    // FACEBOOK_WEBHOOK_SECRET, shared with Messenger.
+    @IsOptional()
+    @IsString()
+    THREADS_APP_ID?: string;
+
+    @IsOptional()
+    @IsString()
+    THREADS_APP_SECRET?: string;
+
+    @IsOptional()
+    @IsString()
+    THREADS_REDIRECT_URI?: string;
+
     // Zalo OA platform OAuth
     @IsOptional()
     @IsString()

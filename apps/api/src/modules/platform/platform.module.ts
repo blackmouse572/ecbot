@@ -14,6 +14,7 @@ import { InstagramPlatformAdapter } from './adapters/instagram/instagram.platfor
 import { MessengerPlatformAdapter } from './adapters/messenger/messenger.platform-adapter';
 import { ShopeePlatformAdapter } from './adapters/shopee/shopee.platform-adapter';
 import { TelegramPlatformAdapter } from './adapters/telegram/telegram.platform-adapter';
+import { ThreadsPlatformAdapter } from './adapters/threads/threads.platform-adapter';
 import { TiktokPlatformAdapter } from './adapters/tiktok/tiktok.platform-adapter';
 import { WebsitePlatformAdapter } from './adapters/website/website.platform-adapter';
 import { WhatsAppPlatformAdapter } from './adapters/whatsapp/whatsapp.platform-adapter';
@@ -49,6 +50,7 @@ const ADAPTERS = [
     ShopeePlatformAdapter,
     TelegramPlatformAdapter,
     WhatsAppPlatformAdapter,
+    ThreadsPlatformAdapter,
     ApiChannelPlatformAdapter,
     WebsitePlatformAdapter,
 ];
