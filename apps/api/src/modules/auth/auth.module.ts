@@ -12,6 +12,7 @@ import { ImpersonationService } from 'src/modules/auth/services/impersonation.se
 import { MfaService } from 'src/modules/auth/services/mfa.service';
 import { SessionModule } from 'src/modules/session/session.module';
 import { UserModule } from 'src/modules/user/user.module';
+import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
 import { Algorithm } from 'jsonwebtoken';
 
 @Module({
@@ -36,6 +37,7 @@ import { Algorithm } from 'jsonwebtoken';
         SessionModule,
         ActivityModule,
         UserModule,
+        CloudTasksQueueModule,
         JwtModule.registerAsync({
             inject: [ConfigService],
             imports: [ConfigModule],

@@ -10,6 +10,8 @@ import { AuthImpersonateRefreshResponseDto } from 'src/modules/auth/dtos/respons
 import { AuthChangePasswordRequestDto } from 'src/modules/auth/dtos/request/auth.change-password.request.dto';
 import { AuthMfaDisableRequestDto } from 'src/modules/auth/dtos/request/auth.mfa-disable.request.dto';
 import { AuthMfaEnableRequestDto } from 'src/modules/auth/dtos/request/auth.mfa-enable.request.dto';
+import { AuthMfaRecoveryCodesRequestDto } from 'src/modules/auth/dtos/request/auth.mfa-recovery-codes.request.dto';
+import { AuthMfaSetupRequestDto } from 'src/modules/auth/dtos/request/auth.mfa-setup.request.dto';
 import { AuthMfaEnableResponseDto } from 'src/modules/auth/dtos/response/auth.mfa-enable.response.dto';
 import { AuthMfaSetupResponseDto } from 'src/modules/auth/dtos/response/auth.mfa-setup.response.dto';
 import { AuthRefreshResponseDto } from 'src/modules/auth/dtos/response/auth.refresh.response.dto';
@@ -91,11 +93,15 @@ export function AuthSharedMfaSetupDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary:
-                'start MFA setup: a new pending TOTP secret and otpauth URI',
+                'start MFA setup: a new pending TOTP secret and otpauth URI; needs the current password',
         }),
         DocAuth({
             xApiKey: true,
             jwtAccessToken: true,
+        }),
+        DocRequest({
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            dto: AuthMfaSetupRequestDto,
         }),
         DocResponse<AuthMfaSetupResponseDto>('auth.mfaSetup', {
             dto: AuthMfaSetupResponseDto,
@@ -107,7 +113,7 @@ export function AuthSharedMfaEnableDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary:
-                'turn MFA on with a code from the pending secret; returns recovery codes once',
+                'turn MFA on with the current password and a code from the pending secret; returns recovery codes once and signs out other sessions',
         }),
         DocAuth({
             xApiKey: true,
@@ -127,7 +133,7 @@ export function AuthSharedMfaDisableDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary:
-                'turn MFA off; needs the current password and a TOTP or recovery code',
+                'turn MFA off; needs the current password and a TOTP or recovery code; signs out other sessions',
         }),
         DocAuth({
             xApiKey: true,
@@ -138,5 +144,25 @@ export function AuthSharedMfaDisableDoc(): MethodDecorator {
             dto: AuthMfaDisableRequestDto,
         }),
         DocResponse('auth.mfaDisable')
+    );
+}
+
+export function AuthSharedMfaRecoveryCodesDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                'replace the recovery codes; needs the current password and a TOTP or recovery code',
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocRequest({
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            dto: AuthMfaRecoveryCodesRequestDto,
+        }),
+        DocResponse<AuthMfaEnableResponseDto>('auth.mfaRecoveryCodes', {
+            dto: AuthMfaEnableResponseDto,
+        })
     );
 }

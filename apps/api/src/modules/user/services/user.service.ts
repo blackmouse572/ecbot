@@ -32,7 +32,7 @@ import { UserUpdateProfileRequestDto } from 'src/modules/user/dtos/request/user.
 import { UserUpdateStatusRequestDto } from 'src/modules/user/dtos/request/user.update-status.request.dto';
 import { UserUpdateRequestDto } from 'src/modules/user/dtos/request/user.update.request.dto';
 import { USER_TERMS_VERSION } from 'src/modules/user/constants/user.constant';
-import { UserCensorResponseDto } from'src/modules/user/dtos/response/user.censor.response.dto';
+import { UserCensorResponseDto } from 'src/modules/user/dtos/response/user.censor.response.dto';
 import { UserGetResponseDto } from 'src/modules/user/dtos/response/user.get.response.dto';
 import { UserListResponseDto } from 'src/modules/user/dtos/response/user.list.response.dto';
 import { UserProfileResponseDto } from 'src/modules/user/dtos/response/user.profile.response.dto';
@@ -594,6 +594,25 @@ export class UserService {
         Object.assign(user, data);
         await this.em.persistAndFlush(user);
         return user;
+    }
+
+    // The four methods below write with conditional SQL updates, not from the
+    // loaded entity, so concurrent requests cannot both pass a check.
+
+    claimPasswordAttempt(user: UserEntity, max: number): Promise<boolean> {
+        return this.userRepository.claimPasswordAttempt(user.id, max);
+    }
+
+    clearPasswordAttempt(user: UserEntity): Promise<void> {
+        return this.userRepository.clearPasswordAttempt(user.id);
+    }
+
+    claimMfaTimeStep(user: UserEntity, step: number): Promise<boolean> {
+        return this.userRepository.claimMfaTimeStep(user.id, step);
+    }
+
+    consumeMfaRecoveryCode(user: UserEntity, hash: string): Promise<boolean> {
+        return this.userRepository.consumeMfaRecoveryCode(user.id, hash);
     }
 
     async active(user: UserEntity): Promise<UserEntity> {

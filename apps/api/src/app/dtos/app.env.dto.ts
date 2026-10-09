@@ -292,6 +292,12 @@ export class AppEnvDto {
     @IsString()
     AWS_PINPOINT_APPLICATION_ID?: string;
 
+    // HMAC key for MFA recovery-code hashes; OAUTH_TOKEN_ENCRYPT_KEY when unset.
+    @IsOptional()
+    @IsString()
+    @MinLength(32)
+    AUTH_MFA_RECOVERY_PEPPER?: string;
+
     @IsOptional()
     @IsString()
     AUTH_SOCIAL_GOOGLE_CLIENT_ID?: string;

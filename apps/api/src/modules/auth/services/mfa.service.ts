@@ -1,38 +1,64 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
     BadRequestException,
     ConflictException,
     Inject,
     Injectable,
+    Logger,
 } from '@nestjs/common';
-import { Cache } from 'cache-manager';
-import { createHash, randomBytes, timingSafeEqual } from 'crypto';
+import { ConfigService } from '@nestjs/config';
+import { createHash, createHmac, randomBytes, randomUUID } from 'crypto';
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
+import { REDIS_AVAILABLE } from 'src/common/redis/redis-availability.provider';
+import { RedisConnectionProvider } from 'src/common/redis/redis-connection.provider';
 import {
+    AUTH_MFA_CHALLENGE_KEY_PREFIX,
     AUTH_MFA_CHALLENGE_TTL_SECONDS,
     AUTH_MFA_DEFAULT_ISSUER,
+    AUTH_MFA_RECOVERY_CODE_BYTES,
     AUTH_MFA_RECOVERY_CODE_COUNT,
 } from 'src/modules/auth/constants/auth.mfa.constant';
 import { AuthMfaEnableResponseDto } from 'src/modules/auth/dtos/response/auth.mfa-enable.response.dto';
 import { AuthMfaSetupResponseDto } from 'src/modules/auth/dtos/response/auth.mfa-setup.response.dto';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
-import { IAuthMfaChallenge } from 'src/modules/auth/interfaces/auth.interface';
+import {
+    IAuthMfaChallenge,
+    IAuthMfaMethod,
+} from 'src/modules/auth/interfaces/auth.interface';
 import {
     base32Encode,
     buildOtpauthUri,
     generateTotpSecret,
     verifyTotp,
 } from 'src/modules/auth/utils/auth.totp.util';
+import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
+import { SessionService } from 'src/modules/session/services/session.service';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { UserService } from 'src/modules/user/services/user.service';
+import { CloudTasksQueueClient } from 'src/worker/cloud-tasks-queue.client';
 
 @Injectable()
 export class MfaService {
+    private readonly logger = new Logger(MfaService.name);
+    private readonly recoveryPepper: string;
+    // Challenges when Redis was unreachable at boot (single instance only).
+    private readonly memoryChallenges = new Map<
+        string,
+        { value: string; expiresAt: number }
+    >();
+
     constructor(
-        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+        private readonly redis: RedisConnectionProvider,
+        @Inject(REDIS_AVAILABLE) private readonly redisAvailable: boolean,
+        configService: ConfigService,
         private readonly helperEncryptionService: HelperEncryptionService,
-        private readonly userService: UserService
-    ) {}
+        private readonly userService: UserService,
+        private readonly sessionService: SessionService,
+        private readonly cloudTasksClient: CloudTasksQueueClient
+    ) {
+        this.recoveryPepper = configService.get<string>(
+            'auth.mfa.recoveryPepper'
+        )!;
+    }
 
     async setup(user: UserEntity): Promise<AuthMfaSetupResponseDto> {
         if (user.mfaEnabled) {
@@ -84,10 +110,7 @@ export class MfaService {
             throw this.invalidCodeError();
         }
 
-        const recoveryCodes = Array.from(
-            { length: AUTH_MFA_RECOVERY_CODE_COUNT },
-            () => this.createRecoveryCode()
-        );
+        const recoveryCodes = this.createRecoveryCodes();
         await this.userService.updateMfa(user, {
             mfaEnabled: true,
             mfaSecret: user.mfaPendingSecret,
@@ -96,6 +119,17 @@ export class MfaService {
             mfaLastTimeStep: step,
         });
 
+        return { recoveryCodes };
+    }
+
+    /** Replaces every recovery code with a new set, shown this once. */
+    async regenerateRecoveryCodes(
+        user: UserEntity
+    ): Promise<AuthMfaEnableResponseDto> {
+        const recoveryCodes = this.createRecoveryCodes();
+        await this.userService.updateMfa(user, {
+            mfaRecoveryCodes: recoveryCodes.map(c => this.hashRecoveryCode(c)),
+        });
         return { recoveryCodes };
     }
 
@@ -110,15 +144,16 @@ export class MfaService {
     }
 
     /**
-     * Checks a 6-digit TOTP code or a recovery code. An accepted TOTP step
-     * and a used recovery code are recorded, so neither works twice.
+     * Checks a 6-digit TOTP code or a recovery code and says which one
+     * passed, or null. Both are spent with a conditional update, so of two
+     * concurrent requests carrying the same code only one gets through.
      */
     async verify(
         user: UserEntity,
         code: string,
         now: number = Date.now()
-    ): Promise<boolean> {
-        if (!user.mfaEnabled || !user.mfaSecret) return false;
+    ): Promise<IAuthMfaMethod | null> {
+        if (!user.mfaEnabled || !user.mfaSecret) return null;
 
         const trimmed = code.trim();
         if (/^\d{6}$/.test(trimmed)) {
@@ -128,46 +163,95 @@ export class MfaService {
                 now,
                 user.mfaLastTimeStep
             );
-            if (step === null) return false;
-            await this.userService.updateMfa(user, { mfaLastTimeStep: step });
-            return true;
+            if (step === null) return null;
+            return (await this.userService.claimMfaTimeStep(user, step))
+                ? 'totp'
+                : null;
         }
 
-        const given = Buffer.from(this.hashRecoveryCode(trimmed));
-        const remaining = user.mfaRecoveryCodes ?? [];
-        const index = remaining.findIndex(
-            hash =>
-                hash.length === given.length &&
-                timingSafeEqual(Buffer.from(hash), given)
-        );
-        if (index === -1) return false;
-
-        await this.userService.updateMfa(user, {
-            mfaRecoveryCodes: remaining.filter((_, i) => i !== index),
-        });
-        return true;
+        return (await this.userService.consumeMfaRecoveryCode(
+            user,
+            this.hashRecoveryCode(trimmed)
+        ))
+            ? 'recovery'
+            : null;
     }
 
     async createChallenge(challenge: IAuthMfaChallenge): Promise<string> {
         const token = randomBytes(32).toString('base64url');
-        await this.cacheManager.set(
-            this.challengeKey(token),
-            challenge,
-            AUTH_MFA_CHALLENGE_TTL_SECONDS * 1000
-        );
+        const key = this.challengeKey(token);
+        const value = JSON.stringify(challenge);
+        const ttlMs = AUTH_MFA_CHALLENGE_TTL_SECONDS * 1000;
+
+        if (this.redisAvailable) {
+            await this.redis.client.set(key, value, 'PX', ttlMs);
+        } else {
+            this.sweepMemoryChallenges();
+            this.memoryChallenges.set(key, {
+                value,
+                expiresAt: Date.now() + ttlMs,
+            });
+        }
         return token;
     }
 
+    /** Reads a challenge without spending it, so a mistyped code can be retried. */
     async findChallenge(token: string): Promise<IAuthMfaChallenge | null> {
-        return (
-            (await this.cacheManager.get<IAuthMfaChallenge>(
-                this.challengeKey(token)
-            )) ?? null
-        );
+        const key = this.challengeKey(token);
+        const value = this.redisAvailable
+            ? await this.redis.client.get(key)
+            : this.readMemoryChallenge(key);
+        return value ? (JSON.parse(value) as IAuthMfaChallenge) : null;
     }
 
-    async deleteChallenge(token: string): Promise<void> {
-        await this.cacheManager.del(this.challengeKey(token));
+    /**
+     * Spends a challenge with an atomic GETDEL: of concurrent callers only
+     * one gets it back, so one challenge opens at most one session.
+     */
+    async consumeChallenge(token: string): Promise<IAuthMfaChallenge | null> {
+        const key = this.challengeKey(token);
+        let value: string | null;
+        if (this.redisAvailable) {
+            value = await this.redis.client.getdel(key);
+        } else {
+            value = this.readMemoryChallenge(key);
+            this.memoryChallenges.delete(key);
+        }
+        return value ? (JSON.parse(value) as IAuthMfaChallenge) : null;
+    }
+
+    /**
+     * After MFA was turned on or off: signs the user out of every session
+     * but `keepSession` (all of them when omitted) and emails them. A failed
+     * email is logged, not thrown: the change itself is already saved.
+     */
+    async revokeSessionsAndNotify(
+        user: UserEntity,
+        enabled: boolean,
+        options: { keepSession?: string; language?: string } = {}
+    ): Promise<void> {
+        await this.sessionService.updateManyRevokeByUser(
+            user.id,
+            undefined,
+            options.keepSession
+        );
+        await this.cloudTasksClient
+            .enqueue(
+                'email',
+                ENUM_SEND_EMAIL_PROCESS.MFA_CHANGED,
+                {
+                    send: { email: user.email, name: user.name },
+                    data: { enabled, language: options.language },
+                },
+                {
+                    taskName: `${ENUM_SEND_EMAIL_PROCESS.MFA_CHANGED}-${user.id}-${randomUUID()}`,
+                }
+            )
+            .catch((err: unknown) =>
+                this.logger.warn(
+                    `MFA email for user [${user.id}] not queued (non-fatal): ${(err as Error)?.message}`
+                )
+            );
     }
 
     invalidCodeError(): BadRequestException {
@@ -179,17 +263,42 @@ export class MfaService {
 
     private challengeKey(token: string): string {
         // Hashed so a cache dump does not hand out live challenges.
-        return `auth:mfa:challenge:${createHash('sha256').update(token).digest('hex')}`;
+        return `${AUTH_MFA_CHALLENGE_KEY_PREFIX}:${createHash('sha256').update(token).digest('hex')}`;
     }
 
-    // 50 random bits, shown as "xxxxx-xxxxx".
+    private readMemoryChallenge(key: string): string | null {
+        const entry = this.memoryChallenges.get(key);
+        if (!entry || entry.expiresAt <= Date.now()) return null;
+        return entry.value;
+    }
+
+    private sweepMemoryChallenges(): void {
+        const now = Date.now();
+        for (const [key, entry] of this.memoryChallenges) {
+            if (entry.expiresAt <= now) this.memoryChallenges.delete(key);
+        }
+    }
+
+    private createRecoveryCodes(): string[] {
+        return Array.from({ length: AUTH_MFA_RECOVERY_CODE_COUNT }, () =>
+            this.createRecoveryCode()
+        );
+    }
+
+    // 80 random bits, shown as "xxxx-xxxx-xxxx-xxxx".
     private createRecoveryCode(): string {
-        const raw = base32Encode(randomBytes(7)).slice(0, 10).toLowerCase();
-        return `${raw.slice(0, 5)}-${raw.slice(5)}`;
+        const raw = base32Encode(
+            randomBytes(AUTH_MFA_RECOVERY_CODE_BYTES)
+        ).toLowerCase();
+        return raw.match(/.{4}/g)!.join('-');
     }
 
+    // Keyed with a server-side pepper, so a leaked table cannot be brute
+    // forced offline without the key.
     private hashRecoveryCode(code: string): string {
         const normalized = code.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return createHash('sha256').update(normalized).digest('hex');
+        return createHmac('sha256', this.recoveryPepper)
+            .update(normalized)
+            .digest('hex');
     }
 }

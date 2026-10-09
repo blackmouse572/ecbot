@@ -431,6 +431,26 @@ describe('SessionService (geo + activity additions)', () => {
             );
         });
 
+        it('keeps the given session when revoking the others', async () => {
+            const service = build();
+
+            await service.updateManyRevokeByUser('u1', undefined, 'keep');
+
+            expect(mockRepo.find).toHaveBeenCalledWith(
+                { user: 'u1', id: { $ne: 'keep' } },
+                undefined
+            );
+            expect(mockRepo.updateMany).toHaveBeenCalledWith(
+                {
+                    user: 'u1',
+                    status: ENUM_SESSION_STATUS.ACTIVE,
+                    id: { $ne: 'keep' },
+                },
+                { status: ENUM_SESSION_STATUS.REVOKED, revokeAt: fixedNow },
+                undefined
+            );
+        });
+
         it('returns false when nothing was actually revoked', async () => {
             mockRepo.updateMany.mockResolvedValueOnce([]);
             const service = build();

@@ -21,6 +21,7 @@ export async function renderTemplate<P extends object>(
         LowTokenBalanceEmail,
         HandoffEmail,
         MemberJoinedEmail,
+        MfaChangedEmail,
         MobileNumberVerificationEmail,
         ResetPasswordEmail,
         VerificationEmail,
@@ -45,6 +46,7 @@ export async function renderTemplate<P extends object>(
         [EmailSubject.LowTokenBalance]: LowTokenBalanceEmail,
         [EmailSubject.Handoff]: HandoffEmail,
         [EmailSubject.MemberJoined]: MemberJoinedEmail,
+        [EmailSubject.MfaChanged]: MfaChangedEmail,
     };
 
     return renderEmail(templates[subject], props);

@@ -1830,13 +1830,17 @@
         "disable": "Tắt",
         "confirm": "Xác nhận",
         "cancel": "Hủy",
-        "done": "Tôi đã lưu mã"
+        "done": "Tôi đã lưu mã",
+        "continue": "Tiếp tục",
+        "regenerate": "Tạo mã khôi phục mới",
+        "createCodes": "Tạo mã"
       },
       "setup": {
-        "scan": "Mở ứng dụng xác thực (Google Authenticator, Microsoft Authenticator, Authy...) và thêm tài khoản bằng khóa thiết lập bên dưới.",
+        "scan": "Quét mã QR bằng ứng dụng xác thực (Google Authenticator, Microsoft Authenticator, Authy...). Không quét được? Hãy thêm tài khoản bằng khóa thiết lập bên dưới.",
         "secretLabel": "Khóa thiết lập",
-        "uriLabel": "Liên kết thiết lập",
-        "enterCode": "Nhập mã 6 chữ số hiển thị trong ứng dụng."
+        "enterCode": "Nhập mã 6 chữ số hiển thị trong ứng dụng.",
+        "confirmPassword": "Nhập mật khẩu để bắt đầu thiết lập xác minh hai bước.",
+        "qrLabel": "Mã QR cho ứng dụng xác thực"
       },
       "recovery": {
         "title": "Lưu các mã khôi phục",
@@ -1844,16 +1848,22 @@
         "copyAll": "Sao chép tất cả mã"
       },
       "disable": {
-        "description": "Nhập mật khẩu và mã từ ứng dụng (hoặc một mã khôi phục) để tắt xác minh hai bước.",
-        "password": "Mật khẩu hiện tại",
-        "code": "Mã xác thực hoặc mã khôi phục"
+        "description": "Nhập mật khẩu và mã từ ứng dụng (hoặc một mã khôi phục) để tắt xác minh hai bước."
       },
       "success": {
         "enabled": "Đã bật xác minh hai bước.",
-        "disabled": "Đã tắt xác minh hai bước."
+        "disabled": "Đã tắt xác minh hai bước.",
+        "regenerated": "Đã tạo mã khôi phục mới."
       },
       "errors": {
         "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      },
+      "credentials": {
+        "password": "Mật khẩu hiện tại",
+        "code": "Mã xác thực hoặc mã khôi phục"
+      },
+      "regenerate": {
+        "description": "Nhập mật khẩu và mã từ ứng dụng để tạo mã khôi phục mới. Các mã cũ sẽ không còn dùng được."
       }
     },
     "exportData": {
