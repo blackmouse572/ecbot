@@ -32,7 +32,7 @@ describe("WidgetAiNotice", () => {
 
       expect(screen.getByText(text)).toBeInTheDocument();
       const link = screen.getByRole("link", { name: linkName });
-      expect(link.getAttribute("href")).toMatch(new RegExp(`${path}$`));
+      expect(link.getAttribute("href")?.endsWith(path)).toBe(true);
       expect(link).toHaveAttribute("target", "_blank");
     },
   );
