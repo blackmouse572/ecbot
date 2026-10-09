@@ -7,6 +7,10 @@ const authToken = { current: null as string | null };
 vi.mock("@/components/layout/impersonation-banner", () => ({
   ImpersonationBanner: () => <p>impersonation-banner</p>,
 }));
+vi.mock(
+  "@/components/auth/terms-acceptance-prompt/terms-acceptance-prompt",
+  () => ({ TermsAcceptancePrompt: () => null }),
+);
 vi.mock("@repo/ui/layout", () => ({
   SidebarProvider: ({ children }: PropsWithChildren) => <>{children}</>,
   NavAccessProvider: ({ children }: PropsWithChildren) => <>{children}</>,

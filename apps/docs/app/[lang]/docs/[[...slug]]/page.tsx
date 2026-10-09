@@ -118,6 +118,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   return {
     title,
     description,
+    ...(page.data.noindex ? { robots: { index: false, follow: false } } : {}),
     alternates: {
       canonical: url,
       languages: alternateLanguages(page.slugs, locales),

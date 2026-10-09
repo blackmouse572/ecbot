@@ -137,7 +137,7 @@ export function Widget() {
             {/* Rendered inside AIChatCard's provider — the transcript sync
                 needs the chat context, which the card owns. */}
             <TranscriptSync widgetKey={key} visitorId={visitorId} />
-            <WidgetAiNotice />
+            <WidgetAiNotice privacyPolicyUrl={data.privacyPolicyUrl} />
             <AIChatInput />
             <div className="px-4 pb-3 empty:hidden">
               <TurnstileField turnstile={turnstile} />
@@ -169,6 +169,7 @@ type WidgetMeta = {
   primaryLanguage?: string;
   theme?: Record<string, unknown>;
   allowedOrigins: string[];
+  privacyPolicyUrl?: string;
 };
 
 function WidgetUnavailable({ message }: { message: string }) {

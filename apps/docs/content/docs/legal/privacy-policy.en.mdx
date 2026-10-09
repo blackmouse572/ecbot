@@ -1,18 +1,21 @@
 ---
 title: Privacy Policy
 description: How Ecbot collects, uses, shares and protects personal data of account users and of the customers who chat with Ecbot agents, and how to exercise your rights.
+noindex: true
 faq:
   - q: Does Ecbot sell personal data?
     a: No. Ecbot does not sell personal data and does not use it for advertising. Data is shared only with the service providers listed on the Subprocessors page, to run the service.
   - q: Who answers when I chat with a shop's agent?
     a: An AI agent answers on behalf of the shop, and the shop's staff can take over the conversation. The shop is responsible for your data; Ecbot processes it on the shop's instructions.
   - q: How do I get a copy of my data or delete my account?
-    a: Account users can export and delete their data in the app as these features roll out, or write to security@ecbot.dev. Customers of a shop should contact that shop first; we help the shop answer.
+    a: Account users can download their personal data and delete their account from their profile in the app, or write to security@ecbot.dev. Customers of a shop should contact that shop first; we help the shop answer.
   - q: Is my data stored in Vietnam?
-    a: Not only. Ecbot runs on cloud providers outside Vietnam and the EU, by default in the AWS Asia Pacific (Jakarta) region, and sends chat content to AI providers abroad to generate replies.
+    a: No. Ecbot runs on Google Cloud and Neon in Singapore, stores files on Cloudflare R2, and sends chat content to AI and tracing providers in the United States to generate and check replies.
 ---
 
-**Draft, not yet in force: this policy must be reviewed by legal counsel before publication.** This Privacy Policy explains what personal data Ecbot collects when you use the Ecbot app or chat with an agent built on Ecbot, why we use it, who we share it with, how long we keep it, and the rights you have under the GDPR and Vietnam's Decree 13/2023/ND-CP on personal data protection.
+**Draft, not yet in force: this policy must be reviewed by legal counsel before publication.** This Privacy Policy explains what personal data Ecbot collects when you use the Ecbot app or chat with an agent built on Ecbot, why we use it, who we share it with, how long we keep it, and your rights under the GDPR and Vietnamese data protection law.
+
+In Vietnam this policy is written against Decree 13/2023/ND-CP on personal data protection and the Personal Data Protection Law (Law 91/2025/QH15), which takes effect on 2026-01-01 and may replace parts of the Decree. **[Counsel to confirm which rules apply and update the article references below.]**
 
 Effective date: 2026-10-08 (version 2026-10-08).
 
@@ -27,7 +30,7 @@ The service is operated by **[Company legal name]**, **[registered address]**, *
 Ecbot plays two roles:
 
 - **Controller** for the data of people who sign up for and use the Ecbot app (account users), and for the operation of our own website and docs.
-- **Processor** for the data that businesses ("customers" of Ecbot) process through their agents, such as the messages their own customers send on Messenger, Zalo, the website widget and other channels. For that data the business is the controller, and the [Data Processing Agreement](/docs/legal/data-processing-agreement) applies. If you chatted with a shop's agent, contact that shop first about your data.
+- **Processor** for the data that businesses ("customers" of Ecbot) process through their agents, such as the messages their own customers send on Messenger, Zalo, the website widget and other channels. For that data the business is the controller, and the [Data Processing Agreement](/docs/legal/data-processing-agreement) applies. If you chatted with a shop's agent, contact that shop first about your data, and read the shop's own privacy policy where it links one.
 
 ## Data we collect
 
@@ -36,7 +39,7 @@ Ecbot plays two roles:
 - Identity and contact data: name, email address, country, optional phone number and avatar.
 - Account data: password hash, sign-up date, the date and version of the Terms and Privacy Policy you accepted, roles and workspace memberships.
 - Usage and security data: login sessions, IP address, device and browser details, activity logs, verification codes and anti-bot checks (Cloudflare Turnstile).
-- Billing data: plan, invoices and payment status. Card details are handled by Stripe and never stored by Ecbot.
+- Billing data: plan, invoices and payment status. Card and bank details are handled by the payment provider you use (Dodo Payments, Stripe, SePay or ZaloPay) and never stored by Ecbot.
 - Content you add: agent settings, knowledge base documents, website pages you ask us to crawl, and connected channel accounts.
 
 **End customers who chat with an agent** (processed for the business)
@@ -49,9 +52,9 @@ Ecbot plays two roles:
 
 ## Why we use it and our legal basis
 
-| Purpose | Legal basis (GDPR / Decree 13) |
+| Purpose | Legal basis (GDPR / Vietnamese law) |
 | --- | --- |
-| Create and run your account, deliver the service you signed up for | Contract (Art 6(1)(b)); consent and contract under Decree 13 Art 11 and 17 |
+| Create and run your account, deliver the service you signed up for | Contract (Art 6(1)(b)); consent and contract under Decree 13 Art 11 and 17 **[counsel to map to Law 91/2025/QH15]** |
 | Generate agent replies, customer tags and profile summaries for the business | Processing on the business's instructions (Art 28); the business is responsible for its own legal basis |
 | Keep the service secure, prevent abuse and fraud, fix errors | Legitimate interests (Art 6(1)(f)) |
 | Billing, invoicing, tax and accounting | Legal obligation (Art 6(1)(c)) and contract |
@@ -64,7 +67,7 @@ Ecbot uses large language models to read conversations and write replies, to cho
 
 These outputs help the business prioritise and answer conversations. They do not by themselves produce legal effects or similarly significant effects on a person. If a business uses them for decisions that do, the business must provide human review and the information required by Art 22 GDPR. Customers can ask the business to review or correct a tag or summary.
 
-Conversations are sent to AI model providers through OpenRouter only to generate the output. We do not use customer conversations to train our own models.
+To generate a reply, conversations are sent to AI model providers through OpenRouter. The prompts and outputs, which contain chat content, are also sent to LangSmith, where we trace AI requests to check quality and fix errors. We do not use customer conversations to train our own models.
 
 ## Who we share data with
 
@@ -76,17 +79,19 @@ We share data only with the service providers that help us run Ecbot, under writ
 
 ## Transfers outside Vietnam and the EU
 
-Ecbot's infrastructure and providers are located outside Vietnam and outside the European Economic Area. By default data is stored in the AWS Asia Pacific (Jakarta, ap-southeast-3) region, and conversations are sent to AI providers that may process them in the United States and elsewhere.
+Ecbot's infrastructure and providers are located outside Vietnam and outside the European Economic Area. The app runs on Google Cloud Run in Singapore (asia-southeast1), the database on Neon and the cache on Upstash in Singapore (ap-southeast-1), and files are stored on Cloudflare R2. Conversations are sent to AI and tracing providers that process them in the United States and elsewhere.
 
-For transfers out of the EEA we rely on the European Commission's Standard Contractual Clauses or an adequacy decision. For transfers out of Vietnam we prepare and keep the cross-border transfer impact assessment required by Decree 13 Art 25 and file it with the Ministry of Public Security. **[Counsel to confirm the transfer mechanisms and filing status.]**
+For transfers out of the EEA we rely on the European Commission's Standard Contractual Clauses or an adequacy decision. For transfers out of Vietnam we prepare and keep the cross-border transfer impact assessment that Vietnamese law requires and file it with the Ministry of Public Security. **[Counsel to confirm the transfer mechanisms, the filing status and the rules under Law 91/2025/QH15.]**
 
 ## How long we keep data
 
-- Account data: while your account is active, and up to **[30] days** after you delete it, except what we must keep by law.
-- Conversations and customer profiles: as long as the business keeps them in its workspace, and deleted within **[30] days** after the business deletes them or its contract ends.
-- Security logs and sessions: up to **[12] months**.
+We do not yet delete data automatically after fixed periods. Today:
+
+- Account data: kept while your account is active. When you delete your account, we remove your name, email and other profile data from it at once; an anonymised record stays for the audit trail.
+- Conversations and customer profiles: kept as long as the business keeps them in its workspace. When the business erases a customer in the app, that customer's profile, conversations, messages and files are deleted permanently. Deleting a workspace hides it but does not yet erase its data; the business can ask security@ecbot.dev to erase it.
+- Activity and audit logs: append-only and currently kept without a time limit, so we can investigate security incidents. They record who did what, not the content of conversations. **[A retention period is not yet set.]**
 - Billing and tax records: as long as accounting law requires, usually **[10] years** in Vietnam.
-- Backups: overwritten on a rolling basis within **[35] days**.
+- Backups: kept by our database provider on its own schedule. **[Backup retention to be confirmed.]**
 
 ## Your rights
 
@@ -100,15 +105,15 @@ Depending on where you live, you can ask to:
 - not be subject to decisions based solely on automated processing with legal or similarly significant effects;
 - lodge a complaint with a supervisory authority: in the EU, your local data protection authority; in Vietnam, the Department of Cybersecurity and High-Tech Crime Prevention (A05), Ministry of Public Security.
 
-**How to exercise them.** Account users can export and delete their data from their profile in the app as these features become available, or email security@ecbot.dev. We answer within one month under the GDPR and within the time limits of Decree 13 (72 hours for some requests). If you are a customer of a business using Ecbot, contact that business; we will help it respond.
+**How to exercise them.** Account users can download their personal data and delete their account from their profile in the app, or email security@ecbot.dev. Businesses can export or erase one customer's data from that customer's page; a full export of a workspace is not yet available in the app, so ask us. We answer within one month under the GDPR and within the time limits of Vietnamese law (72 hours for some requests under Decree 13). If you are a customer of a business using Ecbot, contact that business; we will help it respond.
 
 ## Security and breach notification
 
-We protect data with encryption in transit, access control by role, password hashing, audit logs, and least-privilege access for staff. If a personal data breach occurs, we notify the competent authority within **72 hours** of becoming aware of it where required (GDPR Art 33, Decree 13 Art 23), inform affected people without undue delay when the risk is high, and notify affected business customers without undue delay so they can meet their own obligations.
+We protect data with encryption in transit, access control by role, password hashing, optional two-factor authentication (authenticator app codes and recovery codes), audit logs, and least-privilege access for staff. If a personal data breach occurs, we notify the competent authority within **72 hours** of becoming aware of it where required (GDPR Art 33, Decree 13 Art 23), inform affected people without undue delay when the risk is high, and notify affected business customers without undue delay so they can meet their own obligations.
 
 ## Cookies and local storage
 
-The app uses strictly necessary cookies and browser storage for sign-in, language and security. The website widget stores a random visitor ID so a visitor can continue a conversation. We do not use advertising cookies.
+The app uses strictly necessary cookies and browser storage for sign-in, language and security. The website widget stores a random visitor ID so a visitor can continue a conversation. Our marketing website, ecbot.dev, uses PostHog product analytics, which sets cookies and records page views and clicks to help us understand how visitors use the site. We do not use advertising cookies. **[Counsel to confirm whether PostHog needs a consent banner for EU visitors.]**
 
 ## Children
 

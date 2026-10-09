@@ -32,8 +32,22 @@ describe("WidgetAiNotice", () => {
 
       expect(screen.getByText(text)).toBeInTheDocument();
       const link = screen.getByRole("link", { name: linkName });
-      expect(link.getAttribute("href")).toMatch(new RegExp(`${path}$`));
+      expect(link.getAttribute("href")?.endsWith(path)).toBe(true);
       expect(link).toHaveAttribute("target", "_blank");
     },
   );
+
+  // The business is the controller for its visitors, so its own policy wins.
+  it("links the business's privacy policy when it has one", async () => {
+    await i18n.changeLanguage("en");
+    render(
+      <I18nextProvider i18n={i18n}>
+        <WidgetAiNotice privacyPolicyUrl="https://shop.example.com/privacy" />
+      </I18nextProvider>,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Privacy Policy" }),
+    ).toHaveAttribute("href", "https://shop.example.com/privacy");
+  });
 });

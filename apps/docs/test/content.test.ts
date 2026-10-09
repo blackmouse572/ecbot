@@ -79,3 +79,21 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
     }
   });
 });
+
+// Legal drafts stay reachable by URL (sign-up and the widget link to them)
+// but out of navigation and search until counsel signs them off.
+describe("legal drafts", () => {
+  const legal = pages.filter((p) => p.slug.startsWith("legal/"));
+
+  it("are noindex", () => {
+    expect(legal.length).toBeGreaterThan(0);
+    for (const p of legal) expect(p.data.noindex, p.file).toBe(true);
+  });
+
+  it("are not in the navigation", () => {
+    for (const lang of LANGS) {
+      const meta = JSON.parse(fs.readFileSync(path.join(DIR, `meta.${lang}.json`), "utf8"));
+      expect(meta.pages).not.toContain("legal");
+    }
+  });
+});

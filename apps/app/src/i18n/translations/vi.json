@@ -1,4 +1,10 @@
 {
+  "termsPrompt": {
+    "title": "Vui lòng xem lại điều khoản mới",
+    "description": "Để tiếp tục dùng Ecbot, vui lòng đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy>.",
+    "accept": "Tôi đồng ý",
+    "error": "Không lưu được xác nhận của bạn. Vui lòng thử lại."
+  },
   "impersonation": {
     "error": {
       "title": "Không thể sử dụng liên kết đăng nhập thay mặt này",
@@ -651,13 +657,17 @@
         "title": "Website widget",
         "keyLabel": "Widget key",
         "originsLabel": "Website được phép",
+        "privacyLabel": "Chính sách quyền riêng tư của bạn",
+        "privacyDefault": "Chưa đặt, widget sẽ dẫn đến thông báo quyền riêng tư của Ecbot",
         "edit": {
-          "title": "Sửa danh sách website được phép",
-          "subtitle": "Các website được phép nhúng widget này.",
+          "title": "Sửa thiết lập widget",
+          "subtitle": "Các website được phép nhúng widget này, và chính sách quyền riêng tư mà widget dẫn đến.",
+          "privacyHint": "Bạn quyết định cách dùng dữ liệu của khách truy cập, nên widget cần dẫn đến chính sách quyền riêng tư của chính bạn. Để trống để dẫn đến thông báo của Ecbot.",
+          "privacyInvalid": "Nhập đầy đủ URL bắt đầu bằng https://, vd: https://shop.example.com/privacy",
           "originsHint": "Cách nhau bằng dấu phẩy. Widget sẽ không tải ở nơi khác.",
           "originsInvalid": "Nhập đầy đủ URL, vd: https://shop.example.com",
-          "success": "Đã cập nhật danh sách website được phép.",
-          "error": "Cập nhật danh sách website được phép thất bại."
+          "success": "Đã cập nhật thiết lập widget.",
+          "error": "Cập nhật thiết lập widget thất bại."
         }
       }
     }

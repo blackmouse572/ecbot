@@ -33,6 +33,13 @@ export class WidgetMetaResponseDto {
         type: String,
     })
     allowedOrigins: string[];
+
+    @ApiPropertyOptional({
+        description:
+            "The business's own privacy policy. When absent, the widget links Ecbot's.",
+        example: 'https://shop.example.com/privacy',
+    })
+    privacyPolicyUrl?: string;
 }
 
 export class WidgetMessageResponseDto {

@@ -20,6 +20,8 @@ Pages live in `content/docs/`, one file per language: `<slug>.<lang>.mdx`. A fol
 - `faq` has at least 3 entries (rendered after the body and published as FAQPage JSON-LD);
 - no em dash, and links to other pages use `/docs/<path>`, for example `/docs/agents/skills` (the reader's language is added for you).
 
+`noindex: true` in the frontmatter keeps a page reachable by URL but out of search engines, the sitemap and `llms-full.txt`; leave its folder out of the parent `meta` to hide it from the sidebar too (the `legal/` drafts do both until counsel signs them off).
+
 Only describe what the app does today. Write for shop owners, with the labels the app shows in that language.
 
 ## Screenshots

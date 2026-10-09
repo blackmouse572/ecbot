@@ -64,6 +64,19 @@ export function UserSharedUpdateNotificationsDoc(): MethodDecorator {
     );
 }
 
+export function UserSharedAcceptTermsDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'accept the current Terms of Service and Privacy Policy',
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocResponse('user.acceptTerms')
+    );
+}
+
 export function UserSharedUploadPhotoProfileDoc(): MethodDecorator {
     return applyDecorators(
         Doc({

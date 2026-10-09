@@ -1,3 +1,4 @@
+import { TermsAcceptancePrompt } from "@/components/auth/terms-acceptance-prompt/terms-acceptance-prompt";
 import { ImpersonationBanner } from "@/components/layout/impersonation-banner";
 import { useWorkspaceList } from "@/hooks/api/workspace";
 import {
@@ -67,6 +68,7 @@ export const ProtectedRoute = () => {
           {/* Mounted here, not in a layout, so it also covers /onboard/* and
               /join, which render outside MainLayout. */}
           <ImpersonationBanner />
+          <TermsAcceptancePrompt />
         </NavAccessProvider>
       </AbilityProvider>
     </SidebarProvider>

@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { ForbiddenException } from '@nestjs/common';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
 import { UserSharedController } from '../../../src/modules/user/controllers/user.shared.controller';
+import { USER_TERMS_VERSION } from '../../../src/modules/user/constants/user.constant';
 
 // Task 14: avatar uploads used to buffer any size into memory, trust the
 // caller's declared file type, key objects with the raw `originalname`, and
@@ -151,5 +152,33 @@ describe('UserSharedController.updateNotifications', () => {
         expect(updateNotifications).toHaveBeenCalledWith(user, {
             handoffEmails: false,
         });
+    });
+});
+
+// Existing users accept the current Terms version after login.
+describe('UserSharedController.acceptTerms', () => {
+    const acceptTerms = jest.fn();
+    const createByUser = jest.fn();
+    const controller = new UserSharedController(
+        {} as any,
+        {} as any,
+        { acceptTerms } as any,
+        {} as any,
+        { createByUser } as any,
+        {} as any
+    );
+
+    it('records acceptance and logs which version was accepted', async () => {
+        const user = { id: 'user-1' } as any;
+
+        await controller.acceptTerms(user);
+
+        expect(acceptTerms).toHaveBeenCalledWith(user);
+        expect(createByUser).toHaveBeenCalledWith(
+            user,
+            expect.objectContaining({
+                metadata: { id: 'user-1', termsVersion: USER_TERMS_VERSION },
+            })
+        );
     });
 });

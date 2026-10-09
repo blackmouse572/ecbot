@@ -1,5 +1,6 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
+  client as apiClient,
   exportUserControllerMeV1,
   userSharedControllerGetUserProfileV1,
   userSharedControllerProfileV1,
@@ -46,6 +47,40 @@ export function useMe() {
     ...rest,
     data,
     user,
+  };
+}
+
+/**
+ * Whether the user still has to accept the current Terms and Privacy Policy,
+ * and the call that records it. Reads the user (not workspace) profile, which
+ * carries `termsAcceptanceRequired`.
+ */
+export function useTermsAcceptance() {
+  const queryClient = useQueryClient();
+  const { data } = useQuery(meQueryOptions());
+  // termsAcceptanceRequired is new in the API DTO; read it untyped until
+  // @repo/client is regenerated.
+  const profile = (data?.data as A)?.data as
+    | { termsAcceptanceRequired?: boolean }
+    | undefined;
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async () => {
+      // New endpoint (POST /shared/user/profile/accept-terms); switch to the
+      // generated userSharedControllerAcceptTermsV1 after `pnpm generate:client`.
+      const res = await apiClient.post({
+        url: "/api/v1/shared/user/profile/accept-terms",
+      });
+      if (res.error) throw res.error;
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, "me"] }),
+  });
+
+  return {
+    required: profile?.termsAcceptanceRequired === true,
+    accept: mutateAsync,
+    isPending,
   };
 }
 

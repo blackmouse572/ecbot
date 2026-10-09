@@ -318,3 +318,35 @@ describe('UserService.updateNotifications', () => {
         expect(persistAndFlush).toHaveBeenCalledWith(user);
     });
 });
+
+// Users created before consent was recorded, or who accepted an older
+// version, are asked again after login.
+describe('UserService.acceptTerms', () => {
+    it('records the current version and time', async () => {
+        const acceptedAt = new Date('2026-10-09T08:00:00.000Z');
+        const persistAndFlush = jest.fn();
+        const service = Object.create(UserService.prototype);
+        service.em = { persistAndFlush };
+        service.helperDateService = { create: () => acceptedAt };
+        const user = { id: 'u-1' } as any;
+
+        await service.acceptTerms(user);
+
+        expect(user.termsAcceptedAt).toBe(acceptedAt);
+        expect(user.termsVersion).toBe(USER_TERMS_VERSION);
+        expect(persistAndFlush).toHaveBeenCalledWith(user);
+    });
+});
+
+describe('UserService.mapProfile termsAcceptanceRequired', () => {
+    const service = Object.create(UserService.prototype);
+
+    it.each([
+        [undefined, true],
+        ['2020-01-01', true],
+        [USER_TERMS_VERSION, false],
+    ])('termsVersion %s -> %s', (termsVersion, expected) => {
+        const mapped = service.mapProfile({ id: 'u-1', termsVersion });
+        expect(mapped.termsAcceptanceRequired).toBe(expected);
+    });
+});
