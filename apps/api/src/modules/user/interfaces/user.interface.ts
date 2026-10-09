@@ -1,3 +1,4 @@
+import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
 import { CountryEntity } from 'src/modules/country/repository/entities/country.entity';
 import { RoleEntity } from 'src/modules/role/repository/entities/role.entity';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
@@ -29,3 +30,9 @@ export type IUserMfaUpdate = Partial<
         | 'mfaLastTimeStep'
     >
 >;
+
+// Sign-up input. acceptTerms is optional here: the public sign-up DTO
+// requires it, while an operator creating an account does not send it.
+export type IUserSignUp = Omit<AuthSignUpRequestDto, 'acceptTerms'> & {
+    acceptTerms?: boolean;
+};

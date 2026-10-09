@@ -29,6 +29,7 @@
     "db:schema:fresh": "turbo run schema:fresh --filter api",
     "db:seed": "turbo run migrate:seed --filter api",
     "db:seed:create": "turbo run seeder:create --filter api",
+    "user:create": "pnpm --filter api user:create",
     "db:import": "turbo run database:import --filter api",
     "db:cache:clear": "turbo run cache:clear --filter api",
     "db:generate-entities": "turbo run generate-entities --filter api",

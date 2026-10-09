@@ -233,14 +233,10 @@ export class RoleService implements IRoleService {
         name: string,
         options?: IDatabaseFindOneOptions
     ): Promise<RoleEntity | null> {
-        return this.roleRepository.findOne(
-            {
-                name: {
-                    $like: `%${name}%`,
-                },
-            },
-            options
-        );
+        // Exact name among system roles: workspace roles share this table
+        // (`Owner - <workspace>`, `Admin`, ...), and a substring match let
+        // `admin` resolve to `superadmin`.
+        return this.roleRepository.findOne({ name, workspace: null }, options);
     }
 
     async findOneActiveById(

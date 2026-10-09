@@ -306,6 +306,29 @@ describe('UserService.signUp - terms acceptance', () => {
 
         expect(user).not.toHaveProperty('acceptTerms');
     });
+
+    // An operator creating the account (the user:create command) is not the
+    // user agreeing: no consent is recorded until the user accepts.
+    it('records no acceptance when the caller does not pass acceptTerms', async () => {
+        const user = await service.signUp(
+            'role-1',
+            {
+                email: 'ops@user.com',
+                name: 'Ops',
+                country: 'country-1',
+                password: 'Passw0rd!',
+            },
+            {
+                passwordHash: 'hash',
+                passwordExpired: new Date('2099-01-01'),
+                passwordCreated: new Date('2026-01-01'),
+                salt: 'salt',
+            }
+        );
+
+        expect(user.termsAcceptedAt).toBeUndefined();
+        expect(user.termsVersion).toBeUndefined();
+    });
 });
 
 describe('UserService.updateNotifications', () => {

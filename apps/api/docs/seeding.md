@@ -202,6 +202,28 @@ Commands:
 
 - `seed:user` - Creates users
 
+## Creating a Real User
+
+**File**: `src/migration/seeds/migration.user-create.seed.ts`
+
+`seed:user` is demo data with a published password, so the command line refuses it with `APP_ENV=production`. To create a real account, for example the first superadmin on a fresh database, use `user:create`:
+
+```bash
+pnpm user:create --email you@example.com --password 'Str0ngPassword'
+pnpm user:create --email you@example.com          # generates a password and prints it once
+pnpm user:create --email ops@example.com --role admin --name "Ops" --country SG
+```
+
+| Option       | Default                          | Notes                                                                         |
+| ------------ | -------------------------------- | ----------------------------------------------------------------------------- |
+| `--email`    | required                         | Lowercased; refused if an account already exists                              |
+| `--password` | generated                        | Needs 8+ characters with an uppercase letter, a lowercase letter and a digit  |
+| `--role`     | `superadmin`                     | Any role name from `seed:role`                                                |
+| `--name`     | the part of the email before `@` |                                                                               |
+| `--country`  | `VN`                             | ISO alpha-2 code                                                              |
+
+The account goes through the same creation path as public sign-up, then is marked email-verified, with a password-history entry and an audit row that holds only the user id. It runs against the database in `DATABASE_URL` and needs the role and country seeds. A password typed on the command line lands in your shell history, so prefer the generated one for production and change it after signing in.
+
 # Template Seed
 
 **File**: `src/migration/seeds/migration.template.seed.ts`

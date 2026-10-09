@@ -23,6 +23,7 @@ import { HelperAvatarService } from 'src/common/helper/services/helper.avatar.se
 import { HelperDateService } from 'src/common/helper/services/helper.date.service';
 import { HelperStringService } from 'src/common/helper/services/helper.string.service';
 import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
+import { IUserSignUp } from 'src/modules/user/interfaces/user.interface';
 import { IAuthPassword } from 'src/modules/auth/interfaces/auth.interface';
 import { AwsS3Dto } from 'src/modules/aws/dtos/aws.s3.dto';
 import { UserCreateRequestDto } from 'src/modules/user/dtos/request/user.create.request.dto';
@@ -493,10 +494,10 @@ export class UserService {
             email,
             country,
             password: _rawPassword,
-            acceptTerms: _acceptTerms,
+            acceptTerms,
             avatar,
             ...others
-        }: AuthSignUpRequestDto,
+        }: IUserSignUp,
         { passwordExpired, passwordHash, salt, passwordCreated }: IAuthPassword,
         options?: IDatabaseCreateOptions
     ): Promise<UserEntity> {
@@ -515,9 +516,12 @@ export class UserService {
             signUpDate: this.helperDateService.create(),
             passwordAttempt: 0,
             signUpFrom: ENUM_USER_SIGN_UP_FROM.PUBLIC,
-            // AuthSignUpRequestDto only validates with acceptTerms === true.
-            termsAcceptedAt: this.helperDateService.create(),
-            termsVersion: USER_TERMS_VERSION,
+            // Only the user agreeing records consent: public sign-up sends
+            // acceptTerms; an operator creating the account does not.
+            ...(acceptTerms === true && {
+                termsAcceptedAt: this.helperDateService.create(),
+                termsVersion: USER_TERMS_VERSION,
+            }),
             status: ENUM_USER_STATUS.ACTIVE,
             salt,
             avatar:

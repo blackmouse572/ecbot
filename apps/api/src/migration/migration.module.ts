@@ -26,6 +26,7 @@ import { RoleModule } from 'src/modules/role/role.module';
 import { SessionModule } from 'src/modules/session/session.module';
 import { UserModule } from 'src/modules/user/user.module';
 import { MigrationUserSeed } from './seeds/migration.user.seed';
+import { MigrationUserCreateSeed } from './seeds/migration.user-create.seed';
 
 // TODO: (v8) CHANGE WITH COMMANDER
 @Module({
@@ -58,6 +59,7 @@ import { MigrationUserSeed } from './seeds/migration.user.seed';
         MigrationCountrySeed,
         MigrationRagPrivateBucketSeed,
         MigrationUserSeed,
+        MigrationUserCreateSeed,
         MigrationRoleSeed,
         MigrationTemplateSeed,
         MigrationSkillSeed,
