@@ -1,4 +1,4 @@
-import { LoginForm } from "@repo/auth/components";
+import { HONEYPOT_FIELD_NAME, LoginForm } from "@repo/auth/components";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -34,7 +34,7 @@ describe("auth form honeypot", () => {
 
     fillCredentials();
     const decoy = container.querySelector<HTMLInputElement>(
-      'input[name="website"]',
+      `input[name="${HONEYPOT_FIELD_NAME}"]`,
     )!;
     fireEvent.change(decoy, { target: { value: "http://spam.example" } });
     fireEvent.submit(container.querySelector("form")!);
@@ -50,11 +50,32 @@ describe("auth form honeypot", () => {
     );
 
     const decoy = container.querySelector<HTMLInputElement>(
-      'input[name="website"]',
+      `input[name="${HONEYPOT_FIELD_NAME}"]`,
     )!;
     expect(decoy).toBeTruthy();
     expect(decoy.tabIndex).toBe(-1);
     expect(decoy.getAttribute("autocomplete")).toBe("off");
     expect(decoy.closest("[aria-hidden='true']")).toBeTruthy();
+  });
+
+  // A filled decoy drops the submit silently, so if a browser or password
+  // manager autofills it, a real person clicks submit and nothing happens.
+  it("keeps browser autofill and password managers out of the decoy", () => {
+    const { container } = render(
+      <LoginForm locale="en" onSubmit={vi.fn()} messages={MESSAGES} id="f" />,
+    );
+
+    const decoy = container.querySelector<HTMLInputElement>(
+      `input[name="${HONEYPOT_FIELD_NAME}"]`,
+    )!;
+    // Chrome's autofill heuristics match names like website, url, email,
+    // phone or company and ignore autocomplete="off" for them.
+    expect(HONEYPOT_FIELD_NAME).not.toMatch(
+      /web|url|site|mail|phone|tel|name|company|address|city|zip|postal/i,
+    );
+    expect(decoy.getAttribute("data-1p-ignore")).not.toBeNull();
+    expect(decoy.getAttribute("data-lpignore")).toBe("true");
+    expect(decoy.getAttribute("data-bwignore")).not.toBeNull();
+    expect(decoy.getAttribute("data-form-type")).toBe("other");
   });
 });
