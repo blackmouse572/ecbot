@@ -25,6 +25,7 @@ import {
   emulatorReachability,
   isPlaceholder,
   mergeCorsOrigins,
+  isEnvelopeKey,
   normalizeAiEnv,
   missingManual,
   MANUAL_VALUES,
@@ -302,6 +303,17 @@ if (env.ai) {
 }
 report.filled.push(...bootFixes);
 
+// Older setups wrote a 16-byte key; envelope encryption needs 32 bytes, so
+// creating a Website channel failed with a 500 (#231). Not replaced here:
+// rows encrypted under the old key would become unreadable.
+const encryptKey = env.api.get("OAUTH_TOKEN_ENCRYPT_KEY");
+const badEncryptKey = encryptKey !== "" && !isEnvelopeKey(encryptKey);
+if (badEncryptKey) {
+  report.warnings.push(
+    "OAUTH_TOKEN_ENCRYPT_KEY in apps/api/.env is not 32 bytes (64 hex characters). Saving channel credentials fails until it is. Replace it with the output of `openssl rand -hex 32`, then reconnect any channels connected before.",
+  );
+}
+
 if (
   env.api.has("CLOUD_TASKS_SYSTEM_API_KEY") &&
   !splitPair(env.api.get("CLOUD_TASKS_SYSTEM_API_KEY"))
@@ -309,6 +321,14 @@ if (
   const p = randomApiKeyPair();
   env.api.set("CLOUD_TASKS_SYSTEM_API_KEY", `${p.key}:${p.secret}`);
   report.filled.push("CLOUD_TASKS_SYSTEM_API_KEY (generated pair)");
+}
+
+// Inbound webhooks and every background job go through Cloud Tasks, so local
+// dev needs the emulator (started by `docker compose up -d`). Only fills a
+// missing key: an explicit empty value is the user opting out.
+if (!env.api.has("CLOUD_TASKS_EMULATOR_HOST")) {
+  env.api.set("CLOUD_TASKS_EMULATOR_HOST", "localhost:8123");
+  report.filled.push("CLOUD_TASKS_EMULATOR_HOST = localhost:8123 (emulator)");
 }
 
 {
@@ -463,14 +483,15 @@ if (!opts.check && report.filled.some((f) => /API key pair/.test(f))) {
 if (!opts.check && !opts.noNextSteps) {
   log(`
 Next:
-  docker compose up -d            # Postgres (pgvector), Redis, JWKS server
+  docker compose up -d            # Postgres (pgvector), Redis, JWKS, Cloud Tasks emulator
   pnpm db:migrate:up
   pnpm db:seed                    # demo users: admin@mail.com / aaAA@123
   pnpm dev:app                    # api :${httpPort} + app :5173`);
 }
 
 process.exit(
-  opts.check && (requiredMissing.length || needKeys || bootFixes.length)
+  opts.check &&
+    (requiredMissing.length || needKeys || bootFixes.length || badEncryptKey)
     ? 1
     : 0,
 );

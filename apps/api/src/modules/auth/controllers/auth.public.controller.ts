@@ -59,6 +59,7 @@ import {
     IAuthSocialGooglePayload,
 } from 'src/modules/auth/interfaces/auth.interface';
 import { AuthService } from 'src/modules/auth/services/auth.service';
+import { AuthLoginSessionService } from 'src/modules/auth/services/auth-login-session.service';
 import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
 import { MfaService } from 'src/modules/auth/services/mfa.service';
 import { AUTH_MFA_CHALLENGE_TTL_SECONDS } from 'src/modules/auth/constants/auth.mfa.constant';
@@ -99,7 +100,8 @@ export class AuthPublicController {
         private readonly messageService: MessageService,
         private readonly turnstileService: TurnstileService,
         private readonly impersonationService: ImpersonationService,
-        private readonly mfaService: MfaService
+        private readonly mfaService: MfaService,
+        private readonly authLoginSessionService: AuthLoginSessionService
     ) {}
 
     @AuthPublicImpersonateExchangeDoc()
@@ -726,58 +728,25 @@ export class AuthPublicController {
         };
     }
 
-    // Opens the session, mints the tokens and sets the refresh cookie: the
-    // last step of a password login, or of the MFA step that follows one.
+    // The last step of a password login, or of the MFA step that follows
+    // one: AuthLoginSessionService opens the session, and any failure there
+    // becomes a 500 for the caller.
     private async issueLogin(
         userWithRole: UserEntity,
         request: IRequestApp,
         res: ExpressResponse,
-        rememberMe?: boolean
+        rememberMe?: boolean,
+        auditMetadata?: Record<string, unknown>
     ): Promise<AuthLoginResponseDto> {
-        const databaseSession = this.em.fork();
-        await databaseSession.begin();
-
         try {
-            const session = await this.sessionService.create(
-                request,
-                {
-                    user: userWithRole.id,
-                },
-                { em: databaseSession }
-            );
-
-            await this.sessionService.setLoginSession(userWithRole, session);
-
-            const token = this.authService.createToken(
+            return await this.authLoginSessionService.open(
                 userWithRole,
-                session.id,
-                rememberMe
-            );
-
-            this.authService.setRefreshTokenCookie(
+                request,
                 res,
-                token.refreshToken,
-                rememberMe
+                rememberMe,
+                auditMetadata
             );
-
-            await databaseSession.commit();
-
-            await this.activityService.createByUser(userWithRole, {
-                action: ENUM_ACTIVITY_ACTION.LOGIN,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: {
-                    id: userWithRole.id,
-                    name: userWithRole.email,
-                },
-            });
-
-            return token;
         } catch (err: unknown) {
-            try {
-                await databaseSession.rollback();
-            } catch {
-                /* ignore rollback error */
-            }
             this.logger.error(
                 `Error during login for user [${userWithRole.id}]: ${err}`,
                 err instanceof Error ? err.stack : undefined

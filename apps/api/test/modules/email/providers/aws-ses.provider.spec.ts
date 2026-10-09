@@ -34,7 +34,6 @@ describe('AwsSESProvider.sendResetPassword', () => {
             { name: 'Jane', email: 'jane@b.com' } as any,
             {
                 url: absoluteUrl,
-                otp: '482913',
                 expiredDate: new Date('2026-08-30T05:29:50.057Z'),
             } as any
         );
@@ -48,20 +47,19 @@ describe('AwsSESProvider.sendResetPassword', () => {
         expect(templateData.url).not.toContain('app.example.com/https://');
     });
 
-    it('carries the OTP into the template data', async () => {
+    it('sends no code: the link alone resets the password (#187)', async () => {
         const provider = build();
 
         await provider.sendResetPassword(
             { name: 'Jane', email: 'jane@b.com' } as any,
             {
                 url: 'https://app.example.com/reset-password?token=tok-1',
-                otp: '482913',
                 expiredDate: new Date('2026-08-30T05:29:50.057Z'),
             } as any
         );
 
         const [{ templateData }] = send.mock.calls[0];
-        expect(templateData.otp).toBe('482913');
+        expect(templateData).not.toHaveProperty('otp');
     });
 
     // EMAIL_SUPPORT is optional now; SES fails to render a template whose
@@ -73,7 +71,6 @@ describe('AwsSESProvider.sendResetPassword', () => {
                 { name: 'Jane', email: 'jane@b.com' } as any,
                 {
                     url: 'https://app.example.com/reset-password?token=tok-1',
-                    otp: '482913',
                     expiredDate: new Date('2026-08-30T05:29:50.057Z'),
                 } as any
             );

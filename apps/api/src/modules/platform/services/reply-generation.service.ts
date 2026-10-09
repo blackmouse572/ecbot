@@ -11,10 +11,7 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
 import { MESSAGE_TYPING_REFRESH_MS } from '../constants/message-debounce.constant';
-import {
-    HANDOFF_DEFAULT_REPLY,
-    HANDOFF_DEFAULT_REPLY_LANGUAGE,
-} from '../constants/handoff.constant';
+import { handoffReplyText } from '../utils/handoff-reply.util';
 import { text as toText } from '../interfaces/message-model';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { TurnContextService } from './turn-context.service';
@@ -86,11 +83,10 @@ export class ReplyGenerationService {
     }
 
     /**
-     * A BullMQ job runs outside the HTTP request context, and so does an HTTP
-     * caller that fans this work out. Fork a fresh EntityManager and run the
+     * A debounce timer or an HTTP caller that fans this work out runs outside
+     * the request's ORM context. Fork a fresh EntityManager and run the
      * generation inside its RequestContext so every ORM read/write in `execute`
-     * uses a disposable identity map, discarded when the turn settles — the same
-     * seam `ContextualWorkerHost` provided around the processor's `handle`.
+     * uses a disposable identity map, discarded when the turn settles.
      */
     async run(input: ReplyInput): Promise<ReplyOutcome> {
         if (input.texts.length === 0) return skipped('no_texts');
@@ -389,16 +385,12 @@ export class ReplyGenerationService {
         senderId: string,
         conversationId: string
     ): Promise<boolean> {
-        const text =
-            chatbot.handoffMessage ||
-            HANDOFF_DEFAULT_REPLY[chatbot.primaryLanguage] ||
-            HANDOFF_DEFAULT_REPLY[HANDOFF_DEFAULT_REPLY_LANGUAGE];
         return this.sendBotText(
             chatbot,
             account,
             senderId,
             conversationId,
-            text
+            handoffReplyText(chatbot)
         );
     }
 

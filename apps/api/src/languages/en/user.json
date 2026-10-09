@@ -25,5 +25,6 @@
         "emailNotVerified": "Email not verified.",
         "photoKeyInvalid": "This photo key does not belong to you.",
         "impersonateTargetInvalid": "This account cannot be impersonated."
-    }
+    },
+    "updateNotifications": "Notification settings saved."
 }

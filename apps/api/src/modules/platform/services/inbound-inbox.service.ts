@@ -1,99 +1,102 @@
+import { createHash } from 'crypto';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
-import { REDIS_AVAILABLE } from '@app/common/redis/redis-availability.provider';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { JobsOptions, Queue } from 'bullmq';
+import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
+import { Injectable, Logger } from '@nestjs/common';
 import {
     ENUM_INBOUND_EVENT_PROCESS,
-    INBOUND_EVENT_DEDUP_AGE_SECONDS,
-    INBOUND_EVENT_MAX_ATTEMPTS,
     INBOUND_EVENT_QUEUE,
 } from '../constants/inbound-event.constant';
 import { PlatformWebhookEvent } from '../interfaces/platform-adapter.interface';
+import { InboundEventDedupeService } from './inbound-event-dedupe.service';
 import { MessageProcessorService } from './message-processor.service';
 
 /**
- * Inbound Inbox (ADR-0007). The intake seam of the webhook → reply flow:
- * `accept` makes a received platform message durable by enqueueing it BEFORE
- * the webhook ACK, then a worker drains it through the Turn pipeline
- * (MessageProcessorService.process). The BullMQ job is the durable record.
+ * Inbound Inbox (ADR-0008). The intake seam of the webhook → reply flow:
+ * `accept` makes a received platform message durable by creating a Cloud Task
+ * BEFORE the webhook ACK. Cloud Tasks then POSTs it to InboundEventTaskController,
+ * which runs the Turn pipeline (MessageProcessorService.process) inside that
+ * HTTP request, so the Turn gets full CPU even on a scale-to-zero instance.
  *
- * Falls back to firing the Turn pipeline directly (no queue to be durable
- * through) when Redis was unreachable at boot — same fire-and-forget shape
- * as the queue path's fast ACK, so a Redis outage doesn't also turn every
- * webhook into a slow request that risks the platform's timeout. This loses
- * receipt-before-ACK crash-safety and at-least-once retry; the inbound
- * dedupe claim inside `process()` still protects against a platform
- * redelivery causing duplicate side effects, but a crash mid-Turn now drops
- * the message instead of being retried — acceptable only because Redis was
- * already unavailable.
+ * A failed enqueue throws, so the webhook returns 5xx and the platform
+ * redelivers (receipt-before-ACK). Only when Cloud Tasks isn't configured at
+ * all (no project, no emulator) is the Turn fired inline, fire-and-forget.
  */
 @Injectable()
 export class InboundInboxService {
     private readonly logger = new Logger(InboundInboxService.name);
 
     constructor(
-        @InjectQueue(INBOUND_EVENT_QUEUE)
-        private readonly queue: Queue<PlatformWebhookEvent>,
-        @Inject(REDIS_AVAILABLE)
-        private readonly redisAvailable: boolean,
+        private readonly cloudTasksClient: CloudTasksQueueClient,
+        private readonly dedupe: InboundEventDedupeService,
         private readonly messageProcessor: MessageProcessorService
     ) {}
 
-    private jobId(
+    /**
+     * Deterministic per (platform, message), so a platform redelivery creates
+     * the same task name and Cloud Tasks rejects it as ALREADY_EXISTS (the
+     * client treats that as success). Hashed because task names allow only
+     * [A-Za-z0-9_-] and platform ids don't (WhatsApp `wamid.…==`), and a
+     * hashed name spreads load across Cloud Tasks' key range.
+     */
+    private taskName(
         platform: ENUM_ACCOUNT_TYPE,
         externalMessageId: string
     ): string {
-        // No ':' — BullMQ forbids it in custom ids.
-        return `${platform}-${externalMessageId}`;
-    }
-
-    private jobOptions(jobId: string): JobsOptions {
-        return {
-            jobId,
-            attempts: INBOUND_EVENT_MAX_ATTEMPTS,
-            backoff: { type: 'exponential', delay: 2000 },
-            // Retention keeps the jobId alive past completion so redeliveries
-            // within the platform retry window are deduped no-ops.
-            removeOnComplete: { age: INBOUND_EVENT_DEDUP_AGE_SECONDS },
-            removeOnFail: { age: 24 * 60 * 60 },
-        };
+        return createHash('sha256')
+            .update(`${platform}:${externalMessageId}`)
+            .digest('hex');
     }
 
     /**
      * Durably enqueue one inbound event. Returns 'ignored' for events with no
-     * externalMessageId (read receipts, delivery, typing) — they carry no dedup
+     * externalMessageId (read receipts, delivery, typing): they carry no dedup
      * key and the Turn pipeline ignores them anyway.
      *
      * Throws if the enqueue fails so the controller can return 5xx and let the
-     * platform retry (receipt-before-ACK).
+     * platform retry.
      */
     async accept(
         platform: ENUM_ACCOUNT_TYPE,
         event: PlatformWebhookEvent
     ): Promise<'accepted' | 'ignored'> {
-        if (!event.externalMessageId) return 'ignored';
+        const mid = event.externalMessageId;
+        if (!mid) return 'ignored';
 
-        if (!this.redisAvailable) {
-            this.messageProcessor.process(event).catch(err =>
-                this.logger.error(
-                    `Inline inbound processing failed (no Redis): platform=${platform} kind=${event.kind} mid=${event.externalMessageId}: ${err}`
-                )
-            );
+        // Already enqueued within the dedupe window (a redelivery, or the
+        // hourly reconciliation re-accepting recent messages).
+        if (!(await this.dedupe.claimEnqueue(platform, mid))) {
             this.logger.debug(
-                `Inbound accepted inline (no Redis): platform=${platform} kind=${event.kind} mid=${event.externalMessageId}`
+                `Inbound already enqueued: platform=${platform} mid=${mid}`
             );
             return 'accepted';
         }
 
-        const jobId = this.jobId(platform, event.externalMessageId);
-        await this.queue.add(
-            ENUM_INBOUND_EVENT_PROCESS.INGEST,
-            event,
-            this.jobOptions(jobId)
-        );
+        if (!this.cloudTasksClient.isConfigured()) {
+            this.messageProcessor
+                .process(event)
+                .catch(err =>
+                    this.logger.error(
+                        `Inline inbound processing failed (no Cloud Tasks): platform=${platform} kind=${event.kind} mid=${mid}: ${err}`
+                    )
+                );
+            return 'accepted';
+        }
+
+        const taskName = this.taskName(platform, mid);
+        try {
+            await this.cloudTasksClient.enqueue(
+                INBOUND_EVENT_QUEUE,
+                ENUM_INBOUND_EVENT_PROCESS.INGEST,
+                { event },
+                { taskName }
+            );
+        } catch (err: unknown) {
+            await this.dedupe.releaseEnqueue(platform, mid);
+            throw err;
+        }
+
         this.logger.debug(
-            `Inbound accepted: platform=${platform} kind=${event.kind} mid=${event.externalMessageId}`
+            `Inbound accepted: platform=${platform} kind=${event.kind} mid=${mid} task=${taskName}`
         );
         return 'accepted';
     }

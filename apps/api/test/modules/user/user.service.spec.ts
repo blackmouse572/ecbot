@@ -304,3 +304,17 @@ describe('UserService.signUp - terms acceptance', () => {
         expect(user).not.toHaveProperty('acceptTerms');
     });
 });
+
+describe('UserService.updateNotifications', () => {
+    it('stores the choice on the user', async () => {
+        const persistAndFlush = jest.fn();
+        const service = Object.create(UserService.prototype);
+        service.em = { persistAndFlush };
+        const user = { id: 'u-1', handoffEmails: true } as any;
+
+        await service.updateNotifications(user, { handoffEmails: false });
+
+        expect(user.handoffEmails).toBe(false);
+        expect(persistAndFlush).toHaveBeenCalledWith(user);
+    });
+});

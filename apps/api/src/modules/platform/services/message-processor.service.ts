@@ -9,6 +9,7 @@ import {
 } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { HandoffIntentService } from './handoff-intent.service';
+import { shouldHandOff } from '../utils/handoff-decision.util';
 import { ReplyGenerationService } from './reply-generation.service';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
@@ -96,11 +97,12 @@ export class MessageProcessorService implements OnModuleInit {
             return;
         }
 
-        // Shared dedupe seam (candidate 1) — same key shape as the BullMQ
-        // job id (${platform}-${externalMessageId}, ADR-0007), but checked
-        // here so it covers BOTH ingress paths: the BullMQ-drained
-        // direct-to-api path (where it's redundant defense-in-depth) and the
-        // edge-forwarded path (where it's the only dedupe there is). A
+        // Shared dedupe seam (candidate 1), keyed on the same
+        // (platform, externalMessageId) pair as the Cloud Task name
+        // (ADR-0008), but checked here so it covers BOTH ingress paths: the
+        // Cloud Tasks-drained direct-to-api path (where it outlasts Cloud
+        // Tasks' ~1h task-name dedupe window) and the edge-forwarded path
+        // (where it's the only dedupe there is). A
         // redelivery of the same event is a no-op — no side effect below
         // this point may run twice.
         if (event.externalMessageId) {
@@ -120,7 +122,7 @@ export class MessageProcessorService implements OnModuleInit {
             await this.runTurn(event, account);
         } catch (err) {
             // The claim above marks "this Turn ran". If the Turn throws, the
-            // BullMQ retry would read that claim as a platform redelivery and
+            // Cloud Tasks retry would read that claim as a platform redelivery and
             // skip the message for good — one transient failure would lose it
             // permanently. Release the claim so the retry actually reruns.
             if (event.externalMessageId) {
@@ -271,22 +273,20 @@ export class MessageProcessorService implements OnModuleInit {
             adapter.startTyping(account, event.senderId, true).catch(() => {});
         };
 
-        // The owner's own keywords route topics to staff and always hand off.
-        // A default keyword only flags the message: ordinary questions contain
-        // them too ("hỗ trợ", "chuyển khoản"), so the cheap model checks the
-        // customer wants a person; otherwise the agent answers as usual.
         const handoffMatch = this.conversationService.detectHandoffKeywords(
             effectiveText,
             chatbot.handoffKeywords ?? []
         );
-        let handOff = handoffMatch?.source === 'custom';
-        if (handoffMatch?.source === 'default') {
-            // The check can take seconds: show the customer the bot is typing.
-            startTyping();
-            handOff = await this.moduleRef
-                .get(HandoffIntentService)
-                .wantsPerson(effectiveText, handoffMatch.keyword);
-        }
+        // The intent check can take seconds: show the customer the bot is typing.
+        if (handoffMatch?.source === 'default') startTyping();
+        const handOff = await shouldHandOff(
+            handoffMatch,
+            effectiveText,
+            (text, keyword) =>
+                this.moduleRef
+                    .get(HandoffIntentService)
+                    .wantsPerson(text, keyword)
+        );
         if (handOff) {
             this.logger.log(
                 `Handoff keyword "${handoffMatch?.keyword}" (${handoffMatch?.source}) in conversation ${conversation.id}`
@@ -584,7 +584,7 @@ export class MessageProcessorService implements OnModuleInit {
         conversation.botEnabled = true;
         // Best-effort: updateStatus above already committed status=OPEN, so a
         // rejection here must not bubble into process() (no try/catch; the
-        // BullMQ caller retries and the retry would short-circuit since the
+        // Cloud Tasks caller retries and the retry would short-circuit since the
         // conversation is no longer RESOLVED — leaving the reactivation
         // message unanswered). Fire-and-forget, matching the other sites.
         this.chatbotAIService

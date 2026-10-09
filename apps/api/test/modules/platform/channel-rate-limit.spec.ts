@@ -14,8 +14,8 @@ function makeService() {
             return 1;
         }),
     };
-    const queue = { getBackend: () => ({ client: Promise.resolve(client) }) };
-    const service = new ChannelRateLimitService(queue as any, true);
+    const redis = { client };
+    const service = new ChannelRateLimitService(redis as any, true);
     return { service, client, counters, expires };
 }
 
@@ -64,7 +64,7 @@ describe('ChannelRateLimitService.claim', () => {
             expire: jest.fn(),
         };
         const service = new ChannelRateLimitService(
-            { getBackend: () => ({ client: Promise.resolve(client) }) } as any,
+            { client } as any,
             true
         );
 
@@ -78,7 +78,7 @@ describe('ChannelRateLimitService.claim — no Redis at boot', () => {
     function makeInMemoryService() {
         const client = { incr: jest.fn(), expire: jest.fn() };
         const service = new ChannelRateLimitService(
-            { getBackend: () => ({ client: Promise.resolve(client) }) } as any,
+            { client } as any,
             false
         );
         services.push(service);
@@ -113,13 +113,13 @@ describe('ChannelRateLimitService.claim — no Redis at boot', () => {
 });
 
 describe('ChannelRateLimitService — in-memory sweep lifecycle', () => {
-    function fakeQueue() {
-        return { getBackend: () => ({ client: Promise.resolve({ incr: jest.fn(), expire: jest.fn() }) }) };
+    function fakeRedis() {
+        return { client: { incr: jest.fn(), expire: jest.fn() } };
     }
 
     it('does not schedule a sweep when Redis is available', () => {
         const setIntervalSpy = jest.spyOn(global, 'setInterval');
-        new ChannelRateLimitService(fakeQueue() as any, true);
+        new ChannelRateLimitService(fakeRedis() as any, true);
         expect(setIntervalSpy).not.toHaveBeenCalled();
         setIntervalSpy.mockRestore();
     });
@@ -127,7 +127,7 @@ describe('ChannelRateLimitService — in-memory sweep lifecycle', () => {
     it('schedules a sweep when Redis is unavailable and clears it on destroy', () => {
         const setIntervalSpy = jest.spyOn(global, 'setInterval');
         const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-        const service = new ChannelRateLimitService(fakeQueue() as any, false);
+        const service = new ChannelRateLimitService(fakeRedis() as any, false);
         expect(setIntervalSpy).toHaveBeenCalledTimes(1);
 
         service.onModuleDestroy();

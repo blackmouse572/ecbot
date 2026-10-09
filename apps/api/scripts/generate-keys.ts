@@ -237,7 +237,8 @@ class JwtKeysGenerator {
             return;
         }
 
-        const generated = crypto.randomBytes(16).toString('hex');
+        // 32 bytes: envelope encryption is AES-256-GCM (#231).
+        const generated = crypto.randomBytes(32).toString('hex');
         this.setEnvVar(key, generated);
         console.log(`Generated ${key} into ${this.envPath}`);
     }

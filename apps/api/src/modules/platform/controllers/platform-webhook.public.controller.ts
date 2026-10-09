@@ -27,7 +27,7 @@ import { PlatformAdapterRegistry } from '../services/platform-adapter.registry';
  *   - GET → adapter.verifyChallenge() (Meta-style hub.challenge handshake)
  *   - POST → verifySignature → parse → durably enqueue each event → 200
  *
- * Receipt-before-ACK (ADR-0007): events are made durable via the Inbound Inbox
+ * Receipt-before-ACK (ADR-0008): events are made durable via the Inbound Inbox
  * before the 200, so a crash never drops a message the platform won't retry.
  * Public endpoint. Signature verification is the only auth.
  */

@@ -1,5 +1,6 @@
 import { useResendEmailOtp, useVerifyEmailOtp } from "@/hooks/api";
 import { readApiError } from "@/libs/api-error";
+import { useAuth } from "@/modules/auth";
 import { ROUTES } from "@/routes/constants";
 import { TOO_MANY_REQUESTS_STATUS } from "../constants";
 import { Button, toast } from "@medusajs/ui";
@@ -16,6 +17,7 @@ const OTP_DIGIT_LENGTH = 6; // Default length for OTP input
 const VerifyEmailPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [, setAuth] = useAuth();
   const email = searchParams.get("email") ?? "";
   const userId = searchParams.get("userId") ?? "";
   const { t } = useTranslation(undefined, {
@@ -37,8 +39,14 @@ const VerifyEmailPage = () => {
     if (isVerifying.current) return;
     isVerifying.current = true;
     try {
-      await verifyEmail(otp);
+      const login = await verifyEmail(otp);
       toast.success(t("success.message"));
+      // Signed in by the verify call: straight to the app, no second login.
+      if (login?.accessToken) {
+        setAuth(login.accessToken);
+        navigate("/", { replace: true });
+        return;
+      }
       navigate(`/${ROUTES.Login}`, {
         replace: true,
       });

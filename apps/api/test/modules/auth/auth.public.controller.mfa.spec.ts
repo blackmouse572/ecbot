@@ -5,6 +5,7 @@ import { AuthPublicController } from '@app/modules/auth/controllers/auth.public.
 import { UserService } from '@app/modules/user/services/user.service';
 import { AuthService } from '@app/modules/auth/services/auth.service';
 import { MfaService } from '@app/modules/auth/services/mfa.service';
+import { AuthLoginSessionService } from '@app/modules/auth/services/auth-login-session.service';
 import { CountryService } from '@app/modules/country/services/country.service';
 import { RoleService } from '@app/modules/role/services/role.service';
 import { PasswordHistoryService } from '@app/modules/password-history/services/password-history.service';
@@ -51,7 +52,9 @@ describe('AuthPublicController MFA login', () => {
         ),
     };
     const sessionService = { create: jest.fn(), setLoginSession: jest.fn() };
-    const activityService = { createByUser: jest.fn() };
+    const activityService = {
+        createByUser: jest.fn().mockResolvedValue(undefined),
+    };
     const fork = jest.fn(() => ({
         begin: jest.fn(),
         commit: jest.fn(),
@@ -83,6 +86,7 @@ describe('AuthPublicController MFA login', () => {
                 { provide: UserService, useValue: userService },
                 { provide: AuthService, useValue: authService },
                 { provide: MfaService, useValue: mfaService },
+                AuthLoginSessionService,
                 { provide: CountryService, useValue: {} },
                 { provide: RoleService, useValue: {} },
                 { provide: PasswordHistoryService, useValue: {} },

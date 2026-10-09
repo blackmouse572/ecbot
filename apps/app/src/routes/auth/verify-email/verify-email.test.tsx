@@ -1,10 +1,15 @@
 import "@/i18n";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const verifyEmail = vi.hoisted(() => vi.fn());
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
+const setAuth = vi.hoisted(() => vi.fn());
+
+vi.mock("@/modules/auth", () => ({
+  useAuth: () => [null, setAuth],
+}));
 
 vi.mock("@/hooks/api", () => ({
   useVerifyEmailOtp: () => ({ verifyEmail, isLoading: false }),
@@ -30,7 +35,11 @@ const apiError = (statusCode: number, message: string) =>
 const renderPage = () =>
   render(
     <MemoryRouter initialEntries={["/verify-email?email=a@b.com&userId=u1"]}>
-      <VerifyEmailPage />
+      <Routes>
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/" element={<p>home page</p>} />
+        <Route path="/login" element={<p>login page</p>} />
+      </Routes>
     </MemoryRouter>,
   );
 
@@ -43,6 +52,25 @@ describe("VerifyEmailPage", () => {
   beforeEach(() => {
     verifyEmail.mockReset();
     toast.error.mockReset();
+    setAuth.mockReset();
+  });
+
+  it("signs the user in and goes home once the code is verified (#143)", async () => {
+    verifyEmail.mockResolvedValue({ accessToken: "at", refreshToken: "rt" });
+    renderPage();
+    typeCode();
+
+    expect(await screen.findByText("home page")).toBeInTheDocument();
+    expect(setAuth).toHaveBeenCalledWith("at");
+  });
+
+  it("falls back to the login page when the API signs nobody in", async () => {
+    verifyEmail.mockResolvedValue(undefined);
+    renderPage();
+    typeCode();
+
+    expect(await screen.findByText("login page")).toBeInTheDocument();
+    expect(setAuth).not.toHaveBeenCalled();
   });
 
   it("submits on its own once all six digits are entered", async () => {

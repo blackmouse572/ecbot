@@ -239,8 +239,8 @@ export class ResetPasswordService implements IResetPasswordService {
         repository: ResetPasswordEntity,
         options?: IDatabaseSaveOptions
     ): Promise<ResetPasswordEntity> {
+        // The link stays usable: /reset checks isActive (#187).
         repository.verifyDate = this.helperDateService.create();
-        repository.isActive = false;
 
         return this.resetPasswordRepository.save(repository, options);
     }

@@ -3,7 +3,6 @@ import { AccountRepositoryModule } from '@app/modules/account/repository/account
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { BullModule } from '@nestjs/bullmq';
 import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { ChatbotRepositoryModule } from '@app/modules/chatbot/repository/chatbot.repository.module';
@@ -28,9 +27,7 @@ import { InboundEventDedupeService } from './services/inbound-event-dedupe.servi
 import { StreamingDelivery } from './services/streaming-delivery.service';
 import { ReplyGenerationService } from './services/reply-generation.service';
 import { TurnContextService } from './services/turn-context.service';
-import { INBOUND_EVENT_QUEUE } from './constants/inbound-event.constant';
 import { InboundInboxService } from './services/inbound-inbox.service';
-import { InboundEventProcessor } from './processors/inbound-event.processor';
 import { ActionRouter } from './services/action-router.service';
 import { InboundReconciliationScheduler } from './schedulers/inbound-reconciliation.scheduler';
 import { FollowupService } from './services/followup.service';
@@ -62,7 +59,6 @@ const ADAPTERS = [
         HttpModule.register({ timeout: 1000 * 30 }),
         CloudTasksQueueModule,
         PlatformRepositoryModule,
-        BullModule.registerQueueAsync({ name: INBOUND_EVENT_QUEUE }),
         AccountModule,
         AccountRepositoryModule,
         ChatbotModule,
@@ -83,7 +79,6 @@ const ADAPTERS = [
         },
         PlatformAdapterRegistry,
         InboundInboxService,
-        InboundEventProcessor,
         ApiChannelCallbackService,
         ChannelRateLimitService,
         WidgetSessionService,

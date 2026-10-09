@@ -518,13 +518,6 @@ export class AppEnvDto {
     @Type(() => Number)
     TOOL_EGRESS_MAX_RESPONSE_BYTES?: number;
 
-    // BullMQ worker concurrency overrides
-    // Default: 4
-    @IsOptional()
-    @IsNumber()
-    @Type(() => Number)
-    WORKER_CONCURRENCY_INBOUND?: number;
-
     // E2E testing only — never set in production or staging
     @IsOptional()
     @IsBoolean()
@@ -535,7 +528,7 @@ export class AppEnvDto {
     @IsString()
     E2E_TEST_KEY?: string;
 
-    // Google Cloud Tasks (BullMQ processor migration)
+    // Google Cloud Tasks (background jobs and the Inbound Inbox)
     @IsOptional()
     @IsString()
     CLOUD_TASKS_PROJECT_ID?: string;

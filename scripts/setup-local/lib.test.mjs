@@ -6,6 +6,7 @@ import {
   emulatorReachability,
   isPlaceholder,
   mergeCorsOrigins,
+  isEnvelopeKey,
   normalizeAiEnv,
   resolveInternalToken,
   missingManual,
@@ -300,5 +301,19 @@ describe("normalizeAiEnv", () => {
 
   it("leaves an accepted value alone", () => {
     assert.equal(normalizeAiEnv("staging"), null);
+  });
+});
+
+describe("isEnvelopeKey", () => {
+  it("accepts 32 bytes as 64 hex characters", () => {
+    assert.equal(isEnvelopeKey("ab".repeat(32)), true);
+  });
+
+  it("rejects the 16-byte key older setups generated (#231)", () => {
+    assert.equal(isEnvelopeKey("ab".repeat(16)), false);
+  });
+
+  it("rejects a value that is not hex", () => {
+    assert.equal(isEnvelopeKey("z".repeat(64)), false);
   });
 });

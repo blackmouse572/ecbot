@@ -16,6 +16,7 @@ import { TurnstileService } from '@app/common/turnstile/services/turnstile.servi
 import { ApiKeyService } from '@app/modules/api-key/services/api-key.service';
 import { HelperDateService } from '@app/common/helper/services/helper.date.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
+import { AuthLoginSessionService } from '@app/modules/auth/services/auth-login-session.service';
 import { ImpersonationService } from '@app/modules/auth/services/impersonation.service';
 import { MfaService } from '@app/modules/auth/services/mfa.service';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from '@app/modules/auth/enums/auth.status-code.enum';
@@ -48,6 +49,7 @@ describe('AuthPublicController.impersonateExchange', () => {
                 { provide: TurnstileService, useValue: {} },
                 { provide: ImpersonationService, useValue: { consume } },
                 { provide: MfaService, useValue: {} },
+                { provide: AuthLoginSessionService, useValue: {} },
             ],
         }).compile();
 

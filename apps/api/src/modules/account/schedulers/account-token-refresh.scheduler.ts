@@ -52,15 +52,18 @@ export class AccountTokenRefreshScheduler {
     private async notifyOwnerOfBlockedAccount(account: {
         id: string;
         name: string;
+        chatbot?: { primaryLanguage?: string } | null;
         workspace: {
             slug: string;
             owner: { id: string; name: string; email: string };
         };
     }): Promise<void> {
         try {
-            await this.orm.em.populate(account, ['workspace.owner']);
+            // The chatbot's language, so the email reads like the shop's agent.
+            await this.orm.em.populate(account, ['workspace.owner', 'chatbot']);
             const owner = account.workspace.owner;
-            const reconnectUrl = `/${account.workspace.slug}/accounts/${account.id}`;
+            // The channels list: there is no per-account page to link to.
+            const reconnectUrl = `/${account.workspace.slug}/accounts`;
 
             await Promise.all([
                 this.notificationService.createAccountBlocked(
@@ -73,7 +76,11 @@ export class AccountTokenRefreshScheduler {
                     ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED,
                     {
                         send: { email: owner.email, name: owner.name },
-                        data: { accountName: account.name, reconnectUrl },
+                        data: {
+                            accountName: account.name,
+                            reconnectUrl,
+                            language: account.chatbot?.primaryLanguage,
+                        },
                     },
                     {
                         taskName: `${ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED}-${account.id}-${randomUUID()}`,

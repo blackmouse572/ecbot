@@ -3,6 +3,11 @@ import { HelperEgressService } from 'src/common/helper/services/helper.egress.se
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
 import { ENUM_TOOL_INVOCATION_STATUS } from 'src/modules/tool/enums/tool-invocation-status.enum';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import {
+    appendQueryArgs,
+    HTTP_TOOL_QUERY_METHODS,
+    setQueryParam,
+} from 'src/modules/tool/utils/http-tool-query.util';
 
 export interface ExecutionResult {
     status: ENUM_TOOL_INVOCATION_STATUS;
@@ -45,9 +50,11 @@ export class HttpToolExecutorService {
                     if (tool.httpAuth.placement === 'header') {
                         headers[tool.httpAuth.paramName ?? 'X-API-Key'] = plain;
                     } else {
-                        const sep = url.includes('?') ? '&' : '?';
-                        const param = tool.httpAuth.paramName ?? 'api_key';
-                        url += `${sep}${encodeURIComponent(param)}=${encodeURIComponent(plain)}`;
+                        url = setQueryParam(
+                            url,
+                            tool.httpAuth.paramName ?? 'api_key',
+                            plain
+                        );
                     }
                     break;
                 case 'basic':
@@ -58,12 +65,12 @@ export class HttpToolExecutorService {
         }
 
         const method = tool.httpMethod ?? 'POST';
+        const inQuery = HTTP_TOOL_QUERY_METHODS.includes(method);
+        if (inQuery) url = this.withQueryArgs(url, args);
         const init: RequestInit = {
             method,
             headers,
-            body: ['GET', 'DELETE'].includes(method)
-                ? undefined
-                : JSON.stringify(args),
+            body: inQuery ? undefined : JSON.stringify(args),
         };
 
         const attempts = tool.maxRetries ?? 1;
@@ -155,9 +162,11 @@ export class HttpToolExecutorService {
                         headers[config.httpAuth.paramName ?? 'X-API-Key'] =
                             plain;
                     } else {
-                        const sep = url.includes('?') ? '&' : '?';
-                        const param = config.httpAuth.paramName ?? 'api_key';
-                        url += `${sep}${encodeURIComponent(param)}=${encodeURIComponent(plain)}`;
+                        url = setQueryParam(
+                            url,
+                            config.httpAuth.paramName ?? 'api_key',
+                            plain
+                        );
                     }
                     break;
                 case 'basic':
@@ -168,12 +177,12 @@ export class HttpToolExecutorService {
         }
 
         const method = config.httpMethod ?? 'POST';
+        const inQuery = HTTP_TOOL_QUERY_METHODS.includes(method);
+        if (inQuery) url = this.withQueryArgs(url, args);
         const init: RequestInit = {
             method,
             headers,
-            body: ['GET', 'DELETE'].includes(method)
-                ? undefined
-                : JSON.stringify(args),
+            body: inQuery ? undefined : JSON.stringify(args),
         };
 
         const attempts = config.maxRetries ?? 1;
@@ -228,6 +237,17 @@ export class HttpToolExecutorService {
             errorMessage: lastErr,
             durationMs: Date.now() - started,
         };
+    }
+
+    /** The URL with the call's arguments, never overriding a fixed key. */
+    private withQueryArgs(url: string, args: Record<string, unknown>): string {
+        const { url: withArgs, skipped } = appendQueryArgs(url, args);
+        if (skipped.length) {
+            this.logger.warn(
+                `HTTP tool argument(s) ${skipped.join(', ')} not sent: the tool URL already sets them`
+            );
+        }
+        return withArgs;
     }
 
     private tryParse(body: string): unknown {

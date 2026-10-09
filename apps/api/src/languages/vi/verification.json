@@ -11,6 +11,7 @@
         "attemptMax": "Nhập sai quá nhiều lần. Mã xác minh này đã bị khóa.",
         "userEmailVerified": "Email này đã được xác minh rồi.",
         "userMobileNumberVerified": "Số điện thoại di động này đã được xác minh rồi.",
-        "expired": "Mã này đã hết hạn. Nhấn Gửi lại để nhận mã mới."
+        "expired": "Mã này đã hết hạn. Nhấn Gửi lại để nhận mã mới.",
+        "tooManyCodes": "Bạn đã yêu cầu quá nhiều mã mới trong một giờ qua. Vui lòng chờ một lúc rồi nhấn Gửi lại."
     }
 }

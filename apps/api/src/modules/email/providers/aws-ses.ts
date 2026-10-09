@@ -18,6 +18,8 @@ import { IEmailService } from 'src/modules/email/interfaces/email.service.interf
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
+import { EmailHandoffDto } from '../dtos/email.handoff.dto';
+import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 
 @Injectable()
 export class AwsSESProvider implements IEmailService {
@@ -365,7 +367,7 @@ export class AwsSESProvider implements IEmailService {
 
     async sendResetPassword(
         { name, email }: EmailSendDto,
-        { expiredDate, url, otp }: EmailResetPasswordDto
+        { expiredDate, url }: EmailResetPasswordDto
     ): Promise<boolean> {
         try {
             await this.awsSESService.send({
@@ -382,7 +384,6 @@ export class AwsSESProvider implements IEmailService {
                     // pass it through unchanged (as resend.ts does), don't
                     // prefix it with homeUrl again.
                     url,
-                    otp,
                     expiredDate:
                         this.helperDateService.formatToIsoDate(expiredDate),
                 },
@@ -643,6 +644,65 @@ export class AwsSESProvider implements IEmailService {
                 },
             });
 
+            return true;
+        } catch (err: unknown) {
+            this.logger.error(err);
+            return false;
+        }
+    }
+
+    async sendHandoff(
+        { name, email }: EmailSendDto,
+        { chatbotName, workspaceName, reason, conversationUrl }: EmailHandoffDto
+    ): Promise<boolean> {
+        try {
+            await this.awsSESService.send({
+                templateName: ENUM_SEND_EMAIL_PROCESS.HANDOFF,
+                recipients: [email],
+                sender: this.fromEmail,
+                templateData: {
+                    homeName: this.homeName,
+                    name: title(name),
+                    supportEmail: this.supportEmail ?? '',
+                    homeUrl: this.homeUrl,
+                    chatbotName,
+                    workspaceName,
+                    reason,
+                    conversationUrl: `${this.homeUrl}${conversationUrl}`,
+                },
+            });
+            return true;
+        } catch (err: unknown) {
+            this.logger.error(err);
+            return false;
+        }
+    }
+
+    async sendMemberJoined(
+        { name, email }: EmailSendDto,
+        {
+            memberName,
+            memberEmail,
+            workspaceName,
+            membersUrl,
+        }: EmailMemberJoinedDto
+    ): Promise<boolean> {
+        try {
+            await this.awsSESService.send({
+                templateName: ENUM_SEND_EMAIL_PROCESS.MEMBER_JOINED,
+                recipients: [email],
+                sender: this.fromEmail,
+                templateData: {
+                    homeName: this.homeName,
+                    name: title(name),
+                    supportEmail: this.supportEmail ?? '',
+                    homeUrl: this.homeUrl,
+                    memberName,
+                    memberEmail,
+                    workspaceName,
+                    membersUrl: `${this.homeUrl}${membersUrl}`,
+                },
+            });
             return true;
         } catch (err: unknown) {
             this.logger.error(err);

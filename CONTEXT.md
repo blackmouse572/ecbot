@@ -118,9 +118,9 @@ The module that owns a platform message from receipt to completion. Its intake s
 _Avoid_: webhook handler, ingestion service, message queue.
 
 **Inbound event**:
-The durable queued job representing one received platform message — durable in Redis (BullMQ, AOF-persisted), not a Postgres row. On the BullMQ-drained (direct-to-api) path it's deduped by its job id `${platform}-${externalMessageId}`; completed-job retention sets the dedupe window so redeliveries within it are no-ops.
+The durable queued job representing one received platform message: a Cloud Task on the `inbound-event` queue (ADR-0008), not a Postgres row. On the direct-to-api path the task is named `sha256(platform:externalMessageId)`, and a 26h `inbound-event-enqueued` Redis marker stops redeliveries and reconciliation backfill from creating a second task.
 
-As of the edge multi-platform cutover, a second ingress path (edge-forwarded, via the Cloudflare Worker) also feeds the **Turn** pipeline without going through this BullMQ job — so job-id dedupe alone no longer covers every path an **Inbound event** can arrive by. The actual single dedupe point is now a shared seam at the top of `MessageProcessorService.process()`: a Redis `SET NX` claim on `${platform}:${externalMessageId}` (24h TTL), checked regardless of ingress path. The BullMQ job id stays as redundant defense-in-depth on the direct-to-api path.
+As of the edge multi-platform cutover, a second ingress path (edge-forwarded, via the Cloudflare Worker) also feeds the **Turn** pipeline without going through this task, so enqueue-side dedupe alone doesn't cover every path an **Inbound event** can arrive by. The actual single dedupe point is a shared seam at the top of `MessageProcessorService.process()`: a Redis `SET NX` claim on `${platform}:${externalMessageId}` (26h TTL), checked regardless of ingress path.
 _Avoid_: webhook payload, raw message, inbox row.
 
 **Inbox lag**:

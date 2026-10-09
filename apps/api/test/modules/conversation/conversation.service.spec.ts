@@ -292,6 +292,32 @@ describe('ConversationService', () => {
                 expect.objectContaining({ language: 'vi' })
             );
         });
+
+        it('also emails the team about the handoff', async () => {
+            const send = jest.fn().mockResolvedValue(undefined);
+            mockModuleRef.get.mockReturnValue({ send });
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+            mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
+                []
+            );
+
+            await service.triggerHandoff(
+                { id: 'conv-1' } as any,
+                'workspace-1',
+                'keyword_trigger',
+                'vi'
+            );
+
+            expect(send).toHaveBeenCalledWith(
+                'conv-1',
+                'workspace-1',
+                'keyword_trigger',
+                'vi'
+            );
+            mockModuleRef.get.mockReset();
+        });
     });
 
     // Returns the keyword that matched and where it came from: only the

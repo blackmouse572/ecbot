@@ -122,6 +122,10 @@ export class UserEntity extends DatabaseEntityBase {
     @Exclude()
     mfaLastTimeStep?: number | null;
 
+    /** Email me when a customer is handed over to a person. */
+    @Property({ type: 'boolean', default: true })
+    handoffEmails: boolean = true;
+
     public get isEmailVerified(): boolean {
         return this.verification.email;
     }
