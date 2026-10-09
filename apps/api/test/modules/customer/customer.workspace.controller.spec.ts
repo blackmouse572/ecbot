@@ -1,4 +1,6 @@
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuthImpersonationReadOnlyInterceptor } from '../../../src/modules/auth/interceptors/auth.impersonation-read-only.interceptor';
 import { CustomerWorkspaceController } from '../../../src/modules/customer/controllers/customer.workspace.controller';
 import { ENUM_ACTIVITY_ACTION } from '../../../src/modules/activity/enums/activity.enum';
 import { ENUM_POLICY_SUBJECT } from '../../../src/modules/policy/enums/policy.enum';
@@ -278,49 +280,55 @@ describe('CustomerWorkspaceController', () => {
 
     describe('DELETE /:workspace/customers/:id', () => {
         const summary = {
-            customers: 1,
-            contactPoints: 2,
-            conversations: 3,
-            messages: 40,
-            mediaFiles: 5,
+            customers: 2,
+            contactPoints: 3,
+            conversations: 4,
+            messages: 20,
+            mediaFiles: 1,
         };
 
         it('erases inside the route workspace and returns the counts', async () => {
             mockErasureService.erase.mockResolvedValue(summary);
+            const workspace = { id: 'ws-1' } as any;
 
-            const res = await controller.erase(
-                { id: 'ws-1' } as any,
-                'cust-1',
-                user
-            );
+            const res = await controller.erase(workspace, 'cust-1', user);
 
+            // The service writes the ERASE audit row inside its transaction.
             expect(mockErasureService.erase).toHaveBeenCalledWith(
                 'cust-1',
-                'ws-1'
+                workspace,
+                user
             );
             expect(res).toEqual({ data: summary });
         });
 
-        it('audits the erasure with counts only, no personal data', async () => {
-            mockErasureService.erase.mockResolvedValue(summary);
-
-            await controller.erase({ id: 'ws-1' } as any, 'cust-1', user);
-
-            const [, , activity] =
-                mockActivityService.createByUserWithWorkspace.mock.calls[0];
-            expect(activity.action).toBe('erase');
-            expect(activity.metadata).toEqual({ id: 'cust-1', ...summary });
-        });
-
-        it('does not audit when the customer is not found', async () => {
+        it('propagates the 404 when the customer is not found', async () => {
             mockErasureService.erase.mockRejectedValue(new NotFoundException());
 
             await expect(
                 controller.erase({ id: 'ws-1' } as any, 'cust-x', user)
             ).rejects.toBeInstanceOf(NotFoundException);
-            expect(
-                mockActivityService.createByUserWithWorkspace
-            ).not.toHaveBeenCalled();
+        });
+
+        it('is refused to an admin impersonating the user', () => {
+            const interceptor = new AuthImpersonationReadOnlyInterceptor(
+                new Reflector()
+            );
+            const context = {
+                getType: () => 'http',
+                getHandler: () => CustomerWorkspaceController.prototype.erase,
+                getClass: () => CustomerWorkspaceController,
+                switchToHttp: () => ({
+                    getRequest: () => ({
+                        method: 'DELETE',
+                        user: { impersonatedBy: 'admin-1' },
+                    }),
+                }),
+            } as any;
+
+            expect(() =>
+                interceptor.intercept(context, { handle: jest.fn() } as any)
+            ).toThrow(ForbiddenException);
         });
     });
 });

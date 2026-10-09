@@ -25,6 +25,7 @@ import { IRAGDoc } from '../interfaces/rag.interface';
 import { IRAGService } from '../interfaces/rag.service.interface';
 import { RAGEntity } from '../repository/entities/rag.entity';
 import { RAGRepository } from '../repository/repositories/rag.repository';
+import { ragKeyPrefix } from '../utils/rag-key.util';
 
 @Injectable()
 export class RAGService implements IRAGService {
@@ -201,7 +202,7 @@ export class RAGService implements IRAGService {
             strict: true,
             replacement: '-',
         });
-        return `rag/${workspaceId}/${chatbotId}/${slug}.${extension}`;
+        return `${ragKeyPrefix(workspaceId, chatbotId)}${slug}.${extension}`;
     }
 
     async softDelete(

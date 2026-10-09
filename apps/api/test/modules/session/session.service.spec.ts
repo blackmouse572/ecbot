@@ -16,6 +16,7 @@ describe('SessionService (geo + activity additions)', () => {
 
     const mockRepo = {
         create: jest.fn(async (e: any) => e),
+        updateManyRaw: jest.fn(async () => 2),
         findOneById: jest.fn(),
         find: jest.fn(async () => []),
         findOne: jest.fn(),
@@ -415,6 +416,28 @@ describe('SessionService (geo + activity additions)', () => {
             expect(session.revokeAt).toBe(fixedNow);
             expect(persist).toHaveBeenCalledWith(session);
             expect(flush).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('anonymizeByUser', () => {
+        // Account deletion: session rows stay (they back the audit trail),
+        // the network identifiers do not. ip is NOT NULL.
+        it('clears the IP addresses, user agents and forwarding headers of every session', async () => {
+            const options = { em: { tx: true } } as any;
+
+            await build().anonymizeByUser('u1', options);
+
+            expect(mockRepo.updateManyRaw).toHaveBeenCalledWith(
+                { user: 'u1' },
+                {
+                    ip: '0.0.0.0',
+                    userAgent: null,
+                    xForwardedFor: null,
+                    xForwardedHost: null,
+                    country: null,
+                },
+                options
+            );
         });
     });
 

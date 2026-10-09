@@ -93,12 +93,13 @@ export class ActivityService {
     async createByUserWithWorkspace(
         user: UserEntity,
         workspace: WorkspaceEntity,
-        { action, subject, metadata }: ActivityCreateRequest
+        { action, subject, metadata }: ActivityCreateRequest,
+        options?: IDatabaseCreateOptions
     ): Promise<ActivityEntity> {
         const create = this.build(user, user, { action, subject, metadata });
         create.workspace = workspace;
 
-        return this.activityRepository.create(create);
+        return this.activityRepository.create(create, options);
     }
 
     async createByAdmin(

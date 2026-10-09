@@ -430,6 +430,27 @@ export class SessionService implements ISessionService {
         await this.updateRevoke(checkSession);
     }
 
+    /**
+     * Account deletion keeps the session rows but drops the network
+     * identifiers. `ip` is NOT NULL, so it gets the unspecified address.
+     */
+    async anonymizeByUser(
+        user: string,
+        options?: IDatabaseUpdateManyOptions
+    ): Promise<void> {
+        await this.sessionRepository.updateManyRaw(
+            { user },
+            {
+                ip: '0.0.0.0',
+                userAgent: null,
+                xForwardedFor: null,
+                xForwardedHost: null,
+                country: null,
+            },
+            options
+        );
+    }
+
     /** Revokes every session of the user, or every other one with `exceptSession`. */
     async updateManyRevokeByUser(
         user: string,

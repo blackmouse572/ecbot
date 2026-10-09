@@ -79,7 +79,7 @@ export interface IExportMessage {
     direction: string;
     authorType: string;
     text?: string;
-    attachments?: unknown[];
+    attachments?: IExportAttachment[];
     reactions?: unknown[];
     /** Platform webhook payload as received; part of the stored data. */
     raw?: unknown;
@@ -95,4 +95,42 @@ export interface IExportConversation {
     createdAt: Date;
     lastMessageAt?: Date;
     messages: IExportMessage[];
+}
+
+/** A file sent in a chat: stored ones by file name, never by storage key. */
+export interface IExportAttachment {
+    type: string;
+    description?: string;
+    /** File name of a copy Ecbot stored. */
+    file?: string;
+    /** Platform url of a file Ecbot did not store. */
+    url?: string;
+}
+
+export interface IExportCustomerTag {
+    customerId?: string;
+    name?: string;
+    assignedAt: Date;
+}
+
+export interface IExportFollowup {
+    id: string;
+    conversationId?: string;
+    prompt: string;
+    reason: string;
+    status: string;
+    scheduledAt: Date;
+    firedAt?: Date;
+    cancelledAt?: Date;
+}
+
+export interface IExportToolInvocation {
+    id: string;
+    conversationId?: string;
+    actionName?: string;
+    status: string;
+    inputArgs: Record<string, unknown>;
+    outputResult?: unknown;
+    errorMessage?: string;
+    createdAt: Date;
 }

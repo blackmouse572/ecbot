@@ -4,6 +4,7 @@
     "update": "RAG đã được cập nhật thành công.",
     "delete": "RAG đã được xóa thành công.",
     "errors": {
-        "notFound": "Không tìm thấy RAG."
+        "notFound": "Không tìm thấy RAG.",
+        "invalidAttachment": "Tệp này không được tải lên cho agent này. Vui lòng tải lên lại."
     }
 }

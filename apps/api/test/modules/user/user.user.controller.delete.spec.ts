@@ -15,7 +15,10 @@ describe('UserUserController.delete', () => {
         anonymize: jest.fn(),
     };
     const activityService = { createByUser: jest.fn() };
-    const sessionService = { updateManyRevokeByUser: jest.fn() };
+    const sessionService = {
+        updateManyRevokeByUser: jest.fn(),
+        anonymizeByUser: jest.fn(),
+    };
     const awsS3Service = { deleteDir: jest.fn().mockResolvedValue(undefined) };
     let controller: UserUserController;
 
@@ -49,6 +52,9 @@ describe('UserUserController.delete', () => {
             'u-1',
             { em: session }
         );
+        expect(sessionService.anonymizeByUser).toHaveBeenCalledWith('u-1', {
+            em: session,
+        });
         expect(session.commit).toHaveBeenCalled();
     });
 

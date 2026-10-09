@@ -20,6 +20,7 @@ import {
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { Controller, Get, Header, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { ExportWorkspaceCustomerDoc } from '../docs/export.doc';
 import { CustomerDataExportResponseDto } from '../dtos/response/customer-data-export.response.dto';
@@ -38,13 +39,16 @@ export class ExportWorkspaceController {
 
     @ExportWorkspaceCustomerDoc()
     @Response('export.customer')
+    // CUSTOMER_DATA, not CUSTOMER: the export holds everything stored about
+    // the person, so it is for the workspace owner and admins, not Members.
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.CUSTOMER_DATA,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Header('Content-Disposition', 'attachment; filename="customer-data.json"')
     @Get('/:id/export')
     async customer(

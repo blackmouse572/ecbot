@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { UserUpdateNotificationsRequestDto } from 'src/modules/user/dtos/request/user.update-notifications.request.dto';
 import { CountryEntity } from '@app/modules/country/repository/entities/country.entity';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
@@ -789,8 +790,9 @@ export class UserService {
     }
     /**
      * Account deletion keeps the row (activity and other FKs point at it) but
-     * overwrites everything that identifies the person. The email becomes a
-     * unique, non-routable placeholder so the unique index still holds.
+     * overwrites everything that identifies the person, and everything it
+     * could sign in with. The email becomes a unique, non-routable
+     * placeholder so the unique index still holds.
      */
     async anonymize(
         user: UserEntity,
@@ -806,6 +808,15 @@ export class UserService {
                 photo: null,
                 avatar: this.helperAvatarService.generateUserAvatar(user.id),
                 gender: null,
+                // Not a bcrypt hash, so no password ever matches it; the
+                // columns are not nullable.
+                password: `!deleted:${randomBytes(32).toString('hex')}`,
+                salt: randomBytes(16).toString('hex'),
+                mfaEnabled: false,
+                mfaSecret: null,
+                mfaPendingSecret: null,
+                mfaRecoveryCodes: null,
+                mfaLastTimeStep: null,
             },
             options
         );

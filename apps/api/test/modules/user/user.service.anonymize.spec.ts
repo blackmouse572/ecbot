@@ -46,9 +46,30 @@ describe('UserService.anonymize', () => {
                 photo: null,
                 avatar: 'avatar:u-1',
                 gender: null,
+                password: expect.any(String),
+                salt: expect.any(String),
+                mfaEnabled: false,
+                mfaSecret: null,
+                mfaPendingSecret: null,
+                mfaRecoveryCodes: null,
+                mfaLastTimeStep: null,
             },
             { em: session, actionBy: 'u-1' }
         );
+    });
+
+    // The row must never authenticate again, by password or by MFA.
+    it('replaces the password hash with a random value no password matches', async () => {
+        await service.anonymize({ id: 'u-1' } as any);
+        await service.anonymize({ id: 'u-1' } as any);
+
+        const [first, second] = userRepository.updateEntity.mock.calls.map(
+            ([, data]) => data.password as string
+        );
+        // Not a bcrypt hash ($2a$/$2b$, 60 chars): compare() is always false.
+        expect(first).not.toMatch(/^\$2[aby]\$/);
+        expect(first).not.toHaveLength(60);
+        expect(first).not.toBe(second);
     });
 
     it('builds the avatar from the id, not the old email', async () => {

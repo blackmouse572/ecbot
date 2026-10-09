@@ -4,6 +4,7 @@
     "update": "RAG updated successfully.",
     "delete": "RAG deleted successfully.",
     "errors": {
-        "notFound": "RAG not found."
+        "notFound": "RAG not found.",
+        "invalidAttachment": "This file was not uploaded for this agent. Upload it again."
     }
 }

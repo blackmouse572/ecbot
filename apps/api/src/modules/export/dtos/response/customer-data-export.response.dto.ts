@@ -3,6 +3,9 @@ import {
     IExportContactPoint,
     IExportConversation,
     IExportCustomer,
+    IExportCustomerTag,
+    IExportFollowup,
+    IExportToolInvocation,
 } from '../../interfaces/export.interface';
 
 export class CustomerDataExportResponseDto {
@@ -20,6 +23,9 @@ export class CustomerDataExportResponseDto {
     mergedCustomers: IExportCustomer[];
 
     @ApiProperty({ type: Object, isArray: true })
+    tags: IExportCustomerTag[];
+
+    @ApiProperty({ type: Object, isArray: true })
     contactPoints: IExportContactPoint[];
 
     @ApiProperty({
@@ -28,4 +34,18 @@ export class CustomerDataExportResponseDto {
         description: 'Conversations with all of their messages',
     })
     conversations: IExportConversation[];
+
+    @ApiProperty({
+        type: Object,
+        isArray: true,
+        description: 'Proactive follow-up messages scheduled for the customer',
+    })
+    followups: IExportFollowup[];
+
+    @ApiProperty({
+        type: Object,
+        isArray: true,
+        description: 'Tool calls the agent made in these conversations',
+    })
+    toolInvocations: IExportToolInvocation[];
 }

@@ -1,3 +1,4 @@
+import { ActivityModule } from '@app/modules/activity/activity.module';
 import { AwsModule } from '@app/modules/aws/aws.module';
 import { NotificationModule } from '@app/modules/notification/notification.module';
 import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/workspace.repository.module';
@@ -26,6 +27,7 @@ import { CustomerService } from './services/customer.service';
         ConversationRepositoryModule,
         CloudTasksQueueModule,
         AwsModule,
+        ActivityModule,
     ],
     providers: [
         CustomerErasureService,
