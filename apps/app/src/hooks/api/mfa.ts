@@ -1,8 +1,10 @@
-import type { AuthLoginMfaChallengeResponseDto } from "@/types/mfa";
 import {
   authMfaSharedControllerDisableV1,
+  authMfaSharedControllerEnableV1,
+  authMfaSharedControllerRegenerateRecoveryCodesV1,
+  authMfaSharedControllerSetupV1,
   authPublicControllerLoginWithMfaV1,
-  client,
+  type AuthLoginMfaChallengeResponseDto,
   type AuthLoginMfaRequestDto,
   type AuthLoginResponseDto,
   type AuthMfaDisableRequestDto,
@@ -23,17 +25,6 @@ export const isMfaChallenge = (
 ): data is AuthLoginMfaChallengeResponseDto =>
   "mfaRequired" in data && data.mfaRequired === true;
 
-// Setup, enable and recovery-codes take bodies @repo/client does not have
-// yet; switch to the generated functions after `pnpm generate:client`.
-const postMfa = <T>(path: string, body: object): Promise<T> =>
-  client
-    .post({
-      url: `/api/v1/shared/auth/mfa/${path}`,
-      body,
-      throwOnError: true,
-    })
-    .then((res) => (res.data as { data: T }).data);
-
 export const useLoginWithMfa = () =>
   useMutation({
     mutationFn: (body: AuthLoginMfaRequestDto) =>
@@ -48,7 +39,10 @@ export const useLoginWithMfa = () =>
 export const useMfaSetup = () =>
   useMutation({
     mutationFn: (password: string) =>
-      postMfa<AuthMfaSetupResponseDto>("setup", { password }),
+      authMfaSharedControllerSetupV1({
+        body: { password },
+        throwOnError: true,
+      }).then((res) => res.data.data as AuthMfaSetupResponseDto),
   });
 
 const useInvalidateMe = () => {
@@ -64,7 +58,9 @@ export const useMfaEnable = () => {
   const invalidateMe = useInvalidateMe();
   return useMutation({
     mutationFn: (body: { password: string; code: string }) =>
-      postMfa<AuthMfaEnableResponseDto>("enable", body),
+      authMfaSharedControllerEnableV1({ body, throwOnError: true }).then(
+        (res) => res.data.data as AuthMfaEnableResponseDto,
+      ),
     onSuccess: invalidateMe,
   });
 };
@@ -72,7 +68,10 @@ export const useMfaEnable = () => {
 export const useMfaRegenerateRecoveryCodes = () =>
   useMutation({
     mutationFn: (body: AuthMfaDisableRequestDto) =>
-      postMfa<AuthMfaEnableResponseDto>("recovery-codes", body),
+      authMfaSharedControllerRegenerateRecoveryCodesV1({
+        body,
+        throwOnError: true,
+      }).then((res) => res.data.data as AuthMfaEnableResponseDto),
   });
 
 export const useMfaDisable = () => {

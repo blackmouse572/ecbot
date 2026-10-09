@@ -1,7 +1,6 @@
 import { logoutGuard, useAuth } from "@/modules/auth";
 import { useEndImpersonation, useImpersonation } from "@/modules/impersonation";
 import { useSetLastWorkspaceSlug } from "@/modules/workspace";
-import type { AuthLoginMfaChallengeResponseDto } from "@/types/mfa";
 import {
   authPublicControllerLoginWithCredentialV1,
   authPublicControllerSignUpV1,
@@ -9,6 +8,7 @@ import {
   authSharedControllerLogoutV1,
   authSharedControllerRefreshV1,
   type AuthChangePasswordRequestDto,
+  type AuthLoginMfaChallengeResponseDto,
   verificationEmailControllerResendVerificationEmailV1,
   verificationEmailControllerVerifyEmailV1,
   type AuthLoginRequestDto,

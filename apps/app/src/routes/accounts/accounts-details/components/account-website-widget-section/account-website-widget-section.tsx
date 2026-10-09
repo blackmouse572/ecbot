@@ -53,8 +53,7 @@ export const AccountWebsiteWidgetSection = ({
         <SectionRow
           title={t("accounts.details.websiteWidget.privacyLabel")}
           value={
-            // New in the API DTO; untyped until @repo/client is regenerated.
-            (item as { privacyPolicyUrl?: string }).privacyPolicyUrl ??
+            item.privacyPolicyUrl ??
             t("accounts.details.websiteWidget.privacyDefault")
           }
         />

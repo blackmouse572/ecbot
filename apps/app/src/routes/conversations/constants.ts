@@ -18,6 +18,4 @@ export const CUSTOMER_PANEL = "customer";
 
 // Customer data rights (export and permanent erasure) are their own subject,
 // held by the workspace owner and admins only, not by Members.
-// The cast stands until @repo/client is regenerated with CUSTOMER_DATA.
-export const CUSTOMER_DATA_SUBJECT =
-  "CUSTOMER_DATA" as unknown as ENUM_POLICY_SUBJECT;
+export const CUSTOMER_DATA_SUBJECT: ENUM_POLICY_SUBJECT = "CUSTOMER_DATA";

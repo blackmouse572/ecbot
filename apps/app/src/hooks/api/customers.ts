@@ -5,6 +5,7 @@ import {
   customerWorkspaceControllerListV1,
   customerWorkspaceControllerUpdateV1,
   exportWorkspaceControllerCustomerV1,
+  type CustomerEraseResponseDto,
 } from "@repo/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { conversationQueryKeys } from "./conversations";
@@ -104,15 +105,7 @@ export const useUpdateCustomer = (id: string | undefined | null) => {
   });
 };
 
-// Mirrors the API's CustomerEraseResponseDto until @repo/client is
-// regenerated with it.
-export type CustomerErasureSummary = {
-  customers: number;
-  contactPoints: number;
-  conversations: number;
-  messages: number;
-  mediaFiles: number;
-};
+export type CustomerErasureSummary = CustomerEraseResponseDto;
 
 /** Everything stored about one customer, for a data subject request. */
 export const useExportCustomer = (id: string | undefined | null) => {
@@ -139,11 +132,7 @@ export const useEraseCustomer = (id: string | undefined | null) => {
       customerWorkspaceControllerEraseV1({
         path: { workspace: slug!, id: id! },
         throwOnError: true,
-      }).then(
-        (res) =>
-          (res.data as { data?: CustomerErasureSummary }).data as
-            CustomerErasureSummary | undefined,
-      ),
+      }).then((res) => res.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: conversationQueryKeys.all });

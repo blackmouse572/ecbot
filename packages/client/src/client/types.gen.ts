@@ -50,7 +50,7 @@ export type RolePermissionDto = {
     /**
      * Permission subject
      */
-    subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
+    subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     /**
      * Permission action base on subject
      */
@@ -646,6 +646,18 @@ export type AuthLoginResponseDto = {
     expiresIn: number;
     accessToken: string;
     refreshToken: string;
+};
+
+export type AuthLoginMfaChallengeResponseDto = {
+    mfaRequired: boolean;
+    /**
+     * Short-lived, single-use challenge for /auth/login/mfa
+     */
+    mfaToken: string;
+    /**
+     * seconds
+     */
+    expiresIn: number;
 };
 
 export type AuthLoginRequestDto = {
@@ -1294,7 +1306,7 @@ export type EmailTaskDto = {
     data?: {
         [key: string]: unknown;
     };
-    jobName: 'CHANGE_PASSWORD' | 'TEMPORARY_PASSWORD' | 'WELCOME' | 'CREATE' | 'RESET_PASSWORD' | 'VERIFICATION' | 'EMAIL_VERIFIED' | 'MOBILE_NUMBER_VERIFIED' | 'INVITE_TO_WORKSPACE' | 'ACCOUNT_BLOCKED' | 'ACCOUNT_BANNED' | 'LOW_TOKEN_BALANCE' | 'HANDOFF' | 'MEMBER_JOINED';
+    jobName: 'CHANGE_PASSWORD' | 'TEMPORARY_PASSWORD' | 'WELCOME' | 'CREATE' | 'RESET_PASSWORD' | 'VERIFICATION' | 'EMAIL_VERIFIED' | 'MOBILE_NUMBER_VERIFIED' | 'INVITE_TO_WORKSPACE' | 'ACCOUNT_BLOCKED' | 'ACCOUNT_BANNED' | 'LOW_TOKEN_BALANCE' | 'HANDOFF' | 'MEMBER_JOINED' | 'MFA_CHANGED';
 };
 
 export type SmsSendRequestDto = {
@@ -2066,7 +2078,7 @@ export type ActivityListResponseDto = {
     deletedBy?: UserMetaResponseDto;
     user: string;
     action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'login' | 'login_failed' | 'view' | 'export' | 'erase';
-    subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
+    subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     by: UserShortResponseDto;
     metadata?: {
         [key: string]: unknown;
@@ -3062,6 +3074,13 @@ export type AuthMfaSetupResponseDto = {
     otpauthUri: string;
 };
 
+export type AuthMfaSetupRequestDto = {
+    /**
+     * Current password
+     */
+    password: string;
+};
+
 export type AuthMfaEnableResponseDto = {
     /**
      * One-time recovery codes. Shown only once; the server keeps only hashes.
@@ -3071,12 +3090,27 @@ export type AuthMfaEnableResponseDto = {
 
 export type AuthMfaEnableRequestDto = {
     /**
+     * Current password
+     */
+    password: string;
+    /**
      * 6-digit code from the authenticator app
      */
     code: string;
 };
 
 export type AuthMfaDisableRequestDto = {
+    /**
+     * Current password
+     */
+    password: string;
+    /**
+     * 6-digit authenticator code, or a recovery code
+     */
+    code: string;
+};
+
+export type AuthMfaRecoveryCodesRequestDto = {
     /**
      * Current password
      */
@@ -5128,6 +5162,20 @@ export type CustomerUpdateRequestDto = {
     } | null;
 };
 
+export type CustomerEraseResponseDto = {
+    /**
+     * The customer plus every profile merged into it
+     */
+    customers: number;
+    contactPoints: number;
+    conversations: number;
+    messages: number;
+    /**
+     * Stored images and files sent in the chats
+     */
+    mediaFiles: number;
+};
+
 export type CustomerDataExportResponseDto = {
     exportedAt: string;
     customer: {
@@ -5139,6 +5187,9 @@ export type CustomerDataExportResponseDto = {
     mergedCustomers: Array<{
         [key: string]: unknown;
     }>;
+    tags: Array<{
+        [key: string]: unknown;
+    }>;
     contactPoints: Array<{
         [key: string]: unknown;
     }>;
@@ -5146,6 +5197,18 @@ export type CustomerDataExportResponseDto = {
      * Conversations with all of their messages
      */
     conversations: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Proactive follow-up messages scheduled for the customer
+     */
+    followups: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Tool calls the agent made in these conversations
+     */
+    toolInvocations: Array<{
         [key: string]: unknown;
     }>;
 };
@@ -6838,11 +6901,15 @@ export type AuthPublicControllerLoginWithCredentialV1Responses = {
     /**
      * 200
      */
-    200: ResponseDto & {
+    200: (ResponseDto & {
         message?: unknown;
         statusCode?: number;
         data?: AuthLoginResponseDto;
-    };
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthLoginMfaChallengeResponseDto;
+    });
 };
 
 export type AuthPublicControllerLoginWithCredentialV1Response = AuthPublicControllerLoginWithCredentialV1Responses[keyof AuthPublicControllerLoginWithCredentialV1Responses];
@@ -6979,11 +7046,15 @@ export type AuthPublicControllerLoginWithGoogleV1Responses = {
     /**
      * 200
      */
-    200: ResponseDto & {
+    200: (ResponseDto & {
         message?: unknown;
         statusCode?: number;
         data?: AuthLoginResponseDto;
-    };
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthLoginMfaChallengeResponseDto;
+    });
 };
 
 export type AuthPublicControllerLoginWithGoogleV1Response = AuthPublicControllerLoginWithGoogleV1Responses[keyof AuthPublicControllerLoginWithGoogleV1Responses];
@@ -7049,11 +7120,15 @@ export type AuthPublicControllerLoginWithAppleV1Responses = {
     /**
      * 200
      */
-    200: ResponseDto & {
+    200: (ResponseDto & {
         message?: unknown;
         statusCode?: number;
         data?: AuthLoginResponseDto;
-    };
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthLoginMfaChallengeResponseDto;
+    });
 };
 
 export type AuthPublicControllerLoginWithAppleV1Response = AuthPublicControllerLoginWithAppleV1Responses[keyof AuthPublicControllerLoginWithAppleV1Responses];
@@ -12777,6 +12852,84 @@ export type UserAdminControllerImpersonateV1Responses = {
 
 export type UserAdminControllerImpersonateV1Response = UserAdminControllerImpersonateV1Responses[keyof UserAdminControllerImpersonateV1Responses];
 
+export type AuthAdminControllerResetMfaV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        user: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/auth/update/{user}/mfa/reset';
+};
+
+export type AuthAdminControllerResetMfaV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthAdminControllerResetMfaV1Error = AuthAdminControllerResetMfaV1Errors[keyof AuthAdminControllerResetMfaV1Errors];
+
+export type AuthAdminControllerResetMfaV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthAdminControllerResetMfaV1Response = AuthAdminControllerResetMfaV1Responses[keyof AuthAdminControllerResetMfaV1Responses];
+
 export type AuthAdminControllerUpdatePasswordV1Data = {
     body?: never;
     headers?: {
@@ -15986,7 +16139,7 @@ export type AuthSharedControllerImpersonateRefreshV1Responses = {
 export type AuthSharedControllerImpersonateRefreshV1Response = AuthSharedControllerImpersonateRefreshV1Responses[keyof AuthSharedControllerImpersonateRefreshV1Responses];
 
 export type AuthMfaSharedControllerSetupV1Data = {
-    body?: never;
+    body: AuthMfaSetupRequestDto;
     headers?: {
         /**
          * Custom language header
@@ -16025,6 +16178,13 @@ export type AuthMfaSharedControllerSetupV1Errors = {
      * 408
      */
     408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
         message?: unknown;
         statusCode?: number;
     };
@@ -16198,6 +16358,80 @@ export type AuthMfaSharedControllerDisableV1Responses = {
 };
 
 export type AuthMfaSharedControllerDisableV1Response = AuthMfaSharedControllerDisableV1Responses[keyof AuthMfaSharedControllerDisableV1Responses];
+
+export type AuthMfaSharedControllerRegenerateRecoveryCodesV1Data = {
+    body: AuthMfaRecoveryCodesRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared/auth/mfa/recovery-codes';
+};
+
+export type AuthMfaSharedControllerRegenerateRecoveryCodesV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AuthMfaSharedControllerRegenerateRecoveryCodesV1Error = AuthMfaSharedControllerRegenerateRecoveryCodesV1Errors[keyof AuthMfaSharedControllerRegenerateRecoveryCodesV1Errors];
+
+export type AuthMfaSharedControllerRegenerateRecoveryCodesV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AuthMfaEnableResponseDto;
+    };
+};
+
+export type AuthMfaSharedControllerRegenerateRecoveryCodesV1Response = AuthMfaSharedControllerRegenerateRecoveryCodesV1Responses[keyof AuthMfaSharedControllerRegenerateRecoveryCodesV1Responses];
 
 export type CountrySharedControllerListPublicV1Data = {
     body?: never;
@@ -25946,6 +26180,7 @@ export type CustomerWorkspaceControllerEraseV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
+        data?: CustomerEraseResponseDto;
     };
 };
 
