@@ -10,6 +10,7 @@ import { WorkspaceDocParamsId } from '@app/modules/workspace/constants/workspace
 import { applyDecorators } from '@nestjs/common';
 import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.request.dto';
 import { ContactPointGetResponseDto } from '../dtos/response/contact-point.get.response.dto';
+import { CustomerEraseResponseDto } from '../dtos/response/customer.erase.response.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
 
 export function CustomerWorkspaceListDoc(): MethodDecorator {
@@ -53,11 +54,13 @@ export function CustomerWorkspaceEraseDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary:
-                'Permanently delete a customer with their contact points, conversations, messages and media',
+                'Permanently delete a customer, every profile merged into it, their contact points, conversations, messages and media. Workspace owner or admin only.',
         }),
         DocRequest({ params: [...WorkspaceDocParamsId] }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
-        DocResponse('customer.workspace.erase')
+        DocResponse<CustomerEraseResponseDto>('customer.workspace.erase', {
+            dto: CustomerEraseResponseDto,
+        })
     );
 }
 

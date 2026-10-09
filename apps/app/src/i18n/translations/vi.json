@@ -2394,9 +2394,10 @@
           "action": "Xóa khách hàng và mọi cuộc trò chuyện",
           "confirm": {
             "title": "Xóa vĩnh viễn khách hàng này?",
-            "body": "Thao tác này xóa vĩnh viễn khách hàng, thông tin liên hệ, mọi cuộc trò chuyện, tin nhắn và hình ảnh họ đã gửi. Bạn không thể hoàn tác.",
+            "body": "Thao tác này xóa vĩnh viễn khách hàng, các hồ sơ đã gộp vào họ, thông tin liên hệ, mọi cuộc trò chuyện, tin nhắn và hình ảnh họ đã gửi. Bạn không thể hoàn tác.",
             "confirm": "Xóa vĩnh viễn",
-            "cancel": "Hủy"
+            "cancel": "Hủy",
+            "verification": "XÓA"
           },
           "toast": {
             "success": "Đã xóa khách hàng và mọi cuộc trò chuyện.",

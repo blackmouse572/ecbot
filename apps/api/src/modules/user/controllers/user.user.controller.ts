@@ -102,6 +102,9 @@ export class UserUserController {
             await this.sessionService.updateManyRevokeByUser(user.id, {
                 em: session,
             });
+            await this.sessionService.anonymizeByUser(user.id, {
+                em: session,
+            });
 
             await session.commit();
         } catch (err: unknown) {

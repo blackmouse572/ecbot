@@ -1,5 +1,4 @@
 import { ActivityRepositoryModule } from '@app/modules/activity/repository/activity.repository.module';
-import { ConversationRepositoryModule } from '@app/modules/conversation/repository/conversation.repository.module';
 import { CustomerRepositoryModule } from '@app/modules/customer/repository/customer.repository.module';
 import { SessionRepositoryModule } from '@app/modules/session/repository/session.repository.module';
 import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/workspace.repository.module';
@@ -14,7 +13,6 @@ import { UserDataExportService } from './services/user-data-export.service';
         SessionRepositoryModule,
         WorkspaceRepositoryModule,
         CustomerRepositoryModule,
-        ConversationRepositoryModule,
     ],
     providers: [UserDataExportService, CustomerDataExportService],
     exports: [UserDataExportService, CustomerDataExportService],

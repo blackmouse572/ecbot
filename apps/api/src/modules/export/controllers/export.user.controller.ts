@@ -12,6 +12,7 @@ import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { Controller, Get, Header } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { ExportUserMeDoc } from '../docs/export.doc';
 import { UserDataExportResponseDto } from '../dtos/response/user-data-export.response.dto';
@@ -33,6 +34,7 @@ export class ExportUserController {
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Header('Content-Disposition', 'attachment; filename="my-data.json"')
     @Get('/me')
     async me(

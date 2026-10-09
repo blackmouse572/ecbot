@@ -7,6 +7,7 @@ import { CommonModule } from 'src/common/common.module';
 import { MigrationAccountTokenReencryptSeed } from 'src/migration/seeds/migration.account-token-reencrypt.seed';
 import { MigrationApiKeySeed } from 'src/migration/seeds/migration.api-key.seed';
 import { MigrationCountrySeed } from 'src/migration/seeds/migration.country.seed';
+import { MigrationRagPrivateBucketSeed } from 'src/migration/seeds/migration.rag-private-bucket.seed';
 import { MigrationRoleSeed } from 'src/migration/seeds/migration.role.seed';
 import { MigrationSkillSeed } from 'src/migration/seeds/migration.skill.seed';
 import { MigrationSkillSmoke } from 'src/migration/seeds/migration.skill.smoke';
@@ -14,6 +15,7 @@ import { MigrationTemplateSeed } from 'src/migration/seeds/migration.template.se
 import { AccountRepositoryModule } from 'src/modules/account/repository/account.repository.module';
 import { ActivityModule } from 'src/modules/activity/activity.module';
 import { AwsModule } from 'src/modules/aws/aws.module';
+import { RAGRepositoryModule } from 'src/modules/rag/repository/rag.repository.module';
 import { SkillModule } from 'src/modules/skill/skill.module';
 import { ApiKeyModule } from 'src/modules/api-key/api-key.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
@@ -44,6 +46,7 @@ import { MigrationUserSeed } from './seeds/migration.user.seed';
         VerificationModule,
         NotificationModule,
         AwsModule,
+        RAGRepositoryModule,
         SkillModule,
 
         // Enterprise overlay (absent in the public/OSS build)
@@ -53,6 +56,7 @@ import { MigrationUserSeed } from './seeds/migration.user.seed';
         MigrationAccountTokenReencryptSeed,
         MigrationApiKeySeed,
         MigrationCountrySeed,
+        MigrationRagPrivateBucketSeed,
         MigrationUserSeed,
         MigrationRoleSeed,
         MigrationTemplateSeed,

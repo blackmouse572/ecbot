@@ -2364,9 +2364,10 @@
           "action": "Delete customer and all conversations",
           "confirm": {
             "title": "Delete this customer permanently?",
-            "body": "This permanently deletes the customer, their contact details, every conversation and message, and the images they sent. You cannot undo this.",
+            "body": "This permanently deletes the customer, any profiles merged into them, their contact details, every conversation and message, and the images they sent. You cannot undo this.",
             "confirm": "Delete permanently",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "verification": "DELETE"
           },
           "toast": {
             "success": "Customer and all conversations deleted.",

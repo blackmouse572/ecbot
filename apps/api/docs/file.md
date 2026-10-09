@@ -372,3 +372,7 @@ async exportData(): Promise<IResponseFileExcel> {
     };
 }
 ```
+
+## RAG files and the private bucket
+
+RAG uploads go to the private bucket under `rag/<workspaceId>/<chatbotId>/`, and `create-with-file` rejects any other key. Files uploaded before that change still sit in the public bucket. Move them once per environment with `pnpm --filter api migrate:rag-private --dry-run` (prints the count), then without `--dry-run`. It copies each file to the private bucket, deletes the public object and updates the row. Running it again is safe.

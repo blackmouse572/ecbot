@@ -96,6 +96,10 @@ export interface ISessionService {
         user: string,
         options?: IDatabaseUpdateManyOptions
     ): Promise<boolean>;
+    anonymizeByUser(
+        user: string,
+        options?: IDatabaseUpdateManyOptions
+    ): Promise<void>;
     deleteMany(
         find?: Record<string, any>,
         options?: IDatabaseDeleteManyOptions

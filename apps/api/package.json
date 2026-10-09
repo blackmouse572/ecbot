@@ -37,6 +37,7 @@
         "migrate:remove": "nestjs-command remove:user && nestjs-command remove:country && nestjs-command remove:apikey && nestjs-command remove:role",
         "migrate:template": "nestjs-command migrate:template",
         "migrate:account-tokens": "nestjs-command account:reencrypt-tokens",
+        "migrate:rag-private": "nestjs-command rag:move-to-private",
         "rollback:template": "nestjs-command rollback:template",
         "mikro-orm": "npx mikro-orm",
         "migration:create": "npx mikro-orm migration:create",

@@ -35,6 +35,7 @@ import {
     Get,
     HttpCode,
     HttpStatus,
+    BadRequestException,
     InternalServerErrorException,
     NotFoundException,
     Param,
@@ -65,6 +66,7 @@ import { RAGListByChatbotResponseDto } from '../dtos/response/rag.list.response.
 import { ENUM_RAG_STATUS_CODE_ERROR } from '../enums/rag.status-code.enum';
 import { ENUM_RAG_STATUS } from '../enums/rag.status.enum';
 import { RAGService } from '../services/rag.service';
+import { isRagUploadKey } from '../utils/rag-key.util';
 
 @ApiTags('modules.workspace.rag')
 @Controller({
@@ -229,6 +231,13 @@ export class RAGWorkspaceController {
             throw new NotFoundException({
                 statusCode: ENUM_RAG_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'chatbot.error.notFound',
+            });
+        }
+
+        if (!isRagUploadKey(body.attachment.key, workspace.id, chatbotId)) {
+            throw new BadRequestException({
+                statusCode: ENUM_RAG_STATUS_CODE_ERROR.FORBIDDEN,
+                message: 'rag.errors.invalidAttachment',
             });
         }
 

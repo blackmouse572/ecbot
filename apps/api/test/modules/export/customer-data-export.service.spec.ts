@@ -3,15 +3,11 @@ import { NotFoundException } from '@nestjs/common';
 
 // A workspace answers a data subject request from one of its end customers.
 describe('CustomerDataExportService', () => {
-    const customerRepository = { find: jest.fn() };
-    const contactPointRepository = { find: jest.fn() };
-    const conversationRepository = { find: jest.fn() };
-    const messageRepository = { find: jest.fn() };
+    const customerRepository = { findSubjectData: jest.fn() };
     let service: CustomerDataExportService;
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        customerRepository.find.mockResolvedValue([
+    const subject = () => ({
+        customers: [
             {
                 id: 'cust-1',
                 name: 'Tran Thi B',
@@ -22,8 +18,9 @@ describe('CustomerDataExportService', () => {
                 profileSummary: 'Likes shoes',
                 createdAt: new Date('2026-01-01T00:00:00Z'),
             },
-        ]);
-        contactPointRepository.find.mockResolvedValue([
+            { id: 'cust-old', mergedIntoCustomerId: 'cust-1' },
+        ],
+        contactPoints: [
             {
                 id: 'cp-1',
                 customer: { id: 'cust-1' },
@@ -32,8 +29,8 @@ describe('CustomerDataExportService', () => {
                 displaySenderName: 'Bee',
                 senderAvatar: 'https://fb/avatar',
             },
-        ]);
-        conversationRepository.find.mockResolvedValue([
+        ],
+        conversations: [
             {
                 id: 'conv-1',
                 contactPoint: { id: 'cp-1' },
@@ -41,8 +38,8 @@ describe('CustomerDataExportService', () => {
                 status: 'open',
                 createdAt: new Date('2026-01-02T00:00:00Z'),
             },
-        ]);
-        messageRepository.find.mockResolvedValue([
+        ],
+        messages: [
             {
                 id: 'm-1',
                 conversation: { id: 'conv-1' },
@@ -51,20 +48,57 @@ describe('CustomerDataExportService', () => {
                 text: 'Xin chao',
                 attachments: [
                     { type: 'image', key: 'conversations/conv-1/a.jpg' },
+                    { type: 'image', url: 'https://fbcdn/x.jpg' },
                 ],
                 raw: { mid: 'x' },
                 dateSent: new Date('2026-01-02T00:00:00Z'),
             },
-        ]);
-        service = new CustomerDataExportService(
-            customerRepository as any,
-            contactPointRepository as any,
-            conversationRepository as any,
-            messageRepository as any
+        ],
+        tagAssignments: [
+            {
+                customer: { id: 'cust-1' },
+                tag: { name: 'VIP' },
+                createdAt: new Date('2026-01-03T00:00:00Z'),
+            },
+        ],
+        followups: [
+            {
+                id: 'f-1',
+                conversation: { id: 'conv-1' },
+                prompt: 'Ask about the order',
+                reason: 'no reply',
+                status: 'SCHEDULED',
+                scheduledAt: new Date('2026-01-04T00:00:00Z'),
+            },
+        ],
+        toolInvocations: [
+            {
+                id: 't-1',
+                conversationId: 'conv-1',
+                actionName: 'lookup_order',
+                status: 'SUCCESS',
+                inputArgs: { phone: '0909' },
+                createdAt: new Date('2026-01-02T00:00:00Z'),
+            },
+        ],
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        customerRepository.findSubjectData.mockResolvedValue(subject());
+        service = new CustomerDataExportService(customerRepository as any);
+    });
+
+    it('scopes the lookup to the workspace', async () => {
+        await service.export('cust-1', 'ws-1');
+
+        expect(customerRepository.findSubjectData).toHaveBeenCalledWith(
+            'cust-1',
+            'ws-1'
         );
     });
 
-    it('returns customer, contact points, conversations and their messages', async () => {
+    it('returns customer, merged profiles, contact points, conversations and their messages', async () => {
         const result = await service.export('cust-1', 'ws-1');
 
         expect(result.customer).toMatchObject({
@@ -74,6 +108,7 @@ describe('CustomerDataExportService', () => {
             email: 'b@c.co',
             notes: 'VIP',
         });
+        expect(result.mergedCustomers.map(c => c.id)).toEqual(['cust-old']);
         expect(result.contactPoints[0]).toMatchObject({
             externalSenderId: 'psid-1',
             displaySenderName: 'Bee',
@@ -86,28 +121,43 @@ describe('CustomerDataExportService', () => {
         });
     });
 
-    it('scopes every lookup to the workspace', async () => {
-        await service.export('cust-1', 'ws-1');
+    it('includes tags, follow-ups and tool invocations', async () => {
+        const result = await service.export('cust-1', 'ws-1');
 
-        expect(customerRepository.find.mock.calls[0][0]).toEqual({
-            workspace: 'ws-1',
-            $or: [{ id: 'cust-1' }, { mergedIntoCustomerId: 'cust-1' }],
+        expect(result.tags).toEqual([
+            {
+                customerId: 'cust-1',
+                name: 'VIP',
+                assignedAt: new Date('2026-01-03T00:00:00Z'),
+            },
+        ]);
+        expect(result.followups[0]).toMatchObject({
+            conversationId: 'conv-1',
+            prompt: 'Ask about the order',
         });
-        expect(contactPointRepository.find.mock.calls[0][0]).toEqual({
-            workspace: 'ws-1',
-            customer: { $in: ['cust-1'] },
-        });
-        expect(conversationRepository.find.mock.calls[0][0]).toEqual({
-            contactPoint: { $in: ['cp-1'] },
-            chatbot: { workspace: 'ws-1' },
-        });
-        expect(messageRepository.find.mock.calls[0][0]).toEqual({
-            conversation: { $in: ['conv-1'] },
+        expect(result.toolInvocations[0]).toMatchObject({
+            conversationId: 'conv-1',
+            actionName: 'lookup_order',
+            inputArgs: { phone: '0909' },
         });
     });
 
+    it('names stored files by file name, never by storage key or bucket', async () => {
+        const result = await service.export('cust-1', 'ws-1');
+
+        expect(result.conversations[0].messages[0].attachments).toEqual([
+            { type: 'image', description: undefined, file: 'a.jpg' },
+            {
+                type: 'image',
+                description: undefined,
+                url: 'https://fbcdn/x.jpg',
+            },
+        ]);
+        expect(JSON.stringify(result)).not.toContain('conversations/conv-1/');
+    });
+
     it('throws 404 when the customer is not in the workspace', async () => {
-        customerRepository.find.mockResolvedValue([]);
+        customerRepository.findSubjectData.mockResolvedValue(null);
 
         await expect(service.export('cust-x', 'ws-1')).rejects.toBeInstanceOf(
             NotFoundException

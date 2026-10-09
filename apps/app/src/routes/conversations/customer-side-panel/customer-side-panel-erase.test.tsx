@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Data subject rights live in the Customer side panel's overflow menu:
 // "Export data" downloads a JSON copy, "Delete customer and all
-// conversations" erases them permanently after a danger confirm.
+// conversations" erases them permanently after a typed danger confirm. Both
+// are for workspace owners and admins (the CUSTOMER_DATA subject).
 
 class ResizeObserverMock {
   observe() {}
@@ -100,7 +101,25 @@ import {
 } from "@/hooks/api/customer-tag-assignments";
 import { useCustomerTagList } from "@/hooks/api/customer-tags";
 import { useCustomer } from "@/hooks/api/customers";
+import { AbilityProvider, PolicyAbilityFactory } from "@repo/auth";
+import type { ReactElement } from "react";
 import { CustomerSidePanel } from "./customer-side-panel";
+
+const ADMIN = [{ action: ["manage"], subject: "CUSTOMER_DATA" }];
+// The default Member role: manages customers, not their data rights.
+const MEMBER = [{ action: ["manage"], subject: "CUSTOMER" }];
+
+const renderAs = (rules: typeof ADMIN, ui: ReactElement) =>
+  render(
+    <AbilityProvider
+      ability={PolicyAbilityFactory.createForMember(
+        rules as A,
+        "WORKSPACE_MEMBER",
+      )}
+    >
+      {ui}
+    </AbilityProvider>,
+  );
 
 const useCustomerMock = vi.mocked(useCustomer);
 const useContactPointsMock = vi.mocked(useContactPointsByCustomer);
@@ -170,7 +189,7 @@ const openMenuItem = async (name: string) => {
 
 describe("CustomerSidePanel: export and erase actions", () => {
   it("Export data downloads the customer JSON", async () => {
-    render(<CustomerSidePanel customerId="cust-1" />);
+    renderAs(ADMIN, <CustomerSidePanel customerId="cust-1" />);
 
     await openMenuItem("conversations.customer.panel.exportData.action");
     await flush();
@@ -182,10 +201,11 @@ describe("CustomerSidePanel: export and erase actions", () => {
     );
   });
 
-  it("Delete asks for a danger confirmation that explains it is permanent", async () => {
+  it("Delete asks to type the customer name in a danger confirmation", async () => {
     promptFn.mockResolvedValue(true);
     const onErased = vi.fn();
-    render(
+    renderAs(
+      ADMIN,
       <CustomerSidePanel customerId="cust-1" onCustomerErased={onErased} />,
     );
 
@@ -197,17 +217,60 @@ describe("CustomerSidePanel: export and erase actions", () => {
     expect(args.description).toBe(
       "conversations.customer.panel.erase.confirm.body",
     );
+    expect(args.verificationText).toBe("Alice");
     expect(eraseMutateAsync).toHaveBeenCalledTimes(1);
     expect(onErased).toHaveBeenCalledTimes(1);
   });
 
   it("cancelling the confirmation deletes nothing", async () => {
     promptFn.mockResolvedValue(false);
-    render(<CustomerSidePanel customerId="cust-1" />);
+    renderAs(ADMIN, <CustomerSidePanel customerId="cust-1" />);
 
     await openMenuItem("conversations.customer.panel.erase.action");
     await flush();
 
     expect(eraseMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("asks to type a fixed word when the customer has no name", async () => {
+    promptFn.mockResolvedValue(false);
+    useCustomerMock.mockReturnValue({
+      customer: { ...customerFixture, name: "" },
+      isLoading: false,
+    } as A);
+    renderAs(ADMIN, <CustomerSidePanel customerId="cust-1" />);
+
+    await openMenuItem("conversations.customer.panel.erase.action");
+    await flush();
+
+    expect(promptFn.mock.calls[0][0].verificationText).toBe(
+      "conversations.customer.panel.erase.confirm.verification",
+    );
+  });
+
+  it("hides export and delete from a Member", async () => {
+    renderAs(MEMBER, <CustomerSidePanel customerId="cust-1" />);
+
+    await userEvent.setup().click(
+      screen.getByRole("button", {
+        name: "conversations.customer.panel.actions.more",
+      }),
+    );
+
+    expect(
+      await screen.findByRole("menuitem", {
+        name: "conversations.customer.panel.unmerge.action",
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("menuitem", {
+        name: "conversations.customer.panel.exportData.action",
+      }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("menuitem", {
+        name: "conversations.customer.panel.erase.action",
+      }),
+    ).toBeNull();
   });
 });

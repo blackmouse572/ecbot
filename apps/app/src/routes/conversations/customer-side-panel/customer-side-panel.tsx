@@ -23,6 +23,8 @@ import { downloadJson } from "@/utils";
 import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { FollowupsSection } from "./components/followups-section";
+import { CUSTOMER_DATA_SUBJECT } from "../constants";
+import { Can } from "@repo/auth";
 import {
   ArrowLeft,
   ChevronDoubleLeft,
@@ -187,6 +189,7 @@ export function CustomerSidePanel({
           )}
           <CustomerActions
             customerId={customerId}
+            customerName={customer?.name}
             onErased={onCustomerErased}
           />
         </div>
@@ -453,9 +456,11 @@ function TagChip({
 
 function CustomerActions({
   customerId,
+  customerName,
   onErased,
 }: {
   customerId: string;
+  customerName?: string | null;
   onErased?: () => void;
 }) {
   const { t } = useTranslation();
@@ -483,6 +488,11 @@ function CustomerActions({
       confirmText: t("conversations.customer.panel.erase.confirm.confirm"),
       cancelText: t("conversations.customer.panel.erase.confirm.cancel"),
       variant: "danger",
+      // Typing the name (or a fixed word when there is none) makes a
+      // permanent delete a deliberate act, not a slip of the mouse.
+      verificationText:
+        customerName?.trim() ||
+        t("conversations.customer.panel.erase.confirm.verification"),
     });
     if (!confirmed) return;
     try {
@@ -526,20 +536,24 @@ function CustomerActions({
         <DropdownMenu.Item onClick={handleUnmerge} disabled={unmerge.isPending}>
           {t("conversations.customer.panel.unmerge.action")}
         </DropdownMenu.Item>
-        <DropdownMenu.Item
-          onClick={handleExport}
-          disabled={exportData.isPending}
-        >
-          {t("conversations.customer.panel.exportData.action")}
-        </DropdownMenu.Item>
-        <DropdownMenu.Separator />
-        <DropdownMenu.Item
-          onClick={handleErase}
-          disabled={erase.isPending}
-          className="text-ui-fg-error"
-        >
-          {t("conversations.customer.panel.erase.action")}
-        </DropdownMenu.Item>
+        <Can I="read" a={CUSTOMER_DATA_SUBJECT}>
+          <DropdownMenu.Item
+            onClick={handleExport}
+            disabled={exportData.isPending}
+          >
+            {t("conversations.customer.panel.exportData.action")}
+          </DropdownMenu.Item>
+        </Can>
+        <Can I="delete" a={CUSTOMER_DATA_SUBJECT}>
+          <DropdownMenu.Separator />
+          <DropdownMenu.Item
+            onClick={handleErase}
+            disabled={erase.isPending}
+            className="text-ui-fg-error"
+          >
+            {t("conversations.customer.panel.erase.action")}
+          </DropdownMenu.Item>
+        </Can>
       </DropdownMenu.Content>
     </DropdownMenu>
   );

@@ -690,6 +690,7 @@
             "KNOWLEDGE_BASE",
             "TOOL",
             "CUSTOMER",
+            "CUSTOMER_DATA",
             "CONTACT_POINT",
             "CONVERSATION",
             "INVITATION",

@@ -104,8 +104,8 @@ export const useUpdateCustomer = (id: string | undefined | null) => {
   });
 };
 
-// The erase endpoint does not document its response body, so its summary
-// is typed here.
+// Mirrors the API's CustomerEraseResponseDto until @repo/client is
+// regenerated with it.
 export type CustomerErasureSummary = {
   customers: number;
   contactPoints: number;
