@@ -159,6 +159,22 @@ describe('RoleService', () => {
         });
     });
 
+    describe('findOneByName', () => {
+        // A substring match let `admin` resolve to `superadmin`, and could
+        // return a workspace role such as `Owner - <workspace name>`.
+        it('matches the exact name among system roles only', async () => {
+            mockRoleRepository.findOne.mockResolvedValue(mockRole);
+
+            const result = await service.findOneByName('admin');
+
+            expect(result).toEqual(mockRole);
+            expect(mockRoleRepository.findOne).toHaveBeenCalledWith(
+                { name: 'admin', workspace: null },
+                undefined
+            );
+        });
+    });
+
     describe('findOneActiveById', () => {
         it('should return a role by id', async () => {
             const id = randomUUID();
