@@ -785,7 +785,8 @@ export class AuthPublicController {
             await this.activityService.createByUser(user, {
                 action: ENUM_ACTIVITY_ACTION.LOGIN_FAILED,
                 subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: { id: user.id, name: user.email, reason },
+                // The audit log is append-only, so it keeps ids, not emails.
+                metadata: { id: user.id, reason },
             });
         } catch (err: unknown) {
             this.logger.error(

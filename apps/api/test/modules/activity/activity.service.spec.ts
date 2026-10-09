@@ -1,7 +1,7 @@
 import { ActivityService } from '../../../src/modules/activity/services/activity.service';
 
 describe('ActivityService.mapList', () => {
-    const build = () => new ActivityService({} as any, {} as any);
+    const build = () => new ActivityService({} as any, {} as any, {} as any);
 
     const entity = () => ({
         id: 'act1',
@@ -87,6 +87,16 @@ describe('ActivityService request context', () => {
         }),
     });
     const cls = (request?: any) => ({ get: jest.fn(() => request) });
+    // In-memory stand-in for the Redis-backed cache-manager store.
+    const cache = () => {
+        const store = new Map<string, unknown>();
+        return {
+            get: jest.fn(async (key: string) => store.get(key)),
+            set: jest.fn(async (key: string, value: unknown) => {
+                store.set(key, value);
+            }),
+        };
+    };
     const request = {
         ip: '203.0.113.7',
         headers: { 'user-agent': 'Mozilla/5.0 Test' },
@@ -98,7 +108,8 @@ describe('ActivityService request context', () => {
     it('stamps ip and user agent from the current request on createByUser', async () => {
         const service = new ActivityService(
             repository() as any,
-            cls(request) as any
+            cls(request) as any,
+            cache() as any
         );
 
         const entity = await service.createByUser(user, create);
@@ -110,7 +121,8 @@ describe('ActivityService request context', () => {
     it('stamps ip and user agent on createByAdmin and createByUserWithWorkspace', async () => {
         const service = new ActivityService(
             repository() as any,
-            cls(request) as any
+            cls(request) as any,
+            cache() as any
         );
 
         const byAdmin = await service.createByAdmin(user, 'admin-1', create);
@@ -127,7 +139,8 @@ describe('ActivityService request context', () => {
     it('leaves ip and user agent empty outside a request (seeds, workers)', async () => {
         const service = new ActivityService(
             repository() as any,
-            cls(undefined) as any
+            cls(undefined) as any,
+            cache() as any
         );
 
         const entity = await service.createByUser(user, create);
@@ -138,17 +151,18 @@ describe('ActivityService request context', () => {
 
     it('records a VIEW of a workspace record with one insert and no user lookup', async () => {
         const repo = repository();
-        const service = new ActivityService(repo as any, cls(request) as any);
-
-        const entity = await service.createView(
-            'u1',
-            workspace,
-            'CUSTOMER' as any,
-            { id: 'cust-1' }
+        const service = new ActivityService(
+            repo as any,
+            cls(request) as any,
+            cache() as any
         );
 
+        await service.createView('u1', workspace, 'CUSTOMER' as any, {
+            id: 'cust-1',
+        });
+
         expect(repo.create).toHaveBeenCalledTimes(1);
-        expect(entity).toMatchObject({
+        expect(repo.create.mock.calls[0][0]).toMatchObject({
             action: 'view',
             subject: 'CUSTOMER',
             metadata: { id: 'cust-1' },
@@ -157,5 +171,101 @@ describe('ActivityService request context', () => {
             workspace,
             ipAddress: '203.0.113.7',
         });
+    });
+
+    it('records one VIEW per actor, workspace and record within the dedupe window', async () => {
+        const repo = repository();
+        const store = cache();
+        const service = new ActivityService(
+            repo as any,
+            cls(request) as any,
+            store as any
+        );
+
+        // The SPA polls messages every 5s: only the first read is written.
+        await service.createView('u1', workspace, 'CONVERSATION' as any, {
+            id: 'conv-1',
+            resource: 'messages',
+        });
+        await service.createView('u1', workspace, 'CONVERSATION' as any, {
+            id: 'conv-1',
+            resource: 'messages',
+        });
+        await service.createView('u2', workspace, 'CONVERSATION' as any, {
+            id: 'conv-1',
+        });
+
+        expect(repo.create).toHaveBeenCalledTimes(2);
+        expect(store.set).toHaveBeenCalledWith(
+            expect.any(String),
+            true,
+            10 * 60 * 1000
+        );
+    });
+
+    it('never fails the read when the VIEW cannot be written', async () => {
+        const repo = repository();
+        repo.create.mockRejectedValueOnce(new Error('db down'));
+        const store = cache();
+        store.get.mockRejectedValueOnce(new Error('redis down'));
+        const service = new ActivityService(
+            repo as any,
+            cls(request) as any,
+            store as any
+        );
+
+        await expect(
+            service.createView('u1', workspace, 'CUSTOMER' as any, {
+                id: 'cust-1',
+            })
+        ).resolves.toBeUndefined();
+        await expect(
+            service.createView('u1', workspace, 'CUSTOMER' as any, {
+                id: 'cust-1',
+            })
+        ).resolves.toBeUndefined();
+    });
+
+    it('attributes entries made during impersonation to the admin', async () => {
+        const repo = repository();
+        const service = new ActivityService(
+            repo as any,
+            cls({
+                ...request,
+                user: { user: 'u1', impersonatedBy: 'admin-1' },
+            }) as any,
+            cache() as any
+        );
+
+        await service.createView('u1', workspace, 'CUSTOMER' as any, {
+            id: 'cust-1',
+        });
+        const entity = await service.createByUser(user, create);
+
+        expect(repo.create.mock.calls[0][0]).toMatchObject({
+            user: { id: 'u1' },
+            by: { id: 'admin-1' },
+            metadata: { id: 'cust-1', impersonatedBy: 'admin-1' },
+        });
+        expect(entity).toMatchObject({
+            user: { id: 'u1' },
+            by: { id: 'admin-1' },
+            metadata: { impersonatedBy: 'admin-1' },
+        });
+    });
+
+    it('truncates the user agent to 512 characters', async () => {
+        const service = new ActivityService(
+            repository() as any,
+            cls({
+                ...request,
+                headers: { 'user-agent': 'x'.repeat(5000) },
+            }) as any,
+            cache() as any
+        );
+
+        const entity = await service.createByUser(user, create);
+
+        expect(entity.userAgent).toHaveLength(512);
     });
 });

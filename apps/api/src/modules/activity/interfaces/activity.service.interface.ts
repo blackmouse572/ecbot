@@ -54,8 +54,8 @@ export interface IActivityService {
         userId: string,
         workspace: WorkspaceEntity,
         subject: ENUM_POLICY_SUBJECT,
-        metadata: Record<string, any>
-    ): Promise<ActivityDoc>;
+        metadata: Record<string, any> & { id: string }
+    ): Promise<void>;
     mapList(
         userHistories: IActivityDoc[] | IActivityEntity[]
     ): ActivityListResponseDto[];
