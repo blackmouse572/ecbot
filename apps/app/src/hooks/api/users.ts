@@ -1,7 +1,7 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
-  client as apiClient,
   exportUserControllerMeV1,
+  userSharedControllerAcceptTermsV1,
   userSharedControllerGetUserProfileV1,
   userSharedControllerProfileV1,
   userSharedControllerUpdateNotificationsV1,
@@ -58,20 +58,11 @@ export function useMe() {
 export function useTermsAcceptance() {
   const queryClient = useQueryClient();
   const { data } = useQuery(meQueryOptions());
-  // termsAcceptanceRequired is new in the API DTO; read it untyped until
-  // @repo/client is regenerated.
-  const profile = (data?.data as A)?.data as
-    | { termsAcceptanceRequired?: boolean }
-    | undefined;
+  const profile = (data?.data as A)?.data as UserProfileResponseDto | undefined;
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async () => {
-      // New endpoint (POST /shared/user/profile/accept-terms); switch to the
-      // generated userSharedControllerAcceptTermsV1 after `pnpm generate:client`.
-      const res = await apiClient.post({
-        url: "/api/v1/shared/user/profile/accept-terms",
-      });
-      if (res.error) throw res.error;
+      await userSharedControllerAcceptTermsV1({ throwOnError: true });
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, "me"] }),

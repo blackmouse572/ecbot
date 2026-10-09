@@ -263,6 +263,10 @@ export type WorkspaceGetProfileResponseDto = {
      * Email me when a customer is handed over to a person
      */
     handoffEmails: boolean;
+    /**
+     * True when the user has not accepted the current Terms and Privacy Policy version; the app asks before continuing
+     */
+    termsAcceptanceRequired: boolean;
     workspaceMember?: WorkspaceMemberGetProfileResponseDto;
     /**
      * Whether the profile owner owns this workspace
@@ -751,6 +755,10 @@ export type WidgetMetaResponseDto = {
      * Origins allowed to embed this widget. The widget refuses to render elsewhere.
      */
     allowedOrigins: Array<string>;
+    /**
+     * The business's own privacy policy. When absent, the widget links Ecbot's.
+     */
+    privacyPolicyUrl?: string;
 };
 
 export type WidgetSendMessageRequestDto = {
@@ -1765,6 +1773,10 @@ export type UserProfileResponseDto = {
      * Email me when a customer is handed over to a person
      */
     handoffEmails: boolean;
+    /**
+     * True when the user has not accepted the current Terms and Privacy Policy version; the app asks before continuing
+     */
+    termsAcceptanceRequired: boolean;
 };
 
 export type UserCreateRequestDto = {
@@ -2210,6 +2222,10 @@ export type AccountGetDetailResponseDto = {
      * Origins allowed to embed the widget. WEBSITE_WIDGET only.
      */
     allowedOrigins?: Array<string>;
+    /**
+     * The business's own privacy policy, linked from the widget. WEBSITE_WIDGET only.
+     */
+    privacyPolicyUrl?: string;
 };
 
 export type AccountCreateRequestDto = {
@@ -3177,6 +3193,10 @@ export type AccountUpdateAllowedOriginsResponseDto = {
      * Normalised origins allowed to embed the widget
      */
     allowedOrigins: Array<string>;
+    /**
+     * The business's own privacy policy URL
+     */
+    privacyPolicyUrl?: string;
 };
 
 export type AccountUpdateAllowedOriginsRequestDto = {
@@ -3184,6 +3204,10 @@ export type AccountUpdateAllowedOriginsRequestDto = {
      * Sites allowed to embed this widget. Enforced as a frame-ancestors CSP on the widget page.
      */
     allowedOrigins: Array<string>;
+    /**
+     * The business's own privacy policy, linked from the widget's AI notice instead of Ecbot's. Omit to keep, null to clear.
+     */
+    privacyPolicyUrl?: string | null;
 };
 
 export type AccountLinkRequestDto = {
@@ -15418,6 +15442,72 @@ export type UserSharedControllerUpdateNotificationsV1Responses = {
 };
 
 export type UserSharedControllerUpdateNotificationsV1Response = UserSharedControllerUpdateNotificationsV1Responses[keyof UserSharedControllerUpdateNotificationsV1Responses];
+
+export type UserSharedControllerAcceptTermsV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared/user/profile/accept-terms';
+};
+
+export type UserSharedControllerAcceptTermsV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserSharedControllerAcceptTermsV1Error = UserSharedControllerAcceptTermsV1Errors[keyof UserSharedControllerAcceptTermsV1Errors];
+
+export type UserSharedControllerAcceptTermsV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserSharedControllerAcceptTermsV1Response = UserSharedControllerAcceptTermsV1Responses[keyof UserSharedControllerAcceptTermsV1Responses];
 
 export type UserSharedControllerUploadPhotoProfileV1Data = {
     body: UserUploadPhotoRequestDto;

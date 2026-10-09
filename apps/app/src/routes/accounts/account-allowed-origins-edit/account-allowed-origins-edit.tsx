@@ -51,10 +51,7 @@ function AccountAllowedOriginsEditInner() {
     mode: "onChange",
   });
 
-  // privacyPolicyUrl is new in the API DTO; read it untyped until
-  // @repo/client is regenerated.
-  const privacyPolicyUrl = (account as { privacyPolicyUrl?: string } | undefined)
-    ?.privacyPolicyUrl;
+  const privacyPolicyUrl = account?.privacyPolicyUrl;
 
   useEffect(() => {
     if (account?.allowedOrigins) {

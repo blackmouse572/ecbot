@@ -22,7 +22,6 @@ import {
   type AccountProvisionApiChannelResponseDto,
   type AccountProvisionWebsiteWidgetRequestDto,
   type AccountProvisionWebsiteWidgetResponseDto,
-  type AccountUpdateAllowedOriginsRequestDto,
   type AccountUpdateAllowedOriginsResponseDto,
   type AccountUpdateCallbackUrlResponseDto,
   type AccountListResponseDto,
@@ -250,9 +249,7 @@ export const useUpdateWebsiteWidgetAllowedOrigins = (accountId: string) => {
   return useMutation({
     mutationFn: (body: WebsiteWidgetSettings) =>
       accountControllerUpdateAllowedOriginsV1({
-        // privacyPolicyUrl is new in the API DTO; drop the cast once
-        // @repo/client is regenerated.
-        body: body as AccountUpdateAllowedOriginsRequestDto,
+        body,
         path: { workspace: workspace?.id || "", accountId },
       }).then(
         (res) =>
