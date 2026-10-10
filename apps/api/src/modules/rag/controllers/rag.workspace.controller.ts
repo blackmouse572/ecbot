@@ -35,6 +35,7 @@ import {
     Get,
     HttpCode,
     HttpStatus,
+    BadRequestException,
     InternalServerErrorException,
     NotFoundException,
     Param,
@@ -65,6 +66,7 @@ import { RAGListByChatbotResponseDto } from '../dtos/response/rag.list.response.
 import { ENUM_RAG_STATUS_CODE_ERROR } from '../enums/rag.status-code.enum';
 import { ENUM_RAG_STATUS } from '../enums/rag.status.enum';
 import { RAGService } from '../services/rag.service';
+import { isRagUploadKey } from '../utils/rag-key.util';
 
 @ApiTags('modules.workspace.rag')
 @Controller({
@@ -191,7 +193,7 @@ export class RAGWorkspaceController {
                     randomFilename,
                     payload.size,
                     {
-                        access: ENUM_AWS_S3_ACCESSIBILITY.PUBLIC,
+                        access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE,
                         expired: 900, // 15 minutes
                     }
                 );
@@ -232,11 +234,20 @@ export class RAGWorkspaceController {
             });
         }
 
+        if (!isRagUploadKey(body.attachment.key, workspace.id, chatbotId)) {
+            throw new BadRequestException({
+                statusCode: ENUM_RAG_STATUS_CODE_ERROR.FORBIDDEN,
+                message: 'rag.errors.invalidAttachment',
+            });
+        }
+
         const session = this.em.fork();
         await session.begin();
 
         try {
-            const attachment = this.awsS3Service.mapPresign(body.attachment);
+            const attachment = this.awsS3Service.mapPresign(body.attachment, {
+                access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE,
+            });
             const created = await this.ragService.create(
                 {
                     chatbot: chatbotId,
@@ -315,8 +326,15 @@ export class RAGWorkspaceController {
                 actionBy: user.id,
             });
             const ragWithAttachment = await this.ragService.joinAttachment(rag);
+            // Files uploaded before the move to the private bucket still
+            // live in the public one, so delete from where it is stored.
             await this.awsS3Service.deleteItem(
-                ragWithAttachment.attachment.key
+                ragWithAttachment.attachment.key,
+                {
+                    access: this.awsS3Service.getAccessByBucket(
+                        ragWithAttachment.attachment.bucket
+                    ),
+                }
             );
             await this.activityService.createByUser(
                 user,

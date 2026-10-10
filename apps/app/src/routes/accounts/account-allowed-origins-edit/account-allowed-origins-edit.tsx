@@ -11,6 +11,7 @@ import { useParams } from "react-router-dom";
 
 type FormValues = {
   allowedOrigins: string;
+  privacyPolicyUrl: string;
 };
 
 /** Comma-separated origins → trimmed, non-empty entries. Mirrors the create-flow parsing. */
@@ -29,6 +30,14 @@ function isHttpUrl(value: string): boolean {
   }
 }
 
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function AccountAllowedOriginsEditInner() {
   const { t } = useTranslation();
   const { handleSuccess } = useRouteModal();
@@ -38,19 +47,27 @@ function AccountAllowedOriginsEditInner() {
     useUpdateWebsiteWidgetAllowedOrigins(id ?? "");
 
   const form = useForm<FormValues>({
-    defaultValues: { allowedOrigins: "" },
+    defaultValues: { allowedOrigins: "", privacyPolicyUrl: "" },
     mode: "onChange",
   });
 
+  const privacyPolicyUrl = account?.privacyPolicyUrl;
+
   useEffect(() => {
     if (account?.allowedOrigins) {
-      form.reset({ allowedOrigins: account.allowedOrigins.join(", ") });
+      form.reset({
+        allowedOrigins: account.allowedOrigins.join(", "),
+        privacyPolicyUrl: privacyPolicyUrl ?? "",
+      });
     }
-  }, [account?.allowedOrigins, form]);
+  }, [account?.allowedOrigins, privacyPolicyUrl, form]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     try {
-      await updateAllowedOrigins(splitOrigins(values.allowedOrigins));
+      await updateAllowedOrigins({
+        allowedOrigins: splitOrigins(values.allowedOrigins),
+        privacyPolicyUrl: values.privacyPolicyUrl.trim() || null,
+      });
       toast.success(t("accounts.details.websiteWidget.edit.success"));
       handleSuccess();
     } catch {
@@ -107,6 +124,35 @@ function AccountAllowedOriginsEditInner() {
                 </Form.Control>
                 <Form.Hint>
                   {t("accounts.details.websiteWidget.edit.originsHint")}
+                </Form.Hint>
+                <Form.ErrorMessage />
+              </Form.Item>
+            )}
+          />
+          <Form.Field
+            name="privacyPolicyUrl"
+            control={form.control}
+            rules={{
+              validate: (value: string) =>
+                !value.trim() ||
+                isHttpsUrl(value.trim()) ||
+                t("accounts.details.websiteWidget.edit.privacyInvalid"),
+            }}
+            render={({ field }) => (
+              <Form.Item className="flex flex-col gap-y-2">
+                <Form.Label optional>
+                  {t("accounts.details.websiteWidget.privacyLabel")}
+                </Form.Label>
+                <Form.Control>
+                  <Input
+                    type="url"
+                    placeholder="https://shop.example.com/privacy"
+                    autoComplete="off"
+                    {...field}
+                  />
+                </Form.Control>
+                <Form.Hint>
+                  {t("accounts.details.websiteWidget.edit.privacyHint")}
                 </Form.Hint>
                 <Form.ErrorMessage />
               </Form.Item>

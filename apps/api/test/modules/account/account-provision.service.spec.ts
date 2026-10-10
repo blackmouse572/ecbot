@@ -192,6 +192,36 @@ describe('AccountProvisionService.updateAllowedOrigins', () => {
         expect(accountRepository.save).toHaveBeenCalled();
     });
 
+    // The business is the controller for its visitors, so the widget notice
+    // links its own privacy policy when one is set.
+    it('sets, keeps and clears the privacy policy URL', async () => {
+        const { service } = makeService();
+        const account = {
+            id: 'acc-1',
+            type: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+            config: { allowedOrigins: ['https://shop.example.com'] },
+        } as any;
+        const origins = ['https://shop.example.com'];
+
+        await service.updateAllowedOrigins(
+            account,
+            origins,
+            'user-1',
+            'https://shop.example.com/privacy'
+        );
+        expect(account.config.privacyPolicyUrl).toBe(
+            'https://shop.example.com/privacy'
+        );
+
+        await service.updateAllowedOrigins(account, origins, 'user-1');
+        expect(account.config.privacyPolicyUrl).toBe(
+            'https://shop.example.com/privacy'
+        );
+
+        await service.updateAllowedOrigins(account, origins, 'user-1', null);
+        expect(account.config.privacyPolicyUrl).toBeUndefined();
+    });
+
     it('refuses to update a non-WEBSITE_WIDGET account', async () => {
         const { service } = makeService();
         const account = {

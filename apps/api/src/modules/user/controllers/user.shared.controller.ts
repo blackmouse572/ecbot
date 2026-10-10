@@ -54,7 +54,9 @@ import {
     UserSharedUpdateProfileDoc,
     UserSharedUpdateNotificationsDoc,
     UserSharedUploadPhotoProfileDoc,
+    UserSharedAcceptTermsDoc,
 } from 'src/modules/user/docs/user.shared.doc';
+import { USER_TERMS_VERSION } from 'src/modules/user/constants/user.constant';
 import { ENUM_USER_STATUS_CODE_ERROR } from 'src/modules/user/enums/user.status-code.enum';
 import { UserUpdateProfileRequestDto } from 'src/modules/user/dtos/request/user.update-profile.dto';
 import { UserUploadPhotoRequestDto } from 'src/modules/user/dtos/request/user.upload-photo.request.dto';
@@ -218,6 +220,26 @@ export class UserSharedController {
         @Body() body: UserUpdateNotificationsRequestDto
     ): Promise<void> {
         await this.userService.updateNotifications(user, body);
+    }
+
+    @UserSharedAcceptTermsDoc()
+    @Response('user.acceptTerms')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @HttpCode(HttpStatus.OK)
+    @Post('/profile/accept-terms')
+    async acceptTerms(
+        @AuthJwtPayload<IAuthJwtAccessTokenPayload>('user', UserParsePipe)
+        user: UserEntity
+    ): Promise<void> {
+        await this.userService.acceptTerms(user);
+        // Proof of consent: who accepted which version, and when.
+        await this.activityService.createByUser(user, {
+            action: ENUM_ACTIVITY_ACTION.UPDATE,
+            subject: ENUM_POLICY_SUBJECT.USER,
+            metadata: { id: user.id, termsVersion: USER_TERMS_VERSION },
+        });
     }
 
     @UserSharedUploadPhotoProfileDoc()

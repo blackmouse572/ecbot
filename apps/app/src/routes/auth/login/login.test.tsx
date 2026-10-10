@@ -57,17 +57,27 @@ vi.mock("../components/social-login", () => ({
   SocialLogin: () => null,
 }));
 
-const { mutateAsync, setNextError } = vi.hoisted(() => {
+vi.mock("./login-mfa-step", () => ({
+  LoginMfaStep: ({ mfaToken }: { mfaToken: string }) => (
+    <div>mfa-step:{mfaToken}</div>
+  ),
+}));
+
+const { mutateAsync, setNextError, setNextData } = vi.hoisted(() => {
   let nextError: { statusCode?: number; message: string } | null = null;
+  let nextData: unknown = { accessToken: "tok" };
   return {
     setNextError: (error: typeof nextError) => {
       nextError = error;
+    },
+    setNextData: (data: unknown) => {
+      nextData = data;
     },
     mutateAsync: vi.fn(async (_payload: unknown, options: A) => {
       if (nextError) {
         options?.onError?.(nextError);
       } else {
-        options?.onSuccess?.({ accessToken: "tok" });
+        options?.onSuccess?.(nextData);
       }
     }),
   };
@@ -83,6 +93,7 @@ import { LoginPage } from "./login";
 describe("LoginPage", () => {
   beforeEach(() => {
     setNextError(null);
+    setNextData({ accessToken: "tok" });
     promptFn.mockClear();
     toastError.mockClear();
     mutateAsync.mockClear();
@@ -118,5 +129,15 @@ describe("LoginPage", () => {
     await vi.waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
     expect(toastError).toHaveBeenCalledWith("user.error.inactive");
     expect(promptFn).not.toHaveBeenCalled();
+  });
+
+  it("switches to the code step when the API answers with an MFA challenge", async () => {
+    setNextData({ mfaRequired: true, mfaToken: "challenge-1", expiresIn: 300 });
+    render(<LoginPage />);
+
+    fireEvent.click(screen.getByText("submit-login"));
+
+    expect(await screen.findByText("mfa-step:challenge-1")).toBeTruthy();
+    expect(screen.queryByText("submit-login")).toBeNull();
   });
 });

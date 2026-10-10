@@ -40,4 +40,12 @@ export class UserProfileResponseDto extends OmitType(UserGetResponseDto, [
         description: 'Email me when a customer is handed over to a person',
     })
     handoffEmails: boolean;
+
+    @ApiProperty({
+        required: true,
+        example: false,
+        description:
+            'True when the user has not accepted the current Terms and Privacy Policy version; the app asks before continuing',
+    })
+    termsAcceptanceRequired: boolean;
 }

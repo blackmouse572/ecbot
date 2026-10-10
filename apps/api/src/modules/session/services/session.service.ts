@@ -430,12 +430,36 @@ export class SessionService implements ISessionService {
         await this.updateRevoke(checkSession);
     }
 
-    async updateManyRevokeByUser(
+    /**
+     * Account deletion keeps the session rows but drops the network
+     * identifiers. `ip` is NOT NULL, so it gets the unspecified address.
+     */
+    async anonymizeByUser(
         user: string,
         options?: IDatabaseUpdateManyOptions
+    ): Promise<void> {
+        await this.sessionRepository.updateManyRaw(
+            { user },
+            {
+                ip: '0.0.0.0',
+                userAgent: null,
+                xForwardedFor: null,
+                xForwardedHost: null,
+                country: null,
+            },
+            options
+        );
+    }
+
+    /** Revokes every session of the user, or every other one with `exceptSession`. */
+    async updateManyRevokeByUser(
+        user: string,
+        options?: IDatabaseUpdateManyOptions,
+        exceptSession?: string
     ): Promise<boolean> {
         const today = this.helperDateService.create();
-        const sessions = await this.findAllByUser(user, undefined, options);
+        const except = exceptSession ? { id: { $ne: exceptSession } } : {};
+        const sessions = await this.findAllByUser(user, except, options);
         const promises = sessions.map(e => this.deleteLoginSession(e.id));
         // Impersonation sessions that are about to be flipped by this revoke-all
         // (password change, account deletion, admin "revoke all").
@@ -453,6 +477,7 @@ export class SessionService implements ISessionService {
             {
                 user,
                 status: ENUM_SESSION_STATUS.ACTIVE,
+                ...except,
             },
             {
                 status: ENUM_SESSION_STATUS.REVOKED,

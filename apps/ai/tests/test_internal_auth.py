@@ -103,3 +103,16 @@ def test_boot_check_is_silent_when_token_is_set(monkeypatch):
     security.log_if_internal_token_missing()
 
     assert errors == []
+
+
+async def test_decision_route_rejects_missing_header(monkeypatch):
+    """`/api/decision/system-one` spends model credits, so it is guarded too."""
+    monkeypatch.setattr(AppVars, "API_INTERNAL_TOKEN", SecretStr("correct-token"))
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(
+            "/api/decision/system-one", json={"state": "s", "questions": {}}
+        )
+
+    assert resp.status_code == 401

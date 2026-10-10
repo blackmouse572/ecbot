@@ -237,13 +237,19 @@ export const useUpdateApiChannelCallbackUrl = (accountId: string) => {
 };
 
 /** Replace a website widget's allowed embed origins. The widget key is unchanged. */
+/** `privacyPolicyUrl`: omit to keep, null to clear. */
+type WebsiteWidgetSettings = {
+  allowedOrigins: string[];
+  privacyPolicyUrl?: string | null;
+};
+
 export const useUpdateWebsiteWidgetAllowedOrigins = (accountId: string) => {
   const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (allowedOrigins: string[]) =>
+    mutationFn: (body: WebsiteWidgetSettings) =>
       accountControllerUpdateAllowedOriginsV1({
-        body: { allowedOrigins },
+        body,
         path: { workspace: workspace?.id || "", accountId },
       }).then(
         (res) =>

@@ -10,6 +10,7 @@ import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
+import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
 
 export interface IEmailService {
     importChangePassword(): Promise<boolean>;
@@ -79,5 +80,9 @@ export interface IEmailService {
     sendMemberJoined(
         dto: EmailSendDto,
         data: EmailMemberJoinedDto
+    ): Promise<boolean>;
+    sendMfaChanged(
+        dto: EmailSendDto,
+        data: EmailMfaChangedDto
     ): Promise<boolean>;
 }

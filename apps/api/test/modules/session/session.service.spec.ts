@@ -16,6 +16,7 @@ describe('SessionService (geo + activity additions)', () => {
 
     const mockRepo = {
         create: jest.fn(async (e: any) => e),
+        updateManyRaw: jest.fn(async () => 2),
         findOneById: jest.fn(),
         find: jest.fn(async () => []),
         findOne: jest.fn(),
@@ -418,6 +419,28 @@ describe('SessionService (geo + activity additions)', () => {
         });
     });
 
+    describe('anonymizeByUser', () => {
+        // Account deletion: session rows stay (they back the audit trail),
+        // the network identifiers do not. ip is NOT NULL.
+        it('clears the IP addresses, user agents and forwarding headers of every session', async () => {
+            const options = { em: { tx: true } } as any;
+
+            await build().anonymizeByUser('u1', options);
+
+            expect(mockRepo.updateManyRaw).toHaveBeenCalledWith(
+                { user: 'u1' },
+                {
+                    ip: '0.0.0.0',
+                    userAgent: null,
+                    xForwardedFor: null,
+                    xForwardedHost: null,
+                    country: null,
+                },
+                options
+            );
+        });
+    });
+
     describe('updateManyRevokeByUser', () => {
         it('scopes the update to ACTIVE sessions only, so already-revoked rows keep their revokeAt', async () => {
             const service = build();
@@ -426,6 +449,26 @@ describe('SessionService (geo + activity additions)', () => {
 
             expect(mockRepo.updateMany).toHaveBeenCalledWith(
                 { user: 'u1', status: ENUM_SESSION_STATUS.ACTIVE },
+                { status: ENUM_SESSION_STATUS.REVOKED, revokeAt: fixedNow },
+                undefined
+            );
+        });
+
+        it('keeps the given session when revoking the others', async () => {
+            const service = build();
+
+            await service.updateManyRevokeByUser('u1', undefined, 'keep');
+
+            expect(mockRepo.find).toHaveBeenCalledWith(
+                { user: 'u1', id: { $ne: 'keep' } },
+                undefined
+            );
+            expect(mockRepo.updateMany).toHaveBeenCalledWith(
+                {
+                    user: 'u1',
+                    status: ENUM_SESSION_STATUS.ACTIVE,
+                    id: { $ne: 'keep' },
+                },
                 { status: ENUM_SESSION_STATUS.REVOKED, revokeAt: fixedNow },
                 undefined
             );

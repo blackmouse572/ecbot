@@ -14,6 +14,7 @@ import {
     IDatabaseUpdateOptions,
 } from 'src/common/database/interfaces/database.interface';
 import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
+import { IUserSignUp } from 'src/modules/user/interfaces/user.interface';
 import { IAuthPassword } from 'src/modules/auth/interfaces/auth.interface';
 import { AwsS3Dto } from 'src/modules/aws/dtos/aws.s3.dto';
 import { UserCreateRequestDto } from 'src/modules/user/dtos/request/user.create.request.dto';
@@ -109,7 +110,7 @@ export interface IUserService {
     ): Promise<UserEntity>;
     signUp(
         role: string,
-        { email, name, country }: AuthSignUpRequestDto,
+        { email, name, country }: IUserSignUp,
         { passwordExpired, passwordHash, salt, passwordCreated }: IAuthPassword,
         options?: IDatabaseCreateOptions
     ): Promise<UserEntity>;
@@ -144,10 +145,6 @@ export interface IUserService {
         repository: UserEntity,
         { passwordAttempt }: UserUpdatePasswordAttemptRequestDto,
         options?: IDatabaseSaveOptions
-    ): Promise<UserEntity>;
-    increasePasswordAttempt(
-        repository: UserEntity,
-        options?: IDatabaseUpdateOptions
     ): Promise<UserEntity>;
     resetPasswordAttempt(
         repository: UserEntity,

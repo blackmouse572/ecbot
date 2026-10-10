@@ -1,3 +1,4 @@
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { AuthLoginSessionService } from '@app/modules/auth/services/auth-login-session.service';
 
 describe('AuthLoginSessionService.open', () => {
@@ -43,7 +44,9 @@ describe('AuthLoginSessionService.open', () => {
         expect(createByUser).toHaveBeenCalledWith(
             user,
             expect.objectContaining({
-                metadata: { id: 'user-1', name: 'a@b.com' },
+                action: ENUM_ACTIVITY_ACTION.LOGIN,
+                // The audit log is append-only, so no email in it.
+                metadata: { id: 'user-1' },
             })
         );
     });

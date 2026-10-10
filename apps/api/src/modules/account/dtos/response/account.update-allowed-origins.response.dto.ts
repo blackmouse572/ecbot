@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AccountUpdateAllowedOriginsResponseDto {
     @ApiProperty({
@@ -23,4 +23,10 @@ export class AccountUpdateAllowedOriginsResponseDto {
         required: true,
     })
     allowedOrigins: string[];
+
+    @ApiPropertyOptional({
+        description: "The business's own privacy policy URL",
+        example: 'https://shop.example.com/privacy',
+    })
+    privacyPolicyUrl?: string;
 }

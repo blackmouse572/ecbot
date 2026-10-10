@@ -1,12 +1,18 @@
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
+    BadRequestException,
     Controller,
+    ForbiddenException,
+    HttpCode,
+    HttpStatus,
     InternalServerErrorException,
     Logger,
+    Post,
     Put,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { randomUUID } from 'crypto';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
@@ -16,8 +22,15 @@ import {
     AuthJwtAccessProtected,
     AuthJwtPayload,
 } from 'src/modules/auth/decorators/auth.jwt.decorator';
-import { AuthAdminUpdatePasswordDoc } from 'src/modules/auth/docs/auth.admin.doc';
+import {
+    AuthAdminResetMfaDoc,
+    AuthAdminUpdatePasswordDoc,
+} from 'src/modules/auth/docs/auth.admin.doc';
+import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import { AuthService } from 'src/modules/auth/services/auth.service';
+import { MfaService } from 'src/modules/auth/services/mfa.service';
+import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
+import { ActivityService } from 'src/modules/activity/services/activity.service';
 import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
 import { ENUM_PASSWORD_HISTORY_TYPE } from 'src/modules/password-history/enums/password-history.enum';
 import { PasswordHistoryService } from 'src/modules/password-history/services/password-history.service';
@@ -52,8 +65,62 @@ export class AuthAdminController {
         private readonly cloudTasksClient: CloudTasksQueueClient,
         private readonly authService: AuthService,
         private readonly userService: UserService,
-        private readonly passwordHistoryService: PasswordHistoryService
+        private readonly passwordHistoryService: PasswordHistoryService,
+        private readonly mfaService: MfaService,
+        private readonly activityService: ActivityService
     ) {}
+
+    /**
+     * For a user locked out of their authenticator and recovery codes: turns
+     * MFA off, signs them out everywhere, emails them and audits the reset.
+     */
+    @AuthAdminResetMfaDoc()
+    @Response('auth.mfaReset')
+    @PolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.AUTH,
+        action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
+    })
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
+    @HttpCode(HttpStatus.OK)
+    @Post('/update/:user/mfa/reset')
+    async resetMfa(
+        @AuthJwtPayload('user') updatedBy: string,
+        @AuthJwtPayload('type') updatedByType: ENUM_POLICY_ROLE_TYPE,
+        @UserParam('user', RequestRequiredPipe, UserParsePipe, UserNotSelfPipe)
+        user: UserEntity
+    ): Promise<void> {
+        // Same hierarchy as impersonation: an admin acts only on users; only
+        // a super admin may reset another admin's second factor.
+        if (
+            user.role.type !== ENUM_POLICY_ROLE_TYPE.USER &&
+            updatedByType !== ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN
+        ) {
+            throw new ForbiddenException({
+                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_RESET_FORBIDDEN,
+                message: 'auth.error.mfaResetForbidden',
+            });
+        }
+        if (!user.mfaEnabled) {
+            throw new BadRequestException({
+                statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_NOT_ENABLED,
+                message: 'auth.error.mfaNotEnabled',
+            });
+        }
+
+        await this.mfaService.disable(user);
+        // A user locked out by failed codes starts over with the new setup.
+        await this.userService.clearPasswordAttempt(user);
+        await this.mfaService.revokeSessionsAndNotify(user, false);
+        await this.activityService.createByAdmin(user, updatedBy, {
+            action: ENUM_ACTIVITY_ACTION.UPDATE,
+            subject: ENUM_POLICY_SUBJECT.AUTH,
+            metadata: { id: user.id, by: updatedBy, mfa: 'reset_by_admin' },
+        });
+    }
 
     @AuthAdminUpdatePasswordDoc()
     @Response('auth.updatePassword')

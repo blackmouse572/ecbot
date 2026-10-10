@@ -9,8 +9,10 @@ import { AuthService } from 'src/modules/auth/services/auth.service';
 import { AuthLoginSessionService } from 'src/modules/auth/services/auth-login-session.service';
 import { ActivityModule } from 'src/modules/activity/activity.module';
 import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
+import { MfaService } from 'src/modules/auth/services/mfa.service';
 import { SessionModule } from 'src/modules/session/session.module';
 import { UserModule } from 'src/modules/user/user.module';
+import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
 import { Algorithm } from 'jsonwebtoken';
 
 @Module({
@@ -18,17 +20,24 @@ import { Algorithm } from 'jsonwebtoken';
         AuthService,
         AuthLoginSessionService,
         ImpersonationService,
+        MfaService,
         {
             provide: APP_INTERCEPTOR,
             useClass: AuthImpersonationReadOnlyInterceptor,
         },
     ],
-    exports: [AuthService, AuthLoginSessionService, ImpersonationService],
+    exports: [
+        AuthService,
+        AuthLoginSessionService,
+        ImpersonationService,
+        MfaService,
+    ],
     controllers: [],
     imports: [
         SessionModule,
         ActivityModule,
         UserModule,
+        CloudTasksQueueModule,
         JwtModule.registerAsync({
             inject: [ConfigService],
             imports: [ConfigModule],

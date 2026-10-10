@@ -82,6 +82,12 @@ export class EmailTaskController {
                     dto.data as any
                 );
                 break;
+            case ENUM_SEND_EMAIL_PROCESS.MFA_CHANGED:
+                await this.emailService.sendMfaChanged(
+                    dto.send,
+                    dto.data as any
+                );
+                break;
         }
 
         return {};

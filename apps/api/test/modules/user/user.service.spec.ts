@@ -1,5 +1,9 @@
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { ENUM_FILE_MIME_IMAGE } from '@app/common/file/enums/file.enum';
+import {
+    USER_TERMS_PROMPT_ENABLED,
+    USER_TERMS_VERSION,
+} from '@app/modules/user/constants/user.constant';
 
 // Global setup (test/modules/account/setup.ts) stubs UserService with an
 // empty class for specs that only need it as a DI placeholder. This spec
@@ -251,6 +255,82 @@ describe('UserService - exact email lookups (Task 12)', () => {
     });
 });
 
+// Consent record (GDPR Art 7, Decree 13/2023 Art 11): a public sign-up stores
+// when the user accepted the Terms and Privacy Policy, and which version.
+describe('UserService.signUp - terms acceptance', () => {
+    const acceptedAt = new Date('2026-10-08T13:00:00.000Z');
+    const em = {
+        create: jest.fn((_entity: unknown, data: Record<string, unknown>) => ({
+            ...data,
+        })),
+        getReference: jest.fn((_entity: unknown, id: string) => ({ id })),
+        persistAndFlush: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const service = new UserService(
+        {} as any,
+        em as any,
+        { create: jest.fn(() => acceptedAt) } as any,
+        { get: jest.fn() } as any,
+        {} as any,
+        { generateUserAvatar: jest.fn(() => 'avatar-url') } as any
+    );
+
+    const signUp = () =>
+        service.signUp(
+            'role-1',
+            {
+                email: 'New@User.com',
+                name: 'New User',
+                country: 'country-1',
+                password: 'Passw0rd!',
+                acceptTerms: true,
+            },
+            {
+                passwordHash: 'hash',
+                passwordExpired: new Date('2099-01-01'),
+                passwordCreated: new Date('2026-01-01'),
+                salt: 'salt',
+            }
+        );
+
+    it('stores termsAcceptedAt and the current termsVersion', async () => {
+        const user = await signUp();
+
+        expect(user.termsAcceptedAt).toBe(acceptedAt);
+        expect(user.termsVersion).toBe(USER_TERMS_VERSION);
+    });
+
+    it('does not copy the acceptTerms request flag onto the entity', async () => {
+        const user = await signUp();
+
+        expect(user).not.toHaveProperty('acceptTerms');
+    });
+
+    // An operator creating the account (the user:create command) is not the
+    // user agreeing: no consent is recorded until the user accepts.
+    it('records no acceptance when the caller does not pass acceptTerms', async () => {
+        const user = await service.signUp(
+            'role-1',
+            {
+                email: 'ops@user.com',
+                name: 'Ops',
+                country: 'country-1',
+                password: 'Passw0rd!',
+            },
+            {
+                passwordHash: 'hash',
+                passwordExpired: new Date('2099-01-01'),
+                passwordCreated: new Date('2026-01-01'),
+                salt: 'salt',
+            }
+        );
+
+        expect(user.termsAcceptedAt).toBeUndefined();
+        expect(user.termsVersion).toBeUndefined();
+    });
+});
+
 describe('UserService.updateNotifications', () => {
     it('stores the choice on the user', async () => {
         const persistAndFlush = jest.fn();
@@ -263,4 +343,52 @@ describe('UserService.updateNotifications', () => {
         expect(user.handoffEmails).toBe(false);
         expect(persistAndFlush).toHaveBeenCalledWith(user);
     });
+});
+
+// Users created before consent was recorded, or who accepted an older
+// version, are asked again after login.
+describe('UserService.acceptTerms', () => {
+    it('records the current version and time', async () => {
+        const acceptedAt = new Date('2026-10-09T08:00:00.000Z');
+        const persistAndFlush = jest.fn();
+        const service = Object.create(UserService.prototype);
+        service.em = { persistAndFlush };
+        service.helperDateService = { create: () => acceptedAt };
+        const user = { id: 'u-1' } as any;
+
+        await service.acceptTerms(user);
+
+        expect(user.termsAcceptedAt).toBe(acceptedAt);
+        expect(user.termsVersion).toBe(USER_TERMS_VERSION);
+        expect(persistAndFlush).toHaveBeenCalledWith(user);
+    });
+});
+
+describe('UserService.mapProfile termsAcceptanceRequired', () => {
+    // Off while the documents are drafts: nobody is asked to accept.
+    it('asks no one while the prompt is switched off', () => {
+        expect(USER_TERMS_PROMPT_ENABLED).toBe(false);
+        const mapped = Object.assign(Object.create(UserService.prototype), {
+            termsPromptEnabled: USER_TERMS_PROMPT_ENABLED,
+        }).mapProfile({ id: 'u-1' });
+        expect(mapped.termsAcceptanceRequired).toBe(false);
+    });
+
+    it.each([
+        [undefined, true],
+        ['2020-01-01', true],
+        [USER_TERMS_VERSION, false],
+    ])(
+        'with the prompt on, termsVersion %s -> %s',
+        (termsVersion, expected) => {
+            const enabled = Object.assign(
+                Object.create(UserService.prototype),
+                {
+                    termsPromptEnabled: true,
+                }
+            );
+            const mapped = enabled.mapProfile({ id: 'u-1', termsVersion });
+            expect(mapped.termsAcceptanceRequired).toBe(expected);
+        }
+    );
 });

@@ -190,6 +190,10 @@ export function ConversationDetail() {
     </>
   );
 
+  // The conversation went with the erased customer: back to the list.
+  const leaveErasedConversation = () =>
+    navigate(`/${workspaceSlug}/${ROUTES.Conversations}`);
+
   const sidebar = (
     <CustomerSidePanel
       customerId={customerId}
@@ -197,6 +201,7 @@ export function ConversationDetail() {
       isOpen={sidebarOpen}
       onToggle={toggleSidebar}
       onViewMessage={scrollToMessage}
+      onCustomerErased={leaveErasedConversation}
     />
   );
 
@@ -209,6 +214,7 @@ export function ConversationDetail() {
             customerId={customerId}
             conversationId={id}
             onBack={toggleSidebar}
+            onCustomerErased={leaveErasedConversation}
             onViewMessage={(messageId) => {
               pendingScrollRef.current = messageId;
               toggleSidebar();

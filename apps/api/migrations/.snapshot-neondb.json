@@ -690,6 +690,7 @@
             "KNOWLEDGE_BASE",
             "TOOL",
             "CUSTOMER",
+            "CUSTOMER_DATA",
             "CONTACT_POINT",
             "CONVERSATION",
             "INVITATION",
@@ -745,7 +746,12 @@
             "chatbot_skill_enable",
             "chatbot_skill_disable",
             "impersonate_start",
-            "impersonate_end"
+            "impersonate_end",
+            "login",
+            "login_failed",
+            "view",
+            "export",
+            "erase"
           ],
           "mappedType": "enum"
         },
@@ -828,6 +834,38 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 45,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
         }
       },
       "name": "activities",
@@ -940,7 +978,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "set null"
+          "deleteRule": "no action"
         },
         "activities_deleted_by_id_foreign": {
           "columnNames": [
@@ -953,7 +991,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "set null"
+          "deleteRule": "no action"
         },
         "activities_updated_by_id_foreign": {
           "columnNames": [
@@ -966,7 +1004,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "set null"
+          "deleteRule": "no action"
         },
         "activities_user_id_foreign": {
           "columnNames": [
@@ -992,7 +1030,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "set null"
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {},
@@ -17534,6 +17572,118 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "mfa_enabled": {
+          "name": "mfa_enabled",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "mfa_secret": {
+          "name": "mfa_secret",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "mfa_pending_secret": {
+          "name": "mfa_pending_secret",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "mfa_recovery_codes": {
+          "name": "mfa_recovery_codes",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "mfa_last_time_step": {
+          "name": "mfa_last_time_step",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "terms_accepted_at": {
+          "name": "terms_accepted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "terms_version": {
+          "name": "terms_version",
+          "type": "varchar(20)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 20,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         },
         "handoff_emails": {
           "name": "handoff_emails",

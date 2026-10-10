@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
 import type { SystemOneAnswer, SystemOneQuestion } from '@repo/agent-blueprint';
 import { firstValueFrom } from 'rxjs';
@@ -31,6 +32,7 @@ export class AiDecisionService {
                     timeout: timeoutMs ?? this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
                     headers: {
                         ...authHeaders,
+                        ...getInternalTokenHeader(this.config),
                         'Content-Type': 'application/json',
                     },
                 }

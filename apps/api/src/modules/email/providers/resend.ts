@@ -15,8 +15,10 @@ import { verificationEmailCopy } from '../email-template-components/verification
 import { accountBlockedEmailCopy } from '../email-template-components/account-blocked-email.copy';
 import { handoffEmailCopy } from '../email-template-components/handoff-email.copy';
 import { memberJoinedEmailCopy } from '../email-template-components/member-joined-email.copy';
+import { mfaChangedEmailCopy } from '../email-template-components/mfa-changed-email.copy';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
+import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
@@ -337,5 +339,25 @@ export class ResendProvider implements IEmailService {
             homeUrl: this.homeUrl,
             homeName: this.homeName,
         });
+    }
+
+    async sendMfaChanged(
+        { name, email }: EmailSendDto,
+        { enabled, language }: EmailMfaChangedDto
+    ): Promise<boolean> {
+        const copy = mfaChangedEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.MfaChanged,
+            {
+                name,
+                enabled,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject(enabled)
+        );
     }
 }

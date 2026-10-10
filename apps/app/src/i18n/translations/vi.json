@@ -1,4 +1,11 @@
 {
+  "termsPrompt": {
+    "title": "Vui lòng xem lại điều khoản mới",
+    "description": "Để tiếp tục dùng Ecbot, vui lòng đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy>.",
+    "accept": "Tôi đồng ý",
+    "signOut": "Đăng xuất",
+    "error": "Không lưu được xác nhận của bạn. Vui lòng thử lại."
+  },
   "impersonation": {
     "error": {
       "title": "Không thể sử dụng liên kết đăng nhập thay mặt này",
@@ -216,6 +223,20 @@
         },
         "failed": {
           "message": "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn và thử lại."
+        },
+        "mfa": {
+          "title": "Xác minh hai bước",
+          "description": "Nhập mã 6 chữ số trong ứng dụng xác thực của bạn.",
+          "recoveryDescription": "Nhập một trong các mã khôi phục bạn đã lưu.",
+          "recoveryPlaceholder": "Mã khôi phục",
+          "useRecoveryCode": "Dùng mã khôi phục",
+          "useAuthenticator": "Dùng ứng dụng xác thực",
+          "verifyButton": "Xác minh",
+          "back": "Quay lại đăng nhập",
+          "errors": {
+            "invalidCode": "Mã không đúng. Vui lòng thử lại.",
+            "tooManyAttempts": "Bạn đã thử quá nhiều lần. Vui lòng đợi một phút rồi thử lại."
+          }
         }
       },
       "register": {
@@ -227,7 +248,8 @@
           "password": "Mật khẩu",
           "referral-code": "Mã giới thiệu (tùy chọn)",
           "confirm-password": "Xác nhận mật khẩu",
-          "country": "Quốc gia"
+          "country": "Quốc gia",
+          "acceptTerms": "Tôi đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy>"
         },
         "actions": {
           "registerButton": "Tạo tài khoản mới",
@@ -239,7 +261,8 @@
           "turnstileVerifying": "Đang xác minh, vui lòng đợi...",
           "emailExists": "Đã có tài khoản với email này.",
           "passwordMismatch": "Mật khẩu không khớp.",
-          "signUpFailed": "Đăng ký không thành công. Vui lòng thử lại."
+          "signUpFailed": "Đăng ký không thành công. Vui lòng thử lại.",
+          "acceptTermsRequired": "Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách quyền riêng tư để tiếp tục."
         },
         "success": {
           "message": "Tài khoản đã được tạo. Hãy nhập mã chúng tôi vừa gửi qua email."
@@ -460,7 +483,7 @@
     "link": {
       "title": "Liên kết tài khoản",
       "description": "Kết nối với tài khoản và trang Facebook của bạn, chọn các trang bạn muốn quản lý. Dễ như ăn bánh! 🍰",
-      "acceptTerms": "Bằng cách liên kết tài khoản của bạn, bạn đồng ý với các điều khoản dịch vụ và chính sách quyền riêng tư của chúng tôi.",
+      "acceptTerms": "Khi liên kết tài khoản, bạn đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy> của chúng tôi.",
       "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}} (Đừng lo, chúng ta sẽ sửa nó!)",
       "invalidState": "Không thể xác minh yêu cầu liên kết này. Vui lòng thử liên kết tài khoản lại nhé!",
       "success": {
@@ -635,13 +658,17 @@
         "title": "Website widget",
         "keyLabel": "Widget key",
         "originsLabel": "Website được phép",
+        "privacyLabel": "Chính sách quyền riêng tư của bạn",
+        "privacyDefault": "Chưa đặt, widget sẽ dẫn đến thông báo quyền riêng tư của Ecbot",
         "edit": {
-          "title": "Sửa danh sách website được phép",
-          "subtitle": "Các website được phép nhúng widget này.",
+          "title": "Sửa thiết lập widget",
+          "subtitle": "Các website được phép nhúng widget này, và chính sách quyền riêng tư mà widget dẫn đến.",
+          "privacyHint": "Bạn quyết định cách dùng dữ liệu của khách truy cập, nên widget cần dẫn đến chính sách quyền riêng tư của chính bạn. Để trống để dẫn đến thông báo của Ecbot.",
+          "privacyInvalid": "Nhập đầy đủ URL bắt đầu bằng https://, vd: https://shop.example.com/privacy",
           "originsHint": "Cách nhau bằng dấu phẩy. Widget sẽ không tải ở nơi khác.",
           "originsInvalid": "Nhập đầy đủ URL, vd: https://shop.example.com",
-          "success": "Đã cập nhật danh sách website được phép.",
-          "error": "Cập nhật danh sách website được phép thất bại."
+          "success": "Đã cập nhật thiết lập widget.",
+          "error": "Cập nhật thiết lập widget thất bại."
         }
       }
     }
@@ -1791,6 +1818,62 @@
         "confirmButton": "Xóa tài khoản của tôi",
         "cancelButton": "Hủy"
       }
+    },
+    "mfa": {
+      "domain": "Xác minh hai bước",
+      "description": "Mỗi lần đăng nhập, bạn sẽ nhập thêm mã từ ứng dụng xác thực.",
+      "status": {
+        "on": "Đang bật",
+        "off": "Đang tắt"
+      },
+      "actions": {
+        "enable": "Bật",
+        "disable": "Tắt",
+        "confirm": "Xác nhận",
+        "cancel": "Hủy",
+        "done": "Tôi đã lưu mã",
+        "continue": "Tiếp tục",
+        "regenerate": "Tạo mã khôi phục mới",
+        "createCodes": "Tạo mã"
+      },
+      "setup": {
+        "scan": "Quét mã QR bằng ứng dụng xác thực (Google Authenticator, Microsoft Authenticator, Authy...). Không quét được? Hãy thêm tài khoản bằng khóa thiết lập bên dưới.",
+        "secretLabel": "Khóa thiết lập",
+        "enterCode": "Nhập mã 6 chữ số hiển thị trong ứng dụng.",
+        "confirmPassword": "Nhập mật khẩu để bắt đầu thiết lập xác minh hai bước.",
+        "qrLabel": "Mã QR cho ứng dụng xác thực"
+      },
+      "recovery": {
+        "title": "Lưu các mã khôi phục",
+        "description": "Nếu mất điện thoại, bạn có thể dùng mỗi mã một lần thay cho mã trong ứng dụng. Các mã này chỉ hiển thị lần này.",
+        "copyAll": "Sao chép tất cả mã"
+      },
+      "disable": {
+        "description": "Nhập mật khẩu và mã từ ứng dụng (hoặc một mã khôi phục) để tắt xác minh hai bước."
+      },
+      "success": {
+        "enabled": "Đã bật xác minh hai bước.",
+        "disabled": "Đã tắt xác minh hai bước.",
+        "regenerated": "Đã tạo mã khôi phục mới."
+      },
+      "errors": {
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      },
+      "credentials": {
+        "password": "Mật khẩu hiện tại",
+        "code": "Mã xác thực hoặc mã khôi phục"
+      },
+      "regenerate": {
+        "description": "Nhập mật khẩu và mã từ ứng dụng để tạo mã khôi phục mới. Các mã cũ sẽ không còn dùng được."
+      }
+    },
+    "exportData": {
+      "domain": "Tải dữ liệu của tôi",
+      "description": "Nhận bản sao hồ sơ, các workspace, phiên đăng nhập và lịch sử hoạt động của bạn dưới dạng tệp JSON.",
+      "button": "Tải dữ liệu của tôi",
+      "loading": "Đang chuẩn bị dữ liệu của bạn...",
+      "success": "Đã tải xong dữ liệu của bạn.",
+      "error": "Chưa thể chuẩn bị dữ liệu. Bạn vui lòng thử lại."
     }
   },
   "changePassword": {
@@ -2321,7 +2404,27 @@
           }
         },
         "collapse": "Thu gọn thanh bên",
-        "expand": "Mở rộng thanh bên"
+        "expand": "Mở rộng thanh bên",
+        "exportData": {
+          "action": "Xuất dữ liệu",
+          "loading": "Đang chuẩn bị dữ liệu khách hàng...",
+          "success": "Đã tải xong dữ liệu khách hàng.",
+          "error": "Không thể xuất dữ liệu khách hàng."
+        },
+        "erase": {
+          "action": "Xóa khách hàng và mọi cuộc trò chuyện",
+          "confirm": {
+            "title": "Xóa vĩnh viễn khách hàng này?",
+            "body": "Thao tác này xóa vĩnh viễn khách hàng, các hồ sơ đã gộp vào họ, thông tin liên hệ, mọi cuộc trò chuyện, tin nhắn và hình ảnh họ đã gửi. Bạn không thể hoàn tác.",
+            "confirm": "Xóa vĩnh viễn",
+            "cancel": "Hủy",
+            "verification": "XÓA"
+          },
+          "toast": {
+            "success": "Đã xóa khách hàng và mọi cuộc trò chuyện.",
+            "failed": "Không thể xóa khách hàng."
+          }
+        }
       }
     },
     "image": "Hình ảnh"
@@ -2894,5 +2997,15 @@
       "CANCELED": "Đã huỷ",
       "EXPIRED": "Hết hạn"
     }
+  },
+  "widget": {
+    "invalid": "Khung chat này hiện không khả dụng.",
+    "invalidHint": "Hãy kiểm tra mã widget trên website này, hoặc liên hệ chủ website.",
+    "originNotAllowed": "Khung chat này chưa được bật cho website này.",
+    "turnstile": {
+      "required": "Vui lòng hoàn tất xác minh trước.",
+      "failed": "Xác minh thất bại. Tải lại trang và thử lại."
+    },
+    "aiNotice": "Bạn đang trò chuyện với AI. Tin nhắn của bạn được xử lý để trả lời bạn. <privacy>Chính sách quyền riêng tư</privacy>"
   }
 }

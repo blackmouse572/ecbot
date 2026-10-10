@@ -41,14 +41,17 @@ import {
 import {
     AuthPublicImpersonateExchangeDoc,
     AuthPublicLoginCredentialDoc,
+    AuthPublicLoginMfaDoc,
     AuthPublicLoginSocialAppleDoc,
     AuthPublicLoginSocialGoogleDoc,
     AuthPublicSignUpDoc,
 } from 'src/modules/auth/docs/auth.public.doc';
 import { AuthImpersonateExchangeRequestDto } from 'src/modules/auth/dtos/request/auth.impersonate-exchange.request.dto';
+import { AuthLoginMfaRequestDto } from 'src/modules/auth/dtos/request/auth.login-mfa.request.dto';
 import { AuthLoginRequestDto } from 'src/modules/auth/dtos/request/auth.login.request.dto';
 import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
 import { AuthImpersonateExchangeResponseDto } from 'src/modules/auth/dtos/response/auth.impersonate-exchange.response.dto';
+import { AuthLoginMfaChallengeResponseDto } from 'src/modules/auth/dtos/response/auth.login-mfa-challenge.response.dto';
 import { AuthLoginResponseDto } from 'src/modules/auth/dtos/response/auth.login.response.dto';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import {
@@ -58,6 +61,8 @@ import {
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { AuthLoginSessionService } from 'src/modules/auth/services/auth-login-session.service';
 import { ImpersonationService } from 'src/modules/auth/services/impersonation.service';
+import { MfaService } from 'src/modules/auth/services/mfa.service';
+import { AUTH_MFA_CHALLENGE_TTL_SECONDS } from 'src/modules/auth/constants/auth.mfa.constant';
 import { ENUM_COUNTRY_STATUS_CODE_ERROR } from 'src/modules/country/enums/country.status-code.enum';
 import { CountryService } from 'src/modules/country/services/country.service';
 import { ENUM_SEND_EMAIL_PROCESS } from 'src/modules/email/enums/email.enum';
@@ -95,6 +100,7 @@ export class AuthPublicController {
         private readonly messageService: MessageService,
         private readonly turnstileService: TurnstileService,
         private readonly impersonationService: ImpersonationService,
+        private readonly mfaService: MfaService,
         private readonly authLoginSessionService: AuthLoginSessionService
     ) {}
 
@@ -141,7 +147,9 @@ export class AuthPublicController {
         { email, password, turnstileToken, rememberMe }: AuthLoginRequestDto,
         @Req() request: IRequestApp,
         @Res({ passthrough: true }) res: ExpressResponse
-    ): Promise<IResponse<AuthLoginResponseDto>> {
+    ): Promise<
+        IResponse<AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto>
+    > {
         // Before any user lookup, so bots get no enumeration signal.
         await this.turnstileService.verify(
             turnstileToken,
@@ -157,11 +165,15 @@ export class AuthPublicController {
             throw this.buildInvalidCredentialError();
         }
 
-        const passwordAttempt: boolean = this.authService.getPasswordAttempt();
-        const passwordMaxAttempt: number =
-            this.authService.getPasswordMaxAttempt();
+        // Claim this guess in one conditional update before comparing, so
+        // parallel wrong passwords can't pass the cap, and no stale write
+        // can roll back guesses the MFA step has claimed meanwhile.
         const isPasswordLocked: boolean =
-            passwordAttempt && user.passwordAttempt >= passwordMaxAttempt;
+            this.authService.getPasswordAttempt() &&
+            !(await this.userService.claimPasswordAttempt(
+                user,
+                this.authService.getPasswordMaxAttempt()
+            ));
 
         // Always run the real compare, whatever the lock state, so a locked
         // account's response takes the same time as an unlocked one's.
@@ -176,11 +188,13 @@ export class AuthPublicController {
             // here would turn the lockout into an unlimited-guess "is this
             // the right password" oracle (a 403 for the right password vs.
             // a 400 for a wrong one), which defeats the point of locking.
+            await this.recordLoginFailed(user, 'locked');
             throw this.buildInvalidCredentialError();
         }
 
         if (!validate) {
-            await this.userService.increasePasswordAttempt(user);
+            // The guess was already counted by the claim above.
+            await this.recordLoginFailed(user, 'invalid_password');
 
             // Identical to the unknown-email error above — no attempt
             // count, no lockout hint — a guesser can't distinguish "wrong
@@ -202,11 +216,13 @@ export class AuthPublicController {
         }
 
         if (user.status === ENUM_USER_STATUS.BLOCKED) {
+            await this.recordLoginFailed(user, 'blocked');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.BLOCKED_FORBIDDEN,
                 message: 'user.error.blocked',
             });
         } else if (user.status !== ENUM_USER_STATUS.ACTIVE) {
+            await this.recordLoginFailed(user, 'inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'user.error.inactive',
@@ -215,48 +231,123 @@ export class AuthPublicController {
 
         const userWithRole: UserEntity = await this.userService.join(user);
         if (!userWithRole.role.isActive) {
+            await this.recordLoginFailed(user, 'role_inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_ROLE_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'role.error.inactive',
             });
         } else if (userWithRole.verification.email !== true) {
+            await this.recordLoginFailed(user, 'email_not_verified');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.EMAIL_NOT_VERIFIED,
                 message: 'user.error.emailNotVerified',
             });
         }
 
-        await this.userService.resetPasswordAttempt(user);
+        // With MFA on, the count is only cleared once the second factor
+        // passes, so failed codes keep adding up toward the lockout.
+        if (!user.mfaEnabled) {
+            await this.userService.clearPasswordAttempt(user);
+        }
 
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
         if (checkPasswordExpired) {
+            await this.recordLoginFailed(user, 'password_expired');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
                 message: 'auth.error.passwordExpired',
             });
         }
 
-        try {
-            const token = await this.authLoginSessionService.open(
+        if (user.mfaEnabled) {
+            return { data: await this.createMfaChallenge(user, rememberMe) };
+        }
+
+        return {
+            data: await this.issueLogin(userWithRole, request, res, rememberMe),
+        };
+    }
+
+    @AuthPublicLoginMfaDoc()
+    @Response('auth.loginWithMfa')
+    @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
+    @HttpCode(HttpStatus.OK)
+    @Post('/login/mfa')
+    async loginWithMfa(
+        @Body() { mfaToken, code }: AuthLoginMfaRequestDto,
+        @Req() request: IRequestApp,
+        @Res({ passthrough: true }) res: ExpressResponse
+    ): Promise<IResponse<AuthLoginResponseDto>> {
+        const challenge = await this.mfaService.findChallenge(mfaToken);
+        const user: UserEntity | null = challenge
+            ? await this.userService.findOneById(challenge.user)
+            : null;
+        if (!challenge || !user) {
+            throw this.buildMfaChallengeInvalidError();
+        }
+
+        // Wrong codes count toward the same lockout as wrong passwords. The
+        // guess is claimed in one conditional update before the code is
+        // checked, so parallel guesses cannot get past the cap.
+        if (
+            this.authService.getPasswordAttempt() &&
+            !(await this.userService.claimPasswordAttempt(
+                user,
+                this.authService.getPasswordMaxAttempt()
+            ))
+        ) {
+            await this.mfaService.consumeChallenge(mfaToken);
+            await this.recordLoginFailed(user, 'locked');
+            throw new ForbiddenException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_ATTEMPT_MAX,
+                message: 'auth.error.passwordAttemptMax',
+            });
+        }
+
+        const method = await this.mfaService.verify(user, code);
+        if (!method) {
+            await this.recordLoginFailed(user, 'invalid_mfa_code');
+            throw this.mfaService.invalidCodeError();
+        }
+
+        // Spent atomically: of two requests with valid codes for the same
+        // challenge, only one opens a session.
+        if (!(await this.mfaService.consumeChallenge(mfaToken))) {
+            throw this.buildMfaChallengeInvalidError();
+        }
+
+        // The account may have changed in the minutes since the first step.
+        const userWithRole: UserEntity = await this.userService.join(user);
+        if (
+            user.status !== ENUM_USER_STATUS.ACTIVE ||
+            !userWithRole.role.isActive
+        ) {
+            throw new ForbiddenException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
+                message: 'user.error.inactive',
+            });
+        }
+        if (this.authService.checkPasswordExpired(user.passwordExpired)) {
+            await this.recordLoginFailed(user, 'password_expired');
+            throw new ForbiddenException({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
+                message: 'auth.error.passwordExpired',
+            });
+        }
+
+        await this.userService.clearPasswordAttempt(user);
+
+        return {
+            data: await this.issueLogin(
                 userWithRole,
                 request,
                 res,
-                rememberMe
-            );
-            return { data: token };
-        } catch (err: unknown) {
-            this.logger.error(
-                `Error during login with credential for user [${user.id}]: ${err}`,
-                err instanceof Error ? err.stack : undefined
-            );
-
-            throw new InternalServerErrorException({
-                statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
-                message: 'http.serverError.internalServerError',
-                _error: err,
-            });
-        }
+                challenge.rememberMe,
+                { method }
+            ),
+        };
     }
 
     @AuthPublicLoginSocialGoogleDoc()
@@ -267,7 +358,9 @@ export class AuthPublicController {
         @AuthJwtPayload<IAuthSocialGooglePayload>('email')
         email: string,
         @Req() request: IRequestApp
-    ): Promise<IResponse<AuthLoginResponseDto>> {
+    ): Promise<
+        IResponse<AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto>
+    > {
         const user: UserEntity = await this.userService.findOneByEmail(email);
         if (!user) {
             throw new NotFoundException({
@@ -275,11 +368,13 @@ export class AuthPublicController {
                 message: 'user.error.notFound',
             });
         } else if (user.status === ENUM_USER_STATUS.BLOCKED) {
+            await this.recordLoginFailed(user, 'blocked');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.BLOCKED_FORBIDDEN,
                 message: 'user.error.blocked',
             });
         } else if (user.status !== ENUM_USER_STATUS.ACTIVE) {
+            await this.recordLoginFailed(user, 'inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'user.error.inactive',
@@ -288,26 +383,35 @@ export class AuthPublicController {
 
         const userWithRole: UserEntity = await this.userService.join(user);
         if (!userWithRole.role.isActive) {
+            await this.recordLoginFailed(user, 'role_inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_ROLE_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'role.error.inactive',
             });
         } else if (userWithRole.verification.email !== true) {
+            await this.recordLoginFailed(user, 'email_not_verified');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.EMAIL_NOT_VERIFIED,
                 message: 'user.error.emailNotVerified',
             });
         }
 
-        await this.userService.resetPasswordAttempt(user);
+        if (!user.mfaEnabled) {
+            await this.userService.resetPasswordAttempt(user);
+        }
 
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
         if (checkPasswordExpired) {
+            await this.recordLoginFailed(user, 'password_expired');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
                 message: 'auth.error.passwordExpired',
             });
+        }
+
+        if (user.mfaEnabled) {
+            return { data: await this.createMfaChallenge(user) };
         }
 
         const databaseSession = this.em.fork();
@@ -326,14 +430,20 @@ export class AuthPublicController {
 
             await databaseSession.commit();
 
-            await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: {
-                    id: user.id,
-                    name: user.email,
-                },
-            });
+            // The session is committed: a failed audit write must not turn
+            // the login into a 500.
+            await this.activityService
+                .createByUser(user, {
+                    action: ENUM_ACTIVITY_ACTION.LOGIN,
+                    subject: ENUM_POLICY_SUBJECT.AUTH,
+                    // The audit log is append-only: ids, not emails.
+                    metadata: { id: user.id },
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Login activity for user [${user.id}] not recorded: ${(err as Error)?.message}`
+                    )
+                );
 
             const token = this.authService.createToken(
                 userWithRole,
@@ -365,7 +475,9 @@ export class AuthPublicController {
         @AuthJwtPayload<IAuthSocialApplePayload>('email')
         email: string,
         @Req() request: IRequestApp
-    ): Promise<IResponse<AuthLoginResponseDto>> {
+    ): Promise<
+        IResponse<AuthLoginResponseDto | AuthLoginMfaChallengeResponseDto>
+    > {
         const user: UserEntity = await this.userService.findOneByEmail(email);
         if (!user) {
             throw new NotFoundException({
@@ -373,11 +485,13 @@ export class AuthPublicController {
                 message: 'user.error.notFound',
             });
         } else if (user.status === ENUM_USER_STATUS.BLOCKED) {
+            await this.recordLoginFailed(user, 'blocked');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.BLOCKED_FORBIDDEN,
                 message: 'user.error.blocked',
             });
         } else if (user.status !== ENUM_USER_STATUS.ACTIVE) {
+            await this.recordLoginFailed(user, 'inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'user.error.inactive',
@@ -386,26 +500,35 @@ export class AuthPublicController {
 
         const userWithRole: UserEntity = await this.userService.join(user);
         if (!userWithRole.role.isActive) {
+            await this.recordLoginFailed(user, 'role_inactive');
             throw new ForbiddenException({
                 statusCode: ENUM_ROLE_STATUS_CODE_ERROR.INACTIVE_FORBIDDEN,
                 message: 'role.error.inactive',
             });
         } else if (userWithRole.verification.email !== true) {
+            await this.recordLoginFailed(user, 'email_not_verified');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.EMAIL_NOT_VERIFIED,
                 message: 'user.error.emailNotVerified',
             });
         }
 
-        await this.userService.resetPasswordAttempt(user);
+        if (!user.mfaEnabled) {
+            await this.userService.resetPasswordAttempt(user);
+        }
 
         const checkPasswordExpired: boolean =
             this.authService.checkPasswordExpired(user.passwordExpired);
         if (checkPasswordExpired) {
+            await this.recordLoginFailed(user, 'password_expired');
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_EXPIRED,
                 message: 'auth.error.passwordExpired',
             });
+        }
+
+        if (user.mfaEnabled) {
+            return { data: await this.createMfaChallenge(user) };
         }
 
         const databaseSession = this.em.fork();
@@ -423,14 +546,20 @@ export class AuthPublicController {
 
             await databaseSession.commit();
 
-            await this.activityService.createByUser(user, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: {
-                    id: user.id,
-                    name: user.email,
-                },
-            });
+            // The session is committed: a failed audit write must not turn
+            // the login into a 500.
+            await this.activityService
+                .createByUser(user, {
+                    action: ENUM_ACTIVITY_ACTION.LOGIN,
+                    subject: ENUM_POLICY_SUBJECT.AUTH,
+                    // The audit log is append-only: ids, not emails.
+                    metadata: { id: user.id },
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Login activity for user [${user.id}] not recorded: ${(err as Error)?.message}`
+                    )
+                );
 
             const token = this.authService.createToken(
                 userWithRole,
@@ -466,6 +595,7 @@ export class AuthPublicController {
             password: passwordString,
             country,
             turnstileToken,
+            acceptTerms,
         }: AuthSignUpRequestDto,
         // Normalized by AppCustomLanguageMiddleware; the verification email
         // is written in it.
@@ -515,6 +645,7 @@ export class AuthPublicController {
                     name,
                     password: passwordString,
                     country,
+                    acceptTerms,
                 },
                 password,
                 { em: session }
@@ -612,6 +743,60 @@ export class AuthPublicController {
         }
     }
 
+    private async createMfaChallenge(
+        user: UserEntity,
+        rememberMe?: boolean
+    ): Promise<AuthLoginMfaChallengeResponseDto> {
+        const mfaToken = await this.mfaService.createChallenge({
+            user: user.id,
+            rememberMe,
+        });
+        return {
+            mfaRequired: true,
+            mfaToken,
+            expiresIn: AUTH_MFA_CHALLENGE_TTL_SECONDS,
+        };
+    }
+
+    // The last step of a password login, or of the MFA step that follows
+    // one: AuthLoginSessionService opens the session, and any failure there
+    // becomes a 500 for the caller.
+    private async issueLogin(
+        userWithRole: UserEntity,
+        request: IRequestApp,
+        res: ExpressResponse,
+        rememberMe?: boolean,
+        auditMetadata?: Record<string, unknown>
+    ): Promise<AuthLoginResponseDto> {
+        try {
+            return await this.authLoginSessionService.open(
+                userWithRole,
+                request,
+                res,
+                rememberMe,
+                auditMetadata
+            );
+        } catch (err: unknown) {
+            this.logger.error(
+                `Error during login for user [${userWithRole.id}]: ${err}`,
+                err instanceof Error ? err.stack : undefined
+            );
+
+            throw new InternalServerErrorException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
+                message: 'http.serverError.internalServerError',
+                _error: err,
+            });
+        }
+    }
+
+    private buildMfaChallengeInvalidError(): UnauthorizedException {
+        return new UnauthorizedException({
+            statusCode: ENUM_AUTH_STATUS_CODE_ERROR.MFA_CHALLENGE_INVALID,
+            message: 'auth.error.mfaChallengeInvalid',
+        });
+    }
+
     // Shared by both the unknown-email and wrong-password branches of
     // loginWithCredential, so the two are byte-for-byte identical and
     // carry no attempt count.
@@ -624,5 +809,26 @@ export class AuthPublicController {
             // account, not just a wrong password.
             message: 'auth.error.invalidCredential',
         });
+    }
+
+    // Audit a rejected login for an account that exists (an unknown email
+    // writes nothing). A failed insert is logged and swallowed, so the
+    // caller still gets the exact error it would have got without auditing.
+    private async recordLoginFailed(
+        user: UserEntity,
+        reason: string
+    ): Promise<void> {
+        try {
+            await this.activityService.createByUser(user, {
+                action: ENUM_ACTIVITY_ACTION.LOGIN_FAILED,
+                subject: ENUM_POLICY_SUBJECT.AUTH,
+                // The audit log is append-only, so it keeps ids, not emails.
+                metadata: { id: user.id, reason },
+            });
+        } catch (err: unknown) {
+            this.logger.error(
+                `Failed to audit rejected login for user [${user.id}]: ${err}`
+            );
+        }
     }
 }

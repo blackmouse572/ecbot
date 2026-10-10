@@ -54,6 +54,8 @@ describe('sign-up custom constraint messages (real i18n)', () => {
         ['vi', 'email', 'IsCustomEmailConstraint'],
         ['en', 'password', 'IsPasswordConstraint'],
         ['vi', 'password', 'IsPasswordConstraint'],
+        ['en', 'acceptTerms', 'isTermsAccepted'],
+        ['vi', 'acceptTerms', 'isTermsAccepted'],
     ])('%s: translates %s (%s)', (lang, property, constraint) => {
         const [{ message }] = messageService.setValidationMessage(
             [error(property, constraint)],

@@ -328,7 +328,10 @@ export class VerificationEmailController {
             return undefined;
         }
         const userWithRole = await this.userService.join(user);
+        // With MFA on, a verified email is not a second factor: they log in
+        // through the form, which asks for the code.
         if (
+            user.mfaEnabled ||
             !userWithRole?.role?.isActive ||
             this.authService.checkPasswordExpired(user.passwordExpired)
         ) {

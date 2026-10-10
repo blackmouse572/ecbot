@@ -18,9 +18,12 @@ import { ApiKeyService } from '@app/modules/api-key/services/api-key.service';
 import { HelperDateService } from '@app/common/helper/services/helper.date.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { ImpersonationService } from '@app/modules/auth/services/impersonation.service';
+import { MfaService } from '@app/modules/auth/services/mfa.service';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_TURNSTILE_ACTION } from '@app/common/turnstile/enums/turnstile.action.enum';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 
 describe('AuthPublicController.signUp', () => {
     let controller: AuthPublicController;
@@ -98,6 +101,7 @@ describe('AuthPublicController.signUp', () => {
                     useValue: { verify: verifyTurnstile },
                 },
                 { provide: ImpersonationService, useValue: {} },
+                { provide: MfaService, useValue: {} },
                 AuthLoginSessionService,
             ],
         }).compile();
@@ -195,6 +199,23 @@ describe('AuthPublicController.signUp', () => {
         );
     });
 
+    it('passes acceptTerms on to UserService.signUp so the consent is recorded', async () => {
+        await controller.signUp({
+            email: 'new@user.com',
+            name: 'New User',
+            password: 'Passw0rd!',
+            country: 'country-1',
+            acceptTerms: true,
+        } as any);
+
+        expect(signUp).toHaveBeenCalledWith(
+            'role-1',
+            expect.objectContaining({ acceptTerms: true }),
+            expect.anything(),
+            expect.anything()
+        );
+    });
+
     it('rejects sign-up without creating a user when Turnstile fails', async () => {
         verifyTurnstile.mockRejectedValue(new ForbiddenException());
 
@@ -223,8 +244,8 @@ describe('AuthPublicController.loginWithCredential', () => {
     const maybeRehashPassword = jest.fn();
     const verifyLoginTurnstile = jest.fn();
     const checkPasswordExpired = jest.fn();
-    const resetPasswordAttempt = jest.fn();
-    const increasePasswordAttempt = jest.fn();
+    const clearPasswordAttempt = jest.fn();
+    const claimPasswordAttempt = jest.fn();
     const rehashPassword = jest.fn();
     const join = jest.fn();
     const createToken = jest.fn();
@@ -255,8 +276,8 @@ describe('AuthPublicController.loginWithCredential', () => {
         runDummyPasswordCompare.mockReset();
         maybeRehashPassword.mockReset();
         checkPasswordExpired.mockReset();
-        resetPasswordAttempt.mockReset();
-        increasePasswordAttempt.mockReset();
+        clearPasswordAttempt.mockReset();
+        claimPasswordAttempt.mockReset();
         rehashPassword.mockReset();
         join.mockReset();
         createToken.mockReset();
@@ -281,8 +302,8 @@ describe('AuthPublicController.loginWithCredential', () => {
                     provide: UserService,
                     useValue: {
                         findOneByEmail,
-                        resetPasswordAttempt,
-                        increasePasswordAttempt,
+                        clearPasswordAttempt,
+                        claimPasswordAttempt,
                         rehashPassword,
                         join,
                     },
@@ -321,6 +342,7 @@ describe('AuthPublicController.loginWithCredential', () => {
                     useValue: { verify: verifyLoginTurnstile },
                 },
                 { provide: ImpersonationService, useValue: {} },
+                { provide: MfaService, useValue: {} },
                 AuthLoginSessionService,
             ],
         }).compile();
@@ -334,8 +356,12 @@ describe('AuthPublicController.loginWithCredential', () => {
         maybeRehashPassword.mockResolvedValue(null);
         verifyLoginTurnstile.mockResolvedValue(undefined);
         checkPasswordExpired.mockReturnValue(false);
-        resetPasswordAttempt.mockResolvedValue(undefined);
-        increasePasswordAttempt.mockResolvedValue(undefined);
+        clearPasswordAttempt.mockResolvedValue(undefined);
+        // Models the conditional UPDATE: a guess is claimed only under the cap.
+        claimPasswordAttempt.mockImplementation(
+            async (user: { passwordAttempt: number }, max: number) =>
+                user.passwordAttempt < max
+        );
         rehashPassword.mockResolvedValue(undefined);
         join.mockResolvedValue(activeUser);
         createSession.mockResolvedValue({ id: 'session-1' });
@@ -497,6 +523,7 @@ describe('AuthPublicController.loginWithCredential', () => {
 
     it('rejects a wrong password with the same statusCode/message as an unknown email, and no attempt count', async () => {
         findOneByEmail.mockResolvedValue(activeUser);
+        getPasswordAttempt.mockReturnValue(true);
         validateUser.mockResolvedValue(false);
 
         const error = await controller
@@ -512,7 +539,12 @@ describe('AuthPublicController.loginWithCredential', () => {
             message: 'auth.error.invalidCredential',
         });
         expect(error.response.data).toBeUndefined();
-        expect(increasePasswordAttempt).toHaveBeenCalledWith(activeUser);
+        expect(claimPasswordAttempt).toHaveBeenCalledWith(activeUser, 5);
+        // Claimed before the compare, so parallel guesses can't pass the cap.
+        expect(claimPasswordAttempt.mock.invocationCallOrder[0]).toBeLessThan(
+            validateUser.mock.invocationCallOrder[0]
+        );
+        expect(clearPasswordAttempt).not.toHaveBeenCalled();
     });
 
     it('does not increase the attempt counter or reveal lockout once already at max, on a wrong password', async () => {
@@ -537,7 +569,10 @@ describe('AuthPublicController.loginWithCredential', () => {
             },
         });
 
-        expect(increasePasswordAttempt).not.toHaveBeenCalled();
+        // The claim found no guess left, so nothing was counted.
+        await expect(claimPasswordAttempt.mock.results[0].value).resolves.toBe(
+            false
+        );
     });
 
     // Fix round 1: the original version of this test asserted the opposite
@@ -573,7 +608,10 @@ describe('AuthPublicController.loginWithCredential', () => {
         // Still ran the real compare, so a locked account's timing matches
         // an unlocked wrong-password rejection.
         expect(validateUser).toHaveBeenCalledWith('pass', undefined);
-        expect(increasePasswordAttempt).not.toHaveBeenCalled();
+        // The claim found no guess left, so nothing was counted.
+        await expect(claimPasswordAttempt.mock.results[0].value).resolves.toBe(
+            false
+        );
         expect(createToken).not.toHaveBeenCalled();
     });
 
@@ -611,5 +649,105 @@ describe('AuthPublicController.loginWithCredential', () => {
         );
 
         expect(rehashPassword).not.toHaveBeenCalled();
+    });
+
+    describe('audit trail', () => {
+        const login = (password = 'pass') =>
+            controller
+                .loginWithCredential(
+                    { email: 'ok@x.com', password } as any,
+                    {} as any,
+                    {} as any
+                )
+                .catch(err => err);
+
+        // Strict: the append-only audit log keeps ids, never the email.
+        const failedWith = (user: any, reason: string) => {
+            const [who, body] = createByUserActivity.mock.calls.at(-1);
+            expect(who).toBe(user);
+            expect(body).toStrictEqual({
+                action: ENUM_ACTIVITY_ACTION.LOGIN_FAILED,
+                subject: ENUM_POLICY_SUBJECT.AUTH,
+                metadata: { id: user.id, reason },
+            });
+        };
+
+        it('records a successful login as LOGIN', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+
+            await login();
+
+            expect(createByUserActivity).toHaveBeenCalledWith(
+                activeUser,
+                expect.objectContaining({
+                    action: ENUM_ACTIVITY_ACTION.LOGIN,
+                    subject: ENUM_POLICY_SUBJECT.AUTH,
+                })
+            );
+        });
+
+        it('records a wrong password as LOGIN_FAILED', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            validateUser.mockResolvedValue(false);
+
+            await login('wrong');
+
+            failedWith(activeUser, 'invalid_password');
+        });
+
+        it('records an attempt on a locked account as LOGIN_FAILED', async () => {
+            const locked = { ...activeUser, passwordAttempt: 5 };
+            findOneByEmail.mockResolvedValue(locked);
+            getPasswordAttempt.mockReturnValue(true);
+
+            await login();
+
+            failedWith(locked, 'locked');
+        });
+
+        it('records a blocked or inactive account as LOGIN_FAILED', async () => {
+            const blocked = { ...activeUser, status: 'BLOCKED' };
+            findOneByEmail.mockResolvedValue(blocked);
+            await login();
+            failedWith(blocked, 'blocked');
+
+            const inactive = { ...activeUser, status: 'INACTIVE' };
+            findOneByEmail.mockResolvedValue(inactive);
+            await login();
+            failedWith(inactive, 'inactive');
+        });
+
+        it('records an unverified email as LOGIN_FAILED', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            join.mockResolvedValue({
+                ...activeUser,
+                verification: { email: false },
+            });
+
+            await login();
+
+            failedWith(activeUser, 'email_not_verified');
+        });
+
+        it('records nothing for an unknown email', async () => {
+            findOneByEmail.mockResolvedValue(undefined);
+
+            await login();
+
+            expect(createByUserActivity).not.toHaveBeenCalled();
+        });
+
+        it('returns the same error when the audit insert fails', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            validateUser.mockResolvedValue(false);
+            createByUserActivity.mockRejectedValue(new Error('db down'));
+
+            const error = await login('wrong');
+
+            expect(error.response).toStrictEqual({
+                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
+                message: 'auth.error.invalidCredential',
+            });
+        });
     });
 });

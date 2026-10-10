@@ -206,7 +206,10 @@ describe('InvitationWorkspaceController', () => {
 
         it('revokes a PENDING invitation', async () => {
             mockInvitationService.findOneById.mockResolvedValue(inWorkspace());
-            mockInvitationService.revoke.mockResolvedValue({ id: 'i' });
+            mockInvitationService.revoke.mockResolvedValue({
+                id: 'i',
+                inviteeEmail: 'guest@example.com',
+            });
             mockInvitationService.mapDetail.mockResolvedValue({ id: 'i' });
 
             const result = await controller.revokeInvitation(
@@ -221,6 +224,14 @@ describe('InvitationWorkspaceController', () => {
                 'user'
             );
             expect(result.data).toEqual({ id: 'i' });
+            // The audit log is append-only, so it keeps the id, not the email.
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                user,
+                workspace,
+                expect.objectContaining({ metadata: { id: 'i' } })
+            );
         });
     });
 });

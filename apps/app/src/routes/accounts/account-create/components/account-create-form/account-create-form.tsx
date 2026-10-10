@@ -1,4 +1,5 @@
 import { IssuedPanel } from "@/components/account-connect/issued-panel";
+import { LegalText } from "@/components/common";
 import type { Issued } from "@/components/account-connect/issued";
 import {
   TELEGRAM_TOKEN_PATTERN,
@@ -350,7 +351,6 @@ function PlatformStep({ onSelect }: { onSelect: (value: string) => void }) {
 type WhatsAppTab = "oauth" | "manual";
 
 function AcceptTermsField() {
-  const { t } = useTranslation();
   const form = useFormContext<AccountLinkFormValues>();
   return (
     <Form.Field
@@ -367,7 +367,9 @@ function AcceptTermsField() {
               className="mb-0"
             />
           </Form.Control>
-          <Form.Label>{t("accounts.link.acceptTerms")}</Form.Label>
+          <Form.Label>
+            <LegalText i18nKey="accounts.link.acceptTerms" />
+          </Form.Label>
           <Form.ErrorMessage />
         </Form.Item>
       )}

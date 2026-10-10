@@ -1,4 +1,11 @@
 {
+  "termsPrompt": {
+    "title": "Please review our updated terms",
+    "description": "To keep using Ecbot, please agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "accept": "I agree",
+    "signOut": "Sign out",
+    "error": "Could not save your acceptance. Please try again."
+  },
   "impersonation": {
     "error": {
       "title": "This impersonation link can't be used",
@@ -216,6 +223,20 @@
         },
         "failed": {
           "message": "Login failed. Please try again."
+        },
+        "mfa": {
+          "title": "Two-step verification",
+          "description": "Enter the 6-digit code from your authenticator app.",
+          "recoveryDescription": "Enter one of the recovery codes you saved.",
+          "recoveryPlaceholder": "Recovery code",
+          "useRecoveryCode": "Use a recovery code instead",
+          "useAuthenticator": "Use your authenticator app instead",
+          "verifyButton": "Verify",
+          "back": "Back to sign in",
+          "errors": {
+            "invalidCode": "That code is not valid. Please try again.",
+            "tooManyAttempts": "Too many attempts. Please wait a minute and try again."
+          }
         }
       },
       "register": {
@@ -227,7 +248,8 @@
           "password": "Password",
           "referral-code": "Referral Code (optional)",
           "confirm-password": "Confirm Password",
-          "country": "Country"
+          "country": "Country",
+          "acceptTerms": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>"
         },
         "actions": {
           "registerButton": "Create new account",
@@ -239,7 +261,8 @@
           "turnstileVerifying": "Verifying, please wait...",
           "emailExists": "Email already registered. Please sign in.",
           "passwordMismatch": "Passwords do not match.",
-          "signUpFailed": "Registration failed. Please try again."
+          "signUpFailed": "Registration failed. Please try again.",
+          "acceptTermsRequired": "Please agree to the Terms of Service and Privacy Policy to continue."
         },
         "success": {
           "message": "Account created. Enter the code we emailed you."
@@ -434,7 +457,7 @@
     "link": {
       "title": "Link Account",
       "description": "Connect to your Facebook account and pages, select the pages you want to manage.",
-      "acceptTerms": "By linking your account, you agree to our terms of service and privacy policy.",
+      "acceptTerms": "By linking your account, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
       "error": "An error occurred while linking your account. {{error}}",
       "invalidState": "This connection attempt could not be verified. Please try linking your account again.",
       "success": {
@@ -609,13 +632,17 @@
         "title": "Website widget",
         "keyLabel": "Widget key",
         "originsLabel": "Allowed sites",
+        "privacyLabel": "Your privacy policy",
+        "privacyDefault": "Not set, the widget links to Ecbot's privacy notice",
         "edit": {
-          "title": "Edit allowed sites",
-          "subtitle": "Sites allowed to embed this widget.",
+          "title": "Edit widget settings",
+          "subtitle": "Sites allowed to embed this widget, and the privacy policy it links to.",
+          "privacyHint": "You decide how your visitors' data is used, so the widget should link to your own privacy policy. Leave empty to link to Ecbot's notice.",
+          "privacyInvalid": "Enter a full https:// URL, e.g. https://shop.example.com/privacy",
           "originsHint": "Comma-separated. The widget refuses to load anywhere else.",
           "originsInvalid": "Enter full URLs, e.g. https://shop.example.com",
-          "success": "Allowed sites updated.",
-          "error": "Failed to update allowed sites."
+          "success": "Widget settings updated.",
+          "error": "Failed to update widget settings."
         }
       }
     },
@@ -1743,6 +1770,62 @@
         "confirmButton": "Delete my account",
         "cancelButton": "Cancel"
       }
+    },
+    "mfa": {
+      "domain": "Two-step verification",
+      "description": "Ask for a code from your authenticator app each time you sign in.",
+      "status": {
+        "on": "On",
+        "off": "Off"
+      },
+      "actions": {
+        "enable": "Turn on",
+        "disable": "Turn off",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "done": "I saved my codes",
+        "continue": "Continue",
+        "regenerate": "New recovery codes",
+        "createCodes": "Create codes"
+      },
+      "setup": {
+        "scan": "Scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator, Authy...). Can't scan it? Add the account with the setup key below.",
+        "secretLabel": "Setup key",
+        "enterCode": "Enter the 6-digit code the app shows.",
+        "confirmPassword": "Enter your password to start setting up two-step verification.",
+        "qrLabel": "QR code for your authenticator app"
+      },
+      "recovery": {
+        "title": "Save your recovery codes",
+        "description": "If you lose your phone, each code works once in place of an app code. This is the only time they are shown.",
+        "copyAll": "Copy all codes"
+      },
+      "disable": {
+        "description": "Enter your password and a code from your app (or a recovery code) to turn off two-step verification."
+      },
+      "success": {
+        "enabled": "Two-step verification is on.",
+        "disabled": "Two-step verification is off.",
+        "regenerated": "New recovery codes created."
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again."
+      },
+      "credentials": {
+        "password": "Current password",
+        "code": "Authenticator or recovery code"
+      },
+      "regenerate": {
+        "description": "Enter your password and a code from your app to create new recovery codes. Your old codes will stop working."
+      }
+    },
+    "exportData": {
+      "domain": "Download my data",
+      "description": "Get a copy of your profile, workspaces, sign-in sessions and activity as a JSON file.",
+      "button": "Download my data",
+      "loading": "Preparing your data...",
+      "success": "Your data has been downloaded.",
+      "error": "We could not prepare your data. Please try again."
     }
   },
   "changePassword": {
@@ -2291,7 +2374,27 @@
           }
         },
         "collapse": "Collapse sidebar",
-        "expand": "Expand sidebar"
+        "expand": "Expand sidebar",
+        "exportData": {
+          "action": "Export data",
+          "loading": "Preparing the customer data...",
+          "success": "Customer data downloaded.",
+          "error": "Could not export the customer data."
+        },
+        "erase": {
+          "action": "Delete customer and all conversations",
+          "confirm": {
+            "title": "Delete this customer permanently?",
+            "body": "This permanently deletes the customer, any profiles merged into them, their contact details, every conversation and message, and the images they sent. You cannot undo this.",
+            "confirm": "Delete permanently",
+            "cancel": "Cancel",
+            "verification": "DELETE"
+          },
+          "toast": {
+            "success": "Customer and all conversations deleted.",
+            "failed": "Could not delete the customer."
+          }
+        }
       }
     },
     "image": "Image"
@@ -2864,5 +2967,15 @@
       "CANCELED": "Canceled",
       "EXPIRED": "Expired"
     }
+  },
+  "widget": {
+    "invalid": "This chat is not available.",
+    "invalidHint": "Check the widget key on this website, or contact the site owner.",
+    "originNotAllowed": "This chat is not enabled on this website.",
+    "turnstile": {
+      "required": "Please complete the verification first.",
+      "failed": "Verification failed. Reload the page and try again."
+    },
+    "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>"
   }
 }

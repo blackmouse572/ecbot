@@ -68,6 +68,14 @@ export class UserEntity extends DatabaseEntityBase {
     @Enum(() => ENUM_USER_SIGN_UP_FROM)
     signUpFrom: ENUM_USER_SIGN_UP_FROM;
 
+    // Consent record: when the user accepted the Terms of Service and Privacy
+    // Policy, and which version. Null for users created before it was recorded.
+    @Property({ type: 'timestamptz', nullable: true })
+    termsAcceptedAt?: Date;
+
+    @Property({ type: 'varchar', length: 20, nullable: true })
+    termsVersion?: string;
+
     @Property({ type: 'varchar' })
     @Exclude()
     salt: string;
@@ -90,6 +98,29 @@ export class UserEntity extends DatabaseEntityBase {
 
     @Property({ type: 'varchar', nullable: true })
     avatar?: string;
+
+    @Property({ type: 'boolean', default: false })
+    mfaEnabled: boolean = false;
+
+    // TOTP secrets, envelope-encrypted (AES-256-GCM). The pending one waits
+    // for its first code before it replaces mfaSecret.
+    @Property({ type: 'text', nullable: true })
+    @Exclude()
+    mfaSecret?: string | null;
+
+    @Property({ type: 'text', nullable: true })
+    @Exclude()
+    mfaPendingSecret?: string | null;
+
+    // SHA-256 hashes of the unused recovery codes.
+    @Property({ type: 'jsonb', nullable: true })
+    @Exclude()
+    mfaRecoveryCodes?: string[] | null;
+
+    // Last accepted TOTP time step, so a code can't be replayed.
+    @Property({ type: 'integer', nullable: true })
+    @Exclude()
+    mfaLastTimeStep?: number | null;
 
     /** Email me when a customer is handed over to a person. */
     @Property({ type: 'boolean', default: true })

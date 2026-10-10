@@ -50,6 +50,13 @@ export const AccountWebsiteWidgetSection = ({
           title={t("accounts.details.websiteWidget.originsLabel")}
           value={item.allowedOrigins?.join(", ")}
         />
+        <SectionRow
+          title={t("accounts.details.websiteWidget.privacyLabel")}
+          value={
+            item.privacyPolicyUrl ??
+            t("accounts.details.websiteWidget.privacyDefault")
+          }
+        />
       </Section>
       {item.accountKey && (
         <div className="px-6 py-4">

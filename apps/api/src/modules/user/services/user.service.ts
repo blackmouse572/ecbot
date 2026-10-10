@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { UserUpdateNotificationsRequestDto } from 'src/modules/user/dtos/request/user.update-notifications.request.dto';
 import { CountryEntity } from '@app/modules/country/repository/entities/country.entity';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
@@ -22,6 +23,7 @@ import { HelperAvatarService } from 'src/common/helper/services/helper.avatar.se
 import { HelperDateService } from 'src/common/helper/services/helper.date.service';
 import { HelperStringService } from 'src/common/helper/services/helper.string.service';
 import { AuthSignUpRequestDto } from 'src/modules/auth/dtos/request/auth.sign-up.request.dto';
+import { IUserSignUp } from 'src/modules/user/interfaces/user.interface';
 import { IAuthPassword } from 'src/modules/auth/interfaces/auth.interface';
 import { AwsS3Dto } from 'src/modules/aws/dtos/aws.s3.dto';
 import { UserCreateRequestDto } from 'src/modules/user/dtos/request/user.create.request.dto';
@@ -31,6 +33,10 @@ import { UserUpdatePasswordAttemptRequestDto } from 'src/modules/user/dtos/reque
 import { UserUpdateProfileRequestDto } from 'src/modules/user/dtos/request/user.update-profile.dto';
 import { UserUpdateStatusRequestDto } from 'src/modules/user/dtos/request/user.update-status.request.dto';
 import { UserUpdateRequestDto } from 'src/modules/user/dtos/request/user.update.request.dto';
+import {
+    USER_TERMS_PROMPT_ENABLED,
+    USER_TERMS_VERSION,
+} from 'src/modules/user/constants/user.constant';
 import { UserCensorResponseDto } from 'src/modules/user/dtos/response/user.censor.response.dto';
 import { UserGetResponseDto } from 'src/modules/user/dtos/response/user.get.response.dto';
 import { UserListResponseDto } from 'src/modules/user/dtos/response/user.list.response.dto';
@@ -40,11 +46,14 @@ import {
     ENUM_USER_SIGN_UP_FROM,
     ENUM_USER_STATUS,
 } from 'src/modules/user/enums/user.enum';
+import { IUserMfaUpdate } from 'src/modules/user/interfaces/user.interface';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { UserRepository } from 'src/modules/user/repository/repositories/user.repository';
 
 @Injectable()
 export class UserService {
+    // Read through the instance so tests can switch the prompt on.
+    private readonly termsPromptEnabled: boolean = USER_TERMS_PROMPT_ENABLED;
     private readonly usernamePrefix: string;
     private readonly usernamePattern: RegExp;
 
@@ -485,9 +494,10 @@ export class UserService {
             email,
             country,
             password: _rawPassword,
+            acceptTerms,
             avatar,
             ...others
-        }: AuthSignUpRequestDto,
+        }: IUserSignUp,
         { passwordExpired, passwordHash, salt, passwordCreated }: IAuthPassword,
         options?: IDatabaseCreateOptions
     ): Promise<UserEntity> {
@@ -506,6 +516,12 @@ export class UserService {
             signUpDate: this.helperDateService.create(),
             passwordAttempt: 0,
             signUpFrom: ENUM_USER_SIGN_UP_FROM.PUBLIC,
+            // Only the user agreeing records consent: public sign-up sends
+            // acceptTerms; an operator creating the account does not.
+            ...(acceptTerms === true && {
+                termsAcceptedAt: this.helperDateService.create(),
+                termsVersion: USER_TERMS_VERSION,
+            }),
             status: ENUM_USER_STATUS.ACTIVE,
             salt,
             avatar:
@@ -551,16 +567,6 @@ export class UserService {
         return user;
     }
 
-    async increasePasswordAttempt(
-        user: UserEntity,
-        options?: IDatabaseUpdateOptions
-    ): Promise<UserEntity> {
-        const em = options?.em || this.em;
-        user.passwordAttempt = ++user.passwordAttempt;
-        await em.persistAndFlush(user);
-        return user;
-    }
-
     async resetPasswordAttempt(
         user: UserEntity,
         options?: IDatabaseUpdateOptions
@@ -579,6 +585,34 @@ export class UserService {
         user.passwordAttempt = passwordAttempt;
         await (options?.em || this.em).persistAndFlush(user);
         return user;
+    }
+
+    async updateMfa(
+        user: UserEntity,
+        data: IUserMfaUpdate
+    ): Promise<UserEntity> {
+        Object.assign(user, data);
+        await this.em.persistAndFlush(user);
+        return user;
+    }
+
+    // The four methods below write with conditional SQL updates, not from the
+    // loaded entity, so concurrent requests cannot both pass a check.
+
+    claimPasswordAttempt(user: UserEntity, max: number): Promise<boolean> {
+        return this.userRepository.claimPasswordAttempt(user.id, max);
+    }
+
+    clearPasswordAttempt(user: UserEntity): Promise<void> {
+        return this.userRepository.clearPasswordAttempt(user.id);
+    }
+
+    claimMfaTimeStep(user: UserEntity, step: number): Promise<boolean> {
+        return this.userRepository.claimMfaTimeStep(user.id, step);
+    }
+
+    consumeMfaRecoveryCode(user: UserEntity, hash: string): Promise<boolean> {
+        return this.userRepository.consumeMfaRecoveryCode(user.id, hash);
     }
 
     async active(user: UserEntity): Promise<UserEntity> {
@@ -631,6 +665,18 @@ export class UserService {
         return user;
     }
 
+    /** Records acceptance of the current Terms and Privacy Policy. */
+    async acceptTerms(
+        user: UserEntity,
+        options?: IDatabaseUpdateOptions
+    ): Promise<UserEntity> {
+        const em = options?.em || this.em;
+        user.termsAcceptedAt = this.helperDateService.create();
+        user.termsVersion = USER_TERMS_VERSION;
+        await em.persistAndFlush(user);
+        return user;
+    }
+
     async updatePhoto(
         user: UserEntity,
         aws: AwsS3Dto,
@@ -676,7 +722,10 @@ export class UserService {
     }
 
     mapProfile(user: UserEntity): UserProfileResponseDto {
-        return plainToInstance(UserProfileResponseDto, user);
+        const mapped = plainToInstance(UserProfileResponseDto, user);
+        mapped.termsAcceptanceRequired =
+            this.termsPromptEnabled && user.termsVersion !== USER_TERMS_VERSION;
+        return mapped;
     }
 
     mapList(users: UserEntity[]): UserListResponseDto[] {
@@ -738,6 +787,40 @@ export class UserService {
     ): Promise<void> {
         await this.userRepository.softDelete(find, options);
     }
+    /**
+     * Account deletion keeps the row (activity and other FKs point at it) but
+     * overwrites everything that identifies the person, and everything it
+     * could sign in with. The email becomes a unique, non-routable
+     * placeholder so the unique index still holds.
+     */
+    async anonymize(
+        user: UserEntity,
+        options?: IDatabaseUpdateOptions
+    ): Promise<void> {
+        await this.userRepository.updateEntity(
+            { id: user.id },
+            {
+                email: `deleted+${user.id}@invalid`,
+                name: 'Deleted user',
+                username: null,
+                mobileNumber: null,
+                photo: null,
+                avatar: this.helperAvatarService.generateUserAvatar(user.id),
+                gender: null,
+                // Not a bcrypt hash, so no password ever matches it; the
+                // columns are not nullable.
+                password: `!deleted:${randomBytes(32).toString('hex')}`,
+                salt: randomBytes(16).toString('hex'),
+                mfaEnabled: false,
+                mfaSecret: null,
+                mfaPendingSecret: null,
+                mfaRecoveryCodes: null,
+                mfaLastTimeStep: null,
+            },
+            options
+        );
+    }
+
     createRandomFilenamePhoto(
         userId: string,
         options: { mime: ENUM_FILE_MIME_IMAGE; size: number }

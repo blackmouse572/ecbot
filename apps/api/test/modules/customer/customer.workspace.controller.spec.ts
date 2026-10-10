@@ -1,5 +1,9 @@
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuthImpersonationReadOnlyInterceptor } from '../../../src/modules/auth/interceptors/auth.impersonation-read-only.interceptor';
 import { CustomerWorkspaceController } from '../../../src/modules/customer/controllers/customer.workspace.controller';
+import { ENUM_ACTIVITY_ACTION } from '../../../src/modules/activity/enums/activity.enum';
+import { ENUM_POLICY_SUBJECT } from '../../../src/modules/policy/enums/policy.enum';
 
 // The unit-level test covers the controller's own logic. Cross-workspace tenant
 // isolation (returning 404 when looking up a customer from another workspace),
@@ -35,6 +39,11 @@ const mockMergeSuggestionService = {
 
 const mockActivityService = {
     createByUserWithWorkspace: jest.fn(),
+    createView: jest.fn(),
+};
+
+const mockErasureService = {
+    erase: jest.fn(),
 };
 
 const mockPaginationService = {
@@ -48,7 +57,8 @@ function buildController(): CustomerWorkspaceController {
         mockCustomerService as any,
         mockMergeSuggestionService as any,
         mockActivityService as any,
-        mockPaginationService as any
+        mockPaginationService as any,
+        mockErasureService as any
     );
 }
 
@@ -129,7 +139,8 @@ describe('CustomerWorkspaceController', () => {
 
             const result = await controller.get(
                 { id: 'ws-1' } as any,
-                'cust-1'
+                'cust-1',
+                'user-1'
             );
 
             // BOLA-safe lookup: service is asked for (id, workspaceId), never id alone.
@@ -142,15 +153,36 @@ describe('CustomerWorkspaceController', () => {
             expect(result).toEqual({ data: mappedDto });
         });
 
+        it('records a VIEW of the customer in the audit trail', async () => {
+            mockCustomerService.findOneByIdInWorkspace.mockResolvedValue(
+                customerEntity
+            );
+            const workspace = { id: 'ws-1' } as any;
+
+            await controller.get(workspace, 'cust-1', 'user-1');
+
+            expect(mockActivityService.createView).toHaveBeenCalledWith(
+                'user-1',
+                workspace,
+                ENUM_POLICY_SUBJECT.CUSTOMER,
+                { id: 'cust-1' }
+            );
+        });
+
         it('throws NotFoundException (not 403) when the customer does not exist in this workspace — collapses missing + cross-workspace into one 404', async () => {
             mockCustomerService.findOneByIdInWorkspace.mockResolvedValue(null);
 
             await expect(
-                controller.get({ id: 'ws-1' } as any, 'cust-from-other-ws')
+                controller.get(
+                    { id: 'ws-1' } as any,
+                    'cust-from-other-ws',
+                    'user-1'
+                )
             ).rejects.toBeInstanceOf(NotFoundException);
             // The mapper must NOT be called when the workspace-scoped lookup
             // returns nothing — that's how cross-workspace access is silenced.
             expect(mockCustomerService.mapGet).not.toHaveBeenCalled();
+            expect(mockActivityService.createView).not.toHaveBeenCalled();
         });
     });
 
@@ -186,6 +218,18 @@ describe('CustomerWorkspaceController', () => {
             );
             expect(result.data.name).toBe('New Name');
             expect(result.data.email).toBe('new@example.com');
+            // The audit log is append-only: it keeps ids, not names.
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                user,
+                { id: 'ws-1' },
+                {
+                    action: ENUM_ACTIVITY_ACTION.UPDATE,
+                    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                    metadata: { id: updated.id },
+                }
+            );
         });
 
         it('propagates NotFoundException from the service when target customer is gone', async () => {
@@ -231,6 +275,60 @@ describe('CustomerWorkspaceController', () => {
             // Exactly one positional arg shape — no mutation of the patch body:
             const [, patch] = mockCustomerService.update.mock.calls[0];
             expect(Object.keys(patch)).toEqual(['name']);
+        });
+    });
+
+    describe('DELETE /:workspace/customers/:id', () => {
+        const summary = {
+            customers: 2,
+            contactPoints: 3,
+            conversations: 4,
+            messages: 20,
+            mediaFiles: 1,
+        };
+
+        it('erases inside the route workspace and returns the counts', async () => {
+            mockErasureService.erase.mockResolvedValue(summary);
+            const workspace = { id: 'ws-1' } as any;
+
+            const res = await controller.erase(workspace, 'cust-1', user);
+
+            // The service writes the ERASE audit row inside its transaction.
+            expect(mockErasureService.erase).toHaveBeenCalledWith(
+                'cust-1',
+                workspace,
+                user
+            );
+            expect(res).toEqual({ data: summary });
+        });
+
+        it('propagates the 404 when the customer is not found', async () => {
+            mockErasureService.erase.mockRejectedValue(new NotFoundException());
+
+            await expect(
+                controller.erase({ id: 'ws-1' } as any, 'cust-x', user)
+            ).rejects.toBeInstanceOf(NotFoundException);
+        });
+
+        it('is refused to an admin impersonating the user', () => {
+            const interceptor = new AuthImpersonationReadOnlyInterceptor(
+                new Reflector()
+            );
+            const context = {
+                getType: () => 'http',
+                getHandler: () => CustomerWorkspaceController.prototype.erase,
+                getClass: () => CustomerWorkspaceController,
+                switchToHttp: () => ({
+                    getRequest: () => ({
+                        method: 'DELETE',
+                        user: { impersonatedBy: 'admin-1' },
+                    }),
+                }),
+            } as any;
+
+            expect(() =>
+                interceptor.intercept(context, { handle: jest.fn() } as any)
+            ).toThrow(ForbiddenException);
         });
     });
 });

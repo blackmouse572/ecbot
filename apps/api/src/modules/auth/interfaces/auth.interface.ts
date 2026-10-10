@@ -58,3 +58,13 @@ export type IAuthSocialApplePayload = Pick<
     IAuthSocialGooglePayload,
     'email' | 'emailVerified'
 >;
+
+// What the MFA login step needs to finish a login the password (or social)
+// step already accepted.
+/** Which second factor passed: an authenticator code or a recovery code. */
+export type IAuthMfaMethod = 'totp' | 'recovery';
+
+export interface IAuthMfaChallenge {
+    user: string;
+    rememberMe?: boolean;
+}

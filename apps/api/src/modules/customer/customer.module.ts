@@ -1,3 +1,5 @@
+import { ActivityModule } from '@app/modules/activity/activity.module';
+import { AwsModule } from '@app/modules/aws/aws.module';
 import { NotificationModule } from '@app/modules/notification/notification.module';
 import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/workspace.repository.module';
 import { ConversationRepositoryModule } from '@app/modules/conversation/repository/conversation.repository.module';
@@ -12,6 +14,7 @@ import { CustomerTagAssignmentService } from './services/customer-tag-assignment
 import { CustomerTagClassifierService } from './services/customer-tag-classifier.service';
 import { CustomerTagClassifierTaskService } from './services/customer-tag-classifier-task.service';
 import { CustomerTagService } from './services/customer-tag.service';
+import { CustomerErasureService } from './services/customer-erasure.service';
 import { CustomerService } from './services/customer.service';
 
 @Module({
@@ -23,8 +26,11 @@ import { CustomerService } from './services/customer.service';
         WorkspaceRepositoryModule,
         ConversationRepositoryModule,
         CloudTasksQueueModule,
+        AwsModule,
+        ActivityModule,
     ],
     providers: [
+        CustomerErasureService,
         CustomerService,
         ContactPointService,
         CustomerTagService,
@@ -34,6 +40,7 @@ import { CustomerService } from './services/customer.service';
         CustomerTagClassifierTaskService,
     ],
     exports: [
+        CustomerErasureService,
         CustomerService,
         ContactPointService,
         CustomerTagService,

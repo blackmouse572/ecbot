@@ -143,6 +143,12 @@ export class AppEnvDto {
     @Type(() => Boolean)
     DATABASE_SSL?: boolean;
 
+    // PEM of a private CA for providers whose certificate is not publicly
+    // trusted; newlines may be escaped as \n.
+    @IsOptional()
+    @IsString()
+    DATABASE_SSL_CA?: string;
+
     @IsNotEmpty()
     @IsString()
     @MinLength(1)
@@ -285,6 +291,12 @@ export class AppEnvDto {
     @IsOptional()
     @IsString()
     AWS_PINPOINT_APPLICATION_ID?: string;
+
+    // HMAC key for MFA recovery-code hashes; OAUTH_TOKEN_ENCRYPT_KEY when unset.
+    @IsOptional()
+    @IsString()
+    @MinLength(32)
+    AUTH_MFA_RECOVERY_PEPPER?: string;
 
     @IsOptional()
     @IsString()

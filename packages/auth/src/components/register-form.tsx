@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Select } from "@medusajs/ui";
+import { Checkbox, Select } from "@medusajs/ui";
 import { Input, Form, CircularLoading } from "@repo/ui/common-components";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
@@ -41,6 +41,12 @@ interface IRegisterFormProps extends Omit<
         notMatchPassword: string;
       };
     };
+    /** Required agreement to the Terms of Service and Privacy Policy. */
+    acceptTerms: {
+      /** Usually a sentence with links to both policies. */
+      label: React.ReactNode;
+      required: string;
+    };
   };
 }
 
@@ -51,10 +57,16 @@ const RegisterSchema = z.object({
   country: z.string(),
   password: z.string().min(8),
   confirmPassword: z.string().min(8),
+  acceptTerms: z.boolean(),
 });
 
 type TRegisterSchema = z.infer<typeof RegisterSchema>;
-type TRegisterForm = Omit<TRegisterSchema, "confirmPassword"> & {
+type TRegisterForm = Omit<
+  TRegisterSchema,
+  "confirmPassword" | "acceptTerms"
+> & {
+  /** Always true: the form does not submit until the user agrees. */
+  acceptTerms: true;
   turnstileToken?: string;
 };
 type TRegisterFieldErrors = Partial<Record<string, string>>;
@@ -78,6 +90,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
       email: "",
       password: "",
       country: defaultCountry,
+      acceptTerms: false,
     },
   });
 
@@ -99,12 +112,20 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
       referralCode,
       confirmPassword,
       country,
+      acceptTerms,
     }) => {
       if (honeypot.isTrapped()) return;
       if (password !== confirmPassword) {
         form.setError("confirmPassword", {
           type: "manual",
           message: messages.confirmPassword.error.notMatchPassword,
+        });
+        return;
+      }
+      if (!acceptTerms) {
+        form.setError("acceptTerms", {
+          type: "manual",
+          message: messages.acceptTerms.required,
         });
         return;
       }
@@ -120,6 +141,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
           password,
           referralCode,
           country,
+          acceptTerms,
           turnstileToken,
         });
         for (const [field, message] of Object.entries(fieldErrors ?? {})) {
@@ -276,6 +298,33 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
                     placeholder={messages.confirmPassword.placeholder}
                   />
                 </Form.Control>
+              </Form.Item>
+            );
+          }}
+        />
+        <Form.Field
+          control={form.control}
+          name="acceptTerms"
+          render={({ field: { value, onChange, ref } }) => {
+            return (
+              <Form.Item>
+                <div className="flex items-start gap-x-2">
+                  <Form.Control>
+                    <Checkbox
+                      ref={ref}
+                      checked={value}
+                      onCheckedChange={(checked) => {
+                        onChange(checked === true);
+                        if (checked === true) form.clearErrors("acceptTerms");
+                      }}
+                      className="mt-0.5"
+                    />
+                  </Form.Control>
+                  <Form.Label className="txt-compact-small text-ui-fg-subtle font-normal">
+                    {messages.acceptTerms.label}
+                  </Form.Label>
+                </div>
+                <Form.ErrorMessage />
               </Form.Item>
             );
           }}

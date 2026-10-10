@@ -1,0 +1,89 @@
+---
+title: Data Processing Agreement
+description: Summary terms for businesses using Ecbot as controllers of their customers' personal data, with Ecbot as their processor under GDPR Art 28 and Decree 13.
+noindex: true
+faq:
+  - q: Do I need to sign a separate DPA?
+    a: No. This agreement forms part of the Terms of Service and applies when you accept them. If you need a signed copy or the Standard Contractual Clauses as an annex, contact us.
+  - q: How will I know about a new subprocessor?
+    a: We update the Subprocessors page and notify workspace owners at least 30 days before a new subprocessor starts processing your data, so you can object.
+  - q: What happens to my customers' data when I leave?
+    a: You can export or erase each customer in the app, and ask us to erase the rest of the workspace. Deleting a workspace in the app only hides it, so write to us to have the data erased.
+---
+
+**Draft, not yet in force: this agreement must be reviewed by legal counsel before publication.** This Data Processing Agreement (DPA) sets the terms under which Ecbot processes personal data on behalf of businesses that use Ecbot to talk to their customers. The business is the controller, and Ecbot is the processor. It forms part of the [Terms of Service](/docs/legal/terms-of-service).
+
+Effective date: 2026-10-08 (version 2026-10-08).
+
+## 1. Roles and scope
+
+- **Controller**: the business that holds the Ecbot account ("you"). Under Decree 13/2023/ND-CP and the Personal Data Protection Law (Law 91/2025/QH15, in effect from 2026-01-01) you are the personal data controller.
+- **Processor**: **[Company legal name]** ("Ecbot"), the personal data processor under the same rules.
+- **[Counsel to confirm whether Law 91/2025/QH15 replaces Decree 13 for this DPA and update the article references below.]**
+- This DPA covers personal data that Ecbot processes for you while providing the service. Ecbot's processing of your own account data as a controller is covered by the [Privacy Policy](/docs/legal/privacy-policy).
+
+## 2. Details of the processing
+
+| Item | Description |
+| --- | --- |
+| Subject matter | Running AI agents that answer your customers on connected channels and the website widget |
+| Duration | The term of your subscription, and until the data is erased as described in section 10 |
+| Nature and purpose | Receiving, storing and sending messages; generating replies with AI models; searching your knowledge base; tagging customers and writing profile summaries; running tools and integrations you enable; analytics shown to you |
+| Data subjects | Your customers and prospects who message you; your staff and workspace members |
+| Categories of data | Names, channel user IDs, avatars, contact details given in chat, message content, images and files, customer tags and AI-written profile summaries, conversation metadata, widget visitor IDs |
+| Special categories | Not intended. You must not configure agents to collect special category or sensitive data unless you have a legal basis and tell us in writing |
+
+## 3. Your instructions
+
+Ecbot processes personal data only on your documented instructions, which are these terms, your settings in the app and your use of the API. If we believe an instruction breaks data protection law, we tell you. If the law requires us to process data otherwise, we tell you first unless the law forbids it.
+
+## 4. Your responsibilities
+
+You are responsible for having a legal basis for the processing, for giving your customers the information required by GDPR Art 13 and 14 and Decree 13 Art 13, including that they are talking to an AI, and for the content of your agents and knowledge base.
+
+## 5. Confidentiality and security
+
+Everyone at Ecbot with access to your data is bound by confidentiality. We maintain technical and organisational measures appropriate to the risk, including:
+
+- encryption in transit, and encryption at rest provided by our cloud providers;
+- workspace isolation and role-based access control;
+- password hashing, two-factor authentication with authenticator app codes and recovery codes for user and staff accounts, and least-privilege access;
+- append-only audit and activity logs;
+- error monitoring with personal data sending disabled;
+- database backups by our database provider (Neon) **[restore testing and retention to be confirmed]**.
+
+## 6. Subprocessors
+
+You give general authorisation for Ecbot to use the subprocessors listed on the [Subprocessors](/docs/legal/subprocessors) page. We impose data protection terms on each one that are no less protective than this DPA, and we remain responsible for them. We notify workspace owners at least **30 days** before adding or replacing a subprocessor. You may object on reasonable data protection grounds; if we cannot resolve the objection, you may end the affected service and receive a pro-rata refund of prepaid fees.
+
+## 7. International transfers
+
+Ecbot and its subprocessors process data outside Vietnam and the European Economic Area: the service runs on Google Cloud Run (asia-southeast1) with the database on Neon and the cache on Upstash (ap-southeast-1, Singapore) and files on Cloudflare R2, and AI processing and tracing (OpenRouter, model providers, LangSmith) happen in the United States and other countries. Where GDPR applies, transfers rely on the Standard Contractual Clauses (Module 2 controller to processor, and Module 3 for onward transfers) or an adequacy decision. Where Vietnamese law applies, Ecbot helps you prepare the cross-border transfer impact assessment. **[Counsel to attach or reference the SCCs.]**
+
+## 8. Assistance
+
+Taking into account the nature of the processing, Ecbot helps you:
+
+- answer data subject requests, through in-app export and permanent erasure of one customer's data, and on request;
+- carry out data protection impact assessments and prior consultations;
+- meet your security and breach notification obligations.
+
+## 9. Personal data breaches
+
+Ecbot notifies you without undue delay, and in any case within **[48] hours**, after becoming aware of a personal data breach affecting your data, so you can meet the **72-hour** notification deadline under GDPR Art 33 and Decree 13 Art 23. The notice describes the breach, the data and people affected, likely consequences, and the measures taken or proposed. We update you as we learn more.
+
+## 10. Deletion and return
+
+Before your subscription ends, you can export or erase each customer's data in the app. A full export of the workspace is not yet available in the app; we provide it on request. Deleting a workspace in the app hides it but does not erase its data. To have your workspace data erased, write to security@ecbot.dev, and we erase it unless the law requires us to keep it, in which case we keep it protected and only for that purpose. Copies in our database provider's backups expire on its schedule. **[Automatic deletion after the subscription ends, and the deletion and backup periods, are not yet in place; counsel to set them before publication.]**
+
+## 11. Audits
+
+Ecbot makes available the information needed to show compliance with this DPA, such as security documentation and third-party reports when available. You may audit once a year, with **[30] days'** notice, at your cost, during business hours, and under confidentiality, or more often if a regulator requires it or after a breach.
+
+## 12. Liability and precedence
+
+Liability under this DPA follows the limits in the Terms of Service, except where the law does not allow a limit. If this DPA conflicts with the Terms of Service on data protection, this DPA prevails. If the Standard Contractual Clauses apply, they prevail over both.
+
+## Contact
+
+Data protection: **[DPO email]**. Security incidents: security@ecbot.dev.

@@ -12,4 +12,5 @@ export enum EmailSubject {
     LowTokenBalance = 'Token quota running low',
     Handoff = 'A customer needs a person',
     MemberJoined = 'New workspace member',
+    MfaChanged = 'Two-step verification changed',
 }

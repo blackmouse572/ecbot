@@ -1,10 +1,14 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
+  customerWorkspaceControllerEraseV1,
   customerWorkspaceControllerGetV1,
   customerWorkspaceControllerListV1,
   customerWorkspaceControllerUpdateV1,
+  exportWorkspaceControllerCustomerV1,
+  type CustomerEraseResponseDto,
 } from "@repo/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { conversationQueryKeys } from "./conversations";
 import { useWorkspace } from "./workspace";
 
 export const CUSTOMER_QUERY_KEY = "customer" as const;
@@ -97,6 +101,41 @@ export const useUpdateCustomer = (id: string | undefined | null) => {
           queryKey: customerQueryKeys.detail(id),
         });
       }
+    },
+  });
+};
+
+export type CustomerErasureSummary = CustomerEraseResponseDto;
+
+/** Everything stored about one customer, for a data subject request. */
+export const useExportCustomer = (id: string | undefined | null) => {
+  const { workspace } = useWorkspace();
+  const slug = workspace?.slug;
+
+  return useMutation({
+    mutationFn: () =>
+      exportWorkspaceControllerCustomerV1({
+        path: { workspace: slug!, id: id! },
+        throwOnError: true,
+      }).then((res) => res.data.data),
+  });
+};
+
+/** Permanently deletes the customer with all conversations and messages. */
+export const useEraseCustomer = (id: string | undefined | null) => {
+  const { workspace } = useWorkspace();
+  const slug = workspace?.slug;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () =>
+      customerWorkspaceControllerEraseV1({
+        path: { workspace: slug!, id: id! },
+        throwOnError: true,
+      }).then((res) => res.data.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: conversationQueryKeys.all });
     },
   });
 };

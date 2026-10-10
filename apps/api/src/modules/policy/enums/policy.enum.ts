@@ -26,6 +26,12 @@ export enum ENUM_POLICY_SUBJECT {
     KNOWLEDGE_BASE = 'KNOWLEDGE_BASE',
     TOOL = 'TOOL',
     CUSTOMER = 'CUSTOMER',
+    /**
+     * A customer's personal data as a whole: export (READ) and permanent
+     * erasure (DELETE). Separate from CUSTOMER so the Member role's
+     * `manage CUSTOMER` does not cover it.
+     */
+    CUSTOMER_DATA = 'CUSTOMER_DATA',
     CONTACT_POINT = 'CONTACT_POINT',
     CONVERSATION = 'CONVERSATION',
     INVITATION = 'INVITATION',

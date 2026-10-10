@@ -1,4 +1,5 @@
 import { _Object } from '@aws-sdk/client-s3';
+import { ENUM_AWS_S3_ACCESSIBILITY } from 'src/modules/aws/enums/aws.enum';
 import { AwsS3MultipartDto } from 'src/modules/aws/dtos/aws.s3-multipart.dto';
 import { AwsS3Dto } from 'src/modules/aws/dtos/aws.s3.dto';
 import { AwsS3MultipartPresignCompletePartRequestDto } from 'src/modules/aws/dtos/request/aws.s3-multipart-presign-complete.request.dto';
@@ -20,6 +21,7 @@ import {
 
 export interface IAwsS3Service {
     getConfig(options?: IAwsS3Options): IAwsS3ConfigBucket;
+    getAccessByBucket(bucket: string): ENUM_AWS_S3_ACCESSIBILITY;
     getFileInfo(key: string): IAwsS3FileInfo;
     checkConnection(options?: IAwsS3Options): Promise<boolean>;
     checkBucket(options?: IAwsS3Options): Promise<boolean>;

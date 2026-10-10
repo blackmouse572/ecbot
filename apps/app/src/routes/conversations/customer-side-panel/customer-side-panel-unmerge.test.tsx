@@ -22,6 +22,8 @@ const unmergeMutateAsync = vi.fn();
 const promptFn = vi.fn();
 
 vi.mock("@/hooks/api/customers", () => ({
+  useExportCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useEraseCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useCustomer: vi.fn(),
   useUpdateCustomer: vi.fn(() => ({
     mutateAsync: updateMutateAsync,

@@ -32,7 +32,8 @@ export class AuthLoginSessionService {
         userWithRole: UserEntity,
         request: IRequestApp,
         res: ExpressResponse,
-        rememberMe?: boolean
+        rememberMe?: boolean,
+        auditMetadata?: Record<string, unknown>
     ): Promise<AuthLoginResponseDto> {
         const databaseSession = this.em.fork();
         await databaseSession.begin();
@@ -69,9 +70,10 @@ export class AuthLoginSessionService {
         // must not take the token away from the caller.
         await this.activityService
             .createByUser(userWithRole, {
-                action: ENUM_ACTIVITY_ACTION.CREATE,
+                action: ENUM_ACTIVITY_ACTION.LOGIN,
                 subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: { id: userWithRole.id, name: userWithRole.email },
+                // The audit log is append-only, so it keeps ids, not emails.
+                metadata: { id: userWithRole.id, ...auditMetadata },
             })
             .catch((err: unknown) =>
                 this.logger.warn(

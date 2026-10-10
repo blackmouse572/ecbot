@@ -12,6 +12,7 @@ const MESSAGES = {
     placeholder: "Confirm password",
     error: { notMatchPassword: "Passwords do not match" },
   },
+  acceptTerms: { label: "I agree", required: "Please agree" },
 };
 
 describe("RegisterForm server errors", () => {
@@ -37,6 +38,7 @@ describe("RegisterForm server errors", () => {
     fireEvent.change(container.querySelector("select")!, {
       target: { value: "vn" },
     });
+    fireEvent.click(screen.getByRole("checkbox", { name: "I agree" }));
     fireEvent.submit(container.querySelector("form")!);
 
     expect(

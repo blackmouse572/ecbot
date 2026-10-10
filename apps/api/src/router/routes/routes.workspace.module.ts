@@ -14,6 +14,8 @@ import { CustomerTagAssignmentWorkspaceController } from '@app/modules/customer/
 import { CustomerTagWorkspaceController } from '@app/modules/customer/controllers/customer-tag.workspace.controller';
 import { CustomerWorkspaceController } from '@app/modules/customer/controllers/customer.workspace.controller';
 import { CustomerModule } from '@app/modules/customer/customer.module';
+import { ExportWorkspaceController } from '@app/modules/export/controllers/export.workspace.controller';
+import { ExportModule } from '@app/modules/export/export.module';
 import { InvitationWorkspaceController } from '@app/modules/invitation/controllers/invitation.workspace.controller';
 import { InvitationModule } from '@app/modules/invitation/invitation.module';
 import { NavCountWorkspaceController } from '@app/modules/nav-count/controllers/nav-count.workspace.controller';
@@ -74,6 +76,7 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         SkillWorkspaceController,
         ChatbotSkillWorkspaceController,
         CustomerWorkspaceController,
+        ExportWorkspaceController,
         ContactPointWorkspaceController,
         CustomerTagWorkspaceController,
         CustomerTagAssignmentWorkspaceController,
@@ -110,6 +113,7 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         ToolModule,
         SkillModule,
         CustomerModule,
+        ExportModule,
         NavCountModule,
         PlatformModule,
         ChatbotRepositoryModule,

@@ -60,8 +60,13 @@ WORKDIR /app
 
 # Copy built application (vite preview needs the full workspace + node_modules,
 # not a pruned "prod only" install — vite itself is a devDependency)
-COPY --from=installer /app .
+COPY --from=installer --chown=node:node /app .
+
+# Run as the image's unprivileged user, not root. vite is called directly
+# because corepack's pnpm was prepared under /root, which node cannot read.
+USER node
+WORKDIR /app/apps/app
 
 EXPOSE 4173
 
-CMD ["pnpm", "--filter", "app", "exec", "vite", "preview", "--host", "0.0.0.0", "--port", "4173"]
+CMD ["node_modules/.bin/vite", "preview", "--host", "0.0.0.0", "--port", "4173"]

@@ -1,5 +1,7 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
+  exportUserControllerMeV1,
+  userSharedControllerAcceptTermsV1,
   userSharedControllerGetUserProfileV1,
   userSharedControllerProfileV1,
   userSharedControllerUpdateNotificationsV1,
@@ -48,6 +50,31 @@ export function useMe() {
   };
 }
 
+/**
+ * Whether the user still has to accept the current Terms and Privacy Policy,
+ * and the call that records it. Reads the user (not workspace) profile, which
+ * carries `termsAcceptanceRequired`.
+ */
+export function useTermsAcceptance() {
+  const queryClient = useQueryClient();
+  const { data } = useQuery(meQueryOptions());
+  const profile = (data?.data as A)?.data as UserProfileResponseDto | undefined;
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async () => {
+      await userSharedControllerAcceptTermsV1({ throwOnError: true });
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, "me"] }),
+  });
+
+  return {
+    required: profile?.termsAcceptanceRequired === true,
+    accept: mutateAsync,
+    isPending,
+  };
+}
+
 /** Saves the user's email-notification choices (handover emails). */
 export function useUpdateNotificationSettings() {
   const client = useQueryClient();
@@ -85,6 +112,14 @@ export function useDeleteProfile() {
     deleteProfile,
     ...rest,
   };
+}
+
+const exportMyData = () =>
+  exportUserControllerMeV1({ throwOnError: true }).then((res) => res.data.data);
+
+/** Right of access: downloads everything we hold about the signed-in user. */
+export function useExportMyData() {
+  return useMutation({ mutationFn: exportMyData });
 }
 
 export const userQueryOptions = (userId: string) =>

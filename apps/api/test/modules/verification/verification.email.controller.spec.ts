@@ -704,6 +704,23 @@ describe('VerificationEmailController — email dispatch', () => {
             expect(result).toBeUndefined();
         });
 
+        // A verified email is not a second factor.
+        it('verifies but does not sign in a user with MFA on', async () => {
+            const mfaUser = { ...user, mfaEnabled: true };
+            findOneById.mockResolvedValue(mfaUser);
+            join.mockResolvedValue({ ...mfaUser, role: { isActive: true } });
+
+            const result = await controller.verifyEmail(
+                { email: 'n@e.w', id: 'user-9', otp: '123456' } as any,
+                req,
+                res
+            );
+
+            expect(updateVerificationEmail).toHaveBeenCalled();
+            expect(createSession).not.toHaveBeenCalled();
+            expect(result).toBeUndefined();
+        });
+
         it('verifies but does not sign in when the password has expired', async () => {
             join.mockResolvedValue({ ...user, role: { isActive: true } });
             checkPasswordExpired.mockReturnValue(true);

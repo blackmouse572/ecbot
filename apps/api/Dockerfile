@@ -39,8 +39,14 @@ RUN pnpm prune --prod
 FROM base AS runner
 WORKDIR /app
 
-# Copy built application
+# Copy built application. Files stay root-owned so the app cannot rewrite its
+# own code; only logs/ (DEBUG_INTO_FILE) and swagger.json, which swaggerInit
+# writes into the working directory on boot outside production, are writable.
 COPY --from=installer /app .
+RUN mkdir -p logs && touch swagger.json && chown node:node logs swagger.json
+
+# Run as the image's unprivileged user, not root.
+USER node
 
 EXPOSE 8080
 

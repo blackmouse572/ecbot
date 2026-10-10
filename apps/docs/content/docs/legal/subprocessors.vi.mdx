@@ -1,0 +1,55 @@
+---
+title: Bên xử lý phụ
+description: Danh sách nhà cung cấp bên thứ ba mà Ecbot dùng để xử lý dữ liệu cá nhân, vai trò của từng bên, dữ liệu họ nhận và nơi họ xử lý dữ liệu.
+noindex: true
+faq:
+  - q: Các nền tảng chat tôi kết nối có phải là bên xử lý phụ không?
+    a: Không phải của Ecbot. Meta, Zalo, TikTok, Shopee và Telegram là dịch vụ bạn chọn kết nối và dùng theo thỏa thuận riêng giữa bạn với họ. Chúng tôi liệt kê để bạn biết tin nhắn đi qua đâu.
+  - q: Những nhà cung cấp nào nhìn thấy tin nhắn của khách?
+    a: OpenRouter và nhà cung cấp mô hình mà OpenRouter chuyển tới nhận cuộc trò chuyện, thông tin khách và đoạn kiến thức cần để viết từng câu trả lời, và LangSmith nhận cùng các prompt đó để theo dõi. Neon lưu trữ dữ liệu.
+  - q: Làm sao tôi biết khi danh sách thay đổi?
+    a: Chúng tôi cập nhật trang này và thông báo cho chủ không gian làm việc ít nhất 30 ngày trước khi một bên xử lý phụ mới bắt đầu xử lý dữ liệu khách hàng.
+---
+
+**Bản nháp, chưa có hiệu lực: danh sách này cần được luật sư rà soát trước khi công bố.** Ecbot dùng các nhà cung cấp dưới đây để vận hành dịch vụ. Mỗi bên chỉ xử lý dữ liệu cá nhân cho phần việc của mình, theo thỏa thuận có điều khoản bảo vệ dữ liệu. Danh sách này là một phần của [Thỏa thuận xử lý dữ liệu](/docs/legal/data-processing-agreement).
+
+Cập nhật lần cuối: 2026-10-09.
+
+## Bên xử lý phụ
+
+| Nhà cung cấp | Mục đích | Dữ liệu cá nhân | Vị trí |
+| --- | --- | --- | --- |
+| Google Cloud | Chạy API và dịch vụ AI của Ecbot (Cloud Run), hàng đợi tác vụ nền (Cloud Tasks), đăng nhập bằng Google (OAuth) | Toàn bộ dữ liệu dịch vụ khi được xử lý; dữ liệu tác vụ chứa ID bản ghi; email và tên tài khoản Google | Singapore (asia-southeast1) |
+| Neon | Cơ sở dữ liệu PostgreSQL chính | Toàn bộ dữ liệu dịch vụ được lưu, gồm cuộc trò chuyện và hồ sơ khách | Singapore (AWS ap-southeast-1) |
+| Upstash | Bộ nhớ đệm Redis, phiên đăng nhập và giới hạn truy cập | Dữ liệu phiên, bản ghi lưu đệm, địa chỉ IP để giới hạn truy cập | Singapore (ap-southeast-1) |
+| Cloudflare | Lưu trữ tệp (R2), lưu trữ ứng dụng và trang tài liệu, bảo vệ mạng, kiểm tra chống bot Turnstile | Tệp tải lên và tệp đa phương tiện trong chat; địa chỉ IP, thông tin trình duyệt, siêu dữ liệu yêu cầu | Bucket R2 **[xác nhận khu vực]**; mạng lưới toàn cầu |
+| Cloudflare (edge.ecbot.dev) | Workers, Queues và Durable Objects nhận webhook từ Messenger và Telegram, đưa vào hàng đợi và giữ trạng thái cuộc trò chuyện trong thời gian ngắn để gom tin nhắn trước khi trả lời; nhật ký gọi hàm trên một phần yêu cầu | Nội dung tin nhắn, ID người gửi và thông tin hồ sơ từ các kênh đã kết nối | Mạng lưới toàn cầu; nơi lưu Durable Object **[xác nhận vị trí]** |
+| Apple | Đăng nhập bằng Apple | Email Apple ID (có thể là địa chỉ chuyển tiếp ẩn danh) và tên | Hoa Kỳ |
+| OpenRouter, Inc. | Chuyển yêu cầu AI đến các nhà cung cấp mô hình, gồm Google Gemini và các bên khác, để tạo câu trả lời, nhãn, tóm tắt và embedding | Nội dung chat, thông tin và hồ sơ khách, đoạn trích kho kiến thức | Hoa Kỳ, và khu vực của nhà cung cấp mô hình |
+| Các nhà cung cấp mô hình AI phía sau (ví dụ Google) | Chạy các mô hình mà OpenRouter chuyển tới | Như OpenRouter, theo từng yêu cầu | Hoa Kỳ và các khu vực khác |
+| LangSmith (LangChain, Inc.) | Theo dõi mọi yêu cầu AI trên môi trường thật, để kiểm tra chất lượng và gỡ lỗi | Prompt và kết quả, có chứa nội dung chat, thông tin khách và đoạn trích kho kiến thức | Hoa Kỳ |
+| Firecrawl (Mendable, Inc.) | Thu thập nội dung website bạn thêm vào kho kiến thức | Nội dung công khai của các trang bạn chọn | Hoa Kỳ |
+| Composio | Kết nối công cụ bên thứ ba bạn bật cho agent | Dữ liệu agent gửi tới công cụ, như thông tin đơn hàng hoặc liên hệ | Hoa Kỳ **[xác nhận]** |
+| Resend | Gửi email dịch vụ, như mã xác minh | Tên, email, nội dung email | Hoa Kỳ |
+| Amazon Web Services | Email (SES) dự phòng cho Resend, và SMS (Pinpoint) **[xác nhận Pinpoint có dùng trên môi trường thật không]** | Số điện thoại, email và nội dung tin nhắn | Jakarta (ap-southeast-3) |
+| Sentry (Functional Software, Inc.) | Giám sát lỗi, đã tắt gửi dữ liệu cá nhân | Dữ liệu lỗi kỹ thuật; có thể xử lý địa chỉ IP | Hoa Kỳ **[xác nhận]** |
+| PostHog | Phân tích hành vi trên website ecbot.dev, không dùng cookie cho đến khi khách đồng ý | Lượt xem trang, lượt nhấp, thông tin trình duyệt, địa chỉ IP; mã cookie chỉ sau khi khách đồng ý | Hoa Kỳ (cloud Hoa Kỳ) |
+| Dodo Payments | Thanh toán gói dịch vụ | Tên, email, địa chỉ thanh toán, thông tin thanh toán | **[xác nhận]** |
+
+Hiện Dodo Payments là nhà cung cấp thanh toán duy nhất đang bật. Chúng tôi có thể thêm Stripe, SePay (chuyển khoản ngân hàng tại Việt Nam) hoặc ZaloPay (thanh toán qua ví và thẻ tại Việt Nam); mỗi bên sẽ được liệt kê tại đây, kèm thông báo như thường lệ, trước khi xử lý thanh toán.
+
+## Các kênh bạn kết nối
+
+Khi bạn kết nối một kênh, tin nhắn đi qua lại giữa Ecbot và nền tảng đó. Các nền tảng này hoạt động theo điều khoản riêng với bạn và khách của bạn, không phải là bên xử lý phụ của Ecbot.
+
+| Nền tảng | Dữ liệu trao đổi |
+| --- | --- |
+| Meta (Facebook Messenger, Instagram, WhatsApp) | Tin nhắn, hồ sơ người gửi (tên, ảnh đại diện, ID) |
+| Zalo (VNG) | Tin nhắn, hồ sơ người gửi |
+| TikTok Shop | Tin nhắn, hồ sơ người mua, thông tin đơn hàng |
+| Shopee | Tin nhắn, hồ sơ người mua, thông tin đơn hàng |
+| Telegram | Tin nhắn, hồ sơ người gửi |
+
+## Thay đổi
+
+Chúng tôi thông báo cho chủ không gian làm việc ít nhất **30 ngày** trước khi thêm hoặc thay một bên xử lý phụ có xử lý dữ liệu khách hàng. Để phản đối, hãy gửi email đến **[email DPO]** hoặc security@ecbot.dev.

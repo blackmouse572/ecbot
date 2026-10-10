@@ -28,6 +28,7 @@
     "isDate": "{property} should be a valid date.",
     "isPasswordStrong": "{property} must be a strong password.",
     "IsPasswordConstraint": "{property} must be at least 8 characters, with an uppercase letter, a lowercase letter and a number.",
+    "isTermsAccepted": "{property} must be true: please accept the Terms of Service and Privacy Policy to create an account.",
     "isPasswordMedium": "{property} must be a medium strength password.",
     "isPasswordWeak": "{property} must be a weak password.",
     "isStartWith": "{property} should start with {value}.",
