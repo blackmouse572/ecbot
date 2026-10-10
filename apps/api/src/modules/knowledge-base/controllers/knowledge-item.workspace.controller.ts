@@ -89,6 +89,7 @@ import { KnowledgeBaseService } from '../services/knowledge-base.service';
 import { KnowledgeIngestService } from '../services/knowledge-ingest.service';
 import { KnowledgeItemService } from '../services/knowledge-item.service';
 import { KnowledgeItemFolderService } from '../services/knowledge-item-folder.service';
+import { KnowledgeStorageQuotaService } from '../services/knowledge-storage-quota.service';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '../../../common/pagination/enums/pagination.enum';
 import { FileTypePipe } from '../../../common/file/pipes/file.type.pipe';
 import { ENUM_FILE_MIME_DOCUMENT } from '@app/common/file/enums/file.enum';
@@ -109,7 +110,8 @@ export class KnowledgeItemWorkspaceController {
         private readonly activityService: ActivityService,
         private readonly knowledgeItemFolderService: KnowledgeItemFolderService,
         private readonly awsS3Service: AwsS3Service,
-        private readonly knowledgeIngestService: KnowledgeIngestService
+        private readonly knowledgeIngestService: KnowledgeIngestService,
+        private readonly knowledgeStorageQuotaService: KnowledgeStorageQuotaService
     ) {}
 
     private readonly logger = new Logger(KnowledgeItemWorkspaceController.name);
@@ -315,6 +317,12 @@ export class KnowledgeItemWorkspaceController {
                 statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
                 message: 'knowledgeItem.error.fileRequired',
             });
+        }
+        if (file) {
+            await this.knowledgeStorageQuotaService.assertCanStore(
+                workspace.id,
+                file.size
+            );
         }
 
         const session = this.em.fork();
