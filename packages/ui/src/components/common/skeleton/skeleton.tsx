@@ -17,7 +17,7 @@ export const Skeleton = ({
       aria-hidden
       data-slot={dataSlot}
       className={clx(
-        "bg-ui-bg-component h-3 w-3 animate-pulse rounded-[4px]",
+        "bg-ui-bg-switch-off h-3 w-3 animate-pulse rounded-[4px]",
         className,
       )}
       style={style}
