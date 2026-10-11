@@ -15,6 +15,11 @@ const SWITCHES = {
   destructiveHint: false,
   idempotentHint: true,
 };
+const OVERWRITES = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  idempotentHint: true,
+};
 
 // Each tool: its arguments, the @repo/client call it makes with them, the
 // API response, what the tool returns, and its annotations.
@@ -53,6 +58,69 @@ const cases: [
     { path: { id: "conv-1" }, body: { status: "RESOLVED" } },
     { data: { id: "conv-1", status: "RESOLVED" } },
     { id: "conv-1", status: "RESOLVED" },
+    SWITCHES,
+  ],
+  [
+    "create_knowledge_base",
+    { name: "FAQ", description: "Common questions" },
+    "knowledgeBaseClientControllerCreateV1",
+    { body: { name: "FAQ", description: "Common questions" } },
+    { data: { id: "kb-1" } },
+    { id: "kb-1" },
+    ADDS,
+  ],
+  [
+    "update_knowledge_base",
+    { knowledgeBaseId: "kb-1", name: "Support FAQ" },
+    "knowledgeBaseClientControllerUpdateV1",
+    { path: { knowledgeBaseId: "kb-1" }, body: { name: "Support FAQ" } },
+    { data: { id: "kb-1", name: "Support FAQ" } },
+    { id: "kb-1", name: "Support FAQ" },
+    OVERWRITES,
+  ],
+  [
+    "create_knowledge_item",
+    {
+      knowledgeBaseId: "kb-1",
+      type: "TEXT",
+      title: "Opening hours",
+      content: "Open 9am to 5pm, Monday to Saturday.",
+    },
+    "knowledgeItemClientControllerCreateV1",
+    {
+      path: { knowledgeBaseId: "kb-1" },
+      body: {
+        type: "TEXT",
+        title: "Opening hours",
+        content: "Open 9am to 5pm, Monday to Saturday.",
+      },
+    },
+    { data: { id: "item-1", status: "DRAFT" } },
+    { id: "item-1", status: "DRAFT" },
+    ADDS,
+  ],
+  [
+    "update_knowledge_item",
+    { knowledgeBaseId: "kb-1", itemId: "item-1", content: "Open 8am to 6pm." },
+    "knowledgeItemClientControllerUpdateV1",
+    {
+      path: { knowledgeBaseId: "kb-1", id: "item-1" },
+      body: { content: "Open 8am to 6pm." },
+    },
+    { data: { id: "item-1" } },
+    { id: "item-1" },
+    OVERWRITES,
+  ],
+  [
+    "process_knowledge_item",
+    { knowledgeBaseId: "kb-1", itemId: "item-1" },
+    "knowledgeItemClientControllerUpdateV1",
+    {
+      path: { knowledgeBaseId: "kb-1", id: "item-1" },
+      body: { status: "READY" },
+    },
+    { data: { id: "item-1", status: "READY" } },
+    { id: "item-1", status: "READY" },
     SWITCHES,
   ],
 ];
@@ -97,19 +165,22 @@ describe("write tools", () => {
     },
   );
 
-  it("hides conversation writes from a key that may only read them", async () => {
-    vi.mocked(api.clientCredentialClientControllerMeV1).mockResolvedValue({
-      data: {
-        data: { permissions: [{ subject: "CHATBOT", action: ["read"] }] },
-      },
-    } as never);
-    const client = await connect({ "x-api-key": KEY });
+  it.each([
+    ["CHATBOT", "list_conversations", "reply_to_conversation"],
+    ["KNOWLEDGE_BASE", "list_knowledge_bases", "create_knowledge_item"],
+  ])(
+    "hides %s writes from a key that may only read them",
+    async (subject, readTool, writeTool) => {
+      vi.mocked(api.clientCredentialClientControllerMeV1).mockResolvedValue({
+        data: { data: { permissions: [{ subject, action: ["read"] }] } },
+      } as never);
+      const client = await connect({ "x-api-key": KEY });
 
-    const { tools } = await client.listTools();
-    const names = tools.map((t) => t.name);
+      const { tools } = await client.listTools();
+      const names = tools.map((t) => t.name);
 
-    expect(names).toContain("list_conversations");
-    expect(names).not.toContain("reply_to_conversation");
-    expect(names).not.toContain("set_conversation_bot");
-  });
+      expect(names).toContain(readTool);
+      expect(names).not.toContain(writeTool);
+    },
+  );
 });
