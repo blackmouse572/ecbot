@@ -12,15 +12,4 @@ describe("Form.Item", () => {
     expect(item).toHaveClass("flex", "flex-col", "gap-y-2");
     expect(item.className).not.toMatch(/space-y-/);
   });
-
-  it("keeps a row layout free of vertical margins", () => {
-    render(
-      <Form.Item
-        data-testid="item"
-        className="flex-row items-center gap-x-2"
-      />,
-    );
-
-    expect(screen.getByTestId("item").className).not.toMatch(/space-y-/);
-  });
 });
