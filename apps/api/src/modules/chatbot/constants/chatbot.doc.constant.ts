@@ -10,6 +10,17 @@ export const BasedChatbotDocParams = [
     },
 ];
 
+export const ChatbotDocParamsId = [
+    {
+        name: 'id',
+        allowEmptyValue: false,
+        required: true,
+        type: 'string',
+        example: '8fca54a4-9e4a-4a31-990d-de34c44b1af3',
+    },
+    ...BasedChatbotDocParams,
+];
+
 // The /client surface has no :workspace param (the credential carries it).
 export const ChatbotClientDocParamsId = [
     {
@@ -19,11 +30,6 @@ export const ChatbotClientDocParamsId = [
         type: 'string',
         example: '8fca54a4-9e4a-4a31-990d-de34c44b1af3',
     },
-];
-
-export const ChatbotDocParamsId = [
-    ...ChatbotClientDocParamsId,
-    ...BasedChatbotDocParams,
 ];
 
 export const ChatbotDocQueryStatus = [
