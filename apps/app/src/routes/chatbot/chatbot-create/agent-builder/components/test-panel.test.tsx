@@ -1,7 +1,7 @@
 // Real react-i18next + en.json (imported for its init side effect), unlike
 // agent-builder.test.tsx's raw-key mock: this file specifically proves the
 // interpolated "Talk with {{name}}" text, not just that the right key fired.
-import "@/i18n";
+import i18n from "@/i18n";
 import { createProfile } from "@repo/agent-blueprint";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -74,6 +74,19 @@ describe("TestPanel", () => {
       expect(screen.getByText("Hoa Nail")).toBeInTheDocument();
       expect(screen.getByText("Linh")).toBeInTheDocument();
       expect(screen.getByText("Always offer the Tuesday discount.")).toBeInTheDocument();
+    });
+
+    it("labels the summary in Vietnamese for a Vietnamese owner", async () => {
+      await i18n.changeLanguage("vi");
+      try {
+        openPromptTab();
+        // A translated question title, a choice by its label, and a yes/no.
+        expect(screen.getByText("Tên doanh nghiệp của bạn là gì?")).toBeInTheDocument();
+        expect(screen.getByText("Vừa phải")).toBeInTheDocument();
+        expect(screen.getByText("Agent có dùng emoji không?").closest("div")).toHaveTextContent("Có");
+      } finally {
+        await i18n.changeLanguage("en");
+      }
     });
 
     it("keeps the compiled prompt behind a toggle", () => {
