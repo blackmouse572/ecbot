@@ -2348,7 +2348,7 @@
         "description": "Chọn một hội thoại từ danh sách để xem nội dung tin nhắn."
       },
       "loading": "Đang tải tin nhắn…",
-      "noMessages": "Hội thoại chưa có tin nhắn nào.",
+      "noMessages": "Hội thoại chưa có tin nhắn nào",
       "newMessages": "Tin nhắn mới",
       "notFound": "Không tìm thấy hội thoại",
       "noMessagesHint": "Tin nhắn mới từ khách hàng sẽ hiện ở đây."
@@ -2405,12 +2405,12 @@
         },
         "contactPoints": {
           "title": "Kênh liên hệ",
-          "empty": "Chưa có kênh liên hệ.",
+          "empty": "Chưa có kênh liên hệ",
           "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây."
         },
         "followups": {
           "title": "Nhắc hẹn",
-          "empty": "Không có nhắc hẹn đang chờ.",
+          "empty": "Không có nhắc hẹn đang chờ",
           "badge": "Tin nhắn này đã kích hoạt một nhắc hẹn",
           "viewMessage": "Xem tin nhắn",
           "cancel": "Hủy",
@@ -2751,7 +2751,7 @@
         "composioToolkit": "Bộ công cụ",
         "mcpServerUrl": "URL máy chủ",
         "discoveredActions": "Hành động đã khám phá",
-        "discoveredActionsEmpty": "Chưa khám phá được hành động nào.",
+        "discoveredActionsEmpty": "Chưa khám phá được hành động nào",
         "discoveredActionsReload": "Tải lại",
         "toolkitDescription": "Mô tả",
         "toolkitCategories": "Danh mục",

@@ -2318,7 +2318,7 @@
         "description": "Pick a conversation from the list to view the message thread."
       },
       "loading": "Loading messages…",
-      "noMessages": "No messages in this conversation yet.",
+      "noMessages": "No messages in this conversation yet",
       "newMessages": "New messages",
       "notFound": "Conversation not found",
       "noMessagesHint": "New messages from this customer will show up here."
@@ -2375,12 +2375,12 @@
         },
         "contactPoints": {
           "title": "Contact points",
-          "empty": "No contact points yet.",
+          "empty": "No contact points yet",
           "emptyHint": "Ways to reach this customer, like a phone number or email, show up here."
         },
         "followups": {
           "title": "Followups",
-          "empty": "No pending followups.",
+          "empty": "No pending followups",
           "badge": "This message triggered a followup",
           "viewMessage": "View message",
           "cancel": "Cancel",
@@ -2721,7 +2721,7 @@
         "composioToolkit": "Toolkit",
         "mcpServerUrl": "Server URL",
         "discoveredActions": "Discovered Actions",
-        "discoveredActionsEmpty": "No actions discovered yet.",
+        "discoveredActionsEmpty": "No actions discovered yet",
         "discoveredActionsReload": "Reload",
         "toolkitDescription": "Description",
         "toolkitCategories": "Categories",
