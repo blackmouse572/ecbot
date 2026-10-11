@@ -543,6 +543,68 @@ describe('AccountService - deleteSyncAccount', () => {
     });
 });
 
+// Meta data deletion callback: the person removed the app and asked Meta to
+// have their data deleted. Their Facebook login (name, avatar, user token) is
+// unlinked in every workspace; the pages stay with the business.
+describe('AccountService - deleteFacebookUserData', () => {
+    let service: AccountService;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockEm.transactional.mockImplementation(cb => cb(mockTem));
+        mockTem.find.mockResolvedValue([]);
+        mockOAuthFactory.getService.mockReturnValue(mockPlatformService);
+        service = buildService();
+    });
+
+    it('looks up only Facebook logins with that app-scoped user id', async () => {
+        mockAccountRepository.find.mockResolvedValue([]);
+
+        await service.deleteFacebookUserData('fb-user-1');
+
+        expect(mockAccountRepository.find).toHaveBeenCalledWith({
+            externalId: 'fb-user-1',
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+            deletedAt: null,
+        });
+    });
+
+    it('unlinks each matching login in its own workspace and returns how many', async () => {
+        mockAccountRepository.find.mockResolvedValue([
+            {
+                id: 'account-uuid-1',
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+                workspace: { id: 'ws-1' },
+            },
+        ]);
+        mockAccountRepository.findOne.mockResolvedValue({
+            id: 'account-uuid-1',
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+        });
+
+        const deleted = await service.deleteFacebookUserData('fb-user-1');
+
+        expect(deleted).toBe(1);
+        expect(mockAccountRepository.findOne).toHaveBeenCalledWith({
+            id: 'account-uuid-1',
+            workspace: 'ws-1',
+            deletedAt: null,
+        });
+        expect(mockTem.nativeDelete).toHaveBeenCalledWith(AccountEntity, {
+            id: 'account-uuid-1',
+        });
+    });
+
+    it('returns 0 when we hold nothing for that person', async () => {
+        mockAccountRepository.find.mockResolvedValue([]);
+
+        await expect(
+            service.deleteFacebookUserData('unknown')
+        ).resolves.toBe(0);
+        expect(mockEm.transactional).not.toHaveBeenCalled();
+    });
+});
+
 // S-7: the admin write paths (create / upsert / update) used to store the
 // token exactly as the DTO carried it, so a plaintext row later decrypted to
 // garbage and the refresh cron blocked the account. Every write path must put

@@ -534,6 +534,29 @@ export class AccountService implements IAccountService {
     }
 
     /**
+     * Meta data deletion request: unlinks the person's Facebook login (name,
+     * avatar, user token) in every workspace. Pages linked through it belong
+     * to the business and stay. Returns how many logins were removed.
+     */
+    async deleteFacebookUserData(facebookUserId: string): Promise<number> {
+        const accounts = await this.accountRepository.find({
+            externalId: facebookUserId,
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+            deletedAt: null,
+        });
+
+        let deleted = 0;
+        for (const account of accounts) {
+            if (
+                await this.deleteSyncAccount(account.id, account.workspace.id)
+            ) {
+                deleted++;
+            }
+        }
+        return deleted;
+    }
+
+    /**
      * Best-effort per-platform cleanup on unlink (e.g. Telegram deregisters its
      * webhook). Resolved generically via the OAuth platform registry; platforms
      * that don't need cleanup simply don't implement `onUnlink`. Never aborts
