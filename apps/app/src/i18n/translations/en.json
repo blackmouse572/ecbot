@@ -2669,6 +2669,7 @@
         "maxRetries": "Max retries",
         "mcpProvider": "Provider",
         "composioToolkit": "Toolkit",
+        "mcpServerUrl": "Server URL",
         "discoveredActions": "Discovered Actions",
         "discoveredActionsEmpty": "No actions discovered yet.",
         "discoveredActionsReload": "Reload",

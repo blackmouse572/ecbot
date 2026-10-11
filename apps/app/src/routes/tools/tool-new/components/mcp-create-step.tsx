@@ -1,4 +1,5 @@
 import { useCreateMcpTool } from "@/hooks/api/tools";
+import { readApiError } from "@/libs/api-error";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { toast } from "@medusajs/ui";
 import type { ToolResponseDto } from "@repo/client";
@@ -39,9 +40,7 @@ export const McpCreateStep = ({
     } catch (error) {
       console.error("Error creating MCP tool:", error);
       const message =
-        (error as A)?.body?.message ??
-        (error as A)?.message ??
-        t("tools.errors.createFailed");
+        readApiError(error).message ?? t("tools.errors.createFailed");
       setSubmitError(message);
       toast.error(message);
     }

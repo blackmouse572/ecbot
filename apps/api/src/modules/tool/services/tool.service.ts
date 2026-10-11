@@ -89,15 +89,23 @@ export class ToolService {
 
     /**
      * Create an operator-supplied MCP server tool. Provider is OPERATOR
-     * (vs COMPOSIO for marketplace installs). Runs discovery best-effort:
-     * on failure the tool stays ACTIVE with empty discoveredActions so the
-     * operator can fix credentials and retrigger.
+     * (vs COMPOSIO for marketplace installs). The server is asked for its
+     * actions first, so an unreachable URL or a bad credential is reported
+     * and nothing is saved (#175).
      */
     async createMcpOperator(
         workspaceId: string,
         dto: CreateMcpToolRequestDto,
         createdBy?: UserEntity
     ): Promise<ToolEntity> {
+        const connection = {
+            mcpServerUrl: dto.serverUrl,
+            mcpAuth: dto.auth,
+            mcpCredential: dto.credential
+                ? this.enc.envelopeEncrypt(dto.credential)
+                : undefined,
+        };
+        const actions = await this.testMcpConnection(connection);
         const displayName = (dto as any).displayName ?? dto.name ?? '';
         const slug = await this.slugMinter.mint(
             slugify(displayName),
@@ -111,25 +119,34 @@ export class ToolService {
             displayName,
             description: dto.description,
             status: ENUM_TOOL_STATUS.ACTIVE,
-            mcpServerUrl: dto.serverUrl,
-            mcpAuth: dto.auth,
-            mcpCredential: dto.credential
-                ? this.enc.envelopeEncrypt(dto.credential)
-                : undefined,
+            ...connection,
+            discoveredActions: actions,
+            discoveryAt: new Date(),
         });
         if (createdBy) entity.createdBy = createdBy;
         await this.toolRepo.getEntityManager().flush();
+        return entity;
+    }
+
+    /** Lists the server's actions, or throws 502 when it cannot be reached. */
+    private async testMcpConnection(
+        connection: Pick<
+            ToolEntity,
+            'mcpServerUrl' | 'mcpAuth' | 'mcpCredential'
+        >
+    ): Promise<ToolEntity['discoveredActions']> {
         try {
-            const actions = await this.discovery.discover(entity);
-            entity.discoveredActions = actions;
-            entity.discoveryAt = new Date();
-            await this.toolRepo.getEntityManager().flush();
+            return await this.discovery.discover(
+                Object.assign(new ToolEntity(), connection)
+            );
         } catch (err) {
             this.logger.warn(
-                `MCP discovery failed for tool ${entity.id}: ${String(err)}`
+                `MCP connection test failed for ${connection.mcpServerUrl}: ${String(err)}`
+            );
+            throw new BadGatewayException(
+                'tool.discover.error.connectionFailed'
             );
         }
-        return entity;
     }
 
     async findAllByWorkspace(
@@ -224,8 +241,8 @@ export class ToolService {
     /**
      * An operator's MCP server can change its URL, auth and credential (#176);
      * a marketplace tool's connection belongs to its provider, so only the
-     * name and description move. A new connection is rediscovered
-     * best-effort, like on create.
+     * name and description move. A new connection must answer before it is
+     * saved, like on create.
      */
     private async updateMcp(
         tool: ToolEntity,
@@ -244,29 +261,26 @@ export class ToolService {
                 'tool.update.error.managedConnection'
             );
         }
+        const connection = {
+            mcpServerUrl: dto.serverUrl ?? tool.mcpServerUrl,
+            mcpAuth: (dto.auth as ToolEntity['mcpAuth']) ?? tool.mcpAuth,
+            mcpCredential:
+                dto.auth?.type === 'none'
+                    ? null
+                    : dto.credential
+                      ? this.enc.envelopeEncrypt(dto.credential)
+                      : tool.mcpCredential,
+        };
+        // Test the new connection before it replaces the working one (#175).
+        if (changesConnection) {
+            tool.discoveredActions = await this.testMcpConnection(connection);
+            tool.discoveryAt = new Date();
+            Object.assign(tool, connection);
+        }
         if (dto.name !== undefined) tool.displayName = dto.name;
         if (dto.description !== undefined) tool.description = dto.description;
-        if (dto.serverUrl !== undefined) tool.mcpServerUrl = dto.serverUrl;
-        if (dto.auth !== undefined) {
-            tool.mcpAuth = dto.auth as ToolEntity['mcpAuth'];
-            if (dto.auth.type === 'none') tool.mcpCredential = null;
-        }
-        if (dto.credential) {
-            tool.mcpCredential = this.enc.envelopeEncrypt(dto.credential);
-        }
         if (updatedBy) tool.updatedBy = updatedBy;
         await this.toolRepo.getEntityManager().flush();
-        if (changesConnection) {
-            try {
-                tool.discoveredActions = await this.discovery.discover(tool);
-                tool.discoveryAt = new Date();
-                await this.toolRepo.getEntityManager().flush();
-            } catch (err) {
-                this.logger.warn(
-                    `MCP discovery failed for tool ${tool.id}: ${String(err)}`
-                );
-            }
-        }
         return tool;
     }
 

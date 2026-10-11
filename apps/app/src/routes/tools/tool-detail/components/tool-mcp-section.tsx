@@ -8,6 +8,7 @@ import {
   type ComposioToolkitDetail,
 } from "@/hooks/api/tools";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { readApiError } from "@/libs/api-error";
 
 type ToolMcpSectionProps = {
   item: ToolResponseDto;
@@ -34,8 +35,10 @@ export const ToolMcpSection = ({ item, toolkit }: ToolMcpSectionProps) => {
   const handleRediscover = async () => {
     try {
       await rediscover();
-    } catch {
-      toast.error(t("tools.details.discover.error"));
+    } catch (error) {
+      toast.error(
+        readApiError(error).message ?? t("tools.details.discover.error"),
+      );
     }
   };
 
@@ -65,6 +68,16 @@ export const ToolMcpSection = ({ item, toolkit }: ToolMcpSectionProps) => {
               : "-"
           }
         />
+        {item.mcpServerUrl && (
+          <SectionRow
+            title={t("tools.details.fields.mcpServerUrl")}
+            value={
+              <Text size="small" className="break-all">
+                {item.mcpServerUrl}
+              </Text>
+            }
+          />
+        )}
         {(item.source as Record<string, unknown> | undefined)?.toolkit && (
           <SectionRow
             title={t("tools.details.fields.composioToolkit")}

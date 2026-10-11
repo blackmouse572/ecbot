@@ -2699,6 +2699,7 @@
         "maxRetries": "Số lần thử lại tối đa",
         "mcpProvider": "Nhà cung cấp",
         "composioToolkit": "Bộ công cụ",
+        "mcpServerUrl": "URL máy chủ",
         "discoveredActions": "Hành động đã khám phá",
         "discoveredActionsEmpty": "Chưa khám phá được hành động nào.",
         "discoveredActionsReload": "Tải lại",

@@ -1,4 +1,5 @@
 import { RouteDrawer } from "@/components/modals";
+import { readApiError } from "@/libs/api-error";
 import { useGetTool, useUpdateTool } from "@/hooks/api/tools";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,9 +59,7 @@ const ToolEditInner = () => {
     } catch (error) {
       console.error("Error updating tool:", error);
       const message =
-        (error as A)?.body?.message ??
-        (error as A)?.message ??
-        t("tools.errors.updateFailed");
+        readApiError(error).message ?? t("tools.errors.updateFailed");
       setSubmitError(message);
       toast.error(message);
     }
@@ -74,7 +73,7 @@ const ToolEditInner = () => {
       navigate("..");
     } catch (error) {
       const message =
-        (error as A)?.body?.message ?? t("tools.errors.updateFailed");
+        readApiError(error).message ?? t("tools.errors.updateFailed");
       setSubmitError(message);
       toast.error(message);
     }
@@ -196,7 +195,7 @@ function McpToolEditForm({
       toast.success(t("tools.edit.success"));
       onCancel();
     } catch (error) {
-      toast.error((error as A)?.body?.message ?? t("tools.edit.error"));
+      toast.error(readApiError(error).message ?? t("tools.edit.error"));
     }
   });
 

@@ -14,6 +14,7 @@ import {
     ToolEntity,
 } from 'src/modules/tool/repository/entities/tool.entity';
 import {
+    BadGatewayException,
     BadRequestException,
     ConflictException,
     NotFoundException,
@@ -186,6 +187,66 @@ describe('ToolService', () => {
                 } as any)
             ).rejects.toBeInstanceOf(BadRequestException);
             expect(tool.mcpServerUrl).toBe('https://old.example.com/mcp');
+        });
+    });
+
+    // #175: an unreachable MCP server used to be saved anyway, with no
+    // actions and no error.
+    describe('MCP connection test before saving (#175)', () => {
+        const createDto = {
+            name: 'Shop MCP',
+            description: 'd',
+            serverUrl: 'https://mcp.example.com/sse',
+            auth: { type: 'bearer' },
+            credential: 'tok',
+        } as any;
+
+        it('saves the tool with its actions when the server answers', async () => {
+            mockDiscovery.discover = jest
+                .fn()
+                .mockResolvedValue([{ name: 'list_orders' }]);
+
+            const tool = await svc.createMcpOperator('ws-1', createDto);
+
+            expect(mockDiscovery.discover.mock.calls[0][0]).toMatchObject({
+                mcpServerUrl: 'https://mcp.example.com/sse',
+                mcpCredential: 'v1:enc:tok',
+            });
+            expect(tool.discoveredActions).toEqual([{ name: 'list_orders' }]);
+            expect(mockRepo.create).toHaveBeenCalled();
+        });
+
+        it('saves nothing and says why when the server cannot be reached', async () => {
+            mockDiscovery.discover = jest
+                .fn()
+                .mockRejectedValue(new Error('ECONNREFUSED'));
+
+            await expect(
+                svc.createMcpOperator('ws-1', createDto)
+            ).rejects.toBeInstanceOf(BadGatewayException);
+            expect(mockRepo.create).not.toHaveBeenCalled();
+            expect(mockEm.flush).not.toHaveBeenCalled();
+        });
+
+        it('keeps the old connection when a new URL cannot be reached', async () => {
+            const tool = Object.assign(new ToolEntity(), {
+                id: 't-1',
+                kind: ENUM_TOOL_KIND.MCP,
+                mcpProvider: ENUM_MCP_PROVIDER.OPERATOR,
+                mcpServerUrl: 'https://old.example.com/mcp',
+            });
+            mockRepo.findOneInWorkspace.mockResolvedValue(tool);
+            mockDiscovery.discover = jest
+                .fn()
+                .mockRejectedValue(new Error('ECONNREFUSED'));
+
+            await expect(
+                svc.update('ws-1', 't-1', {
+                    serverUrl: 'https://typo.example.com/mcp',
+                } as any)
+            ).rejects.toBeInstanceOf(BadGatewayException);
+            expect(tool.mcpServerUrl).toBe('https://old.example.com/mcp');
+            expect(mockEm.flush).not.toHaveBeenCalled();
         });
     });
 
