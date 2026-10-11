@@ -1,6 +1,7 @@
 import { ConversationModule } from '@app/modules/conversation/conversation.module';
 import { ConversationRepositoryModule } from '@app/modules/conversation/repository/conversation.repository.module';
 import { AccountModule } from '@app/modules/account/account.module';
+import { AccountDataDeletionPublicController } from '@app/modules/account/controllers/account-data-deletion.public.controller';
 import { PlatformWebhookPublicController } from '@app/modules/platform/controllers/platform-webhook.public.controller';
 import { WidgetPublicController } from '@app/modules/platform/controllers/widget.public.controller';
 import { PlatformModule } from '@app/modules/platform/platform.module';
@@ -43,6 +44,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         HealthPublicController,
         WaitlistPublicController,
         ChatbotPreviewPublicController,
+        AccountDataDeletionPublicController,
     ],
     providers: [],
     exports: [],
