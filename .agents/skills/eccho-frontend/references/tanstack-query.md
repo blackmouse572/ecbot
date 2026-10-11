@@ -1,6 +1,6 @@
 # TanStack Query v5 — ecbot conventions
 
-ecbot's `apps/app` version of the [tanstack-query agent skill](https://github.com/DeckardGer/tanstack-agent-skills/blob/main/skills/tanstack-query/SKILL.md). Source of record: `.github/instructions/app/data-fetching.instructions.md`. Reference implementation: `apps/app/src/hooks/api/chatbot.ts`.
+ecbot's `apps/app` version of the [tanstack-query agent skill](https://github.com/DeckardGer/tanstack-agent-skills/blob/main/skills/tanstack-query/SKILL.md). Reference implementation: `apps/app/src/hooks/api/chatbot.ts`.
 
 **Invariants**: server access only through hooks in `src/hooks/api/<resource>.ts` wrapping the generated `@repo/client` (never raw `fetch`/`axios` — regenerate with `pnpm generate:client`); array query keys via `queryKeysFactory`; targeted invalidation on mutation success; handle `isLoading`/`isError` on every read.
 
@@ -220,3 +220,18 @@ src/hooks/api/
 ├── accounts.ts
 └── index.ts         # re-exports everything
 ```
+
+## API client
+
+Use the generated functions and types from `@repo/client`. They are named `<controller>Controller<action>V1` and take `{ path, query, body }`:
+
+```typescript
+import {
+  chatbotControllerFindAllV1,
+  chatbotControllerCreateV1,
+  type ChatbotCreateRequestDto,
+  type ChatbotListResponseDto,
+} from "@repo/client";
+```
+
+If an endpoint is missing, run `pnpm generate:client` rather than hand-writing a `fetch` or `axios` call, so request and response types stay generated from the API.

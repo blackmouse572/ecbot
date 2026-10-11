@@ -94,19 +94,19 @@ Components are typed `FC<Props>`. Reserve `any` for genuinely dynamic payloads, 
 
 ## References
 
-Read the matching reference before writing code. `.github/instructions/app/*` files are the source of record.
+Read the matching reference before writing code. The `references/` files are the source of truth. Forms, Jotai/CASL and component conventions are documented only in `.github/instructions/app/`.
 
-| Task / area                                                         | Reference                                                                                       |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Queries, keys, mutations, invalidation, loaders                     | [references/tanstack-query.md](references/tanstack-query.md) · `data-fetching.instructions.md`  |
-| Router tree, lazy modules, loaders, breadcrumbs, create/edit modals | [references/react-router.md](references/react-router.md) · `routing-and-modals.instructions.md` |
-| List/table screens                                                  | [references/table-list.md](references/table-list.md)                                            |
-| `@repo/ui` + `@medusajs/ui`, design tokens                          | [references/ui.md](references/ui.md)                                                            |
-| Library picks, motion, easing and color tokens                      | [references/design-system.md](references/design-system.md)                                      |
-| Component composition                                               | [rules/composition.md](rules/composition.md)                                                    |
-| Forms                                                               | `forms.instructions.md`                                                                         |
-| Jotai & CASL                                                        | `state-and-authorization.instructions.md`                                                       |
-| Component conventions                                               | `react.instructions.md`                                                                         |
-| Chatbot wizard, template-driven fields, archetype toggles           | `apps/ai/README.md` § "Agent archetypes & modular prompt"                                       |
+| Task / area                                                         | Reference                                                    |
+| ------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Queries, keys, mutations, invalidation, loaders                     | [references/tanstack-query.md](references/tanstack-query.md) |
+| Router tree, lazy modules, loaders, breadcrumbs, create/edit modals | [references/react-router.md](references/react-router.md)     |
+| List/table screens                                                  | [references/table-list.md](references/table-list.md)         |
+| `@repo/ui` + `@medusajs/ui`, design tokens                          | [references/ui.md](references/ui.md)                         |
+| Library picks, motion, easing and color tokens                      | [references/design-system.md](references/design-system.md)   |
+| Component composition                                               | [rules/composition.md](rules/composition.md)                 |
+| Forms                                                               | `forms.instructions.md`                                      |
+| Jotai & CASL                                                        | `state-and-authorization.instructions.md`                    |
+| Component conventions                                               | `react.instructions.md`                                      |
+| Chatbot wizard, template-driven fields, archetype toggles           | `apps/ai/README.md` § "Agent archetypes & modular prompt"    |
 
 Backend this app calls: the `eccho-backend` skill.
