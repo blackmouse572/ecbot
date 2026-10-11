@@ -140,6 +140,33 @@ describe("KnowledgeItemCreateForm", () => {
     expect([title.selectionStart, title.selectionEnd]).toEqual([0, 11]);
   });
 
+  // #167: a new FILE item must start processing like URL and TEXT do,
+  // not wait in Draft for the "Process" action.
+  it("starts processing a new FILE item right away, once", async () => {
+    const { container } = renderFileForm();
+    fireEvent.change(container.querySelector('input[type="file"]')!, {
+      target: {
+        files: [
+          new File(["q"], "kunmart-faq.pdf", { type: "application/pdf" }),
+        ],
+      },
+    });
+    await waitFor(() =>
+      expect(
+        container.querySelector<HTMLInputElement>('input[name="title"]')!.value,
+      ).toBe("kunmart-faq"),
+    );
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(api.created).toHaveLength(1));
+    expect(api.created[0]).toMatchObject({ type: "FILE" });
+    await waitFor(() =>
+      expect(api.processed).toEqual([
+        { knowledgeBaseId: "kb-1", id: "item-1" },
+      ]),
+    );
+  });
+
   it("gives the tag picker a placeholder", () => {
     renderFileForm();
     expect(
