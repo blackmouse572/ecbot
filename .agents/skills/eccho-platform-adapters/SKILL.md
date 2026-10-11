@@ -1,6 +1,8 @@
 ---
 name: eccho-platform-adapters
-description: Build or change an ecbot chat channel through the `apps/api` platform module (`PlatformAdapter`). Use for Messenger, Instagram, WhatsApp Business, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget: inbound webhooks, signature verification, event parsing, operator replies, sender profiles, channel OAuth, or adding a new channel.
+description: "Build or change an ecbot chat channel through the `apps/api` platform module (`PlatformAdapter`). Use for Messenger, Instagram, WhatsApp Business, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget: inbound webhooks, signature verification, event parsing, operator replies, sender profiles, channel OAuth, or adding a new channel."
+metadata:
+  internal: true
 ---
 
 # ecbot Platform Adapters

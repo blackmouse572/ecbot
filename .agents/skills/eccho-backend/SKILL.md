@@ -1,6 +1,8 @@
 ---
 name: eccho-backend
-description: Rules, module layout, and doc routing for the ecbot `apps/api` NestJS backend. Use for any work under `apps/api/**`: endpoints, entities, repositories, migrations, DTOs, route protection, list/pagination endpoints, queues and background jobs, localized errors, integrations.
+description: "Rules, module layout, and doc routing for the ecbot `apps/api` NestJS backend. Use for any work under `apps/api/**`: endpoints, entities, repositories, migrations, DTOs, route protection, list/pagination endpoints, queues and background jobs, localized errors, integrations."
+metadata:
+  internal: true
 ---
 
 # ecbot Backend (`apps/api`)

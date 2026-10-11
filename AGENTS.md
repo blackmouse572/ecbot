@@ -83,5 +83,8 @@ Read the matching file in `.github/instructions/` (`packages/*.instructions.md`,
 
 - Skill sources live in `.agents/skills/<name>/`; `.claude/skills/<name>` is a symlink to it. Edit only the `.agents/skills/` copy.
 - New skill: create `.agents/skills/<name>/SKILL.md` (disclose long reference into `references/`), then `ln -s ../../.agents/skills/<name> .claude/skills/<name>`. The directory name must equal the frontmatter `name`.
+- `.agents/skills/` is for building ecbot, never for users. Give every skill you write or copy there `metadata:` with `internal: true` in its frontmatter, so `npx skills add blackmouse572/ecbot` does not offer it. Skills installed with `npx skills add` are already hidden through `skills-lock.json`.
+- User-facing skills (for agents driving the Ecbot MCP Server) live in `skills/<name>/` at the repo root, with no `.claude/skills` symlink. Users install them with `npx skills add blackmouse572/ecbot --skill <name>`.
+- Frontmatter must be strict YAML or the `skills` CLI skips the file: quote a `description` that contains `: `.
 - Shared guidance goes here in `AGENTS.md`; `CLAUDE.md` only imports it.
 </important>

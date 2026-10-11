@@ -1,6 +1,8 @@
 ---
 name: eccho-frontend
-description: Rules, folder layout, and reference routing for the ecbot `apps/app` React SPA. Use for any work under `apps/app/**`: pages and routes, data fetching and mutations, forms, create/edit modals, list tables, UI components and styling, permission gating, translations.
+description: "Rules, folder layout, and reference routing for the ecbot `apps/app` React SPA. Use for any work under `apps/app/**`: pages and routes, data fetching and mutations, forms, create/edit modals, list tables, UI components and styling, permission gating, translations."
+metadata:
+  internal: true
 ---
 
 # ecbot Frontend (`apps/app`)
