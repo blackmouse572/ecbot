@@ -17,6 +17,23 @@ export type Allows = (
   action: RolePermissionDto["action"][number],
 ) => boolean;
 
+// Tool annotations by the kind of change a tool makes. A tool that only
+// adds, or flips a reversible switch, is not destructive; one that
+// overwrites or deletes is.
+export const READS = { readOnlyHint: true };
+export const ADDS = { readOnlyHint: false, destructiveHint: false };
+export const SWITCHES = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: true,
+};
+export const OVERWRITES = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  idempotentHint: true,
+};
+export const DELETES = { readOnlyHint: false, destructiveHint: true };
+
 export const paging = {
   page: z.number().int().min(1).optional(),
   perPage: z.number().int().min(1).max(100).optional(),

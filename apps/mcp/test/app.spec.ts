@@ -20,13 +20,22 @@ const READ_TOOLS = [
   "get_chatbot",
   "get_conversation",
   "get_customer",
+  "get_customer_tags",
   "get_knowledge_item",
+  "get_skill",
+  "get_workspace_tool",
+  "list_chatbot_models",
+  "list_chatbot_skills",
+  "list_chatbot_tools",
   "list_chatbots",
   "list_conversation_messages",
   "list_conversations",
+  "list_customer_tags",
   "list_customers",
   "list_knowledge_bases",
   "list_knowledge_items",
+  "list_skills",
+  "list_workspace_tools",
 ];
 
 // What GET /client/v1/me answers: the key's permissions in its workspace.
@@ -105,6 +114,8 @@ describe("/mcp", () => {
       { subject: "CHATBOT", action: ["read"] },
       { subject: "KNOWLEDGE_BASE", action: ["read"] },
       { subject: "CUSTOMER", action: ["read"] },
+      { subject: "TOOL", action: ["read"] },
+      { subject: "SKILL", action: ["read"] },
     ]);
     const client = await connect({ "x-api-key": KEY });
 
@@ -125,6 +136,8 @@ describe("/mcp", () => {
 
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       "get_customer",
+      "get_customer_tags",
+      "list_customer_tags",
       "list_customers",
     ]);
     expect(me).toHaveBeenCalledTimes(1);

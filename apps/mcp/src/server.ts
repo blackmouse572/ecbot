@@ -5,6 +5,8 @@ import { registerChatbotTools } from "./tools/chatbots";
 import { registerConversationTools } from "./tools/conversations";
 import { registerCustomerTools } from "./tools/customers";
 import { registerKnowledgeTools } from "./tools/knowledge";
+import { registerSkillTools } from "./tools/skills";
+import { registerWorkspaceToolTools } from "./tools/workspace-tools";
 import type { Allows, ApiOptions } from "./tools/shared";
 
 // One server per request, bound to the caller's key. The key travels with
@@ -42,6 +44,8 @@ export async function createEcbotServer(
   registerKnowledgeTools(server, api, allows);
   registerConversationTools(server, api, allows);
   registerCustomerTools(server, api, allows);
+  registerWorkspaceToolTools(server, api, allows);
+  registerSkillTools(server, api, allows);
 
   return server;
 }
