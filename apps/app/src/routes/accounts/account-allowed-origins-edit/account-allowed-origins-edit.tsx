@@ -111,7 +111,7 @@ function AccountAllowedOriginsEditInner() {
                 t("accounts.details.websiteWidget.edit.originsInvalid"),
             }}
             render={({ field }) => (
-              <Form.Item className="flex flex-col gap-y-2">
+              <Form.Item>
                 <Form.Label>
                   {t("accounts.details.websiteWidget.originsLabel")}
                 </Form.Label>
@@ -139,7 +139,7 @@ function AccountAllowedOriginsEditInner() {
                 t("accounts.details.websiteWidget.edit.privacyInvalid"),
             }}
             render={({ field }) => (
-              <Form.Item className="flex flex-col gap-y-2">
+              <Form.Item>
                 <Form.Label optional>
                   {t("accounts.details.websiteWidget.privacyLabel")}
                 </Form.Label>

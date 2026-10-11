@@ -2,6 +2,7 @@ import {
     BadRequestException,
     Body,
     Controller,
+    ForbiddenException,
     Get,
     NotFoundException,
     Param,
@@ -57,6 +58,7 @@ import { InstallerRegistry } from '../installers/installer-registry.service';
 import { ToolInstallSessionRepository } from '../repository/repositories/tool-install-session.repository';
 import { ToolRepository } from '../repository/repositories/tool.repository';
 import { ENUM_MCP_PROVIDER } from '../enums/mcp-provider.enum';
+import { ENUM_TOOL_STATUS } from '../enums/tool-status.enum';
 
 @ApiTags('modules.workspace.marketplace')
 @Controller({
@@ -294,6 +296,10 @@ export class MarketplaceWorkspaceController {
     ): Promise<IResponse<ToolInstallResponseDto>> {
         const tool = await this.toolRepo.findOneInWorkspace(dto.toolId, ws.id);
         if (!tool) throw new NotFoundException('tool.get.error.notFound');
+        // Reconnecting would hand back a tool an admin turned off.
+        if (tool.status === ENUM_TOOL_STATUS.REVOKED) {
+            throw new ForbiddenException('tool.execute.error.inactive');
+        }
 
         const installer = this.registry.get(
             tool.mcpProvider ?? ENUM_MCP_PROVIDER.COMPOSIO

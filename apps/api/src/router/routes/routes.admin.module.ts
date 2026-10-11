@@ -6,6 +6,8 @@ import { ChatbotAdminController } from '@app/modules/chatbot/controllers/chatbot
 import { RAGAdminController } from '@app/modules/rag/controllers/rag.admin.controller';
 import { SkillAdminController } from '@app/modules/skill/controllers/skill.admin.controller';
 import { SkillModule } from '@app/modules/skill/skill.module';
+import { ToolAdminController } from '@app/modules/tool/controllers/tool.admin.controller';
+import { ToolModule } from '@app/modules/tool/tool.module';
 import { RAGModule } from '@app/modules/rag/rag.module';
 import { WorkSpaceModule } from '@app/modules/workspace/workspace.module';
 import { Module } from '@nestjs/common';
@@ -48,6 +50,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         ChatbotAdminController,
         RAGAdminController,
         SkillAdminController,
+        ToolAdminController,
         WaitlistAdminController,
     ],
     providers: [],
@@ -70,6 +73,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         WorkSpaceModule,
         RAGModule,
         SkillModule,
+        ToolModule,
         WaitlistModule,
         CloudTasksQueueModule,
     ],

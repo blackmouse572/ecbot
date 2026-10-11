@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
+import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 import { ToolSpec } from 'src/modules/tool/interfaces/tool-spec.interface';
 import { isDestructiveAction } from 'src/modules/tool/utils/destructive-action.util';
 
@@ -27,6 +28,8 @@ export class ManifestBuilderService {
         for (const row of rows) {
             const t = row.tool;
             if (!t || t.deleted) continue;
+            // Inactivated by an admin.
+            if (t.status === ENUM_TOOL_STATUS.REVOKED) continue;
             if (t.kind === ENUM_TOOL_KIND.HTTP) {
                 specs.push({
                     id: t.id,

@@ -60,6 +60,24 @@ describe("useOAuthLogin", () => {
     expect(sessionStorage.getItem("oauth-state:FACEBOOK_ACCOUNT")).toBe(state);
   });
 
+  // Meta App Review rejects any permission the product cannot show in use,
+  // so the login asks only for what Messenger needs.
+  it("asks Facebook only for the permissions Messenger uses", () => {
+    const { result } = renderHook(() => useOAuthLogin("FACEBOOK_ACCOUNT", {}));
+
+    result.current.handleLinkClick();
+
+    const openMock = window.open as ReturnType<typeof vi.fn>;
+    const url = new URL(openMock.mock.calls.at(-1)?.[0] as string);
+    expect(url.searchParams.get("scope")?.split(",").sort()).toEqual([
+      "business_management",
+      "pages_manage_metadata",
+      "pages_messaging",
+      "pages_read_engagement",
+      "pages_show_list",
+    ]);
+  });
+
   it("generates a different state on each click", () => {
     const { result } = renderHook(() => useOAuthLogin("FACEBOOK_ACCOUNT", {}));
     const openMock = window.open as ReturnType<typeof vi.fn>;

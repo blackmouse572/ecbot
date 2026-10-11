@@ -15,6 +15,7 @@ import {
 } from './http-tool-executor.service';
 import { McpToolExecutorService } from 'src/modules/tool/services/mcp-tool-executor.service';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
+import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 import { ChatbotEntity } from 'src/modules/chatbot/repository/entities/chatbot.entity';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
 import { isDestructiveAction } from 'src/modules/tool/utils/destructive-action.util';
@@ -60,6 +61,10 @@ export class ToolExecutionService {
         if (!tool) {
             this.logger.warn(`Tool not found: ${toolId}`);
             throw new NotFoundException('tool.get.error.notFound');
+        }
+        // Inactivated by an admin; a cached manifest may still offer it.
+        if (tool.status === ENUM_TOOL_STATUS.REVOKED) {
+            throw new ForbiddenException('tool.execute.error.inactive');
         }
 
         const link = await this.chatbotToolRepo.findOneByChatbotAndTool(

@@ -3,8 +3,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // public/_headers is what Cloudflare serves the app with. The widget is this
-// app inside an iframe on a customer's own site, so a framing rule that also
-// covered /widget/* would blank every embedded widget.
+// app inside an iframe on a customer's own site, so the site-wide framing rule
+// must not apply to /widget/*. The Worker (apps/app/worker/index.ts) owns
+// framing there and sets frame-ancestors from the account's allowed sites; the
+// two `!` lines only stop the site-wide rule from applying.
 const headers = readFileSync(
   join(__dirname, "../../../public/_headers"),
   "utf8",
@@ -32,10 +34,12 @@ describe("app response headers", () => {
     );
   });
 
-  it("leaves the widget page frameable from a customer's site", () => {
-    expect(rulesFor("/widget/*")).toEqual([
-      "! X-Frame-Options",
-      "! Content-Security-Policy",
-    ]);
+  it("keeps the site-wide framing rule off the widget page", () => {
+    expect(rulesFor("/widget/*")).toEqual(
+      expect.arrayContaining([
+        "! X-Frame-Options",
+        "! Content-Security-Policy",
+      ]),
+    );
   });
 });

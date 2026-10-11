@@ -8,7 +8,9 @@
   Content-Security-Policy: frame-ancestors 'self'
 
 # The website widget is this page inside an iframe on a customer's own site
-# (public/widget.js), so it must stay frameable from anywhere.
+# (public/widget.js). The Worker (apps/app/worker/index.ts) owns framing for
+# /widget/* and sets frame-ancestors from the account's allowed sites. These
+# two lines only stop the site-wide rule above from applying there.
 /widget/*
   ! X-Frame-Options
   ! Content-Security-Policy

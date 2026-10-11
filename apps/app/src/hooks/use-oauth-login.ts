@@ -19,14 +19,14 @@ type PlatformConfig = {
 function getFacebookConfig(state: string): PlatformConfig {
   const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
   const redirectUri = import.meta.env.VITE_FACEBOOK_REDIRECT_URI;
+  // Only what the product uses: Meta App Review rejects the rest. List the
+  // person's Pages (also those owned through a business portfolio), read the
+  // Page profile, subscribe its webhook, and send and receive messages.
   const permissions = [
-    "pages_messaging",
-    "pages_messaging_subscriptions",
+    "pages_show_list",
+    "pages_read_engagement",
     "pages_manage_metadata",
-    "pages_manage_engagement",
-    "pages_read_user_content",
-    "pages_manage_posts",
-    "pages_manage_ads",
+    "pages_messaging",
     "business_management",
   ].join(",");
   return {
