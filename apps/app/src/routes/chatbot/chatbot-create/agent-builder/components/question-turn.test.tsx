@@ -96,3 +96,63 @@ describe("QuestionTurn handoff step", () => {
     );
   });
 });
+
+// #151: "Question 1 / 23" alone felt long, with no estimate and no hint that
+// the agent can be tried before every question is answered.
+describe("QuestionTurn progress", () => {
+  beforeAll(() => i18n.changeLanguage("en"));
+
+  const renderAt = (
+    current: number,
+    total: number,
+    chatbotId: string | null,
+  ) => {
+    const profile = createProfile("ecommerce", "en");
+    const question = buildQuestionGroups(profile)
+      .flatMap((g) => g.questions)
+      .find((q) => q.id === "businessName")!;
+    render(
+      <QuestionTurn
+        question={question}
+        profile={profile}
+        suggestion={null}
+        position={{ current, total }}
+        onAnswer={vi.fn()}
+        onSkip={vi.fn()}
+        chatbotId={chatbotId}
+        linkedAccounts={[]}
+        onAccountsLinked={vi.fn()}
+        onAccountsUnlinked={vi.fn()}
+      />,
+    );
+  };
+
+  it("estimates the time left next to the counter", () => {
+    renderAt(1, 23, null);
+    expect(screen.getByText("Question 1 of 23, about 6 min left")).toBeTruthy();
+  });
+
+  it("never estimates less than a minute", () => {
+    renderAt(23, 23, "bot-1");
+    expect(
+      screen.getByText("Question 23 of 23, about 1 min left"),
+    ).toBeTruthy();
+  });
+
+  it("says the agent can be tried before the draft exists", () => {
+    renderAt(2, 23, null);
+    expect(
+      screen.getByText(
+        "Once your agent has a name, you can try it right away and finish the rest later.",
+      ),
+    ).toBeTruthy();
+    expect(i18n.t("agentBuilder.ui.testEarlyHint", { lng: "vi" })).toBe(
+      "Sau khi đặt tên cho agent, bạn có thể thử ngay và hoàn thành phần còn lại sau.",
+    );
+  });
+
+  it("drops the hint once the draft exists", () => {
+    renderAt(5, 23, "bot-1");
+    expect(screen.queryByText(/finish the rest later/)).toBeNull();
+  });
+});
