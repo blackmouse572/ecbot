@@ -226,6 +226,7 @@ export class WorkspaceRequestService {
                     recipient: request.requestFrom.id,
                     sender: workspace.owner.id,
                     metadata: {
+                        actionUrl: `/${workspace.slug}`,
                         actionText: 'Go to Workspace',
                     },
                 });

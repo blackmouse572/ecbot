@@ -167,8 +167,8 @@ describe('CustomerMergeSuggestionService', () => {
             const { service, notificationService, workspaceMemberRepo } =
                 makeService(em, suggestionRepo);
             workspaceMemberRepo.findActiveByWorkspace.mockResolvedValue([
-                { user: { id: 'user-1' } },
-                { user: { id: 'user-2' } },
+                { user: { id: 'user-1' }, workspace: { slug: 'acme' } },
+                { user: { id: 'user-2' }, workspace: { slug: 'acme' } },
             ]);
 
             const result = await service.detectAndUpsert({
@@ -187,6 +187,9 @@ describe('CustomerMergeSuggestionService', () => {
             expect(firstCall.recipient).toBe('user-1');
             expect(firstCall.metadata.data.customerAId).toBe('cust-A');
             expect(firstCall.metadata.data.customerBId).toBe('cust-B');
+            expect(firstCall.metadata.actionUrl).toBe(
+                '/acme/customers/suggestions'
+            );
         });
 
         it('excludes merged-away (mergedIntoCustomerId set) candidates via the EM filter', async () => {

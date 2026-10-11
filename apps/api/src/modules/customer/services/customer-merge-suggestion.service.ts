@@ -542,7 +542,7 @@ export class CustomerMergeSuggestionService {
                             priority: NotificationPriority.MEDIUM,
                             recipient: member.user.id,
                             metadata: {
-                                actionUrl: `/customers/suggestions`,
+                                actionUrl: `/${member.workspace.slug}/customers/suggestions`,
                                 actionText: 'Review',
                                 data: {
                                     suggestionId,
