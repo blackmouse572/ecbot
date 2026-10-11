@@ -29,6 +29,17 @@ describe('AiDecisionService', () => {
         await expect(s.systemOne('x', {})).resolves.toEqual({});
     });
 
+    // #250: callers meter the call with what apps/ai reports.
+    it('returns the usage and model apps/ai reports', async () => {
+        const data = { answers: {}, usage: { input_tokens: 10, output_tokens: 2, total_tokens: 12 }, model: 'm' };
+        const s = new AiDecisionService({ post: () => of({ data: { data } }) } as any, config);
+        await expect(s.decide('x', {})).resolves.toEqual({
+            answers: {},
+            usage: { inputTokens: 10, outputTokens: 2, totalTokens: 12 },
+            model: 'm',
+        });
+    });
+
     // The handoff check runs before the customer sees any reply, so it cannot
     // wait the agent builder's 15s.
     it('uses a caller-given timeout over the configured one', async () => {

@@ -15,7 +15,7 @@ from langchain_core.documents import Document
 from tenacity import retry
 
 from eccho_ai.core.variables import AppVars
-from eccho_ai.llm.retrievers.embeddings import get_embeddings_client
+from eccho_ai.llm.retrievers.embeddings import aembed_documents_with_usage, get_embeddings_client
 from eccho_ai.llm.retrievers.safe_fetch import (
     EgressBlockedError,
     HostUnresolvableError,
@@ -26,6 +26,7 @@ from eccho_ai.modules.rag.constants import URL_NOT_PUBLIC
 from eccho_ai.modules.rag.models import RAGDocumentResponse, RAGIngestResponse
 from eccho_ai.llm.retrievers.text_processing import load_document, normalize_text
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
+from eccho_ai.llm.usage import TokenUsage
 
 
 class RAGIngestService:
@@ -71,7 +72,7 @@ class RAGIngestService:
             # Shown to operators as the source name (#204).
             **({"title": title} if title else {}),
         }
-        chunk_count = await self._ingest_document(
+        chunk_count, usage = await self._ingest_document(
             document_id=document_id,
             document=document,
             source_filename=file.filename or upload_path.name,
@@ -93,6 +94,7 @@ class RAGIngestService:
             chunk_overlap=chunk_overlap,
             embedding_model=self.embedding_model,
             embedding_dimension=self.embedding_dimension,
+            usage=usage,
         )
 
     async def ingest_url(
@@ -170,7 +172,7 @@ class RAGIngestService:
         )
 
         await self.store.delete_by_knowledge_item(knowledge_item_id)  # idempotent upsert
-        chunk_count = await self._ingest_document(
+        chunk_count, usage = await self._ingest_document(
             document_id=document_id,
             document=document,
             source_filename=source_filename,
@@ -192,6 +194,7 @@ class RAGIngestService:
             chunk_overlap=chunk_overlap,
             embedding_model=self.embedding_model,
             embedding_dimension=self.embedding_dimension,
+            usage=usage,
         )
 
     async def ingest_text(
@@ -230,7 +233,7 @@ class RAGIngestService:
             "source_type": "text",
             "title": title,
         }
-        chunk_count = await self._ingest_document(
+        chunk_count, usage = await self._ingest_document(
             document_id=document_id, document=document, source_filename=source_filename,
             stored_path=str(stored_path), mime_type="text/plain",
             chunk_size=chunk_size, chunk_overlap=chunk_overlap, metadata=merged_metadata,
@@ -240,6 +243,7 @@ class RAGIngestService:
             mime_type="text/plain", content_chars=len(clean), chunk_count=chunk_count,
             chunk_size=chunk_size, chunk_overlap=chunk_overlap,
             embedding_model=self.embedding_model, embedding_dimension=self.embedding_dimension,
+            usage=usage,
         )
 
     async def list_documents(self, *, limit: int = 20) -> list[RAGDocumentResponse]:
@@ -247,8 +251,8 @@ class RAGIngestService:
         return [RAGDocumentResponse.model_validate(row) for row in rows]
 
     @retry(**_RETRY)
-    async def _embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return await (self._embedder or get_embeddings_client()).aembed_documents(texts)
+    async def _embed_documents(self, texts: list[str]) -> tuple[list[list[float]], TokenUsage | None]:
+        return await aembed_documents_with_usage(self._embedder or get_embeddings_client(), texts)
 
     async def _ingest_document(
         self,
@@ -261,7 +265,7 @@ class RAGIngestService:
         chunk_size: int,
         chunk_overlap: int,
         metadata: dict[str, Any],
-    ) -> int:
+    ) -> tuple[int, TokenUsage | None]:
         content_hash = hashlib.sha256(document.page_content.encode("utf-8")).hexdigest()
         await self.store.create_document(
             document_id=document_id,
@@ -294,7 +298,7 @@ class RAGIngestService:
             if not chunk_texts:
                 raise ValueError("No chunks generated from document")
 
-            embeddings = await self._embed_documents(chunk_texts)
+            embeddings, usage = await self._embed_documents(chunk_texts)
             self._validate_embeddings(embeddings, expected_count=len(chunk_texts))
             await self.store.replace_chunks(
                 document_id=document_id,
@@ -306,7 +310,7 @@ class RAGIngestService:
             await self.store.mark_failed(document_id=document_id, error_message=str(exc))
             raise
 
-        return len(chunk_texts)
+        return len(chunk_texts), usage
 
     async def _save_upload(self, file: UploadFile, *, document_id: UUID) -> Path:
         upload_dir = Path(AppVars.RAG_LOCAL_STORAGE_DIR)

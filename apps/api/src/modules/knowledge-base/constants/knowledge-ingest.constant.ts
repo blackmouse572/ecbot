@@ -20,3 +20,10 @@ export enum ENUM_KNOWLEDGE_FAILURE_KIND {
     INGEST = 'ingest',
     LINK_SYNC = 'link_sync',
 }
+
+/**
+ * Stored on an item whose ingest the usage meter refused (#250). apps/app
+ * matches this exact string to translate it, like apps/ai's errors.
+ */
+export const RAG_INGEST_NO_TOKENS_ERROR =
+    'Your workspace has no AI tokens left. Top up or renew your plan, then process this item again.';

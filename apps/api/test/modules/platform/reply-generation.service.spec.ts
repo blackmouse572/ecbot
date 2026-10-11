@@ -141,6 +141,26 @@ describe('ReplyGenerationService.run', () => {
         expect(streamChat).not.toHaveBeenCalled();
     });
 
+    // #250: describing the burst's images is a model call too. A blocked
+    // turn must not run it and leave its tokens unrecorded.
+    it('describes no images when the budget blocks the turn', async () => {
+        const meter = {
+            check: jest
+                .fn()
+                .mockResolvedValue({ allowed: false, reason: 'quota' }),
+            record: jest.fn(),
+        };
+        const { run, turnContext } = serviceWith(
+            { history: [], message: 'x' },
+            meter
+        );
+
+        await run();
+
+        expect(turnContext.build).not.toHaveBeenCalled();
+        expect(meter.record).not.toHaveBeenCalled();
+    });
+
     // Burst and history rules are TurnContextService's (its own spec); here
     // only that the Turn sends apps/ai what the context built.
     it('sends apps/ai the Turn context for the burst', async () => {

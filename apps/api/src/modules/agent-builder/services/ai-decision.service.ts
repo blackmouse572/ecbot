@@ -3,8 +3,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
+import { parseWireTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import type { SystemOneAnswer, SystemOneQuestion } from '@repo/agent-blueprint';
 import { firstValueFrom } from 'rxjs';
+import { ISystemOneResult } from '../interfaces/ai-decision.interface';
 
 // apps/ai answers System One-shaped questions with the model in DECISION_MODEL.
 @Injectable()
@@ -23,6 +25,15 @@ export class AiDecisionService {
         questions: Record<string, SystemOneQuestion>,
         timeoutMs?: number
     ): Promise<Record<string, SystemOneAnswer>> {
+        return (await this.decide(state, questions, timeoutMs)).answers;
+    }
+
+    /** `systemOne`, plus what the call spent, for callers that meter it. */
+    async decide(
+        state: string,
+        questions: Record<string, SystemOneQuestion>,
+        timeoutMs?: number
+    ): Promise<ISystemOneResult> {
         const authHeaders = await getInternalAuthHeader(this.baseUrl);
         const resp = await firstValueFrom(
             this.http.post(
@@ -38,7 +49,13 @@ export class AiDecisionService {
                 }
             )
         );
-        const payload = resp.data as { data?: { answers?: Record<string, SystemOneAnswer> } };
-        return payload?.data?.answers ?? {};
+        const payload = resp.data as {
+            data?: { answers?: Record<string, SystemOneAnswer>; usage?: unknown; model?: string };
+        };
+        return {
+            answers: payload?.data?.answers ?? {},
+            usage: parseWireTokenUsage(payload?.data?.usage),
+            model: payload?.data?.model,
+        };
     }
 }

@@ -1,5 +1,5 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     EMPTY_SUGGESTION,
@@ -8,6 +8,11 @@ import {
     type AgentSuggestion,
 } from '@repo/agent-blueprint';
 import { Cache } from 'cache-manager';
+import {
+    AI_USAGE_METER,
+    AiUsageMeter,
+    ENUM_AI_USAGE_SOURCE,
+} from 'src/app/ai-usage-meter.interface';
 import { createHash } from 'crypto';
 import { AiDecisionService } from './ai-decision.service';
 
@@ -18,7 +23,10 @@ export class AgentBuilderService {
     constructor(
         private readonly aiDecision: AiDecisionService,
         @Inject(CACHE_MANAGER) private readonly cache: Cache,
-        private readonly config: ConfigService
+        private readonly config: ConfigService,
+        @Optional()
+        @Inject(AI_USAGE_METER)
+        private readonly meter?: AiUsageMeter
     ) {}
 
     static cacheKey(description: string): string {
@@ -27,15 +35,28 @@ export class AgentBuilderService {
         return `agent-builder:suggest:v1:${hash}`;
     }
 
-    // Never throws: the builder works without suggestions.
-    async suggest(description: string): Promise<AgentSuggestion> {
+    // Never throws: the builder works without suggestions, so a workspace out
+    // of tokens gets none rather than an error.
+    async suggest(workspaceId: string, description: string): Promise<AgentSuggestion> {
         const state = description.trim();
         const key = AgentBuilderService.cacheKey(state);
         try {
             const cached = await this.cache.get<AgentSuggestion>(key);
             if (cached) return cached;
 
-            const answers = await this.aiDecision.systemOne(state, buildSuggestQuestions());
+            // No meter is the public build: allowed, and nothing recorded below.
+            const budget = (await this.meter?.check(workspaceId)) ?? { allowed: true };
+            if (!budget.allowed) return EMPTY_SUGGESTION;
+
+            const { answers, usage, model } = await this.aiDecision.decide(state, buildSuggestQuestions());
+            if (usage) {
+                await this.meter?.record({
+                    workspaceId,
+                    usage,
+                    source: ENUM_AI_USAGE_SOURCE.AGENT_BUILDER,
+                    model,
+                });
+            }
             const suggestion = readSuggestAnswers(answers);
             // apps/ai answers `{}` on any failure: never cache that for 24h.
             const empty = !answers || Object.keys(answers).length === 0;

@@ -490,6 +490,7 @@
         "namePlaceholder": "e.g. Partner CRM",
         "issuedTitle": "Channel created",
         "issuedDescription": "Keep these values somewhere safe before you close this window.",
+        "needsAgent": "This channel answers once an agent is attached. Open the agent you want, then add this channel to its linked accounts.",
         "apiChannel": {
           "title": "Connect an API channel",
           "description": "Send and receive messages over REST from your own system. Replies are POSTed to your callback URL.",
@@ -2182,7 +2183,8 @@
   "knowledge_item": {
     "ingestErrors": {
       "urlNotPublic": "This page is not public. Use a link anyone can open on the internet, not localhost or a private network address.",
-      "urlFetchFailed": "Could not read this page. Check that the link opens in a browser without signing in, then process it again."
+      "urlFetchFailed": "Could not read this page. Check that the link opens in a browser without signing in, then process it again.",
+      "noTokens": "Your workspace has no AI tokens left. Top up or renew your plan, then process this item again."
     },
     "create_title": "Create Knowledge Item",
     "create_description": "Add a new knowledge item to your knowledge base. Choose from text, URL, or file sources.",
@@ -2955,7 +2957,10 @@
     "byPlatform": {
       "title": "By platform",
       "column": "Platform",
-      "preview": "Preview (test chat)"
+      "preview": "Preview (test chat)",
+      "TAG_CLASSIFIER": "Customer tagging",
+      "AGENT_BUILDER": "Agent builder",
+      "KNOWLEDGE_INGEST": "Knowledge processing"
     },
     "share": "Share",
     "messages": "Messages",
@@ -2995,6 +3000,8 @@
     "invalid": "This chat is not available.",
     "invalidHint": "Check the widget key on this website, or contact the site owner.",
     "originNotAllowed": "This chat is not enabled on this website.",
+    "noAgent": "This chat is not set up yet.",
+    "noAgentHint": "The site owner still needs to choose an agent to answer here.",
     "turnstile": {
       "required": "Please complete the verification first.",
       "failed": "Verification failed. Reload the page and try again."
