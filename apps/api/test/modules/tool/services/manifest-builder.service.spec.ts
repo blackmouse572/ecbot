@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { ManifestBuilderService } from 'src/modules/tool/services/manifest-builder.service';
 import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
+import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 
 describe('ManifestBuilderService', () => {
     let svc: ManifestBuilderService;
@@ -261,5 +262,21 @@ describe('ManifestBuilderService', () => {
         ]);
         const specs = await svc.build('cb-1', 'ws-1');
         expect(specs).toEqual([]);
+    });
+
+    it('leaves out a tool an admin has inactivated', async () => {
+        mockRepo.findEnabledByChatbotId.mockResolvedValue([
+            {
+                tool: {
+                    id: 't-1',
+                    kind: ENUM_TOOL_KIND.HTTP,
+                    slug: 'get_weather',
+                    description: 'Weather',
+                    deleted: false,
+                    status: ENUM_TOOL_STATUS.REVOKED,
+                },
+            },
+        ]);
+        expect(await svc.build('cb-1', 'ws-1')).toEqual([]);
     });
 });

@@ -32,8 +32,18 @@
         "error": {
             "notFound": "Không tìm thấy công cụ",
             "executionFailed": "Thực thi công cụ thất bại",
-            "notLinked": "Công cụ chưa được bật cho chatbot này"
+            "notLinked": "Công cụ chưa được bật cho chatbot này",
+            "inactive": "Công cụ đã bị quản trị viên tắt"
         }
+    },
+    "activate": {
+        "success": "Đã kích hoạt công cụ",
+        "error": {
+            "notInactive": "Chỉ có thể kích hoạt công cụ đã bị quản trị viên tắt"
+        }
+    },
+    "inactivate": {
+        "success": "Đã tắt công cụ"
     },
     "enable": {
         "success": "Đã bật công cụ cho chatbot",

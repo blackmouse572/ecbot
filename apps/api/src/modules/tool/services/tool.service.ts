@@ -2,6 +2,7 @@ import {
     BadGatewayException,
     BadRequestException,
     ConflictException,
+    ForbiddenException,
     Injectable,
     Logger,
     NotFoundException,
@@ -12,12 +13,18 @@ import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.re
 import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { ToolInvocationRepository } from 'src/modules/tool/repository/repositories/tool-invocation.repository';
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
+import { ChatbotCacheService } from 'src/modules/ai-cache/services/chatbot-cache.service';
 import { CreateHttpToolRequestDto } from 'src/modules/tool/dtos/request/create-http-tool.request.dto';
 import { CreateMcpToolRequestDto } from 'src/modules/tool/dtos/request/create-mcp-tool.request.dto';
 import { UpdateToolRequestDto } from 'src/modules/tool/dtos/request/update-tool.request.dto';
 import { TestInlineToolRequestDto } from 'src/modules/tool/dtos/request/test-tool.request.dto';
 import { ToolListResponseDto } from 'src/modules/tool/dtos/response/tool.list.response.dto';
 import { ToolResponseDto } from 'src/modules/tool/dtos/response/tool.response.dto';
+import {
+    ToolAdminListResponseDto,
+    ToolAdminResponseDto,
+    ToolInvocationStatsResponseDto,
+} from 'src/modules/tool/dtos/response/tool.admin.response.dto';
 import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
@@ -31,7 +38,10 @@ import {
 } from './http-tool-executor.service';
 import { SlugMinter } from './slug-minter.service';
 import { InstallerRegistry } from 'src/modules/tool/installers/installer-registry.service';
-import { MCP_AUTH_TYPES } from 'src/modules/tool/constants/tool.constant';
+import {
+    MCP_AUTH_TYPES,
+    TOOL_INVOCATION_STATS_DAYS,
+} from 'src/modules/tool/constants/tool.constant';
 import { sameAuth } from 'src/modules/tool/utils/same-auth.util';
 
 function slugify(s: string): string {
@@ -53,7 +63,8 @@ export class ToolService {
         private readonly discovery: McpDiscoveryService,
         private readonly http: HttpToolExecutorService,
         private readonly slugMinter: SlugMinter,
-        private readonly installerRegistry: InstallerRegistry
+        private readonly installerRegistry: InstallerRegistry,
+        private readonly chatbotCacheService: ChatbotCacheService
     ) {}
 
     async createHttp(
@@ -354,6 +365,7 @@ export class ToolService {
 
     async rediscover(workspaceId: string, toolId: string): Promise<ToolEntity> {
         const tool = await this.getOne(workspaceId, toolId);
+        this.assertNotRevoked(tool);
         if (tool.kind !== ENUM_TOOL_KIND.MCP) {
             throw new BadRequestException('tool.discover.error.notMcp');
         }
@@ -388,10 +400,18 @@ export class ToolService {
         args: Record<string, unknown>
     ): Promise<ExecutionResult> {
         const tool = await this.getOne(workspaceId, toolId);
+        this.assertNotRevoked(tool);
         if (tool.kind !== ENUM_TOOL_KIND.HTTP) {
             throw new BadRequestException('tool.test.error.notHttp');
         }
         return this.http.execute(tool, args);
+    }
+
+    /** The owner cannot run or refresh a tool an admin turned off. */
+    private assertNotRevoked(tool: ToolEntity): void {
+        if (tool.status === ENUM_TOOL_STATUS.REVOKED) {
+            throw new ForbiddenException('tool.execute.error.inactive');
+        }
     }
 
     async testInline(dto: TestInlineToolRequestDto): Promise<ExecutionResult> {
@@ -408,10 +428,120 @@ export class ToolService {
         );
     }
 
+    // ---- Admin: every workspace's tools ----
+
+    async findAllSystem(
+        find: Record<string, any>,
+        options: {
+            limit?: number;
+            offset?: number;
+            order?: IPaginationOrder;
+        } = {}
+    ): Promise<ToolEntity[]> {
+        return this.toolRepo.findAllPaginated(find, {
+            ...options,
+            populate: ['workspace'],
+        });
+    }
+
+    async getTotalSystem(find: Record<string, any>): Promise<number> {
+        return this.toolRepo.countAll(find);
+    }
+
+    async getOneAny(toolId: string): Promise<ToolEntity> {
+        const tool = await this.toolRepo.findOneAny(toolId);
+        if (!tool) throw new NotFoundException('tool.get.error.notFound');
+        return tool;
+    }
+
+    /**
+     * The admin off switch. REVOKED is set nowhere else: the manifest leaves
+     * the tool out and execution refuses it until an admin activates it.
+     * `changed` is false when the tool was already off.
+     */
+    async inactivate(
+        toolId: string
+    ): Promise<{ tool: ToolEntity; changed: boolean }> {
+        const tool = await this.getOneAny(toolId);
+        if (tool.status === ENUM_TOOL_STATUS.REVOKED) {
+            return { tool, changed: false };
+        }
+        tool.status = ENUM_TOOL_STATUS.REVOKED;
+        await this.toolRepo.getEntityManager().flush();
+        await this.invalidateLinkedChatbots(toolId);
+        return { tool, changed: true };
+    }
+
+    /**
+     * Only undoes `inactivate`. A NEEDS_REAUTH or EXPIRED tool has a broken
+     * connection, and calling it ACTIVE would hide that from its owner.
+     */
+    async activate(toolId: string): Promise<ToolEntity> {
+        const tool = await this.getOneAny(toolId);
+        if (tool.status !== ENUM_TOOL_STATUS.REVOKED) {
+            throw new BadRequestException('tool.activate.error.notInactive');
+        }
+        tool.status = ENUM_TOOL_STATUS.ACTIVE;
+        await this.toolRepo.getEntityManager().flush();
+        await this.invalidateLinkedChatbots(toolId);
+        return tool;
+    }
+
+    /** apps/ai caches each chatbot's tools, so a status change must drop them. */
+    private async invalidateLinkedChatbots(toolId: string): Promise<void> {
+        const chatbotIds =
+            await this.chatbotToolRepo.findChatbotIdsByToolId(toolId);
+        await Promise.all(
+            chatbotIds.map(id => this.chatbotCacheService.invalidate(id))
+        );
+    }
+
+    async softDeleteAny(toolId: string): Promise<ToolEntity> {
+        return this.remove(await this.getOneAny(toolId));
+    }
+
+    async getInvocationStats(
+        toolId: string
+    ): Promise<ToolInvocationStatsResponseDto> {
+        const since = new Date();
+        since.setDate(since.getDate() - TOOL_INVOCATION_STATS_DAYS);
+        const [counts, lastInvokedAt] = await Promise.all([
+            this.toolInvocationRepo.countByStatus(toolId, since),
+            this.toolInvocationRepo.findLastInvokedAt(toolId),
+        ]);
+        return {
+            total: counts.SUCCESS + counts.ERROR + counts.TIMEOUT,
+            success: counts.SUCCESS,
+            error: counts.ERROR,
+            timeout: counts.TIMEOUT,
+            lastInvokedAt,
+        };
+    }
+
+    mapAdminList(tools: ToolEntity[]): ToolAdminListResponseDto[] {
+        return plainToInstance(ToolAdminListResponseDto, tools, {
+            excludeExtraneousValues: true,
+        });
+    }
+
+    mapAdminOne(
+        tool: ToolEntity,
+        invocationStats: ToolInvocationStatsResponseDto
+    ): ToolAdminResponseDto {
+        return plainToInstance(
+            ToolAdminResponseDto,
+            { ...tool, invocationStats },
+            { excludeExtraneousValues: true }
+        );
+    }
+
     async softDelete(workspaceId: string, toolId: string): Promise<ToolEntity> {
-        const tool = await this.getOne(workspaceId, toolId);
+        return this.remove(await this.getOne(workspaceId, toolId));
+    }
+
+    private async remove(tool: ToolEntity): Promise<ToolEntity> {
         const refs = await this.chatbotToolRepo.count({
-            tool: { id: toolId },
+            tool: { id: tool.id },
             enabled: true,
         });
         if (refs > 0)
