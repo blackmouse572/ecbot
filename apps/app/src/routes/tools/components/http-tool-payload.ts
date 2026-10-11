@@ -53,6 +53,8 @@ export const toUpdateHttpPayload = (
   return {
     name: data.name,
     description: data.description,
+    httpMethod: data.httpMethod,
+    httpUrl: data.httpUrl,
     inputSchema: rowsToSchemaPayload(data.inputSchemaRows),
     headers: data.headers,
     auth: data.auth,

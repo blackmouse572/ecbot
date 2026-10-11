@@ -5,6 +5,10 @@ import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
 import { DatabaseDto } from '@app/common/database/dtos/database.dto';
+import {
+    IDestructiveActionInput,
+    isDestructiveAction,
+} from 'src/modules/tool/utils/destructive-action.util';
 
 export class ToolResponseDto extends DatabaseDto {
     @Expose()
@@ -94,7 +98,20 @@ export class ToolResponseDto extends DatabaseDto {
     mcpAuth?: Record<string, unknown>;
 
     @Expose()
-    @ApiProperty({ required: false, type: 'array' })
+    @Transform(({ value }) =>
+        Array.isArray(value)
+            ? value.map((action: IDestructiveActionInput) => ({
+                  ...action,
+                  destructive: isDestructiveAction(action),
+              }))
+            : value
+    )
+    @ApiProperty({
+        required: false,
+        type: 'array',
+        description:
+            'Each action carries `destructive`: it stays off until a chatbot link names it',
+    })
     discoveredActions?: unknown[];
 
     @Expose()

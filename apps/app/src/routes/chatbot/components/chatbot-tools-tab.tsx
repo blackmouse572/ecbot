@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ChatbotToolAddDrawer } from "./chatbot-tool-add-drawer";
 import { ChevronDown, PlusMini } from "@medusajs/icons";
+import { defaultEnabledActions, isActionEnabled } from "./mcp-action-state";
 
 type ChatbotToolsTabProps = {
   chatbotId: string;
@@ -231,6 +232,7 @@ type McpActionsListProps = {
 type DiscoveredAction = {
   name: string;
   description?: string;
+  destructive?: boolean;
 };
 
 function McpActionsList({
@@ -273,8 +275,8 @@ function McpActionsList({
 
   const toggleAction = async (name: string, checked: boolean) => {
     const prevActions = enabledActions;
-    // null means all enabled — expand to full list before mutating
-    const base = prevActions ?? actions.map((a) => a.name);
+    // null means all but destructive — expand that list before mutating
+    const base = prevActions ?? defaultEnabledActions(actions);
     const newList = checked
       ? Array.from(new Set([...base, name]))
       : base.filter((n) => n !== name);
@@ -305,8 +307,7 @@ function McpActionsList({
       ) : (
         <ul className="mt-2 space-y-2">
           {actions.map((action) => {
-            const checked =
-              enabledActions === null || enabledActions.includes(action.name);
+            const checked = isActionEnabled(action, enabledActions);
             return (
               <li key={action.name} className="flex items-start gap-2">
                 <Checkbox
@@ -317,6 +318,11 @@ function McpActionsList({
                 <div className="min-w-0">
                   <Text size="small" weight="plus">
                     {action.name}
+                    {action.destructive && (
+                      <Badge size="2xsmall" color="red" className="ml-1.5">
+                        {t("tools.destructiveAction")}
+                      </Badge>
+                    )}
                   </Text>
                   {action.description && (
                     <Text size="small" className="text-ui-fg-subtle">

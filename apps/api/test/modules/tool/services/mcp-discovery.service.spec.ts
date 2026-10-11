@@ -5,6 +5,7 @@ import { HelperEncryptionService } from 'src/common/helper/services/helper.encry
 import { McpDiscoveryService } from 'src/modules/tool/services/mcp-discovery.service';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import { MCP_DISCOVERY_TIMEOUT_MS } from 'src/modules/tool/constants/tool.constant';
 
 jest.mock('@modelcontextprotocol/sdk/client/index.js', () => {
     const connect = jest.fn();
@@ -104,13 +105,54 @@ describe('McpDiscoveryService', () => {
                     type: 'object',
                     properties: { to: { type: 'string' } },
                 },
+                destructive: false,
             },
             {
                 name: 'noDesc',
                 description: '',
                 inputSchema: { type: 'object' },
+                destructive: false,
             },
         ]);
+    });
+
+    // #247 review: a slow or hostile server must not hold the request open.
+    it('gives up on a server that never answers', async () => {
+        jest.useFakeTimers();
+        try {
+            clientMocks.listTools.mockReturnValue(new Promise(() => {}));
+
+            const pending = svc.discover(makeTool());
+            const assertion = expect(pending).rejects.toThrow(/timed out/i);
+            await jest.advanceTimersByTimeAsync(MCP_DISCOVERY_TIMEOUT_MS);
+
+            await assertion;
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    // #177: the server's annotations are not stored, so the flag is decided
+    // at discovery.
+    it('discover flags actions the server marks destructive', async () => {
+        clientMocks.listTools.mockResolvedValue({
+            tools: [
+                {
+                    name: 'sync_orders',
+                    inputSchema: { type: 'object' },
+                    annotations: { destructiveHint: true },
+                },
+                {
+                    name: 'delete_all_orders',
+                    description: 'Dangerous operation, cannot be undone',
+                    inputSchema: { type: 'object' },
+                },
+            ],
+        });
+
+        const actions = await svc.discover(makeTool());
+
+        expect(actions.map(a => a.destructive)).toEqual([true, true]);
     });
 
     it('sets bearer Authorization header in transport requestInit when mcpAuth.type === "bearer"', async () => {

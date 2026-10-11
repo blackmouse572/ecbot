@@ -217,6 +217,8 @@ export class ToolWorkspaceController {
 
     @ToolWorkspaceCreateMcpDoc()
     @Response('tool.create.success')
+    // Calls the MCP server, so capped like /test and /discover (#247 review).
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @WorkspacePolicyAbilityProtected({
         subject: ENUM_POLICY_SUBJECT.TOOL,
         action: [ENUM_POLICY_ACTION.CREATE],
@@ -245,6 +247,8 @@ export class ToolWorkspaceController {
 
     @ToolWorkspaceUpdateDoc()
     @Response('tool.update.success')
+    // Calls the MCP server, so capped like /test and /discover (#247 review).
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @WorkspacePolicyAbilityProtected({
         subject: ENUM_POLICY_SUBJECT.TOOL,
         action: [ENUM_POLICY_ACTION.UPDATE],

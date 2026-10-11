@@ -2557,6 +2557,7 @@
     }
   },
   "tools": {
+    "destructiveAction": "Can delete data",
     "batch": {
       "delete": {
         "label": "Delete",
@@ -2669,6 +2670,7 @@
         "maxRetries": "Max retries",
         "mcpProvider": "Provider",
         "composioToolkit": "Toolkit",
+        "mcpServerUrl": "Server URL",
         "discoveredActions": "Discovered Actions",
         "discoveredActionsEmpty": "No actions discovered yet.",
         "discoveredActionsReload": "Reload",
@@ -2721,12 +2723,14 @@
       "authParamNameHint": "Header or query parameter that carries the API key.",
       "credential": "Credential",
       "credentialHint": "Plaintext on submit; stored envelope-encrypted. Leave empty on edit to keep the existing value.",
+      "credentialRequiredForNewHost": "The address points to a different server now, so enter the credential again.",
       "credentialPlaceholder": "•••••••••",
       "timeoutMs": "Timeout (ms)",
       "maxRetries": "Max retries"
     },
     "errors": {
       "createFailed": "Could not create the tool. Please check the form and try again.",
+      "testFailed": "The test call failed. Check the URL and try again.",
       "updateFailed": "Could not save the tool. Please check the form and try again.",
       "deleteFailed": "Could not delete the tool. Please try again.",
       "schemaRowKeyRequired": "Property key is required.",

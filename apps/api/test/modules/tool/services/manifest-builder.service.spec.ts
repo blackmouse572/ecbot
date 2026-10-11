@@ -158,6 +158,37 @@ describe('ManifestBuilderService', () => {
         });
     });
 
+    // #177: destructive actions stay off until someone turns them on.
+    it('leaves destructive actions out unless the link names them', async () => {
+        const mcpTool = {
+            id: 't-mcp',
+            kind: ENUM_TOOL_KIND.MCP,
+            slug: 'shop',
+            description: 'Shop MCP',
+            deleted: false,
+            discoveredActions: [
+                { name: 'list_orders', description: 'List orders' },
+                {
+                    name: 'delete_all_orders',
+                    description: 'Dangerous operation, cannot be undone',
+                },
+            ],
+        };
+        mockRepo.findEnabledByChatbotId.mockResolvedValue([
+            { tool: mcpTool, enabledActions: null },
+        ]);
+        expect((await svc.build('cb-1', 'ws-1')).map(s => s.name)).toEqual([
+            'shop__list_orders',
+        ]);
+
+        mockRepo.findEnabledByChatbotId.mockResolvedValue([
+            { tool: mcpTool, enabledActions: ['delete_all_orders'] },
+        ]);
+        expect((await svc.build('cb-1', 'ws-1')).map(s => s.name)).toEqual([
+            'shop__delete_all_orders',
+        ]);
+    });
+
     it('intersects discoveredActions with enabledActions when enabledActions is provided', async () => {
         const mcpTool = {
             id: 't-mcp',

@@ -31,6 +31,8 @@ import {
 } from './http-tool-executor.service';
 import { SlugMinter } from './slug-minter.service';
 import { InstallerRegistry } from 'src/modules/tool/installers/installer-registry.service';
+import { MCP_AUTH_TYPES } from 'src/modules/tool/constants/tool.constant';
+import { sameAuth } from 'src/modules/tool/utils/same-auth.util';
 
 function slugify(s: string): string {
     return s
@@ -89,15 +91,23 @@ export class ToolService {
 
     /**
      * Create an operator-supplied MCP server tool. Provider is OPERATOR
-     * (vs COMPOSIO for marketplace installs). Runs discovery best-effort:
-     * on failure the tool stays ACTIVE with empty discoveredActions so the
-     * operator can fix credentials and retrigger.
+     * (vs COMPOSIO for marketplace installs). The server is asked for its
+     * actions first, so an unreachable URL or a bad credential is reported
+     * and nothing is saved (#175).
      */
     async createMcpOperator(
         workspaceId: string,
         dto: CreateMcpToolRequestDto,
         createdBy?: UserEntity
     ): Promise<ToolEntity> {
+        const connection = {
+            mcpServerUrl: dto.serverUrl,
+            mcpAuth: dto.auth,
+            mcpCredential: dto.credential
+                ? this.enc.envelopeEncrypt(dto.credential)
+                : undefined,
+        };
+        const actions = await this.testMcpConnection(connection);
         const displayName = (dto as any).displayName ?? dto.name ?? '';
         const slug = await this.slugMinter.mint(
             slugify(displayName),
@@ -111,25 +121,34 @@ export class ToolService {
             displayName,
             description: dto.description,
             status: ENUM_TOOL_STATUS.ACTIVE,
-            mcpServerUrl: dto.serverUrl,
-            mcpAuth: dto.auth,
-            mcpCredential: dto.credential
-                ? this.enc.envelopeEncrypt(dto.credential)
-                : undefined,
+            ...connection,
+            discoveredActions: actions,
+            discoveryAt: new Date(),
         });
         if (createdBy) entity.createdBy = createdBy;
         await this.toolRepo.getEntityManager().flush();
+        return entity;
+    }
+
+    /** Lists the server's actions, or throws 502 when it cannot be reached. */
+    private async testMcpConnection(
+        connection: Pick<
+            ToolEntity,
+            'mcpServerUrl' | 'mcpAuth' | 'mcpCredential'
+        >
+    ): Promise<ToolEntity['discoveredActions']> {
         try {
-            const actions = await this.discovery.discover(entity);
-            entity.discoveredActions = actions;
-            entity.discoveryAt = new Date();
-            await this.toolRepo.getEntityManager().flush();
+            return await this.discovery.discover(
+                Object.assign(new ToolEntity(), connection)
+            );
         } catch (err) {
             this.logger.warn(
-                `MCP discovery failed for tool ${entity.id}: ${String(err)}`
+                `MCP connection test failed for ${connection.mcpServerUrl}: ${String(err)}`
+            );
+            throw new BadGatewayException(
+                'tool.discover.error.connectionFailed'
             );
         }
-        return entity;
     }
 
     async findAllByWorkspace(
@@ -185,7 +204,17 @@ export class ToolService {
         updatedBy?: UserEntity
     ): Promise<ToolEntity> {
         const tool = await this.getOne(workspaceId, toolId);
+        if (tool.kind === ENUM_TOOL_KIND.MCP) {
+            return this.updateMcp(tool, dto, updatedBy);
+        }
+        this.assertCredentialStaysWithOrigin(
+            tool.httpUrl,
+            dto.httpUrl,
+            tool.httpCredential,
+            dto
+        );
         const patch: any = { ...dto };
+        delete patch.serverUrl;
         // Map dto.name → displayName for backward compatibility. Slug is intentionally
         // immutable after creation (LLM-facing identity) — only displayName is editable.
         if (patch.name !== undefined) {
@@ -208,9 +237,102 @@ export class ToolService {
         }
         if (dto.auth) {
             patch.httpAuth = dto.auth;
+            if (dto.auth.type === 'none') patch.httpCredential = null;
             delete patch.auth;
         }
         Object.assign(tool, patch);
+        if (updatedBy) tool.updatedBy = updatedBy;
+        await this.toolRepo.getEntityManager().flush();
+        return tool;
+    }
+
+    /**
+     * A stored credential never follows a URL to another origin: whoever
+     * edits the tool may never have seen it, so moving the URL to a new
+     * scheme, host or port needs the credential typed again (#247 review).
+     */
+    private assertCredentialStaysWithOrigin(
+        savedUrl: string | undefined,
+        newUrl: string | undefined,
+        storedCredential: string | null | undefined,
+        dto: UpdateToolRequestDto
+    ): void {
+        if (
+            !newUrl ||
+            !savedUrl ||
+            !storedCredential ||
+            dto.credential ||
+            dto.auth?.type === 'none'
+        ) {
+            return;
+        }
+        if (new URL(newUrl).origin !== new URL(savedUrl).origin) {
+            throw new BadRequestException(
+                'tool.update.error.credentialRequired'
+            );
+        }
+    }
+
+    /**
+     * An operator's MCP server can change its URL, auth and credential (#176);
+     * a marketplace tool's connection belongs to its provider, so only the
+     * name and description move. A new connection must answer before it is
+     * saved, like on create.
+     */
+    private async updateMcp(
+        tool: ToolEntity,
+        dto: UpdateToolRequestDto,
+        updatedBy?: UserEntity
+    ): Promise<ToolEntity> {
+        // The edit form sends the saved URL and auth back on every save, so
+        // only a real difference counts as a new connection (#247 review).
+        const changesConnection =
+            (dto.serverUrl !== undefined &&
+                dto.serverUrl !== tool.mcpServerUrl) ||
+            (dto.auth !== undefined && !sameAuth(dto.auth, tool.mcpAuth)) ||
+            !!dto.credential;
+        if (
+            changesConnection &&
+            tool.mcpProvider !== ENUM_MCP_PROVIDER.OPERATOR
+        ) {
+            throw new BadRequestException(
+                'tool.update.error.managedConnection'
+            );
+        }
+        // MCP sends its credential as a bearer token or an API-key header
+        // only; anything else would be accepted and silently ignored.
+        if (
+            dto.auth &&
+            (!MCP_AUTH_TYPES.includes(dto.auth.type) ||
+                (dto.auth.placement !== undefined &&
+                    dto.auth.placement !== 'header'))
+        ) {
+            throw new BadRequestException('tool.update.error.invalidMcpAuth');
+        }
+        this.assertCredentialStaysWithOrigin(
+            tool.mcpServerUrl,
+            dto.serverUrl,
+            tool.mcpCredential,
+            dto
+        );
+        const connection = {
+            mcpServerUrl: dto.serverUrl ?? tool.mcpServerUrl,
+            mcpAuth: (dto.auth as ToolEntity['mcpAuth']) ?? tool.mcpAuth,
+            mcpCredential:
+                dto.auth?.type === 'none'
+                    ? null
+                    : dto.credential
+                      ? this.enc.envelopeEncrypt(dto.credential)
+                      : tool.mcpCredential,
+        };
+        // Test the new connection before it replaces the working one (#175).
+        if (changesConnection) {
+            tool.discoveredActions = await this.testMcpConnection(connection);
+            tool.discoveryAt = new Date();
+            Object.assign(tool, connection);
+        }
+        if (dto.name !== undefined) tool.displayName = dto.name;
+        if (dto.description !== undefined) tool.description = dto.description;
         if (updatedBy) tool.updatedBy = updatedBy;
         await this.toolRepo.getEntityManager().flush();
         return tool;

@@ -72,7 +72,7 @@ export class ToolEntity extends DatabaseEntityBase {
     };
 
     @Property({ type: 'text', nullable: true })
-    httpCredential?: string; // envelope-encrypted
+    httpCredential?: string | null; // envelope-encrypted
 
     @Property({ type: 'int', default: 10000 })
     timeoutMs: number = 10000;
@@ -95,13 +95,15 @@ export class ToolEntity extends DatabaseEntityBase {
     };
 
     @Property({ type: 'text', nullable: true })
-    mcpCredential?: string; // envelope-encrypted
+    mcpCredential?: string | null; // envelope-encrypted
 
     @Property({ type: 'jsonb', nullable: true })
     discoveredActions?: Array<{
         name: string;
         description: string;
         inputSchema: Record<string, unknown>;
+        /** Can destroy data; off until a link names it (#177). */
+        destructive?: boolean;
     }>;
 
     @Property({ type: 'timestamptz', nullable: true })

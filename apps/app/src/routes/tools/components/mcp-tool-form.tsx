@@ -10,6 +10,7 @@ import {
   createMcpToolSchema,
   type McpToolFormData,
 } from "./mcp-tool-schema";
+import { needsCredentialAgain } from "./tool-edit-values";
 
 export type McpToolFormProps = {
   defaultValues: Partial<McpToolFormData>;
@@ -21,6 +22,8 @@ export type McpToolFormProps = {
   trailingActions?: ReactNode;
   id?: string;
   hideActions?: boolean;
+  /** On edit: the saved URL, so moving it to another origin asks for the credential again. */
+  savedUrl?: string;
 };
 
 const DEFAULT_VALUES: McpToolFormData = {
@@ -41,6 +44,7 @@ export const McpToolForm: FC<McpToolFormProps> = ({
   trailingActions,
   id,
   hideActions,
+  savedUrl,
 }) => {
   const { t } = useTranslation();
 
@@ -51,6 +55,19 @@ export const McpToolForm: FC<McpToolFormProps> = ({
 
   const handleSubmit = form.handleSubmit(
     async (data) => {
+      if (
+        needsCredentialAgain(
+          savedUrl,
+          data.serverUrl,
+          data.auth?.type,
+          data.credential,
+        )
+      ) {
+        form.setError("credential", {
+          message: t("tools.form.credentialRequiredForNewHost"),
+        });
+        return;
+      }
       await onSubmit(data);
     },
     (errors) => console.error("McpToolForm validation errors", errors),

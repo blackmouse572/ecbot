@@ -38,6 +38,7 @@ export interface McpAction {
     name: string;
     description: string;
     inputSchema: Record<string, unknown>;
+    destructive?: boolean;
 }
 
 export interface ToolkitInstaller {

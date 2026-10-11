@@ -1,4 +1,5 @@
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
+import { readApiError } from "@/libs/api-error";
 import { useCreateMcpTool } from "@/hooks/api/tools";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { Button, toast } from "@medusajs/ui";
@@ -35,9 +36,7 @@ const ToolNewMcpInner = () => {
     } catch (error) {
       console.error("Error creating MCP tool:", error);
       const message =
-        (error as A)?.body?.message ??
-        (error as A)?.message ??
-        t("tools.errors.createFailed");
+        readApiError(error).message ?? t("tools.errors.createFailed");
       setSubmitError(message);
       toast.error(message);
     }

@@ -20,6 +20,8 @@ import {
   type HttpToolFormData,
   type HttpToolFormInput,
 } from "./http-tool-schema";
+import { readApiError } from "@/libs/api-error";
+import { needsCredentialAgain } from "./tool-edit-values";
 
 export type HttpToolFormProps = {
   defaultValues: Partial<HttpToolFormData>;
@@ -35,6 +37,8 @@ export type HttpToolFormProps = {
   trailingActions?: ReactNode;
   id?: string;
   hideActions?: boolean;
+  /** On edit: the saved URL, so moving it to another origin asks for the credential again. */
+  savedUrl?: string;
 };
 
 // Everything an execution needs: the schema's own keys minus the metadata.
@@ -67,6 +71,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   trailingActions,
   id,
   hideActions,
+  savedUrl,
 }) => {
   const { t } = useTranslation();
 
@@ -94,6 +99,19 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
 
   const handleSubmit = form.handleSubmit(
     async (data) => {
+      if (
+        needsCredentialAgain(
+          savedUrl,
+          data.httpUrl,
+          data.auth?.type,
+          data.credential,
+        )
+      ) {
+        form.setError("credential", {
+          message: t("tools.form.credentialRequiredForNewHost"),
+        });
+        return;
+      }
       await onSubmit(data);
     },
     (errors) => console.error("HttpToolForm validation errors", errors),
@@ -127,7 +145,9 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
       setTestResult(result);
     } catch (err) {
       const msg =
-        (err as A)?.body?.message ?? (err as A)?.message ?? "Unknown error";
+        readApiError(err).message ??
+        (err as A)?.message ??
+        t("tools.errors.testFailed");
       setTestResult({
         status: "ERROR",
         errorMessage: msg,
@@ -476,14 +496,14 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                   </span>
                 </div>
                 {testResult.result !== undefined && (
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-all text-ui-fg-base overflow-auto max-h-64">
+                  <pre className="text-xs font-mono whitespace-pre-wrap break-all text-ui-fg-base overflow-auto max-h-[60vh]">
                     {typeof testResult.result === "string"
                       ? testResult.result
                       : JSON.stringify(testResult.result, null, 2)}
                   </pre>
                 )}
                 {testResult.errorMessage && (
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-all text-ui-fg-error overflow-auto max-h-64">
+                  <pre className="text-xs font-mono whitespace-pre-wrap break-all text-ui-fg-error overflow-auto max-h-[60vh]">
                     {testResult.errorMessage}
                   </pre>
                 )}

@@ -4885,6 +4885,9 @@ export type ToolResponseDto = {
     mcpAuth?: {
         [key: string]: unknown;
     };
+    /**
+     * Each action carries `destructive`: it stays off until a chatbot link names it
+     */
     discoveredActions?: Array<unknown>;
     discoveryAt?: string;
 };
@@ -4929,6 +4932,8 @@ export type CreateMcpToolRequestDto = {
 export type UpdateToolRequestDto = {
     name?: string;
     description?: string;
+    httpMethod?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    httpUrl?: string;
     inputSchema?: {
         [key: string]: unknown;
     };
@@ -4942,6 +4947,10 @@ export type UpdateToolRequestDto = {
     credential?: string;
     timeoutMs?: number;
     maxRetries?: number;
+    /**
+     * MCP server URL (MCP tools only)
+     */
+    serverUrl?: string;
 };
 
 export type TestSavedToolRequestDto = {

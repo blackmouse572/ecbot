@@ -45,10 +45,13 @@ import {
     NotFoundException,
     Post,
     Put,
+    Req,
     UploadedFile,
     UseInterceptors,
 } from '@nestjs/common';
+import { IRequestApp } from '@app/common/request/interfaces/request.interface';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { randomUUID } from 'crypto';
@@ -430,6 +433,8 @@ export class WorkspaceController {
 
     @WorkspaceInvitationDoc()
     @Response('workspace.owner.inviteMember.success')
+    // Each invitation sends an email from our domain (#247 review).
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @WorkspacePolicyAbilityProtected({
         action: [ENUM_POLICY_ACTION.CREATE],
         subject: ENUM_POLICY_SUBJECT.MEMBER,
@@ -440,7 +445,8 @@ export class WorkspaceController {
     async inviteMemberToWorkSpace(
         @AuthJwtPayload('user') userId: string,
         @Body() body: WorkSpaceInviteMemberRequestDto,
-        @WorkspacePayload() workspace: WorkspaceEntity
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Req() request?: IRequestApp
     ) {
         // Generate invitation link and get details. The invitation targets
         // the workspace resolved from the URL by the guard (WorkspacePayload)
@@ -459,6 +465,9 @@ export class WorkspaceController {
             `Generated link expiresAt ${expiresAt.toLocaleDateString('vi-VN')}: ${invitationLink}`
         );
 
+        // The invitee has no language of their own yet, so the email follows
+        // the inviter's (#185).
+        const inviter = await this.userService.findOneById(userId);
         await this.emailService.sendInvitationToWorkSpace(
             {
                 email: body.invitedEmail,
@@ -466,6 +475,10 @@ export class WorkspaceController {
             },
             {
                 invitationLink,
+                workspaceName: workspace.name,
+                inviterName: inviter?.name?.trim() || inviter?.email || '',
+                expiresAt,
+                language: request?.__language,
             }
         );
 

@@ -250,6 +250,45 @@ describe('ResendProvider team emails', () => {
         expect(subject()).toBe('Tran Linh joined Kunmart');
     });
 
+    it('invitation: a localized subject naming the inviter and workspace (#185)', async () => {
+        await provider.sendInvitationToWorkSpace(
+            { name: '', email: 'invitee@b.com' },
+            {
+                invitationLink: 'https://app.ecbot.dev/join?token=abc',
+                workspaceName: 'Kunmart',
+                inviterName: 'Chi Nguyen',
+                language: 'vi',
+            }
+        );
+
+        expect(props()).toMatchObject({
+            invitationLink: 'https://app.ecbot.dev/join?token=abc',
+            workspaceName: 'Kunmart',
+            inviterName: 'Chi Nguyen',
+            language: 'vi',
+        });
+        expect(subject()).toBe(
+            'Chi Nguyen đã mời bạn tham gia Kunmart trên Ecbot'
+        );
+    });
+
+    // #247 review: user-chosen names go into the subject of mail sent from
+    // our domain, so they are capped.
+    it('invitation: caps long names in the subject', async () => {
+        await provider.sendInvitationToWorkSpace(
+            { name: '', email: 'invitee@b.com' },
+            {
+                invitationLink: 'https://app.ecbot.dev/join?token=abc',
+                workspaceName: 'W'.repeat(200),
+                inviterName: 'I'.repeat(200),
+            }
+        );
+
+        expect(subject()).toBe(
+            `${'I'.repeat(59)}… invited you to ${'W'.repeat(59)}… on Ecbot`
+        );
+    });
+
     it('channel disconnected: names the channel in the subject and the language', async () => {
         await provider.sendAccountBlocked(
             { name: 'Chi', email: 'owner@b.com' },

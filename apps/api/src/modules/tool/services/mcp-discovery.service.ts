@@ -5,11 +5,14 @@ import { HelperEgressService } from 'src/common/helper/services/helper.egress.se
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
 import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import { isDestructiveAction } from 'src/modules/tool/utils/destructive-action.util';
+import { MCP_DISCOVERY_TIMEOUT_MS } from 'src/modules/tool/constants/tool.constant';
 
 export interface McpAction {
     name: string;
     description: string;
     inputSchema: Record<string, unknown>;
+    destructive?: boolean;
 }
 
 @Injectable()
@@ -22,14 +25,48 @@ export class McpDiscoveryService {
         private readonly egress: HelperEgressService
     ) {}
 
+    /**
+     * Lists the server's actions within MCP_DISCOVERY_TIMEOUT_MS. The SDK's
+     * SSE transport waits for its endpoint event with no timeout, so a slow
+     * or hostile server could otherwise hold the request open (#247 review);
+     * the abort also cancels the server's open streams.
+     */
     async discover(tool: ToolEntity): Promise<McpAction[]> {
-        const client = await this.connect(tool);
+        const controller = new AbortController();
+        let timer: NodeJS.Timeout | undefined;
+        const timedOut = new Promise<never>((_, reject) => {
+            timer = setTimeout(() => {
+                controller.abort();
+                reject(new Error('MCP discovery timed out'));
+            }, MCP_DISCOVERY_TIMEOUT_MS);
+        });
+        try {
+            return await Promise.race([
+                this.listActions(tool, controller.signal),
+                timedOut,
+            ]);
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    private async listActions(
+        tool: ToolEntity,
+        signal: AbortSignal
+    ): Promise<McpAction[]> {
+        const client = await this.connect(tool, signal);
         try {
             const result = await client.listTools();
             return (result.tools ?? []).map((t: any) => ({
                 name: t.name,
                 description: t.description ?? '',
                 inputSchema: (t.inputSchema ?? {}) as Record<string, unknown>,
+                // The annotations are not kept, so decide while they are here.
+                destructive: isDestructiveAction({
+                    name: t.name,
+                    description: t.description,
+                    annotations: t.annotations,
+                }),
             }));
         } finally {
             try {
@@ -40,7 +77,19 @@ export class McpDiscoveryService {
         }
     }
 
-    async connect(tool: ToolEntity): Promise<Client> {
+    /** Egress fetch that also stops when `signal` aborts. */
+    private fetchWith(signal?: AbortSignal): typeof fetch {
+        return ((input: string | URL | Request, init?: RequestInit) =>
+            this.egress.fetch(input as string | URL, {
+                ...init,
+                signal:
+                    signal && init?.signal
+                        ? AbortSignal.any([signal, init.signal])
+                        : (signal ?? init?.signal),
+            })) as typeof fetch;
+    }
+
+    async connect(tool: ToolEntity, signal?: AbortSignal): Promise<Client> {
         if (!tool.mcpServerUrl) {
             throw new Error('MCP tool missing mcpServerUrl');
         }
@@ -95,7 +144,7 @@ export class McpDiscoveryService {
         try {
             const transport = new StreamableHTTPClientTransport(url, {
                 requestInit: { headers },
-                fetch: this.egress.fetch.bind(this.egress),
+                fetch: this.fetchWith(signal),
             });
             const client = new Client(
                 { name: 'eccho', version: '1.0.0' },
@@ -113,7 +162,7 @@ export class McpDiscoveryService {
             await import('@modelcontextprotocol/sdk/client/sse.js');
         const sseTransport = new SSEClientTransport(url, {
             requestInit: { headers },
-            fetch: this.egress.fetch.bind(this.egress),
+            fetch: this.fetchWith(signal),
         });
         const client = new Client(
             { name: 'eccho', version: '1.0.0' },

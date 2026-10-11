@@ -2587,6 +2587,7 @@
     }
   },
   "tools": {
+    "destructiveAction": "Có thể xóa dữ liệu",
     "batch": {
       "delete": {
         "label": "Xóa",
@@ -2699,6 +2700,7 @@
         "maxRetries": "Số lần thử lại tối đa",
         "mcpProvider": "Nhà cung cấp",
         "composioToolkit": "Bộ công cụ",
+        "mcpServerUrl": "URL máy chủ",
         "discoveredActions": "Hành động đã khám phá",
         "discoveredActionsEmpty": "Chưa khám phá được hành động nào.",
         "discoveredActionsReload": "Tải lại",
@@ -2751,12 +2753,14 @@
       "authParamNameHint": "Tên header hoặc query parameter chứa API key.",
       "credential": "Thông tin xác thực",
       "credentialHint": "Gửi dưới dạng plaintext; lưu trữ envelope-encrypted. Để trống khi chỉnh sửa để giữ giá trị hiện tại.",
+      "credentialRequiredForNewHost": "Địa chỉ giờ trỏ tới máy chủ khác, hãy nhập lại thông tin xác thực.",
       "credentialPlaceholder": "•••••••••",
       "timeoutMs": "Timeout (ms)",
       "maxRetries": "Số lần thử lại tối đa"
     },
     "errors": {
       "createFailed": "Không thể tạo công cụ. Vui lòng kiểm tra biểu mẫu và thử lại.",
+      "testFailed": "Gọi thử không thành công. Hãy kiểm tra URL rồi thử lại.",
       "updateFailed": "Không thể lưu công cụ. Vui lòng kiểm tra biểu mẫu và thử lại.",
       "deleteFailed": "Không thể xóa công cụ. Vui lòng thử lại.",
       "schemaRowKeyRequired": "Khóa thuộc tính là bắt buộc.",

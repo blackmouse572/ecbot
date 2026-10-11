@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ToolSpec } from 'src/modules/tool/interfaces/tool-spec.interface';
+import { isDestructiveAction } from 'src/modules/tool/utils/destructive-action.util';
 
 @Injectable()
 export class ManifestBuilderService {
@@ -39,9 +40,10 @@ export class ManifestBuilderService {
                 const discovered = t.discoveredActions ?? [];
                 if (discovered.length === 0) continue;
                 const enabled = row.enabledActions;
+                // Without a list, everything but destructive actions (#177).
                 const actions =
                     enabled == null
-                        ? discovered
+                        ? discovered.filter(a => !isDestructiveAction(a))
                         : discovered.filter(a => enabled.includes(a.name));
                 for (const action of actions) {
                     specs.push({

@@ -17,6 +17,7 @@ import { Combobox } from "@repo/ui/common-components";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ToolListResponseDto } from "@repo/client";
+import { defaultEnabledActions, isActionEnabled } from "./mcp-action-state";
 
 type ChatbotToolAddDrawerProps = {
   isOpen: boolean;
@@ -96,6 +97,7 @@ export function ChatbotToolAddDrawer({
       toolDetail.discoveredActions as Array<{
         name: string;
         description?: string;
+        destructive?: boolean;
       }>
     ).filter((a) => typeof a?.name === "string" && a.name.length > 0);
   }, [isMcp, toolDetail?.discoveredActions]);
@@ -107,7 +109,7 @@ export function ChatbotToolAddDrawer({
 
   const toggleAction = (name: string, checked: boolean) => {
     setSelectedActions((prev) => {
-      const base = prev ?? discoveredActions.map((a) => a.name);
+      const base = prev ?? defaultEnabledActions(discoveredActions);
       return checked
         ? Array.from(new Set([...base, name]))
         : base.filter((n) => n !== name);
@@ -193,7 +195,11 @@ type ToolDetailPanelProps = {
   tool: ToolListResponseDto;
   isMcp: boolean;
   isLoadingDetail: boolean;
-  discoveredActions: Array<{ name: string; description?: string }>;
+  discoveredActions: Array<{
+    name: string;
+    description?: string;
+    destructive?: boolean;
+  }>;
   selectedActions: string[] | null;
   onToggleAction: (name: string, checked: boolean) => void;
 };
@@ -242,9 +248,7 @@ function ToolDetailPanel({
           ) : (
             <ul className="space-y-2">
               {discoveredActions.map((action) => {
-                const checked =
-                  selectedActions === null ||
-                  selectedActions.includes(action.name);
+                const checked = isActionEnabled(action, selectedActions);
                 return (
                   <li key={action.name} className="flex items-start gap-2">
                     <Checkbox
@@ -256,6 +260,11 @@ function ToolDetailPanel({
                     <div className="min-w-0">
                       <Text size="small" weight="plus">
                         {action.name}
+                        {action.destructive && (
+                          <Badge size="2xsmall" color="red" className="ml-1.5">
+                            {t("tools.destructiveAction")}
+                          </Badge>
+                        )}
                       </Text>
                       {action.description && (
                         <Text size="small" className="text-ui-fg-subtle">
