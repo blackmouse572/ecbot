@@ -5710,6 +5710,73 @@ export type ApiChannelSendMessageRequestDto = {
     timestamp?: string;
 };
 
+export type KnowledgeItemShortResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    /**
+     * Knowledge base ID
+     */
+    knowledgeBaseId: string;
+    /**
+     * Item type (FILE, URL, TEXT)
+     */
+    type: 'FILE' | 'URL' | 'TEXT';
+    /**
+     * Item title
+     */
+    title: string;
+    /**
+     * Folder ID
+     */
+    folderId?: string;
+    /**
+     * Processing status
+     */
+    status: 'DRAFT' | 'READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    /**
+     * Error message if processing failed
+     */
+    errorMessage?: string;
+    /**
+     * When item was processed
+     */
+    processedAt?: string;
+    /**
+     * Tags
+     */
+    tags?: Array<string>;
+};
+
 export type RequestUserResponseDto = {
     id: string;
     name: string;
@@ -28850,6 +28917,150 @@ export type KnowledgeBaseClientControllerListV1Responses = {
 
 export type KnowledgeBaseClientControllerListV1Response = KnowledgeBaseClientControllerListV1Responses[keyof KnowledgeBaseClientControllerListV1Responses];
 
+export type KnowledgeBaseClientControllerCreateV1Data = {
+    body: KnowledgeBaseCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/knowledge-bases';
+};
+
+export type KnowledgeBaseClientControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeBaseClientControllerCreateV1Error = KnowledgeBaseClientControllerCreateV1Errors[keyof KnowledgeBaseClientControllerCreateV1Errors];
+
+export type KnowledgeBaseClientControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type KnowledgeBaseClientControllerCreateV1Response = KnowledgeBaseClientControllerCreateV1Responses[keyof KnowledgeBaseClientControllerCreateV1Responses];
+
+export type KnowledgeBaseClientControllerUpdateV1Data = {
+    body: KnowledgeBaseUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}';
+};
+
+export type KnowledgeBaseClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeBaseClientControllerUpdateV1Error = KnowledgeBaseClientControllerUpdateV1Errors[keyof KnowledgeBaseClientControllerUpdateV1Errors];
+
+export type KnowledgeBaseClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeBaseResponseDto;
+    };
+};
+
+export type KnowledgeBaseClientControllerUpdateV1Response = KnowledgeBaseClientControllerUpdateV1Responses[keyof KnowledgeBaseClientControllerUpdateV1Responses];
+
 export type KnowledgeItemClientControllerListV1Data = {
     body?: never;
     headers?: {
@@ -28949,6 +29160,79 @@ export type KnowledgeItemClientControllerListV1Responses = {
 
 export type KnowledgeItemClientControllerListV1Response = KnowledgeItemClientControllerListV1Responses[keyof KnowledgeItemClientControllerListV1Responses];
 
+export type KnowledgeItemClientControllerCreateV1Data = {
+    body: KnowledgeItemCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items';
+};
+
+export type KnowledgeItemClientControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerCreateV1Error = KnowledgeItemClientControllerCreateV1Errors[keyof KnowledgeItemClientControllerCreateV1Errors];
+
+export type KnowledgeItemClientControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemShortResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerCreateV1Response = KnowledgeItemClientControllerCreateV1Responses[keyof KnowledgeItemClientControllerCreateV1Responses];
+
 export type KnowledgeItemClientControllerGetV1Data = {
     body?: never;
     headers?: {
@@ -29015,6 +29299,80 @@ export type KnowledgeItemClientControllerGetV1Responses = {
 };
 
 export type KnowledgeItemClientControllerGetV1Response = KnowledgeItemClientControllerGetV1Responses[keyof KnowledgeItemClientControllerGetV1Responses];
+
+export type KnowledgeItemClientControllerUpdateV1Data = {
+    body: KnowledgeItemUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items/{id}';
+};
+
+export type KnowledgeItemClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerUpdateV1Error = KnowledgeItemClientControllerUpdateV1Errors[keyof KnowledgeItemClientControllerUpdateV1Errors];
+
+export type KnowledgeItemClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemShortResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerUpdateV1Response = KnowledgeItemClientControllerUpdateV1Responses[keyof KnowledgeItemClientControllerUpdateV1Responses];
 
 export type ConversationClientControllerListV1Data = {
     body?: never;

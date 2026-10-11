@@ -1,4 +1,5 @@
 import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
+import { ENUM_REQUEST_STATUS_CODE_ERROR } from '@app/common/request/enums/request.status-code.enum';
 import {
     PaginationQuery,
     PaginationQueryFilterContainInArray,
@@ -15,9 +16,15 @@ import {
     IResponse,
     IResponsePaging,
 } from '@app/common/response/interfaces/response.interface';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
+import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
 import { AwsS3Service } from '@app/modules/aws/services/aws.s3.service';
-import { ClientCredentialProtected } from '@app/modules/client-credential/decorators/client-credential.decorator';
+import {
+    ClientCredentialPayload,
+    ClientCredentialProtected,
+} from '@app/modules/client-credential/decorators/client-credential.decorator';
+import { ClientCredentialEntity } from '@app/modules/client-credential/repository/entities/client-credential.entity';
 import {
     ENUM_POLICY_ACTION,
     ENUM_POLICY_SUBJECT,
@@ -25,13 +32,27 @@ import {
 import { WorkspacePayload } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { PopulateHint } from '@mikro-orm/postgresql';
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    NotFoundException,
+    Param,
+    Post,
+    Put,
+    UnprocessableEntityException,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
+    KnowledgeItemClientCreateDoc,
     KnowledgeItemClientGetDoc,
     KnowledgeItemClientListDoc,
+    KnowledgeItemClientUpdateDoc,
 } from '../docs/knowledge-item.client.doc';
+import { KnowledgeItemCreateRequestDto } from '../dtos/request/knowledge-item.create.request.dto';
+import { KnowledgeItemUpdateRequestDto } from '../dtos/request/knowledge-item.update.request.dto';
 import { KnowledgeItemResponseDto } from '../dtos/response/knowledge-item.response.dto';
+import { KnowledgeItemShortResponseDto } from '../dtos/response/knowledge-item-short.response.dto';
 import {
     ENUM_KNOWLEDGE_BASE_ITEM_STATUS,
     ENUM_KNOWLEDGE_BASE_ITEM_STATUSES,
@@ -41,10 +62,15 @@ import {
     ENUM_KNOWLEDGE_BASE_ITEM_TYPES,
 } from '../enums/knowledge-base-item-type.enum';
 import { KnowledgeBaseService } from '../services/knowledge-base.service';
+import { KnowledgeItemFolderService } from '../services/knowledge-item-folder.service';
 import { KnowledgeItemService } from '../services/knowledge-item.service';
+import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entity';
 
 // 3rd-party surface: authenticated by x-api-key (ClientCredential), tenant
-// derived from the credential (no :workspace param). See ADR-0012.
+// derived from the credential (no :workspace param). See ADR-0012. Writes
+// act as the credential's creator, in the records and the activity log.
+// There is no file upload here, and no delete: the workspace delete route
+// also requires a role type no workspace member has.
 @ApiTags('modules.client.knowledgeItem')
 @Controller('/knowledge-bases/:knowledgeBaseId/items')
 export class KnowledgeItemClientController {
@@ -52,7 +78,9 @@ export class KnowledgeItemClientController {
         private readonly knowledgeItemService: KnowledgeItemService,
         private readonly knowledgeBaseService: KnowledgeBaseService,
         private readonly paginationService: PaginationService,
-        private readonly awsS3Service: AwsS3Service
+        private readonly awsS3Service: AwsS3Service,
+        private readonly knowledgeItemFolderService: KnowledgeItemFolderService,
+        private readonly activityService: ActivityService
     ) {}
 
     @KnowledgeItemClientListDoc()
@@ -155,6 +183,119 @@ export class KnowledgeItemClientController {
         }
 
         return { data: this.knowledgeItemService.mapGet(item) };
+    }
+
+    @KnowledgeItemClientCreateDoc()
+    @Response('knowledgeItem.create')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.CREATE],
+    })
+    @Post('/')
+    async create(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('knowledgeBaseId') knowledgeBaseId: string,
+        @Body() { folderId, ...dto }: KnowledgeItemCreateRequestDto
+    ): Promise<IResponse<KnowledgeItemShortResponseDto>> {
+        if (dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE) {
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
+                message: 'knowledgeItem.error.fileRequired',
+            });
+        }
+        await this.findKnowledgeBaseOrFail(workspace, knowledgeBaseId);
+
+        const folder = folderId
+            ? await this.knowledgeItemFolderService.findOne({
+                  id: folderId,
+                  knowledgeBase: knowledgeBaseId,
+              })
+            : undefined;
+        if (folderId && !folder) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'knowledgeItemFolder.error.notFound',
+            });
+        }
+
+        const item = await this.knowledgeItemService.create(
+            {
+                ...dto,
+                folder,
+                knowledgeBase: knowledgeBaseId,
+                workspace: workspace.id,
+            },
+            { actionBy: credential.createdBy.id }
+        );
+        await this.log(
+            ENUM_ACTIVITY_ACTION.CREATE,
+            credential,
+            knowledgeBaseId,
+            item
+        );
+
+        return { data: this.knowledgeItemService.mapShort(item) };
+    }
+
+    @KnowledgeItemClientUpdateDoc()
+    @Response('knowledgeItem.update')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @Put('/:id')
+    async update(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('knowledgeBaseId') knowledgeBaseId: string,
+        @Param('id') id: string,
+        @Body() dto: KnowledgeItemUpdateRequestDto
+    ): Promise<IResponse<KnowledgeItemShortResponseDto>> {
+        await this.findKnowledgeBaseOrFail(workspace, knowledgeBaseId);
+
+        const item = await this.knowledgeItemService.findOne({
+            id,
+            knowledgeBase: knowledgeBaseId,
+            deletedAt: null,
+        });
+        if (!item) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'knowledgeItem.error.notFound',
+            });
+        }
+
+        // Setting status READY queues the item for processing.
+        const updated = await this.knowledgeItemService.update(item.id, dto, {
+            actionBy: credential.createdBy.id,
+        });
+        await this.log(
+            ENUM_ACTIVITY_ACTION.UPDATE,
+            credential,
+            knowledgeBaseId,
+            item
+        );
+
+        return { data: this.knowledgeItemService.mapShort(updated) };
+    }
+
+    private async log(
+        action: ENUM_ACTIVITY_ACTION,
+        credential: ClientCredentialEntity,
+        knowledgeBaseId: string,
+        item: KnowledgeItemEntity
+    ): Promise<void> {
+        await this.activityService.createByUser(credential.createdBy, {
+            action,
+            subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+            metadata: {
+                knowledgeBaseId,
+                itemId: item.id,
+                itemType: item.type,
+                itemTitle: item.title,
+            },
+        });
     }
 
     private async findKnowledgeBaseOrFail(

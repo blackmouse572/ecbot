@@ -17,6 +17,13 @@ const mockKnowledgeBaseService = {
     find: jest.fn(),
     getTotal: jest.fn(),
     mapList: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    mapGet: jest.fn(),
+};
+
+const mockActivityService = {
+    createByUser: jest.fn(),
 };
 
 const mockPaginationService = {
@@ -33,7 +40,8 @@ describe('KnowledgeBaseClientController', () => {
         jest.clearAllMocks();
         controller = new KnowledgeBaseClientController(
             mockKnowledgeBaseService as any,
-            mockPaginationService as any
+            mockPaginationService as any,
+            mockActivityService as any
         );
     });
 
@@ -95,6 +103,96 @@ describe('KnowledgeBaseClientController', () => {
         expect(result).toEqual({
             _pagination: { total: 1, totalPage: 1 },
             data: mapped,
+        });
+    });
+
+    describe('writes', () => {
+        const credential = { createdBy: { id: 'creator-1' } } as any;
+
+        it.each([
+            ['create', ENUM_POLICY_ACTION.CREATE],
+            ['update', ENUM_POLICY_ACTION.UPDATE],
+        ] as const)(
+            '%s is guarded and needs KNOWLEDGE_BASE %s',
+            (handler, action) => {
+                const method = KnowledgeBaseClientController.prototype[handler];
+                expect(Reflect.getMetadata(GUARDS_METADATA, method)).toEqual([
+                    ClientCredentialGuard,
+                    ClientCredentialPolicyGuard,
+                ]);
+                expect(
+                    Reflect.getMetadata(
+                        CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
+                        method
+                    )
+                ).toEqual([
+                    {
+                        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+                        action: [action],
+                    },
+                ]);
+            }
+        );
+
+        it('creates a knowledge base in the credential workspace as the creator', async () => {
+            mockKnowledgeBaseService.create.mockResolvedValue({
+                id: 'kb-1',
+                name: 'FAQ',
+            });
+
+            const result = await controller.create(workspace, credential, {
+                name: 'FAQ',
+            });
+
+            expect(mockKnowledgeBaseService.create).toHaveBeenCalledWith(
+                { name: 'FAQ', workspace: 'workspace-1' },
+                { actionBy: 'creator-1' }
+            );
+            expect(mockActivityService.createByUser).toHaveBeenCalledWith(
+                credential.createdBy,
+                {
+                    action: 'create',
+                    subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+                    metadata: {
+                        knowledgeBaseId: 'kb-1',
+                        knowledgeBaseName: 'FAQ',
+                    },
+                }
+            );
+            expect(result).toEqual({ data: { id: 'kb-1' } });
+        });
+
+        it('updates a knowledge base only within the credential workspace', async () => {
+            const updated = { id: 'kb-1', name: 'New' };
+            mockKnowledgeBaseService.update.mockResolvedValue(updated);
+            mockKnowledgeBaseService.mapGet.mockReturnValue({ id: 'kb-1' });
+
+            const result = await controller.update(
+                workspace,
+                credential,
+                'kb-1',
+                { name: 'New' }
+            );
+
+            // The service 404s a base outside the workspace.
+            expect(mockKnowledgeBaseService.update).toHaveBeenCalledWith(
+                'kb-1',
+                'workspace-1',
+                { name: 'New' },
+                { actionBy: 'creator-1' }
+            );
+            expect(mockActivityService.createByUser).toHaveBeenCalledWith(
+                credential.createdBy,
+                {
+                    action: 'update',
+                    subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+                    metadata: {
+                        knowledgeBaseId: 'kb-1',
+                        knowledgeBaseName: 'New',
+                    },
+                }
+            );
+            expect(result).toEqual({ data: { id: 'kb-1' } });
         });
     });
 });
