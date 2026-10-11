@@ -1,5 +1,6 @@
 import { Heading } from "@medusajs/ui";
 import { RouteDrawer } from "@/components/modals";
+import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
 import { KnowledgeItemEditForm } from "./components";
 import { toPrevPath } from "../../../utils";
@@ -7,6 +8,7 @@ import { ROUTES } from "../../constants";
 import { useKnowledgeItem } from "../../../hooks/api";
 
 export function KnowledgeItemEdit() {
+  const { t } = useTranslation();
   const { knowledgeBaseId, id, workspaceSlug } = useParams<{
     knowledgeBaseId: string;
     id: string;
@@ -24,7 +26,7 @@ export function KnowledgeItemEdit() {
       <RouteDrawer.Header>
         <RouteDrawer.Title asChild>
           <Heading level="h2" className="text-xl font-semibold">
-            Edit Tags
+            {t("knowledge_item.editTags")}
           </Heading>
         </RouteDrawer.Title>
       </RouteDrawer.Header>

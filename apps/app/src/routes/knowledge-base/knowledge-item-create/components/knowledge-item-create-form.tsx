@@ -240,7 +240,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                     render={({ field }) => {
                       const tags = field.value || [];
                       return (
-                        <Form.Item className="flex flex-col gap-2">
+                        <Form.Item>
                           <Form.Label>{t("knowledge_item.addTag")}</Form.Label>
                           <ChipGroup
                             onRemove={(index) => {
@@ -266,7 +266,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                     render={({ field }) => {
                       const tags = field.value || [];
                       return (
-                        <Form.Item className="flex flex-col gap-2">
+                        <Form.Item>
                           <KnowledgeItemEditTag
                             defaultValues={tags}
                             knowledgeBaseId={knowledgeBaseId}

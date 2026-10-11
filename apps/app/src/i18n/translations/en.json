@@ -481,7 +481,18 @@
       "platform": {
         "title": "Choose a platform",
         "description": "Select the platform you want to connect to your workspace.",
-        "roadmap": "Roadmap"
+        "roadmap": "Roadmap",
+        "options": {
+          "FACEBOOK_ACCOUNT": "Pages & Messenger",
+          "INSTAGRAM_ACCOUNT": "Business accounts",
+          "ZALO_ACCOUNT": "Zalo OA",
+          "TIKTOK_SHOP": "Shop & seller center",
+          "SHOPEE_SHOP": "Shopee seller",
+          "TELEGRAM_BOT": "Telegram bot",
+          "WHATSAPP_BUSINESS": "WhatsApp Business (Cloud API)",
+          "WEBSITE_WIDGET": "Embeddable chat widget",
+          "API_CHANNEL": "Direct REST integration"
+        }
       },
       "provision": {
         "copied": "Copied",
@@ -1758,6 +1769,10 @@
       "modules": "Modules",
       "noModules": "No modules assigned",
       "noDescription": "No description"
+    },
+    "delete": {
+      "title": "Delete role",
+      "description": "Are you sure you want to delete this role? This action cannot be undone."
     }
   },
   "profile": {
@@ -2837,7 +2852,8 @@
         "installing": "Finishing install…",
         "success": "Installed successfully.",
         "error": "Install failed.",
-        "backLink": "Back to marketplace"
+        "backLink": "Back to marketplace",
+        "noPendingInstall": "No pending install found in this browser session."
       }
     },
     "mcp": {
@@ -3000,5 +3016,17 @@
       "failed": "Verification failed. Reload the page and try again."
     },
     "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>"
+  },
+  "editor": {
+    "toolbar": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "heading2": "Heading 2",
+      "bulletList": "Bullet list",
+      "numberedList": "Numbered list",
+      "quote": "Quote",
+      "undo": "Undo",
+      "redo": "Redo"
+    }
   }
 }

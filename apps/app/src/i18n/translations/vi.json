@@ -13,7 +13,7 @@
       "back": "Quay lại trang quản trị"
     },
     "banner": {
-      "label": "USER VIEW MODE",
+      "label": "CHẾ ĐỘ XEM NHƯ NGƯỜI DÙNG",
       "exit": "Thoát",
       "expand": "Mở rộng điều khiển chế độ xem người dùng",
       "minimize": "Thu nhỏ"
@@ -438,7 +438,8 @@
       "success": {
         "sentRequest": "Yêu cầu tham gia đã được gửi thành công! 🚀",
         "description": "Yêu cầu tham gia của bạn đã được gửi thành công. Chúng tôi sẽ thông báo cho bạn khi có tin vui! 📬"
-      }
+      },
+      "joinWorkspace": "Tham gia Không gian làm việc"
     }
   },
   "join": {
@@ -507,7 +508,18 @@
       "platform": {
         "title": "Chọn nền tảng",
         "description": "Chọn nền tảng bạn muốn kết nối với workspace của mình.",
-        "roadmap": "Sắp có"
+        "roadmap": "Sắp có",
+        "options": {
+          "FACEBOOK_ACCOUNT": "Trang & Messenger",
+          "INSTAGRAM_ACCOUNT": "Tài khoản doanh nghiệp",
+          "ZALO_ACCOUNT": "Zalo OA",
+          "TIKTOK_SHOP": "Cửa hàng & kênh người bán",
+          "SHOPEE_SHOP": "Người bán Shopee",
+          "TELEGRAM_BOT": "Bot Telegram",
+          "WHATSAPP_BUSINESS": "WhatsApp Business (Cloud API)",
+          "WEBSITE_WIDGET": "Khung chat nhúng vào website",
+          "API_CHANNEL": "Tích hợp trực tiếp qua REST API"
+        }
       },
       "provision": {
         "copied": "Đã sao chép",
@@ -639,7 +651,7 @@
           "description": "Một bot Telegram được kết nối bằng bot token."
         },
         "apiChannel": {
-          "label": "API Channel",
+          "label": "Kênh API",
           "description": "Gửi và nhận tin nhắn qua REST từ hệ thống của bạn."
         },
         "websiteWidget": {
@@ -652,7 +664,7 @@
         }
       },
       "apiChannel": {
-        "title": "API channel",
+        "title": "Kênh API",
         "accountKeyLabel": "Account key",
         "accountKeyHint": "Gửi giá trị này dưới dạng accountKey khi gửi tin nhắn.",
         "callbackLabel": "Callback URL",
@@ -681,6 +693,21 @@
           "success": "Đã cập nhật thiết lập widget.",
           "error": "Cập nhật thiết lập widget thất bại."
         }
+      }
+    },
+    "imports": {
+      "title": "Nhập danh sách tài khoản",
+      "upload": {
+        "title": "Tải lên tệp CSV",
+        "description": "Bạn có thể thêm mới hoặc cập nhật {{object}} bằng cách nhập tệp. Để cập nhật {{object}} đã có, hãy dùng đúng ID hiện có. Bạn sẽ được hỏi xác nhận trước khi nhập.",
+        "importFiles": "Nhập tệp",
+        "importFilesDesc": "Kéo thả tệp vào đây hoặc bấm để tải lên",
+        "itemCreated": "Các mục sẽ được tạo mới",
+        "itemUpdated": "Các mục sẽ được cập nhật"
+      },
+      "template": {
+        "title": "Chưa chắc về danh sách?",
+        "description": "Tải mẫu bên dưới để đảm bảo bạn dùng đúng định dạng."
       }
     }
   },
@@ -924,14 +951,14 @@
           "7d": "7 ngày"
         },
         "generate": "Tạo link",
-        "copy": "Copy link",
+        "copy": "Sao chép liên kết",
         "copied": "Đã copy link.",
         "expiresAt": "Hết hạn {{date}}",
         "error": "Không tạo được link preview."
       }
     },
     "preview": {
-      "heading": "Chat preview",
+      "heading": "Xem trước cuộc trò chuyện",
       "invalid": "Link preview này không hợp lệ.",
       "expired": "Link preview này đã hết hạn.",
       "invalidHint": "Hãy xin người chia sẻ một link mới.",
@@ -1054,7 +1081,9 @@
       "autoRead": "Tự đánh dấu đã xem",
       "typingIndicator": "Hiện đang soạn tin",
       "noAccounts": "Chưa có tài khoản liên kết",
-      "noAccountsDescription": "Agent của bạn đã sẵn sàng, nhưng cần các tài khoản để bắt đầu! Hãy chỉnh sửa agent để liên kết tài khoản của bạn."
+      "noAccountsDescription": "Agent của bạn đã sẵn sàng, nhưng cần các tài khoản để bắt đầu! Hãy chỉnh sửa agent để liên kết tài khoản của bạn.",
+      "title": "Chi tiết agent",
+      "generalKnowledge": "Kiến thức chung"
     },
     "rag": {
       "title": "Nền tảng kiến thức",
@@ -1803,9 +1832,13 @@
       "title": "Vai trò",
       "roleId": "ID Vai trò",
       "type": "Loại",
-      "modules": "Modules",
+      "modules": "Mô-đun",
       "noModules": "Không có module nào được gán",
       "noDescription": "Không có mô tả"
+    },
+    "delete": {
+      "title": "Xóa vai trò",
+      "description": "Bạn có chắc muốn xóa vai trò này? Thao tác này không thể hoàn tác."
     }
   },
   "profile": {
@@ -2256,8 +2289,8 @@
     "tagPlaceholder": "Nhập tên thẻ...",
     "tagHint": "Sử dụng thẻ để phân loại và sắp xếp các mục kiến thức của bạn",
     "edit": {
-      "success": "Knowledge item updated successfully",
-      "error": "Failed to update knowledge item"
+      "success": "Đã cập nhật mục kiến thức",
+      "error": "Cập nhật mục kiến thức thất bại"
     },
     "tagsUpdateError": "Không thể cập nhật thẻ",
     "editTags": "Chỉnh sửa thẻ",
@@ -2752,7 +2785,7 @@
       "descriptionPlaceholder": "Công cụ này làm gì? LLM dùng mô tả để quyết định khi nào gọi.",
       "httpMethod": "Phương thức",
       "httpUrl": "URL",
-      "inputSchema": "Input schema (JSON)",
+      "inputSchema": "Lược đồ đầu vào (JSON)",
       "inputSchemaHint": "JSON Schema mô tả tham số đầu vào của công cụ.",
       "headers": "Headers (JSON)",
       "headersHint": "Headers tĩnh đính kèm mọi lần gọi (tùy chọn).",
@@ -2774,7 +2807,7 @@
       "credentialHint": "Gửi dưới dạng plaintext; lưu trữ envelope-encrypted. Để trống khi chỉnh sửa để giữ giá trị hiện tại.",
       "credentialRequiredForNewHost": "Địa chỉ giờ trỏ tới máy chủ khác, hãy nhập lại thông tin xác thực.",
       "credentialPlaceholder": "•••••••••",
-      "timeoutMs": "Timeout (ms)",
+      "timeoutMs": "Thời gian chờ (ms)",
       "maxRetries": "Số lần thử lại tối đa"
     },
     "errors": {
@@ -2867,7 +2900,8 @@
         "installing": "Đang hoàn tất cài đặt…",
         "success": "Cài đặt thành công.",
         "error": "Cài đặt thất bại.",
-        "backLink": "Quay lại kho công cụ"
+        "backLink": "Quay lại kho công cụ",
+        "noPendingInstall": "Không tìm thấy lượt cài đặt nào đang chờ trong phiên trình duyệt này."
       }
     },
     "mcp": {
@@ -3030,5 +3064,17 @@
       "failed": "Xác minh thất bại. Tải lại trang và thử lại."
     },
     "aiNotice": "Bạn đang trò chuyện với AI. Tin nhắn của bạn được xử lý để trả lời bạn. <privacy>Chính sách quyền riêng tư</privacy>"
+  },
+  "editor": {
+    "toolbar": {
+      "bold": "In đậm",
+      "italic": "In nghiêng",
+      "heading2": "Tiêu đề 2",
+      "bulletList": "Danh sách dấu đầu dòng",
+      "numberedList": "Danh sách đánh số",
+      "quote": "Trích dẫn",
+      "undo": "Hoàn tác",
+      "redo": "Làm lại"
+    }
   }
 }
