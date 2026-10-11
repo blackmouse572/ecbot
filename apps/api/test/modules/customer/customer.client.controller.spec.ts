@@ -21,10 +21,12 @@ const mockCustomerService = {
     mapList: jest.fn(),
     findOneByIdInWorkspace: jest.fn(),
     mapGet: jest.fn(),
+    update: jest.fn(),
 };
 
 const mockActivityService = {
     createView: jest.fn(),
+    createByUserWithWorkspace: jest.fn(),
 };
 
 const mockPaginationService = {
@@ -150,6 +152,54 @@ describe('CustomerClientController', () => {
                 controller.get(workspace, credential, 'cust-elsewhere')
             ).rejects.toBeInstanceOf(NotFoundException);
             expect(mockActivityService.createView).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('update', () => {
+        it('is guarded and needs CUSTOMER update', () => {
+            const method = CustomerClientController.prototype.update;
+            expect(Reflect.getMetadata(GUARDS_METADATA, method)).toEqual([
+                ClientCredentialGuard,
+                ClientCredentialPolicyGuard,
+            ]);
+            expect(
+                Reflect.getMetadata(
+                    CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
+                    method
+                )
+            ).toEqual([
+                {
+                    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                    action: [ENUM_POLICY_ACTION.UPDATE],
+                },
+            ]);
+        });
+
+        it('updates a customer of the credential workspace and logs it as the creator', async () => {
+            mockCustomerService.update.mockResolvedValue({ id: 'cust-1' });
+            mockCustomerService.mapGet.mockReturnValue({ id: 'cust-1' });
+
+            const result = await controller.update(
+                workspace,
+                credential,
+                'cust-1',
+                { notes: 'Prefers Zalo' }
+            );
+
+            // The service 404s a customer outside the workspace.
+            expect(mockCustomerService.update).toHaveBeenCalledWith(
+                'cust-1',
+                { notes: 'Prefers Zalo' },
+                'workspace-1'
+            );
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(credential.createdBy, workspace, {
+                action: 'update',
+                subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                metadata: { id: 'cust-1' },
+            });
+            expect(result).toEqual({ data: { id: 'cust-1' } });
         });
     });
 });

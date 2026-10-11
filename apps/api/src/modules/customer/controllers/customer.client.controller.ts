@@ -10,6 +10,7 @@ import {
     IResponse,
     IResponsePaging,
 } from '@app/common/response/interfaces/response.interface';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import {
     ClientCredentialPayload,
@@ -22,7 +23,14 @@ import {
 } from '@app/modules/policy/enums/policy.enum';
 import { WorkspacePayload } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    NotFoundException,
+    Param,
+    Patch,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
     CUSTOMER_DEFAULT_AVAILABLE_ORDER_BY,
@@ -31,13 +39,16 @@ import {
 import {
     CustomerClientGetDoc,
     CustomerClientListDoc,
+    CustomerClientUpdateDoc,
 } from '../docs/customer.client.doc';
+import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.request.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
 import { CustomerService } from '../services/customer.service';
 
 // 3rd-party surface: authenticated by x-api-key (ClientCredential), tenant
 // derived from the credential (no :workspace param). See ADR-0012. Reading a
-// customer is logged as a view by the credential's creator.
+// customer is logged as a view by the credential's creator, and changing one
+// as an update by them.
 @ApiTags('modules.client.customer')
 @Controller('/customers')
 export class CustomerClientController {
@@ -119,5 +130,38 @@ export class CustomerClientController {
         );
 
         return { data: this.customerService.mapGet(customer) };
+    }
+
+    @CustomerClientUpdateDoc()
+    @Response('customer.workspace.update')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @Patch('/:id')
+    async update(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('id') id: string,
+        @Body() dto: CustomerUpdateRequestDto
+    ): Promise<IResponse<CustomerGetResponseDto>> {
+        // 404s a customer outside the workspace.
+        const updated = await this.customerService.update(
+            id,
+            dto,
+            workspace.id
+        );
+        await this.activityService.createByUserWithWorkspace(
+            credential.createdBy,
+            workspace,
+            {
+                action: ENUM_ACTIVITY_ACTION.UPDATE,
+                subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                // The audit log is append-only, so it keeps ids, not names.
+                metadata: { id: updated.id },
+            }
+        );
+
+        return { data: this.customerService.mapGet(updated) };
     }
 }

@@ -10,11 +10,19 @@ import { AwsModule } from '@app/modules/aws/aws.module';
 import { ConversationClientController } from '@app/modules/conversation/controllers/conversation.client.controller';
 import { ConversationModule } from '@app/modules/conversation/conversation.module';
 import { CustomerClientController } from '@app/modules/customer/controllers/customer.client.controller';
+import { CustomerTagAssignmentClientController } from '@app/modules/customer/controllers/customer-tag-assignment.client.controller';
+import { CustomerTagClientController } from '@app/modules/customer/controllers/customer-tag.client.controller';
 import { CustomerModule } from '@app/modules/customer/customer.module';
 import { KnowledgeBaseClientController } from '@app/modules/knowledge-base/controllers/knowledge-base.client.controller';
 import { KnowledgeItemClientController } from '@app/modules/knowledge-base/controllers/knowledge-item.client.controller';
 import { KnowledgeBaseServicesModule } from '@app/modules/knowledge-base/services/services.module';
 import { RoleModule } from '@app/modules/role/role.module';
+import { ChatbotSkillClientController } from '@app/modules/skill/controllers/chatbot-skill.client.controller';
+import { SkillClientController } from '@app/modules/skill/controllers/skill.client.controller';
+import { SkillModule } from '@app/modules/skill/skill.module';
+import { ChatbotToolClientController } from '@app/modules/tool/controllers/chatbot-tool.client.controller';
+import { ToolClientController } from '@app/modules/tool/controllers/tool.client.controller';
+import { ToolModule } from '@app/modules/tool/tool.module';
 import { WorkSpaceModule } from '@app/modules/workspace/workspace.module';
 import { Module } from '@nestjs/common';
 
@@ -29,6 +37,12 @@ import { Module } from '@nestjs/common';
         KnowledgeItemClientController,
         ConversationClientController,
         CustomerClientController,
+        CustomerTagClientController,
+        CustomerTagAssignmentClientController,
+        ToolClientController,
+        ChatbotToolClientController,
+        SkillClientController,
+        ChatbotSkillClientController,
     ],
     providers: [],
     exports: [],
@@ -42,6 +56,8 @@ import { Module } from '@nestjs/common';
         ConversationModule,
         ActivityModule,
         CustomerModule,
+        ToolModule,
+        SkillModule,
         // ClientCredentialPolicyGuard checks the credential creator's roles.
         WorkSpaceModule,
         RoleModule,

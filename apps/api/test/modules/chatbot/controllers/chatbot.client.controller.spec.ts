@@ -23,6 +23,19 @@ const mockChatbotService = {
     findOne: jest.fn(),
     mapList: jest.fn(),
     mapDetails: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    active: jest.fn(),
+    inactive: jest.fn(),
+    softDelete: jest.fn(),
+};
+
+const mockModelCatalogService = {
+    list: jest.fn(),
+};
+
+const mockActivityService = {
+    createByUserWithWorkspace: jest.fn(),
 };
 
 const mockPaginationService = {
@@ -39,7 +52,9 @@ describe('ChatbotClientController', () => {
         jest.clearAllMocks();
         controller = new ChatbotClientController(
             mockChatbotService as any,
-            mockPaginationService as any
+            mockPaginationService as any,
+            mockModelCatalogService as any,
+            mockActivityService as any
         );
     });
 
@@ -182,5 +197,150 @@ describe('ChatbotClientController', () => {
             ).rejects.toBeInstanceOf(NotFoundException);
             expect(mockChatbotService.mapDetails).not.toHaveBeenCalled();
         });
+    });
+
+    describe('models and writes', () => {
+        const credential = { createdBy: { id: 'creator-1' } } as any;
+        const chatbot = { id: 'bot-1', name: 'Shop bot' };
+
+        it.each([
+            ['models', ENUM_POLICY_ACTION.READ],
+            ['create', ENUM_POLICY_ACTION.CREATE],
+            ['update', ENUM_POLICY_ACTION.UPDATE],
+            ['active', ENUM_POLICY_ACTION.UPDATE],
+            ['inactive', ENUM_POLICY_ACTION.UPDATE],
+            // The workspace route deletes with UPDATE too.
+            ['delete', ENUM_POLICY_ACTION.UPDATE],
+        ] as const)('%s is guarded and needs CHATBOT %s', (handler, action) => {
+            const method = ChatbotClientController.prototype[handler];
+            expect(Reflect.getMetadata(GUARDS_METADATA, method)).toEqual([
+                ClientCredentialGuard,
+                ClientCredentialPolicyGuard,
+            ]);
+            expect(
+                Reflect.getMetadata(
+                    CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
+                    method
+                )
+            ).toEqual([
+                { subject: ENUM_POLICY_SUBJECT.CHATBOT, action: [action] },
+            ]);
+        });
+
+        // Declared before /:id, or Nest would read "models" as a chatbot id.
+        it('routes /models ahead of /:id', () => {
+            const order = Object.getOwnPropertyNames(
+                ChatbotClientController.prototype
+            );
+            expect(order.indexOf('models')).toBeLessThan(
+                order.indexOf('findOne')
+            );
+        });
+
+        it('lists the models a chatbot can use', async () => {
+            mockModelCatalogService.list.mockResolvedValue([{ id: 'm-1' }]);
+
+            await expect(controller.models()).resolves.toEqual({
+                data: [{ id: 'm-1' }],
+            });
+        });
+
+        it('creates a chatbot in the credential workspace as the creator', async () => {
+            mockChatbotService.create.mockResolvedValue(chatbot);
+            mockChatbotService.mapList.mockReturnValue([{ id: 'bot-1' }]);
+            const dto = { name: 'Shop bot', workspace: 'spoofed' } as any;
+
+            const result = await controller.create(workspace, credential, dto);
+
+            expect(mockChatbotService.create).toHaveBeenCalledWith(
+                { name: 'Shop bot', workspace: 'workspace-1' },
+                { actionBy: 'creator-1' }
+            );
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(credential.createdBy, workspace, {
+                action: 'create',
+                subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                metadata: { id: 'bot-1', name: 'Shop bot' },
+            });
+            expect(result).toEqual({ data: { id: 'bot-1' } });
+        });
+
+        it('updates only the editable fields the body sent', async () => {
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockResolvedValue({
+                ...chatbot,
+                welcomeMessage: 'Hi',
+            });
+            mockChatbotService.mapList.mockReturnValue([{ id: 'bot-1' }]);
+
+            await controller.update(workspace, credential, 'bot-1', {
+                welcomeMessage: 'Hi',
+                dailyTokenCap: 5,
+            } as any);
+
+            expect(mockChatbotService.findOne).toHaveBeenCalledWith({
+                id: 'bot-1',
+                workspace: 'workspace-1',
+                deletedAt: null,
+            });
+            expect(mockChatbotService.update).toHaveBeenCalledWith(
+                chatbot,
+                { welcomeMessage: 'Hi' },
+                { actionBy: 'creator-1' }
+            );
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                credential.createdBy,
+                workspace,
+                expect.objectContaining({ action: 'update' })
+            );
+        });
+
+        it.each([
+            ['active', 'active', 'active_chatbot'],
+            ['inactive', 'inactive', 'inactive_chatbot'],
+            ['delete', 'softDelete', 'delete'],
+        ] as const)(
+            '%s acts on a chatbot of the credential workspace as the creator',
+            async (handler, serviceMethod, activity) => {
+                mockChatbotService.findOne.mockResolvedValue(chatbot);
+                mockChatbotService[serviceMethod].mockResolvedValue(chatbot);
+                mockChatbotService.mapList.mockReturnValue([{ id: 'bot-1' }]);
+
+                await controller[handler](workspace, credential, 'bot-1');
+
+                expect(mockChatbotService[serviceMethod]).toHaveBeenCalledWith(
+                    chatbot,
+                    { actionBy: 'creator-1' }
+                );
+                expect(
+                    mockActivityService.createByUserWithWorkspace
+                ).toHaveBeenCalledWith(credential.createdBy, workspace, {
+                    action: activity,
+                    subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                    metadata: { id: 'bot-1', name: 'Shop bot' },
+                });
+            }
+        );
+
+        it.each(['update', 'active', 'inactive', 'delete'] as const)(
+            '%s 404s a chatbot outside the credential workspace',
+            async handler => {
+                mockChatbotService.findOne.mockResolvedValue(null);
+
+                await expect(
+                    (controller[handler] as any)(
+                        workspace,
+                        credential,
+                        'other',
+                        {}
+                    )
+                ).rejects.toBeInstanceOf(NotFoundException);
+                expect(mockChatbotService.update).not.toHaveBeenCalled();
+                expect(mockChatbotService.softDelete).not.toHaveBeenCalled();
+            }
+        );
     });
 });
