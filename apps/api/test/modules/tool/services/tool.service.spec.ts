@@ -20,6 +20,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
+import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 
 describe('ToolService', () => {
     let svc: ToolService;
@@ -363,5 +364,86 @@ describe('ToolService', () => {
         await expect(svc.softDelete('ws-1', 't-1')).rejects.toBeInstanceOf(
             ConflictException
         );
+    });
+
+    describe('admin (any workspace)', () => {
+        beforeEach(() => {
+            mockRepo.findOneAny = jest.fn();
+            mockRepo.findAllPaginated = jest.fn().mockResolvedValue([]);
+            mockChatbotTool.count.mockResolvedValue(0);
+        });
+
+        it('lists tools across workspaces with their workspace loaded', async () => {
+            await svc.findAllSystem({ kind: 'HTTP' }, { limit: 20, offset: 0 });
+            expect(mockRepo.findAllPaginated).toHaveBeenCalledWith(
+                { kind: 'HTTP' },
+                { limit: 20, offset: 0, populate: ['workspace'] }
+            );
+        });
+
+        it('getOneAny throws NotFound for an unknown tool', async () => {
+            mockRepo.findOneAny.mockResolvedValue(null);
+            await expect(svc.getOneAny('t-x')).rejects.toBeInstanceOf(
+                NotFoundException
+            );
+        });
+
+        it('inactivate marks the tool REVOKED', async () => {
+            const tool = { id: 't-1', status: ENUM_TOOL_STATUS.ACTIVE };
+            mockRepo.findOneAny.mockResolvedValue(tool);
+            await svc.inactivate('t-1');
+            expect(tool.status).toBe(ENUM_TOOL_STATUS.REVOKED);
+            expect(mockEm.flush).toHaveBeenCalled();
+        });
+
+        it('activate brings an inactivated tool back to ACTIVE', async () => {
+            const tool = { id: 't-1', status: ENUM_TOOL_STATUS.REVOKED };
+            mockRepo.findOneAny.mockResolvedValue(tool);
+            await svc.activate('t-1');
+            expect(tool.status).toBe(ENUM_TOOL_STATUS.ACTIVE);
+        });
+
+        it('activate refuses a tool whose connection is broken, since that needs the owner to reconnect', async () => {
+            const tool = { id: 't-1', status: ENUM_TOOL_STATUS.NEEDS_REAUTH };
+            mockRepo.findOneAny.mockResolvedValue(tool);
+            await expect(svc.activate('t-1')).rejects.toBeInstanceOf(
+                BadRequestException
+            );
+            expect(tool.status).toBe(ENUM_TOOL_STATUS.NEEDS_REAUTH);
+        });
+
+        it('softDeleteAny deletes a tool in any workspace', async () => {
+            const tool: any = { id: 't-1' };
+            mockRepo.findOneAny.mockResolvedValue(tool);
+            await svc.softDeleteAny('t-1');
+            expect(tool.deleted).toBe(true);
+            expect(tool.deletedAt).toBeInstanceOf(Date);
+        });
+
+        it('softDeleteAny keeps a tool that a chatbot still uses', async () => {
+            mockRepo.findOneAny.mockResolvedValue({ id: 't-1' });
+            mockChatbotTool.count.mockResolvedValue(1);
+            await expect(svc.softDeleteAny('t-1')).rejects.toBeInstanceOf(
+                ConflictException
+            );
+        });
+
+        it('getInvocationStats totals the counts per status', async () => {
+            mockInvocationRepo.countByStatus = jest.fn().mockResolvedValue({
+                SUCCESS: 7,
+                ERROR: 2,
+                TIMEOUT: 1,
+            });
+            mockInvocationRepo.findLastInvokedAt = jest
+                .fn()
+                .mockResolvedValue(new Date('2026-10-01T00:00:00Z'));
+            expect(await svc.getInvocationStats('t-1')).toEqual({
+                total: 10,
+                success: 7,
+                error: 2,
+                timeout: 1,
+                lastInvokedAt: new Date('2026-10-01T00:00:00Z'),
+            });
+        });
     });
 });

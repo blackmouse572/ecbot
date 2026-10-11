@@ -18,6 +18,11 @@ import { UpdateToolRequestDto } from 'src/modules/tool/dtos/request/update-tool.
 import { TestInlineToolRequestDto } from 'src/modules/tool/dtos/request/test-tool.request.dto';
 import { ToolListResponseDto } from 'src/modules/tool/dtos/response/tool.list.response.dto';
 import { ToolResponseDto } from 'src/modules/tool/dtos/response/tool.response.dto';
+import {
+    ToolAdminListResponseDto,
+    ToolAdminResponseDto,
+    ToolInvocationStatsResponseDto,
+} from 'src/modules/tool/dtos/response/tool.admin.response.dto';
 import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
@@ -408,10 +413,101 @@ export class ToolService {
         );
     }
 
+    // ---- Admin: every workspace's tools ----
+
+    async findAllSystem(
+        find: Record<string, any>,
+        options: {
+            limit?: number;
+            offset?: number;
+            order?: IPaginationOrder;
+        } = {}
+    ): Promise<ToolEntity[]> {
+        return this.toolRepo.findAllPaginated(find, {
+            ...options,
+            populate: ['workspace'],
+        });
+    }
+
+    async getTotalSystem(find: Record<string, any>): Promise<number> {
+        return this.toolRepo.countAll(find);
+    }
+
+    async getOneAny(toolId: string): Promise<ToolEntity> {
+        const tool = await this.toolRepo.findOneAny(toolId);
+        if (!tool) throw new NotFoundException('tool.get.error.notFound');
+        return tool;
+    }
+
+    /**
+     * The admin off switch. REVOKED is set nowhere else: the manifest leaves
+     * the tool out and execution refuses it until an admin activates it.
+     */
+    async inactivate(toolId: string): Promise<ToolEntity> {
+        const tool = await this.getOneAny(toolId);
+        tool.status = ENUM_TOOL_STATUS.REVOKED;
+        await this.toolRepo.getEntityManager().flush();
+        return tool;
+    }
+
+    /**
+     * Only undoes `inactivate`. A NEEDS_REAUTH or EXPIRED tool has a broken
+     * connection, and calling it ACTIVE would hide that from its owner.
+     */
+    async activate(toolId: string): Promise<ToolEntity> {
+        const tool = await this.getOneAny(toolId);
+        if (tool.status !== ENUM_TOOL_STATUS.REVOKED) {
+            throw new BadRequestException('tool.activate.error.notInactive');
+        }
+        tool.status = ENUM_TOOL_STATUS.ACTIVE;
+        await this.toolRepo.getEntityManager().flush();
+        return tool;
+    }
+
+    async softDeleteAny(toolId: string): Promise<ToolEntity> {
+        return this.remove(await this.getOneAny(toolId));
+    }
+
+    async getInvocationStats(
+        toolId: string
+    ): Promise<ToolInvocationStatsResponseDto> {
+        const [counts, lastInvokedAt] = await Promise.all([
+            this.toolInvocationRepo.countByStatus(toolId),
+            this.toolInvocationRepo.findLastInvokedAt(toolId),
+        ]);
+        return {
+            total: counts.SUCCESS + counts.ERROR + counts.TIMEOUT,
+            success: counts.SUCCESS,
+            error: counts.ERROR,
+            timeout: counts.TIMEOUT,
+            lastInvokedAt,
+        };
+    }
+
+    mapAdminList(tools: ToolEntity[]): ToolAdminListResponseDto[] {
+        return plainToInstance(ToolAdminListResponseDto, tools, {
+            excludeExtraneousValues: true,
+        });
+    }
+
+    mapAdminOne(
+        tool: ToolEntity,
+        invocationStats: ToolInvocationStatsResponseDto
+    ): ToolAdminResponseDto {
+        return plainToInstance(
+            ToolAdminResponseDto,
+            { ...tool, invocationStats },
+            { excludeExtraneousValues: true }
+        );
+    }
+
     async softDelete(workspaceId: string, toolId: string): Promise<ToolEntity> {
-        const tool = await this.getOne(workspaceId, toolId);
+        return this.remove(await this.getOne(workspaceId, toolId));
+    }
+
+    private async remove(tool: ToolEntity): Promise<ToolEntity> {
         const refs = await this.chatbotToolRepo.count({
-            tool: { id: toolId },
+            tool: { id: tool.id },
             enabled: true,
         });
         if (refs > 0)
