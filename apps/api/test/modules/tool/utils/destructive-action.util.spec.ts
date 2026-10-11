@@ -55,4 +55,68 @@ describe('isDestructiveAction', () => {
             true
         );
     });
+
+    // #247 review: the list missed common verbs, inflections, run-together
+    // names and Vietnamese, and read the MCP defaults differently.
+    it.each([
+        'GMAIL_MOVE_TO_TRASH',
+        'cancel_order',
+        'refundPayment',
+        'void_invoice',
+        'revoke_token',
+        'archive_project',
+        'deactivate_user',
+        'terminate_instance',
+        'overwrite_file',
+        'unsubscribe_contact',
+        'transfer_funds',
+        'removes_item',
+        'deleted_records_purge',
+        'bulkdelete',
+        'DELETEORDER',
+        'xoa_don_hang',
+        'huy_don',
+    ])('flags %s', name => {
+        expect(isDestructiveAction({ name })).toBe(true);
+    });
+
+    it('flags Vietnamese warnings in the description', () => {
+        expect(
+            isDestructiveAction({
+                name: 'don_hang',
+                description: 'Xóa toàn bộ đơn hàng, không thể hoàn tác.',
+            })
+        ).toBe(true);
+        expect(
+            isDestructiveAction({
+                name: 'san_pham',
+                description: 'Gỡ sản phẩm vĩnh viễn',
+            })
+        ).toBe(true);
+    });
+
+    it.each([
+        'list_archived_orders',
+        'get_dropdown_options',
+        'clearance_items',
+        'undelete_order',
+        'send_email',
+    ])('leaves %s alone', name => {
+        expect(isDestructiveAction({ name })).toBe(false);
+    });
+
+    it('treats readOnlyHint false with no destructiveHint as destructive, as the MCP spec does', () => {
+        expect(
+            isDestructiveAction({
+                name: 'sync_orders',
+                annotations: { readOnlyHint: false },
+            })
+        ).toBe(true);
+        expect(
+            isDestructiveAction({
+                name: 'add_note',
+                annotations: { readOnlyHint: false, destructiveHint: false },
+            })
+        ).toBe(false);
+    });
 });

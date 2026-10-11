@@ -107,7 +107,11 @@ describe('ToolExecutionService', () => {
     });
 
     it('dispatches MCP tools to McpToolExecutor and persists ToolInvocation', async () => {
-        const tool = { id: 't-mcp', kind: ENUM_TOOL_KIND.MCP };
+        const tool = {
+            id: 't-mcp',
+            kind: ENUM_TOOL_KIND.MCP,
+            discoveredActions: [{ name: 'sendEmail', description: '' }],
+        };
         mockToolRepo.findOne.mockResolvedValue(tool);
         mockMcp.execute.mockResolvedValue({
             status: ENUM_TOOL_INVOCATION_STATUS.SUCCESS,
@@ -168,7 +172,11 @@ describe('ToolExecutionService', () => {
     });
 
     it('splits composite id `<toolId>:<actionName>`; lookup uses bare toolId and dispatches with parsed action', async () => {
-        const tool = { id: 't-mcp', kind: ENUM_TOOL_KIND.MCP };
+        const tool = {
+            id: 't-mcp',
+            kind: ENUM_TOOL_KIND.MCP,
+            discoveredActions: [{ name: 'sendEmail', description: '' }],
+        };
         mockToolRepo.findOne.mockResolvedValue(tool);
         mockMcp.execute.mockResolvedValue({
             status: ENUM_TOOL_INVOCATION_STATUS.SUCCESS,
@@ -196,7 +204,11 @@ describe('ToolExecutionService', () => {
     });
 
     it('when cmd.actionName is explicitly set, it overrides any composite-id suffix', async () => {
-        const tool = { id: 't-mcp', kind: ENUM_TOOL_KIND.MCP };
+        const tool = {
+            id: 't-mcp',
+            kind: ENUM_TOOL_KIND.MCP,
+            discoveredActions: [{ name: 'explicit', description: '' }],
+        };
         mockToolRepo.findOne.mockResolvedValue(tool);
         mockMcp.execute.mockResolvedValue({
             status: ENUM_TOOL_INVOCATION_STATUS.SUCCESS,
@@ -370,8 +382,38 @@ describe('ToolExecutionService', () => {
             expect(mockMcp.execute).not.toHaveBeenCalled();
         });
 
-        it('allows any action when enabledActions is empty (all actions allowed)', async () => {
-            const tool = { id: 't-mcp', kind: ENUM_TOOL_KIND.MCP };
+        // #247 review: an action the server added after discovery has never
+        // been checked, so a link without a list must not run it.
+        it('refuses an action that was never discovered when the link names none', async () => {
+            const tool = {
+                id: 't-mcp',
+                kind: ENUM_TOOL_KIND.MCP,
+                discoveredActions: [{ name: 'list_orders', description: '' }],
+            };
+            mockToolRepo.findOne.mockResolvedValue(tool);
+            mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue({
+                enabled: true,
+                enabledActions: null,
+            });
+
+            await expect(
+                svc.execute({
+                    toolId: 't-mcp',
+                    actionName: 'wipe_everything',
+                    args: {},
+                    chatbotId: 'cb-1',
+                    correlationId: 'corr-1',
+                })
+            ).rejects.toBeInstanceOf(ForbiddenException);
+            expect(mockMcp.execute).not.toHaveBeenCalled();
+        });
+
+        it('allows any discovered, non-destructive action when enabledActions is empty', async () => {
+            const tool = {
+                id: 't-mcp',
+                kind: ENUM_TOOL_KIND.MCP,
+                discoveredActions: [{ name: 'anyAction', description: '' }],
+            };
             mockToolRepo.findOne.mockResolvedValue(tool);
             mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue({
                 enabled: true,

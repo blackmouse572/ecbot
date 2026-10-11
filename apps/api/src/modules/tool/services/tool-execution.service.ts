@@ -83,15 +83,18 @@ export class ToolExecutionService {
             );
             throw new ForbiddenException('tool.execute.error.notLinked');
         }
-        // A destructive action runs only when the link names it (#177).
+        // Without a list of its own, a link runs only discovered actions
+        // that are not destructive (#177); one the server added later was
+        // never checked, so it waits for a rediscover or an explicit list.
         const action = tool.discoveredActions?.find(a => a.name === actionName);
         if (
-            action &&
-            isDestructiveAction(action) &&
-            !link.enabledActions?.includes(action.name)
+            tool.kind === ENUM_TOOL_KIND.MCP &&
+            actionName &&
+            !link.enabledActions?.includes(actionName) &&
+            (!action || isDestructiveAction(action))
         ) {
             this.logger.warn(
-                `Destructive action ${action.name} on tool ${toolId} is not enabled for chatbot ${cmd.chatbotId}`
+                `Action ${actionName} on tool ${toolId} is destructive or undiscovered and not enabled for chatbot ${cmd.chatbotId}`
             );
             throw new ForbiddenException('tool.execute.error.notLinked');
         }
