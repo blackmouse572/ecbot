@@ -15,6 +15,7 @@ import {
     IResponsePaging,
 } from '@app/common/response/interfaces/response.interface';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import {
     ClientCredentialPayload,
@@ -28,10 +29,13 @@ import {
 import { WorkspacePayload } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import {
+    Body,
     Controller,
     Get,
     NotFoundException,
     Param,
+    Patch,
+    Post,
     Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -44,17 +48,24 @@ import {
     ConversationClientGetDoc,
     ConversationClientListDoc,
     ConversationClientListMessagesDoc,
+    ConversationClientSendMessageDoc,
+    ConversationClientUpdateBotDoc,
+    ConversationClientUpdateStatusDoc,
 } from '../docs/conversation.client.doc';
+import { ConversationSendMessageRequestDto } from '../dtos/request/conversation.send-message.request.dto';
+import { ConversationUpdateBotRequestDto } from '../dtos/request/conversation.update-bot.request.dto';
+import { ConversationUpdateStatusRequestDto } from '../dtos/request/conversation.update-status.request.dto';
 import { ConversationGetResponseDto } from '../dtos/response/conversation.get.response.dto';
 import { MessageGetResponseDto } from '../dtos/response/message.get.response.dto';
 import { ENUM_CONVERSATION_STATUS } from '../enums/conversation.enum';
+import { ConversationEntity } from '../repository/entities/conversation.entity';
 import { ConversationMessagingService } from '../services/conversation-messaging.service';
 import { ConversationService } from '../services/conversation.service';
 
 // 3rd-party surface: authenticated by x-api-key (ClientCredential), tenant
 // derived from the credential (no :workspace param). See ADR-0012. Where the
-// workspace routes act as the signed-in operator (unread counts, view
-// entries in the activity log), this acts as the credential's creator.
+// workspace routes act as the signed-in operator (unread counts, replies,
+// the activity log), this acts as the credential's creator.
 @ApiTags('modules.client.conversation')
 @Controller('/conversations')
 export class ConversationClientController {
@@ -239,5 +250,141 @@ export class ConversationClientController {
                 invocations
             ),
         };
+    }
+
+    @ConversationClientSendMessageDoc()
+    @Response('conversation.workspace.sendMessage')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @Post('/:id/messages')
+    async sendMessage(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('id') id: string,
+        @Body() dto: ConversationSendMessageRequestDto
+    ): Promise<IResponse<MessageGetResponseDto>> {
+        const message =
+            await this.conversationMessagingService.sendOperatorReply(
+                id,
+                workspace.id,
+                credential.createdBy.id,
+                dto.text
+            );
+
+        const conversation =
+            await this.conversationService.findOneByIdInWorkspace(
+                id,
+                workspace.id
+            );
+        const userNameMap =
+            await this.conversationMessagingService.buildUserNameMap([message]);
+
+        await this.activityService.createByUserWithWorkspace(
+            credential.createdBy,
+            workspace,
+            {
+                action: ENUM_ACTIVITY_ACTION.CREATE,
+                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                metadata: { id, name: conversation?.senderId || id },
+            }
+        );
+
+        return {
+            data: await this.conversationMessagingService.mapMessage(
+                message,
+                conversation ?? undefined,
+                userNameMap
+            ),
+        };
+    }
+
+    @ConversationClientUpdateStatusDoc()
+    @Response('conversation.workspace.updateStatus')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @Patch('/:id/status')
+    async updateStatus(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('id') id: string,
+        @Body() dto: ConversationUpdateStatusRequestDto
+    ): Promise<IResponse<ConversationGetResponseDto>> {
+        const conversation = await this.findConversationOrFail(workspace, id);
+
+        const updated = await this.conversationService.updateStatus(
+            id,
+            dto.status,
+            dto.reason
+        );
+        await this.logUpdate(workspace, credential, conversation);
+
+        return { data: this.conversationService.mapGet(updated) };
+    }
+
+    @ConversationClientUpdateBotDoc()
+    @Response('conversation.workspace.updateBot')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @Patch('/:id/bot')
+    async updateBot(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('id') id: string,
+        @Body() dto: ConversationUpdateBotRequestDto
+    ): Promise<IResponse<ConversationGetResponseDto>> {
+        const conversation = await this.findConversationOrFail(workspace, id);
+
+        const updated = await this.conversationService.setBotEnabled(
+            id,
+            dto.botEnabled,
+            dto.reason
+        );
+        await this.logUpdate(workspace, credential, conversation);
+
+        return { data: this.conversationService.mapGet(updated) };
+    }
+
+    // Missing and cross-workspace look the same: 404.
+    private async findConversationOrFail(
+        workspace: WorkspaceEntity,
+        id: string
+    ): Promise<ConversationEntity> {
+        const conversation =
+            await this.conversationService.findOneByIdInWorkspace(
+                id,
+                workspace.id
+            );
+        if (!conversation) {
+            throw new NotFoundException({
+                message: 'conversation.error.notFound',
+                statusCode: 404,
+            });
+        }
+        return conversation;
+    }
+
+    private async logUpdate(
+        workspace: WorkspaceEntity,
+        credential: ClientCredentialEntity,
+        conversation: ConversationEntity
+    ): Promise<void> {
+        await this.activityService.createByUserWithWorkspace(
+            credential.createdBy,
+            workspace,
+            {
+                action: ENUM_ACTIVITY_ACTION.UPDATE,
+                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                metadata: {
+                    id: conversation.id,
+                    name: conversation.senderId,
+                },
+            }
+        );
     }
 }

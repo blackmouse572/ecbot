@@ -29274,6 +29274,225 @@ export type ConversationClientControllerListMessagesV1Responses = {
 
 export type ConversationClientControllerListMessagesV1Response = ConversationClientControllerListMessagesV1Responses[keyof ConversationClientControllerListMessagesV1Responses];
 
+export type ConversationClientControllerSendMessageV1Data = {
+    body: ConversationSendMessageRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/conversations/{id}/messages';
+};
+
+export type ConversationClientControllerSendMessageV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerSendMessageV1Error = ConversationClientControllerSendMessageV1Errors[keyof ConversationClientControllerSendMessageV1Errors];
+
+export type ConversationClientControllerSendMessageV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MessageGetResponseDto;
+    };
+};
+
+export type ConversationClientControllerSendMessageV1Response = ConversationClientControllerSendMessageV1Responses[keyof ConversationClientControllerSendMessageV1Responses];
+
+export type ConversationClientControllerUpdateStatusV1Data = {
+    body: ConversationUpdateStatusRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/conversations/{id}/status';
+};
+
+export type ConversationClientControllerUpdateStatusV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerUpdateStatusV1Error = ConversationClientControllerUpdateStatusV1Errors[keyof ConversationClientControllerUpdateStatusV1Errors];
+
+export type ConversationClientControllerUpdateStatusV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ConversationGetResponseDto;
+    };
+};
+
+export type ConversationClientControllerUpdateStatusV1Response = ConversationClientControllerUpdateStatusV1Responses[keyof ConversationClientControllerUpdateStatusV1Responses];
+
+export type ConversationClientControllerUpdateBotV1Data = {
+    body: ConversationUpdateBotRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/conversations/{id}/bot';
+};
+
+export type ConversationClientControllerUpdateBotV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerUpdateBotV1Error = ConversationClientControllerUpdateBotV1Errors[keyof ConversationClientControllerUpdateBotV1Errors];
+
+export type ConversationClientControllerUpdateBotV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ConversationGetResponseDto;
+    };
+};
+
+export type ConversationClientControllerUpdateBotV1Response = ConversationClientControllerUpdateBotV1Responses[keyof ConversationClientControllerUpdateBotV1Responses];
+
 export type CustomerClientControllerListV1Data = {
     body?: never;
     headers?: {

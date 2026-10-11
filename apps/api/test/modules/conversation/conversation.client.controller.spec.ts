@@ -21,6 +21,8 @@ const mockConversationService = {
     mapList: jest.fn(),
     findOneByIdInWorkspace: jest.fn(),
     mapGet: jest.fn(),
+    updateStatus: jest.fn(),
+    setBotEnabled: jest.fn(),
 };
 
 const mockPaginationService = {
@@ -34,10 +36,13 @@ const mockMessagingService = {
     buildUserNameMap: jest.fn(),
     listToolInvocations: jest.fn(),
     mapMessages: jest.fn(),
+    sendOperatorReply: jest.fn(),
+    mapMessage: jest.fn(),
 };
 
 const mockActivityService = {
     createView: jest.fn(),
+    createByUserWithWorkspace: jest.fn(),
 };
 
 describe('ConversationClientController', () => {
@@ -61,7 +66,14 @@ describe('ConversationClientController', () => {
         ).toBe('/conversations');
     });
 
-    it.each(['list', 'get', 'listMessages'] as const)(
+    it.each([
+        'list',
+        'get',
+        'listMessages',
+        'sendMessage',
+        'updateStatus',
+        'updateBot',
+    ] as const)(
         '%s is guarded by the client credential and the creator policy',
         handler => {
             expect(
@@ -87,6 +99,23 @@ describe('ConversationClientController', () => {
                 {
                     subject: ENUM_POLICY_SUBJECT.CHATBOT,
                     action: [ENUM_POLICY_ACTION.READ],
+                },
+            ]);
+        }
+    );
+
+    it.each(['sendMessage', 'updateStatus', 'updateBot'] as const)(
+        '%s requires CHATBOT update',
+        handler => {
+            expect(
+                Reflect.getMetadata(
+                    CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
+                    ConversationClientController.prototype[handler]
+                )
+            ).toEqual([
+                {
+                    subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                    action: [ENUM_POLICY_ACTION.UPDATE],
                 },
             ]);
         }
@@ -271,6 +300,106 @@ describe('ConversationClientController', () => {
                 { limit: 100, offset: 200 }
             );
             expect(mockActivityService.createView).not.toHaveBeenCalled();
+        });
+    });
+
+    // Writes act as the credential's creator: the reply is theirs, and the
+    // activity log records them, as it would for the same action in the app.
+    describe('sendMessage', () => {
+        it('sends the reply as the creator and logs it', async () => {
+            const message = { id: 'msg-1' };
+            const conversation = { id: 'conv-1', senderId: 'sender-1' };
+            mockMessagingService.sendOperatorReply.mockResolvedValue(message);
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                conversation
+            );
+            mockMessagingService.buildUserNameMap.mockResolvedValue(new Map());
+            mockMessagingService.mapMessage.mockResolvedValue({
+                id: 'msg-1',
+            });
+
+            const result = await controller.sendMessage(
+                workspace,
+                credential,
+                'conv-1',
+                { text: 'Hello' }
+            );
+
+            expect(mockMessagingService.sendOperatorReply).toHaveBeenCalledWith(
+                'conv-1',
+                'workspace-1',
+                'creator-1',
+                'Hello'
+            );
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(credential.createdBy, workspace, {
+                action: 'create',
+                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                metadata: { id: 'conv-1', name: 'sender-1' },
+            });
+            expect(result).toEqual({ data: { id: 'msg-1' } });
+        });
+    });
+
+    describe.each([
+        [
+            'updateStatus',
+            'updateStatus',
+            { status: 'RESOLVED', reason: 'done' },
+            ['conv-1', 'RESOLVED', 'done'],
+        ],
+        [
+            'updateBot',
+            'setBotEnabled',
+            { botEnabled: false, reason: 'mine' },
+            ['conv-1', false, 'mine'],
+        ],
+    ] as const)('%s', (handler, serviceMethod, dto, serviceArgs) => {
+        it('changes a conversation in the credential workspace and logs it', async () => {
+            const conversation = { id: 'conv-1', senderId: 'sender-1' };
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                conversation
+            );
+            mockConversationService[serviceMethod].mockResolvedValue({
+                id: 'conv-1',
+            });
+            mockConversationService.mapGet.mockReturnValue({ id: 'conv-1' });
+
+            const result = await controller[handler](
+                workspace,
+                credential,
+                'conv-1',
+                dto as any
+            );
+
+            expect(
+                mockConversationService.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('conv-1', 'workspace-1');
+            expect(mockConversationService[serviceMethod]).toHaveBeenCalledWith(
+                ...serviceArgs
+            );
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(credential.createdBy, workspace, {
+                action: 'update',
+                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                metadata: { id: 'conv-1', name: 'sender-1' },
+            });
+            expect(result).toEqual({ data: { id: 'conv-1' } });
+        });
+
+        it('404s a conversation outside the credential workspace', async () => {
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                controller[handler](workspace, credential, 'other', dto as any)
+            ).rejects.toBeInstanceOf(NotFoundException);
+            expect(
+                mockConversationService[serviceMethod]
+            ).not.toHaveBeenCalled();
         });
     });
 });
