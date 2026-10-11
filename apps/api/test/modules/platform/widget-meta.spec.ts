@@ -61,6 +61,18 @@ describe('WidgetPublicController.meta welcomeMessage', () => {
         );
     });
 
+    // #248 review: the chatbot form does not trim, so a greeting of spaces
+    // left the widget blank.
+    it('treats a greeting of only spaces as unset', async () => {
+        const res = await controllerFor(
+            { allowedOrigins: [] },
+            { welcomeMessage: '   ', primaryLanguage: 'vi' }
+        ).meta('key');
+        expect(res.data?.welcomeMessage).toBe(
+            'Xin chào! Mình có thể giúp gì cho bạn?'
+        );
+    });
+
     it('falls back to English for a language without a default', async () => {
         const res = await controllerFor(
             { allowedOrigins: [] },

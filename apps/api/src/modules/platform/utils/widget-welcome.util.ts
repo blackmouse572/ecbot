@@ -12,7 +12,7 @@ export function widgetWelcomeText(chatbot: {
     primaryLanguage?: string | null;
 }): string {
     return (
-        chatbot.welcomeMessage ||
+        chatbot.welcomeMessage?.trim() ||
         WIDGET_DEFAULT_WELCOME[chatbot.primaryLanguage ?? ''] ||
         WIDGET_DEFAULT_WELCOME[WIDGET_DEFAULT_WELCOME_LANGUAGE]
     );
