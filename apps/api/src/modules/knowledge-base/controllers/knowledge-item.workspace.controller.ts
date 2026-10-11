@@ -50,10 +50,8 @@ import {
     AuthJwtPayload,
 } from 'src/modules/auth/decorators/auth.jwt.decorator';
 import { IAuthJwtAccessTokenPayload } from 'src/modules/auth/interfaces/auth.interface';
-import { PolicyRoleProtected } from 'src/modules/policy/decorators/policy.decorator';
 import {
     ENUM_POLICY_ACTION,
-    ENUM_POLICY_ROLE_TYPE,
     ENUM_POLICY_SUBJECT,
 } from 'src/modules/policy/enums/policy.enum';
 import { UserProtected } from 'src/modules/user/decorators/user.decorator';
@@ -559,7 +557,6 @@ export class KnowledgeItemWorkspaceController {
 
     @KnowledgeItemWorkspaceBatchDeleteDoc()
     @Response('knowledgeItem.batchDelete')
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.WORKSPACE_OWNER)
     @WorkspacePolicyAbilityProtected({
         subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
         action: [ENUM_POLICY_ACTION.DELETE],
@@ -671,7 +668,6 @@ export class KnowledgeItemWorkspaceController {
 
     @KnowledgeItemWorkspaceDeleteDoc()
     @Response('knowledgeItem.delete')
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.WORKSPACE_OWNER)
     @WorkspacePolicyAbilityProtected({
         subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
         action: [ENUM_POLICY_ACTION.DELETE],

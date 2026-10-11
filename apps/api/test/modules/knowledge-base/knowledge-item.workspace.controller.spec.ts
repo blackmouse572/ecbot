@@ -1,4 +1,5 @@
 import { UnprocessableEntityException } from '@nestjs/common';
+import { POLICY_ROLE_META_KEY } from '@app/modules/policy/constants/policy.constant';
 import { KnowledgeItemWorkspaceController } from '@app/modules/knowledge-base/controllers/knowledge-item.workspace.controller';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '@app/modules/knowledge-base/enums/knowledge-base-item-type.enum';
 import { ENUM_REQUEST_STATUS_CODE_ERROR } from 'src/common/request/enums/request.status-code.enum';
@@ -73,4 +74,22 @@ describe('KnowledgeItemWorkspaceController.create', () => {
         expect(em.fork).not.toHaveBeenCalled();
         expect(knowledgeItemService.create).not.toHaveBeenCalled();
     });
+});
+
+describe('KnowledgeItemWorkspaceController delete routes', () => {
+    // A member deletes knowledge items through their role's KNOWLEDGE_BASE
+    // delete permission, as on every other delete route. Every member's
+    // global role type is USER, so a role-type requirement here meant only
+    // super admins could delete.
+    it.each(['delete', 'batchDelete'] as const)(
+        '%s does not require a global role type',
+        handler => {
+            expect(
+                Reflect.getMetadata(
+                    POLICY_ROLE_META_KEY,
+                    KnowledgeItemWorkspaceController.prototype[handler]
+                )
+            ).toBeUndefined();
+        }
+    );
 });
