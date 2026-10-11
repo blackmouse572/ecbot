@@ -1,12 +1,16 @@
 import { useMe, useUpdateNotificationSettings } from "@/hooks/api";
+import { notificationSoundAtom } from "@/modules/notification";
 import { Container, Heading, Label, Switch, Text, toast } from "@medusajs/ui";
+import { useAtom } from "jotai";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
-/** The user's own email-notification choices. */
+/** The user's own notification choices: emails, and the in-app sound. */
 export const PreferenceNotificationSection = () => {
   const { t } = useTranslation();
   const id = useId();
+  const soundId = useId();
+  const [soundOn, setSoundOn] = useAtom(notificationSoundAtom);
   const { user } = useMe();
   const { updateNotifications, isPending } = useUpdateNotificationSettings();
   // Missing on an older profile response: the server default is on.
@@ -42,6 +46,17 @@ export const PreferenceNotificationSection = () => {
           disabled={isPending}
           onCheckedChange={onChange}
         />
+      </div>
+      <div className="flex items-center justify-between gap-x-4 px-6 py-4">
+        <div className="flex flex-col gap-y-1">
+          <Label htmlFor={soundId} size="small" weight="plus">
+            {t("preferences.notifications.sound")}
+          </Label>
+          <Text size="small" className="text-ui-fg-subtle">
+            {t("preferences.notifications.soundHint")}
+          </Text>
+        </div>
+        <Switch id={soundId} checked={soundOn} onCheckedChange={setSoundOn} />
       </div>
     </Container>
   );

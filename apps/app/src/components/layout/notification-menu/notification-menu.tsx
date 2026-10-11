@@ -1,35 +1,68 @@
 import { BellAlert } from "@medusajs/icons";
-import { DropdownMenu, IconButton, Text, clx } from "@medusajs/ui";
+import { DropdownMenu, IconButton, Text } from "@medusajs/ui";
+import { Skeleton } from "@repo/ui/common-components";
+import { useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 
 import {
   useMarkAllNotificationsAsRead,
-  useMarkNotificationAsRead,
+  useMarkNotificationsAsRead,
   useNotifications,
   useUnreadNotificationCount,
-  type NotificationItem,
 } from "@/hooks/api/notifications";
+import { useNotificationSound } from "@/modules/notification";
 
-export const NotificationMenu = () => {
+import { NOTIFICATION_PAGE_SIZE } from "./constants";
+import { NotificationEmptyState } from "./notification-empty-state";
+import { NotificationRow } from "./notification-row";
+
+export const NotificationMenu: FC = () => {
   const { t } = useTranslation();
-  const { count } = useUnreadNotificationCount();
-  const { notifications } = useNotifications({ perPage: 10 });
-  const markAsRead = useMarkNotificationAsRead();
+  const { count, isFetched } = useUnreadNotificationCount();
+  const { notifications, isLoading, refetch } = useNotifications({
+    perPage: NOTIFICATION_PAGE_SIZE,
+  });
+  const markManyAsRead = useMarkNotificationsAsRead();
   const markAllAsRead = useMarkAllNotificationsAsRead();
+  const [newIds, setNewIds] = useState<Set<string>>(() => new Set());
+
+  useNotificationSound(count, isFetched);
+
+  // Opening the menu counts as seeing what is in it: mark those read so the
+  // bell clears, but keep them highlighted until the menu closes.
+  const onOpenChange = async (open: boolean) => {
+    if (!open) {
+      setNewIds(new Set());
+      return;
+    }
+    const { data } = await refetch();
+    const unreadIds = (data?.data ?? [])
+      .filter((notification) => notification.status === "unread")
+      .map((notification) => notification.id);
+    if (unreadIds.length === 0) return;
+    setNewIds(new Set(unreadIds));
+    markManyAsRead.mutate(unreadIds);
+  };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenu.Trigger asChild>
-        <IconButton variant="transparent" size="small" className="relative">
+        <IconButton
+          variant="transparent"
+          size="small"
+          className="relative"
+          aria-label={t("app.menus.notifications.title")}
+        >
           <BellAlert className="text-ui-fg-muted" />
           {count > 0 && (
-            <span className="absolute right-1 top-1 size-1.5 rounded-full bg-red-500" />
+            <span className="bg-ui-tag-red-icon text-ui-fg-on-color absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium leading-none tabular-nums">
+              {count > 9 ? "9+" : count}
+            </span>
           )}
         </IconButton>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content className="w-[320px]">
-        <div className="flex items-center justify-between px-2 py-1.5">
+      <DropdownMenu.Content className="w-[360px] p-0">
+        <div className="flex items-center justify-between px-3 py-2">
           <Text size="small" weight="plus">
             {t("app.menus.notifications.title")}
           </Text>
@@ -43,68 +76,33 @@ export const NotificationMenu = () => {
             </button>
           )}
         </div>
-        <DropdownMenu.Separator />
-        {notifications.length === 0 ? (
-          <div className="px-2 py-4 text-center">
-            <Text size="small" className="text-ui-fg-subtle">
-              {t("app.menus.notifications.empty")}
-            </Text>
-          </div>
-        ) : (
-          notifications.map((notification) => (
-            <NotificationRow
-              key={notification.id}
-              notification={notification}
-              onRead={() => markAsRead.mutate(notification.id)}
-            />
-          ))
-        )}
+        <DropdownMenu.Separator className="my-0" />
+        <div className="max-h-[420px] overflow-y-auto p-1">
+          {isLoading ? (
+            <div className="flex flex-col gap-y-3 p-2">
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="flex items-start gap-x-3">
+                  <Skeleton className="size-7 rounded-full" />
+                  <div className="flex flex-1 flex-col gap-y-1.5">
+                    <Skeleton className="h-3 w-2/3" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : notifications.length === 0 ? (
+            <NotificationEmptyState />
+          ) : (
+            notifications.map((notification) => (
+              <NotificationRow
+                key={notification.id}
+                notification={notification}
+                isNew={newIds.has(notification.id)}
+              />
+            ))
+          )}
+        </div>
       </DropdownMenu.Content>
     </DropdownMenu>
-  );
-};
-
-const NotificationRow = ({
-  notification,
-  onRead,
-}: {
-  notification: NotificationItem;
-  onRead: () => void;
-}) => {
-  const isUnread = notification.status === "unread";
-  const content = (
-    <div className="flex flex-col gap-y-0.5 overflow-hidden px-2 py-1.5">
-      <div className="flex items-center gap-x-1.5">
-        {isUnread && (
-          <span className="size-1.5 shrink-0 rounded-full bg-red-500" />
-        )}
-        <Text size="small" weight="plus" className="truncate" leading="compact">
-          {notification.title}
-        </Text>
-      </div>
-      <Text
-        size="xsmall"
-        leading="compact"
-        className={clx("text-ui-fg-subtle line-clamp-2", {
-          "pl-3": isUnread,
-        })}
-      >
-        {notification.message}
-      </Text>
-    </div>
-  );
-
-  if (notification.metadata?.actionUrl) {
-    return (
-      <DropdownMenu.Item asChild onClick={isUnread ? onRead : undefined}>
-        <Link to={notification.metadata.actionUrl}>{content}</Link>
-      </DropdownMenu.Item>
-    );
-  }
-
-  return (
-    <DropdownMenu.Item onClick={isUnread ? onRead : undefined}>
-      {content}
-    </DropdownMenu.Item>
   );
 };

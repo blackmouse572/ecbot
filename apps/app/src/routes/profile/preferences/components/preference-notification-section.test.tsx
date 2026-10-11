@@ -45,4 +45,18 @@ describe("PreferenceNotificationSection", () => {
     ).toHaveAttribute("aria-checked", "true");
     me.user = { handoffEmails: true };
   });
+
+  it("lets the user turn the notification sound off", () => {
+    render(<PreferenceNotificationSection />);
+
+    const toggle = screen.getByRole("switch", {
+      name: "Play a sound for new notifications",
+    });
+    expect(toggle).toHaveAttribute("aria-checked", "true");
+
+    fireEvent.click(toggle);
+
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(localStorage.getItem("eccho:notification-sound")).toBe("false");
+  });
 });

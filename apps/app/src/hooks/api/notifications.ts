@@ -24,7 +24,13 @@ export interface NotificationItem {
   message: string;
   type: string;
   status: "read" | "archived" | "unread" | "dismissed";
-  metadata?: { actionUrl?: string; actionText?: string };
+  priority?: "low" | "medium" | "high" | "urgent";
+  metadata?: {
+    actionUrl?: string;
+    actionText?: string;
+    // Per-kind payload (conversationId for a handoff, ...).
+    data?: Record<string, A>;
+  };
   createdAt: string;
 }
 
@@ -61,7 +67,10 @@ export function useUnreadNotificationCount() {
       const response = await notificationSharedControllerUnreadV1();
       return response?.data as unknown as { data: { count: number } };
     },
-    refetchInterval: 60_000,
+    // Keep polling in a background tab so the new-notification chime still
+    // plays while the user works elsewhere.
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: true,
   });
 
   return { count: data?.data?.count ?? 0, ...rest };
@@ -85,6 +94,27 @@ export function useMarkNotificationAsRead(
       options?.onSuccess?.(d, v, c);
     },
     ...options,
+  });
+}
+
+/** Marks several notifications read at once (the menu does this on open). */
+export function useMarkNotificationsAsRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      Promise.all(
+        ids.map((id) =>
+          notificationSharedControllerMarkAsReadV1({
+            path: { notification: id },
+          }),
+        ),
+      ),
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: notificationQueryKey.all,
+        exact: false,
+      }),
   });
 }
 
