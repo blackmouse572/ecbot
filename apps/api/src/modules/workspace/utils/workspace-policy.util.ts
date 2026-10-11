@@ -3,6 +3,7 @@ import { ENUM_POLICY_ROLE_TYPE } from 'src/modules/policy/enums/policy.enum';
 import { ENUM_POLICY_STATUS_CODE_ERROR } from 'src/modules/policy/enums/policy.status-code.enum';
 import { PolicyAbilityFactory } from 'src/modules/policy/factories/policy.factory';
 import { IPolicyAbility } from 'src/modules/policy/interfaces/policy.interface';
+import { RoleEntity } from 'src/modules/role/repository/entities/role.entity';
 import { RoleService } from 'src/modules/role/services/role.service';
 import { WorkspaceMemberService } from '../services/workspace.member.service';
 
@@ -23,39 +24,17 @@ export async function assertWorkspaceMemberPolicy(
         roles?: ENUM_POLICY_ROLE_TYPE[];
     }
 ): Promise<void> {
-    // Get user's workspace roles
-    const userRoleIds =
-        await deps.workspaceMemberService.getMemberWorkspaceRoles(
-            workspaceId,
-            userId
-        );
-
-    if (!userRoleIds || userRoleIds.length === 0) {
-        throw new ForbiddenException({
-            statusCode: ENUM_POLICY_STATUS_CODE_ERROR.ROLE_FORBIDDEN,
-            message: 'policy.error.roleForbidden',
-            _error: 'User has no roles in this workspace',
-        });
-    }
-
-    // Get user's roles with full details
-    const userRoles = await Promise.all(
-        userRoleIds.map(roleEntity =>
-            deps.roleService.findOneById(roleEntity.id)
-        )
-    );
-
-    // Deactivated roles (isActive === false) grant nothing, even if the
-    // membership row that references them is still active.
-    const validRoles = userRoles.filter(
-        role => role !== null && role.isActive !== false
+    const validRoles = await findActiveWorkspaceRoles(
+        deps,
+        workspaceId,
+        userId
     );
 
     if (validRoles.length === 0) {
         throw new ForbiddenException({
             statusCode: ENUM_POLICY_STATUS_CODE_ERROR.ROLE_FORBIDDEN,
             message: 'policy.error.roleForbidden',
-            _error: 'User has no valid roles in this workspace',
+            _error: 'User has no active roles in this workspace',
         });
     }
 
@@ -97,4 +76,27 @@ export async function assertWorkspaceMemberPolicy(
             });
         }
     }
+}
+
+// The roles that grant the user anything in the workspace: from active
+// memberships only, and deactivated roles (isActive === false) grant
+// nothing even if the membership row that references them is still active.
+export async function findActiveWorkspaceRoles(
+    deps: {
+        workspaceMemberService: WorkspaceMemberService;
+        roleService: RoleService;
+    },
+    workspaceId: string,
+    userId: string
+): Promise<RoleEntity[]> {
+    const memberRoles =
+        await deps.workspaceMemberService.getMemberWorkspaceRoles(
+            workspaceId,
+            userId
+        );
+    const roles = await Promise.all(
+        memberRoles.map(role => deps.roleService.findOneById(role.id))
+    );
+
+    return roles.filter(role => role !== null && role.isActive !== false);
 }

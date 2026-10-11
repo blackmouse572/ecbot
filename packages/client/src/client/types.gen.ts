@@ -5670,6 +5670,10 @@ export type ClientCredentialMeResponseDto = {
      * Workspace slug
      */
     slug: string;
+    /**
+     * What the credential may do: the abilities its creator has in the workspace now, one entry per subject with every allowed action
+     */
+    permissions: Array<RolePermissionDto>;
 };
 
 export type ApiChannelSendMessageResponseDto = {

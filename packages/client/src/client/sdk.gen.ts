@@ -4258,7 +4258,7 @@ export const clientCredentialWorkspaceControllerDeleteV1 = <ThrowOnError extends
 });
 
 /**
- * resolve the workspace this client credential belongs to
+ * resolve the workspace this client credential belongs to and what it may do there
  */
 export const clientCredentialClientControllerMeV1 = <ThrowOnError extends boolean = false>(options?: Options<ClientCredentialClientControllerMeV1Data, ThrowOnError>): RequestResult<ClientCredentialClientControllerMeV1Responses, ClientCredentialClientControllerMeV1Errors, ThrowOnError> => (options?.client ?? client).get<ClientCredentialClientControllerMeV1Responses, ClientCredentialClientControllerMeV1Errors, ThrowOnError>({
     responseType: 'json',
