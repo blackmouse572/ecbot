@@ -586,6 +586,7 @@ export class AuthPublicController {
     @AuthPublicSignUpDoc()
     @Response('auth.signUp')
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @Post('/sign-up')
     async signUp(
         @Body(new RequestEmailPipe())

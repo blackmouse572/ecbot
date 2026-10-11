@@ -23,6 +23,7 @@ from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.guardrails.content import run_input_guardrail
 from eccho_ai.llm.providers.chat_model import build_chat_model
+from eccho_ai.llm.retrievers.safe_fetch import EgressBlockedError, assert_public_url
 from eccho_ai.modules.chat.models.chat_models import ImageToDescribe
 
 logger = get_logger(__name__)
@@ -82,10 +83,21 @@ def _image(data_url: str) -> dict:
     return {"type": "image_url", "image_url": {"url": data_url}}
 
 
+async def _fetch_catalog_image(url: str) -> str | None:
+    """A catalog URL is typed by the workspace owner, so it only gets fetched
+    when it resolves to a public address (same check as the web crawler)."""
+    try:
+        await assert_public_url(url)
+    except EgressBlockedError as exc:
+        logger.warning("catalog_image_blocked", error=str(exc))
+        return None
+    return await fetch_image_data_url(url)
+
+
 async def _catalog_parts(instructions: str | None) -> list[dict]:
     """Markdown images in the operator instructions, each after its label."""
     found = _CATALOG_IMAGE.findall(instructions or "")[: AppVars.VISION_MAX_CATALOG_IMAGES]
-    data_urls = await asyncio.gather(*(fetch_image_data_url(url) for _, url in found))
+    data_urls = await asyncio.gather(*(_fetch_catalog_image(url) for _, url in found))
     parts: list[dict] = []
     for (label, url), data_url in zip(found, data_urls):
         if data_url:
