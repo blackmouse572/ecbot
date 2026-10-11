@@ -5,9 +5,15 @@ import {
   knowledgeItemClientControllerListV1,
 } from "@repo/client";
 import * as z from "zod";
-import { type ApiOptions, paging, respond } from "./shared";
+import { type Allows, type ApiOptions, paging, respond } from "./shared";
 
-export function registerKnowledgeTools(server: McpServer, api: ApiOptions) {
+export function registerKnowledgeTools(
+  server: McpServer,
+  api: ApiOptions,
+  allows: Allows,
+) {
+  if (!allows("KNOWLEDGE_BASE", "read")) return;
+
   server.registerTool(
     "list_knowledge_bases",
     {

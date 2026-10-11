@@ -39,7 +39,9 @@ To add a tool: add the `/client` endpoint in `apps/api`, run
 `pnpm generate:client`, then register the tool in the matching
 `src/tools/*.ts` with a `title` and `readOnlyHint` or `destructiveHint`,
 spreading `api` into the `@repo/client` call so it carries the caller's key,
-and returning through `respond()`.
+and returning through `respond()`. Register it only if `allows(subject,
+action)` holds for the ability its API route checks, so keys without it don't
+see it.
 
 ## Auth
 
@@ -49,11 +51,17 @@ the app and shown once at creation) as either:
 - `x-api-key: key:secret`
 - `Authorization: Bearer key:secret`, for clients that only send bearer tokens
 
-A request without one gets `401`. A wrong or revoked key surfaces as a tool
-error with the API's message. A key can do at most what the member who
-created it can do in the workspace right now: a tool their role doesn't allow,
-or any tool once they leave the workspace, returns a permission error. Requests from a browser `Origin` get `403`
+A request without one gets `401`. Requests from a browser `Origin` get `403`
 (DNS rebinding protection); MCP clients send no `Origin`.
+
+A key can do at most what the member who created it can do in the workspace
+right now. On `tools/list` the server asks the API once (`GET /client/v1/me`)
+what the key may do and lists only those tools: everything for the owner's
+key, none once the member leaves the workspace. Other requests skip that
+lookup, because the API checks every call anyway: a tool the member lost
+access to after the list was fetched returns a permission error. If the API
+can't answer (a wrong or revoked key, an outage), every tool is listed and
+each call returns the API's message.
 
 ## Config
 

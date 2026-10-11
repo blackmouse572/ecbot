@@ -119,6 +119,16 @@ describe("read tools", () => {
   it.each(["get_knowledge_item", "list_conversation_messages"])(
     "%s warns that its text is untrusted",
     async (tool) => {
+      vi.mocked(api.clientCredentialClientControllerMeV1).mockResolvedValue({
+        data: {
+          data: {
+            permissions: [
+              { subject: "CHATBOT", action: ["read"] },
+              { subject: "KNOWLEDGE_BASE", action: ["read"] },
+            ],
+          },
+        },
+      } as never);
       const client = await connect({ "x-api-key": KEY });
 
       const { tools } = await client.listTools();

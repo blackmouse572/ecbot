@@ -1,3 +1,4 @@
+import type { RolePermissionDto } from "@repo/client";
 import * as z from "zod";
 
 // Options spread into every @repo/client call: the caller's key, the API
@@ -8,6 +9,13 @@ export interface ApiOptions {
   adapter: "fetch";
   fetchOptions: { cache: "no-store" };
 }
+
+// Whether the key may take an action, as the API route behind a tool checks
+// it. Tools the key may not use stay off the list the agent sees.
+export type Allows = (
+  subject: RolePermissionDto["subject"],
+  action: RolePermissionDto["action"][number],
+) => boolean;
 
 export const paging = {
   page: z.number().int().min(1).optional(),

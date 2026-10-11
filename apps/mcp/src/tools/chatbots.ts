@@ -4,9 +4,15 @@ import {
   chatbotClientControllerFindOneV1,
 } from "@repo/client";
 import * as z from "zod";
-import { type ApiOptions, paging, respond } from "./shared";
+import { type Allows, type ApiOptions, paging, respond } from "./shared";
 
-export function registerChatbotTools(server: McpServer, api: ApiOptions) {
+export function registerChatbotTools(
+  server: McpServer,
+  api: ApiOptions,
+  allows: Allows,
+) {
+  if (!allows("CHATBOT", "read")) return;
+
   server.registerTool(
     "list_chatbots",
     {

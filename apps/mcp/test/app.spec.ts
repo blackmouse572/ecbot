@@ -5,6 +5,7 @@ vi.mock("@repo/client");
 import {
   chatbotClientControllerFindAllV1,
   chatbotClientControllerFindOneV1,
+  clientCredentialClientControllerMeV1,
 } from "@repo/client";
 import { app } from "../src/index";
 import { connect, textOf } from "./mcp-client";
@@ -13,6 +14,27 @@ const KEY = "client-key:client-secret";
 
 const findAll = vi.mocked(chatbotClientControllerFindAllV1);
 const findOne = vi.mocked(chatbotClientControllerFindOneV1);
+const me = vi.mocked(clientCredentialClientControllerMeV1);
+
+const ALL_TOOLS = [
+  "get_chatbot",
+  "get_conversation",
+  "get_customer",
+  "get_knowledge_item",
+  "list_chatbots",
+  "list_conversation_messages",
+  "list_conversations",
+  "list_customers",
+  "list_knowledge_bases",
+  "list_knowledge_items",
+];
+
+// What GET /client/v1/me answers: the key's permissions in its workspace.
+function permits(permissions: { subject: string; action: string[] }[]) {
+  me.mockResolvedValue({
+    data: { data: { workspaceId: "workspace-1", permissions } },
+  } as never);
+}
 
 describe("GET /health", () => {
   it("returns 200 ok", async () => {
@@ -78,26 +100,72 @@ describe("/mcp", () => {
     expect(await res.text()).toContain('"name":"ecbot"');
   });
 
-  it("lists every tool as read-only", async () => {
+  it("lists every tool as read-only to a key that may read everything", async () => {
+    permits([
+      { subject: "CHATBOT", action: ["read"] },
+      { subject: "KNOWLEDGE_BASE", action: ["read"] },
+      { subject: "CUSTOMER", action: ["read"] },
+    ]);
+    const client = await connect({ "x-api-key": KEY });
+
+    const { tools } = await client.listTools();
+
+    expect(tools.map((tool) => tool.name).sort()).toEqual(ALL_TOOLS);
+    for (const tool of tools) {
+      expect(tool.annotations?.readOnlyHint).toBe(true);
+    }
+  });
+
+  // The agent sees only what will succeed. The API still checks every call.
+  it("lists only the tools the key's permissions allow", async () => {
+    permits([{ subject: "CUSTOMER", action: ["read"] }]);
     const client = await connect({ "x-api-key": KEY });
 
     const { tools } = await client.listTools();
 
     expect(tools.map((tool) => tool.name).sort()).toEqual([
-      "get_chatbot",
-      "get_conversation",
       "get_customer",
-      "get_knowledge_item",
-      "list_chatbots",
-      "list_conversation_messages",
-      "list_conversations",
       "list_customers",
-      "list_knowledge_bases",
-      "list_knowledge_items",
     ]);
-    for (const tool of tools) {
-      expect(tool.annotations?.readOnlyHint).toBe(true);
-    }
+    expect(me).toHaveBeenCalledTimes(1);
+    expect(me).toHaveBeenCalledWith(
+      expect.objectContaining({ auth: KEY, adapter: "fetch" }),
+    );
+  });
+
+  it("lists no tools to a key whose creator left the workspace", async () => {
+    permits([]);
+    const client = await connect({ "x-api-key": KEY });
+
+    const { tools } = await client.listTools();
+
+    expect(tools).toEqual([]);
+  });
+
+  // A wrong key or an API outage: each call then reports the API's error.
+  it("lists every tool when the API can't say what the key may do", async () => {
+    me.mockResolvedValue({
+      error: { message: "Sorry, this API key is not valid." },
+    } as never);
+    const client = await connect({ "x-api-key": KEY });
+
+    const { tools } = await client.listTools();
+
+    expect(tools.map((tool) => tool.name).sort()).toEqual(ALL_TOOLS);
+  });
+
+  it("looks up permissions only to list tools, not to call one", async () => {
+    findOne.mockResolvedValue({
+      data: { data: { id: "chatbot-1" } },
+    } as never);
+    const client = await connect({ "x-api-key": KEY });
+
+    await client.callTool({
+      name: "get_chatbot",
+      arguments: { id: "chatbot-1" },
+    });
+
+    expect(me).not.toHaveBeenCalled();
   });
 
   it("lists chatbots through the API with the caller's key", async () => {

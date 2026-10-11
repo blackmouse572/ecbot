@@ -5,9 +5,16 @@ import {
   conversationClientControllerListV1,
 } from "@repo/client";
 import * as z from "zod";
-import { type ApiOptions, paging, respond } from "./shared";
+import { type Allows, type ApiOptions, paging, respond } from "./shared";
 
-export function registerConversationTools(server: McpServer, api: ApiOptions) {
+export function registerConversationTools(
+  server: McpServer,
+  api: ApiOptions,
+  allows: Allows,
+) {
+  // The API guards conversations as chatbot data.
+  if (!allows("CHATBOT", "read")) return;
+
   server.registerTool(
     "list_conversations",
     {
