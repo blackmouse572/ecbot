@@ -40,7 +40,8 @@ function makeService(em: any, suggestionRepo: any) {
         contactPointRepo,
         tagAssignmentRepo,
         notificationService as any,
-        workspaceMemberRepo as any
+        workspaceMemberRepo as any,
+        { setMessage: jest.fn((key: string) => key) } as any
     );
     return { service, notificationService, workspaceMemberRepo };
 }
