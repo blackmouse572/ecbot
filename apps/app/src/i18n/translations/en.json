@@ -2729,6 +2729,7 @@
     },
     "errors": {
       "createFailed": "Could not create the tool. Please check the form and try again.",
+      "testFailed": "The test call failed. Check the URL and try again.",
       "updateFailed": "Could not save the tool. Please check the form and try again.",
       "deleteFailed": "Could not delete the tool. Please try again.",
       "schemaRowKeyRequired": "Property key is required.",

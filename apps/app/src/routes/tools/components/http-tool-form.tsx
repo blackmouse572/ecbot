@@ -20,6 +20,7 @@ import {
   type HttpToolFormData,
   type HttpToolFormInput,
 } from "./http-tool-schema";
+import { readApiError } from "@/libs/api-error";
 
 export type HttpToolFormProps = {
   defaultValues: Partial<HttpToolFormData>;
@@ -127,7 +128,9 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
       setTestResult(result);
     } catch (err) {
       const msg =
-        (err as A)?.body?.message ?? (err as A)?.message ?? "Unknown error";
+        readApiError(err).message ??
+        (err as A)?.message ??
+        t("tools.errors.testFailed");
       setTestResult({
         status: "ERROR",
         errorMessage: msg,
@@ -476,14 +479,14 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                   </span>
                 </div>
                 {testResult.result !== undefined && (
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-all text-ui-fg-base overflow-auto max-h-64">
+                  <pre className="text-xs font-mono whitespace-pre-wrap break-all text-ui-fg-base overflow-auto max-h-[60vh]">
                     {typeof testResult.result === "string"
                       ? testResult.result
                       : JSON.stringify(testResult.result, null, 2)}
                   </pre>
                 )}
                 {testResult.errorMessage && (
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-all text-ui-fg-error overflow-auto max-h-64">
+                  <pre className="text-xs font-mono whitespace-pre-wrap break-all text-ui-fg-error overflow-auto max-h-[60vh]">
                     {testResult.errorMessage}
                   </pre>
                 )}

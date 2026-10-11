@@ -2759,6 +2759,7 @@
     },
     "errors": {
       "createFailed": "Không thể tạo công cụ. Vui lòng kiểm tra biểu mẫu và thử lại.",
+      "testFailed": "Gọi thử không thành công. Hãy kiểm tra URL rồi thử lại.",
       "updateFailed": "Không thể lưu công cụ. Vui lòng kiểm tra biểu mẫu và thử lại.",
       "deleteFailed": "Không thể xóa công cụ. Vui lòng thử lại.",
       "schemaRowKeyRequired": "Khóa thuộc tính là bắt buộc.",
