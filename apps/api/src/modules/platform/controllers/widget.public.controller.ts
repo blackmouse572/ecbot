@@ -28,6 +28,7 @@ import {
     Post,
     Query,
     Res,
+    UnprocessableEntityException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -87,9 +88,11 @@ export class WidgetPublicController {
         const account = await this.resolveAccount(key);
         const chatbot = account.chatbot;
         if (!chatbot) {
-            throw new NotFoundException({
-                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'widget.error.notFound',
+            // Same answer as sending a message: the key is right, the owner
+            // just has not picked an agent yet (#255).
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.NO_CHATBOT_ATTACHED,
+                message: 'widget.error.noChatbotAttached',
             });
         }
         const config = account.config;

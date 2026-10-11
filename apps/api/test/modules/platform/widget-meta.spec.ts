@@ -1,15 +1,16 @@
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
+import { ENUM_WIDGET_STATUS_CODE_ERROR } from '../../../src/modules/platform/enums/widget.status-code.enum';
 import { WidgetPublicController } from '../../../src/modules/platform/controllers/widget.public.controller';
 
 function controllerFor(
     config: Record<string, unknown>,
-    chatbot: Record<string, unknown> = {}
+    chatbot: Record<string, unknown> | null = {}
 ) {
     const accountService = {
         findOne: jest.fn(async () => ({
             type: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
             config,
-            chatbot: { name: 'Shop Helper', ...chatbot },
+            chatbot: chatbot && { name: 'Shop Helper', ...chatbot },
         })),
     };
     const none = {} as any;
@@ -24,6 +25,21 @@ function controllerFor(
         none
     );
 }
+
+// #255: a new widget has no agent until the owner attaches one. Saying so
+// lets the widget explain itself instead of calling the key wrong.
+describe('WidgetPublicController.meta without an agent', () => {
+    it('answers that no agent is attached, not that the key is wrong', async () => {
+        await expect(
+            controllerFor({ allowedOrigins: [] }, null).meta('key')
+        ).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.NO_CHATBOT_ATTACHED,
+                message: 'widget.error.noChatbotAttached',
+            },
+        });
+    });
+});
 
 describe('WidgetPublicController.meta privacyPolicyUrl', () => {
     it("returns the business's privacy policy URL when set", async () => {
