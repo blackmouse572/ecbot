@@ -11,7 +11,6 @@ from uuid import uuid4
 import pytest
 
 from eccho_ai.core.variables import AppVars
-from tests.rag_schema import apply_rag_migration
 
 
 pytestmark = pytest.mark.integration
@@ -20,7 +19,6 @@ pytestmark = pytest.mark.integration
 @pytest.mark.asyncio
 async def test_full_text_search_matches_chunk_source_titles(pg_store_factory):
     store = pg_store_factory()
-    await apply_rag_migration()
 
     cases = [
         ("Refund policy", "refund-policy.txt", "refund policy"),

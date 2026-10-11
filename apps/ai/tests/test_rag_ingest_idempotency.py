@@ -8,7 +8,6 @@ import pytest
 from uuid import uuid4
 
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
-from tests.rag_schema import apply_rag_migration
 
 pytestmark = pytest.mark.integration
 
@@ -46,7 +45,6 @@ async def _seed_document(
 @pytest.mark.asyncio
 async def test_delete_by_knowledge_item_removes_only_that_item(pg_store_factory):
     store: PgVectorStore = pg_store_factory()
-    await apply_rag_migration()
     await _seed_document(store, knowledge_item_id="item-A", chatbot_ids=["c1"])
     await _seed_document(store, knowledge_item_id="item-B", chatbot_ids=["c1"])
 

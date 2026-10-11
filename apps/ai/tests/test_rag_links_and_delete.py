@@ -6,7 +6,6 @@ Skipped automatically when neither env var is configured.
 import pytest
 
 from tests.test_rag_ingest_idempotency import _seed_document
-from tests.rag_schema import apply_rag_migration
 
 pytestmark = pytest.mark.integration
 
@@ -14,7 +13,6 @@ pytestmark = pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_chatbot_links_changes_visibility(pg_store_factory):
     store = pg_store_factory()
-    await apply_rag_migration()
     await _seed_document(store, knowledge_item_id="item-A", chatbot_ids=["c1"])
 
     updated = await store.update_chatbot_links("item-A", ["c1", "c2"])
