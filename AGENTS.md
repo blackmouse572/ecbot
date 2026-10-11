@@ -10,12 +10,18 @@ apps/
   app/      Main React 19 SPA: Vite, Tailwind 4, TanStack Query, React Router v7
   ai/       Chatbot / AI module (see apps/ai/README.md)
   docs/     User docs site: Next.js static export + Fumadocs, en/vi (see apps/docs/README.md)
+  edge/     Cloudflare Worker: queues inbound platform webhooks before the API (see apps/edge/README.md)
 packages/
   ui/               @repo/ui: shared components on @medusajs/ui + design tokens
   client/           @repo/client: generated API client
   auth/             shared auth utilities
+  agent-blueprint/  @repo/agent-blueprint: chatbot business types, presets and prompt compiler (api + app)
+  favicons/         per-environment favicon sets copied into apps at build
   eslint-config/    typescript-config/   shared configs
+e2e/                Playwright end-to-end tests
 ```
+
+Domain terms (Workspace, Chatbot, Tool, Skill, Customer, ContactPoint, Client credential, ...) are defined in `CONTEXT.md`. Use them as written there when naming code, copy or docs.
 
 <important if="you need to run commands to build, lint, test, migrate, or generate code">
 
@@ -28,6 +34,8 @@ Run from the repo root. The full list lives in the root `package.json` scripts.
 | `pnpm build`                                                   | Build all                                                   |
 | `pnpm lint` / `pnpm format`                                    | Lint / Prettier                                             |
 | `pnpm test:api`                                                | API unit tests (Jest)                                       |
+| `pnpm check-types`                                             | Typecheck all workspaces                                    |
+| `pnpm e2e` / `pnpm e2e:smoke`                                  | Playwright end-to-end tests (full / smoke)                  |
 | `pnpm db:migrate:create\|up\|down`                             | MikroORM migrations (api)                                   |
 | `pnpm db:seed`                                                 | Seed the database                                           |
 | `pnpm generate:client`                                         | Regenerate `@repo/client` after any API DTO or route change |
@@ -38,7 +46,6 @@ Run from the repo root. The full list lives in the root `package.json` scripts.
 
 - Work test-first: write a failing test (red), make it pass with the simplest code (green), then refactor.
 - Ship the minimum code that solves the asked problem: no speculative features, configurability, or single-use abstractions. If 200 lines could be 50, rewrite it.
-- For a large or multi-step task, invoke the `using-superpowers` skill first (if available) to pick the process skill.
 </important>
 
 <important if="you are setting up or running the project locally, or local sign-in, CORS, API-key, JWKS or Turnstile errors are blocking you">
