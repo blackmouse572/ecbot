@@ -188,6 +188,13 @@ describe('CustomerMergeSuggestionService', () => {
             expect(firstCall.recipient).toBe('user-1');
             expect(firstCall.metadata.data.customerAId).toBe('cust-A');
             expect(firstCall.metadata.data.customerBId).toBe('cust-B');
+            expect(firstCall.title).toBe('notification.mergeSuggestion.title');
+            expect(firstCall.message).toBe(
+                'notification.mergeSuggestion.message'
+            );
+            expect(firstCall.metadata.actionText).toBe(
+                'notification.mergeSuggestion.actionText'
+            );
         });
 
         it('excludes merged-away (mergedIntoCustomerId set) candidates via the EM filter', async () => {

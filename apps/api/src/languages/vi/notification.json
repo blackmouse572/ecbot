@@ -31,7 +31,7 @@
         }
     },
     "mergeSuggestion": {
-        "title": "Có thể trùng khách hàng",
+        "title": "Khách hàng có thể bị trùng",
         "message": "Một khách hàng vừa được cập nhật số điện thoại hoặc email trùng với khách hàng khác. Hãy xem đề xuất gộp.",
         "actionText": "Xem xét"
     },
