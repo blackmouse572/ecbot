@@ -55,6 +55,14 @@ export function steps(profile: AgentProfile): Step[] {
   return buildQuestionGroups(profile).flatMap((group) => group.questions.map((question) => ({ group, question })));
 }
 
+// #151: most answers are a tap or a short phrase, and several can be skipped.
+const SECONDS_PER_QUESTION = 15;
+
+/** Rough minutes left from this question to the end, never below one. */
+export function minutesLeft({ current, total }: { current: number; total: number }): number {
+  return Math.max(1, Math.ceil(((total - current + 1) * SECONDS_PER_QUESTION) / 60));
+}
+
 export function currentStep(state: BuilderState): Step | null {
   if (!state.profile) return null;
   const all = steps(state.profile);

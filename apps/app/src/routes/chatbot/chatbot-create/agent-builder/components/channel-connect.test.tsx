@@ -18,6 +18,7 @@ const oAuthClick = vi.fn();
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string, opts?: { name?: string }) => (opts?.name ? `${key} ${opts.name}` : key) }),
+  Trans: ({ i18nKey }: { i18nKey: string }) => i18nKey,
 }));
 
 vi.mock("@/hooks/api", () => ({

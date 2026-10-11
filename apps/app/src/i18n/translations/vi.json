@@ -537,6 +537,7 @@
           "keyLabel": "Widget key",
           "snippetLabel": "Đoạn mã nhúng",
           "snippetHint": "Dán đoạn này trước thẻ đóng </body> trên mọi trang cần hiển thị widget.",
+          "snippetOptionsHint": "Để hợp với website, đổi data-color (màu nút, vd: #2563eb), data-label (tên của nút chat mà trình đọc màn hình đọc lên) và data-theme (light là nền sáng, dark là nền tối, auto theo thiết bị của khách).",
           "issuedDescription": "Dán đoạn mã này vào website để hiện khung chat. Khóa này công khai nên bạn không cần giữ bí mật."
         }
       },
@@ -548,7 +549,17 @@
           "description": "Dán token bot bạn nhận được từ @BotFather trên Telegram.",
           "tokenLabel": "Bot Token",
           "tokenPlaceholder": "1234567890:AAF...",
-          "tokenHint": "Tạo bot và lấy token qua @BotFather",
+          "guide": {
+            "title": "Cách lấy token bot",
+            "steps": {
+              "open": "Mở <0>@BotFather</0> trên Telegram.",
+              "newbot": "Gửi tin nhắn /newbot.",
+              "name": "Đặt tên hiển thị cho bot, ví dụ tên cửa hàng của bạn.",
+              "username": "Đặt username kết thúc bằng \"bot\", ví dụ myshop_bot.",
+              "copy": "BotFather sẽ trả lời bằng một token dạng 1234567890:AAF... Hãy sao chép token này.",
+              "paste": "Dán token vào ô phía trên."
+            }
+          },
           "tokenInvalid": "Sai định dạng token, phải có dạng 1234567890:ABC...",
           "cta": "Kết nối Bot"
         },
@@ -1109,7 +1120,8 @@
       "tryAgent": "Trò chuyện với {{name}}",
       "yourAgent": "agent của bạn",
       "promptTab": "Prompt",
-      "progress": "Câu {{current}} / {{total}}",
+      "progress": "Câu {{current}} / {{total}}, còn khoảng {{minutes}} phút",
+      "testEarlyHint": "Sau khi đặt tên cho agent, bạn có thể thử ngay và hoàn thành phần còn lại sau.",
       "extraInstructions": "Hướng dẫn bổ sung",
       "extraInstructionsHint": "Được thêm vào cuối phần hướng dẫn cho agent. Để trống nếu các câu trả lời đã đầy đủ.",
       "editWithBuilder": "Chỉnh sửa bằng trình tạo",
@@ -2254,7 +2266,14 @@
     "preview_error": "Không tải được mục này. Vui lòng thử lại.",
     "learned_chunks_other": "Agent đã học tệp này thành {{count}} phần.",
     "not_learned_yet": "Chưa học. Agent có thể dùng tệp này khi xử lý xong.",
-    "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại."
+    "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại.",
+    "agents_label": "Agent dùng mục này",
+    "agents_hint": "Các agent bạn chọn có thể trả lời dựa trên mục này khi xử lý xong. Bạn có thể đổi lại sau trong phần Nền tảng kiến thức của từng agent.",
+    "agents_loading": "Đang tải danh sách agent...",
+    "agents_empty": "Chưa có agent nào. Sau khi tạo agent, hãy liên kết mục này trong phần Nền tảng kiến thức của agent.",
+    "agents_error": "Không tải được danh sách agent. Bạn có thể liên kết mục này sau trong phần Nền tảng kiến thức của agent.",
+    "link_after_create_error_one": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của agent.",
+    "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent."
   },
   "conversations": {
     "title": "Hội thoại",

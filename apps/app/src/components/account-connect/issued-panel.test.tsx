@@ -23,6 +23,23 @@ describe("IssuedPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows the colour, label and theme options in the embed snippet", () => {
+    render(
+      <IssuedPanel
+        issued={{ kind: "WEBSITE_WIDGET", widgetKey: "wk_1" } as never}
+        onDone={vi.fn()}
+      />,
+    );
+    const snippet = (
+      screen.getByDisplayValue(/widget\.js/) as HTMLTextAreaElement
+    ).value;
+    expect(snippet).toContain('data-widget-key="wk_1"');
+    expect(snippet).toContain('data-color="#0f766e"');
+    expect(snippet).toContain('data-label="Chat"');
+    expect(snippet).toContain('data-theme="light"');
+    expect(screen.getByText(/change data-color/)).toBeTruthy();
+  });
+
   it("still warns to keep API channel credentials safe", () => {
     render(
       <IssuedPanel

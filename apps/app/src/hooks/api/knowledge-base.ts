@@ -388,6 +388,49 @@ export const useLinkKnowledgeItemToChatbot = (
   });
 };
 
+/**
+ * Links one knowledge item to several agents (the item create form). One at
+ * a time: each link queues a reindex holding the item's links at that moment,
+ * so the last one must see them all. A failure doesn't stop the rest; the
+ * result says how many failed.
+ */
+export const useLinkKnowledgeItemToChatbots = () => {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      knowledgeItemId,
+      chatbotIds,
+    }: {
+      knowledgeItemId: string;
+      chatbotIds: string[];
+    }) => {
+      let failed = 0;
+      for (const chatbotId of chatbotIds) {
+        try {
+          await chatbotKnowledgeItemWorkspaceControllerLinkV1({
+            path: {
+              workspace: workspace!.slug,
+              chatbotId,
+              knowledgeItemId,
+              id: knowledgeItemId,
+            },
+          });
+        } catch {
+          failed += 1;
+        }
+      }
+      return { failed };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: chatbotKnowledgeItemQueryKeys.lists(),
+      });
+    },
+  });
+};
+
 export const useUnlinkKnowledgeItemFromChatbot = (
   chatbotId: string,
   options?: MutationOptions<unknown, Error, string>,

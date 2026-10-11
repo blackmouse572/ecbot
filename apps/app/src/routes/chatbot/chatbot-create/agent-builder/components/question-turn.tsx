@@ -9,7 +9,7 @@ import {
 } from "@repo/ui/common-components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { LinkedAccountRef } from "../builder-state";
+import { minutesLeft, type LinkedAccountRef } from "../builder-state";
 import { businessTypeIcon } from "./business-type-icon";
 import { ChannelConnect } from "./channel-connect";
 import { channelIcon } from "./channel-icon";
@@ -155,7 +155,13 @@ export function QuestionTurn({
               )}
               <QuestionnaireError>{t("agentBuilder.ui.required")}</QuestionnaireError>
             </QuestionnaireItem>
-            <QuestionnaireProgress current={position.current} total={position.total} render={(p) => t("agentBuilder.ui.progress", p)} />
+            <QuestionnaireProgress
+              current={position.current}
+              total={position.total}
+              render={(p) => t("agentBuilder.ui.progress", { ...p, minutes: minutesLeft(p) })}
+            />
+            {/* #151: the draft (and the test panel) comes after agentName. */}
+            {!chatbotId && <Text size="xsmall" className="text-ui-fg-muted">{t("agentBuilder.ui.testEarlyHint")}</Text>}
             <QuestionnaireActions>
               {!question.required && <QuestionnaireSkip onClick={onSkip}>{t("actions.skip")}</QuestionnaireSkip>}
               <QuestionnaireNext>{t("actions.next")}</QuestionnaireNext>

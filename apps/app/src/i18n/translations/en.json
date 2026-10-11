@@ -511,6 +511,7 @@
           "keyLabel": "Widget key",
           "snippetLabel": "Embed snippet",
           "snippetHint": "Paste this before the closing </body> tag on every page that should show the widget.",
+          "snippetOptionsHint": "To match your site, change data-color (button colour, e.g. #2563eb), data-label (the name screen readers announce for the chat button) and data-theme (light, dark, or auto to follow the visitor's device).",
           "issuedDescription": "Paste this code into your website to show the chat. The key is public, so there is nothing to keep secret."
         }
       },
@@ -522,7 +523,17 @@
           "description": "Paste the bot token you received from @BotFather on Telegram.",
           "tokenLabel": "Bot Token",
           "tokenPlaceholder": "1234567890:AAF...",
-          "tokenHint": "Create a bot and get the token via @BotFather",
+          "guide": {
+            "title": "How to get a bot token",
+            "steps": {
+              "open": "Open <0>@BotFather</0> in Telegram.",
+              "newbot": "Send the message /newbot.",
+              "name": "Choose a display name for your bot, for example your shop name.",
+              "username": "Choose a username that ends in \"bot\", for example myshop_bot.",
+              "copy": "BotFather replies with a token like 1234567890:AAF... Copy it.",
+              "paste": "Paste the token into the field above."
+            }
+          },
           "tokenInvalid": "Invalid token format, expected 1234567890:ABC...",
           "cta": "Connect Bot"
         },
@@ -1083,7 +1094,8 @@
       "tryAgent": "Talk with {{name}}",
       "yourAgent": "your agent",
       "promptTab": "Prompt",
-      "progress": "Question {{current}} of {{total}}",
+      "progress": "Question {{current}} of {{total}}, about {{minutes}} min left",
+      "testEarlyHint": "Once your agent has a name, you can try it right away and finish the rest later.",
       "extraInstructions": "Extra instructions",
       "extraInstructionsHint": "Added at the end of what your agent is told. Leave it empty if your answers cover everything.",
       "editWithBuilder": "Edit with builder",
@@ -2224,7 +2236,14 @@
     "learned_chunks_one": "The agent learned this file as {{count}} section.",
     "learned_chunks_other": "The agent learned this file as {{count}} sections.",
     "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
-    "learn_failed": "Could not learn this file. Try Process again."
+    "learn_failed": "Could not learn this file. Try Process again.",
+    "agents_label": "Agents that use this item",
+    "agents_hint": "The agents you pick can answer from this item once it finishes processing. You can change this later in each agent's Knowledge Base section.",
+    "agents_loading": "Loading agents...",
+    "agents_empty": "No agents yet. After you create one, link this item from the agent's Knowledge Base section.",
+    "agents_error": "Couldn't load agents. You can link this item later from the agent's Knowledge Base section.",
+    "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
+    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section."
   },
   "conversations": {
     "title": "Conversations",

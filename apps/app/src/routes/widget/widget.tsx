@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useVisitorId } from "./use-visitor-id";
 import { WidgetAiNotice } from "./widget-ai-notice";
+import { useWidgetTheme } from "./use-widget-theme";
 import { useWidgetTranscript } from "./use-widget-transcript";
 
 // Empty (local dev / tests) renders no widget and the API, which is also
@@ -34,6 +35,7 @@ export function Widget() {
   const { t } = useTranslation();
   const { key } = useParams();
   const visitorId = useVisitorId(key);
+  useWidgetTheme();
 
   // The parent page's URL. Only available cross-origin as an origin, which is
   // exactly the granularity the allowlist works at.

@@ -46,6 +46,7 @@ import { ChannelRateLimitService } from '../services/channel-rate-limit.service'
 import { WidgetChatService } from '../services/widget-chat.service';
 import { WidgetSessionService } from '../services/widget-session.service';
 import { ENUM_WIDGET_STATUS_CODE_ERROR } from '../enums/widget.status-code.enum';
+import { widgetWelcomeText } from '../utils/widget-welcome.util';
 
 /** Per-visitor ceiling. Turnstile stops bots at the door; this stops a human farming inference. */
 const TURNS_PER_HOUR = 60;
@@ -97,7 +98,7 @@ export class WidgetPublicController {
             data: {
                 name: chatbot.name,
                 avatar: chatbot.avatar,
-                welcomeMessage: chatbot.welcomeMessage,
+                welcomeMessage: widgetWelcomeText(chatbot),
                 primaryLanguage: chatbot.primaryLanguage,
                 theme: config.theme as Record<string, unknown>,
                 // Returned so the widget can refuse to render on a page that is

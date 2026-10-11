@@ -8,7 +8,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   created: [] as unknown[],
   processed: [] as unknown[],
+  linked: [] as unknown[],
+  calls: [] as string[],
   createError: null as unknown,
+  linkFailed: 0,
 }));
 const toast = vi.hoisted(() => ({
   success: vi.fn(),
@@ -33,7 +36,23 @@ vi.mock("../../../../hooks/api", () => ({
   }),
   useProcessKnowledgeItem: () => ({
     mutateAsync: async (args: unknown) => {
+      api.calls.push("process");
       api.processed.push(args);
+    },
+  }),
+  useChatbots: () => ({
+    chatbots: [
+      { id: "bot-1", name: "Sales agent" },
+      { id: "bot-2", name: "Support agent" },
+    ],
+    isLoading: false,
+    isError: false,
+  }),
+  useLinkKnowledgeItemToChatbots: () => ({
+    mutateAsync: async (args: unknown) => {
+      api.calls.push("link");
+      api.linked.push(args);
+      return { failed: api.linkFailed };
     },
   }),
 }));
@@ -58,8 +77,12 @@ describe("KnowledgeItemCreateForm", () => {
   beforeEach(() => {
     api.created = [];
     api.processed = [];
+    api.linked = [];
+    api.calls = [];
     api.createError = null;
+    api.linkFailed = 0;
     toast.error.mockReset();
+    toast.info.mockReset();
   });
 
   // #168: the API now says why a file is refused (empty, not really a PDF);
@@ -114,6 +137,60 @@ describe("KnowledgeItemCreateForm", () => {
     expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
   });
 
+  const fillTextItem = (container: HTMLElement) => {
+    fireEvent.change(container.querySelector('input[name="title"]')!, {
+      target: { value: "Return policy" },
+    });
+    fireEvent.change(container.querySelector('textarea[name="content"]')!, {
+      target: { value: "Returns are accepted within 7 days." },
+    });
+  };
+
+  const renderTextForm = () =>
+    render(
+      <NuqsTestingAdapter searchParams="?t=TEXT">
+        <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+      </NuqsTestingAdapter>,
+    );
+
+  // #163: the create form had no way to pick which agents use the item.
+  it("links the new item to the chosen agents before processing it", async () => {
+    const { container } = renderTextForm();
+    fillTextItem(container);
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Support agent" }));
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(api.processed).toHaveLength(1));
+    expect(api.linked).toEqual([
+      { knowledgeItemId: "item-1", chatbotIds: ["bot-2"] },
+    ]);
+    // Ingestion stamps the linked agents on the vectors, so link first.
+    expect(api.calls).toEqual(["link", "process"]);
+  });
+
+  it("does not call the link endpoint when no agent is chosen", async () => {
+    const { container } = renderTextForm();
+    fillTextItem(container);
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(api.processed).toHaveLength(1));
+    expect(api.linked).toEqual([]);
+  });
+
+  it("tells the user when some agents could not be linked", async () => {
+    api.linkFailed = 1;
+    const { container } = renderTextForm();
+    fillTextItem(container);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Sales agent" }));
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(api.processed).toHaveLength(1));
+    expect(toast.info).toHaveBeenCalledWith(
+      "Item created, but 1 agent could not be linked. Link it from the agent's Knowledge Base section.",
+    );
+  });
+
   const renderFileForm = () =>
     render(
       <NuqsTestingAdapter searchParams="?t=FILE">
@@ -138,6 +215,33 @@ describe("KnowledgeItemCreateForm", () => {
     fireEvent.focus(title);
 
     expect([title.selectionStart, title.selectionEnd]).toEqual([0, 11]);
+  });
+
+  // #167: a new FILE item must start processing like URL and TEXT do,
+  // not wait in Draft for the "Process" action.
+  it("starts processing a new FILE item right away, once", async () => {
+    const { container } = renderFileForm();
+    fireEvent.change(container.querySelector('input[type="file"]')!, {
+      target: {
+        files: [
+          new File(["q"], "kunmart-faq.pdf", { type: "application/pdf" }),
+        ],
+      },
+    });
+    await waitFor(() =>
+      expect(
+        container.querySelector<HTMLInputElement>('input[name="title"]')!.value,
+      ).toBe("kunmart-faq"),
+    );
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(api.created).toHaveLength(1));
+    expect(api.created[0]).toMatchObject({ type: "FILE" });
+    await waitFor(() =>
+      expect(api.processed).toEqual([
+        { knowledgeBaseId: "kb-1", id: "item-1" },
+      ]),
+    );
   });
 
   it("gives the tag picker a placeholder", () => {
