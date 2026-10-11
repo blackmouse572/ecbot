@@ -349,7 +349,7 @@ export function CustomerSidePanel({
 
 function TagsSection({ customerId }: { customerId: string }) {
   const { t } = useTranslation();
-  const { assignments } = useCustomerTagAssignments(customerId);
+  const { assignments, isError } = useCustomerTagAssignments(customerId);
   const { tags: catalog } = useCustomerTagList();
   const apply = useApplyCustomerTag(customerId);
   const remove = useRemoveCustomerTag(customerId);
@@ -369,7 +369,11 @@ function TagsSection({ customerId }: { customerId: string }) {
 
   return (
     <div className="flex flex-col gap-y-2">
-      {assignments.length === 0 ? (
+      {isError ? (
+        <Text size="small" className="text-ui-fg-error">
+          {t("general.loadFailed")}
+        </Text>
+      ) : assignments.length === 0 ? (
         <NoRecords
           size="small"
           title={t("conversations.customer.panel.tags.empty")}

@@ -48,7 +48,7 @@ type DrawerTarget = CustomerTagGetResponseDto | null | "new";
 
 export const CustomerTags = () => {
   const { t } = useTranslation();
-  const { tags, isLoading } = useCustomerTagList();
+  const { tags, isLoading, isError, error } = useCustomerTagList();
   const [editing, setEditing] = useState<DrawerTarget>(null);
 
   const columns = useColumns({ onEdit: (tag) => setEditing(tag) });
@@ -65,6 +65,7 @@ export const CustomerTags = () => {
     getRowId: (row) => row.id,
   });
 
+  if (isError) throw error;
   return (
     <div className="flex flex-col gap-y-3">
       <Container className="divide-y p-0">

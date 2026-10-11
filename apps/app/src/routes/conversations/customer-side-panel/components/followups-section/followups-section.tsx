@@ -15,10 +15,19 @@ interface Props {
 
 export function FollowupsSection({ conversationId, onViewMessage }: Props) {
   const { t } = useTranslation();
-  const { followups, isPending } = useConversationFollowups(conversationId);
+  const { followups, isPending, isError } =
+    useConversationFollowups(conversationId);
   const cancel = useCancelFollowup();
 
   if (isPending) return null;
+
+  if (isError) {
+    return (
+      <Text size="small" className="text-ui-fg-error">
+        {t("general.loadFailed")}
+      </Text>
+    );
+  }
 
   if (followups.length === 0) {
     return (

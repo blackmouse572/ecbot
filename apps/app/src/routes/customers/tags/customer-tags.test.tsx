@@ -367,4 +367,17 @@ describe("CustomerTags settings page", () => {
     expect(promptFn).toHaveBeenCalledTimes(1);
     expect(deleteMutateAsync).not.toHaveBeenCalled();
   });
+
+  it("throws instead of offering to create a tag when loading fails", () => {
+    const error = new Error("boom");
+    useListMock.mockReturnValue({
+      tags: [],
+      isLoading: false,
+      isError: true,
+      error,
+    } as unknown as UseListReturn);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() => render(<CustomerTags />)).toThrow(error);
+  });
 });

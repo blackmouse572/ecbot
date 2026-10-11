@@ -45,7 +45,7 @@ const PAGE_SIZE = 100;
 
 export const ClientCredentials = () => {
   const { t } = useTranslation();
-  const { credentials, isLoading } = useClientCredentialList();
+  const { credentials, isLoading, isError, error } = useClientCredentialList();
   const [creating, setCreating] = useState(false);
 
   const columns = useColumns();
@@ -58,6 +58,7 @@ export const ClientCredentials = () => {
     getRowId: (row) => row.id,
   });
 
+  if (isError) throw error;
   return (
     <div className="flex flex-col gap-y-3">
       <Container className="divide-y p-0">

@@ -1795,8 +1795,7 @@
     "invitations": {
       "title": "Lời mời",
       "empty": "Lời mời bạn gửi từ trang Thành viên sẽ nằm ở đây cho tới khi được chấp nhận.",
-      "emptyTitle": "Không có lời mời đang chờ",
-      "goToMembers": "Mời thành viên"
+      "emptyTitle": "Không có lời mời đang chờ"
     },
     "joinRequests": {
       "title": "Yêu cầu tham gia",
@@ -2067,7 +2066,8 @@
       "success": "Đã cập nhật {{count}} mục.",
       "partial": "Đã cập nhật {{success}} mục, {{failed}} mục thất bại.",
       "error": "Không thể cập nhật {{count}} mục."
-    }
+    },
+    "loadFailed": "Không tải được dữ liệu. Vui lòng thử lại sau."
   },
   "actions": {
     "edit": "Chỉnh sửa",
@@ -2783,8 +2783,8 @@
         "mcpProvider": "Nhà cung cấp",
         "composioToolkit": "Bộ công cụ",
         "mcpServerUrl": "URL máy chủ",
-        "discoveredActions": "Hành động đã khám phá",
-        "discoveredActionsEmpty": "Chưa khám phá được hành động nào",
+        "discoveredActions": "Action đã phát hiện",
+        "discoveredActionsEmpty": "Chưa phát hiện action nào",
         "discoveredActionsReload": "Tải lại",
         "toolkitDescription": "Mô tả",
         "toolkitCategories": "Danh mục",
@@ -2974,7 +2974,7 @@
       "collapseActions": "Ẩn danh sách action",
       "actionsTitle": "Các action đã phát hiện",
       "actionsEmpty": "Chưa phát hiện action nào. Hãy làm mới sau khi máy chủ MCP kết nối.",
-      "actionsAutoSaveError": "Không thể lưu cài đặt hành động.",
+      "actionsAutoSaveError": "Không thể lưu cài đặt action.",
       "empty": {
         "title": "Chưa có công cụ nào được bật",
         "description": "Kết nối công cụ trong workspace để agent có thể tra cứu hoặc thực hiện thao tác cho khách hàng."

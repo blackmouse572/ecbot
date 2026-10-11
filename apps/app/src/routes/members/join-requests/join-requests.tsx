@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 
 export const JoinRequests = () => {
   const { t } = useTranslation();
-  const { joinRequests, isLoading } = useJoinRequests();
+  const { joinRequests, isLoading, isError, error } = useJoinRequests();
   const { mutateAsync: approve } = useApproveJoinRequest();
 
   const handleApprove = (id: string) =>
@@ -20,6 +20,7 @@ export const JoinRequests = () => {
       error: t("errorBoundary.internalServerErrorMessage"),
     });
 
+  if (isError) throw error;
   return (
     <SingleColumnPage>
       <Container className="divide-y p-0">

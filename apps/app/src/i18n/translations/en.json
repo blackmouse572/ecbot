@@ -1695,7 +1695,7 @@
       "loading": "Removing member..."
     },
     "inviteMember": {
-      "action": "Invite Member",
+      "action": "Invite member",
       "placeholder": "Search by name...",
       "success": "Invitation sent!  They're going to love it here.",
       "loading": "Sending invitation magic...",
@@ -1730,8 +1730,7 @@
     "invitations": {
       "title": "Invitations",
       "empty": "Invitations you send from the Members page wait here until they are accepted.",
-      "emptyTitle": "No pending invitations",
-      "goToMembers": "Invite members"
+      "emptyTitle": "No pending invitations"
     },
     "joinRequests": {
       "title": "Join requests",
@@ -1971,7 +1970,7 @@
     "create": "Create",
     "clearAll": "Clear all",
     "continued": "Continue",
-    "linkAccount": "Connect Account",
+    "linkAccount": "Connect account",
     "tryAgain": "Try Again",
     "enable": "Enable",
     "disable": "Disable",
@@ -2023,7 +2022,8 @@
       "success": "{{count}} item(s) updated.",
       "partial": "{{success}} item(s) updated, {{failed}} failed.",
       "error": "Could not update {{count}} item(s)."
-    }
+    },
+    "loadFailed": "Couldn't load this. Try again later."
   },
   "fields": {
     "name": "Name",

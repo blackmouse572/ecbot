@@ -16,11 +16,14 @@ import {
 import { NoRecords } from "@repo/ui/common-components";
 import { SingleColumnPage } from "@repo/ui/layout";
 import { IconMail } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { MemberInviteDialog } from "../members-list/components/member-invite-dialog";
 
 export const Invitations = () => {
   const { t } = useTranslation();
-  const { invitations, isLoading } = useInvitations({
+  const [isInviteOpen, setInviteOpen] = useState(false);
+  const { invitations, isLoading, isError, error } = useInvitations({
     orderBy: "createdAt",
     orderDirection: "desc",
     page: 1,
@@ -44,6 +47,7 @@ export const Invitations = () => {
       error: t("errorBoundary.internalServerErrorMessage"),
     });
 
+  if (isError) throw error;
   return (
     <SingleColumnPage>
       <Container className="divide-y p-0">
@@ -97,11 +101,15 @@ export const Invitations = () => {
           <NoRecords
             title={t("members.invitations.emptyTitle")}
             message={t("members.invitations.empty")}
-            action={{ to: "..", label: t("members.invitations.goToMembers") }}
+            action={{
+              onClick: () => setInviteOpen(true),
+              label: t("members.inviteMember.action"),
+            }}
             icon={<IconMail />}
           />
         )}
       </Container>
+      <MemberInviteDialog open={isInviteOpen} onOpenChange={setInviteOpen} />
     </SingleColumnPage>
   );
 };

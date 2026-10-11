@@ -40,11 +40,9 @@ type ActionProps = {
    * work and navigating keeps the SPA); `onClick` renders a button for
    * actions that open a dialog or drawer in place.
    */
-  action?: {
-    label: string;
-    to?: string;
-    onClick?: () => void;
-  };
+  action?:
+    | { label: string; to: string; onClick?: never }
+    | { label: string; onClick: () => void; to?: never };
 };
 
 export type NoRecordsProps = {
@@ -113,6 +111,7 @@ export const NoRecords = ({
     >
       <div className="flex flex-col items-center gap-y-3">
         <div
+          aria-hidden
           className={clx(
             "bg-ui-bg-component shadow-borders-base text-ui-fg-subtle flex items-center justify-center rounded-lg",
             isSmall ? "size-8 [&_svg]:size-4" : "size-10 [&_svg]:size-5",
