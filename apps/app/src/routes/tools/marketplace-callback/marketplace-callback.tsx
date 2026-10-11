@@ -131,7 +131,7 @@ export const MarketplaceCallback = () => {
                 {t("tools.marketplace.callback.error")}
               </Heading>
               <Text size="small" className="text-ui-fg-subtle max-w-md">
-                No pending install found in this browser session.
+                {t("tools.marketplace.callback.noPendingInstall")}
               </Text>
               <Button type="button" variant="primary" onClick={handleBack}>
                 {t("tools.marketplace.callback.backLink")}

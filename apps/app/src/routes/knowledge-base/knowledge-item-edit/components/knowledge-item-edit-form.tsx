@@ -103,7 +103,7 @@ export function KnowledgeItemEditForm({
               render={({ field }) => {
                 const tags = field.value || [];
                 return (
-                  <Form.Item className="flex flex-col gap-2">
+                  <Form.Item>
                     <Form.Label>{t("knowledge_item.currentTags")}</Form.Label>
                     <ChipGroup
                       onRemove={(index) => {
@@ -131,7 +131,7 @@ export function KnowledgeItemEditForm({
               render={({ field }) => {
                 const tags = field.value || [];
                 return (
-                  <Form.Item className="flex flex-col gap-2">
+                  <Form.Item>
                     <Form.Label>{t("knowledge_item.addTag")}</Form.Label>
                     <KnowledgeItemEditTag
                       defaultValues={tags}

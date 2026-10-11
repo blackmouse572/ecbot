@@ -90,9 +90,8 @@ const RoleActions = ({ item }: { item: RoleListResponseDto }) => {
 
   const deleteRoleHandler = async () => {
     const confirmed = await dialog({
-      title: "Delete Role",
-      description:
-        "Are you sure you want to delete this role? This action cannot be undone.",
+      title: t("roles.delete.title"),
+      description: t("roles.delete.description"),
     });
 
     if (!confirmed) return;

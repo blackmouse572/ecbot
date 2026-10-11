@@ -1,4 +1,7 @@
-import { isHttpUrl, splitOrigins } from "@/components/channel-connect/website-origins";
+import {
+  isHttpUrl,
+  splitOrigins,
+} from "@/components/channel-connect/website-origins";
 import {
   useProvisionApiChannel,
   useProvisionWebsiteWidget,
@@ -107,7 +110,7 @@ export function ProvisionStep({
             control={form.control}
             rules={{ required: t("accounts.create.provision.nameLabel") }}
             render={({ field }) => (
-              <Form.Item className="flex flex-col gap-y-2">
+              <Form.Item>
                 <Form.Label>
                   {t("accounts.create.provision.nameLabel")}
                 </Form.Label>
@@ -140,7 +143,7 @@ export function ProvisionStep({
                 },
               }}
               render={({ field }) => (
-                <Form.Item className="flex flex-col gap-y-2">
+                <Form.Item>
                   <Form.Label>
                     {t("accounts.create.provision.apiChannel.callbackLabel")}
                   </Form.Label>
@@ -171,7 +174,7 @@ export function ProvisionStep({
                   t("accounts.create.provision.websiteWidget.originsInvalid"),
               }}
               render={({ field }) => (
-                <Form.Item className="flex flex-col gap-y-2">
+                <Form.Item>
                   <Form.Label>
                     {t("accounts.create.provision.websiteWidget.originsLabel")}
                   </Form.Label>

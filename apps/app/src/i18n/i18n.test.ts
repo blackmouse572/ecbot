@@ -63,3 +63,23 @@ describe("feature name", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+// A key missing from vi.json falls back to English, so Vietnamese users see
+// English text. Vietnamese has no plural forms: `_other` covers `_one`.
+describe("vi coverage", () => {
+  const keys = (node: unknown, path: string[] = []): string[] =>
+    typeof node === "string"
+      ? [path.join(".")]
+      : Object.entries(node as object).flatMap(([key, value]) =>
+          keys(value, [...path, key]),
+        );
+
+  it("vi.json has every key en.json has", () => {
+    const viKeys = new Set(keys(vi));
+    const missing = keys(en)
+      .map((key) => key.replace(/_one$/, "_other"))
+      .filter((key) => !viKeys.has(key));
+
+    expect(missing).toEqual([]);
+  });
+});

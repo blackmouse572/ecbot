@@ -80,7 +80,7 @@ function AccountCallbackUrlEditInner() {
               },
             }}
             render={({ field }) => (
-              <Form.Item className="flex flex-col gap-y-2">
+              <Form.Item>
                 <Form.Label>
                   {t("accounts.details.apiChannel.callbackLabel")}
                 </Form.Label>
