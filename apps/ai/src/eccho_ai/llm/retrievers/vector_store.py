@@ -72,90 +72,10 @@ def _chunk_row(row: asyncpg.Record) -> dict[str, Any]:
 
 
 class PgVectorStore:
+    # The `rag` schema and its tables come from the API's migrations
+    # (apps/api/migrations/*_create_rag_schema.ts). Nothing here runs DDL.
     def __init__(self, *, embedding_dimension: int):
         self.embedding_dimension = embedding_dimension
-
-    async def ensure_schema(self) -> None:
-        pool = await get_pool()
-        async with pool.acquire() as conn:
-            # RAG tables live in a dedicated `rag` schema rather than `public` so
-            # apps/api's MikroORM (which manages `public`) never sees them as schema
-            # drift and can't inject spurious create/drop into its migrations. The
-            # pool's search_path=rag,public makes the unqualified names below resolve
-            # to `rag`, while the `vector` type stays in `public`.
-            await conn.execute("CREATE SCHEMA IF NOT EXISTS rag")
-            await conn.execute("CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public")
-            # One-time migration off the legacy `public` location: drop the old
-            # public.rag_* tables so MikroORM stops diffing them. These tables are
-            # owned solely by apps/ai and their contents are re-ingestible.
-            await conn.execute(
-                "DROP TABLE IF EXISTS public.rag_document_chunks, public.rag_documents CASCADE"
-            )
-            await conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS rag_documents (
-                    id uuid PRIMARY KEY,
-                    source_filename text NOT NULL,
-                    local_path text NOT NULL,
-                    mime_type text,
-                    content_hash text NOT NULL,
-                    content_chars integer NOT NULL DEFAULT 0,
-                    chunk_count integer NOT NULL DEFAULT 0,
-                    chunk_size integer NOT NULL,
-                    chunk_overlap integer NOT NULL,
-                    embedding_model text NOT NULL,
-                    embedding_dimension integer NOT NULL,
-                    status text NOT NULL DEFAULT 'PROCESSING',
-                    error_message text,
-                    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
-                    created_at timestamptz NOT NULL DEFAULT now(),
-                    updated_at timestamptz NOT NULL DEFAULT now()
-                )
-                """
-            )
-            await conn.execute(
-                f"""
-                CREATE TABLE IF NOT EXISTS rag_document_chunks (
-                    id uuid PRIMARY KEY,
-                    document_id uuid NOT NULL REFERENCES rag_documents(id) ON DELETE CASCADE,
-                    chunk_index integer NOT NULL,
-                    content text NOT NULL,
-                    content_chars integer NOT NULL,
-                    embedding vector({self.embedding_dimension}) NOT NULL,
-                    metadata jsonb NOT NULL DEFAULT '{{}}'::jsonb,
-                    created_at timestamptz NOT NULL DEFAULT now(),
-                    UNIQUE(document_id, chunk_index)
-                )
-                """
-            )
-            try:
-                await conn.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS rag_document_chunks_embedding_hnsw_idx
-                    ON rag_document_chunks
-                    USING hnsw (embedding vector_cosine_ops)
-                    """
-                )
-            except asyncpg.PostgresError:
-                await conn.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS rag_document_chunks_embedding_ivfflat_idx
-                    ON rag_document_chunks
-                    USING ivfflat (embedding vector_cosine_ops)
-                    """
-                )
-            await conn.execute(
-                """
-                CREATE INDEX IF NOT EXISTS rag_documents_knowledge_item_idx
-                ON rag_documents ((metadata->>'knowledge_item_id'))
-                """
-            )
-            await conn.execute(
-                """
-                CREATE INDEX IF NOT EXISTS rag_documents_chatbot_ids_gin_idx
-                ON rag_documents USING GIN (metadata jsonb_path_ops)
-                """
-            )
 
     async def create_document(
         self,
