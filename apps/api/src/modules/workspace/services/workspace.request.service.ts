@@ -227,7 +227,9 @@ export class WorkspaceRequestService {
                     sender: workspace.owner.id,
                     metadata: {
                         actionUrl: `/${workspace.slug}`,
-                        actionText: 'Go to Workspace',
+                        actionText: this.messageService.setMessage(
+                            'notification.requests.action.goToWorkspace'
+                        ),
                     },
                 });
 

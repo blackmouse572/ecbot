@@ -14,6 +14,7 @@ import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface TipTapEditorProps {
   value: string;
@@ -55,6 +56,7 @@ export function TipTapEditor({
   className,
   format = "markdown",
 }: TipTapEditorProps) {
+  const { t } = useTranslation();
   const [editorState, setEditorState] = useState<EditorState>({
     isBold: false,
     isItalic: false,
@@ -171,7 +173,7 @@ export function TipTapEditor({
       {
         id: "bold",
         icon: <IconBold size={18} />,
-        title: "Bold",
+        title: t("editor.toolbar.bold"),
         shortcut: "Ctrl+B",
         isActive: editorState.isBold,
         onClick: handleBold,
@@ -179,7 +181,7 @@ export function TipTapEditor({
       {
         id: "italic",
         icon: <IconItalic size={18} />,
-        title: "Italic",
+        title: t("editor.toolbar.italic"),
         shortcut: "Ctrl+I",
         isActive: editorState.isItalic,
         onClick: handleItalic,
@@ -187,7 +189,7 @@ export function TipTapEditor({
       {
         id: "heading",
         icon: <IconH2 size={18} />,
-        title: "Heading 2",
+        title: t("editor.toolbar.heading2"),
         isActive: editorState.isHeading,
         onClick: handleHeading,
       },
@@ -195,21 +197,21 @@ export function TipTapEditor({
       {
         id: "bulletList",
         icon: <IconList size={18} />,
-        title: "Bullet List",
+        title: t("editor.toolbar.bulletList"),
         isActive: editorState.isBulletList,
         onClick: handleBulletList,
       },
       {
         id: "orderedList",
         icon: <IconListNumbers size={18} />,
-        title: "Numbered List",
+        title: t("editor.toolbar.numberedList"),
         isActive: editorState.isOrderedList,
         onClick: handleOrderedList,
       },
       {
         id: "blockquote",
         icon: <IconQuote size={18} />,
-        title: "Quote",
+        title: t("editor.toolbar.quote"),
         isActive: editorState.isBlockquote,
         onClick: handleBlockquote,
       },
@@ -217,7 +219,7 @@ export function TipTapEditor({
       {
         id: "undo",
         icon: <IconArrowBackUp size={18} />,
-        title: "Undo",
+        title: t("editor.toolbar.undo"),
         shortcut: "Ctrl+Z",
         isActive: false,
         isDisabled: !editorState.canUndo,
@@ -226,7 +228,7 @@ export function TipTapEditor({
       {
         id: "redo",
         icon: <IconArrowForwardUp size={18} />,
-        title: "Redo",
+        title: t("editor.toolbar.redo"),
         shortcut: "Ctrl+Y",
         isActive: false,
         isDisabled: !editorState.canRedo,
@@ -234,6 +236,7 @@ export function TipTapEditor({
       },
     ];
   }, [
+    t,
     editor,
     editorState,
     handleBold,

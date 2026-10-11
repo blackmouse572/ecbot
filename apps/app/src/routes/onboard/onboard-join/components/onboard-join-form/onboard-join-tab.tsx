@@ -13,7 +13,7 @@ export const OnboardJoinTab = () => {
           name="invitationCode"
           control={form.control}
           render={({ field }) => (
-            <Form.Item className="flex flex-col items-center gap-2">
+            <Form.Item className="items-center">
               <Form.Label>{t("onboard.join.fields.code")}</Form.Label>
               <Form.Control>
                 <OTPInput

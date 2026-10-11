@@ -52,10 +52,20 @@ const initialTabState: TabState = {
 
 // ─── Platform config ──────────────────────────────────────────────────────────
 
+type PlatformValue =
+  | "FACEBOOK_ACCOUNT"
+  | "INSTAGRAM_ACCOUNT"
+  | "ZALO_ACCOUNT"
+  | "TIKTOK_SHOP"
+  | "SHOPEE_SHOP"
+  | "TELEGRAM_BOT"
+  | "WHATSAPP_BUSINESS"
+  | "WEBSITE_WIDGET"
+  | "API_CHANNEL";
+
 type PlatformMeta = {
-  value: string;
+  value: PlatformValue;
   label: string;
-  description: string;
   icon: React.ReactNode;
   /** Declared in ENUM_ACCOUNT_TYPE but the adapter is not implemented yet. */
   comingSoon?: boolean;
@@ -65,7 +75,6 @@ const PLATFORMS: PlatformMeta[] = [
   {
     value: "FACEBOOK_ACCOUNT",
     label: "Facebook",
-    description: "Pages & Messenger",
     icon: (
       <img
         src="/icons/facebook-messenger.svg"
@@ -77,46 +86,39 @@ const PLATFORMS: PlatformMeta[] = [
   {
     value: "INSTAGRAM_ACCOUNT",
     label: "Instagram",
-    description: "Business accounts",
     icon: <img src="/icons/instagram.svg" alt="Instagram" className="size-8" />,
     comingSoon: true,
   },
   {
     value: "ZALO_ACCOUNT",
     label: "Zalo",
-    description: "Zalo OA",
     icon: <img src="/icons/zalo.svg" alt="Zalo" className="size-8" />,
   },
   {
     value: "TIKTOK_SHOP",
     label: "TikTok Shop",
-    description: "Shop & seller center",
     icon: <img src="/icons/tiktok.svg" alt="TikTok" className="size-8" />,
     comingSoon: true,
   },
   {
     value: "SHOPEE_SHOP",
     label: "Shopee",
-    description: "Shopee seller",
     icon: <img src="/icons/shopee.svg" alt="Shopee" className="size-8" />,
     comingSoon: true,
   },
   {
     value: "TELEGRAM_BOT",
     label: "Telegram",
-    description: "Telegram bot",
     icon: <img src="/icons/telegram.svg" alt="Telegram" className="size-8" />,
   },
   {
     value: "WHATSAPP_BUSINESS",
     label: "WhatsApp",
-    description: "WhatsApp Business (Cloud API)",
     icon: <img src="/icons/whatsapp.svg" alt="WhatsApp" className="size-8" />,
   },
   {
     value: "WEBSITE_WIDGET",
     label: "Website",
-    description: "Embeddable chat widget",
     icon: (
       <img src="/icons/website-widget.svg" alt="Website" className="size-8" />
     ),
@@ -124,7 +126,6 @@ const PLATFORMS: PlatformMeta[] = [
   {
     value: "API_CHANNEL",
     label: "API",
-    description: "Direct REST integration",
     icon: <img src="/icons/api-channel.svg" alt="API" className="size-8" />,
   },
 ];
@@ -338,7 +339,7 @@ function PlatformStep({ onSelect }: { onSelect: (value: string) => void }) {
                 )}
               </div>
               <Text size="xsmall" className="text-ui-fg-subtle">
-                {p.description}
+                {t(`accounts.create.platform.options.${p.value}`)}
               </Text>
             </div>
           </button>
