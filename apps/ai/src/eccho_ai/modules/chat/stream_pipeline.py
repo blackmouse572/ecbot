@@ -39,12 +39,16 @@ async def events_to_ui_parts(
     guardrail_reason: str | None = None,
     output_guardrail: Callable[[str], Awaitable[str | None]] | None = None,
     sources: list[dict[str, Any]] | None = None,
+    retrieval: dict[str, Any] | None = None,
     image_url_allowed: Callable[[str], Awaitable[bool]] | None = None,
 ) -> AsyncGenerator[str, None]:
     """Yield UI Message Stream SSE frames for one agent turn.
 
     Order: start -> (guardrail data-part) | (text/reasoning/tool parts ->
     optional data-guardrail | source-url*+message-metadata) -> finish -> done.
+
+    `retrieval` (status, reason, top score) goes on `message-metadata` for
+    operators and evals (#205); apps/api reads only `usage` from it.
 
     `image_url_allowed` screens markdown images in the text (allowed ones
     leave it as `file` parts, like `send_image`).
@@ -244,7 +248,10 @@ async def events_to_ui_parts(
                 # Labelled with the page title (else its URL), never the
                 # filename, an internal storage name (#204).
                 yield ui.source_url(source["id"], source_url, source.get("title") or source_url)
-        yield ui.message_metadata({"usage": usage, "sources": sources or []})
+        metadata: dict[str, Any] = {"usage": usage, "sources": sources or []}
+        if retrieval:
+            metadata["retrieval"] = retrieval
+        yield ui.message_metadata(metadata)
 
     except Exception as e:
         # Close any bracket left open when the stream raised mid-run, so the

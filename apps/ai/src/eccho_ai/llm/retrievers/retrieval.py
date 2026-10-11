@@ -89,11 +89,44 @@ class RetrievedChunk:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
+# Why a turn got the knowledge it got (#205), for operators and evals:
+# "ok" (chunks passed the threshold), "no_documents" (none attached),
+# "below_threshold" (candidates, none good enough), "error" (retrieval
+# raised), "disabled" (RAG off, or nothing to search for).
+RETRIEVAL_OK = "ok"
+RETRIEVAL_NO_DOCUMENTS = "no_documents"
+RETRIEVAL_BELOW_THRESHOLD = "below_threshold"
+RETRIEVAL_ERROR = "error"
+RETRIEVAL_DISABLED = "disabled"
+
+
+def score_kind() -> str:
+    """What `rerank_score` holds: the cross-encoder sigmoid ("rerank") or
+    max(similarity, fts) ("hybrid"). The two scales are not comparable."""
+    return "rerank" if AppVars.RAG_RERANK_ENABLED else "hybrid"
+
+
 @dataclass
 class RAGRetrievalResult:
     query: str
     chunks: list[RetrievedChunk]
     context: str
+    status: str = RETRIEVAL_OK
+    reason: str | None = None
+    # Best candidate score, also when nothing passed RAG_RETRIEVAL_MIN_SCORE:
+    # what to compare against when tuning the threshold.
+    top_score: float | None = None
+
+    @property
+    def summary(self) -> dict[str, Any]:
+        """The `retrieval` object on `message-metadata`."""
+        summary: dict[str, Any] = {"status": self.status}
+        if self.reason:
+            summary["reason"] = self.reason
+        if self.top_score is not None:
+            summary["top_score"] = self.top_score
+            summary["score_kind"] = score_kind()
+        return summary
 
     @property
     def has_context(self) -> bool:
@@ -106,13 +139,17 @@ class RAGRetrievalResult:
             source_url = public_source_url(chunk)
             sources.append(
                 {
+                    # Positional per reply: the label the model cites.
                     "id": f"KB-{index}",
+                    # Stable across runs: compare sources by this one.
+                    "chunk_id": chunk.chunk_id,
                     "document_id": chunk.document_id,
                     "filename": chunk.filename,
                     "title": source_title(chunk),
                     "chunk_index": chunk.chunk_index,
                     "source_url": source_url,
                     "score": chunk.rerank_score,
+                    "score_kind": score_kind(),
                 }
             )
         return sources
@@ -127,8 +164,12 @@ class RAGRetrievalService:
 
     async def retrieve(self, *, chatbot_id: str, query: str | None) -> RAGRetrievalResult:
         clean_query = normalize_text(query or "")
-        if not AppVars.RAG_RETRIEVAL_ENABLED or not clean_query:
-            return RAGRetrievalResult(query=clean_query, chunks=[], context="")
+        if not AppVars.RAG_RETRIEVAL_ENABLED:
+            return RAGRetrievalResult(query=clean_query, chunks=[], context="", status=RETRIEVAL_DISABLED)
+        if not clean_query:
+            return RAGRetrievalResult(
+                query=clean_query, chunks=[], context="", status=RETRIEVAL_DISABLED, reason="empty query"
+            )
 
         document_count = await self.store.count_completed_documents(chatbot_id=chatbot_id)
         if document_count == 0:
@@ -136,6 +177,7 @@ class RAGRetrievalService:
                 query=clean_query,
                 chunks=[],
                 context="",
+                status=RETRIEVAL_NO_DOCUMENTS,
             )
 
         query_embedding = await self._embed_query(clean_query)
@@ -166,6 +208,8 @@ class RAGRetrievalService:
             query=clean_query,
             chunks=selected,
             context=self.format_context(selected),
+            status=RETRIEVAL_OK if selected else RETRIEVAL_BELOW_THRESHOLD,
+            top_score=ranked[0].rerank_score if ranked else None,
         )
 
     def format_context(self, chunks: list[RetrievedChunk]) -> str:

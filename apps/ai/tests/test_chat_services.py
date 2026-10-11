@@ -51,6 +51,7 @@ class _Retrieval:
     def __init__(self, context: str, has_context: bool = True):
         self.context = context
         self.has_context = has_context
+        self.status = "ok" if has_context else "below_threshold"
 
 
 def test_rag_message_passthrough_when_no_context():
