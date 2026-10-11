@@ -5,6 +5,7 @@ import { HelperEncryptionService } from 'src/common/helper/services/helper.encry
 import { McpDiscoveryService } from 'src/modules/tool/services/mcp-discovery.service';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import { MCP_DISCOVERY_TIMEOUT_MS } from 'src/modules/tool/constants/tool.constant';
 
 jest.mock('@modelcontextprotocol/sdk/client/index.js', () => {
     const connect = jest.fn();
@@ -113,6 +114,22 @@ describe('McpDiscoveryService', () => {
                 destructive: false,
             },
         ]);
+    });
+
+    // #247 review: a slow or hostile server must not hold the request open.
+    it('gives up on a server that never answers', async () => {
+        jest.useFakeTimers();
+        try {
+            clientMocks.listTools.mockReturnValue(new Promise(() => {}));
+
+            const pending = svc.discover(makeTool());
+            const assertion = expect(pending).rejects.toThrow(/timed out/i);
+            await jest.advanceTimersByTimeAsync(MCP_DISCOVERY_TIMEOUT_MS);
+
+            await assertion;
+        } finally {
+            jest.useRealTimers();
+        }
     });
 
     // #177: the server's annotations are not stored, so the flag is decided
