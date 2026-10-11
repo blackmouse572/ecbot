@@ -16,6 +16,7 @@ import {
 import {
     BasedChatbotDocParams,
     ChatbotDocParamsId,
+    ChatbotDocQueryAccount,
 } from '../constants/chatbot.doc.constant';
 import { CloneChatbotRequestDto } from '../dtos/request/chatbot.clone.request.dto';
 import { ChatbotCreateRequestDto } from '../dtos/request/chatbot.create.request.dto';
@@ -64,14 +65,7 @@ export function ChatbotListDoc(): MethodDecorator {
                 'Retrieve a paginated list of all chatbots in the current workspace.',
         }),
         DocRequest({
-            queries: [
-                {
-                    name: 'account',
-                    type: String,
-                    required: false,
-                    description: 'Account ID used to filter the chatbot list.',
-                },
-            ],
+            queries: ChatbotDocQueryAccount,
             params: BasedChatbotDocParams,
         }),
         DocAuth({

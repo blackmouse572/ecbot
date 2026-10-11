@@ -28609,6 +28609,14 @@ export type ChatbotClientControllerFindAllV1Data = {
     path?: never;
     query?: {
         /**
+         * The status of the chatbot, value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * The type of the chatbot, value with ',' delimiter
+         */
+        type?: string;
+        /**
          * Account ID used to filter the chatbot list.
          */
         account?: string;

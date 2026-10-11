@@ -6,7 +6,12 @@ import {
     DocResponse,
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
-import { ChatbotIdDocParams } from '../constants/chatbot.doc.constant';
+import {
+    ChatbotClientDocParamsId,
+    ChatbotDocQueryAccount,
+    ChatbotDocQueryStatus,
+    ChatbotDocQueryType,
+} from '../constants/chatbot.doc.constant';
 import { ChatbotGetDetailResponseDto } from '../dtos/response/chatbot.detail.response.dto';
 import { ChatbotListResponseDto } from '../dtos/response/chatbot.list.response.dto';
 
@@ -19,12 +24,9 @@ export function ChatbotClientListDoc(): MethodDecorator {
         }),
         DocRequest({
             queries: [
-                {
-                    name: 'account',
-                    type: String,
-                    required: false,
-                    description: 'Account ID used to filter the chatbot list.',
-                },
+                ...ChatbotDocQueryStatus,
+                ...ChatbotDocQueryType,
+                ...ChatbotDocQueryAccount,
             ],
         }),
         DocAuth({ xApiKey: true }),
@@ -42,7 +44,7 @@ export function ChatbotClientGetDoc(): MethodDecorator {
                 'Retrieve a chatbot in the credential workspace, including its configuration and shop knowledge.',
         }),
         DocRequest({
-            params: ChatbotIdDocParams,
+            params: ChatbotClientDocParamsId,
         }),
         DocAuth({ xApiKey: true }),
         DocResponse<ChatbotGetDetailResponseDto>('chatbot.get', {

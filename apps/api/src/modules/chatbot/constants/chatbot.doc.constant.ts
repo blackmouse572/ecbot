@@ -1,3 +1,5 @@
+import { ENUM_CHATBOT_STATUS, ENUM_CHATBOT_TYPE } from '../enums/chatbot.enum';
+
 export const BasedChatbotDocParams = [
     {
         name: 'workspace',
@@ -9,7 +11,7 @@ export const BasedChatbotDocParams = [
 ];
 
 // The /client surface has no :workspace param (the credential carries it).
-export const ChatbotIdDocParams = [
+export const ChatbotClientDocParamsId = [
     {
         name: 'id',
         allowEmptyValue: false,
@@ -20,8 +22,39 @@ export const ChatbotIdDocParams = [
 ];
 
 export const ChatbotDocParamsId = [
-    ...ChatbotIdDocParams,
+    ...ChatbotClientDocParamsId,
     ...BasedChatbotDocParams,
+];
+
+export const ChatbotDocQueryStatus = [
+    {
+        name: 'status',
+        allowEmptyValue: true,
+        required: false,
+        type: 'string',
+        example: Object.values(ENUM_CHATBOT_STATUS).join(','),
+        description: "The status of the chatbot, value with ',' delimiter",
+    },
+];
+
+export const ChatbotDocQueryType = [
+    {
+        name: 'type',
+        allowEmptyValue: true,
+        required: false,
+        type: 'string',
+        example: Object.values(ENUM_CHATBOT_TYPE).join(','),
+        description: "The type of the chatbot, value with ',' delimiter",
+    },
+];
+
+export const ChatbotDocQueryAccount = [
+    {
+        name: 'account',
+        required: false,
+        type: 'string',
+        description: 'Account ID used to filter the chatbot list.',
+    },
 ];
 
 // Request examples for Swagger documentation

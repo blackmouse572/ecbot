@@ -58,6 +58,19 @@ describe('ChatbotClientController', () => {
     );
 
     describe('findAll', () => {
+        // @repo/client is generated from these docs, so an undocumented
+        // filter is one the MCP server can't send.
+        it('documents every filter it accepts', () => {
+            const documented = Reflect.getMetadata(
+                'swagger/apiParameters', // @nestjs/swagger DECORATORS.API_PARAMETERS
+                ChatbotClientController.prototype.findAll
+            ).map((param: { name: string }) => param.name);
+
+            expect(documented).toEqual(
+                expect.arrayContaining(['status', 'type', 'account'])
+            );
+        });
+
         it('lists the credential workspace chatbots with paging, search and filters', async () => {
             const chatbots = [{ id: 'chatbot-1' }];
             const mapped = [{ id: 'chatbot-1', name: 'Shop bot' }];
