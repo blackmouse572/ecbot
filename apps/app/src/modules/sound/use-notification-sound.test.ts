@@ -4,17 +4,17 @@ import { createElement, type PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const playChime = vi.hoisted(() => vi.fn());
-vi.mock("./notification-sound", () => ({
-  playNotificationSound: playChime,
-  primeNotificationSound: vi.fn(),
+vi.mock("./ui-sound-player", () => ({
+  playUISound: playChime,
+  primeUISound: vi.fn(),
 }));
 
-import { notificationSoundAtom } from "./state";
+import { soundEnabledAtom } from "./state";
 import { useNotificationSound } from "./use-notification-sound";
 
 const setup = (soundOn: boolean) => {
   const store = createStore();
-  store.set(notificationSoundAtom, soundOn);
+  store.set(soundEnabledAtom, soundOn);
   const wrapper = ({ children }: PropsWithChildren) =>
     createElement(Provider, { store }, children);
   return renderHook(
@@ -38,7 +38,7 @@ describe("useNotificationSound", () => {
     rerender({ count: 2, isFetched: true });
     rerender({ count: 3, isFetched: true });
 
-    expect(playChime).toHaveBeenCalledTimes(1);
+    expect(playChime).toHaveBeenCalledExactlyOnceWith("notification");
   });
 
   it("stays quiet when the count goes down", () => {

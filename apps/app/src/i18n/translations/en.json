@@ -1878,8 +1878,8 @@
       "handoffEmails": "Email me when a customer needs a person",
       "handoffEmailsHint": "Sent when an agent hands a conversation over to your team. You still see it in the app.",
       "saveFailed": "Could not save your choice. Please try again.",
-      "sound": "Play a sound for new notifications",
-      "soundHint": "A short chime when something new arrives while the app is open. Applies to this browser only."
+      "sound": "Play sounds in the app",
+      "soundHint": "Short sounds for new notifications and messages, sent messages, connected accounts, agents turned on, and knowledge that finishes or fails processing. Applies to this browser only."
     }
   },
   "workspace": {

@@ -1,4 +1,4 @@
-import { createUISFX, type UISFXPlayer } from "uisfx";
+import { createUISFX, type CueName, type UISFXPlayer } from "uisfx";
 
 let player: UISFXPlayer | undefined;
 
@@ -7,7 +7,7 @@ let player: UISFXPlayer | undefined;
  * key press: browsers block sound until then. Sounds are synthesized, so
  * nothing is downloaded.
  */
-export const primeNotificationSound = () => {
+export const primeUISound = () => {
   if (player) return;
   player = createUISFX({ pack: "soft" });
   const unlock = () => void player?.unlock();
@@ -15,7 +15,9 @@ export const primeNotificationSound = () => {
   window.addEventListener("keydown", unlock, { once: true });
 };
 
-export const playNotificationSound = () => {
-  primeNotificationSound();
-  player?.play("notification");
+export const playUISound = (cue: CueName) => {
+  primeUISound();
+  player?.play(cue);
 };
+
+export type { CueName as UISoundCue };

@@ -10,7 +10,7 @@ import {
   useNotifications,
   useUnreadNotificationCount,
 } from "@/hooks/api/notifications";
-import { useNotificationSound } from "@/modules/notification";
+import { useNotificationSound } from "@/modules/sound";
 
 import { NOTIFICATION_PAGE_SIZE } from "./constants";
 import { NotificationEmptyState } from "./notification-empty-state";

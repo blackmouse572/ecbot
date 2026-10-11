@@ -126,6 +126,8 @@ export const knowledgeItemListQueryOptions = (
     staleTime: 2 * 60 * 1000, // 2 minutes for list data
   });
 
+export const KNOWLEDGE_ITEM_PENDING_STATUSES = ["READY", "PROCESSING"];
+
 export const knowledgeItemDetailQueryOptions = (
   workspace: string,
   knowledgeBaseId: string,
@@ -141,6 +143,13 @@ export const knowledgeItemDetailQueryOptions = (
           res.data as A as KnowledgeItemWorkspaceControllerUpdateV1Response,
       ),
     staleTime: 5 * 60 * 1000, // 5 minutes for detail data
+    // Watch a queued or running item until it finishes or fails.
+    refetchInterval: (query) =>
+      KNOWLEDGE_ITEM_PENDING_STATUSES.includes(
+        (query.state.data?.data as A)?.status,
+      )
+        ? 3_000
+        : false,
   });
 
 export const useKnowledgeItems = (

@@ -11,6 +11,7 @@ import {
 } from "@/hooks/api/conversations";
 import { useMe } from "@/hooks/api/users";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { useSoundOnChange, useUISound } from "@/modules/sound";
 import { ROUTES } from "@/routes";
 import {
   ResizableHandle,
@@ -50,6 +51,16 @@ export function ConversationDetail() {
   const send = useSendOperatorReply(id);
   const markRead = useMarkConversationRead(id);
   const react = useReactToMessage(id, currentOperatorId);
+  const playSound = useUISound();
+
+  // A new newest message from the customer. Keyed on the newest id, so
+  // loading older pages or our own sends stay quiet.
+  const newestMessage = messages.at(-1);
+  useSoundOnChange(
+    isLoadingMessages ? undefined : (newestMessage?.id ?? null),
+    () => (newestMessage?.direction === "INBOUND" ? "receive" : null),
+    id,
+  );
 
   // Scrolls the message thread to the message that triggered a followup and
   // briefly highlights it. Kept minimal: no context/state lib, just a DOM
@@ -116,6 +127,7 @@ export function ConversationDetail() {
     send.mutate(
       { text },
       {
+        onSuccess: () => playSound("send"),
         onError: () => {
           toast.error(t("conversations.errors.sendFailed"));
         },
@@ -127,6 +139,7 @@ export function ConversationDetail() {
     send.mutate(
       { text, retryOfClientNonce: clientNonce },
       {
+        onSuccess: () => playSound("send"),
         onError: () => {
           toast.error(t("conversations.errors.sendFailed"));
         },

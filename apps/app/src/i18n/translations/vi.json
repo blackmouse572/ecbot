@@ -1929,8 +1929,8 @@
       "handoffEmails": "Gửi email cho tôi khi khách hàng cần người hỗ trợ",
       "handoffEmailsHint": "Gửi khi agent chuyển một cuộc hội thoại cho đội của bạn. Bạn vẫn thấy thông báo trong ứng dụng.",
       "saveFailed": "Không lưu được lựa chọn của bạn. Vui lòng thử lại.",
-      "sound": "Phát âm thanh khi có thông báo mới",
-      "soundHint": "Một tiếng chuông ngắn khi có thông báo mới lúc ứng dụng đang mở. Chỉ áp dụng trên trình duyệt này."
+      "sound": "Phát âm thanh trong ứng dụng",
+      "soundHint": "Âm thanh ngắn khi có thông báo hoặc tin nhắn mới, khi gửi tin nhắn, kết nối tài khoản, bật agent và khi tri thức xử lý xong hoặc bị lỗi. Chỉ áp dụng trên trình duyệt này."
     }
   },
   "workspace": {

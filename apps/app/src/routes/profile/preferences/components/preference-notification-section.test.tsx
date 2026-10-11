@@ -50,13 +50,13 @@ describe("PreferenceNotificationSection", () => {
     render(<PreferenceNotificationSection />);
 
     const toggle = screen.getByRole("switch", {
-      name: "Play a sound for new notifications",
+      name: "Play sounds in the app",
     });
     expect(toggle).toHaveAttribute("aria-checked", "true");
 
     fireEvent.click(toggle);
 
     expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(localStorage.getItem("eccho:notification-sound")).toBe("false");
+    expect(localStorage.getItem("eccho:sound")).toBe("false");
   });
 });

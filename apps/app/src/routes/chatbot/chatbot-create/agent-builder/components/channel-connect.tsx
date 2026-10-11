@@ -12,6 +12,7 @@ import {
   useUnlinkChatbotAccount,
 } from "@/hooks/api";
 import { useOAuthLogin } from "@/hooks/use-oauth-login";
+import { useUISound } from "@/modules/sound";
 import type { Issued } from "@/components/account-connect/issued";
 import { IssuedPanel } from "@/components/account-connect/issued-panel";
 import { XMarkMini } from "@medusajs/icons";
@@ -84,6 +85,7 @@ export function ChannelConnect({
   // this stops the other platform's listener from also reacting to a single
   // postMessage.
   const pendingOAuth = useRef<ChannelId | null>(null);
+  const playSound = useUISound();
 
   /**
    * Runs one account mutation, managing the busy/error UI state around it.
@@ -122,7 +124,10 @@ export function ChannelConnect({
         return [...prev, ...skipped.filter((s) => !existing.has(s.id))];
       });
     }
-    if (linked.length) onAccountsLinked(linked);
+    if (linked.length) {
+      playSound("connect");
+      onAccountsLinked(linked);
+    }
     if (!linked.length && !skipped.length) setError(true);
   };
 

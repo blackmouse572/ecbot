@@ -1,5 +1,5 @@
 import { useMe, useUpdateNotificationSettings } from "@/hooks/api";
-import { notificationSoundAtom } from "@/modules/notification";
+import { soundEnabledAtom } from "@/modules/sound";
 import { Container, Heading, Label, Switch, Text, toast } from "@medusajs/ui";
 import { useAtom } from "jotai";
 import { useId } from "react";
@@ -10,7 +10,7 @@ export const PreferenceNotificationSection = () => {
   const { t } = useTranslation();
   const id = useId();
   const soundId = useId();
-  const [soundOn, setSoundOn] = useAtom(notificationSoundAtom);
+  const [soundOn, setSoundOn] = useAtom(soundEnabledAtom);
   const { user } = useMe();
   const { updateNotifications, isPending } = useUpdateNotificationSettings();
   // Missing on an older profile response: the server default is on.
