@@ -4,8 +4,9 @@ import { createElement, type PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const playChime = vi.hoisted(() => vi.fn());
-vi.mock("./play-notification-chime", () => ({
-  playNotificationChime: playChime,
+vi.mock("./notification-sound", () => ({
+  playNotificationSound: playChime,
+  primeNotificationSound: vi.fn(),
 }));
 
 import { notificationSoundAtom } from "./state";
