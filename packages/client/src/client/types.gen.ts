@@ -5179,6 +5179,23 @@ export type ComposioToolkitDetailResponseDto = {
     meta: ComposioToolkitDetailMetaDto;
 };
 
+export type ComposioToolkitActionDto = {
+    name: string;
+    description: string;
+    /**
+     * Deletes or changes data; stays off until a chatbot link names it
+     */
+    destructive: boolean;
+};
+
+export type ComposioToolkitAccessResponseDto = {
+    actions: Array<ComposioToolkitActionDto>;
+    /**
+     * OAuth scopes the sign-in asks for; empty when the toolkit has none
+     */
+    scopes: Array<string>;
+};
+
 export type ToolInstallResponseDto = {
     /**
      * OAuth redirect URL. Absent when no authentication required.
@@ -25398,6 +25415,92 @@ export type MarketplaceWorkspaceControllerGetToolkitBySlugV1Responses = {
 };
 
 export type MarketplaceWorkspaceControllerGetToolkitBySlugV1Response = MarketplaceWorkspaceControllerGetToolkitBySlugV1Responses[keyof MarketplaceWorkspaceControllerGetToolkitBySlugV1Responses];
+
+export type MarketplaceWorkspaceControllerGetToolkitAccessV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * the slug of the toolkit
+         */
+        slug: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/tool/marketplace/toolkits/{slug}/access';
+};
+
+export type MarketplaceWorkspaceControllerGetToolkitAccessV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketplaceWorkspaceControllerGetToolkitAccessV1Error = MarketplaceWorkspaceControllerGetToolkitAccessV1Errors[keyof MarketplaceWorkspaceControllerGetToolkitAccessV1Errors];
+
+export type MarketplaceWorkspaceControllerGetToolkitAccessV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ComposioToolkitAccessResponseDto;
+    };
+};
+
+export type MarketplaceWorkspaceControllerGetToolkitAccessV1Response = MarketplaceWorkspaceControllerGetToolkitAccessV1Responses[keyof MarketplaceWorkspaceControllerGetToolkitAccessV1Responses];
 
 export type MarketplaceWorkspaceControllerStartInstallV1Data = {
     body: InstallMarketplaceRequestDto;

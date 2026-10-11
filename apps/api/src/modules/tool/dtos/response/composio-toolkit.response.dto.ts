@@ -85,3 +85,29 @@ export class ComposioToolkitDetailResponseDto {
     @ApiProperty({ type: ComposioToolkitDetailMetaDto })
     meta: ComposioToolkitDetailMetaDto;
 }
+
+export class ComposioToolkitActionDto {
+    @ApiProperty({ example: 'GOOGLESHEETS_BATCH_GET' })
+    name: string;
+
+    @ApiProperty()
+    description: string;
+
+    @ApiProperty({
+        description:
+            'Deletes or changes data; stays off until a chatbot link names it',
+    })
+    destructive: boolean;
+}
+
+export class ComposioToolkitAccessResponseDto {
+    @ApiProperty({ type: [ComposioToolkitActionDto] })
+    actions: ComposioToolkitActionDto[];
+
+    @ApiProperty({
+        type: [String],
+        description:
+            'OAuth scopes the sign-in asks for; empty when the toolkit has none',
+    })
+    scopes: string[];
+}

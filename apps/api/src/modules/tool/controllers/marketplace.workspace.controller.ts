@@ -34,12 +34,16 @@ import {
     MarketplaceWorkspaceCompleteInstallDoc,
     MarketplaceWorkspaceInstallDoc,
     MarketplaceWorkspaceReauthDoc,
+    MarketplaceWorkspaceToolkitAccessDoc,
     MarketplaceWorkspaceToolkitDetailDoc,
 } from 'src/modules/tool/docs/marketplace.workspace.doc';
 import { CompleteInstallRequestDto } from 'src/modules/tool/dtos/request/complete-install.request.dto';
 import { InstallMarketplaceRequestDto } from 'src/modules/tool/dtos/request/install-marketplace.request.dto';
 import { ReauthMarketplaceRequestDto } from 'src/modules/tool/dtos/request/reauth-marketplace.request.dto';
-import { ComposioCatalogService } from 'src/modules/tool/services/composio-catalog.service';
+import {
+    ComposioCatalogService,
+    IComposioToolkitAccess,
+} from 'src/modules/tool/services/composio-catalog.service';
 import { EcchoCatalogService } from 'src/modules/tool/services/eccho-catalog.service';
 import { UserProtected } from 'src/modules/user/decorators/user.decorator';
 import {
@@ -184,6 +188,26 @@ export class MarketplaceWorkspaceController {
         return { data: detail };
     }
 
+    @MarketplaceWorkspaceToolkitAccessDoc()
+    @Response('tool.marketplace.toolkit.success')
+    @WorkspacePolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.TOOL,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Get('/toolkits/:slug/access')
+    async getToolkitAccess(
+        @Param('slug') slug: string
+    ): Promise<IResponse<IComposioToolkitAccess>> {
+        // Ecbot-managed tools sign in to nothing outside Ecbot.
+        if (this.ecchoCatalog.findBySlug(slug)) {
+            return { data: { actions: [], scopes: [] } };
+        }
+        return { data: await this.catalog.getToolkitAccess(slug) };
+    }
+
     @MarketplaceWorkspaceInstallDoc()
     @Response('tool.marketplace.install.success')
     @WorkspacePolicyAbilityProtected({
@@ -232,7 +256,11 @@ export class MarketplaceWorkspaceController {
 
         // Default: Composio
         const installer = this.registry.get(ENUM_MCP_PROVIDER.COMPOSIO);
-        const draftDisplayName = dto.displayName ?? dto.toolkitSlug;
+        // The toolkit's own name ("Google Sheets"), not its slug (#189).
+        const draftDisplayName =
+            dto.displayName ??
+            (await this.catalog.getToolkitBySlug(dto.toolkitSlug))?.name ??
+            dto.toolkitSlug;
         const result = await installer.begin({
             workspace: ws,
             user,

@@ -2937,6 +2937,17 @@
         "eccho": "Ecbot",
         "ecchoComingSoon": "Sắp ra mắt: công cụ nội bộ sẽ có trong bản cập nhật tới."
       },
+      "access": {
+        "actionsTitle": "Công cụ này làm được gì ({{count}})",
+        "actionsEmpty": "Composio chưa liệt kê thao tác nào cho toolkit này.",
+        "destructiveHint": "Các thao tác có thể xóa dữ liệu sẽ tắt cho đến khi bạn bật cho từng agent.",
+        "showAll": "Xem tất cả {{count}}",
+        "showLess": "Thu gọn",
+        "scopesTitle": "Quyền truy cập được yêu cầu",
+        "scopesIntro": "Khi cài đặt, {{name}} sẽ đề nghị bạn cho phép truy cập tài khoản như dưới đây. Quyền này có thể rộng hơn những gì các thao tác bên dưới cần.",
+        "redirectNote": "Khi bấm Cài đặt, trang đăng nhập {{name}} sẽ mở ngay trong tab này, xong sẽ quay lại đây.",
+        "loadError": "Không tải được danh sách thao tác của toolkit này."
+      },
       "callback": {
         "installing": "Đang hoàn tất cài đặt…",
         "success": "Cài đặt thành công.",

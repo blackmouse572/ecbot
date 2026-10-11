@@ -7,6 +7,14 @@ import {
     ComposioToolkitDetail,
     ComposioToolkitPage,
 } from '../interfaces/composio.interface';
+import { isDestructiveAction } from '../utils/destructive-action.util';
+
+/** What a toolkit can do and the account access it asks for (#189). */
+export interface IComposioToolkitAccess {
+    actions: { name: string; description: string; destructive: boolean }[];
+    /** OAuth scopes the sign-in asks for; empty when it has none. */
+    scopes: string[];
+}
 
 // ComposioApi is registered as a global provider via ComposioModule.forRoot(),
 // which is imported in CommonModule. No additional ToolModule import is needed.
@@ -116,4 +124,65 @@ export class ComposioCatalogService {
 
         return categories;
     }
+
+    /**
+     * Shown before install, so the owner knows what they hand over. The
+     * scopes are the toolkit's default OAuth scopes, the ones Composio's
+     * managed sign-in requests.
+     */
+    async getToolkitAccess(slug: string): Promise<IComposioToolkitAccess> {
+        const cacheKey = `composio:toolkit-access:${slug}`;
+        const cached =
+            await this.cacheManager.get<IComposioToolkitAccess>(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const [actions, detail] = await Promise.all([
+                this.api.listToolkitActions(slug),
+                this.getToolkitBySlug(slug),
+            ]);
+            const access: IComposioToolkitAccess = {
+                actions: actions.map(a => ({
+                    name: a.name,
+                    description: a.description,
+                    destructive: isDestructiveAction(a),
+                })),
+                scopes: defaultScopes(detail),
+            };
+            await this.cacheManager.set(
+                cacheKey,
+                access,
+                ComposioCatalogService.TTL_MS
+            );
+            return access;
+        } catch (err) {
+            this.logger.error(`Composio toolkit access error: ${String(err)}`);
+            return { actions: [], scopes: [] };
+        }
+    }
+}
+
+function defaultScopes(detail: ComposioToolkitDetail | null): string[] {
+    const configs = ((detail as any)?.auth_config_details ?? []) as Array<{
+        fields?: {
+            auth_config_creation?: {
+                required?: { name: string; default?: string | null }[];
+                optional?: { name: string; default?: string | null }[];
+            };
+        };
+    }>;
+    for (const config of configs) {
+        const creation = config.fields?.auth_config_creation;
+        const field = [
+            ...(creation?.required ?? []),
+            ...(creation?.optional ?? []),
+        ].find(f => f.name === 'scopes');
+        if (field?.default) {
+            return field.default
+                .split(/[\s,]+/)
+                .map(s => s.trim())
+                .filter(Boolean);
+        }
+    }
+    return [];
 }

@@ -114,6 +114,13 @@ export class ComposioToolkitInstaller implements ToolkitInstaller {
             (session.workspace as any).id
         );
 
+        // Composio's own blurb for the toolkit (#189); the old fixed text
+        // ("Composio toolkit: googlesheets") told the owner nothing.
+        const description = await this.api
+            .getToolkit(toolkit)
+            .then(detail => detail?.meta?.description?.trim())
+            .catch(() => undefined);
+
         const tool = await this.toolRepo.create(
             {
                 workspace: session.workspace,
@@ -126,7 +133,7 @@ export class ComposioToolkitInstaller implements ToolkitInstaller {
                     toolkit,
                     connectedAccountId: connId ?? null,
                 },
-                description: `Composio toolkit: ${toolkit}`,
+                description: description || `Composio toolkit: ${toolkit}`,
                 mcpServerUrl: mcpUrl,
                 status: ENUM_TOOL_STATUS.ACTIVE,
             } as any,

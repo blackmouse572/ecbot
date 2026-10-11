@@ -2889,6 +2889,17 @@
         "eccho": "Ecbot",
         "ecchoComingSoon": "Coming soon: first-party tools land in a follow-up."
       },
+      "access": {
+        "actionsTitle": "What it can do ({{count}})",
+        "actionsEmpty": "Composio lists no actions for this toolkit.",
+        "destructiveHint": "Actions that can delete data stay off until you turn them on for an agent.",
+        "showAll": "Show all {{count}}",
+        "showLess": "Show less",
+        "scopesTitle": "Access it asks for",
+        "scopesIntro": "When you install, {{name}} asks you to allow this access to your account. It can be broader than the actions below need.",
+        "redirectNote": "Install opens the {{name}} sign-in in this tab, then brings you back here.",
+        "loadError": "Could not load what this toolkit can do."
+      },
       "callback": {
         "installing": "Finishing install…",
         "success": "Installed successfully.",

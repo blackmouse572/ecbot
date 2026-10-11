@@ -14,6 +14,7 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { ToolLogo } from "../components/tool-logo";
+import { ToolkitAccessSection } from "./components/toolkit-access-section";
 
 export const MarketplaceInstall = () => {
   const { t } = useTranslation();
@@ -38,7 +39,12 @@ export const MarketplaceInstall = () => {
     if (!slug) return;
     try {
       const callbackUrl = `${window.location.origin}/${workspaceSlug}/tools/marketplace/callback`;
-      const res = await startInstall({ toolkitSlug: slug, callbackUrl });
+      // The installed tool reads as "Google Sheets", not "googlesheets" (#189).
+      const res = await startInstall({
+        toolkitSlug: slug,
+        callbackUrl,
+        ...(toolkit?.name ? { displayName: toolkit.name } : {}),
+      });
       const data = (res?.data as A)?.data as
         | { sessionId?: string; redirectUrl?: string; toolId?: string }
         | undefined;
@@ -130,6 +136,12 @@ export const MarketplaceInstall = () => {
             </Text>
           )}
         </div>
+        <Divider />
+        <ToolkitAccessSection
+          workspaceSlug={workspaceSlug}
+          slug={slug}
+          name={name}
+        />
         <Divider />
         <div className="flex items-center justify-end gap-x-2 px-6 py-4">
           <Button type="button" variant="secondary" onClick={handleBack}>
