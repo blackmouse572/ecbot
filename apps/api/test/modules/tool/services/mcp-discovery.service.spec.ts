@@ -104,13 +104,38 @@ describe('McpDiscoveryService', () => {
                     type: 'object',
                     properties: { to: { type: 'string' } },
                 },
+                destructive: false,
             },
             {
                 name: 'noDesc',
                 description: '',
                 inputSchema: { type: 'object' },
+                destructive: false,
             },
         ]);
+    });
+
+    // #177: the server's annotations are not stored, so the flag is decided
+    // at discovery.
+    it('discover flags actions the server marks destructive', async () => {
+        clientMocks.listTools.mockResolvedValue({
+            tools: [
+                {
+                    name: 'sync_orders',
+                    inputSchema: { type: 'object' },
+                    annotations: { destructiveHint: true },
+                },
+                {
+                    name: 'delete_all_orders',
+                    description: 'Dangerous operation, cannot be undone',
+                    inputSchema: { type: 'object' },
+                },
+            ],
+        });
+
+        const actions = await svc.discover(makeTool());
+
+        expect(actions.map(a => a.destructive)).toEqual([true, true]);
     });
 
     it('sets bearer Authorization header in transport requestInit when mcpAuth.type === "bearer"', async () => {

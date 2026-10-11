@@ -17,6 +17,7 @@ import { McpToolExecutorService } from 'src/modules/tool/services/mcp-tool-execu
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ChatbotEntity } from 'src/modules/chatbot/repository/entities/chatbot.entity';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import { isDestructiveAction } from 'src/modules/tool/utils/destructive-action.util';
 
 export interface ExecuteCommand {
     toolId: string;
@@ -79,6 +80,18 @@ export class ToolExecutionService {
         ) {
             this.logger.warn(
                 `Action ${actionName} on tool ${toolId} is not enabled for chatbot ${cmd.chatbotId}`
+            );
+            throw new ForbiddenException('tool.execute.error.notLinked');
+        }
+        // A destructive action runs only when the link names it (#177).
+        const action = tool.discoveredActions?.find(a => a.name === actionName);
+        if (
+            action &&
+            isDestructiveAction(action) &&
+            !link.enabledActions?.includes(action.name)
+        ) {
+            this.logger.warn(
+                `Destructive action ${action.name} on tool ${toolId} is not enabled for chatbot ${cmd.chatbotId}`
             );
             throw new ForbiddenException('tool.execute.error.notLinked');
         }

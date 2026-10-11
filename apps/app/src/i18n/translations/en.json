@@ -2557,6 +2557,7 @@
     }
   },
   "tools": {
+    "destructiveAction": "Can delete data",
     "batch": {
       "delete": {
         "label": "Delete",

@@ -18,6 +18,7 @@ type ToolMcpSectionProps = {
 type DiscoveredAction = {
   name: string;
   description?: string;
+  destructive?: boolean;
 };
 
 export const ToolMcpSection = ({ item, toolkit }: ToolMcpSectionProps) => {
@@ -136,6 +137,11 @@ export const ToolMcpSection = ({ item, toolkit }: ToolMcpSectionProps) => {
                   title={action.name}
                 >
                   {action.name}
+                  {action.destructive && (
+                    <Badge size="2xsmall" color="red" className="ml-1.5">
+                      {t("tools.destructiveAction")}
+                    </Badge>
+                  )}
                 </Text>
                 <Text size="small" className="text-ui-fg-subtle">
                   {action.description ?? ""}

@@ -2587,6 +2587,7 @@
     }
   },
   "tools": {
+    "destructiveAction": "Có thể xóa dữ liệu",
     "batch": {
       "delete": {
         "label": "Xóa",

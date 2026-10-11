@@ -4885,6 +4885,9 @@ export type ToolResponseDto = {
     mcpAuth?: {
         [key: string]: unknown;
     };
+    /**
+     * Each action carries `destructive`: it stays off until a chatbot link names it
+     */
     discoveredActions?: Array<unknown>;
     discoveryAt?: string;
 };

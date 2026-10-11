@@ -102,6 +102,8 @@ export class ToolEntity extends DatabaseEntityBase {
         name: string;
         description: string;
         inputSchema: Record<string, unknown>;
+        /** Can destroy data; off until a link names it (#177). */
+        destructive?: boolean;
     }>;
 
     @Property({ type: 'timestamptz', nullable: true })

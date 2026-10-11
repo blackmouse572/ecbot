@@ -338,6 +338,38 @@ describe('ToolExecutionService', () => {
             );
         });
 
+        // #177: a destructive action runs only when the link names it.
+        it('refuses a destructive action the link does not name', async () => {
+            const tool = {
+                id: 't-mcp',
+                kind: ENUM_TOOL_KIND.MCP,
+                discoveredActions: [
+                    {
+                        name: 'delete_all_orders',
+                        description: 'Dangerous operation, cannot be undone',
+                    },
+                ],
+            };
+            mockToolRepo.findOne.mockResolvedValue(tool);
+            for (const enabledActions of [undefined, []]) {
+                mockChatbotToolRepo.findOneByChatbotAndTool.mockResolvedValue({
+                    enabled: true,
+                    enabledActions,
+                });
+
+                await expect(
+                    svc.execute({
+                        toolId: 't-mcp',
+                        actionName: 'delete_all_orders',
+                        args: {},
+                        chatbotId: 'cb-1',
+                        correlationId: 'corr-1',
+                    })
+                ).rejects.toBeInstanceOf(ForbiddenException);
+            }
+            expect(mockMcp.execute).not.toHaveBeenCalled();
+        });
+
         it('allows any action when enabledActions is empty (all actions allowed)', async () => {
             const tool = { id: 't-mcp', kind: ENUM_TOOL_KIND.MCP };
             mockToolRepo.findOne.mockResolvedValue(tool);

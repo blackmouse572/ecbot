@@ -5,11 +5,13 @@ import { HelperEgressService } from 'src/common/helper/services/helper.egress.se
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
 import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import { isDestructiveAction } from 'src/modules/tool/utils/destructive-action.util';
 
 export interface McpAction {
     name: string;
     description: string;
     inputSchema: Record<string, unknown>;
+    destructive?: boolean;
 }
 
 @Injectable()
@@ -30,6 +32,12 @@ export class McpDiscoveryService {
                 name: t.name,
                 description: t.description ?? '',
                 inputSchema: (t.inputSchema ?? {}) as Record<string, unknown>,
+                // The annotations are not kept, so decide while they are here.
+                destructive: isDestructiveAction({
+                    name: t.name,
+                    description: t.description,
+                    annotations: t.annotations,
+                }),
             }));
         } finally {
             try {
