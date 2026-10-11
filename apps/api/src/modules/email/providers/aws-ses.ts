@@ -605,7 +605,12 @@ export class AwsSESProvider implements IEmailService {
 
     async sendInvitationToWorkSpace(
         { email }: EmailSendDto,
-        { invitationLink }: EmailInvitationToWorkspaceDto
+        {
+            invitationLink,
+            workspaceName,
+            inviterName,
+            language,
+        }: EmailInvitationToWorkspaceDto
     ): Promise<boolean> {
         try {
             await this.awsSESService.send({
@@ -617,6 +622,9 @@ export class AwsSESProvider implements IEmailService {
                     supportEmail: this.supportEmail,
                     homeUrl: this.homeUrl,
                     invitationLink,
+                    workspaceName,
+                    inviterName,
+                    language,
                 },
             });
             return true;

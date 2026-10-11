@@ -15,6 +15,7 @@ import { verificationEmailCopy } from '../email-template-components/verification
 import { accountBlockedEmailCopy } from '../email-template-components/account-blocked-email.copy';
 import { handoffEmailCopy } from '../email-template-components/handoff-email.copy';
 import { memberJoinedEmailCopy } from '../email-template-components/member-joined-email.copy';
+import { invitationEmailCopy } from '../email-template-components/invitation-email.copy';
 import { mfaChangedEmailCopy } from '../email-template-components/mfa-changed-email.copy';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
@@ -222,15 +223,35 @@ export class ResendProvider implements IEmailService {
 
     async sendInvitationToWorkSpace(
         { email }: EmailSendDto,
-        { invitationLink }: EmailInvitationToWorkspaceDto
-    ): Promise<boolean> {
-        return this.sendEmailTemplate(email, EmailSubject.InviteToWorkSpace, {
-            email,
-            homeName: this.homeName,
-            homeUrl: this.homeUrl,
-            supportEmail: this.supportEmail,
+        {
             invitationLink,
-        });
+            workspaceName,
+            inviterName,
+            expiresAt,
+            language,
+        }: EmailInvitationToWorkspaceDto
+    ): Promise<boolean> {
+        const copy = invitationEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.InviteToWorkSpace,
+            {
+                homeName: this.homeName,
+                homeUrl: this.homeUrl,
+                supportEmail: this.supportEmail,
+                invitationLink,
+                workspaceName,
+                inviterName,
+                expiresAt: expiresAt
+                    ? this.helperDateService.formatToReadable(
+                          expiresAt,
+                          language ?? ENUM_MESSAGE_LANGUAGE.EN
+                      )
+                    : undefined,
+                language,
+            },
+            copy.subject(inviterName, workspaceName)
+        );
     }
 
     async sendAccountBlocked(

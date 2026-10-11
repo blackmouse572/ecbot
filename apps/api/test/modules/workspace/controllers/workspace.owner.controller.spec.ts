@@ -106,6 +106,34 @@ describe('WorkspaceController — inviteMemberToWorkSpace', () => {
             workspace
         );
     });
+
+    // #185: the email named neither the workspace nor the inviter and was
+    // English-only, whatever language the inviter uses.
+    it('emails the invitee who invited them, to which workspace, in the inviter language', async () => {
+        mockUserService.findOneById.mockResolvedValue({
+            id: 'owner-1',
+            name: 'Chi Nguyen',
+        });
+
+        await controller.inviteMemberToWorkSpace(
+            'owner-1',
+            { invitedEmail: 'invitee@mail.com' } as any,
+            workspace,
+            { __language: 'vi' } as any
+        );
+
+        expect(mockEmailService.sendInvitationToWorkSpace).toHaveBeenCalledWith(
+            { email: 'invitee@mail.com', name: '' },
+            {
+                invitationLink:
+                    'https://ecbot.example.com/join?tokens=signed-jwt',
+                workspaceName: 'Acme',
+                inviterName: 'Chi Nguyen',
+                expiresAt: new Date('2026-10-01T00:00:00Z'),
+                language: 'vi',
+            }
+        );
+    });
 });
 
 // Task 14: the workspace avatar upload keyed objects as

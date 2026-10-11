@@ -45,9 +45,11 @@ import {
     NotFoundException,
     Post,
     Put,
+    Req,
     UploadedFile,
     UseInterceptors,
 } from '@nestjs/common';
+import { IRequestApp } from '@app/common/request/interfaces/request.interface';
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -440,7 +442,8 @@ export class WorkspaceController {
     async inviteMemberToWorkSpace(
         @AuthJwtPayload('user') userId: string,
         @Body() body: WorkSpaceInviteMemberRequestDto,
-        @WorkspacePayload() workspace: WorkspaceEntity
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Req() request?: IRequestApp
     ) {
         // Generate invitation link and get details. The invitation targets
         // the workspace resolved from the URL by the guard (WorkspacePayload)
@@ -459,6 +462,9 @@ export class WorkspaceController {
             `Generated link expiresAt ${expiresAt.toLocaleDateString('vi-VN')}: ${invitationLink}`
         );
 
+        // The invitee has no language of their own yet, so the email follows
+        // the inviter's (#185).
+        const inviter = await this.userService.findOneById(userId);
         await this.emailService.sendInvitationToWorkSpace(
             {
                 email: body.invitedEmail,
@@ -466,6 +472,10 @@ export class WorkspaceController {
             },
             {
                 invitationLink,
+                workspaceName: workspace.name,
+                inviterName: inviter?.name ?? inviter?.email ?? workspace.name,
+                expiresAt,
+                language: request?.__language,
             }
         );
 
