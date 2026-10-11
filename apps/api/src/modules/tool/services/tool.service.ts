@@ -31,6 +31,8 @@ import {
 } from './http-tool-executor.service';
 import { SlugMinter } from './slug-minter.service';
 import { InstallerRegistry } from 'src/modules/tool/installers/installer-registry.service';
+import { MCP_AUTH_TYPES } from 'src/modules/tool/constants/tool.constant';
+import { sameAuth } from 'src/modules/tool/utils/same-auth.util';
 
 function slugify(s: string): string {
     return s
@@ -205,6 +207,12 @@ export class ToolService {
         if (tool.kind === ENUM_TOOL_KIND.MCP) {
             return this.updateMcp(tool, dto, updatedBy);
         }
+        this.assertCredentialStaysWithOrigin(
+            tool.httpUrl,
+            dto.httpUrl,
+            tool.httpCredential,
+            dto
+        );
         const patch: any = { ...dto };
         delete patch.serverUrl;
         // Map dto.name → displayName for backward compatibility. Slug is intentionally
@@ -239,6 +247,33 @@ export class ToolService {
     }
 
     /**
+     * A stored credential never follows a URL to another origin: whoever
+     * edits the tool may never have seen it, so moving the URL to a new
+     * scheme, host or port needs the credential typed again (#247 review).
+     */
+    private assertCredentialStaysWithOrigin(
+        savedUrl: string | undefined,
+        newUrl: string | undefined,
+        storedCredential: string | null | undefined,
+        dto: UpdateToolRequestDto
+    ): void {
+        if (
+            !newUrl ||
+            !savedUrl ||
+            !storedCredential ||
+            dto.credential ||
+            dto.auth?.type === 'none'
+        ) {
+            return;
+        }
+        if (new URL(newUrl).origin !== new URL(savedUrl).origin) {
+            throw new BadRequestException(
+                'tool.update.error.credentialRequired'
+            );
+        }
+    }
+
+    /**
      * An operator's MCP server can change its URL, auth and credential (#176);
      * a marketplace tool's connection belongs to its provider, so only the
      * name and description move. A new connection must answer before it is
@@ -249,9 +284,12 @@ export class ToolService {
         dto: UpdateToolRequestDto,
         updatedBy?: UserEntity
     ): Promise<ToolEntity> {
+        // The edit form sends the saved URL and auth back on every save, so
+        // only a real difference counts as a new connection (#247 review).
         const changesConnection =
-            dto.serverUrl !== undefined ||
-            dto.auth !== undefined ||
+            (dto.serverUrl !== undefined &&
+                dto.serverUrl !== tool.mcpServerUrl) ||
+            (dto.auth !== undefined && !sameAuth(dto.auth, tool.mcpAuth)) ||
             !!dto.credential;
         if (
             changesConnection &&
@@ -261,6 +299,22 @@ export class ToolService {
                 'tool.update.error.managedConnection'
             );
         }
+        // MCP sends its credential as a bearer token or an API-key header
+        // only; anything else would be accepted and silently ignored.
+        if (
+            dto.auth &&
+            (!MCP_AUTH_TYPES.includes(dto.auth.type) ||
+                (dto.auth.placement !== undefined &&
+                    dto.auth.placement !== 'header'))
+        ) {
+            throw new BadRequestException('tool.update.error.invalidMcpAuth');
+        }
+        this.assertCredentialStaysWithOrigin(
+            tool.mcpServerUrl,
+            dto.serverUrl,
+            tool.mcpCredential,
+            dto
+        );
         const connection = {
             mcpServerUrl: dto.serverUrl ?? tool.mcpServerUrl,
             mcpAuth: (dto.auth as ToolEntity['mcpAuth']) ?? tool.mcpAuth,

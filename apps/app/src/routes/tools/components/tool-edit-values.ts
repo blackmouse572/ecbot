@@ -36,3 +36,28 @@ export const mcpToolEditValues = (tool: ToolResponseDto): McpToolFormData => ({
   auth: (tool.mcpAuth as McpToolFormData["auth"]) ?? { type: "none" },
   credential: "",
 });
+
+const originOf = (url: string): string | undefined => {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * A saved credential never follows the URL to another scheme, host or port:
+ * whoever edits the tool may never have seen it. The API refuses that too.
+ */
+export const needsCredentialAgain = (
+  savedUrl: string | undefined,
+  newUrl: string,
+  authType: string | undefined,
+  credential: string | undefined,
+): boolean => {
+  if (!savedUrl || !authType || authType === "none" || credential) {
+    return false;
+  }
+  const next = originOf(newUrl);
+  return !!next && next !== originOf(savedUrl);
+};

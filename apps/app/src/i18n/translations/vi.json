@@ -2753,6 +2753,7 @@
       "authParamNameHint": "Tên header hoặc query parameter chứa API key.",
       "credential": "Thông tin xác thực",
       "credentialHint": "Gửi dưới dạng plaintext; lưu trữ envelope-encrypted. Để trống khi chỉnh sửa để giữ giá trị hiện tại.",
+      "credentialRequiredForNewHost": "Địa chỉ giờ trỏ tới máy chủ khác, hãy nhập lại thông tin xác thực.",
       "credentialPlaceholder": "•••••••••",
       "timeoutMs": "Timeout (ms)",
       "maxRetries": "Số lần thử lại tối đa"

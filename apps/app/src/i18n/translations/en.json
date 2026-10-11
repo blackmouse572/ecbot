@@ -2723,6 +2723,7 @@
       "authParamNameHint": "Header or query parameter that carries the API key.",
       "credential": "Credential",
       "credentialHint": "Plaintext on submit; stored envelope-encrypted. Leave empty on edit to keep the existing value.",
+      "credentialRequiredForNewHost": "The address points to a different server now, so enter the credential again.",
       "credentialPlaceholder": "•••••••••",
       "timeoutMs": "Timeout (ms)",
       "maxRetries": "Max retries"

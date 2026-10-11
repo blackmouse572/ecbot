@@ -175,6 +175,87 @@ describe('ToolService', () => {
             expect(tool.mcpCredential).toBeNull();
         });
 
+        // #247 review: a stored key must not follow a URL to a new host it
+        // was never meant for, since whoever edits it never saw the key.
+        it('asks for the credential again when the URL moves to another origin', async () => {
+            const http = Object.assign(new ToolEntity(), {
+                id: 't-1',
+                kind: ENUM_TOOL_KIND.HTTP,
+                httpUrl: 'https://api.shop.vn/orders',
+                httpAuth: { type: 'bearer' },
+                httpCredential: 'v1:enc:secret',
+            });
+            mockRepo.findOneInWorkspace.mockResolvedValue(http);
+            await expect(
+                svc.update('ws-1', 't-1', {
+                    httpUrl: 'https://attacker.example/orders',
+                } as any)
+            ).rejects.toBeInstanceOf(BadRequestException);
+            expect(http.httpUrl).toBe('https://api.shop.vn/orders');
+
+            const mcp = mcpTool();
+            mockRepo.findOneInWorkspace.mockResolvedValue(mcp);
+            mockDiscovery.discover = jest.fn();
+            await expect(
+                svc.update('ws-1', 't-1', {
+                    serverUrl: 'https://attacker.example/mcp',
+                } as any)
+            ).rejects.toBeInstanceOf(BadRequestException);
+            expect(mockDiscovery.discover).not.toHaveBeenCalled();
+        });
+
+        it('keeps the credential for a new path on the same origin, or with a new key', async () => {
+            const http = Object.assign(new ToolEntity(), {
+                id: 't-1',
+                kind: ENUM_TOOL_KIND.HTTP,
+                httpUrl: 'https://api.shop.vn/orders',
+                httpAuth: { type: 'bearer' },
+                httpCredential: 'v1:enc:secret',
+            });
+            mockRepo.findOneInWorkspace.mockResolvedValue(http);
+            await svc.update('ws-1', 't-1', {
+                httpUrl: 'https://api.shop.vn/v2/orders',
+            } as any);
+            expect(http.httpCredential).toBe('v1:enc:secret');
+
+            await svc.update('ws-1', 't-1', {
+                httpUrl: 'https://new-host.example/orders',
+                credential: 'fresh',
+            } as any);
+            expect(http.httpCredential).toBe('v1:enc:fresh');
+        });
+
+        it('does not reconnect when only the name changes, even with the saved connection sent back', async () => {
+            const tool = mcpTool();
+            mockRepo.findOneInWorkspace.mockResolvedValue(tool);
+            mockDiscovery.discover = jest.fn();
+
+            await svc.update('ws-1', 't-1', {
+                name: 'Renamed',
+                serverUrl: 'https://old.example.com/mcp',
+                auth: { type: 'bearer' },
+            } as any);
+
+            expect(mockDiscovery.discover).not.toHaveBeenCalled();
+            expect(tool.displayName).toBe('Renamed');
+        });
+
+        it('refuses auth an MCP server never receives', async () => {
+            const tool = mcpTool();
+            mockRepo.findOneInWorkspace.mockResolvedValue(tool);
+            mockDiscovery.discover = jest.fn();
+
+            for (const auth of [
+                { type: 'basic' },
+                { type: 'api_key', placement: 'query' },
+            ]) {
+                await expect(
+                    svc.update('ws-1', 't-1', { auth } as any)
+                ).rejects.toBeInstanceOf(BadRequestException);
+            }
+            expect(mockDiscovery.discover).not.toHaveBeenCalled();
+        });
+
         it('keeps the saved URL of a marketplace tool, which the provider manages', async () => {
             const tool = Object.assign(mcpTool(), {
                 mcpProvider: ENUM_MCP_PROVIDER.COMPOSIO,

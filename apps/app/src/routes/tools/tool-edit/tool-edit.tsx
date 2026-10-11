@@ -116,6 +116,7 @@ const ToolEditInner = () => {
         </RouteDrawer.Header>
         <RouteDrawer.Body className="flex flex-1 flex-col gap-y-6 overflow-y-auto p-6">
           <McpToolForm
+            savedUrl={tool.mcpServerUrl}
             defaultValues={mcpToolEditValues(tool)}
             onSubmit={handleMcpSubmit}
             onCancel={handleCancel}
@@ -158,6 +159,7 @@ const ToolEditInner = () => {
       </RouteDrawer.Header>
       <RouteDrawer.Body className="flex flex-1 flex-col gap-y-6 overflow-y-auto p-6">
         <HttpToolForm
+          savedUrl={tool.httpUrl}
           defaultValues={defaultValues}
           onSubmit={handleSubmit}
           onCancel={handleCancel}

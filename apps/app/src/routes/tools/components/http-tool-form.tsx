@@ -21,6 +21,7 @@ import {
   type HttpToolFormInput,
 } from "./http-tool-schema";
 import { readApiError } from "@/libs/api-error";
+import { needsCredentialAgain } from "./tool-edit-values";
 
 export type HttpToolFormProps = {
   defaultValues: Partial<HttpToolFormData>;
@@ -36,6 +37,8 @@ export type HttpToolFormProps = {
   trailingActions?: ReactNode;
   id?: string;
   hideActions?: boolean;
+  /** On edit: the saved URL, so moving it to another origin asks for the credential again. */
+  savedUrl?: string;
 };
 
 // Everything an execution needs: the schema's own keys minus the metadata.
@@ -68,6 +71,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   trailingActions,
   id,
   hideActions,
+  savedUrl,
 }) => {
   const { t } = useTranslation();
 
@@ -95,6 +99,19 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
 
   const handleSubmit = form.handleSubmit(
     async (data) => {
+      if (
+        needsCredentialAgain(
+          savedUrl,
+          data.httpUrl,
+          data.auth?.type,
+          data.credential,
+        )
+      ) {
+        form.setError("credential", {
+          message: t("tools.form.credentialRequiredForNewHost"),
+        });
+        return;
+      }
       await onSubmit(data);
     },
     (errors) => console.error("HttpToolForm validation errors", errors),

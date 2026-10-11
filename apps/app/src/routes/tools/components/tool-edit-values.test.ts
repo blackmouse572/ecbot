@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { toUpdateHttpPayload } from "./http-tool-payload";
 import { toUpdateMcpPayload } from "./mcp-tool-payload";
-import { httpToolEditValues, mcpToolEditValues } from "./tool-edit-values";
+import {
+  httpToolEditValues,
+  mcpToolEditValues,
+  needsCredentialAgain,
+} from "./tool-edit-values";
 
 // #176: editing a tool could only change its name and description, and the
 // HTTP form reset auth to "none" on every save.
@@ -76,5 +80,23 @@ describe("tool edit values", () => {
       auth: { type: "bearer" },
       credential: undefined,
     });
+  });
+
+  // #247 review: a stored key must not follow the URL to another server.
+  it("asks for the credential again when the URL moves to another origin", () => {
+    const saved = "https://api.shop.vn/orders";
+    expect(
+      needsCredentialAgain(saved, "https://evil.example/x", "bearer", ""),
+    ).toBe(true);
+    expect(
+      needsCredentialAgain(saved, "https://api.shop.vn/v2", "bearer", ""),
+    ).toBe(false);
+    expect(
+      needsCredentialAgain(saved, "https://evil.example/x", "bearer", "new"),
+    ).toBe(false);
+    expect(
+      needsCredentialAgain(saved, "https://evil.example/x", "none", ""),
+    ).toBe(false);
+    expect(needsCredentialAgain(saved, "not a url", "bearer", "")).toBe(false);
   });
 });
