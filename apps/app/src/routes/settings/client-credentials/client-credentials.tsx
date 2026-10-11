@@ -1,3 +1,4 @@
+import { IconKey } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import {
   useClientCredentialList,
@@ -81,7 +82,13 @@ export const ClientCredentials = () => {
           pageSize={PAGE_SIZE}
           isLoading={isLoading}
           noRecords={{
+            title: t("settings.clientCredentials.emptyTitle"),
             message: t("settings.clientCredentials.empty"),
+            action: {
+              onClick: () => setCreating(true),
+              label: t("settings.clientCredentials.actions.create"),
+            },
+            icon: <IconKey />,
           }}
         />
       </Container>

@@ -40,11 +40,13 @@
     },
     "list": {
       "loading": "Đang tải…",
-      "noRecordsMessage": "Chưa có skill. Tạo mới hoặc sao chép từ mẫu.",
+      "noRecordsMessage": "Skill hướng dẫn agent cách xử lý từng việc cụ thể. Hãy tạo mới, hoặc bắt đầu từ một mẫu có sẵn.",
       "noTemplates": "Chưa có mẫu nào.",
       "filters": {
         "source": "Nguồn"
-      }
+      },
+      "noRecordsTitle": "Chưa có skill nào",
+      "createFirst": "Tạo skill"
     },
     "actions": {
       "browse": "Duyệt mẫu"
@@ -61,7 +63,8 @@
       "detachError": "Gỡ skill thất bại",
       "updateError": "Cập nhật skill thất bại",
       "loadError": "Tải skill thất bại",
-      "empty": "Chưa gắn skill nào."
+      "empty": "Gắn skill để agent này biết cách xử lý những việc cụ thể.",
+      "emptyTitle": "Chưa gắn skill nào"
     },
     "form": {
       "namePlaceholder": "vd: Chính sách hoàn tiền",
@@ -464,12 +467,13 @@
     },
     "title": "Tài khoản",
     "list": {
-      "noRecordsMessage": "Chưa có tài khoản nào. Thời gian để thêm một vài cái! 📱",
+      "noRecordsMessage": "Liên kết Fanpage Facebook, Zalo OA hoặc kênh khác để agent trả lời khách hàng trên đó.",
       "action": {
         "viewProfile": "Xem hồ sơ",
         "viewAddedUser": "Xem người dùng đã thêm",
         "unlink": "Hủy liên kết tài khoản"
-      }
+      },
+      "noRecordsTitle": "Chưa liên kết tài khoản nào"
     },
     "unlink": {
       "confirm": {
@@ -1638,7 +1642,7 @@
   "followups": {
     "title": "Nhắc hẹn",
     "list": {
-      "noRecordsMessage": "Không có nhắc hẹn nào",
+      "noRecordsMessage": "Khi agent hẹn liên hệ lại với khách hàng, nhắc hẹn sẽ hiện ở đây để bạn không bỏ sót.",
       "columns": {
         "chatbot": "Agent",
         "customer": "Khách hàng",
@@ -1677,7 +1681,8 @@
         "bot_disabled": "Bot đã bị tắt",
         "conversation_resolved": "Hội thoại đã được xử lý xong",
         "chatbot_missing": "Agent đã bị ngắt kết nối"
-      }
+      },
+      "noRecordsTitle": "Chưa có nhắc hẹn nào"
     }
   },
   "comments": {
@@ -1760,16 +1765,23 @@
     },
     "invitations": {
       "title": "Lời mời",
-      "empty": "Không có lời mời nào đang chờ."
+      "empty": "Lời mời bạn gửi từ trang Thành viên sẽ nằm ở đây cho tới khi được chấp nhận.",
+      "emptyTitle": "Không có lời mời đang chờ",
+      "goToMembers": "Mời thành viên"
     },
     "joinRequests": {
       "title": "Yêu cầu tham gia",
-      "empty": "Không có yêu cầu tham gia nào đang chờ.",
+      "empty": "Khi có người xin tham gia workspace, bạn có thể duyệt họ tại đây.",
       "approve": {
         "action": "Phê duyệt",
         "loading": "Đang phê duyệt yêu cầu...",
         "success": "Đã phê duyệt yêu cầu. Chào mừng thành viên mới!"
-      }
+      },
+      "emptyTitle": "Không có yêu cầu tham gia đang chờ"
+    },
+    "list": {
+      "noRecordsTitle": "Chưa có thành viên nào",
+      "noRecordsMessage": "Mời đồng nghiệp để cùng quản lý hội thoại và agent."
     }
   },
   "roles": {
@@ -1806,6 +1818,11 @@
       "modules": "Modules",
       "noModules": "Không có module nào được gán",
       "noDescription": "Không có mô tả"
+    },
+    "list": {
+      "noRecordsTitle": "Chưa có vai trò nào",
+      "noRecordsMessage": "Vai trò quyết định mỗi thành viên được xem và chỉnh sửa những gì trong workspace.",
+      "createFirst": "Tạo vai trò"
     }
   },
   "profile": {
@@ -2109,7 +2126,7 @@
     "description": "Tổ chức và quản lý các mục kiến thức của bạn",
     "list": {
       "title": "Các mục kiến thức",
-      "empty": "Chưa có mục kiến thức nào",
+      "empty": "Thêm tài liệu, website hoặc câu hỏi thường gặp để agent trả lời đúng thông tin doanh nghiệp của bạn.",
       "columns": {
         "title": "Tiêu đề",
         "type": "Loại",
@@ -2117,7 +2134,8 @@
         "created": "Ngày tạo",
         "actions": "Hành động",
         "tags": "Thẻ"
-      }
+      },
+      "emptyTitle": "Chưa có mục kiến thức nào"
     },
     "create": {
       "title": "Tạo mục kiến thức",
@@ -2304,7 +2322,8 @@
           "tag_trigger": "Thẻ khách hàng cần nhân viên xử lý",
           "fallback_threshold": "Bot không trả lời được"
         }
-      }
+      },
+      "emptyMessage": "Hội thoại sẽ hiện ở đây khi khách hàng nhắn tin tới một kênh đã liên kết."
     },
     "status": {
       "botActive": "Bot đang trả lời",
@@ -2453,7 +2472,7 @@
       "title": "Gợi ý khách hàng",
       "description": "Phát hiện trùng lặp theo số điện thoại hoặc email.",
       "loading": "Đang tải…",
-      "empty": "Chưa có gợi ý nào cần xử lý.",
+      "empty": "Khi hai hồ sơ khách hàng có vẻ là cùng một người, hệ thống sẽ đề xuất gộp ở đây.",
       "filter": {
         "status": "Trạng thái"
       },
@@ -2503,7 +2522,8 @@
       },
       "nav": {
         "label": "Gợi ý"
-      }
+      },
+      "emptyTitle": "Không có đề xuất cần xem"
     },
     "title": "Khách hàng",
     "list": {
@@ -2512,7 +2532,8 @@
       "phone": "Số điện thoại",
       "firstSeen": "Lần đầu liên hệ",
       "emptyTitle": "Chưa có khách hàng nào",
-      "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn."
+      "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn.",
+      "connectChannel": "Liên kết kênh"
     }
   },
   "settings": {
@@ -2554,11 +2575,13 @@
       "handoff": {
         "yes": "Có",
         "no": "Không"
-      }
+      },
+      "emptyTitle": "Chưa có nhãn nào",
+      "empty": "Nhãn giúp bạn phân nhóm khách hàng, ví dụ VIP hoặc khách sỉ."
     },
     "clientCredentials": {
       "title": "API key",
-      "empty": "Chưa có client credential nào.",
+      "empty": "Tạo credential để hệ thống của bạn có thể gọi ecbot API.",
       "actions": {
         "create": "Tạo credential"
       },
@@ -2602,7 +2625,8 @@
           "body": "Secret hiện tại sẽ ngừng hoạt động ngay. Mọi client đang dùng secret này cần chuyển sang secret mới.",
           "confirm": "Đổi secret"
         }
-      }
+      },
+      "emptyTitle": "Chưa có client credential nào"
     }
   },
   "tools": {
@@ -2655,7 +2679,7 @@
     },
     "list": {
       "loading": "Đang tải công cụ…",
-      "noRecordsMessage": "Không tìm thấy công cụ nào. Hãy thử điều chỉnh tìm kiếm hoặc bộ lọc.",
+      "noRecordsMessage": "Công cụ giúp agent tra cứu đơn hàng, đặt lịch hẹn hoặc gọi tới hệ thống riêng của bạn. Hãy chọn từ kho công cụ hoặc tự tạo.",
       "columns": {
         "kind": "Loại",
         "name": "Tên",
@@ -2681,7 +2705,8 @@
           "OPERATOR": "Operator",
           "ECCHO": "Ecbot"
         }
-      }
+      },
+      "noRecordsTitle": "Chưa có công cụ nào"
     },
     "empty": {
       "title": "Chưa có công cụ nào",
@@ -2888,10 +2913,11 @@
       "title": "Lượt gọi gần đây",
       "subtitle": "100 lượt gọi công cụ gần nhất của agent này. Bấm vào một dòng để xem chi tiết yêu cầu và phản hồi.",
       "refresh": "Tải lại",
-      "empty": "Chưa có lượt gọi nào. Agent chưa gọi công cụ.",
+      "empty": "Mỗi lần agent dùng công cụ trong hội thoại, lượt gọi sẽ hiện ở đây.",
       "input": "Tham số đầu vào",
       "output": "Kết quả",
-      "error": "Lỗi"
+      "error": "Lỗi",
+      "emptyTitle": "Chưa có lượt gọi công cụ"
     },
     "chatbotTab": {
       "title": "Công cụ",
@@ -2945,7 +2971,8 @@
       "location": "Vị trí",
       "signedInAt": "Đăng nhập lúc",
       "lastActiveAt": "Hoạt động gần nhất",
-      "empty": "Bạn chưa có phiên đăng nhập nào."
+      "empty": "Bạn chưa có phiên đăng nhập nào.",
+      "emptyTitle": "Chưa có phiên đăng nhập"
     },
     "revoke": {
       "label": "Thu hồi",

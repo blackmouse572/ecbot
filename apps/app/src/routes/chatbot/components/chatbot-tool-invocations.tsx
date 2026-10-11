@@ -13,7 +13,8 @@ import {
 } from "@medusajs/ui";
 import { Accordion } from "@repo/ui/components";
 import { ChevronDown } from "@medusajs/icons";
-import { IconRefresh } from "@tabler/icons-react";
+import { NoRecords } from "@repo/ui/common-components";
+import { IconRefresh, IconTool } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -74,11 +75,11 @@ export function ChatbotToolInvocations({
           </Text>
         </div>
       ) : invocations.length === 0 ? (
-        <div className="px-6 py-12 text-center">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.invocations.empty")}
-          </Text>
-        </div>
+        <NoRecords
+          title={t("tools.invocations.emptyTitle")}
+          message={t("tools.invocations.empty")}
+          icon={<IconTool />}
+        />
       ) : (
         <div className="max-h-[480px] overflow-y-auto divide-y">
           {invocations.map((inv) => (

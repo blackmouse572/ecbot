@@ -35,9 +35,15 @@ export const NoResults = ({ title, message, className }: NoResultsProps) => {
 };
 
 type ActionProps = {
+  /**
+   * The next step for the user. `to` renders a router link (relative paths
+   * work and navigating keeps the SPA); `onClick` renders a button for
+   * actions that open a dialog or drawer in place.
+   */
   action?: {
-    to: string;
     label: string;
+    to?: string;
+    onClick?: () => void;
   };
 };
 
@@ -49,23 +55,39 @@ export type NoRecordsProps = {
   icon?: React.ReactNode;
 } & ActionProps;
 
-// Router links: `to` resolves like any route link (relative paths work) and
-// navigating keeps the SPA instead of reloading the page.
-const DefaultButton = ({ action }: ActionProps) =>
-  action && (
-    <Button variant="secondary" size="small" asChild>
-      <Link to={action.to}>{action.label}</Link>
-    </Button>
+const ActionButton = ({
+  action,
+  variant,
+}: Required<ActionProps> & { variant: string }) => {
+  const isTransparent = variant === "transparentIconLeft";
+  const content = isTransparent ? (
+    <>
+      <PlusMini /> {action.label}
+    </>
+  ) : (
+    action.label
   );
+  const buttonProps = isTransparent
+    ? ({
+        variant: "transparent",
+        className: "text-ui-fg-interactive",
+      } as const)
+    : ({ variant: "secondary", size: "small" } as const);
 
-const TransparentIconLeftButton = ({ action }: ActionProps) =>
-  action && (
-    <Button variant="transparent" className="text-ui-fg-interactive" asChild>
-      <Link to={action.to}>
-        <PlusMini /> {action.label}
-      </Link>
+  if (action.to) {
+    return (
+      <Button {...buttonProps} asChild>
+        <Link to={action.to}>{content}</Link>
+      </Button>
+    );
+  }
+
+  return (
+    <Button {...buttonProps} type="button" onClick={action.onClick}>
+      {content}
     </Button>
   );
+};
 
 export const NoRecords = ({
   title,
@@ -73,35 +95,34 @@ export const NoRecords = ({
   action,
   className,
   buttonVariant = "default",
-  icon = <ExclamationCircle className="text-ui-fg-subtle" />,
+  icon = <ExclamationCircle />,
 }: NoRecordsProps) => {
   const { t } = useTranslation();
 
   return (
     <div
       className={clx(
-        "flex h-[150px] w-full flex-col items-center justify-center gap-y-4",
+        "flex min-h-[240px] w-full flex-col items-center justify-center gap-y-4 px-6 py-10",
         className,
       )}
     >
       <div className="flex flex-col items-center gap-y-3">
-        {icon}
+        <div className="bg-ui-bg-component shadow-borders-base text-ui-fg-subtle flex size-10 items-center justify-center rounded-lg [&_svg]:size-5">
+          {icon}
+        </div>
 
-        <div className="flex flex-col items-center gap-y-1">
+        <div className="flex max-w-sm flex-col items-center gap-y-1 text-center">
           <Text size="small" leading="compact" weight="plus">
             {title ?? t("general.noRecordsTitle")}
           </Text>
 
-          <Text size="small" className="text-ui-fg-muted">
+          <Text size="small" className="text-ui-fg-subtle">
             {message ?? t("general.noRecordsMessage")}
           </Text>
         </div>
       </div>
 
-      {buttonVariant === "default" && <DefaultButton action={action} />}
-      {buttonVariant === "transparentIconLeft" && (
-        <TransparentIconLeftButton action={action} />
-      )}
+      {action && <ActionButton action={action} variant={buttonVariant} />}
     </div>
   );
 };

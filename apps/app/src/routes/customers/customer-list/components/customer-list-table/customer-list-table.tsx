@@ -1,6 +1,9 @@
+import { IconUsers } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import { useCustomers } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
+import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { ROUTES } from "@/routes/constants";
 import { Container, Heading, Text } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 import { CUSTOMER_LIST_PAGE_SIZE } from "../../../constants";
@@ -8,6 +11,7 @@ import { useCustomerTableColumns, useCustomerTableQuery } from "./hooks";
 
 export const CustomerListTable = () => {
   const { t } = useTranslation();
+  const { workspaceSlug } = useWorkspaceParams();
   const { searchParams, raw } = useCustomerTableQuery();
   const { customers, count, isLoading, isError, error } =
     useCustomers(searchParams);
@@ -44,6 +48,11 @@ export const CustomerListTable = () => {
         noRecords={{
           title: t("customers.list.emptyTitle"),
           message: t("customers.list.emptyMessage"),
+          action: {
+            to: `/${workspaceSlug}/${ROUTES.Accounts}`,
+            label: t("customers.list.connectChannel"),
+          },
+          icon: <IconUsers />,
         }}
       />
     </Container>

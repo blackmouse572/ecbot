@@ -1,3 +1,4 @@
+import { IconRobot } from "@tabler/icons-react";
 import { createSelectColumn } from "@/components/table/columns";
 import { _DataTable } from "@/components/table/data-table";
 import {
@@ -95,6 +96,7 @@ export const ChatbotListTable = () => {
           title: t("chatbot.list.noRecordsTitle"),
           message: t("chatbot.list.noRecordsMessage"),
           action: { to: "create", label: t("chatbot.list.createFirst") },
+          icon: <IconRobot />,
         }}
       />
       <Outlet />

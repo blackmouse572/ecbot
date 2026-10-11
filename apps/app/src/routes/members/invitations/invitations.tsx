@@ -13,7 +13,9 @@ import {
   Text,
   toast,
 } from "@medusajs/ui";
+import { NoRecords } from "@repo/ui/common-components";
 import { SingleColumnPage } from "@repo/ui/layout";
+import { IconMail } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 export const Invitations = () => {
@@ -92,11 +94,12 @@ export const Invitations = () => {
             </div>
           ))
         ) : (
-          <div className="px-6 py-8">
-            <Text className="text-ui-fg-muted">
-              {t("members.invitations.empty")}
-            </Text>
-          </div>
+          <NoRecords
+            title={t("members.invitations.emptyTitle")}
+            message={t("members.invitations.empty")}
+            action={{ to: "..", label: t("members.invitations.goToMembers") }}
+            icon={<IconMail />}
+          />
         )}
       </Container>
     </SingleColumnPage>

@@ -1,3 +1,4 @@
+import { IconTag } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
 import {
@@ -90,7 +91,13 @@ export const CustomerTags = () => {
           pageSize={PAGE_SIZE}
           isLoading={isLoading}
           noRecords={{
-            message: t("settings.customerTags.toast.deleted"),
+            title: t("settings.customerTags.emptyTitle"),
+            message: t("settings.customerTags.empty"),
+            action: {
+              onClick: () => setEditing("new"),
+              label: t("settings.customerTags.actions.create"),
+            },
+            icon: <IconTag />,
           }}
         />
       </Container>

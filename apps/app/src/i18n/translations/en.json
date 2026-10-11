@@ -40,11 +40,13 @@
     },
     "list": {
       "loading": "Loading…",
-      "noRecordsMessage": "No skills yet. Create one or clone a template.",
+      "noRecordsMessage": "Skills teach your agents how to handle specific tasks. Create one, or start from a template.",
       "noTemplates": "No templates available.",
       "filters": {
         "source": "Source"
-      }
+      },
+      "noRecordsTitle": "No skills yet",
+      "createFirst": "Create skill"
     },
     "actions": {
       "browse": "Browse templates"
@@ -61,7 +63,8 @@
       "detachError": "Failed to detach skill",
       "updateError": "Failed to update skill",
       "loadError": "Failed to load skills",
-      "empty": "No skills attached yet."
+      "empty": "Attach a skill so this agent knows how to handle specific tasks.",
+      "emptyTitle": "No skills attached yet"
     },
     "form": {
       "namePlaceholder": "e.g. Refund policy",
@@ -439,11 +442,12 @@
     },
     "title": "Accounts",
     "list": {
-      "noRecordsMessage": "No accounts found",
+      "noRecordsMessage": "Connect a Facebook page, Zalo OA, or another channel so your agents can reply to customers there.",
       "action": {
         "viewProfile": "View Profile",
         "unlink": "Unlink Account"
-      }
+      },
+      "noRecordsTitle": "No accounts connected yet"
     },
     "unlink": {
       "confirm": {
@@ -1612,7 +1616,7 @@
   "followups": {
     "title": "Followups",
     "list": {
-      "noRecordsMessage": "No followups found",
+      "noRecordsMessage": "When an agent promises to get back to a customer, the followup shows up here so nothing slips.",
       "columns": {
         "chatbot": "Agent",
         "customer": "Customer",
@@ -1651,7 +1655,8 @@
         "bot_disabled": "Bot was turned off",
         "conversation_resolved": "Conversation was resolved",
         "chatbot_missing": "Agent was disconnected"
-      }
+      },
+      "noRecordsTitle": "No followups yet"
     }
   },
   "comments": {
@@ -1713,16 +1718,23 @@
     },
     "invitations": {
       "title": "Invitations",
-      "empty": "No pending invitations."
+      "empty": "Invitations you send from the Members page wait here until they are accepted.",
+      "emptyTitle": "No pending invitations",
+      "goToMembers": "Invite members"
     },
     "joinRequests": {
       "title": "Join requests",
-      "empty": "No pending join requests.",
+      "empty": "When someone asks to join your workspace, you can approve them here.",
       "approve": {
         "action": "Approve",
         "loading": "Approving request...",
         "success": "Request approved. Welcome aboard!"
-      }
+      },
+      "emptyTitle": "No pending join requests"
+    },
+    "list": {
+      "noRecordsTitle": "No members yet",
+      "noRecordsMessage": "Invite your teammates to manage conversations and agents together."
     }
   },
   "roles": {
@@ -1758,6 +1770,11 @@
       "modules": "Modules",
       "noModules": "No modules assigned",
       "noDescription": "No description"
+    },
+    "list": {
+      "noRecordsTitle": "No roles yet",
+      "noRecordsMessage": "Roles decide what each member can see and change in this workspace.",
+      "createFirst": "Create role"
     }
   },
   "profile": {
@@ -2078,7 +2095,7 @@
     "description": "Organize and manage your knowledge items",
     "list": {
       "title": "Knowledge Items",
-      "empty": "No knowledge items yet",
+      "empty": "Add documents, websites, or FAQs so your agents answer with your business information.",
       "columns": {
         "title": "Title",
         "type": "Type",
@@ -2086,7 +2103,8 @@
         "tags": "Tags",
         "created": "Created",
         "actions": "Actions"
-      }
+      },
+      "emptyTitle": "No knowledge items yet"
     },
     "create": {
       "title": "Create Knowledge Item",
@@ -2274,7 +2292,8 @@
           "tag_trigger": "Customer tag needs staff",
           "fallback_threshold": "Bot could not answer"
         }
-      }
+      },
+      "emptyMessage": "Conversations show up here when customers message one of your connected channels."
     },
     "status": {
       "botActive": "Bot active",
@@ -2423,7 +2442,7 @@
       "title": "Customer suggestions",
       "description": "Possible duplicate customers detected by matching phone or email.",
       "loading": "Loading…",
-      "empty": "No suggestions to review.",
+      "empty": "When two customer profiles look like the same person, we suggest merging them here.",
       "filter": {
         "status": "Status"
       },
@@ -2473,7 +2492,8 @@
       },
       "nav": {
         "label": "Suggestion"
-      }
+      },
+      "emptyTitle": "No suggestions to review"
     },
     "title": "Customers",
     "list": {
@@ -2482,7 +2502,8 @@
       "phone": "Phone",
       "firstSeen": "First seen",
       "emptyTitle": "No customers yet",
-      "emptyMessage": "Customers appear here once they message one of your channels."
+      "emptyMessage": "Customers appear here once they message one of your channels.",
+      "connectChannel": "Connect a channel"
     }
   },
   "settings": {
@@ -2524,11 +2545,13 @@
       "handoff": {
         "yes": "Yes",
         "no": "No"
-      }
+      },
+      "emptyTitle": "No tags yet",
+      "empty": "Tags help you group customers, for example VIP or wholesale."
     },
     "clientCredentials": {
       "title": "API key",
-      "empty": "No client credentials yet.",
+      "empty": "Create a credential so your own systems can call the ecbot API.",
       "actions": {
         "create": "Create credential"
       },
@@ -2572,7 +2595,8 @@
           "body": "The current secret stops working right away. Any client using it must switch to the new one.",
           "confirm": "Rotate"
         }
-      }
+      },
+      "emptyTitle": "No client credentials yet"
     }
   },
   "tools": {
@@ -2625,7 +2649,7 @@
     },
     "list": {
       "loading": "Loading tools…",
-      "noRecordsMessage": "No tools found. Try adjusting your search or filters.",
+      "noRecordsMessage": "Tools let your agents look up orders, book appointments, or call your own systems. Start from the marketplace or build your own.",
       "columns": {
         "kind": "Kind",
         "name": "Name",
@@ -2651,7 +2675,8 @@
           "OPERATOR": "Operator",
           "ECCHO": "Ecbot"
         }
-      }
+      },
+      "noRecordsTitle": "No tools yet"
     },
     "empty": {
       "title": "No tools yet",
@@ -2858,10 +2883,11 @@
       "title": "Recent invocations",
       "subtitle": "Last 100 tool calls for this agent. Click a row to inspect the request and response.",
       "refresh": "Refresh",
-      "empty": "No invocations yet. The agent hasn't called any tools.",
+      "empty": "Each time this agent uses a tool in a conversation, the call shows up here.",
       "input": "Input args",
       "output": "Output",
-      "error": "Error"
+      "error": "Error",
+      "emptyTitle": "No tool calls yet"
     },
     "chatbotTab": {
       "title": "Tools",
@@ -2915,7 +2941,8 @@
       "location": "Location",
       "signedInAt": "Signed in",
       "lastActiveAt": "Last active",
-      "empty": "You have no sessions yet."
+      "empty": "You have no sessions yet.",
+      "emptyTitle": "No sessions"
     },
     "revoke": {
       "label": "Revoke",

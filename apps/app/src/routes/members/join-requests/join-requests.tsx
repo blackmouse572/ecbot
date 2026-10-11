@@ -3,7 +3,9 @@ import {
   useJoinRequests,
 } from "@/hooks/api/join-requests";
 import { Button, Container, Text, toast } from "@medusajs/ui";
+import { NoRecords } from "@repo/ui/common-components";
 import { SingleColumnPage } from "@repo/ui/layout";
+import { IconUserCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 export const JoinRequests = () => {
@@ -58,11 +60,11 @@ export const JoinRequests = () => {
             </div>
           ))
         ) : (
-          <div className="px-6 py-8">
-            <Text className="text-ui-fg-muted">
-              {t("members.joinRequests.empty")}
-            </Text>
-          </div>
+          <NoRecords
+            title={t("members.joinRequests.emptyTitle")}
+            message={t("members.joinRequests.empty")}
+            icon={<IconUserCheck />}
+          />
         )}
       </Container>
     </SingleColumnPage>

@@ -13,6 +13,8 @@ import {
   Text,
   toast,
 } from "@medusajs/ui";
+import { NoRecords } from "@repo/ui/common-components";
+import { IconSparkles } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatbotSkillAddDrawer } from "./chatbot-skill-add-drawer";
@@ -90,11 +92,15 @@ export function ChatbotSkillsTab({ chatbotId, workspace }: Props) {
           </Text>
         </div>
       ) : chatbotSkills.length === 0 ? (
-        <div className="px-6 py-12 text-center">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("skills.chatbotTab.empty")}
-          </Text>
-        </div>
+        <NoRecords
+          title={t("skills.chatbotTab.emptyTitle")}
+          message={t("skills.chatbotTab.empty")}
+          action={{
+            onClick: () => setDrawerOpen(true),
+            label: t("skills.chatbotTab.addTitle"),
+          }}
+          icon={<IconSparkles />}
+        />
       ) : (
         <ul className="divide-y divide-ui-border-base">
           {chatbotSkills.map((skill) => (

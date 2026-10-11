@@ -74,5 +74,8 @@ describe("Join requests page", () => {
     render(<JoinRequests />);
 
     expect(screen.getByText("members.joinRequests.empty")).toBeInTheDocument();
+    expect(
+      screen.getByText("members.joinRequests.emptyTitle"),
+    ).toBeInTheDocument();
   });
 });

@@ -1,3 +1,4 @@
+import { IconUserPlus } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import { useWorkspaceMembers } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
@@ -86,7 +87,15 @@ export const MemberListTable = () => {
         isLoading={isLoading}
         queryObject={urlParams}
         navigateTo={(row) => `${row.original.id}`}
-        noRecords={{ message: t("accounts.list.noRecordsMessage") }}
+        noRecords={{
+          title: t("members.list.noRecordsTitle"),
+          message: t("members.list.noRecordsMessage"),
+          action: {
+            onClick: () => setInviteOpen(true),
+            label: t("members.inviteMember.action"),
+          },
+          icon: <IconUserPlus />,
+        }}
       />
       <MemberInviteDialog open={isInviteOpen} onOpenChange={setInviteOpen} />
       <Outlet />

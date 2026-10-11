@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/hooks/api/invitations", () => ({
@@ -27,7 +28,7 @@ describe("Invitations page", () => {
       isLoading: false,
     } as A);
 
-    render(<Invitations />);
+    render(<Invitations />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("a@mail.com")).toBeInTheDocument();
   });
@@ -38,8 +39,11 @@ describe("Invitations page", () => {
       isLoading: false,
     } as A);
 
-    render(<Invitations />);
+    render(<Invitations />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("members.invitations.empty")).toBeInTheDocument();
+    expect(
+      screen.getByText("members.invitations.emptyTitle"),
+    ).toBeInTheDocument();
   });
 });

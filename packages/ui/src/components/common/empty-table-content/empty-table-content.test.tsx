@@ -1,5 +1,5 @@
-import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import {
   renderWithProviders,
   uiTestI18nResources,
@@ -24,5 +24,33 @@ describe("empty-table-content", () => {
     expect(
       screen.getByText(uiTestI18nResources.general.noRecordsTitle),
     ).toBeInTheDocument();
+  });
+
+  it("renders a link action that points to the given route", () => {
+    renderWithProviders(
+      <NoRecords action={{ to: "create", label: "Create agent" }} />,
+    );
+
+    expect(screen.getByRole("link", { name: "Create agent" })).toHaveAttribute(
+      "href",
+      "/create",
+    );
+  });
+
+  it("renders a button action that calls onClick", () => {
+    const onClick = vi.fn();
+    renderWithProviders(
+      <NoRecords action={{ onClick, label: "Invite member" }} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Invite member" }));
+
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("renders the given icon", () => {
+    renderWithProviders(<NoRecords icon={<svg data-testid="custom-icon" />} />);
+
+    expect(screen.getByTestId("custom-icon")).toBeInTheDocument();
   });
 });
