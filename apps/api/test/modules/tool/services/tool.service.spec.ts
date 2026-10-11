@@ -13,7 +13,12 @@ import {
     ENUM_HTTP_METHOD,
     ToolEntity,
 } from 'src/modules/tool/repository/entities/tool.entity';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ConflictException,
+    NotFoundException,
+} from '@nestjs/common';
+import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
 
 describe('ToolService', () => {
     let svc: ToolService;
@@ -88,6 +93,100 @@ describe('ToolService', () => {
             inputSchema: { type: 'object' },
         } as any);
         expect(mockEnc.envelopeEncrypt).not.toHaveBeenCalled();
+    });
+
+    // #176: a wrong URL or a rotated token used to mean delete and recreate,
+    // losing every chatbot link.
+    describe('update connection settings (#176)', () => {
+        const mcpTool = () =>
+            Object.assign(new ToolEntity(), {
+                id: 't-1',
+                kind: ENUM_TOOL_KIND.MCP,
+                mcpProvider: ENUM_MCP_PROVIDER.OPERATOR,
+                mcpServerUrl: 'https://old.example.com/mcp',
+                mcpAuth: { type: 'bearer' },
+                mcpCredential: 'v1:enc:old',
+            });
+
+        it('changes an HTTP tool method, URL, auth and credential', async () => {
+            const tool = Object.assign(new ToolEntity(), {
+                id: 't-1',
+                kind: ENUM_TOOL_KIND.HTTP,
+                httpMethod: ENUM_HTTP_METHOD.GET,
+                httpUrl: 'https://old.example.com',
+            });
+            mockRepo.findOneInWorkspace.mockResolvedValue(tool);
+
+            await svc.update('ws-1', 't-1', {
+                httpMethod: ENUM_HTTP_METHOD.POST,
+                httpUrl: 'https://new.example.com/orders',
+                auth: { type: 'bearer' },
+                credential: 'new-token',
+            } as any);
+
+            expect(tool).toMatchObject({
+                httpMethod: ENUM_HTTP_METHOD.POST,
+                httpUrl: 'https://new.example.com/orders',
+                httpAuth: { type: 'bearer' },
+                httpCredential: 'v1:enc:new-token',
+            });
+        });
+
+        it('changes an MCP server URL, auth and credential, then rediscovers', async () => {
+            const tool = mcpTool();
+            mockRepo.findOneInWorkspace.mockResolvedValue(tool);
+            mockDiscovery.discover = jest
+                .fn()
+                .mockResolvedValue([{ name: 'list_orders' }]);
+
+            await svc.update('ws-1', 't-1', {
+                serverUrl: 'https://new.example.com/mcp',
+                auth: {
+                    type: 'api_key',
+                    placement: 'header',
+                    paramName: 'X-Key',
+                },
+                credential: 'rotated',
+            } as any);
+
+            expect(tool).toMatchObject({
+                mcpServerUrl: 'https://new.example.com/mcp',
+                mcpAuth: {
+                    type: 'api_key',
+                    placement: 'header',
+                    paramName: 'X-Key',
+                },
+                mcpCredential: 'v1:enc:rotated',
+                discoveredActions: [{ name: 'list_orders' }],
+            });
+            expect(tool.httpUrl).toBeUndefined();
+            expect(tool.httpCredential).toBeUndefined();
+        });
+
+        it('drops the stored credential when auth is switched off', async () => {
+            const tool = mcpTool();
+            mockRepo.findOneInWorkspace.mockResolvedValue(tool);
+            mockDiscovery.discover = jest.fn().mockResolvedValue([]);
+
+            await svc.update('ws-1', 't-1', { auth: { type: 'none' } } as any);
+
+            expect(tool.mcpAuth).toEqual({ type: 'none' });
+            expect(tool.mcpCredential).toBeNull();
+        });
+
+        it('keeps the saved URL of a marketplace tool, which the provider manages', async () => {
+            const tool = Object.assign(mcpTool(), {
+                mcpProvider: ENUM_MCP_PROVIDER.COMPOSIO,
+            });
+            mockRepo.findOneInWorkspace.mockResolvedValue(tool);
+
+            await expect(
+                svc.update('ws-1', 't-1', {
+                    serverUrl: 'https://evil.example.com',
+                } as any)
+            ).rejects.toBeInstanceOf(BadRequestException);
+            expect(tool.mcpServerUrl).toBe('https://old.example.com/mcp');
+        });
     });
 
     it('getOne throws NotFound when missing', async () => {

@@ -14,7 +14,8 @@
     "update": {
         "success": "Tool updated",
         "error": {
-            "notFound": "Tool not found"
+            "notFound": "Tool not found",
+            "managedConnection": "This tool's connection is managed by its marketplace provider. Reconnect it from the marketplace instead."
         }
     },
     "delete": {

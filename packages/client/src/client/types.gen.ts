@@ -4929,6 +4929,8 @@ export type CreateMcpToolRequestDto = {
 export type UpdateToolRequestDto = {
     name?: string;
     description?: string;
+    httpMethod?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    httpUrl?: string;
     inputSchema?: {
         [key: string]: unknown;
     };
@@ -4942,6 +4944,10 @@ export type UpdateToolRequestDto = {
     credential?: string;
     timeoutMs?: number;
     maxRetries?: number;
+    /**
+     * MCP server URL (MCP tools only)
+     */
+    serverUrl?: string;
 };
 
 export type TestSavedToolRequestDto = {

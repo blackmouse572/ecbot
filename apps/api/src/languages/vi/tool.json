@@ -14,7 +14,8 @@
     "update": {
         "success": "Cập nhật công cụ thành công",
         "error": {
-            "notFound": "Không tìm thấy công cụ"
+            "notFound": "Không tìm thấy công cụ",
+            "managedConnection": "Kết nối của công cụ này do nhà cung cấp trong marketplace quản lý. Hãy kết nối lại từ marketplace."
         }
     },
     "delete": {

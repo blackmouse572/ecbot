@@ -1,4 +1,7 @@
-import type { CreateMcpToolRequestDto } from "@repo/client";
+import type {
+  CreateMcpToolRequestDto,
+  UpdateToolRequestDto,
+} from "@repo/client";
 import type { McpToolFormData } from "./mcp-tool-schema";
 
 export const toCreateMcpPayload = (
@@ -9,6 +12,19 @@ export const toCreateMcpPayload = (
     description: data.description,
     serverUrl: data.serverUrl,
     auth: data.auth,
+    credential: data.credential ? data.credential : undefined,
+  };
+};
+
+export const toUpdateMcpPayload = (
+  data: McpToolFormData,
+): UpdateToolRequestDto => {
+  return {
+    name: data.name,
+    description: data.description,
+    serverUrl: data.serverUrl,
+    auth: data.auth,
+    // Empty credential = leave existing untouched (write-only field).
     credential: data.credential ? data.credential : undefined,
   };
 };

@@ -185,7 +185,11 @@ export class ToolService {
         updatedBy?: UserEntity
     ): Promise<ToolEntity> {
         const tool = await this.getOne(workspaceId, toolId);
+        if (tool.kind === ENUM_TOOL_KIND.MCP) {
+            return this.updateMcp(tool, dto, updatedBy);
+        }
         const patch: any = { ...dto };
+        delete patch.serverUrl;
         // Map dto.name → displayName for backward compatibility. Slug is intentionally
         // immutable after creation (LLM-facing identity) — only displayName is editable.
         if (patch.name !== undefined) {
@@ -208,11 +212,61 @@ export class ToolService {
         }
         if (dto.auth) {
             patch.httpAuth = dto.auth;
+            if (dto.auth.type === 'none') patch.httpCredential = null;
             delete patch.auth;
         }
         Object.assign(tool, patch);
         if (updatedBy) tool.updatedBy = updatedBy;
         await this.toolRepo.getEntityManager().flush();
+        return tool;
+    }
+
+    /**
+     * An operator's MCP server can change its URL, auth and credential (#176);
+     * a marketplace tool's connection belongs to its provider, so only the
+     * name and description move. A new connection is rediscovered
+     * best-effort, like on create.
+     */
+    private async updateMcp(
+        tool: ToolEntity,
+        dto: UpdateToolRequestDto,
+        updatedBy?: UserEntity
+    ): Promise<ToolEntity> {
+        const changesConnection =
+            dto.serverUrl !== undefined ||
+            dto.auth !== undefined ||
+            !!dto.credential;
+        if (
+            changesConnection &&
+            tool.mcpProvider !== ENUM_MCP_PROVIDER.OPERATOR
+        ) {
+            throw new BadRequestException(
+                'tool.update.error.managedConnection'
+            );
+        }
+        if (dto.name !== undefined) tool.displayName = dto.name;
+        if (dto.description !== undefined) tool.description = dto.description;
+        if (dto.serverUrl !== undefined) tool.mcpServerUrl = dto.serverUrl;
+        if (dto.auth !== undefined) {
+            tool.mcpAuth = dto.auth as ToolEntity['mcpAuth'];
+            if (dto.auth.type === 'none') tool.mcpCredential = null;
+        }
+        if (dto.credential) {
+            tool.mcpCredential = this.enc.envelopeEncrypt(dto.credential);
+        }
+        if (updatedBy) tool.updatedBy = updatedBy;
+        await this.toolRepo.getEntityManager().flush();
+        if (changesConnection) {
+            try {
+                tool.discoveredActions = await this.discovery.discover(tool);
+                tool.discoveryAt = new Date();
+                await this.toolRepo.getEntityManager().flush();
+            } catch (err) {
+                this.logger.warn(
+                    `MCP discovery failed for tool ${tool.id}: ${String(err)}`
+                );
+            }
+        }
         return tool;
     }
 
