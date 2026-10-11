@@ -11,7 +11,6 @@ import { ConfigService } from '@nestjs/config';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { randomBytes } from 'crypto';
 import type { Response as ExpressResponse } from 'express';
-import { AccountFacebookDataDeletionRequestDto } from '../dtos/request/account.facebook-data-deletion.request.dto';
 import { AccountService } from '../services/account.service';
 
 /**
@@ -34,11 +33,13 @@ export class AccountDataDeletionPublicController {
 
     @Post('/facebook')
     async facebook(
-        @Body() dto: AccountFacebookDataDeletionRequestDto,
+        // Read by name, not through a DTO: the global pipe would answer 422
+        // if Meta ever adds a field, and the signature check validates it.
+        @Body('signed_request') signedRequest: unknown,
         @Res() res: ExpressResponse
     ): Promise<void> {
         const payload = parseFacebookSignedRequest(
-            dto.signed_request,
+            signedRequest,
             this.configService.get<string>('facebook.appSecret') ?? ''
         );
         if (!payload) {
@@ -48,19 +49,20 @@ export class AccountDataDeletionPublicController {
             return;
         }
 
-        const deleted = await this.accountService.deleteFacebookUserData(
+        const accountIds = await this.accountService.deleteFacebookUserData(
             payload.user_id
         );
         const confirmationCode = randomBytes(6).toString('hex').toUpperCase();
         this.logger.log(
-            `Facebook data deletion ${confirmationCode}: user ${payload.user_id}, ${deleted} login(s) removed`
+            `Facebook data deletion ${confirmationCode}: ${accountIds.length} login(s) removed [${accountIds.join(', ')}]`
         );
 
-        const statusUrl = this.configService.get<string>(
-            'facebook.dataDeletionStatusUrl'
+        const statusUrl = new URL(
+            this.configService.get<string>('facebook.dataDeletionStatusUrl')
         );
+        statusUrl.searchParams.set('code', confirmationCode);
         res.status(HttpStatus.OK).json({
-            url: `${statusUrl}?code=${confirmationCode}`,
+            url: statusUrl.toString(),
             confirmation_code: confirmationCode,
         });
     }

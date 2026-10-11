@@ -64,6 +64,38 @@ describe('parseFacebookSignedRequest', () => {
         }
     );
 
+    it.each([undefined, null, 42, ['a.b'], { a: 'b' }])(
+        'rejects the non-string value %p instead of throwing',
+        value => {
+            expect(parseFacebookSignedRequest(value, APP_SECRET)).toBeNull();
+        }
+    );
+
+    it('rejects a validly signed payload that is not JSON', () => {
+        const encodedPayload = base64Url('not json');
+        const signature = createHmac('sha256', APP_SECRET)
+            .update(encodedPayload)
+            .digest();
+        expect(
+            parseFacebookSignedRequest(
+                `${base64Url(signature)}.${encodedPayload}`,
+                APP_SECRET
+            )
+        ).toBeNull();
+    });
+
+    it.each([undefined, '', 1234567890, { $ne: null }])(
+        'rejects a signed payload whose user_id is %p',
+        userId => {
+            expect(
+                parseFacebookSignedRequest(
+                    sign({ ...payload, user_id: userId }),
+                    APP_SECRET
+                )
+            ).toBeNull();
+        }
+    );
+
     it('rejects everything when the app secret is not configured', () => {
         expect(parseFacebookSignedRequest(sign(payload), '')).toBeNull();
     });

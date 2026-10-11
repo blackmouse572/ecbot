@@ -536,21 +536,28 @@ export class AccountService implements IAccountService {
     /**
      * Meta data deletion request: unlinks the person's Facebook login (name,
      * avatar, user token) in every workspace. Pages linked through it belong
-     * to the business and stay. Returns how many logins were removed.
+     * to the business and stay, but their page tokens were issued under that
+     * person's grant, so those are cleared and the pages wait for a reconnect.
+     * Returns the ids of the logins that were removed.
      */
-    async deleteFacebookUserData(facebookUserId: string): Promise<number> {
+    async deleteFacebookUserData(facebookUserId: string): Promise<string[]> {
         const accounts = await this.accountRepository.find({
             externalId: facebookUserId,
             type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
             deletedAt: null,
         });
 
-        let deleted = 0;
+        const deleted: string[] = [];
         for (const account of accounts) {
+            // Before the delete: it nulls the pages' parent reference.
+            await this.accountRepository.updateManyRaw(
+                { account: account.id, type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE },
+                { accessToken: '', status: ENUM_ACCOUNT_STATUS.INACTIVE }
+            );
             if (
                 await this.deleteSyncAccount(account.id, account.workspace.id)
             ) {
-                deleted++;
+                deleted.push(account.id);
             }
         }
         return deleted;

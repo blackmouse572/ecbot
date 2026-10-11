@@ -54,6 +54,7 @@ const mockAccountRepository = {
     find: jest.fn(),
     getTotal: jest.fn(),
     findOne: jest.fn(),
+    updateManyRaw: jest.fn().mockResolvedValue(0),
 };
 
 const mockFacebookWebhookService = {
@@ -545,7 +546,8 @@ describe('AccountService - deleteSyncAccount', () => {
 
 // Meta data deletion callback: the person removed the app and asked Meta to
 // have their data deleted. Their Facebook login (name, avatar, user token) is
-// unlinked in every workspace; the pages stay with the business.
+// unlinked in every workspace; the pages stay with the business, but lose the
+// page tokens that were issued under that person's grant.
 describe('AccountService - deleteFacebookUserData', () => {
     let service: AccountService;
 
@@ -584,7 +586,7 @@ describe('AccountService - deleteFacebookUserData', () => {
 
         const deleted = await service.deleteFacebookUserData('fb-user-1');
 
-        expect(deleted).toBe(1);
+        expect(deleted).toEqual(['account-uuid-1']);
         expect(mockAccountRepository.findOne).toHaveBeenCalledWith({
             id: 'account-uuid-1',
             workspace: 'ws-1',
@@ -595,12 +597,42 @@ describe('AccountService - deleteFacebookUserData', () => {
         });
     });
 
-    it('returns 0 when we hold nothing for that person', async () => {
+    // The parent FK is `on delete set null`, so the pages have to be found
+    // before the login row goes.
+    it('clears the token of every page linked through that login and marks it inactive, before the login is deleted', async () => {
+        mockAccountRepository.find.mockResolvedValue([
+            {
+                id: 'account-uuid-1',
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+                workspace: { id: 'ws-1' },
+            },
+        ]);
+        mockAccountRepository.findOne.mockResolvedValue({
+            id: 'account-uuid-1',
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+        });
+
+        await service.deleteFacebookUserData('fb-user-1');
+
+        expect(mockAccountRepository.updateManyRaw).toHaveBeenCalledWith(
+            {
+                account: 'account-uuid-1',
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+            },
+            { accessToken: '', status: ENUM_ACCOUNT_STATUS.INACTIVE }
+        );
+        expect(
+            mockAccountRepository.updateManyRaw.mock.invocationCallOrder[0]
+        ).toBeLessThan(mockTem.nativeDelete.mock.invocationCallOrder[0]);
+    });
+
+    it('returns nothing when we hold nothing for that person', async () => {
         mockAccountRepository.find.mockResolvedValue([]);
 
         await expect(
             service.deleteFacebookUserData('unknown')
-        ).resolves.toBe(0);
+        ).resolves.toEqual([]);
+        expect(mockAccountRepository.updateManyRaw).not.toHaveBeenCalled();
         expect(mockEm.transactional).not.toHaveBeenCalled();
     });
 });

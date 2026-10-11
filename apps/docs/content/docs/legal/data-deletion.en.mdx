@@ -4,9 +4,9 @@ description: How to delete the data Ecbot holds about you, whether you connected
 noindex: true
 faq:
   - q: I removed Ecbot from my Facebook settings. Is my data gone?
-    a: When you remove Ecbot and choose to have your data deleted, Facebook tells us and we delete your linked Facebook login (your name, profile picture and access token) right away. You get a confirmation code you can quote to us.
+    a: When you remove Ecbot and choose to have your data deleted, Facebook tells us and we delete your linked Facebook login (your name, profile picture and access token) right away, along with the access tokens of the Pages you connected. You get a confirmation code you can quote to us.
   - q: What happens to the Pages I connected?
-    a: A connected Page and its conversations belong to the business workspace. A workspace member can remove the Page under Channels, which permanently deletes its conversations and messages from Ecbot.
+    a: A connected Page and its conversations belong to the business workspace, so they stay. We delete the Page access tokens that came from your login, which disconnects those Pages until someone reconnects them. A workspace member can remove the Page under Channels, which permanently deletes its conversations and messages from Ecbot.
   - q: I chatted with a shop. How do I delete my messages?
     a: Ask the shop. It controls that data and can erase your profile, conversations, messages and files from its workspace. If the shop does not answer, write to security@ecbot.dev and we will help.
 ---
@@ -22,7 +22,7 @@ You can ask for deletion from Facebook itself:
 3. Find **Ecbot** and choose **Remove**.
 4. Tick the option to delete the data Ecbot has about you, then confirm.
 
-Facebook sends us the request. We delete your linked Facebook login at once: your name, profile picture, Facebook user id and the access token Ecbot held for you. Facebook then shows you a confirmation code and a link back to this page.
+Facebook sends us the request. We delete your linked Facebook login at once: your name, profile picture, Facebook user id and the access token Ecbot held for you. We also delete the access tokens of the Pages you connected, so Ecbot can no longer send messages for those Pages until a workspace member reconnects them. Facebook then shows you a confirmation code and a link back to this page.
 
 You can also do this inside Ecbot: open **Channels**, choose the Facebook account or Page, and remove it. Removing a Page permanently deletes its conversations and messages from Ecbot.
 

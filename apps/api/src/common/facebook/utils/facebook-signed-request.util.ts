@@ -7,10 +7,10 @@ import { IFacebookSignedRequestPayload } from '../interfaces/facebook-signed-req
  * anything that is malformed, unsigned, or signed with another secret.
  */
 export function parseFacebookSignedRequest(
-    signedRequest: string,
+    signedRequest: unknown,
     appSecret: string
 ): IFacebookSignedRequestPayload | null {
-    if (!appSecret) return null;
+    if (!appSecret || typeof signedRequest !== 'string') return null;
 
     const parts = signedRequest.split('.');
     if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
@@ -32,7 +32,9 @@ export function parseFacebookSignedRequest(
             Buffer.from(encodedPayload, 'base64url').toString('utf8')
         ) as IFacebookSignedRequestPayload;
         if (payload.algorithm?.toUpperCase() !== 'HMAC-SHA256') return null;
-        if (!payload.user_id) return null;
+        if (!payload.user_id || typeof payload.user_id !== 'string') {
+            return null;
+        }
         return payload;
     } catch {
         return null;
