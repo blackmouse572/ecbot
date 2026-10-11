@@ -2940,6 +2940,8 @@
       "access": {
         "actionsTitle": "Công cụ này làm được gì ({{count}})",
         "actionsEmpty": "Composio chưa liệt kê thao tác nào cho toolkit này.",
+        "actionsEmptyEccho": "Công cụ Ecbot này sẽ liệt kê các thao tác sau khi bạn cài đặt.",
+        "actionsCapped": "Đang hiển thị {{count}} thao tác đầu tiên.",
         "destructiveHint": "Các thao tác có thể xóa dữ liệu sẽ tắt cho đến khi bạn bật cho từng agent.",
         "showAll": "Xem tất cả {{count}}",
         "showLess": "Thu gọn",

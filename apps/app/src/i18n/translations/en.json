@@ -2892,6 +2892,8 @@
       "access": {
         "actionsTitle": "What it can do ({{count}})",
         "actionsEmpty": "Composio lists no actions for this toolkit.",
+        "actionsEmptyEccho": "This Ecbot tool lists its actions after you install it.",
+        "actionsCapped": "Showing the first {{count}} actions.",
         "destructiveHint": "Actions that can delete data stay off until you turn them on for an agent.",
         "showAll": "Show all {{count}}",
         "showLess": "Show less",

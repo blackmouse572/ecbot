@@ -16,6 +16,18 @@ const actions = Array.from({ length: 10 }, (_, i) => ({
   destructive: i === 0,
 }));
 
+const access = (overrides: object = {}) => ({
+  access: {
+    provider: "composio",
+    actions,
+    scopes: [],
+    requiresSignIn: false,
+    ...overrides,
+  },
+  isLoading: false,
+  isError: false,
+});
+
 // #189: the page said nothing about what the toolkit does or the access
 // Google would ask for.
 describe("ToolkitAccessSection", () => {
@@ -31,14 +43,12 @@ describe("ToolkitAccessSection", () => {
     );
 
   it("lists the requested access and warns it can be broad", () => {
-    accessQuery.mockReturnValue({
-      access: {
-        actions,
+    accessQuery.mockReturnValue(
+      access({
         scopes: ["https://www.googleapis.com/auth/drive"],
-      },
-      isLoading: false,
-      isError: false,
-    });
+        requiresSignIn: true,
+      }),
+    );
 
     renderSection();
 
@@ -50,11 +60,7 @@ describe("ToolkitAccessSection", () => {
   });
 
   it("previews the actions, flags destructive ones, and expands to all", () => {
-    accessQuery.mockReturnValue({
-      access: { actions, scopes: [] },
-      isLoading: false,
-      isError: false,
-    });
+    accessQuery.mockReturnValue(access());
 
     renderSection();
 
@@ -65,6 +71,46 @@ describe("ToolkitAccessSection", () => {
     fireEvent.click(screen.getByText("Show all 10"));
 
     expect(screen.getByText("GOOGLESHEETS_ACTION_9")).toBeTruthy();
+  });
+
+  // An API-key toolkit has no scopes but still leaves the page to sign in.
+  it("warns about leaving the page whenever install needs a sign-in", () => {
+    accessQuery.mockReturnValue(access({ requiresSignIn: true }));
+
+    renderSection();
+
+    expect(screen.getByText(/opens the Google Sheets sign-in/)).toBeTruthy();
+  });
+
+  it("shows Composio's readable action name", () => {
+    accessQuery.mockReturnValue(
+      access({
+        actions: [
+          {
+            name: "GOOGLESHEETS_BATCH_GET",
+            label: "Batch get spreadsheet",
+            description: "Read ranges",
+            destructive: false,
+          },
+        ],
+      }),
+    );
+
+    renderSection();
+
+    expect(screen.getByText("Batch get spreadsheet")).toBeTruthy();
+  });
+
+  it("does not blame Composio for an Ecbot tool's empty list", () => {
+    accessQuery.mockReturnValue(access({ provider: "eccho", actions: [] }));
+
+    renderSection();
+
+    expect(
+      screen.getByText(
+        "This Ecbot tool lists its actions after you install it.",
+      ),
+    ).toBeTruthy();
   });
 
   it("says so when the list cannot load", () => {

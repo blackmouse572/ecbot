@@ -2,7 +2,7 @@ import { useGetToolkitAccess } from "@/hooks/api/tools";
 import { Badge, Button, Skeleton, Text } from "@medusajs/ui";
 import { type FC, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ACCESS_ACTIONS_PREVIEW } from "../constants";
+import { ACCESS_ACTIONS_LIMIT, ACCESS_ACTIONS_PREVIEW } from "../constants";
 
 type ToolkitAccessSectionProps = {
   workspaceSlug: string;
@@ -42,7 +42,7 @@ export const ToolkitAccessSection: FC<ToolkitAccessSectionProps> = ({
     );
   }
 
-  const { actions, scopes } = access;
+  const { actions, scopes, requiresSignIn, provider } = access;
   const shown = showAll ? actions : actions.slice(0, ACCESS_ACTIONS_PREVIEW);
 
   return (
@@ -67,10 +67,12 @@ export const ToolkitAccessSection: FC<ToolkitAccessSectionProps> = ({
               </li>
             ))}
           </ul>
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.marketplace.access.redirectNote", { name })}
-          </Text>
         </div>
+      )}
+      {requiresSignIn && (
+        <Text size="small" className="text-ui-fg-subtle px-6 py-4">
+          {t("tools.marketplace.access.redirectNote", { name })}
+        </Text>
       )}
       <div className="flex flex-col gap-y-3 px-6 py-4">
         <Text size="small" weight="plus">
@@ -80,7 +82,11 @@ export const ToolkitAccessSection: FC<ToolkitAccessSectionProps> = ({
         </Text>
         {actions.length === 0 ? (
           <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.marketplace.access.actionsEmpty")}
+            {t(
+              provider === "eccho"
+                ? "tools.marketplace.access.actionsEmptyEccho"
+                : "tools.marketplace.access.actionsEmpty",
+            )}
           </Text>
         ) : (
           <>
@@ -95,24 +101,33 @@ export const ToolkitAccessSection: FC<ToolkitAccessSectionProps> = ({
                   key={action.name}
                   className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4"
                 >
-                  <Text
-                    size="small"
-                    className="text-ui-fg-base truncate font-medium"
-                    title={action.name}
-                  >
-                    {action.name}
+                  <div className="flex min-w-0 items-center gap-x-1.5">
+                    <Text
+                      size="small"
+                      className="text-ui-fg-base truncate font-medium"
+                      title={action.name}
+                    >
+                      {action.label ?? action.name}
+                    </Text>
                     {action.destructive && (
-                      <Badge size="2xsmall" color="red" className="ml-1.5">
+                      <Badge size="2xsmall" color="red" className="shrink-0">
                         {t("tools.destructiveAction")}
                       </Badge>
                     )}
-                  </Text>
+                  </div>
                   <Text size="small" className="text-ui-fg-subtle">
                     {action.description}
                   </Text>
                 </li>
               ))}
             </ul>
+            {actions.length >= ACCESS_ACTIONS_LIMIT && (
+              <Text size="small" className="text-ui-fg-subtle">
+                {t("tools.marketplace.access.actionsCapped", {
+                  count: ACCESS_ACTIONS_LIMIT,
+                })}
+              </Text>
+            )}
             {actions.length > ACCESS_ACTIONS_PREVIEW && (
               <Button
                 type="button"

@@ -5181,6 +5181,10 @@ export type ComposioToolkitDetailResponseDto = {
 
 export type ComposioToolkitActionDto = {
     name: string;
+    /**
+     * Composio's readable name, when it has one
+     */
+    label?: string;
     description: string;
     /**
      * Deletes or changes data; stays off until a chatbot link names it
@@ -5194,6 +5198,14 @@ export type ComposioToolkitAccessResponseDto = {
      * OAuth scopes the sign-in asks for; empty when the toolkit has none
      */
     scopes: Array<string>;
+    /**
+     * Install leaves the page for a sign-in (OAuth, or a form for a key)
+     */
+    requiresSignIn: boolean;
+    /**
+     * Ecbot's own tools list their actions after install
+     */
+    provider: 'composio' | 'eccho';
 };
 
 export type ToolInstallResponseDto = {

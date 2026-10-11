@@ -203,7 +203,14 @@ export class MarketplaceWorkspaceController {
     ): Promise<IResponse<IComposioToolkitAccess>> {
         // Ecbot-managed tools sign in to nothing outside Ecbot.
         if (this.ecchoCatalog.findBySlug(slug)) {
-            return { data: { actions: [], scopes: [] } };
+            return {
+                data: {
+                    provider: 'eccho',
+                    actions: [],
+                    scopes: [],
+                    requiresSignIn: false,
+                },
+            };
         }
         return { data: await this.catalog.getToolkitAccess(slug) };
     }
