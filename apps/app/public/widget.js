@@ -35,7 +35,16 @@
   var label = script.getAttribute("data-label") || "Chat";
   var zIndex = script.getAttribute("data-z-index") || "2147483000";
   // light (default), dark, or auto to follow the visitor's device setting.
-  var theme = script.getAttribute("data-theme") || "light";
+  // Inside an iframe, prefers-color-scheme follows the embedding page rather
+  // than the device, so auto is resolved here on the host page.
+  var theme = (script.getAttribute("data-theme") || "light").toLowerCase();
+  if (theme === "auto") {
+    theme =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+  }
 
   var open = false;
   var unread = 0;

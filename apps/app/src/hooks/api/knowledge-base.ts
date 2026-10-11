@@ -389,8 +389,9 @@ export const useLinkKnowledgeItemToChatbot = (
 };
 
 /**
- * Links one knowledge item to several agents at once (the item create form).
- * Each link is its own request, so one failure doesn't drop the others; the
+ * Links one knowledge item to several agents (the item create form). One at
+ * a time: each link queues a reindex holding the item's links at that moment,
+ * so the last one must see them all. A failure doesn't stop the rest; the
  * result says how many failed.
  */
 export const useLinkKnowledgeItemToChatbots = () => {
@@ -405,21 +406,22 @@ export const useLinkKnowledgeItemToChatbots = () => {
       knowledgeItemId: string;
       chatbotIds: string[];
     }) => {
-      const results = await Promise.allSettled(
-        chatbotIds.map((chatbotId) =>
-          chatbotKnowledgeItemWorkspaceControllerLinkV1({
+      let failed = 0;
+      for (const chatbotId of chatbotIds) {
+        try {
+          await chatbotKnowledgeItemWorkspaceControllerLinkV1({
             path: {
               workspace: workspace!.slug,
               chatbotId,
               knowledgeItemId,
               id: knowledgeItemId,
             },
-          }),
-        ),
-      );
-      return {
-        failed: results.filter((r) => r.status === "rejected").length,
-      };
+          });
+        } catch {
+          failed += 1;
+        }
+      }
+      return { failed };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
