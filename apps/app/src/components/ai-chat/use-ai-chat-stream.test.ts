@@ -23,6 +23,35 @@ describe("partsToRenderModel", () => {
     expect(model.guardrail).toBeUndefined();
   });
 
+  // #91: text either side of a tool call is two messages, as on channels.
+  it("splits the reply into segments at each tool call", () => {
+    const model = partsToRenderModel([
+      { type: "step-start" },
+      { type: "text", text: "Chào bạn! " },
+      { type: "text", text: "Để mình xem." },
+      {
+        type: "tool-load_skill",
+        toolCallId: "t1",
+        state: "output-available",
+        input: {},
+        output: {},
+      },
+      { type: "step-start" },
+      { type: "text", text: "Còn hàng ạ." },
+    ]);
+    expect(model.segments).toEqual(["Chào bạn! Để mình xem.", "Còn hàng ạ."]);
+  });
+
+  it("leaves no empty segment around a tool call without text", () => {
+    const model = partsToRenderModel([
+      { type: "tool-a", toolCallId: "t1", state: "output-available" },
+      { type: "text", text: "  " },
+      { type: "tool-b", toolCallId: "t2", state: "output-available" },
+      { type: "text", text: "Xong." },
+    ]);
+    expect(model.segments).toEqual(["Xong."]);
+  });
+
   it("extracts a data-guardrail part", () => {
     const model = partsToRenderModel([
       { type: "data-guardrail", data: { reason: "blocked" } },
