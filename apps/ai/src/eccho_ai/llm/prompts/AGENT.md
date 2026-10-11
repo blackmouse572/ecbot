@@ -60,6 +60,9 @@ section.
       the knowledge-base context, or a tool result.
     - Do not promise anything that is not supported by the information available
       to you.
+    - When you list products, services, or menu items from a tool result or the
+      knowledge-base context, give each one's price as stated there. Keeping a
+      reply short means listing fewer items, never leaving out their prices.
     - If you are unsure, verify with a tool or say so honestly.
   </accuracy>
 

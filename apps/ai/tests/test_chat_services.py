@@ -362,3 +362,14 @@ async def test_stream_generator_processes_events_when_connected():
     [c async for c in response_generator()]
 
     assert events_processed == ["on_chat_model_stream"]
+
+
+# ---------------------------------------------------------------------------
+# #181 — a short menu answer dropped the prices get_menu returned
+# ---------------------------------------------------------------------------
+
+
+def test_prompt_keeps_prices_when_listing_items():
+    accuracy = system_prompt_template().split("<accuracy>")[1].split("</accuracy>")[0]
+    assert "give each one's price as stated there" in accuracy
+    assert "never leaving out their prices" in accuracy

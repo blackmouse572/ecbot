@@ -63,7 +63,11 @@ describe('ReplyGenerationService.run', () => {
     });
 
     /** A service whose Turn context is `context`; apps/ai's stream fails. */
-    function serviceWith(context: object, meter?: object) {
+    function serviceWith(
+        context: object,
+        meter?: object,
+        options: { capabilities?: object; typingIndicator?: boolean } = {}
+    ) {
         const streamChat = jest.fn().mockRejectedValue(new Error('stop'));
         const turnContext = { build: jest.fn().mockResolvedValue(context) };
         const svc = new ReplyGenerationService(
@@ -71,7 +75,11 @@ describe('ReplyGenerationService.run', () => {
                 findOne: jest.fn().mockResolvedValue({
                     id: 'acc-1',
                     type: 'TELEGRAM_BOT',
-                    chatbot: { id: 'bot-1', workspace: { id: 'ws-1' } },
+                    chatbot: {
+                        id: 'bot-1',
+                        workspace: { id: 'ws-1' },
+                        typingIndicator: options.typingIndicator,
+                    },
                 }),
             } as any,
             { streamChat } as any,
@@ -80,6 +88,7 @@ describe('ReplyGenerationService.run', () => {
             } as any,
             {
                 get: () => ({
+                    capabilities: options.capabilities ?? { typing: true },
                     startTyping: jest.fn().mockResolvedValue(undefined),
                 }),
             } as any,
@@ -139,6 +148,33 @@ describe('ReplyGenerationService.run', () => {
             reason: 'no_fallback_configured',
         });
         expect(streamChat).not.toHaveBeenCalled();
+    });
+
+    // Telegram drops a chat action after 5s; the 9s default left the
+    // customer without a typing indicator for long stretches (#181).
+    it("re-sends the typing indicator at the adapter's own interval", async () => {
+        const setIntervalSpy = jest.spyOn(global, 'setInterval');
+        const { run } = serviceWith({ history: [], message: 'x' }, undefined, {
+            capabilities: { typing: true, typingRefreshMs: 4000 },
+            typingIndicator: true,
+        });
+
+        await run();
+
+        expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 4000);
+        setIntervalSpy.mockRestore();
+    });
+
+    it('falls back to the default typing interval', async () => {
+        const setIntervalSpy = jest.spyOn(global, 'setInterval');
+        const { run } = serviceWith({ history: [], message: 'x' }, undefined, {
+            typingIndicator: true,
+        });
+
+        await run();
+
+        expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 9000);
+        setIntervalSpy.mockRestore();
     });
 
     // #250: describing the burst's images is a model call too. A blocked
