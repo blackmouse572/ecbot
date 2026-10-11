@@ -31,6 +31,7 @@ describe('NotificationService.createHandoff', () => {
         await service.createHandoff('user-1', {
             conversationId: 'conv-1',
             workspaceId: 'ws-1',
+            workspaceSlug: 'acme',
             reason: 'keyword_trigger',
         });
 
@@ -40,7 +41,7 @@ describe('NotificationService.createHandoff', () => {
                 'notification.handoff.message(notification.handoff.reason.keyword_trigger)',
             recipient: 'user-1',
             metadata: {
-                actionUrl: '/conversations/conv-1',
+                actionUrl: '/acme/conversations/conv-1',
                 actionText: 'notification.handoff.actionText',
             },
         });
@@ -50,6 +51,7 @@ describe('NotificationService.createHandoff', () => {
         await service.createHandoff('user-1', {
             conversationId: 'conv-1',
             workspaceId: 'ws-1',
+            workspaceSlug: 'acme',
             reason: 'pii_detected',
         });
 
@@ -65,6 +67,7 @@ describe('NotificationService.createHandoff', () => {
         await service.createHandoff('user-1', {
             conversationId: 'conv-1',
             workspaceId: 'ws-1',
+            workspaceSlug: 'acme',
             reason: 'keyword_trigger',
             language: 'vi',
         });

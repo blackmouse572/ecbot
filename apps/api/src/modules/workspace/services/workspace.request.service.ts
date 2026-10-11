@@ -106,6 +106,7 @@ export class WorkspaceRequestService {
                     workspace: {
                         id: workspace.id,
                         name: workspace.name,
+                        slug: workspace.slug,
                     },
                     requestorName: requestFrom.name,
                 }
@@ -225,6 +226,7 @@ export class WorkspaceRequestService {
                     recipient: request.requestFrom.id,
                     sender: workspace.owner.id,
                     metadata: {
+                        actionUrl: `/${workspace.slug}`,
                         actionText: this.messageService.setMessage(
                             'notification.requests.action.goToWorkspace'
                         ),

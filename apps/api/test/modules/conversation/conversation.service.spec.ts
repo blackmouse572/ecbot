@@ -269,7 +269,7 @@ describe('ConversationService', () => {
                 handoffReason: 'fallback_threshold',
             });
             mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
-                [{ user: { id: 'user-1' } }]
+                [{ user: { id: 'user-1' }, workspace: { slug: 'acme' } }]
             );
             mockNotificationService.createHandoff.mockResolvedValue({});
 
@@ -561,8 +561,8 @@ describe('ConversationService', () => {
     describe('notifyOperators', () => {
         it('should create notifications for all active workspace members', async () => {
             const members = [
-                { user: { id: 'user-1' } },
-                { user: { id: 'user-2' } },
+                { user: { id: 'user-1' }, workspace: { slug: 'acme' } },
+                { user: { id: 'user-2' }, workspace: { slug: 'acme' } },
             ];
 
             mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
@@ -587,6 +587,7 @@ describe('ConversationService', () => {
                 {
                     conversationId: 'conv-1',
                     workspaceId: 'workspace-1',
+                    workspaceSlug: 'acme',
                     reason: 'keyword_trigger',
                 }
             );
