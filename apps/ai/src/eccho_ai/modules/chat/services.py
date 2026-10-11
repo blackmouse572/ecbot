@@ -13,7 +13,12 @@ from langchain_core.runnables.config import RunnableConfig
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.llm.agents.agent import AgentContext, get_agent  # re-exported
-from eccho_ai.llm.retrievers.retrieval import RETRIEVAL_ERROR, RAGRetrievalResult, RAGRetrievalService
+from eccho_ai.llm.retrievers.retrieval import (
+    RETRIEVAL_ERROR,
+    RAGRetrievalResult,
+    RAGRetrievalService,
+    RetrievalStageError,
+)
 from eccho_ai.llm.tools.resolve import resolve_chatbot_tools
 from eccho_ai.models.chat import Chatbots
 from eccho_ai.modules.chat.constants import (
@@ -55,7 +60,12 @@ async def get_rag_retrieval(chat_request: ChatRequest) -> RAGRetrievalResult | N
             query=chat_request.message or "",
         )
     except Exception as exc:
-        logger.error("rag_retrieval_failed", error=str(exc), chatbot_id=chat_request.chatbot_id)
+        logger.error(
+            "rag_retrieval_failed",
+            error=str(exc.__cause__ or exc),
+            stage=getattr(exc, "code", None),
+            chatbot_id=chat_request.chatbot_id,
+        )
         # Reported on `message-metadata` (#205); the prompt still gets the
         # message as is, as when retrieval does not run.
         return RAGRetrievalResult(
@@ -63,7 +73,8 @@ async def get_rag_retrieval(chat_request: ChatRequest) -> RAGRetrievalResult | N
             chunks=[],
             context="",
             status=RETRIEVAL_ERROR,
-            reason=f"{type(exc).__name__}: {exc}"[:200],
+            # A fixed code, never the exception text (internal hosts, SQL).
+            reason=exc.code if isinstance(exc, RetrievalStageError) else "retrieval_failed",
         )
 
 

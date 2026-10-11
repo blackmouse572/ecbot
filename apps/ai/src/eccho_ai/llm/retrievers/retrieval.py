@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 import asyncio
+import hashlib
 import math
 import re
 from functools import lru_cache
@@ -92,12 +93,35 @@ class RetrievedChunk:
 # Why a turn got the knowledge it got (#205), for operators and evals:
 # "ok" (chunks passed the threshold), "no_documents" (none attached),
 # "below_threshold" (candidates, none good enough), "error" (retrieval
-# raised), "disabled" (RAG off, or nothing to search for).
+# raised), "disabled" (RAG off), "no_query" (nothing to search for, e.g. an
+# image-only message).
 RETRIEVAL_OK = "ok"
 RETRIEVAL_NO_DOCUMENTS = "no_documents"
 RETRIEVAL_BELOW_THRESHOLD = "below_threshold"
 RETRIEVAL_ERROR = "error"
 RETRIEVAL_DISABLED = "disabled"
+RETRIEVAL_NO_QUERY = "no_query"
+
+
+class RetrievalStageError(Exception):
+    """A retrieval failure tagged with the stage that failed. Its `code` goes
+    on `message-metadata`; the driver or HTTP text stays in the logs, since
+    workspace owners can read the metadata in the preview."""
+
+    def __init__(self, code: str):
+        super().__init__(code)
+        self.code = code
+
+
+def stable_chunk_id(chunk: RetrievedChunk) -> str:
+    """Same chunk, same id across re-ingests (#205): the row id changes every
+    time `replace_chunks` reinserts. Knowledge item + chunk index + content
+    hash; the row id for a document ingested without a knowledge item."""
+    item_id = (chunk.metadata.get("document") or {}).get("knowledge_item_id")
+    if not item_id:
+        return chunk.chunk_id
+    digest = hashlib.sha256(chunk.content.encode("utf-8")).hexdigest()[:12]
+    return f"{item_id}:{chunk.chunk_index}:{digest}"
 
 
 def score_kind() -> str:
@@ -141,8 +165,8 @@ class RAGRetrievalResult:
                 {
                     # Positional per reply: the label the model cites.
                     "id": f"KB-{index}",
-                    # Stable across runs: compare sources by this one.
-                    "chunk_id": chunk.chunk_id,
+                    # Stable across runs and re-ingests: compare sources by this one.
+                    "chunk_id": stable_chunk_id(chunk),
                     "document_id": chunk.document_id,
                     "filename": chunk.filename,
                     "title": source_title(chunk),
@@ -167,11 +191,12 @@ class RAGRetrievalService:
         if not AppVars.RAG_RETRIEVAL_ENABLED:
             return RAGRetrievalResult(query=clean_query, chunks=[], context="", status=RETRIEVAL_DISABLED)
         if not clean_query:
-            return RAGRetrievalResult(
-                query=clean_query, chunks=[], context="", status=RETRIEVAL_DISABLED, reason="empty query"
-            )
+            return RAGRetrievalResult(query=clean_query, chunks=[], context="", status=RETRIEVAL_NO_QUERY)
 
-        document_count = await self.store.count_completed_documents(chatbot_id=chatbot_id)
+        try:
+            document_count = await self.store.count_completed_documents(chatbot_id=chatbot_id)
+        except Exception as exc:
+            raise RetrievalStageError("store_failed") from exc
         if document_count == 0:
             return RAGRetrievalResult(
                 query=clean_query,
@@ -180,25 +205,34 @@ class RAGRetrievalService:
                 status=RETRIEVAL_NO_DOCUMENTS,
             )
 
-        query_embedding = await self._embed_query(clean_query)
-        similarity_rows = await self.store.similarity_search_chunks(
-            embedding=query_embedding,
-            chatbot_id=chatbot_id,
-            limit=AppVars.RAG_RETRIEVAL_CANDIDATE_LIMIT,
-        )
+        try:
+            query_embedding = await self._embed_query(clean_query)
+        except Exception as exc:
+            raise RetrievalStageError("embedding_failed") from exc
+        try:
+            similarity_rows = await self.store.similarity_search_chunks(
+                embedding=query_embedding,
+                chatbot_id=chatbot_id,
+                limit=AppVars.RAG_RETRIEVAL_CANDIDATE_LIMIT,
+            )
 
-        fts_rows = await self.store.full_text_search_chunks(
-            query=clean_query,
-            chatbot_id=chatbot_id,
-            limit=AppVars.RAG_RETRIEVAL_CANDIDATE_LIMIT,
-        )
+            fts_rows = await self.store.full_text_search_chunks(
+                query=clean_query,
+                chatbot_id=chatbot_id,
+                limit=AppVars.RAG_RETRIEVAL_CANDIDATE_LIMIT,
+            )
+        except Exception as exc:
+            raise RetrievalStageError("store_failed") from exc
 
         candidates = self._merge_candidates(
             similarity_rows=similarity_rows,
             fts_rows=fts_rows,
         )
         deduped_candidates = self._deduplicate_content(list(candidates.values()))
-        ranked = await self._rerank(clean_query, deduped_candidates)
+        try:
+            ranked = await self._rerank(clean_query, deduped_candidates)
+        except Exception as exc:
+            raise RetrievalStageError("rerank_failed") from exc
         selected = [
             chunk for chunk in ranked
             if chunk.rerank_score >= AppVars.RAG_RETRIEVAL_MIN_SCORE

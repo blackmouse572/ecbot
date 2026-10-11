@@ -7,22 +7,22 @@ import json
 import pytest
 
 from eccho_ai.core.variables import AppVars
-from eccho_ai.llm.retrievers.retrieval import RAGRetrievalService, _embed_query_cached
+from eccho_ai.llm.retrievers.retrieval import RAGRetrievalService, _embed_query_cached, stable_chunk_id
 from eccho_ai.modules.chat import services as chat_services
 from eccho_ai.modules.chat.models.chat_models import ChatRequest
 from eccho_ai.modules.chat.services import _build_rag_message, get_rag_retrieval
 from eccho_ai.modules.chat.stream_pipeline import events_to_ui_parts
 
 
-def _row(chunk_id: str, distance: float) -> dict:
+def _row(chunk_id: str, distance: float, content: str | None = None) -> dict:
     return {
         "chunk_id": chunk_id,
         "document_id": "doc-1",
         "filename": "123-menu.txt",
         "chunk_index": 0,
-        "content": f"content of {chunk_id}",
+        "content": content or f"content of {chunk_id}",
         "distance": distance,
-        "document_metadata": {"title": "Menu"},
+        "document_metadata": {"title": "Menu", "knowledge_item_id": "item-7"},
     }
 
 
@@ -69,7 +69,7 @@ async def test_ok_reports_the_top_score_and_stable_chunk_ids():
     assert result.summary == {"status": "ok", "top_score": pytest.approx(0.9), "score_kind": "hybrid"}
     [source] = result.source_attributions
     assert source["id"] == "KB-1"
-    assert source["chunk_id"] == "c-9"
+    assert source["chunk_id"].startswith("item-7:0:")
     assert source["title"] == "Menu"
     assert source["score_kind"] == "hybrid"
 
@@ -99,10 +99,27 @@ async def test_disabled(monkeypatch):
     assert result.summary == {"status": "disabled"}
 
 
-async def test_empty_query_is_disabled_with_a_reason():
+async def test_empty_query_is_no_query():
     result = await _service(_Store()).retrieve(chatbot_id="bot", query="  ")
 
-    assert result.summary == {"status": "disabled", "reason": "empty query"}
+    assert result.summary == {"status": "no_query"}
+
+
+async def test_chunk_id_survives_a_reingest():
+    # Re-ingesting reinserts every chunk with a new row id.
+    first = await _service(_Store(rows=[_row("row-1", 0.1, "Pho 50k")])).retrieve(chatbot_id="bot", query="menu?")
+    _embed_query_cached.cache_clear()
+    again = await _service(_Store(rows=[_row("row-2", 0.1, "Pho 50k")])).retrieve(chatbot_id="bot", query="menu?")
+
+    assert first.source_attributions[0]["chunk_id"] == again.source_attributions[0]["chunk_id"]
+
+
+def test_chunk_id_falls_back_to_the_row_id_without_a_knowledge_item():
+    from eccho_ai.llm.retrievers.retrieval import RetrievedChunk
+
+    chunk = RetrievedChunk(chunk_id="row-1", document_id="d", filename="f", chunk_index=0, content="x")
+
+    assert stable_chunk_id(chunk) == "row-1"
 
 
 async def test_rerank_scores_are_labelled_rerank(monkeypatch):
@@ -122,6 +139,38 @@ async def test_rerank_scores_are_labelled_rerank(monkeypatch):
     assert result.source_attributions[0]["score_kind"] == "rerank"
 
 
+@pytest.mark.parametrize(
+    ("broken", "code"),
+    [("count_completed_documents", "store_failed"), ("similarity_search_chunks", "store_failed")],
+)
+async def test_store_errors_report_a_fixed_code(monkeypatch, broken, code):
+    store = _Store(rows=[_row("c-1", 0.1)])
+
+    async def boom(**_kw):
+        raise ConnectionError("could not connect to db.internal:5432")
+
+    monkeypatch.setattr(store, broken, boom)
+    monkeypatch.setattr(chat_services, "rag_retrieval_service", _service(store))
+
+    result = await get_rag_retrieval(ChatRequest(chatbot_id="bot", message="menu?"))
+
+    # Owners read this in the preview: never the driver's text.
+    assert result.summary == {"status": "error", "reason": code}
+
+
+async def test_embedding_error_reports_embedding_failed(monkeypatch):
+    class _BrokenEmbedder:
+        async def aembed_query(self, query):
+            raise TimeoutError("https://openrouter.internal timed out")
+
+    service = RAGRetrievalService(store=_Store(rows=[_row("c-1", 0.1)]), embedder=_BrokenEmbedder())
+    monkeypatch.setattr(chat_services, "rag_retrieval_service", service)
+
+    result = await get_rag_retrieval(ChatRequest(chatbot_id="bot", message="menu?"))
+
+    assert result.summary == {"status": "error", "reason": "embedding_failed"}
+
+
 async def test_error_is_reported_and_the_prompt_is_unchanged(monkeypatch):
     class _Broken:
         async def retrieve(self, **_kw):
@@ -131,7 +180,7 @@ async def test_error_is_reported_and_the_prompt_is_unchanged(monkeypatch):
 
     result = await get_rag_retrieval(ChatRequest(chatbot_id="bot", message="menu?"))
 
-    assert result.summary == {"status": "error", "reason": "ConnectionError: pgvector down"}
+    assert result.summary == {"status": "error", "reason": "retrieval_failed"}
     # As before: the model answers without the no-knowledge framing.
     assert _build_rag_message("menu?", result) == "menu?"
 
