@@ -106,6 +106,7 @@ export class WorkspaceRequestService {
                     workspace: {
                         id: workspace.id,
                         name: workspace.name,
+                        slug: workspace.slug,
                     },
                     requestorName: requestFrom.name,
                 }
