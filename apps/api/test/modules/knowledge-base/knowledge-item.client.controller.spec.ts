@@ -2,6 +2,12 @@ import { NotFoundException } from '@nestjs/common';
 import { GUARDS_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { KnowledgeItemClientController } from '../../../src/modules/knowledge-base/controllers/knowledge-item.client.controller';
 import { ClientCredentialGuard } from '../../../src/modules/client-credential/guards/client-credential.guard';
+import { ClientCredentialPolicyGuard } from '../../../src/modules/client-credential/guards/client-credential.policy.guard';
+import { CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY } from '../../../src/modules/client-credential/constants/client-credential.constant';
+import {
+    ENUM_POLICY_ACTION,
+    ENUM_POLICY_SUBJECT,
+} from '../../../src/modules/policy/enums/policy.enum';
 import { WorkspaceEntity } from '../../../src/modules/workspace/repository/entities/workspace.entity';
 
 // /client surface: the knowledge base must belong to the credential's
@@ -50,14 +56,33 @@ describe('KnowledgeItemClientController', () => {
     });
 
     it.each(['list', 'get'] as const)(
-        '%s is guarded by the client credential only',
+        '%s is guarded by the client credential and the creator policy',
         handler => {
             expect(
                 Reflect.getMetadata(
                     GUARDS_METADATA,
                     KnowledgeItemClientController.prototype[handler]
                 )
-            ).toEqual([ClientCredentialGuard]);
+            ).toEqual([ClientCredentialGuard, ClientCredentialPolicyGuard]);
+        }
+    );
+
+    // Same ability as the matching workspace route: the key can do no more
+    // than its creator.
+    it.each(['list', 'get'] as const)(
+        '%s requires KNOWLEDGE_BASE read',
+        handler => {
+            expect(
+                Reflect.getMetadata(
+                    CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
+                    KnowledgeItemClientController.prototype[handler]
+                )
+            ).toEqual([
+                {
+                    subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+                    action: [ENUM_POLICY_ACTION.READ],
+                },
+            ]);
         }
     );
 

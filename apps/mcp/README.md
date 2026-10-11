@@ -50,7 +50,9 @@ the app and shown once at creation) as either:
 - `Authorization: Bearer key:secret`, for clients that only send bearer tokens
 
 A request without one gets `401`. A wrong or revoked key surfaces as a tool
-error with the API's message. Requests from a browser `Origin` get `403`
+error with the API's message. A key can do at most what the member who
+created it can do in the workspace right now: a tool their role doesn't allow,
+or any tool once they leave the workspace, returns a permission error. Requests from a browser `Origin` get `403`
 (DNS rebinding protection); MCP clients send no `Origin`.
 
 ## Config

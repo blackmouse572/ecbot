@@ -5,6 +5,10 @@ import { PaginationService } from '@app/common/pagination/services/pagination.se
 import { ResponsePaging } from '@app/common/response/decorators/response.decorator';
 import { IResponsePaging } from '@app/common/response/interfaces/response.interface';
 import { ClientCredentialProtected } from '@app/modules/client-credential/decorators/client-credential.decorator';
+import {
+    ENUM_POLICY_ACTION,
+    ENUM_POLICY_SUBJECT,
+} from '@app/modules/policy/enums/policy.enum';
 import { WorkspacePayload } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { Controller, Get } from '@nestjs/common';
@@ -25,7 +29,10 @@ export class KnowledgeBaseClientController {
 
     @KnowledgeBaseClientListDoc()
     @ResponsePaging('knowledgeBase.list')
-    @ClientCredentialProtected()
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
     @Get('/')
     async list(
         @WorkspacePayload() workspace: WorkspaceEntity,

@@ -15,6 +15,10 @@ import {
     IResponsePaging,
 } from '@app/common/response/interfaces/response.interface';
 import { ClientCredentialProtected } from '@app/modules/client-credential/decorators/client-credential.decorator';
+import {
+    ENUM_POLICY_ACTION,
+    ENUM_POLICY_SUBJECT,
+} from '@app/modules/policy/enums/policy.enum';
 import { WorkspacePayload } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
@@ -44,7 +48,10 @@ export class ChatbotClientController {
 
     @ChatbotClientListDoc()
     @ResponsePaging('chatbot.list')
-    @ClientCredentialProtected()
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
     @Get('/')
     async findAll(
         @WorkspacePayload() workspace: WorkspaceEntity,
@@ -91,7 +98,10 @@ export class ChatbotClientController {
 
     @ChatbotClientGetDoc()
     @Response('chatbot.get')
-    @ClientCredentialProtected()
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
     @Get('/:id')
     async findOne(
         @WorkspacePayload() workspace: WorkspaceEntity,

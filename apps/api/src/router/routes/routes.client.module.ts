@@ -14,6 +14,8 @@ import { CustomerModule } from '@app/modules/customer/customer.module';
 import { KnowledgeBaseClientController } from '@app/modules/knowledge-base/controllers/knowledge-base.client.controller';
 import { KnowledgeItemClientController } from '@app/modules/knowledge-base/controllers/knowledge-item.client.controller';
 import { KnowledgeBaseServicesModule } from '@app/modules/knowledge-base/services/services.module';
+import { RoleModule } from '@app/modules/role/role.module';
+import { WorkSpaceModule } from '@app/modules/workspace/workspace.module';
 import { Module } from '@nestjs/common';
 
 // 3rd-party surface — every controller here authenticates via x-api-key
@@ -40,6 +42,9 @@ import { Module } from '@nestjs/common';
         ConversationModule,
         ActivityModule,
         CustomerModule,
+        // ClientCredentialPolicyGuard checks the credential creator's roles.
+        WorkSpaceModule,
+        RoleModule,
     ],
 })
 export class RoutesClientModule {}

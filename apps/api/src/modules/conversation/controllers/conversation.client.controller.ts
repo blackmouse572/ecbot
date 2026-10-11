@@ -21,7 +21,10 @@ import {
     ClientCredentialProtected,
 } from '@app/modules/client-credential/decorators/client-credential.decorator';
 import { ClientCredentialEntity } from '@app/modules/client-credential/repository/entities/client-credential.entity';
-import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
+import {
+    ENUM_POLICY_ACTION,
+    ENUM_POLICY_SUBJECT,
+} from '@app/modules/policy/enums/policy.enum';
 import { WorkspacePayload } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import {
@@ -64,7 +67,10 @@ export class ConversationClientController {
 
     @ConversationClientListDoc()
     @ResponsePaging('conversation.workspace.list')
-    @ClientCredentialProtected()
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
     @Get('/')
     async list(
         @WorkspacePayload() workspace: WorkspaceEntity,
@@ -128,7 +134,10 @@ export class ConversationClientController {
 
     @ConversationClientGetDoc()
     @Response('conversation.workspace.get')
-    @ClientCredentialProtected()
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
     @Get('/:id')
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
@@ -167,7 +176,10 @@ export class ConversationClientController {
 
     @ConversationClientListMessagesDoc()
     @ResponsePaging('conversation.workspace.listMessages')
-    @ClientCredentialProtected()
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
     @Get('/:id/messages')
     async listMessages(
         @WorkspacePayload() workspace: WorkspaceEntity,

@@ -18,6 +18,10 @@ import {
 import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
 import { AwsS3Service } from '@app/modules/aws/services/aws.s3.service';
 import { ClientCredentialProtected } from '@app/modules/client-credential/decorators/client-credential.decorator';
+import {
+    ENUM_POLICY_ACTION,
+    ENUM_POLICY_SUBJECT,
+} from '@app/modules/policy/enums/policy.enum';
 import { WorkspacePayload } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { PopulateHint } from '@mikro-orm/postgresql';
@@ -53,7 +57,10 @@ export class KnowledgeItemClientController {
 
     @KnowledgeItemClientListDoc()
     @ResponsePaging('knowledgeItem.list')
-    @ClientCredentialProtected()
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
     @Get('/')
     async list(
         @WorkspacePayload() workspace: WorkspaceEntity,
@@ -114,7 +121,10 @@ export class KnowledgeItemClientController {
 
     @KnowledgeItemClientGetDoc()
     @Response('knowledgeItem.get')
-    @ClientCredentialProtected()
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
     @Get('/:id')
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
