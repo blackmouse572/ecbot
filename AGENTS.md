@@ -11,6 +11,7 @@ apps/
   ai/       Chatbot / AI module (see apps/ai/README.md)
   docs/     User docs site: Next.js static export + Fumadocs, en/vi (see apps/docs/README.md)
   edge/     Cloudflare Worker: queues inbound platform webhooks before the API (see apps/edge/README.md)
+  mcp/      Ecbot MCP Server, a Cloudflare Worker over the API's /client surface (see apps/mcp/README.md)
 packages/
   ui/               @repo/ui: shared components on @medusajs/ui + design tokens
   client/           @repo/client: generated API client
