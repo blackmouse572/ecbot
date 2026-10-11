@@ -1,7 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import {
-  type CustomerTagCreateRequestDto,
-  type CustomerUpdateRequestDto,
   customerClientControllerGetV1,
   customerClientControllerListV1,
   customerClientControllerUpdateV1,
@@ -26,8 +24,6 @@ import {
   respond,
 } from "./shared";
 
-// The generated client types these nullable strings as objects (their
-// DTOs document nullable without a type), so the bodies below are cast.
 const tagFields = {
   emoji: z.string().max(16).optional(),
   description: z
@@ -136,7 +132,7 @@ function registerCreateTools(server: McpServer, api: ApiOptions) {
       respond(
         customerTagClientControllerCreateV1({
           ...api,
-          body: body as CustomerTagCreateRequestDto,
+          body,
         }),
         (d) => d.data,
       ),
@@ -166,7 +162,7 @@ function registerUpdateTools(server: McpServer, api: ApiOptions) {
         customerClientControllerUpdateV1({
           ...api,
           path: { id: customerId },
-          body: body as CustomerUpdateRequestDto,
+          body,
         }),
         (d) => d.data,
       ),
@@ -189,7 +185,7 @@ function registerUpdateTools(server: McpServer, api: ApiOptions) {
         customerTagClientControllerUpdateV1({
           ...api,
           path: { customerTag: tagId },
-          body: body as CustomerTagCreateRequestDto,
+          body,
         }),
         (d) => d.data,
       ),

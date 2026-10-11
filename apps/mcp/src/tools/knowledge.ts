@@ -4,6 +4,7 @@ import {
   knowledgeBaseClientControllerListV1,
   knowledgeBaseClientControllerUpdateV1,
   knowledgeItemClientControllerCreateV1,
+  knowledgeItemClientControllerDeleteV1,
   knowledgeItemClientControllerGetV1,
   knowledgeItemClientControllerListV1,
   knowledgeItemClientControllerUpdateV1,
@@ -13,6 +14,7 @@ import {
   type Allows,
   type ApiOptions,
   ADDS,
+  DELETES,
   OVERWRITES,
   READS,
   SWITCHES,
@@ -28,6 +30,7 @@ export function registerKnowledgeTools(
   if (allows("KNOWLEDGE_BASE", "read")) registerReadTools(server, api);
   if (allows("KNOWLEDGE_BASE", "create")) registerCreateTools(server, api);
   if (allows("KNOWLEDGE_BASE", "update")) registerUpdateTools(server, api);
+  if (allows("KNOWLEDGE_BASE", "delete")) registerDeleteTools(server, api);
 }
 
 function registerReadTools(server: McpServer, api: ApiOptions) {
@@ -230,6 +233,29 @@ function registerUpdateTools(server: McpServer, api: ApiOptions) {
           ...api,
           path: { knowledgeBaseId, id: itemId },
           body: { status: "READY" },
+        }),
+        (d) => d.data,
+      ),
+  );
+}
+
+function registerDeleteTools(server: McpServer, api: ApiOptions) {
+  server.registerTool(
+    "delete_knowledge_item",
+    {
+      title: "Delete knowledge item",
+      description: "Delete a knowledge item. Chatbots stop answering from it.",
+      inputSchema: z.object({
+        knowledgeBaseId: z.string(),
+        itemId: z.string(),
+      }),
+      annotations: DELETES,
+    },
+    ({ knowledgeBaseId, itemId }) =>
+      respond(
+        knowledgeItemClientControllerDeleteV1({
+          ...api,
+          path: { knowledgeBaseId, id: itemId },
         }),
         (d) => d.data,
       ),

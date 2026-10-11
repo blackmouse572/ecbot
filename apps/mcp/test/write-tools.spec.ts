@@ -125,6 +125,15 @@ const cases: [
     SWITCHES,
   ],
   [
+    "delete_knowledge_item",
+    { knowledgeBaseId: "kb-1", itemId: "item-1" },
+    "knowledgeItemClientControllerDeleteV1",
+    { path: { knowledgeBaseId: "kb-1", id: "item-1" } },
+    { data: { id: "item-1" } },
+    { id: "item-1" },
+    DELETES,
+  ],
+  [
     "update_customer",
     { customerId: "cust-1", notes: "Prefers Zalo" },
     "customerClientControllerUpdateV1",

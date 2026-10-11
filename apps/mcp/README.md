@@ -34,6 +34,7 @@ replace data, **deletes** remove it.
 |               | `create_knowledge_base`, `create_knowledge_item` (text or URL)               | knowledge create | adds       |
 |               | `update_knowledge_base`, `update_knowledge_item`                             | knowledge update | overwrites |
 |               | `process_knowledge_item`                                                     | knowledge update | switches   |
+|               | `delete_knowledge_item`                                                      | knowledge delete | deletes    |
 | Customers     | `list_customers`, `get_customer`, `list_customer_tags`, `get_customer_tags`  | customer read    | reads      |
 |               | `create_customer_tag`                                                        | customer create  | adds       |
 |               | `update_customer`, `update_customer_tag`                                     | customer update  | overwrites |
@@ -55,9 +56,7 @@ are named `*_workspace_tool` and `*_chatbot_tool`, to keep them apart from
 this server's own MCP tools.
 
 Not exposed: file uploads, the marketplace installs (they need a browser
-for OAuth), permanent customer erasure, and deleting knowledge items, whose
-workspace route also requires the global `WORKSPACE_OWNER` role type that no
-workspace member has.
+for OAuth), and permanent customer erasure.
 
 Every write acts as the user who created the API key: replies are sent as
 them, and the workspace activity log records them, as for the same action
