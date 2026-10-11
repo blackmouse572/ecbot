@@ -1,43 +1,18 @@
-import {
-  Client,
-  StreamableHTTPClientTransport,
-} from "@modelcontextprotocol/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@repo/client", () => ({
-  chatbotClientControllerFindAllV1: vi.fn(),
-  chatbotClientControllerFindOneV1: vi.fn(),
-}));
+vi.mock("@repo/client");
 
 import {
   chatbotClientControllerFindAllV1,
   chatbotClientControllerFindOneV1,
 } from "@repo/client";
 import { app } from "../src/index";
+import { connect, textOf } from "./mcp-client";
 
 const KEY = "client-key:client-secret";
-const MCP_URL = "http://mcp.test/mcp";
 
 const findAll = vi.mocked(chatbotClientControllerFindAllV1);
 const findOne = vi.mocked(chatbotClientControllerFindOneV1);
-
-// A real MCP client, talking to the worker through app.request instead of
-// the network, so every test runs the actual protocol exchange.
-async function connect(headers: Record<string, string>) {
-  const client = new Client({ name: "test", version: "1.0.0" });
-  await client.connect(
-    new StreamableHTTPClientTransport(new URL(MCP_URL), {
-      fetch: async (url, init) => app.request(url.toString(), init),
-      requestInit: { headers },
-    }),
-  );
-  return client;
-}
-
-function textOf(result: Awaited<ReturnType<Client["callTool"]>>): string {
-  const [block] = result.content as { type: string; text: string }[];
-  return block.text;
-}
 
 describe("GET /health", () => {
   it("returns 200 ok", async () => {
@@ -103,14 +78,22 @@ describe("/mcp", () => {
     expect(await res.text()).toContain('"name":"ecbot"');
   });
 
-  it("lists the chatbot tools as read-only", async () => {
+  it("lists every tool as read-only", async () => {
     const client = await connect({ "x-api-key": KEY });
 
     const { tools } = await client.listTools();
 
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       "get_chatbot",
+      "get_conversation",
+      "get_customer",
+      "get_knowledge_item",
       "list_chatbots",
+      "list_conversation_messages",
+      "list_conversations",
+      "list_customers",
+      "list_knowledge_bases",
+      "list_knowledge_items",
     ]);
     for (const tool of tools) {
       expect(tool.annotations?.readOnlyHint).toBe(true);

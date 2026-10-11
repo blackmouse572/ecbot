@@ -11,15 +11,35 @@ client of other servers (see `CONTEXT.md`).
 
 ## Tools
 
-| Tool            | API call                          | Annotations    |
-| --------------- | --------------------------------- | -------------- |
-| `list_chatbots` | `GET /api/v1/client/chatbots`     | `readOnlyHint` |
-| `get_chatbot`   | `GET /api/v1/client/chatbots/:id` | `readOnlyHint` |
+All read-only (`readOnlyHint`), each a `GET` on `/api/v1/client`:
 
-To add one: add the `/client` endpoint in `apps/api`, run
-`pnpm generate:client`, then register the tool in `src/server.ts` with a
-`title` and `readOnlyHint` or `destructiveHint`, spreading `api` into the
-`@repo/client` call so it carries the caller's key.
+| Tool                         | API path                                      |
+| ---------------------------- | --------------------------------------------- |
+| `list_chatbots`              | `/chatbots`                                   |
+| `get_chatbot`                | `/chatbots/:id`                               |
+| `list_knowledge_bases`       | `/knowledge-bases`                            |
+| `list_knowledge_items`       | `/knowledge-bases/:knowledgeBaseId/items`     |
+| `get_knowledge_item`         | `/knowledge-bases/:knowledgeBaseId/items/:id` |
+| `list_conversations`         | `/conversations`                              |
+| `get_conversation`           | `/conversations/:id`                          |
+| `list_conversation_messages` | `/conversations/:id/messages`                 |
+| `list_customers`             | `/customers`                                  |
+| `get_customer`               | `/customers/:id`                              |
+
+Reading a conversation, its messages or a customer adds a view to the
+workspace activity log, by the user who created the API key, as the same read
+does in the app.
+
+`get_knowledge_item` and `list_conversation_messages` return text that
+customers or uploaded documents wrote (untrusted input, see `CONTEXT.md`);
+their descriptions tell the agent to treat it as data, never as
+instructions.
+
+To add a tool: add the `/client` endpoint in `apps/api`, run
+`pnpm generate:client`, then register the tool in the matching
+`src/tools/*.ts` with a `title` and `readOnlyHint` or `destructiveHint`,
+spreading `api` into the `@repo/client` call so it carries the caller's key,
+and returning through `respond()`.
 
 ## Auth
 
