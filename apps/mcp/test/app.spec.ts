@@ -16,7 +16,7 @@ const findAll = vi.mocked(chatbotClientControllerFindAllV1);
 const findOne = vi.mocked(chatbotClientControllerFindOneV1);
 const me = vi.mocked(clientCredentialClientControllerMeV1);
 
-const ALL_TOOLS = [
+const READ_TOOLS = [
   "get_chatbot",
   "get_conversation",
   "get_customer",
@@ -110,7 +110,7 @@ describe("/mcp", () => {
 
     const { tools } = await client.listTools();
 
-    expect(tools.map((tool) => tool.name).sort()).toEqual(ALL_TOOLS);
+    expect(tools.map((tool) => tool.name).sort()).toEqual(READ_TOOLS);
     for (const tool of tools) {
       expect(tool.annotations?.readOnlyHint).toBe(true);
     }
@@ -144,6 +144,12 @@ describe("/mcp", () => {
 
   // A wrong key or an API outage: each call then reports the API's error.
   it("lists every tool when the API can't say what the key may do", async () => {
+    const subjects = ["CHATBOT", "KNOWLEDGE_BASE", "CUSTOMER", "TOOL", "SKILL"];
+    const actions = ["manage", "read", "create", "update", "delete"];
+    permits(subjects.map((subject) => ({ subject, action: actions })));
+    const everything = await connect({ "x-api-key": KEY })
+      .then((client) => client.listTools())
+      .then(({ tools }) => tools.map((tool) => tool.name).sort());
     me.mockResolvedValue({
       error: { message: "Sorry, this API key is not valid." },
     } as never);
@@ -151,7 +157,8 @@ describe("/mcp", () => {
 
     const { tools } = await client.listTools();
 
-    expect(tools.map((tool) => tool.name).sort()).toEqual(ALL_TOOLS);
+    expect(tools.map((tool) => tool.name).sort()).toEqual(everything);
+    expect(everything).toEqual(expect.arrayContaining(READ_TOOLS));
   });
 
   it("looks up permissions only to list tools, not to call one", async () => {

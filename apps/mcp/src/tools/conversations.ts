@@ -3,6 +3,9 @@ import {
   conversationClientControllerGetV1,
   conversationClientControllerListMessagesV1,
   conversationClientControllerListV1,
+  conversationClientControllerSendMessageV1,
+  conversationClientControllerUpdateBotV1,
+  conversationClientControllerUpdateStatusV1,
 } from "@repo/client";
 import * as z from "zod";
 import { type Allows, type ApiOptions, paging, respond } from "./shared";
@@ -13,8 +16,11 @@ export function registerConversationTools(
   allows: Allows,
 ) {
   // The API guards conversations as chatbot data.
-  if (!allows("CHATBOT", "read")) return;
+  if (allows("CHATBOT", "read")) registerReadTools(server, api);
+  if (allows("CHATBOT", "update")) registerUpdateTools(server, api);
+}
 
+function registerReadTools(server: McpServer, api: ApiOptions) {
   server.registerTool(
     "list_conversations",
     {
@@ -97,6 +103,95 @@ export function registerConversationTools(
           query,
         }),
         (d) => ({ messages: d.data, pagination: d._metadata.pagination }),
+      ),
+  );
+}
+
+function registerUpdateTools(server: McpServer, api: ApiOptions) {
+  server.registerTool(
+    "reply_to_conversation",
+    {
+      title: "Reply to a conversation",
+      description:
+        "Send a message to the customer in a conversation, on its channel (Messenger, Zalo, website widget, ...), as the user who created the API key. The customer sees it at once and it can't be unsent. The bot keeps replying too unless you turn it off with set_conversation_bot.",
+      inputSchema: z.object({
+        conversationId: z.string(),
+        text: z.string().min(1).max(4096),
+      }),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
+    },
+    ({ conversationId, text }) =>
+      respond(
+        conversationClientControllerSendMessageV1({
+          ...api,
+          path: { id: conversationId },
+          body: { text },
+        }),
+        (d) => d.data,
+      ),
+  );
+
+  server.registerTool(
+    "set_conversation_bot",
+    {
+      title: "Turn the bot on or off in a conversation",
+      description:
+        "Turn the chatbot's automatic replies on or off in one conversation. Turn it off to take over from the bot, on to hand the conversation back.",
+      inputSchema: z.object({
+        conversationId: z.string(),
+        botEnabled: z.boolean(),
+        reason: z
+          .string()
+          .max(500)
+          .optional()
+          .describe("Why, shown to the team, e.g. when taking over."),
+      }),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+    },
+    ({ conversationId, ...body }) =>
+      respond(
+        conversationClientControllerUpdateBotV1({
+          ...api,
+          path: { id: conversationId },
+          body,
+        }),
+        (d) => d.data,
+      ),
+  );
+
+  server.registerTool(
+    "set_conversation_status",
+    {
+      title: "Resolve or reopen a conversation",
+      description:
+        "Mark a conversation RESOLVED or OPEN. Either way the bot is turned back on and starts the conversation without its earlier context.",
+      inputSchema: z.object({
+        conversationId: z.string(),
+        status: z.enum(["OPEN", "RESOLVED"]),
+        reason: z.string().max(500).optional(),
+      }),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+    },
+    ({ conversationId, ...body }) =>
+      respond(
+        conversationClientControllerUpdateStatusV1({
+          ...api,
+          path: { id: conversationId },
+          body,
+        }),
+        (d) => d.data,
       ),
   );
 }
