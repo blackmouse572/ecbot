@@ -365,11 +365,12 @@ async def test_stream_generator_processes_events_when_connected():
 
 
 # ---------------------------------------------------------------------------
-# #181 — a short menu answer dropped the prices get_menu returned
+# #181: a short menu answer dropped the prices get_menu returned
 # ---------------------------------------------------------------------------
 
 
 def test_prompt_keeps_prices_when_listing_items():
     accuracy = system_prompt_template().split("<accuracy>")[1].split("</accuracy>")[0]
-    assert "give each one's price as stated there" in accuracy
-    assert "never leaving out their prices" in accuracy
+    assert "include each one's price when it is stated there" in accuracy
+    # ...without pulling against "never invent prices".
+    assert "if no price is given, do not make one up" in accuracy

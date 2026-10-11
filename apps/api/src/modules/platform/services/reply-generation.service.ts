@@ -133,8 +133,12 @@ export class ReplyGenerationService {
             sendTyping(true);
             typingTimer = setInterval(
                 () => sendTyping(true),
-                adapter.capabilities.typingRefreshMs ??
-                    MESSAGE_TYPING_REFRESH_MS
+                // Floored: a 0 would re-send typing every millisecond.
+                Math.max(
+                    1000,
+                    adapter.capabilities.typingRefreshMs ??
+                        MESSAGE_TYPING_REFRESH_MS
+                )
             );
             typingTimer.unref?.();
         };

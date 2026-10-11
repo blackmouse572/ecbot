@@ -165,6 +165,19 @@ describe('ReplyGenerationService.run', () => {
         setIntervalSpy.mockRestore();
     });
 
+    it('never re-sends typing faster than once a second', async () => {
+        const setIntervalSpy = jest.spyOn(global, 'setInterval');
+        const { run } = serviceWith({ history: [], message: 'x' }, undefined, {
+            capabilities: { typing: true, typingRefreshMs: 0 },
+            typingIndicator: true,
+        });
+
+        await run();
+
+        expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 1000);
+        setIntervalSpy.mockRestore();
+    });
+
     it('falls back to the default typing interval', async () => {
         const setIntervalSpy = jest.spyOn(global, 'setInterval');
         const { run } = serviceWith({ history: [], message: 'x' }, undefined, {
