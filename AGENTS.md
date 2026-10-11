@@ -57,6 +57,10 @@ Invoke the `eccho-frontend` skill before writing code.
 Invoke the `eccho-platform-adapters` skill before writing code.
 </important>
 
+<important if="you are adding, planning or reviewing animation, motion or UI polish, or picking a frontend library">
+ecbot's library picks, motion values and design tokens are in `.agents/skills/eccho-frontend/references/design-system.md`. They override the generic values in `emil-design-eng`, `make-interfaces-feel-better`, `pick-ui-library` and the `*-animations` skills.
+</important>
+
 <important if="you are working under apps/ai">
 Read `apps/ai/README.md` first.
 </important>
@@ -85,6 +89,7 @@ Read the matching file in `.github/instructions/` (`packages/*.instructions.md`,
 - New skill: create `.agents/skills/<name>/SKILL.md` (disclose long reference into `references/`), then `ln -s ../../.agents/skills/<name> .claude/skills/<name>`. The directory name must equal the frontmatter `name`.
 - `.agents/skills/` is for building ecbot, never for users. Give every skill you write or copy there `metadata:` with `internal: true` in its frontmatter, so `npx skills add blackmouse572/ecbot` does not offer it. Skills installed with `npx skills add` are already hidden through `skills-lock.json`.
 - User-facing skills (for agents driving the Ecbot MCP Server) live in `skills/<name>/` at the repo root, with no `.claude/skills` symlink. Users install them with `npx skills add blackmouse572/ecbot --skill <name>`.
+- Never edit a skill listed in `skills-lock.json`: `npx skills update` replaces it with upstream. Put ecbot-specific guidance in our own skills (see `eccho-frontend/references/design-system.md`), and add a newly installed skill's folder to `.prettierignore`.
 - Frontmatter must be strict YAML or the `skills` CLI skips the file: quote a `description` that contains `: `.
 - Shared guidance goes here in `AGENTS.md`; `CLAUDE.md` only imports it.
 </important>

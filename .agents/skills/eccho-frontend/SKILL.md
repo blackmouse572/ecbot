@@ -58,7 +58,7 @@ Zod schema in `routes/<feature>/schemas.ts` + `zodResolver` + the `@repo/ui` `Fo
 
 <important if="you are composing or styling UI components">
 
-- Reach for `@repo/ui` first, then `@medusajs/ui`. Style with `ui-` design tokens (`bg-ui-bg-base`, `text-ui-fg-subtle`, ...) and `cn` from `@repo/ui/utils`.
+- Reach for `@repo/ui` first, then `@medusajs/ui`. Style with `ui-` design tokens (`bg-ui-bg-base`, `text-ui-fg-subtle`, ...) and `clx` from `@medusajs/ui`.
 - Items sit inside their Group (`SelectItem` in `SelectGroup`, ...); custom triggers use `asChild` (Radix) or `render` (Base UI); every modal has a `Title` (`sr-only` is fine); `Button` shows pending state by composing `Spinner` + `disabled`.
 - Read [references/ui.md](references/ui.md) and [rules/composition.md](rules/composition.md).
 </important>
@@ -89,9 +89,7 @@ Components are typed `FC<Props>`. Reserve `any` for genuinely dynamic payloads, 
 
 <important if="you are adding animation, UI polish, or a new frontend library">
 
-- Motion values (easing, durations, springs) come from the `emil-design-eng` skill and its [`eccho.md`](../emil-design-eng/eccho.md), the single source of truth. For general UI craft, use `make-interfaces-feel-better`.
-- Stack choices: motion = `motion/react`; toasts = `@medusajs/ui`; state = Jotai / TanStack Query; theme = ecbot `ThemeProvider`; easing tokens from `src/index.css` `@theme` (`--ease-out`, `--ease-in-out`, `--ease-drawer`). Honor `prefers-reduced-motion`.
-- Choosing a library for a task: `pick-ui-library`.
+- Read [references/design-system.md](references/design-system.md): ecbot's library picks, motion values, easing tokens and `ui-` color tokens. It overrides the generic values in the upstream craft skills (`emil-design-eng`, `make-interfaces-feel-better`, the `*-animations` skills, `pick-ui-library`), which you still use for the craft itself.
 </important>
 
 ## References
@@ -104,6 +102,7 @@ Read the matching reference before writing code. `.github/instructions/app/*` fi
 | Router tree, lazy modules, loaders, breadcrumbs, create/edit modals | [references/react-router.md](references/react-router.md) · `routing-and-modals.instructions.md` |
 | List/table screens                                                  | [references/table-list.md](references/table-list.md)                                            |
 | `@repo/ui` + `@medusajs/ui`, design tokens                          | [references/ui.md](references/ui.md)                                                            |
+| Library picks, motion, easing and color tokens                      | [references/design-system.md](references/design-system.md)                                      |
 | Component composition                                               | [rules/composition.md](rules/composition.md)                                                    |
 | Forms                                                               | `forms.instructions.md`                                                                         |
 | Jotai & CASL                                                        | `state-and-authorization.instructions.md`                                                       |
