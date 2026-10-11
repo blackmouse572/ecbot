@@ -148,6 +148,25 @@ async def test_a_catalog_image_on_an_internal_address_is_never_fetched():
     assert not any("Catalog image" in p.get("text", "") for p in parts)
 
 
+async def test_a_malformed_catalog_image_url_is_skipped():
+    # A typo in the instructions must not cost the customer their description.
+    bot = SimpleNamespace(
+        guardrail_enabled=False,
+        general_knowledge=(
+            "![Unclosed bracket](http://[::1/a.png)\n"
+            "![Empty label](http://a..b/a.png)"
+        ),
+    )
+    model = _vision_model({1: "A shirt."})
+    fetch = AsyncMock(side_effect=_fetch_all)
+    with patch.object(images, "fetch_image_data_url", fetch), \
+         patch.object(images, "build_chat_model", return_value=model):
+        described, _ = await images.describe_images(_images("https://s3/u.jpg"), bot)
+
+    assert described == ["A shirt."]
+    assert [call.args[0] for call in fetch.call_args_list] == ["https://s3/u.jpg"]
+
+
 def test_system_prompt_image_guidance_is_business_neutral():
     """The platform explains images; what to do with them is the operator's call."""
     section = system_prompt_template()

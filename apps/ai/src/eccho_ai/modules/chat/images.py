@@ -85,10 +85,11 @@ def _image(data_url: str) -> dict:
 
 async def _fetch_catalog_image(url: str) -> str | None:
     """A catalog URL is typed by the workspace owner, so it only gets fetched
-    when it resolves to a public address (same check as the web crawler)."""
+    when it resolves to a public address (same check as the web crawler).
+    A URL too malformed to parse is skipped the same way."""
     try:
         await assert_public_url(url)
-    except EgressBlockedError as exc:
+    except (EgressBlockedError, httpx.InvalidURL, ValueError) as exc:
         logger.warning("catalog_image_blocked", error=str(exc))
         return None
     return await fetch_image_data_url(url)
