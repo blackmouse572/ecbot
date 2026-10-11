@@ -240,6 +240,25 @@ describe('ToolService', () => {
             expect(tool.displayName).toBe('Renamed');
         });
 
+        // #247 re-review: a tool created through the API without auth has
+        // no stored auth, and the form sends { type: 'none' } back.
+        it('treats missing stored auth as none, so a rename does not reconnect', async () => {
+            const tool = Object.assign(mcpTool(), {
+                mcpAuth: undefined,
+                mcpCredential: undefined,
+            });
+            mockRepo.findOneInWorkspace.mockResolvedValue(tool);
+            mockDiscovery.discover = jest.fn();
+
+            await svc.update('ws-1', 't-1', {
+                name: 'Renamed',
+                serverUrl: 'https://old.example.com/mcp',
+                auth: { type: 'none' },
+            } as any);
+
+            expect(mockDiscovery.discover).not.toHaveBeenCalled();
+        });
+
         it('refuses auth an MCP server never receives', async () => {
             const tool = mcpTool();
             mockRepo.findOneInWorkspace.mockResolvedValue(tool);
