@@ -1,4 +1,11 @@
-import { Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import {
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseUUIDPipe,
+    Patch,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
@@ -135,7 +142,7 @@ export class ToolAdminController {
     @ApiKeyProtected()
     @Get('/get/:toolId')
     async get(
-        @Param('toolId') toolId: string
+        @Param('toolId', ParseUUIDPipe) toolId: string
     ): Promise<IResponse<ToolAdminResponseDto>> {
         const [tool, stats] = await Promise.all([
             this.toolService.getOneAny(toolId),
@@ -157,7 +164,7 @@ export class ToolAdminController {
     @Patch('/activate/:toolId')
     async activate(
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
-        @Param('toolId') toolId: string
+        @Param('toolId', ParseUUIDPipe) toolId: string
     ): Promise<IResponse<DatabaseIdResponseDto>> {
         const tool = await this.toolService.activate(toolId);
         await this.log(user, ENUM_ACTIVITY_ACTION.UPDATE, tool);
@@ -177,10 +184,10 @@ export class ToolAdminController {
     @Patch('/inactivate/:toolId')
     async inactivate(
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
-        @Param('toolId') toolId: string
+        @Param('toolId', ParseUUIDPipe) toolId: string
     ): Promise<IResponse<DatabaseIdResponseDto>> {
-        const tool = await this.toolService.inactivate(toolId);
-        await this.log(user, ENUM_ACTIVITY_ACTION.UPDATE, tool);
+        const { tool, changed } = await this.toolService.inactivate(toolId);
+        if (changed) await this.log(user, ENUM_ACTIVITY_ACTION.UPDATE, tool);
         return { data: { id: tool.id } };
     }
 
@@ -197,7 +204,7 @@ export class ToolAdminController {
     @Delete('/delete/:toolId')
     async delete(
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
-        @Param('toolId') toolId: string
+        @Param('toolId', ParseUUIDPipe) toolId: string
     ): Promise<IResponse<DatabaseIdResponseDto>> {
         const tool = await this.toolService.softDeleteAny(toolId);
         await this.log(user, ENUM_ACTIVITY_ACTION.DELETE, tool);

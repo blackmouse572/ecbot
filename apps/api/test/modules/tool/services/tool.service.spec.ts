@@ -17,8 +17,10 @@ import {
     BadGatewayException,
     BadRequestException,
     ConflictException,
+    ForbiddenException,
     NotFoundException,
 } from '@nestjs/common';
+import { ChatbotCacheService } from 'src/modules/ai-cache/services/chatbot-cache.service';
 import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
 import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 
@@ -49,6 +51,7 @@ describe('ToolService', () => {
     const mockHttp: any = { execute: jest.fn(), executeWithConfig: jest.fn() };
     const mockSlugMinter: any = { mint: jest.fn(async (s: string) => s) };
     const mockInstallerRegistry: any = { get: jest.fn() };
+    const mockChatbotCache: any = { invalidate: jest.fn() };
 
     beforeEach(async () => {
         jest.clearAllMocks();
@@ -66,6 +69,7 @@ describe('ToolService', () => {
                 { provide: HttpToolExecutorService, useValue: mockHttp },
                 { provide: SlugMinter, useValue: mockSlugMinter },
                 { provide: InstallerRegistry, useValue: mockInstallerRegistry },
+                { provide: ChatbotCacheService, useValue: mockChatbotCache },
             ],
         }).compile();
         svc = mod.get(ToolService);
@@ -366,11 +370,44 @@ describe('ToolService', () => {
         );
     });
 
+    // #253 review: the owner must not run or reconnect a tool an admin
+    // turned off.
+    describe('a tool an admin turned off', () => {
+        it('is not run by the test endpoint', async () => {
+            mockRepo.findOneInWorkspace.mockResolvedValue({
+                id: 't-1',
+                kind: ENUM_TOOL_KIND.HTTP,
+                status: ENUM_TOOL_STATUS.REVOKED,
+            });
+            await expect(svc.testSaved('ws-1', 't-1', {})).rejects.toEqual(
+                new ForbiddenException('tool.execute.error.inactive')
+            );
+            expect(mockHttp.execute).not.toHaveBeenCalled();
+        });
+
+        it('is not rediscovered', async () => {
+            mockRepo.findOneInWorkspace.mockResolvedValue({
+                id: 't-1',
+                kind: ENUM_TOOL_KIND.MCP,
+                status: ENUM_TOOL_STATUS.REVOKED,
+            });
+            mockDiscovery.discover = jest.fn();
+            await expect(svc.rediscover('ws-1', 't-1')).rejects.toEqual(
+                new ForbiddenException('tool.execute.error.inactive')
+            );
+            expect(mockDiscovery.discover).not.toHaveBeenCalled();
+            expect(mockInstallerRegistry.get).not.toHaveBeenCalled();
+        });
+    });
+
     describe('admin (any workspace)', () => {
         beforeEach(() => {
             mockRepo.findOneAny = jest.fn();
             mockRepo.findAllPaginated = jest.fn().mockResolvedValue([]);
             mockChatbotTool.count.mockResolvedValue(0);
+            mockChatbotTool.findChatbotIdsByToolId = jest
+                .fn()
+                .mockResolvedValue(['bot-1', 'bot-2']);
         });
 
         it('lists tools across workspaces with their workspace loaded', async () => {
@@ -391,10 +428,42 @@ describe('ToolService', () => {
         it('inactivate marks the tool REVOKED', async () => {
             const tool = { id: 't-1', status: ENUM_TOOL_STATUS.ACTIVE };
             mockRepo.findOneAny.mockResolvedValue(tool);
-            await svc.inactivate('t-1');
+            const result = await svc.inactivate('t-1');
             expect(tool.status).toBe(ENUM_TOOL_STATUS.REVOKED);
             expect(mockEm.flush).toHaveBeenCalled();
+            expect(result).toEqual({ tool, changed: true });
         });
+
+        it('inactivate leaves a tool that is already off alone', async () => {
+            const tool = { id: 't-1', status: ENUM_TOOL_STATUS.REVOKED };
+            mockRepo.findOneAny.mockResolvedValue(tool);
+            expect(await svc.inactivate('t-1')).toEqual({
+                tool,
+                changed: false,
+            });
+            expect(mockEm.flush).not.toHaveBeenCalled();
+            expect(mockChatbotCache.invalidate).not.toHaveBeenCalled();
+        });
+
+        // #253 review: apps/ai caches each chatbot's tools, so a switch
+        // would otherwise wait for the cache to expire.
+        it.each([
+            ['inactivate', ENUM_TOOL_STATUS.ACTIVE],
+            ['activate', ENUM_TOOL_STATUS.REVOKED],
+        ] as const)(
+            '%s drops the cached config of every linked chatbot',
+            async (method, status) => {
+                mockRepo.findOneAny.mockResolvedValue({ id: 't-1', status });
+                await svc[method]('t-1');
+                expect(
+                    mockChatbotTool.findChatbotIdsByToolId
+                ).toHaveBeenCalledWith('t-1');
+                expect(mockChatbotCache.invalidate.mock.calls).toEqual([
+                    ['bot-1'],
+                    ['bot-2'],
+                ]);
+            }
+        );
 
         it('activate brings an inactivated tool back to ACTIVE', async () => {
             const tool = { id: 't-1', status: ENUM_TOOL_STATUS.REVOKED };
@@ -428,7 +497,8 @@ describe('ToolService', () => {
             );
         });
 
-        it('getInvocationStats totals the counts per status', async () => {
+        it('getInvocationStats totals the last 30 days per status', async () => {
+            jest.useFakeTimers({ now: new Date('2026-10-31T00:00:00Z') });
             mockInvocationRepo.countByStatus = jest.fn().mockResolvedValue({
                 SUCCESS: 7,
                 ERROR: 2,
@@ -444,6 +514,11 @@ describe('ToolService', () => {
                 timeout: 1,
                 lastInvokedAt: new Date('2026-10-01T00:00:00Z'),
             });
+            expect(mockInvocationRepo.countByStatus).toHaveBeenCalledWith(
+                't-1',
+                new Date('2026-10-01T00:00:00Z')
+            );
+            jest.useRealTimers();
         });
     });
 });

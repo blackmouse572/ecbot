@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
+import { EntityManager, EntityRepository, raw } from '@mikro-orm/postgresql';
 import { ToolInvocationEntity } from 'src/modules/tool/repository/entities/tool-invocation.entity';
 import { ENUM_TOOL_INVOCATION_STATUS } from 'src/modules/tool/enums/tool-invocation-status.enum';
 
@@ -19,17 +19,24 @@ export class ToolInvocationRepository extends EntityRepository<ToolInvocationEnt
         );
     }
 
-    /** Invocation counts for one tool, keyed by status (rows live 30 days). */
+    /** Invocation counts for one tool since a date, keyed by status. */
     async countByStatus(
-        toolId: string
+        toolId: string,
+        since: Date
     ): Promise<Record<ENUM_TOOL_INVOCATION_STATUS, number>> {
-        const statuses = Object.values(ENUM_TOOL_INVOCATION_STATUS);
-        const counts = await Promise.all(
-            statuses.map(status => this.count({ tool: { id: toolId }, status }))
-        );
-        return Object.fromEntries(
-            statuses.map((status, i) => [status, counts[i]])
-        ) as Record<ENUM_TOOL_INVOCATION_STATUS, number>;
+        const rows = await this.createQueryBuilder('i')
+            .select(['i.status', raw('count(*) as count')])
+            .where({ tool: toolId, createdAt: { $gte: since } })
+            .groupBy('i.status')
+            .execute<
+                {
+                    status: ENUM_TOOL_INVOCATION_STATUS;
+                    count: string | number;
+                }[]
+            >('all');
+        const counts = { SUCCESS: 0, ERROR: 0, TIMEOUT: 0 };
+        for (const row of rows) counts[row.status] = Number(row.count);
+        return counts;
     }
 
     async findLastInvokedAt(toolId: string): Promise<Date | null> {

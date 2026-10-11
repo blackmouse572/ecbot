@@ -29,7 +29,7 @@ export class ToolRepository extends DatabaseRepository<ToolEntity> {
     async findOneAny(toolId: string): Promise<ToolEntity | null> {
         return this.findOne(
             { id: toolId, deleted: false },
-            { populate: ['workspace'] }
+            { populate: ['workspace', 'createdBy'] as any }
         );
     }
 

@@ -23,6 +23,12 @@ export class ChatbotToolRepository extends EntityRepository<ChatbotToolEntity> {
         );
     }
 
+    /** Every chatbot the tool is linked to, enabled or not. */
+    async findChatbotIdsByToolId(toolId: string): Promise<string[]> {
+        const rows = await this.find({ tool: { id: toolId }, deleted: false });
+        return rows.map(row => row.chatbot.id);
+    }
+
     async findOneByChatbotAndTool(
         chatbotId: string,
         toolId: string

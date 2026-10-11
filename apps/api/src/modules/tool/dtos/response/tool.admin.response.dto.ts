@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { ToolListResponseDto } from './tool.list.response.dto';
 import { ToolResponseDto } from './tool.response.dto';
 
@@ -35,10 +35,28 @@ export class ToolInvocationStatsResponseDto {
     lastInvokedAt!: Date | null;
 }
 
+// A query string, fragment or login in a URL can hold a customer's secret
+// (Composio URLs carry ?user_id=), so admins get scheme, host and path only.
+const StripUrlSecrets = (): PropertyDecorator =>
+    Transform(({ value }) => {
+        try {
+            const url = new URL(value);
+            return `${url.origin}${url.pathname}`;
+        } catch {
+            return undefined;
+        }
+    });
+
 // Header values can hold a customer's secret, so admins do not get them.
 export class ToolAdminListResponseDto extends OmitType(ToolListResponseDto, [
     'httpHeaders',
 ] as const) {
+    @StripUrlSecrets()
+    httpUrl?: string;
+
+    @StripUrlSecrets()
+    mcpServerUrl?: string;
+
     @Expose()
     @Type(() => ToolAdminWorkspaceResponseDto)
     @ApiProperty({ type: ToolAdminWorkspaceResponseDto })
@@ -48,6 +66,12 @@ export class ToolAdminListResponseDto extends OmitType(ToolListResponseDto, [
 export class ToolAdminResponseDto extends OmitType(ToolResponseDto, [
     'httpHeaders',
 ] as const) {
+    @StripUrlSecrets()
+    httpUrl?: string;
+
+    @StripUrlSecrets()
+    mcpServerUrl?: string;
+
     @Expose()
     @Type(() => ToolAdminWorkspaceResponseDto)
     @ApiProperty({ type: ToolAdminWorkspaceResponseDto })

@@ -14,6 +14,7 @@ def _chatbot(*actions: str):
     tool = SimpleNamespace(
         id=uuid.uuid4(),
         kind="MCP",
+        status="ACTIVE",
         discovered_actions=[
             {"name": a, "description": f"{a} description", "inputSchema": {"type": "object", "properties": {}}}
             for a in actions
@@ -35,6 +36,7 @@ def _http_chatbot(**overrides):
         **{
             "id": uuid.uuid4(),
             "kind": "HTTP",
+            "status": "ACTIVE",
             "slug": "search-products",
             "description": "Search the product catalog.",
             "http_input_schema": SEARCH_SCHEMA,
@@ -82,6 +84,15 @@ def test_disabled_http_tool_is_not_offered():
     _, chatbot = _http_chatbot()
     chatbot.chatbot_tools[0].enabled = False
     assert build_tools(chatbot) == []
+
+
+def test_tool_an_admin_turned_off_is_not_offered():
+    _, http = _http_chatbot(status="REVOKED")
+    assert build_tools(http) == []
+
+    mcp = _chatbot("get_order")
+    mcp.chatbot_tools[0].tool.status = "REVOKED"
+    assert build_tools(mcp) == []
 
 
 async def test_http_tool_call_runs_the_tool_without_an_action_name(monkeypatch):

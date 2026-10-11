@@ -130,7 +130,8 @@ def _build_http_tool(tool: Tools) -> StructuredTool:
 def build_tools(chatbot: Chatbots) -> list[StructuredTool]:
     tools: list[StructuredTool] = []
     for chatbot_tool in chatbot.chatbot_tools:
-        if not chatbot_tool.enabled:
+        # REVOKED is the admin off switch in apps/api, which also refuses to run the tool.
+        if not chatbot_tool.enabled or chatbot_tool.tool.status == "REVOKED":
             continue
 
         if chatbot_tool.tool.kind == "HTTP":
