@@ -172,7 +172,8 @@
         "title": "Thông báo",
         "empty": "Bạn đã xem hết thông báo",
         "markAllAsRead": "Đánh dấu đã đọc tất cả",
-        "emptyHint": "Các cập nhật mới từ workspace sẽ hiện ở đây, ví dụ khách hàng cần người hỗ trợ hoặc có yêu cầu tham gia mới."
+        "emptyHint": "Các cập nhật mới từ workspace sẽ hiện ở đây, ví dụ khách hàng cần người hỗ trợ hoặc có yêu cầu tham gia mới.",
+        "unreadLabel": "Thông báo, {{count}} chưa đọc"
       },
       "actions": {
         "logout": "Đăng xuất"
@@ -1930,7 +1931,7 @@
       "handoffEmailsHint": "Gửi khi agent chuyển một cuộc hội thoại cho đội của bạn. Bạn vẫn thấy thông báo trong ứng dụng.",
       "saveFailed": "Không lưu được lựa chọn của bạn. Vui lòng thử lại.",
       "sound": "Phát âm thanh trong ứng dụng",
-      "soundHint": "Âm thanh ngắn khi có thông báo hoặc tin nhắn mới, khi gửi tin nhắn, kết nối tài khoản, bật agent và khi tri thức xử lý xong hoặc bị lỗi. Chỉ áp dụng trên trình duyệt này."
+      "soundHint": "Âm thanh ngắn khi có thông báo hoặc tin nhắn mới, khi gửi tin nhắn, kết nối tài khoản, bật agent và khi kiến thức xử lý xong hoặc bị lỗi. Chỉ áp dụng trên trình duyệt này."
     }
   },
   "workspace": {

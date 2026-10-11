@@ -9,7 +9,10 @@ const api = vi.hoisted(() => ({
   count: 0,
   notifications: [] as NotificationItem[],
   markMany: vi.fn(),
+  markOne: vi.fn(),
 }));
+
+vi.mock("@/hooks/use-leader-tab", () => ({ useIsLeaderTab: () => true }));
 
 vi.mock("@/hooks/api/notifications", () => ({
   useUnreadNotificationCount: () => ({ count: api.count, isFetched: true }),
@@ -20,6 +23,7 @@ vi.mock("@/hooks/api/notifications", () => ({
     refetch: async () => ({ data: { data: api.notifications } }),
   }),
   useMarkNotificationsAsRead: () => ({ mutate: api.markMany }),
+  useMarkNotificationAsRead: () => ({ mutate: api.markOne }),
   useMarkAllNotificationsAsRead: () => ({ mutate: vi.fn() }),
 }));
 
@@ -49,6 +53,7 @@ const open = () => {
 describe("NotificationMenu", () => {
   beforeEach(() => {
     api.markMany.mockReset();
+    api.markOne.mockReset();
     api.count = 0;
     api.notifications = [];
   });
@@ -75,6 +80,46 @@ describe("NotificationMenu", () => {
     await waitFor(() => expect(api.markMany).toHaveBeenCalledWith(["n-1"]));
     expect(screen.getByText("Customer needs a person")).toBeInTheDocument();
     expect(screen.getAllByText("now")).toHaveLength(2);
+  });
+
+  it("keeps a customer-needs-a-person notification unread until clicked", async () => {
+    api.count = 2;
+    api.notifications = [
+      item({ id: "n-1", metadata: { data: { conversationId: "c-1" } } }),
+      item({ id: "n-2", title: "Join request" }),
+    ];
+    open();
+
+    await waitFor(() => expect(api.markMany).toHaveBeenCalledWith(["n-2"]));
+
+    fireEvent.click(screen.getByText("Customer needs a person"));
+
+    expect(api.markOne).toHaveBeenCalledWith("n-1");
+  });
+
+  it("marks nothing when the menu closes before the list loads", async () => {
+    api.count = 1;
+    api.notifications = [item({ id: "n-1" })];
+    open();
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: "Escape",
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(api.markMany).not.toHaveBeenCalled();
+  });
+
+  it("reads the unread count to screen readers", () => {
+    api.count = 3;
+    render(
+      <MemoryRouter>
+        <NotificationMenu />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Notifications, 3 unread" }),
+    ).toBeInTheDocument();
   });
 
   it("explains the empty state", async () => {

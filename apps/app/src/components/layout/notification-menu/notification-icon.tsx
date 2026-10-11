@@ -4,13 +4,14 @@ import type { FC } from "react";
 import type { NotificationItem } from "@/hooks/api/notifications";
 
 import { NOTIFICATION_ICONS } from "./constants";
+import { isHandoffNotification } from "./is-handoff-notification";
 
 type NotificationIconProps = { notification: NotificationItem };
 
 export const NotificationIcon: FC<NotificationIconProps> = ({
   notification,
 }) => {
-  const key = notification.metadata?.data?.conversationId
+  const key = isHandoffNotification(notification)
     ? "handoff"
     : notification.type;
   const { Icon, className } =

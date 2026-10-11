@@ -8,7 +8,9 @@ import { soundEnabledAtom } from "./state";
 export const useUISound = () => {
   const soundOn = useAtomValue(soundEnabledAtom);
 
-  useEffect(primeUISound, []);
+  useEffect(() => {
+    if (soundOn) void primeUISound();
+  }, [soundOn]);
 
   return useCallback(
     (cue: UISoundCue) => {

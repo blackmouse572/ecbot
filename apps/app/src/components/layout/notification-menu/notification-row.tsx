@@ -10,14 +10,15 @@ import { NotificationIcon } from "./notification-icon";
 
 type NotificationRowProps = {
   notification: NotificationItem;
-  // Unread when the menu opened: stays highlighted until it closes, even
-  // though it was marked read on open.
+  // Unread, or unread when the menu opened (highlighted until it closes).
   isNew: boolean;
+  onClick?: () => void;
 };
 
 export const NotificationRow: FC<NotificationRowProps> = ({
   notification,
   isNew,
+  onClick,
 }) => {
   const { i18n } = useTranslation();
   const actionUrl = notification.metadata?.actionUrl;
@@ -59,11 +60,15 @@ export const NotificationRow: FC<NotificationRowProps> = ({
 
   if (actionUrl) {
     return (
-      <DropdownMenu.Item asChild className="p-0">
+      <DropdownMenu.Item asChild className="p-0" onClick={onClick}>
         <Link to={actionUrl}>{content}</Link>
       </DropdownMenu.Item>
     );
   }
 
-  return <DropdownMenu.Item className="p-0">{content}</DropdownMenu.Item>;
+  return (
+    <DropdownMenu.Item className="p-0" onClick={onClick}>
+      {content}
+    </DropdownMenu.Item>
+  );
 };

@@ -128,6 +128,15 @@ export const knowledgeItemListQueryOptions = (
 
 export const KNOWLEDGE_ITEM_PENDING_STATUSES = ["READY", "PROCESSING"];
 
+/** `refetchInterval` that watches a queued or running item, for up to 10 minutes. */
+export const pollWhileKnowledgeItemPending = (query: {
+  state: { data?: A; dataUpdateCount: number };
+}) =>
+  KNOWLEDGE_ITEM_PENDING_STATUSES.includes(query.state.data?.data?.status) &&
+  query.state.dataUpdateCount < 200
+    ? 3_000
+    : false;
+
 export const knowledgeItemDetailQueryOptions = (
   workspace: string,
   knowledgeBaseId: string,
@@ -143,13 +152,6 @@ export const knowledgeItemDetailQueryOptions = (
           res.data as A as KnowledgeItemWorkspaceControllerUpdateV1Response,
       ),
     staleTime: 5 * 60 * 1000, // 5 minutes for detail data
-    // Watch a queued or running item until it finishes or fails.
-    refetchInterval: (query) =>
-      KNOWLEDGE_ITEM_PENDING_STATUSES.includes(
-        (query.state.data?.data as A)?.status,
-      )
-        ? 3_000
-        : false,
   });
 
 export const useKnowledgeItems = (
@@ -175,7 +177,10 @@ export const useKnowledgeItems = (
 export const useKnowledgeItem = (
   knowledgeBaseId: string,
   itemId: string,
-  options?: { enabled?: boolean },
+  options?: {
+    enabled?: boolean;
+    refetchInterval?: typeof pollWhileKnowledgeItemPending;
+  },
 ) => {
   const { workspace } = useWorkspace();
 

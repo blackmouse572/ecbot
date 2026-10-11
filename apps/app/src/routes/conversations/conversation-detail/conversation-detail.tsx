@@ -54,11 +54,15 @@ export function ConversationDetail() {
   const playSound = useUISound();
 
   // A new newest message from the customer. Keyed on the newest id, so
-  // loading older pages or our own sends stay quiet.
+  // loading older pages or our own sends stay quiet; so does dropping a
+  // failed optimistic send (`tmp-` id), which can uncover an older message.
   const newestMessage = messages.at(-1);
   useSoundOnChange(
     isLoadingMessages ? undefined : (newestMessage?.id ?? null),
-    () => (newestMessage?.direction === "INBOUND" ? "receive" : null),
+    (previous) =>
+      !previous?.startsWith("tmp-") && newestMessage?.direction === "INBOUND"
+        ? "receive"
+        : null,
     id,
   );
 

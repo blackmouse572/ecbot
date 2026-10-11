@@ -172,7 +172,8 @@
         "title": "Notifications",
         "empty": "You're all caught up",
         "markAllAsRead": "Mark all as read",
-        "emptyHint": "New updates from your workspaces show up here, like a customer who needs a person or a new join request."
+        "emptyHint": "New updates from your workspaces show up here, like a customer who needs a person or a new join request.",
+        "unreadLabel": "Notifications, {{count}} unread"
       },
       "actions": {
         "logout": "Log Out"

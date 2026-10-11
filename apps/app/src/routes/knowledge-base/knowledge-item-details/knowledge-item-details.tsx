@@ -1,5 +1,6 @@
 import {
   KNOWLEDGE_ITEM_PENDING_STATUSES,
+  pollWhileKnowledgeItemPending,
   useKnowledgeItem,
 } from "@/hooks/api/knowledge-base";
 import { useSoundOnChange } from "@/modules/sound";
@@ -21,6 +22,8 @@ export function KnowledgeItemDetails() {
   const { item, isLoading, isError, error } = useKnowledgeItem(
     knowledgeBaseId || "",
     id || "",
+    // Only this page watches processing, so only it polls.
+    { refetchInterval: pollWhileKnowledgeItemPending },
   );
 
   // Processing finished (or failed) while the user is on this page.
