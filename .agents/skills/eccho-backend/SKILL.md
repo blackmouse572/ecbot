@@ -71,7 +71,7 @@ Decorators, top to bottom: doc decorator → `@Response` / `@ResponsePaging` →
 | `.shared`    | none                                                                                                                 |
 | `.public`    | none, and drop `@UserProtected` + `@AuthJwtAccessProtected` (keep `@ApiKeyProtected()`)                              |
 
-Three surfaces replace the whole user/JWT/API-key stack with one guard: `.client` uses `@ClientCredentialProtected()` (the workspace comes from the credential), `.task` uses `@ApiKeyCloudTasksProtected()`, `.system` uses `@ApiKeySystemProtected()`. A `.client` route over workspace data passes the abilities of its workspace route, e.g. `@ClientCredentialProtected({ subject: ENUM_POLICY_SUBJECT.CUSTOMER, action: [ENUM_POLICY_ACTION.READ] })`, so a key can do no more than the member who created it can do now. Read `docs/authorization.md` and `.github/instructions/api/auth.instructions.md`.
+Three surfaces replace the whole user/JWT/API-key stack with one guard: `.client` uses `@ClientCredentialProtected()` (the workspace comes from the credential), `.task` uses `@ApiKeyCloudTasksProtected()`, `.system` uses `@ApiKeySystemProtected()`. A `.client` route over workspace data passes the abilities of its workspace route, e.g. `@ClientCredentialProtected({ subject: ENUM_POLICY_SUBJECT.CUSTOMER, action: [ENUM_POLICY_ACTION.READ] })`, so a key can do no more than the member who created it can do now. A `.client` write acts as that member: inject `@ClientCredentialPayload()` and pass `credential.createdBy` wherever the workspace route passes the signed-in user (records, activity log). Read `docs/authorization.md` and `.github/instructions/api/auth.instructions.md`.
 
 </important>
 

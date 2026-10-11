@@ -11,37 +11,71 @@ client of other servers (see `CONTEXT.md`).
 
 ## Tools
 
-All read-only (`readOnlyHint`), each a `GET` on `/api/v1/client`:
+Each tool calls one route under `/api/v1/client` and needs the same
+permission as the matching route in the app. `tools/list` shows a key only
+the tools its creator holds that permission for (see [Auth](#auth)).
 
-| Tool                         | API path                                      |
-| ---------------------------- | --------------------------------------------- |
-| `list_chatbots`              | `/chatbots`                                   |
-| `get_chatbot`                | `/chatbots/:id`                               |
-| `list_knowledge_bases`       | `/knowledge-bases`                            |
-| `list_knowledge_items`       | `/knowledge-bases/:knowledgeBaseId/items`     |
-| `get_knowledge_item`         | `/knowledge-bases/:knowledgeBaseId/items/:id` |
-| `list_conversations`         | `/conversations`                              |
-| `get_conversation`           | `/conversations/:id`                          |
-| `list_conversation_messages` | `/conversations/:id/messages`                 |
-| `list_customers`             | `/customers`                                  |
-| `get_customer`               | `/customers/:id`                              |
+The kind sets the tool's annotations (`src/tools/shared.ts`), which clients
+use to decide what to confirm with the user: **reads** change nothing,
+**adds** only add, **switches** flip something reversible, **overwrites**
+replace data, **deletes** remove it.
 
-Reading a conversation, its messages or a customer adds a view to the
-workspace activity log, by the user who created the API key, as the same read
-does in the app.
+| Area          | Tool                                                                         | Permission       | Kind       |
+| ------------- | ---------------------------------------------------------------------------- | ---------------- | ---------- |
+| Chatbots      | `list_chatbots`, `get_chatbot`, `list_chatbot_models`                        | chatbot read     | reads      |
+|               | `create_chatbot`                                                             | chatbot create   | adds       |
+|               | `update_chatbot`                                                             | chatbot update   | overwrites |
+|               | `activate_chatbot`, `deactivate_chatbot`                                     | chatbot update   | switches   |
+|               | `delete_chatbot` (update, as in the app)                                     | chatbot update   | deletes    |
+| Conversations | `list_conversations`, `get_conversation`, `list_conversation_messages`       | chatbot read     | reads      |
+|               | `reply_to_conversation` (also `openWorldHint`: the customer sees it at once) | chatbot update   | adds       |
+|               | `set_conversation_bot`, `set_conversation_status`                            | chatbot update   | switches   |
+| Knowledge     | `list_knowledge_bases`, `list_knowledge_items`, `get_knowledge_item`         | knowledge read   | reads      |
+|               | `create_knowledge_base`, `create_knowledge_item` (text or URL)               | knowledge create | adds       |
+|               | `update_knowledge_base`, `update_knowledge_item`                             | knowledge update | overwrites |
+|               | `process_knowledge_item`                                                     | knowledge update | switches   |
+| Customers     | `list_customers`, `get_customer`, `list_customer_tags`, `get_customer_tags`  | customer read    | reads      |
+|               | `create_customer_tag`                                                        | customer create  | adds       |
+|               | `update_customer`, `update_customer_tag`                                     | customer update  | overwrites |
+|               | `tag_customer`, `untag_customer`                                             | customer update  | switches   |
+|               | `delete_customer_tag`                                                        | customer delete  | deletes    |
+| Tools         | `list_workspace_tools`, `get_workspace_tool`, `list_chatbot_tools`           | tool read        | reads      |
+|               | `create_http_tool`, `create_mcp_tool`                                        | tool create      | adds       |
+|               | `update_workspace_tool`                                                      | tool update      | overwrites |
+|               | `enable_chatbot_tool`, `disable_chatbot_tool`                                | tool update      | switches   |
+|               | `delete_workspace_tool`                                                      | tool delete      | deletes    |
+| Skills        | `list_skills`, `get_skill`, `list_chatbot_skills`                            | skill read       | reads      |
+|               | `create_skill`, `clone_skill_template`                                       | skill create     | adds       |
+|               | `update_skill`                                                               | skill update     | overwrites |
+|               | `attach_skill`, `detach_skill`                                               | skill update     | switches   |
+|               | `delete_skill`                                                               | skill delete     | deletes    |
+
+The workspace's **Tools** (HTTP endpoints and MCP servers its chatbots call)
+are named `*_workspace_tool` and `*_chatbot_tool`, to keep them apart from
+this server's own MCP tools.
+
+Not exposed: file uploads, the marketplace installs (they need a browser
+for OAuth), permanent customer erasure, and deleting knowledge items, whose
+workspace route also requires the global `WORKSPACE_OWNER` role type that no
+workspace member has.
+
+Every write acts as the user who created the API key: replies are sent as
+them, and the workspace activity log records them, as for the same action
+in the app. Reading a conversation, its messages or a customer adds a view
+to the log the same way.
 
 `get_knowledge_item` and `list_conversation_messages` return text that
 customers or uploaded documents wrote (untrusted input, see `CONTEXT.md`);
 their descriptions tell the agent to treat it as data, never as
 instructions.
 
-To add a tool: add the `/client` endpoint in `apps/api`, run
-`pnpm generate:client`, then register the tool in the matching
-`src/tools/*.ts` with a `title` and `readOnlyHint` or `destructiveHint`,
-spreading `api` into the `@repo/client` call so it carries the caller's key,
-and returning through `respond()`. Register it only if `allows(subject,
-action)` holds for the ability its API route checks, so keys without it don't
-see it.
+To add a tool: add the `/client` endpoint in `apps/api` with the same
+ability as its workspace route, run `pnpm generate:client`, then register
+the tool in the matching `src/tools/*.ts`, inside the `register*Tools`
+group for that ability (so `tools/list` hides it from keys without it).
+Give it a `title` and the annotation set for its kind, spread `api` into the
+`@repo/client` call so it carries the caller's key, and return through
+`respond()`.
 
 ## Auth
 
@@ -55,7 +89,7 @@ A request without one gets `401`. Requests from a browser `Origin` get `403`
 (DNS rebinding protection); MCP clients send no `Origin`.
 
 A key can do at most what the member who created it can do in the workspace
-right now. On `tools/list` the server asks the API once (`GET /client/v1/me`)
+right now, reads and writes alike. On `tools/list` the server asks the API once (`GET /client/v1/me`)
 what the key may do and lists only those tools: everything for the owner's
 key, none once the member leaves the workspace. Other requests skip that
 lookup, because the API checks every call anyway: a tool the member lost
