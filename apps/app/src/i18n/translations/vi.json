@@ -549,7 +549,17 @@
           "description": "Dán token bot bạn nhận được từ @BotFather trên Telegram.",
           "tokenLabel": "Bot Token",
           "tokenPlaceholder": "1234567890:AAF...",
-          "tokenHint": "Tạo bot và lấy token qua @BotFather",
+          "guide": {
+            "title": "Cách lấy token bot",
+            "steps": {
+              "open": "Mở <0>@BotFather</0> trên Telegram.",
+              "newbot": "Gửi tin nhắn /newbot.",
+              "name": "Đặt tên hiển thị cho bot, ví dụ tên cửa hàng của bạn.",
+              "username": "Đặt username kết thúc bằng \"bot\", ví dụ myshop_bot.",
+              "copy": "BotFather sẽ trả lời bằng một token dạng 1234567890:AAF... Hãy sao chép token này.",
+              "paste": "Dán token vào ô phía trên."
+            }
+          },
           "tokenInvalid": "Sai định dạng token, phải có dạng 1234567890:ABC...",
           "cta": "Kết nối Bot"
         },

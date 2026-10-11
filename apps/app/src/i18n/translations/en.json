@@ -523,7 +523,17 @@
           "description": "Paste the bot token you received from @BotFather on Telegram.",
           "tokenLabel": "Bot Token",
           "tokenPlaceholder": "1234567890:AAF...",
-          "tokenHint": "Create a bot and get the token via @BotFather",
+          "guide": {
+            "title": "How to get a bot token",
+            "steps": {
+              "open": "Open <0>@BotFather</0> in Telegram.",
+              "newbot": "Send the message /newbot.",
+              "name": "Choose a display name for your bot, for example your shop name.",
+              "username": "Choose a username that ends in \"bot\", for example myshop_bot.",
+              "copy": "BotFather replies with a token like 1234567890:AAF... Copy it.",
+              "paste": "Paste the token into the field above."
+            }
+          },
           "tokenInvalid": "Invalid token format, expected 1234567890:ABC...",
           "cta": "Connect Bot"
         },
