@@ -54,7 +54,7 @@ export function IssuedPanel({
           <CopyField
             label={t("accounts.create.provision.websiteWidget.snippetLabel")}
             value={embedSnippet(issued.widgetKey)}
-            hint={t("accounts.create.provision.websiteWidget.snippetHint")}
+            hint={`${t("accounts.create.provision.websiteWidget.snippetHint")} ${t("accounts.create.provision.websiteWidget.snippetOptionsHint")}`}
             multiline
           />
         </>
@@ -69,6 +69,8 @@ export function IssuedPanel({
   );
 }
 
+/** The optional attributes carry public/widget.js's defaults, so the snippet
+ *  works as pasted and shows the owner what to change. */
 function embedSnippet(widgetKey: string): string {
-  return `<script src="${window.location.origin}/widget.js" data-widget-key="${widgetKey}" async></script>`;
+  return `<script src="${window.location.origin}/widget.js" data-widget-key="${widgetKey}" data-color="#0f766e" data-label="Chat" data-theme="light" async></script>`;
 }

@@ -511,6 +511,7 @@
           "keyLabel": "Widget key",
           "snippetLabel": "Embed snippet",
           "snippetHint": "Paste this before the closing </body> tag on every page that should show the widget.",
+          "snippetOptionsHint": "To match your site, change data-color (button colour, e.g. #2563eb), data-label (button name) and data-theme (light, dark, or auto to follow the visitor's device).",
           "issuedDescription": "Paste this code into your website to show the chat. The key is public, so there is nothing to keep secret."
         }
       },

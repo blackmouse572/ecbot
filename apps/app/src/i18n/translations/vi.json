@@ -537,6 +537,7 @@
           "keyLabel": "Widget key",
           "snippetLabel": "Đoạn mã nhúng",
           "snippetHint": "Dán đoạn này trước thẻ đóng </body> trên mọi trang cần hiển thị widget.",
+          "snippetOptionsHint": "Để hợp với website, đổi data-color (màu nút, vd: #2563eb), data-label (tên nút) và data-theme (light là nền sáng, dark là nền tối, auto theo thiết bị của khách).",
           "issuedDescription": "Dán đoạn mã này vào website để hiện khung chat. Khóa này công khai nên bạn không cần giữ bí mật."
         }
       },
