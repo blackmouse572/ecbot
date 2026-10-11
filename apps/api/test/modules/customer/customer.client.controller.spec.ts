@@ -1,0 +1,134 @@
+import { NotFoundException } from '@nestjs/common';
+import { GUARDS_METADATA, PATH_METADATA } from '@nestjs/common/constants';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '../../../src/common/pagination/enums/pagination.enum';
+import { CustomerClientController } from '../../../src/modules/customer/controllers/customer.client.controller';
+import { ClientCredentialGuard } from '../../../src/modules/client-credential/guards/client-credential.guard';
+import { ENUM_POLICY_SUBJECT } from '../../../src/modules/policy/enums/policy.enum';
+import { WorkspaceEntity } from '../../../src/modules/workspace/repository/entities/workspace.entity';
+
+// /client surface: scoped to the credential's workspace, and reading a
+// customer is logged as a view by the credential's creator, as the
+// workspace route logs it for the signed-in operator.
+
+const mockCustomerService = {
+    findByWorkspace: jest.fn(),
+    countByWorkspace: jest.fn(),
+    mapList: jest.fn(),
+    findOneByIdInWorkspace: jest.fn(),
+    mapGet: jest.fn(),
+};
+
+const mockActivityService = {
+    createView: jest.fn(),
+};
+
+const mockPaginationService = {
+    totalPage: jest.fn((total: number, limit: number) =>
+        Math.ceil(total / limit)
+    ),
+};
+
+describe('CustomerClientController', () => {
+    const workspace = { id: 'workspace-1' } as WorkspaceEntity;
+    const credential = { createdBy: { id: 'creator-1' } } as any;
+    let controller: CustomerClientController;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        controller = new CustomerClientController(
+            mockCustomerService as any,
+            mockActivityService as any,
+            mockPaginationService as any
+        );
+    });
+
+    it('is mounted at /customers', () => {
+        expect(
+            Reflect.getMetadata(PATH_METADATA, CustomerClientController)
+        ).toBe('/customers');
+    });
+
+    it.each(['list', 'get'] as const)(
+        '%s is guarded by the client credential only',
+        handler => {
+            expect(
+                Reflect.getMetadata(
+                    GUARDS_METADATA,
+                    CustomerClientController.prototype[handler]
+                )
+            ).toEqual([ClientCredentialGuard]);
+        }
+    );
+
+    it('lists the credential workspace customers, newest first with a stable tiebreak', async () => {
+        const mapped = [{ id: 'cust-1', name: 'Alice' }];
+        mockCustomerService.findByWorkspace.mockResolvedValue([
+            { id: 'cust-1' },
+        ]);
+        mockCustomerService.countByWorkspace.mockResolvedValue(1);
+        mockCustomerService.mapList.mockReturnValue(mapped);
+
+        const result = await controller.list(workspace, {
+            _limit: 20,
+            _offset: 0,
+            _order: { createdAt: 'desc' },
+            _search: { name: { $ilike: '%ali%' } },
+        } as any);
+
+        const find = { name: { $ilike: '%ali%' } };
+        expect(mockCustomerService.findByWorkspace).toHaveBeenCalledWith(
+            'workspace-1',
+            find,
+            {
+                paging: { limit: 20, offset: 0 },
+                order: {
+                    createdAt: 'desc',
+                    id: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+                },
+            }
+        );
+        expect(mockCustomerService.countByWorkspace).toHaveBeenCalledWith(
+            'workspace-1',
+            find
+        );
+        expect(result).toEqual({
+            _pagination: { total: 1, totalPage: 1 },
+            data: mapped,
+        });
+    });
+
+    describe('get', () => {
+        it('returns the customer and logs the view as the creator', async () => {
+            mockCustomerService.findOneByIdInWorkspace.mockResolvedValue({
+                id: 'cust-1',
+            });
+            mockCustomerService.mapGet.mockReturnValue({ id: 'cust-1' });
+
+            const result = await controller.get(
+                workspace,
+                credential,
+                'cust-1'
+            );
+
+            expect(
+                mockCustomerService.findOneByIdInWorkspace
+            ).toHaveBeenCalledWith('cust-1', 'workspace-1');
+            expect(mockActivityService.createView).toHaveBeenCalledWith(
+                'creator-1',
+                workspace,
+                ENUM_POLICY_SUBJECT.CUSTOMER,
+                { id: 'cust-1' }
+            );
+            expect(result).toEqual({ data: { id: 'cust-1' } });
+        });
+
+        it('returns 404 for a customer outside the workspace, without logging a view', async () => {
+            mockCustomerService.findOneByIdInWorkspace.mockResolvedValue(null);
+
+            await expect(
+                controller.get(workspace, credential, 'cust-elsewhere')
+            ).rejects.toBeInstanceOf(NotFoundException);
+            expect(mockActivityService.createView).not.toHaveBeenCalled();
+        });
+    });
+});
