@@ -388,6 +388,47 @@ export const useLinkKnowledgeItemToChatbot = (
   });
 };
 
+/**
+ * Links one knowledge item to several agents at once (the item create form).
+ * Each link is its own request, so one failure doesn't drop the others; the
+ * result says how many failed.
+ */
+export const useLinkKnowledgeItemToChatbots = () => {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      knowledgeItemId,
+      chatbotIds,
+    }: {
+      knowledgeItemId: string;
+      chatbotIds: string[];
+    }) => {
+      const results = await Promise.allSettled(
+        chatbotIds.map((chatbotId) =>
+          chatbotKnowledgeItemWorkspaceControllerLinkV1({
+            path: {
+              workspace: workspace!.slug,
+              chatbotId,
+              knowledgeItemId,
+              id: knowledgeItemId,
+            },
+          }),
+        ),
+      );
+      return {
+        failed: results.filter((r) => r.status === "rejected").length,
+      };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: chatbotKnowledgeItemQueryKeys.lists(),
+      });
+    },
+  });
+};
+
 export const useUnlinkKnowledgeItemFromChatbot = (
   chatbotId: string,
   options?: MutationOptions<unknown, Error, string>,

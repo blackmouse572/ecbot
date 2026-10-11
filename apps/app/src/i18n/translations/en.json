@@ -2224,7 +2224,13 @@
     "learned_chunks_one": "The agent learned this file as {{count}} section.",
     "learned_chunks_other": "The agent learned this file as {{count}} sections.",
     "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
-    "learn_failed": "Could not learn this file. Try Process again."
+    "learn_failed": "Could not learn this file. Try Process again.",
+    "agents_label": "Agents that use this item",
+    "agents_hint": "The agents you pick can answer from this item once it finishes processing. You can change this later in each agent's Knowledge Base section.",
+    "agents_empty": "No agents yet. After you create one, link this item from the agent's Knowledge Base section.",
+    "agents_error": "Couldn't load agents. You can link this item later from the agent's Knowledge Base section.",
+    "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
+    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section."
   },
   "conversations": {
     "title": "Conversations",
