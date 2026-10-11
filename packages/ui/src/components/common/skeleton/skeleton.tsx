@@ -124,7 +124,7 @@ export const GeneralSectionSkeleton = ({
 
   return (
     <Container
-      className="divide-y p-0"
+      className="divide-y overflow-hidden p-0"
       aria-hidden
       data-slot="section-skeleton"
     >
@@ -280,15 +280,15 @@ export const TwoColumnPageSkeleton = ({
   showMetadata = true,
 }: TwoColumnPageSkeletonProps) => {
   return (
-    <div className="flex flex-col gap-x-4 gap-y-3 xl:flex-row xl:items-start">
-      <div className="flex w-full flex-col gap-y-3">
+    <div className="flex w-full flex-col items-start gap-x-4 gap-y-3 xl:grid xl:grid-cols-[minmax(0,_1fr)_440px]">
+      <div className="flex w-full min-w-0 flex-col gap-y-3">
         {Array.from({ length: mainSections }, (_, i) => (
           <GeneralSectionSkeleton key={i} rowCount={sectionRows(i)} />
         ))}
         {showMetadata && <JsonViewSectionSkeleton />}
         {showJSON && <JsonViewSectionSkeleton />}
       </div>
-      <div className="flex w-full max-w-[100%] flex-col gap-y-3 xl:max-w-[440px]">
+      <div className="flex w-full flex-col gap-y-3">
         {Array.from({ length: sidebarSections }, (_, i) => (
           <GeneralSectionSkeleton key={i} rowCount={2} />
         ))}
