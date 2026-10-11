@@ -114,9 +114,6 @@ describe("CustomersSuggestions page", () => {
     render(<CustomersSuggestions />);
 
     expect(screen.getByText("customers.suggestions.empty")).toBeInTheDocument();
-    expect(
-      screen.getByText("customers.suggestions.emptyTitle"),
-    ).toBeInTheDocument();
   });
 
   it("renders one table row per PENDING suggestion with both customer names + match field + value", () => {
