@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
 import { skillFormSchema, type SkillFormData } from "../schemas";
+import { FormSkeleton } from "@repo/ui/common-components";
 
 const SkillEditInner = () => {
   const { t } = useTranslation();
@@ -71,9 +72,7 @@ const SkillEditInner = () => {
           </RouteDrawer.Description>
         </RouteDrawer.Header>
         <RouteDrawer.Body className="p-6">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("skills.list.loading")}
-          </Text>
+          <FormSkeleton fieldCount={4} />
         </RouteDrawer.Body>
       </>
     );

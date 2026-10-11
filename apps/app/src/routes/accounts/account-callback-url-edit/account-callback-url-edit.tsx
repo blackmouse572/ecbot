@@ -3,7 +3,7 @@ import { useAccount, useUpdateApiChannelCallbackUrl } from "@/hooks/api";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import { Button, Heading, Input, Text, toast } from "@medusajs/ui";
-import { Form } from "@repo/ui/common-components";
+import { Form, FormSkeleton } from "@repo/ui/common-components";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -45,9 +45,7 @@ function AccountCallbackUrlEditInner() {
   if (isLoading || !account) {
     return (
       <RouteDrawer.Body className="p-6">
-        <Text size="small" className="text-ui-fg-subtle">
-          …
-        </Text>
+        <FormSkeleton fieldCount={2} />
       </RouteDrawer.Body>
     );
   }

@@ -25,6 +25,7 @@ import {
   type ToolkitCardData,
 } from "../../marketplace/components/toolkit-card";
 import { ToolLogo } from "../../components/tool-logo";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 const DEFAULT_PER_PAGE = 12;
 
@@ -136,11 +137,7 @@ const CatalogView = ({
         )}
       </div>
       {isLoading ? (
-        <div className="py-10 text-center">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.list.loading")}
-          </Text>
-        </div>
+        <ListSkeleton rowCount={6} />
       ) : toolkits.length === 0 ? (
         <div className="py-10 text-center">
           <Text size="small" className="text-ui-fg-subtle">

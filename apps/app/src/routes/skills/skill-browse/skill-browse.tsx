@@ -7,6 +7,7 @@ import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 const PER_PAGE = 12;
 
@@ -50,9 +51,7 @@ const SkillBrowseInner = () => {
           />
 
           {isLoading ? (
-            <Text size="small" className="text-ui-fg-subtle">
-              {t("skills.list.loading")}
-            </Text>
+            <ListSkeleton rowCount={4} />
           ) : !skills || skills.length === 0 ? (
             <Text size="small" className="text-ui-fg-subtle">
               {t("skills.list.noTemplates")}

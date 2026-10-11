@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
 import { skillFormSchema, type SkillFormData } from "../schemas";
+import { FormSkeleton } from "@repo/ui/common-components";
 
 const SkillCopyForm = ({ skillId }: { skillId: string }) => {
   const { t } = useTranslation();
@@ -64,9 +65,7 @@ const SkillCopyForm = ({ skillId }: { skillId: string }) => {
               </Text>
             </div>
             {isLoading ? (
-              <Text size="small" className="text-ui-fg-subtle">
-                {t("skills.list.loading")}
-              </Text>
+              <FormSkeleton fieldCount={4} />
             ) : (
               <SkillFormFields form={form} />
             )}

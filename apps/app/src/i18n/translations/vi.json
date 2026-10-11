@@ -39,7 +39,6 @@
       "inactive": "Tắt"
     },
     "list": {
-      "loading": "Đang tải…",
       "noRecordsMessage": "Chưa có skill. Tạo mới hoặc sao chép từ mẫu.",
       "noTemplates": "Chưa có mẫu nào.",
       "filters": {
@@ -2654,7 +2653,6 @@
       }
     },
     "list": {
-      "loading": "Đang tải công cụ…",
       "noRecordsMessage": "Không tìm thấy công cụ nào. Hãy thử điều chỉnh tìm kiếm hoặc bộ lọc.",
       "columns": {
         "kind": "Loại",

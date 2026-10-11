@@ -5,6 +5,7 @@ import {
   useConversationFollowups,
   type FollowupListResponseDto,
 } from "@/hooks/api/followups";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 interface Props {
   conversationId: string;
@@ -16,7 +17,7 @@ export function FollowupsSection({ conversationId, onViewMessage }: Props) {
   const { followups, isPending } = useConversationFollowups(conversationId);
   const cancel = useCancelFollowup();
 
-  if (isPending) return null;
+  if (isPending) return <ListSkeleton rowCount={2} />;
 
   if (followups.length === 0) {
     return (

@@ -4,7 +4,7 @@ import { useGetTool, useUpdateTool } from "@/hooks/api/tools";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Input, Textarea, Text, toast } from "@medusajs/ui";
-import { Form } from "@repo/ui/common-components";
+import { Form, FormSkeleton } from "@repo/ui/common-components";
 import { Helmet } from "react-helmet-async";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -93,9 +93,7 @@ const ToolEditInner = () => {
           </RouteDrawer.Description>
         </RouteDrawer.Header>
         <RouteDrawer.Body className="p-6">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.list.loading")}
-          </Text>
+          <FormSkeleton />
         </RouteDrawer.Body>
       </>
     );

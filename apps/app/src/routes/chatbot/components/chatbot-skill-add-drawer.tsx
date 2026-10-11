@@ -5,7 +5,7 @@ import {
 } from "@/hooks/api/skills";
 import { Badge, Divider, Button, Drawer, Text, toast } from "@medusajs/ui";
 import type { SkillListResponseDto } from "@repo/client";
-import { Combobox } from "@repo/ui/common-components";
+import { Combobox, ListSkeleton } from "@repo/ui/common-components";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
@@ -176,9 +176,7 @@ function SkillDetailPanel({
       <Divider />
       <div className="p-3 pt-0">
         {isLoadingDetail ? (
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("skills.list.loading")}
-          </Text>
+          <ListSkeleton />
         ) : (
           <div className="prose prose-sm max-h-64 max-w-none overflow-y-auto txt-compact-small text-ui-fg-subtle">
             <ReactMarkdown
