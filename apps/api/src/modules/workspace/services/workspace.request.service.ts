@@ -225,7 +225,9 @@ export class WorkspaceRequestService {
                     recipient: request.requestFrom.id,
                     sender: workspace.owner.id,
                     metadata: {
-                        actionText: 'Go to Workspace',
+                        actionText: this.messageService.setMessage(
+                            'notification.requests.action.goToWorkspace'
+                        ),
                     },
                 });
 

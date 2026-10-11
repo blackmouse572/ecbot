@@ -26,8 +26,14 @@
             "message": "You have a new request to join the workspace from {requestorName}."
         },
         "action": {
-            "view": "View request"
+            "view": "View request",
+            "goToWorkspace": "Go to workspace"
         }
+    },
+    "mergeSuggestion": {
+        "title": "Possible duplicate customer",
+        "message": "A customer was updated with a phone or email that matches another customer. Review the merge suggestion.",
+        "actionText": "Review"
     },
     "error": {
         "notFound": "Notification not found"
