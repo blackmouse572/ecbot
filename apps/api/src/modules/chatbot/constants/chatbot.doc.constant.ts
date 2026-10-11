@@ -8,7 +8,8 @@ export const BasedChatbotDocParams = [
     },
 ];
 
-export const ChatbotDocParamsId = [
+// The /client surface has no :workspace param (the credential carries it).
+export const ChatbotIdDocParams = [
     {
         name: 'id',
         allowEmptyValue: false,
@@ -16,6 +17,10 @@ export const ChatbotDocParamsId = [
         type: 'string',
         example: '8fca54a4-9e4a-4a31-990d-de34c44b1af3',
     },
+];
+
+export const ChatbotDocParamsId = [
+    ...ChatbotIdDocParams,
     ...BasedChatbotDocParams,
 ];
 

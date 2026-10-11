@@ -3,14 +3,25 @@ import { ClientCredentialClientController } from '@app/modules/client-credential
 import { PlatformModule } from '@app/modules/platform/platform.module';
 import { ApiChannelClientController } from '@app/modules/platform/controllers/api-channel.client.controller';
 import { AccountModule } from '@app/modules/account/account.module';
+import { ChatbotClientController } from '@app/modules/chatbot/controllers/chatbot.client.controller';
+import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { Module } from '@nestjs/common';
 
 // 3rd-party surface — every controller here authenticates via x-api-key
 // (ClientCredential) and derives its workspace from the credential. See ADR-0012.
 @Module({
-    controllers: [ClientCredentialClientController, ApiChannelClientController],
+    controllers: [
+        ClientCredentialClientController,
+        ApiChannelClientController,
+        ChatbotClientController,
+    ],
     providers: [],
     exports: [],
-    imports: [ClientCredentialModule, PlatformModule, AccountModule],
+    imports: [
+        ClientCredentialModule,
+        PlatformModule,
+        AccountModule,
+        ChatbotModule,
+    ],
 })
 export class RoutesClientModule {}

@@ -28598,6 +28598,161 @@ export type ApiChannelClientControllerSendMessageV1Responses = {
 
 export type ApiChannelClientControllerSendMessageV1Response = ApiChannelClientControllerSendMessageV1Responses[keyof ApiChannelClientControllerSendMessageV1Responses];
 
+export type ChatbotClientControllerFindAllV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Account ID used to filter the chatbot list.
+         */
+        account?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/chatbots';
+};
+
+export type ChatbotClientControllerFindAllV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerFindAllV1Error = ChatbotClientControllerFindAllV1Errors[keyof ChatbotClientControllerFindAllV1Errors];
+
+export type ChatbotClientControllerFindAllV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ChatbotListResponseDto>;
+    };
+};
+
+export type ChatbotClientControllerFindAllV1Response = ChatbotClientControllerFindAllV1Responses[keyof ChatbotClientControllerFindAllV1Responses];
+
+export type ChatbotClientControllerFindOneV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}';
+};
+
+export type ChatbotClientControllerFindOneV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerFindOneV1Error = ChatbotClientControllerFindOneV1Errors[keyof ChatbotClientControllerFindOneV1Errors];
+
+export type ChatbotClientControllerFindOneV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotGetDetailResponseDto;
+    };
+};
+
+export type ChatbotClientControllerFindOneV1Response = ChatbotClientControllerFindOneV1Responses[keyof ChatbotClientControllerFindOneV1Responses];
+
 export type RequestControllerGetRequestsV1Data = {
     body?: never;
     headers?: {
