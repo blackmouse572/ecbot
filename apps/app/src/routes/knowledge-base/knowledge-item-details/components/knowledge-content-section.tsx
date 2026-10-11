@@ -28,7 +28,7 @@ export const KnowledgeContentSection = ({
         {item.type === "FILE" ? (
           <KnowledgeFilePreview item={item} />
         ) : (
-          <Text className="whitespace-pre-wrap break-words text-ui-fg-base">
+          <Text className="max-h-96 overflow-y-auto whitespace-pre-wrap break-words text-ui-fg-base">
             {item.content}
           </Text>
         )}

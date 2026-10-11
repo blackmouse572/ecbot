@@ -24,5 +24,23 @@ describe("KnowledgeContentSection", () => {
     expect(content.tagName).not.toBe("PRE");
     expect(content).toHaveClass("whitespace-pre-wrap", "break-words");
     expect(content).not.toHaveClass("font-mono");
+    expect(content).toHaveClass("max-h-96", "overflow-y-auto");
+  });
+
+  it("shows the file preview for a file item", () => {
+    render(
+      <KnowledgeContentSection
+        item={
+          {
+            ...textItem,
+            type: "FILE",
+            content: undefined,
+            metadata: { fileName: "pet-policy.docx" },
+          } as KnowledgeItemResponseDto
+        }
+      />,
+    );
+
+    expect(screen.getByText("pet-policy.docx")).toBeInTheDocument();
   });
 });
