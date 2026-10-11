@@ -17,9 +17,13 @@ const SkillCopyForm = ({ skillId }: { skillId: string }) => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const { handleSuccess } = useRouteModal();
-  const { skill, isLoading } = useGetSkill(workspaceSlug, skillId, {
-    enabled: !!skillId,
-  });
+  const { skill, isLoading, isError, error } = useGetSkill(
+    workspaceSlug,
+    skillId,
+    {
+      enabled: !!skillId,
+    },
+  );
   const { createSkill, isPending } = useCreateSkill(workspaceSlug);
 
   const form = useForm<SkillFormData>({
@@ -52,6 +56,10 @@ const SkillCopyForm = ({ skillId }: { skillId: string }) => {
     }
   });
 
+  if (isError) {
+    throw error;
+  }
+
   return (
     <RouteFocusModal.Form form={form}>
       <KeyboundForm onSubmit={handleSubmit} className="flex h-full flex-col">
@@ -65,7 +73,7 @@ const SkillCopyForm = ({ skillId }: { skillId: string }) => {
               </Text>
             </div>
             {isLoading ? (
-              <FormSkeleton fieldCount={4} />
+              <FormSkeleton label={t("general.loading")} fieldCount={4} />
             ) : (
               <SkillFormFields form={form} />
             )}

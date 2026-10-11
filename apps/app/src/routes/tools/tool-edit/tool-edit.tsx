@@ -34,9 +34,13 @@ const ToolEditInner = () => {
   const { workspaceSlug } = useWorkspaceParams();
   const { toolId } = useParams<{ toolId: string }>();
 
-  const { tool, isLoading } = useGetTool(workspaceSlug, toolId ?? "", {
-    enabled: !!toolId,
-  });
+  const { tool, isLoading, isError, error } = useGetTool(
+    workspaceSlug,
+    toolId ?? "",
+    {
+      enabled: !!toolId,
+    },
+  );
   const { updateTool, isPending: isUpdating } = useUpdateTool(
     workspaceSlug,
     toolId ?? "",
@@ -81,6 +85,10 @@ const ToolEditInner = () => {
 
   const handleCancel = () => navigate(`/${workspaceSlug}/tools/${toolId}`);
 
+  if (isError) {
+    throw error;
+  }
+
   if (isLoading || !tool) {
     return (
       <>
@@ -93,7 +101,7 @@ const ToolEditInner = () => {
           </RouteDrawer.Description>
         </RouteDrawer.Header>
         <RouteDrawer.Body className="p-6">
-          <FormSkeleton />
+          <FormSkeleton label={t("general.loading")} />
         </RouteDrawer.Body>
       </>
     );

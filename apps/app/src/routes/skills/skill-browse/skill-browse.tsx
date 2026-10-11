@@ -51,7 +51,7 @@ const SkillBrowseInner = () => {
           />
 
           {isLoading ? (
-            <ListSkeleton rowCount={4} />
+            <ListSkeleton label={t("general.loading")} rowCount={4} />
           ) : !skills || skills.length === 0 ? (
             <Text size="small" className="text-ui-fg-subtle">
               {t("skills.list.noTemplates")}

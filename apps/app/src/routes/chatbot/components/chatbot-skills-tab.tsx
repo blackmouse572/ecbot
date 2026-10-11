@@ -85,7 +85,7 @@ export function ChatbotSkillsTab({ chatbotId, workspace }: Props) {
           </Text>
         </div>
       ) : isLoading ? (
-        <ListSkeleton className="px-6 py-4" />
+        <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
       ) : chatbotSkills.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <Text size="small" className="text-ui-fg-subtle">

@@ -238,7 +238,7 @@ function ToolDetailPanel({
             {t("tools.addDrawer.actionsTitle")}
           </Text>
           {isLoadingDetail ? (
-            <ListSkeleton />
+            <ListSkeleton label={t("general.loading")} />
           ) : discoveredActions.length === 0 ? (
             <Text size="small" className="text-ui-fg-subtle">
               {t("tools.chatbotTab.actionsEmpty")}

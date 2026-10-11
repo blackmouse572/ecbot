@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
   FormSkeleton,
@@ -30,14 +30,26 @@ describe("page skeletons", () => {
 
 describe("ListSkeleton", () => {
   it("draws the requested number of rows", () => {
-    const { container } = render(<ListSkeleton rowCount={4} />);
+    const { container } = render(<ListSkeleton label="Loading" rowCount={4} />);
     expect(count(container, "list-skeleton-row")).toBe(4);
+  });
+
+  it("announces its label to screen readers", () => {
+    render(<ListSkeleton label="Loading tools" />);
+    expect(screen.getByRole("status")).toHaveTextContent("Loading tools");
   });
 });
 
 describe("FormSkeleton", () => {
   it("draws the requested number of fields", () => {
-    const { container } = render(<FormSkeleton fieldCount={2} />);
+    const { container } = render(
+      <FormSkeleton label="Loading" fieldCount={2} />,
+    );
     expect(count(container, "form-skeleton-field")).toBe(2);
+  });
+
+  it("announces its label to screen readers", () => {
+    render(<FormSkeleton label="Loading skill" />);
+    expect(screen.getByRole("status")).toHaveTextContent("Loading skill");
   });
 });

@@ -176,7 +176,7 @@ function SkillDetailPanel({
       <Divider />
       <div className="p-3 pt-0">
         {isLoadingDetail ? (
-          <ListSkeleton />
+          <ListSkeleton label={t("general.loading")} />
         ) : (
           <div className="prose prose-sm max-h-64 max-w-none overflow-y-auto txt-compact-small text-ui-fg-subtle">
             <ReactMarkdown

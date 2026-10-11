@@ -26,7 +26,7 @@ export const JoinRequests = () => {
           <Text weight="plus">{t("members.joinRequests.title")}</Text>
         </div>
         {isLoading ? (
-          <ListSkeleton className="px-6 py-4" />
+          <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
         ) : joinRequests && joinRequests.length > 0 ? (
           joinRequests.map((request) => (
             <div

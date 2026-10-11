@@ -17,7 +17,8 @@ export function FollowupsSection({ conversationId, onViewMessage }: Props) {
   const { followups, isPending } = useConversationFollowups(conversationId);
   const cancel = useCancelFollowup();
 
-  if (isPending) return <ListSkeleton rowCount={2} />;
+  if (isPending)
+    return <ListSkeleton label={t("general.loading")} rowCount={2} />;
 
   if (followups.length === 0) {
     return (

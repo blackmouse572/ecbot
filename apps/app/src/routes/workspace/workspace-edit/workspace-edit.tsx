@@ -27,7 +27,7 @@ export const WorkspaceEdit = () => {
       </RouteDrawer.Header>
       {isLoading || !workspace ? (
         <RouteDrawer.Body className="p-6">
-          <FormSkeleton />
+          <FormSkeleton label={t("general.loading")} />
         </RouteDrawer.Body>
       ) : (
         <WorkspaceEditForm workspace={workspace} />

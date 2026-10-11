@@ -1990,7 +1990,8 @@
       "success": "{{count}} item(s) updated.",
       "partial": "{{success}} item(s) updated, {{failed}} failed.",
       "error": "Could not update {{count}} item(s)."
-    }
+    },
+    "loading": "Loading..."
   },
   "fields": {
     "name": "Name",

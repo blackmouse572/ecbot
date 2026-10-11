@@ -50,7 +50,7 @@ export const Invitations = () => {
           <Text weight="plus">{t("members.invitations.title")}</Text>
         </div>
         {isLoading ? (
-          <ListSkeleton className="px-6 py-4" />
+          <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
         ) : invitations && invitations.length > 0 ? (
           invitations.map((invitation) => (
             <div

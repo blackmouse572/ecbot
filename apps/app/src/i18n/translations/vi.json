@@ -2016,7 +2016,8 @@
       "success": "Đã cập nhật {{count}} mục.",
       "partial": "Đã cập nhật {{success}} mục, {{failed}} mục thất bại.",
       "error": "Không thể cập nhật {{count}} mục."
-    }
+    },
+    "loading": "Đang tải..."
   },
   "actions": {
     "edit": "Chỉnh sửa",

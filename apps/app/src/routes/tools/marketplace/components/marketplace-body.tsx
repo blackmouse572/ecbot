@@ -22,7 +22,7 @@ export function MarketplaceBody({
   return (
     <div className="px-6 py-4">
       {isLoading ? (
-        <ListSkeleton rowCount={6} />
+        <ListSkeleton label={t("general.loading")} rowCount={6} />
       ) : toolkits.length === 0 ? (
         <div className="py-10 text-center">
           <Text size="small" className="text-ui-fg-subtle">

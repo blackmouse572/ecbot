@@ -137,7 +137,7 @@ const CatalogView = ({
         )}
       </div>
       {isLoading ? (
-        <ListSkeleton rowCount={6} />
+        <ListSkeleton label={t("general.loading")} rowCount={6} />
       ) : toolkits.length === 0 ? (
         <div className="py-10 text-center">
           <Text size="small" className="text-ui-fg-subtle">

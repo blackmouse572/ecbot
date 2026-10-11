@@ -17,7 +17,9 @@ function AccountCallbackUrlEditInner() {
   const { t } = useTranslation();
   const { handleSuccess } = useRouteModal();
   const { id } = useParams<{ id: string }>();
-  const { account, isLoading } = useAccount(id ?? "", { enabled: !!id });
+  const { account, isLoading, isError, error } = useAccount(id ?? "", {
+    enabled: !!id,
+  });
   const { mutateAsync: updateCallbackUrl, isPending } =
     useUpdateApiChannelCallbackUrl(id ?? "");
 
@@ -42,10 +44,14 @@ function AccountCallbackUrlEditInner() {
     }
   });
 
+  if (isError) {
+    throw error;
+  }
+
   if (isLoading || !account) {
     return (
       <RouteDrawer.Body className="p-6">
-        <FormSkeleton fieldCount={2} />
+        <FormSkeleton label={t("general.loading")} fieldCount={2} />
       </RouteDrawer.Body>
     );
   }

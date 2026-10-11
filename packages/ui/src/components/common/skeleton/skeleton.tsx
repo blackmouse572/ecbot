@@ -298,17 +298,21 @@ export const TwoColumnPageSkeleton = ({
 };
 
 type ListSkeletonProps = {
+  // Announced to screen readers while the bars stay hidden from them.
+  label: string;
   rowCount?: number;
   className?: string;
 };
 
 // Rows for lists, tabs and pickers that load inside an already visible section.
 export const ListSkeleton = ({
+  label,
   rowCount = 3,
   className,
 }: ListSkeletonProps) => {
   return (
-    <div aria-hidden className={clx("flex flex-col gap-y-2", className)}>
+    <div role="status" className={clx("flex flex-col gap-y-2", className)}>
+      <span className="sr-only">{label}</span>
       {Array.from({ length: rowCount }, (_, i) => (
         <Skeleton
           key={i}
@@ -321,17 +325,21 @@ export const ListSkeleton = ({
 };
 
 type FormSkeletonProps = {
+  // Announced to screen readers while the bars stay hidden from them.
+  label: string;
   fieldCount?: number;
   className?: string;
 };
 
 // Label + input pairs for edit drawers and forms waiting on their record.
 export const FormSkeleton = ({
+  label,
   fieldCount = 3,
   className,
 }: FormSkeletonProps) => {
   return (
-    <div aria-hidden className={clx("flex flex-col gap-y-4", className)}>
+    <div role="status" className={clx("flex flex-col gap-y-4", className)}>
+      <span className="sr-only">{label}</span>
       {Array.from({ length: fieldCount }, (_, i) => (
         <div
           key={i}

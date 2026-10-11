@@ -18,9 +18,13 @@ const SkillEditInner = () => {
   const { workspaceSlug } = useWorkspaceParams();
   const { skillId } = useParams<{ skillId: string }>();
 
-  const { skill, isLoading } = useGetSkill(workspaceSlug, skillId ?? "", {
-    enabled: !!skillId,
-  });
+  const { skill, isLoading, isError, error } = useGetSkill(
+    workspaceSlug,
+    skillId ?? "",
+    {
+      enabled: !!skillId,
+    },
+  );
   const { updateSkill, isPending } = useUpdateSkill(
     workspaceSlug,
     skillId ?? "",
@@ -60,6 +64,10 @@ const SkillEditInner = () => {
     }
   });
 
+  if (isError) {
+    throw error;
+  }
+
   if (isLoading || !skill) {
     return (
       <>
@@ -72,7 +80,7 @@ const SkillEditInner = () => {
           </RouteDrawer.Description>
         </RouteDrawer.Header>
         <RouteDrawer.Body className="p-6">
-          <FormSkeleton fieldCount={4} />
+          <FormSkeleton label={t("general.loading")} fieldCount={4} />
         </RouteDrawer.Body>
       </>
     );

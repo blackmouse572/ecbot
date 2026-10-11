@@ -35,7 +35,7 @@ export const MembersAssignRoleEdit = () => {
       </RouteDrawer.Header>
       {isLoading || !member ? (
         <RouteDrawer.Body className="p-6">
-          <FormSkeleton fieldCount={1} />
+          <FormSkeleton label={t("general.loading")} fieldCount={1} />
         </RouteDrawer.Body>
       ) : (
         <MembersAssignRoleForm item={member} />
