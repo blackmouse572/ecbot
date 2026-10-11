@@ -53,4 +53,10 @@ describe("empty-table-content", () => {
 
     expect(screen.getByTestId("custom-icon")).toBeInTheDocument();
   });
+
+  it("drops the page-level min height in the small size", () => {
+    const { container } = renderWithProviders(<NoRecords size="small" />);
+
+    expect(container.firstChild).not.toHaveClass("min-h-[240px]");
+  });
 });

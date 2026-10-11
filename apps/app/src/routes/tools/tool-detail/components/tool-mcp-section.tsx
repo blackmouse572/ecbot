@@ -1,5 +1,5 @@
 import { Container, Heading, Text, Button, Badge, toast } from "@medusajs/ui";
-import { Section, SectionRow } from "@repo/ui/common-components";
+import { NoRecords, Section, SectionRow } from "@repo/ui/common-components";
 import type { ToolResponseDto } from "@repo/client";
 import { useTranslation } from "react-i18next";
 import { IconFunctionFilled, IconRefresh } from "@tabler/icons-react";
@@ -121,9 +121,12 @@ export const ToolMcpSection = ({ item, toolkit }: ToolMcpSectionProps) => {
           {t("tools.details.fields.discoveredActions")}
         </Text>
         {actions.length === 0 ? (
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.details.fields.discoveredActionsEmpty")}
-          </Text>
+          <NoRecords
+            size="small"
+            title={t("tools.details.fields.discoveredActionsEmpty")}
+            message={t("tools.details.fields.discoveredActionsEmptyHint")}
+            icon={<IconFunctionFilled />}
+          />
         ) : (
           <ul className="flex flex-col gap-3">
             {actions.map((action) => (

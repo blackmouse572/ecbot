@@ -857,8 +857,8 @@
       "account": {
         "active": "Active"
       },
-      "noAccounts": "No Linked Accounts Yet",
-      "noAccountsDescription": "Your agent is ready to go, but needs accounts to get started! Edit the agent to link your accounts."
+      "noAccounts": "No linked accounts yet",
+      "noAccountsDescription": "Connect a Facebook page, Zalo OA, or another channel so this agent can start replying to customers."
     },
     "edit": {
       "title": "Edit agent",
@@ -2189,7 +2189,7 @@
     },
     "empty": {
       "title": "No knowledge items linked",
-      "description": "Add knowledge items to enhance your agent with context and information."
+      "description": "Link knowledge items so this agent answers with your business information."
     },
     "actions": {
       "process": "Process",
@@ -2258,10 +2258,11 @@
     "agents_label": "Agents that use this item",
     "agents_hint": "The agents you pick can answer from this item once it finishes processing. You can change this later in each agent's Knowledge Base section.",
     "agents_loading": "Loading agents...",
-    "agents_empty": "No agents yet. After you create one, link this item from the agent's Knowledge Base section.",
+    "agents_empty": "After you create an agent, link this item from the agent's Knowledge Base section.",
     "agents_error": "Couldn't load agents. You can link this item later from the agent's Knowledge Base section.",
     "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
-    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section."
+    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section.",
+    "agents_emptyTitle": "No agents yet"
   },
   "conversations": {
     "title": "Conversations",
@@ -2319,7 +2320,8 @@
       "loading": "Loading messages…",
       "noMessages": "No messages in this conversation yet.",
       "newMessages": "New messages",
-      "notFound": "Conversation not found"
+      "notFound": "Conversation not found",
+      "noMessagesHint": "New messages from this customer will show up here."
     },
     "composer": {
       "placeholder": "Reply as operator…",
@@ -2373,20 +2375,23 @@
         },
         "contactPoints": {
           "title": "Contact points",
-          "empty": "No contact points yet."
+          "empty": "No contact points yet.",
+          "emptyHint": "Ways to reach this customer, like a phone number or email, show up here."
         },
         "followups": {
           "title": "Followups",
           "empty": "No pending followups.",
           "badge": "This message triggered a followup",
           "viewMessage": "View message",
-          "cancel": "Cancel"
+          "cancel": "Cancel",
+          "emptyHint": "When the agent promises to get back to this customer, the followup shows up here."
         },
         "tags": {
           "title": "Tags",
           "empty": "No tags yet",
           "add": "Add tag",
-          "remove": "Remove"
+          "remove": "Remove",
+          "emptyHint": "Pick a tag below to group this customer."
         },
         "actions": {
           "save": "Save",
@@ -2723,7 +2728,8 @@
         "toolkitToolsCount": "Actions",
         "id": "ID",
         "createdAt": "Created",
-        "updatedAt": "Updated"
+        "updatedAt": "Updated",
+        "discoveredActionsEmptyHint": "Actions show up here once the MCP server connects."
       }
     },
     "discover": {
@@ -2907,8 +2913,9 @@
       "actionsAutoSaveError": "Failed to save action settings.",
       "empty": {
         "title": "No tools enabled",
-        "description": "Click 'Add' to connect a workspace tool to this agent."
-      }
+        "description": "Connect a workspace tool so this agent can look things up or take actions for customers."
+      },
+      "actionsEmptyTitle": "No actions yet"
     },
     "addDrawer": {
       "title": "Add Tool",

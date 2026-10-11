@@ -1057,8 +1057,8 @@
       },
       "autoRead": "Tự đánh dấu đã xem",
       "typingIndicator": "Hiện đang soạn tin",
-      "noAccounts": "Chưa có tài khoản liên kết",
-      "noAccountsDescription": "Agent của bạn đã sẵn sàng, nhưng cần các tài khoản để bắt đầu! Hãy chỉnh sửa agent để liên kết tài khoản của bạn."
+      "noAccounts": "Chưa liên kết tài khoản nào",
+      "noAccountsDescription": "Liên kết Fanpage Facebook, Zalo OA hoặc kênh khác để agent này bắt đầu trả lời khách hàng."
     },
     "rag": {
       "title": "Nền tảng kiến thức",
@@ -2220,7 +2220,7 @@
     },
     "empty": {
       "title": "Không có mục kiến thức nào được liên kết",
-      "description": "Thêm các mục kiến thức để nâng cao agent của bạn bằng ngữ cảnh và thông tin."
+      "description": "Liên kết mục kiến thức để agent trả lời đúng thông tin doanh nghiệp của bạn."
     },
     "actions": {
       "process": "Xử lý",
@@ -2288,10 +2288,11 @@
     "agents_label": "Agent dùng mục này",
     "agents_hint": "Các agent bạn chọn có thể trả lời dựa trên mục này khi xử lý xong. Bạn có thể đổi lại sau trong phần Nền tảng kiến thức của từng agent.",
     "agents_loading": "Đang tải danh sách agent...",
-    "agents_empty": "Chưa có agent nào. Sau khi tạo agent, hãy liên kết mục này trong phần Nền tảng kiến thức của agent.",
+    "agents_empty": "Sau khi tạo agent, hãy liên kết mục này trong phần Nền tảng kiến thức của agent.",
     "agents_error": "Không tải được danh sách agent. Bạn có thể liên kết mục này sau trong phần Nền tảng kiến thức của agent.",
     "link_after_create_error_one": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của agent.",
-    "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent."
+    "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent.",
+    "agents_emptyTitle": "Chưa có agent nào"
   },
   "conversations": {
     "title": "Hội thoại",
@@ -2349,7 +2350,8 @@
       "loading": "Đang tải tin nhắn…",
       "noMessages": "Hội thoại chưa có tin nhắn nào.",
       "newMessages": "Tin nhắn mới",
-      "notFound": "Không tìm thấy hội thoại"
+      "notFound": "Không tìm thấy hội thoại",
+      "noMessagesHint": "Tin nhắn mới từ khách hàng sẽ hiện ở đây."
     },
     "composer": {
       "placeholder": "Trả lời với tư cách nhân viên…",
@@ -2403,20 +2405,23 @@
         },
         "contactPoints": {
           "title": "Kênh liên hệ",
-          "empty": "Chưa có kênh liên hệ."
+          "empty": "Chưa có kênh liên hệ.",
+          "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây."
         },
         "followups": {
           "title": "Nhắc hẹn",
           "empty": "Không có nhắc hẹn đang chờ.",
           "badge": "Tin nhắn này đã kích hoạt một nhắc hẹn",
           "viewMessage": "Xem tin nhắn",
-          "cancel": "Hủy"
+          "cancel": "Hủy",
+          "emptyHint": "Khi agent hẹn liên hệ lại với khách hàng này, nhắc hẹn sẽ hiện ở đây."
         },
         "tags": {
           "title": "Nhãn",
           "empty": "Chưa có nhãn",
           "add": "Thêm nhãn",
-          "remove": "Xoá"
+          "remove": "Xoá",
+          "emptyHint": "Chọn nhãn bên dưới để phân nhóm khách hàng này."
         },
         "actions": {
           "save": "Lưu",
@@ -2753,7 +2758,8 @@
         "toolkitToolsCount": "Hành động",
         "id": "ID",
         "createdAt": "Ngày tạo",
-        "updatedAt": "Ngày cập nhật"
+        "updatedAt": "Ngày cập nhật",
+        "discoveredActionsEmptyHint": "Các action sẽ hiện ở đây khi máy chủ MCP kết nối thành công."
       }
     },
     "discover": {
@@ -2937,8 +2943,9 @@
       "actionsAutoSaveError": "Không thể lưu cài đặt hành động.",
       "empty": {
         "title": "Chưa có công cụ nào được bật",
-        "description": "Nhấn 'Thêm' để kết nối một công cụ workspace với agent này."
-      }
+        "description": "Kết nối công cụ trong workspace để agent có thể tra cứu hoặc thực hiện thao tác cho khách hàng."
+      },
+      "actionsEmptyTitle": "Chưa có action nào"
     },
     "addDrawer": {
       "title": "Thêm Công Cụ",

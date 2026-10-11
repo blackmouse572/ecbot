@@ -53,6 +53,8 @@ export type NoRecordsProps = {
   className?: string;
   buttonVariant?: string;
   icon?: React.ReactNode;
+  /** `small` fits side panels and nested sections: tighter, no min height. */
+  size?: "base" | "small";
 } & ActionProps;
 
 const ActionButton = ({
@@ -96,18 +98,26 @@ export const NoRecords = ({
   className,
   buttonVariant = "default",
   icon = <ExclamationCircle />,
+  size = "base",
 }: NoRecordsProps) => {
+  const isSmall = size === "small";
   const { t } = useTranslation();
 
   return (
     <div
       className={clx(
-        "flex min-h-[240px] w-full flex-col items-center justify-center gap-y-4 px-6 py-10",
+        "flex w-full flex-col items-center justify-center",
+        isSmall ? "gap-y-3 px-3 py-4" : "min-h-[240px] gap-y-4 px-6 py-10",
         className,
       )}
     >
       <div className="flex flex-col items-center gap-y-3">
-        <div className="bg-ui-bg-component shadow-borders-base text-ui-fg-subtle flex size-10 items-center justify-center rounded-lg [&_svg]:size-5">
+        <div
+          className={clx(
+            "bg-ui-bg-component shadow-borders-base text-ui-fg-subtle flex items-center justify-center rounded-lg",
+            isSmall ? "size-8 [&_svg]:size-4" : "size-10 [&_svg]:size-5",
+          )}
+        >
           {icon}
         </div>
 

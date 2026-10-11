@@ -25,6 +25,8 @@ import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { FollowupsSection } from "./components/followups-section";
 import { CUSTOMER_DATA_SUBJECT } from "../constants";
 import { Can } from "@repo/auth";
+import { NoRecords } from "@repo/ui/common-components";
+import { IconAddressBook, IconTag } from "@tabler/icons-react";
 import {
   ArrowLeft,
   ChevronDoubleLeft,
@@ -368,9 +370,12 @@ function TagsSection({ customerId }: { customerId: string }) {
   return (
     <div className="flex flex-col gap-y-2">
       {assignments.length === 0 ? (
-        <Text size="small" className="text-ui-fg-subtle">
-          {t("conversations.customer.panel.tags.empty")}
-        </Text>
+        <NoRecords
+          size="small"
+          title={t("conversations.customer.panel.tags.empty")}
+          message={t("conversations.customer.panel.tags.emptyHint")}
+          icon={<IconTag />}
+        />
       ) : (
         <ul className="flex flex-wrap gap-1.5">
           {assignments.map((assignment) => (
@@ -567,9 +572,12 @@ function ContactPointsList({
   const { t } = useTranslation();
   if (contactPoints.length === 0) {
     return (
-      <Text size="small" className="text-ui-fg-subtle">
-        {t("conversations.customer.panel.contactPoints.empty")}
-      </Text>
+      <NoRecords
+        size="small"
+        title={t("conversations.customer.panel.contactPoints.empty")}
+        message={t("conversations.customer.panel.contactPoints.emptyHint")}
+        icon={<IconAddressBook />}
+      />
     );
   }
   return (

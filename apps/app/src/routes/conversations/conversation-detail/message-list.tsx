@@ -7,6 +7,7 @@ import {
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerViewport,
+  NoRecords,
   Skeleton,
 } from "@repo/ui/common-components";
 import type {
@@ -15,6 +16,7 @@ import type {
 } from "@/hooks/api/conversations";
 import { useConversationFollowups } from "@/hooks/api/followups";
 import { MessageBubble } from "./message-bubble";
+import { IconMessage } from "@tabler/icons-react";
 
 interface Props {
   conversationId?: string;
@@ -85,11 +87,11 @@ export const MessageList = ({
                 </div>
               )}
               {messages.length === 0 && (
-                <div className="text-ui-fg-subtle flex items-center justify-center py-8">
-                  <Text size="small">
-                    {t("conversations.detail.noMessages")}
-                  </Text>
-                </div>
+                <NoRecords
+                  title={t("conversations.detail.noMessages")}
+                  message={t("conversations.detail.noMessagesHint")}
+                  icon={<IconMessage />}
+                />
               )}
               {messages.map((m) => (
                 <MessageScrollerItem

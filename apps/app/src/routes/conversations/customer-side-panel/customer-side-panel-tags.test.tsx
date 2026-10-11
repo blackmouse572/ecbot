@@ -185,6 +185,9 @@ describe("CustomerSidePanel — tags section", () => {
     expect(
       screen.getByText("conversations.customer.panel.tags.empty"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("conversations.customer.panel.tags.emptyHint"),
+    ).toBeInTheDocument();
   });
 
   it("clicking the × on a chip calls useRemoveCustomerTag with the right tagId", async () => {

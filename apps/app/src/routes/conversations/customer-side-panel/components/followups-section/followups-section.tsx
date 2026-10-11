@@ -1,4 +1,6 @@
 import { Button, Text } from "@medusajs/ui";
+import { NoRecords } from "@repo/ui/common-components";
+import { IconCalendarTime } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import {
   useCancelFollowup,
@@ -20,9 +22,12 @@ export function FollowupsSection({ conversationId, onViewMessage }: Props) {
 
   if (followups.length === 0) {
     return (
-      <Text size="small" className="text-ui-fg-subtle">
-        {t("conversations.customer.panel.followups.empty")}
-      </Text>
+      <NoRecords
+        size="small"
+        title={t("conversations.customer.panel.followups.empty")}
+        message={t("conversations.customer.panel.followups.emptyHint")}
+        icon={<IconCalendarTime />}
+      />
     );
   }
 
