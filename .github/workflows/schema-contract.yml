@@ -1,0 +1,84 @@
+name: Schema contract
+
+# The deploy builds the database from apps/api/migrations and nothing else.
+# apps/ai uses that database without creating anything in it, so this builds a
+# clean database the same way and checks every table and column apps/ai uses
+# is there. Without it a missing table only shows up in production.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/api/migrations/**"
+      - "apps/api/mikro-orm.config.ts"
+      - "apps/ai/**"
+      - ".github/workflows/schema-contract.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/api/migrations/**"
+      - "apps/api/mikro-orm.config.ts"
+      - "apps/ai/**"
+      - ".github/workflows/schema-contract.yml"
+
+jobs:
+  contract:
+    name: Schema contract
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: eccho_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate a clean database
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/eccho_ci
+          DATABASE_SSL: "false"
+        run: pnpm migration:up
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/ai/uv.lock"
+          python-version: "3.12"
+
+      - name: Install AI dependencies
+        working-directory: apps/ai
+        run: uv sync --frozen
+
+      - name: Everything apps/ai uses exists in the migrated database
+        working-directory: apps/ai
+        env:
+          SCHEMA_CONTRACT_DATABASE: "1"
+          POSTGRES_URL: postgresql+asyncpg://postgres:password@localhost:5432/eccho_ci
+        run: uv run pytest -m schema_contract tests/test_schema_contract.py
