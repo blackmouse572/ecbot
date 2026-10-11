@@ -84,6 +84,15 @@ describe('AgentBuilderService.suggest', () => {
         });
     });
 
+    it('still returns and caches the suggestion when recording the usage fails', async () => {
+        const m = meter(true);
+        m.record.mockRejectedValue(new Error('db down'));
+        const { service, cache } = setup({ meter: m });
+        const out = await service.suggest('ws-1', 'Nail spa');
+        expect(out.businessType).toEqual({ value: 'beauty', confidence: 0.95 });
+        expect(cache.set).toHaveBeenCalled();
+    });
+
     it('gives no suggestion and calls no model when the workspace is out of tokens', async () => {
         const m = meter(false);
         const { service, aiDecision } = setup({ meter: m });

@@ -316,6 +316,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         const meter = { check: jest.fn(), record: jest.fn() };
 
         beforeEach(() => {
+            meter.record.mockResolvedValue(undefined);
             conversationRepository.findOneById.mockResolvedValue(
                 liveConversation({
                     chatbot: { id: 'bot-1', workspace: { id: 'ws-1' } },
@@ -362,6 +363,27 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
                 model: 'google/gemini-2.5-flash',
                 conversationId: 'conv-1',
             });
+        });
+
+        it('still applies the tags and summary when recording the usage fails', async () => {
+            meter.check.mockResolvedValue({ allowed: true });
+            meter.record.mockRejectedValue(new Error('db down'));
+            httpService.post.mockReturnValue(
+                classifierResponse({
+                    profile_summary: 'Buyer.',
+                    usage: {
+                        input_tokens: 1,
+                        output_tokens: 1,
+                        total_tokens: 2,
+                    },
+                })
+            );
+
+            await expect(
+                service.handle(dto() as any, 0)
+            ).resolves.toBeUndefined();
+
+            expect(customerRepository.updateEntity).toHaveBeenCalled();
         });
 
         it('skips the classification silently when the workspace is out of tokens', async () => {

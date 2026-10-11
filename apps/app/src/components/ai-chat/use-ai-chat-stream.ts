@@ -121,7 +121,7 @@ export type RenderModelFile = {
 
 export type RenderModel = {
   text: string;
-  /** The text split at each tool call, one message each (#91), blanks dropped. */
+  /** The text split at each tool call or step, one message each (#91), blanks dropped. */
   segments: string[];
   reasoning?: string;
   toolCalls: RenderModelToolCall[];
@@ -178,6 +178,10 @@ export function partsToRenderModel(
       const text = (part.text as string | undefined) ?? "";
       model.text += text;
       segment = (segment ?? "") + text;
+    } else if (part.type === "step-start") {
+      // A step after a tool call: the widget's stream, whose tool parts the
+      // API filters out, splits here.
+      closeSegment();
     } else if (part.type === "reasoning") {
       model.reasoning =
         (model.reasoning ?? "") + ((part.text as string | undefined) ?? "");

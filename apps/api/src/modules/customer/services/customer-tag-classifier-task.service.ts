@@ -209,14 +209,20 @@ export class CustomerTagClassifierTaskService {
         });
         const usage = parseWireTokenUsage(result.usage);
         if (usage) {
-            await this.meter?.record({
-                workspaceId,
-                usage,
-                source: ENUM_AI_USAGE_SOURCE.TAG_CLASSIFIER,
-                chatbotId: chatbot.id,
-                model: result.model,
-                conversationId,
-            });
+            await this.meter
+                ?.record({
+                    workspaceId,
+                    usage,
+                    source: ENUM_AI_USAGE_SOURCE.TAG_CLASSIFIER,
+                    chatbotId: chatbot.id,
+                    model: result.model,
+                    conversationId,
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Tag classifier usage not recorded for conversation ${conversationId}: ${err}`
+                    )
+                );
         }
 
         const availableNames = new Set(

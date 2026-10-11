@@ -3,10 +3,16 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
-import { parseWireTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
+import { parseWireTokenUsage, TokenUsageDelta } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import type { SystemOneAnswer, SystemOneQuestion } from '@repo/agent-blueprint';
 import { firstValueFrom } from 'rxjs';
-import { ISystemOneResult } from '../interfaces/ai-decision.interface';
+
+export interface ISystemOneResult {
+    answers: Record<string, SystemOneAnswer>;
+    /** What the call spent; null when apps/ai reported nothing. */
+    usage: TokenUsageDelta | null;
+    model?: string;
+}
 
 // apps/ai answers System One-shaped questions with the model in DECISION_MODEL.
 @Injectable()

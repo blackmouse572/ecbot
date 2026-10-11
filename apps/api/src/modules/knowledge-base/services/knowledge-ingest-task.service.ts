@@ -249,12 +249,18 @@ export class KnowledgeIngestTaskService {
         }
         const usage = parseWireTokenUsage(data?.usage);
         if (workspaceId && usage) {
-            await this.meter?.record({
-                workspaceId,
-                usage,
-                source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
-                model: data?.embedding_model,
-            });
+            await this.meter
+                ?.record({
+                    workspaceId,
+                    usage,
+                    source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
+                    model: data?.embedding_model,
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Ingest usage not recorded for item ${knowledgeItemId}: ${err}`
+                    )
+                );
         }
         await this.knowledgeItemService.updateStatus(knowledgeItemId, {
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,

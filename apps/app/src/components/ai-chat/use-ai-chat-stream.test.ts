@@ -42,6 +42,18 @@ describe("partsToRenderModel", () => {
     expect(model.segments).toEqual(["Chào bạn! Để mình xem.", "Còn hàng ạ."]);
   });
 
+  // The widget's stream has its tool parts filtered out by the API; the
+  // step-start that opens each step after a tool call still splits it.
+  it("splits a customer stream, which has no tool parts, at each step", () => {
+    const model = partsToRenderModel([
+      { type: "step-start" },
+      { type: "text", text: "Chào bạn!" },
+      { type: "step-start" },
+      { type: "text", text: "Còn hàng ạ." },
+    ]);
+    expect(model.segments).toEqual(["Chào bạn!", "Còn hàng ạ."]);
+  });
+
   it("leaves no empty segment around a tool call without text", () => {
     const model = partsToRenderModel([
       { type: "tool-a", toolCallId: "t1", state: "output-available" },

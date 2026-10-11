@@ -55,7 +55,7 @@ export class AgentBuilderService {
                     usage,
                     source: ENUM_AI_USAGE_SOURCE.AGENT_BUILDER,
                     model,
-                });
+                }).catch((err: unknown) => this.logger.warn(`agent builder usage not recorded: ${err}`));
             }
             const suggestion = readSuggestAnswers(answers);
             // apps/ai answers `{}` on any failure: never cache that for 24h.

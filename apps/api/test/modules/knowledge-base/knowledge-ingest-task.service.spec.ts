@@ -633,6 +633,7 @@ describe('KnowledgeIngestTaskService', () => {
         } as any;
 
         beforeEach(() => {
+            meter.record.mockResolvedValue(undefined);
             findOneById.mockResolvedValue({
                 id: 'item-1',
                 type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
@@ -681,6 +682,34 @@ describe('KnowledgeIngestTaskService', () => {
                 source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
                 model: 'google/gemini-embedding-001',
             });
+        });
+
+        it('still completes the item when recording the usage fails', async () => {
+            meter.check.mockResolvedValue({ allowed: true });
+            meter.record.mockRejectedValue(new Error('db down'));
+            httpPost.mockReturnValue(
+                of({
+                    data: {
+                        data: {
+                            chunk_count: 2,
+                            usage: {
+                                input_tokens: 9,
+                                output_tokens: 0,
+                                total_tokens: 9,
+                            },
+                        },
+                    },
+                })
+            );
+
+            await expect(service.handle(ingestDto, 0)).resolves.toBeUndefined();
+
+            expect(updateStatus).toHaveBeenLastCalledWith(
+                'item-1',
+                expect.objectContaining({
+                    status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
+                })
+            );
         });
 
         it('fails the item with a message the owner can act on when the workspace is out of tokens', async () => {
