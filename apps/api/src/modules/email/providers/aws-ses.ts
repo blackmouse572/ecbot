@@ -609,6 +609,7 @@ export class AwsSESProvider implements IEmailService {
             invitationLink,
             workspaceName,
             inviterName,
+            expiresAt,
             language,
         }: EmailInvitationToWorkspaceDto
     ): Promise<boolean> {
@@ -624,6 +625,7 @@ export class AwsSESProvider implements IEmailService {
                     invitationLink,
                     workspaceName,
                     inviterName,
+                    expiresAt,
                     language,
                 },
             });

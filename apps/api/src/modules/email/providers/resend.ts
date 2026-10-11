@@ -15,7 +15,10 @@ import { verificationEmailCopy } from '../email-template-components/verification
 import { accountBlockedEmailCopy } from '../email-template-components/account-blocked-email.copy';
 import { handoffEmailCopy } from '../email-template-components/handoff-email.copy';
 import { memberJoinedEmailCopy } from '../email-template-components/member-joined-email.copy';
-import { invitationEmailCopy } from '../email-template-components/invitation-email.copy';
+import {
+    capSubjectName,
+    invitationEmailCopy,
+} from '../email-template-components/invitation-email.copy';
 import { mfaChangedEmailCopy } from '../email-template-components/mfa-changed-email.copy';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
@@ -250,7 +253,10 @@ export class ResendProvider implements IEmailService {
                     : undefined,
                 language,
             },
-            copy.subject(inviterName, workspaceName)
+            copy.subject(
+                capSubjectName(inviterName),
+                capSubjectName(workspaceName)
+            )
         );
     }
 

@@ -51,6 +51,7 @@ import {
 } from '@nestjs/common';
 import { IRequestApp } from '@app/common/request/interfaces/request.interface';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { randomUUID } from 'crypto';
@@ -432,6 +433,8 @@ export class WorkspaceController {
 
     @WorkspaceInvitationDoc()
     @Response('workspace.owner.inviteMember.success')
+    // Each invitation sends an email from our domain (#247 review).
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @WorkspacePolicyAbilityProtected({
         action: [ENUM_POLICY_ACTION.CREATE],
         subject: ENUM_POLICY_SUBJECT.MEMBER,
@@ -473,7 +476,7 @@ export class WorkspaceController {
             {
                 invitationLink,
                 workspaceName: workspace.name,
-                inviterName: inviter?.name ?? inviter?.email ?? workspace.name,
+                inviterName: inviter?.name?.trim() || inviter?.email || '',
                 expiresAt,
                 language: request?.__language,
             }

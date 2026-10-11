@@ -52,3 +52,14 @@ export const invitationEmailCopy = (
     (COPY[language as ENUM_MESSAGE_LANGUAGE] ?? COPY[ENUM_MESSAGE_LANGUAGE.EN])(
         homeName
     );
+
+const SUBJECT_NAME_MAX = 60;
+
+/**
+ * Names people choose go into the subject of mail sent from our domain, so a
+ * long one is cut short rather than filling the inbox line (#247 review).
+ */
+export const capSubjectName = (name: string): string =>
+    name.length > SUBJECT_NAME_MAX
+        ? `${name.slice(0, SUBJECT_NAME_MAX - 1)}…`
+        : name;

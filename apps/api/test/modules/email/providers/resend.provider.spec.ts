@@ -272,6 +272,23 @@ describe('ResendProvider team emails', () => {
         );
     });
 
+    // #247 review: user-chosen names go into the subject of mail sent from
+    // our domain, so they are capped.
+    it('invitation: caps long names in the subject', async () => {
+        await provider.sendInvitationToWorkSpace(
+            { name: '', email: 'invitee@b.com' },
+            {
+                invitationLink: 'https://app.ecbot.dev/join?token=abc',
+                workspaceName: 'W'.repeat(200),
+                inviterName: 'I'.repeat(200),
+            }
+        );
+
+        expect(subject()).toBe(
+            `${'I'.repeat(59)}… invited you to ${'W'.repeat(59)}… on Ecbot`
+        );
+    });
+
     it('channel disconnected: names the channel in the subject and the language', async () => {
         await provider.sendAccountBlocked(
             { name: 'Chi', email: 'owner@b.com' },
