@@ -35,6 +35,7 @@ import { PopulateHint } from '@mikro-orm/postgresql';
 import {
     Body,
     Controller,
+    Delete,
     Get,
     NotFoundException,
     Param,
@@ -45,10 +46,12 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import {
     KnowledgeItemClientCreateDoc,
+    KnowledgeItemClientDeleteDoc,
     KnowledgeItemClientGetDoc,
     KnowledgeItemClientListDoc,
     KnowledgeItemClientUpdateDoc,
 } from '../docs/knowledge-item.client.doc';
+import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { KnowledgeItemCreateRequestDto } from '../dtos/request/knowledge-item.create.request.dto';
 import { KnowledgeItemUpdateRequestDto } from '../dtos/request/knowledge-item.update.request.dto';
 import { KnowledgeItemResponseDto } from '../dtos/response/knowledge-item.response.dto';
@@ -69,8 +72,7 @@ import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entit
 // 3rd-party surface: authenticated by x-api-key (ClientCredential), tenant
 // derived from the credential (no :workspace param). See ADR-0012. Writes
 // act as the credential's creator, in the records and the activity log.
-// There is no file upload here, and no delete: the workspace delete route
-// also requires a role type no workspace member has.
+// There is no file upload here.
 @ApiTags('modules.client.knowledgeItem')
 @Controller('/knowledge-bases/:knowledgeBaseId/items')
 export class KnowledgeItemClientController {
@@ -253,18 +255,7 @@ export class KnowledgeItemClientController {
         @Body() dto: KnowledgeItemUpdateRequestDto
     ): Promise<IResponse<KnowledgeItemShortResponseDto>> {
         await this.findKnowledgeBaseOrFail(workspace, knowledgeBaseId);
-
-        const item = await this.knowledgeItemService.findOne({
-            id,
-            knowledgeBase: knowledgeBaseId,
-            deletedAt: null,
-        });
-        if (!item) {
-            throw new NotFoundException({
-                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'knowledgeItem.error.notFound',
-            });
-        }
+        const item = await this.findItemOrFail(knowledgeBaseId, id);
 
         // Setting status READY queues the item for processing.
         const updated = await this.knowledgeItemService.update(item.id, dto, {
@@ -278,6 +269,53 @@ export class KnowledgeItemClientController {
         );
 
         return { data: this.knowledgeItemService.mapShort(updated) };
+    }
+
+    @KnowledgeItemClientDeleteDoc()
+    @Response('knowledgeItem.delete')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.DELETE],
+    })
+    @Delete('/:id')
+    async delete(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('knowledgeBaseId') knowledgeBaseId: string,
+        @Param('id') id: string
+    ): Promise<IResponse<DatabaseIdResponseDto>> {
+        await this.findKnowledgeBaseOrFail(workspace, knowledgeBaseId);
+        const item = await this.findItemOrFail(knowledgeBaseId, id);
+
+        await this.knowledgeItemService.softDelete(item.id, {
+            actionBy: credential.createdBy.id,
+        });
+        await this.log(
+            ENUM_ACTIVITY_ACTION.DELETE,
+            credential,
+            knowledgeBaseId,
+            item
+        );
+
+        return { data: { id: item.id } };
+    }
+
+    private async findItemOrFail(
+        knowledgeBaseId: string,
+        id: string
+    ): Promise<KnowledgeItemEntity> {
+        const item = await this.knowledgeItemService.findOne({
+            id,
+            knowledgeBase: knowledgeBaseId,
+            deletedAt: null,
+        });
+        if (!item) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'knowledgeItem.error.notFound',
+            });
+        }
+        return item;
     }
 
     private async log(

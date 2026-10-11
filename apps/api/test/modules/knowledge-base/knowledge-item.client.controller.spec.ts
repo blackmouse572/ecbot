@@ -22,6 +22,7 @@ const mockKnowledgeItemService = {
     create: jest.fn(),
     update: jest.fn(),
     mapShort: jest.fn(),
+    softDelete: jest.fn(),
 };
 
 const mockFolderService = {
@@ -236,6 +237,7 @@ describe('KnowledgeItemClientController', () => {
         it.each([
             ['create', ENUM_POLICY_ACTION.CREATE],
             ['update', ENUM_POLICY_ACTION.UPDATE],
+            ['delete', ENUM_POLICY_ACTION.DELETE],
         ] as const)(
             '%s is guarded and needs KNOWLEDGE_BASE %s',
             (handler, action) => {
@@ -407,6 +409,54 @@ describe('KnowledgeItemClientController', () => {
                     )
                 ).rejects.toBeInstanceOf(NotFoundException);
                 expect(mockKnowledgeItemService.update).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('delete', () => {
+            it('deletes an item of the knowledge base as the creator', async () => {
+                mockKnowledgeBaseService.findOne.mockResolvedValue({
+                    id: 'kb-1',
+                });
+                mockKnowledgeItemService.findOne.mockResolvedValue(item);
+
+                const result = await controller.delete(
+                    workspace,
+                    credential,
+                    'kb-1',
+                    'item-1'
+                );
+
+                expect(
+                    mockKnowledgeItemService.softDelete
+                ).toHaveBeenCalledWith('item-1', { actionBy: 'creator-1' });
+                expect(mockActivityService.createByUser).toHaveBeenCalledWith(
+                    credential.createdBy,
+                    {
+                        action: 'delete',
+                        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+                        metadata: {
+                            knowledgeBaseId: 'kb-1',
+                            itemId: 'item-1',
+                            itemType: 'TEXT',
+                            itemTitle: 'Opening hours',
+                        },
+                    }
+                );
+                expect(result).toEqual({ data: { id: 'item-1' } });
+            });
+
+            it('404s an item outside the knowledge base, deleting nothing', async () => {
+                mockKnowledgeBaseService.findOne.mockResolvedValue({
+                    id: 'kb-1',
+                });
+                mockKnowledgeItemService.findOne.mockResolvedValue(null);
+
+                await expect(
+                    controller.delete(workspace, credential, 'kb-1', 'item-9')
+                ).rejects.toBeInstanceOf(NotFoundException);
+                expect(
+                    mockKnowledgeItemService.softDelete
+                ).not.toHaveBeenCalled();
             });
         });
     });

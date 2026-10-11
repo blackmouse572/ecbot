@@ -6,6 +6,7 @@ import {
     DocResponse,
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
+import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
 import {
     KnowledgeBaseDocParamsItemId,
@@ -95,5 +96,22 @@ export function KnowledgeItemClientUpdateDoc(): MethodDecorator {
         DocResponse('knowledgeItem.update', {
             dto: KnowledgeItemShortResponseDto,
         })
+    );
+}
+
+export function KnowledgeItemClientDeleteDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                'delete a knowledge item of a knowledge base in the credential workspace',
+        }),
+        DocRequest({
+            params: [
+                ...KnowledgeBaseDocParamsKnowledgeBaseId,
+                ...KnowledgeBaseDocParamsItemId,
+            ],
+        }),
+        DocAuth({ xApiKey: true }),
+        DocResponse('knowledgeItem.delete', { dto: DatabaseIdResponseDto })
     );
 }

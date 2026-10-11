@@ -5328,24 +5328,12 @@ export type CustomerGetResponseDto = {
 };
 
 export type CustomerUpdateRequestDto = {
-    name?: {
-        [key: string]: unknown;
-    } | null;
-    phone?: {
-        [key: string]: unknown;
-    } | null;
-    email?: {
-        [key: string]: unknown;
-    } | null;
-    language?: {
-        [key: string]: unknown;
-    } | null;
-    notes?: {
-        [key: string]: unknown;
-    } | null;
-    profileSummary?: {
-        [key: string]: unknown;
-    } | null;
+    name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    language?: string | null;
+    notes?: string | null;
+    profileSummary?: string | null;
 };
 
 export type CustomerEraseResponseDto = {
@@ -5451,23 +5439,15 @@ export type CustomerTagGetResponseDto = {
 
 export type CustomerTagCreateRequestDto = {
     name: string;
-    emoji?: {
-        [key: string]: unknown;
-    } | null;
-    description?: {
-        [key: string]: unknown;
-    } | null;
+    emoji?: string | null;
+    description?: string | null;
     triggersHandoff?: boolean;
 };
 
 export type CustomerTagUpdateRequestDto = {
     name?: string;
-    emoji?: {
-        [key: string]: unknown;
-    } | null;
-    description?: {
-        [key: string]: unknown;
-    } | null;
+    emoji?: string | null;
+    description?: string | null;
     triggersHandoff?: boolean;
 };
 
@@ -29638,6 +29618,73 @@ export type KnowledgeItemClientControllerCreateV1Responses = {
 };
 
 export type KnowledgeItemClientControllerCreateV1Response = KnowledgeItemClientControllerCreateV1Responses[keyof KnowledgeItemClientControllerCreateV1Responses];
+
+export type KnowledgeItemClientControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items/{id}';
+};
+
+export type KnowledgeItemClientControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerDeleteV1Error = KnowledgeItemClientControllerDeleteV1Errors[keyof KnowledgeItemClientControllerDeleteV1Errors];
+
+export type KnowledgeItemClientControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerDeleteV1Response = KnowledgeItemClientControllerDeleteV1Responses[keyof KnowledgeItemClientControllerDeleteV1Responses];
 
 export type KnowledgeItemClientControllerGetV1Data = {
     body?: never;
