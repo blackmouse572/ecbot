@@ -238,6 +238,11 @@ export class AuthPublicController {
             });
         } else if (userWithRole.verification.email !== true) {
             await this.recordLoginFailed(user, 'email_not_verified');
+            // The password was right, so it must not count toward the
+            // lockout: this is every admin-created user's first sign-in.
+            if (!user.mfaEnabled) {
+                await this.userService.clearPasswordAttempt(user);
+            }
             // The password was right, so the id is safe to return: the app
             // needs it to open the enter-your-code page.
             throw new ForbiddenException({

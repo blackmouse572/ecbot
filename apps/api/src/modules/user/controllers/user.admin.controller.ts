@@ -225,6 +225,7 @@ export class UserAdminController {
     @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
+    @ApiKeyProtected()
     @Post('/create')
     async create(
         @AuthJwtPayload('user') createBy: string,
@@ -431,6 +432,10 @@ export class UserAdminController {
 
         await this.em.transactional(async em => {
             await this.userService.updateVerificationEmail(user, { em });
+            // Retire the pending code: a correct code still opens a session.
+            await this.verificationService.inactiveEmailManyByUser(user.id, {
+                em,
+            });
 
             await this.activityService.createByAdmin(user, userFromPayload, {
                 action: ENUM_ACTIVITY_ACTION.UPDATE,

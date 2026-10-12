@@ -743,6 +743,29 @@ describe('AuthPublicController.loginWithCredential', () => {
             );
         });
 
+        // Admin-created users land here on first sign-in: a right password
+        // must not count toward the lockout.
+        it('clears the failed-attempt count for an unverified email', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            join.mockResolvedValue({
+                ...activeUser,
+                verification: { email: false },
+            });
+
+            await login();
+
+            expect(clearPasswordAttempt).toHaveBeenCalledWith(activeUser);
+        });
+
+        it('returns no user id with a wrong password or an unknown email', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            validateUser.mockResolvedValueOnce(false);
+            expect((await login()).getResponse().data).toBeUndefined();
+
+            findOneByEmail.mockResolvedValue(undefined);
+            expect((await login()).getResponse().data).toBeUndefined();
+        });
+
         it('records nothing for an unknown email', async () => {
             findOneByEmail.mockResolvedValue(undefined);
 

@@ -295,12 +295,14 @@ describe('UserAdminController.verifyEmail', () => {
     let controller: UserAdminController;
 
     const updateVerificationEmail = jest.fn();
+    const inactiveEmailManyByUser = jest.fn();
     const createByAdminActivity = jest.fn();
     const transactional = jest.fn((cb: any) => cb({}));
     const payload = { user: 'admin-1' };
 
     beforeEach(async () => {
         updateVerificationEmail.mockReset();
+        inactiveEmailManyByUser.mockReset();
         createByAdminActivity.mockReset();
         transactional.mockClear();
 
@@ -327,11 +329,25 @@ describe('UserAdminController.verifyEmail', () => {
                     provide: ActivityService,
                     useValue: { createByAdmin: createByAdminActivity },
                 },
-                { provide: VerificationService, useValue: {} },
+                {
+                    provide: VerificationService,
+                    useValue: { inactiveEmailManyByUser },
+                },
             ],
         }).compile();
 
         controller = module.get(UserAdminController);
+    });
+
+    // The code from account creation would otherwise still sign them in.
+    it('retires the pending verification codes', async () => {
+        const user = { id: 'user-2', verification: { email: false } };
+
+        await controller.verifyEmail(user as any, payload as any);
+
+        expect(inactiveEmailManyByUser).toHaveBeenCalledWith('user-2', {
+            em: expect.anything(),
+        });
     });
 
     it('marks the email verified and records who did it', async () => {

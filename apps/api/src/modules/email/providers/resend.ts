@@ -163,7 +163,7 @@ export class ResendProvider implements IEmailService {
                     passwordExpiredAt,
                     language ?? ENUM_MESSAGE_LANGUAGE.EN
                 ),
-                loginUrl: `${this.homeUrl}/login`,
+                loginUrl: `${this.homeUrl.replace(/\/+$/, '')}/login`,
                 supportEmail: this.supportEmail,
                 homeUrl: this.homeUrl,
                 homeName: this.homeName,
