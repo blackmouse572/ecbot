@@ -44,6 +44,7 @@ describe("_DataTable empty state", () => {
     renderEmpty({
       page: "2",
       perPage: "20",
+      order: "-createdAt",
       orderBy: "name",
       orderDirection: "ASC",
     });

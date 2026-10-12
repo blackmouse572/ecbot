@@ -62,6 +62,7 @@ export const _DataTable = <TData,>({
     ([key, value]) =>
       key === "page" ||
       key === "perPage" ||
+      key === "order" ||
       key === "orderBy" ||
       key === "orderDirection" ||
       !value,

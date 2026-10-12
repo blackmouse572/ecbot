@@ -2700,7 +2700,7 @@
         },
         "mcp": {
           "title": "MCP tự cấu hình",
-          "description": "Kết nối máy chủ Model Context Protocol. Các hành động được khám phá tự động."
+          "description": "Kết nối máy chủ Model Context Protocol. Các action được phát hiện tự động."
         },
         "marketplace": {
           "title": "Kho công cụ",
@@ -2791,7 +2791,7 @@
         "discoveredActionsReload": "Tải lại",
         "toolkitDescription": "Mô tả",
         "toolkitCategories": "Danh mục",
-        "toolkitToolsCount": "Hành động",
+        "toolkitToolsCount": "Action",
         "id": "ID",
         "createdAt": "Ngày tạo",
         "updatedAt": "Ngày cập nhật",
@@ -2987,7 +2987,7 @@
     "addDrawer": {
       "title": "Thêm Công Cụ",
       "selectLabel": "Chọn một công cụ",
-      "actionsTitle": "Hành động",
+      "actionsTitle": "Action",
       "enableSuccess": "Đã thêm công cụ.",
       "enableError": "Không thể thêm công cụ."
     }
