@@ -4,7 +4,7 @@ import { useGetTool, useUpdateTool } from "@/hooks/api/tools";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Input, Textarea, Text, toast } from "@medusajs/ui";
-import { Form } from "@repo/ui/common-components";
+import { Form, FormSkeleton } from "@repo/ui/common-components";
 import { Helmet } from "react-helmet-async";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -34,9 +34,13 @@ const ToolEditInner = () => {
   const { workspaceSlug } = useWorkspaceParams();
   const { toolId } = useParams<{ toolId: string }>();
 
-  const { tool, isLoading } = useGetTool(workspaceSlug, toolId ?? "", {
-    enabled: !!toolId,
-  });
+  const { tool, isLoading, isError, error } = useGetTool(
+    workspaceSlug,
+    toolId ?? "",
+    {
+      enabled: !!toolId,
+    },
+  );
   const { updateTool, isPending: isUpdating } = useUpdateTool(
     workspaceSlug,
     toolId ?? "",
@@ -81,6 +85,10 @@ const ToolEditInner = () => {
 
   const handleCancel = () => navigate(`/${workspaceSlug}/tools/${toolId}`);
 
+  if (isError) {
+    throw error;
+  }
+
   if (isLoading || !tool) {
     return (
       <>
@@ -93,9 +101,7 @@ const ToolEditInner = () => {
           </RouteDrawer.Description>
         </RouteDrawer.Header>
         <RouteDrawer.Body className="p-6">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.list.loading")}
-          </Text>
+          <FormSkeleton label={t("general.loading")} />
         </RouteDrawer.Body>
       </>
     );

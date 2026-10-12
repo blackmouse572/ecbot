@@ -17,6 +17,7 @@ import { NoRecords } from "@repo/ui/common-components";
 import { IconRefresh, IconTool } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 type ChatbotToolInvocationsProps = {
   chatbotId: string;
@@ -69,11 +70,7 @@ export function ChatbotToolInvocations({
       </div>
 
       {isLoading ? (
-        <div className="px-6 py-10 text-center">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.list.loading")}
-          </Text>
-        </div>
+        <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
       ) : invocations.length === 0 ? (
         <NoRecords
           title={t("tools.invocations.emptyTitle")}

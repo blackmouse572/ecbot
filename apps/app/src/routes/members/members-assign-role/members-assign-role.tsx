@@ -5,6 +5,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { useWorkspaceMember } from "@/hooks/api";
 import { RouteDrawer } from "../../../components/modals";
 import { MembersAssignRoleForm } from "./components/member-assign-role-form";
+import { FormSkeleton } from "@repo/ui/common-components";
 
 export const MembersAssignRoleEdit = () => {
   const { id } = useParams();
@@ -32,7 +33,13 @@ export const MembersAssignRoleEdit = () => {
           )}
         </RouteDrawer.Description>
       </RouteDrawer.Header>
-      {!isLoading && member && <MembersAssignRoleForm item={member} />}
+      {isLoading || !member ? (
+        <RouteDrawer.Body className="p-6">
+          <FormSkeleton label={t("general.loading")} fieldCount={1} />
+        </RouteDrawer.Body>
+      ) : (
+        <MembersAssignRoleForm item={member} />
+      )}
     </RouteDrawer>
   );
 };

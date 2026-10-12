@@ -11,14 +11,19 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
 import { skillFormSchema, type SkillFormData } from "../schemas";
+import { FormSkeleton } from "@repo/ui/common-components";
 
 const SkillCopyForm = ({ skillId }: { skillId: string }) => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const { handleSuccess } = useRouteModal();
-  const { skill, isLoading } = useGetSkill(workspaceSlug, skillId, {
-    enabled: !!skillId,
-  });
+  const { skill, isLoading, isError, error } = useGetSkill(
+    workspaceSlug,
+    skillId,
+    {
+      enabled: !!skillId,
+    },
+  );
   const { createSkill, isPending } = useCreateSkill(workspaceSlug);
 
   const form = useForm<SkillFormData>({
@@ -51,6 +56,10 @@ const SkillCopyForm = ({ skillId }: { skillId: string }) => {
     }
   });
 
+  if (isError) {
+    throw error;
+  }
+
   return (
     <RouteFocusModal.Form form={form}>
       <KeyboundForm onSubmit={handleSubmit} className="flex h-full flex-col">
@@ -64,9 +73,7 @@ const SkillCopyForm = ({ skillId }: { skillId: string }) => {
               </Text>
             </div>
             {isLoading ? (
-              <Text size="small" className="text-ui-fg-subtle">
-                {t("skills.list.loading")}
-              </Text>
+              <FormSkeleton label={t("general.loading")} fieldCount={4} />
             ) : (
               <SkillFormFields form={form} />
             )}

@@ -400,11 +400,13 @@ export class NotificationService {
         data: {
             conversationId: string;
             workspaceId: string;
+            workspaceSlug: string;
             reason: string;
             language?: string;
         }
     ): Promise<NotificationEntity> {
-        const { conversationId, workspaceId, reason, language } = data;
+        const { conversationId, workspaceId, workspaceSlug, reason, language } =
+            data;
         const reasonKey = (
             NOTIFICATION_HANDOFF_REASONS as readonly string[]
         ).includes(reason)
@@ -434,7 +436,7 @@ export class NotificationService {
             priority: NotificationPriority.HIGH,
             recipient: recipientId,
             metadata: {
-                actionUrl: `/conversations/${conversationId}`,
+                actionUrl: `/${workspaceSlug}/conversations/${conversationId}`,
                 actionText: this.messageService.setMessage(
                     'notification.handoff.actionText',
                     { customLanguage: language }
@@ -449,7 +451,7 @@ export class NotificationService {
         senderId: string,
         data: {
             requestId: string;
-            workspace: { id: string; name: string };
+            workspace: { id: string; name: string; slug: string };
             requestorName: string;
         }
     ): Promise<NotificationEntity> {
@@ -473,7 +475,7 @@ export class NotificationService {
             recipient: recipientId,
             sender: senderId,
             metadata: {
-                actionUrl: `/workspace/${workspace.id}/requests`,
+                actionUrl: `/${workspace.slug}/settings/members/join-requests`,
                 actionText: this.messageService.setMessage(
                     'notification.requests.action.view'
                 ),

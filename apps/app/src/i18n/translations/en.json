@@ -39,7 +39,6 @@
       "inactive": "Inactive"
     },
     "list": {
-      "loading": "Loading…",
       "noRecordsMessage": "Skills teach your agents how to handle specific tasks. Create one, or start from a template.",
       "noTemplates": "No templates available.",
       "filters": {
@@ -174,7 +173,9 @@
       "notifications": {
         "title": "Notifications",
         "empty": "You're all caught up",
-        "markAllAsRead": "Mark all as read"
+        "markAllAsRead": "Mark all as read",
+        "emptyHint": "New updates from your workspaces show up here, like a customer who needs a person or a new join request.",
+        "unreadLabel": "Notifications, {{count}} unread"
       },
       "actions": {
         "logout": "Log Out"
@@ -1900,14 +1901,16 @@
     },
     "notifications": {
       "domain": "Notifications",
-      "description": "Choose which emails you get.",
+      "description": "Choose how we let you know about new activity.",
       "fields": {
         "emailNotifications": "Email Notifications",
         "pushNotifications": "Push Notifications"
       },
       "handoffEmails": "Email me when a customer needs a person",
       "handoffEmailsHint": "Sent when an agent hands a conversation over to your team. You still see it in the app.",
-      "saveFailed": "Could not save your choice. Please try again."
+      "saveFailed": "Could not save your choice. Please try again.",
+      "sound": "Play sounds in the app",
+      "soundHint": "Short sounds for new notifications and messages, sent messages, connected accounts, agents turned on, and knowledge that finishes or fails processing. Applies to this browser only."
     }
   },
   "workspace": {
@@ -2023,6 +2026,7 @@
       "partial": "{{success}} item(s) updated, {{failed}} failed.",
       "error": "Could not update {{count}} item(s)."
     },
+    "loading": "Loading...",
     "loadFailed": "Couldn't load this. Try again later."
   },
   "fields": {
@@ -2668,7 +2672,6 @@
       }
     },
     "list": {
-      "loading": "Loading tools…",
       "noRecordsMessage": "Tools let your agents look up orders, book appointments, or call your own systems. Start from the marketplace or build your own.",
       "columns": {
         "kind": "Kind",

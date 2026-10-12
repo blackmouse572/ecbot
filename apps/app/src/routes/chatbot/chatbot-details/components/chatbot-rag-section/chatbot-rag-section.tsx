@@ -7,10 +7,7 @@ import type {
   ChatbotGetDetailResponseDto,
   KnowledgeItemResponseDto,
 } from "@repo/client";
-import {
-  NoRecords,
-  SingleColumnPageSkeleton,
-} from "@repo/ui/common-components";
+import { GeneralSectionSkeleton, NoRecords } from "@repo/ui/common-components";
 import { IconBooks } from "@tabler/icons-react";
 import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -78,11 +75,7 @@ export function ChatbotRAGSection({ item, className }: ChatbotRAGSectionProps) {
   };
 
   if (isLoading) {
-    return (
-      <div className="h-[300px] [&>div]:h-full">
-        <SingleColumnPageSkeleton sections={1} />
-      </div>
-    );
+    return <GeneralSectionSkeleton rowCount={3} />;
   }
 
   if (items?.length === 0) {

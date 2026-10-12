@@ -25,7 +25,12 @@ describe('WorkspaceRequestService — approve', () => {
     const mockActivityService = { createByUser: jest.fn() };
     const mockMessageService = { setMessage: jest.fn() };
 
-    const workspace: any = { id: 'ws-1', name: 'Acme', owner: { id: 'own-1' } };
+    const workspace: any = {
+        id: 'ws-1',
+        name: 'Acme',
+        slug: 'acme',
+        owner: { id: 'own-1' },
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -82,6 +87,13 @@ describe('WorkspaceRequestService — approve', () => {
         expect(mockMemberJoinedEmail.send).toHaveBeenCalledWith(
             workspace.id,
             'user-1'
+        );
+        // The requester's "Go to Workspace" button opens the workspace.
+        expect(mockNotificationService.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                recipient: 'user-1',
+                metadata: expect.objectContaining({ actionUrl: '/acme' }),
+            })
         );
     });
 });

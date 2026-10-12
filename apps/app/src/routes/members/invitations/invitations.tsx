@@ -13,7 +13,7 @@ import {
   Text,
   toast,
 } from "@medusajs/ui";
-import { NoRecords } from "@repo/ui/common-components";
+import { ListSkeleton, NoRecords } from "@repo/ui/common-components";
 import { SingleColumnPage } from "@repo/ui/layout";
 import { IconMail } from "@tabler/icons-react";
 import { useState } from "react";
@@ -54,7 +54,9 @@ export const Invitations = () => {
         <div className="flex items-center justify-between px-6 py-4">
           <Text weight="plus">{t("members.invitations.title")}</Text>
         </div>
-        {isLoading ? null : invitations && invitations.length > 0 ? (
+        {isLoading ? (
+          <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
+        ) : invitations && invitations.length > 0 ? (
           invitations.map((invitation) => (
             <div
               key={invitation.id}

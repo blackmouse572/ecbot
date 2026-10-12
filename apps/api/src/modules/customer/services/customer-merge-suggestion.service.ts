@@ -547,7 +547,7 @@ export class CustomerMergeSuggestionService {
                             priority: NotificationPriority.MEDIUM,
                             recipient: member.user.id,
                             metadata: {
-                                actionUrl: `/customers/suggestions`,
+                                actionUrl: `/${member.workspace.slug}/customers/suggestions`,
                                 actionText: this.messageService.setMessage(
                                     'notification.mergeSuggestion.actionText'
                                 ),

@@ -13,7 +13,7 @@ import {
   toast,
 } from "@medusajs/ui";
 import type { ReactNode } from "react";
-import { Combobox } from "@repo/ui/common-components";
+import { Combobox, ListSkeleton } from "@repo/ui/common-components";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ToolListResponseDto } from "@repo/client";
@@ -238,9 +238,7 @@ function ToolDetailPanel({
             {t("tools.addDrawer.actionsTitle")}
           </Text>
           {isLoadingDetail ? (
-            <Text size="small" className="text-ui-fg-subtle">
-              {t("tools.list.loading")}
-            </Text>
+            <ListSkeleton label={t("general.loading")} />
           ) : discoveredActions.length === 0 ? (
             <Text size="small" className="text-ui-fg-subtle">
               {t("tools.chatbotTab.actionsEmpty")}

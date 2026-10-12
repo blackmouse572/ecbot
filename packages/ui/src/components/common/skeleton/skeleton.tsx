@@ -4,12 +4,18 @@ import { type CSSProperties, type ComponentPropsWithoutRef } from "react";
 type SkeletonProps = {
   className?: string;
   style?: CSSProperties;
+  "data-slot"?: string;
 };
 
-export const Skeleton = ({ className, style }: SkeletonProps) => {
+export const Skeleton = ({
+  className,
+  style,
+  "data-slot": dataSlot,
+}: SkeletonProps) => {
   return (
     <div
       aria-hidden
+      data-slot={dataSlot}
       className={clx(
         "bg-ui-bg-component h-3 w-3 animate-pulse rounded-[4px]",
         className,
@@ -117,9 +123,13 @@ export const GeneralSectionSkeleton = ({
   const rows = Array.from({ length: rowCount ?? 0 }, (_, i) => i);
 
   return (
-    <Container className="divide-y p-0" aria-hidden>
+    <Container
+      className="divide-y overflow-hidden p-0"
+      aria-hidden
+      data-slot="section-skeleton"
+    >
       <div className="flex items-center justify-between px-6 py-4">
-        <HeadingSkeleton characters={16} />
+        <HeadingSkeleton level="h2" characters={16} />
         <IconButtonSkeleton />
       </div>
       {rows.map((row) => (
@@ -236,6 +246,10 @@ type SingleColumnPageSkeletonProps = {
   showMetadata?: boolean;
 };
 
+// Page skeletons draw the same section cards the loaded page renders
+// (heading + label/value rows) so the layout does not jump when data lands.
+const sectionRows = (index: number) => (index === 0 ? 3 : 5);
+
 export const SingleColumnPageSkeleton = ({
   sections = 2,
   showJSON = false,
@@ -243,20 +257,11 @@ export const SingleColumnPageSkeleton = ({
 }: SingleColumnPageSkeletonProps) => {
   return (
     <div className="flex flex-col gap-y-3">
-      {Array.from({ length: sections }, (_, i) => i).map((section) => {
-        return (
-          <Skeleton
-            key={section}
-            className={clx("h-full max-h-[460px] w-full rounded-lg", {
-              // First section is smaller on most pages, this gives us less
-              // layout shifting in general,
-              "max-h-[219px]": section === 0,
-            })}
-          />
-        );
-      })}
-      {showMetadata && <Skeleton className="h-[60px] w-full rounded-lg" />}
-      {showJSON && <Skeleton className="h-[60px] w-full rounded-lg" />}
+      {Array.from({ length: sections }, (_, i) => (
+        <GeneralSectionSkeleton key={i} rowCount={sectionRows(i)} />
+      ))}
+      {showMetadata && <JsonViewSectionSkeleton />}
+      {showJSON && <JsonViewSectionSkeleton />}
     </div>
   );
 };
@@ -274,54 +279,77 @@ export const TwoColumnPageSkeleton = ({
   showJSON = false,
   showMetadata = true,
 }: TwoColumnPageSkeletonProps) => {
-  const showExtraData = showJSON || showMetadata;
-
   return (
-    <div className="flex flex-col gap-y-3">
-      <div className="flex flex-col gap-x-4 gap-y-3 xl:flex-row xl:items-start">
-        <div className="flex w-full flex-col gap-y-3">
-          {Array.from({ length: mainSections }, (_, i) => i).map((section) => {
-            return (
-              <Skeleton
-                key={section}
-                className={clx("h-full max-h-[460px] w-full rounded-lg", {
-                  "max-h-[219px]": section === 0,
-                })}
-              />
-            );
-          })}
-          {showExtraData && (
-            <div className="hidden flex-col gap-y-3 xl:flex">
-              {showMetadata && (
-                <Skeleton className="h-[60px] w-full rounded-lg" />
-              )}
-              {showJSON && <Skeleton className="h-[60px] w-full rounded-lg" />}
-            </div>
-          )}
-        </div>
-        <div className="flex w-full max-w-[100%] flex-col gap-y-3 xl:mt-0 xl:max-w-[440px]">
-          {Array.from({ length: sidebarSections }, (_, i) => i).map(
-            (section) => {
-              return (
-                <Skeleton
-                  key={section}
-                  className={clx("h-full max-h-[320px] w-full rounded-lg", {
-                    "max-h-[140px]": section === 0,
-                  })}
-                />
-              );
-            },
-          )}
-          {showExtraData && (
-            <div className="flex flex-col gap-y-3 xl:hidden">
-              {showMetadata && (
-                <Skeleton className="h-[60px] w-full rounded-lg" />
-              )}
-              {showJSON && <Skeleton className="h-[60px] w-full rounded-lg" />}
-            </div>
-          )}
-        </div>
+    <div className="flex w-full flex-col items-start gap-x-4 gap-y-3 xl:grid xl:grid-cols-[minmax(0,_1fr)_440px]">
+      <div className="flex w-full min-w-0 flex-col gap-y-3">
+        {Array.from({ length: mainSections }, (_, i) => (
+          <GeneralSectionSkeleton key={i} rowCount={sectionRows(i)} />
+        ))}
+        {showMetadata && <JsonViewSectionSkeleton />}
+        {showJSON && <JsonViewSectionSkeleton />}
       </div>
+      <div className="flex w-full flex-col gap-y-3">
+        {Array.from({ length: sidebarSections }, (_, i) => (
+          <GeneralSectionSkeleton key={i} rowCount={2} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+type ListSkeletonProps = {
+  // Announced to screen readers while the bars stay hidden from them.
+  label: string;
+  rowCount?: number;
+  className?: string;
+};
+
+// Rows for lists, tabs and pickers that load inside an already visible section.
+export const ListSkeleton = ({
+  label,
+  rowCount = 3,
+  className,
+}: ListSkeletonProps) => {
+  return (
+    <div role="status" className={clx("flex flex-col gap-y-2", className)}>
+      <span className="sr-only">{label}</span>
+      {Array.from({ length: rowCount }, (_, i) => (
+        <Skeleton
+          key={i}
+          data-slot="list-skeleton-row"
+          className="h-9 w-full rounded-md"
+        />
+      ))}
+    </div>
+  );
+};
+
+type FormSkeletonProps = {
+  // Announced to screen readers while the bars stay hidden from them.
+  label: string;
+  fieldCount?: number;
+  className?: string;
+};
+
+// Label + input pairs for edit drawers and forms waiting on their record.
+export const FormSkeleton = ({
+  label,
+  fieldCount = 3,
+  className,
+}: FormSkeletonProps) => {
+  return (
+    <div role="status" className={clx("flex flex-col gap-y-4", className)}>
+      <span className="sr-only">{label}</span>
+      {Array.from({ length: fieldCount }, (_, i) => (
+        <div
+          key={i}
+          data-slot="form-skeleton-field"
+          className="flex flex-col gap-y-2"
+        >
+          <TextSkeleton characters={12} />
+          <Skeleton className="h-8 w-full rounded-md" />
+        </div>
+      ))}
     </div>
   );
 };

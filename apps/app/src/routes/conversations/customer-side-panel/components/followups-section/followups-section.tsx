@@ -7,6 +7,7 @@ import {
   useConversationFollowups,
   type FollowupListResponseDto,
 } from "@/hooks/api/followups";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 interface Props {
   conversationId: string;
@@ -19,7 +20,8 @@ export function FollowupsSection({ conversationId, onViewMessage }: Props) {
     useConversationFollowups(conversationId);
   const cancel = useCancelFollowup();
 
-  if (isPending) return null;
+  if (isPending)
+    return <ListSkeleton label={t("general.loading")} rowCount={2} />;
 
   if (isError) {
     return (

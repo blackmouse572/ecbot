@@ -3,6 +3,7 @@ import { Text } from "@medusajs/ui";
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ToolkitCard, type ToolkitCardData } from "./toolkit-card";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 type MarketplaceBodyProps = {
   toolkits: ToolkitCardData[];
@@ -21,11 +22,7 @@ export function MarketplaceBody({
   return (
     <div className="px-6 py-4">
       {isLoading ? (
-        <div className="py-10 text-center">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.list.loading")}
-          </Text>
-        </div>
+        <ListSkeleton label={t("general.loading")} rowCount={6} />
       ) : toolkits.length === 0 ? (
         <div className="py-10 text-center">
           <Text size="small" className="text-ui-fg-subtle">
