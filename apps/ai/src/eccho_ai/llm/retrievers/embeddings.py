@@ -90,3 +90,29 @@ async def embed_chunks(texts: list[str]) -> list[list[float]]:
                 f"Embedding dimension mismatch: expected {expected}, got {len(vector)}"
             )
     return vectors
+
+
+async def aembed_documents_with_usage(
+    client: "OpenAIEmbeddings", texts: list[str]
+) -> tuple[list[list[float]], "TokenUsage | None"]:
+    """`client.aembed_documents(texts)`, plus the tokens the provider billed.
+
+    LangChain drops the response's `usage`, and apps/api meters ingest by it
+    (#250). Same batching as LangChain's raw-text path, which `_build_client`
+    selects with `check_embedding_ctx_length=False`.
+    """
+    from eccho_ai.llm.usage import TokenUsage
+
+    vectors: list[list[float]] = []
+    usage: TokenUsage | None = None
+    params = client._invocation_params
+    for start in range(0, len(texts), client.chunk_size):
+        response = await client.async_client.create(
+            input=texts[start : start + client.chunk_size], **params
+        )
+        vectors.extend(item.embedding for item in response.data)
+        if response.usage is not None:
+            usage = usage or TokenUsage()
+            usage.input_tokens += response.usage.prompt_tokens
+            usage.total_tokens += response.usage.total_tokens
+    return vectors, usage

@@ -6,7 +6,11 @@ import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorato
 import { AuthJwtAccessProtected } from 'src/modules/auth/decorators/auth.jwt.decorator';
 import { ENUM_POLICY_ACTION, ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { UserProtected } from 'src/modules/user/decorators/user.decorator';
-import { WorkspacePolicyAbilityProtected } from 'src/modules/workspace/decorators/workspace.decorator';
+import {
+    WorkspacePayload,
+    WorkspacePolicyAbilityProtected,
+} from 'src/modules/workspace/decorators/workspace.decorator';
+import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import { AgentBuilderWorkspaceSuggestDoc } from '../docs/agent-builder.workspace.doc';
 import { AgentBuilderSuggestRequestDto } from '../dtos/request/agent-builder.suggest.request.dto';
 import { AgentBuilderSuggestResponseDto } from '../dtos/response/agent-builder.suggest.response.dto';
@@ -29,8 +33,14 @@ export class AgentBuilderWorkspaceController {
     @HttpCode(HttpStatus.OK)
     @Post('/suggest')
     async suggest(
+        @WorkspacePayload() workspace: WorkspaceEntity,
         @Body() { description }: AgentBuilderSuggestRequestDto
     ): Promise<IResponse<AgentBuilderSuggestResponseDto>> {
-        return { data: await this.agentBuilderService.suggest(description) };
+        return {
+            data: await this.agentBuilderService.suggest(
+                workspace.id,
+                description
+            ),
+        };
     }
 }

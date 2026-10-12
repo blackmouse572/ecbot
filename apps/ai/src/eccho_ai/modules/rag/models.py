@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from eccho_ai.llm.usage import TokenUsage
+
 
 class RAGIngestResponse(BaseModel):
     document_id: UUID
@@ -17,6 +19,8 @@ class RAGIngestResponse(BaseModel):
     embedding_model: str
     embedding_dimension: int
     status: str = "COMPLETED"
+    # Embedding tokens, for apps/api to meter (#250); None when not reported.
+    usage: TokenUsage | None = None
 
 
 class RAGDocumentResponse(BaseModel):

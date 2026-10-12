@@ -2,6 +2,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from eccho_ai.llm.usage import TokenUsage
+
 
 class DecisionQuestion(BaseModel):
     type: Literal["choice", "noul"]
@@ -22,3 +24,6 @@ class DecisionRequest(BaseModel):
 
 class DecisionResponse(BaseModel):
     answers: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    # What the call spent, for apps/api to meter; None when no model ran.
+    usage: TokenUsage | None = None
+    model: str | None = None

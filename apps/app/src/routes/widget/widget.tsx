@@ -18,6 +18,9 @@ import { useWidgetTranscript } from "./use-widget-transcript";
 // unconfigured there, skips verification — the two switch off together.
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
+// apps/api ENUM_WIDGET_STATUS_CODE_ERROR.NO_CHATBOT_ATTACHED.
+const WIDGET_NO_AGENT_STATUS_CODE = 5513;
+
 /**
  * The embeddable website chat widget (issue #374).
  *
@@ -48,7 +51,7 @@ export function Widget() {
     }
   }, []);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["widget-meta", key],
     queryFn: async () => {
       const res = await widgetPublicControllerMetaV1({
@@ -104,8 +107,22 @@ export function Widget() {
       (origin) => origin.toLowerCase() === parentOrigin.toLowerCase(),
     );
 
+  if (isError && isNoAgentError(error)) {
+    return (
+      <WidgetUnavailable
+        message={t("widget.noAgent")}
+        hint={t("widget.noAgentHint")}
+      />
+    );
+  }
+
   if (!key || isError) {
-    return <WidgetUnavailable message={t("widget.invalid")} />;
+    return (
+      <WidgetUnavailable
+        message={t("widget.invalid")}
+        hint={t("widget.invalidHint")}
+      />
+    );
   }
 
   if (isLoading || !data) {
@@ -113,7 +130,12 @@ export function Widget() {
   }
 
   if (!originAllowed) {
-    return <WidgetUnavailable message={t("widget.originNotAllowed")} />;
+    return (
+      <WidgetUnavailable
+        message={t("widget.originNotAllowed")}
+        hint={t("widget.invalidHint")}
+      />
+    );
   }
 
   return (
@@ -174,15 +196,26 @@ type WidgetMeta = {
   privacyPolicyUrl?: string;
 };
 
-function WidgetUnavailable({ message }: { message: string }) {
-  const { t } = useTranslation();
+/** The key is right, but the owner has not attached an agent yet (#255). */
+function isNoAgentError(error: unknown): boolean {
+  const body = (error as { response?: { data?: { statusCode?: number } } })
+    ?.response?.data;
+  return body?.statusCode === WIDGET_NO_AGENT_STATUS_CODE;
+}
 
+function WidgetUnavailable({
+  message,
+  hint,
+}: {
+  message: string;
+  hint: string;
+}) {
   return (
     <div className="bg-ui-bg-base flex h-screen w-screen flex-col items-center justify-center gap-y-2 p-4 text-center">
       <ExclamationCircle className="text-ui-fg-muted" />
       <Heading level="h2">{message}</Heading>
       <Text size="small" className="text-ui-fg-subtle">
-        {t("widget.invalidHint")}
+        {hint}
       </Text>
     </div>
   );

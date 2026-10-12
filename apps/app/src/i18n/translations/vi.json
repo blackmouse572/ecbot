@@ -533,6 +533,7 @@
         "namePlaceholder": "vd. Partner CRM",
         "issuedTitle": "Đã tạo kênh",
         "issuedDescription": "Hãy lưu lại các giá trị này ở nơi an toàn trước khi đóng cửa sổ.",
+        "needsAgent": "Kênh này chỉ trả lời khi đã gắn agent. Hãy mở agent bạn muốn dùng, rồi thêm kênh này vào tài khoản liên kết của agent.",
         "apiChannel": {
           "title": "Kết nối API channel",
           "description": "Gửi và nhận tin nhắn qua REST từ hệ thống của bạn. Phản hồi sẽ được POST tới callback URL.",
@@ -2268,7 +2269,8 @@
   "knowledge_item": {
     "ingestErrors": {
       "urlNotPublic": "Trang này không công khai. Hãy dùng đường link ai cũng mở được trên internet, không phải localhost hay địa chỉ mạng nội bộ.",
-      "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại."
+      "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",
+      "noTokens": "Workspace đã hết token AI. Hãy nạp thêm hoặc gia hạn gói, rồi xử lý lại mục này."
     },
     "create_title": "Tạo Mục Kiến Thức",
     "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",
@@ -3056,7 +3058,10 @@
     "byPlatform": {
       "title": "Theo platform",
       "column": "Platform",
-      "preview": "Preview (chat thử)"
+      "preview": "Preview (chat thử)",
+      "TAG_CLASSIFIER": "Gắn tag khách hàng",
+      "AGENT_BUILDER": "Tạo agent",
+      "KNOWLEDGE_INGEST": "Xử lý kiến thức"
     },
     "share": "Tỷ trọng",
     "messages": "Tin nhắn",
@@ -3096,6 +3101,8 @@
     "invalid": "Khung chat này hiện không khả dụng.",
     "invalidHint": "Hãy kiểm tra mã widget trên website này, hoặc liên hệ chủ website.",
     "originNotAllowed": "Khung chat này chưa được bật cho website này.",
+    "noAgent": "Khung chat này chưa được thiết lập xong.",
+    "noAgentHint": "Chủ website cần chọn agent để trả lời ở đây.",
     "turnstile": {
       "required": "Vui lòng hoàn tất xác minh trước.",
       "failed": "Xác minh thất bại. Tải lại trang và thử lại."

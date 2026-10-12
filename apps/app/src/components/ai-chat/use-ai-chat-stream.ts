@@ -121,6 +121,8 @@ export type RenderModelFile = {
 
 export type RenderModel = {
   text: string;
+  /** The text split at each tool call or step, one message each (#91), blanks dropped. */
+  segments: string[];
   reasoning?: string;
   toolCalls: RenderModelToolCall[];
   files: RenderModelFile[];
@@ -156,13 +158,30 @@ export function isEmptyRenderModel(model: RenderModel): boolean {
 export function partsToRenderModel(
   parts: readonly UIMessagePartLike[],
 ): RenderModel {
-  const model: RenderModel = { text: "", toolCalls: [], files: [] };
+  const model: RenderModel = {
+    text: "",
+    segments: [],
+    toolCalls: [],
+    files: [],
+  };
+  // A tool call closes the current segment; the next text opens a new one.
+  let segment: string | null = null;
+  const closeSegment = () => {
+    if (segment?.trim()) model.segments.push(segment);
+    segment = null;
+  };
   // `data-tool-meta` may arrive before or after its tool part; match by id.
   const metaById = new Map<string, ToolMeta>();
 
   for (const part of parts) {
     if (part.type === "text") {
-      model.text += (part.text as string | undefined) ?? "";
+      const text = (part.text as string | undefined) ?? "";
+      model.text += text;
+      segment = (segment ?? "") + text;
+    } else if (part.type === "step-start") {
+      // A step after a tool call: the widget's stream, whose tool parts the
+      // API filters out, splits here.
+      closeSegment();
     } else if (part.type === "reasoning") {
       model.reasoning =
         (model.reasoning ?? "") + ((part.text as string | undefined) ?? "");
@@ -186,6 +205,7 @@ export function partsToRenderModel(
       part.type.startsWith("tool-") &&
       part.type !== SEND_IMAGE_TOOL_PART
     ) {
+      closeSegment();
       model.toolCalls.push({
         toolCallId: part.toolCallId as string,
         toolName: part.type.slice("tool-".length),
@@ -196,6 +216,7 @@ export function partsToRenderModel(
     }
   }
 
+  closeSegment();
   for (const call of model.toolCalls) call.meta = metaById.get(call.toolCallId);
   return model;
 }
