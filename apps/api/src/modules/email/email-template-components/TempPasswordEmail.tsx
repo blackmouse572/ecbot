@@ -1,41 +1,8 @@
-import { Body, Head, Html } from '@react-email/components';
 import React from 'react';
+import CreateEmail, { type CreateEmailProps } from './CreateEmail';
 
-interface TempPasswordEmailProps {
-    name: string;
-    password: string;
-    passwordExpiredAt: string;
-    supportEmail?: string;
-    homeUrl: string;
-    homeName: string;
-}
-
-const TempPasswordEmail: React.FC<TempPasswordEmailProps> = ({
-    name,
-    password,
-    passwordExpiredAt,
-    supportEmail,
-    homeUrl,
-    homeName,
-}) => (
-    <Html>
-        <Head />
-        <Body>
-            <p>Hi{name},</p>
-            <br />
-            <p>
-                Your password is <strong>{password}</strong>.
-            </p>
-            <p>Expired At {passwordExpiredAt}.</p>
-            <br />
-            {supportEmail && <p>Support Email: {supportEmail}.</p>}
-            <p>
-                Visit us: <a href={homeUrl}>{homeUrl}</a>.
-            </p>
-            <br />
-            <p>By: {homeName}.</p>
-        </Body>
-    </Html>
+const TempPasswordEmail: React.FC<Omit<CreateEmailProps, 'kind'>> = props => (
+    <CreateEmail {...props} kind="reset" />
 );
 
 export default TempPasswordEmail;

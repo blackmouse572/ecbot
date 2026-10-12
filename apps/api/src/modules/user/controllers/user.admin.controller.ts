@@ -9,6 +9,7 @@ import {
     Controller,
     ForbiddenException,
     Get,
+    Headers,
     HttpCode,
     HttpStatus,
     Logger,
@@ -19,7 +20,6 @@ import {
     Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { MessageService } from 'src/common/message/services/message.service';
 import {
     PaginationQuery,
@@ -84,10 +84,12 @@ import {
     UserAdminListDoc,
     UserAdminUpdateDoc,
     UserAdminUpdateStatusDoc,
+    UserAdminVerifyEmailDoc,
 } from 'src/modules/user/docs/user.admin.doc';
 import { UserCreateRequestDto } from 'src/modules/user/dtos/request/user.create.request.dto';
 import { UserUpdateStatusRequestDto } from 'src/modules/user/dtos/request/user.update-status.request.dto';
 import { UserUpdateRequestDto } from 'src/modules/user/dtos/request/user.update.request.dto';
+import { UserCreateResponseDto } from 'src/modules/user/dtos/response/user.create.response.dto';
 import { UserListResponseDto } from 'src/modules/user/dtos/response/user.list.response.dto';
 import { UserProfileResponseDto } from 'src/modules/user/dtos/response/user.profile.response.dto';
 import {
@@ -227,8 +229,10 @@ export class UserAdminController {
     async create(
         @AuthJwtPayload('user') createBy: string,
         @Body()
-        { email, role, name, country, gender }: UserCreateRequestDto
-    ): Promise<IResponse<DatabaseIdResponseDto>> {
+        { email, role, name, country, gender }: UserCreateRequestDto,
+        // The admin's language: the new user has no preference yet.
+        @Headers('x-custom-lang') language?: string
+    ): Promise<IResponse<UserCreateResponseDto>> {
         const promises: Promise<any>[] = [
             this.roleService.findOneById(role),
             this.userService.existByEmail(email),
@@ -304,6 +308,7 @@ export class UserAdminController {
                             data: {
                                 passwordExpiredAt: password.passwordExpired,
                                 password: passwordString,
+                                language,
                             },
                         },
                         {
@@ -319,6 +324,7 @@ export class UserAdminController {
                                 otp: verification.otp,
                                 expiredAt: verification.expiredDate,
                                 reference: verification.reference,
+                                language,
                             },
                         },
                         {
@@ -334,7 +340,7 @@ export class UserAdminController {
             }
 
             return {
-                data: { id: created.id },
+                data: { id: created.id, password: passwordString },
             };
         });
 
@@ -399,6 +405,39 @@ export class UserAdminController {
                         role,
                         gender,
                     },
+                },
+            });
+        });
+    }
+
+    @UserAdminVerifyEmailDoc()
+    @Response('user.verifyEmail')
+    @PolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.USER,
+        action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
+    })
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Patch('/update/:user/verify-email')
+    async verifyEmail(
+        @UserParam('user', RequestRequiredPipe, UserParsePipe, UserNotSelfPipe)
+        user: UserEntity,
+        @AuthJwtPayload<IAuthJwtRefreshTokenPayload>()
+        { user: userFromPayload }: IAuthJwtRefreshTokenPayload
+    ): Promise<void> {
+        if (user.verification?.email) return;
+
+        await this.em.transactional(async em => {
+            await this.userService.updateVerificationEmail(user, { em });
+
+            await this.activityService.createByAdmin(user, userFromPayload, {
+                action: ENUM_ACTIVITY_ACTION.UPDATE,
+                subject: ENUM_POLICY_SUBJECT.USER,
+                metadata: {
+                    old: { emailVerified: false },
+                    new: { emailVerified: true },
                 },
             });
         });

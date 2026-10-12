@@ -114,13 +114,17 @@ describe('UserAdminController.create', () => {
     });
 
     it('enqueues CREATE via CloudTasksQueueClient inside the create transaction', async () => {
-        await controller.create('admin-1', {
-            email: 'created@x.com',
-            role: 'role-1',
-            name: 'Created',
-            country: 'country-1',
-            gender: 'MALE',
-        } as any);
+        await controller.create(
+            'admin-1',
+            {
+                email: 'created@x.com',
+                role: 'role-1',
+                name: 'Created',
+                country: 'country-1',
+                gender: 'MALE',
+            } as any,
+            'vi'
+        );
 
         expect(enqueue).toHaveBeenCalledWith(
             'email',
@@ -130,6 +134,7 @@ describe('UserAdminController.create', () => {
                 data: {
                     passwordExpiredAt: passwordExpired,
                     password: 'Temp123!',
+                    language: 'vi',
                 },
             },
             { taskName: 'CREATE-user-1' }
@@ -154,6 +159,7 @@ describe('UserAdminController.create', () => {
                     otp: '654321',
                     expiredAt: verification.expiredDate,
                     reference: 'ref-create-1',
+                    language: undefined,
                 },
             },
             { taskName: 'VERIFICATION-user-1' }
@@ -171,7 +177,23 @@ describe('UserAdminController.create', () => {
                 country: 'country-1',
                 gender: 'MALE',
             } as any)
-        ).resolves.toEqual({ data: { id: 'user-1' } });
+        ).resolves.toEqual({
+            data: { id: 'user-1', password: 'Temp123!' },
+        });
+    });
+
+    it('returns the generated temporary password so the admin can share it', async () => {
+        await expect(
+            controller.create('admin-1', {
+                email: 'created@x.com',
+                role: 'role-1',
+                name: 'Created',
+                country: 'country-1',
+                gender: 'MALE',
+            } as any)
+        ).resolves.toEqual({
+            data: { id: 'user-1', password: 'Temp123!' },
+        });
     });
 });
 
@@ -266,5 +288,78 @@ describe('UserAdminController.updateStatus', () => {
                 payload as any
             )
         ).resolves.toBeDefined();
+    });
+});
+
+describe('UserAdminController.verifyEmail', () => {
+    let controller: UserAdminController;
+
+    const updateVerificationEmail = jest.fn();
+    const createByAdminActivity = jest.fn();
+    const transactional = jest.fn((cb: any) => cb({}));
+    const payload = { user: 'admin-1' };
+
+    beforeEach(async () => {
+        updateVerificationEmail.mockReset();
+        createByAdminActivity.mockReset();
+        transactional.mockClear();
+
+        const module: TestingModule = await Test.createTestingModule({
+            controllers: [UserAdminController],
+            providers: [
+                { provide: EntityManager, useValue: { transactional } },
+                { provide: CloudTasksQueueClient, useValue: {} },
+                { provide: PaginationService, useValue: {} },
+                { provide: ClsService, useValue: {} },
+                { provide: DatabaseService, useValue: {} },
+                { provide: HelperArrayService, useValue: {} },
+                { provide: RoleService, useValue: {} },
+                { provide: AuthService, useValue: {} },
+                { provide: ImpersonationService, useValue: {} },
+                { provide: SessionService, useValue: {} },
+                {
+                    provide: UserService,
+                    useValue: { updateVerificationEmail },
+                },
+                { provide: CountryService, useValue: {} },
+                { provide: PasswordHistoryService, useValue: {} },
+                {
+                    provide: ActivityService,
+                    useValue: { createByAdmin: createByAdminActivity },
+                },
+                { provide: VerificationService, useValue: {} },
+            ],
+        }).compile();
+
+        controller = module.get(UserAdminController);
+    });
+
+    it('marks the email verified and records who did it', async () => {
+        const user = { id: 'user-2', verification: { email: false } };
+
+        await controller.verifyEmail(user as any, payload as any);
+
+        expect(updateVerificationEmail).toHaveBeenCalledWith(user, {
+            em: expect.anything(),
+        });
+        expect(createByAdminActivity).toHaveBeenCalledWith(
+            user,
+            'admin-1',
+            expect.objectContaining({
+                metadata: {
+                    old: { emailVerified: false },
+                    new: { emailVerified: true },
+                },
+            })
+        );
+    });
+
+    it('does nothing when the email is already verified', async () => {
+        const user = { id: 'user-2', verification: { email: true } };
+
+        await controller.verifyEmail(user as any, payload as any);
+
+        expect(updateVerificationEmail).not.toHaveBeenCalled();
+        expect(createByAdminActivity).not.toHaveBeenCalled();
     });
 });

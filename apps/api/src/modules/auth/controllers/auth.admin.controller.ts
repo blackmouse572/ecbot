@@ -4,6 +4,7 @@ import {
     BadRequestException,
     Controller,
     ForbiddenException,
+    Headers,
     HttpCode,
     HttpStatus,
     InternalServerErrorException,
@@ -17,6 +18,7 @@ import { randomUUID } from 'crypto';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
 import { Response } from 'src/common/response/decorators/response.decorator';
+import { IResponse } from 'src/common/response/interfaces/response.interface';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
 import {
     AuthJwtAccessProtected,
@@ -26,6 +28,7 @@ import {
     AuthAdminResetMfaDoc,
     AuthAdminUpdatePasswordDoc,
 } from 'src/modules/auth/docs/auth.admin.doc';
+import { AuthAdminUpdatePasswordResponseDto } from 'src/modules/auth/dtos/response/auth.admin-update-password.response.dto';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { MfaService } from 'src/modules/auth/services/mfa.service';
@@ -136,8 +139,10 @@ export class AuthAdminController {
     async updatePassword(
         @AuthJwtPayload('user') updatedBy: string,
         @UserParam('user', RequestRequiredPipe, UserParsePipe, UserNotSelfPipe)
-        user: UserEntity
-    ): Promise<void> {
+        user: UserEntity,
+        // The admin's language: users have no stored preference.
+        @Headers('x-custom-lang') language?: string
+    ): Promise<IResponse<AuthAdminUpdatePasswordResponseDto>> {
         const session = this.em.fork();
         await session.begin();
 
@@ -175,6 +180,7 @@ export class AuthAdminController {
                         data: {
                             passwordExpiredAt: password.passwordExpired,
                             password: passwordString,
+                            language,
                         },
                     },
                     {
@@ -187,7 +193,7 @@ export class AuthAdminController {
                     );
                 });
 
-            return;
+            return { data: { password: passwordString } };
         } catch (err: unknown) {
             await session.rollback();
 

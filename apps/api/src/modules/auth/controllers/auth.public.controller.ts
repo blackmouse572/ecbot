@@ -238,9 +238,12 @@ export class AuthPublicController {
             });
         } else if (userWithRole.verification.email !== true) {
             await this.recordLoginFailed(user, 'email_not_verified');
+            // The password was right, so the id is safe to return: the app
+            // needs it to open the enter-your-code page.
             throw new ForbiddenException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.EMAIL_NOT_VERIFIED,
                 message: 'user.error.emailNotVerified',
+                data: { id: user.id },
             });
         }
 

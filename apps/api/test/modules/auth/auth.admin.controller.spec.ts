@@ -77,7 +77,7 @@ describe('AuthAdminController.updatePassword', () => {
         createByAdmin.mockResolvedValue(undefined);
         commit.mockResolvedValue(undefined);
 
-        await controller.updatePassword('admin-1', user as any);
+        await controller.updatePassword('admin-1', user as any, 'vi');
 
         expect(enqueue).toHaveBeenCalledWith(
             'email',
@@ -87,6 +87,7 @@ describe('AuthAdminController.updatePassword', () => {
                 data: {
                     passwordExpiredAt: passwordExpired,
                     password: 'Temp123!',
+                    language: 'vi',
                 },
             },
             {
@@ -113,7 +114,7 @@ describe('AuthAdminController.updatePassword', () => {
 
         await expect(
             controller.updatePassword('admin-1', user as any)
-        ).resolves.toBeUndefined();
+        ).resolves.toEqual({ data: { password: 'Temp123!' } });
 
         expect(commit).toHaveBeenCalledTimes(1);
         expect(rollback).not.toHaveBeenCalled();
