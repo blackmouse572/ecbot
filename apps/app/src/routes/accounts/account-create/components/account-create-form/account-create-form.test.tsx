@@ -150,6 +150,24 @@ describe("AccountCreateForm: blocked OAuth popup", () => {
   });
 });
 
+describe("AccountCreateForm — Instagram", () => {
+  it("is selectable and links through Instagram Login", async () => {
+    linkMutateAsync.mockResolvedValue({ data: { data: null } });
+
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+    await user.click(screen.getByText("Instagram"));
+
+    expect(oauthLogin.platform).toBe("INSTAGRAM_ACCOUNT");
+    await oauthLogin.props.onSuccess({ code: "IGcode" });
+
+    expect(linkMutateAsync).toHaveBeenCalledWith({
+      code: "IGcode",
+      platform: "INSTAGRAM_ACCOUNT",
+    });
+  });
+});
+
 describe("AccountCreateForm — WhatsApp Embedded Signup", () => {
   it("offers Facebook login and manual entry as tabs, Facebook first", async () => {
     const user = userEvent.setup();

@@ -3,9 +3,10 @@ import { describe, expect, it } from "vitest";
 import { CHANNEL_CONNECT, channelOfAccountType } from "./channel-accounts";
 
 describe("CHANNEL_CONNECT", () => {
-  it("maps messenger and zalo to oauth platforms", () => {
+  it("maps messenger, zalo and instagram to oauth platforms", () => {
     expect(CHANNEL_CONNECT.messenger).toEqual({ kind: "oauth", platform: "FACEBOOK_ACCOUNT" });
     expect(CHANNEL_CONNECT.zalo).toEqual({ kind: "oauth", platform: "ZALO_ACCOUNT" });
+    expect(CHANNEL_CONNECT.instagram).toEqual({ kind: "oauth", platform: "INSTAGRAM_ACCOUNT" });
   });
 
   it("maps telegram to a token connect and website to a widget", () => {
@@ -13,8 +14,7 @@ describe("CHANNEL_CONNECT", () => {
     expect(CHANNEL_CONNECT.website).toEqual({ kind: "widget" });
   });
 
-  it("marks instagram, tiktok and shopee as coming soon", () => {
-    expect(CHANNEL_CONNECT.instagram).toEqual({ kind: "comingSoon" });
+  it("marks tiktok and shopee as coming soon", () => {
     expect(CHANNEL_CONNECT.tiktok).toEqual({ kind: "comingSoon" });
     expect(CHANNEL_CONNECT.shopee).toEqual({ kind: "comingSoon" });
   });

@@ -26,7 +26,7 @@ import { CHANNEL_CONNECT, channelOfAccountType } from "../channel-accounts";
 import { channelIcon } from "./channel-icon";
 
 const GRID_CHANNELS: ChannelId[] = ["messenger", "zalo", "telegram", "website", "instagram", "tiktok", "shopee"];
-const COMING_SOON_CHANNELS: ChannelId[] = ["instagram", "tiktok", "shopee"];
+const COMING_SOON_CHANNELS: ChannelId[] = ["tiktok", "shopee"];
 
 // A linked account's platform-typed response, as `useLinkAccount` actually
 // resolves it (see hooks/api/accounts.ts: `res.data.data`). Facebook returns
@@ -80,10 +80,9 @@ export function ChannelConnect({
   const widgetNameId = useId();
   const widgetOriginsId = useId();
 
-  // Which oauth popup is currently in flight; both oauth hooks below stay
-  // mounted at once (messenger and zalo cards are both always visible), so
-  // this stops the other platform's listener from also reacting to a single
-  // postMessage.
+  // Which oauth popup is currently in flight; every oauth hook below stays
+  // mounted at once (their cards are always visible), so this stops another
+  // platform's listener from also reacting to a single postMessage.
   const pendingOAuth = useRef<ChannelId | null>(null);
   const playSound = useUISound();
 
@@ -152,42 +151,30 @@ export function ChannelConnect({
       await linkCandidates(candidates);
     });
 
-  const { handleLinkClick: openMessenger } = useOAuthLogin("FACEBOOK_ACCOUNT", {
-    onSuccess: ({ code }) => {
-      if (pendingOAuth.current !== "messenger") return;
+  // Each popup's callbacks act only when that channel's popup is the one in flight.
+  const oauthHandlers = (channel: ChannelId, platform: string) => ({
+    onSuccess: ({ code }: { code: string }) => {
+      if (pendingOAuth.current !== channel) return;
       pendingOAuth.current = null;
-      void linkOAuthAccount("messenger", "FACEBOOK_ACCOUNT", code);
+      void linkOAuthAccount(channel, platform, code);
     },
     onError: () => {
-      if (pendingOAuth.current !== "messenger") return;
+      if (pendingOAuth.current !== channel) return;
       pendingOAuth.current = null;
       setBusy(null);
       setError(true);
     },
     onClosed: () => {
-      if (pendingOAuth.current !== "messenger") return;
+      if (pendingOAuth.current !== channel) return;
       pendingOAuth.current = null;
       setBusy(null);
     },
   });
-  const { handleLinkClick: openZalo } = useOAuthLogin("ZALO_ACCOUNT", {
-    onSuccess: ({ code }) => {
-      if (pendingOAuth.current !== "zalo") return;
-      pendingOAuth.current = null;
-      void linkOAuthAccount("zalo", "ZALO_ACCOUNT", code);
-    },
-    onError: () => {
-      if (pendingOAuth.current !== "zalo") return;
-      pendingOAuth.current = null;
-      setBusy(null);
-      setError(true);
-    },
-    onClosed: () => {
-      if (pendingOAuth.current !== "zalo") return;
-      pendingOAuth.current = null;
-      setBusy(null);
-    },
-  });
+  const openOAuth: Partial<Record<ChannelId, () => void>> = {
+    messenger: useOAuthLogin("FACEBOOK_ACCOUNT", oauthHandlers("messenger", "FACEBOOK_ACCOUNT")).handleLinkClick,
+    zalo: useOAuthLogin("ZALO_ACCOUNT", oauthHandlers("zalo", "ZALO_ACCOUNT")).handleLinkClick,
+    instagram: useOAuthLogin("INSTAGRAM_ACCOUNT", oauthHandlers("instagram", "INSTAGRAM_ACCOUNT")).handleLinkClick,
+  };
 
   const handleCardClick = (channel: ChannelId) => {
     const connect = CHANNEL_CONNECT[channel];
@@ -204,8 +191,7 @@ export function ChannelConnect({
     if (connect.kind === "oauth") {
       pendingOAuth.current = channel;
       setBusy(channel);
-      if (channel === "messenger") openMessenger();
-      else openZalo();
+      openOAuth[channel]?.();
       return;
     }
     // token (telegram) / widget (website): expand the inline form.

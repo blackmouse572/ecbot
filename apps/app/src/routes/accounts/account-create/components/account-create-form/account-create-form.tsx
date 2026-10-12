@@ -88,7 +88,6 @@ const PLATFORMS: PlatformMeta[] = [
     value: "INSTAGRAM_ACCOUNT",
     label: "Instagram",
     icon: <img src="/icons/instagram.svg" alt="Instagram" className="size-8" />,
-    comingSoon: true,
   },
   {
     value: "ZALO_ACCOUNT",

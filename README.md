@@ -36,11 +36,11 @@ It runs on your own server.
 | WhatsApp Business  | Shipped                                                                        |
 | Website widget     | Shipped                                                                        |
 | REST API channel   | Shipped                                                                        |
-| Instagram          | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/22) |
+| Instagram          | Shipped, needs Meta App Review for accounts outside the Meta app               |
 | TikTok Shop        | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/23) |
 | Shopee             | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/24) |
 
-Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Three slots are open and specced, which makes them good first contributions.
+Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Two slots are open and specced, which makes them good first contributions.
 
 ## Why Ecbot
 

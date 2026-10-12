@@ -298,14 +298,29 @@ describe("ChannelConnect", () => {
     expect(onAccountsUnlinked).toHaveBeenCalledWith(["acc-1"]);
   });
 
+  it("links an Instagram account through Instagram Login", async () => {
+    linkAccount.mockResolvedValue({ data: { data: { id: "acc-ig", name: "lan.shop", type: "INSTAGRAM_PAGE" } } });
+
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.instagram"));
+    expect(oAuthClick).toHaveBeenCalledWith("INSTAGRAM_ACCOUNT");
+
+    await oAuthHandlers.INSTAGRAM_ACCOUNT.onSuccess?.({ code: "auth-code" });
+
+    await waitFor(() => expect(linkAccount).toHaveBeenCalledWith({ code: "auth-code", platform: "INSTAGRAM_ACCOUNT" }));
+    await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-ig"] }));
+  });
+
   it("writes the channels derived from linked accounts plus coming-soon picks on Next", async () => {
     const user = userEvent.setup();
     renderConnect([], [{ id: "acc-1", name: "Lotus Spa", type: "FACEBOOK_ACCOUNT" }]);
 
-    await user.click(screen.getByText("agentBuilder.channels.instagram"));
+    await user.click(screen.getByText("agentBuilder.channels.tiktok"));
     await user.click(screen.getByRole("button", { name: "actions.next" }));
 
-    expect(onAnswer).toHaveBeenCalledWith(expect.arrayContaining(["messenger", "instagram"]));
+    expect(onAnswer).toHaveBeenCalledWith(expect.arrayContaining(["messenger", "tiktok"]));
     expect(onAnswer.mock.calls[0][0]).toHaveLength(2);
   });
 

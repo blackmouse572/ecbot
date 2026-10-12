@@ -78,6 +78,23 @@ describe("useOAuthLogin", () => {
     ]);
   });
 
+  // Instagram Login (no Facebook Page); the Basic Display scopes are retired.
+  it("asks Instagram for the Instagram Login messaging permissions", () => {
+    const { result } = renderHook(() => useOAuthLogin("INSTAGRAM_ACCOUNT", {}));
+
+    result.current.handleLinkClick();
+
+    const openMock = window.open as ReturnType<typeof vi.fn>;
+    const url = new URL(openMock.mock.calls.at(-1)?.[0] as string);
+    expect(url.origin + url.pathname).toBe(
+      "https://www.instagram.com/oauth/authorize",
+    );
+    expect(url.searchParams.get("scope")?.split(",").sort()).toEqual([
+      "instagram_business_basic",
+      "instagram_business_manage_messages",
+    ]);
+  });
+
   it("generates a different state on each click", () => {
     const { result } = renderHook(() => useOAuthLogin("FACEBOOK_ACCOUNT", {}));
     const openMock = window.open as ReturnType<typeof vi.fn>;

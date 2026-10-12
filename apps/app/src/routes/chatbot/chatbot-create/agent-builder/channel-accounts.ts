@@ -5,7 +5,10 @@ type AccountType = AccountListResponseDto["type"];
 
 /** How the channels question connects each channel choice to a real account. */
 export type ChannelConnect =
-  | { kind: "oauth"; platform: "FACEBOOK_ACCOUNT" | "ZALO_ACCOUNT" }
+  | {
+      kind: "oauth";
+      platform: "FACEBOOK_ACCOUNT" | "ZALO_ACCOUNT" | "INSTAGRAM_ACCOUNT";
+    }
   | { kind: "token"; platform: "TELEGRAM_BOT" }
   | { kind: "widget" }
   | { kind: "comingSoon" };
@@ -16,7 +19,7 @@ export const CHANNEL_CONNECT: Record<ChannelId, ChannelConnect> = {
   zalo: { kind: "oauth", platform: "ZALO_ACCOUNT" },
   telegram: { kind: "token", platform: "TELEGRAM_BOT" },
   website: { kind: "widget" },
-  instagram: { kind: "comingSoon" },
+  instagram: { kind: "oauth", platform: "INSTAGRAM_ACCOUNT" },
   tiktok: { kind: "comingSoon" },
   shopee: { kind: "comingSoon" },
 };
