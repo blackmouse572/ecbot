@@ -11,10 +11,10 @@
     "@casl/react": "^5.0.1",
     "@hookform/resolvers": "5.9.1",
     "@marsidev/react-turnstile": "^1.6.1",
-    "@medusajs/ui": "^4.2.5",
+    "@medusajs/ui": "^4.2.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-hook-form": "7.88.0",
+    "react-hook-form": "7.89.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
