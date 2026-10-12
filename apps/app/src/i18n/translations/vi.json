@@ -2031,7 +2031,44 @@
     }
   },
   "subscription": {
-    "domain": "Gói đăng ký"
+    "domain": "Gói đăng ký",
+    "title": "Gói của bạn",
+    "badge": {
+      "upgrade": "Nâng cấp gói"
+    },
+    "current": {
+      "renewsOn": "Gia hạn vào {{date}}",
+      "endsOn": "Kết thúc vào {{date}}",
+      "usage": "Đã dùng {{percent}}% quota",
+      "pending": "Đổi sang {{plan}} vào {{date}}",
+      "cancelScheduled": "Huỷ vào {{date}}"
+    },
+    "actions": {
+      "current": "Gói hiện tại",
+      "choose": "Chọn gói",
+      "upgrade": "Nâng cấp",
+      "downgrade": "Hạ cấp",
+      "cancel": "Huỷ gói đăng ký",
+      "resume": "Khôi phục gói đăng ký",
+      "contactUs": "Gói này được quản lý thay bạn. Hãy liên hệ để thay đổi hoặc huỷ.",
+      "processing": "Đang chờ cổng thanh toán xác nhận thay đổi…"
+    },
+    "cancelDialog": {
+      "title": "Huỷ gói đăng ký?",
+      "reasonLabel": "Lý do bạn huỷ gói?",
+      "reasonPlaceholder": "Cho chúng tôi biết lý do (bắt buộc)",
+      "confirm": "Huỷ vào cuối kỳ"
+    },
+    "checkout": {
+      "providersTitle": "Bạn muốn thanh toán bằng cách nào?",
+      "start": "Tiếp tục thanh toán",
+      "none": "Gói này chưa có phương thức thanh toán. Hãy liên hệ với chúng tôi.",
+      "pending": "Đang chờ xác nhận thanh toán…"
+    },
+    "cycle": {
+      "monthly": "mỗi tháng",
+      "yearly": "mỗi năm"
+    }
   },
   "billing": {
     "domain": "Thanh toán"

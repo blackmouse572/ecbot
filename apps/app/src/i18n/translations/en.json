@@ -1962,7 +1962,44 @@
     }
   },
   "subscription": {
-    "domain": "Subscription"
+    "domain": "Subscription",
+    "title": "Your plan",
+    "badge": {
+      "upgrade": "Upgrade plan"
+    },
+    "current": {
+      "renewsOn": "Renews {{date}}",
+      "endsOn": "Ends {{date}}",
+      "usage": "{{percent}}% of quota used",
+      "pending": "Changes to {{plan}} on {{date}}",
+      "cancelScheduled": "Cancels on {{date}}"
+    },
+    "actions": {
+      "current": "Current plan",
+      "choose": "Choose plan",
+      "upgrade": "Upgrade",
+      "downgrade": "Downgrade",
+      "cancel": "Cancel subscription",
+      "resume": "Resume subscription",
+      "contactUs": "This plan is managed for you. Contact us to change or cancel it.",
+      "processing": "Waiting for the payment provider to confirm your change…"
+    },
+    "cancelDialog": {
+      "title": "Cancel subscription?",
+      "reasonLabel": "Why are you cancelling?",
+      "reasonPlaceholder": "Tell us what changed (required)",
+      "confirm": "Cancel at period end"
+    },
+    "checkout": {
+      "providersTitle": "How would you like to pay?",
+      "start": "Continue to payment",
+      "none": "No payment method is available for this plan. Contact us.",
+      "pending": "Waiting for your payment to be confirmed…"
+    },
+    "cycle": {
+      "monthly": "per month",
+      "yearly": "per year"
+    }
   },
   "billing": {
     "domain": "Billing"
