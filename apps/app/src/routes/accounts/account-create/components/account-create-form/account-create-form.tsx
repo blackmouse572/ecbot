@@ -10,6 +10,7 @@ import { getAvatarFallback } from "@/components/utils/avatar-fallback";
 import { KeyboundForm } from "@/components/utils/keybound-form";
 import { useLinkAccount } from "@/hooks/api";
 import { useOAuthLogin } from "@/hooks/use-oauth-login";
+import { useUISound } from "@/modules/sound";
 import {
   Avatar,
   Button,
@@ -165,6 +166,8 @@ export const AccountCreateForm = () => {
 
   const { mutateAsync, isPending } = useLinkAccount();
 
+  const playSound = useUISound();
+
   const selectedPlatform = form.watch("platform");
 
   const goToTab = (next: TabKey, completeCurrent: TabKey) => {
@@ -198,6 +201,7 @@ export const AccountCreateForm = () => {
 
   const handleIssued = (result: Issued) => {
     setIssued(result);
+    playSound("connect");
     goToTab("SUCCESS", "CONNECT");
   };
 
@@ -206,6 +210,7 @@ export const AccountCreateForm = () => {
     try {
       const res = await mutateAsync({ code, platform: selectedPlatform as A });
       setLinkedData((res.data as A)?.data ?? null);
+      playSound("connect");
       goToTab("SUCCESS", "CONNECT");
     } catch (error) {
       console.error("Failed to link account:", error);

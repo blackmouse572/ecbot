@@ -4,6 +4,7 @@ import {
 import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto } from "@repo/client";
 import { useCreateChatbot, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
 import { useAgentBuilderSuggest } from "@/hooks/api/agent-builder";
+import { useUISound } from "@/modules/sound";
 import { toast } from "@medusajs/ui";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,6 +43,7 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
   const create = useCreateChatbot();
   const update = useUpdateChatbot();
   const activate = useToggleChatbotActivate();
+  const playSound = useUISound();
   const [starting, setStarting] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const creating = useRef(false);
@@ -178,6 +180,7 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
     if (!state.chatbotId) return;
     try {
       await activate.mutateAsync({ id: state.chatbotId, active: true });
+      playSound("toggle-on");
       dispatch({ type: "finished" });
     } catch {
       toast.error(t("chatbot.edit.error"));

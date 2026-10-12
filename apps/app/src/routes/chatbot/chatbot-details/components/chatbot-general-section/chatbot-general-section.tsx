@@ -4,6 +4,7 @@ import {
 } from "@/hooks/api";
 import { ChatbotActions } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-actions";
 import { ChatbotNameCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-name-cell";
+import { useUISound } from "@/modules/sound";
 import { Container, Switch } from "@medusajs/ui";
 
 type ChatbotGeneralSectionProps = {
@@ -12,6 +13,8 @@ type ChatbotGeneralSectionProps = {
 
 export const ChatbotGeneralSection = ({ item }: ChatbotGeneralSectionProps) => {
   const toggle = useToggleChatbotActivate();
+  const playSound = useUISound();
+  const turningOn = item.status === "inactive";
 
   return (
     <Container className="divide-y p-0">
@@ -24,10 +27,10 @@ export const ChatbotGeneralSection = ({ item }: ChatbotGeneralSectionProps) => {
             checked={item.status !== "inactive"}
             disabled={toggle.isPending}
             onCheckedChange={() =>
-              toggle.mutate({
-                id: item.id,
-                active: item.status === "inactive",
-              })
+              toggle.mutate(
+                { id: item.id, active: turningOn },
+                { onSuccess: () => turningOn && playSound("toggle-on") },
+              )
             }
           />
           <ChatbotActions item={item} />
