@@ -48,6 +48,23 @@
         "message": "{amount} tokens were added to workspace \"{workspaceName}\".",
         "actionText": "View usage"
     },
+    "subscriptionPlanChanged": {
+        "title": "Your plan has changed",
+        "message": "Workspace \"{workspaceName}\" is now on the {toPlan} plan (was {fromPlan}).",
+        "note": "Note from our team: {note}",
+        "actionText": "View plan"
+    },
+    "subscriptionCanceled": {
+        "title": "Subscription cancelled",
+        "message": "Workspace \"{workspaceName}\" will leave the {planName} plan on {periodEnd}.",
+        "note": "Note from our team: {note}",
+        "actionText": "View plan"
+    },
+    "subscriptionResumed": {
+        "title": "Subscription resumed",
+        "message": "Workspace \"{workspaceName}\" will keep the {planName} plan and renew as usual.",
+        "actionText": "View plan"
+    },
     "workspaceNoPlan": {
         "title": "Workspace needs attention",
         "message": "Workspace \"{workspaceName}\" was created without a billing plan, so its chatbots will not reply yet. Contact support to finish setup.",

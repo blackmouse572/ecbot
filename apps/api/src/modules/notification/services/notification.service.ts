@@ -360,6 +360,137 @@ export class NotificationService {
         });
     }
 
+    async createSubscriptionPlanChanged(
+        recipientId: string,
+        workspaceId: string,
+        data: {
+            workspaceName: string;
+            fromPlan: string;
+            toPlan: string;
+            note?: string;
+        }
+    ): Promise<NotificationEntity> {
+        const message = this.messageService.setMessage(
+            'notification.subscriptionPlanChanged.message',
+            {
+                properties: {
+                    workspaceName: data.workspaceName,
+                    fromPlan: data.fromPlan,
+                    toPlan: data.toPlan,
+                },
+            }
+        );
+        const messageWithNote = data.note
+            ? `${message} ${this.messageService.setMessage(
+                  'notification.subscriptionPlanChanged.note',
+                  { properties: { note: data.note } }
+              )}`
+            : message;
+
+        return this.create({
+            title: this.messageService.setMessage(
+                'notification.subscriptionPlanChanged.title'
+            ),
+            message: messageWithNote,
+            type: NotificationType.SUCCESS,
+            priority: NotificationPriority.MEDIUM,
+            recipient: recipientId,
+            workspace: workspaceId,
+            metadata: {
+                actionUrl: '/usage',
+                actionText: this.messageService.setMessage(
+                    'notification.subscriptionPlanChanged.actionText'
+                ),
+                data: {
+                    fromPlan: data.fromPlan,
+                    toPlan: data.toPlan,
+                    note: data.note,
+                },
+            },
+        });
+    }
+
+    async createSubscriptionCanceled(
+        recipientId: string,
+        workspaceId: string,
+        data: {
+            workspaceName: string;
+            planName: string;
+            periodEnd: string;
+            reason?: string;
+        }
+    ): Promise<NotificationEntity> {
+        const message = this.messageService.setMessage(
+            'notification.subscriptionCanceled.message',
+            {
+                properties: {
+                    workspaceName: data.workspaceName,
+                    planName: data.planName,
+                    periodEnd: data.periodEnd,
+                },
+            }
+        );
+        const messageWithNote = data.reason
+            ? `${message} ${this.messageService.setMessage(
+                  'notification.subscriptionCanceled.note',
+                  { properties: { note: data.reason } }
+              )}`
+            : message;
+
+        return this.create({
+            title: this.messageService.setMessage(
+                'notification.subscriptionCanceled.title'
+            ),
+            message: messageWithNote,
+            type: NotificationType.SUCCESS,
+            priority: NotificationPriority.MEDIUM,
+            recipient: recipientId,
+            workspace: workspaceId,
+            metadata: {
+                actionUrl: '/usage',
+                actionText: this.messageService.setMessage(
+                    'notification.subscriptionCanceled.actionText'
+                ),
+                data: {
+                    planName: data.planName,
+                    reason: data.reason,
+                },
+            },
+        });
+    }
+
+    async createSubscriptionResumed(
+        recipientId: string,
+        workspaceId: string,
+        data: { workspaceName: string; planName: string }
+    ): Promise<NotificationEntity> {
+        return this.create({
+            title: this.messageService.setMessage(
+                'notification.subscriptionResumed.title'
+            ),
+            message: this.messageService.setMessage(
+                'notification.subscriptionResumed.message',
+                {
+                    properties: {
+                        workspaceName: data.workspaceName,
+                        planName: data.planName,
+                    },
+                }
+            ),
+            type: NotificationType.SUCCESS,
+            priority: NotificationPriority.MEDIUM,
+            recipient: recipientId,
+            workspace: workspaceId,
+            metadata: {
+                actionUrl: '/usage',
+                actionText: this.messageService.setMessage(
+                    'notification.subscriptionResumed.actionText'
+                ),
+                data: { planName: data.planName },
+            },
+        });
+    }
+
     /**
      * Billing was never seeded, so workspace creation could not attach a plan
      * and `TokenGuardService` will refuse every turn. The operator log names
