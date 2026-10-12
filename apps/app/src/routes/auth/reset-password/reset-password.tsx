@@ -3,7 +3,6 @@ import { useResetPassword, useResetPasswordToken } from "@/hooks/api";
 import { ROUTES } from "@/routes/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, toast } from "@medusajs/ui";
-import { HoneypotField, useHoneypot } from "@repo/auth/components";
 import { CircularLoading, Form, Input } from "@repo/ui/common-components";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -17,7 +16,6 @@ function ResetPasswordPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
-  const honeypot = useHoneypot();
 
   const { isLoading: isCheckingToken, isError: isTokenInvalid } =
     useResetPasswordToken(token);
@@ -29,7 +27,6 @@ function ResetPasswordPage() {
   });
 
   const onReset = form.handleSubmit(async ({ newPassword }) => {
-    if (honeypot.isTrapped()) return;
     try {
       await resetPassword(newPassword);
       toast.success(t("success.message"));
@@ -74,13 +71,15 @@ function ResetPasswordPage() {
         </p>
       </div>
 
-      {/* The link in the email is enough to choose a new password (#187). */}
+      {/* The link in the email is enough to choose a new password (#187).
+          No bot trap here: the emailed token already keeps bots out, and a
+          password manager fills a lone text field as the username, which
+          silently dropped the submit. */}
       <Form {...form}>
         <form
           onSubmit={onReset}
           className="relative flex w-full flex-col gap-y-4"
         >
-          <HoneypotField ref={honeypot.ref} />
           <div className="flex flex-col gap-y-3">
             <Form.Field
               control={form.control}
