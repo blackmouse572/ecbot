@@ -650,6 +650,35 @@ describe('ConversationWorkspaceController', () => {
         });
     });
 
+    describe('updateStatus and updateBot', () => {
+        it.each([
+            ['updateStatus', { status: ENUM_CONVERSATION_STATUS.RESOLVED }],
+            ['updateBot', { botEnabled: false }],
+        ] as const)(
+            '%s names the customer in the activity',
+            async (method, dto) => {
+                mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                    { ...mockConversation, senderName: 'Lan Nguyen' }
+                );
+
+                await (controller[method] as any)(
+                    workspace,
+                    'conv-1',
+                    dto,
+                    user
+                );
+
+                expect(
+                    mockActivityService.createByUserWithWorkspace
+                ).toHaveBeenCalledWith(user, workspace, {
+                    action: 'update',
+                    subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                    metadata: { id: 'conv-1', name: 'Lan Nguyen' },
+                });
+            }
+        );
+    });
+
     describe('updateStatus', () => {
         it('should update lifecycle status and return mapped result', async () => {
             const dto = {

@@ -112,4 +112,12 @@ describe("ActivityItemDefault", () => {
     );
     expect(text).toContain("sent a message to a customer");
   });
+
+  it("keeps a phone number used as the customer name", () => {
+    expect(
+      renderItem(
+        activity("CONVERSATION", "create", { id: "c1", name: "84912345678" }),
+      ),
+    ).toContain("sent a message to 84912345678");
+  });
 });

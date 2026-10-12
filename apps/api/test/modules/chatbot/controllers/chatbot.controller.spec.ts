@@ -373,6 +373,59 @@ describe('ChatbotController', () => {
             );
         });
 
+        // The edit form always sends the linked account ids back.
+        const withLinkedAccounts = (ids: string[]) => ({
+            ...mockChatbot,
+            accounts: {
+                loadItems: jest.fn().mockResolvedValue(ids.map(id => ({ id }))),
+            },
+        });
+
+        it('logs no activity when the form resends the same linked accounts', async () => {
+            const chatbot = withLinkedAccounts(['a1']);
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockResolvedValue(chatbot);
+            mockChatbotService.mapList.mockReturnValue([chatbot]);
+
+            await controller.update(
+                mockWorkspace,
+                chatbot.id,
+                { accounts: ['a1'] } as ChatbotUpdateRequestDto,
+                mockUser
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
+
+        it('logs the old and new linked account ids when they change', async () => {
+            const chatbot = withLinkedAccounts(['a1']);
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockResolvedValue(chatbot);
+            mockChatbotService.mapList.mockReturnValue([chatbot]);
+
+            await controller.update(
+                mockWorkspace,
+                chatbot.id,
+                { accounts: ['a1', 'a2'] } as ChatbotUpdateRequestDto,
+                mockUser
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                mockUser,
+                mockWorkspace,
+                expect.objectContaining({
+                    metadata: expect.objectContaining({
+                        old: { accounts: ['a1'] },
+                        new: { accounts: ['a1', 'a2'] },
+                    }),
+                })
+            );
+        });
+
         it('logs no activity when the save changed nothing', async () => {
             const chatbot = { ...mockChatbot, name: 'Same Bot' };
             mockChatbotService.findOne.mockResolvedValue(chatbot);

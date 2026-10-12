@@ -59,5 +59,6 @@ export const ACTIVITY_MESSAGE_MAP: Partial<Record<ActivityAction, ParseKeys>> =
   };
 
 // Older conversation activities stored the platform sender id (a UUID or a
-// long number) as the name; it means nothing to a reader.
-export const PLATFORM_ID_PATTERN = /^([0-9a-f]{8}-[0-9a-f-]{27}|\d{6,})$/i;
+// long number) as the name; it means nothing to a reader. 12+ digits keeps
+// phone numbers, which a channel may use as the name, readable.
+export const PLATFORM_ID_PATTERN = /^([0-9a-f]{8}-[0-9a-f-]{27}|\d{12,})$/i;
