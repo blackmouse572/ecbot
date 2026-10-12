@@ -2,12 +2,12 @@ import { env } from "../env";
 import { timingSafeEqual } from "../timing-safe-equal";
 import type { ChallengeVerifier } from "./challenge-verifier";
 
-// Mirrors apps/api's verifyMetaChallenge() (Messenger and WhatsApp share one
+// Mirrors apps/api's verifyMetaChallenge() (Messenger, WhatsApp and Threads share one
 // Meta app, so one handshake and one secret) — keep in sync if that changes. Edge verifies locally (holds its own copy of
 // FACEBOOK_WEBHOOK_SECRET) so Meta's GET handshake works directly against
 // this worker without a round-trip to apps/api.
 export const facebookChallengeVerifier: ChallengeVerifier = {
-  slugs: ["messenger", "facebook", "whatsapp"],
+  slugs: ["messenger", "facebook", "whatsapp", "threads"],
   verify(url) {
     const mode = url.searchParams.get("hub.mode");
     const token = url.searchParams.get("hub.verify_token");

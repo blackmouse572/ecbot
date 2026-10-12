@@ -262,4 +262,28 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
             } as any
         );
     }
+
+    /**
+     * The customer's latest inbound message on an account, across that
+     * account's conversations with them. Threads replies must name the post
+     * they answer, and this is the one the customer last wrote.
+     */
+    async findLatestInboundBySender(
+        accountId: string,
+        senderId: string
+    ): Promise<MessageEntity | null> {
+        return this.findOne(
+            {
+                conversation: { account: accountId, senderId },
+                direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                externalId: { $ne: null },
+                deletedAt: null,
+            } as any,
+            {
+                order: {
+                    dateSent: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+                },
+            } as any
+        );
+    }
 }

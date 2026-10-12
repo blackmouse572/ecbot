@@ -36,7 +36,7 @@ Mỗi ứng dụng trong repo đọc cấu hình từ tệp `.env` riêng: `apps
 | Redis | `REDIS_*` | Bộ nhớ đệm và hàng đợi. |
 | Lưu trữ | `AWS_S3_PUBLIC_*`, `AWS_S3_PRIVATE_*` | Bucket cho tệp tải lên, tài liệu kiến thức và kỹ năng. |
 | Email | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_SUPPORT` | Mã đăng ký, lời mời và cảnh báo. `EMAIL_SUPPORT` là địa chỉ hỗ trợ hiển thị trong email; để trống thì email không có dòng này. |
-| Kênh | `FACEBOOK_*`, `ZALO_*`, `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Ứng dụng của các kênh và xác minh webhook. |
+| Kênh | `FACEBOOK_*`, `THREADS_*`, `ZALO_*`, `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Ứng dụng của các kênh và xác minh webhook. |
 | Dịch vụ AI | `AI_BACKEND_URL`, `AI_SERVICE_API_KEY`, `AI_SERVICE_API_SECRET`, `API_INTERNAL_TOKEN` | Giao tiếp giữa API và dịch vụ AI. |
 | Tác vụ nền | `CLOUD_TASKS_*` | Dự án và hàng đợi Cloud Tasks, cùng `CLOUD_TASKS_EMULATOR_HOST` khi chạy trên máy. |
 | Kho công cụ | `COMPOSIO_*` | Các công cụ trong kho công cụ. |
@@ -49,7 +49,7 @@ Mỗi ứng dụng trong repo đọc cấu hình từ tệp `.env` riêng: `apps
 | `VITE_API_URL` | Origin của API, ví dụ `http://localhost:8080`. |
 | `VITE_API_KEY`, `VITE_API_KEY_SECRET` | Cặp khóa API ứng dụng gửi kèm mọi yêu cầu. |
 | `VITE_TURNSTILE_SITE_KEY` | Tiện ích chống bot. |
-| `VITE_FACEBOOK_*`, `VITE_WHATSAPP_CONFIG_ID`, `VITE_ZALO_*` | Cửa sổ đăng nhập khi kết nối kênh. |
+| `VITE_FACEBOOK_*`, `VITE_WHATSAPP_CONFIG_ID`, `VITE_THREADS_*`, `VITE_ZALO_*` | Cửa sổ đăng nhập khi kết nối kênh. |
 
 ## Dịch vụ AI (apps/ai/.env)
 

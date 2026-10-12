@@ -27,4 +27,5 @@ const colorMap: Record<
   API_CHANNEL: "grey",
   WEBSITE_WIDGET: "green",
   WHATSAPP_BUSINESS: "green",
+  THREADS_ACCOUNT: "grey",
 };

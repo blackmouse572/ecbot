@@ -34,6 +34,7 @@ It runs on your own server.
 | Zalo OA            | Shipped                                                                        |
 | Telegram           | Shipped                                                                        |
 | WhatsApp Business  | Shipped                                                                        |
+| Threads            | Shipped (replies and mentions)                                                 |
 | Website widget     | Shipped                                                                        |
 | REST API channel   | Shipped                                                                        |
 | Instagram          | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/22) |

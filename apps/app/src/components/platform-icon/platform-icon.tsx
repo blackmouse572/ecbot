@@ -16,6 +16,7 @@ export const PLATFORM_ICON_SRC = {
   apiChannel: "/icons/api-channel.svg",
   websiteWidget: "/icons/website-widget.svg",
   whatsapp: "/icons/whatsapp.svg",
+  threads: "/icons/threads.svg",
 } as const;
 
 const ICON_BY_TYPE: Record<AccountType, { src: string; label: string }> = {
@@ -31,6 +32,7 @@ const ICON_BY_TYPE: Record<AccountType, { src: string; label: string }> = {
   API_CHANNEL: { src: PLATFORM_ICON_SRC.apiChannel, label: "API" },
   WEBSITE_WIDGET: { src: PLATFORM_ICON_SRC.websiteWidget, label: "Website" },
   WHATSAPP_BUSINESS: { src: PLATFORM_ICON_SRC.whatsapp, label: "WhatsApp" },
+  THREADS_ACCOUNT: { src: PLATFORM_ICON_SRC.threads, label: "Threads" },
 };
 
 interface PlatformIconProps extends Omit<ComponentProps<"img">, "src" | "alt"> {

@@ -36,7 +36,7 @@ Filled for you: the JWT signing keys (written to `apps/api/keys`) and key ids, C
 | Redis | `REDIS_*` | Cache and queues. |
 | Storage | `AWS_S3_PUBLIC_*`, `AWS_S3_PRIVATE_*` | Buckets for uploads, knowledge files and skills. |
 | Email | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_SUPPORT` | Sign-up codes, invitations and alerts. `EMAIL_SUPPORT` is the support address shown in emails; leave it empty to leave the line out. |
-| Channels | `FACEBOOK_*`, `ZALO_*`, `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Channel apps and webhook verification. |
+| Channels | `FACEBOOK_*`, `THREADS_*`, `ZALO_*`, `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Channel apps and webhook verification. |
 | AI service | `AI_BACKEND_URL`, `AI_SERVICE_API_KEY`, `AI_SERVICE_API_SECRET`, `API_INTERNAL_TOKEN` | Calls between the API and the AI service. |
 | Background jobs | `CLOUD_TASKS_*` | Cloud Tasks project, queues, and `CLOUD_TASKS_EMULATOR_HOST` for local runs. |
 | Marketplace | `COMPOSIO_*` | Marketplace tools. |
@@ -49,7 +49,7 @@ Filled for you: the JWT signing keys (written to `apps/api/keys`) and key ids, C
 | `VITE_API_URL` | API origin, for example `http://localhost:8080`. |
 | `VITE_API_KEY`, `VITE_API_KEY_SECRET` | The API key pair the app sends with every request. |
 | `VITE_TURNSTILE_SITE_KEY` | Bot protection widget. |
-| `VITE_FACEBOOK_*`, `VITE_WHATSAPP_CONFIG_ID`, `VITE_ZALO_*` | Sign-in popups for connecting channels. |
+| `VITE_FACEBOOK_*`, `VITE_WHATSAPP_CONFIG_ID`, `VITE_THREADS_*`, `VITE_ZALO_*` | Sign-in popups for connecting channels. |
 
 ## AI service (apps/ai/.env)
 

@@ -7,6 +7,7 @@ import { ZaloOAuthService } from '../../../src/common/zalo/services/zalo-oauth.s
 import { TikTokShopOAuthService } from '../../../src/common/tiktok-shop/services/tiktok-shop-oauth.service';
 import { ShopeeOAuthService } from '../../../src/common/shopee/services/shopee-oauth.service';
 import { TelegramOAuthService } from '../../../src/common/telegram/services/telegram-oauth.service';
+import { ThreadsOAuthService } from '../../../src/common/threads/services/threads-oauth.service';
 import { WhatsAppOAuthService } from '../../../src/common/whatsapp/services/whatsapp-oauth.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 
@@ -40,6 +41,11 @@ const mockWhatsAppService = {
     refreshCredentials: jest.fn(),
 };
 
+const mockThreadsService = {
+    getTokenAndProfile: jest.fn(),
+    refreshCredentials: jest.fn(),
+};
+
 describe('OAuthPlatformFactory', () => {
     let factory: OAuthPlatformFactory;
 
@@ -68,6 +74,10 @@ describe('OAuthPlatformFactory', () => {
                 {
                     provide: WhatsAppOAuthService,
                     useValue: mockWhatsAppService,
+                },
+                {
+                    provide: ThreadsOAuthService,
+                    useValue: mockThreadsService,
                 },
             ],
         }).compile();
@@ -114,6 +124,12 @@ describe('OAuthPlatformFactory', () => {
     it('returns the WhatsApp service for WHATSAPP_BUSINESS', () => {
         expect(factory.getService(ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS)).toBe(
             mockWhatsAppService
+        );
+    });
+
+    it('returns the Threads service for THREADS_ACCOUNT', () => {
+        expect(factory.getService(ENUM_ACCOUNT_TYPE.THREADS_ACCOUNT)).toBe(
+            mockThreadsService
         );
     });
 

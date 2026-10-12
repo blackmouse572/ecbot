@@ -12,6 +12,7 @@ import { useLinkAccount } from "@/hooks/api";
 import { useOAuthLogin } from "@/hooks/use-oauth-login";
 import { useUISound } from "@/modules/sound";
 import {
+  Alert,
   Avatar,
   Button,
   Checkbox,
@@ -116,6 +117,12 @@ const PLATFORMS: PlatformMeta[] = [
     value: "WHATSAPP_BUSINESS",
     label: "WhatsApp",
     icon: <img src="/icons/whatsapp.svg" alt="WhatsApp" className="size-8" />,
+  },
+  {
+    value: "THREADS_ACCOUNT",
+    label: "Threads",
+    description: "Replies & mentions",
+    icon: <img src="/icons/threads.svg" alt="Threads" className="size-8" />,
   },
   {
     value: "WEBSITE_WIDGET",
@@ -459,6 +466,9 @@ function ConnectStep({
       </div>
 
       <div className="flex w-full flex-col gap-y-4">
+        {platform === "THREADS_ACCOUNT" && (
+          <Alert>{t("accounts.create.connect.threads.notice")}</Alert>
+        )}
         {isTelegram ? (
           <Form.Field
             name="botToken"

@@ -13,7 +13,7 @@ consumer instead (see References).
 | ------ | ------------------------- | ------------------------------------------------------- |
 | GET    | `/health`                 | Liveness check                                           |
 | GET    | `/robots.txt`             | `Disallow: /` for every crawler (see Bots & crawlers)     |
-| GET    | `/webhooks/:platform`     | Meta `hub.challenge` verification (Messenger, WhatsApp), checked locally (see Env / bindings); 404 for every other slug |
+| GET    | `/webhooks/:platform`     | Meta `hub.challenge` verification (Messenger, WhatsApp, Threads), checked locally (see Env / bindings); 404 for every other slug |
 | POST   | `/webhooks/telegram/:botId` | Telegram (botId comes from the URL, not the payload)   |
 | POST   | `/webhooks/:platform`     | Every other platform (slug-based)                        |
 
@@ -44,6 +44,18 @@ consumer instead (see References).
   verified in apps/api.
 - The callback URL is set by hand in the Meta app dashboard (WhatsApp >
   Configuration). Point it at this worker's `/webhooks/whatsapp`.
+
+### Threads
+
+- Slug: `threads`
+- Path: `POST /webhooks/threads`
+- GET challenge: same Meta handshake as Messenger (`GET /webhooks/threads`),
+  checked against the same `FACEBOOK_WEBHOOK_SECRET`.
+- Signature: `x-hub-signature-256` HMAC keyed with `THREADS_APP_SECRET` (the
+  Threads use case has its own app secret), verified in apps/api.
+- The callback URL is set by hand in the Meta app dashboard (Threads use case >
+  Webhooks), subscribed to the `replies` and `mentions` fields. Point it at
+  this worker's `/webhooks/threads`.
 
 ### Telegram
 
