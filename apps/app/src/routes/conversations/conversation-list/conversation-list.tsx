@@ -20,6 +20,8 @@ import {
 import { ConversationListItem } from "./conversation-list-item";
 import { ConversationListSkeleton } from "./conversation-list-skeleton";
 import { ArrowPath } from "@medusajs/icons";
+import { NoRecords, NoResults } from "@repo/ui/common-components";
+import { IconMessages } from "@tabler/icons-react";
 
 const LAST_VIEWED_KEY = "conversations.lastViewedAt";
 const GROUP_BY_KEY = "conversations.groupBy";
@@ -88,6 +90,12 @@ export const ConversationList = () => {
   const basePath = `/${workspace?.slug}/${ROUTES.Conversations}`;
 
   const showChatbot = groupBy !== "chatbot";
+  const isFiltered = !!(
+    search ||
+    statusFilter ||
+    chatbotFilter ||
+    accountFilter
+  );
 
   const groups = useMemo(() => {
     if (groupBy === "none") return null;
@@ -179,10 +187,19 @@ export const ConversationList = () => {
               {t("actions.tryAgain")}
             </Button>
           </div>
+        ) : conversations.length === 0 && isFiltered ? (
+          <NoResults className="h-full p-6" />
         ) : conversations.length === 0 ? (
-          <div className="text-ui-fg-subtle p-6 text-center">
-            <Text size="small">{t("conversations.list.empty")}</Text>
-          </div>
+          <NoRecords
+            className="h-full"
+            title={t("conversations.list.empty")}
+            message={t("conversations.list.emptyMessage")}
+            action={{
+              to: `/${workspace?.slug}/${ROUTES.Accounts}`,
+              label: t("customers.list.connectChannel"),
+            }}
+            icon={<IconMessages />}
+          />
         ) : groups ? (
           groups.map((group) => (
             <div key={group.label}>

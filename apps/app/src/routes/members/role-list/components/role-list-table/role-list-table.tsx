@@ -1,3 +1,4 @@
+import { IconShieldLock } from "@tabler/icons-react";
 import { Button, Container, Heading, toast, usePrompt } from "@medusajs/ui";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -73,7 +74,10 @@ export const RoleListTable = () => {
         queryObject={raw}
         navigateTo={(row) => `${row.original.id}`}
         noRecords={{
-          message: t("accounts.list.noRecordsMessage"),
+          title: t("roles.list.noRecordsTitle"),
+          message: t("roles.list.noRecordsMessage"),
+          action: { to: "create", label: t("roles.list.createFirst") },
+          icon: <IconShieldLock />,
         }}
       />
       <Outlet />

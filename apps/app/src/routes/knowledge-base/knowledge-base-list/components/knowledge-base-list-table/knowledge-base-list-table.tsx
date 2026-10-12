@@ -1,3 +1,4 @@
+import { IconBooks } from "@tabler/icons-react";
 import { createSelectColumn } from "@/components/table/columns";
 import { _DataTable } from "@/components/table/data-table";
 import {
@@ -145,7 +146,12 @@ export const KnowledgeBaseListTable = () => {
         queryObject={raw}
         navigateTo={(row) => `${firstKB?.id}/item/${row.original.id}`}
         noRecords={{
+          title: t("knowledgeBase.list.emptyTitle"),
           message: t("knowledgeBase.list.empty"),
+          action: firstKB
+            ? { onClick: handleCreate, label: t("actions.create") }
+            : undefined,
+          icon: <IconBooks />,
         }}
       />
       <Outlet />

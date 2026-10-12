@@ -13,12 +13,13 @@ import {
   usePrompt,
 } from "@medusajs/ui";
 import type { ChatbotGetDetailResponseDto } from "@repo/client";
+import { NoRecords } from "@repo/ui/common-components";
+import { IconPlugConnected } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { PlatformIcon } from "../../../../components/platform-icon/platform-icon";
 import { AccountLinkDrawer } from "./account-link-drawer";
-import { AccountListEmpty } from "./account-list-empty";
 
 type LinkedAccount = ChatbotGetDetailResponseDto["accounts"][number];
 
@@ -156,7 +157,15 @@ export function AccountList({
               />
             ))
           ) : (
-            <AccountListEmpty chatbotId={item.id} />
+            <NoRecords
+              title={t("chatbot.details.noAccounts")}
+              message={t("chatbot.details.noAccountsDescription")}
+              action={{
+                onClick: () => setDrawerOpen(true),
+                label: t("actions.linkAccount"),
+              }}
+              icon={<IconPlugConnected />}
+            />
           )}
         </div>
       </Container>

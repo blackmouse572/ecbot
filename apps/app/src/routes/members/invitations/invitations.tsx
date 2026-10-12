@@ -13,13 +13,17 @@ import {
   Text,
   toast,
 } from "@medusajs/ui";
+import { ListSkeleton, NoRecords } from "@repo/ui/common-components";
 import { SingleColumnPage } from "@repo/ui/layout";
+import { IconMail } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ListSkeleton } from "@repo/ui/common-components";
+import { MemberInviteDialog } from "../members-list/components/member-invite-dialog";
 
 export const Invitations = () => {
   const { t } = useTranslation();
-  const { invitations, isLoading } = useInvitations({
+  const [isInviteOpen, setInviteOpen] = useState(false);
+  const { invitations, isLoading, isError, error } = useInvitations({
     orderBy: "createdAt",
     orderDirection: "desc",
     page: 1,
@@ -43,6 +47,7 @@ export const Invitations = () => {
       error: t("errorBoundary.internalServerErrorMessage"),
     });
 
+  if (isError) throw error;
   return (
     <SingleColumnPage>
       <Container className="divide-y p-0">
@@ -95,13 +100,18 @@ export const Invitations = () => {
             </div>
           ))
         ) : (
-          <div className="px-6 py-8">
-            <Text className="text-ui-fg-muted">
-              {t("members.invitations.empty")}
-            </Text>
-          </div>
+          <NoRecords
+            title={t("members.invitations.emptyTitle")}
+            message={t("members.invitations.empty")}
+            action={{
+              onClick: () => setInviteOpen(true),
+              label: t("members.inviteMember.action"),
+            }}
+            icon={<IconMail />}
+          />
         )}
       </Container>
+      <MemberInviteDialog open={isInviteOpen} onOpenChange={setInviteOpen} />
     </SingleColumnPage>
   );
 };

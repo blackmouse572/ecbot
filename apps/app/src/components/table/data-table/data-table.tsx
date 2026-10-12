@@ -15,7 +15,7 @@ interface DataTableProps<TData>
   isLoading?: boolean;
   pageSize: number;
   queryObject?: Record<string, A>;
-  noRecords?: Pick<NoRecordsProps, "title" | "message" | "action">;
+  noRecords?: Pick<NoRecordsProps, "title" | "message" | "action" | "icon">;
 }
 
 // Maybe we should use the memoized version of DataTableRoot
@@ -56,8 +56,17 @@ export const _DataTable = <TData,>({
     );
   }
 
-  const noQuery =
-    Object.values(queryObject).filter((v) => Boolean(v)).length === 0;
+  // Pagination and sorting are not filters: a leftover `?page=2` on an empty
+  // list must still show the "create your first" state, not "no results".
+  const noQuery = Object.entries(queryObject).every(
+    ([key, value]) =>
+      key === "page" ||
+      key === "perPage" ||
+      key === "order" ||
+      key === "orderBy" ||
+      key === "orderDirection" ||
+      !value,
+  );
   const noResults = !isLoading && count === 0 && !noQuery;
   const noRecords = !isLoading && count === 0 && noQuery;
 

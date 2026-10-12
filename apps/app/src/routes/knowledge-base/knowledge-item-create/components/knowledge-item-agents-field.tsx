@@ -1,6 +1,7 @@
 import { useChatbots } from "@/hooks/api";
 import { Checkbox, Label, Text } from "@medusajs/ui";
-import { Form } from "@repo/ui/common-components";
+import { Form, NoRecords } from "@repo/ui/common-components";
+import { IconRobot } from "@tabler/icons-react";
 import type { FC } from "react";
 import type { Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -58,9 +59,12 @@ export const KnowledgeItemAgentsField: FC<KnowledgeItemAgentsFieldProps> = ({
                   {t("knowledge_item.agents_error")}
                 </Text>
               ) : !agents.length ? (
-                <Text size="small" className="text-ui-fg-subtle">
-                  {t("knowledge_item.agents_empty")}
-                </Text>
+                <NoRecords
+                  size="small"
+                  title={t("knowledge_item.agents_emptyTitle")}
+                  message={t("knowledge_item.agents_empty")}
+                  icon={<IconRobot />}
+                />
               ) : (
                 <ul className="flex flex-col gap-y-2">
                   {agents.map((chatbot) => {

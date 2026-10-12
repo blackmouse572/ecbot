@@ -1,3 +1,4 @@
+import { IconKey } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import {
   useClientCredentialList,
@@ -44,7 +45,7 @@ const PAGE_SIZE = 100;
 
 export const ClientCredentials = () => {
   const { t } = useTranslation();
-  const { credentials, isLoading } = useClientCredentialList();
+  const { credentials, isLoading, isError, error } = useClientCredentialList();
   const [creating, setCreating] = useState(false);
 
   const columns = useColumns();
@@ -57,6 +58,7 @@ export const ClientCredentials = () => {
     getRowId: (row) => row.id,
   });
 
+  if (isError) throw error;
   return (
     <div className="flex flex-col gap-y-3">
       <Container className="divide-y p-0">
@@ -81,7 +83,13 @@ export const ClientCredentials = () => {
           pageSize={PAGE_SIZE}
           isLoading={isLoading}
           noRecords={{
+            title: t("settings.clientCredentials.emptyTitle"),
             message: t("settings.clientCredentials.empty"),
+            action: {
+              onClick: () => setCreating(true),
+              label: t("settings.clientCredentials.actions.create"),
+            },
+            icon: <IconKey />,
           }}
         />
       </Container>

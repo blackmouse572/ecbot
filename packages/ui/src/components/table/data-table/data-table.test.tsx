@@ -152,12 +152,13 @@ describe("_DataTable when count disagrees with the rows", () => {
   });
 });
 
-// Pagination (`page`/`perPage`) and sort state (`orderBy`/`orderDirection`, the
+// Pagination (`page`/`perPage`) and sort state (`order` as the sort control
+// writes it, `orderBy`/`orderDirection`, the
 // parsed form of the order-by URL param) travel in `queryObject` alongside the
 // filters, so they must not be mistaken for one: an empty list under only one
 // of these has had nothing searched for and is still "no records".
 describe("_DataTable no-records vs no-results", () => {
-  it.each(["page", "perPage", "orderBy", "orderDirection"])(
+  it.each(["page", "perPage", "order", "orderBy", "orderDirection"])(
     "does not treat %s as an active query",
     (key) => {
       renderWithProviders(

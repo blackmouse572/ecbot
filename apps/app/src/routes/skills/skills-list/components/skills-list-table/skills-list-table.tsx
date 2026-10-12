@@ -1,3 +1,4 @@
+import { IconSparkles } from "@tabler/icons-react";
 import { createSelectColumn } from "@/components/table/columns";
 import { _DataTable } from "@/components/table/data-table";
 import { useBatchDeleteSkills, useListSkills } from "@/hooks/api/skills";
@@ -90,7 +91,10 @@ export const SkillsListTable = () => {
           { key: "createdAt", label: t("fields.createdAt") },
         ]}
         noRecords={{
+          title: t("skills.list.noRecordsTitle"),
           message: t("skills.list.noRecordsMessage"),
+          action: { to: "create", label: t("skills.list.createFirst") },
+          icon: <IconSparkles />,
         }}
       />
       <Outlet />

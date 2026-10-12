@@ -221,7 +221,11 @@ describe("CustomerTags settings page", () => {
       screen.queryByLabelText("settings.customerTags.fields.name"),
     ).not.toBeInTheDocument();
 
-    const createBtn = screen.getByRole("button", {
+    // The empty state offers its own create button next to the header one.
+    expect(
+      screen.getByText("settings.customerTags.emptyTitle"),
+    ).toBeInTheDocument();
+    const [createBtn] = screen.getAllByRole("button", {
       name: "settings.customerTags.actions.create",
     });
     await user.click(createBtn);
@@ -241,9 +245,9 @@ describe("CustomerTags settings page", () => {
     render(<CustomerTags />);
 
     await user.click(
-      screen.getByRole("button", {
+      screen.getAllByRole("button", {
         name: "settings.customerTags.actions.create",
-      }),
+      })[0],
     );
 
     const nameInput = await screen.findByLabelText(
@@ -362,5 +366,18 @@ describe("CustomerTags settings page", () => {
 
     expect(promptFn).toHaveBeenCalledTimes(1);
     expect(deleteMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("throws instead of offering to create a tag when loading fails", () => {
+    const error = new Error("boom");
+    useListMock.mockReturnValue({
+      tags: [],
+      isLoading: false,
+      isError: true,
+      error,
+    } as unknown as UseListReturn);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() => render(<CustomerTags />)).toThrow(error);
   });
 });

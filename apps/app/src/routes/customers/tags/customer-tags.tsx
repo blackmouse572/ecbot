@@ -1,3 +1,4 @@
+import { IconTag } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
 import {
@@ -47,7 +48,7 @@ type DrawerTarget = CustomerTagGetResponseDto | null | "new";
 
 export const CustomerTags = () => {
   const { t } = useTranslation();
-  const { tags, isLoading } = useCustomerTagList();
+  const { tags, isLoading, isError, error } = useCustomerTagList();
   const [editing, setEditing] = useState<DrawerTarget>(null);
 
   const columns = useColumns({ onEdit: (tag) => setEditing(tag) });
@@ -64,6 +65,7 @@ export const CustomerTags = () => {
     getRowId: (row) => row.id,
   });
 
+  if (isError) throw error;
   return (
     <div className="flex flex-col gap-y-3">
       <Container className="divide-y p-0">
@@ -90,7 +92,13 @@ export const CustomerTags = () => {
           pageSize={PAGE_SIZE}
           isLoading={isLoading}
           noRecords={{
-            message: t("settings.customerTags.toast.deleted"),
+            title: t("settings.customerTags.emptyTitle"),
+            message: t("settings.customerTags.empty"),
+            action: {
+              onClick: () => setEditing("new"),
+              label: t("settings.customerTags.actions.create"),
+            },
+            icon: <IconTag />,
           }}
         />
       </Container>

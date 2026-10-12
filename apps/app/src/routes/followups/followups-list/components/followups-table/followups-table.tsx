@@ -1,3 +1,4 @@
+import { IconCalendarTime } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import {
   useFollowups,
@@ -54,7 +55,9 @@ export const FollowupsTable = () => {
         isLoading={isLoading}
         queryObject={raw}
         noRecords={{
+          title: t("followups.list.noRecordsTitle"),
           message: t("followups.list.noRecordsMessage"),
+          icon: <IconCalendarTime />,
         }}
       />
     </Container>

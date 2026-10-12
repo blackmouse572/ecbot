@@ -3,13 +3,15 @@ import {
   useJoinRequests,
 } from "@/hooks/api/join-requests";
 import { Button, Container, Text, toast } from "@medusajs/ui";
+import { NoRecords } from "@repo/ui/common-components";
 import { SingleColumnPage } from "@repo/ui/layout";
+import { IconUserCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { ListSkeleton } from "@repo/ui/common-components";
 
 export const JoinRequests = () => {
   const { t } = useTranslation();
-  const { joinRequests, isLoading } = useJoinRequests();
+  const { joinRequests, isLoading, isError, error } = useJoinRequests();
   const { mutateAsync: approve } = useApproveJoinRequest();
 
   const handleApprove = (id: string) =>
@@ -19,6 +21,7 @@ export const JoinRequests = () => {
       error: t("errorBoundary.internalServerErrorMessage"),
     });
 
+  if (isError) throw error;
   return (
     <SingleColumnPage>
       <Container className="divide-y p-0">
@@ -61,11 +64,11 @@ export const JoinRequests = () => {
             </div>
           ))
         ) : (
-          <div className="px-6 py-8">
-            <Text className="text-ui-fg-muted">
-              {t("members.joinRequests.empty")}
-            </Text>
-          </div>
+          <NoRecords
+            title={t("members.joinRequests.emptyTitle")}
+            message={t("members.joinRequests.empty")}
+            icon={<IconUserCheck />}
+          />
         )}
       </Container>
     </SingleColumnPage>
