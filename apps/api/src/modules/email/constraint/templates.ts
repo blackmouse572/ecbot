@@ -24,6 +24,7 @@ export async function renderTemplate<P extends object>(
         MfaChangedEmail,
         MobileNumberVerificationEmail,
         ResetPasswordEmail,
+        TempPasswordEmail,
         VerificationEmail,
         WelcomeEmail,
     } = await import('@app/modules/email/email-template-components');
@@ -37,6 +38,7 @@ export async function renderTemplate<P extends object>(
         [EmailSubject.Welcome]: WelcomeEmail,
         [EmailSubject.CreateAccount]: CreateEmail,
         [EmailSubject.ResetPassword]: ResetPasswordEmail,
+        [EmailSubject.TempPassword]: TempPasswordEmail,
         [EmailSubject.EmailVerification]: VerificationEmail,
         [EmailSubject.EmailVerified]: VerificationEmail,
         [EmailSubject.MobileNumberVerified]: MobileNumberVerificationEmail,

@@ -1,6 +1,6 @@
 import { fireEvent, render as rtlRender, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const render = (ui: ReactElement) =>
@@ -64,7 +64,11 @@ vi.mock("./login-mfa-step", () => ({
 }));
 
 const { mutateAsync, setNextError, setNextData } = vi.hoisted(() => {
-  let nextError: { statusCode?: number; message: string } | null = null;
+  let nextError: {
+    statusCode?: number;
+    message: string;
+    data?: { id: string };
+  } | null = null;
   let nextData: unknown = { accessToken: "tok" };
   return {
     setNextError: (error: typeof nextError) => {
@@ -86,6 +90,7 @@ const { mutateAsync, setNextError, setNextData } = vi.hoisted(() => {
 vi.mock("@/hooks/api/auth", () => ({
   useSignInWithEmailPass: () => ({ mutateAsync, isPending: false }),
   USER_BLOCKED_FORBIDDEN_STATUS_CODE: 5159,
+  USER_EMAIL_NOT_VERIFIED_STATUS_CODE: 5167,
 }));
 
 import { LoginPage } from "./login";
@@ -129,6 +134,30 @@ describe("LoginPage", () => {
     await vi.waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
     expect(toastError).toHaveBeenCalledWith("user.error.inactive");
     expect(promptFn).not.toHaveBeenCalled();
+  });
+
+  it("sends an unverified user to the code page instead of a dead end", async () => {
+    setNextError({
+      statusCode: 5167,
+      message: "user.error.emailNotVerified",
+      data: { id: "user-9" },
+    });
+    const VerifyPage = () => <div>verify:{useLocation().search}</div>;
+    rtlRender(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-email" element={<VerifyPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByText("submit-login"));
+
+    expect(
+      await screen.findByText("verify:?email=user%40x.com&userId=user-9"),
+    ).toBeInTheDocument();
+    expect(toastError).not.toHaveBeenCalled();
   });
 
   it("switches to the code step when the API answers with an MFA challenge", async () => {

@@ -4,6 +4,7 @@ import {
     BadRequestException,
     Controller,
     ForbiddenException,
+    Headers,
     HttpCode,
     HttpStatus,
     InternalServerErrorException,
@@ -17,6 +18,7 @@ import { randomUUID } from 'crypto';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
 import { Response } from 'src/common/response/decorators/response.decorator';
+import { IResponse } from 'src/common/response/interfaces/response.interface';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
 import {
     AuthJwtAccessProtected,
@@ -26,6 +28,7 @@ import {
     AuthAdminResetMfaDoc,
     AuthAdminUpdatePasswordDoc,
 } from 'src/modules/auth/docs/auth.admin.doc';
+import { AuthAdminUpdatePasswordResponseDto } from 'src/modules/auth/dtos/response/auth.admin-update-password.response.dto';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { MfaService } from 'src/modules/auth/services/mfa.service';
@@ -48,7 +51,10 @@ import {
     UserProtected,
 } from 'src/modules/user/decorators/user.decorator';
 import { UserNotSelfPipe } from 'src/modules/user/pipes/user.not-self.pipe';
-import { UserParsePipe } from 'src/modules/user/pipes/user.parse.pipe';
+import {
+    UserParsePipe,
+    UserWithRolePipe,
+} from 'src/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { UserService } from 'src/modules/user/services/user.service';
 
@@ -135,9 +141,30 @@ export class AuthAdminController {
     @Put('/update/:user/password')
     async updatePassword(
         @AuthJwtPayload('user') updatedBy: string,
-        @UserParam('user', RequestRequiredPipe, UserParsePipe, UserNotSelfPipe)
-        user: UserEntity
-    ): Promise<void> {
+        @AuthJwtPayload('type') updatedByType: ENUM_POLICY_ROLE_TYPE,
+        @UserParam(
+            'user',
+            RequestRequiredPipe,
+            UserWithRolePipe,
+            UserNotSelfPipe
+        )
+        user: UserEntity,
+        // The admin's language: users have no stored preference.
+        @Headers('x-custom-lang') language?: string
+    ): Promise<IResponse<AuthAdminUpdatePasswordResponseDto>> {
+        // The new password comes back in the response: same hierarchy as
+        // resetMfa, or an admin could sign in as a super admin.
+        if (
+            user.role.type !== ENUM_POLICY_ROLE_TYPE.USER &&
+            updatedByType !== ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN
+        ) {
+            throw new ForbiddenException({
+                statusCode:
+                    ENUM_AUTH_STATUS_CODE_ERROR.PASSWORD_RESET_FORBIDDEN,
+                message: 'auth.error.passwordResetForbidden',
+            });
+        }
+
         const session = this.em.fork();
         await session.begin();
 
@@ -175,6 +202,7 @@ export class AuthAdminController {
                         data: {
                             passwordExpiredAt: password.passwordExpired,
                             password: passwordString,
+                            language,
                         },
                     },
                     {
@@ -187,7 +215,7 @@ export class AuthAdminController {
                     );
                 });
 
-            return;
+            return { data: { password: passwordString } };
         } catch (err: unknown) {
             await session.rollback();
 

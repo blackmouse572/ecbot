@@ -31,7 +31,12 @@ export function ImpersonationBanner() {
 
   if (!impersonation) return null;
 
-  const style = { transform: `translateX(calc(-50% + ${x}px))` };
+  const style = {
+    transform: `translateX(calc(-50% + ${x}px))`,
+    // An open modal dialog sets pointer-events: none on <body>, which would
+    // leave the banner visible but unclickable.
+    pointerEvents: "auto" as const,
+  };
 
   if (minimized) {
     return (

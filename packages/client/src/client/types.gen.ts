@@ -1791,6 +1791,17 @@ export type UserProfileResponseDto = {
     termsAcceptanceRequired: boolean;
 };
 
+export type UserCreateResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Temporary password, shown to the admin once
+     */
+    password: string;
+};
+
 export type UserCreateRequestDto = {
     email: string;
     role: string;
@@ -1829,6 +1840,13 @@ export type AuthImpersonateResponseDto = {
      * Seconds
      */
     expiresIn: number;
+};
+
+export type AuthAdminUpdatePasswordResponseDto = {
+    /**
+     * New temporary password, shown to the admin once
+     */
+    password: string;
 };
 
 export type SessionListResponseDto = {
@@ -12746,7 +12764,7 @@ export type UserAdminControllerCreateV1Responses = {
     201: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: DatabaseIdResponseDto;
+        data?: UserCreateResponseDto;
     };
 };
 
@@ -12836,6 +12854,84 @@ export type UserAdminControllerUpdateV1Responses = {
 };
 
 export type UserAdminControllerUpdateV1Response = UserAdminControllerUpdateV1Responses[keyof UserAdminControllerUpdateV1Responses];
+
+export type UserAdminControllerVerifyEmailV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        user: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/user/update/{user}/verify-email';
+};
+
+export type UserAdminControllerVerifyEmailV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserAdminControllerVerifyEmailV1Error = UserAdminControllerVerifyEmailV1Errors[keyof UserAdminControllerVerifyEmailV1Errors];
+
+export type UserAdminControllerVerifyEmailV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserAdminControllerVerifyEmailV1Response = UserAdminControllerVerifyEmailV1Responses[keyof UserAdminControllerVerifyEmailV1Responses];
 
 export type UserAdminControllerUpdateStatusV1Data = {
     body: UserUpdateStatusRequestDto;
@@ -13152,6 +13248,7 @@ export type AuthAdminControllerUpdatePasswordV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
+        data?: AuthAdminUpdatePasswordResponseDto;
     };
 };
 

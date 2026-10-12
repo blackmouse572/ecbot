@@ -1,3 +1,4 @@
+import { AuthAdminUpdatePasswordResponseDto } from 'src/modules/auth/dtos/response/auth.admin-update-password.response.dto';
 import { applyDecorators } from '@nestjs/common';
 import {
     Doc,
@@ -21,7 +22,9 @@ export function AuthAdminUpdatePasswordDoc(): MethodDecorator {
             jwtAccessToken: true,
         }),
         DocGuard({ role: true, policy: true }),
-        DocResponse('auth.updatePassword')
+        DocResponse<AuthAdminUpdatePasswordResponseDto>('auth.updatePassword', {
+            dto: AuthAdminUpdatePasswordResponseDto,
+        })
     );
 }
 
