@@ -756,6 +756,11 @@
       "mergeConfirm": "confirmed merging customer {{name}}",
       "mergeDismiss": "dismissed the merge suggestion for customer {{name}}"
     },
+    "conversation": {
+      "create": "sent a message to <link/>",
+      "update": "updated the conversation with <link/>",
+      "unknownCustomer": "a customer"
+    },
     "generic": {
       "create": "created <link/>",
       "update": "updated <link/>",

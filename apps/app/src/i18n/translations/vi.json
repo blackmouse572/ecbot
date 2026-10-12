@@ -777,6 +777,11 @@
       "mergeConfirm": "đã xác nhận gộp khách hàng {{name}}",
       "mergeDismiss": "đã bỏ qua đề xuất gộp khách hàng {{name}}"
     },
+    "conversation": {
+      "create": "đã gửi tin nhắn cho <link/>",
+      "update": "đã cập nhật hội thoại với <link/>",
+      "unknownCustomer": "một khách hàng"
+    },
     "generic": {
       "create": "đã tạo <link/>",
       "update": "đã cập nhật <link/>",

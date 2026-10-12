@@ -13,7 +13,11 @@ import type React from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ActivityItem } from "./activity-item";
-import { ACTIVITY_MESSAGE_MAP, ACTIVITY_SUBJECT_MESSAGE_MAP } from "./constant";
+import {
+  ACTIVITY_MESSAGE_MAP,
+  ACTIVITY_SUBJECT_MESSAGE_MAP,
+  PLATFORM_ID_PATTERN,
+} from "./constant";
 
 export interface Props {
   item: ActivityListResponseDto;
@@ -27,6 +31,12 @@ export function ActivityItemDefault({ item }: Props) {
   // inside it) - resolve the display name across every shape in use.
   const getDisplayName = (): string | undefined => {
     const metadata = (item.metadata as A) || {};
+    if (item.subject === "CONVERSATION") {
+      const name: string | undefined = metadata.name;
+      return name && !PLATFORM_ID_PATTERN.test(name)
+        ? name
+        : t("activities.conversation.unknownCustomer");
+    }
     return (
       metadata.name ??
       metadata.itemTitle ??
@@ -46,6 +56,8 @@ export function ActivityItemDefault({ item }: Props) {
         return `/${workspaceSlug}/account/${metadata.id}`;
       case "WORKSPACE":
         return `/${workspaceSlug}/${ROUTES.Settings}/${ROUTES.Workspace}`;
+      case "CONVERSATION":
+        return `/${workspaceSlug}/${ROUTES.Conversations}/${metadata.id}`;
       case "SKILL":
         return `/${workspaceSlug}/${ROUTES.Skills}/${metadata.id}`;
       case "ROLE":

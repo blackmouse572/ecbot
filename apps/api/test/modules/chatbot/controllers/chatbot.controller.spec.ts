@@ -340,6 +340,110 @@ describe('ChatbotController', () => {
                 welcomeMessage: null,
             });
         });
+        // ChatbotService.update edits the loaded entity in place, so the
+        // mock does the same to catch a diff taken after the write.
+        const updateInPlace = (entity: any, fields: any) =>
+            Promise.resolve(Object.assign(entity, fields));
+
+        it('logs the old and new value of each changed field', async () => {
+            const chatbot = { ...mockChatbot, name: 'Old Bot' };
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockImplementation(updateInPlace);
+            mockChatbotService.mapList.mockReturnValue([chatbot]);
+
+            await controller.update(
+                mockWorkspace,
+                chatbot.id,
+                { name: 'New Bot' } as ChatbotUpdateRequestDto,
+                mockUser
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                mockUser,
+                mockWorkspace,
+                expect.objectContaining({
+                    metadata: expect.objectContaining({
+                        name: 'New Bot',
+                        old: { name: 'Old Bot' },
+                        new: { name: 'New Bot' },
+                    }),
+                })
+            );
+        });
+
+        // The edit form always sends the linked account ids back.
+        const withLinkedAccounts = (ids: string[]) => ({
+            ...mockChatbot,
+            accounts: {
+                loadItems: jest.fn().mockResolvedValue(ids.map(id => ({ id }))),
+            },
+        });
+
+        it('logs no activity when the form resends the same linked accounts', async () => {
+            const chatbot = withLinkedAccounts(['a1']);
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockResolvedValue(chatbot);
+            mockChatbotService.mapList.mockReturnValue([chatbot]);
+
+            await controller.update(
+                mockWorkspace,
+                chatbot.id,
+                { accounts: ['a1'] } as ChatbotUpdateRequestDto,
+                mockUser
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
+
+        it('logs the old and new linked account ids when they change', async () => {
+            const chatbot = withLinkedAccounts(['a1']);
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockResolvedValue(chatbot);
+            mockChatbotService.mapList.mockReturnValue([chatbot]);
+
+            await controller.update(
+                mockWorkspace,
+                chatbot.id,
+                { accounts: ['a1', 'a2'] } as ChatbotUpdateRequestDto,
+                mockUser
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                mockUser,
+                mockWorkspace,
+                expect.objectContaining({
+                    metadata: expect.objectContaining({
+                        old: { accounts: ['a1'] },
+                        new: { accounts: ['a1', 'a2'] },
+                    }),
+                })
+            );
+        });
+
+        it('logs no activity when the save changed nothing', async () => {
+            const chatbot = { ...mockChatbot, name: 'Same Bot' };
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockImplementation(updateInPlace);
+            mockChatbotService.mapList.mockReturnValue([chatbot]);
+            mockActivityService.createByUserWithWorkspace.mockClear();
+
+            await controller.update(
+                mockWorkspace,
+                chatbot.id,
+                { name: 'Same Bot' } as ChatbotUpdateRequestDto,
+                mockUser
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
     });
 
     describe('linkAccount', () => {
