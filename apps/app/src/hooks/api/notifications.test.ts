@@ -27,7 +27,14 @@ vi.mock("@repo/client", () => ({
   })),
 }));
 
-import { useNotifications, useUnreadNotificationCount } from "./notifications";
+import { notificationSharedControllerMarkAsReadV1 } from "@repo/client";
+
+import {
+  notificationQueryKey,
+  useMarkNotificationsAsRead,
+  useNotifications,
+  useUnreadNotificationCount,
+} from "./notifications";
 
 const wrapper = ({ children }: PropsWithChildren) => {
   const client = new QueryClient({
@@ -55,5 +62,35 @@ describe("useUnreadNotificationCount", () => {
     });
 
     await waitFor(() => expect(result.current.count).toBe(3));
+  });
+});
+
+describe("useMarkNotificationsAsRead", () => {
+  it("keeps going past a failed request and lowers the count per success", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const countKey = notificationQueryKey.list({ scope: "unread-count" });
+    client.setQueryData(countKey, { data: { count: 3 } });
+    vi.mocked(notificationSharedControllerMarkAsReadV1)
+      .mockResolvedValueOnce({} as never)
+      .mockRejectedValueOnce(new Error("429"))
+      .mockResolvedValueOnce({} as never);
+    const counts: number[] = [];
+    client.getQueryCache().subscribe(() => {
+      const count = (
+        client.getQueryData(countKey) as { data: { count: number } }
+      )?.data.count;
+      if (counts.at(-1) !== count) counts.push(count);
+    });
+
+    const { result } = renderHook(() => useMarkNotificationsAsRead(), {
+      wrapper: ({ children }: PropsWithChildren) =>
+        createElement(QueryClientProvider, { client }, children),
+    });
+    await result.current.mutateAsync(["a", "b", "c"]);
+
+    expect(notificationSharedControllerMarkAsReadV1).toHaveBeenCalledTimes(3);
+    expect(counts.slice(0, 2)).toEqual([2, 1]);
   });
 });

@@ -103,7 +103,9 @@ export function useMarkNotificationAsRead(
 
 /**
  * Marks several notifications read (the menu does this on open). One request
- * at a time: the API throttles bursts to 10 requests per half second.
+ * at a time: the API throttles bursts to 10 requests per half second. A
+ * failed one is skipped (it stays unread for next time) and the bell drops
+ * by one per success, without waiting for the whole batch.
  */
 export function useMarkNotificationsAsRead() {
   const queryClient = useQueryClient();
@@ -111,9 +113,18 @@ export function useMarkNotificationsAsRead() {
   return useMutation({
     mutationFn: async (ids: string[]) => {
       for (const id of ids) {
-        await notificationSharedControllerMarkAsReadV1({
-          path: { notification: id },
-        });
+        try {
+          await notificationSharedControllerMarkAsReadV1({
+            path: { notification: id },
+          });
+        } catch {
+          continue;
+        }
+        queryClient.setQueryData<{ data: { count: number } }>(
+          notificationQueryKey.list({ scope: "unread-count" }),
+          (old) =>
+            old && { ...old, data: { count: Math.max(0, old.data.count - 1) } },
+        );
       }
     },
     onSettled: () =>

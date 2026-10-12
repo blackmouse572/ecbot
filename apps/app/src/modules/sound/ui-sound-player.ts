@@ -21,7 +21,10 @@ export const primeUISound = () =>
     };
     window.addEventListener("pointerdown", unlock);
     window.addEventListener("keydown", unlock);
-  }));
+  })).catch(() => {
+    // The chunk failed to load (offline, new deploy): try again next time.
+    loading = undefined;
+  });
 
 /**
  * Browsers keep audio locked until the user interacts with the page. A
