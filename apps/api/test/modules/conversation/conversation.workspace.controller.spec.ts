@@ -635,6 +635,19 @@ describe('ConversationWorkspaceController', () => {
                 mockConversationService.markConversationRead
             ).toHaveBeenCalledWith(operatorId, conversationId);
         });
+
+        it('logs no activity, since reading is not a change', async () => {
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                mockConversation
+            );
+            const controllerLocal = buildController();
+
+            await controllerLocal.markRead(workspace, conversationId, user);
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
     });
 
     describe('updateStatus', () => {
@@ -834,6 +847,29 @@ describe('ConversationWorkspaceController', () => {
             expect(result).toEqual({ data: mappedMessage });
         });
 
+        it('names the customer in the activity, not the platform sender id', async () => {
+            mockConversationMessagingService.sendOperatorReply.mockResolvedValue(
+                sentMessage
+            );
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue({
+                ...mockConversation,
+                senderName: 'Lan Nguyen',
+            });
+            mockConversationMessagingService.buildUserNameMap.mockResolvedValue(
+                new Map()
+            );
+
+            await controller.sendMessage(workspace, 'conv-1', dto as any, user);
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(user, workspace, {
+                action: 'create',
+                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                metadata: { id: 'conv-1', name: 'Lan Nguyen' },
+            });
+        });
+
         it('propagates the 404 thrown for a conversation in another workspace', async () => {
             mockConversationMessagingService.sendOperatorReply.mockRejectedValue(
                 new NotFoundException({
@@ -885,6 +921,32 @@ describe('ConversationWorkspaceController', () => {
                 operatorUserId: operatorId,
             });
             expect(result).toEqual({ data: reactedMessage });
+        });
+
+        it('names the customer in the activity, not the conversation id', async () => {
+            mockConversationMessagingService.reactToMessage.mockResolvedValue(
+                reactedMessage
+            );
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue({
+                ...mockConversation,
+                senderName: 'Lan Nguyen',
+            });
+
+            await controller.reactToMessage(
+                workspace,
+                'conv-1',
+                'msg-1',
+                dto as any,
+                user
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(user, workspace, {
+                action: 'update',
+                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                metadata: { id: 'conv-1', name: 'Lan Nguyen' },
+            });
         });
 
         it('propagates the 404 thrown for a conversation in another workspace', async () => {

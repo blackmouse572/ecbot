@@ -13,6 +13,8 @@ export const ACTIVITY_SUBJECT_MESSAGE_MAP: Partial<
   "CHATBOT:update": "activities.chatbot.update",
   "CHATBOT:delete": "activities.chatbot.delete",
   "CHATBOT:clone_chatbot": "activities.chatbot.clone",
+  "CONVERSATION:create": "activities.conversation.create",
+  "CONVERSATION:update": "activities.conversation.update",
   "WORKSPACE:create": "activities.workspace.create",
   "WORKSPACE:update": "activities.workspace.update",
   "SKILL:create": "activities.skill.create",
@@ -55,3 +57,7 @@ export const ACTIVITY_MESSAGE_MAP: Partial<Record<ActivityAction, ParseKeys>> =
     link_account_chatbot: "activities.chatbot.linkAccount",
     unlink_account_chatbot: "activities.chatbot.unlinkAccount",
   };
+
+// Older conversation activities stored the platform sender id (a UUID or a
+// long number) as the name; it means nothing to a reader.
+export const PLATFORM_ID_PATTERN = /^([0-9a-f]{8}-[0-9a-f-]{27}|\d{6,})$/i;

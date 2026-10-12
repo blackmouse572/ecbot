@@ -340,6 +340,57 @@ describe('ChatbotController', () => {
                 welcomeMessage: null,
             });
         });
+        // ChatbotService.update edits the loaded entity in place, so the
+        // mock does the same to catch a diff taken after the write.
+        const updateInPlace = (entity: any, fields: any) =>
+            Promise.resolve(Object.assign(entity, fields));
+
+        it('logs the old and new value of each changed field', async () => {
+            const chatbot = { ...mockChatbot, name: 'Old Bot' };
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockImplementation(updateInPlace);
+            mockChatbotService.mapList.mockReturnValue([chatbot]);
+
+            await controller.update(
+                mockWorkspace,
+                chatbot.id,
+                { name: 'New Bot' } as ChatbotUpdateRequestDto,
+                mockUser
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                mockUser,
+                mockWorkspace,
+                expect.objectContaining({
+                    metadata: expect.objectContaining({
+                        name: 'New Bot',
+                        old: { name: 'Old Bot' },
+                        new: { name: 'New Bot' },
+                    }),
+                })
+            );
+        });
+
+        it('logs no activity when the save changed nothing', async () => {
+            const chatbot = { ...mockChatbot, name: 'Same Bot' };
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.update.mockImplementation(updateInPlace);
+            mockChatbotService.mapList.mockReturnValue([chatbot]);
+            mockActivityService.createByUserWithWorkspace.mockClear();
+
+            await controller.update(
+                mockWorkspace,
+                chatbot.id,
+                { name: 'Same Bot' } as ChatbotUpdateRequestDto,
+                mockUser
+            );
+
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
     });
 
     describe('linkAccount', () => {
