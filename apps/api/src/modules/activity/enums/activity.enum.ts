@@ -35,4 +35,7 @@ export enum ENUM_ACTIVITY_ACTION {
     VIEW = 'view',
     EXPORT = 'export',
     ERASE = 'erase',
+    SUBSCRIPTION_CHANGE_PLAN = 'subscription_change_plan',
+    SUBSCRIPTION_CANCEL = 'subscription_cancel',
+    SUBSCRIPTION_RESUME = 'subscription_resume',
 }
