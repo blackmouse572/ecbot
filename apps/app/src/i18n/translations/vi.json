@@ -39,7 +39,6 @@
       "inactive": "Tắt"
     },
     "list": {
-      "loading": "Đang tải…",
       "noRecordsMessage": "Chưa có skill. Tạo mới hoặc sao chép từ mẫu.",
       "noTemplates": "Chưa có mẫu nào.",
       "filters": {
@@ -2050,7 +2049,8 @@
       "success": "Đã cập nhật {{count}} mục.",
       "partial": "Đã cập nhật {{success}} mục, {{failed}} mục thất bại.",
       "error": "Không thể cập nhật {{count}} mục."
-    }
+    },
+    "loading": "Đang tải..."
   },
   "actions": {
     "edit": "Chỉnh sửa",
@@ -2687,7 +2687,6 @@
       }
     },
     "list": {
-      "loading": "Đang tải công cụ…",
       "noRecordsMessage": "Không tìm thấy công cụ nào. Hãy thử điều chỉnh tìm kiếm hoặc bộ lọc.",
       "columns": {
         "kind": "Loại",

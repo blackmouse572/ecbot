@@ -16,6 +16,7 @@ import {
 } from "@repo/ui/layout";
 import { useCallback } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { LogoBoxSpinner } from "@repo/ui/common-components";
 // import { SearchProvider } from "../../../providers/search-provider";
 const ignorePaths = [ROUTES.Onboard, ROUTES.OnboardJoin] as string[];
 export const ProtectedRoute = () => {
@@ -35,7 +36,7 @@ export const ProtectedRoute = () => {
   }
 
   if (isLoading) {
-    return null;
+    return <LogoBoxSpinner />;
   }
 
   // if (

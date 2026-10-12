@@ -4,15 +4,12 @@ import { Heading } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { WorkspaceEditForm } from "./components/workspace-edit-form";
+import { FormSkeleton } from "@repo/ui/common-components";
 
 export const WorkspaceEdit = () => {
   const { t } = useTranslation();
   const { state } = useLocation();
   const { workspace, isLoading, isError, error } = useWorkspace();
-
-  if (isLoading) {
-    return null;
-  }
 
   if (isError) {
     throw error;
@@ -28,7 +25,13 @@ export const WorkspaceEdit = () => {
           {t("workspace.edit.description")}
         </RouteDrawer.Description>
       </RouteDrawer.Header>
-      <WorkspaceEditForm workspace={workspace!} />
+      {isLoading || !workspace ? (
+        <RouteDrawer.Body className="p-6">
+          <FormSkeleton label={t("general.loading")} />
+        </RouteDrawer.Body>
+      ) : (
+        <WorkspaceEditForm workspace={workspace} />
+      )}
     </RouteDrawer>
   );
 };

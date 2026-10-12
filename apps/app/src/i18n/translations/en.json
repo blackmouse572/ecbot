@@ -39,7 +39,6 @@
       "inactive": "Inactive"
     },
     "list": {
-      "loading": "Loading…",
       "noRecordsMessage": "No skills yet. Create one or clone a template.",
       "noTemplates": "No templates available.",
       "filters": {
@@ -2006,7 +2005,8 @@
       "success": "{{count}} item(s) updated.",
       "partial": "{{success}} item(s) updated, {{failed}} failed.",
       "error": "Could not update {{count}} item(s)."
-    }
+    },
+    "loading": "Loading..."
   },
   "fields": {
     "name": "Name",
@@ -2639,7 +2639,6 @@
       }
     },
     "list": {
-      "loading": "Loading tools…",
       "noRecordsMessage": "No tools found. Try adjusting your search or filters.",
       "columns": {
         "kind": "Kind",

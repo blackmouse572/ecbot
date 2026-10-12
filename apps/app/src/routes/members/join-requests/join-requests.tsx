@@ -5,6 +5,7 @@ import {
 import { Button, Container, Text, toast } from "@medusajs/ui";
 import { SingleColumnPage } from "@repo/ui/layout";
 import { useTranslation } from "react-i18next";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 export const JoinRequests = () => {
   const { t } = useTranslation();
@@ -24,7 +25,9 @@ export const JoinRequests = () => {
         <div className="flex items-center justify-between px-6 py-4">
           <Text weight="plus">{t("members.joinRequests.title")}</Text>
         </div>
-        {isLoading ? null : joinRequests && joinRequests.length > 0 ? (
+        {isLoading ? (
+          <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
+        ) : joinRequests && joinRequests.length > 0 ? (
           joinRequests.map((request) => (
             <div
               key={request.id}

@@ -18,6 +18,7 @@ import {
   ResizablePanelGroup,
 } from "@repo/ui/components";
 import { CustomerSidePanel } from "../customer-side-panel";
+import { ConversationDetailSkeleton } from "./conversation-detail-skeleton";
 import { ConversationHeader } from "./conversation-header";
 import { MessageComposer } from "./message-composer";
 import { MessageList } from "./message-list";
@@ -95,11 +96,7 @@ export function ConversationDetail() {
   if (!id) return null;
 
   if (isLoadingConversation && !conversation) {
-    return (
-      <div className="text-ui-fg-subtle flex flex-1 items-center justify-center">
-        {t("conversations.detail.loading")}
-      </div>
-    );
+    return <ConversationDetailSkeleton />;
   }
 
   if (!conversation) {

@@ -1,4 +1,4 @@
-import { LogoBoxSpinner, Skeleton } from "@repo/ui/common-components";
+import { LogoBoxSpinner } from "@repo/ui/common-components";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -29,19 +29,5 @@ export function AccountCallback() {
     return () => clearTimeout(t);
   }, [location.search]);
 
-  return (
-    <div className="flex flex-col items-center justify-center h-screen gap-3 container mx-auto">
-      <div className="py-8">
-        <LogoBoxSpinner />
-      </div>
-      <Skeleton className="w-full h-16" />
-      <Skeleton className="w-full h-16" />
-      <div className="flex items-center justify-center gap-4">
-        <Skeleton className="w-full h-16" />
-        <Skeleton className="w-full h-16" />
-      </div>
-      <Skeleton className="w-full h-16" />
-      <Skeleton className="w-full h-16" />
-    </div>
-  );
+  return <LogoBoxSpinner />;
 }

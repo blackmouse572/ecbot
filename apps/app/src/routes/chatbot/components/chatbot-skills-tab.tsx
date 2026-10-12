@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatbotSkillAddDrawer } from "./chatbot-skill-add-drawer";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 type Props = {
   chatbotId: string;
@@ -84,11 +85,7 @@ export function ChatbotSkillsTab({ chatbotId, workspace }: Props) {
           </Text>
         </div>
       ) : isLoading ? (
-        <div className="px-6 py-10 text-center">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("skills.list.loading")}
-          </Text>
-        </div>
+        <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
       ) : chatbotSkills.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <Text size="small" className="text-ui-fg-subtle">

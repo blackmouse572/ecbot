@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
 import { skillFormSchema, type SkillFormData } from "../schemas";
+import { FormSkeleton } from "@repo/ui/common-components";
 
 const SkillEditInner = () => {
   const { t } = useTranslation();
@@ -17,9 +18,13 @@ const SkillEditInner = () => {
   const { workspaceSlug } = useWorkspaceParams();
   const { skillId } = useParams<{ skillId: string }>();
 
-  const { skill, isLoading } = useGetSkill(workspaceSlug, skillId ?? "", {
-    enabled: !!skillId,
-  });
+  const { skill, isLoading, isError, error } = useGetSkill(
+    workspaceSlug,
+    skillId ?? "",
+    {
+      enabled: !!skillId,
+    },
+  );
   const { updateSkill, isPending } = useUpdateSkill(
     workspaceSlug,
     skillId ?? "",
@@ -59,6 +64,10 @@ const SkillEditInner = () => {
     }
   });
 
+  if (isError) {
+    throw error;
+  }
+
   if (isLoading || !skill) {
     return (
       <>
@@ -71,9 +80,7 @@ const SkillEditInner = () => {
           </RouteDrawer.Description>
         </RouteDrawer.Header>
         <RouteDrawer.Body className="p-6">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("skills.list.loading")}
-          </Text>
+          <FormSkeleton label={t("general.loading")} fieldCount={4} />
         </RouteDrawer.Body>
       </>
     );

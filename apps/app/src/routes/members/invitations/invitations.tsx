@@ -15,6 +15,7 @@ import {
 } from "@medusajs/ui";
 import { SingleColumnPage } from "@repo/ui/layout";
 import { useTranslation } from "react-i18next";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 export const Invitations = () => {
   const { t } = useTranslation();
@@ -48,7 +49,9 @@ export const Invitations = () => {
         <div className="flex items-center justify-between px-6 py-4">
           <Text weight="plus">{t("members.invitations.title")}</Text>
         </div>
-        {isLoading ? null : invitations && invitations.length > 0 ? (
+        {isLoading ? (
+          <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
+        ) : invitations && invitations.length > 0 ? (
           invitations.map((invitation) => (
             <div
               key={invitation.id}
