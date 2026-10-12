@@ -16,6 +16,7 @@ jobs:
     if: github.event.workflow_run.event == 'pull_request'
     steps:
       - name: Download scan report artifact
+        id: download
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
@@ -28,6 +29,12 @@ jobs:
               (artifact) => artifact.name === "secure-scan-report"
             );
             if (!match) {
+              // The scan job is skipped when a PR changes no dependency files.
+              if (context.payload.workflow_run.conclusion === "success") {
+                core.info("No scan report: the scan was skipped for this PR.");
+                core.setOutput("skipped", "true");
+                return;
+              }
               core.setFailed("secure-scan-report artifact not found");
               return;
             }
@@ -45,9 +52,11 @@ jobs:
 
       # -j junks paths: a fork controls the archive, so nothing may escape the dir.
       - name: Unzip scan report
+        if: steps.download.outputs.skipped != 'true'
         run: unzip -o -j secure-scan-report.zip -d secure-scan-report
 
       - name: Upsert PR comment
+        if: steps.download.outputs.skipped != 'true'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
