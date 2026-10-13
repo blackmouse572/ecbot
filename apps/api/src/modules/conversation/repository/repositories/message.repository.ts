@@ -176,6 +176,26 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         } as FilterQuery<MessageEntity>;
     }
 
+    /** `filter` narrowed to rows up to and including `untilId`. */
+    async untilFilter(
+        filter: FilterQuery<MessageEntity>,
+        untilId: string
+    ): Promise<FilterQuery<MessageEntity> | null> {
+        const until = await this.findOne({ id: untilId } as any);
+        if (!until) return null;
+        return {
+            $and: [
+                filter,
+                {
+                    $or: [
+                        { dateSent: { $lt: until.dateSent } },
+                        { dateSent: until.dateSent, id: { $lte: until.id } },
+                    ],
+                },
+            ],
+        } as FilterQuery<MessageEntity>;
+    }
+
     /** The newest `limit` rows matching `filter`, oldest→newest. */
     async findNewest(
         filter: FilterQuery<MessageEntity>,

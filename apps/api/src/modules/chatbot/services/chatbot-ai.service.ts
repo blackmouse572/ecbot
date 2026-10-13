@@ -9,7 +9,10 @@ import {
     parseWireTokenUsage,
     TokenUsageDelta,
 } from '../interfaces/token-usage-wire.interface';
-import { AI_STREAM_IDLE_TIMEOUT_MS } from '../constants/chatbot-ai.constant';
+import {
+    AI_STREAM_IDLE_TIMEOUT_MS,
+    CONVERSATION_MEMORY_HTTP_TIMEOUT_MS,
+} from '../constants/chatbot-ai.constant';
 
 export interface AIChatHistoryMessage {
     role: 'user' | 'assistant';
@@ -27,6 +30,8 @@ interface AIChatStreamParams {
     conversation_id?: string;
     customer_id?: string;
     contact_point_id?: string;
+    /** The messages before `history`, summarized. */
+    summary?: string;
     history?: AIChatHistoryMessage[];
     trigger_message_id?: string;
 }
@@ -42,6 +47,20 @@ export interface AIDescribeImagesParams {
 export interface AIDescribedImages {
     images: { id: string; description: string | null }[];
     usage?: TokenUsageDelta;
+}
+
+/** Messages that left a conversation's history window, to fold into its
+ *  summary. */
+export interface AISummarizeParams {
+    previous_summary?: string;
+    messages: { role: 'customer' | 'bot' | 'operator'; text: string }[];
+}
+
+/** The new summary ("" when apps/ai could not make one) and what it cost. */
+export interface AISummary {
+    summary: string;
+    usage?: TokenUsageDelta;
+    model?: string;
 }
 
 @Injectable()
@@ -82,6 +101,21 @@ export class ChatbotAIService {
         }>(`${this.aiBackendUrl}/api/chat/describe`, params, { headers });
         const { images, usage } = response.data.data;
         return { images, usage: parseWireTokenUsage(usage) ?? undefined };
+    }
+
+    async summarizeConversation(params: AISummarizeParams): Promise<AISummary> {
+        const response = await this.httpService.axiosRef.post<{
+            data: { summary: string; usage?: unknown; model?: string };
+        }>(`${this.aiBackendUrl}/api/chat/summarize`, params, {
+            headers: await this.buildHeaders(),
+            timeout: CONVERSATION_MEMORY_HTTP_TIMEOUT_MS,
+        });
+        const { summary, usage, model } = response.data.data;
+        return {
+            summary,
+            usage: parseWireTokenUsage(usage) ?? undefined,
+            model,
+        };
     }
 
     async deleteSession(sessionId: string): Promise<void> {

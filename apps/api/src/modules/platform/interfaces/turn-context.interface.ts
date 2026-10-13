@@ -4,6 +4,8 @@ import { MessageEntity } from '@app/modules/conversation/repository/entities/mes
 
 /** What apps/ai gets for one Turn. */
 export interface ITurnContext {
+    /** The messages before `history`, summarized (see ConversationMemoryService). */
+    summary?: string;
     history: AIChatHistoryMessage[];
     /** The burst's texts, then one note per burst image: what apps/ai saw in
      *  it, or that it could not be viewed. */
@@ -23,6 +25,8 @@ export interface ITurnBurst {
 
 /** What the bot remembers of a conversation for one Turn. */
 export interface IMemoryWindow {
+    /** The messages before `rows`, summarized; none until the first step. */
+    summary?: string;
     /** The newest messages, oldest first. */
     rows: MessageEntity[];
 }

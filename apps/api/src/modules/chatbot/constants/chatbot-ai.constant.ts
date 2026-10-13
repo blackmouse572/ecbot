@@ -3,3 +3,6 @@
 // 60s default aborted replies on a cold start or a slow tool roundtrip. apps/ai
 // sends a keepalive every 15s, so this only fires on a wedged connection.
 export const AI_STREAM_IDLE_TIMEOUT_MS = 2 * 60 * 1000;
+
+/** A conversation summary is one short LLM call. */
+export const CONVERSATION_MEMORY_HTTP_TIMEOUT_MS = 60 * 1000;

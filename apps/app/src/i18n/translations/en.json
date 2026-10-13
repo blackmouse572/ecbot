@@ -3166,6 +3166,7 @@
       "column": "Platform",
       "preview": "Preview (test chat)",
       "TAG_CLASSIFIER": "Customer tagging",
+      "CONVERSATION_MEMORY": "Conversation memory",
       "AGENT_BUILDER": "Agent builder",
       "KNOWLEDGE_INGEST": "Knowledge processing"
     },

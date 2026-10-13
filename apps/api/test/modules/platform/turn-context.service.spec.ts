@@ -39,18 +39,19 @@ function contextOver(rows: object[], describeImages?: jest.Mock) {
         } as any,
         ai as any,
         {
-            window: jest.fn(async () => ({ rows })),
+            window: jest.fn(async () => ({ summary: 'earlier', rows })),
         } as any
     );
     return { service, updateAttachments, ai };
 }
 
 describe('TurnContextService', () => {
-    it('sends the memory window before the burst as history', async () => {
+    it('sends the memory window before the burst as history, with the summary', async () => {
         const { service } = contextOver([
             { id: 'm-1', text: 'hi', direction: 'INBOUND' },
         ]);
         const context = await service.build('c', { texts: [] }, 'bot');
+        expect(context.summary).toBe('earlier');
         expect(context.history).toEqual([{ role: 'user', content: 'hi' }]);
     });
 

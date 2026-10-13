@@ -63,4 +63,12 @@ export class ConversationEntity extends DatabaseEntityBase {
 
     @Property({ type: 'timestamptz', nullable: true })
     senderProfileFetchedAt?: Date;
+
+    /** What the bot remembers of the messages before its history window. */
+    @Property({ type: 'text', nullable: true })
+    memorySummary?: string;
+
+    /** The last message `memorySummary` covers; later ones are the window. */
+    @Property({ type: 'uuid', nullable: true })
+    memorySummaryUntilId?: string;
 }

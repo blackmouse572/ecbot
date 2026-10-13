@@ -32,7 +32,8 @@ interface IBurstImage {
  * agent is stateless, so context comes from the DB each Turn). The burst is
  * the rows of the messages the Turn answers, found by id (a reply to an
  * earlier burst can sit between them); what came before is history, as
- * far back as the memory window reaches. Burst images not yet described
+ * far back as the memory window reaches, and what came before that is the
+ * conversation summary. Burst images not yet described
  * are described once, in one apps/ai call, and kept on their image so later
  * Turns remember them.
  */
@@ -55,7 +56,7 @@ export class TurnContextService {
         chatbotId: string
     ): Promise<ITurnContext> {
         const { texts } = burst;
-        const { rows: recent } = await this.memory.window(
+        const { summary, rows: recent } = await this.memory.window(
             conversationId,
             texts.length
         );
@@ -91,6 +92,7 @@ export class TurnContextService {
         );
 
         return {
+            summary,
             history,
             message: [texts.join('\n'), ...notes].filter(Boolean).join('\n'),
             usage,

@@ -190,6 +190,7 @@ export class ReplyGenerationService {
             // The agent is stateless: history, the burst's message and its
             // images come from the DB each Turn.
             const {
+                summary,
                 history,
                 message,
                 usage: describeUsage,
@@ -217,6 +218,7 @@ export class ReplyGenerationService {
                         conversation_id: conversationId,
                         customer_id: customerId,
                         contact_point_id: contactPointId,
+                        summary,
                         history,
                         trigger_message_id: triggerMessage?.id,
                     },
