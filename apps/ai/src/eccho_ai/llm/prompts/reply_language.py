@@ -11,22 +11,24 @@ conversation keeps its language.
 from __future__ import annotations
 
 import re
+import unicodedata
 
 REPLY_LANGUAGE_NOTE = (
     "<reply_language>The customer is not writing in Vietnamese. Write your whole "
-    "reply in the language of their message. Your address style (em, anh, chị, "
-    "bạn) is only for Vietnamese replies: here, use plain I and you, and no "
-    "Vietnamese words such as ạ or nhé.</reply_language>"
+    "reply in the same language as their message: French if they wrote French, "
+    "English if they wrote English, and so on. Your address style (em, anh, chị, "
+    "bạn) is only for Vietnamese replies: here, use that language's plain forms, "
+    "and no Vietnamese words such as ạ or nhé.</reply_language>"
 )
 
-# Any Vietnamese vowel mark or đ: accented text is treated as Vietnamese.
+# Letters only Vietnamese uses (đ, ă, ơ, ư, dot-below and hook-above vowels).
+# Shared accents like é, à or ô also appear in French, so they do not count.
 _VIETNAMESE_LETTERS = re.compile(
-    "[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]",
-    re.IGNORECASE,
+    "[ạảấầẩẫậắằẳẵặăẹẻẽếềểễệỉịĩọỏốồổỗộơớờởỡợụủũưứừửữựỳỵỷỹđ]", re.IGNORECASE
 )
-# Common words of Vietnamese typed without accents ("shop oi con hang ko").
-_UNACCENTED_VIETNAMESE = frozenset(
-    [
+# Common Vietnamese words, compared without accents ("shop oi con hang ko").
+_VIETNAMESE_WORDS = frozenset(
+    {
         "khong",
         "ko",
         "k",
@@ -55,7 +57,6 @@ _UNACCENTED_VIETNAMESE = frozenset(
         "lam",
         "voi",
         "cua",
-        "toi",
         "em",
         "anh",
         "chi",
@@ -63,7 +64,8 @@ _UNACCENTED_VIETNAMESE = frozenset(
         "ak",
         "sp",
         "ib",
-    ]
+        "co",
+    }
 )
 _MIN_WORDS = 3
 
@@ -71,7 +73,10 @@ _MIN_WORDS = 3
 def reply_language_note(message: str) -> str:
     if _VIETNAMESE_LETTERS.search(message):
         return ""
-    words = re.findall(r"[a-z]+", message.lower())
-    if len(words) < _MIN_WORDS or _UNACCENTED_VIETNAMESE.intersection(words):
+    plain = (
+        unicodedata.normalize("NFD", message.lower()).encode("ascii", "ignore").decode()
+    )
+    words = re.findall(r"[a-z]+", plain)
+    if len(words) < _MIN_WORDS or _VIETNAMESE_WORDS.intersection(words):
         return ""
     return REPLY_LANGUAGE_NOTE

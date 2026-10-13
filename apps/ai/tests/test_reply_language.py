@@ -18,6 +18,9 @@ from eccho_ai.modules.chat.services import get_agent_input
         "Hi, do you have a table for 4 tonight at 7pm?",
         "How much is the pho?",
         "Sorry I don't speak Vietnamese. Can I order delivery to District 3?",
+        "Bonjour, avez-vous une table pour 4 personnes ce soir à 19h ?",
+        "Combien coûte le pho ?",
+        "Très bien, et toi ?",
     ],
 )
 def test_notes_a_message_clearly_not_in_vietnamese(message):
@@ -32,6 +35,7 @@ def test_notes_a_message_clearly_not_in_vietnamese(message):
         "Cho mình xin menu với price list nha",
         "shop oi con hang ko",
         "gia bao nhieu vay",
+        "Có giao hàng tới quận 3 không",
         "ok",
         "hello there",
         "👍",
