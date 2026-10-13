@@ -2045,7 +2045,8 @@
     "next": "Next",
     "skip": "Skip",
     "preview": "Preview",
-    "createNew": "Create new"
+    "createNew": "Create new",
+    "unlink": "Unlink"
   },
   "general": {
     "notSet": "Not set",
@@ -2274,6 +2275,23 @@
       "process": "Process",
       "reprocess": "Re-process",
       "processQueued": "Queued for processing"
+    },
+    "link": {
+      "title": "Add Knowledge Item"
+    },
+    "selectItem": "Select Item",
+    "error": {
+      "selectItem": "Please select an item",
+      "linkFailed": "Failed to link knowledge item",
+      "unlinkFailed": "Failed to unlink knowledge item"
+    },
+    "success": {
+      "linkedItem": "Knowledge item linked successfully",
+      "unlinked": "Knowledge item unlinked successfully"
+    },
+    "unlink": {
+      "title": "Unlink Item",
+      "description": "Are you sure you want to unlink this knowledge item? This action cannot be undone."
     }
   },
   "knowledge_item": {

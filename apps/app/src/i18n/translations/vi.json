@@ -2157,7 +2157,8 @@
     "next": "Sau",
     "skip": "Bỏ qua",
     "preview": "Xem trước",
-    "createNew": "Tạo mới"
+    "createNew": "Tạo mới",
+    "unlink": "Bỏ liên kết"
   },
   "fields": {
     "name": "Tên",
@@ -2323,6 +2324,23 @@
       "process": "Xử lý",
       "reprocess": "Xử lý lại",
       "processQueued": "Đã đưa vào hàng đợi xử lý"
+    },
+    "link": {
+      "title": "Thêm mục kiến thức"
+    },
+    "selectItem": "Chọn mục",
+    "error": {
+      "selectItem": "Hãy chọn một mục",
+      "linkFailed": "Không liên kết được mục kiến thức",
+      "unlinkFailed": "Không bỏ liên kết được mục kiến thức"
+    },
+    "success": {
+      "linkedItem": "Đã liên kết mục kiến thức",
+      "unlinked": "Đã bỏ liên kết mục kiến thức"
+    },
+    "unlink": {
+      "title": "Bỏ liên kết mục",
+      "description": "Bạn có chắc muốn bỏ liên kết mục kiến thức này? Không thể hoàn tác thao tác này."
     }
   },
   "knowledge_item": {
