@@ -8,7 +8,11 @@
     },
     "schedule": {
         "error": {
-            "tooManyPending": "Cuộc hội thoại này đã có quá nhiều follow-up đang chờ."
+            "tooManyPending": "Cuộc hội thoại này đã có quá nhiều follow-up đang chờ.",
+            "atAndDelay": "Chỉ gửi một trong hai: delayMinutes hoặc at.",
+            "atInvalid": "Thời gian follow-up không phải ngày giờ hợp lệ.",
+            "atNotInFuture": "Thời gian follow-up đã qua hoặc còn chưa tới một phút. Hãy chọn thời gian muộn hơn.",
+            "atTooFar": "Thời gian follow-up cách hơn 30 ngày."
         }
     },
     "cancel": {

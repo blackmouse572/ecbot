@@ -1,10 +1,14 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+    BadRequestException,
+    UnprocessableEntityException,
+} from '@nestjs/common';
 import {
     ENUM_FOLLOWUP_PROCESS,
     ENUM_FOLLOWUP_STATUS,
 } from '@app/modules/platform/constants/followup.constant';
 import { IFollowupJob } from '@app/modules/platform/interfaces/followup.interface';
 import { FollowupService } from '@app/modules/platform/services/followup.service';
+import { ChatbotTimezoneService } from '@app/modules/chatbot/services/chatbot-timezone.service';
 import { followupRow, makeFollowupRepository } from './followup.fixtures';
 
 const jobData: IFollowupJob = {
@@ -18,7 +22,17 @@ const jobData: IFollowupJob = {
     reason: 'payment_check',
 };
 
-function buildService(rows: any[] = []) {
+function buildService(rows: any[] = [], agentTimezone?: string) {
+    const conversationService = {
+        findOneById: jest.fn().mockResolvedValue({
+            id: 'conv-1',
+            chatbot: { id: 'cb-1', timezone: agentTimezone },
+        }),
+    };
+    const moduleRef = { get: jest.fn().mockReturnValue(conversationService) };
+    const timezoneService = new ChatbotTimezoneService({
+        get: () => 'Asia/Ho_Chi_Minh',
+    } as any);
     const cloudTasksClient = {
         enqueue: jest.fn().mockResolvedValue(undefined),
         deleteTask: jest.fn().mockResolvedValue(undefined),
@@ -29,17 +43,19 @@ function buildService(rows: any[] = []) {
         service: new FollowupService(
             cloudTasksClient as any,
             followupRepository as any,
-            {} as any,
-            {} as any,
-            {} as any,
-            {} as any,
-            {} as any,
-            {} as any,
-            {} as any,
-            {} as any
+            {} as any, // accountService
+            {} as any, // chatbotAIService
+            {} as any, // messageRepository
+            {} as any, // registry
+            {} as any, // manifestBuilder
+            {} as any, // streaming
+            moduleRef as any,
+            {} as any, // turnContext
+            timezoneService
         ),
         cloudTasksClient,
         followupRepository,
+        conversationService,
     };
 }
 
@@ -50,7 +66,7 @@ describe('FollowupService', () => {
         const { service, cloudTasksClient, followupRepository } =
             buildService();
 
-        const id = await service.schedule(jobData, 30);
+        const id = await service.schedule(jobData, { delayMinutes: 30 });
 
         expect(followupRepository.rows).toEqual([
             expect.objectContaining({
@@ -75,7 +91,10 @@ describe('FollowupService', () => {
         const { service, cloudTasksClient, followupRepository } =
             buildService();
 
-        await service.schedule({ ...jobData, triggerMessageId: 'msg-9' }, 30);
+        await service.schedule(
+            { ...jobData, triggerMessageId: 'msg-9' },
+            { delayMinutes: 30 }
+        );
 
         expect(followupRepository.rows[0].triggerMessageId).toBe('msg-9');
         expect(cloudTasksClient.enqueue).toHaveBeenCalledWith(
@@ -92,7 +111,9 @@ describe('FollowupService', () => {
         const error = new Error('cloud tasks down');
         cloudTasksClient.enqueue.mockRejectedValue(error);
 
-        await expect(service.schedule(jobData, 30)).rejects.toBe(error);
+        await expect(
+            service.schedule(jobData, { delayMinutes: 30 })
+        ).rejects.toBe(error);
         expect(followupRepository.rows).toEqual([]);
     });
 
@@ -103,7 +124,7 @@ describe('FollowupService', () => {
         const { service, cloudTasksClient, followupRepository } =
             buildService(rows);
 
-        const promise = service.schedule(jobData, 30);
+        const promise = service.schedule(jobData, { delayMinutes: 30 });
 
         await expect(promise).rejects.toBeInstanceOf(BadRequestException);
         await expect(promise).rejects.toThrow(
@@ -119,9 +140,9 @@ describe('FollowupService', () => {
         );
         const { service, cloudTasksClient } = buildService(rows);
 
-        await expect(service.schedule(jobData, 30)).resolves.toEqual(
-            expect.any(String)
-        );
+        await expect(
+            service.schedule(jobData, { delayMinutes: 30 })
+        ).resolves.toEqual(expect.any(String));
         expect(cloudTasksClient.enqueue).toHaveBeenCalled();
     });
 
@@ -137,9 +158,9 @@ describe('FollowupService', () => {
         ];
         const { service, cloudTasksClient } = buildService(rows);
 
-        await expect(service.schedule(jobData, 30)).rejects.toBeInstanceOf(
-            BadRequestException
-        );
+        await expect(
+            service.schedule(jobData, { delayMinutes: 30 })
+        ).rejects.toBeInstanceOf(BadRequestException);
         expect(cloudTasksClient.enqueue).not.toHaveBeenCalled();
     });
 
@@ -152,9 +173,9 @@ describe('FollowupService', () => {
         );
         const { service, cloudTasksClient } = buildService(rows);
 
-        await expect(service.schedule(jobData, 30)).resolves.toEqual(
-            expect.any(String)
-        );
+        await expect(
+            service.schedule(jobData, { delayMinutes: 30 })
+        ).resolves.toEqual(expect.any(String));
         expect(cloudTasksClient.enqueue).toHaveBeenCalled();
     });
 
@@ -280,7 +301,8 @@ describe('FollowupService', () => {
                 }),
             } as any,
             {} as any,
-            turnContext as any
+            turnContext as any,
+            {} as any // timezoneService
         );
         jest.spyOn(service as any, 'recordOutcome').mockResolvedValue(
             undefined
@@ -301,5 +323,112 @@ describe('FollowupService', () => {
             expect.any(String),
             expect.objectContaining({ attachments: image })
         );
+    });
+    describe('schedule() at a wall-clock time', () => {
+        // 2026-10-13 23:50 in Asia/Ho_Chi_Minh (UTC+7).
+        const askedAt = Date.parse('2026-10-13T16:50:00Z');
+
+        beforeEach(() => jest.spyOn(Date, 'now').mockReturnValue(askedAt));
+
+        const scheduledAtOf = (followupRepository: any) =>
+            (followupRepository.createScheduled.mock.calls[0][0] as any)
+                .scheduledAt as Date;
+
+        it('resolves "tomorrow 09:00" in the agent timezone across midnight', async () => {
+            const { service, followupRepository, cloudTasksClient } =
+                buildService();
+
+            await service.schedule(jobData, { at: '2026-10-14T09:00' });
+
+            const scheduledAt = scheduledAtOf(followupRepository);
+            expect(scheduledAt.toISOString()).toBe('2026-10-14T02:00:00.000Z');
+            expect(scheduledAt.getTime() - askedAt).toBe(
+                (9 * 60 + 10) * 60_000
+            );
+            expect(cloudTasksClient.enqueue).toHaveBeenCalledWith(
+                'followup',
+                ENUM_FOLLOWUP_PROCESS.FIRE,
+                expect.anything(),
+                expect.objectContaining({ scheduleTime: scheduledAt })
+            );
+        });
+
+        it("uses the agent's own timezone over APP_TIMEZONE", async () => {
+            const { service, followupRepository } = buildService(
+                [],
+                'Asia/Tokyo'
+            );
+
+            await service.schedule(jobData, { at: '2026-10-14T09:00' });
+
+            expect(scheduledAtOf(followupRepository).toISOString()).toBe(
+                '2026-10-14T00:00:00.000Z'
+            );
+        });
+
+        it('rejects a time that has already passed and creates no row', async () => {
+            const { service, followupRepository, cloudTasksClient } =
+                buildService();
+
+            // 09:00 today was ~15 hours ago in Vietnam.
+            const promise = service.schedule(jobData, {
+                at: '2026-10-13T09:00',
+            });
+
+            await expect(promise).rejects.toBeInstanceOf(
+                UnprocessableEntityException
+            );
+            await expect(promise).rejects.toThrow(
+                'followup.schedule.error.atNotInFuture'
+            );
+            expect(followupRepository.rows).toEqual([]);
+            expect(cloudTasksClient.enqueue).not.toHaveBeenCalled();
+        });
+
+        it('rejects a time less than a minute ahead', async () => {
+            const { service } = buildService();
+
+            await expect(
+                service.schedule(jobData, { at: '2026-10-13T23:50' })
+            ).rejects.toThrow('followup.schedule.error.atNotInFuture');
+        });
+
+        it('rejects a time more than 30 days ahead', async () => {
+            const { service } = buildService();
+
+            await expect(
+                service.schedule(jobData, { at: '2026-11-13T09:00' })
+            ).rejects.toThrow('followup.schedule.error.atTooFar');
+        });
+
+        it('rejects a date that does not exist', async () => {
+            const { service } = buildService();
+
+            await expect(
+                service.schedule(jobData, { at: '2026-02-30T09:00' })
+            ).rejects.toThrow('followup.schedule.error.atInvalid');
+        });
+
+        it('applies the pending cap to wall-clock follow-ups too', async () => {
+            const rows = Array.from({ length: 5 }, (_, i) =>
+                followupRow({ id: `f-${i}` })
+            );
+            const { service, cloudTasksClient } = buildService(rows);
+
+            await expect(
+                service.schedule(jobData, { at: '2026-10-14T09:00' })
+            ).rejects.toThrow('followup.schedule.error.tooManyPending');
+            expect(cloudTasksClient.enqueue).not.toHaveBeenCalled();
+        });
+
+        it('keeps the delay path relative to now, unchanged', async () => {
+            const { service, followupRepository } = buildService();
+
+            await service.schedule(jobData, { delayMinutes: 30 });
+
+            expect(scheduledAtOf(followupRepository).getTime()).toBe(
+                askedAt + 30 * 60_000
+            );
+        });
     });
 });

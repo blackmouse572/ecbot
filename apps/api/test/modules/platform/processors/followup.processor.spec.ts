@@ -29,6 +29,7 @@ function makeService(overrides: any = {}) {
             { resolve: async (list: unknown[] = []) => list } as any,
             {} as any
         ),
+        {} as any, // timezoneService
         // `meter: null` builds the service without one — the public build.
         overrides.meter === null
             ? undefined
