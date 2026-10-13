@@ -92,7 +92,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -143,7 +143,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -162,7 +162,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.CREATE],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -194,7 +194,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -227,7 +227,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -258,7 +258,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -294,7 +294,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -330,7 +330,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -361,7 +361,7 @@ export class ApiKeyAdminController {
         subject: ENUM_POLICY_SUBJECT.API_KEY,
         action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.DELETE],
     })
-    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()

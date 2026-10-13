@@ -2,22 +2,31 @@ import { ApiProperty, IntersectionType, PartialType } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { ENUM_API_KEY_TYPE } from 'src/modules/api-key/enums/api-key.enum';
 import { ApiKeyUpdateDateRequestDto } from 'src/modules/api-key/dtos/request/api-key.update-date.request.dto';
-import { ApiKeyUpdateRequestDto } from 'src/modules/api-key/dtos/request/api-key.update.request.dto';
+import { ApiKeyNameRequestDto } from 'src/modules/api-key/dtos/request/api-key.update.request.dto';
 
-export class ApiKeyCreateRequestDto extends IntersectionType(
-    ApiKeyUpdateRequestDto,
-    PartialType(ApiKeyUpdateDateRequestDto)
-) {
+/**
+ * Declared here (not shared with the update DTO) so the create path's
+ * `type` can be strictly required and reject null, without inheriting the
+ * parent's @IsOptional() constraint that would let `{ "type": null }`
+ * slip through validation into the NOT NULL column as a 500.
+ */
+class ApiKeyCreateTypeRequestDto {
     @ApiProperty({
-        description: 'Api Key name',
+        description: 'Type of api key',
         example: ENUM_API_KEY_TYPE.DEFAULT,
-        required: true,
         enum: ENUM_API_KEY_TYPE,
+        required: true,
     })
     @IsNotEmpty()
     @IsEnum(ENUM_API_KEY_TYPE)
     type: ENUM_API_KEY_TYPE;
 }
+
+export class ApiKeyCreateRequestDto extends IntersectionType(
+    ApiKeyNameRequestDto,
+    ApiKeyCreateTypeRequestDto,
+    PartialType(ApiKeyUpdateDateRequestDto)
+) {}
 
 export class ApiKeyCreateRawRequestDto extends ApiKeyCreateRequestDto {
     @ApiProperty({
@@ -40,3 +49,4 @@ export class ApiKeyCreateRawRequestDto extends ApiKeyCreateRequestDto {
     @MaxLength(100)
     secret: string;
 }
+

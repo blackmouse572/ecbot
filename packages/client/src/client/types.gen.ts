@@ -1571,6 +1571,10 @@ export type ApiKeyCreateRequestDto = {
      */
     name: string;
     /**
+     * Type of api key
+     */
+    type: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
+    /**
      * Api Key start date
      */
     startDate?: string;
@@ -1578,10 +1582,6 @@ export type ApiKeyCreateRequestDto = {
      * Api Key end date
      */
     endDate?: string;
-    /**
-     * Api Key name
-     */
-    type: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
 };
 
 export type ApiKeyResetResponseDto = {
@@ -1604,6 +1604,10 @@ export type ApiKeyUpdateRequestDto = {
      * Api Key name
      */
     name: string;
+    /**
+     * Type of api key
+     */
+    type?: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
 };
 
 export type DatabaseIdResponseDto = {
