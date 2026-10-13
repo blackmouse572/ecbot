@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { RolePermissionDto } from 'src/modules/role/dtos/role.permission.dto';
 
-// What a 3rd-party client sees at GET /client/me — the workspace its
-// credential resolves to. Proves the x-api-key guard derived the tenant.
+// What a 3rd-party client sees at GET /client/me: the workspace its
+// credential resolves to, and what the credential may do there.
 export class ClientCredentialMeResponseDto {
     @ApiProperty({
         description: 'Workspace id the credential belongs to',
@@ -23,4 +24,13 @@ export class ClientCredentialMeResponseDto {
         required: true,
     })
     slug: string;
+
+    @ApiProperty({
+        description:
+            'What the credential may do: the abilities its creator has in the workspace now, one entry per subject with every allowed action',
+        type: RolePermissionDto,
+        isArray: true,
+        required: true,
+    })
+    permissions: RolePermissionDto[];
 }

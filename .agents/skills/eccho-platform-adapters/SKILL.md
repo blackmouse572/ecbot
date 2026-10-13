@@ -1,6 +1,8 @@
 ---
 name: eccho-platform-adapters
-description: Build or change an ecbot chat channel through the `apps/api` platform module (`PlatformAdapter`). Use for Messenger, Instagram, WhatsApp Business, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget: inbound webhooks, signature verification, event parsing, operator replies, sender profiles, channel OAuth, or adding a new channel.
+description: "Build or change an ecbot chat channel through the `apps/api` platform module (`PlatformAdapter`). Use for Messenger, Instagram, WhatsApp Business, Zalo OA, TikTok Shop, Shopee, Telegram, the API channel, or the website widget: inbound webhooks, signature verification, event parsing, operator replies, sender profiles, channel OAuth, or adding a new channel."
+metadata:
+  internal: true
 ---
 
 # ecbot Platform Adapters
@@ -186,17 +188,16 @@ following inside one:
 1. `pnpm -F api exec tsc --noEmit` — your adapter typechecks.
 2. `npx jest --config test/jest.json <platform>-adapter` from `apps/api` — unit
    tests for `verifySignature`, `parse` and `doSend` pass.
-3. `grep -rn "from 'chat'\|@chat-adapter" apps/api/src` returns nothing.
-4. GET handshake (Meta-style platforms only):
+3. GET handshake (Meta-style platforms only):
    `curl "https://<host>/v1/webhooks/<slug>?hub.mode=subscribe&hub.verify_token=…&hub.challenge=ping"` → `ping`.
-5. POST a captured payload with a valid signature → `200 EVENT_RECEIVED`, and a
+4. POST a captured payload with a valid signature → `200 EVENT_RECEIVED`, and a
    Cloud Task lands on the `inbound-event` queue (local: the emulator).
-6. POST the same payload again → no second Turn (the task name and the
+5. POST the same payload again → no second Turn (the task name and the
    Redis claim both dedupe it).
-7. POST with a tampered body → 403.
-8. The account has a `chatbot` attached — `MessageProcessorService` silently
+6. POST with a tampered body → 403.
+7. The account has a `chatbot` attached — `MessageProcessorService` silently
    no-ops without one, which is the most common "nothing happens" trap.
-9. Operator outbound: send via
+8. Operator outbound: send via
    `POST /v1/workspace/:w/conversations/:id/messages` on a conversation whose
    `account.type` is yours. `messages` should go `PENDING → SENT` with the
    provider's `externalId`.

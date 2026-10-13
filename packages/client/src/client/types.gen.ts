@@ -5328,24 +5328,12 @@ export type CustomerGetResponseDto = {
 };
 
 export type CustomerUpdateRequestDto = {
-    name?: {
-        [key: string]: unknown;
-    } | null;
-    phone?: {
-        [key: string]: unknown;
-    } | null;
-    email?: {
-        [key: string]: unknown;
-    } | null;
-    language?: {
-        [key: string]: unknown;
-    } | null;
-    notes?: {
-        [key: string]: unknown;
-    } | null;
-    profileSummary?: {
-        [key: string]: unknown;
-    } | null;
+    name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    language?: string | null;
+    notes?: string | null;
+    profileSummary?: string | null;
 };
 
 export type CustomerEraseResponseDto = {
@@ -5451,23 +5439,15 @@ export type CustomerTagGetResponseDto = {
 
 export type CustomerTagCreateRequestDto = {
     name: string;
-    emoji?: {
-        [key: string]: unknown;
-    } | null;
-    description?: {
-        [key: string]: unknown;
-    } | null;
+    emoji?: string | null;
+    description?: string | null;
     triggersHandoff?: boolean;
 };
 
 export type CustomerTagUpdateRequestDto = {
     name?: string;
-    emoji?: {
-        [key: string]: unknown;
-    } | null;
-    description?: {
-        [key: string]: unknown;
-    } | null;
+    emoji?: string | null;
+    description?: string | null;
     triggersHandoff?: boolean;
 };
 
@@ -5670,6 +5650,10 @@ export type ClientCredentialMeResponseDto = {
      * Workspace slug
      */
     slug: string;
+    /**
+     * What the credential may do: the abilities its creator has in the workspace now, one entry per subject with every allowed action
+     */
+    permissions: Array<RolePermissionDto>;
 };
 
 export type ApiChannelSendMessageResponseDto = {
@@ -5704,6 +5688,73 @@ export type ApiChannelSendMessageRequestDto = {
      * When the end user sent the message (ISO). Defaults to now.
      */
     timestamp?: string;
+};
+
+export type KnowledgeItemShortResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    /**
+     * Knowledge base ID
+     */
+    knowledgeBaseId: string;
+    /**
+     * Item type (FILE, URL, TEXT)
+     */
+    type: 'FILE' | 'URL' | 'TEXT';
+    /**
+     * Item title
+     */
+    title: string;
+    /**
+     * Folder ID
+     */
+    folderId?: string;
+    /**
+     * Processing status
+     */
+    status: 'DRAFT' | 'READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    /**
+     * Error message if processing failed
+     */
+    errorMessage?: string;
+    /**
+     * When item was processed
+     */
+    processedAt?: string;
+    /**
+     * Tags
+     */
+    tags?: Array<string>;
 };
 
 export type RequestUserResponseDto = {
@@ -28597,6 +28648,3663 @@ export type ApiChannelClientControllerSendMessageV1Responses = {
 };
 
 export type ApiChannelClientControllerSendMessageV1Response = ApiChannelClientControllerSendMessageV1Responses[keyof ApiChannelClientControllerSendMessageV1Responses];
+
+export type ChatbotClientControllerFindAllV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * The status of the chatbot, value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * The type of the chatbot, value with ',' delimiter
+         */
+        type?: string;
+        /**
+         * Account ID used to filter the chatbot list.
+         */
+        account?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/chatbots';
+};
+
+export type ChatbotClientControllerFindAllV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerFindAllV1Error = ChatbotClientControllerFindAllV1Errors[keyof ChatbotClientControllerFindAllV1Errors];
+
+export type ChatbotClientControllerFindAllV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ChatbotListResponseDto>;
+    };
+};
+
+export type ChatbotClientControllerFindAllV1Response = ChatbotClientControllerFindAllV1Responses[keyof ChatbotClientControllerFindAllV1Responses];
+
+export type ChatbotClientControllerCreateV1Data = {
+    body: ChatbotCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/chatbots';
+};
+
+export type ChatbotClientControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerCreateV1Error = ChatbotClientControllerCreateV1Errors[keyof ChatbotClientControllerCreateV1Errors];
+
+export type ChatbotClientControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotListResponseDto;
+    };
+};
+
+export type ChatbotClientControllerCreateV1Response = ChatbotClientControllerCreateV1Responses[keyof ChatbotClientControllerCreateV1Responses];
+
+export type ChatbotClientControllerModelsV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/chatbots/models';
+};
+
+export type ChatbotClientControllerModelsV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerModelsV1Error = ChatbotClientControllerModelsV1Errors[keyof ChatbotClientControllerModelsV1Errors];
+
+export type ChatbotClientControllerModelsV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotModelResponseDto;
+    };
+};
+
+export type ChatbotClientControllerModelsV1Response = ChatbotClientControllerModelsV1Responses[keyof ChatbotClientControllerModelsV1Responses];
+
+export type ChatbotClientControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}';
+};
+
+export type ChatbotClientControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerDeleteV1Error = ChatbotClientControllerDeleteV1Errors[keyof ChatbotClientControllerDeleteV1Errors];
+
+export type ChatbotClientControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotListResponseDto;
+    };
+};
+
+export type ChatbotClientControllerDeleteV1Response = ChatbotClientControllerDeleteV1Responses[keyof ChatbotClientControllerDeleteV1Responses];
+
+export type ChatbotClientControllerFindOneV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}';
+};
+
+export type ChatbotClientControllerFindOneV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerFindOneV1Error = ChatbotClientControllerFindOneV1Errors[keyof ChatbotClientControllerFindOneV1Errors];
+
+export type ChatbotClientControllerFindOneV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotGetDetailResponseDto;
+    };
+};
+
+export type ChatbotClientControllerFindOneV1Response = ChatbotClientControllerFindOneV1Responses[keyof ChatbotClientControllerFindOneV1Responses];
+
+export type ChatbotClientControllerUpdateV1Data = {
+    body: ChatbotUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}';
+};
+
+export type ChatbotClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerUpdateV1Error = ChatbotClientControllerUpdateV1Errors[keyof ChatbotClientControllerUpdateV1Errors];
+
+export type ChatbotClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotListResponseDto;
+    };
+};
+
+export type ChatbotClientControllerUpdateV1Response = ChatbotClientControllerUpdateV1Responses[keyof ChatbotClientControllerUpdateV1Responses];
+
+export type ChatbotClientControllerActiveV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}/active';
+};
+
+export type ChatbotClientControllerActiveV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerActiveV1Error = ChatbotClientControllerActiveV1Errors[keyof ChatbotClientControllerActiveV1Errors];
+
+export type ChatbotClientControllerActiveV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotListResponseDto;
+    };
+};
+
+export type ChatbotClientControllerActiveV1Response = ChatbotClientControllerActiveV1Responses[keyof ChatbotClientControllerActiveV1Responses];
+
+export type ChatbotClientControllerInactiveV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}/inactive';
+};
+
+export type ChatbotClientControllerInactiveV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerInactiveV1Error = ChatbotClientControllerInactiveV1Errors[keyof ChatbotClientControllerInactiveV1Errors];
+
+export type ChatbotClientControllerInactiveV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotListResponseDto;
+    };
+};
+
+export type ChatbotClientControllerInactiveV1Response = ChatbotClientControllerInactiveV1Responses[keyof ChatbotClientControllerInactiveV1Responses];
+
+export type KnowledgeBaseClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/knowledge-bases';
+};
+
+export type KnowledgeBaseClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeBaseClientControllerListV1Error = KnowledgeBaseClientControllerListV1Errors[keyof KnowledgeBaseClientControllerListV1Errors];
+
+export type KnowledgeBaseClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<KnowledgeBaseResponseDto>;
+    };
+};
+
+export type KnowledgeBaseClientControllerListV1Response = KnowledgeBaseClientControllerListV1Responses[keyof KnowledgeBaseClientControllerListV1Responses];
+
+export type KnowledgeBaseClientControllerCreateV1Data = {
+    body: KnowledgeBaseCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/knowledge-bases';
+};
+
+export type KnowledgeBaseClientControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeBaseClientControllerCreateV1Error = KnowledgeBaseClientControllerCreateV1Errors[keyof KnowledgeBaseClientControllerCreateV1Errors];
+
+export type KnowledgeBaseClientControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type KnowledgeBaseClientControllerCreateV1Response = KnowledgeBaseClientControllerCreateV1Responses[keyof KnowledgeBaseClientControllerCreateV1Responses];
+
+export type KnowledgeBaseClientControllerUpdateV1Data = {
+    body: KnowledgeBaseUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}';
+};
+
+export type KnowledgeBaseClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeBaseClientControllerUpdateV1Error = KnowledgeBaseClientControllerUpdateV1Errors[keyof KnowledgeBaseClientControllerUpdateV1Errors];
+
+export type KnowledgeBaseClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeBaseResponseDto;
+    };
+};
+
+export type KnowledgeBaseClientControllerUpdateV1Response = KnowledgeBaseClientControllerUpdateV1Responses[keyof KnowledgeBaseClientControllerUpdateV1Responses];
+
+export type KnowledgeItemClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+    };
+    query?: {
+        /**
+         * value with ',' delimiter
+         */
+        type?: string;
+        /**
+         * value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * comma-separated tag names to filter items that contain any of these tags
+         */
+        tags?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items';
+};
+
+export type KnowledgeItemClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerListV1Error = KnowledgeItemClientControllerListV1Errors[keyof KnowledgeItemClientControllerListV1Errors];
+
+export type KnowledgeItemClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<KnowledgeItemResponseDto>;
+    };
+};
+
+export type KnowledgeItemClientControllerListV1Response = KnowledgeItemClientControllerListV1Responses[keyof KnowledgeItemClientControllerListV1Responses];
+
+export type KnowledgeItemClientControllerCreateV1Data = {
+    body: KnowledgeItemCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items';
+};
+
+export type KnowledgeItemClientControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerCreateV1Error = KnowledgeItemClientControllerCreateV1Errors[keyof KnowledgeItemClientControllerCreateV1Errors];
+
+export type KnowledgeItemClientControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemShortResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerCreateV1Response = KnowledgeItemClientControllerCreateV1Responses[keyof KnowledgeItemClientControllerCreateV1Responses];
+
+export type KnowledgeItemClientControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items/{id}';
+};
+
+export type KnowledgeItemClientControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerDeleteV1Error = KnowledgeItemClientControllerDeleteV1Errors[keyof KnowledgeItemClientControllerDeleteV1Errors];
+
+export type KnowledgeItemClientControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerDeleteV1Response = KnowledgeItemClientControllerDeleteV1Responses[keyof KnowledgeItemClientControllerDeleteV1Responses];
+
+export type KnowledgeItemClientControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items/{id}';
+};
+
+export type KnowledgeItemClientControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerGetV1Error = KnowledgeItemClientControllerGetV1Errors[keyof KnowledgeItemClientControllerGetV1Errors];
+
+export type KnowledgeItemClientControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerGetV1Response = KnowledgeItemClientControllerGetV1Responses[keyof KnowledgeItemClientControllerGetV1Responses];
+
+export type KnowledgeItemClientControllerUpdateV1Data = {
+    body: KnowledgeItemUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items/{id}';
+};
+
+export type KnowledgeItemClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerUpdateV1Error = KnowledgeItemClientControllerUpdateV1Errors[keyof KnowledgeItemClientControllerUpdateV1Errors];
+
+export type KnowledgeItemClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemShortResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerUpdateV1Response = KnowledgeItemClientControllerUpdateV1Responses[keyof KnowledgeItemClientControllerUpdateV1Responses];
+
+export type ConversationClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * The status of the conversation, value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * The channel of the conversation, value with ',' delimiter
+         */
+        accountType?: string;
+        /**
+         * Account ID the conversation came in on.
+         */
+        account?: string;
+        /**
+         * Chatbot ID handling the conversation.
+         */
+        chatbot?: string;
+        /**
+         * Whether the bot replies, boolean with ',' delimiter
+         */
+        botEnabled?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/conversations';
+};
+
+export type ConversationClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerListV1Error = ConversationClientControllerListV1Errors[keyof ConversationClientControllerListV1Errors];
+
+export type ConversationClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ConversationGetResponseDto>;
+    };
+};
+
+export type ConversationClientControllerListV1Response = ConversationClientControllerListV1Responses[keyof ConversationClientControllerListV1Responses];
+
+export type ConversationClientControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/conversations/{id}';
+};
+
+export type ConversationClientControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerGetV1Error = ConversationClientControllerGetV1Errors[keyof ConversationClientControllerGetV1Errors];
+
+export type ConversationClientControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ConversationGetResponseDto;
+    };
+};
+
+export type ConversationClientControllerGetV1Response = ConversationClientControllerGetV1Responses[keyof ConversationClientControllerGetV1Responses];
+
+export type ConversationClientControllerListMessagesV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: {
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/conversations/{id}/messages';
+};
+
+export type ConversationClientControllerListMessagesV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerListMessagesV1Error = ConversationClientControllerListMessagesV1Errors[keyof ConversationClientControllerListMessagesV1Errors];
+
+export type ConversationClientControllerListMessagesV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<MessageGetResponseDto>;
+    };
+};
+
+export type ConversationClientControllerListMessagesV1Response = ConversationClientControllerListMessagesV1Responses[keyof ConversationClientControllerListMessagesV1Responses];
+
+export type ConversationClientControllerSendMessageV1Data = {
+    body: ConversationSendMessageRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/conversations/{id}/messages';
+};
+
+export type ConversationClientControllerSendMessageV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerSendMessageV1Error = ConversationClientControllerSendMessageV1Errors[keyof ConversationClientControllerSendMessageV1Errors];
+
+export type ConversationClientControllerSendMessageV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MessageGetResponseDto;
+    };
+};
+
+export type ConversationClientControllerSendMessageV1Response = ConversationClientControllerSendMessageV1Responses[keyof ConversationClientControllerSendMessageV1Responses];
+
+export type ConversationClientControllerUpdateStatusV1Data = {
+    body: ConversationUpdateStatusRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/conversations/{id}/status';
+};
+
+export type ConversationClientControllerUpdateStatusV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerUpdateStatusV1Error = ConversationClientControllerUpdateStatusV1Errors[keyof ConversationClientControllerUpdateStatusV1Errors];
+
+export type ConversationClientControllerUpdateStatusV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ConversationGetResponseDto;
+    };
+};
+
+export type ConversationClientControllerUpdateStatusV1Response = ConversationClientControllerUpdateStatusV1Responses[keyof ConversationClientControllerUpdateStatusV1Responses];
+
+export type ConversationClientControllerUpdateBotV1Data = {
+    body: ConversationUpdateBotRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/conversations/{id}/bot';
+};
+
+export type ConversationClientControllerUpdateBotV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerUpdateBotV1Error = ConversationClientControllerUpdateBotV1Errors[keyof ConversationClientControllerUpdateBotV1Errors];
+
+export type ConversationClientControllerUpdateBotV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ConversationGetResponseDto;
+    };
+};
+
+export type ConversationClientControllerUpdateBotV1Response = ConversationClientControllerUpdateBotV1Responses[keyof ConversationClientControllerUpdateBotV1Responses];
+
+export type CustomerClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/customers';
+};
+
+export type CustomerClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerClientControllerListV1Error = CustomerClientControllerListV1Errors[keyof CustomerClientControllerListV1Errors];
+
+export type CustomerClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<CustomerGetResponseDto>;
+    };
+};
+
+export type CustomerClientControllerListV1Response = CustomerClientControllerListV1Responses[keyof CustomerClientControllerListV1Responses];
+
+export type CustomerClientControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customers/{id}';
+};
+
+export type CustomerClientControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerClientControllerGetV1Error = CustomerClientControllerGetV1Errors[keyof CustomerClientControllerGetV1Errors];
+
+export type CustomerClientControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerGetResponseDto;
+    };
+};
+
+export type CustomerClientControllerGetV1Response = CustomerClientControllerGetV1Responses[keyof CustomerClientControllerGetV1Responses];
+
+export type CustomerClientControllerUpdateV1Data = {
+    body: CustomerUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customers/{id}';
+};
+
+export type CustomerClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerClientControllerUpdateV1Error = CustomerClientControllerUpdateV1Errors[keyof CustomerClientControllerUpdateV1Errors];
+
+export type CustomerClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerGetResponseDto;
+    };
+};
+
+export type CustomerClientControllerUpdateV1Response = CustomerClientControllerUpdateV1Responses[keyof CustomerClientControllerUpdateV1Responses];
+
+export type CustomerTagClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/customer-tags';
+};
+
+export type CustomerTagClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagClientControllerListV1Error = CustomerTagClientControllerListV1Errors[keyof CustomerTagClientControllerListV1Errors];
+
+export type CustomerTagClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerTagGetResponseDto;
+    };
+};
+
+export type CustomerTagClientControllerListV1Response = CustomerTagClientControllerListV1Responses[keyof CustomerTagClientControllerListV1Responses];
+
+export type CustomerTagClientControllerCreateV1Data = {
+    body: CustomerTagCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/customer-tags';
+};
+
+export type CustomerTagClientControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagClientControllerCreateV1Error = CustomerTagClientControllerCreateV1Errors[keyof CustomerTagClientControllerCreateV1Errors];
+
+export type CustomerTagClientControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerTagGetResponseDto;
+    };
+};
+
+export type CustomerTagClientControllerCreateV1Response = CustomerTagClientControllerCreateV1Responses[keyof CustomerTagClientControllerCreateV1Responses];
+
+export type CustomerTagClientControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the customer tag
+         */
+        customerTag: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customer-tags/{customerTag}';
+};
+
+export type CustomerTagClientControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagClientControllerDeleteV1Error = CustomerTagClientControllerDeleteV1Errors[keyof CustomerTagClientControllerDeleteV1Errors];
+
+export type CustomerTagClientControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagClientControllerDeleteV1Response = CustomerTagClientControllerDeleteV1Responses[keyof CustomerTagClientControllerDeleteV1Responses];
+
+export type CustomerTagClientControllerUpdateV1Data = {
+    body: CustomerTagUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the customer tag
+         */
+        customerTag: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customer-tags/{customerTag}';
+};
+
+export type CustomerTagClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagClientControllerUpdateV1Error = CustomerTagClientControllerUpdateV1Errors[keyof CustomerTagClientControllerUpdateV1Errors];
+
+export type CustomerTagClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerTagGetResponseDto;
+    };
+};
+
+export type CustomerTagClientControllerUpdateV1Response = CustomerTagClientControllerUpdateV1Responses[keyof CustomerTagClientControllerUpdateV1Responses];
+
+export type CustomerTagAssignmentClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the customer
+         */
+        customerId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customers/{customerId}/tags';
+};
+
+export type CustomerTagAssignmentClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagAssignmentClientControllerListV1Error = CustomerTagAssignmentClientControllerListV1Errors[keyof CustomerTagAssignmentClientControllerListV1Errors];
+
+export type CustomerTagAssignmentClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerTagAssignmentGetResponseDto;
+    };
+};
+
+export type CustomerTagAssignmentClientControllerListV1Response = CustomerTagAssignmentClientControllerListV1Responses[keyof CustomerTagAssignmentClientControllerListV1Responses];
+
+export type CustomerTagAssignmentClientControllerRemoveV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the customer
+         */
+        customerId: string;
+        /**
+         * The ID of the customer tag
+         */
+        tagId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customers/{customerId}/tags/{tagId}';
+};
+
+export type CustomerTagAssignmentClientControllerRemoveV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagAssignmentClientControllerRemoveV1Error = CustomerTagAssignmentClientControllerRemoveV1Errors[keyof CustomerTagAssignmentClientControllerRemoveV1Errors];
+
+export type CustomerTagAssignmentClientControllerRemoveV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagAssignmentClientControllerRemoveV1Response = CustomerTagAssignmentClientControllerRemoveV1Responses[keyof CustomerTagAssignmentClientControllerRemoveV1Responses];
+
+export type CustomerTagAssignmentClientControllerApplyV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the customer
+         */
+        customerId: string;
+        /**
+         * The ID of the customer tag
+         */
+        tagId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customers/{customerId}/tags/{tagId}';
+};
+
+export type CustomerTagAssignmentClientControllerApplyV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagAssignmentClientControllerApplyV1Error = CustomerTagAssignmentClientControllerApplyV1Errors[keyof CustomerTagAssignmentClientControllerApplyV1Errors];
+
+export type CustomerTagAssignmentClientControllerApplyV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerTagAssignmentGetResponseDto;
+    };
+};
+
+export type CustomerTagAssignmentClientControllerApplyV1Response = CustomerTagAssignmentClientControllerApplyV1Responses[keyof CustomerTagAssignmentClientControllerApplyV1Responses];
+
+export type ToolClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * value with ',' delimiter
+         */
+        kind?: string;
+        /**
+         * value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/tools';
+};
+
+export type ToolClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolClientControllerListV1Error = ToolClientControllerListV1Errors[keyof ToolClientControllerListV1Errors];
+
+export type ToolClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ToolListResponseDto>;
+    };
+};
+
+export type ToolClientControllerListV1Response = ToolClientControllerListV1Responses[keyof ToolClientControllerListV1Responses];
+
+export type ToolClientControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/tools/{toolId}';
+};
+
+export type ToolClientControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolClientControllerDeleteV1Error = ToolClientControllerDeleteV1Errors[keyof ToolClientControllerDeleteV1Errors];
+
+export type ToolClientControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ToolClientControllerDeleteV1Response = ToolClientControllerDeleteV1Responses[keyof ToolClientControllerDeleteV1Responses];
+
+export type ToolClientControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/tools/{toolId}';
+};
+
+export type ToolClientControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolClientControllerGetV1Error = ToolClientControllerGetV1Errors[keyof ToolClientControllerGetV1Errors];
+
+export type ToolClientControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ToolResponseDto;
+    };
+};
+
+export type ToolClientControllerGetV1Response = ToolClientControllerGetV1Responses[keyof ToolClientControllerGetV1Responses];
+
+export type ToolClientControllerUpdateV1Data = {
+    body: UpdateToolRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/tools/{toolId}';
+};
+
+export type ToolClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolClientControllerUpdateV1Error = ToolClientControllerUpdateV1Errors[keyof ToolClientControllerUpdateV1Errors];
+
+export type ToolClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ToolClientControllerUpdateV1Response = ToolClientControllerUpdateV1Responses[keyof ToolClientControllerUpdateV1Responses];
+
+export type ToolClientControllerCreateHttpV1Data = {
+    body: CreateHttpToolRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/tools/http';
+};
+
+export type ToolClientControllerCreateHttpV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolClientControllerCreateHttpV1Error = ToolClientControllerCreateHttpV1Errors[keyof ToolClientControllerCreateHttpV1Errors];
+
+export type ToolClientControllerCreateHttpV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ToolClientControllerCreateHttpV1Response = ToolClientControllerCreateHttpV1Responses[keyof ToolClientControllerCreateHttpV1Responses];
+
+export type ToolClientControllerCreateMcpV1Data = {
+    body: CreateMcpToolRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/tools/mcp';
+};
+
+export type ToolClientControllerCreateMcpV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolClientControllerCreateMcpV1Error = ToolClientControllerCreateMcpV1Errors[keyof ToolClientControllerCreateMcpV1Errors];
+
+export type ToolClientControllerCreateMcpV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ToolClientControllerCreateMcpV1Response = ToolClientControllerCreateMcpV1Responses[keyof ToolClientControllerCreateMcpV1Responses];
+
+export type ChatbotToolClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/tools';
+};
+
+export type ChatbotToolClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotToolClientControllerListV1Error = ChatbotToolClientControllerListV1Errors[keyof ChatbotToolClientControllerListV1Errors];
+
+export type ChatbotToolClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotToolListResponseDto;
+    };
+};
+
+export type ChatbotToolClientControllerListV1Response = ChatbotToolClientControllerListV1Responses[keyof ChatbotToolClientControllerListV1Responses];
+
+export type ChatbotToolClientControllerDisableV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/tools/{toolId}';
+};
+
+export type ChatbotToolClientControllerDisableV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotToolClientControllerDisableV1Error = ChatbotToolClientControllerDisableV1Errors[keyof ChatbotToolClientControllerDisableV1Errors];
+
+export type ChatbotToolClientControllerDisableV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ChatbotToolClientControllerDisableV1Response = ChatbotToolClientControllerDisableV1Responses[keyof ChatbotToolClientControllerDisableV1Responses];
+
+export type ChatbotToolClientControllerEnableV1Data = {
+    body: EnableOnChatbotRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/tools/{toolId}';
+};
+
+export type ChatbotToolClientControllerEnableV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotToolClientControllerEnableV1Error = ChatbotToolClientControllerEnableV1Errors[keyof ChatbotToolClientControllerEnableV1Errors];
+
+export type ChatbotToolClientControllerEnableV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ChatbotToolClientControllerEnableV1Response = ChatbotToolClientControllerEnableV1Responses[keyof ChatbotToolClientControllerEnableV1Responses];
+
+export type SkillClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * workspace (default): the workspace's skills; template: builtin templates to clone; all: both
+         */
+        source?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/skills';
+};
+
+export type SkillClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type SkillClientControllerListV1Error = SkillClientControllerListV1Errors[keyof SkillClientControllerListV1Errors];
+
+export type SkillClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<SkillListResponseDto>;
+    };
+};
+
+export type SkillClientControllerListV1Response = SkillClientControllerListV1Responses[keyof SkillClientControllerListV1Responses];
+
+export type SkillClientControllerCreateV1Data = {
+    body: CreateSkillRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/skills';
+};
+
+export type SkillClientControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type SkillClientControllerCreateV1Error = SkillClientControllerCreateV1Errors[keyof SkillClientControllerCreateV1Errors];
+
+export type SkillClientControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type SkillClientControllerCreateV1Response = SkillClientControllerCreateV1Responses[keyof SkillClientControllerCreateV1Responses];
+
+export type SkillClientControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        skillId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/skills/{skillId}';
+};
+
+export type SkillClientControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type SkillClientControllerDeleteV1Error = SkillClientControllerDeleteV1Errors[keyof SkillClientControllerDeleteV1Errors];
+
+export type SkillClientControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type SkillClientControllerDeleteV1Response = SkillClientControllerDeleteV1Responses[keyof SkillClientControllerDeleteV1Responses];
+
+export type SkillClientControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        skillId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/skills/{skillId}';
+};
+
+export type SkillClientControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type SkillClientControllerGetV1Error = SkillClientControllerGetV1Errors[keyof SkillClientControllerGetV1Errors];
+
+export type SkillClientControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: SkillGetResponseDto;
+    };
+};
+
+export type SkillClientControllerGetV1Response = SkillClientControllerGetV1Responses[keyof SkillClientControllerGetV1Responses];
+
+export type SkillClientControllerUpdateV1Data = {
+    body: UpdateSkillRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        skillId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/skills/{skillId}';
+};
+
+export type SkillClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type SkillClientControllerUpdateV1Error = SkillClientControllerUpdateV1Errors[keyof SkillClientControllerUpdateV1Errors];
+
+export type SkillClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type SkillClientControllerUpdateV1Response = SkillClientControllerUpdateV1Responses[keyof SkillClientControllerUpdateV1Responses];
+
+export type SkillClientControllerCloneV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        skillId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/skills/{skillId}/duplicate';
+};
+
+export type SkillClientControllerCloneV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type SkillClientControllerCloneV1Error = SkillClientControllerCloneV1Errors[keyof SkillClientControllerCloneV1Errors];
+
+export type SkillClientControllerCloneV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type SkillClientControllerCloneV1Response = SkillClientControllerCloneV1Responses[keyof SkillClientControllerCloneV1Responses];
+
+export type ChatbotSkillClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/skills';
+};
+
+export type ChatbotSkillClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotSkillClientControllerListV1Error = ChatbotSkillClientControllerListV1Errors[keyof ChatbotSkillClientControllerListV1Errors];
+
+export type ChatbotSkillClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotSkillListResponseDto;
+    };
+};
+
+export type ChatbotSkillClientControllerListV1Response = ChatbotSkillClientControllerListV1Responses[keyof ChatbotSkillClientControllerListV1Responses];
+
+export type ChatbotSkillClientControllerDetachV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+        skillId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/skills/{skillId}';
+};
+
+export type ChatbotSkillClientControllerDetachV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotSkillClientControllerDetachV1Error = ChatbotSkillClientControllerDetachV1Errors[keyof ChatbotSkillClientControllerDetachV1Errors];
+
+export type ChatbotSkillClientControllerDetachV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ChatbotSkillClientControllerDetachV1Response = ChatbotSkillClientControllerDetachV1Responses[keyof ChatbotSkillClientControllerDetachV1Responses];
+
+export type ChatbotSkillClientControllerAttachV1Data = {
+    body: AttachSkillRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+        skillId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/skills/{skillId}';
+};
+
+export type ChatbotSkillClientControllerAttachV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotSkillClientControllerAttachV1Error = ChatbotSkillClientControllerAttachV1Errors[keyof ChatbotSkillClientControllerAttachV1Errors];
+
+export type ChatbotSkillClientControllerAttachV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ChatbotSkillClientControllerAttachV1Response = ChatbotSkillClientControllerAttachV1Responses[keyof ChatbotSkillClientControllerAttachV1Responses];
 
 export type RequestControllerGetRequestsV1Data = {
     body?: never;

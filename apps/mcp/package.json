@@ -1,0 +1,25 @@
+{
+  "name": "mcp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --env-file .env",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "check-types": "tsc --noEmit",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.3.1",
+    "@repo/client": "workspace:*",
+    "hono": "^4.13.9",
+    "valibot": "^1.5.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260925.1",
+    "@modelcontextprotocol/client": "^2.3.1",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.137.0"
+  }
+}

@@ -1,6 +1,8 @@
 ---
 name: eccho-backend
-description: Rules, module layout, and doc routing for the ecbot `apps/api` NestJS backend. Use for any work under `apps/api/**`: endpoints, entities, repositories, migrations, DTOs, route protection, list/pagination endpoints, queues and background jobs, localized errors, integrations.
+description: "Rules, module layout, and doc routing for the ecbot `apps/api` NestJS backend. Use for any work under `apps/api/**`: endpoints, entities, repositories, migrations, DTOs, route protection, list/pagination endpoints, queues and background jobs, localized errors, integrations."
+metadata:
+  internal: true
 ---
 
 # ecbot Backend (`apps/api`)
@@ -11,25 +13,31 @@ NestJS 11 modular monolith on the ACK NestJS boilerplate: PostgreSQL + MikroORM,
 
 ## Module layout
 
+Copy `src/modules/role/` as the layout reference:
+
 ```
 src/modules/[feature]/
-├── controllers/     [feature].[access].controller.ts, one per access level
-├── services/        [feature].service.ts, declares the class only
-├── repositories/    [feature].repository.ts
-├── entities/        [feature].entity.ts
-├── dtos/            [feature].[action].dto.ts
-├── docs/            [feature].[access].doc.ts
-├── constants/       [feature].constant.ts, [feature].doc.constant.ts
-├── enums/ interfaces/ guards/ decorators/
+├── controllers/       [feature].[access].controller.ts, one per access level
+├── services/          [feature].service.ts, declares the class only
+├── repository/
+│   ├── entities/      [feature].entity.ts
+│   ├── repositories/  [feature].repository.ts
+│   └── [feature].repository.module.ts
+├── dtos/
+│   ├── request/       [feature].[action].request.dto.ts
+│   └── response/      [feature].[action].response.dto.ts
+├── docs/              [feature].[access].doc.ts
+├── constants/         [feature].doc.constant.ts, [feature].list.constant.ts
+├── enums/ interfaces/ pipes/ guards/ decorators/
 └── [feature].module.ts   providers/exports only; controllers[] stays empty
 ```
 
-Cross-cutting code (message, response, database, auth guards, integrations) lives in `src/common/`; routes in `src/router/routes/`; migrations in `src/database/migrations/` (generated); i18n strings in `src/languages/{lang}/`.
+Cross-cutting code (message, response, database, auth guards, integrations) lives in `src/common/`; routes in `src/router/routes/`; migrations in `apps/api/migrations/` (generated); i18n strings in `src/languages/{lang}/`.
 
 <important if="you are reading or writing the database">
 
-- All DB access goes through a `*.repository.ts` extending the base repository. Services call repository methods, never the `EntityManager`.
-- Entities extend `DatabaseEntity` (`id`, `createdAt`, `updatedAt`, soft-delete `deletedAt`).
+- All DB access goes through a `*.repository.ts` extending `DatabaseRepository`. Services call repository methods, never the `EntityManager`.
+- Entities extend `DatabaseEntityBase` from `src/common/database/bases/database.entity.ts` (`id`, `createdAt`, `updatedAt`, soft delete via `deleted` + `deletedAt`).
 - Type filters as `FilterQuery<TEntity>` and options as `IDatabase*Options`. A query that needs `as any` belongs in a typed repository method.
 - Create migrations with `pnpm db:migrate:create`; edit the generated file only to review it.
 </important>
@@ -52,7 +60,19 @@ One controller class per access level. Register it in `src/router/routes/routes.
 </important>
 
 <important if="you are protecting a route or adding authorization">
-Decorators, top to bottom: doc decorator → `@PolicyAbilityProtected` → `@PolicyRoleProtected` → `@UserProtected` → `@AuthJwtAccessProtected` → HTTP method. Read `docs/authorization.md` and `.github/instructions/api/auth.instructions.md`.
+
+Decorators, top to bottom: doc decorator → `@Response` / `@ResponsePaging` → access guard → `@UserProtected` → `@AuthJwtAccessProtected` → `@ApiKeyProtected` → HTTP method. Pattern: `modules/customer/controllers/customer.workspace.controller.ts`.
+
+| Surface      | Access guard                                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `.admin`     | `@PolicyAbilityProtected(...)` → `@PolicyRoleProtected(...)`                                                         |
+| `.workspace` | `@WorkspaceScopedProtected(...)` or `@WorkspacePolicyAbilityProtected(...)`; owner-only `@WorkspaceOwnerProtected()` |
+| `.user`      | `@PolicyRoleProtected(...)`                                                                                          |
+| `.shared`    | none                                                                                                                 |
+| `.public`    | none, and drop `@UserProtected` + `@AuthJwtAccessProtected` (keep `@ApiKeyProtected()`)                              |
+
+Three surfaces replace the whole user/JWT/API-key stack with one guard: `.client` uses `@ClientCredentialProtected()` (the workspace comes from the credential), `.task` uses `@ApiKeyCloudTasksProtected()`, `.system` uses `@ApiKeySystemProtected()`. A `.client` route over workspace data passes the abilities of its workspace route, e.g. `@ClientCredentialProtected({ subject: ENUM_POLICY_SUBJECT.CUSTOMER, action: [ENUM_POLICY_ACTION.READ] })`, so a key can do no more than the member who created it can do now. A `.client` write acts as that member: inject `@ClientCredentialPayload()` and pass `credential.createdBy` wherever the workspace route passes the signed-in user (records, activity log). Read `docs/authorization.md` and `.github/instructions/api/auth.instructions.md`.
+
 </important>
 
 <important if="you are returning data from a controller or service">
@@ -84,7 +104,7 @@ Endpoint docs live in `modules/<feature>/docs/*.doc.ts`. `DocRequest({ params, q
 </important>
 
 <important if="you are accepting a request body or params">
-Validate with a `class-validator` DTO named `[name].[action].dto.ts`; every `@Body()` is typed by one. See `docs/request-validation.md`.
+Validate with a `class-validator` DTO in `dtos/request/[feature].[action].request.dto.ts`; every `@Body()` is typed by one. See `docs/request-validation.md`.
 </important>
 
 <important if="you are adding a user-facing message or throwing an error">

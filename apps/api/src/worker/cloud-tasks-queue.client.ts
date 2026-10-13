@@ -58,6 +58,18 @@ export class CloudTasksQueueClient {
     }
 
     private async createClient(): Promise<CloudTasksClient> {
+        const client = await this.buildClient();
+
+        // Start it here, where a failure (e.g. no credentials) is a plain
+        // rejection. Each generated method also runs
+        // `this.initialize().catch(err => { throw err; })`, so calling one
+        // on a client that failed to start leaves an unhandled rejection
+        // that exits the process.
+        await client.initialize();
+        return client;
+    }
+
+    private async buildClient(): Promise<CloudTasksClient> {
         const { CloudTasksClient } = await import('@google-cloud/tasks');
         const emulatorHost = this.configService.get<string>(
             'cloudTasks.emulatorHost'
