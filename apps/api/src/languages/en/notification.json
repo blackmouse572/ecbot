@@ -26,8 +26,14 @@
             "message": "You have a new request to join the workspace from {requestorName}."
         },
         "action": {
-            "view": "View request"
+            "view": "View request",
+            "goToWorkspace": "Go to workspace"
         }
+    },
+    "mergeSuggestion": {
+        "title": "Possible duplicate customer",
+        "message": "A customer was updated with a phone or email that matches another customer. Review the merge suggestion.",
+        "actionText": "Review"
     },
     "error": {
         "notFound": "Notification not found"
@@ -41,6 +47,25 @@
         "title": "Tokens added",
         "message": "{amount} tokens were added to workspace \"{workspaceName}\".",
         "actionText": "View usage"
+    },
+    "subscriptionPlanChanged": {
+        "title": "Your plan has changed",
+        "message": "Workspace \"{workspaceName}\" is now on the {toPlan} plan (was {fromPlan}).{note}",
+        "scheduledTitle": "Your plan change is scheduled",
+        "scheduledMessage": "Workspace \"{workspaceName}\" will move to the {toPlan} plan on {scheduledOn}.{note}",
+        "note": " Note from our team: {note}",
+        "actionText": "View plan"
+    },
+    "subscriptionCanceled": {
+        "title": "Subscription cancelled",
+        "message": "Workspace \"{workspaceName}\" will leave the {planName} plan on {periodEnd}.{note}",
+        "note": " Note from our team: {note}",
+        "actionText": "View plan"
+    },
+    "subscriptionResumed": {
+        "title": "Subscription resumed",
+        "message": "Workspace \"{workspaceName}\" will keep the {planName} plan and renew as usual.",
+        "actionText": "View plan"
     },
     "workspaceNoPlan": {
         "title": "Workspace needs attention",

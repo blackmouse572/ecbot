@@ -25,7 +25,7 @@ export const WhatsAppCredentialFields = () => {
           },
         }}
         render={({ field }) => (
-          <Form.Item className="flex flex-col gap-y-2">
+          <Form.Item>
             <Form.Label>
               {t("accounts.create.connect.whatsapp.phoneNumberIdLabel")}
             </Form.Label>
@@ -48,7 +48,7 @@ export const WhatsAppCredentialFields = () => {
           required: t("accounts.create.connect.whatsapp.tokenLabel"),
         }}
         render={({ field }) => (
-          <Form.Item className="flex flex-col gap-y-2">
+          <Form.Item>
             <Form.Label>
               {t("accounts.create.connect.whatsapp.tokenLabel")}
             </Form.Label>

@@ -24,7 +24,13 @@ export interface NotificationItem {
   message: string;
   type: string;
   status: "read" | "archived" | "unread" | "dismissed";
-  metadata?: { actionUrl?: string; actionText?: string };
+  priority?: "low" | "medium" | "high" | "urgent";
+  metadata?: {
+    actionUrl?: string;
+    actionText?: string;
+    // Per-kind payload (conversationId for a handoff, ...).
+    data?: Record<string, A>;
+  };
   createdAt: string;
 }
 
@@ -54,14 +60,21 @@ export function useUnreadNotifications(query?: Record<string, A>) {
   return { notifications: data?.data ?? [], data, ...rest };
 }
 
-export function useUnreadNotificationCount() {
+/**
+ * `pollInBackground`: keep polling while the tab is hidden, so the
+ * new-notification sound still plays. Only one tab should do this.
+ */
+export function useUnreadNotificationCount({
+  pollInBackground = false,
+}: { pollInBackground?: boolean } = {}) {
   const { data, ...rest } = useQuery({
     queryKey: notificationQueryKey.list({ scope: "unread-count" }),
     queryFn: async () => {
       const response = await notificationSharedControllerUnreadV1();
       return response?.data as unknown as { data: { count: number } };
     },
-    refetchInterval: 60_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: pollInBackground,
   });
 
   return { count: data?.data?.count ?? 0, ...rest };
@@ -85,6 +98,40 @@ export function useMarkNotificationAsRead(
       options?.onSuccess?.(d, v, c);
     },
     ...options,
+  });
+}
+
+/**
+ * Marks several notifications read (the menu does this on open). One request
+ * at a time: the API throttles bursts to 10 requests per half second. A
+ * failed one is skipped (it stays unread for next time) and the bell drops
+ * by one per success, without waiting for the whole batch.
+ */
+export function useMarkNotificationsAsRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (const id of ids) {
+        try {
+          await notificationSharedControllerMarkAsReadV1({
+            path: { notification: id },
+          });
+        } catch {
+          continue;
+        }
+        queryClient.setQueryData<{ data: { count: number } }>(
+          notificationQueryKey.list({ scope: "unread-count" }),
+          (old) =>
+            old && { ...old, data: { count: Math.max(0, old.data.count - 1) } },
+        );
+      }
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: notificationQueryKey.all,
+        exact: false,
+      }),
   });
 }
 

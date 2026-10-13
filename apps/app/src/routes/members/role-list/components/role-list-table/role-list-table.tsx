@@ -1,3 +1,4 @@
+import { IconShieldLock } from "@tabler/icons-react";
 import { Button, Container, Heading, toast, usePrompt } from "@medusajs/ui";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -73,7 +74,10 @@ export const RoleListTable = () => {
         queryObject={raw}
         navigateTo={(row) => `${row.original.id}`}
         noRecords={{
-          message: t("accounts.list.noRecordsMessage"),
+          title: t("roles.list.noRecordsTitle"),
+          message: t("roles.list.noRecordsMessage"),
+          action: { to: "create", label: t("roles.list.createFirst") },
+          icon: <IconShieldLock />,
         }}
       />
       <Outlet />
@@ -90,9 +94,8 @@ const RoleActions = ({ item }: { item: RoleListResponseDto }) => {
 
   const deleteRoleHandler = async () => {
     const confirmed = await dialog({
-      title: "Delete Role",
-      description:
-        "Are you sure you want to delete this role? This action cannot be undone.",
+      title: t("roles.delete.title"),
+      description: t("roles.delete.description"),
     });
 
     if (!confirmed) return;

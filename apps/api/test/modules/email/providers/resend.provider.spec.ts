@@ -306,3 +306,82 @@ describe('ResendProvider team emails', () => {
         expect(subject()).toBe('Kết nối lại Kunmart Fanpage');
     });
 });
+
+// An admin-created account got an unstyled English email with no way in, and
+// an admin password reset sent nothing at all through Resend.
+describe('ResendProvider admin password emails', () => {
+    const sendEmail = jest.fn();
+    const render = renderTemplate as jest.Mock;
+    const values: Record<string, any> = {
+        'email.fromEmail': 'Ecbot <noreply@ecbot.dev>',
+        'home.name': 'Ecbot',
+        'home.url': 'https://app.ecbot.dev',
+        'app.timezone': 'Asia/Ho_Chi_Minh',
+    };
+    const config = { get: (key: string) => values[key] } as any;
+    const provider = new ResendProvider(
+        { sendEmail } as any,
+        config,
+        new HelperDateService(config)
+    );
+    // From the queue as JSON: the date is a string.
+    const data = (language?: string) =>
+        ({
+            password: 'G3FqxV9e34',
+            passwordExpiredAt: '2026-10-15T11:16:19.000Z',
+            language,
+        }) as any;
+    const props = () => render.mock.calls[0][1];
+
+    beforeEach(() => {
+        render.mockClear();
+        sendEmail.mockReset();
+        sendEmail.mockResolvedValue({ error: null });
+    });
+
+    it('sends the new account email in Vietnamese with a sign-in link', async () => {
+        await provider.sendCreate(
+            { name: 'Chi', email: 'chi@b.com' },
+            data('vi')
+        );
+
+        expect(render).toHaveBeenCalledWith(
+            EmailSubject.CreateAccount,
+            expect.objectContaining({
+                language: 'vi',
+                password: 'G3FqxV9e34',
+                loginUrl: 'https://app.ecbot.dev/login',
+            })
+        );
+        expect(sendEmail.mock.calls[0][0].subject).toBe(
+            'Tài khoản Ecbot của bạn đã sẵn sàng'
+        );
+    });
+
+    it('shows a readable expiry with its timezone', async () => {
+        await provider.sendCreate({ name: 'Chi', email: 'chi@b.com' }, data());
+
+        expect(props().passwordExpiredAt).toMatch(/Oct 15, 2026.*6:16.*GMT\+7/);
+        expect(sendEmail.mock.calls[0][0].subject).toBe(
+            'Your Ecbot account is ready'
+        );
+    });
+
+    it('sends the temporary password after an admin reset', async () => {
+        await provider.sendTempPassword(
+            { name: 'Chi', email: 'chi@b.com' },
+            data('vi')
+        );
+
+        expect(render).toHaveBeenCalledWith(
+            EmailSubject.TempPassword,
+            expect.objectContaining({
+                password: 'G3FqxV9e34',
+                loginUrl: 'https://app.ecbot.dev/login',
+            })
+        );
+        expect(sendEmail.mock.calls[0][0].subject).toBe(
+            'Mật khẩu mới cho Ecbot'
+        );
+    });
+});

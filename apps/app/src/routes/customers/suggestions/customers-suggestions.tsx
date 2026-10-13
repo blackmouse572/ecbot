@@ -1,3 +1,4 @@
+import { IconUsersGroup } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import {
   useCustomerMergeSuggestionList,
@@ -80,7 +81,9 @@ export const CustomersSuggestions = () => {
           pageSize={PAGE_SIZE}
           isLoading={isLoading}
           noRecords={{
+            title: t("customers.suggestions.emptyTitle"),
             message: t("customers.suggestions.empty"),
+            icon: <IconUsersGroup />,
           }}
         />
       </Container>

@@ -54,6 +54,7 @@ const mockAccountRepository = {
     find: jest.fn(),
     getTotal: jest.fn(),
     findOne: jest.fn(),
+    updateManyRaw: jest.fn().mockResolvedValue(0),
 };
 
 const mockFacebookWebhookService = {
@@ -543,6 +544,99 @@ describe('AccountService - deleteSyncAccount', () => {
     });
 });
 
+// Meta data deletion callback: the person removed the app and asked Meta to
+// have their data deleted. Their Facebook login (name, avatar, user token) is
+// unlinked in every workspace; the pages stay with the business, but lose the
+// page tokens that were issued under that person's grant.
+describe('AccountService - deleteFacebookUserData', () => {
+    let service: AccountService;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockEm.transactional.mockImplementation(cb => cb(mockTem));
+        mockTem.find.mockResolvedValue([]);
+        mockOAuthFactory.getService.mockReturnValue(mockPlatformService);
+        service = buildService();
+    });
+
+    it('looks up only Facebook logins with that app-scoped user id', async () => {
+        mockAccountRepository.find.mockResolvedValue([]);
+
+        await service.deleteFacebookUserData('fb-user-1');
+
+        expect(mockAccountRepository.find).toHaveBeenCalledWith({
+            externalId: 'fb-user-1',
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+            deletedAt: null,
+        });
+    });
+
+    it('unlinks each matching login in its own workspace and returns how many', async () => {
+        mockAccountRepository.find.mockResolvedValue([
+            {
+                id: 'account-uuid-1',
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+                workspace: { id: 'ws-1' },
+            },
+        ]);
+        mockAccountRepository.findOne.mockResolvedValue({
+            id: 'account-uuid-1',
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+        });
+
+        const deleted = await service.deleteFacebookUserData('fb-user-1');
+
+        expect(deleted).toEqual(['account-uuid-1']);
+        expect(mockAccountRepository.findOne).toHaveBeenCalledWith({
+            id: 'account-uuid-1',
+            workspace: 'ws-1',
+            deletedAt: null,
+        });
+        expect(mockTem.nativeDelete).toHaveBeenCalledWith(AccountEntity, {
+            id: 'account-uuid-1',
+        });
+    });
+
+    // The parent FK is `on delete set null`, so the pages have to be found
+    // before the login row goes.
+    it('clears the token of every page linked through that login and marks it inactive, before the login is deleted', async () => {
+        mockAccountRepository.find.mockResolvedValue([
+            {
+                id: 'account-uuid-1',
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+                workspace: { id: 'ws-1' },
+            },
+        ]);
+        mockAccountRepository.findOne.mockResolvedValue({
+            id: 'account-uuid-1',
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+        });
+
+        await service.deleteFacebookUserData('fb-user-1');
+
+        expect(mockAccountRepository.updateManyRaw).toHaveBeenCalledWith(
+            {
+                account: 'account-uuid-1',
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+            },
+            { accessToken: '', status: ENUM_ACCOUNT_STATUS.INACTIVE }
+        );
+        expect(
+            mockAccountRepository.updateManyRaw.mock.invocationCallOrder[0]
+        ).toBeLessThan(mockTem.nativeDelete.mock.invocationCallOrder[0]);
+    });
+
+    it('returns nothing when we hold nothing for that person', async () => {
+        mockAccountRepository.find.mockResolvedValue([]);
+
+        await expect(
+            service.deleteFacebookUserData('unknown')
+        ).resolves.toEqual([]);
+        expect(mockAccountRepository.updateManyRaw).not.toHaveBeenCalled();
+        expect(mockEm.transactional).not.toHaveBeenCalled();
+    });
+});
+
 // S-7: the admin write paths (create / upsert / update) used to store the
 // token exactly as the DTO carried it, so a plaintext row later decrypted to
 // garbage and the refresh cron blocked the account. Every write path must put
@@ -729,5 +823,61 @@ describe('AccountService - update', () => {
         expect(account.type).toBe(ENUM_ACCOUNT_TYPE.INSTAGRAM_ACCOUNT);
         expect(account.status).toBe(ENUM_ACCOUNT_STATUS.ACTIVE);
         expect(account.accessToken).toBe('v1:v1:iv:tag:old-cipher');
+    });
+});
+
+describe('AccountService - mapList', () => {
+    const entity = (toObject: () => Record<string, unknown>) =>
+        ({ toObject }) as any;
+
+    it('trims the linked chatbot to id and name', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({
+                id: 'account-1',
+                name: 'Axios Page',
+                chatbot: {
+                    id: 'bot-1',
+                    name: 'Axios Bot',
+                    generalKnowledge: 'secret',
+                },
+            })),
+        ]);
+
+        expect(mapped.chatbot).toStrictEqual({ id: 'bot-1', name: 'Axios Bot' });
+    });
+
+    it('returns null when the channel has no chatbot', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({ id: 'account-1', name: 'Axios Page' })),
+        ]);
+
+        expect(mapped.chatbot).toBeNull();
+    });
+
+    it('returns null when the linked chatbot is soft-deleted', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({
+                id: 'account-1',
+                name: 'Axios Page',
+                chatbot: { id: 'bot-9', name: 'Old Bot', deletedAt: new Date() },
+            })),
+        ]);
+
+        expect(mapped.chatbot).toBeNull();
+    });
+
+    // Callers that do not populate the relation (admin list, unlinked list)
+    // get the identifier value, not an entity: it must never surface as a
+    // chatbot summary.
+    it('returns null when the relation is an unpopulated reference id', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({
+                id: 'account-1',
+                name: 'Axios Page',
+                chatbot: 'bot-1',
+            })),
+        ]);
+
+        expect(mapped.chatbot).toBeNull();
     });
 });

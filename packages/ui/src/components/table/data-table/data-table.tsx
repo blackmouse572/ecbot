@@ -49,15 +49,16 @@ export const _DataTable = <TData,>({
     );
   }
 
-  // `page`/`perPage` are pagination, not filters, and `orderBy`/`orderDirection`
-  // (the parsed form of the order-by URL param, see useQueryParamsWithSort) are
-  // sort state, not a search. Counting any of them here would make an empty
+  // `page`/`perPage` are pagination, not filters. `order` (the raw param the
+  // sort control writes) and `orderBy`/`orderDirection` (its parsed form, see
+  // useQueryParamsWithSort) are sort state, not a search. Counting any of them here would make an empty
   // list under a plain sort say "your search matched nothing" when nothing was
   // searched for at all.
   const noQuery = Object.entries(queryObject).every(
     ([key, value]) =>
       key === "page" ||
       key === "perPage" ||
+      key === "order" ||
       key === "orderBy" ||
       key === "orderDirection" ||
       !value,

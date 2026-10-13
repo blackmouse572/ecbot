@@ -28,6 +28,7 @@ import {
     Post,
     Query,
     Res,
+    UnprocessableEntityException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -46,6 +47,7 @@ import { ChannelRateLimitService } from '../services/channel-rate-limit.service'
 import { WidgetChatService } from '../services/widget-chat.service';
 import { WidgetSessionService } from '../services/widget-session.service';
 import { ENUM_WIDGET_STATUS_CODE_ERROR } from '../enums/widget.status-code.enum';
+import { widgetWelcomeText } from '../utils/widget-welcome.util';
 
 /** Per-visitor ceiling. Turnstile stops bots at the door; this stops a human farming inference. */
 const TURNS_PER_HOUR = 60;
@@ -86,9 +88,11 @@ export class WidgetPublicController {
         const account = await this.resolveAccount(key);
         const chatbot = account.chatbot;
         if (!chatbot) {
-            throw new NotFoundException({
-                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'widget.error.notFound',
+            // Same answer as sending a message: the key is right, the owner
+            // just has not picked an agent yet (#255).
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.NO_CHATBOT_ATTACHED,
+                message: 'widget.error.noChatbotAttached',
             });
         }
         const config = account.config;
@@ -97,7 +101,7 @@ export class WidgetPublicController {
             data: {
                 name: chatbot.name,
                 avatar: chatbot.avatar,
-                welcomeMessage: chatbot.welcomeMessage,
+                welcomeMessage: widgetWelcomeText(chatbot),
                 primaryLanguage: chatbot.primaryLanguage,
                 theme: config.theme as Record<string, unknown>,
                 // Returned so the widget can refuse to render on a page that is

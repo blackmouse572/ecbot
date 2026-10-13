@@ -185,6 +185,9 @@ describe("CustomerSidePanel — tags section", () => {
     expect(
       screen.getByText("conversations.customer.panel.tags.empty"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("conversations.customer.panel.tags.emptyHint"),
+    ).toBeInTheDocument();
   });
 
   it("clicking the × on a chip calls useRemoveCustomerTag with the right tagId", async () => {
@@ -262,5 +265,19 @@ describe("CustomerSidePanel — tags section", () => {
 
     expect(applyMutate).toHaveBeenCalledTimes(1);
     expect(applyMutate).toHaveBeenCalledWith("tag-hot");
+  });
+
+  it("shows a load error instead of the empty state when tags fail to load", () => {
+    useTagAssignmentsMock.mockReturnValue({
+      assignments: [],
+      isError: true,
+    } as unknown as UseTagAssignmentsReturn);
+
+    render(<CustomerSidePanel customerId="cust-1" />);
+
+    expect(screen.getByText("general.loadFailed")).toBeInTheDocument();
+    expect(
+      screen.queryByText("conversations.customer.panel.tags.empty"),
+    ).not.toBeInTheDocument();
   });
 });

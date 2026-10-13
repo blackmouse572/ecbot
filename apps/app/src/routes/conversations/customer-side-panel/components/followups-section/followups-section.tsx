@@ -1,10 +1,13 @@
 import { Button, Text } from "@medusajs/ui";
+import { NoRecords } from "@repo/ui/common-components";
+import { IconCalendarTime } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import {
   useCancelFollowup,
   useConversationFollowups,
   type FollowupListResponseDto,
 } from "@/hooks/api/followups";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 interface Props {
   conversationId: string;
@@ -13,16 +16,29 @@ interface Props {
 
 export function FollowupsSection({ conversationId, onViewMessage }: Props) {
   const { t } = useTranslation();
-  const { followups, isPending } = useConversationFollowups(conversationId);
+  const { followups, isPending, isError } =
+    useConversationFollowups(conversationId);
   const cancel = useCancelFollowup();
 
-  if (isPending) return null;
+  if (isPending)
+    return <ListSkeleton label={t("general.loading")} rowCount={2} />;
+
+  if (isError) {
+    return (
+      <Text size="small" className="text-ui-fg-error">
+        {t("general.loadFailed")}
+      </Text>
+    );
+  }
 
   if (followups.length === 0) {
     return (
-      <Text size="small" className="text-ui-fg-subtle">
-        {t("conversations.customer.panel.followups.empty")}
-      </Text>
+      <NoRecords
+        size="small"
+        title={t("conversations.customer.panel.followups.empty")}
+        message={t("conversations.customer.panel.followups.emptyHint")}
+        icon={<IconCalendarTime />}
+      />
     );
   }
 

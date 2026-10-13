@@ -1,3 +1,4 @@
+import { IconDevices } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import { useRevokeSession, useSessions } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
@@ -61,7 +62,9 @@ export const SessionsTable = () => {
         isLoading={isLoading}
         queryObject={raw}
         noRecords={{
+          title: t("sessions.table.emptyTitle"),
           message: t("sessions.table.empty"),
+          icon: <IconDevices />,
         }}
       />
     </Container>

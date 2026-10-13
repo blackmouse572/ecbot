@@ -7,11 +7,11 @@ import type {
   ChatbotGetDetailResponseDto,
   KnowledgeItemResponseDto,
 } from "@repo/client";
-import { SingleColumnPageSkeleton } from "@repo/ui/common-components";
+import { GeneralSectionSkeleton, NoRecords } from "@repo/ui/common-components";
+import { IconBooks } from "@tabler/icons-react";
 import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatbotRAGSectionContainer } from "./chatbot-rag-section-container";
-import { ChatbotRAGSectionEmpty } from "./chatbot-rag-section-empty";
 import { ChatbotRAGSectionItem } from "./chatbot-rag-section-item";
 import { ChatbotRAGSectionAddDrawer } from "./chatbot-rag-section-add-drawer";
 
@@ -75,11 +75,7 @@ export function ChatbotRAGSection({ item, className }: ChatbotRAGSectionProps) {
   };
 
   if (isLoading) {
-    return (
-      <div className="h-[300px] [&>div]:h-full">
-        <SingleColumnPageSkeleton sections={1} />
-      </div>
-    );
+    return <GeneralSectionSkeleton rowCount={3} />;
   }
 
   if (items?.length === 0) {
@@ -89,7 +85,15 @@ export function ChatbotRAGSection({ item, className }: ChatbotRAGSectionProps) {
         className={clx("divide-y p-0", className)}
         onAddClick={() => setIsDrawerOpen(true)}
       >
-        <ChatbotRAGSectionEmpty item={item} className={className} />
+        <NoRecords
+          title={t("knowledgeBase.empty.title")}
+          message={t("knowledgeBase.empty.description")}
+          action={{
+            onClick: () => setIsDrawerOpen(true),
+            label: t("actions.add"),
+          }}
+          icon={<IconBooks />}
+        />
         <ChatbotRAGSectionAddDrawer
           isOpen={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}

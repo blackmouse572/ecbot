@@ -1,6 +1,7 @@
 import { Input, Label, Text } from "@medusajs/ui";
 import { useId, type Ref } from "react";
 import { useTranslation } from "react-i18next";
+import { TelegramBotGuide } from "./telegram-bot-guide";
 
 /** A bot token from @BotFather: numeric id, a colon, then a 35+ char secret. */
 export const TELEGRAM_TOKEN_PATTERN = /^\d+:[A-Za-z0-9_-]{35,}$/;
@@ -10,7 +11,8 @@ export const TELEGRAM_TOKEN_PATTERN = /^\d+:[A-Za-z0-9_-]{35,}$/;
  * (`ConnectStep`) and the agent builder's channel connect card; both send
  * the token through `useLinkAccount` as `{ code: botToken, platform:
  * "TELEGRAM_BOT" }`, so the field itself (label, placeholder, hint) should
- * never drift between the two.
+ * never drift between the two. The @BotFather guide lives here for the same
+ * reason (#161).
  */
 export function TelegramTokenField({
   ref,
@@ -30,7 +32,7 @@ export function TelegramTokenField({
   disabled?: boolean;
   /** Defaults to the accounts form's own label; the builder passes its own
    * ("Bot token from @BotFather") so the two contexts can read differently
-   * while still sharing the field, the validation message and the hint. */
+   * while still sharing the field, the validation message and the guide. */
   label?: string;
 }) {
   const { t } = useTranslation();
@@ -56,9 +58,7 @@ export function TelegramTokenField({
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
       />
-      <Text id={hintId} size="xsmall" className="text-ui-fg-subtle">
-        {t("accounts.create.connect.telegram.tokenHint")}
-      </Text>
+      <TelegramBotGuide summaryId={hintId} />
       {error && (
         <Text id={errorId} size="xsmall" className="text-ui-fg-error">
           {error}

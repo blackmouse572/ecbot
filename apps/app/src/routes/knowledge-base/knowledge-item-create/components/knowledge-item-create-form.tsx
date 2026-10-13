@@ -11,8 +11,10 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 import {
   useCreateKnowledgeItem,
+  useLinkKnowledgeItemToChatbots,
   useProcessKnowledgeItem,
 } from "../../../../hooks/api";
+import { KnowledgeItemAgentsField } from "./knowledge-item-agents-field";
 import { FileForm, TextForm, UrlForm } from "./forms";
 import { fileTitle } from "./forms/file-title";
 import { KnowledgeItemTypeSelector } from "./knowledge-item-type-selector/index";
@@ -65,6 +67,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
       title: "",
       content: "",
       tags: [],
+      chatbotIds: [],
     },
   });
   const { remove, append } = useFieldArray({
@@ -79,7 +82,8 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
     },
   });
   const { mutateAsync: processItem } = useProcessKnowledgeItem();
-  const handleSubmit = form.handleSubmit(async (data) => {
+  const { mutateAsync: linkAgents } = useLinkKnowledgeItemToChatbots();
+  const handleSubmit = form.handleSubmit(async ({ chatbotIds, ...data }) => {
     try {
       setIsLoading(true);
       setUploadProgress(0);
@@ -104,6 +108,19 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
       // ingestion right away, for every type, instead of making the user find
       // the "Process" action in the list.
       const createdId = created.data?.data?.id;
+      // Link before processing: ingestion tags the item's content with the
+      // agents linked at that moment.
+      if (createdId && chatbotIds?.length) {
+        const { failed } = await linkAgents({
+          knowledgeItemId: createdId,
+          chatbotIds,
+        });
+        if (failed) {
+          toast.info(
+            t("knowledge_item.link_after_create_error", { count: failed }),
+          );
+        }
+      }
       if (createdId) {
         try {
           await processItem({ knowledgeBaseId, id: createdId });
@@ -223,7 +240,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                     render={({ field }) => {
                       const tags = field.value || [];
                       return (
-                        <Form.Item className="flex flex-col gap-2">
+                        <Form.Item>
                           <Form.Label>{t("knowledge_item.addTag")}</Form.Label>
                           <ChipGroup
                             onRemove={(index) => {
@@ -249,7 +266,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                     render={({ field }) => {
                       const tags = field.value || [];
                       return (
-                        <Form.Item className="flex flex-col gap-2">
+                        <Form.Item>
                           <KnowledgeItemEditTag
                             defaultValues={tags}
                             knowledgeBaseId={knowledgeBaseId}
@@ -272,6 +289,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                   )}
                   {selectedType === "URL" && <UrlForm form={form} />}
                   {selectedType === "TEXT" && <TextForm form={form} />}
+                  <KnowledgeItemAgentsField control={form.control} />
                 </div>
               )}
             </div>

@@ -1571,6 +1571,10 @@ export type ApiKeyCreateRequestDto = {
      */
     name: string;
     /**
+     * Type of api key
+     */
+    type: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
+    /**
      * Api Key start date
      */
     startDate?: string;
@@ -1578,10 +1582,6 @@ export type ApiKeyCreateRequestDto = {
      * Api Key end date
      */
     endDate?: string;
-    /**
-     * Api Key name
-     */
-    type: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
 };
 
 export type ApiKeyResetResponseDto = {
@@ -1604,6 +1604,10 @@ export type ApiKeyUpdateRequestDto = {
      * Api Key name
      */
     name: string;
+    /**
+     * Type of api key
+     */
+    type?: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
 };
 
 export type DatabaseIdResponseDto = {
@@ -1791,6 +1795,17 @@ export type UserProfileResponseDto = {
     termsAcceptanceRequired: boolean;
 };
 
+export type UserCreateResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Temporary password, shown to the admin once
+     */
+    password: string;
+};
+
 export type UserCreateRequestDto = {
     email: string;
     role: string;
@@ -1829,6 +1844,13 @@ export type AuthImpersonateResponseDto = {
      * Seconds
      */
     expiresIn: number;
+};
+
+export type AuthAdminUpdatePasswordResponseDto = {
+    /**
+     * New temporary password, shown to the admin once
+     */
+    password: string;
 };
 
 export type SessionListResponseDto = {
@@ -2077,12 +2099,23 @@ export type ActivityListResponseDto = {
      */
     deletedBy?: UserMetaResponseDto;
     user: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'login' | 'login_failed' | 'view' | 'export' | 'erase';
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'login' | 'login_failed' | 'view' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     by: UserShortResponseDto;
     metadata?: {
         [key: string]: unknown;
     };
+};
+
+export type AccountChatbotSummary = {
+    /**
+     * Chatbot ID
+     */
+    id: string;
+    /**
+     * Chatbot name
+     */
+    name: string;
 };
 
 export type AddedBy = {
@@ -2155,6 +2188,10 @@ export type AccountListResponseDto = {
      * Number of proxies associated with the account
      */
     totalProxies: number;
+    /**
+     * The chatbot answering on this channel; null when none is linked (a soft-deleted chatbot counts as none)
+     */
+    chatbot: AccountChatbotSummary | null;
     /**
      * The user who added the account
      */
@@ -2939,6 +2976,146 @@ export type UpdateSkillRequestDto = {
      */
     instructions?: string;
     status?: 'ACTIVE' | 'INACTIVE';
+};
+
+export type ToolAdminWorkspaceResponseDto = {
+    id: string;
+    name: string;
+};
+
+export type ToolAdminListResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    kind: 'HTTP' | 'MCP';
+    displayName: string;
+    name: string;
+    slug: string;
+    description: string;
+    status: 'ACTIVE' | 'NEEDS_REAUTH' | 'EXPIRED' | 'REVOKED';
+    source?: {
+        [key: string]: unknown;
+    };
+    httpMethod?: string;
+    httpUrl?: string;
+    httpAuth?: {
+        [key: string]: unknown;
+    };
+    timeoutMs?: number;
+    maxRetries?: number;
+    mcpProvider?: 'COMPOSIO' | 'ECCHO' | 'OPERATOR';
+    mcpServerUrl?: string;
+    mcpAuth?: {
+        [key: string]: unknown;
+    };
+    discoveryAt?: string;
+    workspace: ToolAdminWorkspaceResponseDto;
+};
+
+export type ToolInvocationStatsResponseDto = {
+    /**
+     * Invocations kept in the log (30 days)
+     */
+    total: number;
+    success: number;
+    error: number;
+    timeout: number;
+    lastInvokedAt?: string | null;
+};
+
+export type ToolAdminResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    kind: 'HTTP' | 'MCP';
+    displayName: string;
+    name: string;
+    slug: string;
+    description: string;
+    status: 'ACTIVE' | 'NEEDS_REAUTH' | 'EXPIRED' | 'REVOKED';
+    source?: {
+        [key: string]: unknown;
+    };
+    httpMethod?: string;
+    httpUrl?: string;
+    httpInputSchema?: {
+        [key: string]: unknown;
+    };
+    httpAuth?: {
+        [key: string]: unknown;
+    };
+    timeoutMs?: number;
+    maxRetries?: number;
+    mcpProvider?: 'COMPOSIO' | 'ECCHO' | 'OPERATOR';
+    mcpServerUrl?: string;
+    mcpAuth?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Each action carries `destructive`: it stays off until a chatbot link names it
+     */
+    discoveredActions?: Array<unknown>;
+    discoveryAt?: string;
+    workspace: ToolAdminWorkspaceResponseDto;
+    invocationStats: ToolInvocationStatsResponseDto;
 };
 
 export type WaitlistListResponseDto = {
@@ -12606,7 +12783,7 @@ export type UserAdminControllerCreateV1Responses = {
     201: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: DatabaseIdResponseDto;
+        data?: UserCreateResponseDto;
     };
 };
 
@@ -12696,6 +12873,84 @@ export type UserAdminControllerUpdateV1Responses = {
 };
 
 export type UserAdminControllerUpdateV1Response = UserAdminControllerUpdateV1Responses[keyof UserAdminControllerUpdateV1Responses];
+
+export type UserAdminControllerVerifyEmailV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        user: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/user/update/{user}/verify-email';
+};
+
+export type UserAdminControllerVerifyEmailV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserAdminControllerVerifyEmailV1Error = UserAdminControllerVerifyEmailV1Errors[keyof UserAdminControllerVerifyEmailV1Errors];
+
+export type UserAdminControllerVerifyEmailV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserAdminControllerVerifyEmailV1Response = UserAdminControllerVerifyEmailV1Responses[keyof UserAdminControllerVerifyEmailV1Responses];
 
 export type UserAdminControllerUpdateStatusV1Data = {
     body: UserUpdateStatusRequestDto;
@@ -13012,6 +13267,7 @@ export type AuthAdminControllerUpdatePasswordV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
+        data?: AuthAdminUpdatePasswordResponseDto;
     };
 };
 
@@ -15214,6 +15470,432 @@ export type SkillAdminControllerCreateV1Responses = {
 };
 
 export type SkillAdminControllerCreateV1Response = SkillAdminControllerCreateV1Responses[keyof SkillAdminControllerCreateV1Responses];
+
+export type ToolAdminControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * enum value with ',' delimiter
+         */
+        kind?: string;
+        /**
+         * enum value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * workspace id
+         */
+        workspace?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/tool/list';
+};
+
+export type ToolAdminControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolAdminControllerListV1Error = ToolAdminControllerListV1Errors[keyof ToolAdminControllerListV1Errors];
+
+export type ToolAdminControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ToolAdminListResponseDto>;
+    };
+};
+
+export type ToolAdminControllerListV1Response = ToolAdminControllerListV1Responses[keyof ToolAdminControllerListV1Responses];
+
+export type ToolAdminControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/tool/get/{toolId}';
+};
+
+export type ToolAdminControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolAdminControllerGetV1Error = ToolAdminControllerGetV1Errors[keyof ToolAdminControllerGetV1Errors];
+
+export type ToolAdminControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ToolAdminResponseDto;
+    };
+};
+
+export type ToolAdminControllerGetV1Response = ToolAdminControllerGetV1Responses[keyof ToolAdminControllerGetV1Responses];
+
+export type ToolAdminControllerActivateV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/tool/activate/{toolId}';
+};
+
+export type ToolAdminControllerActivateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolAdminControllerActivateV1Error = ToolAdminControllerActivateV1Errors[keyof ToolAdminControllerActivateV1Errors];
+
+export type ToolAdminControllerActivateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ToolAdminControllerActivateV1Response = ToolAdminControllerActivateV1Responses[keyof ToolAdminControllerActivateV1Responses];
+
+export type ToolAdminControllerInactivateV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/tool/inactivate/{toolId}';
+};
+
+export type ToolAdminControllerInactivateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolAdminControllerInactivateV1Error = ToolAdminControllerInactivateV1Errors[keyof ToolAdminControllerInactivateV1Errors];
+
+export type ToolAdminControllerInactivateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ToolAdminControllerInactivateV1Response = ToolAdminControllerInactivateV1Responses[keyof ToolAdminControllerInactivateV1Responses];
+
+export type ToolAdminControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        toolId: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/tool/delete/{toolId}';
+};
+
+export type ToolAdminControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolAdminControllerDeleteV1Error = ToolAdminControllerDeleteV1Errors[keyof ToolAdminControllerDeleteV1Errors];
+
+export type ToolAdminControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ToolAdminControllerDeleteV1Response = ToolAdminControllerDeleteV1Responses[keyof ToolAdminControllerDeleteV1Responses];
 
 export type WaitlistAdminControllerListV1Data = {
     body?: never;

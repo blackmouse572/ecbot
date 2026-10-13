@@ -9,9 +9,12 @@ import type { Issued } from "./issued";
  */
 export function IssuedPanel({
   issued,
+  needsAgent,
   onDone,
 }: {
   issued: Issued;
+  /** No agent is attached yet, so the channel cannot answer (#255). */
+  needsAgent?: boolean;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -28,6 +31,12 @@ export function IssuedPanel({
             : t("accounts.create.provision.websiteWidget.issuedDescription")}
         </Text>
       </div>
+
+      {needsAgent && (
+        <Alert variant="info">
+          {t("accounts.create.provision.needsAgent")}
+        </Alert>
+      )}
 
       {issued.kind === "API_CHANNEL" ? (
         <>
@@ -54,7 +63,7 @@ export function IssuedPanel({
           <CopyField
             label={t("accounts.create.provision.websiteWidget.snippetLabel")}
             value={embedSnippet(issued.widgetKey)}
-            hint={t("accounts.create.provision.websiteWidget.snippetHint")}
+            hint={`${t("accounts.create.provision.websiteWidget.snippetHint")} ${t("accounts.create.provision.websiteWidget.snippetOptionsHint")}`}
             multiline
           />
         </>
@@ -69,6 +78,8 @@ export function IssuedPanel({
   );
 }
 
+/** The optional attributes carry public/widget.js's defaults, so the snippet
+ *  works as pasted and shows the owner what to change. */
 function embedSnippet(widgetKey: string): string {
-  return `<script src="${window.location.origin}/widget.js" data-widget-key="${widgetKey}" async></script>`;
+  return `<script src="${window.location.origin}/widget.js" data-widget-key="${widgetKey}" data-color="#0f766e" data-label="Chat" data-theme="light" async></script>`;
 }

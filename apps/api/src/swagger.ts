@@ -48,6 +48,16 @@ export default async function (app: NestApplication): Promise<void> {
             deepScanRoutes: true,
         });
 
+        // The e2e test helpers are only registered when E2E_TEST_HELPERS=true,
+        // but they would otherwise appear in swagger.json on a helpers-on local
+        // boot and leak into the committed @repo/client on regeneration. Always
+        // strip them so the committed contract is independent of the local env.
+        for (const pathName of Object.keys(document.paths ?? {})) {
+            if (pathName.startsWith('/api/v1/test-helpers/')) {
+                delete document.paths[pathName];
+            }
+        }
+
         writeFileSync('swagger.json', JSON.stringify(document));
 
         const setupPath = `${docPrefix}_`;

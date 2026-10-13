@@ -7,9 +7,17 @@ ipv4BlockList.addSubnet('172.16.0.0', 12, 'ipv4');
 ipv4BlockList.addSubnet('192.168.0.0', 16, 'ipv4');
 ipv4BlockList.addSubnet('169.254.0.0', 16, 'ipv4'); // covers 169.254.169.254 (cloud metadata)
 ipv4BlockList.addSubnet('0.0.0.0', 8, 'ipv4');
+ipv4BlockList.addSubnet('100.64.0.0', 10, 'ipv4'); // carrier-grade NAT; some clouds serve metadata here
+ipv4BlockList.addSubnet('198.18.0.0', 15, 'ipv4'); // benchmarking, never public
+ipv4BlockList.addSubnet('192.0.0.0', 24, 'ipv4'); // IETF protocol assignments
+ipv4BlockList.addSubnet('240.0.0.0', 4, 'ipv4'); // reserved, includes broadcast
 
 const ipv6BlockList = new net.BlockList();
+ipv6BlockList.addSubnet('::', 128, 'ipv6'); // unspecified
 ipv6BlockList.addSubnet('::1', 128, 'ipv6');
+ipv6BlockList.addSubnet('64:ff9b::', 96, 'ipv6'); // NAT64: reaches any IPv4 address, private ones included
+ipv6BlockList.addSubnet('64:ff9b:1::', 48, 'ipv6'); // local-use NAT64, same reach
+ipv6BlockList.addSubnet('2002::', 16, 'ipv6'); // 6to4: embeds any IPv4 address
 ipv6BlockList.addSubnet('fc00::', 7, 'ipv6');
 ipv6BlockList.addSubnet('fe80::', 10, 'ipv6');
 

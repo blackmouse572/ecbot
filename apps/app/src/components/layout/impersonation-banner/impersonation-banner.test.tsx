@@ -1,4 +1,6 @@
+import { FocusModal } from "@medusajs/ui";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -56,6 +58,44 @@ describe("ImpersonationBanner", () => {
       screen.getByRole("button", { name: i18n.t("impersonation.banner.exit") }),
     );
     expect(endImpersonation).toHaveBeenCalledWith();
+  });
+
+  it("stays clickable over an open dialog without closing it", async () => {
+    impersonation.current = {
+      accessToken: "jwt",
+      expiresAt: Date.now() + 300_000,
+      impersonatedBy: "admin-1",
+      user: { id: "u1", name: "Nguyen Van A", email: "a@example.com" },
+    };
+    const onOpenChange = vi.fn();
+    render(
+      <I18nextProvider i18n={i18n}>
+        <ImpersonationBanner />
+        <FocusModal open onOpenChange={onOpenChange}>
+          <FocusModal.Content>
+            <FocusModal.Title>Dialog</FocusModal.Title>
+          </FocusModal.Content>
+        </FocusModal>
+      </I18nextProvider>,
+    );
+
+    // Radix registers its click-outside listener on the next tick.
+    await new Promise((r) => setTimeout(r, 0));
+    // A modal dialog sets pointer-events: none on <body> (and aria-hidden on
+    // everything outside it); userEvent refuses to click an element that
+    // inherits pointer-events: none, just like a real browser.
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: i18n.t("impersonation.banner.exit"),
+        hidden: true,
+      }),
+    );
+
+    // Dragging the banner must not count as a click outside the dialog.
+    await userEvent.click(screen.getByText(/Nguyen Van A/));
+
+    expect(endImpersonation).toHaveBeenCalledWith();
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 
   it("shows no countdown (the session renews in the background)", () => {

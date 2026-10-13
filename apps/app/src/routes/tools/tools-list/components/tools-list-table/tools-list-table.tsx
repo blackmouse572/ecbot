@@ -1,3 +1,4 @@
+import { IconTool } from "@tabler/icons-react";
 import { createSelectColumn } from "@/components/table/columns";
 import { _DataTable } from "@/components/table/data-table";
 import {
@@ -98,7 +99,13 @@ export const ToolsListTable = () => {
           { key: "createdAt", label: t("fields.createdAt") },
         ]}
         noRecords={{
+          title: t("tools.list.noRecordsTitle"),
           message: t("tools.list.noRecordsMessage"),
+          action: {
+            onClick: handleMarketplace,
+            label: t("tools.actions.browseMarketplace"),
+          },
+          icon: <IconTool />,
         }}
       />
       <Outlet />

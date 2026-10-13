@@ -217,6 +217,9 @@ describe("CustomerSidePanel", () => {
     expect(
       screen.getByText("conversations.customer.panel.contactPoints.empty"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("conversations.customer.panel.contactPoints.emptyHint"),
+    ).toBeInTheDocument();
     expect(screen.queryByTestId("platform-icon")).not.toBeInTheDocument();
   });
 });

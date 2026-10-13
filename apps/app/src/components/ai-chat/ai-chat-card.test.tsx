@@ -83,6 +83,40 @@ describe("AIChatCard turn", () => {
   });
 });
 
+describe("AIChatCard reply split by a tool call (#91)", () => {
+  it("shows the text before and after a tool call as two messages", () => {
+    chat.status = "ready";
+    chat.messages = [
+      {
+        id: "a1",
+        role: "assistant",
+        parts: [
+          { type: "text", text: "Chào bạn!" },
+          {
+            type: "tool-load_skill",
+            toolCallId: "r1",
+            state: "output-available",
+            input: {},
+            output: {},
+          },
+          { type: "text", text: "Còn hàng ạ." },
+        ],
+      },
+    ];
+    render(
+      <TooltipProvider>
+        <AIChatCard chatbotId="bot-1" transport={transport} />
+      </TooltipProvider>,
+    );
+    const first = screen.getByText("Chào bạn!");
+    const second = screen.getByText("Còn hàng ạ.");
+    expect(first.closest(".chat-bubble")).not.toBe(
+      second.closest(".chat-bubble"),
+    );
+    chat.messages = [];
+  });
+});
+
 describe("AIChatCard for a customer", () => {
   it("shows the customer the reply only, never how the agent got there", () => {
     chat.status = "ready";

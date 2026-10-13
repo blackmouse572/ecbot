@@ -1,6 +1,6 @@
 import { normalizeTagName } from '@app/modules/customer/utils/tag-name.util';
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Sentry from '@sentry/nestjs';
 import { firstValueFrom } from 'rxjs';
@@ -21,6 +21,12 @@ import { CustomerRepository } from '../repository/repositories/customer.reposito
 import { CustomerTagClassifierService } from './customer-tag-classifier.service';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
 import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
+import {
+    AI_USAGE_METER,
+    AiUsageMeter,
+    ENUM_AI_USAGE_SOURCE,
+} from '@app/app/ai-usage-meter.interface';
+import { parseWireTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 
 interface IClassifierMessagePayload {
     role: 'user' | 'bot' | 'operator' | 'system';
@@ -38,6 +44,8 @@ interface IClassifierResponse {
     tags_to_add?: string[];
     tags_to_remove?: string[];
     profile_summary?: string;
+    usage?: unknown;
+    model?: string;
 }
 
 @Injectable()
@@ -53,7 +61,10 @@ export class CustomerTagClassifierTaskService {
         private readonly customerTagAssignmentService: CustomerTagAssignmentService,
         private readonly classifierService: CustomerTagClassifierService,
         private readonly httpService: HttpService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        @Optional()
+        @Inject(AI_USAGE_METER)
+        private readonly meter?: AiUsageMeter
     ) {
         this.aiBackendUrl =
             this.configService.get<string>('ai.backend.url') ??
@@ -136,11 +147,23 @@ export class CustomerTagClassifierTaskService {
             return;
         }
 
-        const workspaceId: string | undefined = (conversation as any).chatbot
-            ?.workspace?.id;
+        const chatbot = (conversation as any).chatbot;
+        const workspaceId: string | undefined = chatbot?.workspace?.id;
         if (!workspaceId) {
             this.logger.warn(
                 `classify: conversation ${conversationId} chatbot has no workspace`
+            );
+            return;
+        }
+
+        // Tags are a nicety: a workspace out of tokens just goes without
+        // them. No meter is the public build: allowed, nothing recorded.
+        const budget = (await this.meter?.check(workspaceId, chatbot)) ?? {
+            allowed: true,
+        };
+        if (!budget.allowed) {
+            this.logger.debug(
+                `classify: token budget blocked conv=${conversationId}: ${budget.reason}`
             );
             return;
         }
@@ -184,6 +207,23 @@ export class CustomerTagClassifierTaskService {
             available_tags: availableTags,
             current_tags: currentTags,
         });
+        const usage = parseWireTokenUsage(result.usage);
+        if (usage) {
+            await this.meter
+                ?.record({
+                    workspaceId,
+                    usage,
+                    source: ENUM_AI_USAGE_SOURCE.TAG_CLASSIFIER,
+                    chatbotId: chatbot.id,
+                    model: result.model,
+                    conversationId,
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Tag classifier usage not recorded for conversation ${conversationId}: ${err}`
+                    )
+                );
+        }
 
         const availableNames = new Set(
             availableTags.map(t => normalizeTagName(t.name))

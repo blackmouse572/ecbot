@@ -147,28 +147,9 @@ export class ReplyGenerationService {
 
         startTyping();
         try {
-            const tools = await this.manifestBuilder.build(
-                chatbot.id,
-                chatbot.workspace.id
-            );
-
-            // The agent is stateless: history, the burst's message and its
-            // images come from the DB each Turn.
-            const {
-                history,
-                message,
-                usage: describeUsage,
-            } = await this.turnContext.build(
-                conversationId,
-                { texts, messageIds: input.messageIds },
-                chatbot.id
-            );
-
-            const triggerMessage =
-                await this.messageRepository.findLatestInbound(conversationId);
-
             // Out of tokens: say the fallback line rather than burning an LLM
-            // call we cannot bill.
+            // call we cannot bill. Checked before the Turn context, which
+            // describes the burst's images with a model call of its own.
             // No meter is the public build: allowed, and nothing recorded below.
             const budget = (await this.meter?.check(
                 chatbot.workspace.id,
@@ -188,6 +169,26 @@ export class ReplyGenerationService {
                     )
                 );
             }
+
+            const tools = await this.manifestBuilder.build(
+                chatbot.id,
+                chatbot.workspace.id
+            );
+
+            // The agent is stateless: history, the burst's message and its
+            // images come from the DB each Turn.
+            const {
+                history,
+                message,
+                usage: describeUsage,
+            } = await this.turnContext.build(
+                conversationId,
+                { texts, messageIds: input.messageIds },
+                chatbot.id
+            );
+
+            const triggerMessage =
+                await this.messageRepository.findLatestInbound(conversationId);
 
             const ac = new AbortController();
             let deliveryResult: DeliveryResult | null = null;

@@ -5,11 +5,16 @@ import { EmailCreateDto } from 'src/modules/email/dtos/email.create.dto';
 import { EmailMobileNumberVerifiedDto } from 'src/modules/email/dtos/email.mobile-number-verified.dto';
 import { EmailResetPasswordDto } from 'src/modules/email/dtos/email.reset-password.dto';
 import { EmailSendDto } from 'src/modules/email/dtos/email.send.dto';
+import { EmailTempPasswordDto } from 'src/modules/email/dtos/email.temp-password.dto';
 import { EmailVerificationDto } from 'src/modules/email/dtos/email.verification.dto';
 import { EmailVerifiedDto } from 'src/modules/email/dtos/email.verified.dto';
 import { ResendEmailService } from 'src/modules/resend/services/resend-email.service';
 import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 import { renderTemplate } from '../constraint/templates';
+import {
+    adminPasswordEmailCopy,
+    type AdminPasswordEmailKind,
+} from '../email-template-components/admin-password-email.copy';
 import { resetPasswordEmailCopy } from '../email-template-components/reset-password-email.copy';
 import { verificationEmailCopy } from '../email-template-components/verification-email.copy';
 import { accountBlockedEmailCopy } from '../email-template-components/account-blocked-email.copy';
@@ -78,7 +83,6 @@ export class ResendProvider implements IEmailService {
     importMobileNumberVerified = this.notImplemented;
     getMobileNumberVerified = this.notImplemented;
     deleteMobileNumberVerified = this.notImplemented;
-    sendTempPassword = this.notImplemented;
 
     private async sendEmailTemplate<P extends object>(
         to: string,
@@ -128,18 +132,45 @@ export class ResendProvider implements IEmailService {
     }
 
     async sendCreate(
-        { name, email }: EmailSendDto,
-        { password: passwordString, passwordExpiredAt }: EmailCreateDto
+        dto: EmailSendDto,
+        createDto: EmailCreateDto
     ): Promise<boolean> {
-        return this.sendEmailTemplate(email, EmailSubject.CreateAccount, {
-            password: passwordString,
-            passwordExpiredAt:
-                this.helperDateService.formatToRFC2822(passwordExpiredAt),
-            homeName: this.homeName,
-            homeUrl: this.homeUrl,
-            name,
-            supportEmail: this.supportEmail,
-        });
+        return this.sendAdminPassword('create', dto, createDto);
+    }
+
+    async sendTempPassword(
+        dto: EmailSendDto,
+        tempDto: EmailTempPasswordDto
+    ): Promise<boolean> {
+        return this.sendAdminPassword('reset', dto, tempDto);
+    }
+
+    private sendAdminPassword(
+        kind: AdminPasswordEmailKind,
+        { name, email }: EmailSendDto,
+        { password, passwordExpiredAt, language }: EmailTempPasswordDto
+    ): Promise<boolean> {
+        const copy = adminPasswordEmailCopy(kind, language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            kind === 'create'
+                ? EmailSubject.CreateAccount
+                : EmailSubject.TempPassword,
+            {
+                name,
+                password,
+                passwordExpiredAt: this.helperDateService.formatToReadable(
+                    passwordExpiredAt,
+                    language ?? ENUM_MESSAGE_LANGUAGE.EN
+                ),
+                loginUrl: `${this.homeUrl.replace(/\/+$/, '')}/login`,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject
+        );
     }
 
     async sendResetPassword(

@@ -1,3 +1,4 @@
+import { MessageService } from '@app/common/message/services/message.service';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
     BadRequestException,
@@ -70,7 +71,8 @@ export class CustomerMergeSuggestionService {
         private readonly contactPointRepository: ContactPointRepository,
         private readonly tagAssignmentRepository: CustomerTagAssignmentRepository,
         private readonly notificationService: NotificationService,
-        private readonly workspaceMemberRepository: WorkspaceMemberRepository
+        private readonly workspaceMemberRepository: WorkspaceMemberRepository,
+        private readonly messageService: MessageService
     ) {}
 
     /**
@@ -535,15 +537,20 @@ export class CustomerMergeSuggestionService {
                 members.map(member =>
                     this.notificationService
                         .create({
-                            title: 'Possible duplicate customer',
-                            message:
-                                'A customer was updated with a phone or email that matches another customer. Review the merge suggestion.',
+                            title: this.messageService.setMessage(
+                                'notification.mergeSuggestion.title'
+                            ),
+                            message: this.messageService.setMessage(
+                                'notification.mergeSuggestion.message'
+                            ),
                             type: NotificationType.INFO,
                             priority: NotificationPriority.MEDIUM,
                             recipient: member.user.id,
                             metadata: {
-                                actionUrl: `/customers/suggestions`,
-                                actionText: 'Review',
+                                actionUrl: `/${member.workspace.slug}/customers/suggestions`,
+                                actionText: this.messageService.setMessage(
+                                    'notification.mergeSuggestion.actionText'
+                                ),
                                 data: {
                                     suggestionId,
                                     workspaceId,

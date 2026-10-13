@@ -33,6 +33,7 @@ export type BuilderAction =
       suggestion: AgentSuggestion | null;
       source: "describe" | "template";
       description?: string;
+      prefillBusinessName?: string;
     }
   | { type: "hydrate"; profile: AgentProfile; chatbotId: string; finished: boolean; accounts?: LinkedAccountRef[] }
   | { type: "answer"; question: Question; value: unknown }
@@ -53,6 +54,14 @@ export const initialBuilderState: BuilderState = {
 
 export function steps(profile: AgentProfile): Step[] {
   return buildQuestionGroups(profile).flatMap((group) => group.questions.map((question) => ({ group, question })));
+}
+
+// #151: most answers are a tap or a short phrase, and several can be skipped.
+const SECONDS_PER_QUESTION = 15;
+
+/** Rough minutes left from this question to the end, never below one. */
+export function minutesLeft({ current, total }: { current: number; total: number }): number {
+  return Math.max(1, Math.ceil(((total - current + 1) * SECONDS_PER_QUESTION) / 60));
 }
 
 export function currentStep(state: BuilderState): Step | null {
@@ -79,7 +88,20 @@ const addOnce = (list: string[], id: string) => (list.includes(id) ? list : [...
 
 export function builderReducer(state: BuilderState, action: BuilderAction): BuilderState {
   switch (action.type) {
-    case "start":
+    case "start": {
+      // Answers already given in the description (the business name, a
+      // return policy) are filled in, not asked again (#150, #156).
+      const profile =
+        action.source === "describe" && action.description
+          ? prefillFromText(action.profile, action.description)
+          : action.profile;
+      // The channel the owner came from names the business unless an answer
+      // (a description) already provided one; remains unanswered, so the
+      // question still asks, prefilled.
+      const seeded =
+        action.prefillBusinessName && !profile.businessName.trim()
+          ? { ...profile, businessName: action.prefillBusinessName }
+          : profile;
       return {
         ...initialBuilderState,
         // Preserve an existing draft's id (and its linked accounts):
@@ -87,18 +109,14 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         // updates that draft instead of creating a second one.
         chatbotId: state.chatbotId,
         linkedAccounts: state.linkedAccounts,
-        // Answers already given in the description (the business name, a
-        // return policy) are filled in, not asked again (#150, #156).
-        profile:
-          action.source === "describe" && action.description
-            ? prefillFromText(action.profile, action.description)
-            : action.profile,
+        profile: seeded,
         suggestion: action.suggestion,
         source: action.source,
         describeText: action.source === "describe" ? (action.description ?? null) : null,
         // The template already chose the business type.
         answered: action.source === "template" ? ["businessType"] : [],
       };
+    }
     case "hydrate":
       return {
         ...initialBuilderState,

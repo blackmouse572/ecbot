@@ -3,7 +3,7 @@ import { useAccount, useUpdateWebsiteWidgetAllowedOrigins } from "@/hooks/api";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import { Button, Heading, Input, Text, toast } from "@medusajs/ui";
-import { Form } from "@repo/ui/common-components";
+import { Form, FormSkeleton } from "@repo/ui/common-components";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -42,7 +42,9 @@ function AccountAllowedOriginsEditInner() {
   const { t } = useTranslation();
   const { handleSuccess } = useRouteModal();
   const { id } = useParams<{ id: string }>();
-  const { account, isLoading } = useAccount(id ?? "", { enabled: !!id });
+  const { account, isLoading, isError, error } = useAccount(id ?? "", {
+    enabled: !!id,
+  });
   const { mutateAsync: updateAllowedOrigins, isPending } =
     useUpdateWebsiteWidgetAllowedOrigins(id ?? "");
 
@@ -75,12 +77,14 @@ function AccountAllowedOriginsEditInner() {
     }
   });
 
+  if (isError) {
+    throw error;
+  }
+
   if (isLoading || !account) {
     return (
       <RouteDrawer.Body className="p-6">
-        <Text size="small" className="text-ui-fg-subtle">
-          …
-        </Text>
+        <FormSkeleton label={t("general.loading")} fieldCount={2} />
       </RouteDrawer.Body>
     );
   }
@@ -111,7 +115,7 @@ function AccountAllowedOriginsEditInner() {
                 t("accounts.details.websiteWidget.edit.originsInvalid"),
             }}
             render={({ field }) => (
-              <Form.Item className="flex flex-col gap-y-2">
+              <Form.Item>
                 <Form.Label>
                   {t("accounts.details.websiteWidget.originsLabel")}
                 </Form.Label>
@@ -139,7 +143,7 @@ function AccountAllowedOriginsEditInner() {
                 t("accounts.details.websiteWidget.edit.privacyInvalid"),
             }}
             render={({ field }) => (
-              <Form.Item className="flex flex-col gap-y-2">
+              <Form.Item>
                 <Form.Label optional>
                   {t("accounts.details.websiteWidget.privacyLabel")}
                 </Form.Label>

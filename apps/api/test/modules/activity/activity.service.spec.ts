@@ -1,4 +1,6 @@
+import { ENUM_ACTIVITY_ACTION } from '../../../src/modules/activity/enums/activity.enum';
 import { ActivityService } from '../../../src/modules/activity/services/activity.service';
+import { ENUM_POLICY_SUBJECT } from '../../../src/modules/policy/enums/policy.enum';
 
 describe('ActivityService.mapList', () => {
     const build = () => new ActivityService({} as any, {} as any, {} as any);
@@ -304,5 +306,37 @@ describe('ActivityService request context', () => {
         const entity = await service.createByUser(user, create);
 
         expect(entity.userAgent).toHaveLength(512);
+    });
+});
+
+describe('ActivityService.createByAdminWithWorkspace', () => {
+    it('createByAdminWithWorkspace attaches the workspace and a by-reference staff actor', async () => {
+        const create = jest.fn(entity => entity);
+        const service = new ActivityService(
+            {
+                create,
+                getEntityManager: () => ({
+                    getReference: (_entity: unknown, id: string) => ({ id }),
+                }),
+            } as any,
+            // No request context: `build` reads only `cls.get`.
+            { get: () => undefined } as any,
+            {} as any
+        );
+        const owner = { id: 'u-owner' } as any;
+        const workspace = { id: 'w1' } as any;
+
+        await service.createByAdminWithWorkspace(owner, 'staff-1', workspace, {
+            action: ENUM_ACTIVITY_ACTION.SUBSCRIPTION_CHANGE_PLAN,
+            subject: ENUM_POLICY_SUBJECT.PLAN,
+            metadata: { note: 'partner deal' },
+        });
+
+        const entity = create.mock.calls[0][0];
+        expect(entity.user).toBe(owner);
+        expect(entity.workspace).toBe(workspace);
+        expect(entity.by).toEqual({ id: 'staff-1' });
+        expect(entity.action).toBe('subscription_change_plan');
+        expect(entity.metadata).toEqual({ note: 'partner deal' });
     });
 });

@@ -11,6 +11,7 @@ import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/
 import { HttpToolExecutorService } from 'src/modules/tool/services/http-tool-executor.service';
 import { McpToolExecutorService } from 'src/modules/tool/services/mcp-tool-executor.service';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
+import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 import { ENUM_TOOL_INVOCATION_STATUS } from 'src/modules/tool/enums/tool-invocation-status.enum';
 
 describe('ToolExecutionService', () => {
@@ -439,5 +440,24 @@ describe('ToolExecutionService', () => {
                 {}
             );
         });
+    });
+
+    it('refuses to run a tool an admin has inactivated', async () => {
+        mockToolRepo.findOne.mockResolvedValue({
+            id: 't-1',
+            kind: ENUM_TOOL_KIND.HTTP,
+            status: ENUM_TOOL_STATUS.REVOKED,
+        });
+
+        await expect(
+            svc.execute({
+                toolId: 't-1',
+                args: {},
+                chatbotId: 'cb-1',
+                conversationId: 'conv-1',
+                correlationId: 'corr-1',
+            })
+        ).rejects.toBeInstanceOf(ForbiddenException);
+        expect(mockHttp.execute).not.toHaveBeenCalled();
     });
 });

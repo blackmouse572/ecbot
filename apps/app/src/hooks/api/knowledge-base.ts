@@ -126,6 +126,17 @@ export const knowledgeItemListQueryOptions = (
     staleTime: 2 * 60 * 1000, // 2 minutes for list data
   });
 
+export const KNOWLEDGE_ITEM_PENDING_STATUSES = ["READY", "PROCESSING"];
+
+/** `refetchInterval` that watches a queued or running item, for up to 10 minutes. */
+export const pollWhileKnowledgeItemPending = (query: {
+  state: { data?: A; dataUpdateCount: number };
+}) =>
+  KNOWLEDGE_ITEM_PENDING_STATUSES.includes(query.state.data?.data?.status) &&
+  query.state.dataUpdateCount < 200
+    ? 3_000
+    : false;
+
 export const knowledgeItemDetailQueryOptions = (
   workspace: string,
   knowledgeBaseId: string,
@@ -166,7 +177,10 @@ export const useKnowledgeItems = (
 export const useKnowledgeItem = (
   knowledgeBaseId: string,
   itemId: string,
-  options?: { enabled?: boolean },
+  options?: {
+    enabled?: boolean;
+    refetchInterval?: typeof pollWhileKnowledgeItemPending;
+  },
 ) => {
   const { workspace } = useWorkspace();
 
@@ -384,6 +398,49 @@ export const useLinkKnowledgeItemToChatbot = (
       if (options?.onSuccess) {
         options.onSuccess(data, undefined as A, undefined as A);
       }
+    },
+  });
+};
+
+/**
+ * Links one knowledge item to several agents (the item create form). One at
+ * a time: each link queues a reindex holding the item's links at that moment,
+ * so the last one must see them all. A failure doesn't stop the rest; the
+ * result says how many failed.
+ */
+export const useLinkKnowledgeItemToChatbots = () => {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      knowledgeItemId,
+      chatbotIds,
+    }: {
+      knowledgeItemId: string;
+      chatbotIds: string[];
+    }) => {
+      let failed = 0;
+      for (const chatbotId of chatbotIds) {
+        try {
+          await chatbotKnowledgeItemWorkspaceControllerLinkV1({
+            path: {
+              workspace: workspace!.slug,
+              chatbotId,
+              knowledgeItemId,
+              id: knowledgeItemId,
+            },
+          });
+        } catch {
+          failed += 1;
+        }
+      }
+      return { failed };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: chatbotKnowledgeItemQueryKeys.lists(),
+      });
     },
   });
 };

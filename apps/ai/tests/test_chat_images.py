@@ -111,6 +111,7 @@ async def test_catalog_images_from_the_instructions_go_to_the_vision_model_label
     )
     model = _vision_model({1: "A shirt. Catalog match: White linen shirt"})
     with patch.object(images, "fetch_image_data_url", AsyncMock(side_effect=_fetch_all)), \
+         patch.object(images, "assert_public_url", AsyncMock()), \
          patch.object(images, "build_chat_model", return_value=model):
         await images.describe_images(_images("https://s3/u.jpg"), bot)
 
@@ -123,6 +124,47 @@ async def test_catalog_images_from_the_instructions_go_to_the_vision_model_label
         "data:image/jpeg;base64,shirt.jpg",
         "data:image/jpeg;base64,dress.jpg",
     ]
+
+
+async def test_a_catalog_image_on_an_internal_address_is_never_fetched():
+    # Catalog URLs are typed by the workspace owner, so they get the same
+    # egress check as the knowledge-base crawler. Customer images do not: those
+    # URLs are ours or the platform's.
+    bot = SimpleNamespace(
+        guardrail_enabled=False,
+        general_knowledge=(
+            "![Metadata](http://169.254.169.254/latest/meta-data/)\n"
+            "![Loopback](http://127.0.0.1:8000/admin.png)"
+        ),
+    )
+    model = _vision_model({1: "A shirt."})
+    fetch = AsyncMock(side_effect=_fetch_all)
+    with patch.object(images, "fetch_image_data_url", fetch), \
+         patch.object(images, "build_chat_model", return_value=model):
+        await images.describe_images(_images("https://s3/u.jpg"), bot)
+
+    assert [call.args[0] for call in fetch.call_args_list] == ["https://s3/u.jpg"]
+    parts = model.ainvoke.call_args.args[0][0].content
+    assert not any("Catalog image" in p.get("text", "") for p in parts)
+
+
+async def test_a_malformed_catalog_image_url_is_skipped():
+    # A typo in the instructions must not cost the customer their description.
+    bot = SimpleNamespace(
+        guardrail_enabled=False,
+        general_knowledge=(
+            "![Unclosed bracket](http://[::1/a.png)\n"
+            "![Empty label](http://a..b/a.png)"
+        ),
+    )
+    model = _vision_model({1: "A shirt."})
+    fetch = AsyncMock(side_effect=_fetch_all)
+    with patch.object(images, "fetch_image_data_url", fetch), \
+         patch.object(images, "build_chat_model", return_value=model):
+        described, _ = await images.describe_images(_images("https://s3/u.jpg"), bot)
+
+    assert described == ["A shirt."]
+    assert [call.args[0] for call in fetch.call_args_list] == ["https://s3/u.jpg"]
 
 
 def test_system_prompt_image_guidance_is_business_neutral():

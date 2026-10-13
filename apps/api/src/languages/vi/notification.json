@@ -26,26 +26,51 @@
             "message": "Bạn có yêu cầu mới để tham gia không gian làm việc từ {requestorName}."
         },
         "action": {
-            "view": "Xem yêu cầu"
+            "view": "Xem yêu cầu",
+            "goToWorkspace": "Đến không gian làm việc"
         }
+    },
+    "mergeSuggestion": {
+        "title": "Khách hàng có thể bị trùng",
+        "message": "Một khách hàng vừa được cập nhật số điện thoại hoặc email trùng với khách hàng khác. Hãy xem đề xuất gộp.",
+        "actionText": "Xem xét"
     },
     "error": {
         "notFound": "Không tìm thấy thông báo"
     },
     "lowTokenBalance": {
-        "title": "Token quota sắp hết",
-        "message": "Workspace \"{workspaceName}\" đã dùng {usedPercent}% token quota của kỳ này.",
-        "actionText": "Xem usage"
+        "title": "Hạn mức token sắp hết",
+        "message": "Không gian làm việc \"{workspaceName}\" đã dùng {usedPercent}% hạn mức token của kỳ này.",
+        "actionText": "Xem mức sử dụng"
     },
     "tokenCredited": {
         "title": "Đã cộng token",
-        "message": "Workspace \"{workspaceName}\" vừa được cộng {amount} token.",
-        "actionText": "Xem usage"
+        "message": "Không gian làm việc \"{workspaceName}\" vừa được cộng {amount} token.",
+        "actionText": "Xem mức sử dụng"
+    },
+    "subscriptionPlanChanged": {
+        "title": "Gói của bạn đã thay đổi",
+        "message": "Không gian làm việc \"{workspaceName}\" hiện dùng gói {toPlan} (trước đó là {fromPlan}).{note}",
+        "scheduledTitle": "Thay đổi gói đã được lên lịch",
+        "scheduledMessage": "Không gian làm việc \"{workspaceName}\" sẽ chuyển sang gói {toPlan} vào ngày {scheduledOn}.{note}",
+        "note": " Ghi chú từ đội ngũ của chúng tôi: {note}",
+        "actionText": "Xem gói"
+    },
+    "subscriptionCanceled": {
+        "title": "Gói đăng ký đã huỷ",
+        "message": "Không gian làm việc \"{workspaceName}\" sẽ kết thúc gói {planName} vào ngày {periodEnd}.{note}",
+        "note": " Ghi chú từ đội ngũ của chúng tôi: {note}",
+        "actionText": "Xem gói"
+    },
+    "subscriptionResumed": {
+        "title": "Gói đăng ký đã được tiếp tục",
+        "message": "Không gian làm việc \"{workspaceName}\" sẽ tiếp tục dùng gói {planName} và gia hạn như thường lệ.",
+        "actionText": "Xem gói"
     },
     "workspaceNoPlan": {
-        "title": "Workspace cần được xử lý",
-        "message": "Workspace \"{workspaceName}\" được tạo mà chưa có billing plan nên chatbot chưa trả lời được. Liên hệ support để hoàn tất.",
-        "actionText": "Liên hệ support"
+        "title": "Không gian làm việc cần được xử lý",
+        "message": "Không gian làm việc \"{workspaceName}\" được tạo mà chưa có gói thanh toán nên chatbot chưa trả lời được. Hãy liên hệ bộ phận hỗ trợ để hoàn tất.",
+        "actionText": "Liên hệ hỗ trợ"
     },
     "handoff": {
         "title": "Khách hàng cần người hỗ trợ",

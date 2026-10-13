@@ -150,14 +150,9 @@ export class WidgetChatService {
             return;
         }
 
-        const { history } = await this.turnContext.build(
-            conversation.id,
-            { texts: [text], messageIds: [inbound.id] },
-            chatbot.id
-        );
-
         // Out of tokens: answer with the fallback line over the same stream the
-        // widget is already reading, rather than failing the request.
+        // widget is already reading, rather than failing the request. Checked
+        // before the turn context, which may describe images with the LLM.
         // No meter is the public build: allowed, and nothing recorded below.
         const budget = (await this.meter?.check(
             account.workspace.id,
@@ -166,6 +161,31 @@ export class WidgetChatService {
         if (!budget.allowed) {
             this.streamFallback(res, chatbot.fallbackMessage);
             return;
+        }
+
+        const { history, usage: describeUsage } = await this.turnContext.build(
+            conversation.id,
+            { texts: [text], messageIds: [inbound.id] },
+            chatbot.id
+        );
+        // Spent whether or not the reply below succeeds, so booked on its own.
+        if (describeUsage) {
+            await this.meter
+                ?.record({
+                    workspaceId: account.workspace.id,
+                    usage: describeUsage,
+                    source: ENUM_AI_USAGE_SOURCE.WIDGET,
+                    chatbotId: chatbot.id,
+                    accountId: account.id,
+                    platform: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                    model: chatbot.modelTextName,
+                    conversationId: conversation.id,
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Failed to record describe usage for widget conversation ${conversation.id}: ${err}`
+                    )
+                );
         }
 
         const abort = new AbortController();

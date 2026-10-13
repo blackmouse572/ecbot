@@ -4,6 +4,9 @@
  * Embedded on a customer's own page as:
  *   <script src="https://app.eccho.io/widget.js" data-widget-key="..."></script>
  *
+ * Optional: data-color (launcher colour), data-label (launcher and frame
+ * name), data-theme (light | dark | auto), data-z-index.
+ *
  * Deliberately dependency-free, hand-written, and styled with inline styles
  * only. The app's Tailwind build ships a global Preflight reset — injecting it
  * into someone else's page would rewrite their typography, buttons and form
@@ -31,6 +34,17 @@
   var color = script.getAttribute("data-color") || "#0f766e";
   var label = script.getAttribute("data-label") || "Chat";
   var zIndex = script.getAttribute("data-z-index") || "2147483000";
+  // light (default), dark, or auto to follow the visitor's device setting.
+  // Inside an iframe, prefers-color-scheme follows the embedding page rather
+  // than the device, so auto is resolved here on the host page.
+  var theme = (script.getAttribute("data-theme") || "light").toLowerCase();
+  if (theme === "auto") {
+    theme =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+  }
 
   var open = false;
   var unread = 0;
@@ -83,7 +97,11 @@
   // The parent page's URL travels as the Referer so the widget can check it
   // against the allowlist. It is advisory — the real gate is frame-ancestors.
   frame.src =
-    origin + "/widget/" + encodeURIComponent(widgetKey);
+    origin +
+    "/widget/" +
+    encodeURIComponent(widgetKey) +
+    "?theme=" +
+    encodeURIComponent(theme);
   frame.allow = "clipboard-write";
   applyStyles(frame, {
     position: "fixed",

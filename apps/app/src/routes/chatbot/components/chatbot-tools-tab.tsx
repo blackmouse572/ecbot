@@ -15,14 +15,16 @@ import {
   Text,
   toast,
 } from "@medusajs/ui";
+import { NoRecords } from "@repo/ui/common-components";
 import { Accordion } from "@repo/ui/components";
-import { IconTrash } from "@tabler/icons-react";
+import { IconTool, IconTrash } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ChatbotToolAddDrawer } from "./chatbot-tool-add-drawer";
 import { ChevronDown, PlusMini } from "@medusajs/icons";
 import { defaultEnabledActions, isActionEnabled } from "./mcp-action-state";
+import { ListSkeleton } from "@repo/ui/common-components";
 
 type ChatbotToolsTabProps = {
   chatbotId: string;
@@ -56,23 +58,22 @@ export function ChatbotToolsTab({
     toolsList = (
       <Container className="p-0">
         <SectionHeader onAdd={() => setDrawerOpen(true)} />
-        <div className="px-6 py-10 text-center">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.list.loading")}
-          </Text>
-        </div>
+        <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
       </Container>
     );
   } else if (!tools || tools.length === 0) {
     toolsList = (
       <Container className="p-0">
         <SectionHeader onAdd={() => setDrawerOpen(true)} />
-        <div className="px-6 py-12 text-center">
-          <Heading level="h3">{t("tools.chatbotTab.empty.title")}</Heading>
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.chatbotTab.empty.description")}
-          </Text>
-        </div>
+        <NoRecords
+          title={t("tools.chatbotTab.empty.title")}
+          message={t("tools.chatbotTab.empty.description")}
+          action={{
+            onClick: () => setDrawerOpen(true),
+            label: t("actions.add"),
+          }}
+          icon={<IconTool />}
+        />
       </Container>
     );
   } else {
@@ -297,13 +298,18 @@ function McpActionsList({
         {t("tools.chatbotTab.actionsTitle")}
       </Text>
       {isLoading ? (
-        <Text size="small" className="text-ui-fg-subtle mt-1">
-          {t("tools.list.loading")}
-        </Text>
+        <ListSkeleton
+          label={t("general.loading")}
+          rowCount={2}
+          className="mt-2"
+        />
       ) : actions.length === 0 ? (
-        <Text size="small" className="text-ui-fg-subtle mt-1">
-          {t("tools.chatbotTab.actionsEmpty")}
-        </Text>
+        <NoRecords
+          size="small"
+          title={t("tools.chatbotTab.actionsEmptyTitle")}
+          message={t("tools.chatbotTab.actionsEmpty")}
+          icon={<IconTool />}
+        />
       ) : (
         <ul className="mt-2 space-y-2">
           {actions.map((action) => {

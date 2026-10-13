@@ -175,10 +175,14 @@ export class ApiKeyService implements IApiKeyService {
 
     async update(
         repository: ApiKeyEntity,
-        { name }: ApiKeyUpdateRequestDto,
+        { name, type }: ApiKeyUpdateRequestDto,
         options?: IDatabaseSaveOptions
     ): Promise<ApiKeyEntity> {
         repository.name = name;
+
+        if (type != null) {
+            repository.type = type;
+        }
 
         return this.apiKeyRepository.save(repository, options);
     }

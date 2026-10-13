@@ -501,6 +501,7 @@ export class ConversationService implements IConversationService {
                     .createHandoff(member.user.id, {
                         conversationId,
                         workspaceId,
+                        workspaceSlug: member.workspace.slug,
                         reason,
                         language,
                     })

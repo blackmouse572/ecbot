@@ -13,7 +13,7 @@
       "back": "Quay lại trang quản trị"
     },
     "banner": {
-      "label": "USER VIEW MODE",
+      "label": "CHẾ ĐỘ XEM NHƯ NGƯỜI DÙNG",
       "exit": "Thoát",
       "expand": "Mở rộng điều khiển chế độ xem người dùng",
       "minimize": "Thu nhỏ"
@@ -39,12 +39,13 @@
       "inactive": "Tắt"
     },
     "list": {
-      "loading": "Đang tải…",
-      "noRecordsMessage": "Chưa có skill. Tạo mới hoặc sao chép từ mẫu.",
+      "noRecordsMessage": "Skill hướng dẫn agent cách xử lý từng việc cụ thể. Hãy tạo mới, hoặc bắt đầu từ một mẫu có sẵn.",
       "noTemplates": "Chưa có mẫu nào.",
       "filters": {
         "source": "Nguồn"
-      }
+      },
+      "noRecordsTitle": "Chưa có skill nào",
+      "createFirst": "Tạo skill"
     },
     "actions": {
       "browse": "Duyệt mẫu"
@@ -61,7 +62,8 @@
       "detachError": "Gỡ skill thất bại",
       "updateError": "Cập nhật skill thất bại",
       "loadError": "Tải skill thất bại",
-      "empty": "Chưa gắn skill nào."
+      "empty": "Gắn skill để agent này biết cách xử lý những việc cụ thể.",
+      "emptyTitle": "Chưa gắn skill nào"
     },
     "form": {
       "namePlaceholder": "vd: Chính sách hoàn tiền",
@@ -171,7 +173,9 @@
       "notifications": {
         "title": "Thông báo",
         "empty": "Bạn đã xem hết thông báo",
-        "markAllAsRead": "Đánh dấu đã đọc tất cả"
+        "markAllAsRead": "Đánh dấu đã đọc tất cả",
+        "emptyHint": "Các cập nhật mới từ workspace sẽ hiện ở đây, ví dụ khách hàng cần người hỗ trợ hoặc có yêu cầu tham gia mới.",
+        "unreadLabel": "Thông báo, {{count}} chưa đọc"
       },
       "actions": {
         "logout": "Đăng xuất"
@@ -438,7 +442,8 @@
       "success": {
         "sentRequest": "Yêu cầu tham gia đã được gửi thành công! 🚀",
         "description": "Yêu cầu tham gia của bạn đã được gửi thành công. Chúng tôi sẽ thông báo cho bạn khi có tin vui! 📬"
-      }
+      },
+      "joinWorkspace": "Tham gia không gian làm việc"
     }
   },
   "join": {
@@ -464,12 +469,13 @@
     },
     "title": "Tài khoản",
     "list": {
-      "noRecordsMessage": "Chưa có tài khoản nào. Thời gian để thêm một vài cái! 📱",
+      "noRecordsMessage": "Liên kết Fanpage Facebook, Zalo OA hoặc kênh khác để agent trả lời khách hàng trên đó.",
       "action": {
         "viewProfile": "Xem hồ sơ",
         "viewAddedUser": "Xem người dùng đã thêm",
         "unlink": "Hủy liên kết tài khoản"
-      }
+      },
+      "noRecordsTitle": "Chưa liên kết tài khoản nào"
     },
     "unlink": {
       "confirm": {
@@ -507,7 +513,18 @@
       "platform": {
         "title": "Chọn nền tảng",
         "description": "Chọn nền tảng bạn muốn kết nối với workspace của mình.",
-        "roadmap": "Sắp có"
+        "roadmap": "Sắp có",
+        "options": {
+          "FACEBOOK_ACCOUNT": "Trang & Messenger",
+          "INSTAGRAM_ACCOUNT": "Tài khoản doanh nghiệp",
+          "ZALO_ACCOUNT": "Zalo OA",
+          "TIKTOK_SHOP": "Cửa hàng & kênh người bán",
+          "SHOPEE_SHOP": "Người bán Shopee",
+          "TELEGRAM_BOT": "Bot Telegram",
+          "WHATSAPP_BUSINESS": "WhatsApp Business (Cloud API)",
+          "WEBSITE_WIDGET": "Khung chat nhúng vào website",
+          "API_CHANNEL": "Tích hợp trực tiếp qua REST API"
+        }
       },
       "provision": {
         "copied": "Đã sao chép",
@@ -516,6 +533,7 @@
         "namePlaceholder": "vd. Partner CRM",
         "issuedTitle": "Đã tạo kênh",
         "issuedDescription": "Hãy lưu lại các giá trị này ở nơi an toàn trước khi đóng cửa sổ.",
+        "needsAgent": "Kênh này chỉ trả lời khi đã gắn agent. Hãy mở agent bạn muốn dùng, rồi thêm kênh này vào tài khoản liên kết của agent.",
         "apiChannel": {
           "title": "Kết nối API channel",
           "description": "Gửi và nhận tin nhắn qua REST từ hệ thống của bạn. Phản hồi sẽ được POST tới callback URL.",
@@ -537,6 +555,7 @@
           "keyLabel": "Widget key",
           "snippetLabel": "Đoạn mã nhúng",
           "snippetHint": "Dán đoạn này trước thẻ đóng </body> trên mọi trang cần hiển thị widget.",
+          "snippetOptionsHint": "Để hợp với website, đổi data-color (màu nút, vd: #2563eb), data-label (tên của nút chat mà trình đọc màn hình đọc lên) và data-theme (light là nền sáng, dark là nền tối, auto theo thiết bị của khách).",
           "issuedDescription": "Dán đoạn mã này vào website để hiện khung chat. Khóa này công khai nên bạn không cần giữ bí mật."
         }
       },
@@ -548,7 +567,17 @@
           "description": "Dán token bot bạn nhận được từ @BotFather trên Telegram.",
           "tokenLabel": "Bot Token",
           "tokenPlaceholder": "1234567890:AAF...",
-          "tokenHint": "Tạo bot và lấy token qua @BotFather",
+          "guide": {
+            "title": "Cách lấy token bot",
+            "steps": {
+              "open": "Mở <0>@BotFather</0> trên Telegram.",
+              "newbot": "Gửi tin nhắn /newbot.",
+              "name": "Đặt tên hiển thị cho bot, ví dụ tên cửa hàng của bạn.",
+              "username": "Đặt username kết thúc bằng \"bot\", ví dụ myshop_bot.",
+              "copy": "BotFather sẽ trả lời bằng một token dạng 1234567890:AAF... Hãy sao chép token này.",
+              "paste": "Dán token vào ô phía trên."
+            }
+          },
           "tokenInvalid": "Sai định dạng token, phải có dạng 1234567890:ABC...",
           "cta": "Kết nối Bot"
         },
@@ -628,7 +657,7 @@
           "description": "Một bot Telegram được kết nối bằng bot token."
         },
         "apiChannel": {
-          "label": "API Channel",
+          "label": "Kênh API",
           "description": "Gửi và nhận tin nhắn qua REST từ hệ thống của bạn."
         },
         "websiteWidget": {
@@ -641,7 +670,7 @@
         }
       },
       "apiChannel": {
-        "title": "API channel",
+        "title": "Kênh API",
         "accountKeyLabel": "Account key",
         "accountKeyHint": "Gửi giá trị này dưới dạng accountKey khi gửi tin nhắn.",
         "callbackLabel": "Callback URL",
@@ -670,6 +699,26 @@
           "success": "Đã cập nhật thiết lập widget.",
           "error": "Cập nhật thiết lập widget thất bại."
         }
+      },
+      "noChatbot": {
+        "title": "Chưa có agent",
+        "message": "Tạo agent để trả lời khách hàng trên kênh này.",
+        "action": "Tạo agent"
+      }
+    },
+    "imports": {
+      "title": "Nhập danh sách tài khoản",
+      "upload": {
+        "title": "Tải lên tệp CSV",
+        "description": "Bạn có thể thêm mới hoặc cập nhật {{object}} bằng cách nhập tệp. Để cập nhật {{object}} đã có, hãy dùng đúng ID hiện có. Bạn sẽ được hỏi xác nhận trước khi nhập.",
+        "importFiles": "Nhập tệp",
+        "importFilesDesc": "Kéo thả tệp vào đây hoặc bấm để tải lên",
+        "itemCreated": "Các mục sẽ được tạo mới",
+        "itemUpdated": "Các mục sẽ được cập nhật"
+      },
+      "template": {
+        "title": "Chưa chắc về danh sách?",
+        "description": "Tải mẫu bên dưới để đảm bảo bạn dùng đúng định dạng."
       }
     }
   },
@@ -732,6 +781,16 @@
       "unmerge": "đã tách khách hàng {{name}}",
       "mergeConfirm": "đã xác nhận gộp khách hàng {{name}}",
       "mergeDismiss": "đã bỏ qua đề xuất gộp khách hàng {{name}}"
+    },
+    "conversation": {
+      "create": "đã gửi tin nhắn cho <link/>",
+      "update": "đã cập nhật hội thoại với <link/>",
+      "unknownCustomer": "một khách hàng"
+    },
+    "plan": {
+      "changePlan": "đã thay đổi gói đăng ký",
+      "cancel": "đã huỷ gói đăng ký",
+      "resume": "đã tiếp tục gói đăng ký"
     },
     "generic": {
       "create": "đã tạo <link/>",
@@ -913,14 +972,14 @@
           "7d": "7 ngày"
         },
         "generate": "Tạo link",
-        "copy": "Copy link",
+        "copy": "Sao chép liên kết",
         "copied": "Đã copy link.",
         "expiresAt": "Hết hạn {{date}}",
         "error": "Không tạo được link preview."
       }
     },
     "preview": {
-      "heading": "Chat preview",
+      "heading": "Xem trước cuộc trò chuyện",
       "invalid": "Link preview này không hợp lệ.",
       "expired": "Link preview này đã hết hạn.",
       "invalidHint": "Hãy xin người chia sẻ một link mới.",
@@ -1042,8 +1101,10 @@
       },
       "autoRead": "Tự đánh dấu đã xem",
       "typingIndicator": "Hiện đang soạn tin",
-      "noAccounts": "Chưa có tài khoản liên kết",
-      "noAccountsDescription": "Agent của bạn đã sẵn sàng, nhưng cần các tài khoản để bắt đầu! Hãy chỉnh sửa agent để liên kết tài khoản của bạn."
+      "noAccounts": "Chưa liên kết tài khoản nào",
+      "noAccountsDescription": "Liên kết Fanpage Facebook, Zalo OA hoặc kênh khác để agent này bắt đầu trả lời khách hàng.",
+      "title": "Chi tiết agent",
+      "generalKnowledge": "Kiến thức chung"
     },
     "rag": {
       "title": "Nền tảng kiến thức",
@@ -1109,7 +1170,8 @@
       "tryAgent": "Trò chuyện với {{name}}",
       "yourAgent": "agent của bạn",
       "promptTab": "Prompt",
-      "progress": "Câu {{current}} / {{total}}",
+      "progress": "Câu {{current}} / {{total}}, còn khoảng {{minutes}} phút",
+      "testEarlyHint": "Sau khi đặt tên cho agent, bạn có thể thử ngay và hoàn thành phần còn lại sau.",
       "extraInstructions": "Hướng dẫn bổ sung",
       "extraInstructionsHint": "Được thêm vào cuối phần hướng dẫn cho agent. Để trống nếu các câu trả lời đã đầy đủ.",
       "editWithBuilder": "Chỉnh sửa bằng trình tạo",
@@ -1123,6 +1185,7 @@
       "comingSoon": "Sắp ra mắt",
       "connectFailed": "Chưa kết nối được kênh này. Vui lòng thử lại.",
       "connected": "Đã kết nối",
+      "channelLoadFailed": "Không tải được kênh này. Bạn có thể liên kết sau.",
       "telegramTokenLabel": "Bot token từ @BotFather",
       "widgetOriginsLabel": "Các website được phép hiển thị chat (mỗi dòng một địa chỉ)",
       "channelInUse": "{{name}} đang được dùng cho agent khác. Hãy gỡ liên kết ở đó trước để dùng tại đây.",
@@ -1626,7 +1689,7 @@
   "followups": {
     "title": "Nhắc hẹn",
     "list": {
-      "noRecordsMessage": "Không có nhắc hẹn nào",
+      "noRecordsMessage": "Khi agent hẹn liên hệ lại với khách hàng, nhắc hẹn sẽ hiện ở đây để bạn không bỏ sót.",
       "columns": {
         "chatbot": "Agent",
         "customer": "Khách hàng",
@@ -1665,7 +1728,8 @@
         "bot_disabled": "Bot đã bị tắt",
         "conversation_resolved": "Hội thoại đã được xử lý xong",
         "chatbot_missing": "Agent đã bị ngắt kết nối"
-      }
+      },
+      "noRecordsTitle": "Chưa có nhắc hẹn nào"
     }
   },
   "comments": {
@@ -1748,16 +1812,22 @@
     },
     "invitations": {
       "title": "Lời mời",
-      "empty": "Không có lời mời nào đang chờ."
+      "empty": "Lời mời bạn gửi từ trang Thành viên sẽ nằm ở đây cho tới khi được chấp nhận.",
+      "emptyTitle": "Không có lời mời đang chờ"
     },
     "joinRequests": {
       "title": "Yêu cầu tham gia",
-      "empty": "Không có yêu cầu tham gia nào đang chờ.",
+      "empty": "Khi có người xin tham gia workspace, bạn có thể duyệt họ tại đây.",
       "approve": {
         "action": "Phê duyệt",
         "loading": "Đang phê duyệt yêu cầu...",
         "success": "Đã phê duyệt yêu cầu. Chào mừng thành viên mới!"
-      }
+      },
+      "emptyTitle": "Không có yêu cầu tham gia đang chờ"
+    },
+    "list": {
+      "noRecordsTitle": "Chưa có thành viên nào",
+      "noRecordsMessage": "Mời đồng nghiệp để cùng quản lý hội thoại và agent."
     }
   },
   "roles": {
@@ -1791,9 +1861,18 @@
       "title": "Vai trò",
       "roleId": "ID Vai trò",
       "type": "Loại",
-      "modules": "Modules",
+      "modules": "Mô-đun",
       "noModules": "Không có module nào được gán",
       "noDescription": "Không có mô tả"
+    },
+    "delete": {
+      "title": "Xóa vai trò",
+      "description": "Bạn có chắc muốn xóa vai trò này? Thao tác này không thể hoàn tác."
+    },
+    "list": {
+      "noRecordsTitle": "Chưa có vai trò nào",
+      "noRecordsMessage": "Vai trò quyết định mỗi thành viên được xem và chỉnh sửa những gì trong workspace.",
+      "createFirst": "Tạo vai trò"
     }
   },
   "profile": {
@@ -1908,14 +1987,16 @@
     },
     "notifications": {
       "domain": "Thông báo",
-      "description": "Chọn những email bạn muốn nhận.",
+      "description": "Chọn cách bạn muốn nhận thông báo về hoạt động mới.",
       "fields": {
         "emailNotifications": "Thông báo qua email",
         "pushNotifications": "Thông báo đẩy"
       },
       "handoffEmails": "Gửi email cho tôi khi khách hàng cần người hỗ trợ",
       "handoffEmailsHint": "Gửi khi agent chuyển một cuộc hội thoại cho đội của bạn. Bạn vẫn thấy thông báo trong ứng dụng.",
-      "saveFailed": "Không lưu được lựa chọn của bạn. Vui lòng thử lại."
+      "saveFailed": "Không lưu được lựa chọn của bạn. Vui lòng thử lại.",
+      "sound": "Phát âm thanh trong ứng dụng",
+      "soundHint": "Âm thanh ngắn khi có thông báo hoặc tin nhắn mới, khi gửi tin nhắn, kết nối tài khoản, bật agent và khi kiến thức xử lý xong hoặc bị lỗi. Chỉ áp dụng trên trình duyệt này."
     }
   },
   "workspace": {
@@ -1961,7 +2042,47 @@
     }
   },
   "subscription": {
-    "domain": "Gói đăng ký"
+    "domain": "Gói đăng ký",
+    "title": "Gói của bạn",
+    "badge": {
+      "upgrade": "Nâng cấp gói"
+    },
+    "current": {
+      "renewsOn": "Gia hạn vào {{date}}",
+      "endsOn": "Kết thúc vào {{date}}",
+      "usage": "Đã dùng {{percent}}% quota",
+      "pending": "Đổi sang {{plan}} vào {{date}}",
+      "cancelScheduled": "Huỷ vào {{date}}"
+    },
+    "actions": {
+      "current": "Gói hiện tại",
+      "choose": "Chọn gói",
+      "upgrade": "Nâng cấp",
+      "downgrade": "Hạ cấp",
+      "cancel": "Huỷ gói đăng ký",
+      "resume": "Khôi phục gói đăng ký",
+      "contactUs": "Gói này được quản lý thay bạn. Hãy liên hệ để thay đổi hoặc huỷ.",
+      "processing": "Đang chờ cổng thanh toán xác nhận thay đổi…"
+    },
+    "cancelDialog": {
+      "title": "Huỷ gói đăng ký?",
+      "reasonLabel": "Lý do bạn huỷ gói?",
+      "reasonPlaceholder": "Cho chúng tôi biết lý do (bắt buộc)",
+      "confirm": "Huỷ vào cuối kỳ"
+    },
+    "checkout": {
+      "providersTitle": "Bạn muốn thanh toán bằng cách nào?",
+      "start": "Tiếp tục thanh toán",
+      "none": "Gói này chưa có phương thức thanh toán. Hãy liên hệ với chúng tôi.",
+      "pending": "Đang chờ xác nhận thanh toán…"
+    },
+    "errors": {
+      "unavailable": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
+    "cycle": {
+      "monthly": "mỗi tháng",
+      "yearly": "mỗi năm"
+    }
   },
   "billing": {
     "domain": "Thanh toán"
@@ -1974,7 +2095,7 @@
     "emojiLoading": "Đang tải…",
     "is": "bằng",
     "noResultsTitle": "Không có kết quả",
-    "noResultsMessage": "Không có kết quả",
+    "noResultsMessage": "Thử từ khoá hoặc bộ lọc khác.",
     "noResults": "Không có kết quả",
     "of": "của",
     "results": "kết quả",
@@ -2005,7 +2126,9 @@
       "success": "Đã cập nhật {{count}} mục.",
       "partial": "Đã cập nhật {{success}} mục, {{failed}} mục thất bại.",
       "error": "Không thể cập nhật {{count}} mục."
-    }
+    },
+    "loading": "Đang tải...",
+    "loadFailed": "Không tải được dữ liệu. Vui lòng thử lại sau."
   },
   "actions": {
     "edit": "Chỉnh sửa",
@@ -2097,7 +2220,7 @@
     "description": "Tổ chức và quản lý các mục kiến thức của bạn",
     "list": {
       "title": "Các mục kiến thức",
-      "empty": "Chưa có mục kiến thức nào",
+      "empty": "Thêm tài liệu, website hoặc câu hỏi thường gặp để agent trả lời đúng thông tin doanh nghiệp của bạn.",
       "columns": {
         "title": "Tiêu đề",
         "type": "Loại",
@@ -2105,7 +2228,8 @@
         "created": "Ngày tạo",
         "actions": "Hành động",
         "tags": "Thẻ"
-      }
+      },
+      "emptyTitle": "Chưa có mục kiến thức nào"
     },
     "create": {
       "title": "Tạo mục kiến thức",
@@ -2190,7 +2314,7 @@
     },
     "empty": {
       "title": "Không có mục kiến thức nào được liên kết",
-      "description": "Thêm các mục kiến thức để nâng cao agent của bạn bằng ngữ cảnh và thông tin."
+      "description": "Liên kết mục kiến thức để agent trả lời đúng thông tin doanh nghiệp của bạn."
     },
     "actions": {
       "process": "Xử lý",
@@ -2201,7 +2325,8 @@
   "knowledge_item": {
     "ingestErrors": {
       "urlNotPublic": "Trang này không công khai. Hãy dùng đường link ai cũng mở được trên internet, không phải localhost hay địa chỉ mạng nội bộ.",
-      "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại."
+      "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",
+      "noTokens": "Workspace đã hết token AI. Hãy nạp thêm hoặc gia hạn gói, rồi xử lý lại mục này."
     },
     "create_title": "Tạo Mục Kiến Thức",
     "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",
@@ -2244,8 +2369,8 @@
     "tagPlaceholder": "Nhập tên thẻ...",
     "tagHint": "Sử dụng thẻ để phân loại và sắp xếp các mục kiến thức của bạn",
     "edit": {
-      "success": "Knowledge item updated successfully",
-      "error": "Failed to update knowledge item"
+      "success": "Đã cập nhật mục kiến thức",
+      "error": "Cập nhật mục kiến thức thất bại"
     },
     "tagsUpdateError": "Không thể cập nhật thẻ",
     "editTags": "Chỉnh sửa thẻ",
@@ -2254,7 +2379,15 @@
     "preview_error": "Không tải được mục này. Vui lòng thử lại.",
     "learned_chunks_other": "Agent đã học tệp này thành {{count}} phần.",
     "not_learned_yet": "Chưa học. Agent có thể dùng tệp này khi xử lý xong.",
-    "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại."
+    "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại.",
+    "agents_label": "Agent dùng mục này",
+    "agents_hint": "Các agent bạn chọn có thể trả lời dựa trên mục này khi xử lý xong. Bạn có thể đổi lại sau trong phần Nền tảng kiến thức của từng agent.",
+    "agents_loading": "Đang tải danh sách agent...",
+    "agents_empty": "Sau khi tạo agent, hãy liên kết mục này trong phần Nền tảng kiến thức của agent.",
+    "agents_error": "Không tải được danh sách agent. Bạn có thể liên kết mục này sau trong phần Nền tảng kiến thức của agent.",
+    "link_after_create_error_one": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của agent.",
+    "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent.",
+    "agents_emptyTitle": "Chưa có agent nào"
   },
   "conversations": {
     "title": "Hội thoại",
@@ -2285,7 +2418,8 @@
           "tag_trigger": "Thẻ khách hàng cần nhân viên xử lý",
           "fallback_threshold": "Bot không trả lời được"
         }
-      }
+      },
+      "emptyMessage": "Hội thoại sẽ hiện ở đây khi khách hàng nhắn tin tới một kênh đã liên kết."
     },
     "status": {
       "botActive": "Bot đang trả lời",
@@ -2309,9 +2443,10 @@
         "description": "Chọn một hội thoại từ danh sách để xem nội dung tin nhắn."
       },
       "loading": "Đang tải tin nhắn…",
-      "noMessages": "Hội thoại chưa có tin nhắn nào.",
+      "noMessages": "Hội thoại chưa có tin nhắn nào",
       "newMessages": "Tin nhắn mới",
-      "notFound": "Không tìm thấy hội thoại"
+      "notFound": "Không tìm thấy hội thoại",
+      "noMessagesHint": "Tin nhắn mới từ khách hàng sẽ hiện ở đây."
     },
     "composer": {
       "placeholder": "Trả lời với tư cách nhân viên…",
@@ -2365,20 +2500,23 @@
         },
         "contactPoints": {
           "title": "Kênh liên hệ",
-          "empty": "Chưa có kênh liên hệ."
+          "empty": "Chưa có kênh liên hệ",
+          "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây."
         },
         "followups": {
           "title": "Nhắc hẹn",
-          "empty": "Không có nhắc hẹn đang chờ.",
+          "empty": "Không có nhắc hẹn đang chờ",
           "badge": "Tin nhắn này đã kích hoạt một nhắc hẹn",
           "viewMessage": "Xem tin nhắn",
-          "cancel": "Hủy"
+          "cancel": "Hủy",
+          "emptyHint": "Khi agent hẹn liên hệ lại với khách hàng này, nhắc hẹn sẽ hiện ở đây."
         },
         "tags": {
           "title": "Nhãn",
           "empty": "Chưa có nhãn",
           "add": "Thêm nhãn",
-          "remove": "Xoá"
+          "remove": "Xoá",
+          "emptyHint": "Chọn nhãn bên dưới để phân nhóm khách hàng này."
         },
         "actions": {
           "save": "Lưu",
@@ -2434,7 +2572,7 @@
       "title": "Gợi ý khách hàng",
       "description": "Phát hiện trùng lặp theo số điện thoại hoặc email.",
       "loading": "Đang tải…",
-      "empty": "Chưa có gợi ý nào cần xử lý.",
+      "empty": "Khi hai hồ sơ khách hàng có vẻ là cùng một người, hệ thống sẽ đề xuất gộp ở đây.",
       "filter": {
         "status": "Trạng thái"
       },
@@ -2484,7 +2622,8 @@
       },
       "nav": {
         "label": "Gợi ý"
-      }
+      },
+      "emptyTitle": "Không có đề xuất cần xem"
     },
     "title": "Khách hàng",
     "list": {
@@ -2493,7 +2632,8 @@
       "phone": "Số điện thoại",
       "firstSeen": "Lần đầu liên hệ",
       "emptyTitle": "Chưa có khách hàng nào",
-      "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn."
+      "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn.",
+      "connectChannel": "Liên kết kênh"
     }
   },
   "settings": {
@@ -2535,11 +2675,13 @@
       "handoff": {
         "yes": "Có",
         "no": "Không"
-      }
+      },
+      "emptyTitle": "Chưa có nhãn nào",
+      "empty": "Nhãn giúp bạn phân nhóm khách hàng, ví dụ VIP hoặc khách sỉ."
     },
     "clientCredentials": {
       "title": "API key",
-      "empty": "Chưa có client credential nào.",
+      "empty": "Tạo credential để hệ thống của bạn có thể gọi ecbot API.",
       "actions": {
         "create": "Tạo credential"
       },
@@ -2583,7 +2725,8 @@
           "body": "Secret hiện tại sẽ ngừng hoạt động ngay. Mọi client đang dùng secret này cần chuyển sang secret mới.",
           "confirm": "Đổi secret"
         }
-      }
+      },
+      "emptyTitle": "Chưa có client credential nào"
     }
   },
   "tools": {
@@ -2615,7 +2758,7 @@
         },
         "mcp": {
           "title": "MCP tự cấu hình",
-          "description": "Kết nối máy chủ Model Context Protocol. Các hành động được khám phá tự động."
+          "description": "Kết nối máy chủ Model Context Protocol. Các action được phát hiện tự động."
         },
         "marketplace": {
           "title": "Kho công cụ",
@@ -2635,8 +2778,7 @@
       }
     },
     "list": {
-      "loading": "Đang tải công cụ…",
-      "noRecordsMessage": "Không tìm thấy công cụ nào. Hãy thử điều chỉnh tìm kiếm hoặc bộ lọc.",
+      "noRecordsMessage": "Công cụ giúp agent tra cứu đơn hàng, đặt lịch hẹn hoặc gọi tới hệ thống riêng của bạn. Hãy chọn từ kho công cụ hoặc tự tạo.",
       "columns": {
         "kind": "Loại",
         "name": "Tên",
@@ -2662,7 +2804,8 @@
           "OPERATOR": "Operator",
           "ECCHO": "Ecbot"
         }
-      }
+      },
+      "noRecordsTitle": "Chưa có công cụ nào"
     },
     "empty": {
       "title": "Chưa có công cụ nào",
@@ -2701,15 +2844,16 @@
         "mcpProvider": "Nhà cung cấp",
         "composioToolkit": "Bộ công cụ",
         "mcpServerUrl": "URL máy chủ",
-        "discoveredActions": "Hành động đã khám phá",
-        "discoveredActionsEmpty": "Chưa khám phá được hành động nào.",
+        "discoveredActions": "Action đã phát hiện",
+        "discoveredActionsEmpty": "Chưa phát hiện action nào",
         "discoveredActionsReload": "Tải lại",
         "toolkitDescription": "Mô tả",
         "toolkitCategories": "Danh mục",
-        "toolkitToolsCount": "Hành động",
+        "toolkitToolsCount": "Action",
         "id": "ID",
         "createdAt": "Ngày tạo",
-        "updatedAt": "Ngày cập nhật"
+        "updatedAt": "Ngày cập nhật",
+        "discoveredActionsEmptyHint": "Các action sẽ hiện ở đây khi máy chủ MCP kết nối thành công."
       }
     },
     "discover": {
@@ -2733,7 +2877,7 @@
       "descriptionPlaceholder": "Công cụ này làm gì? LLM dùng mô tả để quyết định khi nào gọi.",
       "httpMethod": "Phương thức",
       "httpUrl": "URL",
-      "inputSchema": "Input schema (JSON)",
+      "inputSchema": "Lược đồ đầu vào (JSON)",
       "inputSchemaHint": "JSON Schema mô tả tham số đầu vào của công cụ.",
       "headers": "Headers (JSON)",
       "headersHint": "Headers tĩnh đính kèm mọi lần gọi (tùy chọn).",
@@ -2755,7 +2899,7 @@
       "credentialHint": "Gửi dưới dạng plaintext; lưu trữ envelope-encrypted. Để trống khi chỉnh sửa để giữ giá trị hiện tại.",
       "credentialRequiredForNewHost": "Địa chỉ giờ trỏ tới máy chủ khác, hãy nhập lại thông tin xác thực.",
       "credentialPlaceholder": "•••••••••",
-      "timeoutMs": "Timeout (ms)",
+      "timeoutMs": "Thời gian chờ (ms)",
       "maxRetries": "Số lần thử lại tối đa"
     },
     "errors": {
@@ -2848,7 +2992,8 @@
         "installing": "Đang hoàn tất cài đặt…",
         "success": "Cài đặt thành công.",
         "error": "Cài đặt thất bại.",
-        "backLink": "Quay lại kho công cụ"
+        "backLink": "Quay lại kho công cụ",
+        "noPendingInstall": "Không tìm thấy lượt cài đặt nào đang chờ trong phiên trình duyệt này."
       }
     },
     "mcp": {
@@ -2869,10 +3014,11 @@
       "title": "Lượt gọi gần đây",
       "subtitle": "100 lượt gọi công cụ gần nhất của agent này. Bấm vào một dòng để xem chi tiết yêu cầu và phản hồi.",
       "refresh": "Tải lại",
-      "empty": "Chưa có lượt gọi nào. Agent chưa gọi công cụ.",
+      "empty": "Mỗi lần agent dùng công cụ trong hội thoại, lượt gọi sẽ hiện ở đây.",
       "input": "Tham số đầu vào",
       "output": "Kết quả",
-      "error": "Lỗi"
+      "error": "Lỗi",
+      "emptyTitle": "Chưa có lượt gọi công cụ"
     },
     "chatbotTab": {
       "title": "Công cụ",
@@ -2889,16 +3035,17 @@
       "collapseActions": "Ẩn danh sách action",
       "actionsTitle": "Các action đã phát hiện",
       "actionsEmpty": "Chưa phát hiện action nào. Hãy làm mới sau khi máy chủ MCP kết nối.",
-      "actionsAutoSaveError": "Không thể lưu cài đặt hành động.",
+      "actionsAutoSaveError": "Không thể lưu cài đặt action.",
       "empty": {
         "title": "Chưa có công cụ nào được bật",
-        "description": "Nhấn 'Thêm' để kết nối một công cụ workspace với agent này."
-      }
+        "description": "Kết nối công cụ trong workspace để agent có thể tra cứu hoặc thực hiện thao tác cho khách hàng."
+      },
+      "actionsEmptyTitle": "Chưa có action nào"
     },
     "addDrawer": {
       "title": "Thêm Công Cụ",
       "selectLabel": "Chọn một công cụ",
-      "actionsTitle": "Hành động",
+      "actionsTitle": "Action",
       "enableSuccess": "Đã thêm công cụ.",
       "enableError": "Không thể thêm công cụ."
     }
@@ -2926,7 +3073,8 @@
       "location": "Vị trí",
       "signedInAt": "Đăng nhập lúc",
       "lastActiveAt": "Hoạt động gần nhất",
-      "empty": "Bạn chưa có phiên đăng nhập nào."
+      "empty": "Bạn chưa có phiên đăng nhập nào.",
+      "emptyTitle": "Chưa có phiên đăng nhập"
     },
     "revoke": {
       "label": "Thu hồi",
@@ -2966,7 +3114,10 @@
     "byPlatform": {
       "title": "Theo platform",
       "column": "Platform",
-      "preview": "Preview (chat thử)"
+      "preview": "Preview (chat thử)",
+      "TAG_CLASSIFIER": "Gắn tag khách hàng",
+      "AGENT_BUILDER": "Tạo agent",
+      "KNOWLEDGE_INGEST": "Xử lý kiến thức"
     },
     "share": "Tỷ trọng",
     "messages": "Tin nhắn",
@@ -3006,10 +3157,24 @@
     "invalid": "Khung chat này hiện không khả dụng.",
     "invalidHint": "Hãy kiểm tra mã widget trên website này, hoặc liên hệ chủ website.",
     "originNotAllowed": "Khung chat này chưa được bật cho website này.",
+    "noAgent": "Khung chat này chưa được thiết lập xong.",
+    "noAgentHint": "Chủ website cần chọn agent để trả lời ở đây.",
     "turnstile": {
       "required": "Vui lòng hoàn tất xác minh trước.",
       "failed": "Xác minh thất bại. Tải lại trang và thử lại."
     },
     "aiNotice": "Bạn đang trò chuyện với AI. Tin nhắn của bạn được xử lý để trả lời bạn. <privacy>Chính sách quyền riêng tư</privacy>"
+  },
+  "editor": {
+    "toolbar": {
+      "bold": "In đậm",
+      "italic": "In nghiêng",
+      "heading2": "Tiêu đề 2",
+      "bulletList": "Danh sách dấu đầu dòng",
+      "numberedList": "Danh sách đánh số",
+      "quote": "Trích dẫn",
+      "undo": "Hoàn tác",
+      "redo": "Làm lại"
+    }
   }
 }

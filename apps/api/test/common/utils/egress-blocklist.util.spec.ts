@@ -14,6 +14,13 @@ describe('egress-blocklist.util', () => {
             ['192.168.1.1', 4], // RFC1918
             ['169.254.169.254', 4], // cloud metadata address
             ['0.0.0.0', 4],
+            ['100.64.0.1', 4], // carrier-grade NAT
+            ['100.100.100.200', 4], // CGNAT space, a cloud metadata address
+            ['198.18.0.1', 4], // benchmarking range
+            ['198.19.255.255', 4], // benchmarking range upper bound
+            ['192.0.0.1', 4], // IETF protocol assignments
+            ['240.0.0.1', 4], // reserved
+            ['255.255.255.255', 4], // broadcast
         ])('blocks IPv4 %s', (address, family) => {
             expect(isDisallowedAddress(address, family as 4)).toBe(true);
         });
@@ -22,6 +29,11 @@ describe('egress-blocklist.util', () => {
             ['::1', 6], // loopback
             ['fc00::1', 6], // unique-local
             ['fe80::1', 6], // link-local
+            ['::', 6], // unspecified
+            ['64:ff9b::a9fe:a9fe', 6], // NAT64 form of 169.254.169.254
+            ['64:ff9b::7f00:1', 6], // NAT64 form of 127.0.0.1
+            ['64:ff9b:1::a9fe:a9fe', 6], // local-use NAT64 form of 169.254.169.254
+            ['2002:a9fe:a9fe::1', 6], // 6to4 form of 169.254.169.254
         ])('blocks IPv6 %s', (address, family) => {
             expect(isDisallowedAddress(address, family as 6)).toBe(true);
         });
@@ -39,6 +51,24 @@ describe('egress-blocklist.util', () => {
         it('does not block a normal public IPv4 address', () => {
             expect(isDisallowedAddress('8.8.8.8', 4)).toBe(false);
         });
+
+        it.each([
+            '100.63.255.255',
+            '100.128.0.1',
+            '198.17.255.255',
+            '198.20.0.1',
+            '191.255.255.255',
+            '192.0.1.1',
+        ])('does not block %s, just outside a blocked range', address => {
+            expect(isDisallowedAddress(address, 4)).toBe(false);
+        });
+
+        it.each(['2001:ffff::1', '2003::1'])(
+            'does not block IPv6 %s, just outside a blocked range',
+            address => {
+                expect(isDisallowedAddress(address, 6)).toBe(false);
+            }
+        );
 
         it('does not block a normal public IPv6 address', () => {
             expect(isDisallowedAddress('2001:4860:4860::8888', 6)).toBe(

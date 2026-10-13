@@ -403,6 +403,11 @@ export class AppEnvDto {
     @IsString()
     FACEBOOK_PAGE_ACCESS_TOKEN?: string;
 
+    // Default: 'https://ecbot.dev/en/docs/legal/data-deletion'
+    @IsOptional()
+    @IsUrl({ require_tld: false })
+    FACEBOOK_DATA_DELETION_STATUS_URL?: string;
+
     // OAuth token encryption (required for all platform account connections)
     @IsNotEmpty()
     @IsString()

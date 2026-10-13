@@ -74,5 +74,21 @@ describe("Join requests page", () => {
     render(<JoinRequests />);
 
     expect(screen.getByText("members.joinRequests.empty")).toBeInTheDocument();
+    expect(
+      screen.getByText("members.joinRequests.emptyTitle"),
+    ).toBeInTheDocument();
+  });
+
+  it("throws instead of showing the empty state when loading fails", () => {
+    const error = new Error("boom");
+    vi.mocked(useJoinRequests).mockReturnValue({
+      joinRequests: [],
+      isLoading: false,
+      isError: true,
+      error,
+    } as A);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() => render(<JoinRequests />)).toThrow(error);
   });
 });

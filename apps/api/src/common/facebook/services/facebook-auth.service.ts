@@ -44,7 +44,7 @@ export class FacebookAuthService
         const url = `${this.baseGraphApiUrl}/me`;
         const params = {
             access_token: accessToken,
-            fields: 'id,name,email,picture',
+            fields: 'id,name,picture',
         };
 
         try {

@@ -2,17 +2,18 @@ import { type ActivityListResponseDto } from "@repo/client";
 import type { ParseKeys } from "i18next";
 
 type ActivitySubject = ActivityListResponseDto["subject"];
-type ActivityAction = ActivityListResponseDto["action"];
 
 // Generic actions (create/update/delete) mean different things per subject -
 // override by "SUBJECT:action" first, fall back to ACTIVITY_MESSAGE_MAP by action.
 export const ACTIVITY_SUBJECT_MESSAGE_MAP: Partial<
-  Record<`${ActivitySubject}:${ActivityAction}`, ParseKeys>
+  Record<`${ActivitySubject}:${ActivityListResponseDto["action"]}`, ParseKeys>
 > = {
   "CHATBOT:create": "activities.chatbot.create",
   "CHATBOT:update": "activities.chatbot.update",
   "CHATBOT:delete": "activities.chatbot.delete",
   "CHATBOT:clone_chatbot": "activities.chatbot.clone",
+  "CONVERSATION:create": "activities.conversation.create",
+  "CONVERSATION:update": "activities.conversation.update",
   "WORKSPACE:create": "activities.workspace.create",
   "WORKSPACE:update": "activities.workspace.update",
   "SKILL:create": "activities.skill.create",
@@ -35,23 +36,32 @@ export const ACTIVITY_SUBJECT_MESSAGE_MAP: Partial<
   "CUSTOMER:customer_unmerge": "activities.customer.unmerge",
   "CUSTOMER:customer_merge_confirm": "activities.customer.mergeConfirm",
   "CUSTOMER:customer_merge_dismiss": "activities.customer.mergeDismiss",
+  "PLAN:subscription_change_plan": "activities.plan.changePlan",
+  "PLAN:subscription_cancel": "activities.plan.cancel",
+  "PLAN:subscription_resume": "activities.plan.resume",
 };
 
 // Subject-agnostic fallback, used when no SUBJECT:action override exists above.
-export const ACTIVITY_MESSAGE_MAP: Partial<Record<ActivityAction, ParseKeys>> =
-  {
-    create: "activities.generic.create",
-    update: "activities.generic.update",
-    delete: "activities.generic.delete",
-    join_workspace: "activities.workspace.join",
-    leave_workspace: "activities.workspace.leave",
-    invite_member: "activities.member.invite",
-    remove_member: "activities.member.remove",
-    approve_join_workspace: "activities.member.approve",
-    active_chatbot: "activities.chatbot.active",
-    archive_chatbot: "activities.chatbot.archive",
-    inactive_chatbot: "activities.chatbot.inactive",
-    unarchive_chatbot: "activities.chatbot.unarchive",
-    link_account_chatbot: "activities.chatbot.linkAccount",
-    unlink_account_chatbot: "activities.chatbot.unlinkAccount",
-  };
+export const ACTIVITY_MESSAGE_MAP: Partial<
+  Record<ActivityListResponseDto["action"], ParseKeys>
+> = {
+  create: "activities.generic.create",
+  update: "activities.generic.update",
+  delete: "activities.generic.delete",
+  join_workspace: "activities.workspace.join",
+  leave_workspace: "activities.workspace.leave",
+  invite_member: "activities.member.invite",
+  remove_member: "activities.member.remove",
+  approve_join_workspace: "activities.member.approve",
+  active_chatbot: "activities.chatbot.active",
+  archive_chatbot: "activities.chatbot.archive",
+  inactive_chatbot: "activities.chatbot.inactive",
+  unarchive_chatbot: "activities.chatbot.unarchive",
+  link_account_chatbot: "activities.chatbot.linkAccount",
+  unlink_account_chatbot: "activities.chatbot.unlinkAccount",
+};
+
+// Older conversation activities stored the platform sender id (a UUID or a
+// long number) as the name; it means nothing to a reader. 12+ digits keeps
+// phone numbers, which a channel may use as the name, readable.
+export const PLATFORM_ID_PATTERN = /^([0-9a-f]{8}-[0-9a-f-]{27}|\d{12,})$/i;

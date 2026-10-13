@@ -295,11 +295,27 @@ export class AccountService implements IAccountService {
     mapList(accounts: AccountEntity[]): AccountListResponseDto[] {
         return accounts.map((a: AccountEntity) => {
             const obj = hasToObject(a) ? a.toObject() : a;
+            // A populated chatbot carries every column; only the summary
+            // travels. A soft-deleted one counts as no agent, same rule as
+            // findAccountsNotBelongingToAnyChatbot. Unpopulated callers get
+            // the reference id, which is not a summary either.
+            const chatbot = (obj as any).chatbot as
+                | { id: string; name: string; deletedAt?: Date | null }
+                | string
+                | null
+                | undefined;
+
             return {
                 ...obj,
                 cookies: undefined,
                 proxies: undefined,
                 accessToken: undefined,
+                chatbot:
+                    chatbot &&
+                    typeof chatbot === 'object' &&
+                    !chatbot.deletedAt
+                        ? { id: chatbot.id, name: chatbot.name }
+                        : null,
             } as unknown as AccountListResponseDto;
         });
     }
@@ -531,6 +547,36 @@ export class AccountService implements IAccountService {
 
             return true;
         });
+    }
+
+    /**
+     * Meta data deletion request: unlinks the person's Facebook login (name,
+     * avatar, user token) in every workspace. Pages linked through it belong
+     * to the business and stay, but their page tokens were issued under that
+     * person's grant, so those are cleared and the pages wait for a reconnect.
+     * Returns the ids of the logins that were removed.
+     */
+    async deleteFacebookUserData(facebookUserId: string): Promise<string[]> {
+        const accounts = await this.accountRepository.find({
+            externalId: facebookUserId,
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+            deletedAt: null,
+        });
+
+        const deleted: string[] = [];
+        for (const account of accounts) {
+            // Before the delete: it nulls the pages' parent reference.
+            await this.accountRepository.updateManyRaw(
+                { account: account.id, type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE },
+                { accessToken: '', status: ENUM_ACCOUNT_STATUS.INACTIVE }
+            );
+            if (
+                await this.deleteSyncAccount(account.id, account.workspace.id)
+            ) {
+                deleted.push(account.id);
+            }
+        }
+        return deleted;
     }
 
     /**

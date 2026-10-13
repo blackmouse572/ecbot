@@ -10,6 +10,7 @@ import { Avatar, DropdownMenu, Text, clx } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
 import { useLogout, useMe } from "@/hooks/api";
+import { enterpriseUserSection } from "@/routes/enterprise.user-section";
 import { Skeleton } from "@repo/ui/common-components";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -24,6 +25,9 @@ export const UserMenu = () => {
 
   return (
     <div>
+      {enterpriseUserSection().map((Section, index) => (
+        <Section key={index} />
+      ))}
       <DropdownMenu open={openMenu} onOpenChange={setOpenMenu}>
         <UserBadge />
         <DropdownMenu.Content className="min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)]">

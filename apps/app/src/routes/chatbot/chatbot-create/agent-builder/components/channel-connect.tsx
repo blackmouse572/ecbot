@@ -12,6 +12,7 @@ import {
   useUnlinkChatbotAccount,
 } from "@/hooks/api";
 import { useOAuthLogin } from "@/hooks/use-oauth-login";
+import { useUISound } from "@/modules/sound";
 import type { Issued } from "@/components/account-connect/issued";
 import { IssuedPanel } from "@/components/account-connect/issued-panel";
 import { XMarkMini } from "@medusajs/icons";
@@ -21,7 +22,7 @@ import type { AccountGetDetailResponseDto, AccountListResponseDto, ChatbotLinkAc
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { LinkedAccountRef } from "../builder-state";
-import { CHANNEL_CONNECT, channelOfAccountType } from "../channel-accounts";
+import { CHANNEL_CONNECT, channelOfAccountType, isConnectableAccountType } from "../channel-accounts";
 import { channelIcon } from "./channel-icon";
 
 const GRID_CHANNELS: ChannelId[] = ["messenger", "zalo", "telegram", "website", "instagram", "tiktok", "shopee"];
@@ -84,6 +85,7 @@ export function ChannelConnect({
   // this stops the other platform's listener from also reacting to a single
   // postMessage.
   const pendingOAuth = useRef<ChannelId | null>(null);
+  const playSound = useUISound();
 
   /**
    * Runs one account mutation, managing the busy/error UI state around it.
@@ -122,7 +124,10 @@ export function ChannelConnect({
         return [...prev, ...skipped.filter((s) => !existing.has(s.id))];
       });
     }
-    if (linked.length) onAccountsLinked(linked);
+    if (linked.length) {
+      playSound("connect");
+      onAccountsLinked(linked);
+    }
     if (!linked.length && !skipped.length) setError(true);
   };
 
@@ -264,11 +269,8 @@ export function ChannelConnect({
     onAnswer(Array.from(new Set([...fromAccounts, ...comingSoon])));
   };
 
-  // User-level Facebook accounts aren't a messaging channel themselves
-  // (only their pages are), and API channels are server integrations, not
-  // a channel this builder connects, so neither is offered here.
-  const existingChannelAccounts = (unlinkedAccounts ?? []).filter(
-    (a) => a.type !== "FACEBOOK_ACCOUNT" && a.type !== "API_CHANNEL",
+  const existingChannelAccounts = (unlinkedAccounts ?? []).filter((a) =>
+    isConnectableAccountType(a.type),
   );
 
   return (

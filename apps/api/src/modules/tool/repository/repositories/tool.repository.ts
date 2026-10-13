@@ -25,12 +25,21 @@ export class ToolRepository extends DatabaseRepository<ToolEntity> {
         );
     }
 
+    /** Admin lookup: any workspace, with the workspace loaded. */
+    async findOneAny(toolId: string): Promise<ToolEntity | null> {
+        return this.findOne(
+            { id: toolId, deleted: false },
+            { populate: ['workspace', 'createdBy'] as any }
+        );
+    }
+
     async findAllPaginated(
         find: Record<string, any>,
         options: {
             limit?: number;
             offset?: number;
             order?: IPaginationOrder;
+            populate?: string[];
         } = {}
     ): Promise<ToolEntity[]> {
         const where = { ...find, deleted: false };
@@ -38,6 +47,7 @@ export class ToolRepository extends DatabaseRepository<ToolEntity> {
             limit: options.limit,
             offset: options.offset,
             orderBy: (options.order as any) ?? { createdAt: 'DESC' },
+            populate: (options.populate ?? []) as any,
         });
     }
 

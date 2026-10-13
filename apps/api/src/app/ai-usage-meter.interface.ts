@@ -16,6 +16,12 @@ export enum ENUM_AI_USAGE_SOURCE {
     WIDGET = 'WIDGET',
     /** An operator testing the bot in the console. */
     PREVIEW = 'PREVIEW',
+    /** Tagging a customer and summarising them after a conversation. */
+    TAG_CLASSIFIER = 'TAG_CLASSIFIER',
+    /** Suggestions while an owner describes a new agent. */
+    AGENT_BUILDER = 'AGENT_BUILDER',
+    /** Embedding an uploaded knowledge document. */
+    KNOWLEDGE_INGEST = 'KNOWLEDGE_INGEST',
 }
 
 /** The chatbot fields a meter reads — structural, so any chatbot-shaped
@@ -47,9 +53,11 @@ export interface AiUsageRecord {
  * nothing is recorded. Provided by the token-usage module (Ecbot Cloud).
  */
 export interface AiUsageMeter {
+    /** Without a chatbot (agent builder, knowledge ingest) only the
+     *  workspace's budget applies, not a chatbot's own caps. */
     check(
         workspaceId: string,
-        chatbot: AiUsageMeterChatbot
+        chatbot?: AiUsageMeterChatbot
     ): Promise<AiUsageDecision>;
     /** Never throws: it runs on the tail of a reply already delivered to a customer. */
     record(record: AiUsageRecord): Promise<void>;

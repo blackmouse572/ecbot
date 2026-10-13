@@ -10,6 +10,7 @@ import logging
 import unicodedata
 
 from fastapi import APIRouter, Depends
+from langchain_core.callbacks import get_usage_metadata_callback
 
 from eccho_ai.core.security import require_internal_token
 from eccho_ai.core.variables import AppVars
@@ -19,8 +20,10 @@ from eccho_ai.modules.customer.models import (
     ClassifierTagDef,
     ClassifyRequest,
     ClassifyResponse,
+    ClassifyResult,
 )
 from eccho_ai.llm.providers.chat_model import build_chat_model
+from eccho_ai.llm.usage import sum_usage
 
 
 logger = logging.getLogger("uvicorn.info")
@@ -93,9 +96,9 @@ def _build_user_prompt(req: ClassifyRequest) -> str:
 
 @router.post(
     "/classify",
-    response_model=AppResponse[ClassifyResponse],
+    response_model=AppResponse[ClassifyResult],
 )
-async def classify(req: ClassifyRequest) -> AppResponse[ClassifyResponse]:
+async def classify(req: ClassifyRequest) -> AppResponse[ClassifyResult]:
     llm = build_chat_model(
         model_text_name=AppVars.CLASSIFIER_MODEL,
         temperature=AppVars.CUSTOMER_CLASSIFIER_TEMPERATURE,
@@ -103,21 +106,24 @@ async def classify(req: ClassifyRequest) -> AppResponse[ClassifyResponse]:
     structured = llm.with_structured_output(ClassifyResponse)
 
     user_prompt = _build_user_prompt(req)
-    try:
-        result = await structured.ainvoke(
-            [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ]
-        )
-    except Exception as exc:  # noqa: BLE001 — never crash the BullMQ job
-        logger.warning(
-            "customer.classify failed conv=%s customer=%s err=%s",
-            req.conversation_id,
-            req.customer_id,
-            exc,
-        )
-        return AppResponse(data=ClassifyResponse())
+    with get_usage_metadata_callback() as usage_cb:
+        try:
+            result = await structured.ainvoke(
+                [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ]
+            )
+        except Exception as exc:  # noqa: BLE001 — never crash the BullMQ job
+            logger.warning(
+                "customer.classify failed conv=%s customer=%s err=%s",
+                req.conversation_id,
+                req.customer_id,
+                exc,
+            )
+            result = ClassifyResponse()
+    # Reported even when the answer is lost: the tokens were spent.
+    usage = sum_usage(usage_cb.usage_metadata)
 
     if not isinstance(result, ClassifyResponse):
         # Defensive — `with_structured_output` should already return the
@@ -130,7 +136,7 @@ async def classify(req: ClassifyRequest) -> AppResponse[ClassifyResponse]:
                 req.conversation_id,
                 exc,
             )
-            return AppResponse(data=ClassifyResponse())
+            result = ClassifyResponse()
 
     # Defense-in-depth: trim to known catalog / current sets. apps/api also
     # filters but we don't want to hand back a tag the catalog doesn't define.
@@ -149,7 +155,11 @@ async def classify(req: ClassifyRequest) -> AppResponse[ClassifyResponse]:
         if _nfc(t) in current_names
     ]
 
-    return AppResponse(data=result)
+    return AppResponse(
+        data=ClassifyResult(
+            **result.model_dump(), usage=usage, model=AppVars.CLASSIFIER_MODEL
+        )
+    )
 
 
 def _nfc(name: str) -> str:

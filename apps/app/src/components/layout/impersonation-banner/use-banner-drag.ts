@@ -33,6 +33,9 @@ export function useBannerUi() {
 
   const onPointerDown = useCallback(
     (e: ReactPointerEvent) => {
+      // Keep the press inside the banner: an open dialog treats a pointerdown
+      // outside it as "close".
+      e.stopPropagation();
       (e.target as Element).setPointerCapture?.(e.pointerId);
       dragging.current = { startX: e.clientX, baseX: state.x };
       dragged.current = false;

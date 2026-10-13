@@ -32,8 +32,18 @@
         "error": {
             "notFound": "Tool not found",
             "executionFailed": "Tool execution failed",
-            "notLinked": "Tool is not enabled for this chatbot"
+            "notLinked": "Tool is not enabled for this chatbot",
+            "inactive": "Tool was turned off by an administrator"
         }
+    },
+    "activate": {
+        "success": "Tool activated",
+        "error": {
+            "notInactive": "Only a tool an administrator turned off can be activated"
+        }
+    },
+    "inactivate": {
+        "success": "Tool inactivated"
     },
     "enable": {
         "success": "Tool enabled on chatbot",

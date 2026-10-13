@@ -5,7 +5,7 @@ import { Outlet, useParams } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { ConversationList } from "../conversation-list/conversation-list";
 import { SMALL_SCREEN_QUERY } from "../constants";
-import { LogoBoxSpinner } from "@repo/ui/common-components";
+import { ConversationDetailSkeleton } from "../conversation-detail/conversation-detail-skeleton";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -19,13 +19,7 @@ export function ConversationsShell() {
 
   const thread = (
     <main className="flex h-full flex-col overflow-hidden">
-      <Suspense
-        fallback={
-          <div className="flex flex-1 items-center justify-center">
-            <LogoBoxSpinner />
-          </div>
-        }
-      >
+      <Suspense fallback={<ConversationDetailSkeleton />}>
         <Outlet />
       </Suspense>
     </main>

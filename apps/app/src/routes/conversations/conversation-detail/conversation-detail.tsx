@@ -11,6 +11,7 @@ import {
 } from "@/hooks/api/conversations";
 import { useMe } from "@/hooks/api/users";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { useSoundOnChange, useUISound } from "@/modules/sound";
 import { ROUTES } from "@/routes";
 import {
   ResizableHandle,
@@ -18,6 +19,7 @@ import {
   ResizablePanelGroup,
 } from "@repo/ui/components";
 import { CustomerSidePanel } from "../customer-side-panel";
+import { ConversationDetailSkeleton } from "./conversation-detail-skeleton";
 import { ConversationHeader } from "./conversation-header";
 import { MessageComposer } from "./message-composer";
 import { MessageList } from "./message-list";
@@ -50,6 +52,20 @@ export function ConversationDetail() {
   const send = useSendOperatorReply(id);
   const markRead = useMarkConversationRead(id);
   const react = useReactToMessage(id, currentOperatorId);
+  const playSound = useUISound();
+
+  // A new newest message from the customer. Keyed on the newest id, so
+  // loading older pages or our own sends stay quiet; so does dropping a
+  // failed optimistic send (`tmp-` id), which can uncover an older message.
+  const newestMessage = messages.at(-1);
+  useSoundOnChange(
+    isLoadingMessages ? undefined : (newestMessage?.id ?? null),
+    (previous) =>
+      !previous?.startsWith("tmp-") && newestMessage?.direction === "INBOUND"
+        ? "receive"
+        : null,
+    id,
+  );
 
   // Scrolls the message thread to the message that triggered a followup and
   // briefly highlights it. Kept minimal: no context/state lib, just a DOM
@@ -95,11 +111,7 @@ export function ConversationDetail() {
   if (!id) return null;
 
   if (isLoadingConversation && !conversation) {
-    return (
-      <div className="text-ui-fg-subtle flex flex-1 items-center justify-center">
-        {t("conversations.detail.loading")}
-      </div>
-    );
+    return <ConversationDetailSkeleton />;
   }
 
   if (!conversation) {
@@ -116,6 +128,7 @@ export function ConversationDetail() {
     send.mutate(
       { text },
       {
+        onSuccess: () => playSound("send"),
         onError: () => {
           toast.error(t("conversations.errors.sendFailed"));
         },
@@ -127,6 +140,7 @@ export function ConversationDetail() {
     send.mutate(
       { text, retryOfClientNonce: clientNonce },
       {
+        onSuccess: () => playSound("send"),
         onError: () => {
           toast.error(t("conversations.errors.sendFailed"));
         },
