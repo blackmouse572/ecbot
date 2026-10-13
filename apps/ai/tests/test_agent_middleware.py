@@ -6,6 +6,7 @@ both awrap_model_call and awrap_tool_call. Uses a fake chat model; no network.
 """
 from __future__ import annotations
 
+from datetime import UTC
 from unittest.mock import MagicMock
 
 from langchain.agents import create_agent
@@ -97,6 +98,7 @@ class _CapturingRequest:
     """Minimal ModelRequest stand-in that records what the middleware overrides."""
 
     tools: list = []
+    messages: list = []  # noqa: RUF012
 
     def __init__(self, context):
         self.runtime = type("_R", (), {"context": context})()
@@ -150,3 +152,37 @@ async def test_no_session_id_without_conversation(monkeypatch):
     model = await _run_middleware(monkeypatch, base, conversation_id=None)
     assert model is base
     assert model.extra_body is None
+
+
+# ── Per-turn clock (#285) ────────────────────────────────────────────────────
+
+
+async def test_current_time_rides_the_newest_turn_not_the_system_prompt(monkeypatch):
+    from datetime import datetime
+
+    seen: dict = {}
+
+    class _RecordingModel(_FakeToolModel):
+        def _generate(self, messages, *a, **kw):
+            seen["messages"] = messages
+            return super()._generate(messages, *a, **kw)
+
+    fake = _RecordingModel(messages=iter([AIMessage(content="ok")]))
+    monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+
+    chatbot = MagicMock(timezone="Asia/Ho_Chi_Minh")
+    ctx = AgentRequestContext(
+        chatbot=chatbot,
+        chatbot_id="x",
+        now=datetime(2026, 10, 13, 16, 50, tzinfo=UTC),
+    )
+    result = await _agent().ainvoke({"messages": [("user", "deliver now?")]}, context=ctx)
+
+    system, newest = seen["messages"][0], seen["messages"][-1]
+    assert system.content == "sys"
+    assert newest.content.startswith(
+        "<current_time>Tuesday, 2026-10-13 23:50 (Asia/Ho_Chi_Minh, UTC+07:00)</current_time>"
+    )
+    # Model input only: the conversation state keeps the customer's own words.
+    assert result["messages"][0].content == "deliver now?"
