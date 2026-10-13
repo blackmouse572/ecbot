@@ -78,4 +78,20 @@ describe("ResetPasswordPage", () => {
     ).toBeTruthy();
     expect(resetPassword).not.toHaveBeenCalled();
   });
+
+  it("shows the strength meter only once the user starts typing", () => {
+    render(
+      <MemoryRouter initialEntries={["/reset-password?token=tok-1"]}>
+        <ResetPasswordPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole("progressbar")).toBeNull();
+
+    fireEvent.change(screen.getByPlaceholderText("New password"), {
+      target: { value: "a" },
+    });
+
+    expect(screen.getByRole("progressbar")).toBeTruthy();
+  });
 });

@@ -90,7 +90,9 @@ export const ChangePasswordForm = () => {
                     placeholder={t("changePassword.fields.newPassword")}
                   />
                 </Form.Control>
-                <PasswordStrength password={field.value} className="mt-3" />
+                {field.value && (
+                  <PasswordStrength password={field.value} className="mt-3" />
+                )}
               </Form.Item>
             )}
           />

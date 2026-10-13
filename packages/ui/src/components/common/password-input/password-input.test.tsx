@@ -37,6 +37,16 @@ describe("PasswordInput", () => {
       "aria-invalid",
       "true",
     );
-    expect(screen.getByText("Too short")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Too short");
+  });
+
+  it("points the input at the error so screen readers announce it", () => {
+    renderWithProviders(
+      <PasswordInput placeholder="Password" errorMessage="Too short" />,
+    );
+
+    expect(screen.getByPlaceholderText("Password")).toHaveAccessibleDescription(
+      "Too short",
+    );
   });
 });

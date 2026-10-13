@@ -1,6 +1,6 @@
 import { Eye, EyeSlash } from "@medusajs/icons";
 import { clx } from "@medusajs/ui";
-import { useState, type ComponentProps } from "react";
+import { useId, useState, type ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 
 interface PasswordInputProps extends Omit<ComponentProps<"input">, "type"> {
@@ -13,9 +13,11 @@ const PasswordInput = ({
   errorMessage,
   className,
   disabled,
+  "aria-describedby": ariaDescribedBy,
   ...props
 }: PasswordInputProps) => {
   const { t } = useTranslation();
+  const errorId = useId();
   const [isVisible, setIsVisible] = useState(false);
 
   return (
@@ -26,6 +28,7 @@ const PasswordInput = ({
           type={isVisible ? "text" : "password"}
           disabled={disabled}
           aria-invalid={!!errorMessage}
+          aria-describedby={errorMessage ? errorId : ariaDescribedBy}
           className={clx(
             "caret-ui-fg-base bg-ui-bg-field hover:bg-ui-bg-field-hover shadow-borders-base placeholder-ui-fg-muted text-ui-fg-base transition-fg txt-compact-small relative h-8 w-full appearance-none rounded-md py-1.5 ps-2 pe-9 outline-none",
             "focus-visible:shadow-borders-interactive-with-active",
@@ -46,7 +49,11 @@ const PasswordInput = ({
         </button>
       </div>
       {errorMessage && (
-        <p className="txt-compact-xsmall text-ui-fg-error mt-1">
+        <p
+          id={errorId}
+          role="alert"
+          className="txt-compact-xsmall text-ui-fg-error mt-1"
+        >
           {errorMessage}
         </p>
       )}
