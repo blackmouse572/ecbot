@@ -41,7 +41,12 @@ export const agentProfileSchema = z.object({
   // Absent until the owner fills in the week (#289).
   openingHours: openingHoursSchema.optional(),
   primaryLanguage: z.string().min(2).max(8),
-}).strict();
+}).strict().refine(
+  // Personal assistants have no opening hours: the prompt and apps/ai's
+  // per-turn status would disagree on them (#289).
+  (p) => !p.openingHours || !getBusinessType(p.businessType).personal,
+  { message: "personal assistants have no opening hours", path: ["openingHours"] },
+);
 
 export type AgentProfile = z.infer<typeof agentProfileSchema>;
 

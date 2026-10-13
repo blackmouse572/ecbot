@@ -49,6 +49,8 @@ describe("agentProfileSchema", () => {
     expect(agentProfileSchema.safeParse(p).success).toBe(true);
     const overlapping = { mon: [{ open: "08:00", close: "12:00" }, { open: "11:00", close: "13:00" }] };
     expect(agentProfileSchema.safeParse({ ...p, openingHours: overlapping }).success).toBe(false);
+    const personal = createProfile("personal_tasks", "en");
+    expect(agentProfileSchema.safeParse({ ...personal, openingHours: { mon: [] } }).success).toBe(false);
   });
 
   it("accepts custom collect labels within the limits and profiles without them", () => {
