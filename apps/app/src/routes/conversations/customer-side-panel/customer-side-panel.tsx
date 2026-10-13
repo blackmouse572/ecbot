@@ -333,9 +333,6 @@ export function CustomerSidePanel({
 
           {conversationId && (
             <div className="border-ui-border-base border-t px-4 py-4">
-              <Heading level="h3" className="mb-2">
-                {t("conversations.customer.panel.timezone.title")}
-              </Heading>
               <TimezoneSection conversationId={conversationId} />
             </div>
           )}

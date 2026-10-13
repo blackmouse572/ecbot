@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@medusajs/ui";
 import { useConversation } from "@/hooks/api/conversations";
 import { TimezoneSection } from "./timezone-section";
 
@@ -28,6 +29,13 @@ const withConversation = (conversation: object) =>
     isError: false,
   } as never);
 
+const renderSection = () =>
+  render(
+    <TooltipProvider>
+      <TimezoneSection conversationId="conv-1" />
+    </TooltipProvider>,
+  );
+
 describe("TimezoneSection", () => {
   beforeEach(() => mutateAsync.mockClear());
 
@@ -36,7 +44,7 @@ describe("TimezoneSection", () => {
       timezone: null,
       chatbot: { timezone: "Asia/Ho_Chi_Minh" },
     });
-    render(<TimezoneSection conversationId="conv-1" />);
+    renderSection();
 
     expect(
       screen.getByRole("button", {
@@ -44,7 +52,7 @@ describe("TimezoneSection", () => {
       }),
     ).toHaveTextContent("conversations.customer.panel.timezone.followAgent");
     expect(
-      screen.getByText(
+      screen.getByLabelText(
         "conversations.customer.panel.timezone.hintWithZone:Asia/Ho_Chi_Minh",
       ),
     ).toBeInTheDocument();
@@ -52,7 +60,7 @@ describe("TimezoneSection", () => {
 
   it("shows the conversation's own zone and clears it back to the agent", async () => {
     withConversation({ timezone: "America/New_York", chatbot: {} });
-    render(<TimezoneSection conversationId="conv-1" />);
+    renderSection();
 
     const trigger = screen.getByRole("button", {
       name: "conversations.customer.panel.timezone.title",
