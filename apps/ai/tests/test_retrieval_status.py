@@ -204,3 +204,31 @@ async def test_retrieval_goes_on_message_metadata():
 
     assert metadata["retrieval"] == {"status": "below_threshold", "top_score": 0.3}
     assert "usage" in metadata
+
+
+def test_blocked_turn_still_reports_retrieval(client, monkeypatch):
+    """The non-streaming endpoint's guardrail block keeps `retrieval`, so an
+    eval of a blocked turn still sees why retrieval found what it did."""
+    from types import SimpleNamespace
+
+    from eccho_ai.llm.retrievers.retrieval import RAGRetrievalResult
+    from eccho_ai.modules.chat import routers
+
+    async def retrieval(_req):
+        return RAGRetrievalResult(query="menu?", chunks=[], context="", status="no_documents")
+
+    async def agent(_id):
+        return SimpleNamespace(chatbot=object())
+
+    async def block(_message, _chatbot):
+        return "off topic"
+
+    monkeypatch.setattr(routers, "get_rag_retrieval", retrieval)
+    monkeypatch.setattr(routers, "get_agent", agent)
+    monkeypatch.setattr(routers, "run_input_guardrail", block)
+
+    res = client.post("/api/chat/message", json={"chatbot_id": "bot", "message": "menu?"})
+
+    metadata = res.json()["data"]["metadata"]
+    assert metadata["guardrail_block"] is True
+    assert metadata["retrieval"] == {"status": "no_documents"}

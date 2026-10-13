@@ -9,6 +9,7 @@ import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
 import { ToolInstallSessionRepository } from 'src/modules/tool/repository/repositories/tool-install-session.repository';
 import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.repository';
 import { SlugMinter } from 'src/modules/tool/services/slug-minter.service';
+import { ComposioCatalogService } from 'src/modules/tool/services/composio-catalog.service';
 import {
     BeginResult,
     CompleteParams,
@@ -29,7 +30,8 @@ export class ComposioToolkitInstaller implements ToolkitInstaller {
         private readonly toolRepo: ToolRepository,
         private readonly sessionRepo: ToolInstallSessionRepository,
         private readonly slugMinter: SlugMinter,
-        private readonly em: EntityManager
+        private readonly em: EntityManager,
+        private readonly catalog: ComposioCatalogService
     ) {}
 
     async begin(ctx: InstallContext): Promise<BeginResult> {
@@ -116,10 +118,10 @@ export class ComposioToolkitInstaller implements ToolkitInstaller {
 
         // Composio's own blurb for the toolkit (#189); the old fixed text
         // ("Composio toolkit: googlesheets") told the owner nothing.
-        const description = await this.api
-            .getToolkit(toolkit)
-            .then(detail => detail?.meta?.description?.trim())
-            .catch(() => undefined);
+        // Cached, and it never throws (null on failure).
+        const description = (
+            await this.catalog.getToolkitBySlug(toolkit)
+        )?.meta?.description?.trim();
 
         const tool = await this.toolRepo.create(
             {

@@ -21,7 +21,8 @@ describe('ComposioToolkitInstaller.complete', () => {
             toolRepo as any,
             {} as any,
             { mint: jest.fn(async () => 'composio-googlesheets') } as any,
-            em as any
+            em as any,
+            { getToolkitBySlug: getToolkit } as any
         );
         const session = {
             id: 'sess-1',
@@ -53,9 +54,8 @@ describe('ComposioToolkitInstaller.complete', () => {
 
     it('still installs when the description cannot be fetched', async () => {
         const { installer, toolRepo, session } = setup(
-            jest.fn(async () => {
-                throw new Error('down');
-            })
+            // getToolkitBySlug swallows Composio errors and answers null.
+            jest.fn(async () => null)
         );
 
         await installer.complete(session as any, {});

@@ -61,7 +61,12 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             return AppResponse(
                 data=ChatResponse(
                     response="__GUARDRAIL_BLOCK__",
-                    metadata={"guardrail_block": True, "reason": input_block},
+                    metadata={
+                        "guardrail_block": True,
+                        "reason": input_block,
+                        # Evals of a blocked turn still see why retrieval found what it did (#205).
+                        **({"retrieval": retrieval.summary} if retrieval else {}),
+                    },
                 )
             )
 
@@ -103,7 +108,12 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
         return AppResponse(
             data=ChatResponse(
                 response="__GUARDRAIL_BLOCK__",
-                metadata={"guardrail_block": True, "reason": output_block},
+                metadata={
+                        "guardrail_block": True,
+                        "reason": output_block,
+                        # Evals of a blocked turn still see why retrieval found what it did (#205).
+                        **({"retrieval": retrieval.summary} if retrieval else {}),
+                    },
             )
         )
 
