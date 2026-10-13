@@ -117,7 +117,7 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
                 duration: CHAT_SHIFT_DURATION,
                 ease: CHAT_EASE_IN_OUT,
               }}
-              className="text-ui-fg-base group-hover/step:text-ui-fg-base min-w-0 truncate font-mono text-xs leading-[18px]"
+              className="text-ui-fg-base min-w-0 truncate font-sans"
             >
               {name}
             </motion.code>
@@ -130,7 +130,7 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
           <NumberFlow
             value={formatElapsed(elapsedMs)}
             className={clx(
-              "min-w-[42px] shrink-0 justify-end font-mono text-[11px]",
+              "txt-compact-xsmall min-w-[42px] shrink-0 justify-end tabular-nums",
               failed ? "text-ui-fg-error" : "text-ui-fg-muted",
             )}
           />
