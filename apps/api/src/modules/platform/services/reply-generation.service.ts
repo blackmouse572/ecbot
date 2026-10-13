@@ -125,10 +125,10 @@ export class ReplyGenerationService {
         const chatbot = account.chatbot;
         const adapter = this.registry.get(account.type);
 
-        // Keep the typing indicator alive: platforms expire `typing_on` after
-        // ~20s, but a reply with tool roundtrips can run longer, so re-send it
-        // on an interval until stopTyping() fires (final message sent, discard,
-        // or no reply).
+        // Keep the typing indicator alive: platforms expire it (Messenger after
+        // ~20s, Telegram after 5s), but a reply with tool roundtrips can run
+        // longer, so re-send it on an interval until stopTyping() fires (final
+        // message sent, discard, or no reply).
         let typingTimer: ReturnType<typeof setInterval> | undefined;
         const sendTyping = (on: boolean) => {
             if (chatbot.typingIndicator) {
@@ -140,7 +140,12 @@ export class ReplyGenerationService {
             sendTyping(true);
             typingTimer = setInterval(
                 () => sendTyping(true),
-                MESSAGE_TYPING_REFRESH_MS
+                // Floored: a 0 would re-send typing every millisecond.
+                Math.max(
+                    1000,
+                    adapter.capabilities.typingRefreshMs ??
+                        MESSAGE_TYPING_REFRESH_MS
+                )
             );
             typingTimer.unref?.();
         };

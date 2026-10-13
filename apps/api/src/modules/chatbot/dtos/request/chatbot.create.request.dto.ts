@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
     IsBoolean,
     IsEnum,
@@ -8,6 +9,8 @@ import {
     IsObject,
     IsOptional,
     IsString,
+    IsTimeZone,
+    Matches,
     Max,
     MaxLength,
     Min,
@@ -17,6 +20,7 @@ import {
     ENUM_CHATBOT_STATUS,
     ENUM_CHATBOT_TYPE,
 } from '../../enums/chatbot.enum';
+import { canonicalTimezone } from '../../utils/chatbot-timezone.util';
 import { IsOptionalNotNull } from 'src/common/request/validations/request.is-optional-not-null.validation';
 
 // No field carries a default initializer: ChatbotEntity holds the defaults,
@@ -315,4 +319,17 @@ export class ChatbotCreateRequestDto {
         required: false,
     })
     followupRules?: string;
+
+    @IsTimeZone()
+    // A bare offset ("+07:00") passes Intl but is no zone ZoneInfo can load.
+    @Matches(/^[A-Za-z]/)
+    @Transform(({ value }) => canonicalTimezone(value))
+    @IsOptional()
+    @ApiProperty({
+        description:
+            'IANA timezone the agent uses for the current date and time. Defaults to the deployment timezone.',
+        example: 'Asia/Ho_Chi_Minh',
+        required: false,
+    })
+    timezone?: string;
 }

@@ -61,7 +61,12 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             return AppResponse(
                 data=ChatResponse(
                     response="__GUARDRAIL_BLOCK__",
-                    metadata={"guardrail_block": True, "reason": input_block},
+                    metadata={
+                        "guardrail_block": True,
+                        "reason": input_block,
+                        # Evals of a blocked turn still see why retrieval found what it did (#205).
+                        **({"retrieval": retrieval.summary} if retrieval else {}),
+                    },
                 )
             )
 
@@ -103,7 +108,12 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
         return AppResponse(
             data=ChatResponse(
                 response="__GUARDRAIL_BLOCK__",
-                metadata={"guardrail_block": True, "reason": output_block},
+                metadata={
+                        "guardrail_block": True,
+                        "reason": output_block,
+                        # Evals of a blocked turn still see why retrieval found what it did (#205).
+                        **({"retrieval": retrieval.summary} if retrieval else {}),
+                    },
             )
         )
 
@@ -125,6 +135,7 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
                 "output_token_usage": usage.get("output_tokens", 0),
                 "total_token_usage": usage.get("total_tokens", 0),
                 "sources": source_attributions,
+                **({"retrieval": retrieval.summary} if retrieval else {}),
             },
         )
     )
@@ -210,12 +221,16 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
     # `events_to_ui_parts` after the loop, once populated, to emit source-url
     # parts + message-metadata. Mutated in place so both sides share it.
     source_attributions: list[dict[str, Any]] = []
+    # Same for why retrieval found what it found (#205); stays empty on a resume.
+    retrieval_summary: dict[str, Any] = {}
 
     async def _agent_events():
         retrieval = await get_rag_retrieval(chat_request)
         source_attributions[:] = (
             retrieval.source_attributions if retrieval and retrieval.has_context else []
         )
+        if retrieval:
+            retrieval_summary.update(retrieval.summary)
         config = get_agent_config(chat_request, request)
         with apply_cassette(cassette_name_for(message)):
             async for event in ctx.agent.astream_events(
@@ -262,6 +277,7 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
                 request_id=request_id,
                 output_guardrail=_check_output_guardrail,
                 sources=source_attributions,
+                retrieval=retrieval_summary,
                 image_url_allowed=lambda url: is_known_image_url(ctx.chatbot, url),
             )
         ),

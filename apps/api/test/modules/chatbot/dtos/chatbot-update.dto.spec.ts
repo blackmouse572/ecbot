@@ -57,8 +57,32 @@ describe('ChatbotUpdateRequestDto', () => {
         'handoffKeywords',
         'guardrailCustomInstruction',
         'followupRules',
+        'timezone',
     ])('accepts null for %s, which clears it', field => {
         expect(errorsFor({ [field]: null })).toEqual([]);
+    });
+
+    it('accepts an IANA timezone', () => {
+        expect(errorsFor({ timezone: 'Asia/Bangkok' })).toEqual([]);
+    });
+
+    it('rejects a timezone that is not an IANA zone', () => {
+        expect(errorsFor({ timezone: 'Mars/Olympus' })).toEqual(['timezone']);
+        expect(errorsFor({ timezone: '' })).toEqual(['timezone']);
+    });
+
+    // apps/ai reads the value with Python's ZoneInfo, which is case-sensitive
+    // and has no bare offsets: store only names it can load.
+    it('stores the canonical spelling of a zone name', () => {
+        const dto = plainToInstance(ChatbotUpdateRequestDto, {
+            timezone: 'asia/bangkok',
+        });
+        expect(dto.timezone).toBe('Asia/Bangkok');
+        expect(errorsFor({ timezone: 'asia/bangkok' })).toEqual([]);
+    });
+
+    it('rejects a bare UTC offset', () => {
+        expect(errorsFor({ timezone: '+07:00' })).toEqual(['timezone']);
     });
 });
 

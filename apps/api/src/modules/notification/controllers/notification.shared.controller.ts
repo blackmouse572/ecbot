@@ -1,5 +1,6 @@
 import { PaginationQuery } from '@app/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from '@app/common/pagination/dtos/pagination.list.dto';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
 import { PaginationService } from '@app/common/pagination/services/pagination.service';
 import { RequestRequiredPipe } from '@app/common/request/pipes/request.required.pipe';
 import {
@@ -49,26 +50,34 @@ export class NotificationSharedController {
     async list(
         @AuthJwtPayload('user', RequestRequiredPipe, UserParsePipe)
         user: UserEntity,
-        @PaginationQuery()
+        @PaginationQuery({
+            defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+        })
         { _limit, _offset, _order, _search }: PaginationListDto,
         @Query('status') status: string
     ) {
+        // The bell shows read and unread history; archived and dismissed
+        // rows stay out unless asked for by status.
         const find: Record<string, any> = {
             ..._search,
+            status: status || {
+                $nin: [
+                    NotificationStatus.ARCHIVED,
+                    NotificationStatus.DISMISSED,
+                ],
+            },
         };
-
-        if (status) {
-            find.status = status;
-        } else {
-            find.status = NotificationStatus.UNREAD;
-        }
 
         const notifications = await this.notificationService.findAllByRecipient(
             user.id,
-            find
+            find,
+            { paging: { limit: _limit, offset: _offset }, order: _order }
         );
 
-        const total: number = await this.notificationService.getTotal(find);
+        const total: number = await this.notificationService.getTotalByUser(
+            user.id,
+            find
+        );
         const totalPage: number = this.paginationService.totalPage(
             total,
             _limit
@@ -89,7 +98,9 @@ export class NotificationSharedController {
     async listUnread(
         @AuthJwtPayload('user', RequestRequiredPipe, UserParsePipe)
         user: UserEntity,
-        @PaginationQuery()
+        @PaginationQuery({
+            defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+        })
         { _limit, _offset, _order }: PaginationListDto
     ) {
         const find: Record<string, any> = {
@@ -98,10 +109,14 @@ export class NotificationSharedController {
 
         const notifications = await this.notificationService.findAllByRecipient(
             user.id,
-            find
+            find,
+            { paging: { limit: _limit, offset: _offset }, order: _order }
         );
 
-        const total: number = await this.notificationService.getTotal(find);
+        const total: number = await this.notificationService.getTotalByUser(
+            user.id,
+            find
+        );
         const totalPage: number = this.paginationService.totalPage(
             total,
             _limit

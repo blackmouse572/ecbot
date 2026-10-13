@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Any, TypedDict
 
 from langchain_core.tools import StructuredTool
@@ -31,6 +32,9 @@ class AgentRequestContext(BaseModel):
     customer_id: str | None = Field(default=None)
     contact_point_id: str | None = Field(default=None)
     trigger_message_id: str | None = Field(default=None)
+    # The turn's clock, fixed when the request arrives so every model call in
+    # one turn (tool rounds included) sends the same bytes and keeps the cache.
+    now: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class ToolExecutionRequest(TypedDict):

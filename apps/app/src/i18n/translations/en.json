@@ -86,7 +86,9 @@
       "title": "Create skill",
       "subtitle": "Write instructions the agent will follow when this skill applies.",
       "success": "Skill created",
-      "error": "Failed to create skill"
+      "error": "Failed to create skill",
+      "attachedSuccess": "Skill created and added to the agent",
+      "attachError": "Skill created, but it could not be added to the agent. Add it from the agent's Skills section."
     },
     "edit": {
       "title": "Edit skill",
@@ -865,7 +867,10 @@
       "guardrailEscalateOnBlockHint": "Hand off to a human operator when a guardrail blocks a message. Disable for silent blocks only.",
       "followupRules": "Follow-up rules",
       "followupRulesHint": "Free-text guidance for when the bot should proactively follow up",
-      "followupRulesPlaceholder": "e.g. Follow up after 24 hours if the customer has not responded"
+      "followupRulesPlaceholder": "e.g. Follow up after 24 hours if the customer has not responded",
+      "timezone": "Timezone",
+      "timezoneHint": "The agent uses it to know the current date and time, for example to tell when the shop is closed.",
+      "timezoneDefault": "Default (system timezone)"
     },
     "details": {
       "title": "Agent Details",
@@ -1127,6 +1132,9 @@
       "tryAgent": "Talk with {{name}}",
       "yourAgent": "your agent",
       "promptTab": "Prompt",
+      "promptSummaryIntro": "What your agent was told, from your answers. The agent reads it as an English prompt.",
+      "showFullPrompt": "Show the full prompt (English)",
+      "hideFullPrompt": "Hide the full prompt",
       "progress": "Question {{current}} of {{total}}, about {{minutes}} min left",
       "testEarlyHint": "Once your agent has a name, you can try it right away and finish the rest later.",
       "extraInstructions": "Extra instructions",
@@ -2065,7 +2073,9 @@
     "previous": "Previous",
     "next": "Next",
     "skip": "Skip",
-    "preview": "Preview"
+    "preview": "Preview",
+    "createNew": "Create new",
+    "unlink": "Unlink"
   },
   "general": {
     "notSet": "Not set",
@@ -2294,6 +2304,23 @@
       "process": "Process",
       "reprocess": "Re-process",
       "processQueued": "Queued for processing"
+    },
+    "link": {
+      "title": "Add Knowledge Item"
+    },
+    "selectItem": "Select Item",
+    "error": {
+      "selectItem": "Please select an item",
+      "linkFailed": "Failed to link knowledge item",
+      "unlinkFailed": "Failed to unlink knowledge item"
+    },
+    "success": {
+      "linkedItem": "Knowledge item linked successfully",
+      "unlinked": "Knowledge item unlinked successfully"
+    },
+    "unlink": {
+      "title": "Unlink Item",
+      "description": "Are you sure you want to unlink this knowledge item? This action cannot be undone."
     }
   },
   "knowledge_item": {
@@ -2355,14 +2382,8 @@
     "learned_chunks_other": "The agent learned this file as {{count}} sections.",
     "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
     "learn_failed": "Could not learn this file. Try Process again.",
-    "agents_label": "Agents that use this item",
-    "agents_hint": "The agents you pick can answer from this item once it finishes processing. You can change this later in each agent's Knowledge Base section.",
-    "agents_loading": "Loading agents...",
-    "agents_empty": "After you create an agent, link this item from the agent's Knowledge Base section.",
-    "agents_error": "Couldn't load agents. You can link this item later from the agent's Knowledge Base section.",
     "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
-    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section.",
-    "agents_emptyTitle": "No agents yet"
+    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section."
   },
   "conversations": {
     "title": "Conversations",
@@ -2791,7 +2812,9 @@
       "subtitle": "Describe an HTTP endpoint the agent can call as a tool.",
       "submit": "Create tool",
       "success": "Tool created.",
-      "error": "Failed to create tool."
+      "error": "Failed to create tool.",
+      "attachedSuccess": "Tool created and added to the agent.",
+      "attachError": "Tool created, but it could not be added to the agent. Add it from the agent's Tools section."
     },
     "edit": {
       "title": "Edit tool",
@@ -2962,6 +2985,19 @@
         "composio": "Composio",
         "eccho": "Ecbot",
         "ecchoComingSoon": "Coming soon: first-party tools land in a follow-up."
+      },
+      "access": {
+        "actionsTitle": "What it can do ({{count}})",
+        "actionsEmpty": "Composio lists no actions for this toolkit.",
+        "actionsEmptyEccho": "This Ecbot tool lists its actions after you install it.",
+        "actionsCapped": "Showing the first {{count}} actions.",
+        "destructiveHint": "Actions that can delete data stay off until you turn them on for an agent.",
+        "showAll": "Show all {{count}}",
+        "showLess": "Show less",
+        "scopesTitle": "Access it asks for",
+        "scopesIntro": "When you install, {{name}} asks you to allow this access to your account. It can be broader than the actions below need.",
+        "redirectNote": "Install opens the {{name}} sign-in in this tab, then brings you back here.",
+        "loadError": "Could not load what this toolkit can do."
       },
       "callback": {
         "installing": "Finishing install…",

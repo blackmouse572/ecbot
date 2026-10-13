@@ -117,6 +117,8 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
         deleteMessage: true,
         reactions: { inbound: true, outbound: true },
         typing: true,
+        // Telegram shows a chat action for 5 seconds at most (#181).
+        typingRefreshMs: 4000,
         markRead: false,
     };
 

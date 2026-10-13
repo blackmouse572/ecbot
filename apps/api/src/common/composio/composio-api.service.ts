@@ -441,6 +441,8 @@ export class ComposioApi {
     async listToolkitActions(toolkitSlug: string): Promise<
         {
             name: string;
+            /** Composio's readable name, when it differs from the slug. */
+            label?: string;
             description: string;
             inputSchema: Record<string, unknown>;
         }[]
@@ -488,6 +490,7 @@ export class ComposioApi {
                         : raw;
                 return {
                     name: a.slug,
+                    ...(a.name && a.name !== a.slug ? { label: a.name } : {}),
                     description: a.description ?? a.name ?? '',
                     inputSchema,
                 };

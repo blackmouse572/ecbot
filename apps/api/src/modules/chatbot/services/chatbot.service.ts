@@ -670,6 +670,7 @@ export class ChatbotService implements IChatbotService {
             guardrailCustomInstruction: source.guardrailCustomInstruction,
             guardrailEscalateOnBlock: source.guardrailEscalateOnBlock,
             followupRules: source.followupRules,
+            timezone: source.timezone,
         });
 
         // Persist without flushing so the chatbot row and every junction row

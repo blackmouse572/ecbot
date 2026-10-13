@@ -85,3 +85,47 @@ export class ComposioToolkitDetailResponseDto {
     @ApiProperty({ type: ComposioToolkitDetailMetaDto })
     meta: ComposioToolkitDetailMetaDto;
 }
+
+export class ComposioToolkitActionDto {
+    @ApiProperty({ example: 'GOOGLESHEETS_BATCH_GET' })
+    name: string;
+
+    @ApiPropertyOptional({
+        example: 'Batch get spreadsheet',
+        description: "Composio's readable name, when it has one",
+    })
+    label?: string;
+
+    @ApiProperty()
+    description: string;
+
+    @ApiProperty({
+        description:
+            'Deletes or changes data; stays off until a chatbot link names it',
+    })
+    destructive: boolean;
+}
+
+export class ComposioToolkitAccessResponseDto {
+    @ApiProperty({ type: [ComposioToolkitActionDto] })
+    actions: ComposioToolkitActionDto[];
+
+    @ApiProperty({
+        type: [String],
+        description:
+            'OAuth scopes the sign-in asks for; empty when the toolkit has none',
+    })
+    scopes: string[];
+
+    @ApiProperty({
+        description:
+            'Install leaves the page for a sign-in (OAuth, or a form for a key)',
+    })
+    requiresSignIn: boolean;
+
+    @ApiProperty({
+        enum: ['composio', 'eccho'],
+        description: "Ecbot's own tools list their actions after install",
+    })
+    provider: 'composio' | 'eccho';
+}

@@ -294,4 +294,13 @@ export class ChatbotListResponseDto extends DatabaseDto {
     })
     @Expose()
     followupRules?: string;
+
+    @ApiProperty({
+        description: 'IANA timezone the agent uses for the current date and time',
+        example: 'Asia/Ho_Chi_Minh',
+        type: String,
+        required: false,
+    })
+    @Expose()
+    timezone?: string;
 }

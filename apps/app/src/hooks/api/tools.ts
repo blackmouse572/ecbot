@@ -30,7 +30,11 @@ import {
   type UpdateEnabledActionsRequestDto,
   marketplaceWorkspaceControllerGetToolkitBySlugV1,
   type MarketplaceWorkspaceControllerGetToolkitBySlugV1Response,
+  marketplaceWorkspaceControllerGetToolkitAccessV1,
+  type ComposioToolkitAccessResponseDto,
 } from "@repo/client";
+
+export type { ComposioToolkitAccessResponseDto };
 import {
   queryOptions,
   useMutation,
@@ -409,6 +413,28 @@ export const toolkitDetailQueryOptions = (workspace: string, slug: string) =>
       ),
     staleTime: 60 * 60 * 1000,
   });
+
+// What a toolkit can do and the access its sign-in asks for, shown before
+// install (#189).
+export const useGetToolkitAccess = (
+  workspace: string,
+  slug: string,
+  options?: { enabled?: boolean },
+) => {
+  const { data, ...rest } = useQuery({
+    queryKey: [TOOLS_QUERY_KEY, "toolkit", slug, "access"] as const,
+    queryFn: () =>
+      marketplaceWorkspaceControllerGetToolkitAccessV1({
+        path: { workspace, slug } as never,
+      }).then(
+        (res) =>
+          (res.data as A)?.data as ComposioToolkitAccessResponseDto | undefined,
+      ),
+    staleTime: 60 * 60 * 1000,
+    ...options,
+  });
+  return { ...rest, access: data };
+};
 
 export const useGetToolkitDetail = (
   workspace: string,

@@ -4,7 +4,8 @@ import { Button, Drawer, Text, toast } from "@medusajs/ui";
 import { Combobox } from "@repo/ui/common-components";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { withOriginAgent } from "@/utils/origin-agent";
 import {
   useKnowledgeBases,
   useKnowledgeItems,
@@ -27,7 +28,6 @@ export function ChatbotRAGSectionAddDrawer({
   linkedItemIds = [],
 }: ChatbotRAGSectionAddDrawerProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { workspaceSlug } = useWorkspaceParams();
 
   const [selectedItemId, setSelectedItemId] = useState<string>("");
@@ -35,13 +35,14 @@ export function ChatbotRAGSectionAddDrawer({
 
   // Fetch all knowledge bases
   const { knowledgeBases } = useKnowledgeBases();
+  const knowledgeBaseId = knowledgeBases?.[0]?.id;
 
   // Fetch items for selected knowledge base
   const { items: knowledgeItems, isLoading } = useKnowledgeItems(
-    knowledgeBases?.[0].id || "",
+    knowledgeBaseId || "",
     {},
     {
-      enabled: !!knowledgeBases,
+      enabled: !!knowledgeBaseId,
     },
   );
 
@@ -119,17 +120,19 @@ export function ChatbotRAGSectionAddDrawer({
           )}
         </Drawer.Body>
         <Drawer.Footer>
-          <Button
-            variant="transparent"
-            onClick={() =>
-              navigate(
-                `/${workspaceSlug}/${ROUTES.KnowledgeBase}/${knowledgeBases?.[0]?.id}/item/create`,
-              )
-            }
-          >
-            <PlusMini />
-            {t("actions.create")}
-          </Button>
+          {knowledgeBaseId && (
+            <Button variant="transparent" asChild>
+              <Link
+                to={withOriginAgent(
+                  `/${workspaceSlug}/${ROUTES.KnowledgeBase}/${knowledgeBaseId}/item/create`,
+                  chatbotId,
+                )}
+              >
+                <PlusMini />
+                {t("actions.createNew")}
+              </Link>
+            </Button>
+          )}
           <div className="flex items-center gap-2 ml-auto">
             <Drawer.Close asChild>
               <Button variant="secondary">{t("actions.cancel")}</Button>

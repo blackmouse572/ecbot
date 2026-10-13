@@ -56,6 +56,12 @@ const CUSTOMER_TAG_DEFAULTS_EN: ICustomerTagSeed[] = [
         description: 'Customer is upset or hostile.',
         triggersHandoff: true,
     },
+    {
+        name: 'New order',
+        emoji: '🧾',
+        description: 'Customer confirmed an order for staff to finish.',
+        triggersHandoff: true,
+    },
 ];
 
 const CUSTOMER_TAG_DEFAULTS_VI: ICustomerTagSeed[] = [
@@ -105,6 +111,12 @@ const CUSTOMER_TAG_DEFAULTS_VI: ICustomerTagSeed[] = [
         name: 'Bực tức',
         emoji: '🚨',
         description: 'Khách đang bực bội hoặc gay gắt.',
+        triggersHandoff: true,
+    },
+    {
+        name: 'Đơn hàng mới',
+        emoji: '🧾',
+        description: 'Khách đã chốt đơn, cần nhân viên xác nhận.',
         triggersHandoff: true,
     },
 ];

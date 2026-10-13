@@ -86,7 +86,9 @@
       "title": "Tạo skill",
       "subtitle": "Viết hướng dẫn agent sẽ làm theo khi skill này phù hợp.",
       "success": "Đã tạo skill",
-      "error": "Tạo skill thất bại"
+      "error": "Tạo skill thất bại",
+      "attachedSuccess": "Đã tạo skill và thêm vào agent",
+      "attachError": "Đã tạo skill nhưng chưa thêm được vào agent. Hãy thêm từ mục Skills của agent."
     },
     "edit": {
       "title": "Sửa skill",
@@ -907,7 +909,10 @@
       "guardrailEscalateOnBlockHint": "Chuyển đến người vận hành khi guardrail chặn tin nhắn. Tắt để chỉ chặn âm thầm.",
       "followupRules": "Quy tắc nhắc hẹn",
       "followupRulesHint": "Hướng dẫn tự do cho việc khi nào bot nên chủ động nhắc hẹn lại khách hàng",
-      "followupRulesPlaceholder": "Ví dụ: Nhắc hẹn lại sau 24 giờ nếu khách hàng chưa phản hồi"
+      "followupRulesPlaceholder": "Ví dụ: Nhắc hẹn lại sau 24 giờ nếu khách hàng chưa phản hồi",
+      "timezone": "Múi giờ",
+      "timezoneHint": "Agent dùng múi giờ này để biết ngày giờ hiện tại, ví dụ để biết lúc nào cửa hàng đã đóng cửa.",
+      "timezoneDefault": "Mặc định (múi giờ hệ thống)"
     },
     "chat": {
       "heading": "Chat Thử",
@@ -1171,6 +1176,9 @@
       "tryAgent": "Trò chuyện với {{name}}",
       "yourAgent": "agent của bạn",
       "promptTab": "Prompt",
+      "promptSummaryIntro": "Những gì agent được dặn, theo câu trả lời của bạn. Agent đọc phần này dưới dạng prompt tiếng Anh.",
+      "showFullPrompt": "Xem prompt đầy đủ (tiếng Anh)",
+      "hideFullPrompt": "Ẩn prompt đầy đủ",
       "progress": "Câu {{current}} / {{total}}, còn khoảng {{minutes}} phút",
       "testEarlyHint": "Sau khi đặt tên cho agent, bạn có thể thử ngay và hoàn thành phần còn lại sau.",
       "extraInstructions": "Hướng dẫn bổ sung",
@@ -2177,7 +2185,9 @@
     "previous": "Trước",
     "next": "Sau",
     "skip": "Bỏ qua",
-    "preview": "Xem trước"
+    "preview": "Xem trước",
+    "createNew": "Tạo mới",
+    "unlink": "Bỏ liên kết"
   },
   "fields": {
     "name": "Tên",
@@ -2343,6 +2353,23 @@
       "process": "Xử lý",
       "reprocess": "Xử lý lại",
       "processQueued": "Đã đưa vào hàng đợi xử lý"
+    },
+    "link": {
+      "title": "Thêm mục kiến thức"
+    },
+    "selectItem": "Chọn mục",
+    "error": {
+      "selectItem": "Hãy chọn một mục",
+      "linkFailed": "Không liên kết được mục kiến thức",
+      "unlinkFailed": "Không bỏ liên kết được mục kiến thức"
+    },
+    "success": {
+      "linkedItem": "Đã liên kết mục kiến thức",
+      "unlinked": "Đã bỏ liên kết mục kiến thức"
+    },
+    "unlink": {
+      "title": "Bỏ liên kết mục",
+      "description": "Bạn có chắc muốn bỏ liên kết mục kiến thức này? Không thể hoàn tác thao tác này."
     }
   },
   "knowledge_item": {
@@ -2403,14 +2430,8 @@
     "learned_chunks_other": "Agent đã học tệp này thành {{count}} phần.",
     "not_learned_yet": "Chưa học. Agent có thể dùng tệp này khi xử lý xong.",
     "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại.",
-    "agents_label": "Agent dùng mục này",
-    "agents_hint": "Các agent bạn chọn có thể trả lời dựa trên mục này khi xử lý xong. Bạn có thể đổi lại sau trong phần Nền tảng kiến thức của từng agent.",
-    "agents_loading": "Đang tải danh sách agent...",
-    "agents_empty": "Sau khi tạo agent, hãy liên kết mục này trong phần Nền tảng kiến thức của agent.",
-    "agents_error": "Không tải được danh sách agent. Bạn có thể liên kết mục này sau trong phần Nền tảng kiến thức của agent.",
     "link_after_create_error_one": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của agent.",
-    "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent.",
-    "agents_emptyTitle": "Chưa có agent nào"
+    "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent."
   },
   "conversations": {
     "title": "Hội thoại",
@@ -2839,7 +2860,9 @@
       "subtitle": "Mô tả một endpoint HTTP để agent có thể gọi như một công cụ.",
       "submit": "Tạo công cụ",
       "success": "Đã tạo công cụ.",
-      "error": "Không tạo được công cụ."
+      "error": "Không tạo được công cụ.",
+      "attachedSuccess": "Đã tạo công cụ và thêm vào agent.",
+      "attachError": "Đã tạo công cụ nhưng chưa thêm được vào agent. Hãy thêm từ mục Công cụ của agent."
     },
     "edit": {
       "title": "Chỉnh sửa công cụ",
@@ -3010,6 +3033,19 @@
         "composio": "Composio",
         "eccho": "Ecbot",
         "ecchoComingSoon": "Sắp ra mắt: công cụ nội bộ sẽ có trong bản cập nhật tới."
+      },
+      "access": {
+        "actionsTitle": "Công cụ này làm được gì ({{count}})",
+        "actionsEmpty": "Composio chưa liệt kê thao tác nào cho toolkit này.",
+        "actionsEmptyEccho": "Công cụ Ecbot này sẽ liệt kê các thao tác sau khi bạn cài đặt.",
+        "actionsCapped": "Đang hiển thị {{count}} thao tác đầu tiên.",
+        "destructiveHint": "Các thao tác có thể xóa dữ liệu sẽ tắt cho đến khi bạn bật cho từng agent.",
+        "showAll": "Xem tất cả {{count}}",
+        "showLess": "Thu gọn",
+        "scopesTitle": "Quyền truy cập được yêu cầu",
+        "scopesIntro": "Khi cài đặt, {{name}} sẽ đề nghị bạn cho phép truy cập tài khoản như dưới đây. Quyền này có thể rộng hơn những gì các thao tác bên dưới cần.",
+        "redirectNote": "Khi bấm Cài đặt, trang đăng nhập {{name}} sẽ mở ngay trong tab này, xong sẽ quay lại đây.",
+        "loadError": "Không tải được danh sách thao tác của toolkit này."
       },
       "callback": {
         "installing": "Đang hoàn tất cài đặt…",

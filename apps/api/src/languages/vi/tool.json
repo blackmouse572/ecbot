@@ -86,6 +86,13 @@
         },
         "complete": {
             "success": "Đã hoàn tất cài đặt Composio"
+        },
+        "toolkit": {
+            "success": "Đã lấy thông tin toolkit",
+            "error": {
+                "notFound": "Không tìm thấy toolkit này.",
+                "unavailable": "Kho công cụ đang không phản hồi. Hãy thử lại sau ít phút."
+            }
         }
     },
     "discover": {
