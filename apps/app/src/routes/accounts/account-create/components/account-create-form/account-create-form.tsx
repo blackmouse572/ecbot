@@ -88,7 +88,8 @@ const PLATFORMS: PlatformMeta[] = [
     value: "INSTAGRAM_ACCOUNT",
     label: "Instagram",
     icon: <img src="/icons/instagram.svg" alt="Instagram" className="size-8" />,
-    comingSoon: true,
+    // A build without the Instagram app id can't open Instagram Login.
+    comingSoon: !import.meta.env.VITE_INSTAGRAM_APP_ID,
   },
   {
     value: "ZALO_ACCOUNT",

@@ -606,8 +606,8 @@
           "description": "Your personal profile on Instagram"
         },
         "instagramPage": {
-          "label": "Instagram Business Page",
-          "description": "A business page on Instagram for engaging with your followers."
+          "label": "Instagram Professional Account",
+          "description": "A business or creator account on Instagram that replies to your customers' messages."
         },
         "zaloAccount": {
           "label": "Zalo Profile",

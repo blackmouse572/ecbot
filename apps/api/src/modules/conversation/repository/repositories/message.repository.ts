@@ -83,6 +83,19 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         clientNonce: string,
         externalId: string
     ): Promise<void> {
+        // The platform's echo of this send can be processed first. Without
+        // an app id to mark it as ours (Instagram), processEcho stored it as
+        // an operator message under this externalId: drop that copy so the
+        // real row can take the id under UQ_messages_conversation_externalId.
+        const pending = await this.findOne({ clientNonce } as any);
+        if (pending) {
+            await this.em.nativeDelete(MessageEntity, {
+                conversation: pending.conversation,
+                externalId,
+                clientNonce: null,
+                authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
+            } as any);
+        }
         await this.updateEntity(
             { clientNonce } as any,
             { externalId, status: ENUM_MESSAGE_STATUS.SENT } as any

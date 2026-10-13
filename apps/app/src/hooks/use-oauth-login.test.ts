@@ -78,6 +78,37 @@ describe("useOAuthLogin", () => {
     ]);
   });
 
+  // Instagram Login (no Facebook Page); the Basic Display scopes are retired.
+  it("asks Instagram for the Instagram Login messaging permissions", () => {
+    vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP");
+    vi.stubEnv(
+      "VITE_INSTAGRAM_REDIRECT_URI",
+      "https://app.test/auth/instagram/callback",
+    );
+    const { result } = renderHook(() => useOAuthLogin("INSTAGRAM_ACCOUNT", {}));
+
+    result.current.handleLinkClick();
+
+    const openMock = window.open as ReturnType<typeof vi.fn>;
+    const url = new URL(openMock.mock.calls.at(-1)?.[0] as string);
+    vi.unstubAllEnvs();
+    expect(url.origin + url.pathname).toBe(
+      "https://www.instagram.com/oauth/authorize",
+    );
+    expect(url.searchParams.get("client_id")).toBe("IG_APP");
+    expect(url.searchParams.get("redirect_uri")).toBe(
+      "https://app.test/auth/instagram/callback",
+    );
+    expect(url.searchParams.get("response_type")).toBe("code");
+    expect(url.searchParams.get("state")).toBe(
+      sessionStorage.getItem("oauth-state:INSTAGRAM_ACCOUNT"),
+    );
+    expect(url.searchParams.get("scope")?.split(",").sort()).toEqual([
+      "instagram_business_basic",
+      "instagram_business_manage_messages",
+    ]);
+  });
+
   it("generates a different state on each click", () => {
     const { result } = renderHook(() => useOAuthLogin("FACEBOOK_ACCOUNT", {}));
     const openMock = window.open as ReturnType<typeof vi.fn>;

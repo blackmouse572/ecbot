@@ -3,9 +3,11 @@ import type { AccountListResponseDto } from "@repo/client";
 
 type AccountType = AccountListResponseDto["type"];
 
+export type OAuthPlatform = "FACEBOOK_ACCOUNT" | "ZALO_ACCOUNT" | "INSTAGRAM_ACCOUNT";
+
 /** How the channels question connects each channel choice to a real account. */
 export type ChannelConnect =
-  | { kind: "oauth"; platform: "FACEBOOK_ACCOUNT" | "ZALO_ACCOUNT" }
+  | { kind: "oauth"; platform: OAuthPlatform }
   | { kind: "token"; platform: "TELEGRAM_BOT" }
   | { kind: "widget" }
   | { kind: "comingSoon" };
@@ -16,7 +18,10 @@ export const CHANNEL_CONNECT: Record<ChannelId, ChannelConnect> = {
   zalo: { kind: "oauth", platform: "ZALO_ACCOUNT" },
   telegram: { kind: "token", platform: "TELEGRAM_BOT" },
   website: { kind: "widget" },
-  instagram: { kind: "comingSoon" },
+  // A build without the Instagram app id can't open Instagram Login.
+  instagram: import.meta.env.VITE_INSTAGRAM_APP_ID
+    ? { kind: "oauth", platform: "INSTAGRAM_ACCOUNT" }
+    : { kind: "comingSoon" },
   tiktok: { kind: "comingSoon" },
   shopee: { kind: "comingSoon" },
 };

@@ -13,7 +13,7 @@ consumer instead (see References).
 | ------ | ------------------------- | ------------------------------------------------------- |
 | GET    | `/health`                 | Liveness check                                           |
 | GET    | `/robots.txt`             | `Disallow: /` for every crawler (see Bots & crawlers)     |
-| GET    | `/webhooks/:platform`     | Meta `hub.challenge` verification (Messenger, WhatsApp), checked locally (see Env / bindings); 404 for every other slug |
+| GET    | `/webhooks/:platform`     | Meta `hub.challenge` verification (Messenger, WhatsApp, Instagram), checked locally (see Env / bindings); 404 for every other slug |
 | POST   | `/webhooks/telegram/:botId` | Telegram (botId comes from the URL, not the payload)   |
 | POST   | `/webhooks/:platform`     | Every other platform (slug-based)                        |
 
@@ -93,7 +93,14 @@ consumer instead (see References).
 ### Instagram
 
 - Slug: `instagram`
-- **Adapter is a stub**: events are acknowledged and dropped, same as TikTok.
+- Path: `POST /webhooks/instagram`
+- GET challenge: same Meta handshake as Messenger (`GET /webhooks/instagram`),
+  checked against the same `FACEBOOK_WEBHOOK_SECRET`.
+- Signature: `x-hub-signature-256` HMAC keyed with `INSTAGRAM_APP_SECRET`
+  (the Instagram app secret, not the Facebook one), verified in apps/api.
+- The callback URL is set by hand in the Meta app dashboard (Instagram >
+  API setup with Instagram login > Configure webhooks). Point it at this
+  worker's `/webhooks/instagram`.
 
 ## Adding a GET challenge for another platform
 

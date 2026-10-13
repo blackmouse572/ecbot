@@ -87,6 +87,12 @@ describe('OAuthPlatformFactory', () => {
         );
     });
 
+    it('returns the Instagram service for INSTAGRAM_PAGE, so its token refreshes', () => {
+        expect(factory.getService(ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE)).toBe(
+            mockInstagramService
+        );
+    });
+
     it('returns the Zalo service for ZALO_ACCOUNT', () => {
         expect(factory.getService(ENUM_ACCOUNT_TYPE.ZALO_ACCOUNT)).toBe(
             mockZaloService
