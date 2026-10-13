@@ -1,14 +1,14 @@
 import {
   applySuggestion, createProfile, migrateProfile, type AgentProfile, type BusinessTypeId,
 } from "@repo/agent-blueprint";
-import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto } from "@repo/client";
-import { useCreateChatbot, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
+import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto, ChatbotLinkAccountResponseDto } from "@repo/client";
+import { useCreateChatbot, useLinkChatbotAccount, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
 import { useAgentBuilderSuggest } from "@/hooks/api/agent-builder";
 import { useUISound } from "@/modules/sound";
 import { toast } from "@medusajs/ui";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { builderReducer, initialBuilderState, isDraftReady } from "./builder-state";
+import { builderReducer, initialBuilderState, isDraftReady, type LinkedAccountRef } from "./builder-state";
 import { toChatbotPayload } from "./to-chatbot-payload";
 
 const SAVE_DEBOUNCE_MS = 600;
@@ -32,7 +32,13 @@ function baseFrom(chatbot: ChatbotGetDetailResponseDto): Partial<ChatbotCreateRe
   return editable as Partial<ChatbotCreateRequestDto>;
 }
 
-export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: ChatbotGetDetailResponseDto }) {
+export function useAgentBuilder({
+  hydrateFrom: source,
+  ensurePrefillChannel,
+}: {
+  hydrateFrom?: ChatbotGetDetailResponseDto;
+  ensurePrefillChannel?: () => Promise<LinkedAccountRef | undefined>;
+}) {
   // A chatbot made without the builder has no profile to resume: start fresh
   // instead, so the new draft never takes over its accounts or settings.
   const hydrateFrom = source?.agentProfile ? source : undefined;
@@ -83,7 +89,10 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
 
   const startFromDescription = async (description: string) => {
     setStarting(true);
-    const suggestion = await suggest.mutateAsync(description).catch(() => null);
+    const [suggestion, channel] = await Promise.all([
+      suggest.mutateAsync(description).catch(() => null),
+      ensurePrefillChannel?.() ?? Promise.resolve(undefined),
+    ]);
     setStarting(false);
     const profile = suggestion ? applySuggestion(suggestion, language) : null;
     dispatch({
@@ -92,11 +101,20 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
       suggestion: profile ? suggestion : null,
       source: "describe",
       description,
+      prefillBusinessName: channel?.name,
     });
   };
 
-  const startFromTemplate = (type: BusinessTypeId) =>
-    dispatch({ type: "start", profile: createProfile(type, language), suggestion: null, source: "template" });
+  const startFromTemplate = async (type: BusinessTypeId) => {
+    const channel = await ensurePrefillChannel?.();
+    dispatch({
+      type: "start",
+      profile: createProfile(type, language),
+      suggestion: null,
+      source: "template",
+      prefillBusinessName: channel?.name,
+    });
+  };
 
   // Create the inactive draft as soon as the business type is answered
   // (wireframe delta section 4). A failure is retried once an answer
@@ -124,6 +142,32 @@ export function useAgentBuilder({ hydrateFrom: source }: { hydrateFrom?: Chatbot
         creating.current = false;
       });
   }, [state, extraInstructions, base, createDraft]);
+
+  // The channel a quick create arrived with is connected to the draft as
+  // soon as it exists, so the channels question shows it already connected.
+  // One shot per builder session: a restart keeps the same draft.
+  const linkPrefill = useLinkChatbotAccount(state.chatbotId ?? "");
+  const prefillLinkStarted = useRef(false);
+
+  useEffect(() => {
+    if (!state.chatbotId || !ensurePrefillChannel || prefillLinkStarted.current) return;
+    prefillLinkStarted.current = true;
+    void (async () => {
+      const channel = await ensurePrefillChannel();
+      if (!channel) return;
+      try {
+        const res = await linkPrefill.mutateAsync({ accounts: [channel.id] });
+        const result = (res.data as A)?.data as ChatbotLinkAccountResponseDto | undefined;
+        if (result?.linked?.includes(channel.id)) {
+          dispatch({ type: "accountsLinked", accounts: [channel] });
+        } else {
+          toast.error(t("agentBuilder.ui.channelInUse", { name: channel.name }));
+        }
+      } catch {
+        toast.error(t("agentBuilder.ui.connectFailed"));
+      }
+    })();
+  }, [state.chatbotId, ensurePrefillChannel, linkPrefill, t]);
 
   // After the draft exists, every answer saves the full payload (debounced).
   // No longer serialized against account link/unlink (fix round 3): since

@@ -10,6 +10,7 @@
     "deleteSelf": "User deleted successfully.",
     "updateMobileNumber": "Mobile number updated successfully.",
     "updateClaimUsername": "Username claimed successfully.",
+    "verifyEmail": "Email marked as verified.",
     "impersonate": "Impersonation session started.",
     "error": {
         "mobileNumberExist": "This mobile number already exists.",

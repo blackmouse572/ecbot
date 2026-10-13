@@ -1,5 +1,4 @@
 import { HttpStatus, applyDecorators } from '@nestjs/common';
-import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import {
     Doc,
     DocAuth,
@@ -19,6 +18,7 @@ import {
 import { UserCreateRequestDto } from 'src/modules/user/dtos/request/user.create.request.dto';
 import { UserUpdateStatusRequestDto } from 'src/modules/user/dtos/request/user.update-status.request.dto';
 import { UserUpdateRequestDto } from 'src/modules/user/dtos/request/user.update.request.dto';
+import { UserCreateResponseDto } from 'src/modules/user/dtos/response/user.create.response.dto';
 import { UserListResponseDto } from 'src/modules/user/dtos/response/user.list.response.dto';
 import { UserProfileResponseDto } from 'src/modules/user/dtos/response/user.profile.response.dto';
 
@@ -78,9 +78,9 @@ export function UserAdminCreateDoc(): MethodDecorator {
             dto: UserCreateRequestDto,
         }),
         DocGuard({ role: true, policy: true }),
-        DocResponse<DatabaseIdResponseDto>('user.create', {
+        DocResponse<UserCreateResponseDto>('user.create', {
             httpStatus: HttpStatus.CREATED,
-            dto: DatabaseIdResponseDto,
+            dto: UserCreateResponseDto,
         })
     );
 }
@@ -132,5 +132,15 @@ export function UserAdminImpersonateDoc(): MethodDecorator {
         DocResponse<AuthImpersonateResponseDto>('user.impersonate', {
             dto: AuthImpersonateResponseDto,
         })
+    );
+}
+
+export function UserAdminVerifyEmailDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'mark the email of a user as verified' }),
+        DocRequest({ params: UserDocParamsId }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ role: true, policy: true }),
+        DocResponse('user.verifyEmail')
     );
 }

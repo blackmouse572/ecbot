@@ -191,6 +191,17 @@ describe('AccountController (workspace-scoped)', () => {
                 expect.objectContaining({ deletedAt: null })
             );
         });
+
+        it('populates the chatbot relation so rows can name their agent', async () => {
+            await controller.list(workspace, pagination, {});
+
+            expect(accountService.findAll).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    populate: expect.arrayContaining(['chatbot']),
+                })
+            );
+        });
     });
 
     describe('getDetail', () => {

@@ -4,6 +4,7 @@ import type { AccountListResponseDto } from "@repo/client";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { AccountChatbotCell } from "../account-chatbot-cell";
 import { AccountNameCell } from "../account-name-cell";
 import { AccountStatusCell } from "../account-status-cell";
 import { AccountTypeCell } from "../account-type-cell";
@@ -33,6 +34,11 @@ export const useAccountTableColumns = () => {
         cell: ({ row }) => (
           <AccountTypeCell size="2xsmall" type={row.original.type} />
         ),
+      }),
+      columnHelper.display({
+        id: "chatbot",
+        header: () => headerLabel(t("chatbot.title")),
+        cell: ({ row }) => <AccountChatbotCell chatbot={row.original.chatbot} />,
       }),
       columnHelper.display({
         id: "updatedAt",

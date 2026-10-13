@@ -14,4 +14,11 @@ export class EmailTempPasswordDto {
         description: 'Expired at by date',
     })
     passwordExpiredAt: Date;
+
+    @ApiProperty({
+        required: false,
+        example: 'vi',
+        description: 'Language to write the email in; English otherwise',
+    })
+    language?: string;
 }

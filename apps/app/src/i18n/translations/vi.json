@@ -699,6 +699,11 @@
           "success": "Đã cập nhật thiết lập widget.",
           "error": "Cập nhật thiết lập widget thất bại."
         }
+      },
+      "noChatbot": {
+        "title": "Chưa có agent",
+        "message": "Tạo agent để trả lời khách hàng trên kênh này.",
+        "action": "Tạo agent"
       }
     },
     "imports": {
@@ -781,6 +786,11 @@
       "create": "đã gửi tin nhắn cho <link/>",
       "update": "đã cập nhật hội thoại với <link/>",
       "unknownCustomer": "một khách hàng"
+    },
+    "plan": {
+      "changePlan": "đã thay đổi gói đăng ký",
+      "cancel": "đã huỷ gói đăng ký",
+      "resume": "đã tiếp tục gói đăng ký"
     },
     "generic": {
       "create": "đã tạo <link/>",
@@ -1178,6 +1188,7 @@
       "comingSoon": "Sắp ra mắt",
       "connectFailed": "Chưa kết nối được kênh này. Vui lòng thử lại.",
       "connected": "Đã kết nối",
+      "channelLoadFailed": "Không tải được kênh này. Bạn có thể liên kết sau.",
       "telegramTokenLabel": "Bot token từ @BotFather",
       "widgetOriginsLabel": "Các website được phép hiển thị chat (mỗi dòng một địa chỉ)",
       "channelInUse": "{{name}} đang được dùng cho agent khác. Hãy gỡ liên kết ở đó trước để dùng tại đây.",
@@ -2034,7 +2045,47 @@
     }
   },
   "subscription": {
-    "domain": "Gói đăng ký"
+    "domain": "Gói đăng ký",
+    "title": "Gói của bạn",
+    "badge": {
+      "upgrade": "Nâng cấp gói"
+    },
+    "current": {
+      "renewsOn": "Gia hạn vào {{date}}",
+      "endsOn": "Kết thúc vào {{date}}",
+      "usage": "Đã dùng {{percent}}% quota",
+      "pending": "Đổi sang {{plan}} vào {{date}}",
+      "cancelScheduled": "Huỷ vào {{date}}"
+    },
+    "actions": {
+      "current": "Gói hiện tại",
+      "choose": "Chọn gói",
+      "upgrade": "Nâng cấp",
+      "downgrade": "Hạ cấp",
+      "cancel": "Huỷ gói đăng ký",
+      "resume": "Khôi phục gói đăng ký",
+      "contactUs": "Gói này được quản lý thay bạn. Hãy liên hệ để thay đổi hoặc huỷ.",
+      "processing": "Đang chờ cổng thanh toán xác nhận thay đổi…"
+    },
+    "cancelDialog": {
+      "title": "Huỷ gói đăng ký?",
+      "reasonLabel": "Lý do bạn huỷ gói?",
+      "reasonPlaceholder": "Cho chúng tôi biết lý do (bắt buộc)",
+      "confirm": "Huỷ vào cuối kỳ"
+    },
+    "checkout": {
+      "providersTitle": "Bạn muốn thanh toán bằng cách nào?",
+      "start": "Tiếp tục thanh toán",
+      "none": "Gói này chưa có phương thức thanh toán. Hãy liên hệ với chúng tôi.",
+      "pending": "Đang chờ xác nhận thanh toán…"
+    },
+    "errors": {
+      "unavailable": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
+    "cycle": {
+      "monthly": "mỗi tháng",
+      "yearly": "mỗi năm"
+    }
   },
   "billing": {
     "domain": "Thanh toán"

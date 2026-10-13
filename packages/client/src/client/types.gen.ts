@@ -1571,6 +1571,10 @@ export type ApiKeyCreateRequestDto = {
      */
     name: string;
     /**
+     * Type of api key
+     */
+    type: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
+    /**
      * Api Key start date
      */
     startDate?: string;
@@ -1578,10 +1582,6 @@ export type ApiKeyCreateRequestDto = {
      * Api Key end date
      */
     endDate?: string;
-    /**
-     * Api Key name
-     */
-    type: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
 };
 
 export type ApiKeyResetResponseDto = {
@@ -1604,6 +1604,10 @@ export type ApiKeyUpdateRequestDto = {
      * Api Key name
      */
     name: string;
+    /**
+     * Type of api key
+     */
+    type?: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
 };
 
 export type DatabaseIdResponseDto = {
@@ -1791,6 +1795,17 @@ export type UserProfileResponseDto = {
     termsAcceptanceRequired: boolean;
 };
 
+export type UserCreateResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Temporary password, shown to the admin once
+     */
+    password: string;
+};
+
 export type UserCreateRequestDto = {
     email: string;
     role: string;
@@ -1829,6 +1844,13 @@ export type AuthImpersonateResponseDto = {
      * Seconds
      */
     expiresIn: number;
+};
+
+export type AuthAdminUpdatePasswordResponseDto = {
+    /**
+     * New temporary password, shown to the admin once
+     */
+    password: string;
 };
 
 export type SessionListResponseDto = {
@@ -2077,12 +2099,23 @@ export type ActivityListResponseDto = {
      */
     deletedBy?: UserMetaResponseDto;
     user: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'login' | 'login_failed' | 'view' | 'export' | 'erase';
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'login' | 'login_failed' | 'view' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     by: UserShortResponseDto;
     metadata?: {
         [key: string]: unknown;
     };
+};
+
+export type AccountChatbotSummary = {
+    /**
+     * Chatbot ID
+     */
+    id: string;
+    /**
+     * Chatbot name
+     */
+    name: string;
 };
 
 export type AddedBy = {
@@ -2155,6 +2188,10 @@ export type AccountListResponseDto = {
      * Number of proxies associated with the account
      */
     totalProxies: number;
+    /**
+     * The chatbot answering on this channel; null when none is linked (a soft-deleted chatbot counts as none)
+     */
+    chatbot: AccountChatbotSummary | null;
     /**
      * The user who added the account
      */
@@ -12775,7 +12812,7 @@ export type UserAdminControllerCreateV1Responses = {
     201: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: DatabaseIdResponseDto;
+        data?: UserCreateResponseDto;
     };
 };
 
@@ -12865,6 +12902,84 @@ export type UserAdminControllerUpdateV1Responses = {
 };
 
 export type UserAdminControllerUpdateV1Response = UserAdminControllerUpdateV1Responses[keyof UserAdminControllerUpdateV1Responses];
+
+export type UserAdminControllerVerifyEmailV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        user: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/user/update/{user}/verify-email';
+};
+
+export type UserAdminControllerVerifyEmailV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserAdminControllerVerifyEmailV1Error = UserAdminControllerVerifyEmailV1Errors[keyof UserAdminControllerVerifyEmailV1Errors];
+
+export type UserAdminControllerVerifyEmailV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type UserAdminControllerVerifyEmailV1Response = UserAdminControllerVerifyEmailV1Responses[keyof UserAdminControllerVerifyEmailV1Responses];
 
 export type UserAdminControllerUpdateStatusV1Data = {
     body: UserUpdateStatusRequestDto;
@@ -13181,6 +13296,7 @@ export type AuthAdminControllerUpdatePasswordV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
+        data?: AuthAdminUpdatePasswordResponseDto;
     };
 };
 
