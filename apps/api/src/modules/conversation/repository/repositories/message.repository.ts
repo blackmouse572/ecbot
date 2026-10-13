@@ -146,18 +146,6 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
     }
 
     /**
-     * The `limit` MOST RECENT messages, in chronological (oldest→newest) order —
-     * the AI conversation-history window. Thin alias for the newest-anchored
-     * first page of {@link findByConversation}.
-     */
-    async findRecentByConversation(
-        conversationId: string,
-        limit: number
-    ): Promise<MessageEntity[]> {
-        return this.findByConversation(conversationId, { limit, offset: 0 });
-    }
-
-    /**
      * Filter for the conversation's messages after `cursorId` (all of them
      * without one): what the memory summary does not cover yet. Ordered on
      * (`dateSent`, `id`) like {@link findAfter}, so two rows sharing a
@@ -186,30 +174,6 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
                   }
                 : {}),
         } as FilterQuery<MessageEntity>;
-    }
-
-    /** `filter` narrowed to rows up to and including `untilId`. */
-    async untilFilter(
-        filter: FilterQuery<MessageEntity>,
-        untilId: string
-    ): Promise<FilterQuery<MessageEntity> | null> {
-        const until = await this.findOne({ id: untilId } as any);
-        if (!until) return null;
-        return {
-            $and: [
-                filter,
-                {
-                    $or: [
-                        { dateSent: { $lt: until.dateSent } },
-                        { dateSent: until.dateSent, id: { $lte: until.id } },
-                    ],
-                },
-            ],
-        } as FilterQuery<MessageEntity>;
-    }
-
-    async countWhere(filter: FilterQuery<MessageEntity>): Promise<number> {
-        return this.getTotal(filter);
     }
 
     /** The newest `limit` rows matching `filter`, oldest→newest. */

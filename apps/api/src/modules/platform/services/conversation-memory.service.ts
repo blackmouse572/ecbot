@@ -11,13 +11,20 @@ import { memoryWindowDrop } from '../utils/memory-window.util';
 export class ConversationMemoryService {
     constructor(private readonly messageRepository: MessageRepository) {}
 
-    async window(conversationId: string): Promise<IMemoryWindow> {
+    /** `burstSize`: the newest rows the Turn answers. They come on top of
+     *  the window, so a long burst never eats into the history, and the
+     *  window steps on the history count alone. */
+    async window(
+        conversationId: string,
+        burstSize = 0
+    ): Promise<IMemoryWindow> {
         const filter =
             await this.messageRepository.afterCursorFilter(conversationId);
-        const total = await this.messageRepository.countWhere(filter);
+        const total = await this.messageRepository.getTotal(filter);
+        const history = Math.max(0, total - burstSize);
         const rows = await this.messageRepository.findNewest(
             filter,
-            total - memoryWindowDrop(total)
+            total - memoryWindowDrop(history)
         );
         return { rows };
     }

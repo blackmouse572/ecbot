@@ -60,7 +60,7 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
     const chatbotAIService = { streamChat: jest.fn() };
     const messageRepository = {
         findByConversation: jest.fn(),
-        findRecentByConversation: jest.fn(),
+        findNewest: jest.fn(),
         findLatestInbound: jest.fn(),
         insertPendingOutbound: jest.fn(),
         markOutboundSent: jest.fn(),
@@ -132,7 +132,7 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             },
         });
         messageRepository.findByConversation.mockResolvedValue([]);
-        messageRepository.findRecentByConversation.mockResolvedValue([]);
+        messageRepository.findNewest.mockResolvedValue([]);
         messageRepository.findLatestInbound.mockResolvedValue({
             id: 'msg-trigger-1',
         });
