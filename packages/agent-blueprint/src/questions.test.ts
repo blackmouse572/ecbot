@@ -38,12 +38,18 @@ describe("buildQuestionGroups", () => {
       .toEqual(["identity", "essence", "facts", "process", "rules", "interaction"]);
   });
 
-  it("asks one fact question per preset fact", () => {
+  it("asks the weekly hours, then one fact question per preset fact", () => {
     const facts = buildQuestionGroups(createProfile("restaurant", "vi")).find((g) => g.id === "facts")!;
     expect(facts.questions.map((q) => q.id)).toEqual([
-      "facts.opening_hours", "facts.address", "facts.menu_highlights",
+      "openingHours", "facts.opening_hours", "facts.address", "facts.menu_highlights",
       "facts.reservation_policy", "facts.delivery", "facts.payment_methods",
     ]);
+  });
+
+  // #289: every business type gets the weekly hours, also those without an hours fact.
+  it("asks the weekly hours of business types without an hours fact", () => {
+    const facts = buildQuestionGroups(createProfile("hotel", "en")).find((g) => g.id === "facts")!;
+    expect(facts.questions[0]).toMatchObject({ id: "openingHours", kind: "hours", path: { field: "openingHours" } });
   });
 
   it("hides the address style question unless the language is Vietnamese", () => {
@@ -53,7 +59,7 @@ describe("buildQuestionGroups", () => {
 
   it("hides customer-facing questions for personal types", () => {
     const personal = ids(createProfile("personal_scheduling", "en"));
-    ["channels", "collect", "handoffWhen", "afterHours"].forEach((id) => expect(personal).not.toContain(id));
+    ["channels", "collect", "handoffWhen", "afterHours", "openingHours"].forEach((id) => expect(personal).not.toContain(id));
     expect(buildQuestionGroups(createProfile("personal_scheduling", "en")).map((g) => g.id)).not.toContain("process");
   });
 
@@ -76,7 +82,7 @@ describe("buildQuestionGroups", () => {
 
   it("gives fact questions their own title as the ask, and the shared factLead key as the lead", () => {
     const facts = buildQuestionGroups(createProfile("restaurant", "vi")).find((g) => g.id === "facts")!;
-    for (const fact of facts.questions) {
+    for (const fact of facts.questions.filter((q) => q.path.field === "facts")) {
       expect(fact.askKey).toBe(fact.titleKey);
       expect(fact.leadKey).toBe("agentBuilder.ui.factLead");
     }

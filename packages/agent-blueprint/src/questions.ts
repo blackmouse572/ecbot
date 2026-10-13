@@ -3,10 +3,11 @@ import {
   ADDRESS_STYLE, AFTER_HOURS, CHANNELS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN,
   PERSONAL_GOALS, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, type FactId,
 } from "./libraries";
+import { WEEKDAYS } from "./opening-hours";
 import { PRESETS } from "./presets";
 import { applyPreset, type AgentProfile } from "./profile";
 
-export type QuestionKind = "single" | "multi" | "text" | "boolean";
+export type QuestionKind = "single" | "multi" | "text" | "boolean" | "hours";
 export type QuestionPath = { field: Exclude<keyof AgentProfile, "facts"> } | { field: "facts"; fact: FactId };
 export type Question = {
   id: string;
@@ -95,7 +96,11 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
     q("formality", "single", { required: true, choices: choicesOf("formality") }),
   ];
 
-  const facts: Question[] = PRESETS[profile.businessType].facts.map((fact) => ({
+  // Weekly hours (#289) come first; a preset's free-text hours question then
+  // reads as notes on top of them.
+  const facts: Question[] = [
+    ...(personal ? [] : [q("openingHours", "hours")]),
+    ...PRESETS[profile.businessType].facts.map((fact): Question => ({
     id: `facts.${fact}`,
     path: { field: "facts", fact },
     kind: "text",
@@ -107,7 +112,8 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
     placeholderKey: `agentBuilder.facts.${fact}.placeholder`,
     required: false,
     multiline: true,
-  }));
+  })),
+  ];
 
   const process: Question[] = personal ? [] : [
     q("collect", "multi", { choices: choicesOf("collect") }),
@@ -152,7 +158,7 @@ export function allTranslationKeys(): string[] {
   const questionIds = [
     "businessType", "businessName", "ownerName", "agentName", "channels", "goals", "greeting",
     "difference", "personality", "formality", "collect", "handoffWhen", "rules", "unsure",
-    "replyLength", "emoji", "addressStyle", "followUpQuestions", "afterHours",
+    "replyLength", "emoji", "addressStyle", "followUpQuestions", "afterHours", "openingHours",
   ];
   const withExtras: Record<string, string[]> = {
     agentName: ["placeholder"], goals: ["description"],
@@ -168,6 +174,7 @@ export function allTranslationKeys(): string[] {
     for (const e of entries) keys.push(`agentBuilder.${lib}.${e.id}`);
   }
   keys.push("agentBuilder.examples.ownerName");
+  for (const d of WEEKDAYS) keys.push(`agentBuilder.weekdays.${d}`, `agentBuilder.weekdaysShort.${d}`);
   for (const t of BUSINESS_TYPES) {
     keys.push(`agentBuilder.examples.${t.id}.difference`);
     if (!t.personal) keys.push(`agentBuilder.examples.${t.id}.businessName`);

@@ -4,6 +4,7 @@ import {
   ADDRESS_STYLE, AFTER_HOURS, CHANNELS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN,
   PERSONALITY, REPLY_LENGTH, RULES, UNSURE, idsOf, type FactId,
 } from "./libraries";
+import { openingHoursSchema } from "./opening-hours";
 import { PRESETS } from "./presets";
 
 export const PROFILE_LIMITS = { shortText: 120, longText: 1000 } as const;
@@ -32,6 +33,8 @@ export const agentProfileSchema = z.object({
   addressStyle: z.enum(idsOf(ADDRESS_STYLE)).nullable(),
   followUpQuestions: z.boolean(),
   afterHours: z.enum(idsOf(AFTER_HOURS)),
+  // Absent until the owner fills in the week (#289).
+  openingHours: openingHoursSchema.optional(),
   primaryLanguage: z.string().min(2).max(8),
 }).strict();
 
@@ -83,5 +86,6 @@ export function applyPreset(profile: AgentProfile, type: BusinessTypeId): AgentP
     emoji: profile.emoji,
     addressStyle: profile.addressStyle,
     facts,
+    ...(profile.openingHours && !getBusinessType(type).personal ? { openingHours: profile.openingHours } : {}),
   };
 }

@@ -123,6 +123,27 @@ describe("compilePrompt", () => {
     expect(withHours).toContain("Reply as usual and mention the opening hours.");
   });
 
+  // #289: structured hours are the source of truth; the free text stays as notes.
+  it("puts the weekly hours in the knowledge and keeps the free text as notes", () => {
+    const openingHours = { mon: [{ open: "08:00", close: "22:00" }], tue: [{ open: "08:00", close: "22:00" }] };
+    const out = compilePrompt({ ...sample("restaurant", "en"), openingHours });
+    expect(out).toContain("Opening hours: Monday to Tuesday 08:00-22:00; Wednesday to Sunday closed");
+    expect(out).toContain("Opening hours notes: sample opening_hours");
+  });
+
+  it("counts structured hours as known for types that ask no hours question", () => {
+    const openingHours = { sat: [{ open: "09:00", close: "17:00" }] };
+    const out = compilePrompt({ ...sample("hotel", "en"), afterHours: "share_hours", openingHours });
+    expect(out).toContain("Opening hours: Monday to Friday closed; Saturday 09:00-17:00; Sunday closed");
+    expect(out).toContain("Reply as usual and mention the opening hours.");
+  });
+
+  it("compiles a profile without structured hours as before", () => {
+    const out = compilePrompt({ ...sample("restaurant", "en"), openingHours: { mon: [] } });
+    expect(out).toBe(compilePrompt(sample("restaurant", "en")));
+    expect(out).toContain("Opening hours: sample opening_hours");
+  });
+
   // #119: no guessing stock or variants, and no "I will check" promise.
   it("forbids stating stock, variants or prices that are not in the facts", () => {
     const out = compilePrompt(sample("ecommerce", "en"));

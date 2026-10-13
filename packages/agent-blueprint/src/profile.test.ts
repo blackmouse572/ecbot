@@ -34,9 +34,23 @@ describe("applyPreset", () => {
     expect(next.goals).toContain("reservations");
     expect(next.facts).toEqual({ opening_hours: "9h-21h" });
   });
+
+  it("keeps opening hours for business types and drops them for personal ones", () => {
+    const openingHours = { mon: [{ open: "08:00", close: "17:00" }] };
+    const spa = { ...createProfile("beauty", "vi"), openingHours };
+    expect(applyPreset(spa, "restaurant").openingHours).toEqual(openingHours);
+    expect(applyPreset(spa, "personal_tasks").openingHours).toBeUndefined();
+  });
 });
 
 describe("agentProfileSchema", () => {
+  it("accepts a profile without opening hours and rejects overlapping ones", () => {
+    const p = createProfile("beauty", "vi");
+    expect(agentProfileSchema.safeParse(p).success).toBe(true);
+    const overlapping = { mon: [{ open: "08:00", close: "12:00" }, { open: "11:00", close: "13:00" }] };
+    expect(agentProfileSchema.safeParse({ ...p, openingHours: overlapping }).success).toBe(false);
+  });
+
   it("rejects unknown goals, too many personality words and oversized text", () => {
     const base = createProfile("beauty", "vi");
     expect(agentProfileSchema.safeParse({ ...base, goals: ["hack"] }).success).toBe(false);
