@@ -130,6 +130,8 @@ def get_agent_context(
         customer_id=chat_request.customer_id,
         contact_point_id=chat_request.contact_point_id,
         trigger_message_id=chat_request.trigger_message_id,
+        agent_timezone=chat_request.agent_timezone,
+        customer_timezone=chat_request.customer_timezone,
     )
 
 

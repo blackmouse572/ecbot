@@ -6,31 +6,28 @@ Instead `with_current_time` prefixes it onto the newest human turn of the model
 input only; the messages in agent state (and the history apps/api stores) stay
 untouched.
 
-`resolve_timezone` is the single place the effective zone is decided. #292 adds
-the conversation's own timezone in front of the agent's here.
+apps/api decides which zones apply (#292: conversation -> agent -> deployment
+default) and sends them resolved on the chat request; this module only loads
+and renders them.
 """
 from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from langchain_core.messages import BaseMessage, HumanMessage
 
 from eccho_ai.core.app_logger import get_logger
-from eccho_ai.core.variables import AppVars
-
-if TYPE_CHECKING:
-    from eccho_ai.models.chat import Chatbots
 
 logger = get_logger(__name__)
 
 
 @lru_cache(maxsize=128)
 def _zone(key: str) -> ZoneInfo | None:
-    """Cached per key, so a bad stored value warns once, not on every model call."""
+    """Cached per key, so a bad value warns once, not on every model call."""
     try:
         return ZoneInfo(key)
     # ZoneInfoNotFoundError is a KeyError; malformed keys ("../x") raise ValueError.
@@ -39,22 +36,33 @@ def _zone(key: str) -> ZoneInfo | None:
         return None
 
 
-def resolve_timezone(chatbot: Chatbots | None) -> ZoneInfo:
-    """Agent timezone, else the deployment default. A bad value never breaks a turn."""
-    configured = getattr(chatbot, "timezone", None)
-    return (
-        (configured and _zone(configured))
-        or _zone(AppVars.APP_TIMEZONE)
-        or ZoneInfo("UTC")
-    )
+def zone(key: str | None) -> ZoneInfo:
+    """The zone apps/api resolved. UTC when it is missing (an older apps/api
+    mid-deploy) or invalid, so a bad value never breaks a turn."""
+    return (key and _zone(key)) or ZoneInfo("UTC")
 
 
-def render_current_time(now: datetime, tz: ZoneInfo) -> str:
+def _clock(now: datetime, tz: ZoneInfo) -> str:
     local = now.astimezone(tz)
     offset = local.strftime("%z")  # +0700
+    return f"{local:%A, %Y-%m-%d %H:%M} ({tz.key}, UTC{offset[:3]}:{offset[3:]})"
+
+
+def render_current_time(
+    now: datetime, agent_tz: ZoneInfo, customer_tz: ZoneInfo | None = None
+) -> str:
+    """One clock when the customer shares the business's zone (the common
+    case); both clocks and the rule for which one applies when they differ."""
+    if customer_tz is None or customer_tz.key == agent_tz.key:
+        return f"<current_time>{_clock(now, agent_tz)}</current_time>"
     return (
-        f"<current_time>{local:%A, %Y-%m-%d %H:%M} "
-        f"({tz.key}, UTC{offset[:3]}:{offset[3:]})</current_time>"
+        "<current_time>\n"
+        f"Business: {_clock(now, agent_tz)}\n"
+        f"Customer: {_clock(now, customer_tz)}\n"
+        "Opening hours and business facts follow the business clock. Times the "
+        'customer states ("call me at 9", "tomorrow morning") follow the '
+        "customer clock.\n"
+        "</current_time>"
     )
 
 

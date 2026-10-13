@@ -201,6 +201,7 @@ export class WidgetChatService {
                     customer_id: customerId,
                     contact_point_id: contactPoint.id,
                     history,
+                    zones: { chatbot, conversation },
                 },
                 abort.signal
             );

@@ -152,6 +152,22 @@ describe('ConversationService', () => {
         });
     });
 
+    describe('setTimezone', () => {
+        it('writes the timezone, null included', async () => {
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+
+            await service.setTimezone('conv-1', 'America/New_York');
+            await service.setTimezone('conv-1', null);
+
+            expect(mockConversationRepository.updateEntity.mock.calls).toEqual([
+                [{ id: 'conv-1' }, { timezone: 'America/New_York' }],
+                [{ id: 'conv-1' }, { timezone: null }],
+            ]);
+        });
+    });
+
     describe('setBotEnabled', () => {
         it('should flip the bot off without raising an alarm (no handoffAt)', async () => {
             const conversation = { id: 'conv-1', botEnabled: true };

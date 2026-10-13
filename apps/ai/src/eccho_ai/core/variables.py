@@ -29,10 +29,6 @@ class _AppVars(BaseSettings):
     LOG_LEVEL: str = "INFO"
     MAX_CONCURRENT_REQUESTS: int = 100
 
-    # Deployment default IANA timezone (same as apps/api APP_TIMEZONE); an
-    # agent with no timezone of its own reads "now" in this zone.
-    APP_TIMEZONE: str = "Asia/Ho_Chi_Minh"
-
     # Set only by the enterprise image; unset uses the bundled AGENT.md.
     AGENT_PROMPT_PATH: Path | None = Field(default=None)
 

@@ -48,6 +48,7 @@ import {
 import { ConversationReactToMessageRequestDto } from '../dtos/request/conversation.react-to-message.request.dto';
 import { ConversationSendMessageRequestDto } from '../dtos/request/conversation.send-message.request.dto';
 import { ConversationUpdateBotRequestDto } from '../dtos/request/conversation.update-bot.request.dto';
+import { ConversationUpdateTimezoneRequestDto } from '../dtos/request/conversation.update-timezone.request.dto';
 import { ConversationUpdateStatusRequestDto } from '../dtos/request/conversation.update-status.request.dto';
 import { ConversationGetResponseDto } from '../dtos/response/conversation.get.response.dto';
 import { MessageGetResponseDto } from '../dtos/response/message.get.response.dto';
@@ -62,6 +63,7 @@ import {
     ConversationWorkspaceReactToMessageDoc,
     ConversationWorkspaceSendMessageDoc,
     ConversationWorkspaceUpdateBotDoc,
+    ConversationWorkspaceUpdateTimezoneDoc,
     ConversationWorkspaceUpdateStatusDoc,
 } from '../docs/conversation.workspace.doc';
 import {
@@ -311,6 +313,52 @@ export class ConversationWorkspaceController {
             id,
             dto.botEnabled,
             dto.reason
+        );
+
+        await this.activityService.createByUserWithWorkspace(user, workspace, {
+            action: ENUM_ACTIVITY_ACTION.UPDATE,
+            subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+            metadata: {
+                id: conversation.id,
+                name: conversation.senderName,
+            },
+        });
+
+        return { data: this.conversationService.mapGet(updated) };
+    }
+
+    @ConversationWorkspaceUpdateTimezoneDoc()
+    @Response('conversation.workspace.updateTimezone')
+    @WorkspaceScopedProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Patch('/:id/timezone')
+    async updateTimezone(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('id') id: string,
+        @Body() dto: ConversationUpdateTimezoneRequestDto,
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+    ): Promise<IResponse<ConversationGetResponseDto>> {
+        const conversation =
+            await this.conversationService.findOneByIdInWorkspace(
+                id,
+                workspace.id
+            );
+
+        if (!conversation) {
+            throw new NotFoundException({
+                message: 'conversation.error.notFound',
+                statusCode: 404,
+            });
+        }
+
+        const updated = await this.conversationService.setTimezone(
+            id,
+            dto.timezone
         );
 
         await this.activityService.createByUserWithWorkspace(user, workspace, {

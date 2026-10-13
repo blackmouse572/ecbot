@@ -1,3 +1,4 @@
+import { ChatbotTimezoneService } from './chatbot-timezone.service';
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -29,6 +30,11 @@ interface AIChatStreamParams {
     contact_point_id?: string;
     history?: AIChatHistoryMessage[];
     trigger_message_id?: string;
+    /** Where the timezones come from; sent to apps/ai resolved (#292). */
+    zones: {
+        chatbot: { timezone?: string | null };
+        conversation?: { timezone?: string | null } | null;
+    };
 }
 
 /** A burst's images for apps/ai to describe (stored ones already signed). */
@@ -50,7 +56,8 @@ export class ChatbotAIService {
 
     constructor(
         private readonly httpService: HttpService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly timezoneService: ChatbotTimezoneService
     ) {
         this.aiBackendUrl = this.configService.get<string>('ai.backend.url');
     }
@@ -60,9 +67,18 @@ export class ChatbotAIService {
         signal?: AbortSignal
     ): Promise<IncomingMessage> {
         const headers = await this.buildHeaders();
+        const { zones, ...body } = params;
+        const resolved = this.timezoneService.resolve(
+            zones.chatbot,
+            zones.conversation
+        );
         const response = await this.httpService.axiosRef.post(
             `${this.aiBackendUrl}/api/chat/stream`,
-            params,
+            {
+                ...body,
+                agent_timezone: resolved.agent,
+                customer_timezone: resolved.customer,
+            },
             {
                 responseType: 'stream',
                 signal,

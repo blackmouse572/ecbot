@@ -37,6 +37,10 @@ export interface IConversationService {
         botEnabled: boolean,
         reason?: string
     ): Promise<ConversationEntity>;
+    setTimezone(
+        conversationId: string,
+        timezone: string | null
+    ): Promise<ConversationEntity>;
     recordFallback(
         chatbotId: string,
         accountId: string,

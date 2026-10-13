@@ -11,6 +11,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ConversationReactToMessageRequestDto } from '../dtos/request/conversation.react-to-message.request.dto';
 import { ConversationSendMessageRequestDto } from '../dtos/request/conversation.send-message.request.dto';
 import { ConversationUpdateBotRequestDto } from '../dtos/request/conversation.update-bot.request.dto';
+import { ConversationUpdateTimezoneRequestDto } from '../dtos/request/conversation.update-timezone.request.dto';
 import { ConversationUpdateStatusRequestDto } from '../dtos/request/conversation.update-status.request.dto';
 import { ConversationGetResponseDto } from '../dtos/response/conversation.get.response.dto';
 import { MessageGetResponseDto } from '../dtos/response/message.get.response.dto';
@@ -181,5 +182,29 @@ export function ConversationWorkspaceMarkReadDoc(): MethodDecorator {
             jwtAccessToken: true,
         }),
         DocResponse('conversation.workspace.markRead')
+    );
+}
+
+export function ConversationWorkspaceUpdateTimezoneDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                "Set the conversation's timezone, or clear it to follow the agent",
+        }),
+        DocRequest({
+            params: [...WorkspaceDocParamsId],
+            dto: ConversationUpdateTimezoneRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocResponse<ConversationGetResponseDto>(
+            'conversation.workspace.updateTimezone',
+            {
+                dto: ConversationGetResponseDto,
+            }
+        )
     );
 }

@@ -3,6 +3,7 @@ import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.servi
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
 import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
+import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { ManifestBuilderService } from '@app/modules/tool/services/manifest-builder.service';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
@@ -179,7 +180,10 @@ export class FollowupService {
             );
         }
 
-        const skipReason = await this.resolveSkipReason(data);
+        const conversation = await this.conversationService.findOneById(
+            data.conversationId
+        );
+        const skipReason = this.skipReasonFor(conversation);
         if (skipReason) {
             return this.recordOutcome(followup, data.conversationId, {
                 status: ENUM_FOLLOWUP_STATUS.SKIPPED,
@@ -187,7 +191,7 @@ export class FollowupService {
             });
         }
 
-        await this.generateAndDeliver(followup, data);
+        await this.generateAndDeliver(followup, data, conversation);
     }
 
     private get conversationService(): ConversationService {
@@ -232,12 +236,9 @@ export class FollowupService {
     }
 
     /** `null` when the followup should actually be delivered. */
-    private async resolveSkipReason(
-        data: IFollowupJob
-    ): Promise<ENUM_FOLLOWUP_SKIP_REASON | null> {
-        const conversation = await this.conversationService.findOneById(
-            data.conversationId
-        );
+    private skipReasonFor(
+        conversation: ConversationEntity | null
+    ): ENUM_FOLLOWUP_SKIP_REASON | null {
         if (!conversation) {
             return ENUM_FOLLOWUP_SKIP_REASON.CONVERSATION_MISSING;
         }
@@ -253,7 +254,8 @@ export class FollowupService {
 
     private async generateAndDeliver(
         followup: FollowupEntity | null,
-        data: IFollowupJob
+        data: IFollowupJob,
+        conversation: ConversationEntity
     ): Promise<void> {
         const {
             conversationId,
@@ -320,6 +322,7 @@ export class FollowupService {
                     tools,
                     max_tool_iterations: 5,
                     history,
+                    zones: { chatbot, conversation },
                 },
                 ac.signal
             );

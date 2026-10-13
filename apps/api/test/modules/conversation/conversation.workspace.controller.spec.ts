@@ -13,6 +13,7 @@ const mockConversationService = {
     findOneByIdInWorkspace: jest.fn(),
     updateStatus: jest.fn(),
     setBotEnabled: jest.fn(),
+    setTimezone: jest.fn(),
     notifyOperators: jest.fn(),
     mapGet: jest.fn(),
     mapList: jest.fn(),
@@ -650,10 +651,11 @@ describe('ConversationWorkspaceController', () => {
         });
     });
 
-    describe('updateStatus and updateBot', () => {
+    describe('updateStatus, updateBot and updateTimezone', () => {
         it.each([
             ['updateStatus', { status: ENUM_CONVERSATION_STATUS.RESOLVED }],
             ['updateBot', { botEnabled: false }],
+            ['updateTimezone', { timezone: 'America/New_York' }],
         ] as const)(
             '%s names the customer in the activity',
             async (method, dto) => {
@@ -767,6 +769,46 @@ describe('ConversationWorkspaceController', () => {
             ).rejects.toThrow(NotFoundException);
 
             expect(mockConversationService.updateStatus).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('updateTimezone', () => {
+        it('sets the timezone, or clears it with null', async () => {
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                mockConversation
+            );
+            mockConversationService.setTimezone.mockResolvedValue(
+                mockConversation
+            );
+
+            for (const timezone of ['America/New_York', null]) {
+                const result = await controller.updateTimezone(
+                    workspace,
+                    'conv-1',
+                    { timezone },
+                    user
+                );
+                expect(
+                    mockConversationService.setTimezone
+                ).toHaveBeenLastCalledWith('conv-1', timezone);
+                expect(result).toEqual({ data: mockMappedConversation });
+            }
+        });
+
+        it('throws NotFoundException for a conversation outside the workspace', async () => {
+            mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
+                null
+            );
+
+            await expect(
+                controller.updateTimezone(
+                    workspace,
+                    'conv-in-other-workspace',
+                    { timezone: null },
+                    user
+                )
+            ).rejects.toThrow(NotFoundException);
+            expect(mockConversationService.setTimezone).not.toHaveBeenCalled();
         });
     });
 

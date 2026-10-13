@@ -212,6 +212,7 @@ export class ReplyGenerationService {
                         contact_point_id: contactPointId,
                         history,
                         trigger_message_id: triggerMessage?.id,
+                        zones: { chatbot, conversation },
                     },
                     ac.signal
                 );

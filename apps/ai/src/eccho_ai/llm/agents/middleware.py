@@ -19,8 +19,8 @@ from langchain.agents.middleware import AgentMiddleware, AgentState
 
 from eccho_ai.llm.prompts.current_time import (
     render_current_time,
-    resolve_timezone,
     with_current_time,
+    zone,
 )
 from eccho_ai.llm.prompts.loader import render_system_prompt
 from eccho_ai.llm.providers.chat_model import build_chat_model
@@ -69,7 +69,11 @@ class ChatbotConfigMiddleware(AgentMiddleware[AgentState[Any], AgentRequestConte
                 system_prompt=render_system_prompt(chatbot),
                 messages=with_current_time(
                     request.messages,
-                    render_current_time(context.now, resolve_timezone(chatbot)),
+                    render_current_time(
+                        context.now,
+                        zone(context.agent_timezone),
+                        zone(context.customer_timezone or context.agent_timezone),
+                    ),
                 ),
             )
         return await handler(request)
