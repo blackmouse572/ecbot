@@ -10,13 +10,6 @@ export class NotificationRepository extends DatabaseRepository<NotificationEntit
         super(em, NotificationEntity);
     }
 
-    async findByRecipient(recipientId: string): Promise<NotificationEntity[]> {
-        return this.find(
-            { recipient: recipientId },
-            { populate: ['recipient', 'sender'] }
-        );
-    }
-
     async findUnreadByRecipient(
         recipientId: string
     ): Promise<NotificationEntity[]> {

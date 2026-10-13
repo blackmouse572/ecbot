@@ -27,7 +27,7 @@ export class NotificationGuard implements CanActivate {
             });
         }
 
-        if (notification.recipient.toString() !== user.toString()) {
+        if (notification.recipient.id !== user) {
             throw new NotFoundException({
                 statusCode: ENUM_USER_STATUS_CODE_ERROR.NOT_FOUND,
                 message: 'notification.error.notFound',

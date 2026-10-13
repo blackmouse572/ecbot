@@ -140,7 +140,6 @@ await notificationService.deleteExpiredNotifications();
 The notification repository extends `DatabaseRepositoryBase` and includes custom methods:
 
 - `findByWorkspace(workspaceId)` - Find notifications by workspace
-- `findByRecipient(recipientId)` - Find notifications by recipient
 - `markAsRead(id)` - Mark single notification as read
 - `markAsArchived(id)` - Mark single notification as archived
 - `countUnreadByRecipient(recipientId)` - Count unread notifications for user

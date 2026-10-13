@@ -1,7 +1,6 @@
 import { BellAlert } from "@medusajs/icons";
-import { DropdownMenu, IconButton, Text } from "@medusajs/ui";
-import { Skeleton } from "@repo/ui/common-components";
-import { useRef, useState, type FC } from "react";
+import { DropdownMenu, IconButton, Text, clx } from "@medusajs/ui";
+import { useCallback, useRef, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -18,6 +17,8 @@ import { NOTIFICATION_PAGE_SIZE } from "./constants";
 import { isHandoffNotification } from "./is-handoff-notification";
 import { NotificationEmptyState } from "./notification-empty-state";
 import { NotificationRow } from "./notification-row";
+import { NotificationRowSkeleton } from "./notification-row-skeleton";
+import { useScrollEdges } from "./use-scroll-edges";
 
 export const NotificationMenu: FC = () => {
   const { t } = useTranslation();
@@ -27,9 +28,14 @@ export const NotificationMenu: FC = () => {
   const { count, isFetched } = useUnreadNotificationCount({
     pollInBackground: isLeader,
   });
-  const { notifications, isLoading, refetch } = useNotifications({
-    perPage: NOTIFICATION_PAGE_SIZE,
-  });
+  const {
+    notifications,
+    isLoading,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useNotifications({ perPage: NOTIFICATION_PAGE_SIZE });
   const markManyAsRead = useMarkNotificationsAsRead();
   const markAsRead = useMarkNotificationAsRead();
   const markAllAsRead = useMarkAllNotificationsAsRead();
@@ -37,6 +43,11 @@ export const NotificationMenu: FC = () => {
   const isOpen = useRef(false);
 
   useNotificationSound(isFetched && isLeader ? count : undefined);
+
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const edges = useScrollEdges(notifications.length, loadMore);
 
   // Opening the menu counts as seeing what is in it: mark those read so the
   // bell clears, but keep them highlighted until the menu closes. A customer
@@ -49,7 +60,7 @@ export const NotificationMenu: FC = () => {
     }
     const { data } = await refetch();
     if (!isOpen.current) return;
-    const seenIds = (data?.data ?? [])
+    const seenIds = (data?.pages.flatMap((page) => page?.data ?? []) ?? [])
       .filter(
         (notification) =>
           notification.status === "unread" &&
@@ -98,38 +109,52 @@ export const NotificationMenu: FC = () => {
           )}
         </div>
         <DropdownMenu.Separator className="my-0" />
-        <div className="max-h-[420px] overflow-y-auto p-1">
-          {isLoading ? (
-            <div className="flex flex-col gap-y-3 p-2">
-              {[0, 1, 2].map((index) => (
-                <div key={index} className="flex items-start gap-x-3">
-                  <Skeleton className="size-7 rounded-full" />
-                  <div className="flex flex-1 flex-col gap-y-1.5">
-                    <Skeleton className="h-3 w-2/3" />
-                    <Skeleton className="h-3 w-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : notifications.length === 0 ? (
-            <NotificationEmptyState />
-          ) : (
-            notifications.map((notification) => (
-              <NotificationRow
-                key={notification.id}
-                notification={notification}
-                isNew={
-                  newIds.has(notification.id) ||
-                  notification.status === "unread"
-                }
-                onClick={
-                  notification.status === "unread"
-                    ? () => markAsRead.mutate(notification.id)
-                    : undefined
-                }
-              />
-            ))
-          )}
+        <div className="relative">
+          <div
+            ref={edges.ref}
+            data-testid="notification-list"
+            className="max-h-[420px] overflow-y-auto p-1"
+            onScroll={edges.onScroll}
+          >
+            {isLoading ? (
+              [0, 1, 2].map((index) => <NotificationRowSkeleton key={index} />)
+            ) : notifications.length === 0 ? (
+              <NotificationEmptyState />
+            ) : (
+              notifications.map((notification) => (
+                <NotificationRow
+                  key={notification.id}
+                  notification={notification}
+                  isNew={
+                    newIds.has(notification.id) ||
+                    notification.status === "unread"
+                  }
+                  onClick={
+                    notification.status === "unread"
+                      ? () => markAsRead.mutate(notification.id)
+                      : undefined
+                  }
+                />
+              ))
+            )}
+            {isFetchingNextPage && <NotificationRowSkeleton />}
+          </div>
+          <div
+            aria-hidden
+            data-testid="notification-shadow-top"
+            className={clx(
+              "from-ui-fg-base/10 pointer-events-none absolute inset-x-0 top-0 h-3 bg-gradient-to-b to-transparent transition-opacity",
+              edges.top ? "opacity-100" : "opacity-0",
+            )}
+          />
+          <div
+            aria-hidden
+            data-testid="notification-shadow-bottom"
+            className={clx(
+              "from-ui-fg-base/10 pointer-events-none absolute inset-x-0 bottom-0 h-3 bg-gradient-to-t to-transparent transition-opacity",
+              edges.bottom ? "opacity-100" : "opacity-0",
+            )}
+          />
         </div>
       </DropdownMenu.Content>
     </DropdownMenu>
