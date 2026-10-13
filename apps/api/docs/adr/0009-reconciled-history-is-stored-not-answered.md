@@ -18,7 +18,7 @@ Replayed history is imported, never answered.
 - The marker is a plain field of the event, so it survives the whole ingress: inbox accept, Cloud Task payload (JSON), task controller DTO, `MessageProcessorService.process()`.
 - A replayed customer message keeps the dedupe claim, refreshes the customer's identity, stores the message and bumps `lastMessageAt`, then stops. It skips action dispatch, the classifier, reopening a resolved conversation, the handoff check, typing, read receipts and reply generation.
 - The next live message runs the full Turn as before, including when the import created the conversation.
-- Sender-profile refresh is one routine shared by the customer-message and echo paths. A lookup that yields neither a name nor an avatar is not stamped as fetched, so the next event retries.
+- Sender-profile refresh is one routine shared by the customer-message and echo paths. A lookup that yields neither a name nor an avatar is not cached for the full 7 days: it is retried after 15 minutes.
 - Messenger's `reconcile()` also reads the conversation's `participants` and sets `senderName`, so imports get a name even when the profile API returns nothing.
 
 ## Consequences
@@ -26,4 +26,4 @@ Replayed history is imported, never answered.
 - No tokens are spent on replies the platform will reject.
 - A customer message the live webhook missed (an outage) and the sweep later recovers is stored in the inbox but gets no automatic reply. An operator sees it there. Telling "missed during an outage" apart from "old history" safely would need per-platform window checks, which is out of scope.
 - Already-failed outbound messages and already-metered tokens are not cleaned up.
-- An empty profile lookup now retries on every event for that customer until the platform returns something. The lookup is one Graph call per inbound event, and the conversation-level cache still applies once a name or avatar is found.
+- An empty profile lookup is retried every 15 minutes until the platform returns something. `fetchSenderProfile` adapters swallow errors, so this also covers a rate-limited or denied lookup, and a burst of imported messages still makes at most one Graph call per window.

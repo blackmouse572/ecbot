@@ -29,7 +29,10 @@ import { MessageDebounceService } from './message-debounce.service';
 import { ActionRouter } from './action-router.service';
 import { GenerationLeaseService } from './generation-lease.service';
 import { InboundEventDedupeService } from './inbound-event-dedupe.service';
-import { SENDER_PROFILE_STALE_MS } from '../constants/sender-profile.constant';
+import {
+    SENDER_PROFILE_EMPTY_RETRY_MS,
+    SENDER_PROFILE_STALE_MS,
+} from '../constants/sender-profile.constant';
 import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 
 @Injectable()
@@ -375,8 +378,8 @@ export class MessageProcessorService implements OnModuleInit {
     /**
      * Fill the conversation's sender name/avatar from the platform, at most
      * once per SENDER_PROFILE_STALE_MS. Shared by the customer-message and echo
-     * paths. A lookup that finds no identity is not stamped as fetched, so the
-     * next event retries instead of caching "nobody" for a week.
+     * paths. A lookup that finds no identity is retried after
+     * SENDER_PROFILE_EMPTY_RETRY_MS instead of caching "nobody" for a week.
      */
     private async refreshSenderProfile(
         adapter: PlatformAdapter,
@@ -400,7 +403,22 @@ export class MessageProcessorService implements OnModuleInit {
                 event.senderId
             );
             const senderName = profile.name ?? event.senderName;
-            if (!senderName && !profile.avatar) return;
+            if (!senderName && !profile.avatar) {
+                // Nothing found (or the adapter swallowed a failure): stamp
+                // only a backdated fetch time, so the next lookup comes after
+                // SENDER_PROFILE_EMPTY_RETRY_MS rather than a week.
+                const retryAt = new Date(
+                    Date.now() -
+                        SENDER_PROFILE_STALE_MS +
+                        SENDER_PROFILE_EMPTY_RETRY_MS
+                );
+                await this.conversationService.updateSenderProfile(
+                    conversation.id,
+                    { senderProfileFetchedAt: retryAt }
+                );
+                conversation.senderProfileFetchedAt = retryAt;
+                return;
+            }
 
             const avatarBase64 = profile.avatar
                 ? await fetchAsBase64(profile.avatar)

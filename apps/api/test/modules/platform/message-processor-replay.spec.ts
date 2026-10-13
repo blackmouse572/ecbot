@@ -2,6 +2,7 @@ import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.en
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
 import { MessageProcessorService } from '../../../src/modules/platform/services/message-processor.service';
 import { PlatformWebhookEvent } from '../../../src/modules/platform/interfaces/platform-adapter.interface';
+import { SENDER_PROFILE_EMPTY_RETRY_MS } from '../../../src/modules/platform/constants/sender-profile.constant';
 
 jest.mock('../../../src/common/utils/fetch-as-base64.util', () => ({
     fetchAsBase64: jest.fn(async (url: string) => `base64:${url}`),
@@ -213,15 +214,29 @@ describe('MessageProcessorService — replayed history', () => {
     });
 
     describe('sender profile', () => {
-        it('does not mark an empty lookup as fetched, so the next event retries', async () => {
+        it('does not cache an empty lookup as fetched: it retries after a short backoff', async () => {
             adapter.fetchSenderProfile.mockResolvedValue({ id: 'customer-1' });
 
             await processor.process(replayed);
-            await processor.process({ ...live, externalMessageId: 'm_2' });
 
+            // Only the retry stamp is written, no name or avatar.
             expect(
                 conversationService.updateSenderProfile
-            ).not.toHaveBeenCalled();
+            ).toHaveBeenCalledWith('conv-1', {
+                senderProfileFetchedAt: expect.any(Date),
+            });
+
+            // A burst of imported messages does not fan out into Graph calls.
+            await processor.process({ ...replayed, externalMessageId: 'm_2' });
+            expect(adapter.fetchSenderProfile).toHaveBeenCalledTimes(1);
+
+            // Once the backoff has passed, the next event looks again.
+            conversation.senderProfileFetchedAt = new Date(
+                (conversation.senderProfileFetchedAt as Date).getTime() -
+                    SENDER_PROFILE_EMPTY_RETRY_MS -
+                    1000
+            );
+            await processor.process({ ...live, externalMessageId: 'm_3' });
             expect(adapter.fetchSenderProfile).toHaveBeenCalledTimes(2);
         });
 
