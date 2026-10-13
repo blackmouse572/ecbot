@@ -48,14 +48,14 @@ describe("KnowledgeItemCreate", () => {
     seen.formProps = undefined;
   });
 
-  // #283: opened from an agent, the agent is pre-ticked and closing the
+  // #283: opened from an agent, the new item is linked to it and closing the
   // modal lands back on that agent.
-  it("pre-ticks the agent it was opened from and returns there", () => {
+  it("passes the agent it was opened from and returns there", () => {
     renderAt("/ws/knowledge-base/kb-1/item/create?agent=bot-1");
 
     expect(seen.formProps).toMatchObject({
       knowledgeBaseId: "kb-1",
-      defaultChatbotIds: ["bot-1"],
+      agentId: "bot-1",
     });
     expect(seen.prev).toBe("/ws/chatbot/bot-1");
   });
@@ -63,7 +63,7 @@ describe("KnowledgeItemCreate", () => {
   it("keeps the knowledge base as the destination without an agent", () => {
     renderAt("/ws/knowledge-base/kb-1/item/create");
 
-    expect(seen.formProps?.defaultChatbotIds).toBeUndefined();
+    expect(seen.formProps?.agentId).toBeUndefined();
     expect(seen.prev).toBe("/ws/knowledge-base");
   });
 });

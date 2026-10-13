@@ -25,7 +25,7 @@ export function KnowledgeItemCreate() {
       <KnowledgeItemCreateForm
         workspaceSlug={workspaceSlug}
         knowledgeBaseId={knowledgeBaseId}
-        defaultChatbotIds={agentId ? [agentId] : undefined}
+        agentId={agentId}
       />
     </RouteFocusModal>
   );

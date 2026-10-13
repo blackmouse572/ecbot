@@ -14,7 +14,6 @@ import {
   useLinkKnowledgeItemToChatbots,
   useProcessKnowledgeItem,
 } from "../../../../hooks/api";
-import { KnowledgeItemAgentsField } from "./knowledge-item-agents-field";
 import { FileForm, TextForm, UrlForm } from "./forms";
 import { fileTitle } from "./forms/file-title";
 import { KnowledgeItemTypeSelector } from "./knowledge-item-type-selector/index";
@@ -30,13 +29,13 @@ import { KnowledgeItemEditTag } from "../../knowledge-item-edit/components/knowl
 interface KnowledgeItemCreateFormProps {
   workspaceSlug: string;
   knowledgeBaseId: string;
-  /** Agents ticked when the form opens, e.g. the agent it was opened from. */
-  defaultChatbotIds?: string[];
+  /** The agent the form was opened from; the new item is linked to it. */
+  agentId?: string;
 }
 
 export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
   knowledgeBaseId,
-  defaultChatbotIds = [],
+  agentId,
 }) => {
   const { t } = useTranslation();
   const { handleSuccess } = useRouteModal();
@@ -70,7 +69,6 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
       title: "",
       content: "",
       tags: [],
-      chatbotIds: defaultChatbotIds,
     },
   });
   const { remove, append } = useFieldArray({
@@ -86,7 +84,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
   });
   const { mutateAsync: processItem } = useProcessKnowledgeItem();
   const { mutateAsync: linkAgents } = useLinkKnowledgeItemToChatbots();
-  const handleSubmit = form.handleSubmit(async ({ chatbotIds, ...data }) => {
+  const handleSubmit = form.handleSubmit(async (data) => {
     try {
       setIsLoading(true);
       setUploadProgress(0);
@@ -113,10 +111,10 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
       const createdId = created.data?.data?.id;
       // Link before processing: ingestion tags the item's content with the
       // agents linked at that moment.
-      if (createdId && chatbotIds?.length) {
+      if (createdId && agentId) {
         const { failed } = await linkAgents({
           knowledgeItemId: createdId,
-          chatbotIds,
+          chatbotIds: [agentId],
         });
         if (failed) {
           toast.info(
@@ -292,7 +290,6 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                   )}
                   {selectedType === "URL" && <UrlForm form={form} />}
                   {selectedType === "TEXT" && <TextForm form={form} />}
-                  <KnowledgeItemAgentsField control={form.control} />
                 </div>
               )}
             </div>
