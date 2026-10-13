@@ -295,11 +295,23 @@ export class AccountService implements IAccountService {
     mapList(accounts: AccountEntity[]): AccountListResponseDto[] {
         return accounts.map((a: AccountEntity) => {
             const obj = hasToObject(a) ? a.toObject() : a;
+            // A populated chatbot carries every column; only the summary
+            // travels. A soft-deleted one counts as no agent, same rule as
+            // findAccountsNotBelongingToAnyChatbot.
+            const chatbot = (obj as any).chatbot as
+                | { id: string; name: string; deletedAt?: Date | null }
+                | null
+                | undefined;
+
             return {
                 ...obj,
                 cookies: undefined,
                 proxies: undefined,
                 accessToken: undefined,
+                chatbot:
+                    chatbot && !chatbot.deletedAt
+                        ? { id: chatbot.id, name: chatbot.name }
+                        : null,
             } as unknown as AccountListResponseDto;
         });
     }
