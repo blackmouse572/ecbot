@@ -112,9 +112,11 @@ async def get_agent_input(
         else:
             messages.append(AIMessage(content=turn.content))
 
-    message = _build_rag_message(chat_request.message or "", retrieval)
-    note = reply_language_note(chat_request.message or "")
-    messages.append(HumanMessage(content=f"{note}\n\n{message}" if note else message))
+    customer_message = chat_request.message or ""
+    note = reply_language_note(customer_message)
+    if note:
+        customer_message = f"{note}\n\n{customer_message}"
+    messages.append(HumanMessage(content=_build_rag_message(customer_message, retrieval)))
     return {"messages": messages}
 
 

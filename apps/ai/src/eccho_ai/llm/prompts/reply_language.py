@@ -26,29 +26,24 @@ REPLY_LANGUAGE_NOTE = (
 _VIETNAMESE_LETTERS = re.compile(
     "[ạảấầẩẫậắằẳẵặăẹẻẽếềểễệỉịĩọỏốồổỗộơớờởỡợụủũưứừửữựỳỵỷỹđ]", re.IGNORECASE
 )
-# Common Vietnamese words, compared without accents ("shop oi con hang ko").
+# Vietnamese words, compared without accents ("shop oi con hang ko"). Words
+# that are also ordinary English or French (hang, bao, chi, ban, co) are left
+# out: one of them would hide the note from an English customer.
 _VIETNAMESE_WORDS = frozenset(
     {
         "khong",
         "ko",
-        "k",
         "hok",
-        "hong",
         "kg",
         "dc",
         "duoc",
-        "oi",
         "nha",
         "nhe",
         "nhen",
         "minh",
-        "ban",
         "cho",
         "gia",
-        "bao",
         "nhieu",
-        "con",
-        "hang",
         "giao",
         "sao",
         "vay",
@@ -57,24 +52,30 @@ _VIETNAMESE_WORDS = frozenset(
         "lam",
         "voi",
         "cua",
-        "em",
         "anh",
-        "chi",
-        "di",
         "ak",
         "sp",
         "ib",
-        "co",
     }
+)
+# Letters outside the Latin script (Chinese, Japanese, Thai, Cyrillic, ...).
+_NON_LATIN_LETTERS = re.compile(r"[^\W\d_A-Za-z\u00C0-\u024F\u1E00-\u1EFF]")
+# apps/api appends English notes for the customer's photos after their text.
+_IMAGE_NOTE = re.compile(
+    r"^\[(?:Image description: |The user sent an image that could not be viewed)",
+    re.MULTILINE,
 )
 _MIN_WORDS = 3
 
 
 def reply_language_note(message: str) -> str:
-    if _VIETNAMESE_LETTERS.search(message):
+    text = _IMAGE_NOTE.split(message, maxsplit=1)[0]
+    if _VIETNAMESE_LETTERS.search(text):
         return ""
+    if _NON_LATIN_LETTERS.search(text):
+        return REPLY_LANGUAGE_NOTE
     plain = (
-        unicodedata.normalize("NFD", message.lower()).encode("ascii", "ignore").decode()
+        unicodedata.normalize("NFD", text.lower()).encode("ascii", "ignore").decode()
     )
     words = re.findall(r"[a-z]+", plain)
     if len(words) < _MIN_WORDS or _VIETNAMESE_WORDS.intersection(words):
