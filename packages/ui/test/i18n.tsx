@@ -38,6 +38,27 @@ export const uiTestI18nResources = {
     noRecordsTitle: "No records",
     noRecordsMessage: "Nothing here yet",
   },
+  password: {
+    show: "Show password",
+    hide: "Hide password",
+    strength: {
+      label: "Password strength",
+      empty: "Enter a password",
+      weak: "Weak",
+      medium: "Medium",
+      strong: "Strong",
+      count: "{{count}}/{{total}} requirements met",
+      met: "Requirement met",
+      notMet: "Requirement not met",
+    },
+    requirements: {
+      label: "Password requirements",
+      minLength: "At least 8 characters",
+      number: "At least 1 number",
+      lowercase: "At least 1 lowercase letter",
+      uppercase: "At least 1 uppercase letter",
+    },
+  },
   fields: {
     createdAt: "Created at",
     date: "Date",

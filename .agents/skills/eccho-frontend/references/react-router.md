@@ -1,6 +1,6 @@
 # React Router v7 (data mode) — ecbot conventions
 
-ecbot's own version of the [react-router-data-mode skill](https://github.com/remix-run/agent-skills/blob/main/skills/react-router-data-mode/SKILL.md). We use the **data router** (lazy modules, `loader`, `handle.breadcrumb`, `ErrorBoundary`) but **deliberately skip** its mutation stack — no `action` / `<Form method>` / `useFetcher`. ecbot mutates through **TanStack Query mutation hooks** ([tanstack-query.md](tanstack-query.md)). The live router tree is `apps/app/src/routes/route.tsx`; read it for the current shape. Source of record: `.github/instructions/app/routing-and-modals.instructions.md`.
+ecbot's own version of the [react-router-data-mode skill](https://github.com/remix-run/agent-skills/blob/main/skills/react-router-data-mode/SKILL.md). We use the **data router** (lazy modules, `loader`, `handle.breadcrumb`, `ErrorBoundary`) but **deliberately skip** its mutation stack — no `action` / `<Form method>` / `useFetcher`. ecbot mutates through **TanStack Query mutation hooks** ([tanstack-query.md](tanstack-query.md)). The live router tree is `apps/app/src/routes/route.tsx`; read it for the current shape. Loaders prime the TanStack Query cache: see [tanstack-query.md](tanstack-query.md) (Loaders with queryOptions).
 
 ## Route Constants
 
@@ -231,3 +231,45 @@ export function ChatbotDetail() {
   );
 }
 ```
+
+> **Exception**: a create _and_ edit flow that share one large form (e.g. `chatbot`) may both use `RouteFocusModal`, because the form needs the space. A simple edit stays a `RouteDrawer`.
+
+## Modal forms
+
+Both modals expose `Header`, `Title`, `Description`, `Body`, `Footer`, `Close` and `Form`. Give every modal a `Title`, `sr-only` when there is no visible header, so screen readers announce it. Closing the modal navigates back to the previous route.
+
+`.Form` bridges React Hook Form into the modal. Inside it, wrap the fields in `KeyboundForm` (`@/components/utils/keybound-form`), which submits only on ⌘/Ctrl+Enter so a stray Enter in a field doesn't submit. Examples: `routes/skills/skill-create/skill-create.tsx` (`RouteFocusModal.Form`), `routes/workspace/workspace-edit/components/workspace-edit-form.tsx` (`RouteDrawer.Form`).
+
+```typescript
+<RouteDrawer.Form form={form}>
+  <KeyboundForm onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+    <RouteDrawer.Body className="flex flex-1 flex-col gap-y-8 overflow-y-auto">
+      {/* Form.Field rows */}
+    </RouteDrawer.Body>
+    <RouteDrawer.Footer>
+      <Button variant="secondary" onClick={onClose}>{t("actions.cancel")}</Button>
+      <Button type="submit" isLoading={updateMutation.isPending}>{t("actions.save")}</Button>
+    </RouteDrawer.Footer>
+  </KeyboundForm>
+</RouteDrawer.Form>
+```
+
+After a successful mutation, call `handleSuccess()` from `useRouteModal()` (exported by `@/components/modals`). It navigates back and sets `state.isSubmitSuccessful`. Pair it with a toast:
+
+```typescript
+const { handleSuccess } = useRouteModal();
+
+const handleSubmit = async (data) => {
+  try {
+    await updateMutation.mutateAsync(data);
+    handleSuccess();
+    toast.success(t("...success"));
+  } catch (e) {
+    toast.error(t("...error"));
+  }
+};
+```
+
+### Sharing one form between create and edit
+
+Extract a presentational `<FeatureForm>` in `routes/<feature>/components/` that takes `defaultValues`, `onSubmit`, `onCancel`, `isPending` and label props. The create page passes create defaults and a create mutation; the edit page seeds `defaultValues` from the fetched resource and passes an update mutation.

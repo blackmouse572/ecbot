@@ -1,6 +1,8 @@
 ---
 name: local-setup
 description: Bring a fresh or broken ecbot checkout to a running, signed-in local stack — install, configure every .env, start Postgres/Redis/JWKS, migrate, seed, run, and prove login works. Use when the user asks to set up, spin up, bootstrap, install or run the project locally, when a new contributor clones the repo, or when local login/API calls fail with CORS, 401 right after sign-in, API-key rejections, Turnstile 403 (5400) or a missing `vector` extension.
+metadata:
+  internal: true
 ---
 
 # Local setup

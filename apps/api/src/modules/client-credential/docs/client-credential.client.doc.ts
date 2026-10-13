@@ -9,7 +9,8 @@ import { ClientCredentialMeResponseDto } from '../dtos/response/client-credentia
 export function ClientCredentialMeDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
-            summary: 'resolve the workspace this client credential belongs to',
+            summary:
+                'resolve the workspace this client credential belongs to and what it may do there',
         }),
         DocAuth({ xApiKey: true }),
         DocResponse('clientCredential.me', {

@@ -1,0 +1,7 @@
+{
+    "error": {
+        "webhookSubscriptionFailed": "Could not turn on messages for this Instagram account. Please check that it is a professional account and try again.",
+        "linkFailed": "Could not connect this Instagram account. Please try connecting again.",
+        "heartReactionOnly": "Instagram only supports the heart reaction."
+    }
+}

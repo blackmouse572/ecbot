@@ -73,6 +73,7 @@ log_cli_format = "%(asctime)s [%(levelname)s] %(message)s (%(filename)s:%(lineno
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 markers = [
     "integration: needs a live Postgres or full app environment; excluded from the default CI unit lane (run the unit lane with `-m \"not integration\"`)",
+    "schema_contract: checks the tables and columns the AI service uses against a database built by the API migrations",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",

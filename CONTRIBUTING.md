@@ -6,7 +6,7 @@ Thanks for being here. Bug reports, adapters, docs fixes and features are all we
 
 - **Small fix?** Just open a pull request.
 - **Anything larger?** Open an issue first and describe the approach. It is much cheaper to disagree about a design in an issue than in a finished branch.
-- **Looking for somewhere to start?** Three channel adapters are specced and unimplemented — Instagram, TikTok Shop, Shopee. They are labelled `good first issue` and each has an issue describing the interface, the platform docs, and what "done" means.
+- **Looking for somewhere to start?** Two channel adapters are specced and unimplemented — TikTok Shop, Shopee. They are labelled `good first issue` and each has an issue describing the interface, the platform docs, and what "done" means.
 
 ## Contributor Licence Agreement
 

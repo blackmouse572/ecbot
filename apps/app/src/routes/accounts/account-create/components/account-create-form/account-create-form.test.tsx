@@ -12,6 +12,9 @@ class ResizeObserverMock {
 (globalThis as A).ResizeObserver =
   (globalThis as A).ResizeObserver ?? ResizeObserverMock;
 
+// Read when the form module loads, so Instagram is enabled for these tests.
+vi.hoisted(() => vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP"));
+
 const linkMutateAsync = vi.fn();
 
 vi.mock("@/hooks/api", () => ({
@@ -147,6 +150,35 @@ describe("AccountCreateForm: blocked OAuth popup", () => {
     expect(errorToast.mock.calls.flat().join(" ")).not.toContain(
       "popup-blocked",
     );
+  });
+});
+
+describe("AccountCreateForm — Instagram", () => {
+  it("stays on the roadmap in a build without the Instagram app id", async () => {
+    vi.stubEnv("VITE_INSTAGRAM_APP_ID", "");
+    vi.resetModules();
+    const { AccountCreateForm: Fresh } = await import("./account-create-form");
+    render(<Fresh />);
+
+    const card = screen.getByText("Instagram").closest("button");
+    expect(card?.disabled).toBe(true);
+    vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP");
+  });
+
+  it("is selectable and links through Instagram Login", async () => {
+    linkMutateAsync.mockResolvedValue({ data: { data: null } });
+
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+    await user.click(screen.getByText("Instagram"));
+
+    expect(oauthLogin.platform).toBe("INSTAGRAM_ACCOUNT");
+    await oauthLogin.props.onSuccess({ code: "IGcode" });
+
+    expect(linkMutateAsync).toHaveBeenCalledWith({
+      code: "IGcode",
+      platform: "INSTAGRAM_ACCOUNT",
+    });
   });
 });
 

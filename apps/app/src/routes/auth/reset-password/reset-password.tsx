@@ -3,7 +3,12 @@ import { useResetPassword, useResetPasswordToken } from "@/hooks/api";
 import { ROUTES } from "@/routes/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, toast } from "@medusajs/ui";
-import { CircularLoading, Form, Input } from "@repo/ui/common-components";
+import {
+  CircularLoading,
+  Form,
+  PasswordInput,
+  PasswordStrength,
+} from "@repo/ui/common-components";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -87,16 +92,22 @@ function ResetPasswordPage() {
               render={({ field, fieldState }) => (
                 <Form.Item>
                   <Form.Control>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       autoComplete="new-password"
                       autoFocus
-                      errorMessage={fieldState.error?.message}
+                      errorMessage={
+                        fieldState.error?.message === "weak"
+                          ? t("errors.weak")
+                          : fieldState.error?.message
+                      }
                       {...field}
                       className="bg-ui-bg-field-component"
                       placeholder={t("fields.newPassword")}
                     />
                   </Form.Control>
+                  {field.value && (
+                    <PasswordStrength password={field.value} className="mt-3" />
+                  )}
                 </Form.Item>
               )}
             />
@@ -106,8 +117,7 @@ function ResetPasswordPage() {
               render={({ field, fieldState }) => (
                 <Form.Item>
                   <Form.Control>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       autoComplete="new-password"
                       errorMessage={
                         fieldState.error?.message === "passwordMismatch"

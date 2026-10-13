@@ -1,11 +1,20 @@
 import type { ChannelId } from "@repo/agent-blueprint";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// Read when channel-accounts loads, so it is set before the import below.
+vi.hoisted(() => vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP"));
+
 import { CHANNEL_CONNECT, channelOfAccountType } from "./channel-accounts";
 
+afterEach(() => {
+  vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP");
+});
+
 describe("CHANNEL_CONNECT", () => {
-  it("maps messenger and zalo to oauth platforms", () => {
+  it("maps messenger, zalo and instagram to oauth platforms", () => {
     expect(CHANNEL_CONNECT.messenger).toEqual({ kind: "oauth", platform: "FACEBOOK_ACCOUNT" });
     expect(CHANNEL_CONNECT.zalo).toEqual({ kind: "oauth", platform: "ZALO_ACCOUNT" });
+    expect(CHANNEL_CONNECT.instagram).toEqual({ kind: "oauth", platform: "INSTAGRAM_ACCOUNT" });
   });
 
   it("maps telegram to a token connect and website to a widget", () => {
@@ -13,8 +22,14 @@ describe("CHANNEL_CONNECT", () => {
     expect(CHANNEL_CONNECT.website).toEqual({ kind: "widget" });
   });
 
-  it("marks instagram, tiktok and shopee as coming soon", () => {
-    expect(CHANNEL_CONNECT.instagram).toEqual({ kind: "comingSoon" });
+  it("keeps instagram coming soon in a build without the Instagram app id", async () => {
+    vi.stubEnv("VITE_INSTAGRAM_APP_ID", "");
+    vi.resetModules();
+    const fresh = await import("./channel-accounts");
+    expect(fresh.CHANNEL_CONNECT.instagram).toEqual({ kind: "comingSoon" });
+  });
+
+  it("marks tiktok and shopee as coming soon", () => {
     expect(CHANNEL_CONNECT.tiktok).toEqual({ kind: "comingSoon" });
     expect(CHANNEL_CONNECT.shopee).toEqual({ kind: "comingSoon" });
   });

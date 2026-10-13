@@ -1,3 +1,4 @@
+import { ClientCredentialEntity } from '@app/modules/client-credential/repository/entities/client-credential.entity';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { Request } from 'express';
 import { ResponsePagingMetadataPaginationRequestDto } from 'src/common/response/dtos/response.paging.dto';
@@ -11,6 +12,7 @@ export interface IRequestApp<T = IAuthJwtAccessTokenPayload> extends Request {
 
     __user?: UserEntity;
     __workspace?: WorkspaceEntity;
+    __clientCredential?: ClientCredentialEntity;
     __language: string;
     __version: string;
 

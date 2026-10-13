@@ -304,7 +304,8 @@
         },
         "errors": {
           "passwordMismatch": "Mật khẩu không khớp.",
-          "resetFailed": "Không thể đặt lại mật khẩu. Hãy yêu cầu liên kết mới và thử lại."
+          "resetFailed": "Không thể đặt lại mật khẩu. Hãy yêu cầu liên kết mới và thử lại.",
+          "weak": "Mật khẩu cần ít nhất 8 ký tự, gồm chữ số, chữ thường và chữ hoa."
         },
         "expired": {
           "title": "Liên kết đặt lại đã hết hạn",
@@ -633,8 +634,8 @@
           "description": "Hồ sơ cá nhân của bạn trên Instagram"
         },
         "instagramPage": {
-          "label": "Trang doanh nghiệp Instagram",
-          "description": "Trang doanh nghiệp trên Instagram để kết nối với người theo dõi của bạn."
+          "label": "Tài khoản Instagram chuyên nghiệp",
+          "description": "Tài khoản doanh nghiệp hoặc nhà sáng tạo trên Instagram, dùng để trả lời tin nhắn của khách hàng."
         },
         "zaloAccount": {
           "label": "Hồ sơ Zalo",
@@ -1969,10 +1970,32 @@
     "errors": {
       "mismatch": "Mật khẩu không khớp.",
       "sameAsCurrent": "Mật khẩu mới phải khác mật khẩu hiện tại.",
-      "failed": "Không thể đổi mật khẩu. Kiểm tra lại mật khẩu hiện tại và thử lại."
+      "failed": "Không thể đổi mật khẩu. Kiểm tra lại mật khẩu hiện tại và thử lại.",
+      "weak": "Mật khẩu cần ít nhất 8 ký tự, gồm chữ số, chữ thường và chữ hoa."
     },
     "success": {
       "message": "Đã đổi mật khẩu."
+    }
+  },
+  "password": {
+    "show": "Hiện mật khẩu",
+    "hide": "Ẩn mật khẩu",
+    "strength": {
+      "label": "Độ mạnh mật khẩu",
+      "empty": "Nhập mật khẩu",
+      "weak": "Yếu",
+      "medium": "Trung bình",
+      "strong": "Mạnh",
+      "count": "Đạt {{count}}/{{total}} điều kiện",
+      "met": "Đã đạt",
+      "notMet": "Chưa đạt"
+    },
+    "requirements": {
+      "label": "Điều kiện mật khẩu",
+      "minLength": "Ít nhất 8 ký tự",
+      "number": "Ít nhất 1 chữ số",
+      "lowercase": "Ít nhất 1 chữ thường",
+      "uppercase": "Ít nhất 1 chữ hoa"
     }
   },
   "preferences": {

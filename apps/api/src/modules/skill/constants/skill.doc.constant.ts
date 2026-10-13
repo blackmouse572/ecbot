@@ -19,3 +19,15 @@ export const ChatbotSkillDocParamsChatbotId = [
         example: '977e3947-67fa-400f-86d1-694d5c525e58',
     },
 ];
+
+export const SkillDocQuerySource = [
+    {
+        name: 'source',
+        allowEmptyValue: true,
+        required: false,
+        type: 'string',
+        example: 'workspace',
+        description:
+            "workspace (default): the workspace's skills; template: builtin templates to clone; all: both",
+    },
+];

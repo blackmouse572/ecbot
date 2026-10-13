@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import type { EntityManager } from '@mikro-orm/postgresql';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '@app/modules/knowledge-base/enums/knowledge-base-item-status.enum';
 import { KnowledgeItemService } from '@app/modules/knowledge-base/services/knowledge-item.service';
@@ -67,5 +68,46 @@ describe('KnowledgeItemService.updateStatus', () => {
         });
 
         expect(item.errorMessage).toBe('AI unavailable');
+    });
+});
+
+describe('KnowledgeItemService.softDelete', () => {
+    const item = { id: 'item-1' };
+    const flush = jest.fn().mockResolvedValue(undefined);
+    const em = {
+        findOneOrFail: jest.fn().mockResolvedValue(item),
+        getReference: jest.fn((_: string, id: string) => ({ id })),
+        persist: jest.fn(() => ({ flush })),
+    } as unknown as EntityManager;
+    const ragSyncService = { deleteByItem: jest.fn() };
+    type Ctor = ConstructorParameters<typeof KnowledgeItemService>;
+    const service = new KnowledgeItemService(
+        em,
+        undefined as unknown as Ctor[1],
+        undefined as unknown as Ctor[2],
+        undefined as unknown as Ctor[3],
+        undefined as unknown as Ctor[4],
+        undefined as unknown as Ctor[5],
+        ragSyncService as unknown as Ctor[6]
+    );
+
+    // The RAG cleanup is best-effort and not awaited. Left unhandled, its
+    // rejection (e.g. Cloud Tasks unreachable) exits the API process.
+    it('deletes the item when the RAG cleanup cannot be queued, and logs it', async () => {
+        const warn = jest
+            .spyOn(Logger.prototype, 'warn')
+            .mockImplementation(() => undefined);
+        ragSyncService.deleteByItem.mockRejectedValue(
+            new Error('Could not load the default credentials.')
+        );
+
+        await expect(
+            service.softDelete('item-1', { actionBy: 'user-1' })
+        ).resolves.toBeUndefined();
+        await new Promise(resolve => setImmediate(resolve));
+
+        expect(flush).toHaveBeenCalled();
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('item-1'));
+        warn.mockRestore();
     });
 });

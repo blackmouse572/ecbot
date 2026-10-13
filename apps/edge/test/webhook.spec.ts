@@ -210,6 +210,25 @@ describe("webhook GET challenge (facebook)", () => {
     expect(await res.text()).toBe("789");
   });
 
+  it("verifies the Instagram handshake with the same Meta verify token", async () => {
+    const res = await app.request(
+      "/webhooks/instagram?hub.mode=subscribe&hub.verify_token=verify-me&hub.challenge=321",
+      { method: "GET" },
+      mkEnv(),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("321");
+  });
+
+  it("refuses an Instagram handshake with the wrong verify token", async () => {
+    const res = await app.request(
+      "/webhooks/instagram?hub.mode=subscribe&hub.verify_token=nope&hub.challenge=321",
+      { method: "GET" },
+      mkEnv(),
+    );
+    expect(res.status).toBe(403);
+  });
+
   it("404s for a platform with no GET handshake", async () => {
     const res = await app.request("/webhooks/zalo", { method: "GET" }, mkEnv());
     expect(res.status).toBe(404);

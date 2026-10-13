@@ -3,3 +3,13 @@ templates/*
 # Written by MikroORM (`migration:up`) — keep its native formatting so the
 # CI snapshot guard can diff it byte for byte.
 apps/api/migrations/.snapshot-*.json
+# Installed by `npx skills add` (listed in skills-lock.json). Keep them byte for
+# byte upstream so their lock hashes hold and `npx skills update` diffs stay clean.
+.agents/skills/emil-design-eng/
+.agents/skills/find-animation-opportunities/
+.agents/skills/improve-animations/
+.agents/skills/make-interfaces-feel-better/
+.agents/skills/pick-ui-library/
+.agents/skills/review-animations/
+.agents/skills/vercel-composition-patterns/
+.agents/skills/web-design-guidelines/

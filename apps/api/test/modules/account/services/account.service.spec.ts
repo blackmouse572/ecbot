@@ -170,6 +170,18 @@ describe('AccountService - syncAccount', () => {
         );
     });
 
+    it('stores an Instagram login as the INSTAGRAM_PAGE channel its adapter serves', async () => {
+        await service.syncAccount(
+            'auth-code',
+            ENUM_ACCOUNT_TYPE.INSTAGRAM_ACCOUNT,
+            'ws-1',
+            'user-1'
+        );
+
+        const upsertCall = mockAccountRepository.upsert.mock.calls[0][0];
+        expect(upsertCall.type).toBe(ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE);
+    });
+
     it('throws NotFoundException when platform service returns no access token', async () => {
         mockPlatformService.getTokenAndProfile.mockResolvedValueOnce({
             ...mockOAuthResult,

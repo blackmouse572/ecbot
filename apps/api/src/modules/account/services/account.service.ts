@@ -51,6 +51,14 @@ import { AccountRepository } from '../repository/repositories/account.repository
 // Every account read carries enough of its workspace to label the row.
 const WORKSPACE_JOIN = { path: 'workspace', select: 'name slug avatar' };
 
+// An Instagram login is itself the messaging channel (no Page in between),
+// stored under the type InstagramPlatformAdapter is registered for.
+const LINKED_CHANNEL_TYPE: Partial<
+    Record<ENUM_ACCOUNT_TYPE, ENUM_ACCOUNT_TYPE>
+> = {
+    [ENUM_ACCOUNT_TYPE.INSTAGRAM_ACCOUNT]: ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
+};
+
 const PAGE_SUBSCRIPTION_FIELDS =
     FACEBOOK_SUBSCRIPTION_FIELD[ENUM_FACEBOOK_OBJECT_TO_SUBCRIBE.PAGE];
 
@@ -357,7 +365,7 @@ export class AccountService implements IAccountService {
 
         const linked = await this.upsertLinkedAccount(
             profile,
-            platform,
+            LINKED_CHANNEL_TYPE[platform] ?? platform,
             workspaceId,
             actor
         );

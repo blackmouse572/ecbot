@@ -4,12 +4,10 @@ import {
     BadRequestException,
     CanActivate,
     ExecutionContext,
-    ForbiddenException,
     Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ENUM_POLICY_ROLE_TYPE } from 'src/modules/policy/enums/policy.enum';
-import { ENUM_POLICY_STATUS_CODE_ERROR } from 'src/modules/policy/enums/policy.status-code.enum';
 import { PolicyAbilityFactory } from 'src/modules/policy/factories/policy.factory';
 import { IPolicyAbility } from 'src/modules/policy/interfaces/policy.interface';
 import { RoleService } from 'src/modules/role/services/role.service';
@@ -18,6 +16,7 @@ import {
     WORKSPACE_POLICY_ROLE_META_KEY,
 } from '../constants/workspace.constant';
 import { WorkspaceMemberService } from '../services/workspace.member.service';
+import { assertWorkspaceMemberPolicy } from '../utils/workspace-policy.util';
 
 @Injectable()
 export class WorkspacePolicyGuard implements CanActivate {
@@ -74,80 +73,16 @@ export class WorkspacePolicyGuard implements CanActivate {
             context.getHandler()
         );
 
-        // Get user's workspace roles
-        const userRoleIds =
-            await this.workspaceMemberService.getMemberWorkspaceRoles(
-                __workspace.id,
-                __user.id
-            );
-
-        if (!userRoleIds || userRoleIds.length === 0) {
-            throw new ForbiddenException({
-                statusCode: ENUM_POLICY_STATUS_CODE_ERROR.ROLE_FORBIDDEN,
-                message: 'policy.error.roleForbidden',
-                _error: 'User has no roles in this workspace',
-            });
-        }
-
-        // Get user's roles with full details
-        const userRoles = await Promise.all(
-            userRoleIds.map(roleEntity =>
-                this.roleService.findOneById(roleEntity.id)
-            )
+        await assertWorkspaceMemberPolicy(
+            {
+                workspaceMemberService: this.workspaceMemberService,
+                roleService: this.roleService,
+                policyAbilityFactory: this.policyAbilityFactory,
+            },
+            __workspace.id,
+            __user.id,
+            { abilities: requiredAbilities, roles: requiredRoles }
         );
-
-        // Deactivated roles (isActive === false) grant nothing, even if the
-        // membership row that references them is still active.
-        const validRoles = userRoles.filter(
-            role => role !== null && role.isActive !== false
-        );
-
-        if (validRoles.length === 0) {
-            throw new ForbiddenException({
-                statusCode: ENUM_POLICY_STATUS_CODE_ERROR.ROLE_FORBIDDEN,
-                message: 'policy.error.roleForbidden',
-                _error: 'User has no valid roles in this workspace',
-            });
-        }
-
-        // Check role-based requirements
-        if (requiredRoles && requiredRoles.length > 0) {
-            const hasRequiredRole = validRoles.some(role =>
-                requiredRoles.includes(role.type as ENUM_POLICY_ROLE_TYPE)
-            );
-
-            if (!hasRequiredRole) {
-                throw new ForbiddenException({
-                    statusCode: ENUM_POLICY_STATUS_CODE_ERROR.ROLE_FORBIDDEN,
-                    message: 'policy.error.roleForbidden',
-                    _error: 'User does not have required role type',
-                });
-            }
-        }
-
-        // Check ability-based requirements
-        if (requiredAbilities && requiredAbilities.length > 0) {
-            // Collect all permissions from user's workspace roles
-            const allPermissions = validRoles.reduce((permissions, role) => {
-                return permissions.concat(role.permissions);
-            }, []);
-
-            // Use PolicyAbilityFactory to check permissions
-            const userAbilities =
-                this.policyAbilityFactory.createForUser(allPermissions);
-            const policyHandler = this.policyAbilityFactory.handlerAbilities(
-                userAbilities,
-                requiredAbilities
-            );
-
-            if (!policyHandler) {
-                throw new ForbiddenException({
-                    statusCode: ENUM_POLICY_STATUS_CODE_ERROR.ABILITY_FORBIDDEN,
-                    message: 'policy.error.abilityForbidden',
-                    _error: 'User does not have required permissions',
-                });
-            }
-        }
 
         return true;
     }

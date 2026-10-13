@@ -113,6 +113,9 @@ def pg_store_factory():
 
     Skips automatically when neither RAG_POSTGRES_URL nor POSTGRES_URL is
     configured — keeps the test suite green in CI environments without a DB.
+
+    The database must already be migrated (`pnpm db:migrate:up`): the `rag`
+    tables come from the API's migrations and nothing here creates them.
     """
     db_url = os.environ.get("RAG_POSTGRES_URL") or os.environ.get("POSTGRES_URL") or ""
     if not db_url:

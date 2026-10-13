@@ -1,0 +1,7 @@
+{
+    "error": {
+        "webhookSubscriptionFailed": "Không thể bật nhận tin nhắn cho tài khoản Instagram này. Vui lòng kiểm tra đây là tài khoản chuyên nghiệp rồi thử lại.",
+        "linkFailed": "Không thể kết nối tài khoản Instagram này. Vui lòng thử kết nối lại.",
+        "heartReactionOnly": "Instagram chỉ hỗ trợ thả tim."
+    }
+}

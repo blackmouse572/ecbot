@@ -10,6 +10,7 @@ license: MIT
 metadata:
   source: "David Ogilvy - How to Create Advertising That Sells (1972) + Ogilvy on Advertising (1983)"
   compiled: 2026
+  internal: true
 ---
 
 # Ogilvy Copywriting Skill

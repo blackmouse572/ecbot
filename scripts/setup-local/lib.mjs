@@ -213,13 +213,23 @@ export const MANUAL_VALUES = [
     ],
   },
   {
-    group: "Facebook / Instagram channels",
-    why: "Needed only to connect Facebook pages or Instagram accounts.",
+    group: "Facebook channels",
+    why: "Needed only to connect Facebook pages.",
     where: "https://developers.facebook.com/apps",
     values: [
       { file: "api", key: "FACEBOOK_APP_ID" },
       { file: "api", key: "FACEBOOK_APP_SECRET", secret: true },
       { file: "app", key: "VITE_FACEBOOK_APP_ID", sameAs: "FACEBOOK_APP_ID" },
+    ],
+  },
+  {
+    group: "Instagram channel",
+    why: "Needed only to connect Instagram accounts. Use the Instagram app id and secret from the Meta app's Instagram API setup, not the Facebook ones.",
+    where: "https://developers.facebook.com/apps",
+    values: [
+      { file: "api", key: "INSTAGRAM_APP_ID" },
+      { file: "api", key: "INSTAGRAM_APP_SECRET", secret: true },
+      { file: "app", key: "VITE_INSTAGRAM_APP_ID", sameAs: "INSTAGRAM_APP_ID" },
     ],
   },
   {

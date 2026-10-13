@@ -12,7 +12,7 @@ import {
     FilterQuery,
     FindAllOptions,
 } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { AwsS3Entity } from '@app/modules/aws/repository/entities/aws.s3.entity';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '../enums/knowledge-base-item-status.enum';
@@ -32,6 +32,8 @@ import { RagSyncService } from './rag-sync.service';
 
 @Injectable()
 export class KnowledgeItemService {
+    private readonly logger = new Logger(KnowledgeItemService.name);
+
     constructor(
         private readonly em: EntityManager,
         private readonly knowledgeItemRepository: KnowledgeItemRepository,
@@ -276,7 +278,15 @@ export class KnowledgeItemService {
         await em.persist(item).flush();
 
         // Notify apps/ai to remove RAG documents for this item (best-effort).
-        void this.ragSyncService.deleteByItem(item.id);
+        // Not awaited, so a failure is caught here: left unhandled it would
+        // exit the process.
+        void this.ragSyncService
+            .deleteByItem(item.id)
+            .catch((err: unknown) =>
+                this.logger.warn(
+                    `RAG cleanup for deleted item ${item.id} not queued: ${(err as Error)?.message}`
+                )
+            );
     }
 
     async delete(id: string, options?: IDatabaseDeleteOptions): Promise<void> {

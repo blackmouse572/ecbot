@@ -17,13 +17,13 @@ export class CustomerTagCreateRequestDto {
     @IsOptional()
     @IsString()
     @MaxLength(16)
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: String, required: false, nullable: true })
     emoji?: string | null;
 
     @IsOptional()
     @IsString()
     @MaxLength(2000)
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: String, required: false, nullable: true })
     description?: string | null;
 
     @IsOptional()

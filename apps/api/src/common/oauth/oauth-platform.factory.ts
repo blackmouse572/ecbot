@@ -26,6 +26,7 @@ export class OAuthPlatformFactory {
             case ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT:
                 return this.facebookAdapter;
             case ENUM_ACCOUNT_TYPE.INSTAGRAM_ACCOUNT:
+            case ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE:
                 return this.instagramService;
             case ENUM_ACCOUNT_TYPE.ZALO_ACCOUNT:
                 return this.zaloService;
