@@ -180,7 +180,7 @@ export class ApiKeyService implements IApiKeyService {
     ): Promise<ApiKeyEntity> {
         repository.name = name;
 
-        if (type !== undefined) {
+        if (type != null) {
             repository.type = type;
         }
 
