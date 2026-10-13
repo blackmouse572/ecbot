@@ -26,6 +26,8 @@ type TimezoneSelectProps = Omit<
 > & {
   value?: string | null;
   onChange: (value: string | null) => void;
+  /** Label of the "no zone of its own" row; defaults to the system timezone. */
+  defaultLabel?: string;
   ref?: Ref<HTMLButtonElement>;
 };
 
@@ -40,6 +42,7 @@ export function TimezoneSelect({
   value,
   onChange,
   ref,
+  defaultLabel: defaultLabelProp,
   ...triggerProps
 }: TimezoneSelectProps) {
   const { t } = useTranslation();
@@ -82,7 +85,7 @@ export function TimezoneSelect({
     handleOpenChange(false);
   };
 
-  const defaultLabel = t("chatbot.create.timezoneDefault");
+  const defaultLabel = defaultLabelProp ?? t("chatbot.create.timezoneDefault");
 
   return (
     <RadixPopover.Root modal open={open} onOpenChange={handleOpenChange}>

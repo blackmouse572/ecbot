@@ -2613,6 +2613,12 @@
             "success": "Đã xóa khách hàng và mọi cuộc trò chuyện.",
             "failed": "Không thể xóa khách hàng."
           }
+        },
+        "timezone": {
+          "title": "Múi giờ của khách",
+          "followAgent": "Giống agent",
+          "hint": "Giờ khách nhắc đến, ví dụ \"gọi lại lúc 9h\", được hiểu theo múi giờ này. Giờ mở cửa vẫn theo agent.",
+          "hintWithZone": "Giờ khách nhắc đến, ví dụ \"gọi lại lúc 9h\", được hiểu theo múi giờ này. Giờ mở cửa vẫn theo agent ({{zone}})."
         }
       }
     },
