@@ -2735,7 +2735,10 @@
         "description": "Mô tả",
         "descriptionPlaceholder": "Nhãn này dùng để làm gì?",
         "triggersHandoff": "Chuyển cho nhân viên",
-        "triggersHandoffHelp": "Khi nhãn này được gắn, tự động chuyển hội thoại cho nhân viên trực tiếp xử lý."
+        "triggersHandoffHelp": "Khi nhãn này được gắn, tự động chuyển hội thoại cho nhân viên trực tiếp xử lý.",
+        "notifiesTeam": "Báo cho đội ngũ",
+        "notifiesTeamHelp": "Khi agent gắn nhãn này, báo cho đội ngũ trong ứng dụng và qua email. Trợ lý vẫn tiếp tục trả lời.",
+        "notifiesTeamByHandoff": "Khi chuyển cho nhân viên, đội ngũ đã được báo."
       },
       "toast": {
         "created": "Đã tạo nhãn.",

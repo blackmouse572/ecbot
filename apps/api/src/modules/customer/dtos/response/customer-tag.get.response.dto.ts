@@ -24,6 +24,10 @@ export class CustomerTagGetResponseDto {
 
     @Expose()
     @ApiProperty()
+    notifiesTeam: boolean;
+
+    @Expose()
+    @ApiProperty()
     createdAt: Date;
 
     @Expose()

@@ -82,5 +82,9 @@
             "tag_trigger": "The customer was tagged as needing a staff member",
             "other": "The assistant flagged a message it should not answer"
         }
+    },
+    "tagNotice": {
+        "title": "A customer was tagged \"{tag}\"",
+        "message": "The assistant keeps replying. Open the conversation to follow up."
     }
 }

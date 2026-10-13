@@ -2687,7 +2687,10 @@
         "description": "Description",
         "descriptionPlaceholder": "What is this tag used for?",
         "triggersHandoff": "Triggers handoff",
-        "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator."
+        "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator.",
+        "notifiesTeam": "Notify the team",
+        "notifiesTeamHelp": "When the agent applies this tag, notify the team in the app and by email. The assistant keeps replying.",
+        "notifiesTeamByHandoff": "A handoff already notifies the team."
       },
       "toast": {
         "created": "Tag created.",

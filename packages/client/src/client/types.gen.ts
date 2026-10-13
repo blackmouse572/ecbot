@@ -5515,6 +5515,7 @@ export type CustomerTagGetResponseDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff: boolean;
+    notifiesTeam: boolean;
     createdAt: string;
     updatedAt?: string;
 };
@@ -5524,6 +5525,10 @@ export type CustomerTagCreateRequestDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff?: boolean;
+    /**
+     * Notify the team when the agent applies this tag, without handing the conversation over
+     */
+    notifiesTeam?: boolean;
 };
 
 export type CustomerTagUpdateRequestDto = {
@@ -5531,6 +5536,10 @@ export type CustomerTagUpdateRequestDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff?: boolean;
+    /**
+     * Notify the team when the agent applies this tag, without handing the conversation over
+     */
+    notifiesTeam?: boolean;
 };
 
 export type CustomerTagAssignmentGetResponseDto = {

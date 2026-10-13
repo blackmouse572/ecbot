@@ -40,6 +40,7 @@ const TagFormSchema = zod.object({
   emoji: zod.string().max(16).optional().nullable(),
   description: zod.string().max(2000).optional().nullable(),
   triggersHandoff: zod.boolean(),
+  notifiesTeam: zod.boolean(),
 });
 
 type TagFormValues = zod.infer<typeof TagFormSchema>;
@@ -203,6 +204,17 @@ const useColumns = ({
         ),
       }),
       columnHelper.display({
+        id: "notifiesTeam",
+        header: () => t("settings.customerTags.fields.notifiesTeam"),
+        cell: ({ row }) => (
+          <StatusBadge color={row.original.notifiesTeam ? "blue" : "grey"}>
+            {row.original.notifiesTeam
+              ? t("settings.customerTags.handoff.yes")
+              : t("settings.customerTags.handoff.no")}
+          </StatusBadge>
+        ),
+      }),
+      columnHelper.display({
         id: "actions",
         cell: ({ row }) => (
           <CustomerTagRowActions tag={row.original} onEdit={onEdit} />
@@ -234,8 +246,11 @@ function CustomerTagDrawer({
       emoji: "",
       description: "",
       triggersHandoff: false,
+      notifiesTeam: false,
     },
   });
+  // A handoff already notifies the team, so the switch has nothing to add.
+  const handsOff = form.watch("triggersHandoff");
 
   useEffect(() => {
     if (!isOpen) return;
@@ -245,6 +260,7 @@ function CustomerTagDrawer({
         emoji: tag.emoji ?? "",
         description: tag.description ?? "",
         triggersHandoff: tag.triggersHandoff,
+        notifiesTeam: tag.notifiesTeam ?? false,
       });
     } else {
       form.reset({
@@ -252,6 +268,7 @@ function CustomerTagDrawer({
         emoji: "",
         description: "",
         triggersHandoff: false,
+        notifiesTeam: false,
       });
     }
   }, [isOpen, tag, form]);
@@ -264,6 +281,7 @@ function CustomerTagDrawer({
       emoji: values.emoji?.trim() || null,
       description: values.description?.trim() || null,
       triggersHandoff: values.triggersHandoff,
+      notifiesTeam: values.notifiesTeam,
     };
     try {
       if (tag) {
@@ -390,6 +408,38 @@ function CustomerTagDrawer({
                       <Form.Control>
                         <Switch
                           checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </Form.Control>
+                    </div>
+                    <Form.ErrorMessage />
+                  </Form.Item>
+                )}
+              />
+              <Form.Field
+                control={form.control}
+                name="notifiesTeam"
+                render={({ field }) => (
+                  <Form.Item>
+                    <div className="flex items-start justify-between gap-x-4">
+                      <div className="flex flex-col">
+                        <Form.Label>
+                          {t("settings.customerTags.fields.notifiesTeam")}
+                        </Form.Label>
+                        <Text size="small" className="text-ui-fg-subtle">
+                          {handsOff
+                            ? t(
+                                "settings.customerTags.fields.notifiesTeamByHandoff",
+                              )
+                            : t(
+                                "settings.customerTags.fields.notifiesTeamHelp",
+                              )}
+                        </Text>
+                      </div>
+                      <Form.Control>
+                        <Switch
+                          checked={field.value || handsOff}
+                          disabled={handsOff}
                           onCheckedChange={field.onChange}
                         />
                       </Form.Control>
