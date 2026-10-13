@@ -194,6 +194,23 @@ describe("NotificationMenu", () => {
     expect(api.fetchNextPage).not.toHaveBeenCalled();
   });
 
+  it("shades the bottom edge as soon as an overflowing list opens", async () => {
+    api.notifications = [item({ id: "n-1", status: "read" })];
+    const sizes = vi
+      .spyOn(HTMLElement.prototype, "scrollHeight", "get")
+      .mockReturnValue(1200);
+    const height = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(320);
+    open();
+
+    expect(await screen.findByTestId("notification-shadow-bottom")).toHaveClass(
+      "opacity-100",
+    );
+    sizes.mockRestore();
+    height.mockRestore();
+  });
+
   it("shades the edges that have more to scroll", async () => {
     api.notifications = [item({ id: "n-1", status: "read" })];
     open();

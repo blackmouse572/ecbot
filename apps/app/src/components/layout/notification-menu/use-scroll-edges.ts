@@ -12,29 +12,36 @@ const END_THRESHOLD = 80;
 /**
  * Tracks whether a scroll box has more content above or below, for edge
  * shadows, and calls `onReachEnd` when the reader gets near the bottom.
- * `contentKey` re-measures when the content changes (rows loaded).
+ * Measures when the box mounts and again when `contentKey` changes.
  */
 export function useScrollEdges(contentKey: unknown, onReachEnd?: () => void) {
-  const ref = useRef<HTMLDivElement>(null);
+  const element = useRef<HTMLElement | null>(null);
   const [edges, setEdges] = useState({ top: false, bottom: false });
 
-  const measure = useCallback((element: HTMLElement) => {
-    const { scrollTop, scrollHeight, clientHeight } = element;
+  const measure = useCallback((target: HTMLElement) => {
+    const { scrollTop, scrollHeight, clientHeight } = target;
     const remaining = scrollHeight - clientHeight - scrollTop;
     setEdges({ top: scrollTop > 0, bottom: remaining > 1 });
     return remaining;
   }, []);
 
+  // A callback ref: the box mounts when the menu opens, after the rows have
+  // already loaded, so measuring only on content changes would miss it.
+  const ref = useCallback(
+    (node: HTMLElement | null) => {
+      element.current = node;
+      if (node) measure(node);
+    },
+    [measure],
+  );
+
   useLayoutEffect(() => {
-    if (ref.current) measure(ref.current);
+    if (element.current) measure(element.current);
   }, [contentKey, measure]);
 
-  const onScroll = useCallback(
-    (event: UIEvent<HTMLElement>) => {
-      if (measure(event.currentTarget) < END_THRESHOLD) onReachEnd?.();
-    },
-    [measure, onReachEnd],
-  );
+  const onScroll = (event: UIEvent<HTMLElement>) => {
+    if (measure(event.currentTarget) < END_THRESHOLD) onReachEnd?.();
+  };
 
   return { ...edges, ref, onScroll };
 }
