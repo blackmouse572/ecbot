@@ -865,4 +865,19 @@ describe('AccountService - mapList', () => {
 
         expect(mapped.chatbot).toBeNull();
     });
+
+    // Callers that do not populate the relation (admin list, unlinked list)
+    // get the identifier value, not an entity: it must never surface as a
+    // chatbot summary.
+    it('returns null when the relation is an unpopulated reference id', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({
+                id: 'account-1',
+                name: 'Axios Page',
+                chatbot: 'bot-1',
+            })),
+        ]);
+
+        expect(mapped.chatbot).toBeNull();
+    });
 });
