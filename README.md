@@ -36,7 +36,7 @@ It runs on your own server.
 | WhatsApp Business  | Shipped                                                                        |
 | Website widget     | Shipped                                                                        |
 | REST API channel   | Shipped                                                                        |
-| Instagram          | Shipped, needs Meta App Review for accounts outside the Meta app               |
+| Instagram          | Built, hidden until configured, goes live after Meta App Review                |
 | TikTok Shop        | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/23) |
 | Shopee             | Roadmap, [adapter slot open](https://github.com/blackmouse572/ecbot/issues/24) |
 

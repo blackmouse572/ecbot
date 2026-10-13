@@ -151,6 +151,39 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
         );
     });
 
+    // Instagram refuses to refresh an expired token, so its 60-day tokens
+    // are refreshed days ahead instead of inside the last half hour.
+    it('refreshes Instagram tokens a week ahead', async () => {
+        await scheduler.handleTokenRefresh();
+
+        expect(mockAccountRepository.findExpiringSoon).toHaveBeenCalledWith(
+            30,
+            {
+                types: [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE],
+                minutes: 7 * 24 * 60,
+            }
+        );
+    });
+
+    it('keeps an account active when an early refresh fails, to retry next run', async () => {
+        const account = makeMockAccount({
+            type: ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
+            tokenExpiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        });
+        mockAccountRepository.findExpiringSoon.mockResolvedValue([account]);
+        mockPlatformService.refreshCredentials.mockRejectedValueOnce(
+            new Error('Graph unavailable')
+        );
+
+        await scheduler.handleTokenRefresh();
+
+        expect(account.status).toBe(ENUM_ACCOUNT_STATUS.ACTIVE);
+        expect(mockAccountRepository.save).not.toHaveBeenCalled();
+        expect(
+            mockNotificationService.createAccountBlocked
+        ).not.toHaveBeenCalled();
+    });
+
     it('marks account as BLOCKED when refresh fails', async () => {
         const account = makeMockAccount();
         mockAccountRepository.findExpiringSoon.mockResolvedValue([account]);

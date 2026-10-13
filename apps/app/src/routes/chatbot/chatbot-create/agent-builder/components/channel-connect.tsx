@@ -22,11 +22,11 @@ import type { AccountGetDetailResponseDto, AccountListResponseDto, ChatbotLinkAc
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { LinkedAccountRef } from "../builder-state";
-import { CHANNEL_CONNECT, channelOfAccountType } from "../channel-accounts";
+import { CHANNEL_CONNECT, channelOfAccountType, type OAuthPlatform } from "../channel-accounts";
 import { channelIcon } from "./channel-icon";
 
 const GRID_CHANNELS: ChannelId[] = ["messenger", "zalo", "telegram", "website", "instagram", "tiktok", "shopee"];
-const COMING_SOON_CHANNELS: ChannelId[] = ["tiktok", "shopee"];
+const COMING_SOON_CHANNELS = GRID_CHANNELS.filter((c) => CHANNEL_CONNECT[c].kind === "comingSoon");
 
 // A linked account's platform-typed response, as `useLinkAccount` actually
 // resolves it (see hooks/api/accounts.ts: `res.data.data`). Facebook returns
@@ -170,10 +170,12 @@ export function ChannelConnect({
       setBusy(null);
     },
   });
-  const openOAuth: Partial<Record<ChannelId, () => void>> = {
-    messenger: useOAuthLogin("FACEBOOK_ACCOUNT", oauthHandlers("messenger", "FACEBOOK_ACCOUNT")).handleLinkClick,
-    zalo: useOAuthLogin("ZALO_ACCOUNT", oauthHandlers("zalo", "ZALO_ACCOUNT")).handleLinkClick,
-    instagram: useOAuthLogin("INSTAGRAM_ACCOUNT", oauthHandlers("instagram", "INSTAGRAM_ACCOUNT")).handleLinkClick,
+  // Keyed by every OAuth platform, so a channel switched to oauth without a
+  // popup here fails to compile instead of locking the builder.
+  const openOAuth: Record<OAuthPlatform, () => void> = {
+    FACEBOOK_ACCOUNT: useOAuthLogin("FACEBOOK_ACCOUNT", oauthHandlers("messenger", "FACEBOOK_ACCOUNT")).handleLinkClick,
+    ZALO_ACCOUNT: useOAuthLogin("ZALO_ACCOUNT", oauthHandlers("zalo", "ZALO_ACCOUNT")).handleLinkClick,
+    INSTAGRAM_ACCOUNT: useOAuthLogin("INSTAGRAM_ACCOUNT", oauthHandlers("instagram", "INSTAGRAM_ACCOUNT")).handleLinkClick,
   };
 
   const handleCardClick = (channel: ChannelId) => {
@@ -191,7 +193,7 @@ export function ChannelConnect({
     if (connect.kind === "oauth") {
       pendingOAuth.current = channel;
       setBusy(channel);
-      openOAuth[channel]?.();
+      openOAuth[connect.platform]();
       return;
     }
     // token (telegram) / widget (website): expand the inline form.

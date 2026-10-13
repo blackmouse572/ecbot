@@ -3,6 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Read when channel-accounts loads, so Instagram is a live OAuth channel here.
+vi.hoisted(() => vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP"));
+
 const unlinkAccountsMock = vi.fn();
 const linkAccount = vi.fn();
 const linkChatbotAccount = vi.fn();
@@ -311,6 +314,18 @@ describe("ChannelConnect", () => {
 
     await waitFor(() => expect(linkAccount).toHaveBeenCalledWith({ code: "auth-code", platform: "INSTAGRAM_ACCOUNT" }));
     await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-ig"] }));
+  });
+
+  it("ignores another platform's callback while the Instagram popup is open", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.instagram"));
+    await oAuthHandlers.FACEBOOK_ACCOUNT.onSuccess?.({ code: "stray-code" });
+    act(() => oAuthHandlers.ZALO_ACCOUNT.onClosed?.());
+
+    expect(linkAccount).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "actions.next" })).toBeDisabled();
   });
 
   it("writes the channels derived from linked accounts plus coming-soon picks on Next", async () => {

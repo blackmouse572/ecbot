@@ -36,7 +36,11 @@ import { PlatformAdapter } from '../platform-adapter.base';
 
 const GRAPH_API_BASE = 'https://graph.instagram.com';
 const API_VERSION = 'v23.0';
-const MESSAGE_LIMIT = 1000;
+// Instagram caps a text message at 1000 bytes of UTF-8, not characters:
+// Vietnamese diacritics take 2 or 3 bytes each.
+const MESSAGE_BYTE_LIMIT = 1000;
+const BUTTON_TITLE_LIMIT = 20;
+const CARD_TEXT_LIMIT = 80;
 const MEDIA_ATTACHMENTS = new Set(['image', 'video', 'audio', 'file']);
 // Instagram accepts a single reaction type, "love".
 const HEART_EMOJI = new Set(['❤️', '❤', '♥️', '♥']);
@@ -143,9 +147,9 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             return [];
         }
         return payload.entry.flatMap(entry =>
-            (entry.messaging ?? []).map(event =>
-                this.normalizeEvent(entry.id, event)
-            )
+            (entry.messaging ?? [])
+                .filter(event => event.sender?.id && event.recipient?.id)
+                .map(event => this.normalizeEvent(entry.id, event))
         );
     }
 
@@ -185,7 +189,10 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             action = decodeActionPayload(event.postback.payload);
         } else if (event.reaction) {
             kind = 'reaction';
-            externalMessageId = event.reaction.mid;
+            // The mid is the reacted message's id: reusing it as the dedupe
+            // key would drop the reaction as a repeat of that message, and an
+            // unreact as a repeat of the react.
+            externalMessageId = `reaction:${event.reaction.mid}:${event.reaction.action}:${event.timestamp}`;
             reaction = {
                 emoji: event.reaction.emoji,
                 messageId: event.reaction.mid,
@@ -268,8 +275,10 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
         action: 'react' | 'unreact'
     ): Promise<void> {
         if (action === 'react' && !HEART_EMOJI.has(emoji)) {
-            this.logger.debug(`Instagram cannot react with ${emoji}, skipped`);
-            return;
+            throw new UnprocessableEntityException({
+                message: 'instagram.error.heartReactionOnly',
+                statusCode: 422,
+            });
         }
         await this.httpPost(account, {
             recipient: { id: senderId },
@@ -320,17 +329,24 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
         } else {
             const card = c.card;
             const element: Record<string, unknown> = {
-                title: card.title ?? card.body ?? ' ',
-                subtitle: card.subtitle ?? card.body,
+                title: this.truncateGraphemes(
+                    card.title ?? card.body ?? ' ',
+                    CARD_TEXT_LIMIT
+                ),
+                subtitle: this.cardText(card.subtitle ?? card.body),
                 image_url: card.imageUrl,
             };
             if (card.buttons?.length) {
                 element.buttons = card.buttons.map(b =>
                     b.kind === 'link'
-                        ? { type: 'web_url', title: b.label, url: b.url }
+                        ? {
+                              type: 'web_url',
+                              title: this.buttonTitle(b.label),
+                              url: b.url,
+                          }
                         : {
                               type: 'postback',
-                              title: b.label,
+                              title: this.buttonTitle(b.label),
                               payload: encodeActionPayload(b.id, b.value),
                           }
                 );
@@ -346,15 +362,25 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
         if (msg.quickReplies?.length) {
             message.quick_replies = msg.quickReplies.slice(0, 13).map(q => ({
                 content_type: 'text',
-                title: q.label,
+                title: this.buttonTitle(q.label),
                 payload: encodeActionPayload(q.id, q.value),
             }));
         }
         return message;
     }
 
+    private buttonTitle(label: string): string {
+        return this.truncateGraphemes(label, BUTTON_TITLE_LIMIT);
+    }
+
+    private cardText(text: string | undefined): string | undefined {
+        return text === undefined
+            ? undefined
+            : this.truncateGraphemes(text, CARD_TEXT_LIMIT);
+    }
+
     private truncate(text: string): string {
-        const s = this.truncateGraphemes(text, MESSAGE_LIMIT);
+        const s = this.truncateBytes(text, MESSAGE_BYTE_LIMIT);
         if (!s.trim()) {
             throw new UnprocessableEntityException({
                 message: 'platform.error.emptyMessage',
@@ -362,6 +388,21 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             });
         }
         return s;
+    }
+
+    /** Cuts on grapheme boundaries so the UTF-8 result fits `maxBytes`. */
+    private truncateBytes(text: string, maxBytes: number): string {
+        if (Buffer.byteLength(text, 'utf8') <= maxBytes) return text;
+        const suffix = '...';
+        let budget = maxBytes - Buffer.byteLength(suffix, 'utf8');
+        let out = '';
+        const seg = new Intl.Segmenter('und', { granularity: 'grapheme' });
+        for (const { segment } of seg.segment(text)) {
+            budget -= Buffer.byteLength(segment, 'utf8');
+            if (budget < 0) break;
+            out += segment;
+        }
+        return out + suffix;
     }
 
     // ----- private helpers -----

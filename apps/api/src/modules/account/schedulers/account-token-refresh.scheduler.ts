@@ -12,13 +12,22 @@ import {
     TokenEncryptionErrorReason,
 } from 'src/common/helper/exceptions/token-encryption.exception';
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
-import { ENUM_ACCOUNT_STATUS } from '../enums/account.enum';
+import { ENUM_ACCOUNT_STATUS, ENUM_ACCOUNT_TYPE } from '../enums/account.enum';
 import { AccountRepository } from '../repository/repositories/account.repository';
 
 // Only these two reasons are operator/deploy misconfigurations (a missing or
 // wrong-length OAUTH_TOKEN_ENCRYPT_KEY) that apply to every row alike; the
 // rest — invalid_format, unsupported_version, auth_failed — are per-row data
 // faults, so they keep the BLOCKED + notify path.
+const REFRESH_AHEAD_MINUTES = 30;
+
+// Instagram refuses to refresh an expired token, and this job runs hourly, so
+// its 60-day tokens are refreshed a week ahead.
+const EARLY_REFRESH = {
+    types: [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE],
+    minutes: 7 * 24 * 60,
+};
+
 const OPERATOR_FAULT_REASONS: ReadonlySet<TokenEncryptionErrorReason> = new Set(
     ['key_not_found', 'key_length']
 );
@@ -98,8 +107,10 @@ export class AccountTokenRefreshScheduler {
     async handleTokenRefresh(): Promise<void> {
         this.logger.log('Running account token refresh job');
 
-        const expiringAccounts =
-            await this.accountRepository.findExpiringSoon(30);
+        const expiringAccounts = await this.accountRepository.findExpiringSoon(
+            REFRESH_AHEAD_MINUTES,
+            EARLY_REFRESH
+        );
 
         if (!expiringAccounts.length) {
             this.logger.log('No expiring tokens found');
@@ -155,6 +166,19 @@ export class AccountTokenRefreshScheduler {
                     configFaults++;
                     this.logger.error(
                         `Token encryption configuration fault (${error.reason}) for account ${account.id}: ${error.message}`
+                    );
+                    continue;
+                }
+
+                // Picked up early, the current token still works: retry on a
+                // later run instead of blocking a working account.
+                const stillValid =
+                    !!account.tokenExpiresAt &&
+                    account.tokenExpiresAt.getTime() >
+                        Date.now() + REFRESH_AHEAD_MINUTES * 60 * 1000;
+                if (stillValid) {
+                    this.logger.warn(
+                        `Early token refresh failed for account ${account.id}, retrying next run: ${error.message}`
                     );
                     continue;
                 }

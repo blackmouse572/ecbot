@@ -3,10 +3,12 @@ import {
     IOAuthTokenResult,
 } from '@app/common/oauth/interfaces/oauth-platform.interface';
 import { HttpService } from '@nestjs/axios';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 const GRAPH_API_VERSION = 'v23.0';
+// Instagram documents long-lived tokens as 60 days.
+const DEFAULT_EXPIRES_IN = 60 * 24 * 60 * 60;
 const SUBSCRIBED_FIELDS =
     'messages,messaging_postbacks,message_reactions,messaging_seen';
 
@@ -25,6 +27,7 @@ interface InstagramProfile {
  */
 @Injectable()
 export class InstagramOAuthService implements IOAuthPlatformService {
+    private readonly logger = new Logger(InstagramOAuthService.name);
     private readonly appId: string;
     private readonly appSecret: string;
     private readonly redirectUri: string;
@@ -43,33 +46,7 @@ export class InstagramOAuthService implements IOAuthPlatformService {
     }
 
     async getTokenAndProfile(code: string): Promise<IOAuthTokenResult> {
-        // Exchange short-lived token
-        const tokenResponse = await this.httpService.axiosRef.post(
-            `${this.baseUrl}/oauth/access_token`,
-            new URLSearchParams({
-                client_id: this.appId,
-                client_secret: this.appSecret,
-                grant_type: 'authorization_code',
-                redirect_uri: this.redirectUri,
-                code,
-            }),
-            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-        );
-
-        // Exchange for long-lived token (60 days)
-        const longLivedResponse = await this.httpService.axiosRef.get(
-            `${this.graphUrl}/access_token`,
-            {
-                params: {
-                    grant_type: 'ig_exchange_token',
-                    client_secret: this.appSecret,
-                    access_token: tokenResponse.data.access_token,
-                },
-            }
-        );
-
-        const accessToken = longLivedResponse.data.access_token;
-        const expiresIn: number = longLivedResponse.data.expires_in; // seconds
+        const { accessToken, expiresIn } = await this.exchangeCode(code);
 
         // Without the subscription Instagram sends no message webhooks for
         // this account, so a failure here must fail the link.
@@ -95,13 +72,88 @@ export class InstagramOAuthService implements IOAuthPlatformService {
         );
 
         const newAccessToken = response.data.access_token;
-        const expiresIn: number = response.data.expires_in;
-
-        return this.toResult(
-            newAccessToken,
-            new Date(Date.now() + expiresIn * 1000),
-            await this.getProfile(newAccessToken)
+        const tokenExpiresAt = new Date(
+            Date.now() + (response.data.expires_in ?? DEFAULT_EXPIRES_IN) * 1000
         );
+
+        // The token is already rotated: a failed profile lookup must not
+        // throw it away. The scheduler only stores the token and expiry.
+        try {
+            return this.toResult(
+                newAccessToken,
+                tokenExpiresAt,
+                await this.getProfile(newAccessToken)
+            );
+        } catch (error) {
+            this.logger.warn(
+                `Instagram profile lookup after refresh failed: ${error?.message ?? error}`
+            );
+            return {
+                accessToken: newAccessToken,
+                tokenExpiresAt,
+                externalId: '',
+                name: '',
+            };
+        }
+    }
+
+    async onUnlink(accessToken: string): Promise<void> {
+        try {
+            await this.httpService.axiosRef.delete(
+                `${this.graphUrl}/${GRAPH_API_VERSION}/me/subscribed_apps`,
+                { params: { access_token: accessToken } }
+            );
+        } catch (error) {
+            this.logger.warn(
+                `Instagram webhook unsubscribe failed: ${error?.message ?? error}`
+            );
+        }
+    }
+
+    /** Code to short-lived token, then to a long-lived (60 day) token. */
+    private async exchangeCode(
+        code: string
+    ): Promise<{ accessToken: string; expiresIn: number }> {
+        try {
+            const tokenResponse = await this.httpService.axiosRef.post(
+                `${this.baseUrl}/oauth/access_token`,
+                new URLSearchParams({
+                    client_id: this.appId,
+                    client_secret: this.appSecret,
+                    grant_type: 'authorization_code',
+                    redirect_uri: this.redirectUri,
+                    code,
+                }),
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                }
+            );
+            const longLivedResponse = await this.httpService.axiosRef.get(
+                `${this.graphUrl}/access_token`,
+                {
+                    params: {
+                        grant_type: 'ig_exchange_token',
+                        client_secret: this.appSecret,
+                        access_token: tokenResponse.data.access_token,
+                    },
+                }
+            );
+            return {
+                accessToken: longLivedResponse.data.access_token,
+                expiresIn:
+                    longLivedResponse.data.expires_in ?? DEFAULT_EXPIRES_IN,
+            };
+        } catch (error) {
+            this.logger.warn(
+                `Instagram code exchange failed: ${error?.message ?? error}`
+            );
+            throw new BadRequestException({
+                statusCode: 400,
+                message: 'instagram.error.linkFailed',
+            });
+        }
     }
 
     private async getProfile(accessToken: string): Promise<InstagramProfile> {

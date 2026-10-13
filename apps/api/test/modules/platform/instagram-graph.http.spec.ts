@@ -154,6 +154,63 @@ describe('Instagram Login over HTTP', () => {
         const result = await oauth.refreshCredentials('OLD');
         expect(result).toMatchObject({ accessToken: 'NEW', externalId: IG_ID });
     });
+
+    it('keeps a good refresh when the profile lookup after it fails', async () => {
+        graph()
+            .get('/refresh_access_token')
+            .query(true)
+            .reply(200, { access_token: 'NEW', expires_in: 5184000 });
+        graph().get('/v23.0/me').query(true).reply(500, {});
+
+        const result = await oauth.refreshCredentials('OLD');
+        expect(result.accessToken).toBe('NEW');
+        expect(result.tokenExpiresAt.getTime()).toBeGreaterThan(Date.now());
+    });
+
+    it('assumes the documented 60 days when Instagram omits expires_in', async () => {
+        graph()
+            .get('/refresh_access_token')
+            .query(true)
+            .reply(200, { access_token: 'NEW' });
+        graph().get('/v23.0/me').query(true).reply(200, profile);
+
+        const result = await oauth.refreshCredentials('OLD');
+        const days =
+            (result.tokenExpiresAt.getTime() - Date.now()) / 86_400_000;
+        expect(Math.round(days)).toBe(60);
+    });
+
+    it('maps a refused code exchange to a translated link error', async () => {
+        nock('https://api.instagram.com')
+            .post('/oauth/access_token')
+            .reply(400, {
+                error_type: 'OAuthException',
+                code: 400,
+                error_message: 'This authorization code has been used',
+            });
+
+        await expect(oauth.getTokenAndProfile('USED')).rejects.toMatchObject({
+            response: { message: 'instagram.error.linkFailed' },
+        });
+    });
+
+    it('unsubscribes the account from webhooks when it is unlinked', async () => {
+        graph()
+            .delete('/v23.0/me/subscribed_apps')
+            .query({ access_token: 'LONG_TOKEN' })
+            .reply(200, { success: true });
+
+        await oauth.onUnlink('LONG_TOKEN');
+    });
+
+    it('never fails an unlink when Instagram refuses the unsubscribe', async () => {
+        graph()
+            .delete('/v23.0/me/subscribed_apps')
+            .query(true)
+            .reply(400, { error: { message: 'Invalid OAuth access token' } });
+
+        await expect(oauth.onUnlink('DEAD')).resolves.toBeUndefined();
+    });
 });
 
 describe('Instagram messaging over HTTP', () => {

@@ -171,9 +171,40 @@ describe('InstagramPlatformAdapter.parse', () => {
         );
         expect(e).toMatchObject({
             kind: 'reaction',
-            externalMessageId: 'm4',
             reaction: { emoji: '❤️', messageId: 'm4', action: 'react' },
         });
+    });
+
+    it('gives each reaction its own dedupe id, apart from the message and from an unreact', () => {
+        const react = (action: string, timestamp: number) =>
+            makeAdapter().parse(
+                payload([
+                    {
+                        ...base,
+                        timestamp,
+                        reaction: { mid: 'm4', action, emoji: '❤️' },
+                    },
+                ])
+            )[0].externalMessageId;
+
+        const ids = [
+            'm4',
+            react('react', 1),
+            react('unreact', 2),
+            react('react', 3),
+        ];
+        expect(new Set(ids).size).toBe(4);
+        expect(react('react', 1)).toBe(react('react', 1));
+    });
+
+    it('skips events with no sender instead of throwing', () => {
+        const events = makeAdapter().parse(
+            payload([
+                { recipient: { id: IG_ID }, timestamp: 1, read: { mid: 'x' } },
+                { ...base, message: { mid: 'm9', text: 'hi' } },
+            ])
+        );
+        expect(events.map(e => e.externalMessageId)).toEqual(['m9']);
     });
 
     it('keeps media attachments and drops shares it cannot render', () => {
@@ -332,15 +363,41 @@ describe('InstagramPlatformAdapter.sendMessage', () => {
         expect(opts.params).toEqual({ access_token: 'TOKEN' });
     });
 
-    it('cuts text to Instagram’s 1000 character limit', async () => {
+    it('cuts Vietnamese text to Instagram’s 1000 byte limit without splitting a letter', async () => {
         const { post, adapter } = makeSending();
+        // "ệ" is 3 bytes in UTF-8, so 600 of them (1800 bytes) fit in 1000
+        // characters but not in 1000 bytes.
+        const text = 'Cảm ơn bạn đã liên hệ. '.repeat(20) + 'ệ'.repeat(600);
         await adapter.sendMessage(account, CUSTOMER, {
-            content: { kind: 'text', text: 'a'.repeat(1500) },
+            content: { kind: 'text', text },
             fallbackText: '',
         });
-        expect(
-            [...post.mock.calls[0][1].message.text].length
-        ).toBeLessThanOrEqual(1000);
+        const sent: string = post.mock.calls[0][1].message.text;
+        expect(Buffer.byteLength(sent, 'utf8')).toBeLessThanOrEqual(1000);
+        expect(Buffer.byteLength(sent, 'utf8')).toBeGreaterThan(990);
+        expect(sent.endsWith('ệ...')).toBe(true);
+        expect(sent.startsWith('Cảm ơn bạn đã liên hệ.')).toBe(true);
+    });
+
+    it('leaves text within 1000 bytes untouched', async () => {
+        const { post, adapter } = makeSending();
+        const text = 'ệ'.repeat(333);
+        await adapter.sendMessage(account, CUSTOMER, {
+            content: { kind: 'text', text },
+            fallbackText: '',
+        });
+        expect(post.mock.calls[0][1].message.text).toBe(text);
+    });
+
+    it('cuts quick reply titles to 20 characters', async () => {
+        const { post, adapter } = makeSending();
+        await adapter.sendMessage(account, CUSTOMER, {
+            content: { kind: 'text', text: 'Pick one' },
+            fallbackText: 'Pick one',
+            quickReplies: [{ id: 'q', label: 'Giao hàng tận nơi trong ngày' }],
+        });
+        const [qr] = post.mock.calls[0][1].message.quick_replies;
+        expect([...qr.title].length).toBeLessThanOrEqual(20);
     });
 
     it('renders quick replies, capped at 13', async () => {
@@ -435,6 +492,31 @@ describe('InstagramPlatformAdapter.sendMessage', () => {
         });
     });
 
+    it('cuts card titles to 80 and button titles to 20 characters', async () => {
+        const { post, adapter } = makeSending();
+        await adapter.sendMessage(account, CUSTOMER, {
+            content: {
+                kind: 'card',
+                card: {
+                    title: 'Áo '.repeat(40),
+                    subtitle: 'Mô tả '.repeat(30),
+                    buttons: [
+                        {
+                            kind: 'postback',
+                            label: 'Thêm vào giỏ hàng ngay bây giờ',
+                            id: 'add',
+                        },
+                    ],
+                },
+            },
+            fallbackText: 'Áo',
+        });
+        const [el] = post.mock.calls[0][1].message.attachment.payload.elements;
+        expect([...el.title].length).toBeLessThanOrEqual(80);
+        expect([...el.subtitle].length).toBeLessThanOrEqual(80);
+        expect([...el.buttons[0].title].length).toBeLessThanOrEqual(20);
+    });
+
     it('surfaces the Graph error instead of a bare AxiosError', async () => {
         const err: any = new Error('Request failed with status code 400');
         err.isAxiosError = true;
@@ -470,15 +552,19 @@ describe('InstagramPlatformAdapter sender actions', () => {
         });
     });
 
-    it('skips emoji Instagram cannot send, since it only allows love', async () => {
+    it('rejects emoji other than the heart, since Instagram only allows love', async () => {
         const post = jest.fn();
-        await makeAdapter({ axiosRef: { post, get: jest.fn() } }).addReaction(
-            account,
-            CUSTOMER,
-            'mid-1',
-            '👍',
-            'react'
-        );
+        await expect(
+            makeAdapter({ axiosRef: { post, get: jest.fn() } }).addReaction(
+                account,
+                CUSTOMER,
+                'mid-1',
+                '👍',
+                'react'
+            )
+        ).rejects.toMatchObject({
+            response: { message: 'instagram.error.heartReactionOnly' },
+        });
         expect(post).not.toHaveBeenCalled();
     });
 

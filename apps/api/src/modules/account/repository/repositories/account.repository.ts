@@ -1,7 +1,10 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { ENUM_ACCOUNT_STATUS } from '../../enums/account.enum';
+import {
+    ENUM_ACCOUNT_STATUS,
+    ENUM_ACCOUNT_TYPE,
+} from '../../enums/account.enum';
 import { ENUM_ACCOUNT_STATUS_CODE_ERROR } from '../../enums/account.status-code.enum';
 import { AccountEntity } from '../entities/account.entity';
 import { IDatabaseCreateOptions } from '../../../../common/database/interfaces/database.interface';
@@ -48,12 +51,28 @@ export class AccountRepository extends DatabaseRepository<AccountEntity> {
         });
     }
 
+    /**
+     * Accounts whose token expires within `thresholdMinutes`, plus those of
+     * the `early` types within its longer window (for platforms that refuse
+     * to refresh an already expired token).
+     */
     async findExpiringSoon(
-        thresholdMinutes: number = 30
+        thresholdMinutes: number = 30,
+        early?: { types: ENUM_ACCOUNT_TYPE[]; minutes: number }
     ): Promise<AccountEntity[]> {
-        const threshold = new Date(Date.now() + thresholdMinutes * 60 * 1000);
+        const ahead = (minutes: number) =>
+            new Date(Date.now() + minutes * 60 * 1000);
+        const windows: Record<string, unknown>[] = [
+            { tokenExpiresAt: { $lte: ahead(thresholdMinutes) } },
+        ];
+        if (early?.types.length) {
+            windows.push({
+                type: { $in: early.types },
+                tokenExpiresAt: { $lte: ahead(early.minutes) },
+            });
+        }
         return this.find({
-            tokenExpiresAt: { $lte: threshold },
+            $or: windows,
             status: { $ne: ENUM_ACCOUNT_STATUS.BLOCKED },
             deletedAt: null,
         });
