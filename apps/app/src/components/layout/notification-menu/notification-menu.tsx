@@ -152,7 +152,7 @@ export const NotificationMenu: FC = () => {
             aria-hidden
             data-testid="notification-shadow-top"
             className={clx(
-              "from-ui-fg-base/10 pointer-events-none absolute inset-x-0 top-0 h-3 bg-gradient-to-b to-transparent transition-opacity",
+              "from-ui-bg-component pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b to-transparent transition-opacity",
               edges.top ? "opacity-100" : "opacity-0",
             )}
           />
@@ -160,7 +160,7 @@ export const NotificationMenu: FC = () => {
             aria-hidden
             data-testid="notification-shadow-bottom"
             className={clx(
-              "from-ui-fg-base/10 pointer-events-none absolute inset-x-0 bottom-0 h-3 bg-gradient-to-t to-transparent transition-opacity",
+              "from-ui-bg-component pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t to-transparent transition-opacity",
               edges.bottom ? "opacity-100" : "opacity-0",
             )}
           />
