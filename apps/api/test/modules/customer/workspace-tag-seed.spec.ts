@@ -7,7 +7,7 @@ import {
 import { WORKSPACE_DEFAULT_MEMBER_ROLES } from '../../../src/modules/workspace/constants/workspace.constant';
 import { WorkspaceOwnerService } from '../../../src/modules/workspace/services/workspace.owner.service';
 
-// What this spec asserts: the workspace creation hook seeds the 9 default
+// What this spec asserts: the workspace creation hook seeds the 10 default
 // customer tags atomically *inside* the same MikroORM session that the rest
 // of the workspace setup runs in. This is the contract operators rely on —
 // a workspace cannot exist without its baseline tag catalog, and a failure
@@ -110,11 +110,11 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         );
     });
 
-    it('seeds exactly 9 default customer tags on workspace creation', async () => {
+    it('seeds exactly 10 default customer tags on workspace creation', async () => {
         await service.create(owner, dto);
 
-        expect(customerTagService.create).toHaveBeenCalledTimes(9);
-        expect(CUSTOMER_TAG_DEFAULTS.en).toHaveLength(9);
+        expect(customerTagService.create).toHaveBeenCalledTimes(10);
+        expect(CUSTOMER_TAG_DEFAULTS.en).toHaveLength(10);
     });
 
     it('creates default workspace roles with CUSTOMER manage permission', async () => {
@@ -170,7 +170,8 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         );
         expect(seeded.map((tag: any) => tag.name)).toContain('Khiếu nại');
         expect(seeded.map((tag: any) => tag.name)).toContain('Đơn hàng mới');
-        expect(seeded.filter((tag: any) => tag.triggersHandoff).length).toBe(3);
+        expect(seeded.map((tag: any) => tag.name)).toContain('Cần nhân viên');
+        expect(seeded.filter((tag: any) => tag.triggersHandoff).length).toBe(4);
     });
 
     it("keeps every language's catalog in step (same emoji and handoff flags)", () => {
@@ -189,7 +190,7 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         }
     });
 
-    it('Complaint, Angry and New order are seeded with triggersHandoff=true; the other 6 are false', async () => {
+    it('Complaint, Angry, New order and Needs staff are seeded with triggersHandoff=true; the other 6 are false', async () => {
         await service.create(owner, dto);
 
         const handoffTrue: string[] = [];
@@ -202,8 +203,14 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         }
 
         // New order hands a confirmed order to the owner when no order tool is
-        // connected (#281).
-        expect(handoffTrue.sort()).toEqual(['Angry', 'Complaint', 'New order']);
+        // connected (#281). Needs staff is the neutral pick when the customer
+        // just asks for a person, so they are not marked as complaining (#282).
+        expect(handoffTrue.sort()).toEqual([
+            'Angry',
+            'Complaint',
+            'Needs staff',
+            'New order',
+        ]);
         expect(handoffFalse).toHaveLength(6);
         expect(handoffFalse).not.toContain('Complaint');
         expect(handoffFalse).not.toContain('Angry');

@@ -62,6 +62,12 @@ const CUSTOMER_TAG_DEFAULTS_EN: ICustomerTagSeed[] = [
         description: 'Customer confirmed an order for staff to finish.',
         triggersHandoff: true,
     },
+    {
+        name: 'Needs staff',
+        emoji: '🙋',
+        description: 'Customer asked to talk to a person.',
+        triggersHandoff: true,
+    },
 ];
 
 const CUSTOMER_TAG_DEFAULTS_VI: ICustomerTagSeed[] = [
@@ -117,6 +123,12 @@ const CUSTOMER_TAG_DEFAULTS_VI: ICustomerTagSeed[] = [
         name: 'Đơn hàng mới',
         emoji: '🧾',
         description: 'Khách đã chốt đơn, cần nhân viên xác nhận.',
+        triggersHandoff: true,
+    },
+    {
+        name: 'Cần nhân viên',
+        emoji: '🙋',
+        description: 'Khách muốn trao đổi với nhân viên.',
         triggersHandoff: true,
     },
 ];

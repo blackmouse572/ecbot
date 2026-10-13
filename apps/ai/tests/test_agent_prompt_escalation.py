@@ -22,3 +22,13 @@ def test_handoff_rule_refers_to_the_marker_not_a_tag_name():
     assert '"(triggers handoff)"' in block
     for seeded_name in ("New order", "Complaint", "Angry"):
         assert seeded_name not in block
+
+
+def test_upset_or_complaining_customer_is_handed_over_in_the_same_turn():
+    # #282: the agent apologised and kept asking whether the customer wanted
+    # someone else instead of handing over.
+    block = " ".join(_escalation_block().split())
+    assert "angry, complaining, or clearly escalating" in block
+    assert "in that same reply" in block
+    assert "Do not only apologize" in block
+    assert "do not ask whether they want to talk to someone" in block
