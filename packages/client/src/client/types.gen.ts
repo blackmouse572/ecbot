@@ -1604,6 +1604,10 @@ export type ApiKeyUpdateRequestDto = {
      * Api Key name
      */
     name: string;
+    /**
+     * Type of api key
+     */
+    type?: 'SYSTEM' | 'DEFAULT' | 'PUBLIC';
 };
 
 export type DatabaseIdResponseDto = {
