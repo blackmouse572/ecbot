@@ -16,7 +16,7 @@ import { FollowupService } from '../services/followup.service';
 
 /**
  * Back-channel for the agent's proactive-followup tools. apps/ai POSTs here to
- * schedule a delayed Cloud Task, GETs to list a conversation's pending
+ * schedule a Cloud Task (after a delay or at a local wall-clock time), GETs to list a conversation's pending
  * followups, and DELETEs to cancel one. Scheduling/cancel logic lives here so
  * the Python side stays a thin tool runner.
  */
@@ -30,6 +30,9 @@ export class FollowupSystemController {
     async schedule(
         @Body() dto: FollowupScheduleRequestDto
     ): Promise<{ followupId: string }> {
+        if (dto.at != null && dto.delayMinutes != null) {
+            throw new BadRequestException('followup.schedule.error.atAndDelay');
+        }
         const followupId = await this.followupService.schedule(
             {
                 conversationId: dto.conversationId,
@@ -42,7 +45,7 @@ export class FollowupSystemController {
                 reason: dto.reason,
                 triggerMessageId: dto.triggerMessageId,
             },
-            dto.delayMinutes
+            dto.at != null ? { at: dto.at } : { delayMinutes: dto.delayMinutes }
         );
         return { followupId };
     }

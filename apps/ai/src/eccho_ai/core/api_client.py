@@ -20,6 +20,11 @@ API_PREFIX = "/api/v1"
 class ApiClientError(RuntimeError):
     """Raised when the back-channel call to apps/api fails."""
 
+    def __init__(self, message: str, status_code: int | None = None):
+        super().__init__(message)
+        # None for transport errors: the API was never reached.
+        self.status_code = status_code
+
 
 class ApiClient:
     def __init__(
@@ -49,7 +54,8 @@ class ApiClient:
         # A redirect counts: httpx does not follow it, and its body is not data.
         if not resp.is_success:
             raise ApiClientError(
-                f"{method} {url} failed: {resp.status_code} {resp.text[:200]}"
+                f"{method} {url} failed: {resp.status_code} {resp.text[:200]}",
+                status_code=resp.status_code,
             )
         if not resp.content:
             return {}

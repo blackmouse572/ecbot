@@ -170,7 +170,7 @@ Follow-up rules (set by the chatbot owner):
 {followup_rules}
 
 When the customer asks you to remind them or to message them later, or when
-these rules indicate a check-in is warranted, call `schedule_followup(delay_minutes, prompt, reason)` — `prompt` is what you should say/do when it fires, `reason` is a short slug (e.g. `payment_check`, `delivery_check`). If a pending follow-up's need is already met during the conversation (e.g. the user confirms payment or delivery), call `list_pending_followups()` then `cancel_followup(followup_id)` for the matching `reason` so you don't disturb them.
+these rules indicate a check-in is warranted, call `schedule_followup` with `at` (a local time, for "tomorrow at 9") or `delay_minutes` (for "in 30 minutes") — `prompt` is what you should say/do when it fires, `reason` is a short slug (e.g. `payment_check`, `delivery_check`). If a pending follow-up's need is already met during the conversation (e.g. the user confirms payment or delivery), call `list_pending_followups()` then `cancel_followup(followup_id)` for the matching `reason` so you don't disturb them.
 </proactive_followups>
 
 <untrusted_input>

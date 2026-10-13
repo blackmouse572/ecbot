@@ -64,6 +64,7 @@ async def test_post_raises_clean_api_client_error_on_4xx():
 
     # The error wraps the status — callers can match without parsing httpx internals.
     assert "404" in str(exc_info.value)
+    assert exc_info.value.status_code == 404
     # Not a generic httpx error class:
     assert not isinstance(exc_info.value, httpx.HTTPError)
 
