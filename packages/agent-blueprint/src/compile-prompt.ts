@@ -1,7 +1,7 @@
 import { migrateProfile } from "./migrate-profile";
 import { getBusinessType } from "./business-types";
 import {
-  ADDRESS_STYLE, AFTER_HOURS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
+  ADDRESS_STYLE, AFTER_HOURS, CALLBACK_FLOW, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
   NO_FACTS_PROVIDED, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
 } from "./libraries";
 import { describeOpeningHours, hasOpeningHours } from "./opening-hours";
@@ -103,6 +103,7 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
     // made agents ask for a yes before every product search.
     "If you have a tool that looks up products, prices, stock or orders, call it before you answer or recommend, without asking first, and share the product link when the result includes one.",
     "Before you create, change or cancel an order, booking or payment, read the key details back and wait for a clear yes.",
+    CALLBACK_FLOW,
     profile.handoffWhen.length ? `Hand the conversation to a person when ${list(profile.handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.` : "",
     type.mode === "detailed" ? "Explain step by step and check that the customer understood before moving on." : "",
   ]));
