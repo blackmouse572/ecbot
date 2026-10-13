@@ -31,7 +31,8 @@ export interface ToolCallSerialization {
     status: 'success' | 'error';
     result?: unknown;
     error?: string;
-    durationMs: number;
+    /** Absent for a skill load, which is not timed. */
+    durationMs?: number;
     /** Tool kind, lowercased like the live stream's `data-tool-meta`. */
     kind?: 'http' | 'mcp' | 'skill';
 }
