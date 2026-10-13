@@ -9,7 +9,7 @@ import {
 import { Avatar, DropdownMenu, Text, clx } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
-import { useLogout, useMe } from "@/hooks/api";
+import { useLogout, useMe, useWorkspace } from "@/hooks/api";
 import { enterpriseUserSection } from "@/routes/enterprise.user-section";
 import { Skeleton } from "@repo/ui/common-components";
 import { useQueryClient } from "@tanstack/react-query";
@@ -20,14 +20,19 @@ import { useTheme } from "../../../providers/theme-provider";
 export const UserMenu = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  // Enterprise sections are workspace-scoped — the subscription badge reads the
+  // current workspace — and the settings sidebar has no workspace in its URL, so
+  // mount them only once a workspace is resolved.
+  const { workspace } = useWorkspace();
 
   const [openMenu, setOpenMenu] = useState(false);
 
   return (
     <div>
-      {enterpriseUserSection().map((Section, index) => (
-        <Section key={index} />
-      ))}
+      {workspace &&
+        enterpriseUserSection().map((Section, index) => (
+          <Section key={index} />
+        ))}
       <DropdownMenu open={openMenu} onOpenChange={setOpenMenu}>
         <UserBadge />
         <DropdownMenu.Content className="min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)]">
