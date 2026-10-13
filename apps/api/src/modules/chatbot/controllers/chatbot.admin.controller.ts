@@ -128,9 +128,7 @@ export class ChatbotAdminController {
 
         return {
             _pagination: { total, totalPage },
-            data: chatbots.map(chatbot =>
-                this.chatbotService.mapDetails(chatbot)
-            ),
+            data: chatbots.map(chatbot => this.toResponse(chatbot)),
         };
     }
 
@@ -149,7 +147,7 @@ export class ChatbotAdminController {
         @Param('id', ParseUUIDPipe) id: string
     ): Promise<IResponse<ChatbotAdminResponseDto>> {
         const chatbot = await this.findOrFail(id);
-        return { data: this.chatbotService.mapDetails(chatbot) };
+        return { data: this.toResponse(chatbot) };
     }
 
     @ChatbotAdminUpdateDoc()
@@ -181,7 +179,7 @@ export class ChatbotAdminController {
         });
 
         const populated = await this.findOrFail(updatedChatbot.id);
-        return { data: this.chatbotService.mapDetails(populated) };
+        return { data: this.toResponse(populated) };
     }
 
     @ChatbotAdminDeleteDoc()
@@ -211,7 +209,17 @@ export class ChatbotAdminController {
             },
         });
 
-        return { data: this.chatbotService.mapDetails(chatbot) };
+        return { data: this.toResponse(chatbot) };
+    }
+
+    // The shared detail mapper keeps only @Expose()d fields, and the workspace
+    // DTO exposes none but the id; admins need to see whose bot this is.
+    private toResponse(chatbot: ChatbotEntity): ChatbotAdminResponseDto {
+        const { id, name, slug, avatar } = chatbot.workspace;
+        return {
+            ...this.chatbotService.mapDetails(chatbot),
+            workspace: { id, name, slug, avatar },
+        };
     }
 
     private async findOrFail(id: string): Promise<ChatbotEntity> {

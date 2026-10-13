@@ -12,7 +12,7 @@ import {
 import { ChatbotEntity } from '@app/modules/chatbot/repository/entities/chatbot.entity';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { EntityManager, wrap } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import slugify from 'slugify';
@@ -176,10 +176,13 @@ export class RAGService implements IRAGService {
         }
     }
 
-    mapGet(rag: RAGEntity): RAGGetResponseDto {
-        // Use class-transformer or plain mapping as in user.service.ts
-        // Assuming plainToInstance is imported if needed
-        return plainToInstance(RAGGetResponseDto, rag);
+    // `groups: ['private']` also exposes the storage key; admin views only.
+    mapGet(rag: RAGEntity, groups?: string[]): RAGGetResponseDto {
+        // The entity graph is cyclic once chatbot/workspace are populated, and
+        // plainToInstance on the entity itself overflows the stack. toObject()
+        // serializes it safely; the embedding vector is no use to a reader.
+        const { embedding: _embedding, ...plain } = wrap(rag).toObject();
+        return plainToInstance(RAGGetResponseDto, plain, { groups });
     }
 
     mapList(rag: RAGEntity): any {

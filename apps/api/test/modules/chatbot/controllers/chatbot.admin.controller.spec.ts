@@ -5,14 +5,24 @@ import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { ChatbotAdminController } from 'src/modules/chatbot/controllers/chatbot.admin.controller';
 
 describe('ChatbotAdminController', () => {
-    const chatbot = { id: 'c-1', name: 'Shop bot' };
+    const workspace = { id: 'w-1', name: 'Shop A', slug: 'shop-a' };
+    const chatbot = { id: 'c-1', name: 'Shop bot', workspace };
+    const mapped = {
+        id: 'c-1',
+        name: 'Shop bot',
+        workspace: { ...workspace, avatar: undefined },
+    };
     const chatbotService: any = {
         findAll: jest.fn(),
         getTotal: jest.fn(),
         findOne: jest.fn(),
         update: jest.fn(),
         softDelete: jest.fn(),
-        mapDetails: jest.fn((c: any) => ({ id: c.id, name: c.name })),
+        mapDetails: jest.fn((c: any) => ({
+            id: c.id,
+            name: c.name,
+            workspace: { id: c.workspace.id },
+        })),
     };
     const paginationService: any = { totalPage: jest.fn(() => 1) };
     const activityService: any = { createByUser: jest.fn() };
@@ -81,7 +91,7 @@ describe('ChatbotAdminController', () => {
         );
         expect(res).toEqual({
             _pagination: { total: 1, totalPage: 1 },
-            data: [{ id: 'c-1', name: 'Shop bot' }],
+            data: [mapped],
         });
     });
 
@@ -100,13 +110,13 @@ describe('ChatbotAdminController', () => {
         expect(chatbotService.softDelete).not.toHaveBeenCalled();
     });
 
-    it('returns the mapped detail with workspace and accounts', async () => {
+    it('returns the detail with the workspace name, not just its id', async () => {
         chatbotService.findOne.mockResolvedValue(chatbot);
         const res = await controller.findOne('c-1');
         expect(chatbotService.findOne).toHaveBeenCalledWith(
             { id: 'c-1', deletedAt: null },
             { populate: ['workspace', 'accounts'] }
         );
-        expect(res).toEqual({ data: { id: 'c-1', name: 'Shop bot' } });
+        expect(res).toEqual({ data: mapped });
     });
 });

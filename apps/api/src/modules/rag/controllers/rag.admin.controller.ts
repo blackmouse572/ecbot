@@ -110,6 +110,7 @@ export class RAGAdminController {
                     offset: _offset,
                 },
                 order: _order,
+                populate: ['attachment', 'chatbot', 'workspace'],
             }
         );
 
@@ -119,7 +120,10 @@ export class RAGAdminController {
             _limit
         );
 
-        const mapped = rags.map(rag => this.ragService.mapGet(rag));
+        // Admins see the storage key: it is the only file name a RAG entry has.
+        const mapped = rags.map(rag =>
+            this.ragService.mapGet(rag, ['private'])
+        );
 
         return {
             _pagination: { total, totalPage },
@@ -152,7 +156,9 @@ export class RAGAdminController {
             });
         }
 
-        const mapped: RAGGetResponseDto = this.ragService.mapGet(rag);
+        const mapped: RAGGetResponseDto = this.ragService.mapGet(rag, [
+            'private',
+        ]);
         return { data: mapped };
     }
 
