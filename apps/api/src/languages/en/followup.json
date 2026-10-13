@@ -12,7 +12,8 @@
             "atAndDelay": "Send either delayMinutes or at, not both.",
             "atInvalid": "The follow-up time is not a valid date and time.",
             "atNotInFuture": "The follow-up time has already passed or is less than a minute away. Pick a later time.",
-            "atTooFar": "The follow-up time is more than 30 days away."
+            "atTooFar": "The follow-up time is more than 30 days away.",
+            "conversationNotFound": "The conversation for this follow-up does not exist."
         }
     },
     "cancel": {

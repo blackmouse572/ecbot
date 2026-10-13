@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { REQUEST_VALIDATION_PIPE_OPTIONS } from '@app/common/request/constants/request.constant';
 import { FollowupScheduleRequestDto } from '@app/modules/platform/dtos/request/followup.schedule.request.dto';
 
 const base = {
@@ -11,10 +12,14 @@ const base = {
     reason: 'payment_check',
 };
 
+// The global pipe's options: `skipUndefinedProperties` changes which rules run.
 const failedFields = async (body: object) =>
-    (await validate(plainToInstance(FollowupScheduleRequestDto, body))).map(
-        error => error.property
-    );
+    (
+        await validate(
+            plainToInstance(FollowupScheduleRequestDto, body),
+            REQUEST_VALIDATION_PIPE_OPTIONS
+        )
+    ).map(error => error.property);
 
 describe('FollowupScheduleRequestDto', () => {
     it('accepts a delay alone', async () => {

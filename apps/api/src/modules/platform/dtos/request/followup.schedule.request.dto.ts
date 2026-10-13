@@ -1,4 +1,5 @@
 import {
+    IsDefined,
     IsInt,
     IsNotEmpty,
     IsOptional,
@@ -46,7 +47,9 @@ export class FollowupScheduleRequestDto {
     triggerMessageId?: string;
 
     // Exactly one of `delayMinutes` / `at`; the controller rejects both.
+    // @IsDefined runs even under the pipe's skipUndefinedProperties.
     @ValidateIf((dto: FollowupScheduleRequestDto) => dto.at == null)
+    @IsDefined()
     @IsInt()
     @Min(1)
     @Max(FOLLOWUP_MAX_AHEAD_MINUTES)
@@ -54,6 +57,7 @@ export class FollowupScheduleRequestDto {
 
     /** Local wall-clock time in the conversation's timezone, no offset. */
     @ValidateIf((dto: FollowupScheduleRequestDto) => dto.delayMinutes == null)
+    @IsDefined()
     @Matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
     at?: string;
 }

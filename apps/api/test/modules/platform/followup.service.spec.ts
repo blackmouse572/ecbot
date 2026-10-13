@@ -409,6 +409,17 @@ describe('FollowupService', () => {
             ).rejects.toThrow('followup.schedule.error.atInvalid');
         });
 
+        it('rejects when the conversation does not exist', async () => {
+            const { service, conversationService, followupRepository } =
+                buildService();
+            conversationService.findOneById.mockResolvedValue(null);
+
+            await expect(
+                service.schedule(jobData, { at: '2026-10-14T09:00' })
+            ).rejects.toThrow('followup.schedule.error.conversationNotFound');
+            expect(followupRepository.rows).toEqual([]);
+        });
+
         it('applies the pending cap to wall-clock follow-ups too', async () => {
             const rows = Array.from({ length: 5 }, (_, i) =>
                 followupRow({ id: `f-${i}` })

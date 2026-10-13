@@ -138,9 +138,13 @@ export class FollowupService {
             conversationId,
             { populate: ['chatbot'] }
         );
-        const zone = conversation
-            ? this.timezoneService.resolveConversationTimezone(conversation)
-            : this.timezoneService.resolveAgentTimezone(null);
+        if (!conversation) {
+            throw new UnprocessableEntityException(
+                'followup.schedule.error.conversationNotFound'
+            );
+        }
+        const zone =
+            this.timezoneService.resolveConversationTimezone(conversation);
         const local = DateTime.fromISO(at, { zone });
         if (!local.isValid) {
             throw new UnprocessableEntityException(
