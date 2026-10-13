@@ -28,7 +28,10 @@ export const GettingStarted: FC = () => {
           const content = (
             <>
               {step.done ? (
-                <span className="flex size-8 shrink-0 items-center justify-center">
+                <span
+                  aria-hidden
+                  className="bg-ui-tag-green-bg shadow-borders-base flex size-8 shrink-0 items-center justify-center rounded-md"
+                >
                   <CheckCircleSolid className="text-ui-tag-green-icon" />
                 </span>
               ) : (

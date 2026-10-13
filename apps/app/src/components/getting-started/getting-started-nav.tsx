@@ -1,4 +1,4 @@
-import { CheckCircleSolid } from "@medusajs/icons";
+import { CheckCircleSolid, CircleMiniSolid } from "@medusajs/icons";
 import { Text } from "@medusajs/ui";
 import { Can } from "@repo/auth";
 import type { FC } from "react";
@@ -69,9 +69,7 @@ export const GettingStartedNav: FC = () => {
                 <li key={step.key}>
                   {step.done ? (
                     <span className="text-ui-fg-muted flex items-center gap-x-2 px-1 py-1">
-                      <span className="flex size-6 shrink-0 items-center justify-center">
-                        <CheckCircleSolid className="text-ui-tag-green-icon" />
-                      </span>
+                      <CheckCircleSolid className="text-ui-tag-green-icon shrink-0" />
                       <Text
                         size="xsmall"
                         leading="compact"
@@ -85,12 +83,7 @@ export const GettingStartedNav: FC = () => {
                       to={step.to}
                       className="text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover flex items-center gap-x-2 rounded-md px-1 py-1 transition-colors"
                     >
-                      <span
-                        aria-hidden
-                        className="bg-ui-bg-component text-ui-fg-subtle shadow-borders-base flex shrink-0 items-center justify-center rounded-md size-6"
-                      >
-                        <step.icon />
-                      </span>
+                      <CircleMiniSolid className="text-ui-fg-muted shrink-0" />
                       <Text size="xsmall" leading="compact" weight="plus">
                         {title}
                       </Text>

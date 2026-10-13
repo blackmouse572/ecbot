@@ -3,6 +3,8 @@ import { useCreateWorkspace } from "@/hooks/api/workspace";
 import { readApiError } from "@/libs/api-error";
 import { ROUTES } from "@/routes/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { businessTypeIcon } from "@/routes/chatbot/chatbot-create/agent-builder/components/business-type-icon";
+import { EllipsisHorizontal } from "@medusajs/icons";
 import { Button, Heading, Input, RadioGroup, Text, toast } from "@medusajs/ui";
 import { TEMPLATE_TYPES } from "@repo/agent-blueprint";
 import { Form, LogoBox } from "@repo/ui/common-components";
@@ -69,8 +71,13 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
     ...TEMPLATE_TYPES.map((type) => ({
       value: type,
       label: t(`agentBuilder.types.${type}`),
+      icon: businessTypeIcon(type),
     })),
-    { value: OTHER_BUSINESS_TYPE, label: t("onboard.welcome.other") },
+    {
+      value: OTHER_BUSINESS_TYPE,
+      label: t("onboard.welcome.other"),
+      icon: <EllipsisHorizontal />,
+    },
   ];
 
   return (
@@ -122,11 +129,18 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
                     onValueChange={field.onChange}
                   >
                     {choices.map((choice) => (
-                      <RadioGroup.ChoiceBox
+                      <label
                         key={choice.value}
-                        value={choice.value}
-                        label={choice.label}
-                      />
+                        className="shadow-borders-base bg-ui-bg-base hover:bg-ui-bg-base-hover has-[[data-state=checked]]:shadow-borders-interactive-with-active flex cursor-pointer items-center gap-x-3 rounded-lg px-3 py-2.5 transition-[color,background-color,box-shadow]"
+                      >
+                        <RadioGroup.Item value={choice.value} />
+                        <span className="text-ui-fg-subtle flex shrink-0">
+                          {choice.icon}
+                        </span>
+                        <Text size="small" weight="plus" leading="compact">
+                          {choice.label}
+                        </Text>
+                      </label>
                     ))}
                   </RadioGroup>
                 </Form.Control>
