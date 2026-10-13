@@ -382,11 +382,10 @@ export class ConversationWorkspaceController {
                       to: messages[messages.length - 1].dateSent,
                   }
                 : undefined;
-        const invocations =
-            await this.conversationMessagingService.listToolInvocations(
-                id,
-                range
-            );
+        const [invocations, activities] = await Promise.all([
+            this.conversationMessagingService.listToolInvocations(id, range),
+            this.conversationMessagingService.listActivities(id, range),
+        ]);
 
         return {
             _pagination: {
@@ -397,7 +396,8 @@ export class ConversationWorkspaceController {
                 messages,
                 conversation,
                 userNameMap,
-                invocations
+                invocations,
+                activities
             ),
         };
     }

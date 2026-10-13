@@ -94,6 +94,14 @@ export class CustomerDataExportService {
                 errorMessage: t.errorMessage,
                 createdAt: t.createdAt,
             })),
+            activities: data.activities.map(a => ({
+                id: a.id,
+                conversationId: a.conversationId,
+                kind: a.kind,
+                label: a.label,
+                payload: a.payload as Record<string, unknown> | undefined,
+                createdAt: a.createdAt,
+            })),
         };
     }
 

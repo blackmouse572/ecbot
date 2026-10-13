@@ -339,3 +339,58 @@ describe("MessageBubble look", () => {
     expect(screen.getByText("chatbot.chat.trace.done")).toBeInTheDocument();
   });
 });
+
+// #286: a channel reply shows what the agent did, like the owner preview.
+describe("MessageBubble agent activity", () => {
+  const botMessage = {
+    ...baseMessage,
+    direction: "OUTBOUND" as const,
+    authorType: "BOT" as const,
+    authorId: "bot-1",
+    text: "Refunds take 5 days.",
+  };
+
+  it("shows a knowledge search with its source links, even with no tool calls", () => {
+    render(
+      <TooltipProvider>
+        <MessageBubble
+          message={{
+            ...botMessage,
+            knowledgeCount: 2,
+            sources: [
+              {
+                id: "KB-1",
+                title: "Refund policy",
+                sourceUrl: "https://shop.vn/refunds",
+              },
+              { id: "KB-2", title: "FAQ" },
+            ],
+          }}
+        />
+      </TooltipProvider>,
+    );
+
+    expect(
+      screen.getByText("chatbot.chat.trace.knowledgeStep"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("KB-1 · Refund policy").closest("a"),
+    ).toHaveAttribute("href", "https://shop.vn/refunds");
+    expect(screen.getByText("KB-2 · FAQ")).toBeInTheDocument();
+  });
+
+  it("shows no trace for a reply where the agent did nothing", () => {
+    render(
+      <TooltipProvider>
+        <MessageBubble message={botMessage} />
+      </TooltipProvider>,
+    );
+
+    expect(
+      screen.queryByText("chatbot.chat.trace.knowledgeStep"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("chatbot.chat.sources.label"),
+    ).not.toBeInTheDocument();
+  });
+});

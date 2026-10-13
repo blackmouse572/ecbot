@@ -134,3 +134,12 @@ export interface IExportToolInvocation {
     errorMessage?: string;
     createdAt: Date;
 }
+
+export interface IExportActivity {
+    id: string;
+    conversationId: string;
+    kind: string;
+    label?: string;
+    payload?: Record<string, unknown>;
+    createdAt: Date;
+}
