@@ -7,3 +7,12 @@ export const ChatbotAdminDocParamsId = [
         example: '6bdc931d-24f7-4205-95b9-7fccab1bcc13',
     },
 ];
+
+export const ChatbotAdminDocQueryWorkspace = [
+    {
+        name: 'workspace',
+        required: false,
+        type: 'string',
+        description: 'workspace id',
+    },
+];

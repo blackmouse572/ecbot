@@ -1,4 +1,10 @@
-import { PaginationQuery } from '@app/common/pagination/decorators/pagination.decorator';
+import {
+    PaginationQuery,
+    PaginationQueryFilterEqual,
+    PaginationQueryFilterInEnum,
+} from '@app/common/pagination/decorators/pagination.decorator';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
+import { ENUM_APP_STATUS_CODE_ERROR } from '@app/app/enums/app.status-code.enum';
 import { PaginationListDto } from '@app/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from '@app/common/pagination/services/pagination.service';
 import {
@@ -7,7 +13,7 @@ import {
 } from '@app/common/response/interfaces/response.interface';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
-import { ApiKeySystemProtected } from '@app/modules/api-key/decorators/api-key.decorator';
+import { ApiKeyProtected } from '@app/modules/api-key/decorators/api-key.decorator';
 import {
     AuthJwtAccessProtected,
     AuthJwtPayload,
@@ -24,14 +30,25 @@ import {
 import { UserProtected } from '@app/modules/user/decorators/user.decorator';
 import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
-import { Body, Controller, Delete, Get, Param, Put } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    NotFoundException,
+    Param,
+    ParseUUIDPipe,
+    Put,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
 import {
     Response,
     ResponsePaging,
 } from 'src/common/response/decorators/response.decorator';
-import { CHATBOT_SEARCHABLE_FIELDS } from '../constants/chatbot.list.constant';
+import {
+    CHATBOT_DEFAULT_AVAILABLE_SORT,
+    CHATBOT_SEARCHABLE_FIELDS,
+} from '../constants/chatbot.list.constant';
 import {
     ChatbotAdminDeleteDoc,
     ChatbotAdminGetDoc,
@@ -40,7 +57,12 @@ import {
 } from '../docs/chatbot.admin.doc';
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
 import { ChatbotAdminResponseDto } from '../dtos/response/chatbot.admin.response.dto';
+import { ENUM_CHATBOT_STATUS, ENUM_CHATBOT_TYPE } from '../enums/chatbot.enum';
+import { ChatbotEntity } from '../repository/entities/chatbot.entity';
 import { ChatbotService } from '../services/chatbot.service';
+
+// `accounts` is the relation's name; populating `account` made MikroORM throw.
+const CHATBOT_ADMIN_POPULATE = ['workspace', 'accounts'] as const;
 
 @ApiTags('modules.admin.chatbot')
 @Controller({
@@ -63,41 +85,52 @@ export class ChatbotAdminController {
     @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
-    @ApiKeySystemProtected()
+    @ApiKeyProtected()
     @Get('/')
     async findAll(
         @PaginationQuery({
             availableSearch: CHATBOT_SEARCHABLE_FIELDS,
+            availableOrderBy: CHATBOT_DEFAULT_AVAILABLE_SORT,
+            defaultOrderBy: 'createdAt',
+            defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
         })
-        { _search, _limit, _offset, _order }: PaginationListDto
+        { _search, _limit, _offset, _order }: PaginationListDto,
+        @PaginationQueryFilterInEnum('status', null, ENUM_CHATBOT_STATUS)
+        status?: Record<string, any>,
+        @PaginationQueryFilterInEnum('type', null, ENUM_CHATBOT_TYPE)
+        type?: Record<string, any>,
+        @PaginationQueryFilterEqual('workspace')
+        workspace?: Record<string, any>
     ): Promise<IResponsePaging<ChatbotAdminResponseDto>> {
         const find: Record<string, any> = {
             ..._search,
             deletedAt: null,
+            ...(status ?? {}),
+            ...(type ?? {}),
+            ...(workspace ?? {}),
         };
 
-        const chatbots = await this.chatbotService.findAll(find, {
-            paging: {
-                limit: _limit,
-                offset: _offset,
-            },
-            order: _order,
-            populate: ['workspace', 'account'],
-        });
-
-        const total: number = await this.chatbotService.getTotal(find);
+        const [chatbots, total] = await Promise.all([
+            this.chatbotService.findAll(find, {
+                paging: {
+                    limit: _limit,
+                    offset: _offset,
+                },
+                order: _order,
+                populate: [...CHATBOT_ADMIN_POPULATE],
+            }),
+            this.chatbotService.getTotal(find),
+        ]);
         const totalPage: number = this.paginationService.totalPage(
             total,
             _limit
         );
 
-        const data = chatbots.map(chatbot =>
-            plainToInstance(ChatbotAdminResponseDto, chatbot)
-        );
-
         return {
             _pagination: { total, totalPage },
-            data,
+            data: chatbots.map(chatbot =>
+                this.chatbotService.mapDetails(chatbot)
+            ),
         };
     }
 
@@ -110,25 +143,13 @@ export class ChatbotAdminController {
     @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
-    @ApiKeySystemProtected()
+    @ApiKeyProtected()
     @Get('/:id')
     async findOne(
-        @Param('id') id: string
+        @Param('id', ParseUUIDPipe) id: string
     ): Promise<IResponse<ChatbotAdminResponseDto>> {
-        const chatbot = await this.chatbotService.findOne(
-            {
-                id: id,
-                deletedAt: null,
-            },
-            {
-                populate: ['workspace', 'account'],
-            }
-        );
-
-        const responseData = plainToInstance(ChatbotAdminResponseDto, chatbot);
-        return {
-            data: responseData,
-        };
+        const chatbot = await this.findOrFail(id);
+        return { data: this.chatbotService.mapDetails(chatbot) };
     }
 
     @ChatbotAdminUpdateDoc()
@@ -140,18 +161,14 @@ export class ChatbotAdminController {
     @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
-    @ApiKeySystemProtected()
+    @ApiKeyProtected()
     @Put('/:id')
     async update(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() dto: ChatbotUpdateRequestDto,
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
     ): Promise<IResponse<ChatbotAdminResponseDto>> {
-        const chatbot = await this.chatbotService.findOne({
-            id: id,
-            deletedAt: null,
-        });
-
+        const chatbot = await this.findOrFail(id);
         const updatedChatbot = await this.chatbotService.update(chatbot, dto);
 
         await this.activityService.createByUser(user, {
@@ -163,23 +180,8 @@ export class ChatbotAdminController {
             },
         });
 
-        const populatedChatbot = await this.chatbotService.findOne(
-            {
-                id: updatedChatbot.id,
-            },
-            {
-                populate: ['workspace', 'account'],
-            }
-        );
-
-        const responseData = plainToInstance(
-            ChatbotAdminResponseDto,
-            populatedChatbot
-        );
-
-        return {
-            data: responseData,
-        };
+        const populated = await this.findOrFail(updatedChatbot.id);
+        return { data: this.chatbotService.mapDetails(populated) };
     }
 
     @ChatbotAdminDeleteDoc()
@@ -191,17 +193,13 @@ export class ChatbotAdminController {
     @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
     @UserProtected()
     @AuthJwtAccessProtected()
-    @ApiKeySystemProtected()
+    @ApiKeyProtected()
     @Delete('/:id')
     async delete(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
     ): Promise<IResponse<ChatbotAdminResponseDto>> {
-        const chatbot = await this.chatbotService.findOne({
-            id: id,
-            deletedAt: null,
-        });
-
+        const chatbot = await this.findOrFail(id);
         const deletedChatbot = await this.chatbotService.softDelete(chatbot);
 
         await this.activityService.createByUser(user, {
@@ -213,22 +211,20 @@ export class ChatbotAdminController {
             },
         });
 
-        const populatedChatbot = await this.chatbotService.findOne(
-            {
-                id: deletedChatbot.id,
-            },
-            {
-                populate: ['workspace', 'account'],
-            }
-        );
+        return { data: this.chatbotService.mapDetails(chatbot) };
+    }
 
-        const responseData = plainToInstance(
-            ChatbotAdminResponseDto,
-            populatedChatbot
+    private async findOrFail(id: string): Promise<ChatbotEntity> {
+        const chatbot = await this.chatbotService.findOne(
+            { id, deletedAt: null },
+            { populate: [...CHATBOT_ADMIN_POPULATE] }
         );
-
-        return {
-            data: responseData,
-        };
+        if (!chatbot) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'chatbot.error.notFound',
+            });
+        }
+        return chatbot;
     }
 }
