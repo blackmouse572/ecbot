@@ -122,7 +122,7 @@ describe("compilePrompt", () => {
   // #158: the configured address style and length hold from the first reply.
   it("applies address style and reply length to every reply, including the first", () => {
     const out = compilePrompt(sample("beauty", "vi"));
-    expect(out).toContain('In every reply, including the first, refer to yourself as "em" and address them as "anh" or "chị". Never call them "bạn".');
+    expect(out).toContain('In every Vietnamese reply, including the first, refer to yourself as "em" and address them as "anh" or "chị". Never call them "bạn".');
     expect(out).toContain("Keep every reply, including the first, to one or two sentences.");
   });
 

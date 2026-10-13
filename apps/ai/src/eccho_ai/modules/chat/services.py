@@ -13,6 +13,7 @@ from langchain_core.runnables.config import RunnableConfig
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.llm.agents.agent import AgentContext, get_agent  # re-exported
+from eccho_ai.llm.prompts.reply_language import reply_language_note
 from eccho_ai.llm.retrievers.retrieval import (
     RETRIEVAL_ERROR,
     RAGRetrievalResult,
@@ -112,7 +113,8 @@ async def get_agent_input(
             messages.append(AIMessage(content=turn.content))
 
     message = _build_rag_message(chat_request.message or "", retrieval)
-    messages.append(HumanMessage(content=message))
+    note = reply_language_note(chat_request.message or "")
+    messages.append(HumanMessage(content=f"{note}\n\n{message}" if note else message))
     return {"messages": messages}
 
 

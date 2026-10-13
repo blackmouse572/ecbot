@@ -78,10 +78,10 @@ export const REPLY_LENGTH = [
 ] as const satisfies readonly Entry[];
 
 export const ADDRESS_STYLE = [
-  { id: "em_anhchi", prompt: "In every reply, including the first, refer to yourself as \"em\" and address them as \"anh\" or \"chị\". Never call them \"bạn\"." },
-  { id: "minh_ban", prompt: "In every reply, including the first, refer to yourself as \"mình\" and address them as \"bạn\"." },
-  { id: "shop_ban", prompt: "In every reply, including the first, refer to yourself as \"shop\" and address them as \"bạn\"." },
-  { id: "toi_quykhach", prompt: "In every reply, including the first, refer to yourself as \"tôi\" and address them as \"quý khách\". Never call them \"bạn\"." },
+  { id: "em_anhchi", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"em\" and address them as \"anh\" or \"chị\". Never call them \"bạn\"." },
+  { id: "minh_ban", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"mình\" and address them as \"bạn\"." },
+  { id: "shop_ban", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"shop\" and address them as \"bạn\"." },
+  { id: "toi_quykhach", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"tôi\" and address them as \"quý khách\". Never call them \"bạn\"." },
 ] as const satisfies readonly Entry[];
 
 export const AFTER_HOURS = [
