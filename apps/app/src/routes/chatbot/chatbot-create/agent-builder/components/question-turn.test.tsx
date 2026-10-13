@@ -198,8 +198,21 @@ describe("QuestionTurn collect step", () => {
     expect(onAnswer).toHaveBeenCalledWith(["name", "phone", "address", "product_interest", "Deadline"]);
   });
 
+  it("shows the add-your-own input only while Other is ticked", () => {
+    const onAnswer = renderCollect(createProfile("ecommerce", "en"));
+    expect(screen.queryByRole("textbox", { name: "Add your own" })).toBeNull();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Other" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Add your own" }), { target: { value: "Deadline" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Other" }));
+    expect(screen.queryByRole("textbox", { name: "Add your own" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onAnswer).toHaveBeenCalledWith(["name", "phone", "address", "product_interest"]);
+  });
+
   it("ticks the fixed field instead of adding a label that names it", () => {
     const onAnswer = renderCollect({ ...createProfile("ecommerce", "en"), collect: ["name"] });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Other" }));
     const input = screen.getByRole("textbox", { name: "Add your own" });
     for (const typed of ["email", "Special requests"]) {
       fireEvent.change(input, { target: { value: typed } });

@@ -1205,7 +1205,8 @@
       "customCollectPlaceholder": "Ví dụ: hạn giao, file thiết kế, kích cỡ",
       "customCollectAdd": "Thêm",
       "customCollectRemove": "Xoá {{label}}",
-      "customCollectLimit": "Bạn có thể thêm tối đa {{count}} mục."
+      "customCollectLimit": "Bạn có thể thêm tối đa {{count}} mục.",
+      "customCollectOther": "Khác"
     },
     "groups": {
       "identity": "Về doanh nghiệp",

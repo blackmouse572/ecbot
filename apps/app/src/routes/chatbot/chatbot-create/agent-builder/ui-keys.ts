@@ -7,5 +7,5 @@ export const BUILDER_UI_KEYS = [
   "existingChannels", "useChannel", "connectLater", "comingSoon", "connectFailed",
   "connected", "telegramTokenLabel", "widgetOriginsLabel", "channelInUse", "unlinkChannel", "removeChannel",
   "changeTypeTitle", "changeTypeDescription", "changeTypeConfirm",
-  "customCollectLabel", "customCollectPlaceholder", "customCollectAdd", "customCollectRemove", "customCollectLimit",
+  "customCollectLabel", "customCollectPlaceholder", "customCollectAdd", "customCollectRemove", "customCollectLimit", "customCollectOther",
 ].map((k) => `agentBuilder.ui.${k}`);

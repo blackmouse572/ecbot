@@ -35,7 +35,7 @@ export const CustomCollectEditor: FC<Props> = ({ labels, onChange }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id} size="small" weight="plus">{t("agentBuilder.ui.customCollectLabel")}</Label>
+      <Label htmlFor={id} className="sr-only">{t("agentBuilder.ui.customCollectLabel")}</Label>
       {labels.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {labels.map((label) => (

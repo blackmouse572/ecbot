@@ -30,18 +30,32 @@ type Props = {
   onAccountsUnlinked: (ids: string[]) => void;
 };
 
+// The collect step's "Other" choice: ticking it shows the add-your-own input.
+const OTHER = "__other__";
+
 const BOOLEAN_CHOICES = [
   { value: "yes", labelKey: "agentBuilder.ui.yes" },
   { value: "no", labelKey: "agentBuilder.ui.no" },
 ];
 
 function toFormValue(question: Question, raw: unknown): string | string[] {
+  if (question.id === "collect") {
+    const values = (raw as string[] | undefined) ?? [];
+    const hasCustom = values.some((v) => !question.choices?.some((c) => c.value === v));
+    return hasCustom ? [...values, OTHER] : values;
+  }
   if (question.kind === "multi") return (raw as string[] | undefined) ?? [];
   if (question.kind === "boolean") return raw ? "yes" : "no";
   return String(raw ?? "");
 }
 
 function fromFormValue(question: Question, value: string | string[]): unknown {
+  // Without "Other" ticked, only the fixed fields count.
+  if (question.id === "collect") {
+    const values = value as string[];
+    const other = values.includes(OTHER);
+    return values.filter((v) => v !== OTHER && (other || question.choices?.some((c) => c.value === v)));
+  }
   if (question.kind === "boolean") return value === "yes";
   if (question.kind === "text") return (value as string).trim();
   return value;
@@ -86,7 +100,8 @@ export function QuestionTurn({
     const typed = label.trim().toLowerCase();
     return choices.find((c) => c.value === typed || t(c.labelKey).toLowerCase() === typed)?.value;
   };
-  const customLabels = question.id === "collect" ? (value as string[]).filter((v) => !isChoice(v)) : [];
+  const otherTicked = question.id === "collect" && (value as string[]).includes(OTHER);
+  const customLabels = question.id === "collect" ? (value as string[]).filter((v) => !isChoice(v) && v !== OTHER) : [];
   // The greeting example reuses the names given so far, or the type's examples.
   const placeholderNames = {
     agentName: profile.agentName.trim() || t("agentBuilder.questions.agentName.placeholder"),
@@ -159,16 +174,17 @@ export function QuestionTurn({
                   {choices.map((c) => (
                     <QuestionnaireChoice key={c.value} value={c.value} label={t(c.labelKey)} icon={choiceIcon(question, c.value)} />
                   ))}
+                  {question.id === "collect" && <QuestionnaireChoice value={OTHER} label={t("agentBuilder.ui.customCollectOther")} />}
                 </QuestionnaireChoices>
               )}
-              {question.id === "collect" && (
+              {otherTicked && (
                 <CustomCollectEditor
                   labels={customLabels}
                   onChange={(labels) => {
                     // A label that names a fixed field ticks that field instead.
                     const ticked = labels.map(choiceFor).filter((c): c is string => !!c);
                     const ids = [...(value as string[]).filter(isChoice), ...ticked.filter((c) => !(value as string[]).includes(c))];
-                    setValue([...ids, ...labels.filter((l) => !choiceFor(l))]);
+                    setValue([...ids, OTHER, ...labels.filter((l) => !choiceFor(l))]);
                   }}
                 />
               )}

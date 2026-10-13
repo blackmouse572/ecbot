@@ -1161,7 +1161,8 @@
       "customCollectPlaceholder": "e.g. Deadline, design file, size",
       "customCollectAdd": "Add",
       "customCollectRemove": "Remove {{label}}",
-      "customCollectLimit": "You can add up to {{count}} fields."
+      "customCollectLimit": "You can add up to {{count}} fields.",
+      "customCollectOther": "Other"
     },
     "groups": {
       "identity": "About your business",
