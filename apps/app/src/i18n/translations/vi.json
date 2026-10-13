@@ -394,15 +394,8 @@
   },
   "onboard": {
     "select": {
-      "welcome": "Chào mừng đến với Ecbot! 🎉",
-      "description": "Bắt đầu hành trình của bạn với Ecbot",
-      "join": {
-        "label": "Tham gia không gian làm việc",
-        "description": "Tôi muốn tham gia vào không gian làm việc hiện có và cùng nhau làm việc vui vẻ"
-      },
       "create": {
-        "label": "Tạo không gian làm việc",
-        "description": "Tôi muốn tạo một không gian làm việc mới và trở thành thủ lĩnh của riêng mình"
+        "label": "Tạo không gian làm việc"
       },
       "existing": {
         "title": "Không gian làm việc của bạn",
@@ -447,6 +440,21 @@
         "description": "Yêu cầu tham gia của bạn đã được gửi thành công. Chúng tôi sẽ thông báo cho bạn khi có tin vui! 📬"
       },
       "joinWorkspace": "Tham gia không gian làm việc"
+    },
+    "welcome": {
+      "title": "Chào mừng đến với Ecbot",
+      "description": "Cho chúng tôi biết về cửa hàng của bạn, rồi tạo agent đầu tiên trong vài phút.",
+      "fields": {
+        "name": "Tên cửa hàng",
+        "type": "Bạn kinh doanh gì?"
+      },
+      "placeholders": {
+        "name": "Ví dụ: Tiệm bánh Mây"
+      },
+      "other": "Khác",
+      "submit": "Tạo agent đầu tiên",
+      "invited": "Được mời vào một không gian làm việc?",
+      "joinLink": "Tham gia bằng mã"
     }
   },
   "join": {
@@ -1168,11 +1176,11 @@
       "skipped": "Đã bỏ qua",
       "yes": "Có",
       "no": "Không",
-      "draftCreated": "Agent đã được lưu nháp. Hãy thử ở bên phải trong khi mình tiếp tục nhé.",
+      "draftCreated": "Agent đã được lưu nháp. Hãy thử ở bên phải, thấy trả lời ổn là kích hoạt được ngay.",
       "saveFailed": "Chưa lưu được agent. Câu trả lời vẫn được giữ và sẽ thử lại ở câu tiếp theo.",
       "done": "Đã xong. Hãy kích hoạt agent khi bạn thấy hài lòng.",
       "finish": "Kích hoạt agent",
-      "finished": "Agent đã được kích hoạt. Bạn có thể sửa bất kỳ câu trả lời nào ở trên.",
+      "finished": "Agent đã được kích hoạt và sẽ trả lời trên các kênh đã kết nối. Bạn có thể trả lời tiếp hoặc sửa bất kỳ câu nào.",
       "tryAgent": "Trò chuyện với {{name}}",
       "yourAgent": "agent của bạn",
       "promptTab": "Prompt",
@@ -1208,7 +1216,8 @@
       "customCollectAdd": "Thêm",
       "customCollectRemove": "Xoá {{label}}",
       "customCollectLimit": "Bạn có thể thêm tối đa {{count}} mục.",
-      "customCollectOther": "Khác"
+      "customCollectOther": "Khác",
+      "activateNow": "Kích hoạt ngay"
     },
     "groups": {
       "identity": "Về doanh nghiệp",

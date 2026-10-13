@@ -115,7 +115,8 @@ vi.mock("@/components/modals", () => ({
   useRouteModal: () => ({ setCloseOnEscape }),
 }));
 
-const renderBuilder = () => render(<MemoryRouter initialEntries={["/ws/chatbot/create"]}><AgentBuilder /></MemoryRouter>);
+const renderBuilder = (path = "/ws/chatbot/create") =>
+  render(<MemoryRouter initialEntries={[path]}><AgentBuilder /></MemoryRouter>);
 
 // Answers the open question with whatever makes it valid, then clicks Next.
 async function answerCurrent() {
@@ -171,6 +172,36 @@ describe("AgentBuilder", () => {
       // for the business name next instead of asking the type again.
       expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
       expect(screen.getByText("agentBuilder.groups.identity")).toBeInTheDocument();
+    });
+  });
+
+  describe("arriving from the welcome screen", () => {
+    it("starts the chosen template with the business name filled in", async () => {
+      renderBuilder("/ws/chatbot/create?template=beauty&businessName=Lotus%20Spa");
+      expect(await screen.findByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toHaveValue("Lotus Spa");
+      expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
+    });
+
+    it("shows the hero when the template is not one the builder knows", () => {
+      renderBuilder("/ws/chatbot/create?template=nope&businessName=Lotus");
+      expect(screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" })).toBeInTheDocument();
+    });
+  });
+
+  describe("turning the agent on early", () => {
+    it("offers to turn the draft on before every question is answered", async () => {
+      renderBuilder();
+      await pickBeautyTemplate();
+      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
+      await answerToAgentName();
+
+      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.activateNow" }));
+
+      expect(activate).toHaveBeenCalledWith({ id: "bot-1", active: true });
+      await screen.findByText("agentBuilder.ui.finished");
+      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
+      // The rest of the questions stay open: answers keep saving to the live agent.
+      expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
     });
   });
 

@@ -105,14 +105,16 @@ export function useAgentBuilder({
     });
   };
 
-  const startFromTemplate = async (type: BusinessTypeId) => {
+  // `businessName` is the name typed on the welcome screen; a quick-create
+  // channel's name wins over it.
+  const startFromTemplate = async (type: BusinessTypeId, businessName?: string) => {
     const channel = await ensurePrefillChannel?.();
     dispatch({
       type: "start",
       profile: createProfile(type, language),
       suggestion: null,
       source: "template",
-      prefillBusinessName: channel?.name,
+      prefillBusinessName: channel?.name ?? businessName,
     });
   };
 

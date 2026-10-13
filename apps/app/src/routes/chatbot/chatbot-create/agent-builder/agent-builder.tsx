@@ -3,6 +3,7 @@ import { useChatbot } from "@/hooks/api";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SidebarRight, XMark } from "@medusajs/icons";
 import { Button, IconButton, Text, clx } from "@medusajs/ui";
+import { BUSINESS_TYPE_IDS, type BusinessTypeId } from "@repo/agent-blueprint";
 import { SidebarProvider, useSidebar } from "@repo/ui/layout";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,19 @@ export function AgentBuilder() {
     hydrateFrom: hydrateId ? chatbot : undefined,
     ensurePrefillChannel: prefill.ensure,
   });
+
+  // The welcome screen sends a new owner here with their business type and
+  // name: start that template right away instead of showing the hero.
+  const template = params.get("template") ?? "";
+  const businessName = params.get("businessName")?.trim() || undefined;
+  const { startFromTemplate } = builder;
+  const templateStarted = useRef(false);
+  useEffect(() => {
+    if (hydrateId || templateStarted.current) return;
+    if (!BUSINESS_TYPE_IDS.includes(template as BusinessTypeId)) return;
+    templateStarted.current = true;
+    void startFromTemplate(template as BusinessTypeId, businessName);
+  }, [hydrateId, template, businessName, startFromTemplate]);
 
   return (
     // A SidebarProvider scoped to the builder for the test panel's
@@ -90,6 +104,14 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
       <RouteFocusModal.Header>
         <div className="flex w-full items-center justify-between gap-2">
           <Text size="small" className="text-ui-fg-subtle">{t("agentBuilder.ui.title")}</Text>
+          <div className="flex items-center gap-2">
+          {/* The draft can go live as soon as it exists; the remaining
+              questions keep saving to the live agent. */}
+          {unlocked && !builder.state.finished && (
+            <Button size="small" variant="secondary" onClick={builder.finish} isLoading={builder.finishing}>
+              {t("agentBuilder.ui.activateNow")}
+            </Button>
+          )}
           {unlocked && (
             <Button
               variant="transparent"
@@ -103,6 +125,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
               <span className="truncate">{tryAgentLabel}</span>
             </Button>
           )}
+          </div>
         </div>
       </RouteFocusModal.Header>
       <RouteFocusModal.Body

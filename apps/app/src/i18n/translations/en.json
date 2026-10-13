@@ -368,15 +368,8 @@
   },
   "onboard": {
     "select": {
-      "welcome": "Setup",
-      "description": "Choose an option to get started.",
-      "join": {
-        "label": "Join Workspace",
-        "description": "Join an existing workspace."
-      },
       "create": {
-        "label": "Create Workspace",
-        "description": "Create a new workspace to get started."
+        "label": "Create Workspace"
       },
       "existing": {
         "title": "Your Workspaces",
@@ -421,6 +414,21 @@
         "description": "Your request has been sent to the workspace owner."
       },
       "joinWorkspace": "Join Workspace"
+    },
+    "welcome": {
+      "title": "Welcome to Ecbot",
+      "description": "Tell us about your business, then build your first agent in a few minutes.",
+      "fields": {
+        "name": "Business name",
+        "type": "What does your business do?"
+      },
+      "placeholders": {
+        "name": "e.g. Cloud Bakery"
+      },
+      "other": "Other",
+      "submit": "Create my first agent",
+      "invited": "Invited to a workspace?",
+      "joinLink": "Join with a code"
     }
   },
   "join": {
@@ -1124,11 +1132,11 @@
       "skipped": "Skipped",
       "yes": "Yes",
       "no": "No",
-      "draftCreated": "Your agent is saved as a draft. Try it on the right while we keep going.",
+      "draftCreated": "Your agent is saved as a draft. Try it on the right, and activate it as soon as it answers well.",
       "saveFailed": "Could not save your agent. Your answers are kept, and we will retry on the next answer.",
       "done": "All set. Activate your agent when you are happy with it.",
       "finish": "Activate agent",
-      "finished": "Your agent is active. You can change any answer above at any time.",
+      "finished": "Your agent is active and replies on its connected channels. Keep answering, or change any answer at any time.",
       "tryAgent": "Talk with {{name}}",
       "yourAgent": "your agent",
       "promptTab": "Prompt",
@@ -1164,7 +1172,8 @@
       "customCollectAdd": "Add",
       "customCollectRemove": "Remove {{label}}",
       "customCollectLimit": "You can add up to {{count}} fields.",
-      "customCollectOther": "Other"
+      "customCollectOther": "Other",
+      "activateNow": "Activate now"
     },
     "groups": {
       "identity": "About your business",
