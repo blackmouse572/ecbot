@@ -56,16 +56,18 @@ export const CustomCollectEditor: FC<Props> = ({ labels, onChange }) => {
         </ul>
       )}
       <div className="flex gap-2">
-        <Input
-          id={id}
-          size="small"
-          value={draft}
-          maxLength={MAX_LENGTH}
-          disabled={full}
-          placeholder={t("agentBuilder.ui.customCollectPlaceholder")}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={onKeyDown}
-        />
+        <div className="flex-1">
+          <Input
+            id={id}
+            size="small"
+            value={draft}
+            maxLength={MAX_LENGTH}
+            disabled={full}
+            placeholder={t("agentBuilder.ui.customCollectPlaceholder")}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={onKeyDown}
+          />
+        </div>
         <Button type="button" size="small" variant="secondary" disabled={full || !draft.trim()} onClick={add}>
           {t("agentBuilder.ui.customCollectAdd")}
         </Button>
