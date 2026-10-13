@@ -1,4 +1,8 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  focusManager,
+} from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { createElement, type PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -27,7 +31,10 @@ vi.mock("@repo/client", () => ({
   })),
 }));
 
-import { notificationSharedControllerMarkAsReadV1 } from "@repo/client";
+import {
+  notificationSharedControllerMarkAsReadV1,
+  notificationSharedControllerUnreadV1,
+} from "@repo/client";
 
 import {
   notificationQueryKey,
@@ -64,22 +71,25 @@ describe("useUnreadNotificationCount", () => {
     await waitFor(() => expect(result.current.count).toBe(3));
   });
 
-  it("polls only while the tab is focused", async () => {
+  it("refetches once when the tab regains focus, with the app's defaults", async () => {
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
+      defaultOptions: {
+        queries: { retry: 0, refetchOnWindowFocus: false },
+      },
     });
     const { result } = renderHook(() => useUnreadNotificationCount(), {
       wrapper: ({ children }: PropsWithChildren) =>
         createElement(QueryClientProvider, { client }, children),
     });
     await waitFor(() => expect(result.current.count).toBe(3));
+    vi.mocked(notificationSharedControllerUnreadV1).mockClear();
 
-    const query = client.getQueryCache().find({
-      queryKey: notificationQueryKey.list({ scope: "unread-count" }),
-    })!;
-    const options = query.observers[0].options;
-    expect(options.refetchInterval).toBe(30_000);
-    expect(options.refetchIntervalInBackground).toBeFalsy();
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+
+    await waitFor(() =>
+      expect(notificationSharedControllerUnreadV1).toHaveBeenCalledTimes(1),
+    );
   });
 });
 

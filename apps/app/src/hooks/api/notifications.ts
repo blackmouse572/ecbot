@@ -90,6 +90,7 @@ export function useUnreadNotificationCount() {
     },
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   return { count: data?.data?.count ?? 0, ...rest };
