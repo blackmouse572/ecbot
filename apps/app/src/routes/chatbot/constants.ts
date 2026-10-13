@@ -236,4 +236,5 @@ export const CHATBOT_FORM_DEFAULTS: Partial<ChatbotFormData> = {
   guardrailCustomInstruction: "",
   guardrailEscalateOnBlock: true,
   followupRules: "",
+  timezone: null,
 };

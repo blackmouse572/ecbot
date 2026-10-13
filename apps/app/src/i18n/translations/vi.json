@@ -906,7 +906,10 @@
       "guardrailEscalateOnBlockHint": "Chuyển đến người vận hành khi guardrail chặn tin nhắn. Tắt để chỉ chặn âm thầm.",
       "followupRules": "Quy tắc nhắc hẹn",
       "followupRulesHint": "Hướng dẫn tự do cho việc khi nào bot nên chủ động nhắc hẹn lại khách hàng",
-      "followupRulesPlaceholder": "Ví dụ: Nhắc hẹn lại sau 24 giờ nếu khách hàng chưa phản hồi"
+      "followupRulesPlaceholder": "Ví dụ: Nhắc hẹn lại sau 24 giờ nếu khách hàng chưa phản hồi",
+      "timezone": "Múi giờ",
+      "timezoneHint": "Agent dùng múi giờ này để biết ngày giờ hiện tại, ví dụ để biết lúc nào cửa hàng đã đóng cửa.",
+      "timezoneDefault": "Mặc định (múi giờ hệ thống)"
     },
     "chat": {
       "heading": "Chat Thử",

@@ -2520,6 +2520,10 @@ export type ChatbotAdminResponseDto = {
      */
     followupRules?: string;
     /**
+     * IANA timezone the agent uses for the current date and time
+     */
+    timezone?: string;
+    /**
      * Chatbot associate accounts
      */
     accounts: Array<AccountGetDetailResponseDto>;
@@ -2640,6 +2644,10 @@ export type ChatbotUpdateRequestDto = {
      * Free-text guidance for when the bot should proactively follow up
      */
     followupRules?: string;
+    /**
+     * IANA timezone the agent uses for the current date and time
+     */
+    timezone?: string;
 };
 
 export type ChatbotGetDetailShortResponseDto = {
@@ -3600,6 +3608,10 @@ export type ChatbotListResponseDto = {
      * Free-text guidance for when the bot should proactively follow up
      */
     followupRules?: string;
+    /**
+     * IANA timezone the agent uses for the current date and time
+     */
+    timezone?: string;
 };
 
 export type ChatbotModelResponseDto = {
@@ -3760,6 +3772,10 @@ export type ChatbotGetDetailResponseDto = {
      */
     followupRules?: string;
     /**
+     * IANA timezone the agent uses for the current date and time
+     */
+    timezone?: string;
+    /**
      * Workspace the chatbot belongs to
      */
     workspace: WorkspaceGetShortResponseDto;
@@ -3914,6 +3930,10 @@ export type ChatbotCreateResponseDto = {
      * Free-text guidance for when the bot should proactively follow up
      */
     followupRules?: string;
+    /**
+     * IANA timezone the agent uses for the current date and time
+     */
+    timezone?: string;
 };
 
 export type ChatbotCreateRequestDto = {
@@ -4027,6 +4047,10 @@ export type ChatbotCreateRequestDto = {
      * Free-text guidance for when the bot should proactively follow up
      */
     followupRules?: string;
+    /**
+     * IANA timezone the agent uses for the current date and time
+     */
+    timezone?: string;
 };
 
 export type BatchIdsWithActiveRequestDto = {

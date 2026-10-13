@@ -9,7 +9,7 @@ import {
   IconCircleChevronsRightFilled,
   IconShieldCheckFilled,
 } from "@tabler/icons-react";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -21,6 +21,12 @@ import {
 } from "../../schemas";
 import { LinkedAccountsField } from "../linked-accounts-field";
 import { ChatbotTypeField } from "./chatbot-type-field";
+
+// Loaded on demand: the zone list and its virtualizer stay out of the form's
+// initial bundle.
+const TimezoneSelect = lazy(() =>
+  import("../timezone-select").then((m) => ({ default: m.TimezoneSelect })),
+);
 
 type ChatbotFormProps = {
   defaultValues?: Partial<ChatbotFormData>;
@@ -238,6 +244,34 @@ export function ChatbotForm({
                         </Select.Content>
                       </Select>
                     </Form.Control>
+                    <Form.ErrorMessage />
+                  </Form.Item>
+                )}
+              />
+
+              <Form.Field
+                name="timezone"
+                control={form.control}
+                render={({ field: { value, onChange, ref, ...field } }) => (
+                  <Form.Item>
+                    <Form.Label optional>
+                      {t("chatbot.create.timezone")}
+                    </Form.Label>
+                    <Form.Hint>{t("chatbot.create.timezoneHint")}</Form.Hint>
+                    <Suspense
+                      fallback={
+                        <div className="bg-ui-bg-field h-8 rounded-md" />
+                      }
+                    >
+                      <Form.Control>
+                        <TimezoneSelect
+                          {...field}
+                          ref={ref}
+                          value={value}
+                          onChange={onChange}
+                        />
+                      </Form.Control>
+                    </Suspense>
                     <Form.ErrorMessage />
                   </Form.Item>
                 )}
