@@ -1150,7 +1150,7 @@
       "saveFailed": "Could not save your agent. Your answers are kept, and we will retry on the next answer.",
       "done": "All set. Activate your agent when you are happy with it.",
       "finish": "Activate agent",
-      "finished": "Your agent is active and replies on its connected channels. Keep answering, or change any answer at any time.",
+      "finished": "Your agent is active and replies to customers on every channel linked to it. Keep answering, or change any answer at any time.",
       "tryAgent": "Talk with {{name}}",
       "yourAgent": "your agent",
       "promptTab": "Prompt",

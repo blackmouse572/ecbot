@@ -142,11 +142,11 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
           >
             {t("onboard.welcome.submit")}
           </Button>
-          <Text size="small" className="text-ui-fg-subtle">
+          <Text size="small" className="text-ui-fg-subtle text-center">
             {t("onboard.welcome.invited")}{" "}
             <Link
               to={`/${ROUTES.Onboard}/${ROUTES.OnboardJoin}`}
-              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover whitespace-nowrap"
             >
               {t("onboard.welcome.joinLink")}
             </Link>

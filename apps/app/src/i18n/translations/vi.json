@@ -1194,7 +1194,7 @@
       "saveFailed": "Chưa lưu được agent. Câu trả lời vẫn được giữ và sẽ thử lại ở câu tiếp theo.",
       "done": "Đã xong. Hãy kích hoạt agent khi bạn thấy hài lòng.",
       "finish": "Kích hoạt agent",
-      "finished": "Agent đã được kích hoạt và sẽ trả lời trên các kênh đã kết nối. Bạn có thể trả lời tiếp hoặc sửa bất kỳ câu nào.",
+      "finished": "Agent đã được kích hoạt và sẽ trả lời khách trên mọi kênh được gắn với agent. Bạn có thể trả lời tiếp hoặc sửa bất kỳ câu nào.",
       "tryAgent": "Trò chuyện với {{name}}",
       "yourAgent": "agent của bạn",
       "promptTab": "Prompt",
