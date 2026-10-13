@@ -77,6 +77,7 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
         chatbot: {
             id: 'chatbot-1',
+            status: 'active',
             workspace: { id: 'workspace-1' },
             handoffKeywords: [],
             handoffFallbackThreshold: 3,

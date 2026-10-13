@@ -87,6 +87,7 @@ describe('MessageProcessorService — Customer + ContactPoint wiring (#172)', ()
         type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
         chatbot: {
             id: 'chatbot-1',
+            status: 'active',
             workspace: { id: 'workspace-1' },
             handoffKeywords: [],
             handoffFallbackThreshold: 3,

@@ -68,6 +68,7 @@ describe('MessageProcessorService — typing indicator starts at intake', () => 
             type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
             chatbot: {
                 id: 'chatbot-1',
+                status: 'active',
                 workspace: { id: 'workspace-1' },
                 handoffKeywords: [],
                 autoRead: false,
