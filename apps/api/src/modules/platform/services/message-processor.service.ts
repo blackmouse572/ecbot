@@ -1,7 +1,7 @@
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { AccountService } from '@app/modules/account/services/account.service';
-import { ENUM_CHATBOT_STATUS } from '@app/modules/chatbot/enums/chatbot.enum';
+import { TURNED_OFF_CHATBOT_STATUSES } from '@app/modules/platform/constants/turned-off-chatbot.constant';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
 import {
@@ -236,7 +236,7 @@ export class MessageProcessorService implements OnModuleInit {
         // A turned-off agent (a builder draft not activated yet, or one the
         // owner deactivated) keeps its inbox, like a conversation with the bot
         // disabled, but does not answer.
-        if (chatbot.status !== ENUM_CHATBOT_STATUS.ACTIVE) {
+        if (TURNED_OFF_CHATBOT_STATUSES.includes(chatbot.status)) {
             this.logger.debug(
                 `Chatbot ${chatbot.id} is ${chatbot.status}, skipping bot reply`
             );

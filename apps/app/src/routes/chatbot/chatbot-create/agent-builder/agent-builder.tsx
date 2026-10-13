@@ -11,10 +11,7 @@ import { useSearchParams } from "react-router-dom";
 import { agentDisplayName } from "./agent-display-name";
 import { BuilderThread } from "./components/builder-thread";
 import { TestPanel } from "./components/test-panel";
-import {
-  useAgentBuilder,
-  type AgentBuilderController,
-} from "./use-agent-builder";
+import { useAgentBuilder, type AgentBuilderController } from "./use-agent-builder";
 import { usePrefillChannel } from "./use-prefill-channel";
 
 // Matches Tailwind's `md:` breakpoint, which decides whether the test panel
@@ -70,10 +67,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
   // opener on close, and Escape closes the sheet, not the route modal.
   useEffect(() => {
     if (!sheetOpen) return;
-    const opener =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     sheetCloseRef.current?.focus();
     setCloseOnEscape(false);
     return () => {
@@ -109,35 +103,28 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
     <>
       <RouteFocusModal.Header>
         <div className="flex w-full items-center justify-between gap-2">
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("agentBuilder.ui.title")}
-          </Text>
+          <Text size="small" className="text-ui-fg-subtle">{t("agentBuilder.ui.title")}</Text>
           <div className="flex items-center gap-2">
-            {/* The draft can go live as soon as it exists; the remaining
+          {/* The draft can go live as soon as it exists; the remaining
               questions keep saving to the live agent. */}
-            {unlocked && !builder.state.finished && (
-              <Button
-                size="small"
-                variant="secondary"
-                onClick={builder.finish}
-                isLoading={builder.finishing}
-              >
-                {t("agentBuilder.ui.activateNow")}
-              </Button>
-            )}
-            {unlocked && (
-              <Button
-                variant="transparent"
-                size="small"
-                className="max-w-[240px]"
-                title={tryAgentLabel}
-                aria-expanded={panelOpen}
-                onClick={() => toggle(isDesktopViewport ? "desktop" : "mobile")}
-              >
-                <SidebarRight className="size-4 shrink-0" />
-                <span className="truncate">{tryAgentLabel}</span>
-              </Button>
-            )}
+          {unlocked && !builder.state.finished && (
+            <Button size="small" variant="secondary" onClick={builder.finish} isLoading={builder.finishing}>
+              {t("agentBuilder.ui.activateNow")}
+            </Button>
+          )}
+          {unlocked && (
+            <Button
+              variant="transparent"
+              size="small"
+              className="max-w-[240px]"
+              title={tryAgentLabel}
+              aria-expanded={panelOpen}
+              onClick={() => toggle(isDesktopViewport ? "desktop" : "mobile")}
+            >
+              <SidebarRight className="size-4 shrink-0" />
+              <span className="truncate">{tryAgentLabel}</span>
+            </Button>
+          )}
           </div>
         </div>
       </RouteFocusModal.Header>
@@ -164,9 +151,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
               // Mobile: full-screen sheet, transform-driven.
               "fixed inset-0 z-40 flex flex-col transition-transform duration-300 ease-drawer",
               "motion-reduce:translate-y-0 motion-reduce:transition-opacity motion-reduce:duration-200 motion-reduce:ease-out",
-              mobile
-                ? "translate-y-0 motion-reduce:opacity-100"
-                : "translate-y-full motion-reduce:opacity-0",
+              mobile ? "translate-y-0 motion-reduce:opacity-100" : "translate-y-full motion-reduce:opacity-0",
               // Desktop: static grid column, width driven by the parent's
               // --panel-w, no transform/transition of its own.
               // The reduced-motion opacity crossfade is mobile-only.
@@ -184,11 +169,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
             }}
           >
             <div className="flex justify-end p-4 pb-0 md:hidden">
-              <IconButton
-                ref={sheetCloseRef}
-                variant="transparent"
-                onClick={() => toggle("mobile")}
-              >
+              <IconButton ref={sheetCloseRef} variant="transparent" onClick={() => toggle("mobile")}>
                 <XMark />
                 <span className="sr-only">{t("actions.close")}</span>
               </IconButton>
