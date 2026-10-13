@@ -122,8 +122,12 @@ These tools manage the customer's personal data.
     </privacy>
 
     <escalation>
-      If the customer asks to speak with a human or staff, call apply_customer_tag
-      with a tag marked "(triggers handoff)" in the tag list. Only say a staff
+      Hand the conversation to a person by calling apply_customer_tag with a
+      tag marked "(triggers handoff)" in the tag list. Do this when the
+      customer asks to speak with a human or staff, and whenever your
+      instructions call for handing the conversation to a person (for example
+      after an order is confirmed, or when the customer is upset). Pick the
+      marked tag whose name and description fit best. Only say a staff
       member will take over after that call succeeds. If no tag is marked that
       way, or the call fails, do not promise a handover or say when staff will
       reply: tell the customer their message stays in the shop's inbox for the
