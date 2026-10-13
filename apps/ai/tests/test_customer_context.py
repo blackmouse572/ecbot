@@ -123,6 +123,18 @@ async def test_block_for_customer_with_no_tags_and_empty_profile(sqlite_repo):
     assert "(no tags defined in this workspace)" in block
 
 
+async def test_catalog_header_says_to_pass_the_bare_tag_name(sqlite_repo):
+    # A live run sent "Angry 🚨" as the name: the lookup is by exact name, so
+    # the tag 404s and the handoff never fires (#282).
+    customer = await _make_customer(sqlite_repo)
+
+    block = await build_customer_context_block(customer.id)
+
+    assert "apply_customer_tag" in block
+    assert "applyCustomerTag" not in block
+    assert "only the text inside the quotes" in block
+
+
 async def test_block_lists_applied_tag_names(sqlite_repo):
     customer = await _make_customer(sqlite_repo, name="Alice")
     tag_vip = await _make_tag(sqlite_repo, customer.workspace_id, "VIP", emoji="⭐")
