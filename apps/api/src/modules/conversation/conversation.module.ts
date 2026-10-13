@@ -13,6 +13,7 @@ import { MessageMediaService } from './services/message-media.service';
 import { AwsModule } from '@app/modules/aws/aws.module';
 import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
 import { HandoffEmailService } from './services/handoff-email.service';
+import { ConversationActivityPruneScheduler } from './schedulers/conversation-activity-prune.scheduler';
 
 @Module({
     imports: [
@@ -32,6 +33,7 @@ import { HandoffEmailService } from './services/handoff-email.service';
         ConversationService,
         ConversationMessagingService,
         MessageMediaService,
+        ConversationActivityPruneScheduler,
     ],
     exports: [
         ConversationService,
