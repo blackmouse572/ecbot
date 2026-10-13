@@ -15,6 +15,8 @@ import {
 } from "@medusajs/ui";
 import { NoRecords } from "@repo/ui/common-components";
 import { IconSparkles } from "@tabler/icons-react";
+import { ROUTES } from "@/routes/constants";
+import { withOriginAgent } from "@/utils/origin-agent";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatbotSkillAddDrawer } from "./chatbot-skill-add-drawer";
@@ -93,8 +95,11 @@ export function ChatbotSkillsTab({ chatbotId, workspace }: Props) {
           title={t("skills.chatbotTab.emptyTitle")}
           message={t("skills.chatbotTab.empty")}
           action={{
-            onClick: () => setDrawerOpen(true),
-            label: t("skills.chatbotTab.addTitle"),
+            to: withOriginAgent(
+              `/${workspace}/${ROUTES.Skills}/create`,
+              chatbotId,
+            ),
+            label: t("actions.createNew"),
           }}
           icon={<IconSparkles />}
         />

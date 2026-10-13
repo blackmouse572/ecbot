@@ -169,6 +169,33 @@ describe("KnowledgeItemCreateForm", () => {
     expect(api.calls).toEqual(["link", "process"]);
   });
 
+  // #283: opened from an agent's page, the form arrives with that agent ticked.
+  it("pre-ticks the agent it was opened from, and the tick stays editable", async () => {
+    const { container } = render(
+      <NuqsTestingAdapter searchParams="?t=TEXT">
+        <KnowledgeItemCreateForm
+          workspaceSlug="ws"
+          knowledgeBaseId="kb-1"
+          defaultChatbotIds={["bot-1"]}
+        />
+      </NuqsTestingAdapter>,
+    );
+    fillTextItem(container);
+
+    expect(screen.getByRole("checkbox", { name: "Sales agent" })).toBeChecked();
+    expect(
+      screen.getByRole("checkbox", { name: "Support agent" }),
+    ).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Support agent" }));
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(api.processed).toHaveLength(1));
+    expect(api.linked).toEqual([
+      { knowledgeItemId: "item-1", chatbotIds: ["bot-1", "bot-2"] },
+    ]);
+  });
+
   it("does not call the link endpoint when no agent is chosen", async () => {
     const { container } = renderTextForm();
     fillTextItem(container);

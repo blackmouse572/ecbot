@@ -86,7 +86,9 @@
       "title": "Create skill",
       "subtitle": "Write instructions the agent will follow when this skill applies.",
       "success": "Skill created",
-      "error": "Failed to create skill"
+      "error": "Failed to create skill",
+      "attachedSuccess": "Skill created and added to the agent",
+      "attachError": "Skill created, but it could not be added to the agent. Add it from the agent's Skills section."
     },
     "edit": {
       "title": "Edit skill",
@@ -2042,7 +2044,8 @@
     "previous": "Previous",
     "next": "Next",
     "skip": "Skip",
-    "preview": "Preview"
+    "preview": "Preview",
+    "createNew": "Create new"
   },
   "general": {
     "notSet": "Not set",
@@ -2768,7 +2771,9 @@
       "subtitle": "Describe an HTTP endpoint the agent can call as a tool.",
       "submit": "Create tool",
       "success": "Tool created.",
-      "error": "Failed to create tool."
+      "error": "Failed to create tool.",
+      "attachedSuccess": "Tool created and added to the agent.",
+      "attachError": "Tool created, but it could not be added to the agent. Add it from the agent's Tools section."
     },
     "edit": {
       "title": "Edit tool",

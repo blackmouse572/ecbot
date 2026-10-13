@@ -1,6 +1,7 @@
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
-import { useCreateSkill } from "@/hooks/api/skills";
+import { useAttachSkillToChatbot, useCreateSkill } from "@/hooks/api/skills";
+import { useOriginAgent } from "@/hooks/use-origin-agent";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Text, toast } from "@medusajs/ui";
@@ -15,6 +16,11 @@ const SkillCreateForm = () => {
   const { workspaceSlug } = useWorkspaceParams();
   const { handleSuccess } = useRouteModal();
   const { createSkill, isPending } = useCreateSkill(workspaceSlug);
+  const { agentId } = useOriginAgent();
+  const { attachSkillToChatbot } = useAttachSkillToChatbot(
+    workspaceSlug,
+    agentId ?? "",
+  );
 
   const form = useForm<SkillFormData>({
     resolver: zodResolver(skillFormSchema),
@@ -26,17 +32,34 @@ const SkillCreateForm = () => {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
+    let skillId: string | undefined;
     try {
-      await createSkill({
+      const res = await createSkill({
         name: data.name,
         description: data.description || undefined,
         instructions: data.instructions,
       });
-      toast.success(t("skills.create.success"));
-      handleSuccess();
+      skillId = res.data?.data?.id;
     } catch (error) {
       toast.error((error as A)?.body?.message ?? t("skills.create.error"));
+      return;
     }
+
+    if (!agentId || !skillId) {
+      toast.success(t("skills.create.success"));
+      handleSuccess();
+      return;
+    }
+
+    // Opened from an agent: attach the new skill (enabled). The modal's
+    // `prev` is that agent's page, so success lands back there.
+    try {
+      await attachSkillToChatbot({ skillId });
+      toast.success(t("skills.create.attachedSuccess"));
+    } catch {
+      toast.error(t("skills.create.attachError"));
+    }
+    handleSuccess();
   });
 
   return (
@@ -73,8 +96,9 @@ const SkillCreateForm = () => {
 
 export const SkillCreate = () => {
   const { t } = useTranslation();
+  const { agentPath } = useOriginAgent();
   return (
-    <RouteFocusModal>
+    <RouteFocusModal prev={agentPath}>
       <Helmet>
         <title>{t("skills.create.title")} - Ecbot</title>
       </Helmet>

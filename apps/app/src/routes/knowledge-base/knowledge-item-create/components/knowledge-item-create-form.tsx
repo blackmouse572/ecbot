@@ -30,10 +30,13 @@ import { KnowledgeItemEditTag } from "../../knowledge-item-edit/components/knowl
 interface KnowledgeItemCreateFormProps {
   workspaceSlug: string;
   knowledgeBaseId: string;
+  /** Agents ticked when the form opens, e.g. the agent it was opened from. */
+  defaultChatbotIds?: string[];
 }
 
 export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
   knowledgeBaseId,
+  defaultChatbotIds = [],
 }) => {
   const { t } = useTranslation();
   const { handleSuccess } = useRouteModal();
@@ -67,7 +70,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
       title: "",
       content: "",
       tags: [],
-      chatbotIds: [],
+      chatbotIds: defaultChatbotIds,
     },
   });
   const { remove, append } = useFieldArray({

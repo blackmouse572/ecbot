@@ -86,7 +86,9 @@
       "title": "Tạo skill",
       "subtitle": "Viết hướng dẫn agent sẽ làm theo khi skill này phù hợp.",
       "success": "Đã tạo skill",
-      "error": "Tạo skill thất bại"
+      "error": "Tạo skill thất bại",
+      "attachedSuccess": "Đã tạo skill và thêm vào agent",
+      "attachError": "Đã tạo skill nhưng chưa thêm được vào agent. Hãy thêm từ mục Skills của agent."
     },
     "edit": {
       "title": "Sửa skill",
@@ -2154,7 +2156,8 @@
     "previous": "Trước",
     "next": "Sau",
     "skip": "Bỏ qua",
-    "preview": "Xem trước"
+    "preview": "Xem trước",
+    "createNew": "Tạo mới"
   },
   "fields": {
     "name": "Tên",
@@ -2816,7 +2819,9 @@
       "subtitle": "Mô tả một endpoint HTTP để agent có thể gọi như một công cụ.",
       "submit": "Tạo công cụ",
       "success": "Đã tạo công cụ.",
-      "error": "Không tạo được công cụ."
+      "error": "Không tạo được công cụ.",
+      "attachedSuccess": "Đã tạo công cụ và thêm vào agent.",
+      "attachError": "Đã tạo công cụ nhưng chưa thêm được vào agent. Hãy thêm từ mục Công cụ của agent."
     },
     "edit": {
       "title": "Chỉnh sửa công cụ",
