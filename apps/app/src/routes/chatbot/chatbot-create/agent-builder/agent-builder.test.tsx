@@ -58,6 +58,7 @@ const provisionWebsiteWidget = vi.fn();
 const oAuthLoginClick = vi.fn();
 const setCloseOnEscape = vi.fn();
 const prompt = vi.fn();
+const prefillAccount = vi.fn();
 
 // `to-chatbot-payload.ts` pulls in `../../constants`, which imports `@/i18n`
 // and initializes it with the real translation resources. Mocking
@@ -75,6 +76,7 @@ vi.mock("@/hooks/api", () => ({
   useUpdateChatbot: () => ({ mutateAsync: update }),
   useToggleChatbotActivate: () => ({ mutateAsync: activate, isPending: false }),
   useChatbot: (...args: unknown[]) => chatbot(...args),
+  useAccount: (...args: unknown[]) => prefillAccount(...args),
   // The channels question mounts ChannelConnect once it's reached; these
   // stubs keep the rest of this suite (which isn't exercising channel
   // connect behavior) from hitting the real account hooks and their
@@ -137,6 +139,7 @@ describe("AgentBuilder", () => {
     update.mockReset().mockResolvedValue({});
     suggest.mockReset();
     chatbot.mockReset().mockReturnValue({ chatbot: undefined });
+    prefillAccount.mockReset().mockReturnValue({ account: undefined, isError: false });
     activate.mockReset().mockResolvedValue({});
     toastError.mockReset();
     testPanelMounts.mockReset();
@@ -567,6 +570,93 @@ describe("AgentBuilder", () => {
     await answerToAgentName();
     await waitFor(() => expect(create).toHaveBeenCalledOnce());
     expect(create.mock.calls[0][0]).toMatchObject({ accounts: [] });
+  });
+
+  describe("arriving from a channel page", () => {
+    const renderFromChannel = () =>
+      render(
+        <MemoryRouter initialEntries={["/ws/chatbot/create?accountId=acc-1"]}>
+          <AgentBuilder />
+        </MemoryRouter>,
+      );
+
+    beforeEach(() => {
+      prefillAccount.mockReturnValue({
+        account: { id: "acc-1", type: "FACEBOOK_PAGE", name: "Axios English Center" },
+        isError: false,
+      });
+    });
+
+    it("prefills the business name and connects the channel to the draft", async () => {
+      linkChatbotAccount.mockResolvedValue({ data: { data: { linked: ["acc-1"], skipped: [] } } });
+      renderFromChannel();
+
+      await pickBeautyTemplate();
+      expect(
+        screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" }),
+      ).toHaveValue("Axios English Center");
+
+      await answerCurrent(); // businessName (keeps the prefilled value)
+      await answerCurrent(); // agentName, creates the draft
+      await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-1"] }));
+      await screen.findByText("agentBuilder.ui.connected");
+      expect(screen.getByRole("button", { name: "agentBuilder.ui.unlinkChannel" })).toBeInTheDocument();
+    });
+
+    it("tells the owner when the channel already belongs to another agent", async () => {
+      linkChatbotAccount.mockResolvedValue({
+        data: { data: { linked: [], skipped: [{ id: "acc-1", name: "Axios English Center" }] } },
+      });
+      renderFromChannel();
+      await pickBeautyTemplate();
+      await answerCurrent();
+      await answerCurrent();
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith("agentBuilder.ui.channelInUse"));
+      expect(screen.queryByText("agentBuilder.ui.connected")).not.toBeInTheDocument();
+    });
+
+    it("keeps going when the connect request fails", async () => {
+      linkChatbotAccount.mockRejectedValue(new Error("down"));
+      renderFromChannel();
+      await pickBeautyTemplate();
+      await answerCurrent();
+      await answerCurrent();
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith("agentBuilder.ui.connectFailed"));
+    });
+
+    it("starts without prefill when the channel cannot be loaded", async () => {
+      prefillAccount.mockReturnValue({ account: undefined, isError: true });
+      renderFromChannel();
+
+      await waitFor(() =>
+        expect(toastError).toHaveBeenCalledWith("agentBuilder.ui.channelLoadFailed"),
+      );
+      await pickBeautyTemplate();
+      expect(
+        screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" }),
+      ).toHaveValue("");
+      await answerCurrent();
+      await answerCurrent();
+      expect(linkChatbotAccount).not.toHaveBeenCalled();
+    });
+
+    it("ignores a channel type the builder never connects", async () => {
+      prefillAccount.mockReturnValue({
+        account: { id: "acc-1", type: "FACEBOOK_ACCOUNT", name: "Owner Account" },
+        isError: false,
+      });
+      renderFromChannel();
+      await pickBeautyTemplate();
+      expect(
+        screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" }),
+      ).toHaveValue("");
+      await answerCurrent();
+      await answerCurrent();
+      await waitFor(() => expect(create).toHaveBeenCalledOnce());
+      expect(linkChatbotAccount).not.toHaveBeenCalled();
+    });
   });
 
   describe("the test panel", () => {
