@@ -5,6 +5,8 @@ import {
     CLOUD_TASKS_CLIENT,
 } from '../../src/worker/cloud-tasks-queue.client';
 
+jest.mock('@google-cloud/tasks', () => ({ CloudTasksClient: jest.fn() }));
+
 describe('CloudTasksQueueClient.enqueue', () => {
     let client: CloudTasksQueueClient;
     const createTask = jest.fn();
@@ -273,5 +275,77 @@ describe('CloudTasksQueueClient.isConfigured', () => {
 
     it('is false with neither', () => {
         expect(build({}).isConfigured()).toBe(false);
+    });
+});
+
+describe('CloudTasksQueueClient with the real client', () => {
+    const { CloudTasksClient } = jest.requireMock('@google-cloud/tasks');
+    const credentialsError = new Error(
+        'Could not load the default credentials.'
+    );
+
+    // Like the generated client: initialize() builds the gRPC stub (and
+    // loads credentials), and every method also runs
+    // `this.initialize().catch(err => { throw err; })`, which leaves an
+    // unhandled rejection behind, and so exits Node, when the stub failed.
+    function fakeClient(initialize: () => Promise<unknown>) {
+        const stub = initialize();
+        stub.catch(() => undefined);
+        const client = {
+            initialize: jest.fn(() => stub),
+            queuePath: jest.fn(() => 'queue-path'),
+            taskPath: jest.fn(() => 'task-path'),
+            createTask: jest.fn(() => {
+                client.initialize().catch((err: unknown) => {
+                    throw err;
+                });
+                return stub.then(() => [{}]);
+            }),
+        };
+        return client;
+    }
+
+    const config = {
+        get: (key: string) =>
+            ({
+                'cloudTasks.projectId': 'eccho-dev',
+                'cloudTasks.location': 'asia-southeast1',
+            })[key],
+    } as unknown as ConfigService;
+
+    beforeEach(() => {
+        CloudTasksClient.mockReset();
+    });
+
+    // Calling a method on a client whose stub failed is what crashes the
+    // process (Jest's worker too), so the failed client is never used.
+    it('rejects an enqueue when the client cannot start, without calling it', async () => {
+        const failing = fakeClient(() => Promise.reject(credentialsError));
+        CloudTasksClient.mockImplementation(() => failing);
+
+        await expect(
+            new CloudTasksQueueClient(config).enqueue('email', 'WELCOME', {})
+        ).rejects.toBe(credentialsError);
+
+        expect(failing.createTask).not.toHaveBeenCalled();
+    });
+
+    it('builds a new client on the next enqueue after a failed start', async () => {
+        const failing = fakeClient(() => Promise.reject(credentialsError));
+        const working = fakeClient(() => Promise.resolve({}));
+        CloudTasksClient.mockImplementationOnce(
+            () => failing
+        ).mockImplementationOnce(() => working);
+        const queue = new CloudTasksQueueClient(config);
+
+        await expect(queue.enqueue('email', 'WELCOME', {})).rejects.toBe(
+            credentialsError
+        );
+        await expect(
+            queue.enqueue('email', 'WELCOME', {})
+        ).resolves.toBeUndefined();
+
+        expect(failing.createTask).not.toHaveBeenCalled();
+        expect(working.createTask).toHaveBeenCalledTimes(1);
     });
 });

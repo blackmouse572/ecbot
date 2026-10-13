@@ -13,7 +13,6 @@ pytestmark = pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_chatbot_links_changes_visibility(pg_store_factory):
     store = pg_store_factory()
-    await store.ensure_schema()
     await _seed_document(store, knowledge_item_id="item-A", chatbot_ids=["c1"])
 
     updated = await store.update_chatbot_links("item-A", ["c1", "c2"])

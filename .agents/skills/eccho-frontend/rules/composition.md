@@ -53,11 +53,10 @@ This applies to all group-based components:
 | `ContextMenuItem`                                          | `ContextMenuGroup`       |
 | `CommandItem`                                              | `CommandGroup`           |
 | `MessageScrollerItem`                                      | `MessageScrollerContent` |
-| `Message` (consecutive, same sender)                       | `MessageGroup`           |
 | `Bubble` (stacked)                                         | `BubbleGroup`            |
 | `Attachment` (in a row)                                    | `AttachmentGroup`        |
 
-Chat components nest in a fixed order (`MessageScrollerProvider` → `MessageScroller` → `MessageScrollerViewport` → `MessageScrollerContent` → `MessageScrollerItem`). See [chat.md](./chat.md).
+Chat components nest in a fixed order: `MessageScroller` → `MessageScrollerViewport` → `MessageScrollerContent` → `MessageScrollerItem`, with `MessageScrollerButton` as a sibling of the viewport. They live in `packages/ui/src/components/common/ai/`; see `apps/app/src/routes/conversations/conversation-detail/message-list.tsx` for a full example.
 
 ---
 

@@ -22,7 +22,7 @@ The UI package contains shared, reusable UI components used across all frontend 
 
 ```typescript
 import { FC, ReactNode } from 'react';
-import { cn } from '../utils/cn';
+import { clx } from '@medusajs/ui';
 
 interface ButtonProps {
     children: ReactNode;
@@ -43,7 +43,7 @@ export const Button: FC<ButtonProps> = ({
 }) => {
     return (
         <button
-            className={cn(
+            className={clx(
                 'rounded-md font-medium transition-colors',
                 {
                     'bg-blue-600 text-white hover:bg-blue-700': variant === 'primary',
@@ -116,14 +116,14 @@ export const Button: FC<ButtonProps> = ({
 
 ## Styling with Tailwind
 
-Use Tailwind CSS utility classes with the `cn` utility for conditional classes:
+Use Tailwind CSS utility classes with `clx` from `@medusajs/ui` for conditional classes:
 
 ```typescript
-import { cn } from '../utils/cn';
+import { clx } from '@medusajs/ui';
 
 const Component = ({ isActive, className }) => {
     return (
-        <div className={cn(
+        <div className={clx(
             'base-classes',
             isActive && 'active-classes',
             className
@@ -174,25 +174,25 @@ Design components to be composable:
 
 ```typescript
 export const Card = ({ children, className }) => (
-    <div className={cn('rounded-lg border bg-white shadow', className)}>
+    <div className={clx('rounded-lg border bg-white shadow', className)}>
         {children}
     </div>
 );
 
 Card.Header = ({ children, className }) => (
-    <div className={cn('border-b px-6 py-4', className)}>
+    <div className={clx('border-b px-6 py-4', className)}>
         {children}
     </div>
 );
 
 Card.Body = ({ children, className }) => (
-    <div className={cn('px-6 py-4', className)}>
+    <div className={clx('px-6 py-4', className)}>
         {children}
     </div>
 );
 
 Card.Footer = ({ children, className }) => (
-    <div className={cn('border-t px-6 py-4', className)}>
+    <div className={clx('border-t px-6 py-4', className)}>
         {children}
     </div>
 );

@@ -8,19 +8,17 @@ description: >-
 
 Great interfaces rarely come from a single thing. It's usually a collection of small details that compound into a great experience. Apply these principles when building or reviewing UI code. Before suggesting or writing a fix, identify the project's existing styling system and express the change in that system: Tailwind in a Tailwind project, plain CSS in a CSS project, or the established CSS-in-JS approach. Never introduce a second styling system just to apply a polish fix.
 
-**ecbot:** this is the general UI-polish skill (surfaces, typography, icons, motion, performance). For ecbot's design-system pins — style with Tailwind 4 + `ui-` semantic tokens (`bg-ui-bg-*`, `text-ui-fg-*`, `border-ui-border-*`), `cn` from `@repo/ui/utils`, `.dark` variant — and for **exact motion values** (easing tokens, durations, spring configs, `motion/react`), read [`../emil-design-eng/eccho.md`](../emil-design-eng/eccho.md). The animation principles below (4–7, 12–15, 19) are the quick checklist; `emil-design-eng` is the source of truth when a precise curve/duration/spring is needed. For a deeper motion audit, plan, or diff review, hand off to `find-animation-opportunities` / `improve-animations` / `review-animations`.
-
 When reviewing, slow the interface down: replay motion at 10% speed in the browser's Animations panel and walk every state: hover, focus, active, loading, empty. What feels off at 10% speed is what's subtly wrong at full speed.
 
 ## Quick Reference
 
-| Category                      | When to Use                                                                                         |
-| ----------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Typography](typography.md)   | Text wrapping, font smoothing, tabular numbers                                                      |
-| [Surfaces](surfaces.md)       | Border radius, optical alignment, shadows, image outlines, hit areas                                |
-| [Animations](animations.md)   | Interruptible animations, enter/exit transitions, icon animations, scale on press, motion restraint |
-| [Icons](icons.md)             | Icon stroke weight, states via `currentColor`, outline vs fill, sizing, RTL flipping                |
-| [Performance](performance.md) | Transition specificity, `will-change` usage                                                         |
+| Category | When to Use |
+| --- | --- |
+| [Typography](typography.md) | Text wrapping, font smoothing, tabular numbers |
+| [Surfaces](surfaces.md) | Border radius, optical alignment, shadows, image outlines, hit areas |
+| [Animations](animations.md) | Interruptible animations, enter/exit transitions, icon animations, scale on press, motion restraint |
+| [Icons](icons.md) | Icon stroke weight, states via `currentColor`, outline vs fill, sizing, RTL flipping |
+| [Performance](performance.md) | Transition specificity, `will-change` usage |
 
 ## Core Principles
 
@@ -102,38 +100,38 @@ No custom animation on high-frequency interactions: the attention cost repeats o
 
 ## Common Mistakes
 
-| Mistake                                        | Fix                                                                                               |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Same border radius on parent and child         | Calculate `outerRadius = innerRadius + padding`                                                   |
-| Icons look off-center                          | Adjust optically with padding or fix SVG directly                                                 |
-| Border used only to fake elevation             | Use layered `box-shadow` with transparency; keep structural and state borders                     |
-| Jarring staged entrance or contextual exit     | Stagger infrequent entrances and keep context-preserving exits subtle                             |
-| Numbers cause layout shift                     | Apply `tabular-nums`                                                                              |
-| Heavy text on macOS                            | Apply `antialiased` to root                                                                       |
-| Animation plays on page load                   | Add `initial={false}` to `AnimatePresence`                                                        |
-| `transition: all` on elements                  | Specify exact properties                                                                          |
-| First-frame animation stutter                  | Add `will-change: transform` (sparingly)                                                          |
-| Tiny hit areas on small controls               | Extend with a pseudo-element to 44×44px for touch/mobile, or at least 40×40px in dense desktop UI |
-| Hairline icon beside bold text                 | Match the stroke width to the text weight                                                         |
-| Separate icon assets per state                 | One `currentColor` SVG, states via CSS                                                            |
-| Filled icons everywhere                        | Outline as default, fill only for the active state                                                |
-| Entrance animation on every hover or keystroke | Instant feedback or ≤150ms opacity/color transition                                               |
+| Mistake | Fix |
+| --- | --- |
+| Same border radius on parent and child | Calculate `outerRadius = innerRadius + padding` |
+| Icons look off-center | Adjust optically with padding or fix SVG directly |
+| Border used only to fake elevation | Use layered `box-shadow` with transparency; keep structural and state borders |
+| Jarring staged entrance or contextual exit | Stagger infrequent entrances and keep context-preserving exits subtle |
+| Numbers cause layout shift | Apply `tabular-nums` |
+| Heavy text on macOS | Apply `antialiased` to root |
+| Animation plays on page load | Add `initial={false}` to `AnimatePresence` |
+| `transition: all` on elements | Specify exact properties |
+| First-frame animation stutter | Add `will-change: transform` (sparingly) |
+| Tiny hit areas on small controls | Extend with a pseudo-element to 44×44px for touch/mobile, or at least 40×40px in dense desktop UI |
+| Hairline icon beside bold text | Match the stroke width to the text weight |
+| Separate icon assets per state | One `currentColor` SVG, states via CSS |
+| Filled icons everywhere | Outline as default, fill only for the active state |
+| Entrance animation on every hover or keystroke | Instant feedback or ≤150ms opacity/color transition |
 
 ## Review Output Format
 
 Use `full` when no review mode is supplied.
 
-| Mode    | Coverage                                                                               | Finding cap |
-| ------- | -------------------------------------------------------------------------------------- | ----------- |
-| `quick` | Primary user path and highest-traffic states; report only `HIGH` and `MEDIUM` issues   | 5           |
-| `full`  | Entire requested scope across typography, surfaces, animations, icons, and performance | 15          |
+| Mode | Coverage | Finding cap |
+| --- | --- | --- |
+| `quick` | Primary user path and highest-traffic states; report only `HIGH` and `MEDIUM` issues | 5 |
+| `full` | Entire requested scope across typography, surfaces, animations, icons, and performance | 15 |
 
 ### Scope and Coverage
 
 State the mode, exact scope, framework, styling conventions, and any review boundary. Show what was actually inspected:
 
-| Category   | Evidence inspected                   | Result                                                   |
-| ---------- | ------------------------------------ | -------------------------------------------------------- |
+| Category | Evidence inspected | Result |
+| --- | --- | --- |
 | Typography | Files, components, states, or checks | Findings count, `Clear`, or `Not reviewed` with a reason |
 
 Include all five Quick Reference categories. Never imply an uninspected surface was reviewed.
@@ -152,32 +150,29 @@ Consolidate a repeated systemic issue into one row and list every affected locat
 ### Example
 
 #### Concentric border radius
-
-| Severity | Location          | Before                                                      | After                                                              | Why                                                    |
-| -------- | ----------------- | ----------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------ |
-| LOW      | `src/Card.tsx:28` | `rounded-xl` on card + `rounded-xl` on inner button (`p-2`) | `rounded-2xl` on card (`8 + 8 = 16`), `rounded-lg` on inner button | Nested corners should be concentric                    |
-| LOW      | `src/card.css:11` | `border-radius: 16px` on both nested surfaces               | Outer `24px`, inner `16px` with `8px` padding                      | Equal nested radii make the inner surface look pinched |
+| Severity | Location | Before | After | Why |
+| --- | --- | --- | --- | --- |
+| LOW | `src/Card.tsx:28` | `rounded-xl` on card + `rounded-xl` on inner button (`p-2`) | `rounded-2xl` on card (`8 + 8 = 16`), `rounded-lg` on inner button | Nested corners should be concentric |
+| LOW | `src/card.css:11` | `border-radius: 16px` on both nested surfaces | Outer `24px`, inner `16px` with `8px` padding | Equal nested radii make the inner surface look pinched |
 
 #### Tabular numbers
-
-| Severity | Location             | Before                      | After                                                 | Why                                                |
-| -------- | -------------------- | --------------------------- | ----------------------------------------------------- | -------------------------------------------------- |
-| MEDIUM   | `src/Counter.tsx:17` | `<span>{count}</span>`      | `<span className="tabular-nums">{count}</span>`       | Proportional digits cause changing values to shift |
-| LOW      | `src/timer.css:8`    | Default numerals on a timer | Add `font-variant-numeric: tabular-nums` to the timer | Equal-width digits keep the timer stable           |
+| Severity | Location | Before | After | Why |
+| --- | --- | --- | --- | --- |
+| MEDIUM | `src/Counter.tsx:17` | `<span>{count}</span>` | `<span className="tabular-nums">{count}</span>` | Proportional digits cause changing values to shift |
+| LOW | `src/timer.css:8` | Default numerals on a timer | Add `font-variant-numeric: tabular-nums` to the timer | Equal-width digits keep the timer stable |
 
 #### Scale on press
-
-| Severity | Location            | Before                     | After                                          | Why                                              |
-| -------- | ------------------- | -------------------------- | ---------------------------------------------- | ------------------------------------------------ |
-| LOW      | `src/Button.tsx:19` | `<button className="...">` | Add `active:scale-[0.96] transition-transform` | Press feedback makes the control feel responsive |
-| MEDIUM   | `src/button.css:24` | `scale(0.9)` on press      | Raise to `scale(0.96)`                         | Anything below `0.95` feels exaggerated          |
+| Severity | Location | Before | After | Why |
+| --- | --- | --- | --- | --- |
+| LOW | `src/Button.tsx:19` | `<button className="...">` | Add `active:scale-[0.96] transition-transform` | Press feedback makes the control feel responsive |
+| MEDIUM | `src/button.css:24` | `scale(0.9)` on press | Raise to `scale(0.96)` | Anything below `0.95` feels exaggerated |
 
 ### Considered but Rejected
 
 Include 1–3 real candidates in `quick` mode and 2–5 in `full` mode:
 
-| Location          | Candidate           | Rejected because                                                                            |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------------- |
+| Location | Candidate | Rejected because |
+| --- | --- | --- |
 | `src/Card.tsx:28` | Increase the shadow | Existing depth matches the shared surface token; changing one card would reduce consistency |
 
 Do not invent filler. If the scope contains fewer borderline candidates, include the ones that exist and say so.

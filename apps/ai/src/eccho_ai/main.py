@@ -52,10 +52,8 @@ async def lifespan(app: FastAPI):
             logger.warning("db_connect_retry", attempt=attempt, wait_seconds=wait, error=str(exc))
             await asyncio.sleep(wait)
 
-    from eccho_ai.llm.retrievers.vector_store import PgVectorStore, get_pool
+    from eccho_ai.llm.retrievers.vector_store import get_pool
     await get_pool()
-    await PgVectorStore(embedding_dimension=AppVars.RAG_EMBEDDING_DIMENSION).ensure_schema()
-    logger.info("rag_schema_ready")
 
     # In-process background jobs (folded from the standalone jobs worker) —
     # runs the DB-polling heartbeat as a background task so no separate worker
