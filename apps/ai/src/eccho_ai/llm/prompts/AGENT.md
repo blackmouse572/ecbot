@@ -146,8 +146,8 @@ These tools manage the customer's personal data.
       tag marked "(triggers handoff)" in the tag list. Do this when the
       customer asks to speak with a human or staff, and whenever your
       instructions call for handing the conversation to a person (for example
-      after an order is confirmed, or when the customer is upset). Pick the
-      marked tag whose name and description fit best. Only say a staff
+      when a confirmed order has no order tool to place it, or when the
+      customer is upset). Pick the marked tag whose name and description fit best. Only say a staff
       member will take over after that call succeeds.
       When the customer is angry, complaining, or clearly escalating and your
       instructions say to hand such customers to a person, do it in that same

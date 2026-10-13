@@ -1294,6 +1294,11 @@
         "ask": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn? Khi đó, bạn và đội ngũ sẽ nhận thông báo trong ứng dụng (biểu tượng chuông ở trên cùng) kèm đường dẫn tới cuộc trò chuyện.",
         "lead": "Chuyển cho tôi khi:"
       },
+      "placedOrders": {
+        "title": "Sau khi công cụ đặt hàng tạo đơn thì sao?",
+        "ask": "Sau khi agent đặt đơn qua công cụ đặt hàng đã kết nối, bạn muốn điều gì xảy ra? Nếu chọn nhận thông báo, bạn và đội ngũ sẽ được báo trong ứng dụng (biểu tượng chuông ở trên cùng) và qua email.",
+        "lead": "Sau khi đơn được đặt:"
+      },
       "rules": {
         "title": "Agent tuyệt đối không được làm gì?",
         "ask": "Có điều gì agent tuyệt đối không được làm không?",
@@ -1519,6 +1524,11 @@
       "reply_normally": "Trả lời bình thường",
       "share_hours": "Trả lời và báo giờ mở cửa",
       "promise_callback": "Hẹn liên hệ lại trong giờ làm việc"
+    },
+    "placedOrders": {
+      "none": "Không báo, chỉ xác nhận với khách",
+      "notify": "Báo cho tôi, agent vẫn tiếp tục trò chuyện",
+      "handoff": "Báo cho tôi và chuyển cuộc trò chuyện cho tôi"
     },
     "channels": {
       "messenger": "Facebook Messenger",

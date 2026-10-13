@@ -2,7 +2,7 @@ import { migrateProfile } from "./migrate-profile";
 import { getBusinessType } from "./business-types";
 import {
   ADDRESS_STYLE, AFTER_HOURS, CALLBACK_FLOW, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
-  NO_FACTS_PROVIDED, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
+  NO_FACTS_PROVIDED, PERSONALITY, PLACED_ORDERS, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
 } from "./libraries";
 import { describeOpeningHours, hasOpeningHours } from "./opening-hours";
 import { PRESETS } from "./presets";
@@ -42,6 +42,16 @@ function section(title: string, body: string[]): string {
   return lines.length ? `## ${title}\n${lines.join("\n")}` : "";
 }
 
+// The owner's choice for tool-placed orders (#288) follows the step that
+// places the order, ahead of the no-tool branch.
+const PLACE_WITH_TOOL = "place the order with the connected order tool.";
+
+function goalPrompt(goal: AgentProfile["goals"][number], profile: AgentProfile): string {
+  const prompt = promptOf(GOALS, goal);
+  const after = goal === "take_orders" && profile.placedOrders ? promptOf(PLACED_ORDERS, profile.placedOrders) : "";
+  return after ? prompt.replace(PLACE_WITH_TOOL, `${PLACE_WITH_TOOL} ${after}`) : prompt;
+}
+
 export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}): string {
   const profile = migrateProfile(stored);
   const type = getBusinessType(profile.businessType);
@@ -56,7 +66,7 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
       ? `- You are a personal ${type.promptLabel} working for ${business}.`
       : `- Business: ${business}, ${withArticle(type.promptLabel)}.`,
     profile.goals.length ? "- Your jobs:" : "",
-    ...profile.goals.map((g, i) => `  ${i + 1}. ${promptOf(GOALS, g)}`),
+    ...profile.goals.map((g, i) => `  ${i + 1}. ${goalPrompt(g, profile)}`),
   ]);
 
   // "First conversation" read as every turn to models, which re-introduced

@@ -12,6 +12,7 @@ describe("createProfile", () => {
     expect(p.channels).toEqual(["messenger"]);
     expect(p.handoffWhen).toEqual(["asks_for_human", "upset"]);
     expect(p.unsure).toBe("handoff");
+    expect(p.placedOrders).toBe("notify");
     expect(p.addressStyle).toBe("em_anhchi");
     expect(agentProfileSchema.parse(p)).toEqual(p);
   });
@@ -21,6 +22,7 @@ describe("createProfile", () => {
     expect(p.channels).toEqual([]);
     expect(p.handoffWhen).toEqual([]);
     expect(p.unsure).toBe("say_unknown");
+    expect(p.placedOrders).toBeUndefined();
     expect(p.addressStyle).toBeNull();
   });
 });

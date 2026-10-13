@@ -220,6 +220,25 @@ describe("compilePrompt", () => {
     expect(out).not.toContain("then read the full order back before closing.");
   });
 
+  // #288: the owner picks what happens after the order tool places an order.
+  it("tells the team about a tool-placed order the way the owner chose", () => {
+    const base = { ...sample("ecommerce", "en"), goals: ["take_orders" as const] };
+    const notify = compilePrompt({ ...base, placedOrders: "notify" });
+    expect(notify).toContain('After the order tool confirms the order, apply the tag marked "(notifies the team)" for placed orders ("Order placed" by default)');
+    expect(notify).toContain('place the order with the connected order tool. After the order tool confirms the order');
+    const handoff = compilePrompt({ ...base, placedOrders: "handoff" });
+    expect(handoff).toContain('After the order tool confirms the order, hand the conversation to a person by applying the tag marked "(triggers handoff)" for new orders');
+    expect(compilePrompt({ ...base, placedOrders: "none" })).toContain("Do not apply a tag or hand the conversation over for it.");
+    // Profiles saved before #288 compile as before.
+    const { placedOrders: _, ...stored } = base;
+    expect(compilePrompt(stored)).not.toContain("After the order tool confirms the order");
+  });
+
+  it("leaves the placed-order step out when the agent takes no orders", () => {
+    const out = compilePrompt({ ...sample("ecommerce", "en"), goals: ["answer_questions"], placedOrders: "notify" });
+    expect(out).not.toContain("After the order tool confirms the order");
+  });
+
   it("chooses a or an based on the following word", () => {
     expect(withArticle("online shop")).toBe("an online shop");
     expect(withArticle("hotel or homestay")).toBe("a hotel or homestay");

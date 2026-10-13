@@ -51,6 +51,15 @@ export const HANDOFF_WHEN = [
   { id: "complaint", prompt: "the customer makes a complaint" },
 ] as const satisfies readonly Entry[];
 
+// What follows an order the connected order tool placed (#288). Without an
+// explicit "none", live runs still handed placed orders over (the no-tool
+// branch below it names a tag).
+export const PLACED_ORDERS = [
+  { id: "none", prompt: "After the order tool confirms the order, tell the customer the order is placed. Do not apply a tag or hand the conversation over for it." },
+  { id: "notify", prompt: "After the order tool confirms the order, apply the tag marked \"(notifies the team)\" for placed orders (\"Order placed\" by default) so the team knows, then tell the customer the order is placed." },
+  { id: "handoff", prompt: "After the order tool confirms the order, hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new orders (\"New order\" by default), then tell the customer the order is placed and a staff member will follow up." },
+] as const satisfies readonly Entry[];
+
 export const COLLECT = [
   { id: "name", prompt: "full name" },
   { id: "phone", prompt: "phone number" },

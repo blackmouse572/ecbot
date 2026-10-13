@@ -1,7 +1,7 @@
 import { BUSINESS_TYPES, getBusinessType, type BusinessTypeId } from "./business-types";
 import {
   ADDRESS_STYLE, AFTER_HOURS, CHANNELS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN,
-  PERSONAL_GOALS, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, type CollectId, type FactId, type GoalId,
+  PERSONAL_GOALS, PERSONALITY, PLACED_ORDERS, REPLY_LENGTH, RULES, UNSURE, type CollectId, type FactId, type GoalId,
 } from "./libraries";
 import { WEEKDAYS } from "./opening-hours";
 import { PRESETS } from "./presets";
@@ -40,6 +40,7 @@ const LIBRARIES = {
   rules: RULES,
   unsure: UNSURE,
   handoffWhen: HANDOFF_WHEN,
+  placedOrders: PLACED_ORDERS,
   collect: COLLECT,
   personality: PERSONALITY,
   formality: FORMALITY,
@@ -127,6 +128,8 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
         : "agentBuilder.questions.collect.ask",
     }),
     q("handoffWhen", "multi", { choices: choicesOf("handoffWhen") }),
+    // Only an agent that takes orders has an order tool to place them (#288).
+    ...(profile.goals.includes("take_orders") ? [q("placedOrders", "single", { choices: choicesOf("placedOrders") })] : []),
   ];
 
   const rules: Question[] = [
@@ -181,6 +184,7 @@ export function allTranslationKeys(): string[] {
     "businessType", "businessName", "ownerName", "agentName", "channels", "goals", "greeting",
     "difference", "personality", "formality", "collect", "handoffWhen", "rules", "unsure",
     "replyLength", "emoji", "addressStyle", "followUpQuestions", "afterHours", "openingHours",
+    "placedOrders",
   ];
   const withExtras: Record<string, string[]> = {
     agentName: ["placeholder"], goals: ["description"], collect: ["askOrder"],
