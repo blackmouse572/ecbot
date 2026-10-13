@@ -23,7 +23,8 @@ export class Migration20261013130000_backfill_new_order_tag extends Migration {
             left join (
                 select distinct "workspace_id"
                 from "customer_tags"
-                where "name" in ('Khiếu nại', 'Bực tức')
+                where "deleted_at" is null
+                  and "name" in ('Khiếu nại', 'Bực tức')
             ) vi on vi."workspace_id" = w."id"
             where w."deleted_at" is null
               and not exists (

@@ -32,6 +32,11 @@ describe('Backfill migration: "New order" customer tag (#281)', () => {
         expect(stmt).toContain("'New order'");
         expect(stmt).toContain("'Khiếu nại'");
         expect(stmt).toContain("'Bực tức'");
+        // Only a live tag counts: a workspace that deleted "Khiếu nại" is
+        // not treated as Vietnamese.
+        expect(stmt).toMatch(
+            /where "deleted_at" is null\s+and "name" in \('Khiếu nại', 'Bực tức'\)/
+        );
     });
 
     it('leaves a workspace alone when it already has a tag with that name', () => {
