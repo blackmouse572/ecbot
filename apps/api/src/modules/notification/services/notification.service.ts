@@ -635,7 +635,8 @@ export class NotificationService {
                     'notification.handoff.actionText',
                     { customLanguage: language }
                 ),
-                data: { conversationId, workspaceId, tagName },
+                // No conversationId: the app reads it as a handoff marker.
+                data: { kind: 'tag_notice', workspaceId, tagName },
             },
         });
     }

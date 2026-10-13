@@ -109,6 +109,9 @@ describe('NotificationService.createHandoff', () => {
                 language: 'vi',
             });
 
+            expect(
+                (create.mock.calls[0][0] as any).metadata.data.conversationId
+            ).toBeUndefined();
             expect(create.mock.calls[0][0]).toMatchObject({
                 title: 'notification.tagNotice.title(Order placed)',
                 message: 'notification.tagNotice.message',
@@ -116,8 +119,10 @@ describe('NotificationService.createHandoff', () => {
                 metadata: {
                     actionUrl: '/acme/conversations/conv-1',
                     actionText: 'notification.handoff.actionText',
+                    // No conversationId: the app reads that as a handoff
+                    // (red icon, stays unread until clicked).
                     data: {
-                        conversationId: 'conv-1',
+                        kind: 'tag_notice',
                         workspaceId: 'ws-1',
                         tagName: 'Order placed',
                     },

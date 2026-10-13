@@ -325,6 +325,27 @@ describe("CustomerTags settings page", () => {
     expect(payload.triggersHandoff).toBe(false);
   });
 
+  // #288 review: with a handoff on, the notify switch would do nothing.
+  it("locks Notify the team on while the tag hands off", async () => {
+    useListMock.mockReturnValue({
+      tags: [angryTag],
+      isLoading: false,
+    } as unknown as UseListReturn);
+    const user = userEvent.setup();
+
+    render(<CustomerTags />);
+    await user.click(screen.getByRole("button", { name: "actions.edit" }));
+
+    const notify = await screen.findByRole("switch", {
+      name: "settings.customerTags.fields.notifiesTeam",
+    });
+    expect(notify).toBeDisabled();
+    expect(notify).toBeChecked();
+    expect(
+      screen.getByText("settings.customerTags.fields.notifiesTeamByHandoff"),
+    ).toBeInTheDocument();
+  });
+
   it("shows whether each tag notifies the team in its own column", () => {
     useListMock.mockReturnValue({
       tags: [orderPlacedTag],

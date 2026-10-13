@@ -249,6 +249,8 @@ function CustomerTagDrawer({
       notifiesTeam: false,
     },
   });
+  // A handoff already notifies the team, so the switch has nothing to add.
+  const handsOff = form.watch("triggersHandoff");
 
   useEffect(() => {
     if (!isOpen) return;
@@ -425,12 +427,19 @@ function CustomerTagDrawer({
                           {t("settings.customerTags.fields.notifiesTeam")}
                         </Form.Label>
                         <Text size="small" className="text-ui-fg-subtle">
-                          {t("settings.customerTags.fields.notifiesTeamHelp")}
+                          {handsOff
+                            ? t(
+                                "settings.customerTags.fields.notifiesTeamByHandoff",
+                              )
+                            : t(
+                                "settings.customerTags.fields.notifiesTeamHelp",
+                              )}
                         </Text>
                       </div>
                       <Form.Control>
                         <Switch
-                          checked={field.value}
+                          checked={field.value || handsOff}
+                          disabled={handsOff}
                           onCheckedChange={field.onChange}
                         />
                       </Form.Control>
