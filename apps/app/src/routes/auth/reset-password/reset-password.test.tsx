@@ -43,6 +43,29 @@ describe("ResetPasswordPage", () => {
     ).toBeNull();
 
     fireEvent.change(screen.getByPlaceholderText("New password"), {
+      target: { value: "Sup3rsecret" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Confirm new password"), {
+      target: { value: "Sup3rsecret" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() =>
+      expect(resetPassword).toHaveBeenCalledWith("Sup3rsecret"),
+    );
+  });
+
+  // The API rejects a password without a number, a lowercase and an uppercase
+  // letter; the form used to check only the length and let it through.
+  it("blocks a password the API would reject and says why", async () => {
+    resetPassword.mockClear();
+    const { container } = render(
+      <MemoryRouter initialEntries={["/reset-password?token=tok-1"]}>
+        <ResetPasswordPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("New password"), {
       target: { value: "sup3rsecret" },
     });
     fireEvent.change(screen.getByPlaceholderText("Confirm new password"), {
@@ -50,8 +73,9 @@ describe("ResetPasswordPage", () => {
     });
     fireEvent.submit(container.querySelector("form")!);
 
-    await waitFor(() =>
-      expect(resetPassword).toHaveBeenCalledWith("sup3rsecret"),
-    );
+    expect(
+      await screen.findByText(/lowercase and an uppercase letter/),
+    ).toBeTruthy();
+    expect(resetPassword).not.toHaveBeenCalled();
   });
 });

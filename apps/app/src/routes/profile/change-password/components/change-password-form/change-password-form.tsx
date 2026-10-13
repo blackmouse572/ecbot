@@ -1,7 +1,11 @@
 import { useChangePassword } from "@/hooks/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Container, Heading, Text, toast } from "@medusajs/ui";
-import { Form, Input } from "@repo/ui/common-components";
+import {
+  Form,
+  PasswordInput,
+  PasswordStrength,
+} from "@repo/ui/common-components";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,6 +20,7 @@ const localizeError = (
 ) => {
   if (message === "passwordMismatch")
     return t("changePassword.errors.mismatch");
+  if (message === "weak") return t("changePassword.errors.weak");
   if (message === "sameAsCurrent")
     return t("changePassword.errors.sameAsCurrent");
   return message;
@@ -62,8 +67,7 @@ export const ChangePasswordForm = () => {
             render={({ field, fieldState }) => (
               <Form.Item>
                 <Form.Control>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     autoComplete="current-password"
                     errorMessage={localizeError(fieldState.error?.message, t)}
                     {...field}
@@ -79,14 +83,14 @@ export const ChangePasswordForm = () => {
             render={({ field, fieldState }) => (
               <Form.Item>
                 <Form.Control>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     autoComplete="new-password"
                     errorMessage={localizeError(fieldState.error?.message, t)}
                     {...field}
                     placeholder={t("changePassword.fields.newPassword")}
                   />
                 </Form.Control>
+                <PasswordStrength password={field.value} className="mt-3" />
               </Form.Item>
             )}
           />
@@ -96,8 +100,7 @@ export const ChangePasswordForm = () => {
             render={({ field, fieldState }) => (
               <Form.Item>
                 <Form.Control>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     autoComplete="new-password"
                     errorMessage={localizeError(fieldState.error?.message, t)}
                     {...field}
