@@ -27,6 +27,7 @@ import { InboundEventDedupeService } from './services/inbound-event-dedupe.servi
 import { StreamingDelivery } from './services/streaming-delivery.service';
 import { ReplyGenerationService } from './services/reply-generation.service';
 import { TurnContextService } from './services/turn-context.service';
+import { ConversationMemoryService } from './services/conversation-memory.service';
 import { InboundInboxService } from './services/inbound-inbox.service';
 import { ActionRouter } from './services/action-router.service';
 import { InboundReconciliationScheduler } from './schedulers/inbound-reconciliation.scheduler';
@@ -90,6 +91,7 @@ const ADAPTERS = [
         ReplyGenerationService,
         HandoffIntentService,
         TurnContextService,
+        ConversationMemoryService,
         MessageDebounceService,
         MessageProcessorService,
         ActionRouter,

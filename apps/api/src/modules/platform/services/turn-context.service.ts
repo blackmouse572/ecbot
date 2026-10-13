@@ -16,8 +16,8 @@ import {
     imageDescriptionNote,
     UNVIEWABLE_IMAGE_NOTE,
 } from '../constants/media.constant';
-import { MESSAGE_HISTORY_WINDOW } from '../constants/message-debounce.constant';
 import { ITurnBurst, ITurnContext } from '../interfaces/turn-context.interface';
+import { ConversationMemoryService } from './conversation-memory.service';
 
 /** One burst image: its message, its position there, and what we know. */
 interface IBurstImage {
@@ -31,9 +31,8 @@ interface IBurstImage {
  * Builds what apps/ai gets for a Turn from the conversation's rows (the
  * agent is stateless, so context comes from the DB each Turn). The burst is
  * the rows of the messages the Turn answers, found by id (a reply to an
- * earlier burst can sit between them); what came before is history. Burst
- * images not yet
- * described are described once, in one apps/ai call, and kept on their
+ * earlier burst can sit between them); what came before is history, as
+ * far back as the memory window reaches. Burst images not yet described are described once, in one apps/ai call, and kept on their
  * image so later Turns remember them.
  */
 @Injectable()
@@ -43,7 +42,8 @@ export class TurnContextService {
     constructor(
         private readonly messageRepository: MessageRepository,
         private readonly messageMedia: MessageMediaService,
-        private readonly chatbotAIService: ChatbotAIService
+        private readonly chatbotAIService: ChatbotAIService,
+        private readonly memory: ConversationMemoryService
     ) {}
 
     /** `burst`: the customer messages this Turn answers (none for a
@@ -54,10 +54,7 @@ export class TurnContextService {
         chatbotId: string
     ): Promise<ITurnContext> {
         const { texts } = burst;
-        const recent = await this.messageRepository.findRecentByConversation(
-            conversationId,
-            MESSAGE_HISTORY_WINDOW + texts.length
-        );
+        const { rows: recent } = await this.memory.window(conversationId);
         const burstRows = new Set(this.burstRows(recent, burst));
         // History is what came before the burst; rows saved after it belong
         // to the next Turn.

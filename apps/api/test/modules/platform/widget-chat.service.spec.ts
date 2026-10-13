@@ -1,3 +1,4 @@
+import { memoryStub } from '../../helpers/memory-stub';
 import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import {
@@ -67,7 +68,8 @@ function setup(overrides: Record<string, any> = {}) {
     const turnContext = new TurnContextService(
         messageRepository as any,
         { resolve: async (list: unknown[] = []) => list } as any,
-        {} as any
+        {} as any,
+        memoryStub(messageRepository)
     );
 
     const service = new WidgetChatService(

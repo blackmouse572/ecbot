@@ -1,3 +1,4 @@
+import { memoryStub } from '../../helpers/memory-stub';
 import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
@@ -106,7 +107,8 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             new TurnContextService(
                 messageRepository as any,
                 noMedia as any,
-                {} as any
+                {} as any,
+                memoryStub(messageRepository)
             ),
             meter as any
         );
@@ -218,7 +220,8 @@ describe('ReplyGenerationService.run — generation lease (candidate 2)', () => 
             new TurnContextService(
                 messageRepository as any,
                 noMedia as any,
-                {} as any
+                {} as any,
+                memoryStub(messageRepository)
             )
         );
 

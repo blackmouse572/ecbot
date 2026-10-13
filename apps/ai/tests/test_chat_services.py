@@ -9,7 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from pydantic import ValidationError
 
 from eccho_ai.modules.chat import ui_message_stream as ui
@@ -179,17 +179,18 @@ def test_history_system_role_rejected():
         _req(history=[{"role": "system", "content": "be helpful"}])
 
 
-async def test_customer_context_block_prepended_as_system_message(monkeypatch):
+async def test_customer_context_rides_on_the_newest_message_after_history(monkeypatch):
+    """The block changes whenever a tag or field does; ahead of the history it
+    would break the prompt cache of every turn after it."""
     monkeypatch.setattr(
         "eccho_ai.modules.chat.services.build_customer_context_block",
         AsyncMock(return_value="Customer: VIP"),
     )
-    result = await get_agent_input(_req())
+    result = await get_agent_input(_req(history=[{"role": "user", "content": "first"}]))
     messages = result["messages"]
-    assert isinstance(messages[0], SystemMessage)
-    assert "VIP" in messages[0].content
-    assert isinstance(messages[-1], HumanMessage)
-    assert messages[-1].content == "hello"
+    assert [type(m) for m in messages] == [HumanMessage, HumanMessage]
+    assert messages[0].content == "first"
+    assert messages[-1].content == "Customer: VIP\n\nhello"
 
 
 async def test_empty_history_list_behaves_like_no_history(monkeypatch):
