@@ -116,6 +116,24 @@ export class ActivityService {
         return this.activityRepository.create(create, options);
     }
 
+    // A staff actor (partner, platform operator) changes something on the
+    // user's behalf inside one workspace.
+    async createByAdminWithWorkspace(
+        user: UserEntity,
+        byUserId: string,
+        workspace: WorkspaceEntity,
+        { action, subject, metadata }: ActivityCreateRequest,
+        options?: IDatabaseCreateOptions
+    ): Promise<ActivityEntity> {
+        const by = this.activityRepository
+            .getEntityManager()
+            .getReference(UserEntity, byUserId);
+        const create = this.build(user, by, { action, subject, metadata });
+        create.workspace = workspace;
+
+        return this.activityRepository.create(create, options);
+    }
+
     // A read of personal data (conversation, customer). Takes the user id
     // from the JWT, so a repeated read costs one cache check and no user
     // lookup: one row per actor, workspace and record per dedupe window.

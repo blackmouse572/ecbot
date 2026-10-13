@@ -11,6 +11,7 @@ import { agentDisplayName } from "./agent-display-name";
 import { BuilderThread } from "./components/builder-thread";
 import { TestPanel } from "./components/test-panel";
 import { useAgentBuilder, type AgentBuilderController } from "./use-agent-builder";
+import { usePrefillChannel } from "./use-prefill-channel";
 
 // Matches Tailwind's `md:` breakpoint, which decides whether the test panel
 // renders as a grid column (desktop) or a full-screen sheet (mobile).
@@ -19,8 +20,13 @@ const DESKTOP_QUERY = "(min-width: 768px)";
 export function AgentBuilder() {
   const [params] = useSearchParams();
   const hydrateId = params.get("chatbotId") ?? "";
+  const accountId = params.get("accountId") ?? "";
   const { chatbot } = useChatbot(hydrateId, { enabled: !!hydrateId });
-  const builder = useAgentBuilder({ hydrateFrom: hydrateId ? chatbot : undefined });
+  const prefill = usePrefillChannel(accountId, !!accountId && !hydrateId);
+  const builder = useAgentBuilder({
+    hydrateFrom: hydrateId ? chatbot : undefined,
+    ensurePrefillChannel: prefill.ensure,
+  });
 
   return (
     // A SidebarProvider scoped to the builder for the test panel's

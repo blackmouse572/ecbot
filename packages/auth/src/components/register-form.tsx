@@ -273,7 +273,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
                   <Input
                     type="password"
                     errorMessage={fieldState.error?.message}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     {...field}
                     className="bg-ui-bg-field-component"
                     placeholder={messages.passwordPlaceholder}
@@ -292,6 +292,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
                 <Form.Control>
                   <Input
                     type="password"
+                    autoComplete="new-password"
                     errorMessage={fieldState.error?.message}
                     {...field}
                     className="bg-ui-bg-field-component"

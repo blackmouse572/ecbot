@@ -8,11 +8,13 @@ import logging
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends
+from langchain_core.callbacks import get_usage_metadata_callback
 from pydantic import BaseModel, Field, create_model
 
 from eccho_ai.core.security import require_internal_token
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.providers.chat_model import build_chat_model
+from eccho_ai.llm.usage import sum_usage
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.modules.decision.models import DecisionQuestion, DecisionRequest, DecisionResponse
 
@@ -76,30 +78,36 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
     # assembling the answers) lives in one try: the builder must work without
     # suggestions, so any failure here degrades to empty answers with HTTP 200
     # rather than bubbling up as a 400/500 through main.py's global handlers.
-    try:
-        llm = build_chat_model(model_text_name=AppVars.DECISION_MODEL, temperature=0.0)
-        structured = llm.with_structured_output(_output_model(req.questions))
-        result = _as_dict(
-            await structured.ainvoke(
-                [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"State:\n{req.state}\n\nQuestions:\n{_format_questions(req.questions)}"},
-                ]
+    # Usage is reported even when the answers are lost: the tokens were spent.
+    with get_usage_metadata_callback() as usage_cb:
+        try:
+            llm = build_chat_model(model_text_name=AppVars.DECISION_MODEL, temperature=0.0)
+            structured = llm.with_structured_output(_output_model(req.questions))
+            result = _as_dict(
+                await structured.ainvoke(
+                    [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": f"State:\n{req.state}\n\nQuestions:\n{_format_questions(req.questions)}"},
+                    ]
+                )
             )
+
+            answers: dict[str, dict[str, Any]] = {}
+            for index, (qid, q) in enumerate(req.questions.items()):
+                value = result.get(f"q{index}")
+                if value is None:
+                    continue
+                if q.type == "choice":
+                    v = _as_dict(value)
+                    answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
+                else:
+                    answers[qid] = {"type": "noul", "noul": value}
+        except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
+            logger.warning("decision.system_one failed err=%s", exc)
+            answers = {}
+
+    return AppResponse(
+        data=DecisionResponse(
+            answers=answers, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.DECISION_MODEL
         )
-
-        answers: dict[str, dict[str, Any]] = {}
-        for index, (qid, q) in enumerate(req.questions.items()):
-            value = result.get(f"q{index}")
-            if value is None:
-                continue
-            if q.type == "choice":
-                v = _as_dict(value)
-                answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
-            else:
-                answers[qid] = {"type": "noul", "noul": value}
-    except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
-        logger.warning("decision.system_one failed err=%s", exc)
-        return AppResponse(data=DecisionResponse())
-
-    return AppResponse(data=DecisionResponse(answers=answers))
+    )

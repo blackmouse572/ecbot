@@ -3,6 +3,7 @@ export enum EmailSubject {
     Welcome = 'Welcome',
     CreateAccount = 'Create Account',
     ResetPassword = 'Reset Password',
+    TempPassword = 'Temporary Password',
     EmailVerification = 'Email Verification',
     EmailVerified = 'Email Verified',
     MobileNumberVerified = 'MobileNumber Verified',

@@ -10,6 +10,7 @@ import {
     CUSTOMER_TAG_CLASSIFIER_SENTRY_QUEUE,
     ENUM_CUSTOMER_TAG_CLASSIFIER_PROCESS,
 } from '../../../src/modules/customer/constants/customer-tag-classifier.constant';
+import { ENUM_AI_USAGE_SOURCE } from '../../../src/app/ai-usage-meter.interface';
 import { CustomerTagClassifierTaskService } from '../../../src/modules/customer/services/customer-tag-classifier-task.service';
 
 jest.mock('@sentry/nestjs', () => ({ captureException: jest.fn() }));
@@ -307,6 +308,97 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
                 queue: CUSTOMER_TAG_CLASSIFIER_SENTRY_QUEUE,
                 conversation_id: 'conv-1',
             },
+        });
+    });
+
+    // #250: the classifier's model call is metered like a reply.
+    describe('usage meter', () => {
+        const meter = { check: jest.fn(), record: jest.fn() };
+
+        beforeEach(() => {
+            meter.record.mockResolvedValue(undefined);
+            conversationRepository.findOneById.mockResolvedValue(
+                liveConversation({
+                    chatbot: { id: 'bot-1', workspace: { id: 'ws-1' } },
+                })
+            );
+            service = new CustomerTagClassifierTaskService(
+                conversationRepository as any,
+                messageRepository as any,
+                customerRepository as any,
+                customerTagService as any,
+                customerTagAssignmentService as any,
+                classifierService as any,
+                httpService as any,
+                configService as any,
+                meter as any
+            );
+        });
+
+        it('records what the classification spent', async () => {
+            meter.check.mockResolvedValue({ allowed: true });
+            httpService.post.mockReturnValue(
+                classifierResponse({
+                    profile_summary: 'Buyer.',
+                    usage: {
+                        input_tokens: 300,
+                        output_tokens: 40,
+                        total_tokens: 340,
+                    },
+                    model: 'google/gemini-2.5-flash',
+                })
+            );
+
+            await service.handle(dto() as any, 0);
+
+            expect(meter.check).toHaveBeenCalledWith(
+                'ws-1',
+                expect.objectContaining({ id: 'bot-1' })
+            );
+            expect(meter.record).toHaveBeenCalledWith({
+                workspaceId: 'ws-1',
+                usage: { inputTokens: 300, outputTokens: 40, totalTokens: 340 },
+                source: ENUM_AI_USAGE_SOURCE.TAG_CLASSIFIER,
+                chatbotId: 'bot-1',
+                model: 'google/gemini-2.5-flash',
+                conversationId: 'conv-1',
+            });
+        });
+
+        it('still applies the tags and summary when recording the usage fails', async () => {
+            meter.check.mockResolvedValue({ allowed: true });
+            meter.record.mockRejectedValue(new Error('db down'));
+            httpService.post.mockReturnValue(
+                classifierResponse({
+                    profile_summary: 'Buyer.',
+                    usage: {
+                        input_tokens: 1,
+                        output_tokens: 1,
+                        total_tokens: 2,
+                    },
+                })
+            );
+
+            await expect(
+                service.handle(dto() as any, 0)
+            ).resolves.toBeUndefined();
+
+            expect(customerRepository.updateEntity).toHaveBeenCalled();
+        });
+
+        it('skips the classification silently when the workspace is out of tokens', async () => {
+            meter.check.mockResolvedValue({
+                allowed: false,
+                reason: 'QUOTA_EXHAUSTED',
+            });
+
+            await expect(
+                service.handle(dto() as any, 0)
+            ).resolves.toBeUndefined();
+
+            expect(httpService.post).not.toHaveBeenCalled();
+            expect(meter.record).not.toHaveBeenCalled();
+            expect(customerRepository.updateEntity).not.toHaveBeenCalled();
         });
     });
 });

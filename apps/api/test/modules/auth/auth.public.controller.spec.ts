@@ -729,6 +729,43 @@ describe('AuthPublicController.loginWithCredential', () => {
             failedWith(activeUser, 'email_not_verified');
         });
 
+        it('returns the user id with an unverified email, so the app can open the code page', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            join.mockResolvedValue({
+                ...activeUser,
+                verification: { email: false },
+            });
+
+            const err = await login();
+
+            expect(err.getResponse()).toEqual(
+                expect.objectContaining({ data: { id: 'user-3' } })
+            );
+        });
+
+        // Admin-created users land here on first sign-in: a right password
+        // must not count toward the lockout.
+        it('clears the failed-attempt count for an unverified email', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            join.mockResolvedValue({
+                ...activeUser,
+                verification: { email: false },
+            });
+
+            await login();
+
+            expect(clearPasswordAttempt).toHaveBeenCalledWith(activeUser);
+        });
+
+        it('returns no user id with a wrong password or an unknown email', async () => {
+            findOneByEmail.mockResolvedValue(activeUser);
+            validateUser.mockResolvedValueOnce(false);
+            expect((await login()).getResponse().data).toBeUndefined();
+
+            findOneByEmail.mockResolvedValue(undefined);
+            expect((await login()).getResponse().data).toBeUndefined();
+        });
+
         it('records nothing for an unknown email', async () => {
             findOneByEmail.mockResolvedValue(undefined);
 

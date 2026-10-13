@@ -60,7 +60,7 @@ function setup(overrides: Record<string, any> = {}) {
 
     const meter = {
         check: jest.fn().mockResolvedValue({ allowed: true }),
-        record: jest.fn(),
+        record: jest.fn().mockResolvedValue(undefined),
     };
     // The real Turn context over the fake repository (widget visitors send
     // no images, so nothing is signed).
@@ -103,6 +103,7 @@ function setup(overrides: Record<string, any> = {}) {
         sseStream,
         conversation,
         handoffIntent,
+        turnContext,
     };
 }
 
@@ -317,6 +318,56 @@ describe('WidgetChatService token budget', () => {
             expect.any(String),
             expect.objectContaining({ text: 'the bot reply' })
         );
+    });
+
+    // Describing images is an LLM call, so it must not run on a spent budget.
+    it('builds no turn context when the budget is spent', async () => {
+        const { service, meter, turnContext } = setup();
+        meter.check.mockResolvedValue({ allowed: false });
+        const build = jest.spyOn(turnContext, 'build');
+
+        await service.handleTurn(
+            { write: jest.fn(), end: jest.fn(), setHeader: jest.fn() } as any,
+            turn
+        );
+
+        expect(build).not.toHaveBeenCalled();
+    });
+
+    it('records the tokens spent describing images', async () => {
+        const { service, meter, turnContext } = setup();
+        const describeUsage = {
+            inputTokens: 40,
+            outputTokens: 8,
+            totalTokens: 48,
+        };
+        jest.spyOn(turnContext, 'build').mockResolvedValue({
+            history: [],
+            usage: describeUsage,
+        } as any);
+
+        await service.handleTurn(res, turn);
+
+        expect(meter.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                workspaceId: 'ws-1',
+                source: 'WIDGET',
+                usage: describeUsage,
+            })
+        );
+    });
+
+    it('still answers when recording the describe usage fails', async () => {
+        const { service, meter, turnContext, chatbotAIService } = setup();
+        meter.record.mockRejectedValue(new Error('db down'));
+        jest.spyOn(turnContext, 'build').mockResolvedValue({
+            history: [],
+            usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+        } as any);
+
+        await service.handleTurn(res, turn);
+
+        expect(chatbotAIService.streamChat).toHaveBeenCalled();
     });
 
     it('still persists the visitor message when the budget is spent', async () => {

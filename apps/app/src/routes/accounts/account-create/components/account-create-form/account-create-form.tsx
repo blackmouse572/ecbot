@@ -290,7 +290,12 @@ export const AccountCreateForm = () => {
               className="w-full flex justify-center"
             >
               {issued ? (
-                <IssuedPanel issued={issued} onDone={() => handleSuccess?.()} />
+                // Made here, the channel has no agent yet (#255).
+                <IssuedPanel
+                  issued={issued}
+                  needsAgent
+                  onDone={() => handleSuccess?.()}
+                />
               ) : (
                 linkedData && (
                   <SuccessStep

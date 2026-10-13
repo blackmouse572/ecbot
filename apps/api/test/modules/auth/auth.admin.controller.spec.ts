@@ -65,7 +65,12 @@ describe('AuthAdminController.updatePassword', () => {
     });
 
     it('enqueues TEMPORARY_PASSWORD via CloudTasksQueueClient after the reset transaction commits', async () => {
-        const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
+        const user = {
+            id: 'user-1',
+            email: 'a@b.com',
+            name: 'A',
+            role: { type: ENUM_POLICY_ROLE_TYPE.USER },
+        };
         const passwordExpired = new Date('2026-02-01T00:00:00.000Z');
         createPasswordRandom.mockReturnValue('Temp123!');
         createPassword.mockResolvedValue({
@@ -77,7 +82,12 @@ describe('AuthAdminController.updatePassword', () => {
         createByAdmin.mockResolvedValue(undefined);
         commit.mockResolvedValue(undefined);
 
-        await controller.updatePassword('admin-1', user as any);
+        await controller.updatePassword(
+            'admin-1',
+            ENUM_POLICY_ROLE_TYPE.ADMIN,
+            user as any,
+            'vi'
+        );
 
         expect(enqueue).toHaveBeenCalledWith(
             'email',
@@ -87,6 +97,7 @@ describe('AuthAdminController.updatePassword', () => {
                 data: {
                     passwordExpiredAt: passwordExpired,
                     password: 'Temp123!',
+                    language: 'vi',
                 },
             },
             {
@@ -98,7 +109,12 @@ describe('AuthAdminController.updatePassword', () => {
     });
 
     it('does not roll back the already-committed session when enqueue fails', async () => {
-        const user = { id: 'user-1', email: 'a@b.com', name: 'A' };
+        const user = {
+            id: 'user-1',
+            email: 'a@b.com',
+            name: 'A',
+            role: { type: ENUM_POLICY_ROLE_TYPE.USER },
+        };
         const passwordExpired = new Date('2026-02-01T00:00:00.000Z');
         createPasswordRandom.mockReturnValue('Temp123!');
         createPassword.mockResolvedValue({
@@ -112,11 +128,57 @@ describe('AuthAdminController.updatePassword', () => {
         enqueue.mockRejectedValue(new Error('boom'));
 
         await expect(
-            controller.updatePassword('admin-1', user as any)
-        ).resolves.toBeUndefined();
+            controller.updatePassword(
+                'admin-1',
+                ENUM_POLICY_ROLE_TYPE.ADMIN,
+                user as any
+            )
+        ).resolves.toEqual({ data: { password: 'Temp123!' } });
 
         expect(commit).toHaveBeenCalledTimes(1);
         expect(rollback).not.toHaveBeenCalled();
+    });
+
+    // The new password comes back in the response, so an admin resetting a
+    // super admin could sign in as them.
+    it.each([ENUM_POLICY_ROLE_TYPE.ADMIN, ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN])(
+        'refuses an ADMIN resetting a %s',
+        async targetType => {
+            await expect(
+                controller.updatePassword(
+                    'admin-1',
+                    ENUM_POLICY_ROLE_TYPE.ADMIN,
+                    { id: 'user-2', role: { type: targetType } } as any
+                )
+            ).rejects.toMatchObject({
+                response: {
+                    statusCode:
+                        ENUM_AUTH_STATUS_CODE_ERROR.PASSWORD_RESET_FORBIDDEN,
+                },
+            });
+            expect(updatePassword).not.toHaveBeenCalled();
+        }
+    );
+
+    it('lets a SUPER_ADMIN reset an admin', async () => {
+        const admin = {
+            id: 'user-2',
+            email: 'a@b.com',
+            name: 'A',
+            role: { type: ENUM_POLICY_ROLE_TYPE.ADMIN },
+        };
+        createPasswordRandom.mockReturnValue('Temp123!');
+        createPassword.mockResolvedValue({ password: 'hashed' });
+        updatePassword.mockResolvedValue(admin);
+        resetPasswordAttempt.mockResolvedValue(admin);
+
+        await expect(
+            controller.updatePassword(
+                'root-1',
+                ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN,
+                admin as any
+            )
+        ).resolves.toEqual({ data: { password: 'Temp123!' } });
     });
 });
 

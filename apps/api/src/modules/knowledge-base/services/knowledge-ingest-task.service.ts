@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Sentry from '@sentry/nestjs';
 import { firstValueFrom } from 'rxjs';
@@ -8,6 +8,12 @@ import { AwsS3Service } from '@app/modules/aws/services/aws.s3.service';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
 import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
+import {
+    AI_USAGE_METER,
+    AiUsageMeter,
+    ENUM_AI_USAGE_SOURCE,
+} from '@app/app/ai-usage-meter.interface';
+import { parseWireTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '../enums/knowledge-base-item-status.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '../enums/knowledge-base-item-type.enum';
 import {
@@ -15,6 +21,7 @@ import {
     ENUM_RAG_INGEST_PROCESS,
     RAG_INGEST_HTTP_TIMEOUT_MS,
     RAG_INGEST_MAX_ATTEMPTS,
+    RAG_INGEST_NO_TOKENS_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
 } from '../constants/knowledge-ingest.constant';
 import { KnowledgeIngestTaskDto } from '../dtos/knowledge-ingest.task.dto';
@@ -64,7 +71,10 @@ export class KnowledgeIngestTaskService {
         private readonly awsS3Service: AwsS3Service,
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
-        private readonly failureNotifier: KnowledgeFailureNotifierService
+        private readonly failureNotifier: KnowledgeFailureNotifierService,
+        @Optional()
+        @Inject(AI_USAGE_METER)
+        private readonly meter?: AiUsageMeter
     ) {
         this.aiBackendUrl =
             this.configService.get<string>('ai.backend.url') ??
@@ -196,12 +206,30 @@ export class KnowledgeIngestTaskService {
     }
 
     private async ingest(knowledgeItemId: string): Promise<void> {
-        const item =
-            await this.knowledgeItemService.findOneById(knowledgeItemId);
+        const item = await this.knowledgeItemService.findOneById(
+            knowledgeItemId,
+            { populate: ['knowledgeBase'] }
+        );
         if (!item) {
             this.logger.debug(
                 `ingest: item ${knowledgeItemId} not found — skipping`
             );
+            return;
+        }
+
+        // Out of tokens: fail the item where the owner sees it and can process
+        // it again once topped up, rather than leave it "processing".
+        // No meter is the public build: allowed, and nothing recorded below.
+        const workspaceId: string | undefined =
+            item.knowledgeBase?.workspace?.id;
+        const budget = workspaceId
+            ? await this.meter?.check(workspaceId)
+            : undefined;
+        if (budget && !budget.allowed) {
+            this.logger.log(
+                `ingest: token budget blocked item=${knowledgeItemId}: ${budget.reason}`
+            );
+            await this.markFailed(knowledgeItemId, RAG_INGEST_NO_TOKENS_ERROR);
             return;
         }
 
@@ -218,6 +246,21 @@ export class KnowledgeIngestTaskService {
             data = await this.ingestUrl(item, chatbotIds);
         } else {
             data = await this.ingestText(item, chatbotIds);
+        }
+        const usage = parseWireTokenUsage(data?.usage);
+        if (workspaceId && usage) {
+            await this.meter
+                ?.record({
+                    workspaceId,
+                    usage,
+                    source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
+                    model: data?.embedding_model,
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Ingest usage not recorded for item ${knowledgeItemId}: ${err}`
+                    )
+                );
         }
         await this.knowledgeItemService.updateStatus(knowledgeItemId, {
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,

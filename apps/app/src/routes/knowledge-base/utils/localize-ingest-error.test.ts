@@ -12,6 +12,16 @@ describe("localizeIngestError", () => {
     expect(localizeIngestError(NOT_PUBLIC, i18n.t)).toContain("công khai");
   });
 
+  it("translates the out-of-tokens error apps/api stores", async () => {
+    await i18n.changeLanguage("vi");
+    expect(
+      localizeIngestError(
+        "Your workspace has no AI tokens left. Top up or renew your plan, then process this item again.",
+        i18n.t,
+      ),
+    ).toContain("hết token");
+  });
+
   it("keeps an unknown error as stored", () => {
     expect(localizeIngestError("Something else", i18n.t)).toBe(
       "Something else",

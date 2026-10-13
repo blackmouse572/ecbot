@@ -9,9 +9,12 @@ import type { Issued } from "./issued";
  */
 export function IssuedPanel({
   issued,
+  needsAgent,
   onDone,
 }: {
   issued: Issued;
+  /** No agent is attached yet, so the channel cannot answer (#255). */
+  needsAgent?: boolean;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -28,6 +31,12 @@ export function IssuedPanel({
             : t("accounts.create.provision.websiteWidget.issuedDescription")}
         </Text>
       </div>
+
+      {needsAgent && (
+        <Alert variant="info">
+          {t("accounts.create.provision.needsAgent")}
+        </Alert>
+      )}
 
       {issued.kind === "API_CHANNEL" ? (
         <>

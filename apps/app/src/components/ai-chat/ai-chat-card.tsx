@@ -146,6 +146,10 @@ function AIChatMessages({
           isAssistant &&
           !model.text &&
           !model.guardrail;
+        // Text either side of a tool call reads as separate messages, as it
+        // does on the channels (#91); the last one keeps the attachments.
+        const earlierSegments = model.segments.slice(0, -1);
+        const lastSegment = model.segments.at(-1) ?? "";
         const toolCalls = model.toolCalls.map(toolCallToChat);
         const showTrace =
           internals &&
@@ -183,6 +187,19 @@ function AIChatMessages({
                   running={isLoading && isLastMessage}
                 />
               )}
+              {!showSpinner &&
+                !model.guardrail &&
+                earlierSegments.map((segment, segmentIndex) => (
+                  <MessageContent
+                    key={segmentIndex}
+                    className={clx(
+                      BUBBLE_CLASS[isAssistant ? "assistant" : "user"],
+                      BUBBLE_ENTER,
+                    )}
+                  >
+                    <MessageResponse>{segment}</MessageResponse>
+                  </MessageContent>
+                ))}
               {showBubble && (
                 <MessageContent
                   className={clx(
@@ -219,7 +236,7 @@ function AIChatMessages({
                           {model.reasoning}
                         </Text>
                       )}
-                      <MessageResponse>{model.text}</MessageResponse>
+                      <MessageResponse>{lastSegment}</MessageResponse>
                     </div>
                   )}
                   <MessageAttachments files={model.files} />

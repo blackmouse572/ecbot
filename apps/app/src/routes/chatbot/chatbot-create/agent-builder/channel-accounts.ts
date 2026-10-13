@@ -44,3 +44,15 @@ const ACCOUNT_TYPE_TO_CHANNEL: Record<AccountType, ChannelId | null> = {
 export function channelOfAccountType(type: AccountType): ChannelId | null {
   return ACCOUNT_TYPE_TO_CHANNEL[type] ?? null;
 }
+
+/** Channel kinds the builder never connects: user-level Facebook accounts
+ * (only their pages are channels) and API channels (server integrations,
+ * attached from the chatbot side). */
+const UNCONNECTED_ACCOUNT_TYPES = new Set<AccountType>([
+  "FACEBOOK_ACCOUNT",
+  "API_CHANNEL",
+]);
+
+/** Whether the builder can connect this channel type to an agent. */
+export const isConnectableAccountType = (type: AccountType) =>
+  !UNCONNECTED_ACCOUNT_TYPES.has(type);

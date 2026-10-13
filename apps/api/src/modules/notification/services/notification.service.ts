@@ -360,6 +360,153 @@ export class NotificationService {
         });
     }
 
+    async createSubscriptionPlanChanged(
+        recipientId: string,
+        workspaceId: string,
+        data: {
+            workspaceName: string;
+            fromPlan: string;
+            toPlan: string;
+            note?: string;
+            scheduledOn?: string;
+        }
+    ): Promise<NotificationEntity> {
+        const scheduled = Boolean(data.scheduledOn);
+        // The templates carry a `{note}` slot, so editors control where the
+        // note sits in each language's copy; when there is no note the slot
+        // interpolates the empty string. Only the scheduled template uses
+        // {scheduledOn} and only the immediate one mentions the old plan.
+        const note = data.note
+            ? this.messageService.setMessage(
+                  'notification.subscriptionPlanChanged.note',
+                  { properties: { note: data.note } }
+              )
+            : '';
+        const message = this.messageService.setMessage(
+            scheduled
+                ? 'notification.subscriptionPlanChanged.scheduledMessage'
+                : 'notification.subscriptionPlanChanged.message',
+            {
+                properties: {
+                    workspaceName: data.workspaceName,
+                    toPlan: data.toPlan,
+                    ...(scheduled
+                        ? { scheduledOn: data.scheduledOn }
+                        : { fromPlan: data.fromPlan }),
+                    note,
+                },
+            }
+        );
+
+        return this.create({
+            title: this.messageService.setMessage(
+                scheduled
+                    ? 'notification.subscriptionPlanChanged.scheduledTitle'
+                    : 'notification.subscriptionPlanChanged.title'
+            ),
+            message: message,
+            type: NotificationType.SUCCESS,
+            priority: NotificationPriority.MEDIUM,
+            recipient: recipientId,
+            workspace: workspaceId,
+            metadata: {
+                actionUrl: '/usage',
+                actionText: this.messageService.setMessage(
+                    'notification.subscriptionPlanChanged.actionText'
+                ),
+                data: {
+                    fromPlan: data.fromPlan,
+                    toPlan: data.toPlan,
+                    note: data.note,
+                },
+            },
+        });
+    }
+
+    async createSubscriptionCanceled(
+        recipientId: string,
+        workspaceId: string,
+        data: {
+            workspaceName: string;
+            planName: string;
+            periodEnd: string;
+            reason?: string;
+        }
+    ): Promise<NotificationEntity> {
+        // The template carries a `{note}` slot; when there is no reason the
+        // slot interpolates the empty string.
+        const note = data.reason
+            ? this.messageService.setMessage(
+                  'notification.subscriptionCanceled.note',
+                  { properties: { note: data.reason } }
+              )
+            : '';
+        const message = this.messageService.setMessage(
+            'notification.subscriptionCanceled.message',
+            {
+                properties: {
+                    workspaceName: data.workspaceName,
+                    planName: data.planName,
+                    periodEnd: data.periodEnd,
+                    note,
+                },
+            }
+        );
+
+        return this.create({
+            title: this.messageService.setMessage(
+                'notification.subscriptionCanceled.title'
+            ),
+            message: message,
+            type: NotificationType.SUCCESS,
+            priority: NotificationPriority.MEDIUM,
+            recipient: recipientId,
+            workspace: workspaceId,
+            metadata: {
+                actionUrl: '/usage',
+                actionText: this.messageService.setMessage(
+                    'notification.subscriptionCanceled.actionText'
+                ),
+                data: {
+                    planName: data.planName,
+                    reason: data.reason,
+                },
+            },
+        });
+    }
+
+    async createSubscriptionResumed(
+        recipientId: string,
+        workspaceId: string,
+        data: { workspaceName: string; planName: string }
+    ): Promise<NotificationEntity> {
+        return this.create({
+            title: this.messageService.setMessage(
+                'notification.subscriptionResumed.title'
+            ),
+            message: this.messageService.setMessage(
+                'notification.subscriptionResumed.message',
+                {
+                    properties: {
+                        workspaceName: data.workspaceName,
+                        planName: data.planName,
+                    },
+                }
+            ),
+            type: NotificationType.SUCCESS,
+            priority: NotificationPriority.MEDIUM,
+            recipient: recipientId,
+            workspace: workspaceId,
+            metadata: {
+                actionUrl: '/usage',
+                actionText: this.messageService.setMessage(
+                    'notification.subscriptionResumed.actionText'
+                ),
+                data: { planName: data.planName },
+            },
+        });
+    }
+
     /**
      * Billing was never seeded, so workspace creation could not attach a plan
      * and `TokenGuardService` will refuse every turn. The operator log names

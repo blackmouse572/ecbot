@@ -28,9 +28,12 @@ import { useNavigate } from "react-router-dom";
 export interface AuthLoginError {
   statusCode?: number;
   message: string;
+  // Set on USER_EMAIL_NOT_VERIFIED_STATUS_CODE, so login can open the code page.
+  data?: { id?: string };
 }
 
 export const USER_BLOCKED_FORBIDDEN_STATUS_CODE = 5159;
+export const USER_EMAIL_NOT_VERIFIED_STATUS_CODE = 5167;
 
 export const useSignInWithEmailPass = (
   options?: UseMutationOptions<

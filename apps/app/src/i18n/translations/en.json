@@ -506,6 +506,7 @@
         "namePlaceholder": "e.g. Partner CRM",
         "issuedTitle": "Channel created",
         "issuedDescription": "Keep these values somewhere safe before you close this window.",
+        "needsAgent": "This channel answers once an agent is attached. Open the agent you want, then add this channel to its linked accounts.",
         "apiChannel": {
           "title": "Connect an API channel",
           "description": "Send and receive messages over REST from your own system. Replies are POSTed to your callback URL.",
@@ -671,6 +672,11 @@
           "success": "Widget settings updated.",
           "error": "Failed to update widget settings."
         }
+      },
+      "noChatbot": {
+        "title": "No agent yet",
+        "message": "Create an agent to answer customers on this channel.",
+        "action": "Create agent"
       }
     },
     "imports": {
@@ -754,6 +760,16 @@
       "unmerge": "unmerged customer {{name}}",
       "mergeConfirm": "confirmed merging customer {{name}}",
       "mergeDismiss": "dismissed the merge suggestion for customer {{name}}"
+    },
+    "conversation": {
+      "create": "sent a message to <link/>",
+      "update": "updated the conversation with <link/>",
+      "unknownCustomer": "a customer"
+    },
+    "plan": {
+      "changePlan": "Changed the subscription plan",
+      "cancel": "Cancelled the subscription",
+      "resume": "Resumed the subscription"
     },
     "generic": {
       "create": "created <link/>",
@@ -1125,6 +1141,7 @@
       "comingSoon": "Coming soon",
       "connectFailed": "Could not connect this channel. Please try again.",
       "connected": "Connected",
+      "channelLoadFailed": "Could not load this channel. You can connect it later.",
       "telegramTokenLabel": "Bot token from @BotFather",
       "widgetOriginsLabel": "Websites allowed to show the chat (one per line)",
       "channelInUse": "{{name}} is already used by another agent. Unlink it there first to use it here.",
@@ -1956,7 +1973,47 @@
     }
   },
   "subscription": {
-    "domain": "Subscription"
+    "domain": "Subscription",
+    "title": "Your plan",
+    "badge": {
+      "upgrade": "Upgrade plan"
+    },
+    "current": {
+      "renewsOn": "Renews {{date}}",
+      "endsOn": "Ends {{date}}",
+      "usage": "{{percent}}% of quota used",
+      "pending": "Changes to {{plan}} on {{date}}",
+      "cancelScheduled": "Cancels on {{date}}"
+    },
+    "actions": {
+      "current": "Current plan",
+      "choose": "Choose plan",
+      "upgrade": "Upgrade",
+      "downgrade": "Downgrade",
+      "cancel": "Cancel subscription",
+      "resume": "Resume subscription",
+      "contactUs": "This plan is managed for you. Contact us to change or cancel it.",
+      "processing": "Waiting for the payment provider to confirm your change…"
+    },
+    "cancelDialog": {
+      "title": "Cancel subscription?",
+      "reasonLabel": "Why are you cancelling?",
+      "reasonPlaceholder": "Tell us what changed (required)",
+      "confirm": "Cancel at period end"
+    },
+    "checkout": {
+      "providersTitle": "How would you like to pay?",
+      "start": "Continue to payment",
+      "none": "No payment method is available for this plan. Contact us.",
+      "pending": "Waiting for your payment to be confirmed…"
+    },
+    "errors": {
+      "unavailable": "Something went wrong. Please try again."
+    },
+    "cycle": {
+      "monthly": "per month",
+      "yearly": "per year"
+    }
   },
   "billing": {
     "domain": "Billing"
@@ -2219,7 +2276,8 @@
   "knowledge_item": {
     "ingestErrors": {
       "urlNotPublic": "This page is not public. Use a link anyone can open on the internet, not localhost or a private network address.",
-      "urlFetchFailed": "Could not read this page. Check that the link opens in a browser without signing in, then process it again."
+      "urlFetchFailed": "Could not read this page. Check that the link opens in a browser without signing in, then process it again.",
+      "noTokens": "Your workspace has no AI tokens left. Top up or renew your plan, then process this item again."
     },
     "create_title": "Create Knowledge Item",
     "create_description": "Add a new knowledge item to your knowledge base. Choose from text, URL, or file sources.",
@@ -3008,7 +3066,10 @@
     "byPlatform": {
       "title": "By platform",
       "column": "Platform",
-      "preview": "Preview (test chat)"
+      "preview": "Preview (test chat)",
+      "TAG_CLASSIFIER": "Customer tagging",
+      "AGENT_BUILDER": "Agent builder",
+      "KNOWLEDGE_INGEST": "Knowledge processing"
     },
     "share": "Share",
     "messages": "Messages",
@@ -3048,6 +3109,8 @@
     "invalid": "This chat is not available.",
     "invalidHint": "Check the widget key on this website, or contact the site owner.",
     "originNotAllowed": "This chat is not enabled on this website.",
+    "noAgent": "This chat is not set up yet.",
+    "noAgentHint": "The site owner still needs to choose an agent to answer here.",
     "turnstile": {
       "required": "Please complete the verification first.",
       "failed": "Verification failed. Reload the page and try again."

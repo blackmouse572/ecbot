@@ -66,7 +66,7 @@ export interface IApiKeyService {
     ): Promise<ApiKeyEntity>;
     update(
         repository: ApiKeyEntity,
-        { name }: ApiKeyUpdateRequestDto,
+        { name, type }: ApiKeyUpdateRequestDto,
         options?: IDatabaseSaveOptions
     ): Promise<ApiKeyEntity>;
     updateDate(

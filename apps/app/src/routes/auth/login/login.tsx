@@ -1,6 +1,7 @@
 import { LinkButton } from "@/components/common";
 import {
   USER_BLOCKED_FORBIDDEN_STATUS_CODE,
+  USER_EMAIL_NOT_VERIFIED_STATUS_CODE,
   useSignInWithEmailPass,
 } from "@/hooks/api/auth";
 import { isMfaChallenge } from "@/hooks/api/mfa";
@@ -71,6 +72,19 @@ function LoginPage() {
               title: t("errors.banned.title"),
               description: t("errors.banned.description"),
               confirmText: t("actions.ok"),
+            });
+            return;
+          }
+          // Right password, email not verified yet (e.g. an account an
+          // admin created): go enter the emailed code instead of a dead end.
+          const userId = error?.data?.id;
+          if (
+            error?.statusCode === USER_EMAIL_NOT_VERIFIED_STATUS_CODE &&
+            userId
+          ) {
+            navigate({
+              pathname: `/${ROUTES.VerifyEmail}`,
+              search: `?${new URLSearchParams({ email, userId })}`,
             });
             return;
           }

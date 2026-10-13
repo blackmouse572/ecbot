@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from eccho_ai.llm.usage import TokenUsage
+
 
 # ----- Request -----
 
@@ -63,3 +65,11 @@ class ClassifyResponse(BaseModel):
         default="",
         description="One paragraph (~50 tokens) describing who this customer is.",
     )
+
+
+class ClassifyResult(ClassifyResponse):
+    """What the endpoint returns: the model's answer plus what it spent, for
+    apps/api to meter. Kept off `ClassifyResponse` so the LLM never sees it."""
+
+    usage: TokenUsage | None = None
+    model: str | None = None

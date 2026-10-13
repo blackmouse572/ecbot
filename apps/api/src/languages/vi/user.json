@@ -10,6 +10,7 @@
     "deleteSelf": "Người dùng đã được xóa thành công. Tạm biệt!",
     "updateMobileNumber": "Số điện thoại đã được cập nhật thành công.",
     "updateClaimUsername": "Tên người dùng đã được claim thành công! Bây giờ nó là của bạn rồi.",
+    "verifyEmail": "Email đã được đánh dấu là đã xác minh.",
     "impersonate": "Đã bắt đầu phiên đăng nhập thay mặt người dùng.",
     "error": {
         "mobileNumberExist": "Số điện thoại này đã tồn tại rồi. Thử số khác xem?",

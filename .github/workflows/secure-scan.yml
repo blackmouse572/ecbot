@@ -7,7 +7,34 @@ permissions:
   contents: read
 
 jobs:
+  # The scan only runs when a PR changes dependency files (or this workflow).
+  # The gate lives in a job rather than in `on.pull_request.paths`: a skipped
+  # job still reports a passing "scan" check, so it never blocks a merge.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      deps: ${{ steps.filter.outputs.deps }}
+    steps:
+      - name: Check for dependency file changes
+        id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          pattern='(^|/)(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|\.npmrc|pyproject\.toml|uv\.lock)$|^\.github/workflows/secure-scan\.yml$'
+          files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
+          if grep -Eq "$pattern" <<< "$files"; then
+            echo "deps=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No dependency files changed, skipping the scan."
+            echo "deps=false" >> "$GITHUB_OUTPUT"
+          fi
+
   scan:
+    needs: changes
+    if: needs.changes.outputs.deps == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

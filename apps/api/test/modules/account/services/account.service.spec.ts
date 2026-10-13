@@ -837,3 +837,59 @@ describe('AccountService - update', () => {
         expect(account.accessToken).toBe('v1:v1:iv:tag:old-cipher');
     });
 });
+
+describe('AccountService - mapList', () => {
+    const entity = (toObject: () => Record<string, unknown>) =>
+        ({ toObject }) as any;
+
+    it('trims the linked chatbot to id and name', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({
+                id: 'account-1',
+                name: 'Axios Page',
+                chatbot: {
+                    id: 'bot-1',
+                    name: 'Axios Bot',
+                    generalKnowledge: 'secret',
+                },
+            })),
+        ]);
+
+        expect(mapped.chatbot).toStrictEqual({ id: 'bot-1', name: 'Axios Bot' });
+    });
+
+    it('returns null when the channel has no chatbot', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({ id: 'account-1', name: 'Axios Page' })),
+        ]);
+
+        expect(mapped.chatbot).toBeNull();
+    });
+
+    it('returns null when the linked chatbot is soft-deleted', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({
+                id: 'account-1',
+                name: 'Axios Page',
+                chatbot: { id: 'bot-9', name: 'Old Bot', deletedAt: new Date() },
+            })),
+        ]);
+
+        expect(mapped.chatbot).toBeNull();
+    });
+
+    // Callers that do not populate the relation (admin list, unlinked list)
+    // get the identifier value, not an entity: it must never surface as a
+    // chatbot summary.
+    it('returns null when the relation is an unpopulated reference id', () => {
+        const [mapped] = buildService().mapList([
+            entity(() => ({
+                id: 'account-1',
+                name: 'Axios Page',
+                chatbot: 'bot-1',
+            })),
+        ]);
+
+        expect(mapped.chatbot).toBeNull();
+    });
+});

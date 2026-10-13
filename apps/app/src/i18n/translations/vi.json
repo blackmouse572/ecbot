@@ -533,6 +533,7 @@
         "namePlaceholder": "vd. Partner CRM",
         "issuedTitle": "Đã tạo kênh",
         "issuedDescription": "Hãy lưu lại các giá trị này ở nơi an toàn trước khi đóng cửa sổ.",
+        "needsAgent": "Kênh này chỉ trả lời khi đã gắn agent. Hãy mở agent bạn muốn dùng, rồi thêm kênh này vào tài khoản liên kết của agent.",
         "apiChannel": {
           "title": "Kết nối API channel",
           "description": "Gửi và nhận tin nhắn qua REST từ hệ thống của bạn. Phản hồi sẽ được POST tới callback URL.",
@@ -698,6 +699,11 @@
           "success": "Đã cập nhật thiết lập widget.",
           "error": "Cập nhật thiết lập widget thất bại."
         }
+      },
+      "noChatbot": {
+        "title": "Chưa có agent",
+        "message": "Tạo agent để trả lời khách hàng trên kênh này.",
+        "action": "Tạo agent"
       }
     },
     "imports": {
@@ -775,6 +781,16 @@
       "unmerge": "đã tách khách hàng {{name}}",
       "mergeConfirm": "đã xác nhận gộp khách hàng {{name}}",
       "mergeDismiss": "đã bỏ qua đề xuất gộp khách hàng {{name}}"
+    },
+    "conversation": {
+      "create": "đã gửi tin nhắn cho <link/>",
+      "update": "đã cập nhật hội thoại với <link/>",
+      "unknownCustomer": "một khách hàng"
+    },
+    "plan": {
+      "changePlan": "đã thay đổi gói đăng ký",
+      "cancel": "đã huỷ gói đăng ký",
+      "resume": "đã tiếp tục gói đăng ký"
     },
     "generic": {
       "create": "đã tạo <link/>",
@@ -1169,6 +1185,7 @@
       "comingSoon": "Sắp ra mắt",
       "connectFailed": "Chưa kết nối được kênh này. Vui lòng thử lại.",
       "connected": "Đã kết nối",
+      "channelLoadFailed": "Không tải được kênh này. Bạn có thể liên kết sau.",
       "telegramTokenLabel": "Bot token từ @BotFather",
       "widgetOriginsLabel": "Các website được phép hiển thị chat (mỗi dòng một địa chỉ)",
       "channelInUse": "{{name}} đang được dùng cho agent khác. Hãy gỡ liên kết ở đó trước để dùng tại đây.",
@@ -2025,7 +2042,47 @@
     }
   },
   "subscription": {
-    "domain": "Gói đăng ký"
+    "domain": "Gói đăng ký",
+    "title": "Gói của bạn",
+    "badge": {
+      "upgrade": "Nâng cấp gói"
+    },
+    "current": {
+      "renewsOn": "Gia hạn vào {{date}}",
+      "endsOn": "Kết thúc vào {{date}}",
+      "usage": "Đã dùng {{percent}}% quota",
+      "pending": "Đổi sang {{plan}} vào {{date}}",
+      "cancelScheduled": "Huỷ vào {{date}}"
+    },
+    "actions": {
+      "current": "Gói hiện tại",
+      "choose": "Chọn gói",
+      "upgrade": "Nâng cấp",
+      "downgrade": "Hạ cấp",
+      "cancel": "Huỷ gói đăng ký",
+      "resume": "Khôi phục gói đăng ký",
+      "contactUs": "Gói này được quản lý thay bạn. Hãy liên hệ để thay đổi hoặc huỷ.",
+      "processing": "Đang chờ cổng thanh toán xác nhận thay đổi…"
+    },
+    "cancelDialog": {
+      "title": "Huỷ gói đăng ký?",
+      "reasonLabel": "Lý do bạn huỷ gói?",
+      "reasonPlaceholder": "Cho chúng tôi biết lý do (bắt buộc)",
+      "confirm": "Huỷ vào cuối kỳ"
+    },
+    "checkout": {
+      "providersTitle": "Bạn muốn thanh toán bằng cách nào?",
+      "start": "Tiếp tục thanh toán",
+      "none": "Gói này chưa có phương thức thanh toán. Hãy liên hệ với chúng tôi.",
+      "pending": "Đang chờ xác nhận thanh toán…"
+    },
+    "errors": {
+      "unavailable": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
+    "cycle": {
+      "monthly": "mỗi tháng",
+      "yearly": "mỗi năm"
+    }
   },
   "billing": {
     "domain": "Thanh toán"
@@ -2268,7 +2325,8 @@
   "knowledge_item": {
     "ingestErrors": {
       "urlNotPublic": "Trang này không công khai. Hãy dùng đường link ai cũng mở được trên internet, không phải localhost hay địa chỉ mạng nội bộ.",
-      "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại."
+      "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",
+      "noTokens": "Workspace đã hết token AI. Hãy nạp thêm hoặc gia hạn gói, rồi xử lý lại mục này."
     },
     "create_title": "Tạo Mục Kiến Thức",
     "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",
@@ -3056,7 +3114,10 @@
     "byPlatform": {
       "title": "Theo platform",
       "column": "Platform",
-      "preview": "Preview (chat thử)"
+      "preview": "Preview (chat thử)",
+      "TAG_CLASSIFIER": "Gắn tag khách hàng",
+      "AGENT_BUILDER": "Tạo agent",
+      "KNOWLEDGE_INGEST": "Xử lý kiến thức"
     },
     "share": "Tỷ trọng",
     "messages": "Tin nhắn",
@@ -3096,6 +3157,8 @@
     "invalid": "Khung chat này hiện không khả dụng.",
     "invalidHint": "Hãy kiểm tra mã widget trên website này, hoặc liên hệ chủ website.",
     "originNotAllowed": "Khung chat này chưa được bật cho website này.",
+    "noAgent": "Khung chat này chưa được thiết lập xong.",
+    "noAgentHint": "Chủ website cần chọn agent để trả lời ở đây.",
     "turnstile": {
       "required": "Vui lòng hoàn tất xác minh trước.",
       "failed": "Xác minh thất bại. Tải lại trang và thử lại."

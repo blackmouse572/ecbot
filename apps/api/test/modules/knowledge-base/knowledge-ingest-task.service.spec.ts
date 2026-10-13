@@ -5,12 +5,14 @@ import {
     ENUM_RAG_INGEST_PROCESS,
     RAG_INGEST_HTTP_TIMEOUT_MS,
     RAG_INGEST_MAX_ATTEMPTS,
+    RAG_INGEST_NO_TOKENS_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
     ENUM_KNOWLEDGE_FAILURE_KIND,
 } from '@app/modules/knowledge-base/constants/knowledge-ingest.constant';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '@app/modules/knowledge-base/enums/knowledge-base-item-type.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '@app/modules/knowledge-base/enums/knowledge-base-item-status.enum';
 import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
+import { ENUM_AI_USAGE_SOURCE } from '@app/app/ai-usage-meter.interface';
 
 jest.mock('@sentry/nestjs', () => ({ captureException: jest.fn() }));
 jest.mock('@app/common/utils/gcp-id-token.util', () => ({
@@ -619,6 +621,116 @@ describe('KnowledgeIngestTaskService', () => {
                 0
             );
             expect(notifyFailed).not.toHaveBeenCalled();
+        });
+    });
+
+    // #250: embedding a knowledge document is metered against the workspace.
+    describe('usage meter', () => {
+        const meter = { check: jest.fn(), record: jest.fn() };
+        const ingestDto = {
+            jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+            knowledgeItemId: 'item-1',
+        } as any;
+
+        beforeEach(() => {
+            meter.record.mockResolvedValue(undefined);
+            findOneById.mockResolvedValue({
+                id: 'item-1',
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
+                content: 'content',
+                title: 'Title',
+                knowledgeBase: { id: 'kb-1', workspace: { id: 'ws-1' } },
+            });
+            service = new KnowledgeIngestTaskService(
+                { findOneById, updateStatus } as any,
+                { findByKnowledgeItem } as any,
+                { getItemBuffer } as any,
+                { post: httpPost, patch: httpPatch, delete: httpDelete } as any,
+                configService as any,
+                { notifyFailed } as any,
+                meter as any
+            );
+        });
+
+        it('records the embedding tokens apps/ai reports', async () => {
+            meter.check.mockResolvedValue({ allowed: true });
+            httpPost.mockReturnValue(
+                of({
+                    data: {
+                        data: {
+                            chunk_count: 2,
+                            embedding_model: 'google/gemini-embedding-001',
+                            usage: {
+                                input_tokens: 900,
+                                output_tokens: 0,
+                                total_tokens: 900,
+                            },
+                        },
+                    },
+                })
+            );
+
+            await service.handle(ingestDto, 0);
+
+            expect(findOneById).toHaveBeenCalledWith('item-1', {
+                populate: ['knowledgeBase'],
+            });
+            expect(meter.check).toHaveBeenCalledWith('ws-1');
+            expect(meter.record).toHaveBeenCalledWith({
+                workspaceId: 'ws-1',
+                usage: { inputTokens: 900, outputTokens: 0, totalTokens: 900 },
+                source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
+                model: 'google/gemini-embedding-001',
+            });
+        });
+
+        it('still completes the item when recording the usage fails', async () => {
+            meter.check.mockResolvedValue({ allowed: true });
+            meter.record.mockRejectedValue(new Error('db down'));
+            httpPost.mockReturnValue(
+                of({
+                    data: {
+                        data: {
+                            chunk_count: 2,
+                            usage: {
+                                input_tokens: 9,
+                                output_tokens: 0,
+                                total_tokens: 9,
+                            },
+                        },
+                    },
+                })
+            );
+
+            await expect(service.handle(ingestDto, 0)).resolves.toBeUndefined();
+
+            expect(updateStatus).toHaveBeenLastCalledWith(
+                'item-1',
+                expect.objectContaining({
+                    status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
+                })
+            );
+        });
+
+        it('fails the item with a message the owner can act on when the workspace is out of tokens', async () => {
+            meter.check.mockResolvedValue({
+                allowed: false,
+                reason: 'QUOTA_EXHAUSTED',
+            });
+
+            await expect(service.handle(ingestDto, 0)).resolves.toBeUndefined();
+
+            expect(httpPost).not.toHaveBeenCalled();
+            expect(meter.record).not.toHaveBeenCalled();
+            expect(updateStatus).toHaveBeenCalledTimes(1);
+            expect(updateStatus).toHaveBeenCalledWith('item-1', {
+                status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.FAILED,
+                errorMessage: RAG_INGEST_NO_TOKENS_ERROR,
+            });
+            expect(notifyFailed).toHaveBeenCalledWith(
+                'item-1',
+                ENUM_KNOWLEDGE_FAILURE_KIND.INGEST
+            );
         });
     });
 });

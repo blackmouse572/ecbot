@@ -73,4 +73,67 @@ describe("ActivityItemDefault", () => {
       ),
     ).toContain("joined workspace Kunmart");
   });
+
+  it("names the customer a message was sent to, linked to the conversation", async () => {
+    const item = activity("CONVERSATION", "create", {
+      id: "c1",
+      name: "Lan Nguyen",
+    });
+    const { container } = render(
+      <MemoryRouter>
+        <ActivityItemDefault item={item} />
+      </MemoryRouter>,
+    );
+    expect(container.textContent).toContain("sent a message to Lan Nguyen");
+    expect(
+      container.querySelector('a[href="/kunmart/conversations/c1"]'),
+    ).not.toBeNull();
+
+    await i18n.changeLanguage("vi");
+    expect(renderItem(item)).toContain("đã gửi tin nhắn cho Lan Nguyen");
+    await i18n.changeLanguage("en");
+  });
+
+  it("names the customer of an updated conversation", () => {
+    expect(
+      renderItem(
+        activity("CONVERSATION", "update", { id: "c1", name: "Lan Nguyen" }),
+      ),
+    ).toContain("updated the conversation with Lan Nguyen");
+  });
+
+  it.each([
+    ["no name", {}],
+    ["a raw sender id", { name: "32b908a2-d449-49dc-a1f2-205fdc5abee2" }],
+    ["a numeric platform id", { name: "24536128911234567" }],
+  ])("says a customer instead of %s", (_, metadata) => {
+    const text = renderItem(
+      activity("CONVERSATION", "create", { id: "c1", ...metadata }),
+    );
+    expect(text).toContain("sent a message to a customer");
+  });
+
+  it("keeps a phone number used as the customer name", () => {
+    expect(
+      renderItem(
+        activity("CONVERSATION", "create", { id: "c1", name: "84912345678" }),
+      ),
+    ).toContain("sent a message to 84912345678");
+  });
+
+  it.each([
+    ["subscription_change_plan", "Changed the subscription plan"],
+    ["subscription_cancel", "Cancelled the subscription"],
+    ["subscription_resume", "Resumed the subscription"],
+  ])("labels a PLAN %s activity", (action, message) => {
+    expect(renderItem(activity("PLAN", action, {}))).toContain(message);
+  });
+
+  it("labels a PLAN plan change in vi", async () => {
+    await i18n.changeLanguage("vi");
+    expect(
+      renderItem(activity("PLAN", "subscription_change_plan", {})),
+    ).toContain("đã thay đổi gói đăng ký");
+    await i18n.changeLanguage("en");
+  });
 });

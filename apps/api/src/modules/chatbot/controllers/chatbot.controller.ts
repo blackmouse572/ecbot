@@ -18,6 +18,7 @@ import {
     IResponsePaging,
 } from '@app/common/response/interfaces/response.interface';
 import { getDiffObject, pickDefinedFields } from '@app/common/utils/common';
+import { isEqual, pick } from 'lodash';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { ApiKeyProtected } from '@app/modules/api-key/decorators/api-key.decorator';
@@ -295,6 +296,15 @@ export class ChatbotController {
         // editable through this endpoint yet.
         const editableFields = pickDefinedFields(dto, CHATBOT_EDITABLE_FIELDS);
 
+        // update() edits the loaded entity in place, so copy the old values
+        // first. Accounts are a collection, so compare their ids instead.
+        const { accounts, ...changedFields } = editableFields;
+        const changedKeys = Object.keys(changedFields);
+        const before = structuredClone(pick(chatbot, changedKeys));
+        const oldAccountIds = accounts?.length
+            ? (await chatbot.accounts.loadItems()).map(account => account.id)
+            : [];
+
         const updatedChatbot = await this.chatbotService.update(
             chatbot,
             editableFields,
@@ -303,17 +313,31 @@ export class ChatbotController {
             }
         );
 
-        const diff = getDiffObject(chatbot, updatedChatbot);
-        await this.activityService.createByUserWithWorkspace(user, workspace, {
-            action: ENUM_ACTIVITY_ACTION.UPDATE,
-            subject: ENUM_POLICY_SUBJECT.CHATBOT,
-            metadata: {
-                id: chatbot.id,
-                name: chatbot.name,
-                old: diff.old,
-                new: diff.new,
-            },
-        });
+        const diff = getDiffObject(before, pick(updatedChatbot, changedKeys));
+        if (
+            accounts?.length &&
+            !isEqual([...accounts].sort(), [...oldAccountIds].sort())
+        ) {
+            diff.old.accounts = oldAccountIds;
+            diff.new.accounts = accounts;
+        }
+
+        if (Object.keys(diff.new).length > 0) {
+            await this.activityService.createByUserWithWorkspace(
+                user,
+                workspace,
+                {
+                    action: ENUM_ACTIVITY_ACTION.UPDATE,
+                    subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                    metadata: {
+                        id: updatedChatbot.id,
+                        name: updatedChatbot.name,
+                        old: diff.old,
+                        new: diff.new,
+                    },
+                }
+            );
+        }
         return {
             data: this.chatbotService.mapList([updatedChatbot])[0],
         };

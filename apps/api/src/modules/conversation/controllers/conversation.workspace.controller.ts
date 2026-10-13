@@ -183,15 +183,6 @@ export class ConversationWorkspaceController {
         }
 
         await this.conversationService.markConversationRead(user.id, id);
-
-        await this.activityService.createByUserWithWorkspace(user, workspace, {
-            action: ENUM_ACTIVITY_ACTION.UPDATE,
-            subject: ENUM_POLICY_SUBJECT.CONVERSATION,
-            metadata: {
-                id: conversation.id,
-                name: conversation.senderId,
-            },
-        });
     }
 
     @ConversationWorkspaceGetDoc()
@@ -280,7 +271,7 @@ export class ConversationWorkspaceController {
             subject: ENUM_POLICY_SUBJECT.CONVERSATION,
             metadata: {
                 id: conversation.id,
-                name: conversation.senderId,
+                name: conversation.senderName,
             },
         });
 
@@ -327,7 +318,7 @@ export class ConversationWorkspaceController {
             subject: ENUM_POLICY_SUBJECT.CONVERSATION,
             metadata: {
                 id: conversation.id,
-                name: conversation.senderId,
+                name: conversation.senderName,
             },
         });
 
@@ -448,7 +439,7 @@ export class ConversationWorkspaceController {
             subject: ENUM_POLICY_SUBJECT.CONVERSATION,
             metadata: {
                 id,
-                name: conversation?.senderId || id,
+                name: conversation?.senderName,
             },
         });
 
@@ -487,12 +478,18 @@ export class ConversationWorkspaceController {
             operatorUserId: user.id,
         });
 
+        const conversation =
+            await this.conversationService.findOneByIdInWorkspace(
+                id,
+                workspace.id
+            );
+
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,
             subject: ENUM_POLICY_SUBJECT.CONVERSATION,
             metadata: {
                 id,
-                name: id,
+                name: conversation?.senderName,
             },
         });
 

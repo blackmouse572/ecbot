@@ -48,7 +48,7 @@ export function AccountDetails() {
         </TwoColumnPage.Main>
         <TwoColumnPage.Sidebar>
           <AccountAlertSection item={account} />
-          <AccountChatbotSection accountId={account.id} />
+          <AccountChatbotSection accountId={account.id} type={account.type} />
         </TwoColumnPage.Sidebar>
       </TwoColumnPage>
     </SingleColumnPage>

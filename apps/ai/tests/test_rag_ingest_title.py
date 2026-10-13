@@ -28,7 +28,7 @@ def _service(monkeypatch, tmp_path):
     service = RAGIngestService(store=store, embedder=object())
 
     async def embed(texts):
-        return [[0.0] * service.embedding_dimension for _ in texts]
+        return [[0.0] * service.embedding_dimension for _ in texts], None
 
     monkeypatch.setattr(service, "_embed_documents", embed)
     monkeypatch.setattr(service, "_validate_embeddings", lambda *_a, **_k: None)
