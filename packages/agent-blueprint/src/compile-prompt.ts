@@ -4,6 +4,7 @@ import {
   ADDRESS_STYLE, AFTER_HOURS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
   NO_FACTS_PROVIDED, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
 } from "./libraries";
+import { describeOpeningHours, hasOpeningHours } from "./opening-hours";
 import { PRESETS } from "./presets";
 import type { AgentProfile } from "./profile";
 
@@ -76,11 +77,17 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
     `Tone: ${promptOf(FORMALITY, profile.formality)}`,
   ]);
 
+  // Structured hours are the source of truth (#289); the free-text answer
+  // then only adds notes such as "kitchen closes 30 minutes earlier".
+  const weeklyHours = !type.personal && hasOpeningHours(profile.openingHours) ? profile.openingHours : undefined;
   const allowedFacts = PRESETS[profile.businessType].facts;
-  const facts = allowedFacts
-    .map((id: FactId) => [id, profile.facts[id]?.trim()] as const)
-    .filter(([, v]) => !!v)
-    .map(([id, v]) => `${promptOf(FACTS, id)}: ${plain(v as string)}`);
+  const facts = [
+    weeklyHours ? `Opening hours: ${describeOpeningHours(weeklyHours)}` : "",
+    ...allowedFacts
+      .map((id: FactId) => [id, profile.facts[id]?.trim()] as const)
+      .filter(([, v]) => !!v)
+      .map(([id, v]) => `${id === "opening_hours" && weeklyHours ? "Opening hours notes" : promptOf(FACTS, id)}: ${plain(v as string)}`),
+  ].filter(Boolean);
   const knowledge = section("Knowledge", facts.length
     ? facts.map((f, i) => (type.mode === "detailed" ? `${i + 1}. ${f}` : `- ${f}`))
     : [NO_FACTS_PROVIDED]);
@@ -105,7 +112,7 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
     `${profile.rules.length + 1}. When you are not sure: ${promptOf(UNSURE, profile.unsure)}`,
   ]);
 
-  const hoursKnown = allowedFacts.includes("opening_hours") && !!profile.facts.opening_hours?.trim();
+  const hoursKnown = !!weeklyHours || (allowedFacts.includes("opening_hours") && !!profile.facts.opening_hours?.trim());
   const afterHours = profile.afterHours === "share_hours" && !hoursKnown
     ? HOURS_NOT_PROVIDED
     : promptOf(AFTER_HOURS, profile.afterHours);

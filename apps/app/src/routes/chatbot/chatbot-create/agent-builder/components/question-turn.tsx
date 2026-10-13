@@ -14,6 +14,7 @@ import { businessTypeIcon } from "./business-type-icon";
 import { ChannelConnect } from "./channel-connect";
 import { CustomCollectEditor } from "./custom-collect-editor";
 import { channelIcon } from "./channel-icon";
+import { OpeningHoursTurn } from "./opening-hours-turn";
 
 type Props = {
   question: Question;
@@ -111,6 +112,10 @@ export function QuestionTurn({
         : `agentBuilder.examples.${profile.businessType}.businessName`,
     ),
   };
+
+  if (question.kind === "hours") {
+    return <OpeningHoursTurn question={question} profile={profile} position={position} onAnswer={onAnswer} onSkip={onSkip} />;
+  }
 
   if (question.id === "channels" && chatbotId) {
     return (

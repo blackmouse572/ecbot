@@ -3,7 +3,8 @@
 One shared agent is compiled once; this middleware customizes it per request
 from the chatbot config carried on the runtime context — swapping the model,
 injecting the chatbot's operator tools, rendering its system prompt, and
-prefixing the turn's current time onto the newest human message (#285).
+prefixing the turn's current time (#285) and open/closed status (#289) onto the
+newest human message.
 
 Async hooks (`awrap_*`) are required: the app invokes the agent asynchronously
 (`ainvoke` / `astream_events`), and the sync hooks raise under async invocation.
@@ -23,6 +24,7 @@ from eccho_ai.llm.prompts.current_time import (
     with_current_time,
 )
 from eccho_ai.llm.prompts.loader import render_system_prompt
+from eccho_ai.llm.prompts.opening_hours import render_opening_hours
 from eccho_ai.llm.providers.chat_model import build_chat_model
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 
@@ -50,6 +52,13 @@ def _with_sticky_session(model, conversation_id: str | None):
     )
 
 
+def _turn_context(chatbot, now) -> str:
+    """The clock, then the open/closed status when the agent has weekly hours (#289)."""
+    tz = resolve_timezone(chatbot)
+    blocks = [render_current_time(now, tz), render_opening_hours(chatbot, now, tz)]
+    return "\n".join(b for b in blocks if b)
+
+
 class ChatbotConfigMiddleware(AgentMiddleware[AgentState[Any], AgentRequestContext]):
     async def awrap_model_call(self, request, handler):
         context = _context_from(request)
@@ -67,10 +76,7 @@ class ChatbotConfigMiddleware(AgentMiddleware[AgentState[Any], AgentRequestConte
                 ),
                 tools=[*request.tools, *injected],
                 system_prompt=render_system_prompt(chatbot),
-                messages=with_current_time(
-                    request.messages,
-                    render_current_time(context.now, resolve_timezone(chatbot)),
-                ),
+                messages=with_current_time(request.messages, _turn_context(chatbot, context.now)),
             )
         return await handler(request)
 
