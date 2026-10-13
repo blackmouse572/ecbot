@@ -63,6 +63,24 @@ describe("useUnreadNotificationCount", () => {
 
     await waitFor(() => expect(result.current.count).toBe(3));
   });
+
+  it("polls only while the tab is focused", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const { result } = renderHook(() => useUnreadNotificationCount(), {
+      wrapper: ({ children }: PropsWithChildren) =>
+        createElement(QueryClientProvider, { client }, children),
+    });
+    await waitFor(() => expect(result.current.count).toBe(3));
+
+    const query = client.getQueryCache().find({
+      queryKey: notificationQueryKey.list({ scope: "unread-count" }),
+    })!;
+    const options = query.observers[0].options;
+    expect(options.refetchInterval).toBe(30_000);
+    expect(options.refetchIntervalInBackground).toBeFalsy();
+  });
 });
 
 describe("useMarkNotificationsAsRead", () => {

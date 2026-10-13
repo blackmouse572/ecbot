@@ -80,13 +80,8 @@ export function useUnreadNotifications(query?: Record<string, A>) {
   return { notifications: data?.data ?? [], data, ...rest };
 }
 
-/**
- * `pollInBackground`: keep polling while the tab is hidden, so the
- * new-notification sound still plays. Only one tab should do this.
- */
-export function useUnreadNotificationCount({
-  pollInBackground = false,
-}: { pollInBackground?: boolean } = {}) {
+/** Polls only while the tab is visible; regaining focus refetches once. */
+export function useUnreadNotificationCount() {
   const { data, ...rest } = useQuery({
     queryKey: notificationQueryKey.list({ scope: "unread-count" }),
     queryFn: async () => {
@@ -94,7 +89,7 @@ export function useUnreadNotificationCount({
       return response?.data as unknown as { data: { count: number } };
     },
     refetchInterval: 30_000,
-    refetchIntervalInBackground: pollInBackground,
+    refetchIntervalInBackground: false,
   });
 
   return { count: data?.data?.count ?? 0, ...rest };
