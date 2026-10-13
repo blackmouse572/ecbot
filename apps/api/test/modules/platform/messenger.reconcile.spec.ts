@@ -83,6 +83,47 @@ describe('MessengerPlatformAdapter.reconcile', () => {
         );
     });
 
+    it('names the customer from the conversation participants, for imports the profile API cannot resolve', async () => {
+        const account = makeAccount('page-123');
+        const httpGetSpy = jest.spyOn(adapter as any, 'httpGet');
+        httpGetSpy.mockResolvedValueOnce({ data: [{ id: 'conv-1' }] });
+        httpGetSpy.mockResolvedValueOnce({
+            participants: {
+                data: [
+                    { id: 'page-123', name: 'Shop Page' },
+                    { id: 'user-psid', name: 'Lan Nguyen' },
+                ],
+            },
+            messages: {
+                data: [
+                    makeRawMsg('msg-1', 'user-psid', '2026-01-02T00:00:00Z'),
+                    {
+                        ...makeRawMsg(
+                            'msg-2',
+                            'page-123',
+                            '2026-01-02T00:01:00Z',
+                            'hi there'
+                        ),
+                        to: { data: [{ id: 'user-psid' }] },
+                    },
+                ],
+            },
+        });
+
+        const events = await adapter.reconcile(
+            account,
+            new Date('2026-01-01T00:00:00Z')
+        );
+
+        expect(events.map(e => e.senderName)).toEqual([
+            'Lan Nguyen',
+            'Lan Nguyen',
+        ]);
+        const fields = (httpGetSpy.mock.calls[1][1] as Record<string, string>)
+            .fields;
+        expect(fields).toContain('participants');
+    });
+
     it('skips a conversation that throws and continues', async () => {
         const lookback = new Date('2026-01-01T00:00:00Z');
         const httpGetSpy = jest.spyOn(adapter as any, 'httpGet');

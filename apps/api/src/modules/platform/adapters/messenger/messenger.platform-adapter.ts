@@ -352,6 +352,7 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
         const events: PlatformWebhookEvent[] = [];
         for (const convoId of conversationIds) {
             let convoData: {
+                participants?: { data?: { id: string; name?: string }[] };
                 messages?: {
                     data: {
                         id: string;
@@ -364,6 +365,7 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
             };
             try {
                 convoData = await this.httpGet<{
+                    participants?: { data?: { id: string; name?: string }[] };
                     messages: {
                         data: {
                             id: string;
@@ -376,8 +378,9 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
                 }>(this.graphUrl(convoId), {
                     access_token: this.token(account),
                     // `to` identifies the customer on page-authored messages,
-                    // where `from` is the page itself.
-                    fields: `messages.since(${sinceUnix}).limit(1000){id,message,created_time,from,to}`,
+                    // where `from` is the page itself. `participants` names
+                    // the customer for imports the profile API can't resolve.
+                    fields: `participants,messages.since(${sinceUnix}).limit(1000){id,message,created_time,from,to}`,
                 });
             } catch (err) {
                 this.logger.warn(
@@ -386,6 +389,9 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
                 continue;
             }
             const rawMsgs = convoData.messages?.data ?? [];
+            const participantNames = new Map(
+                (convoData.participants?.data ?? []).map(p => [p.id, p.name])
+            );
             if (rawMsgs.length >= 1000) {
                 this.logger.warn(
                     `reconcile: message list may be truncated at 1000 for conversation ${convoId} — some messages may be missed`
@@ -408,6 +414,7 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
                     kind: fromPage ? 'echo' : 'message',
                     accountKey: account.externalId,
                     senderId: customerId,
+                    senderName: participantNames.get(customerId),
                     recipientId: account.externalId,
                     externalMessageId: m.id,
                     text: m.message,

@@ -41,7 +41,11 @@ export class InboundReconciliationScheduler {
                 );
                 for (const event of events) {
                     try {
-                        await this.inbox.accept(account.type, event);
+                        // Replayed history is imported, never answered (ADR-0009).
+                        await this.inbox.accept(account.type, {
+                            ...event,
+                            replayed: true,
+                        });
                     } catch (err) {
                         this.logger.error(
                             `accept failed mid=${event.externalMessageId}: ${(err as Error).message}`

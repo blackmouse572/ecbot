@@ -72,6 +72,13 @@ export interface PlatformWebhookEvent {
      * for.
      */
     sentByUs?: boolean;
+    /**
+     * History re-emitted by the reconciliation sweep, not a live webhook. It
+     * is stored (and may refresh the customer's identity) but never answered:
+     * by the time it is replayed it can be outside the platform's reply
+     * window, and a reply would only fail after spending tokens (ADR-0009).
+     */
+    replayed?: boolean;
     externalMessageId?: string;
     text?: string;
     timestamp: Date;

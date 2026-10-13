@@ -55,6 +55,16 @@ describe('InboundInboxService.accept (Cloud Tasks intake seam)', () => {
         expect(messageProcessor.process).not.toHaveBeenCalled();
     });
 
+    it('carries the replayed marker through the task payload (JSON round-trip)', async () => {
+        await inbox.accept(ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE, {
+            ...baseEvent,
+            replayed: true,
+        });
+
+        const [, , payload] = cloudTasks.enqueue.mock.calls[0];
+        expect(JSON.parse(JSON.stringify(payload)).event.replayed).toBe(true);
+    });
+
     it('names the task deterministically per platform + externalMessageId', async () => {
         await inbox.accept(ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE, baseEvent);
         await dedupe.releaseEnqueue(ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE, 'mid-1');
