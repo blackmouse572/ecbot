@@ -156,6 +156,23 @@ describe("compilePrompt", () => {
     expect(out).toContain("Opening hours: sample opening_hours");
   });
 
+  // #291: bookings respect real time and hours, and go to staff with a tag.
+  it("grounds booking goals in the current time and hands confirmed bookings to staff", () => {
+    for (const type of ["beauty", "restaurant"] as const) {
+      const out = compilePrompt(sample(type, "en"));
+      expect(out).toContain("Only offer or accept times that are still ahead of now and inside the opening hours");
+      expect(out).toContain("If no opening hours are given, take the customer's preferred time without promising it.");
+      expect(out).toContain('applying the tag marked "(triggers handoff)" for new bookings ("New booking" by default)');
+      expect(out).toContain("Never say the booking is confirmed.");
+    }
+  });
+
+  it("treats a callback request as a booking for business types only", () => {
+    const callback = "If the customer asks to be called back";
+    expect(compilePrompt(sample("ecommerce", "en"))).toContain(callback);
+    expect(compilePrompt(sample("personal_scheduling", "en"))).not.toContain(callback);
+  });
+
   // #119: no guessing stock or variants, and no "I will check" promise.
   it("forbids stating stock, variants or prices that are not in the facts", () => {
     const out = compilePrompt(sample("ecommerce", "en"));
