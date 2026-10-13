@@ -19,7 +19,6 @@ pytestmark = pytest.mark.integration
 @pytest.mark.asyncio
 async def test_full_text_search_matches_chunk_source_titles(pg_store_factory):
     store = pg_store_factory()
-    await store.ensure_schema()
 
     cases = [
         ("Refund policy", "refund-policy.txt", "refund policy"),
