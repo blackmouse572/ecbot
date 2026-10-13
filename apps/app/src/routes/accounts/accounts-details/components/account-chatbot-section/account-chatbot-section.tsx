@@ -23,7 +23,7 @@ type Props = {
 export const AccountChatbotSection = ({ accountId, type, initialData }: Props) => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
-  const { chatbot, isLoading } = useAccountChatbot(accountId, { initialData });
+  const { chatbot, isLoading, isError } = useAccountChatbot(accountId, { initialData });
 
   const linkedChatbotId = isLoading ? undefined : chatbot?.id;
 
@@ -31,7 +31,9 @@ export const AccountChatbotSection = ({ accountId, type, initialData }: Props) =
     return <ChatbotSection chatbotId={linkedChatbotId} title={t("chatbot.title")} />;
   }
 
-  if (isLoading || !isConnectableAccountType(type)) return null;
+  // Without a settled lookup there is nothing honest to show: a failed
+  // request must not claim the channel has no agent.
+  if (isLoading || isError || !isConnectableAccountType(type)) return null;
 
   return (
     <Container className="p-0">
