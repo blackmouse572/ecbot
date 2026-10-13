@@ -98,6 +98,27 @@ describe('InboundEventTaskController', () => {
         expect(dto.event).toEqual(body.event);
     });
 
+    it('keeps the replayed marker on the event under production validation options', async () => {
+        const replayedBody = {
+            ...body,
+            event: { ...body.event, replayed: true },
+        };
+        const dto = plainToInstance(InboundEventTaskDto, replayedBody);
+        await validate(dto, {
+            whitelist: REQUEST_VALIDATION_PIPE_OPTIONS.whitelist,
+            forbidNonWhitelisted:
+                REQUEST_VALIDATION_PIPE_OPTIONS.forbidNonWhitelisted,
+            forbidUnknownValues:
+                REQUEST_VALIDATION_PIPE_OPTIONS.forbidUnknownValues,
+        });
+
+        await controller.handle(dto);
+
+        expect(processor.process).toHaveBeenCalledWith(
+            expect.objectContaining({ replayed: true })
+        );
+    });
+
     it('rejects a body without an event or with an unknown jobName', async () => {
         for (const payload of [
             { jobName: ENUM_INBOUND_EVENT_PROCESS.INGEST },

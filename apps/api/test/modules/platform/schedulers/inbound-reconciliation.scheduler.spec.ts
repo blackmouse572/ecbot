@@ -69,8 +69,32 @@ describe('InboundReconciliationScheduler', () => {
         expect(inbox.accept).toHaveBeenCalledTimes(1);
         expect(inbox.accept).toHaveBeenCalledWith(
             ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
-            event
+            { ...event, replayed: true }
         );
+    });
+
+    it('marks every reconciled event as replayed history, so it is stored but never answered', async () => {
+        accountRepository.findAllActive.mockResolvedValue([makeAccount()]);
+        registry.has.mockReturnValue(true);
+        registry.get.mockReturnValue({
+            reconcile: jest
+                .fn()
+                .mockResolvedValue([
+                    makeEvent(),
+                    {
+                        ...makeEvent(),
+                        kind: 'echo',
+                        externalMessageId: 'msg-2',
+                    },
+                ]),
+        } as any);
+        inbox.accept.mockResolvedValue('accepted');
+
+        await scheduler.handleReconcile();
+
+        for (const [, event] of inbox.accept.mock.calls) {
+            expect(event.replayed).toBe(true);
+        }
     });
 
     it('passes a lookback date ~25h in the past to reconcile', async () => {

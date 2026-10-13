@@ -29,6 +29,8 @@ import { MessageDebounceService } from './message-debounce.service';
 import { ActionRouter } from './action-router.service';
 import { GenerationLeaseService } from './generation-lease.service';
 import { InboundEventDedupeService } from './inbound-event-dedupe.service';
+import { SENDER_PROFILE_STALE_MS } from '../constants/sender-profile.constant';
+import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 
 @Injectable()
 export class MessageProcessorService implements OnModuleInit {
@@ -165,8 +167,10 @@ export class MessageProcessorService implements OnModuleInit {
         // effective message text so persistence + debounce work unchanged.
         const effectiveText = event.action?.value ?? event.text ?? '';
 
-        // Dispatch to a registered handler first; if handled, stop here.
-        if (event.action) {
+        // Dispatch to a registered handler first; if handled, stop here. A
+        // replayed button press is history: its handler already ran, or the
+        // moment for it has passed.
+        if (event.action && !event.replayed) {
             const handled = await this.actionRouter.dispatch(event.action.id, {
                 conversationId: conversation.id,
                 senderId: event.senderId,
@@ -175,52 +179,14 @@ export class MessageProcessorService implements OnModuleInit {
             if (handled) return;
         }
 
-        const STALE_MS = 7 * 24 * 60 * 60 * 1000;
-        const isStale =
-            !conversation.senderProfileFetchedAt ||
-            Date.now() - conversation.senderProfileFetchedAt.getTime() >
-                STALE_MS;
-
-        if (isStale) {
-            try {
-                const profile = await adapter.fetchSenderProfile(
-                    account,
-                    event.senderId
-                );
-                const senderName = profile.name ?? event.senderName;
-                const avatarBase64 = profile.avatar
-                    ? await fetchAsBase64(profile.avatar)
-                    : undefined;
-                const fetchedAt = new Date();
-                await this.conversationService.updateSenderProfile(
-                    conversation.id,
-                    {
-                        senderName,
-                        senderAvatar: avatarBase64 ?? null,
-                        senderProfileFetchedAt: fetchedAt,
-                    }
-                );
-                await this.customerService.updateContactPointProfile(
-                    contactPoint.id,
-                    {
-                        displaySenderName: senderName,
-                        senderAvatar: avatarBase64 ?? null,
-                        fetchedAt,
-                    }
-                );
-                await this.customerService.fillCustomerNameIfEmpty(
-                    customerId,
-                    senderName
-                );
-                conversation.senderName = senderName;
-                conversation.senderAvatar = avatarBase64 ?? null;
-                conversation.senderProfileFetchedAt = fetchedAt;
-            } catch (e) {
-                this.logger.warn(
-                    `fetchSenderProfile failed for account=${account.type} sender=${event.senderId}: ${(e as Error).message}`
-                );
-            }
-        }
+        await this.refreshSenderProfile(
+            adapter,
+            account,
+            event,
+            conversation,
+            contactPoint.id,
+            customerId
+        );
 
         const inbound = event.externalMessageId
             ? await this.messageRepository.upsertByExternalId(
@@ -248,6 +214,10 @@ export class MessageProcessorService implements OnModuleInit {
             account.id,
             event.senderId
         );
+
+        // Replayed history is imported, not answered (ADR-0009): nothing below
+        // may talk to the customer, reopen the thread or spend tokens.
+        if (event.replayed) return;
 
         this.customerTagClassifierService
             .scheduleAfterMessage(conversation.id, new Date())
@@ -403,6 +373,70 @@ export class MessageProcessorService implements OnModuleInit {
     }
 
     /**
+     * Fill the conversation's sender name/avatar from the platform, at most
+     * once per SENDER_PROFILE_STALE_MS. Shared by the customer-message and echo
+     * paths. A lookup that finds no identity is not stamped as fetched, so the
+     * next event retries instead of caching "nobody" for a week.
+     */
+    private async refreshSenderProfile(
+        adapter: PlatformAdapter,
+        account: AccountEntity,
+        event: PlatformWebhookEvent,
+        conversation: ConversationEntity,
+        contactPointId: string,
+        customerId: string
+    ): Promise<void> {
+        const fetchedAt = conversation.senderProfileFetchedAt;
+        if (
+            fetchedAt &&
+            Date.now() - fetchedAt.getTime() <= SENDER_PROFILE_STALE_MS
+        ) {
+            return;
+        }
+
+        try {
+            const profile = await adapter.fetchSenderProfile(
+                account,
+                event.senderId
+            );
+            const senderName = profile.name ?? event.senderName;
+            if (!senderName && !profile.avatar) return;
+
+            const avatarBase64 = profile.avatar
+                ? await fetchAsBase64(profile.avatar)
+                : undefined;
+            const now = new Date();
+            await this.conversationService.updateSenderProfile(
+                conversation.id,
+                {
+                    senderName,
+                    senderAvatar: avatarBase64 ?? null,
+                    senderProfileFetchedAt: now,
+                }
+            );
+            await this.customerService.updateContactPointProfile(
+                contactPointId,
+                {
+                    displaySenderName: senderName,
+                    senderAvatar: avatarBase64 ?? null,
+                    fetchedAt: now,
+                }
+            );
+            await this.customerService.fillCustomerNameIfEmpty(
+                customerId,
+                senderName
+            );
+            conversation.senderName = senderName;
+            conversation.senderAvatar = avatarBase64 ?? null;
+            conversation.senderProfileFetchedAt = now;
+        } catch (e) {
+            this.logger.warn(
+                `fetchSenderProfile failed for account=${account.type} sender=${event.senderId}: ${(e as Error).message}`
+            );
+        }
+    }
+
+    /**
      * Copy each image into our own storage: platform links expire or need
      * credentials. On any failure the image keeps its platform link, so the
      * turn still goes through. The platform `raw` payload is not kept here —
@@ -475,13 +509,12 @@ export class MessageProcessorService implements OnModuleInit {
         );
         if (!account?.chatbot) return;
 
-        const { contactPoint } = await this.customerService.resolveContactPoint(
-            {
+        const { contactPoint, customerId } =
+            await this.customerService.resolveContactPoint({
                 workspaceId: account.chatbot.workspace.id,
                 platform: account.type,
                 externalSenderId: event.senderId,
-            }
-        );
+            });
 
         const conversation = await this.conversationService.findOrCreate({
             chatbotId: account.chatbot.id,
@@ -489,6 +522,17 @@ export class MessageProcessorService implements OnModuleInit {
             senderId: event.senderId,
             contactPointId: contactPoint.id,
         });
+
+        // A page-first import creates the conversation here, so this path
+        // must name the customer too, or the thread stays anonymous.
+        await this.refreshSenderProfile(
+            this.registry.get(account.type),
+            account,
+            event,
+            conversation,
+            contactPoint.id,
+            customerId
+        );
 
         await this.messageRepository.upsertByExternalId(
             conversation.id,
