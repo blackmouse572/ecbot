@@ -86,6 +86,13 @@
         },
         "complete": {
             "success": "Composio install complete"
+        },
+        "toolkit": {
+            "success": "Toolkit retrieved",
+            "error": {
+                "notFound": "This toolkit was not found.",
+                "unavailable": "The marketplace is not responding right now. Try again in a moment."
+            }
         }
     },
     "discover": {

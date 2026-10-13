@@ -40,6 +40,11 @@ export interface AdapterCapabilities {
     deleteMessage: boolean;
     reactions: { inbound: boolean; outbound: boolean };
     typing: boolean;
+    /**
+     * How often to re-send the typing indicator while a reply generates, when
+     * the platform expires it sooner than MESSAGE_TYPING_REFRESH_MS allows.
+     */
+    typingRefreshMs?: number;
     markRead: boolean;
 }
 

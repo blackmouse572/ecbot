@@ -1171,6 +1171,9 @@
       "tryAgent": "Trò chuyện với {{name}}",
       "yourAgent": "agent của bạn",
       "promptTab": "Prompt",
+      "promptSummaryIntro": "Những gì agent được dặn, theo câu trả lời của bạn. Agent đọc phần này dưới dạng prompt tiếng Anh.",
+      "showFullPrompt": "Xem prompt đầy đủ (tiếng Anh)",
+      "hideFullPrompt": "Ẩn prompt đầy đủ",
       "progress": "Câu {{current}} / {{total}}, còn khoảng {{minutes}} phút",
       "testEarlyHint": "Sau khi đặt tên cho agent, bạn có thể thử ngay và hoàn thành phần còn lại sau.",
       "extraInstructions": "Hướng dẫn bổ sung",
@@ -3010,6 +3013,19 @@
         "composio": "Composio",
         "eccho": "Ecbot",
         "ecchoComingSoon": "Sắp ra mắt: công cụ nội bộ sẽ có trong bản cập nhật tới."
+      },
+      "access": {
+        "actionsTitle": "Công cụ này làm được gì ({{count}})",
+        "actionsEmpty": "Composio chưa liệt kê thao tác nào cho toolkit này.",
+        "actionsEmptyEccho": "Công cụ Ecbot này sẽ liệt kê các thao tác sau khi bạn cài đặt.",
+        "actionsCapped": "Đang hiển thị {{count}} thao tác đầu tiên.",
+        "destructiveHint": "Các thao tác có thể xóa dữ liệu sẽ tắt cho đến khi bạn bật cho từng agent.",
+        "showAll": "Xem tất cả {{count}}",
+        "showLess": "Thu gọn",
+        "scopesTitle": "Quyền truy cập được yêu cầu",
+        "scopesIntro": "Khi cài đặt, {{name}} sẽ đề nghị bạn cho phép truy cập tài khoản như dưới đây. Quyền này có thể rộng hơn những gì các thao tác bên dưới cần.",
+        "redirectNote": "Khi bấm Cài đặt, trang đăng nhập {{name}} sẽ mở ngay trong tab này, xong sẽ quay lại đây.",
+        "loadError": "Không tải được danh sách thao tác của toolkit này."
       },
       "callback": {
         "installing": "Đang hoàn tất cài đặt…",

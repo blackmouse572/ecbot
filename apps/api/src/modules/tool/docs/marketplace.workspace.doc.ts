@@ -14,6 +14,7 @@ import { CompleteInstallRequestDto } from 'src/modules/tool/dtos/request/complet
 import { InstallMarketplaceRequestDto } from 'src/modules/tool/dtos/request/install-marketplace.request.dto';
 import { ReauthMarketplaceRequestDto } from 'src/modules/tool/dtos/request/reauth-marketplace.request.dto';
 import {
+    ComposioToolkitAccessResponseDto,
     ComposioToolkitCategoryDto,
     ComposioToolkitDetailResponseDto,
     ComposioToolkitResponseDto,
@@ -108,6 +109,30 @@ export function MarketplaceWorkspaceToolkitDetailDoc(): MethodDecorator {
         DocResponse('tool.marketplace.toolkit.success', {
             httpStatus: HttpStatus.OK,
             dto: ComposioToolkitDetailResponseDto,
+        })
+    );
+}
+
+export function MarketplaceWorkspaceToolkitAccessDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                'list what a toolkit can do and the account access it asks for, before install',
+        }),
+        DocRequest({
+            params: [
+                ...WorkspaceDocParamsId,
+                { name: 'slug', description: 'the slug of the toolkit' },
+            ],
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocGuard({ role: true, policy: true }),
+        DocResponse('tool.marketplace.toolkit.success', {
+            httpStatus: HttpStatus.OK,
+            dto: ComposioToolkitAccessResponseDto,
         })
     );
 }

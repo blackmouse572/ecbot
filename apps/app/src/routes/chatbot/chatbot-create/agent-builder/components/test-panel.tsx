@@ -7,9 +7,9 @@ import { useAuthToken } from "@/modules/auth";
 import { compilePrompt, type AgentProfile } from "@repo/agent-blueprint";
 import { Tabs } from "@medusajs/ui";
 import { ScrollArea } from "@repo/ui/components";
-import { MessageResponse } from "@repo/ui/common-components";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { PromptSummary } from "./prompt-summary";
 
 type Props = {
   chatbotId: string;
@@ -49,7 +49,7 @@ export function TestPanel({ chatbotId, profile, extraInstructions, agentDisplayN
       </Tabs.Content>
       <Tabs.Content value="prompt" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <MessageResponse>{prompt}</MessageResponse>
+          {profile && <PromptSummary profile={profile} extraInstructions={extraInstructions} prompt={prompt} />}
         </ScrollArea>
       </Tabs.Content>
     </Tabs>

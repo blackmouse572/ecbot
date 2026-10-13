@@ -51,6 +51,7 @@ class _Retrieval:
     def __init__(self, context: str, has_context: bool = True):
         self.context = context
         self.has_context = has_context
+        self.status = "ok" if has_context else "below_threshold"
 
 
 def test_rag_message_passthrough_when_no_context():
@@ -361,3 +362,15 @@ async def test_stream_generator_processes_events_when_connected():
     [c async for c in response_generator()]
 
     assert events_processed == ["on_chat_model_stream"]
+
+
+# ---------------------------------------------------------------------------
+# #181: a short menu answer dropped the prices get_menu returned
+# ---------------------------------------------------------------------------
+
+
+def test_prompt_keeps_prices_when_listing_items():
+    accuracy = system_prompt_template().split("<accuracy>")[1].split("</accuracy>")[0]
+    assert "include each one's price when it is stated there" in accuracy
+    # ...without pulling against "never invent prices".
+    assert "if no price is given, do not make one up" in accuracy

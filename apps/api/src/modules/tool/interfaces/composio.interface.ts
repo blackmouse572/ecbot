@@ -74,6 +74,8 @@ export interface ComposioToolkitAuthField {
 
 export interface ComposioToolkitAuthConfigDetail {
     mode: string;
+    /** Scopes the sign-in always requests for this mode. */
+    required_scopes?: string[];
     name: string;
     auth_hint_url?: string;
     fields: {
@@ -87,6 +89,15 @@ export interface ComposioToolkitAuthConfigDetail {
         };
     };
     proxy?: { base_url: string };
+}
+
+/**
+ * The auth part of `GET /toolkits/{slug}` as the REST API sends it
+ * (snake_case; the SDK's `ToolkitRetrieveResponse` is the camelCased form).
+ */
+export interface ComposioToolkitAuthInfo {
+    composio_managed_auth_schemes?: string[];
+    auth_config_details?: ComposioToolkitAuthConfigDetail[];
 }
 
 // Detail shape is identical to ToolkitRetrieveResponse today; kept as a named
