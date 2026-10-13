@@ -1,6 +1,8 @@
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
+import { useEnableToolOnChatbot } from "@/hooks/api/tools";
+import { useOriginAgent } from "@/hooks/use-origin-agent";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { Button } from "@medusajs/ui";
+import { Button, toast } from "@medusajs/ui";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
@@ -23,6 +25,11 @@ const ToolNewInner = () => {
   const navigate = useNavigate();
   const { workspaceSlug } = useWorkspaceParams();
   const { handleSuccess } = useRouteModal();
+  const { agentId, agentPath } = useOriginAgent();
+  const { enableToolOnChatbot } = useEnableToolOnChatbot(
+    workspaceSlug,
+    agentId ?? "",
+  );
 
   const [step, setStep] = useState<Step>({ id: "picker" });
 
@@ -31,7 +38,7 @@ const ToolNewInner = () => {
   // The form id that the header submit button should target.
   const [formId, setFormId] = useState<string | undefined>(undefined);
 
-  const handleCancel = () => navigate(`/${workspaceSlug}/tools`);
+  const handleCancel = () => navigate(agentPath ?? `/${workspaceSlug}/tools`);
   const handleBack = () => setStep({ id: "picker" });
 
   const handleTypeSelect = (type: ToolType) => {
@@ -41,10 +48,23 @@ const ToolNewInner = () => {
     setStep({ id: type });
   };
 
-  const handleCreated = (toolId?: string) => {
+  const handleCreated = async (toolId?: string) => {
     setFormId(undefined);
     setIsPending(false);
-    setStep({ id: "success", toolId });
+    if (!agentId || !toolId) {
+      setStep({ id: "success", toolId });
+      return;
+    }
+
+    // Opened from an agent: turn the new tool on there (an empty body
+    // enables every non-destructive action, like the add drawer) and go back.
+    try {
+      await enableToolOnChatbot({ toolId, body: {} });
+      toast.success(t("tools.create.attachedSuccess"));
+    } catch {
+      toast.error(t("tools.create.attachError"));
+    }
+    handleSuccess(agentPath);
   };
 
   const handleGoToTool = () => {
@@ -146,7 +166,10 @@ const ToolNewInner = () => {
 
       {step.id === "picker" && (
         <RouteFocusModal.Body className="flex flex-col items-center overflow-y-auto p-16">
-          <ToolTypePicker onSelect={handleTypeSelect} />
+          <ToolTypePicker
+            onSelect={handleTypeSelect}
+            showMarketplace={!agentId}
+          />
         </RouteFocusModal.Body>
       )}
 
@@ -191,8 +214,9 @@ const ToolNewInner = () => {
 
 export const ToolNew = () => {
   const { workspaceSlug } = useWorkspaceParams();
+  const { agentPath } = useOriginAgent();
   return (
-    <RouteFocusModal prev={`/${workspaceSlug}/tools`}>
+    <RouteFocusModal prev={agentPath ?? `/${workspaceSlug}/tools`}>
       <ToolNewInner />
     </RouteFocusModal>
   );

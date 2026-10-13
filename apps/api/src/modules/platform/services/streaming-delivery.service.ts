@@ -7,6 +7,8 @@ import { ReplySegment, segmentMessages } from '../interfaces/message-model';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { botImage } from '@app/modules/conversation/utils/message-attachment';
 import { ReplySegmenter } from '../utils/reply-segmenter';
+import { ReplyActivityCollector } from '../utils/reply-activity-collector';
+import { IReplyActivity } from '@app/modules/conversation/interfaces/conversation-activity.interface';
 import {
     parseWireTokenUsage,
     TokenUsageDelta,
@@ -83,14 +85,16 @@ export function outputHeuristic(text: string): string | null {
 
 /** Parse one SSE line into its UI-message part, or null. Shared by both
  *  delivery paths so the frame contract lives in one place. */
-function parseSsePart(line: string): {
-    type: string;
-    delta?: unknown;
-    data?: unknown;
-    messageMetadata?: unknown;
-    url?: unknown;
-    mediaType?: unknown;
-} | null {
+function parseSsePart(line: string):
+    | ({
+          type: string;
+          delta?: unknown;
+          data?: unknown;
+          messageMetadata?: unknown;
+          url?: unknown;
+          mediaType?: unknown;
+      } & Record<string, unknown>)
+    | null {
     if (!line.startsWith('data: ')) return null;
     const body = line.slice(6);
     if (body === '[DONE]') return null;
@@ -126,6 +130,8 @@ export interface DeliveryResult {
      *  Present even on a blocked or failed turn — the tokens were already
      *  burned by the time the verdict arrived. */
     usage?: TokenUsageDelta;
+    /** Skills loaded and knowledge searched for this reply (#286). */
+    activities: IReplyActivity[];
 }
 
 @Injectable()
@@ -166,6 +172,7 @@ export class StreamingDelivery {
             let failed = false;
             let settled = false;
             let usage: TokenUsageDelta | undefined;
+            const activity = new ReplyActivityCollector();
             // Serial send chain: sends run in order, off the stream's data
             // handler, so we never block the socket (mirrors the buffered
             // supersede-check pattern).
@@ -200,6 +207,7 @@ export class StreamingDelivery {
             const consumeLine = (line: string) => {
                 const parsed = parseSsePart(line);
                 if (!parsed) return;
+                activity.observe(parsed);
                 if (
                     parsed.type === 'text-delta' &&
                     typeof parsed.delta === 'string'
@@ -244,6 +252,7 @@ export class StreamingDelivery {
                         guardrailReason: blockReason,
                         generationFailed: failed,
                         usage,
+                        activities: activity.activities,
                     })
                 );
             };
@@ -306,6 +315,7 @@ export class StreamingDelivery {
                 guardrailReason: '',
                 generationFailed: false,
                 usage: result.usage,
+                activities: result.activities,
             };
         }
         if (result.guardrailBlocked) {
@@ -316,6 +326,7 @@ export class StreamingDelivery {
                 guardrailReason: result.guardrailReason,
                 generationFailed: false,
                 usage: result.usage,
+                activities: result.activities,
             };
         }
         if (result.generationFailed) {
@@ -326,6 +337,7 @@ export class StreamingDelivery {
                 guardrailReason: '',
                 generationFailed: true,
                 usage: result.usage,
+                activities: result.activities,
             };
         }
 
@@ -345,6 +357,7 @@ export class StreamingDelivery {
             guardrailReason: '',
             generationFailed: false,
             usage: result.usage,
+            activities: result.activities,
         };
     }
 
@@ -398,6 +411,7 @@ export class StreamingDelivery {
         guardrailReason: string;
         generationFailed: boolean;
         usage?: TokenUsageDelta;
+        activities: IReplyActivity[];
     }> {
         return new Promise(resolve => {
             const segments: ReplySegment[] = [];
@@ -412,6 +426,7 @@ export class StreamingDelivery {
             let guardrailReason = '';
             let generationFailed = false;
             let usage: TokenUsageDelta | undefined;
+            const activity = new ReplyActivityCollector();
             let settled = false;
             let lastCheck = 0; // 0 so the throttled supersede check fires on the first chunk
             let checking = false;
@@ -443,6 +458,7 @@ export class StreamingDelivery {
                     return; // non-JSON line — ignore
                 }
                 if (!parsed || typeof parsed !== 'object') return;
+                activity.observe(parsed);
                 if (
                     parsed.type === 'text-delta' &&
                     typeof parsed.delta === 'string'
@@ -489,6 +505,7 @@ export class StreamingDelivery {
                     guardrailReason,
                     generationFailed,
                     usage,
+                    activities: activity.activities,
                 });
             };
 

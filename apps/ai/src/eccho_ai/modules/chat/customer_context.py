@@ -129,7 +129,10 @@ async def build_customer_context_block(customer_id: str | None) -> str:
     )
     lines.append(f"Profile summary: {_safe(customer.profile_summary) or '—'}")
     lines.append("")
-    lines.append("# Tag catalog (apply with applyCustomerTag tool when warranted)")
+    lines.append(
+        "# Tag catalog (apply with the apply_customer_tag tool when warranted;"
+        " pass only the text inside the quotes as the name, never the emoji)"
+    )
     if not capped_rows:
         lines.append("- (no tags defined in this workspace)")
     else:

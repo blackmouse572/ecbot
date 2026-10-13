@@ -1,7 +1,7 @@
 import { BUSINESS_TYPES, getBusinessType, type BusinessTypeId } from "./business-types";
 import {
   ADDRESS_STYLE, AFTER_HOURS, CHANNELS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN,
-  PERSONAL_GOALS, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, type FactId,
+  PERSONAL_GOALS, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, type CollectId, type FactId, type GoalId,
 } from "./libraries";
 import { PRESETS } from "./presets";
 import { applyPreset, type AgentProfile } from "./profile";
@@ -28,6 +28,10 @@ export type GroupId = "identity" | "essence" | "facts" | "process" | "rules" | "
 export type QuestionGroup = { id: GroupId; titleKey: string; questions: Question[] };
 
 export const TEMPLATE_TYPES: BusinessTypeId[] = ["restaurant", "beauty", "ecommerce", "healthcare", "education", "personal_scheduling"];
+
+// Goals that end in an order or booking: the collect question then asks what
+// a complete one needs (#287).
+const ORDER_GOALS: readonly GoalId[] = ["take_orders", "book_appointments", "reservations"];
 
 const LIBRARIES = {
   types: BUSINESS_TYPES,
@@ -110,7 +114,12 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
   }));
 
   const process: Question[] = personal ? [] : [
-    q("collect", "multi", { choices: choicesOf("collect") }),
+    q("collect", "multi", {
+      choices: choicesOf("collect"),
+      askKey: profile.goals.some((g) => ORDER_GOALS.includes(g))
+        ? "agentBuilder.questions.collect.askOrder"
+        : "agentBuilder.questions.collect.ask",
+    }),
     q("handoffWhen", "multi", { choices: choicesOf("handoffWhen") }),
   ];
 
@@ -138,13 +147,26 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
   return groups.filter((g) => g.questions.length > 0);
 }
 
+const COLLECT_IDS = new Set<string>(COLLECT.map((c) => c.id));
+
+/** The collect answer is one list: fixed ids first, then the owner's own labels. */
 export function readAnswer(profile: AgentProfile, path: QuestionPath): unknown {
-  return path.field === "facts" ? profile.facts[path.fact] ?? "" : profile[path.field];
+  if (path.field === "facts") return profile.facts[path.fact] ?? "";
+  if (path.field === "collect") return [...profile.collect, ...(profile.customCollect ?? [])];
+  return profile[path.field];
 }
 
 export function writeAnswer(profile: AgentProfile, path: QuestionPath, value: unknown): AgentProfile {
   if (path.field === "facts") return { ...profile, facts: { ...profile.facts, [path.fact]: String(value ?? "") } };
   if (path.field === "businessType") return applyPreset(profile, value as BusinessTypeId);
+  if (path.field === "collect") {
+    const values = value as string[];
+    return {
+      ...profile,
+      collect: values.filter((v) => COLLECT_IDS.has(v)) as CollectId[],
+      customCollect: values.filter((v) => !COLLECT_IDS.has(v)),
+    };
+  }
   return { ...profile, [path.field]: value } as AgentProfile;
 }
 
@@ -155,7 +177,7 @@ export function allTranslationKeys(): string[] {
     "replyLength", "emoji", "addressStyle", "followUpQuestions", "afterHours",
   ];
   const withExtras: Record<string, string[]> = {
-    agentName: ["placeholder"], goals: ["description"],
+    agentName: ["placeholder"], goals: ["description"], collect: ["askOrder"],
     greeting: ["placeholder", "placeholderPersonal"], personality: ["description"],
   };
   const keys = questionIds.flatMap((id) => [

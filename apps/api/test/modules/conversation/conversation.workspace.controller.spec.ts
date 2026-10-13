@@ -33,6 +33,7 @@ const mockConversationMessagingService = {
     mapMessage: jest.fn(),
     buildUserNameMap: jest.fn(),
     listToolInvocations: jest.fn(),
+    listActivities: jest.fn().mockResolvedValue([]),
 };
 
 const mockActivityService = {

@@ -32,8 +32,8 @@ export interface ToolCallSerialization {
     result?: unknown;
     error?: string;
     durationMs: number;
-    /** Registry tool kind, lowercased like the live stream's `data-tool-meta`. */
-    kind?: 'http' | 'mcp';
+    /** Tool kind, lowercased like the live stream's `data-tool-meta`. */
+    kind?: 'http' | 'mcp' | 'skill';
 }
 
 /**
@@ -68,6 +68,20 @@ export class MessageAttachmentResponseDto {
 
     @ApiPropertyOptional({ description: 'Media URL, when known' })
     url?: string;
+}
+
+/** One knowledge source behind a BOT reply, for the operator trace. */
+export class MessageKnowledgeSourceResponseDto {
+    @ApiProperty({ description: 'Knowledge item id' })
+    id: string;
+
+    @ApiPropertyOptional({ description: 'Knowledge item or page title' })
+    title?: string;
+
+    @ApiPropertyOptional({
+        description: 'Web page link, when the item has one',
+    })
+    sourceUrl?: string;
 }
 
 export class MessageGetResponseDto {
@@ -138,6 +152,22 @@ export class MessageGetResponseDto {
         items: { type: 'object' },
     })
     toolCalls?: ToolCallSerialization[];
+
+    @Expose()
+    @ApiPropertyOptional({
+        description:
+            'Knowledge sources the agent found before this BOT reply. Only on channel replies.',
+    })
+    knowledgeCount?: number;
+
+    @Expose()
+    @ApiPropertyOptional({
+        type: () => MessageKnowledgeSourceResponseDto,
+        isArray: true,
+        description:
+            'The knowledge sources behind this BOT reply, when the AI service reported them',
+    })
+    sources?: MessageKnowledgeSourceResponseDto[];
 
     @ApiPropertyOptional({
         type: () => MessageAttachmentResponseDto,

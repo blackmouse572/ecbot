@@ -81,6 +81,15 @@ describe('CustomerDataExportService', () => {
                 createdAt: new Date('2026-01-02T00:00:00Z'),
             },
         ],
+        activities: [
+            {
+                id: 'act-1',
+                conversationId: 'conv-1',
+                kind: 'KNOWLEDGE',
+                payload: { count: 1, sources: [{ id: 'k-1', title: 'FAQ' }] },
+                createdAt: new Date('2026-01-02T00:00:01Z'),
+            },
+        ],
     });
 
     beforeEach(() => {
@@ -121,7 +130,7 @@ describe('CustomerDataExportService', () => {
         });
     });
 
-    it('includes tags, follow-ups and tool invocations', async () => {
+    it('includes tags, follow-ups, tool invocations and agent activity', async () => {
         const result = await service.export('cust-1', 'ws-1');
 
         expect(result.tags).toEqual([
@@ -140,6 +149,16 @@ describe('CustomerDataExportService', () => {
             actionName: 'lookup_order',
             inputArgs: { phone: '0909' },
         });
+        expect(result.activities).toEqual([
+            {
+                id: 'act-1',
+                conversationId: 'conv-1',
+                kind: 'KNOWLEDGE',
+                label: undefined,
+                payload: { count: 1, sources: [{ id: 'k-1', title: 'FAQ' }] },
+                createdAt: new Date('2026-01-02T00:00:01Z'),
+            },
+        ]);
     });
 
     it('names stored files by file name, never by storage key or bucket', async () => {

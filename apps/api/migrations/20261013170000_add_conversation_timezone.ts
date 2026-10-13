@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class Migration20261013160000_add_conversation_timezone extends Migration {
+export class Migration20261013170000_add_conversation_timezone extends Migration {
     override async up(): Promise<void> {
         this.addSql(
             'alter table "conversations" add column if not exists "timezone" varchar(64) null;'

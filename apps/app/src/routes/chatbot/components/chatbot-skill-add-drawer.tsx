@@ -3,12 +3,16 @@ import {
   useGetSkill,
   useListSkills,
 } from "@/hooks/api/skills";
+import { ROUTES } from "@/routes/constants";
+import { withOriginAgent } from "@/utils/origin-agent";
+import { PlusMini } from "@medusajs/icons";
 import { Badge, Divider, Button, Drawer, Text, toast } from "@medusajs/ui";
 import type { SkillListResponseDto } from "@repo/client";
 import { Combobox, ListSkeleton } from "@repo/ui/common-components";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
+import { Link } from "react-router-dom";
 
 type Props = {
   isOpen: boolean;
@@ -67,6 +71,11 @@ export function ChatbotSkillAddDrawer({
     { enabled: !!selectedId },
   );
 
+  const createPath = withOriginAgent(
+    `/${workspace}/${ROUTES.Skills}/create`,
+    chatbotId,
+  );
+
   const reset = () => {
     setSelectedId("");
     setSearch("");
@@ -121,6 +130,12 @@ export function ChatbotSkillAddDrawer({
           )}
         </Drawer.Body>
         <Drawer.Footer>
+          <Button variant="transparent" asChild>
+            <Link to={createPath}>
+              <PlusMini />
+              {t("actions.createNew")}
+            </Link>
+          </Button>
           <div className="ml-auto flex items-center gap-2">
             <Drawer.Close asChild>
               <Button variant="secondary">{t("actions.cancel")}</Button>

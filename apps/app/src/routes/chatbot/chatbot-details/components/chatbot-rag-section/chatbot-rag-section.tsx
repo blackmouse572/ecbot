@@ -1,7 +1,11 @@
 import {
   useChatbotKnowledgeItems,
+  useKnowledgeBases,
   useUnlinkKnowledgeItemFromChatbot,
 } from "@/hooks/api/knowledge-base";
+import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { ROUTES } from "@/routes/constants";
+import { withOriginAgent } from "@/utils/origin-agent";
 import { clx, toast, usePrompt } from "@medusajs/ui";
 import type {
   ChatbotGetDetailResponseDto,
@@ -32,6 +36,11 @@ export function ChatbotRAGSection({ item, className }: ChatbotRAGSectionProps) {
 
   // Fetch linked knowledge items
   const { items, isLoading } = useChatbotKnowledgeItems(item.id);
+  const { workspaceSlug } = useWorkspaceParams();
+  // The section works on the workspace's first knowledge base; without one
+  // there is nowhere to create an item, so the empty state offers Add only.
+  const { knowledgeBases } = useKnowledgeBases();
+  const knowledgeBaseId = knowledgeBases?.[0]?.id;
 
   // Unlink mutation
   const unlinkMutation = useUnlinkKnowledgeItemFromChatbot(item.id);
@@ -88,10 +97,20 @@ export function ChatbotRAGSection({ item, className }: ChatbotRAGSectionProps) {
         <NoRecords
           title={t("knowledgeBase.empty.title")}
           message={t("knowledgeBase.empty.description")}
-          action={{
-            onClick: () => setIsDrawerOpen(true),
-            label: t("actions.add"),
-          }}
+          action={
+            knowledgeBaseId
+              ? {
+                  to: withOriginAgent(
+                    `/${workspaceSlug}/${ROUTES.KnowledgeBase}/${knowledgeBaseId}/item/create`,
+                    item.id,
+                  ),
+                  label: t("actions.createNew"),
+                }
+              : {
+                  onClick: () => setIsDrawerOpen(true),
+                  label: t("actions.add"),
+                }
+          }
           icon={<IconBooks />}
         />
         <ChatbotRAGSectionAddDrawer

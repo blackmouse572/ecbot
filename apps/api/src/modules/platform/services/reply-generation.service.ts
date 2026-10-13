@@ -5,6 +5,7 @@ import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conver
 import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
+import { ConversationMessagingService } from '@app/modules/conversation/services/conversation-messaging.service';
 import { ManifestBuilderService } from '@app/modules/tool/services/manifest-builder.service';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
@@ -80,6 +81,12 @@ export class ReplyGenerationService {
 
     private get conversationService(): ConversationService {
         return this.moduleRef.get(ConversationService, { strict: false });
+    }
+
+    private get messaging(): ConversationMessagingService {
+        return this.moduleRef.get(ConversationMessagingService, {
+            strict: false,
+        });
     }
 
     /**
@@ -291,6 +298,18 @@ export class ReplyGenerationService {
             }
 
             if (!deliveryResult) return failed('stream_failed');
+
+            // What the agent did, for the operator's trace (#286). Only for a
+            // reply that reached the customer, so it splices under that reply.
+            if (deliveryResult.anySent && deliveryResult.activities?.length) {
+                await this.messaging
+                    .recordActivities(conversationId, deliveryResult.activities)
+                    .catch(err =>
+                        this.logger.warn(
+                            `recordActivities failed for ${conversationId}: ${(err as Error).message}`
+                        )
+                    );
+            }
 
             if (deliveryResult.superseded && !deliveryResult.anySent) {
                 this.logger.debug(

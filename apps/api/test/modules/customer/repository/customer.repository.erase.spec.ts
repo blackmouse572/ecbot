@@ -1,3 +1,4 @@
+import { ConversationActivityEntity } from '@app/modules/conversation/repository/entities/conversation-activity.entity';
 import { ConversationReadEntity } from '@app/modules/conversation/repository/entities/conversation-read.entity';
 import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
@@ -100,6 +101,7 @@ describe('CustomerRepository data subject scope', () => {
             // Children before parents, so no FK blocks the delete.
             expect(tem.nativeDelete.mock.calls).toEqual([
                 [ToolInvocationEntity, { conversationId: convs }],
+                [ConversationActivityEntity, { conversationId: convs }],
                 [FollowupEntity, { conversation: convs }],
                 [ConversationReadEntity, { conversation: convs }],
                 [MessageEntity, { conversation: convs }],
@@ -213,7 +215,7 @@ describe('CustomerRepository data subject scope', () => {
             );
         });
 
-        it('collects messages, tags, follow-ups and tool calls of the whole scope', async () => {
+        it('collects messages, tags, follow-ups, tool calls and agent activity of the whole scope', async () => {
             queue(CustomerEntity, [{ id: 'C' }, { id: 'B' }], [{ id: 'A' }]);
             queue(ContactPointEntity, [
                 { id: 'cp-1', platform: 'FACEBOOK', externalSenderId: 'psid' },
@@ -223,6 +225,7 @@ describe('CustomerRepository data subject scope', () => {
             queue(CustomerTagAssignmentEntity, [{ id: 'ta-1' }]);
             queue(FollowupEntity, [{ id: 'f-1' }]);
             queue(ToolInvocationEntity, [{ id: 'ti-1' }]);
+            queue(ConversationActivityEntity, [{ id: 'act-1' }]);
 
             const data = await repo.findSubjectData('C', 'ws-1');
 
@@ -231,6 +234,7 @@ describe('CustomerRepository data subject scope', () => {
             expect(data?.tagAssignments).toEqual([{ id: 'ta-1' }]);
             expect(data?.followups).toEqual([{ id: 'f-1' }]);
             expect(data?.toolInvocations).toEqual([{ id: 'ti-1' }]);
+            expect(data?.activities).toEqual([{ id: 'act-1' }]);
             expect(findWhere(CustomerTagAssignmentEntity)[0]).toEqual({
                 customer: { $in: ['C', 'B', 'A'] },
                 deletedAt: null,

@@ -86,7 +86,9 @@
       "title": "Create skill",
       "subtitle": "Write instructions the agent will follow when this skill applies.",
       "success": "Skill created",
-      "error": "Failed to create skill"
+      "error": "Failed to create skill",
+      "attachedSuccess": "Skill created and added to the agent",
+      "attachError": "Skill created, but it could not be added to the agent. Add it from the agent's Skills section."
     },
     "edit": {
       "title": "Edit skill",
@@ -1156,7 +1158,13 @@
       "removeChannel": "Remove {{name}}",
       "changeTypeTitle": "Change the business type?",
       "changeTypeDescription": "This agent is live. A new business type resets the answers that depend on it, such as goals, rules and what to collect, and customers see the change as soon as it saves.",
-      "changeTypeConfirm": "Change type"
+      "changeTypeConfirm": "Change type",
+      "customCollectLabel": "Add your own",
+      "customCollectPlaceholder": "e.g. Deadline, design file, size",
+      "customCollectAdd": "Add",
+      "customCollectRemove": "Remove {{label}}",
+      "customCollectLimit": "You can add up to {{count}} fields.",
+      "customCollectOther": "Other"
     },
     "groups": {
       "identity": "About your business",
@@ -1225,7 +1233,8 @@
       "collect": {
         "title": "What details should it collect from customers?",
         "ask": "When a customer is ready, what details should your agent collect?",
-        "lead": "Please collect:"
+        "lead": "Please collect:",
+        "askOrder": "What does a complete order or booking need? Your agent collects these before confirming."
       },
       "handoffWhen": {
         "title": "When should it pass the chat to you?",
@@ -2071,7 +2080,9 @@
     "previous": "Previous",
     "next": "Next",
     "skip": "Skip",
-    "preview": "Preview"
+    "preview": "Preview",
+    "createNew": "Create new",
+    "unlink": "Unlink"
   },
   "general": {
     "notSet": "Not set",
@@ -2300,6 +2311,23 @@
       "process": "Process",
       "reprocess": "Re-process",
       "processQueued": "Queued for processing"
+    },
+    "link": {
+      "title": "Add Knowledge Item"
+    },
+    "selectItem": "Select Item",
+    "error": {
+      "selectItem": "Please select an item",
+      "linkFailed": "Failed to link knowledge item",
+      "unlinkFailed": "Failed to unlink knowledge item"
+    },
+    "success": {
+      "linkedItem": "Knowledge item linked successfully",
+      "unlinked": "Knowledge item unlinked successfully"
+    },
+    "unlink": {
+      "title": "Unlink Item",
+      "description": "Are you sure you want to unlink this knowledge item? This action cannot be undone."
     }
   },
   "knowledge_item": {
@@ -2361,14 +2389,8 @@
     "learned_chunks_other": "The agent learned this file as {{count}} sections.",
     "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
     "learn_failed": "Could not learn this file. Try Process again.",
-    "agents_label": "Agents that use this item",
-    "agents_hint": "The agents you pick can answer from this item once it finishes processing. You can change this later in each agent's Knowledge Base section.",
-    "agents_loading": "Loading agents...",
-    "agents_empty": "After you create an agent, link this item from the agent's Knowledge Base section.",
-    "agents_error": "Couldn't load agents. You can link this item later from the agent's Knowledge Base section.",
     "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
-    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section.",
-    "agents_emptyTitle": "No agents yet"
+    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section."
   },
   "conversations": {
     "title": "Conversations",
@@ -2797,7 +2819,9 @@
       "subtitle": "Describe an HTTP endpoint the agent can call as a tool.",
       "submit": "Create tool",
       "success": "Tool created.",
-      "error": "Failed to create tool."
+      "error": "Failed to create tool.",
+      "attachedSuccess": "Tool created and added to the agent.",
+      "attachError": "Tool created, but it could not be added to the agent. Add it from the agent's Tools section."
     },
     "edit": {
       "title": "Edit tool",

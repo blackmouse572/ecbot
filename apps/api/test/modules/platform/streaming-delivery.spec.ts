@@ -4,6 +4,7 @@ import {
     guardrailDeliveryPolicy,
     outputHeuristic,
 } from '../../../src/modules/platform/services/streaming-delivery.service';
+import { ENUM_CONVERSATION_ACTIVITY_KIND } from '../../../src/modules/conversation/enums/conversation-activity.enum';
 
 const GUARD_OFF = {
     guardrailEnabled: false,
@@ -725,5 +726,148 @@ describe('StreamingDelivery — token usage', () => {
         );
 
         expect(res.usage).toBeUndefined();
+    });
+});
+
+/**
+ * #286: what the agent did for a channel reply (skills loaded, knowledge
+ * searched) is read off the stream so the inbox can show it. Registry tool
+ * calls are already persisted by the tool executor, and reasoning is never
+ * kept, so neither becomes an activity.
+ */
+describe('StreamingDelivery — agent activity', () => {
+    const params = (stream: any, chatbot: any) => ({
+        adapter: makeAdapter(),
+        account: {} as any,
+        senderId: 'S',
+        conversationId: 'C',
+        chatbot,
+        stream,
+        abort: new AbortController(),
+        isCurrent: async () => true,
+        onSegmentPersist: async () => 'nonce',
+        onSent: async () => {},
+        onFailed: async () => {},
+    });
+
+    const activityStream = () =>
+        sse([
+            line({ type: 'start' }),
+            line({ type: 'data-knowledge', data: { count: 2 } }),
+            line({ type: 'reasoning-start', id: 'r' }),
+            line({ type: 'reasoning-delta', id: 'r', delta: 'thinking' }),
+            line({ type: 'reasoning-end', id: 'r' }),
+            line({
+                type: 'tool-input-start',
+                toolCallId: 'call-1',
+                toolName: 'load_skill',
+            }),
+            line({
+                type: 'tool-input-available',
+                toolCallId: 'call-1',
+                toolName: 'load_skill',
+                input: { slug: 'refunds' },
+            }),
+            line({
+                type: 'data-tool-meta',
+                id: 'call-1',
+                data: { kind: 'skill' },
+            }),
+            line({
+                type: 'tool-output-available',
+                toolCallId: 'call-1',
+                output: 'skill body',
+            }),
+            line({
+                type: 'tool-input-start',
+                toolCallId: 'call-2',
+                toolName: 'get_order',
+            }),
+            line({
+                type: 'tool-input-available',
+                toolCallId: 'call-2',
+                toolName: 'get_order',
+                input: { id: 7 },
+            }),
+            line({
+                type: 'data-tool-meta',
+                id: 'call-2',
+                data: { kind: 'mcp', label: 'Shopify' },
+            }),
+            line({
+                type: 'text-delta',
+                id: 't1',
+                delta: 'Refunds take 5 days.',
+            }),
+            line({
+                type: 'message-metadata',
+                messageMetadata: {
+                    sources: [
+                        {
+                            id: 'KB-1',
+                            title: 'Refund policy',
+                            source_url: 'https://shop.vn/refunds',
+                        },
+                        { id: 'KB-2', title: 'FAQ', source_url: null },
+                    ],
+                },
+            }),
+            line({ type: 'finish' }),
+            DONE,
+        ]);
+
+    const expected = [
+        {
+            kind: ENUM_CONVERSATION_ACTIVITY_KIND.KNOWLEDGE,
+            count: 2,
+            sources: [
+                {
+                    id: 'KB-1',
+                    title: 'Refund policy',
+                    sourceUrl: 'https://shop.vn/refunds',
+                },
+                { id: 'KB-2', title: 'FAQ' },
+            ],
+            at: expect.any(Date),
+        },
+        {
+            kind: ENUM_CONVERSATION_ACTIVITY_KIND.SKILL,
+            label: 'refunds',
+            at: expect.any(Date),
+        },
+    ];
+
+    it('records skill loads and knowledge searches on the incremental path', async () => {
+        const res = await new StreamingDelivery().deliver(
+            params(activityStream(), GUARD_OFF) as any
+        );
+
+        expect(res.activities).toEqual(expected);
+    });
+
+    it('records them on the buffered path too', async () => {
+        const res = await new StreamingDelivery().deliver(
+            params(activityStream(), {
+                guardrailEnabled: true,
+                guardrailModelEnabled: true,
+            }) as any
+        );
+
+        expect(res.activities).toEqual(expected);
+    });
+
+    it('records nothing for a text-only reply', async () => {
+        const res = await new StreamingDelivery().deliver(
+            params(
+                sse([
+                    line({ type: 'text-delta', id: 't1', delta: 'hi' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                GUARD_OFF
+            ) as any
+        );
+
+        expect(res.activities).toEqual([]);
     });
 });
