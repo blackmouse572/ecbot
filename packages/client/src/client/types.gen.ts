@@ -1349,6 +1349,13 @@ export type InboundEventTaskDto = {
     };
 };
 
+export type ConversationMemoryTaskDto = {
+    jobName: 'summarize';
+    conversationId: string;
+    fromMessageId?: string;
+    untilMessageId: string;
+};
+
 export type KnowledgeIngestTaskDto = {
     jobName: 'ingest' | 'reindex-links' | 'delete';
     knowledgeItemId: string;
@@ -9966,6 +9973,77 @@ export type InboundEventTaskControllerHandleV1Responses = {
 };
 
 export type InboundEventTaskControllerHandleV1Response = InboundEventTaskControllerHandleV1Responses[keyof InboundEventTaskControllerHandleV1Responses];
+
+export type ConversationMemoryTaskControllerHandleV1Data = {
+    body: ConversationMemoryTaskDto;
+    headers: {
+        'x-cloudtasks-taskretrycount': string;
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/system/tasks/conversation-memory';
+};
+
+export type ConversationMemoryTaskControllerHandleV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationMemoryTaskControllerHandleV1Error = ConversationMemoryTaskControllerHandleV1Errors[keyof ConversationMemoryTaskControllerHandleV1Errors];
+
+export type ConversationMemoryTaskControllerHandleV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationMemoryTaskControllerHandleV1Response = ConversationMemoryTaskControllerHandleV1Responses[keyof ConversationMemoryTaskControllerHandleV1Responses];
 
 export type KnowledgeIngestTaskControllerHandleV1Data = {
     body: KnowledgeIngestTaskDto;
