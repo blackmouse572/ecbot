@@ -165,7 +165,8 @@ describe("compilePrompt", () => {
   it("places orders with the connected order tool and hands off without one", () => {
     const out = compilePrompt(sample("ecommerce", "en"));
     expect(out).toContain("place the order with the connected order tool");
-    expect(out).toContain("If no order tool is connected, do not say the order is placed");
+    expect(out).toContain("If no order tool is connected, the order is not placed yet");
+    expect(out).toContain("Never say the order is placed, confirmed or complete.");
     expect(out).not.toContain("then read the full order back before closing.");
   });
 
