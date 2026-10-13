@@ -7,11 +7,13 @@ import {
   notificationSharedControllerUnreadV1,
 } from "@repo/client";
 import {
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
   type MutationOptions,
 } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 export const notificationQueryKey = queryKeysFactory("notifications");
 
@@ -34,16 +36,34 @@ export interface NotificationItem {
   createdAt: string;
 }
 
+type NotificationPage = {
+  data: NotificationItem[];
+  _metadata?: { pagination?: { page?: number; totalPage?: number } };
+};
+
+/** Newest first, one page at a time (`fetchNextPage` loads older ones). */
 export function useNotifications(query?: Record<string, A>) {
-  const { data, ...rest } = useQuery({
+  const { data, ...rest } = useInfiniteQuery({
     queryKey: notificationQueryKey.list(query),
-    queryFn: async () => {
-      const response = await notificationSharedControllerListV1({ query });
-      return response?.data as unknown as { data: NotificationItem[] };
+    queryFn: async ({ pageParam }) => {
+      const response = await notificationSharedControllerListV1({
+        query: { ...query, page: pageParam },
+      });
+      return response?.data as unknown as NotificationPage;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (last) => {
+      const { page, totalPage } = last?._metadata?.pagination ?? {};
+      return page && totalPage && page < totalPage ? page + 1 : undefined;
     },
   });
 
-  return { notifications: data?.data ?? [], data, ...rest };
+  const notifications = useMemo(
+    () => data?.pages.flatMap((page) => page?.data ?? []) ?? [],
+    [data?.pages],
+  );
+
+  return { notifications, data, ...rest };
 }
 
 export function useUnreadNotifications(query?: Record<string, A>) {

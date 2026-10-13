@@ -10,6 +10,8 @@ const api = vi.hoisted(() => ({
   notifications: [] as NotificationItem[],
   markMany: vi.fn(),
   markOne: vi.fn(),
+  fetchNextPage: vi.fn(),
+  hasNextPage: false,
 }));
 
 vi.mock("@/hooks/use-leader-tab", () => ({ useIsLeaderTab: () => true }));
@@ -20,7 +22,12 @@ vi.mock("@/hooks/api/notifications", () => ({
     notifications: api.notifications,
     isLoading: false,
     isError: false,
-    refetch: async () => ({ data: { data: api.notifications } }),
+    refetch: async () => ({
+      data: { pages: [{ data: api.notifications }] },
+    }),
+    hasNextPage: api.hasNextPage,
+    isFetchingNextPage: false,
+    fetchNextPage: api.fetchNextPage,
   }),
   useMarkNotificationsAsRead: () => ({ mutate: api.markMany }),
   useMarkNotificationAsRead: () => ({ mutate: api.markOne }),
@@ -28,6 +35,17 @@ vi.mock("@/hooks/api/notifications", () => ({
 }));
 
 import { NotificationMenu } from "./notification-menu";
+
+// jsdom has no layout: set the scroll box, then fire the scroll event.
+const scrollTo = (
+  element: HTMLElement,
+  box: { scrollTop: number; scrollHeight: number; clientHeight: number },
+) => {
+  for (const [key, value] of Object.entries(box)) {
+    Object.defineProperty(element, key, { configurable: true, value });
+  }
+  fireEvent.scroll(element);
+};
 
 const item = (overrides: Partial<NotificationItem>): NotificationItem => ({
   id: "n-1",
@@ -54,6 +72,8 @@ describe("NotificationMenu", () => {
   beforeEach(() => {
     api.markMany.mockReset();
     api.markOne.mockReset();
+    api.fetchNextPage.mockReset().mockResolvedValue({ data: undefined });
+    api.hasNextPage = false;
     api.count = 0;
     api.notifications = [];
   });
@@ -130,5 +150,84 @@ describe("NotificationMenu", () => {
       screen.getByText(/new updates from your workspaces show up here/i),
     ).toBeInTheDocument();
     expect(api.markMany).not.toHaveBeenCalled();
+  });
+  it("loads older notifications when scrolled near the bottom", async () => {
+    api.hasNextPage = true;
+    api.notifications = [item({ id: "n-1", status: "read" })];
+    open();
+
+    const list = await screen.findByTestId("notification-list");
+    scrollTo(list, { scrollTop: 240, scrollHeight: 600, clientHeight: 320 });
+
+    expect(api.fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks unread rows from older pages read as they load", async () => {
+    api.hasNextPage = true;
+    api.notifications = [item({ id: "n-1", status: "read" })];
+    api.fetchNextPage.mockResolvedValue({
+      data: {
+        pages: [
+          { data: api.notifications },
+          {
+            data: [item({ id: "n-21" }), item({ id: "n-22", status: "read" })],
+          },
+        ],
+      },
+    });
+    open();
+
+    const list = await screen.findByTestId("notification-list");
+    scrollTo(list, { scrollTop: 240, scrollHeight: 600, clientHeight: 320 });
+
+    await waitFor(() => expect(api.markMany).toHaveBeenCalledWith(["n-21"]));
+  });
+
+  it("does not load more while far from the bottom", async () => {
+    api.hasNextPage = true;
+    api.notifications = [item({ id: "n-1", status: "read" })];
+    open();
+
+    const list = await screen.findByTestId("notification-list");
+    scrollTo(list, { scrollTop: 0, scrollHeight: 1200, clientHeight: 320 });
+
+    expect(api.fetchNextPage).not.toHaveBeenCalled();
+  });
+
+  it("shades the bottom edge as soon as an overflowing list opens", async () => {
+    api.notifications = [item({ id: "n-1", status: "read" })];
+    const sizes = vi
+      .spyOn(HTMLElement.prototype, "scrollHeight", "get")
+      .mockReturnValue(1200);
+    const height = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(320);
+    open();
+
+    expect(await screen.findByTestId("notification-shadow-bottom")).toHaveClass(
+      "opacity-100",
+    );
+    sizes.mockRestore();
+    height.mockRestore();
+  });
+
+  it("shades the edges that have more to scroll", async () => {
+    api.notifications = [item({ id: "n-1", status: "read" })];
+    open();
+
+    const list = await screen.findByTestId("notification-list");
+    scrollTo(list, { scrollTop: 100, scrollHeight: 1200, clientHeight: 320 });
+
+    expect(screen.getByTestId("notification-shadow-top")).toHaveClass(
+      "opacity-100",
+    );
+    expect(screen.getByTestId("notification-shadow-bottom")).toHaveClass(
+      "opacity-100",
+    );
+
+    scrollTo(list, { scrollTop: 0, scrollHeight: 1200, clientHeight: 320 });
+    expect(screen.getByTestId("notification-shadow-top")).toHaveClass(
+      "opacity-0",
+    );
   });
 });

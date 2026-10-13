@@ -1,5 +1,6 @@
 import {
     IDatabaseCreateOptions,
+    IDatabaseFindAllOptions,
     IDatabaseGetTotalOptions,
 } from '@app/common/database/interfaces/database.interface';
 import { MessageService } from '@app/common/message/services/message.service';
@@ -47,9 +48,13 @@ export class NotificationService {
 
     async findAllByRecipient(
         recipientId: string,
-        _find?: Record<string, any>
+        find?: Record<string, any>,
+        options?: IDatabaseFindAllOptions
     ): Promise<NotificationEntity[]> {
-        return this.notificationRepository.findByRecipient(recipientId);
+        return this.notificationRepository.find(
+            { ...find, recipient: recipientId },
+            { populate: ['recipient', 'sender'], ...options }
+        );
     }
 
     async findAllWithPagination(
