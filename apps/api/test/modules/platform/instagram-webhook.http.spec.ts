@@ -7,9 +7,12 @@ import request from 'supertest';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { InstagramPlatformAdapter } from '../../../src/modules/platform/adapters/instagram/instagram.platform-adapter';
 import { PlatformWebhookPublicController } from '../../../src/modules/platform/controllers/platform-webhook.public.controller';
+import { PocSystemController } from '../../../src/modules/platform/controllers/poc.system.controller';
 import { PLATFORM_ADAPTER } from '../../../src/modules/platform/interfaces/platform-adapter.interface';
 import { InboundInboxService } from '../../../src/modules/platform/services/inbound-inbox.service';
+import { MessageProcessorService } from '../../../src/modules/platform/services/message-processor.service';
 import { PlatformAdapterRegistry } from '../../../src/modules/platform/services/platform-adapter.registry';
+import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
 
 // Boots the real webhook controller, registry and Instagram adapter, and hits
 // `/v1/webhooks/instagram` over HTTP the way Meta does.
@@ -129,5 +132,65 @@ describe('POST/GET /v1/webhooks/instagram', () => {
 
         expect(res.status).toBe(403);
         expect(inbox.accept).not.toHaveBeenCalled();
+    });
+});
+
+// The edge Worker queues the raw Instagram request and forwards it to
+// /system/poc/inbound; verification and parsing happen there instead.
+describe('Instagram webhook through the edge queue consumer', () => {
+    let controller: PocSystemController;
+    const processor = { process: jest.fn().mockResolvedValue(undefined) };
+
+    beforeAll(async () => {
+        const moduleRef = await Test.createTestingModule({
+            controllers: [PocSystemController],
+            providers: [
+                PlatformAdapterRegistry,
+                { provide: MessageProcessorService, useValue: processor },
+                { provide: ReplyGenerationService, useValue: {} },
+                {
+                    provide: PLATFORM_ADAPTER,
+                    useFactory: () => [
+                        new InstagramPlatformAdapter(
+                            config as any,
+                            new HttpService(axios.create()),
+                            { decryptToken: () => 'TOKEN' } as any
+                        ),
+                    ],
+                },
+            ],
+        }).compile();
+        await moduleRef.init(); // the registry collects adapters on init
+        controller = moduleRef.get(PocSystemController);
+    });
+
+    beforeEach(() => processor.process.mockClear());
+
+    it('verifies and processes a signed DM forwarded by the edge', async () => {
+        const res = await controller.inbound({
+            platform: 'instagram',
+            rawBody: body,
+            headers: { 'x-hub-signature-256': sign(body) },
+        });
+
+        expect(res).toEqual({ processed: 1 });
+        expect(processor.process).toHaveBeenCalledWith(
+            expect.objectContaining({
+                kind: 'message',
+                accountKey: IG_ID,
+                externalMessageId: 'aWdfZAG1',
+            })
+        );
+    });
+
+    it('drops a forwarded body whose signature does not match', async () => {
+        const res = await controller.inbound({
+            platform: 'instagram',
+            rawBody: body.replace('Shop ơi', 'Hacked'),
+            headers: { 'x-hub-signature-256': sign(body) },
+        });
+
+        expect(res).toEqual({ processed: 0 });
+        expect(processor.process).not.toHaveBeenCalled();
     });
 });
