@@ -1,3 +1,4 @@
+import { CloudTasksClient } from '@google-cloud/tasks';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CloudTasksQueueClient } from '../../src/worker/cloud-tasks-queue.client';
@@ -16,6 +17,18 @@ describe('CloudTasksQueueClient — lazy client construction', () => {
             return values[key];
         }),
     };
+
+    // The client is started on construction, which loads Google
+    // credentials. Tests have none, so only that step is stubbed.
+    beforeEach(() => {
+        jest.spyOn(CloudTasksClient.prototype, 'initialize').mockResolvedValue(
+            undefined as never
+        );
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
 
     // Deliberately no CLOUD_TASKS_CLIENT provider — that's the production
     // wiring after the token became an @Optional() test-only override.

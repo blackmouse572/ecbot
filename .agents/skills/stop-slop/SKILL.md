@@ -7,6 +7,7 @@ metadata:
   source: https://github.com/hardikpandya/stop-slop
   version: "2.0.0"
   updated: "2026-03-17"
+  internal: true
 ---
 
 # Stop Slop

@@ -105,6 +105,8 @@ export class ClientCredentialGuard implements CanActivate {
 
         // Derive tenant from the credential — downstream reads via @WorkspacePayload().
         request.__workspace = credential.workspace;
+        // Read via @ClientCredentialPayload(), e.g. to act as its creator.
+        request.__clientCredential = credential;
 
         return true;
     }

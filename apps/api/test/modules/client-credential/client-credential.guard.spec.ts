@@ -79,20 +79,24 @@ describe('ClientCredentialGuard', () => {
         ).rejects.toBeInstanceOf(UnauthorizedException);
     });
 
-    it('accepts a valid credential and sets request.__workspace', async () => {
-        mockService.findOneByActiveKey.mockResolvedValue({
+    // __clientCredential lets /client handlers act as the credential's
+    // creator, e.g. for the activity log.
+    it('accepts a valid credential and sets request.__workspace and __clientCredential', async () => {
+        const credential = {
             isActive: true,
             hash: 'H',
             startDate: new Date('2026-01-01Z'),
             endDate: new Date('2026-12-31Z'),
             workspace,
-        });
+        };
+        mockService.findOneByActiveKey.mockResolvedValue(credential);
         mockService.createHash.mockResolvedValue('HASHED');
         mockService.validateHash.mockResolvedValue(true);
 
         const c = ctx({ 'x-api-key': 'k:s' });
         await expect(guard.canActivate(c)).resolves.toBe(true);
         expect(c.__request.__workspace).toBe(workspace);
+        expect(c.__request.__clientCredential).toBe(credential);
         expect(mockService.findOneByActiveKey).toHaveBeenCalledWith('k', {
             populate: ['workspace'],
         });

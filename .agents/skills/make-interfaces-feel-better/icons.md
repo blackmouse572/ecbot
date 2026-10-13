@@ -6,11 +6,11 @@ Icon weight, states, sizing, and direction: the details that make icons sit natu
 
 An icon next to text should carry the same optical weight as the text.
 
-| Adjacent text                        | Icon stroke width (24px grid) |
-| ------------------------------------ | ----------------------------- |
-| Regular (400), 14–16px               | `1.5px`                       |
-| Medium/Semibold (500–600)            | `2px`                         |
-| Bold (700), or emphasized standalone | `2.5px`                       |
+| Adjacent text | Icon stroke width (24px grid) |
+| --- | --- |
+| Regular (400), 14–16px | `1.5px` |
+| Medium/Semibold (500–600) | `2px` |
+| Bold (700), or emphasized standalone | `2.5px` |
 
 Use one stroke weight per icon set on a surface. Size inline icons relative to the text's cap height, typically `1em`–`1.25em`.
 
@@ -23,26 +23,18 @@ Use one SVG drawn with `currentColor`; let CSS drive hover, selected, and disabl
 ```
 
 ```css
-.icon-button {
-  color: oklch(0.552 0.016 285.938);
-}
-.icon-button:hover {
-  color: oklch(0.21 0.006 285.885);
-}
-.icon-button[aria-pressed="true"] {
-  color: oklch(0.623 0.188 259.815);
-}
-.icon-button:disabled {
-  opacity: 0.4;
-}
+.icon-button { color: oklch(0.552 0.016 285.938); }
+.icon-button:hover { color: oklch(0.21 0.006 285.885); }
+.icon-button[aria-pressed="true"] { color: oklch(0.623 0.188 259.815); }
+.icon-button:disabled { opacity: 0.4; }
 ```
 
 ## Outline Default, Fill Active
 
-| Variant | Use for                                                             |
-| ------- | ------------------------------------------------------------------- |
-| Outline | Default state: toolbars, list rows, inline with text                |
-| Fill    | Selected or active state: active tab, toggled bookmark, liked heart |
+| Variant | Use for |
+| --- | --- |
+| Outline | Default state: toolbars, list rows, inline with text |
+| Fill | Selected or active state: active tab, toggled bookmark, liked heart |
 
 The swap between variants is a contextual icon animation; use the exact cross-fade values in [animations.md](animations.md).
 
@@ -55,12 +47,12 @@ The swap between variants is a contextual icon animation; use the exact cross-fa
 
 ## Icons in RTL
 
-| Flip                                     | Don't flip              |
-| ---------------------------------------- | ----------------------- |
-| Back/forward arrows, navigation chevrons | Logos and brand marks   |
-| Text alignment, lists, indent            | Checkmarks              |
-| Directional send glyphs                  | Clocks, cups, pencils   |
-| Speaker waves tied to reading direction  | Media playback controls |
+| Flip | Don't flip |
+| --- | --- |
+| Back/forward arrows, navigation chevrons | Logos and brand marks |
+| Text alignment, lists, indent | Checkmarks |
+| Directional send glyphs | Clocks, cups, pencils |
+| Speaker waves tied to reading direction | Media playback controls |
 
 ```css
 [dir="rtl"] .icon-directional {

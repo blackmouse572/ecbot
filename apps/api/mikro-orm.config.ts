@@ -109,6 +109,10 @@ const getMikroOrmConfig = (): MikroOrmModuleOptions => {
         // `chatbots_accounts` are leftovers of entities that were removed.
         // Without this the schema diff proposes dropping them on every run.
         schemaGenerator: {
+            // The `rag` schema is created by a hand-written migration and has
+            // no entities. Left visible, it lands in the snapshot after
+            // `migration:up` and the next `migration:create` drops it.
+            ignoreSchema: ['rag'],
             skipTables: [
                 'rag_documents',
                 'rag_document_chunks',
