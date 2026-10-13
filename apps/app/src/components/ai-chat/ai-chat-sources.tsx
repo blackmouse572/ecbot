@@ -6,13 +6,13 @@ export function AIChatSources({ sources }: { sources: RagSource[] }) {
   if (!sources.length) return null;
   return (
     <div className="mt-2 flex flex-col gap-1 border-t border-ui-border-base pt-2">
-      <span className="text-ui-fg-muted text-xs">
+      <span className="text-ui-fg-muted txt-compact-xsmall">
         {t("chatbot.chat.sources.label")}
       </span>
       <div className="flex flex-wrap gap-1.5">
         {sources.map((s) => {
           const chip = (
-            <span className="bg-ui-bg-subtle text-ui-fg-subtle rounded-md px-2 py-0.5 text-xs">
+            <span className="bg-ui-bg-subtle text-ui-fg-subtle txt-compact-xsmall rounded-md px-2 py-0.5">
               {[s.id, s.title ?? s.filename].filter(Boolean).join(" · ")}
             </span>
           );
