@@ -69,7 +69,7 @@ apps/ai/
 |   |   +-- providers/        # chat_model (build_chat_model) + google (images)
 |   |   +-- agents/           # shared agent + ChatbotConfigMiddleware (per-request config)
 |   |   +-- tools/            # operator_tools, system_tools, skills (load_skill)
-|   |   +-- prompts/          # AGENT.md (package data) + loader (render_system_prompt) + current_time (per-turn clock)
+|   |   +-- prompts/          # AGENT.md (package data) + loader (render_system_prompt) + current_time (per-turn clock) + opening_hours (per-turn open/closed)
 |   |   +-- retrievers/       # rag retrieval, pgvector store, text processing, pdf/web readers
 |   |   +-- guardrails/       # content (input/output policy) + secrets (scan)
 |   +-- modules/              # feature routers + orchestration

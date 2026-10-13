@@ -25,6 +25,7 @@ from eccho_ai.core.api_client import ApiClient, ApiClientError
 from eccho_ai.core.postgres import PostgresRepo
 from eccho_ai.llm.tools.constants import (
     FOLLOWUP_FAILED,
+    FOLLOWUP_TIME_REJECTED,
     FOLLOWUP_UNAVAILABLE,
     HANDOFF_FAILED,
     HANDOFF_UNAVAILABLE,
@@ -355,21 +356,39 @@ async def remove_customer_tag(name: str) -> dict[str, Any]:
 
 
 @tool
-async def schedule_followup(delay_minutes: int, prompt: str, reason: str) -> dict[str, Any]:
-    """Schedule a proactive follow-up message to the user after `delay_minutes`.
+async def schedule_followup(
+    prompt: str,
+    reason: str,
+    delay_minutes: int | None = None,
+    at: str | None = None,
+) -> dict[str, Any]:
+    """Schedule a proactive follow-up message to the user, either after
+    `delay_minutes` or at the local time `at`. Give exactly one of the two.
 
     This is the only way to message the user later. Call it when the user asks
-    to be reminded or contacted later ("remind me in 30 minutes"), or when the
-    follow-up rules warrant a check-in (e.g. confirm a payment 30 minutes
-    later, or a delivery in 3 days). Never promise a reminder without it. `prompt` is the instruction for
-    what to say/do when it fires; `reason` is a short slug used to identify and
-    cancel this follow-up later (e.g. `payment_check`).
+    to be reminded or contacted later, or when the follow-up rules warrant a
+    check-in (e.g. confirm a payment 30 minutes later, or a delivery in 3
+    days). Never promise a reminder without it.
+
+    - `at`: for a clock time or a day ("tomorrow at 9", "Monday morning",
+      "8pm tonight"). Local date and time as `YYYY-MM-DDTHH:mm`, no offset,
+      worked out from the current time you were given. Pick a sensible hour
+      for vague times (morning 09:00, afternoon 14:00, evening 19:00).
+    - `delay_minutes`: only for a relative wait ("in 30 minutes", "in 2
+      hours"). Never turn a clock time or a day into minutes yourself.
+
+    `prompt` is the instruction for what to say/do when it fires; `reason` is a
+    short slug used to identify and cancel this follow-up later (e.g.
+    `payment_check`).
     """
     started = time.perf_counter()
+    if (delay_minutes is None) == (at is None):
+        return {"error": "give exactly one of delay_minutes or at"}
     ctx = _get_followup_context()
     if not ctx or not ctx.get("conversation_id"):
         _log_call("schedule_followup", _truncate(reason), "no_context", 0)
         return {"error": "no conversation context", "instruction": FOLLOWUP_UNAVAILABLE}
+    when = {"at": at} if at is not None else {"delayMinutes": delay_minutes}
     try:
         result = await ApiClient.get_instance().post(
             "/system/followups",
@@ -380,7 +399,7 @@ async def schedule_followup(delay_minutes: int, prompt: str, reason: str) -> dic
                 "providerId": ctx["provider_id"],
                 "customerId": ctx["customer_id"],
                 "contactPointId": ctx["contact_point_id"],
-                "delayMinutes": delay_minutes,
+                **when,
                 "prompt": prompt,
                 "reason": reason,
                 "triggerMessageId": ctx.get("trigger_message_id"),
@@ -392,6 +411,9 @@ async def schedule_followup(delay_minutes: int, prompt: str, reason: str) -> dic
     except ApiClientError as exc:
         _log_call("schedule_followup", _truncate(reason), "error",
                   (time.perf_counter() - started) * 1000)
+        # A wall-clock time the API refused is the model's to fix, not a dead end.
+        if at is not None and exc.status_code == 422:
+            return {"error": str(exc), "instruction": FOLLOWUP_TIME_REJECTED}
         return {"error": str(exc), "instruction": FOLLOWUP_FAILED}
 
 

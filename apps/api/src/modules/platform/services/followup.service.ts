@@ -1,5 +1,6 @@
 import { AccountService } from '@app/modules/account/services/account.service';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
+import { ChatbotTimezoneService } from '@app/modules/chatbot/services/chatbot-timezone.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
 import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
@@ -14,14 +15,18 @@ import {
     Injectable,
     Logger,
     Optional,
+    UnprocessableEntityException,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
+import { DateTime } from 'luxon';
 import {
     ENUM_FOLLOWUP_PROCESS,
     ENUM_FOLLOWUP_SKIP_REASON,
     ENUM_FOLLOWUP_STATUS,
+    FOLLOWUP_MAX_AHEAD_MINUTES,
+    FOLLOWUP_MIN_LEAD_MINUTES,
     FOLLOWUP_QUEUE,
     FOLLOWUP_TASK_PREFIX,
     MAX_PENDING_FOLLOWUPS_PER_CONVERSATION,
@@ -33,6 +38,7 @@ import { FollowupPendingResponseDto } from '../dtos/response/followup.pending.re
 import {
     IFollowupJob,
     IFollowupOutcome,
+    IFollowupWhen,
     IFollowupWorkspaceFilter,
 } from '../interfaces/followup.interface';
 import { FollowupEntity } from '../repository/entities/followup.entity';
@@ -61,12 +67,20 @@ export class FollowupService {
         private readonly streaming: StreamingDelivery,
         private readonly moduleRef: ModuleRef,
         private readonly turnContext: TurnContextService,
+        private readonly timezoneService: ChatbotTimezoneService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
     ) {}
 
-    async schedule(data: IFollowupJob, delayMinutes: number): Promise<string> {
+    async schedule(data: IFollowupJob, when: IFollowupWhen): Promise<string> {
+        const scheduledAt =
+            'at' in when
+                ? await this.resolveWallClock(data.conversationId, when.at)
+                : new Date(
+                      Date.now() + Math.max(0, when.delayMinutes) * 60_000
+                  );
+
         // Not wrapped in a transaction with the insert below: a burst of
         // concurrent schedule() calls for the same conversation can each read
         // the count before any of them commits, so the cap can be exceeded by
@@ -84,9 +98,6 @@ export class FollowupService {
             );
         }
 
-        const scheduledAt = new Date(
-            Date.now() + Math.max(0, delayMinutes) * 60_000
-        );
         const followup = await this.followupRepository.createScheduled({
             chatbotId: data.chatbotId,
             conversationId: data.conversationId,
@@ -113,6 +124,47 @@ export class FollowupService {
         }
 
         return followup.id;
+    }
+
+    /**
+     * A local `YYYY-MM-DDTHH:mm` in the conversation's timezone, as an
+     * instant. Rejections are 422 so apps/ai can tell "pick another time"
+     * apart from the 400 pending cap.
+     */
+    private async resolveWallClock(
+        conversationId: string,
+        at: string
+    ): Promise<Date> {
+        const conversation = await this.conversationService.findOneById(
+            conversationId,
+            { populate: ['chatbot'] }
+        );
+        if (!conversation) {
+            throw new UnprocessableEntityException(
+                'followup.schedule.error.conversationNotFound'
+            );
+        }
+        const zone =
+            this.timezoneService.resolveConversationTimezone(conversation);
+        const local = DateTime.fromISO(at, { zone });
+        if (!local.isValid) {
+            throw new UnprocessableEntityException(
+                'followup.schedule.error.atInvalid'
+            );
+        }
+
+        const minutesAhead = (local.toMillis() - Date.now()) / 60_000;
+        if (minutesAhead < FOLLOWUP_MIN_LEAD_MINUTES) {
+            throw new UnprocessableEntityException(
+                'followup.schedule.error.atNotInFuture'
+            );
+        }
+        if (minutesAhead > FOLLOWUP_MAX_AHEAD_MINUTES) {
+            throw new UnprocessableEntityException(
+                'followup.schedule.error.atTooFar'
+            );
+        }
+        return local.toJSDate();
     }
 
     async cancel(followupId: string, conversationId: string): Promise<boolean> {

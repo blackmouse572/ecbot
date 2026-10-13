@@ -214,3 +214,35 @@ async def test_a_conversation_timezone_adds_the_customer_clock(monkeypatch):
     newest = seen["messages"][-1].content
     assert "Business: Tuesday, 2026-10-13 23:50 (Asia/Ho_Chi_Minh" in newest
     assert "Customer: Tuesday, 2026-10-13 12:50 (America/New_York" in newest
+
+
+async def test_opening_status_follows_the_clock_on_the_newest_turn(monkeypatch):
+    from datetime import datetime
+
+    seen: dict = {}
+
+    class _RecordingModel(_FakeToolModel):
+        def _generate(self, messages, *a, **kw):
+            seen["messages"] = messages
+            return super()._generate(messages, *a, **kw)
+
+    fake = _RecordingModel(messages=iter([AIMessage(content="ok")]))
+    monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+
+    chatbot = MagicMock(
+        agent_profile={"openingHours": {"tue": [{"open": "08:00", "close": "22:00"}]}},
+    )
+    ctx = AgentRequestContext(
+        chatbot=chatbot,
+        chatbot_id="x",
+        agent_timezone="Asia/Ho_Chi_Minh",
+        now=datetime(2026, 10, 13, 16, 50, tzinfo=UTC),
+    )
+    await _agent().ainvoke({"messages": [("user", "open?")]}, context=ctx)
+
+    assert seen["messages"][-1].content == (
+        "<current_time>Tuesday, 2026-10-13 23:50 (Asia/Ho_Chi_Minh, UTC+07:00)</current_time>\n"
+        "<opening_hours>Closed now. Opens next Tuesday at 08:00. "
+        "Today (Tuesday): 08:00-22:00.</opening_hours>\n\nopen?"
+    )
