@@ -1,3 +1,4 @@
+import { CheckCircleSolid } from "@medusajs/icons";
 import { Text } from "@medusajs/ui";
 import { Can } from "@repo/auth";
 import type { FC } from "react";
@@ -8,8 +9,8 @@ import { useGettingStartedSteps } from "./use-getting-started-steps";
 
 /**
  * The getting-started checklist in the sidebar, so a new owner sees the next
- * step from every page. Only the next step is linked so the card stays
- * short under the nav. Hidden on the dashboard, which shows the full card,
+ * step from every page; each step still to do links to where it is done.
+ * Hidden on the dashboard, which shows the full card,
  * and gone once every step is done.
  */
 export const GettingStartedNav: FC = () => {
@@ -17,7 +18,6 @@ export const GettingStartedNav: FC = () => {
   const steps = useGettingStartedSteps();
   const onDashboard = useMatch(`/:workspaceSlug/${ROUTES.Dashboard}`);
   const doneCount = steps.filter((step) => step.done).length;
-  const next = steps.find((step) => !step.done);
 
   if (onDashboard || steps.length === 0 || doneCount === steps.length)
     return null;
@@ -25,16 +25,17 @@ export const GettingStartedNav: FC = () => {
   return (
     <Can I="manage" a="CHATBOT">
       <section aria-labelledby="getting-started-nav" className="px-3 py-2">
-        <div className="bg-ui-bg-base shadow-borders-base flex flex-col gap-y-2 rounded-lg p-3">
+        <div className="bg-ui-bg-base shadow-borders-base flex flex-col gap-y-2 rounded-lg px-2 py-3">
           <Text
             id="getting-started-nav"
+            className="px-1"
             size="small"
             weight="plus"
             leading="compact"
           >
             {t("dashboard.gettingStarted.title")}
           </Text>
-          <div className="flex items-center gap-x-2">
+          <div className="flex items-center gap-x-2 px-1">
             <div
               role="progressbar"
               aria-labelledby="getting-started-nav"
@@ -59,17 +60,46 @@ export const GettingStartedNav: FC = () => {
               })}
             </Text>
           </div>
-          {next && (
-            <Link
-              to={next.to}
-              className="text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover -mx-1 flex items-center gap-x-2 rounded-md px-1 py-1 transition-colors"
-            >
-              <span className="border-ui-border-strong size-[15px] shrink-0 rounded-full border" />
-              <Text size="xsmall" leading="compact" weight="plus">
-                {t(`dashboard.gettingStarted.steps.${next.key}.title`)}
-              </Text>
-            </Link>
-          )}
+          <ol className="flex flex-col">
+            {steps.map((step) => {
+              const title = t(
+                `dashboard.gettingStarted.steps.${step.key}.title`,
+              );
+              return (
+                <li key={step.key}>
+                  {step.done ? (
+                    <span className="text-ui-fg-muted flex items-center gap-x-2 px-1 py-1">
+                      <span className="flex size-6 shrink-0 items-center justify-center">
+                        <CheckCircleSolid className="text-ui-tag-green-icon" />
+                      </span>
+                      <Text
+                        size="xsmall"
+                        leading="compact"
+                        className="line-through"
+                      >
+                        {title}
+                      </Text>
+                    </span>
+                  ) : (
+                    <Link
+                      to={step.to}
+                      className="text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover flex items-center gap-x-2 rounded-md px-1 py-1 transition-colors"
+                    >
+                      <span
+                        aria-hidden
+                        className="bg-ui-bg-component text-ui-fg-subtle shadow-borders-base flex shrink-0 items-center justify-center rounded-md size-6"
+                      >
+                        <step.icon />
+                      </span>
+                      <Text size="xsmall" leading="compact" weight="plus">
+                        {title}
+                      </Text>
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
         </div>
       </section>
     </Can>

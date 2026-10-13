@@ -104,14 +104,6 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
       <RouteFocusModal.Header>
         <div className="flex w-full items-center justify-between gap-2">
           <Text size="small" className="text-ui-fg-subtle">{t("agentBuilder.ui.title")}</Text>
-          <div className="flex items-center gap-2">
-          {/* The draft can go live as soon as it exists; the remaining
-              questions keep saving to the live agent. */}
-          {unlocked && !builder.state.finished && (
-            <Button size="small" variant="secondary" onClick={builder.finish} isLoading={builder.finishing}>
-              {t("agentBuilder.ui.activateNow")}
-            </Button>
-          )}
           {unlocked && (
             <Button
               variant="transparent"
@@ -125,7 +117,6 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
               <span className="truncate">{tryAgentLabel}</span>
             </Button>
           )}
-          </div>
         </div>
       </RouteFocusModal.Header>
       <RouteFocusModal.Body

@@ -1146,7 +1146,7 @@
       "skipped": "Skipped",
       "yes": "Yes",
       "no": "No",
-      "draftCreated": "Your agent is saved as a draft. Try it on the right, and activate it as soon as it answers well.",
+      "draftCreated": "Your agent is saved as a draft. Try it on the right.",
       "saveFailed": "Could not save your agent. Your answers are kept, and we will retry on the next answer.",
       "done": "All set. Activate your agent when you are happy with it.",
       "finish": "Activate agent",
@@ -1168,7 +1168,7 @@
       "factLead": "Here's the answer:",
       "existingChannels": "Use an existing channel",
       "useChannel": "Use",
-      "connectLater": "Connect later",
+      "connectLater": "Skip",
       "comingSoon": "Coming soon",
       "connectFailed": "Could not connect this channel. Please try again.",
       "connected": "Connected",
@@ -1187,7 +1187,9 @@
       "customCollectRemove": "Remove {{label}}",
       "customCollectLimit": "You can add up to {{count}} fields.",
       "customCollectOther": "Other",
-      "activateNow": "Activate now"
+      "activateNow": "Activate now",
+      "activateLater": "Later",
+      "activateAsk": "Turn your agent on now so it starts replying to customers? You can keep answering the remaining questions either way."
     },
     "groups": {
       "identity": "About your business",

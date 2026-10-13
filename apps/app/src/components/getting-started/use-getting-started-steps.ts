@@ -43,8 +43,9 @@ export function useGettingStartedSteps(): GettingStartedStep[] {
   const path = (key: GettingStartedStepKey, fallback: string) =>
     key === "account" && accounts.count > 0 ? ROUTES.Accounts : fallback;
 
-  return GETTING_STARTED_STEPS.map(({ key, path: stepPath }) => ({
+  return GETTING_STARTED_STEPS.map(({ key, path: stepPath, icon }) => ({
     key,
+    icon,
     to: `/${workspaceSlug}/${path(key, stepPath)}`,
     done: done[key],
   }));

@@ -92,10 +92,12 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
           <div className="flex flex-1 flex-col">
             <CoreRouteSection />
           </div>
-          <GettingStartedNav />
           <UtilitySection />
         </div>
+        {/* Pinned with the user menu so the checklist stays in view while
+            the nav scrolls on short screens. */}
         <div className="bg-ui-bg-subtle sticky bottom-0">
+          <GettingStartedNav />
           <UserSection />
         </div>
       </div>

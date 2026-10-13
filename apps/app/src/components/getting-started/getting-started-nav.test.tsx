@@ -49,7 +49,7 @@ describe("GettingStartedNav", () => {
     data.conversations = 0;
   });
 
-  it("shows progress and links only the next step, so the card stays short", () => {
+  it("shows progress and links every step still to do", () => {
     data.chatbots = 1;
     renderNav();
 
@@ -61,8 +61,11 @@ describe("GettingStartedNav", () => {
       screen.getByRole("link", { name: /Connect a channel/ }),
     ).toHaveAttribute("href", "/kunmart/accounts/create");
     expect(
-      screen.queryByRole("link", { name: /Activate your agent/ }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("link", { name: /Activate your agent/ }),
+    ).toHaveAttribute("href", "/kunmart/chatbot");
+    expect(
+      screen.getByRole("link", { name: /first conversation/i }),
+    ).toHaveAttribute("href", "/kunmart/conversations");
   });
 
   it("fills the progress bar by the share of steps done", () => {

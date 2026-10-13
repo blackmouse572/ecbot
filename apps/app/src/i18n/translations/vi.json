@@ -1190,7 +1190,7 @@
       "skipped": "Đã bỏ qua",
       "yes": "Có",
       "no": "Không",
-      "draftCreated": "Agent đã được lưu nháp. Hãy thử ở bên phải, thấy trả lời ổn là kích hoạt được ngay.",
+      "draftCreated": "Agent đã được lưu nháp. Hãy thử trò chuyện ở bên phải.",
       "saveFailed": "Chưa lưu được agent. Câu trả lời vẫn được giữ và sẽ thử lại ở câu tiếp theo.",
       "done": "Đã xong. Hãy kích hoạt agent khi bạn thấy hài lòng.",
       "finish": "Kích hoạt agent",
@@ -1212,7 +1212,7 @@
       "factLead": "Câu trả lời:",
       "existingChannels": "Dùng kênh đã kết nối",
       "useChannel": "Dùng",
-      "connectLater": "Kết nối sau",
+      "connectLater": "Bỏ qua",
       "comingSoon": "Sắp ra mắt",
       "connectFailed": "Chưa kết nối được kênh này. Vui lòng thử lại.",
       "connected": "Đã kết nối",
@@ -1231,7 +1231,9 @@
       "customCollectRemove": "Xoá {{label}}",
       "customCollectLimit": "Bạn có thể thêm tối đa {{count}} mục.",
       "customCollectOther": "Khác",
-      "activateNow": "Kích hoạt ngay"
+      "activateNow": "Kích hoạt ngay",
+      "activateLater": "Để sau",
+      "activateAsk": "Kích hoạt agent ngay để agent bắt đầu trả lời khách? Dù chọn gì, bạn vẫn trả lời tiếp các câu còn lại được."
     },
     "groups": {
       "identity": "Về doanh nghiệp",
@@ -2213,7 +2215,7 @@
     "close": "Đóng",
     "copy": "Sao chép",
     "previous": "Trước",
-    "next": "Sau",
+    "next": "Tiếp theo",
     "skip": "Bỏ qua",
     "preview": "Xem trước",
     "createNew": "Tạo mới",

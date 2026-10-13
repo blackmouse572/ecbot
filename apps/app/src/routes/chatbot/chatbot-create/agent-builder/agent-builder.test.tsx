@@ -119,7 +119,10 @@ const renderBuilder = (path = "/ws/chatbot/create") =>
   render(<MemoryRouter initialEntries={[path]}><AgentBuilder /></MemoryRouter>);
 
 // Answers the open question with whatever makes it valid, then clicks Next.
+// The ask to activate after the channel step is answered with "later".
 async function answerCurrent() {
+  const later = screen.queryByRole("button", { name: "agentBuilder.ui.activateLater" });
+  if (later) return userEvent.click(later);
   const text = screen.queryByRole("textbox", { name: /agentBuilder\.(questions|facts)/ });
   if (text && !(text as HTMLInputElement).value) await userEvent.type(text, "Lotus");
   await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
@@ -189,18 +192,37 @@ describe("AgentBuilder", () => {
   });
 
   describe("turning the agent on early", () => {
-    it("offers to turn the draft on before every question is answered", async () => {
+    it("asks whether to activate once the channel step is answered or skipped", async () => {
       renderBuilder();
       await pickBeautyTemplate();
-      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
       await answerToAgentName();
+      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
 
-      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.activateNow" }));
+      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" }));
+
+      expect(await screen.findByText("agentBuilder.ui.activateAsk")).toBeInTheDocument();
+      // The next question waits for the answer.
+      expect(screen.queryByRole("button", { name: "actions.next" })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.activateNow" }));
 
       expect(activate).toHaveBeenCalledWith({ id: "bot-1", active: true });
       await screen.findByText("agentBuilder.ui.finished");
       expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
       // The rest of the questions stay open: answers keep saving to the live agent.
+      expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
+    });
+
+    it("keeps the agent off and moves on when the owner picks later", async () => {
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerToAgentName();
+      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.activateLater" }));
+
+      expect(activate).not.toHaveBeenCalled();
+      expect(screen.getByText("agentBuilder.ui.activateLater")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
     });
   });
