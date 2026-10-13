@@ -672,6 +672,11 @@
           "success": "Widget settings updated.",
           "error": "Failed to update widget settings."
         }
+      },
+      "noChatbot": {
+        "title": "No agent yet",
+        "message": "Create an agent to answer customers on this channel.",
+        "action": "Create agent"
       }
     },
     "imports": {

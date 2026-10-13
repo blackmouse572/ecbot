@@ -699,6 +699,11 @@
           "success": "Đã cập nhật thiết lập widget.",
           "error": "Cập nhật thiết lập widget thất bại."
         }
+      },
+      "noChatbot": {
+        "title": "Chưa có agent",
+        "message": "Tạo agent để trả lời khách hàng trên kênh này.",
+        "action": "Tạo agent"
       }
     },
     "imports": {

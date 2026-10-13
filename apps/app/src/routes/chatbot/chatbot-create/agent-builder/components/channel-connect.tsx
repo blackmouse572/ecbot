@@ -22,7 +22,7 @@ import type { AccountGetDetailResponseDto, AccountListResponseDto, ChatbotLinkAc
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { LinkedAccountRef } from "../builder-state";
-import { CHANNEL_CONNECT, channelOfAccountType } from "../channel-accounts";
+import { CHANNEL_CONNECT, channelOfAccountType, isConnectableAccountType } from "../channel-accounts";
 import { channelIcon } from "./channel-icon";
 
 const GRID_CHANNELS: ChannelId[] = ["messenger", "zalo", "telegram", "website", "instagram", "tiktok", "shopee"];
@@ -269,11 +269,8 @@ export function ChannelConnect({
     onAnswer(Array.from(new Set([...fromAccounts, ...comingSoon])));
   };
 
-  // User-level Facebook accounts aren't a messaging channel themselves
-  // (only their pages are), and API channels are server integrations, not
-  // a channel this builder connects, so neither is offered here.
-  const existingChannelAccounts = (unlinkedAccounts ?? []).filter(
-    (a) => a.type !== "FACEBOOK_ACCOUNT" && a.type !== "API_CHANNEL",
+  const existingChannelAccounts = (unlinkedAccounts ?? []).filter((a) =>
+    isConnectableAccountType(a.type),
   );
 
   return (
