@@ -61,6 +61,18 @@ describe("compilePrompt", () => {
     expect(plainOut).toContain("collect: full name and phone number.");
   });
 
+  it("adds custom collect labels to the same collect sentence after the fixed fields", () => {
+    const out = compilePrompt({ ...sample("beauty", "en"), collect: ["name", "phone"], customCollect: ["deadline", "design file"] });
+    expect(out).toContain("collect: full name, phone number, deadline and design file.");
+    const onlyCustom = compilePrompt({ ...sample("beauty", "en"), collect: [], customCollect: ["serial number"] });
+    expect(onlyCustom).toContain("Before confirming anything, collect: serial number.");
+  });
+
+  it("compiles a profile without custom collect labels exactly as one with an empty list", () => {
+    const base = sample("beauty", "en");
+    expect(compilePrompt({ ...base, customCollect: [] })).toBe(compilePrompt(base));
+  });
+
   it("numbers the Process steps 1..n without gaps when a step is omitted", () => {
     const out = compilePrompt({ ...sample("beauty", "en"), collect: [], handoffWhen: [] });
     const process = out.split("## Process\n")[1]!.split("\n\n")[0]!.split("\n");
@@ -186,7 +198,8 @@ describe("compilePrompt", () => {
   it("places orders with the connected order tool and hands off without one", () => {
     const out = compilePrompt(sample("ecommerce", "en"));
     expect(out).toContain("place the order with the connected order tool");
-    expect(out).toContain("If no order tool is connected, do not say the order is placed");
+    expect(out).toContain("If no order tool is connected, the order is not placed yet");
+    expect(out).toContain("Never say the order is placed, confirmed or complete.");
     expect(out).not.toContain("then read the full order back before closing.");
   });
 

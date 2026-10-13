@@ -33,6 +33,13 @@ describe("buildQuestionGroups", () => {
     expect(keys).toContain("agentBuilder.questions.greeting.placeholderPersonal");
   });
 
+  it("asks about a complete order when an order-taking goal is selected", () => {
+    const shop = createProfile("ecommerce", "vi");
+    expect(question(shop, "collect").askKey).toBe("agentBuilder.questions.collect.askOrder");
+    const leads = { ...createProfile("finance", "vi"), goals: ["answer_questions" as const] };
+    expect(question(leads, "collect").askKey).toBe("agentBuilder.questions.collect.ask");
+  });
+
   it("builds six groups in order for an SMB type", () => {
     expect(buildQuestionGroups(createProfile("beauty", "vi")).map((g) => g.id))
       .toEqual(["identity", "essence", "facts", "process", "rules", "interaction"]);
@@ -100,6 +107,13 @@ describe("readAnswer / writeAnswer", () => {
   it("reads and writes fact paths", () => {
     const p = writeAnswer(createProfile("beauty", "vi"), { field: "facts", fact: "opening_hours" }, "9h-21h");
     expect(readAnswer(p, { field: "facts", fact: "opening_hours" })).toBe("9h-21h");
+  });
+
+  it("reads fixed and custom collect fields as one list and writes them back apart", () => {
+    const p = writeAnswer(createProfile("beauty", "vi"), { field: "collect" }, ["name", "Deadline", "phone"]);
+    expect(p.collect).toEqual(["name", "phone"]);
+    expect(p.customCollect).toEqual(["Deadline"]);
+    expect(readAnswer(p, { field: "collect" })).toEqual(["name", "phone", "Deadline"]);
   });
 
   it("re-applies presets when the business type changes", () => {

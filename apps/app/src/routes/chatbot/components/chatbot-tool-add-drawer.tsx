@@ -17,6 +17,10 @@ import { Combobox, ListSkeleton } from "@repo/ui/common-components";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ToolListResponseDto } from "@repo/client";
+import { ROUTES } from "@/routes/constants";
+import { withOriginAgent } from "@/utils/origin-agent";
+import { PlusMini } from "@medusajs/icons";
+import { Link } from "react-router-dom";
 import { defaultEnabledActions, isActionEnabled } from "./mcp-action-state";
 
 type ChatbotToolAddDrawerProps = {
@@ -40,6 +44,10 @@ export function ChatbotToolAddDrawer({
   const [selectedActions, setSelectedActions] = useState<string[] | null>(null);
 
   const { tools } = useListTools(workspace, { perPage: 100 });
+  const createPath = withOriginAgent(
+    `/${workspace}/${ROUTES.Tools}/new`,
+    chatbotId,
+  );
   const { enableToolOnChatbot, isPending } = useEnableToolOnChatbot(
     workspace,
     chatbotId,
@@ -173,6 +181,12 @@ export function ChatbotToolAddDrawer({
           )}
         </Drawer.Body>
         <Drawer.Footer>
+          <Button variant="transparent" asChild>
+            <Link to={createPath}>
+              <PlusMini />
+              {t("actions.createNew")}
+            </Link>
+          </Button>
           <div className="flex items-center gap-2 ml-auto">
             <Drawer.Close asChild>
               <Button variant="secondary">{t("actions.cancel")}</Button>

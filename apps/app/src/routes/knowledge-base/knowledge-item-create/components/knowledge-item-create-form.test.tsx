@@ -40,14 +40,6 @@ vi.mock("../../../../hooks/api", () => ({
       api.processed.push(args);
     },
   }),
-  useChatbots: () => ({
-    chatbots: [
-      { id: "bot-1", name: "Sales agent" },
-      { id: "bot-2", name: "Support agent" },
-    ],
-    isLoading: false,
-    isError: false,
-  }),
   useLinkKnowledgeItemToChatbots: () => ({
     mutateAsync: async (args: unknown) => {
       api.calls.push("link");
@@ -146,30 +138,38 @@ describe("KnowledgeItemCreateForm", () => {
     });
   };
 
-  const renderTextForm = () =>
+  const renderTextForm = (agentId?: string) =>
     render(
       <NuqsTestingAdapter searchParams="?t=TEXT">
-        <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+        <KnowledgeItemCreateForm
+          workspaceSlug="ws"
+          knowledgeBaseId="kb-1"
+          agentId={agentId}
+        />
       </NuqsTestingAdapter>,
     );
 
-  // #163: the create form had no way to pick which agents use the item.
-  it("links the new item to the chosen agents before processing it", async () => {
-    const { container } = renderTextForm();
-    fillTextItem(container);
+  // #283: the form has no agent picker; opened from an agent's page, the
+  // new item is linked to that agent.
+  it("has no agent picker", () => {
+    renderTextForm("bot-1");
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole("checkbox", { name: "Support agent" }));
+  it("links the new item to the agent it was opened from before processing it", async () => {
+    const { container } = renderTextForm("bot-1");
+    fillTextItem(container);
     fireEvent.submit(container.querySelector("form")!);
 
     await waitFor(() => expect(api.processed).toHaveLength(1));
     expect(api.linked).toEqual([
-      { knowledgeItemId: "item-1", chatbotIds: ["bot-2"] },
+      { knowledgeItemId: "item-1", chatbotIds: ["bot-1"] },
     ]);
     // Ingestion stamps the linked agents on the vectors, so link first.
     expect(api.calls).toEqual(["link", "process"]);
   });
 
-  it("does not call the link endpoint when no agent is chosen", async () => {
+  it("does not call the link endpoint when opened outside an agent", async () => {
     const { container } = renderTextForm();
     fillTextItem(container);
     fireEvent.submit(container.querySelector("form")!);
@@ -178,11 +178,10 @@ describe("KnowledgeItemCreateForm", () => {
     expect(api.linked).toEqual([]);
   });
 
-  it("tells the user when some agents could not be linked", async () => {
+  it("tells the user when the agent could not be linked", async () => {
     api.linkFailed = 1;
-    const { container } = renderTextForm();
+    const { container } = renderTextForm("bot-1");
     fillTextItem(container);
-    fireEvent.click(screen.getByRole("checkbox", { name: "Sales agent" }));
     fireEvent.submit(container.querySelector("form")!);
 
     await waitFor(() => expect(api.processed).toHaveLength(1));

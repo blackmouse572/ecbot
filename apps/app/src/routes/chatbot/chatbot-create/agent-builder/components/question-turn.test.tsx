@@ -4,7 +4,7 @@ import {
   createProfile,
   type AgentProfile,
 } from "@repo/agent-blueprint";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { QuestionTurn } from "./question-turn";
 
@@ -154,5 +154,79 @@ describe("QuestionTurn progress", () => {
   it("drops the hint once the draft exists", () => {
     renderAt(5, 23, "bot-1");
     expect(screen.queryByText(/finish the rest later/)).toBeNull();
+  });
+});
+
+// #287: owners add their own details to collect before confirming.
+describe("QuestionTurn collect step", () => {
+  beforeAll(() => i18n.changeLanguage("en"));
+
+  const renderCollect = (profile: AgentProfile) => {
+    const question = buildQuestionGroups(profile)
+      .flatMap((g) => g.questions)
+      .find((q) => q.id === "collect")!;
+    const onAnswer = vi.fn();
+    render(
+      <QuestionTurn
+        question={question}
+        profile={profile}
+        suggestion={null}
+        position={{ current: 1, total: 20 }}
+        onAnswer={onAnswer}
+        onSkip={vi.fn()}
+        chatbotId={null}
+        linkedAccounts={[]}
+        onAccountsLinked={vi.fn()}
+        onAccountsUnlinked={vi.fn()}
+      />,
+    );
+    return onAnswer;
+  };
+
+  it("asks about a complete order when the agent takes orders", () => {
+    renderCollect(createProfile("ecommerce", "en"));
+    expect(screen.getByText("What does a complete order or booking need? Your agent collects these before confirming.")).toBeInTheDocument();
+  });
+
+  it("adds and removes the owner's own fields and answers with them after the fixed ones", () => {
+    const onAnswer = renderCollect({ ...createProfile("ecommerce", "en"), customCollect: ["Gift note"] });
+    const input = screen.getByRole("textbox", { name: "Add your own" });
+    fireEvent.change(input, { target: { value: "Deadline" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    fireEvent.click(screen.getByRole("button", { name: "Remove Gift note" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onAnswer).toHaveBeenCalledWith(["name", "phone", "address", "product_interest", "Deadline"]);
+  });
+
+  it("shows the add-your-own input only while Other is ticked", () => {
+    const onAnswer = renderCollect(createProfile("ecommerce", "en"));
+    expect(screen.queryByRole("textbox", { name: "Add your own" })).toBeNull();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Other" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Add your own" }), { target: { value: "Deadline" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Other" }));
+    expect(screen.queryByRole("textbox", { name: "Add your own" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onAnswer).toHaveBeenCalledWith(["name", "phone", "address", "product_interest"]);
+  });
+
+  it("ticks the fixed field instead of adding a label that names it", () => {
+    const onAnswer = renderCollect({ ...createProfile("ecommerce", "en"), collect: ["name"] });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Other" }));
+    const input = screen.getByRole("textbox", { name: "Add your own" });
+    for (const typed of ["email", "Special requests"]) {
+      fireEvent.change(input, { target: { value: typed } });
+      fireEvent.keyDown(input, { key: "Enter" });
+    }
+    expect(screen.getByRole("checkbox", { name: "Email" })).toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onAnswer).toHaveBeenCalledWith(["name", "email", "notes"]);
+  });
+
+  it("stops adding once the limit is reached", () => {
+    const full = Array.from({ length: 10 }, (_, i) => `Field ${i}`);
+    renderCollect({ ...createProfile("ecommerce", "en"), customCollect: full });
+    expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
+    expect(screen.getByText("You can add up to 10 fields.")).toBeInTheDocument();
   });
 });

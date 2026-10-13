@@ -6,8 +6,6 @@ const baseSchema = z.object({
   title: z.string().min(1),
   content: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  // Agents to link the item to after it is created; not sent with the item.
-  chatbotIds: z.array(z.string()).optional(),
 });
 
 const createFileSchema = () =>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compilePrompt } from "./compile-prompt";
 import { migrateProfile } from "./migrate-profile";
-import { agentProfileSchema, applyPreset, createProfile, type AgentProfile } from "./profile";
+import { PROFILE_LIMITS, agentProfileSchema, applyPreset, createProfile, type AgentProfile } from "./profile";
 
 describe("createProfile", () => {
   it("fills presets and sane defaults for an SMB type", () => {
@@ -49,6 +49,21 @@ describe("agentProfileSchema", () => {
     expect(agentProfileSchema.safeParse(p).success).toBe(true);
     const overlapping = { mon: [{ open: "08:00", close: "12:00" }, { open: "11:00", close: "13:00" }] };
     expect(agentProfileSchema.safeParse({ ...p, openingHours: overlapping }).success).toBe(false);
+  });
+
+  it("accepts custom collect labels within the limits and profiles without them", () => {
+    const p = createProfile("beauty", "vi");
+    expect(agentProfileSchema.safeParse(p).success).toBe(true);
+    expect(agentProfileSchema.parse({ ...p, customCollect: ["  Deadline  "] }).customCollect).toEqual(["Deadline"]);
+  });
+
+  it("rejects empty, too long or too many custom collect labels", () => {
+    const p = createProfile("beauty", "vi");
+    const max = PROFILE_LIMITS.customCollect;
+    expect(agentProfileSchema.safeParse({ ...p, customCollect: ["  "] }).success).toBe(false);
+    expect(agentProfileSchema.safeParse({ ...p, customCollect: ["email"] }).success).toBe(false);
+    expect(agentProfileSchema.safeParse({ ...p, customCollect: ["x".repeat(max.length + 1)] }).success).toBe(false);
+    expect(agentProfileSchema.safeParse({ ...p, customCollect: Array.from({ length: max.count + 1 }, (_, i) => `f${i}`) }).success).toBe(false);
   });
 
   it("rejects unknown goals, too many personality words and oversized text", () => {

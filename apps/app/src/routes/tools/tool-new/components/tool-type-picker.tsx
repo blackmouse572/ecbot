@@ -1,5 +1,5 @@
 import { Globe, SquareBlueSolid, SquarePurpleSolid } from "@medusajs/icons";
-import { Heading, Text } from "@medusajs/ui";
+import { Heading, Text, clx } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
 export type ToolType = "http" | "mcp" | "marketplace";
@@ -31,9 +31,13 @@ const PickerCard = ({ icon, title, description, onClick }: PickerCardProps) => (
 
 type ToolTypePickerProps = {
   onSelect: (type: ToolType) => void;
+  showMarketplace?: boolean;
 };
 
-export const ToolTypePicker = ({ onSelect }: ToolTypePickerProps) => {
+export const ToolTypePicker = ({
+  onSelect,
+  showMarketplace = true,
+}: ToolTypePickerProps) => {
   const { t } = useTranslation();
 
   return (
@@ -44,7 +48,12 @@ export const ToolTypePicker = ({ onSelect }: ToolTypePickerProps) => {
           {t("tools.new.picker.subtitle")}
         </Text>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div
+        className={clx(
+          "grid grid-cols-1 gap-3",
+          showMarketplace ? "sm:grid-cols-3" : "sm:grid-cols-2",
+        )}
+      >
         <PickerCard
           icon={<SquareBlueSolid />}
           title={t("tools.new.picker.http.title")}
@@ -57,12 +66,14 @@ export const ToolTypePicker = ({ onSelect }: ToolTypePickerProps) => {
           description={t("tools.new.picker.mcp.description")}
           onClick={() => onSelect("mcp")}
         />
-        <PickerCard
-          icon={<Globe />}
-          title={t("tools.new.picker.marketplace.title")}
-          description={t("tools.new.picker.marketplace.description")}
-          onClick={() => onSelect("marketplace")}
-        />
+        {showMarketplace && (
+          <PickerCard
+            icon={<Globe />}
+            title={t("tools.new.picker.marketplace.title")}
+            description={t("tools.new.picker.marketplace.description")}
+            onClick={() => onSelect("marketplace")}
+          />
+        )}
       </div>
     </div>
   );
