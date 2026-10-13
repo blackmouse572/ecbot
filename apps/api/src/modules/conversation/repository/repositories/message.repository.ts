@@ -1,6 +1,6 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import {
     ENUM_MESSAGE_AUTHOR,
@@ -146,15 +146,46 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
     }
 
     /**
-     * The `limit` MOST RECENT messages, in chronological (oldest→newest) order —
-     * the AI conversation-history window. Thin alias for the newest-anchored
-     * first page of {@link findByConversation}.
+     * Filter for the conversation's messages after `cursorId` (all of them
+     * without one): what the memory summary does not cover yet. Ordered on
+     * (`dateSent`, `id`) like {@link findAfter}, so two rows sharing a
+     * millisecond never straddle the cursor. The cursor row is looked up even
+     * when deleted, so deleting it does not rewind the summary.
      */
-    async findRecentByConversation(
+    async afterCursorFilter(
         conversationId: string,
+        cursorId?: string
+    ): Promise<FilterQuery<MessageEntity>> {
+        const cursor = cursorId
+            ? await this.findOne({
+                  id: cursorId,
+                  conversation: conversationId,
+              } as any)
+            : null;
+        return {
+            conversation: conversationId,
+            deletedAt: null,
+            ...(cursor
+                ? {
+                      $or: [
+                          { dateSent: { $gt: cursor.dateSent } },
+                          { dateSent: cursor.dateSent, id: { $gt: cursor.id } },
+                      ],
+                  }
+                : {}),
+        } as FilterQuery<MessageEntity>;
+    }
+
+    /** The newest `limit` rows matching `filter`, oldest→newest. */
+    async findNewest(
+        filter: FilterQuery<MessageEntity>,
         limit: number
     ): Promise<MessageEntity[]> {
-        return this.findByConversation(conversationId, { limit, offset: 0 });
+        const rows = await this.find(filter, {
+            orderBy: { dateSent: 'DESC', id: 'DESC' } as any,
+            paging: { limit, offset: 0 },
+        });
+        return rows.reverse();
     }
 
     /**
