@@ -1,6 +1,6 @@
 import "@/i18n";
 import { Form } from "@repo/ui/common-components";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import type { UseFormReturn } from "react-hook-form";
@@ -12,6 +12,7 @@ const api = vi.hoisted(() => ({
   created: [] as unknown[],
   attached: [] as { chatbotId: string; skillId: string }[],
   attachError: null as unknown,
+  attachGate: null as Promise<void> | null,
   prev: undefined as unknown,
   handleSuccess: vi.fn(),
 }));
@@ -33,6 +34,7 @@ vi.mock("@/hooks/api/skills", () => ({
   }),
   useAttachSkillToChatbot: (_ws: string, chatbotId: string) => ({
     attachSkillToChatbot: async ({ skillId }: { skillId: string }) => {
+      if (api.attachGate) await api.attachGate;
       if (api.attachError) throw api.attachError;
       api.attached.push({ chatbotId, skillId });
     },
@@ -102,6 +104,7 @@ describe("SkillCreate", () => {
     api.created = [];
     api.attached = [];
     api.attachError = null;
+    api.attachGate = null;
     api.prev = undefined;
     api.handleSuccess.mockReset();
     toast.success.mockReset();
@@ -120,6 +123,21 @@ describe("SkillCreate", () => {
     expect(toast.success).toHaveBeenCalledWith(
       "Skill created and added to the agent",
     );
+  });
+
+  it("keeps Create disabled until the attach finishes, so a second click can't duplicate the skill", async () => {
+    let release = () => {};
+    api.attachGate = new Promise<void>((r) => (release = r));
+    const { container } = renderAt("/ws/skills/create?agent=bot-1");
+
+    submit(container);
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /create/i })).toBeDisabled(),
+    );
+    release();
+    await waitFor(() => expect(api.handleSuccess).toHaveBeenCalled());
+    expect(api.created).toHaveLength(1);
   });
 
   it("still returns to the agent when attaching fails", async () => {

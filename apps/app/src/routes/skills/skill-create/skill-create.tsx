@@ -84,7 +84,11 @@ const SkillCreateForm = () => {
                 {t("actions.cancel")}
               </Button>
             </RouteFocusModal.Close>
-            <Button type="submit" isLoading={isPending}>
+            <Button
+              type="submit"
+              isLoading={isPending || form.formState.isSubmitting}
+              disabled={form.formState.isSubmitting}
+            >
               {t("actions.create")}
             </Button>
           </div>
