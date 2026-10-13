@@ -25,4 +25,5 @@ export const CHATBOT_EDITABLE_FIELDS = [
     'handoffMessage',
     'handoffKeywords',
     'followupRules',
+    'timezone',
 ] as const;

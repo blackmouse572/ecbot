@@ -865,7 +865,10 @@
       "guardrailEscalateOnBlockHint": "Hand off to a human operator when a guardrail blocks a message. Disable for silent blocks only.",
       "followupRules": "Follow-up rules",
       "followupRulesHint": "Free-text guidance for when the bot should proactively follow up",
-      "followupRulesPlaceholder": "e.g. Follow up after 24 hours if the customer has not responded"
+      "followupRulesPlaceholder": "e.g. Follow up after 24 hours if the customer has not responded",
+      "timezone": "Timezone",
+      "timezoneHint": "The agent uses it to know the current date and time, for example to tell when the shop is closed.",
+      "timezoneDefault": "Default (system timezone)"
     },
     "details": {
       "title": "Agent Details",

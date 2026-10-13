@@ -45,6 +45,8 @@ export const createChatbotSchema = z.object({
   guardrailCustomInstruction: z.string().max(2000).nullish(),
   guardrailEscalateOnBlock: z.boolean().default(true),
   followupRules: z.string().max(2000).nullish(),
+  // null follows the deployment timezone (APP_TIMEZONE).
+  timezone: z.string().nullish(),
 });
 
 export type ChatbotFormData = z.infer<typeof createChatbotSchema>;

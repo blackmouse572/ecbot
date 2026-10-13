@@ -695,6 +695,7 @@ dependencies = [
     { name = "sqlmodel" },
     { name = "structlog" },
     { name = "tenacity" },
+    { name = "tzdata" },
     { name = "uvicorn" },
     { name = "vcrpy" },
 ]
@@ -733,6 +734,7 @@ requires-dist = [
     { name = "sqlmodel", specifier = ">=0.0.38,<0.0.39" },
     { name = "structlog", specifier = ">=26.1.0" },
     { name = "tenacity", specifier = ">=9.0.0" },
+    { name = "tzdata", specifier = ">=2026.4" },
     { name = "uvicorn", specifier = ">=0.41.0,<0.42.0" },
     { name = "vcrpy", specifier = ">=6.0.1" },
 ]

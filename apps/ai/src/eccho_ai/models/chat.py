@@ -72,6 +72,9 @@ class Chatbots(SQLModel, table=True):
     # Proactive followups (#140)
     followup_rules: str | None = Field(default=None)
 
+    # IANA zone for the per-turn clock (#285); None follows APP_TIMEZONE.
+    timezone: str | None = Field(default=None)
+
     # Relationships
     chatbot_tools: list["ChatbotTools"] = Relationship(back_populates="chatbot")
     chatbot_skills: list["ChatbotSkills"] = Relationship(back_populates="chatbot")
