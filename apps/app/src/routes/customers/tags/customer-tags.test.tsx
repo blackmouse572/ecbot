@@ -135,6 +135,7 @@ const vipTag = {
   emoji: "⭐",
   description: "High value",
   triggersHandoff: false,
+  notifiesTeam: false,
 };
 const angryTag = {
   id: "tag-angry",
@@ -142,6 +143,15 @@ const angryTag = {
   emoji: "🚨",
   description: "upset",
   triggersHandoff: true,
+  notifiesTeam: false,
+};
+const orderPlacedTag = {
+  id: "tag-order",
+  name: "Order placed",
+  emoji: "🛒",
+  description: "Placed by the order tool",
+  triggersHandoff: false,
+  notifiesTeam: true,
 };
 
 beforeEach(() => {
@@ -277,6 +287,54 @@ describe("CustomerTags settings page", () => {
     expect(payload.emoji).toBe("🎯");
     expect(payload.description).toBe("Marketing target list");
     expect(payload.triggersHandoff).toBe(false);
+    expect(payload.notifiesTeam).toBe(false);
+  });
+
+  // #288: a tag can tell the team without handing the conversation over.
+  it("sends notifiesTeam when the owner turns on Notify the team", async () => {
+    useListMock.mockReturnValue({
+      tags: [],
+      isLoading: false,
+    } as unknown as UseListReturn);
+    const user = userEvent.setup();
+
+    render(<CustomerTags />);
+
+    await user.click(
+      screen.getAllByRole("button", {
+        name: "settings.customerTags.actions.create",
+      })[0],
+    );
+    await user.type(
+      await screen.findByLabelText("settings.customerTags.fields.name"),
+      "Order placed",
+    );
+    await user.click(
+      screen.getByRole("switch", {
+        name: "settings.customerTags.fields.notifiesTeam",
+      }),
+    );
+    const submit = screen
+      .getAllByRole("button", { name: "actions.create" })
+      .find((b) => b.getAttribute("type") === "submit");
+    await user.click(submit!);
+
+    const payload = createMutateAsync.mock.calls[0][0];
+    expect(payload.notifiesTeam).toBe(true);
+    expect(payload.triggersHandoff).toBe(false);
+  });
+
+  it("marks a notify-only tag in the list", () => {
+    useListMock.mockReturnValue({
+      tags: [orderPlacedTag],
+      isLoading: false,
+    } as unknown as UseListReturn);
+
+    render(<CustomerTags />);
+
+    expect(
+      screen.getByText("settings.customerTags.handoff.notify"),
+    ).toBeInTheDocument();
   });
 
   it("Edit (from the row's ActionMenu) opens the Drawer pre-filled and submit calls useUpdateCustomerTag", async () => {

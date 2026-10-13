@@ -40,6 +40,7 @@ const TagFormSchema = zod.object({
   emoji: zod.string().max(16).optional().nullable(),
   description: zod.string().max(2000).optional().nullable(),
   triggersHandoff: zod.boolean(),
+  notifiesTeam: zod.boolean(),
 });
 
 type TagFormValues = zod.infer<typeof TagFormSchema>;
@@ -194,13 +195,20 @@ const useColumns = ({
       columnHelper.display({
         id: "triggersHandoff",
         header: () => t("settings.customerTags.fields.triggersHandoff"),
-        cell: ({ row }) => (
-          <StatusBadge color={row.original.triggersHandoff ? "green" : "grey"}>
-            {row.original.triggersHandoff
-              ? t("settings.customerTags.handoff.yes")
-              : t("settings.customerTags.handoff.no")}
-          </StatusBadge>
-        ),
+        cell: ({ row }) =>
+          !row.original.triggersHandoff && row.original.notifiesTeam ? (
+            <StatusBadge color="blue">
+              {t("settings.customerTags.handoff.notify")}
+            </StatusBadge>
+          ) : (
+            <StatusBadge
+              color={row.original.triggersHandoff ? "green" : "grey"}
+            >
+              {row.original.triggersHandoff
+                ? t("settings.customerTags.handoff.yes")
+                : t("settings.customerTags.handoff.no")}
+            </StatusBadge>
+          ),
       }),
       columnHelper.display({
         id: "actions",
@@ -234,6 +242,7 @@ function CustomerTagDrawer({
       emoji: "",
       description: "",
       triggersHandoff: false,
+      notifiesTeam: false,
     },
   });
 
@@ -245,6 +254,7 @@ function CustomerTagDrawer({
         emoji: tag.emoji ?? "",
         description: tag.description ?? "",
         triggersHandoff: tag.triggersHandoff,
+        notifiesTeam: tag.notifiesTeam ?? false,
       });
     } else {
       form.reset({
@@ -252,6 +262,7 @@ function CustomerTagDrawer({
         emoji: "",
         description: "",
         triggersHandoff: false,
+        notifiesTeam: false,
       });
     }
   }, [isOpen, tag, form]);
@@ -264,6 +275,7 @@ function CustomerTagDrawer({
       emoji: values.emoji?.trim() || null,
       description: values.description?.trim() || null,
       triggersHandoff: values.triggersHandoff,
+      notifiesTeam: values.notifiesTeam,
     };
     try {
       if (tag) {
@@ -385,6 +397,31 @@ function CustomerTagDrawer({
                           {t(
                             "settings.customerTags.fields.triggersHandoffHelp",
                           )}
+                        </Text>
+                      </div>
+                      <Form.Control>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </Form.Control>
+                    </div>
+                    <Form.ErrorMessage />
+                  </Form.Item>
+                )}
+              />
+              <Form.Field
+                control={form.control}
+                name="notifiesTeam"
+                render={({ field }) => (
+                  <Form.Item>
+                    <div className="flex items-start justify-between gap-x-4">
+                      <div className="flex flex-col">
+                        <Form.Label>
+                          {t("settings.customerTags.fields.notifiesTeam")}
+                        </Form.Label>
+                        <Text size="small" className="text-ui-fg-subtle">
+                          {t("settings.customerTags.fields.notifiesTeamHelp")}
                         </Text>
                       </div>
                       <Form.Control>

@@ -44,10 +44,12 @@ export class HandoffEmailService {
     /** Both windows must have room: the conversation's, then the workspace's. */
     private async withinCaps(
         conversationId: string,
-        workspaceId: string
+        workspaceId: string,
+        notice: boolean
     ): Promise<boolean> {
+        const kind = notice ? 'notice:conversation' : 'conversation';
         const conversationOk = await this.rateLimit.claim(
-            `${HANDOFF_EMAIL_KEY_PREFIX}:conversation:${conversationId}`,
+            `${HANDOFF_EMAIL_KEY_PREFIX}:${kind}:${conversationId}`,
             1,
             HANDOFF_EMAIL_CONVERSATION_WINDOW_SECONDS
         );
@@ -63,7 +65,8 @@ export class HandoffEmailService {
         conversationId: string,
         workspaceId: string,
         reason: string,
-        language?: string
+        language?: string,
+        tagName?: string
     ): Promise<void> {
         try {
             const [conversation, workspace, members] = await Promise.all([
@@ -87,7 +90,10 @@ export class HandoffEmailService {
                 );
                 return;
             }
-            if (!(await this.withinCaps(conversationId, workspaceId))) {
+            // A tag notice (#288) has its own per-conversation window, so it
+            // never uses up the email a handoff right after it needs.
+            const notice = reason === 'tag_notice';
+            if (!(await this.withinCaps(conversationId, workspaceId, notice))) {
                 this.logger.log(
                     `Handoff email for conversation ${conversationId} skipped: cooldown (in-app notification still sent)`
                 );
@@ -102,6 +108,7 @@ export class HandoffEmailService {
                 chatbotName: conversation.chatbot?.name ?? workspace.name,
                 workspaceName: workspace.name,
                 reason,
+                ...(notice ? { tagName } : {}),
                 conversationUrl: `/${workspace.slug}/conversations/${conversationId}`,
                 language,
             };

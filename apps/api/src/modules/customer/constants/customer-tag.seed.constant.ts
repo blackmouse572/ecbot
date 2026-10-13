@@ -5,6 +5,7 @@ export interface ICustomerTagSeed {
     emoji: string;
     description: string;
     triggersHandoff: boolean;
+    notifiesTeam?: boolean;
 }
 
 const CUSTOMER_TAG_DEFAULTS_EN: ICustomerTagSeed[] = [
@@ -68,6 +69,13 @@ const CUSTOMER_TAG_DEFAULTS_EN: ICustomerTagSeed[] = [
         description: 'Customer asked to talk to a person.',
         triggersHandoff: true,
     },
+    {
+        name: 'Order placed',
+        emoji: '🛒',
+        description: 'The order tool placed an order for the customer.',
+        triggersHandoff: false,
+        notifiesTeam: true,
+    },
 ];
 
 const CUSTOMER_TAG_DEFAULTS_VI: ICustomerTagSeed[] = [
@@ -130,6 +138,13 @@ const CUSTOMER_TAG_DEFAULTS_VI: ICustomerTagSeed[] = [
         emoji: '🙋',
         description: 'Khách muốn trao đổi với nhân viên.',
         triggersHandoff: true,
+    },
+    {
+        name: 'Đã đặt đơn',
+        emoji: '🛒',
+        description: 'Đơn hàng đã được đặt qua công cụ đặt hàng.',
+        triggersHandoff: false,
+        notifiesTeam: true,
     },
 ];
 

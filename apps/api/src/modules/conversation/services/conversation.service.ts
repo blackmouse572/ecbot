@@ -8,6 +8,7 @@ import { CustomerTagClassifierService } from '@app/modules/customer/services/cus
 import { NotificationService } from '@app/modules/notification/services/notification.service';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform-adapter.registry';
+import { WorkspaceMemberEntity } from '@app/modules/workspace/repository/entities/workspace-member.entity';
 import { WorkspaceMemberRepository } from '@app/modules/workspace/repository/repositories/workspace-member.repository';
 import { wrap } from '@mikro-orm/core';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -477,11 +478,57 @@ export class ConversationService implements IConversationService {
         return updated;
     }
 
+    /**
+     * Tells the team a customer was tagged, without a handoff: the bot keeps
+     * replying (#288). Same recipients as a handoff, in-app and by email.
+     */
+    async notifyTeam(
+        conversation: ConversationEntity,
+        workspaceId: string,
+        tagName: string,
+        language?: string
+    ): Promise<void> {
+        await this.notifyMembers(workspaceId, conversation.id, member =>
+            this.notificationService.createTagNotice(member.user.id, {
+                conversationId: conversation.id,
+                workspaceId,
+                workspaceSlug: member.workspace.slug,
+                tagName,
+                language,
+            })
+        );
+        // Not awaited, like the handoff email (send never rejects).
+        void this.handoffEmail?.send(
+            conversation.id,
+            workspaceId,
+            'tag_notice',
+            language,
+            tagName
+        );
+    }
+
     async notifyOperators(
         conversationId: string,
         workspaceId: string,
         reason: string,
         language?: string
+    ): Promise<void> {
+        await this.notifyMembers(workspaceId, conversationId, member =>
+            this.notificationService.createHandoff(member.user.id, {
+                conversationId,
+                workspaceId,
+                workspaceSlug: member.workspace.slug,
+                reason,
+                language,
+            })
+        );
+    }
+
+    /** Sends one notification to every active member; never throws. */
+    private async notifyMembers(
+        workspaceId: string,
+        conversationId: string,
+        notify: (member: WorkspaceMemberEntity) => Promise<unknown>
     ): Promise<void> {
         try {
             const members =
@@ -491,35 +538,27 @@ export class ConversationService implements IConversationService {
 
             if (!members || members.length === 0) {
                 this.logger.warn(
-                    `No active members in workspace ${workspaceId} to notify of handoff`
+                    `No active members in workspace ${workspaceId} to notify about conversation ${conversationId}`
                 );
                 return;
             }
 
-            const notificationPromises = members.map(member =>
-                this.notificationService
-                    .createHandoff(member.user.id, {
-                        conversationId,
-                        workspaceId,
-                        workspaceSlug: member.workspace.slug,
-                        reason,
-                        language,
-                    })
-                    .catch(err => {
+            await Promise.all(
+                members.map(member =>
+                    notify(member).catch(err => {
                         this.logger.error(
                             `Failed to notify member ${member.user.id}: ${err.message}`
                         );
                     })
+                )
             );
 
-            await Promise.all(notificationPromises);
-
             this.logger.log(
-                `Notified ${members.length} operators about handoff for conversation ${conversationId}`
+                `Notified ${members.length} members about conversation ${conversationId}`
             );
         } catch (error) {
             this.logger.error(
-                `Failed to notify operators for conversation ${conversationId}: ${error.message}`
+                `Failed to notify members for conversation ${conversationId}: ${error.message}`
             );
         }
     }
