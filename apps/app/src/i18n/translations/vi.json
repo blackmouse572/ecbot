@@ -2070,6 +2070,9 @@
       "none": "Gói này chưa có phương thức thanh toán. Hãy liên hệ với chúng tôi.",
       "pending": "Đang chờ xác nhận thanh toán…"
     },
+    "errors": {
+      "unavailable": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
     "cycle": {
       "monthly": "mỗi tháng",
       "yearly": "mỗi năm"

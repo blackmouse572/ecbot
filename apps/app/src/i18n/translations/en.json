@@ -2001,6 +2001,9 @@
       "none": "No payment method is available for this plan. Contact us.",
       "pending": "Waiting for your payment to be confirmed…"
     },
+    "errors": {
+      "unavailable": "Something went wrong. Please try again."
+    },
     "cycle": {
       "monthly": "per month",
       "yearly": "per year"
