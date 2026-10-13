@@ -82,6 +82,10 @@ export function QuestionTurn({
   const choices = question.kind === "boolean" ? BOOLEAN_CHOICES : (question.choices ?? []);
   // The collect answer also carries the owner's own labels after the fixed ids.
   const isChoice = (v: string) => choices.some((c) => c.value === v);
+  const choiceFor = (label: string) => {
+    const typed = label.trim().toLowerCase();
+    return choices.find((c) => c.value === typed || t(c.labelKey).toLowerCase() === typed)?.value;
+  };
   const customLabels = question.id === "collect" ? (value as string[]).filter((v) => !isChoice(v)) : [];
   // The greeting example reuses the names given so far, or the type's examples.
   const placeholderNames = {
@@ -160,7 +164,12 @@ export function QuestionTurn({
               {question.id === "collect" && (
                 <CustomCollectEditor
                   labels={customLabels}
-                  onChange={(labels) => setValue([...(value as string[]).filter(isChoice), ...labels])}
+                  onChange={(labels) => {
+                    // A label that names a fixed field ticks that field instead.
+                    const ticked = labels.map(choiceFor).filter((c): c is string => !!c);
+                    const ids = [...(value as string[]).filter(isChoice), ...ticked.filter((c) => !(value as string[]).includes(c))];
+                    setValue([...ids, ...labels.filter((l) => !choiceFor(l))]);
+                  }}
                 />
               )}
               <QuestionnaireError>{t("agentBuilder.ui.required")}</QuestionnaireError>

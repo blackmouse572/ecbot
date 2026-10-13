@@ -47,6 +47,7 @@ describe("agentProfileSchema", () => {
     const p = createProfile("beauty", "vi");
     const max = PROFILE_LIMITS.customCollect;
     expect(agentProfileSchema.safeParse({ ...p, customCollect: ["  "] }).success).toBe(false);
+    expect(agentProfileSchema.safeParse({ ...p, customCollect: ["email"] }).success).toBe(false);
     expect(agentProfileSchema.safeParse({ ...p, customCollect: ["x".repeat(max.length + 1)] }).success).toBe(false);
     expect(agentProfileSchema.safeParse({ ...p, customCollect: Array.from({ length: max.count + 1 }, (_, i) => `f${i}`) }).success).toBe(false);
   });

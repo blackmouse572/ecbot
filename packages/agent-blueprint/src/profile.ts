@@ -25,7 +25,8 @@ export const agentProfileSchema = z.object({
   facts: z.partialRecord(z.enum(idsOf(FACTS)), longText),
   collect: z.array(z.enum(idsOf(COLLECT))),
   // Business-specific details to collect, in the owner's words (#287).
-  customCollect: z.array(z.string().trim().min(1).max(PROFILE_LIMITS.customCollect.length))
+  customCollect: z.array(z.string().trim().min(1).max(PROFILE_LIMITS.customCollect.length)
+    .refine((label) => !idsOf(COLLECT).includes(label as never), "use collect for a fixed field"))
     .max(PROFILE_LIMITS.customCollect.count)
     .optional(),
   handoffWhen: z.array(z.enum(idsOf(HANDOFF_WHEN))),

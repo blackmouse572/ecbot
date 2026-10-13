@@ -198,6 +198,18 @@ describe("QuestionTurn collect step", () => {
     expect(onAnswer).toHaveBeenCalledWith(["name", "phone", "address", "product_interest", "Deadline"]);
   });
 
+  it("ticks the fixed field instead of adding a label that names it", () => {
+    const onAnswer = renderCollect({ ...createProfile("ecommerce", "en"), collect: ["name"] });
+    const input = screen.getByRole("textbox", { name: "Add your own" });
+    for (const typed of ["email", "Special requests"]) {
+      fireEvent.change(input, { target: { value: typed } });
+      fireEvent.keyDown(input, { key: "Enter" });
+    }
+    expect(screen.getByRole("checkbox", { name: "Email" })).toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onAnswer).toHaveBeenCalledWith(["name", "email", "notes"]);
+  });
+
   it("stops adding once the limit is reached", () => {
     const full = Array.from({ length: 10 }, (_, i) => `Field ${i}`);
     renderCollect({ ...createProfile("ecommerce", "en"), customCollect: full });
