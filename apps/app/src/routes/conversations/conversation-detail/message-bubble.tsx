@@ -16,6 +16,7 @@ import {
   MessageContent,
   ReactionPicker,
 } from "@repo/ui/common-components";
+import { AIChatSources } from "@/components/ai-chat/ai-chat-sources";
 import { ToolTrace } from "@/components/ai-chat/tool-trace";
 import type {
   MessageAuthorType,
@@ -114,7 +115,10 @@ export const MessageBubble = ({
   const clientNonce = (message as A)._clientNonce as string | undefined;
   const author = (message as A).author as
     { id: string; name: string } | undefined;
-  const { toolCalls, attachments } = message as MessageWithToolCalls;
+  const { toolCalls = [], attachments } = message as MessageWithToolCalls;
+  const { knowledgeCount, sources = [] } = message;
+  const showTrace =
+    message.authorType === "BOT" && (toolCalls.length > 0 || !!knowledgeCount);
 
   // Group reactions by emoji for the chip row; track whether the current
   // operator is one of the reactors so their chip can be highlighted.
@@ -193,11 +197,16 @@ export const MessageBubble = ({
 
   return (
     <Message from={role} id={id}>
-      {message.authorType === "BOT" && toolCalls && toolCalls.length > 0 && (
+      {showTrace && (
         // The bot's turn opens with what it did, then who replied, then the
         // reply. Sized to its content on the bot's side.
         <div className="max-w-[80%]">
-          <ToolTrace toolCalls={toolCalls.map(toTraceCall)} running={false} />
+          <ToolTrace
+            toolCalls={toolCalls.map(toTraceCall)}
+            knowledgeCount={knowledgeCount}
+            running={false}
+          />
+          <AIChatSources sources={sources} />
         </div>
       )}
       <div

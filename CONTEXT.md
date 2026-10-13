@@ -136,8 +136,12 @@ The rapid-fire **sender** messages collapsed into a single **Turn** while the de
 _Avoid_: batch, group.
 
 **Turn context**:
-What apps/ai receives for one **Turn**: the conversation history, the burst's message, and the burst's images. Built from the database each Turn, because the agent keeps no state between Turns. The burst is the customer's last messages, even when a reply to an earlier burst was saved between them. History notes what the customer showed in images, but leaves out the bot's own images. A follow-up has no burst, so every recent message is history.
+What apps/ai receives for one **Turn**: the conversation history, the burst's message, and the burst's images. Built from the database each Turn, because the agent keeps no state between Turns. The burst is the customer's last messages, even when a reply to an earlier burst was saved between them. History notes what the customer showed in images, but leaves out the bot's own images. A follow-up has no burst, so every message in the **Conversation memory** window is history.
 _Avoid_: prompt context, chat history (when you mean all three parts).
+
+**Conversation memory**:
+What the bot remembers of one **Conversation** each **Turn**: its newest messages, in a window that drops its oldest messages in steps of 20 once it passes 40. Moving in steps keeps the start of the prompt the same between drops, so the provider's prompt cache keeps hitting.
+_Avoid_: LangChain memory, checkpointer, context window (the model's own limit).
 
 **Image description**:
 What the AI saw in one customer image: a neutral description, the image's visible text, and which catalog product it shows when the operator instructions carry product images. Made once per image, when the **Turn** that answers it starts, and kept on the image so later Turns remember it. A description the input **Guardrail** would block is not kept; the image then reads as one that could not be viewed.

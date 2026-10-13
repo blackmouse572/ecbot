@@ -15,6 +15,8 @@ import { ENUM_MCP_PROVIDER } from '../../../src/modules/tool/enums/mcp-provider.
 import { ENUM_TOOL_INVOCATION_STATUS } from '../../../src/modules/tool/enums/tool-invocation-status.enum';
 import { ENUM_TOOL_KIND } from '../../../src/modules/tool/enums/tool-kind.enum';
 import { ToolInvocationEntity } from '../../../src/modules/tool/repository/entities/tool-invocation.entity';
+import { ConversationActivityEntity } from '../../../src/modules/conversation/repository/entities/conversation-activity.entity';
+import { ENUM_CONVERSATION_ACTIVITY_KIND } from '../../../src/modules/conversation/enums/conversation-activity.enum';
 
 const mockS3 = {
     signGetUrl: jest.fn(async (key: string) => `https://s3/${key}?sig`),
@@ -64,7 +66,8 @@ describe('ConversationMessagingService', () => {
             mockUserRepository as any,
             mockToolInvocationRepository as any,
             { get: jest.fn(() => mockPlatformRegistry) } as any,
-            new MessageMediaService(mockS3 as any)
+            new MessageMediaService(mockS3 as any),
+            {} as any
         );
 
     const facebookAccount = {
@@ -699,6 +702,117 @@ describe('ConversationMessagingService', () => {
                     toolName: 'Product search',
                     kind: 'http',
                 }),
+            ]);
+        });
+    });
+
+    describe('agent activity (via mapMessages)', () => {
+        const bot = (sent: string) =>
+            ({
+                authorId: 'bot-1',
+                authorType: ENUM_MESSAGE_AUTHOR.BOT,
+                conversation: { id: 'c' },
+                dateSent: new Date(sent),
+            }) as unknown as MessageEntity;
+        const activity = (over: Record<string, unknown>) =>
+            ({
+                id: 'act',
+                conversationId: 'c',
+                createdAt: new Date('2026-10-01T10:00:01Z'),
+                ...over,
+            }) as unknown as ConversationActivityEntity;
+
+        it('shows a loaded skill as a skill step under the next bot reply', async () => {
+            const [dto] = await buildService().mapMessages(
+                [bot('2026-10-01T10:00:05Z')],
+                undefined,
+                undefined,
+                [],
+                [
+                    activity({
+                        id: 'a',
+                        kind: ENUM_CONVERSATION_ACTIVITY_KIND.SKILL,
+                        label: 'refunds',
+                    }),
+                ]
+            );
+
+            expect(dto.toolCalls).toEqual([
+                expect.objectContaining({
+                    invocationId: 'a',
+                    toolName: 'load_skill',
+                    args: { slug: 'refunds' },
+                    status: 'success',
+                    kind: 'skill',
+                }),
+            ]);
+        });
+
+        it('shows a knowledge search with its count and source links', async () => {
+            const [first, second] = await buildService().mapMessages(
+                [bot('2026-10-01T10:00:05Z'), bot('2026-10-01T10:05:00Z')],
+                undefined,
+                undefined,
+                [],
+                [
+                    activity({
+                        kind: ENUM_CONVERSATION_ACTIVITY_KIND.KNOWLEDGE,
+                        payload: {
+                            count: 2,
+                            sources: [
+                                {
+                                    id: 'KB-1',
+                                    title: 'Refund policy',
+                                    sourceUrl: 'https://shop.vn/refunds',
+                                },
+                            ],
+                        },
+                    }),
+                ]
+            );
+
+            expect(first.knowledgeCount).toBe(2);
+            expect(first.sources).toEqual([
+                {
+                    id: 'KB-1',
+                    title: 'Refund policy',
+                    sourceUrl: 'https://shop.vn/refunds',
+                },
+            ]);
+            expect(second.knowledgeCount).toBeUndefined();
+        });
+
+        it('orders skill steps and tool calls by when they happened', async () => {
+            const [dto] = await buildService().mapMessages(
+                [bot('2026-10-01T10:00:09Z')],
+                undefined,
+                undefined,
+                [
+                    {
+                        id: 'tool',
+                        inputArgs: {},
+                        status: ENUM_TOOL_INVOCATION_STATUS.SUCCESS,
+                        durationMs: 5,
+                        createdAt: new Date('2026-10-01T10:00:03Z'),
+                        tool: {
+                            displayName: 'Shopify',
+                            kind: ENUM_TOOL_KIND.MCP,
+                        },
+                    } as unknown as ToolInvocationEntity,
+                ],
+                [
+                    activity({
+                        id: 'skill',
+                        kind: ENUM_CONVERSATION_ACTIVITY_KIND.SKILL,
+                        label: 'refunds',
+                        createdAt: new Date('2026-10-01T10:00:01Z'),
+                    }),
+                ]
+            );
+
+            expect(dto.toolCalls?.map(c => c.invocationId)).toEqual([
+                'skill',
+                'tool',
             ]);
         });
     });

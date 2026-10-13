@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+    IExportActivity,
     IExportContactPoint,
     IExportConversation,
     IExportCustomer,
@@ -48,4 +49,12 @@ export class CustomerDataExportResponseDto {
         description: 'Tool calls the agent made in these conversations',
     })
     toolInvocations: IExportToolInvocation[];
+
+    @ApiProperty({
+        type: Object,
+        isArray: true,
+        description:
+            'Skills the agent loaded and knowledge it searched in these conversations',
+    })
+    activities: IExportActivity[];
 }

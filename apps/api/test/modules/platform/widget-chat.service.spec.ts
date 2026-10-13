@@ -1,3 +1,4 @@
+import { memoryStub } from '../../helpers/memory-stub';
 import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import {
@@ -44,7 +45,7 @@ function setup(overrides: Record<string, any> = {}) {
     };
     const messageRepository = {
         upsertByExternalId: jest.fn(async () => ({ id: 'msg-in' })),
-        findRecentByConversation: jest.fn(async () => []),
+        findNewest: jest.fn(async () => []),
         insertPendingOutbound: jest.fn(async () => ({ id: 'msg-out' })),
         markOutboundSent: jest.fn(async () => {}),
         ...(overrides.messageRepository ?? {}),
@@ -67,7 +68,8 @@ function setup(overrides: Record<string, any> = {}) {
     const turnContext = new TurnContextService(
         messageRepository as any,
         { resolve: async (list: unknown[] = []) => list } as any,
-        {} as any
+        {} as any,
+        memoryStub(messageRepository)
     );
 
     const service = new WidgetChatService(
@@ -161,7 +163,7 @@ describe('WidgetChatService.handleTurn', () => {
     it('feeds the AI history from Postgres, not an ephemeral cache', async () => {
         const { service, messageRepository, chatbotAIService } = setup({
             messageRepository: {
-                findRecentByConversation: jest.fn(async () => [
+                findNewest: jest.fn(async () => [
                     {
                         direction: ENUM_MESSAGE_DIRECTION.INBOUND,
                         text: 'earlier question',
@@ -182,7 +184,7 @@ describe('WidgetChatService.handleTurn', () => {
 
         await service.handleTurn(res, turn);
 
-        expect(messageRepository.findRecentByConversation).toHaveBeenCalled();
+        expect(messageRepository.findNewest).toHaveBeenCalled();
         const [params] = chatbotAIService.streamChat.mock.calls[0] as any;
         expect(params.history).toEqual([
             { role: 'user', content: 'earlier question' },

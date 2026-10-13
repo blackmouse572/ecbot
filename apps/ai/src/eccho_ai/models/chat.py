@@ -75,6 +75,9 @@ class Chatbots(SQLModel, table=True):
     # IANA zone for the per-turn clock (#285); None follows APP_TIMEZONE.
     timezone: str | None = Field(default=None)
 
+    # Agent builder answers (jsonb). Read for the weekly opening hours (#289).
+    agent_profile: Dict[str, Any] | None = Field(default=None, sa_column=Column(JSON()))
+
     # Relationships
     chatbot_tools: list["ChatbotTools"] = Relationship(back_populates="chatbot")
     chatbot_skills: list["ChatbotSkills"] = Relationship(back_populates="chatbot")

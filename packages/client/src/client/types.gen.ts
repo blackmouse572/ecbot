@@ -4849,6 +4849,21 @@ export type MessageAuthorDto = {
     name: string;
 };
 
+export type MessageKnowledgeSourceResponseDto = {
+    /**
+     * Knowledge item id
+     */
+    id: string;
+    /**
+     * Knowledge item or page title
+     */
+    title?: string;
+    /**
+     * Web page link, when the item has one
+     */
+    sourceUrl?: string;
+};
+
 export type MessageReactionResponseDto = {
     /**
      * Reaction emoji
@@ -4909,6 +4924,14 @@ export type MessageGetResponseDto = {
     toolCalls?: Array<{
         [key: string]: unknown;
     }>;
+    /**
+     * Knowledge sources the agent found before this BOT reply. Only on channel replies.
+     */
+    knowledgeCount?: number;
+    /**
+     * The knowledge sources behind this BOT reply, when the AI service reported them
+     */
+    sources?: Array<MessageKnowledgeSourceResponseDto>;
     /**
      * Images and other media on this message
      */
@@ -5436,6 +5459,12 @@ export type CustomerDataExportResponseDto = {
      * Tool calls the agent made in these conversations
      */
     toolInvocations: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Skills the agent loaded and knowledge it searched in these conversations
+     */
+    activities: Array<{
         [key: string]: unknown;
     }>;
 };

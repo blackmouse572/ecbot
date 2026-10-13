@@ -1,3 +1,4 @@
+import { memoryStub } from '../../../helpers/memory-stub';
 import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
 import { ENUM_MESSAGE_DIRECTION } from '@app/modules/conversation/enums/message.enum';
@@ -27,8 +28,10 @@ function makeService(overrides: any = {}) {
         new TurnContextService(
             overrides.messageRepository,
             { resolve: async (list: unknown[] = []) => list } as any,
-            {} as any
+            {} as any,
+            memoryStub(overrides.messageRepository)
         ),
+        {} as any, // timezoneService
         // `meter: null` builds the service without one — the public build.
         overrides.meter === null
             ? undefined
@@ -184,7 +187,7 @@ describe('FollowupService.fire', () => {
             registry: { get: jest.fn().mockReturnValue({}) },
             chatbotAIService: { streamChat: jest.fn().mockResolvedValue({}) },
             messageRepository: {
-                findRecentByConversation: jest.fn().mockResolvedValue([]),
+                findNewest: jest.fn().mockResolvedValue([]),
             },
             streaming: { deliver },
         });
@@ -203,7 +206,7 @@ describe('FollowupService.fire', () => {
     it('rebuilds history from the DB (empty-thread fallback), delivers and records COMPLETED', async () => {
         const streamChat = jest.fn().mockResolvedValue({});
         const deliver = jest.fn().mockResolvedValue({ anySent: true });
-        const findRecentByConversation = jest.fn().mockResolvedValue([
+        const findNewest = jest.fn().mockResolvedValue([
             { text: 'hi there', direction: ENUM_MESSAGE_DIRECTION.INBOUND },
             {
                 text: 'how can I help?',
@@ -218,7 +221,7 @@ describe('FollowupService.fire', () => {
                 get: jest.fn().mockReturnValue({ sendMessage: jest.fn() }),
             },
             chatbotAIService: { streamChat },
-            messageRepository: { findRecentByConversation },
+            messageRepository: { findNewest },
             streaming: { deliver },
         });
 
@@ -255,7 +258,7 @@ describe('FollowupService.fire', () => {
             },
             chatbotAIService: { streamChat: jest.fn().mockResolvedValue({}) },
             messageRepository: {
-                findRecentByConversation: jest.fn().mockResolvedValue([]),
+                findNewest: jest.fn().mockResolvedValue([]),
             },
             streaming: { deliver },
         });
@@ -279,7 +282,7 @@ describe('FollowupService.fire', () => {
             registry: { get: jest.fn().mockReturnValue({}) },
             chatbotAIService: { streamChat: jest.fn().mockResolvedValue({}) },
             messageRepository: {
-                findRecentByConversation: jest.fn().mockResolvedValue([]),
+                findNewest: jest.fn().mockResolvedValue([]),
             },
             streaming: { deliver },
         });
@@ -299,7 +302,7 @@ describe('FollowupService.fire', () => {
                 streamChat: jest.fn().mockRejectedValue(error),
             },
             messageRepository: {
-                findRecentByConversation: jest.fn().mockResolvedValue([]),
+                findNewest: jest.fn().mockResolvedValue([]),
             },
             streaming: { deliver: jest.fn() },
         });
@@ -323,7 +326,7 @@ describe('FollowupService.fire', () => {
             registry: { get: jest.fn().mockReturnValue({}) },
             chatbotAIService: { streamChat: jest.fn().mockResolvedValue({}) },
             messageRepository: {
-                findRecentByConversation: jest.fn().mockResolvedValue([]),
+                findNewest: jest.fn().mockResolvedValue([]),
             },
             streaming: {
                 deliver: jest.fn().mockResolvedValue({
@@ -350,7 +353,7 @@ describe('FollowupService.fire', () => {
             registry: { get: jest.fn().mockReturnValue({}) },
             chatbotAIService: { streamChat: jest.fn().mockResolvedValue({}) },
             messageRepository: {
-                findRecentByConversation: jest.fn().mockResolvedValue([]),
+                findNewest: jest.fn().mockResolvedValue([]),
                 insertPendingOutbound: jest.fn().mockResolvedValue(undefined),
             },
             streaming: { deliver },
@@ -375,7 +378,7 @@ describe('FollowupService.fire', () => {
                     .mockRejectedValue(new Error('x'.repeat(400))),
             },
             messageRepository: {
-                findRecentByConversation: jest.fn().mockResolvedValue([]),
+                findNewest: jest.fn().mockResolvedValue([]),
             },
             streaming: { deliver: jest.fn() },
         });

@@ -1,4 +1,6 @@
-"""Bounded customer-context block injected into the agent system prompt.
+"""Bounded customer-context block, prefixed onto the newest human message
+(after the history, so its changes never break the prompt cache of the turns
+before it; see `services.get_agent_input`).
 
 Keeps the block at ~250 tokens by capping the tag catalog at 12 entries.
 Only confirmed-unified Customers (merged_into_customer_id IS NULL) are visible
@@ -56,7 +58,7 @@ def _format_tag_line(name: str, emoji: str | None, description: str | None, trig
 
 
 async def build_customer_context_block(customer_id: str | None) -> str:
-    """Return the system-prompt context block for the given customer.
+    """Return the context block for the given customer.
 
     Returns "" if `customer_id` is None or the customer is missing / shadowed
     by a confirmed merge. Never raises — DB failures log and return "".

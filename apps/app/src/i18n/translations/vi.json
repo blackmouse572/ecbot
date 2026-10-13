@@ -1203,6 +1203,15 @@
       "changeTypeTitle": "Đổi loại hình kinh doanh?",
       "changeTypeDescription": "Agent này đang hoạt động. Đổi loại hình sẽ đặt lại các câu trả lời phụ thuộc vào nó, như mục tiêu, quy tắc và thông tin cần thu thập, và khách hàng sẽ thấy thay đổi ngay khi lưu.",
       "changeTypeConfirm": "Đổi loại hình",
+      "hoursOpen": "Mở cửa",
+      "hoursClosed": "Đóng cửa",
+      "hoursAddRange": "Thêm khung giờ",
+      "hoursRemoveRange": "Xóa khung giờ này",
+      "hoursCopyToAll": "Áp dụng giờ này cho mọi ngày",
+      "hoursFrom": "Giờ mở",
+      "hoursTo": "Giờ đóng",
+      "hoursInvalid": "Bạn kiểm tra lại giờ nhé: giờ đóng phải sau giờ mở, và các khung giờ trong một ngày không được trùng nhau.",
+      "hoursEveryDay": "Mỗi ngày",
       "customCollectLabel": "Thêm mục khác",
       "customCollectPlaceholder": "Ví dụ: hạn giao, file thiết kế, kích cỡ",
       "customCollectAdd": "Thêm",
@@ -1319,6 +1328,11 @@
         "title": "Ngoài giờ làm việc, agent nên làm gì?",
         "ask": "Ngoài giờ làm việc thì agent nên làm gì?",
         "lead": "Ngoài giờ làm việc:"
+      },
+      "openingHours": {
+        "title": "Bạn mở cửa vào giờ nào?",
+        "ask": "Mỗi tuần bạn mở cửa vào những giờ nào?",
+        "lead": "Giờ mở cửa:"
       }
     },
     "examples": {
@@ -1517,8 +1531,8 @@
     },
     "facts": {
       "opening_hours": {
-        "title": "Giờ mở cửa của bạn là khi nào?",
-        "placeholder": "Thứ 2 đến Chủ nhật, 9:00 đến 21:00"
+        "title": "Bạn có ghi chú gì thêm về giờ mở cửa không?",
+        "placeholder": "Bếp nhận món cuối lúc 21:30, nghỉ Tết từ 28 đến mùng 4"
       },
       "address": {
         "title": "Địa chỉ và chi nhánh của bạn ở đâu?",
@@ -1700,6 +1714,24 @@
         "title": "Bạn nên liên hệ lại với khách bao lâu một lần?",
         "placeholder": "Mỗi 2 tuần với khách tiềm năng"
       }
+    },
+    "weekdays": {
+      "mon": "Thứ 2",
+      "tue": "Thứ 3",
+      "wed": "Thứ 4",
+      "thu": "Thứ 5",
+      "fri": "Thứ 6",
+      "sat": "Thứ 7",
+      "sun": "Chủ nhật"
+    },
+    "weekdaysShort": {
+      "mon": "T2",
+      "tue": "T3",
+      "wed": "T4",
+      "thu": "T5",
+      "fri": "T6",
+      "sat": "T7",
+      "sun": "CN"
     }
   },
   "followups": {

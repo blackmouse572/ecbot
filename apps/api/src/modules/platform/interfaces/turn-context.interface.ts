@@ -1,5 +1,6 @@
 import { TokenUsageDelta } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import { AIChatHistoryMessage } from '@app/modules/chatbot/services/chatbot-ai.service';
+import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
 
 /** What apps/ai gets for one Turn. */
 export interface ITurnContext {
@@ -18,4 +19,10 @@ export interface ITurnBurst {
      *  `texts.length` customer rows, which a message saved in the meantime
      *  can shift (an older edge debounce sends texts only). */
     messageIds?: string[];
+}
+
+/** What the bot remembers of a conversation for one Turn. */
+export interface IMemoryWindow {
+    /** The newest messages, oldest first. */
+    rows: MessageEntity[];
 }
