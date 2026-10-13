@@ -312,3 +312,67 @@ async def test_schedule_followup_api_error_does_not_claim_chat_unsupported(monke
     )
     assert "not available in this chat" not in result["instruction"]
     assert "Do not promise" in result["instruction"]
+
+
+# ─── Wall-clock follow-ups (#290) ────────────────────────────────────────────
+
+_FOLLOWUP_CTX = {
+    "conversation_id": "conv-1", "chatbot_id": "cb-1", "user_id": "psid-1",
+    "provider_id": "acc-1", "customer_id": "cust-1", "contact_point_id": "cp-1",
+}
+
+
+async def test_schedule_followup_at_sends_local_time_without_delay(monkeypatch):
+    _patch_followup_ctx(monkeypatch, _FOLLOWUP_CTX)
+    calls = _stub_api_client_all(monkeypatch, post={"followupId": "f-1"})
+    result = await schedule_followup.ainvoke(
+        {"at": "2026-10-14T09:00", "prompt": "remind", "reason": "reminder"}
+    )
+    assert result == {"followupId": "f-1"}
+    _, body = calls["post"][0]
+    assert body["at"] == "2026-10-14T09:00"
+    assert "delayMinutes" not in body
+
+
+@pytest.mark.parametrize("args", [
+    {},
+    {"delay_minutes": 30, "at": "2026-10-14T09:00"},
+])
+async def test_schedule_followup_needs_exactly_one_of_delay_or_at(monkeypatch, args):
+    _patch_followup_ctx(monkeypatch, _FOLLOWUP_CTX)
+    calls = _stub_api_client_all(monkeypatch, post={"followupId": "f-1"})
+    result = await schedule_followup.ainvoke(
+        {"prompt": "remind", "reason": "reminder", **args}
+    )
+    assert "exactly one" in result["error"]
+    assert calls["post"] == []
+
+
+def _stub_api_client_rejecting(monkeypatch, status_code):
+    class _Stub:
+        async def post(self, path, json):
+            raise system_tools_module.ApiClientError(
+                f"POST failed: {status_code}", status_code=status_code
+            )
+
+    monkeypatch.setattr(
+        system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _Stub())
+    )
+
+
+async def test_schedule_followup_rejected_time_asks_model_to_pick_another(monkeypatch):
+    _patch_followup_ctx(monkeypatch, _FOLLOWUP_CTX)
+    _stub_api_client_rejecting(monkeypatch, 422)
+    result = await schedule_followup.ainvoke(
+        {"at": "2026-10-13T09:00", "prompt": "remind", "reason": "reminder"}
+    )
+    assert result["instruction"] == system_tools_module.FOLLOWUP_TIME_REJECTED
+
+
+async def test_schedule_followup_cap_with_at_is_still_a_failure(monkeypatch):
+    _patch_followup_ctx(monkeypatch, _FOLLOWUP_CTX)
+    _stub_api_client_rejecting(monkeypatch, 400)
+    result = await schedule_followup.ainvoke(
+        {"at": "2026-10-14T09:00", "prompt": "remind", "reason": "reminder"}
+    )
+    assert result["instruction"] == system_tools_module.FOLLOWUP_FAILED

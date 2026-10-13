@@ -1,35 +1,67 @@
-import { ConfigService } from '@nestjs/config';
-import { ChatbotTimezoneService } from '../../../../src/modules/chatbot/services/chatbot-timezone.service';
+import { ChatbotTimezoneService } from '@app/modules/chatbot/services/chatbot-timezone.service';
+
+function buildService(appTimezone?: string) {
+    const configService = { get: jest.fn().mockReturnValue(appTimezone) };
+    return new ChatbotTimezoneService(configService as any);
+}
 
 describe('ChatbotTimezoneService', () => {
-    const service = new ChatbotTimezoneService({
-        get: () => 'Asia/Ho_Chi_Minh',
-    } as unknown as ConfigService);
-
-    it('falls back to the deployment default when nothing is set', () => {
-        expect(service.resolve({ timezone: null }, null)).toEqual({
-            agent: 'Asia/Ho_Chi_Minh',
-            customer: 'Asia/Ho_Chi_Minh',
-        });
+    it('uses the agent timezone when it is set', () => {
+        const service = buildService('Asia/Ho_Chi_Minh');
+        expect(service.resolveAgentTimezone({ timezone: 'Asia/Tokyo' })).toBe(
+            'Asia/Tokyo'
+        );
     });
 
-    it('uses the agent timezone for both clocks when the conversation has none', () => {
-        expect(service.resolve({ timezone: 'Asia/Bangkok' })).toEqual({
-            agent: 'Asia/Bangkok',
-            customer: 'Asia/Bangkok',
-        });
+    it('falls back to APP_TIMEZONE when the agent has none', () => {
+        const service = buildService('Asia/Ho_Chi_Minh');
+        expect(service.resolveAgentTimezone({ timezone: undefined })).toBe(
+            'Asia/Ho_Chi_Minh'
+        );
+        expect(service.resolveAgentTimezone(null)).toBe('Asia/Ho_Chi_Minh');
     });
 
-    // Business hours stay in the agent's zone; only the customer's clock moves.
+    it('skips an invalid stored zone instead of failing', () => {
+        const service = buildService('Asia/Ho_Chi_Minh');
+        expect(service.resolveAgentTimezone({ timezone: 'Not/AZone' })).toBe(
+            'Asia/Ho_Chi_Minh'
+        );
+    });
+
+    it('falls back to UTC when nothing valid is configured', () => {
+        const service = buildService(undefined);
+        expect(service.resolveAgentTimezone(null)).toBe('UTC');
+    });
+
+    it('resolves a conversation without its own zone through its chatbot', () => {
+        const service = buildService('Asia/Ho_Chi_Minh');
+        expect(
+            service.resolveConversationTimezone({
+                chatbot: { timezone: 'Asia/Bangkok' } as any,
+                timezone: null,
+            })
+        ).toBe('Asia/Bangkok');
+    });
+
+    // #292: business hours stay in the agent's zone; only the customer's
+    // clock moves to the conversation's.
     it('puts the conversation timezone in front for the customer only', () => {
+        const service = buildService('Asia/Ho_Chi_Minh');
         expect(
             service.resolve(
                 { timezone: 'Asia/Bangkok' },
                 { timezone: 'America/New_York' }
             )
         ).toEqual({ agent: 'Asia/Bangkok', customer: 'America/New_York' });
+        expect(service.resolve({ timezone: null }, null)).toEqual({
+            agent: 'Asia/Ho_Chi_Minh',
+            customer: 'Asia/Ho_Chi_Minh',
+        });
         expect(
-            service.resolve({ timezone: null }, { timezone: 'Europe/London' })
-        ).toEqual({ agent: 'Asia/Ho_Chi_Minh', customer: 'Europe/London' });
+            service.resolveConversationTimezone({
+                chatbot: { timezone: 'Asia/Bangkok' } as any,
+                timezone: 'Europe/London',
+            })
+        ).toBe('Europe/London');
     });
 });
