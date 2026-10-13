@@ -26,6 +26,7 @@ export * from "./sortable-tree";
 
 export * from "./loading";
 export * from "./otp-input";
+export * from "./password-input";
 export * from "./switch-box";
 export * from "./thumbnail";
 

@@ -304,7 +304,8 @@
         },
         "errors": {
           "passwordMismatch": "Passwords do not match.",
-          "resetFailed": "Could not reset your password. Request a new link and try again."
+          "resetFailed": "Could not reset your password. Request a new link and try again.",
+          "weak": "Use at least 8 characters with a number, a lowercase and an uppercase letter."
         },
         "expired": {
           "title": "This reset link has expired",
@@ -1900,10 +1901,32 @@
     "errors": {
       "mismatch": "Passwords do not match.",
       "sameAsCurrent": "New password must be different from the current one.",
-      "failed": "Could not change your password. Check your current password and try again."
+      "failed": "Could not change your password. Check your current password and try again.",
+      "weak": "Use at least 8 characters with a number, a lowercase and an uppercase letter."
     },
     "success": {
       "message": "Password changed."
+    }
+  },
+  "password": {
+    "show": "Show password",
+    "hide": "Hide password",
+    "strength": {
+      "label": "Password strength",
+      "empty": "Enter a password",
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong",
+      "count": "{{count}}/{{total}} requirements met",
+      "met": "Requirement met",
+      "notMet": "Requirement not met"
+    },
+    "requirements": {
+      "label": "Password requirements",
+      "minLength": "At least 8 characters",
+      "number": "At least 1 number",
+      "lowercase": "At least 1 lowercase letter",
+      "uppercase": "At least 1 uppercase letter"
     }
   },
   "preferences": {
