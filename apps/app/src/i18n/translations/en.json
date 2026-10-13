@@ -672,6 +672,11 @@
           "success": "Widget settings updated.",
           "error": "Failed to update widget settings."
         }
+      },
+      "noChatbot": {
+        "title": "No agent yet",
+        "message": "Create an agent to answer customers on this channel.",
+        "action": "Create agent"
       }
     },
     "imports": {
@@ -1136,6 +1141,7 @@
       "comingSoon": "Coming soon",
       "connectFailed": "Could not connect this channel. Please try again.",
       "connected": "Connected",
+      "channelLoadFailed": "Could not load this channel. You can connect it later.",
       "telegramTokenLabel": "Bot token from @BotFather",
       "widgetOriginsLabel": "Websites allowed to show the chat (one per line)",
       "channelInUse": "{{name}} is already used by another agent. Unlink it there first to use it here.",

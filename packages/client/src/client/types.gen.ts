@@ -2107,6 +2107,17 @@ export type ActivityListResponseDto = {
     };
 };
 
+export type AccountChatbotSummary = {
+    /**
+     * Chatbot ID
+     */
+    id: string;
+    /**
+     * Chatbot name
+     */
+    name: string;
+};
+
 export type AddedBy = {
     /**
      * ID of the user who added the account
@@ -2177,6 +2188,10 @@ export type AccountListResponseDto = {
      * Number of proxies associated with the account
      */
     totalProxies: number;
+    /**
+     * The chatbot answering on this channel; null when none is linked (a soft-deleted chatbot counts as none)
+     */
+    chatbot: AccountChatbotSummary | null;
     /**
      * The user who added the account
      */

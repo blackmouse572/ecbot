@@ -104,7 +104,7 @@ export const useAccount = (id: string, options?: AccountQueryOptions) => {
     ...rest,
     isError,
     error,
-    account: data.data as AccountGetDetailResponseDto | undefined,
+    account: data?.data as AccountGetDetailResponseDto | undefined,
   };
 };
 

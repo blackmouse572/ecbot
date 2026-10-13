@@ -27,6 +27,14 @@ class AddedBy {
     avatar: string | null;
 }
 
+class AccountChatbotSummary {
+    @ApiProperty({ description: 'Chatbot ID' })
+    id: string;
+
+    @ApiProperty({ description: 'Chatbot name' })
+    name: string;
+}
+
 export class AccountListResponseDto extends OmitType(AccountGetResponseDto, [
     'deleted',
     'createdBy',
@@ -47,6 +55,14 @@ export class AccountListResponseDto extends OmitType(AccountGetResponseDto, [
         default: 0,
     })
     totalProxies: number;
+
+    @ApiProperty({
+        description:
+            'The chatbot answering on this channel; null when none is linked (a soft-deleted chatbot counts as none)',
+        type: AccountChatbotSummary,
+        nullable: true,
+    })
+    chatbot: AccountChatbotSummary | null;
 
     @ApiProperty({
         description: 'The user who added the account',

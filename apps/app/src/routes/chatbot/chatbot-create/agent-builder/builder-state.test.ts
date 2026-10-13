@@ -33,6 +33,29 @@ describe("builderReducer", () => {
     expect(currentStep(s)?.question.id).toBe("businessName");
   });
 
+  it("seeds an empty business name from the channel the owner came from", () => {
+    const s = builderReducer(initialBuilderState, {
+      type: "start",
+      profile: createProfile("beauty", "en"),
+      suggestion: null,
+      source: "template",
+      prefillBusinessName: "Axios English Center",
+    });
+    expect(s.profile!.businessName).toBe("Axios English Center");
+  });
+
+  it("never overwrites a business name already provided", () => {
+    const profile = { ...createProfile("beauty", "en"), businessName: "Lotus Spa" };
+    const s = builderReducer(initialBuilderState, {
+      type: "start",
+      profile,
+      suggestion: null,
+      source: "template",
+      prefillBusinessName: "Axios English Center",
+    });
+    expect(s.profile!.businessName).toBe("Lotus Spa");
+  });
+
   // Skipping must not drop the preset's safety rules, contact fields or
   // handoff triggers; it only drops what auto-fill added on top of them.
   it.each(["rules", "collect", "handoffWhen"] as const)("resets %s to the preset when skipped", (id) => {

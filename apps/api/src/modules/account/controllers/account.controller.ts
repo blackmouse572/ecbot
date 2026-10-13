@@ -134,7 +134,7 @@ export class AccountController {
                     offset: _offset,
                 },
                 order: _order,
-                populate: AUDIT_POPULATE,
+                populate: [...AUDIT_POPULATE, 'chatbot'],
             }
         );
         const total: number = await this.accountService.getTotal(find);

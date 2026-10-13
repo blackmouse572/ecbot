@@ -699,6 +699,11 @@
           "success": "Đã cập nhật thiết lập widget.",
           "error": "Cập nhật thiết lập widget thất bại."
         }
+      },
+      "noChatbot": {
+        "title": "Chưa có agent",
+        "message": "Tạo agent để trả lời khách hàng trên kênh này.",
+        "action": "Tạo agent"
       }
     },
     "imports": {
@@ -1180,6 +1185,7 @@
       "comingSoon": "Sắp ra mắt",
       "connectFailed": "Chưa kết nối được kênh này. Vui lòng thử lại.",
       "connected": "Đã kết nối",
+      "channelLoadFailed": "Không tải được kênh này. Bạn có thể liên kết sau.",
       "telegramTokenLabel": "Bot token từ @BotFather",
       "widgetOriginsLabel": "Các website được phép hiển thị chat (mỗi dòng một địa chỉ)",
       "channelInUse": "{{name}} đang được dùng cho agent khác. Hãy gỡ liên kết ở đó trước để dùng tại đây.",
