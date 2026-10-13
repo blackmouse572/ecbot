@@ -5,8 +5,11 @@ import { TimezoneSelect } from "./timezone-select";
 
 // jsdom has no layout, so the real virtualizer measures zero rows. Render the
 // first rows only, which is also what proves the list is windowed.
+const scrollToIndex = vi.fn();
+
 vi.mock("@tanstack/react-virtual", () => ({
   useVirtualizer: ({ count }: { count: number }) => ({
+    scrollToIndex,
     getTotalSize: () => count * 32,
     getVirtualItems: () =>
       Array.from({ length: Math.min(count, 10) }, (_, index) => ({
@@ -58,5 +61,20 @@ describe("TimezoneSelect", () => {
       screen.getByRole("option", { name: /chatbot.create.timezoneDefault/ }),
     );
     expect(onChange).toHaveBeenCalledWith(null);
+  });
+
+  it("checks a zone stored under its old ICU id", async () => {
+    render(<TimezoneSelect value="Asia/Saigon" onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole("button"));
+    expect(
+      screen.getByRole("option", { name: /Asia\/Ho_Chi_Minh/ }),
+    ).toHaveAttribute("data-checked", "true");
+  });
+
+  it("opens scrolled to the selected zone", async () => {
+    scrollToIndex.mockClear();
+    render(<TimezoneSelect value="Asia/Bangkok" onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole("button"));
+    expect(scrollToIndex).toHaveBeenCalledWith(1, { align: "center" });
   });
 });

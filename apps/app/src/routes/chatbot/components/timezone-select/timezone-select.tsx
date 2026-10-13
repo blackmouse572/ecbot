@@ -6,14 +6,16 @@ import { Popover as RadixPopover } from "radix-ui";
 import {
   type ButtonHTMLAttributes,
   type Ref,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  buildTimezoneOptions,
+  canonicalZone,
   filterTimezoneOptions,
+  getTimezoneOptions,
   type TimezoneOption,
 } from "./build-timezone-options";
 
@@ -32,8 +34,8 @@ const ROW_HEIGHT = 32;
 const itemClassName =
   "hover:bg-ui-bg-base-hover aria-selected:bg-ui-bg-base-pressed text-ui-fg-base txt-compact-small flex w-full cursor-pointer items-center gap-x-2 rounded-md px-2 outline-none transition-colors";
 
-// ~420 zones: the list is built on first open and only the visible rows
-// render, so neither the form nor the popover pays for the whole list.
+// ~420 zones: the list is built once per session on first open and only the
+// visible rows render, so neither the form nor the popover pays for all of it.
 export function TimezoneSelect({
   value,
   onChange,
@@ -59,10 +61,21 @@ export function TimezoneSelect({
   });
 
   const handleOpenChange = (next: boolean) => {
-    if (next && !options.length) setOptions(buildTimezoneOptions());
+    if (next && !options.length) setOptions(getTimezoneOptions());
     if (!next) setSearch("");
     setOpen(next);
   };
+
+  // A zone stored under an old ICU id still matches its row.
+  const selected = value ? canonicalZone(value) : null;
+
+  useEffect(() => {
+    if (!open || search) return;
+    const index = filtered.findIndex((option) => option.value === selected);
+    if (index >= 0) virtualizer.scrollToIndex(index, { align: "center" });
+    // Only when the list opens: scrolling on every render would fight the user.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, options]);
 
   const select = (zone: string | null) => {
     onChange(zone);
@@ -132,6 +145,7 @@ export function TimezoneSelect({
                         <Command.Item
                           key={option.value}
                           value={option.value}
+                          data-checked={option.value === selected}
                           onSelect={() => select(option.value)}
                           className={clx(
                             itemClassName,
@@ -144,7 +158,7 @@ export function TimezoneSelect({
                         >
                           <CheckMini
                             className={clx({
-                              invisible: option.value !== value,
+                              invisible: option.value !== selected,
                             })}
                           />
                           <span className="truncate">{option.label}</span>

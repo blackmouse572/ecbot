@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
@@ -27,23 +28,25 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-def _zone(key: str | None) -> ZoneInfo | None:
-    if not key:
-        return None
+@lru_cache(maxsize=128)
+def _zone(key: str) -> ZoneInfo | None:
+    """Cached per key, so a bad stored value warns once, not on every model call."""
     try:
         return ZoneInfo(key)
     # ZoneInfoNotFoundError is a KeyError; malformed keys ("../x") raise ValueError.
     except (KeyError, ValueError):
+        logger.warning("invalid_timezone", timezone=key)
         return None
 
 
 def resolve_timezone(chatbot: Chatbots | None) -> ZoneInfo:
     """Agent timezone, else the deployment default. A bad value never breaks a turn."""
     configured = getattr(chatbot, "timezone", None)
-    zone = _zone(configured)
-    if zone is None and configured:
-        logger.warning("invalid_chatbot_timezone", timezone=configured)
-    return zone or _zone(AppVars.APP_TIMEZONE) or ZoneInfo("UTC")
+    return (
+        (configured and _zone(configured))
+        or _zone(AppVars.APP_TIMEZONE)
+        or ZoneInfo("UTC")
+    )
 
 
 def render_current_time(now: datetime, tz: ZoneInfo) -> str:

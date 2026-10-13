@@ -75,3 +75,13 @@ def test_targets_the_human_turn_during_a_tool_loop():
     out = with_current_time(messages, "B")
     assert out[0].content == "B\n\nq"
     assert out[1:] == messages[1:]
+
+
+def test_warns_once_per_bad_value_not_on_every_model_call(monkeypatch):
+    import eccho_ai.llm.prompts.current_time as ct
+
+    warnings = []
+    monkeypatch.setattr(ct.logger, "warning", lambda *a, **kw: warnings.append(kw))
+    for _ in range(5):
+        resolve_timezone(_bot("Not/AZone"))
+    assert len(warnings) == 1

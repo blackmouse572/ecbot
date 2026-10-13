@@ -22,11 +22,25 @@ const LEGACY_ZONES: Record<string, string> = {
   "Pacific/Truk": "Pacific/Chuuk",
 };
 
-function utcOffset(zone: string, now: Date): string {
-  const name = new Intl.DateTimeFormat("en-US", {
-    timeZone: zone,
-    timeZoneName: "longOffset",
-  })
+/** The current IANA name for an old ICU id; other ids are returned as is. */
+export function canonicalZone(zone: string): string {
+  return LEGACY_ZONES[zone] ?? zone;
+}
+
+function formatterFor(zone: string): Intl.DateTimeFormat | null {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: zone,
+      timeZoneName: "longOffset",
+    });
+  } catch {
+    // A browser with older time zone data may not know the current name.
+    return null;
+  }
+}
+
+function utcOffset(formatter: Intl.DateTimeFormat, now: Date): string {
+  const name = formatter
     .formatToParts(now)
     .find((part) => part.type === "timeZoneName")?.value;
   // "GMT+07:00", or plain "GMT" for UTC itself.
@@ -34,20 +48,39 @@ function utcOffset(zone: string, now: Date): string {
   return `UTC${offset}`;
 }
 
-/** Every IANA zone, labelled with its offset at `now`. Built on first open. */
+/** Every IANA zone the browser knows, labelled with its offset at `now`. */
 export function buildTimezoneOptions(now = new Date()): TimezoneOption[] {
-  const all = Intl.supportedValuesOf("timeZone").map(
-    (zone) => LEGACY_ZONES[zone] ?? zone,
-  );
-  const zones = [...new Set([...PRIORITY_ZONES, ...all, "UTC"])];
-  return zones.map((zone) => {
-    const label = `(${utcOffset(zone, now)}) ${zone}`;
-    return {
+  const options = new Map<string, TimezoneOption>();
+  const zones = [
+    ...PRIORITY_ZONES,
+    ...Intl.supportedValuesOf("timeZone"),
+    "UTC",
+  ];
+  for (const id of zones) {
+    const modern = canonicalZone(id);
+    let zone = modern;
+    let formatter = formatterFor(modern);
+    if (!formatter && modern !== id) {
+      zone = id;
+      formatter = formatterFor(id);
+    }
+    if (!formatter || options.has(zone)) continue;
+    const label = `(${utcOffset(formatter, now)}) ${zone}`;
+    options.set(zone, {
       value: zone,
       label,
       search: label.replace(/_/g, " ").toLowerCase(),
-    };
-  });
+    });
+  }
+  return [...options.values()];
+}
+
+let cached: TimezoneOption[] | null = null;
+
+/** The list for this session: built on the first open, shared by every picker. */
+export function getTimezoneOptions(): TimezoneOption[] {
+  cached ??= buildTimezoneOptions();
+  return cached;
 }
 
 export function filterTimezoneOptions(

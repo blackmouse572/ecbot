@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildTimezoneOptions,
+  canonicalZone,
   filterTimezoneOptions,
+  getTimezoneOptions,
 } from "./build-timezone-options";
 
 // Fixed instant so offsets are stable (no DST in October for these zones
@@ -45,5 +47,39 @@ describe("filterTimezoneOptions", () => {
 
   it("returns everything for an empty search", () => {
     expect(filterTimezoneOptions(options, "  ")).toBe(options);
+  });
+});
+
+describe("canonicalZone", () => {
+  it("maps an old ICU id to its current IANA name", () => {
+    expect(canonicalZone("Asia/Saigon")).toBe("Asia/Ho_Chi_Minh");
+    expect(canonicalZone("Asia/Bangkok")).toBe("Asia/Bangkok");
+  });
+});
+
+describe("getTimezoneOptions", () => {
+  it("builds the list once per session", () => {
+    expect(getTimezoneOptions()).toBe(getTimezoneOptions());
+  });
+});
+
+describe("older browser time zone data", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("keeps the old id when the browser does not know the new name", () => {
+    vi.spyOn(Intl, "supportedValuesOf").mockReturnValue(["Europe/Kiev"]);
+    const RealFormat = Intl.DateTimeFormat;
+    // A plain function so `new` works on the mock.
+    vi.spyOn(Intl, "DateTimeFormat").mockImplementation(function (
+      locale?: string | string[],
+      options?: Intl.DateTimeFormatOptions,
+    ) {
+      if (options?.timeZone === "Europe/Kyiv") throw new RangeError("unknown");
+      return new RealFormat(locale, options);
+    } as never);
+
+    const values = buildTimezoneOptions(NOW).map((o) => o.value);
+    expect(values).toContain("Europe/Kiev");
+    expect(values).not.toContain("Europe/Kyiv");
   });
 });
