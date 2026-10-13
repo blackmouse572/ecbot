@@ -2645,7 +2645,7 @@ export type ChatbotUpdateRequestDto = {
      */
     followupRules?: string;
     /**
-     * IANA timezone the agent uses for the current date and time
+     * IANA timezone the agent uses for the current date and time. Defaults to the deployment timezone.
      */
     timezone?: string;
 };
@@ -4048,7 +4048,7 @@ export type ChatbotCreateRequestDto = {
      */
     followupRules?: string;
     /**
-     * IANA timezone the agent uses for the current date and time
+     * IANA timezone the agent uses for the current date and time. Defaults to the deployment timezone.
      */
     timezone?: string;
 };
