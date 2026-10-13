@@ -1202,7 +1202,13 @@
       "removeChannel": "Bỏ {{name}}",
       "changeTypeTitle": "Đổi loại hình kinh doanh?",
       "changeTypeDescription": "Agent này đang hoạt động. Đổi loại hình sẽ đặt lại các câu trả lời phụ thuộc vào nó, như mục tiêu, quy tắc và thông tin cần thu thập, và khách hàng sẽ thấy thay đổi ngay khi lưu.",
-      "changeTypeConfirm": "Đổi loại hình"
+      "changeTypeConfirm": "Đổi loại hình",
+      "customCollectLabel": "Thêm mục khác",
+      "customCollectPlaceholder": "Ví dụ: hạn giao, file thiết kế, kích cỡ",
+      "customCollectAdd": "Thêm",
+      "customCollectRemove": "Xoá {{label}}",
+      "customCollectLimit": "Bạn có thể thêm tối đa {{count}} mục.",
+      "customCollectOther": "Khác"
     },
     "groups": {
       "identity": "Về doanh nghiệp",
@@ -1271,7 +1277,8 @@
       "collect": {
         "title": "Agent cần thu thập thông tin gì từ khách?",
         "ask": "Khi khách sẵn sàng, agent cần hỏi những thông tin gì?",
-        "lead": "Hãy thu thập:"
+        "lead": "Hãy thu thập:",
+        "askOrder": "Một đơn hàng hoặc lịch hẹn đầy đủ cần những thông tin gì? Agent sẽ hỏi đủ các mục này trước khi xác nhận."
       },
       "handoffWhen": {
         "title": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn?",

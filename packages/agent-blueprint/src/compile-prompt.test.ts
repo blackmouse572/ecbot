@@ -61,6 +61,18 @@ describe("compilePrompt", () => {
     expect(plainOut).toContain("collect: full name and phone number.");
   });
 
+  it("adds custom collect labels to the same collect sentence after the fixed fields", () => {
+    const out = compilePrompt({ ...sample("beauty", "en"), collect: ["name", "phone"], customCollect: ["deadline", "design file"] });
+    expect(out).toContain("collect: full name, phone number, deadline and design file.");
+    const onlyCustom = compilePrompt({ ...sample("beauty", "en"), collect: [], customCollect: ["serial number"] });
+    expect(onlyCustom).toContain("Before confirming anything, collect: serial number.");
+  });
+
+  it("compiles a profile without custom collect labels exactly as one with an empty list", () => {
+    const base = sample("beauty", "en");
+    expect(compilePrompt({ ...base, customCollect: [] })).toBe(compilePrompt(base));
+  });
+
   it("numbers the Process steps 1..n without gaps when a step is omitted", () => {
     const out = compilePrompt({ ...sample("beauty", "en"), collect: [], handoffWhen: [] });
     const process = out.split("## Process\n")[1]!.split("\n\n")[0]!.split("\n");
