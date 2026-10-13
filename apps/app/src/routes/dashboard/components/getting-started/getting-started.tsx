@@ -3,7 +3,7 @@ import { Container, Heading, Text } from "@medusajs/ui";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { useGettingStartedSteps } from "../../hooks/use-getting-started-steps";
+import { useGettingStartedSteps } from "@/components/getting-started";
 
 /** Checklist that walks a new workspace to its first customer conversation. */
 export const GettingStarted: FC = () => {

@@ -349,7 +349,7 @@
     },
     "gettingStarted": {
       "title": "Get your agent live",
-      "description": "Three steps to start answering your customers.",
+      "description": "Four steps to start answering your customers.",
       "steps": {
         "chatbot": {
           "title": "Create your first agent",
@@ -357,13 +357,18 @@
         },
         "account": {
           "title": "Connect a channel",
-          "description": "Put it on your website, Telegram, Messenger or Zalo."
+          "description": "Put your agent on your website, Telegram, Messenger or Zalo."
+        },
+        "activate": {
+          "title": "Activate your agent",
+          "description": "Turn it on so it starts replying on its channels. You can keep refining it afterwards."
         },
         "conversation": {
           "title": "Get your first conversation",
           "description": "Message it from your website or a connected channel, or wait for your first customer."
         }
-      }
+      },
+      "progress": "{{done}} of {{total}}"
     }
   },
   "onboard": {

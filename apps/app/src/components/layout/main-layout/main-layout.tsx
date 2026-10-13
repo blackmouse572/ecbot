@@ -16,6 +16,7 @@ import {
   Sparkles,
   Users,
 } from "@medusajs/icons";
+import { GettingStartedNav } from "@/components/getting-started";
 import { BlockedAccountsBadge } from "./blocked-accounts-badge";
 import { RecentAgentsSection } from "./recent-agents-section";
 import { PausedConversationsBadge } from "./paused-conversations-badge";
@@ -91,6 +92,7 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
           <div className="flex flex-1 flex-col">
             <CoreRouteSection />
           </div>
+          <GettingStartedNav />
           <UtilitySection />
         </div>
         <div className="bg-ui-bg-subtle sticky bottom-0">
