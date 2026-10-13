@@ -2602,7 +2602,12 @@
           "title": "Customer timezone",
           "followAgent": "Same as the agent",
           "hint": "Times this customer mentions, like \"call me at 9\", are read in this timezone. Opening hours still follow the agent.",
-          "hintWithZone": "Times this customer mentions, like \"call me at 9\", are read in this timezone. Opening hours still follow the agent ({{zone}})."
+          "hintWithZone": "Times this customer mentions, like \"call me at 9\", are read in this timezone. Opening hours still follow the agent ({{zone}}).",
+          "toast": {
+            "saving": "Saving timezone…",
+            "updated": "Timezone updated.",
+            "updateFailed": "Couldn't update the timezone."
+          }
         }
       }
     },

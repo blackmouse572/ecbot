@@ -48,9 +48,10 @@ describe("TimezoneSection", () => {
 
     expect(
       screen.getByRole("button", {
-        name: "conversations.customer.panel.timezone.title",
+        name: "conversations.customer.panel.timezone.followAgent",
+        description: "conversations.customer.panel.timezone.title",
       }),
-    ).toHaveTextContent("conversations.customer.panel.timezone.followAgent");
+    ).toBeInTheDocument();
     expect(
       screen.getByLabelText(
         "conversations.customer.panel.timezone.hintWithZone:Asia/Ho_Chi_Minh",
@@ -62,10 +63,7 @@ describe("TimezoneSection", () => {
     withConversation({ timezone: "America/New_York", chatbot: {} });
     renderSection();
 
-    const trigger = screen.getByRole("button", {
-      name: "conversations.customer.panel.timezone.title",
-    });
-    expect(trigger).toHaveTextContent("America/New_York");
+    const trigger = screen.getByRole("button", { name: "America/New_York" });
 
     await userEvent.click(trigger);
     await userEvent.click(

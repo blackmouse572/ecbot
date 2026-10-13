@@ -2650,7 +2650,12 @@
           "title": "Múi giờ của khách",
           "followAgent": "Giống agent",
           "hint": "Giờ khách nhắc đến, ví dụ \"gọi lại lúc 9h\", được hiểu theo múi giờ này. Giờ mở cửa vẫn theo agent.",
-          "hintWithZone": "Giờ khách nhắc đến, ví dụ \"gọi lại lúc 9h\", được hiểu theo múi giờ này. Giờ mở cửa vẫn theo agent ({{zone}})."
+          "hintWithZone": "Giờ khách nhắc đến, ví dụ \"gọi lại lúc 9h\", được hiểu theo múi giờ này. Giờ mở cửa vẫn theo agent ({{zone}}).",
+          "toast": {
+            "saving": "Đang lưu múi giờ…",
+            "updated": "Đã cập nhật múi giờ.",
+            "updateFailed": "Không cập nhật được múi giờ."
+          }
         }
       }
     },
