@@ -50,16 +50,16 @@
     },
     "subscriptionPlanChanged": {
         "title": "Gói của bạn đã thay đổi",
-        "message": "Không gian làm việc \"{workspaceName}\" hiện dùng gói {toPlan} (trước đó là {fromPlan}).",
+        "message": "Không gian làm việc \"{workspaceName}\" hiện dùng gói {toPlan} (trước đó là {fromPlan}).{note}",
         "scheduledTitle": "Thay đổi gói đã được lên lịch",
-        "scheduledMessage": "Không gian làm việc \"{workspaceName}\" sẽ chuyển sang gói {toPlan} vào ngày {scheduledOn}.",
-        "note": "Ghi chú từ đội ngũ của chúng tôi: {note}",
+        "scheduledMessage": "Không gian làm việc \"{workspaceName}\" sẽ chuyển sang gói {toPlan} vào ngày {scheduledOn}.{note}",
+        "note": " Ghi chú từ đội ngũ của chúng tôi: {note}",
         "actionText": "Xem gói"
     },
     "subscriptionCanceled": {
         "title": "Gói đăng ký đã huỷ",
-        "message": "Không gian làm việc \"{workspaceName}\" sẽ kết thúc gói {planName} vào ngày {periodEnd}.",
-        "note": "Ghi chú từ đội ngũ của chúng tôi: {note}",
+        "message": "Không gian làm việc \"{workspaceName}\" sẽ kết thúc gói {planName} vào ngày {periodEnd}.{note}",
+        "note": " Ghi chú từ đội ngũ của chúng tôi: {note}",
         "actionText": "Xem gói"
     },
     "subscriptionResumed": {

@@ -2,19 +2,11 @@ import { type ActivityListResponseDto } from "@repo/client";
 import type { ParseKeys } from "i18next";
 
 type ActivitySubject = ActivityListResponseDto["subject"];
-// The generated client predates the subscription actions, and regenerating it
-// also picked up unrelated test-helper routes, so name the three here until
-// the client is regenerated from a clean swagger document.
-type ActivityAction =
-  | ActivityListResponseDto["action"]
-  | "subscription_change_plan"
-  | "subscription_cancel"
-  | "subscription_resume";
 
 // Generic actions (create/update/delete) mean different things per subject -
 // override by "SUBJECT:action" first, fall back to ACTIVITY_MESSAGE_MAP by action.
 export const ACTIVITY_SUBJECT_MESSAGE_MAP: Partial<
-  Record<`${ActivitySubject}:${ActivityAction}`, ParseKeys>
+  Record<`${ActivitySubject}:${ActivityListResponseDto["action"]}`, ParseKeys>
 > = {
   "CHATBOT:create": "activities.chatbot.create",
   "CHATBOT:update": "activities.chatbot.update",
@@ -50,23 +42,24 @@ export const ACTIVITY_SUBJECT_MESSAGE_MAP: Partial<
 };
 
 // Subject-agnostic fallback, used when no SUBJECT:action override exists above.
-export const ACTIVITY_MESSAGE_MAP: Partial<Record<ActivityAction, ParseKeys>> =
-  {
-    create: "activities.generic.create",
-    update: "activities.generic.update",
-    delete: "activities.generic.delete",
-    join_workspace: "activities.workspace.join",
-    leave_workspace: "activities.workspace.leave",
-    invite_member: "activities.member.invite",
-    remove_member: "activities.member.remove",
-    approve_join_workspace: "activities.member.approve",
-    active_chatbot: "activities.chatbot.active",
-    archive_chatbot: "activities.chatbot.archive",
-    inactive_chatbot: "activities.chatbot.inactive",
-    unarchive_chatbot: "activities.chatbot.unarchive",
-    link_account_chatbot: "activities.chatbot.linkAccount",
-    unlink_account_chatbot: "activities.chatbot.unlinkAccount",
-  };
+export const ACTIVITY_MESSAGE_MAP: Partial<
+  Record<ActivityListResponseDto["action"], ParseKeys>
+> = {
+  create: "activities.generic.create",
+  update: "activities.generic.update",
+  delete: "activities.generic.delete",
+  join_workspace: "activities.workspace.join",
+  leave_workspace: "activities.workspace.leave",
+  invite_member: "activities.member.invite",
+  remove_member: "activities.member.remove",
+  approve_join_workspace: "activities.member.approve",
+  active_chatbot: "activities.chatbot.active",
+  archive_chatbot: "activities.chatbot.archive",
+  inactive_chatbot: "activities.chatbot.inactive",
+  unarchive_chatbot: "activities.chatbot.unarchive",
+  link_account_chatbot: "activities.chatbot.linkAccount",
+  unlink_account_chatbot: "activities.chatbot.unlinkAccount",
+};
 
 // Older conversation activities stored the platform sender id (a UUID or a
 // long number) as the name; it means nothing to a reader. 12+ digits keeps

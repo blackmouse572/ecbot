@@ -10,8 +10,12 @@ const modules = import.meta.glob<{ default: ComponentType }>(
   { eager: true },
 );
 
+// Built once at module load from the eagerly-globbed modules; every call
+// returns the same array reference, so callers must not mutate it.
+const sections: ComponentType[] = Object.keys(modules)
+  .sort()
+  .map((key) => modules[key].default);
+
 export function enterpriseUserSection(): ComponentType[] {
-  return Object.keys(modules)
-    .sort()
-    .map((key) => modules[key].default);
+  return sections;
 }

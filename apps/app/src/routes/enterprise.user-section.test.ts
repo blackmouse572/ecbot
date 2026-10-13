@@ -11,4 +11,12 @@ describe("enterpriseUserSection", () => {
       expect(["function", "object"]).toContain(typeof section);
     }
   });
+
+  // Returning the same array reference across calls proves the section is
+  // built once from an eagerly-globbed registry rather than re-scanned on
+  // every call, without asserting against the enterprise tree itself.
+  it("returns the same array reference on every call", () => {
+    const first = enterpriseUserSection();
+    expect(enterpriseUserSection()).toBe(first);
+  });
 });

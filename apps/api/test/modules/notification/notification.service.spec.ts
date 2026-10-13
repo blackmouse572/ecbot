@@ -49,8 +49,25 @@ describe('NotificationService subscription notifications', () => {
                     },
                 },
             });
+            // The message mock echoes the template key, so the {note} slot is
+            // filled with the rendered note call's echo below.
             expect(dto.message).toBe(
-                'notification.subscriptionPlanChanged.message notification.subscriptionPlanChanged.note'
+                'notification.subscriptionPlanChanged.message'
+            );
+            expect(messageService.setMessage).toHaveBeenCalledWith(
+                'notification.subscriptionPlanChanged.note',
+                { properties: { note: 'Upgrade confirmed' } }
+            );
+            expect(messageService.setMessage).toHaveBeenCalledWith(
+                'notification.subscriptionPlanChanged.message',
+                {
+                    properties: {
+                        workspaceName: 'Acme',
+                        fromPlan: 'free',
+                        toPlan: 'pro',
+                        note: 'notification.subscriptionPlanChanged.note',
+                    },
+                }
             );
         });
 
@@ -65,6 +82,21 @@ describe('NotificationService subscription notifications', () => {
 
             expect(dto.message).toBe(
                 'notification.subscriptionPlanChanged.message'
+            );
+            expect(messageService.setMessage).toHaveBeenCalledWith(
+                'notification.subscriptionPlanChanged.message',
+                {
+                    properties: {
+                        workspaceName: 'Acme',
+                        fromPlan: 'free',
+                        toPlan: 'pro',
+                        note: '',
+                    },
+                }
+            );
+            expect(messageService.setMessage).not.toHaveBeenCalledWith(
+                'notification.subscriptionPlanChanged.note',
+                expect.anything()
             );
             expect(dto.metadata.data.note).toBeUndefined();
         });
@@ -88,18 +120,24 @@ describe('NotificationService subscription notifications', () => {
                 workspace: 'ws-1',
             });
             expect(dto.message).toBe(
-                'notification.subscriptionPlanChanged.scheduledMessage notification.subscriptionPlanChanged.note'
+                'notification.subscriptionPlanChanged.scheduledMessage'
             );
+            // The scheduled template does not mention the old plan and never
+            // renders "now", so it is not handed a fromPlan.
             expect(messageService.setMessage).toHaveBeenCalledWith(
                 'notification.subscriptionPlanChanged.scheduledMessage',
                 {
                     properties: {
                         workspaceName: 'Acme',
-                        fromPlan: 'free',
                         toPlan: 'pro',
                         scheduledOn: '2026-11-01',
+                        note: 'notification.subscriptionPlanChanged.note',
                     },
                 }
+            );
+            expect(messageService.setMessage).not.toHaveBeenCalledWith(
+                'notification.subscriptionPlanChanged.message',
+                expect.anything()
             );
         });
     });
@@ -127,8 +165,25 @@ describe('NotificationService subscription notifications', () => {
                     data: { planName: 'pro', reason: 'Payment failed' },
                 },
             });
+            // The message mock echoes the template key, so the {note} slot is
+            // filled with the rendered note call's echo below.
+            expect(messageService.setMessage).toHaveBeenCalledWith(
+                'notification.subscriptionCanceled.note',
+                { properties: { note: 'Payment failed' } }
+            );
+            expect(messageService.setMessage).toHaveBeenCalledWith(
+                'notification.subscriptionCanceled.message',
+                {
+                    properties: {
+                        workspaceName: 'Acme',
+                        planName: 'pro',
+                        periodEnd: '2026-11-01',
+                        note: 'notification.subscriptionCanceled.note',
+                    },
+                }
+            );
             expect(dto.message).toBe(
-                'notification.subscriptionCanceled.message notification.subscriptionCanceled.note'
+                'notification.subscriptionCanceled.message'
             );
         });
 
@@ -141,6 +196,21 @@ describe('NotificationService subscription notifications', () => {
 
             const dto = create.mock.calls[0][0];
 
+            expect(messageService.setMessage).toHaveBeenCalledWith(
+                'notification.subscriptionCanceled.message',
+                {
+                    properties: {
+                        workspaceName: 'Acme',
+                        planName: 'pro',
+                        periodEnd: '2026-11-01',
+                        note: '',
+                    },
+                }
+            );
+            expect(messageService.setMessage).not.toHaveBeenCalledWith(
+                'notification.subscriptionCanceled.note',
+                expect.anything()
+            );
             expect(dto.message).toBe(
                 'notification.subscriptionCanceled.message'
             );
@@ -192,6 +262,9 @@ describe('NotificationService subscription notifications', () => {
         }
         expect(subscriptionPlanChanged.message).toContain('{fromPlan}');
         expect(subscriptionPlanChanged.message).toContain('{toPlan}');
+        // The narratives carry a {note} slot so editors place the note per
+        // language; empty-string interpolation must leave a clean sentence.
+        expect(subscriptionPlanChanged.message).toContain('{note}');
         expect(subscriptionPlanChanged.scheduledTitle).toBeTruthy();
         expect(subscriptionPlanChanged.scheduledMessage).toContain(
             '{workspaceName}'
@@ -200,10 +273,14 @@ describe('NotificationService subscription notifications', () => {
         expect(subscriptionPlanChanged.scheduledMessage).toContain(
             '{scheduledOn}'
         );
+        expect(subscriptionPlanChanged.scheduledMessage).toContain('{note}');
         expect(subscriptionPlanChanged.note).toContain('{note}');
+        expect(subscriptionPlanChanged.note.endsWith(' {note}')).toBe(true);
         expect(subscriptionCanceled.message).toContain('{planName}');
         expect(subscriptionCanceled.message).toContain('{periodEnd}');
+        expect(subscriptionCanceled.message).toContain('{note}');
         expect(subscriptionCanceled.note).toContain('{note}');
+        expect(subscriptionCanceled.note.endsWith(' {note}')).toBe(true);
         expect(subscriptionResumed.message).toContain('{planName}');
     });
 });

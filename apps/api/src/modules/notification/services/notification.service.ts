@@ -372,6 +372,16 @@ export class NotificationService {
         }
     ): Promise<NotificationEntity> {
         const scheduled = Boolean(data.scheduledOn);
+        // The templates carry a `{note}` slot, so editors control where the
+        // note sits in each language's copy; when there is no note the slot
+        // interpolates the empty string. Only the scheduled template uses
+        // {scheduledOn} and only the immediate one mentions the old plan.
+        const note = data.note
+            ? this.messageService.setMessage(
+                  'notification.subscriptionPlanChanged.note',
+                  { properties: { note: data.note } }
+              )
+            : '';
         const message = this.messageService.setMessage(
             scheduled
                 ? 'notification.subscriptionPlanChanged.scheduledMessage'
@@ -379,18 +389,14 @@ export class NotificationService {
             {
                 properties: {
                     workspaceName: data.workspaceName,
-                    fromPlan: data.fromPlan,
                     toPlan: data.toPlan,
-                    scheduledOn: data.scheduledOn,
+                    ...(scheduled
+                        ? { scheduledOn: data.scheduledOn }
+                        : { fromPlan: data.fromPlan }),
+                    note,
                 },
             }
         );
-        const messageWithNote = data.note
-            ? `${message} ${this.messageService.setMessage(
-                  'notification.subscriptionPlanChanged.note',
-                  { properties: { note: data.note } }
-              )}`
-            : message;
 
         return this.create({
             title: this.messageService.setMessage(
@@ -398,7 +404,7 @@ export class NotificationService {
                     ? 'notification.subscriptionPlanChanged.scheduledTitle'
                     : 'notification.subscriptionPlanChanged.title'
             ),
-            message: messageWithNote,
+            message: message,
             type: NotificationType.SUCCESS,
             priority: NotificationPriority.MEDIUM,
             recipient: recipientId,
@@ -427,6 +433,14 @@ export class NotificationService {
             reason?: string;
         }
     ): Promise<NotificationEntity> {
+        // The template carries a `{note}` slot; when there is no reason the
+        // slot interpolates the empty string.
+        const note = data.reason
+            ? this.messageService.setMessage(
+                  'notification.subscriptionCanceled.note',
+                  { properties: { note: data.reason } }
+              )
+            : '';
         const message = this.messageService.setMessage(
             'notification.subscriptionCanceled.message',
             {
@@ -434,21 +448,16 @@ export class NotificationService {
                     workspaceName: data.workspaceName,
                     planName: data.planName,
                     periodEnd: data.periodEnd,
+                    note,
                 },
             }
         );
-        const messageWithNote = data.reason
-            ? `${message} ${this.messageService.setMessage(
-                  'notification.subscriptionCanceled.note',
-                  { properties: { note: data.reason } }
-              )}`
-            : message;
 
         return this.create({
             title: this.messageService.setMessage(
                 'notification.subscriptionCanceled.title'
             ),
-            message: messageWithNote,
+            message: message,
             type: NotificationType.SUCCESS,
             priority: NotificationPriority.MEDIUM,
             recipient: recipientId,

@@ -50,16 +50,16 @@
     },
     "subscriptionPlanChanged": {
         "title": "Your plan has changed",
-        "message": "Workspace \"{workspaceName}\" is now on the {toPlan} plan (was {fromPlan}).",
+        "message": "Workspace \"{workspaceName}\" is now on the {toPlan} plan (was {fromPlan}).{note}",
         "scheduledTitle": "Your plan change is scheduled",
-        "scheduledMessage": "Workspace \"{workspaceName}\" will move to the {toPlan} plan on {scheduledOn}.",
-        "note": "Note from our team: {note}",
+        "scheduledMessage": "Workspace \"{workspaceName}\" will move to the {toPlan} plan on {scheduledOn}.{note}",
+        "note": " Note from our team: {note}",
         "actionText": "View plan"
     },
     "subscriptionCanceled": {
         "title": "Subscription cancelled",
-        "message": "Workspace \"{workspaceName}\" will leave the {planName} plan on {periodEnd}.",
-        "note": "Note from our team: {note}",
+        "message": "Workspace \"{workspaceName}\" will leave the {planName} plan on {periodEnd}.{note}",
+        "note": " Note from our team: {note}",
         "actionText": "View plan"
     },
     "subscriptionResumed": {
