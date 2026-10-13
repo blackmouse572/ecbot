@@ -21,6 +21,8 @@ import { IconTool, IconTrash } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { ROUTES } from "@/routes/constants";
+import { withOriginAgent } from "@/utils/origin-agent";
 import { ChatbotToolAddDrawer } from "./chatbot-tool-add-drawer";
 import { ChevronDown, PlusMini } from "@medusajs/icons";
 import { defaultEnabledActions, isActionEnabled } from "./mcp-action-state";
@@ -69,8 +71,8 @@ export function ChatbotToolsTab({
           title={t("tools.chatbotTab.empty.title")}
           message={t("tools.chatbotTab.empty.description")}
           action={{
-            onClick: () => setDrawerOpen(true),
-            label: t("actions.add"),
+            to: withOriginAgent(`/${workspace}/${ROUTES.Tools}/new`, chatbotId),
+            label: t("actions.createNew"),
           }}
           icon={<IconTool />}
         />
