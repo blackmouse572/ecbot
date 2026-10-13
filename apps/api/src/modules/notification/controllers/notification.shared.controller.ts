@@ -56,9 +56,16 @@ export class NotificationSharedController {
         { _limit, _offset, _order, _search }: PaginationListDto,
         @Query('status') status: string
     ) {
+        // The bell shows read and unread history; archived and dismissed
+        // rows stay out unless asked for by status.
         const find: Record<string, any> = {
             ..._search,
-            ...(status && { status }),
+            status: status || {
+                $nin: [
+                    NotificationStatus.ARCHIVED,
+                    NotificationStatus.DISMISSED,
+                ],
+            },
         };
 
         const notifications = await this.notificationService.findAllByRecipient(

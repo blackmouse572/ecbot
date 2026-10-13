@@ -1,6 +1,6 @@
 import { BellAlert } from "@medusajs/icons";
 import { DropdownMenu, IconButton, Text, clx } from "@medusajs/ui";
-import { useCallback, useRef, useState, type FC } from "react";
+import { useRef, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -9,6 +9,7 @@ import {
   useMarkNotificationsAsRead,
   useNotifications,
   useUnreadNotificationCount,
+  type NotificationItem,
 } from "@/hooks/api/notifications";
 import { useIsLeaderTab } from "@/hooks/use-leader-tab";
 import { useNotificationSound } from "@/modules/sound";
@@ -44,23 +45,12 @@ export const NotificationMenu: FC = () => {
 
   useNotificationSound(isFetched && isLeader ? count : undefined);
 
-  const loadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-  const edges = useScrollEdges(notifications.length, loadMore);
-
-  // Opening the menu counts as seeing what is in it: mark those read so the
-  // bell clears, but keep them highlighted until the menu closes. A customer
-  // waiting for a person stays unread until its row is clicked.
-  const onOpenChange = async (open: boolean) => {
-    isOpen.current = open;
-    if (!open) {
-      setNewIds(new Set());
-      return;
-    }
-    const { data } = await refetch();
+  // Seeing a row counts as reading it: mark it read so the bell clears, but
+  // keep it highlighted until the menu closes. A customer waiting for a
+  // person stays unread until its row is clicked.
+  const markSeen = (rows: NotificationItem[]) => {
     if (!isOpen.current) return;
-    const seenIds = (data?.pages.flatMap((page) => page?.data ?? []) ?? [])
+    const seenIds = rows
       .filter(
         (notification) =>
           notification.status === "unread" &&
@@ -68,8 +58,27 @@ export const NotificationMenu: FC = () => {
       )
       .map((notification) => notification.id);
     if (seenIds.length === 0) return;
-    setNewIds(new Set(seenIds));
+    setNewIds((previous) => new Set([...previous, ...seenIds]));
     markManyAsRead.mutate(seenIds);
+  };
+
+  // Older pages load as the reader scrolls; their rows are seen too.
+  const loadMore = () => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage().then(({ data }) =>
+      markSeen(data?.pages.at(-1)?.data ?? []),
+    );
+  };
+  const edges = useScrollEdges(notifications.length, loadMore);
+
+  const onOpenChange = async (open: boolean) => {
+    isOpen.current = open;
+    if (!open) {
+      setNewIds(new Set());
+      return;
+    }
+    const { data } = await refetch();
+    markSeen(data?.pages.flatMap((page) => page?.data ?? []) ?? []);
   };
 
   return (

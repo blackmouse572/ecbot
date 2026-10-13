@@ -72,7 +72,7 @@ describe("NotificationMenu", () => {
   beforeEach(() => {
     api.markMany.mockReset();
     api.markOne.mockReset();
-    api.fetchNextPage.mockReset();
+    api.fetchNextPage.mockReset().mockResolvedValue({ data: undefined });
     api.hasNextPage = false;
     api.count = 0;
     api.notifications = [];
@@ -160,6 +160,27 @@ describe("NotificationMenu", () => {
     scrollTo(list, { scrollTop: 240, scrollHeight: 600, clientHeight: 320 });
 
     expect(api.fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks unread rows from older pages read as they load", async () => {
+    api.hasNextPage = true;
+    api.notifications = [item({ id: "n-1", status: "read" })];
+    api.fetchNextPage.mockResolvedValue({
+      data: {
+        pages: [
+          { data: api.notifications },
+          {
+            data: [item({ id: "n-21" }), item({ id: "n-22", status: "read" })],
+          },
+        ],
+      },
+    });
+    open();
+
+    const list = await screen.findByTestId("notification-list");
+    scrollTo(list, { scrollTop: 240, scrollHeight: 600, clientHeight: 320 });
+
+    await waitFor(() => expect(api.markMany).toHaveBeenCalledWith(["n-21"]));
   });
 
   it("does not load more while far from the bottom", async () => {
