@@ -17,7 +17,10 @@ vi.mock("@/hooks/api/chatbot", () => ({
     query(q?.status ? data.active : data.chatbots),
 }));
 vi.mock("@/hooks/api/accounts", () => ({
-  useAccounts: () => ({ ...query(data.accounts.length), accounts: data.accounts }),
+  useAccounts: () => ({
+    ...query(data.accounts.length),
+    accounts: data.accounts,
+  }),
 }));
 vi.mock("@/hooks/api/conversations", () => ({
   useConversations: () => query(data.conversations),
@@ -25,7 +28,9 @@ vi.mock("@/hooks/api/conversations", () => ({
 vi.mock("@/hooks/use-workspace-params", () => ({
   useWorkspaceParams: () => ({ workspaceSlug: "kunmart" }),
 }));
-vi.mock("@repo/auth", () => ({ Can: ({ children }: { children: ReactNode }) => <>{children}</> }));
+vi.mock("@repo/auth", () => ({
+  Can: ({ children }: { children: ReactNode }) => <>{children}</>,
+}));
 
 import { GettingStartedNav } from "./getting-started-nav";
 
@@ -49,15 +54,15 @@ describe("GettingStartedNav", () => {
     renderNav();
 
     expect(screen.getByText("1 of 4")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Create your first agent/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Connect a channel/ })).toHaveAttribute(
-      "href",
-      "/kunmart/accounts/create",
-    );
-    expect(screen.getByRole("link", { name: /Activate your agent/ })).toHaveAttribute(
-      "href",
-      "/kunmart/chatbot",
-    );
+    expect(
+      screen.queryByRole("link", { name: /Create your first agent/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Connect a channel/ }),
+    ).toHaveAttribute("href", "/kunmart/accounts/create");
+    expect(
+      screen.getByRole("link", { name: /Activate your agent/ }),
+    ).toHaveAttribute("href", "/kunmart/chatbot");
   });
 
   it("counts a channel only once an agent answers on it", () => {
@@ -66,10 +71,9 @@ describe("GettingStartedNav", () => {
     renderNav();
 
     // Connected but not linked: still to do, and sent to the channel list.
-    expect(screen.getByRole("link", { name: /Connect a channel/ })).toHaveAttribute(
-      "href",
-      "/kunmart/accounts",
-    );
+    expect(
+      screen.getByRole("link", { name: /Connect a channel/ }),
+    ).toHaveAttribute("href", "/kunmart/accounts");
   });
 
   it("counts an agent as live only once it is active", () => {
@@ -78,7 +82,9 @@ describe("GettingStartedNav", () => {
     renderNav();
 
     expect(screen.getByText("2 of 4")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Activate your agent/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Activate your agent/ }),
+    ).toBeInTheDocument();
   });
 
   it("stays out of the dashboard, which shows the full checklist card", () => {

@@ -32,7 +32,10 @@ vi.mock("react-router-dom", async () => {
     await vi.importActual<typeof import("react-router-dom")>(
       "react-router-dom",
     );
-  return { ...actual, useNavigate: () => (to: string) => state.navigated.push(to) };
+  return {
+    ...actual,
+    useNavigate: () => (to: string) => state.navigated.push(to),
+  };
 });
 
 import { OnboardWelcomeForm } from "./onboard-welcome-form";
@@ -62,7 +65,9 @@ describe("OnboardWelcomeForm", () => {
 
     typeName("Tiệm bánh Mây");
     fireEvent.click(screen.getByRole("radio", { name: /Restaurant/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Create my first agent/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Create my first agent/ }),
+    );
 
     await waitFor(() =>
       expect(state.navigated).toEqual([
@@ -78,7 +83,9 @@ describe("OnboardWelcomeForm", () => {
 
     typeName("Kunmart");
     fireEvent.click(screen.getByRole("radio", { name: /Other/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Create my first agent/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Create my first agent/ }),
+    );
 
     await waitFor(() =>
       expect(state.navigated).toEqual([
@@ -95,28 +102,35 @@ describe("OnboardWelcomeForm", () => {
     renderForm();
 
     typeName("Kunmart");
-    fireEvent.click(screen.getByRole("button", { name: /Create my first agent/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Create my first agent/ }),
+    );
 
     await waitFor(() => expect(state.navigated).toHaveLength(1));
     expect(state.bodies[1].slug).toMatch(/^kunmart-[a-z0-9]{4}$/);
-    expect(state.navigated[0]).toMatch(/^\/kunmart-[a-z0-9]{4}\/chatbot\/create\?/);
+    expect(state.navigated[0]).toMatch(
+      /^\/kunmart-[a-z0-9]{4}\/chatbot\/create\?/,
+    );
   });
 
   it("asks for the shop name before creating anything", async () => {
     renderForm();
 
-    fireEvent.click(screen.getByRole("button", { name: /Create my first agent/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Create my first agent/ }),
+    );
 
-    expect(await screen.findByText("Please fill out this field")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Please fill out this field"),
+    ).toBeInTheDocument();
     expect(state.bodies).toEqual([]);
   });
 
   it("links invited people to joining an existing workspace", () => {
     renderForm();
 
-    expect(screen.getByRole("link", { name: /Join with a code/ })).toHaveAttribute(
-      "href",
-      "/onboard/join",
-    );
+    expect(
+      screen.getByRole("link", { name: /Join with a code/ }),
+    ).toHaveAttribute("href", "/onboard/join");
   });
 });

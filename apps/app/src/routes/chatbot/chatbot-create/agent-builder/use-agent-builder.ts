@@ -1,14 +1,39 @@
 import {
-  applySuggestion, createProfile, migrateProfile, type AgentProfile, type BusinessTypeId,
+  applySuggestion,
+  createProfile,
+  migrateProfile,
+  type AgentProfile,
+  type BusinessTypeId,
 } from "@repo/agent-blueprint";
-import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto, ChatbotLinkAccountResponseDto } from "@repo/client";
-import { useCreateChatbot, useLinkChatbotAccount, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
+import type {
+  ChatbotCreateRequestDto,
+  ChatbotGetDetailResponseDto,
+  ChatbotLinkAccountResponseDto,
+} from "@repo/client";
+import {
+  useCreateChatbot,
+  useLinkChatbotAccount,
+  useToggleChatbotActivate,
+  useUpdateChatbot,
+} from "@/hooks/api";
 import { useAgentBuilderSuggest } from "@/hooks/api/agent-builder";
 import { useUISound } from "@/modules/sound";
 import { toast } from "@medusajs/ui";
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
-import { builderReducer, initialBuilderState, isDraftReady, type LinkedAccountRef } from "./builder-state";
+import {
+  builderReducer,
+  initialBuilderState,
+  isDraftReady,
+  type LinkedAccountRef,
+} from "./builder-state";
 import { toChatbotPayload } from "./to-chatbot-payload";
 
 const SAVE_DEBOUNCE_MS = 600;
@@ -23,12 +48,27 @@ const SAVE_DEBOUNCE_MS = 600;
  * forces `accounts: []` unconditionally, as a second, independent guard.
  */
 const READ_ONLY_FIELDS = new Set<string>([
-  "id", "createdAt", "createdBy", "updatedAt", "updatedBy", "deleted", "deletedAt", "deletedBy",
-  "generalKnowledge", "workspace", "status", "modelProvider", "accounts",
+  "id",
+  "createdAt",
+  "createdBy",
+  "updatedAt",
+  "updatedBy",
+  "deleted",
+  "deletedAt",
+  "deletedBy",
+  "generalKnowledge",
+  "workspace",
+  "status",
+  "modelProvider",
+  "accounts",
 ]);
 
-function baseFrom(chatbot: ChatbotGetDetailResponseDto): Partial<ChatbotCreateRequestDto> {
-  const editable = Object.fromEntries(Object.entries(chatbot).filter(([key]) => !READ_ONLY_FIELDS.has(key)));
+function baseFrom(
+  chatbot: ChatbotGetDetailResponseDto,
+): Partial<ChatbotCreateRequestDto> {
+  const editable = Object.fromEntries(
+    Object.entries(chatbot).filter(([key]) => !READ_ONLY_FIELDS.has(key)),
+  );
   return editable as Partial<ChatbotCreateRequestDto>;
 }
 
@@ -58,7 +98,11 @@ export function useAgentBuilder({
   // changes, never in a loop on re-render.
   const failed = useRef("");
   // The debounced save not sent yet, flushed on unmount.
-  const pending = useRef<{ id: string; body: ChatbotCreateRequestDto; snapshot: string } | null>(null);
+  const pending = useRef<{
+    id: string;
+    body: ChatbotCreateRequestDto;
+    snapshot: string;
+  } | null>(null);
   // The save in flight. Saves run one at a time, in order, so an older answer
   // can never land after a newer one.
   const inFlight = useRef<Promise<void> | null>(null);
@@ -73,7 +117,10 @@ export function useAgentBuilder({
   // answer only; it never feeds into `base`/the autosave payload (fix
   // round 3: account membership changes only through the guarded
   // link/unlink endpoints, never through this create/update body).
-  const base = useMemo(() => (hydrateFrom ? baseFrom(hydrateFrom) : {}), [hydrateFrom]);
+  const base = useMemo(
+    () => (hydrateFrom ? baseFrom(hydrateFrom) : {}),
+    [hydrateFrom],
+  );
 
   useEffect(() => {
     if (!hydrateFrom?.agentProfile) return;
@@ -81,10 +128,24 @@ export function useAgentBuilder({
     hydratedId.current = hydrateFrom.id;
     // An answer to a question the builder no longer asks shows in the one
     // that replaced it (#155).
-    const profile = migrateProfile(hydrateFrom.agentProfile as unknown as AgentProfile);
-    const accounts = (hydrateFrom.accounts ?? []).map((a) => ({ id: a.id, type: a.type, name: a.name }));
-    lastSaved.current = JSON.stringify(toChatbotPayload(profile, extraInstructions, base));
-    dispatch({ type: "hydrate", profile, chatbotId: hydrateFrom.id, finished: hydrateFrom.status === "active", accounts });
+    const profile = migrateProfile(
+      hydrateFrom.agentProfile as unknown as AgentProfile,
+    );
+    const accounts = (hydrateFrom.accounts ?? []).map((a) => ({
+      id: a.id,
+      type: a.type,
+      name: a.name,
+    }));
+    lastSaved.current = JSON.stringify(
+      toChatbotPayload(profile, extraInstructions, base),
+    );
+    dispatch({
+      type: "hydrate",
+      profile,
+      chatbotId: hydrateFrom.id,
+      finished: hydrateFrom.status === "active",
+      accounts,
+    });
   }, [hydrateFrom, extraInstructions, base]);
 
   const startFromDescription = async (description: string) => {
@@ -107,7 +168,10 @@ export function useAgentBuilder({
 
   // `businessName` is the name typed on the welcome screen; a quick-create
   // channel's name wins over it.
-  const startFromTemplate = async (type: BusinessTypeId, businessName?: string) => {
+  const startFromTemplate = async (
+    type: BusinessTypeId,
+    businessName?: string,
+  ) => {
     const channel = await ensurePrefillChannel?.();
     dispatch({
       type: "start",
@@ -123,14 +187,21 @@ export function useAgentBuilder({
   // changes the profile.
   const createDraft = create.mutateAsync;
   useEffect(() => {
-    if (!state.profile || state.chatbotId || creating.current || !isDraftReady(state)) return;
+    if (
+      !state.profile ||
+      state.chatbotId ||
+      creating.current ||
+      !isDraftReady(state)
+    )
+      return;
     const body = toChatbotPayload(state.profile, extraInstructions, base);
     const snapshot = JSON.stringify(body);
     if (snapshot === failed.current) return;
     creating.current = true;
     createDraft({ ...body, status: "inactive" } as ChatbotCreateRequestDto)
       .then((res) => {
-        const id = (res as { data?: { data?: { id?: string } } }).data?.data?.id;
+        const id = (res as { data?: { data?: { id?: string } } }).data?.data
+          ?.id;
         if (!id) throw new Error("missing chatbot id");
         lastSaved.current = snapshot;
         setSaveError(false);
@@ -152,18 +223,22 @@ export function useAgentBuilder({
   const prefillLinkStarted = useRef(false);
 
   useEffect(() => {
-    if (!state.chatbotId || !ensurePrefillChannel || prefillLinkStarted.current) return;
+    if (!state.chatbotId || !ensurePrefillChannel || prefillLinkStarted.current)
+      return;
     prefillLinkStarted.current = true;
     void (async () => {
       const channel = await ensurePrefillChannel();
       if (!channel) return;
       try {
         const res = await linkPrefill.mutateAsync({ accounts: [channel.id] });
-        const result = (res.data as A)?.data as ChatbotLinkAccountResponseDto | undefined;
+        const result = (res.data as A)?.data as
+          ChatbotLinkAccountResponseDto | undefined;
         if (result?.linked?.includes(channel.id)) {
           dispatch({ type: "accountsLinked", accounts: [channel] });
         } else {
-          toast.error(t("agentBuilder.ui.channelInUse", { name: channel.name }));
+          toast.error(
+            t("agentBuilder.ui.channelInUse", { name: channel.name }),
+          );
         }
       } catch {
         toast.error(t("agentBuilder.ui.connectFailed"));
@@ -191,7 +266,9 @@ export function useAgentBuilder({
           },
         );
       // Start right away when idle, so an unmount flush is sent synchronously.
-      const next: Promise<void> = (inFlight.current ? inFlight.current.then(run) : run()).finally(() => {
+      const next: Promise<void> = (
+        inFlight.current ? inFlight.current.then(run) : run()
+      ).finally(() => {
         if (inFlight.current === next) inFlight.current = null;
       });
       inFlight.current = next;
@@ -217,7 +294,8 @@ export function useAgentBuilder({
   useEffect(
     () => () => {
       const last = pending.current;
-      if (last && last.snapshot !== lastSaved.current) enqueueSave(last.id, last.body, last.snapshot);
+      if (last && last.snapshot !== lastSaved.current)
+        enqueueSave(last.id, last.body, last.snapshot);
     },
     [enqueueSave],
   );
@@ -234,8 +312,15 @@ export function useAgentBuilder({
   };
 
   return {
-    state, dispatch, startFromDescription, startFromTemplate, starting, saveError,
-    finish, finishing: activate.isPending, extraInstructions,
+    state,
+    dispatch,
+    startFromDescription,
+    startFromTemplate,
+    starting,
+    saveError,
+    finish,
+    finishing: activate.isPending,
+    extraInstructions,
   };
 }
 

@@ -1,6 +1,7 @@
 import type { GETTING_STARTED_STEPS } from "./constants";
 
-export type GettingStartedStepKey = (typeof GETTING_STARTED_STEPS)[number]["key"];
+export type GettingStartedStepKey =
+  (typeof GETTING_STARTED_STEPS)[number]["key"];
 
 export type GettingStartedStep = {
   key: GettingStartedStepKey;

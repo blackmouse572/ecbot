@@ -4,7 +4,10 @@ import { useConversations } from "@/hooks/api/conversations";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import {
-  ACTIVE_CHATBOT_COUNT_QUERY, COUNT_QUERY, GETTING_STARTED_STEPS, LINKED_ACCOUNT_QUERY,
+  ACTIVE_CHATBOT_COUNT_QUERY,
+  COUNT_QUERY,
+  GETTING_STARTED_STEPS,
+  LINKED_ACCOUNT_QUERY,
 } from "./constants";
 import type { GettingStartedStep, GettingStartedStepKey } from "./types";
 
@@ -21,7 +24,11 @@ export function useGettingStartedSteps(): GettingStartedStep[] {
   const accounts = useAccounts(LINKED_ACCOUNT_QUERY);
   const conversations = useConversations(COUNT_QUERY);
 
-  if ([chatbots, active, accounts, conversations].some((q) => q.isLoading || q.isError)) {
+  if (
+    [chatbots, active, accounts, conversations].some(
+      (q) => q.isLoading || q.isError,
+    )
+  ) {
     return [];
   }
 

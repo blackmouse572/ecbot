@@ -583,6 +583,15 @@
             "manual": "Enter manually"
           }
         }
+      },
+      "linkAgent": {
+        "title": "Choose the agent that answers here",
+        "description": "The channel replies to customers only once an active agent is linked to it.",
+        "pick": "Agent",
+        "link": "Link agent",
+        "linked": "{{name}} now answers on this channel.",
+        "taken": "This channel already has another agent. Unlink it from the channel page first.",
+        "create": "Create an agent for this channel"
       }
     },
     "edit": {

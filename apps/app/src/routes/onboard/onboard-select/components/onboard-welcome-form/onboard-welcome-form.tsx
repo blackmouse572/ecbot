@@ -45,7 +45,9 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
       return slugOf(await createWorkspace({ name }));
     } catch (e) {
       if ((e as { status?: number })?.status !== 409) throw e;
-      return slugOf(await createWorkspace({ name, slug: suffixedWorkspaceSlug(name) }));
+      return slugOf(
+        await createWorkspace({ name, slug: suffixedWorkspaceSlug(name) }),
+      );
     }
   };
 
@@ -64,7 +66,10 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
   });
 
   const choices = [
-    ...TEMPLATE_TYPES.map((type) => ({ value: type, label: t(`agentBuilder.types.${type}`) })),
+    ...TEMPLATE_TYPES.map((type) => ({
+      value: type,
+      label: t(`agentBuilder.types.${type}`),
+    })),
     { value: OTHER_BUSINESS_TYPE, label: t("onboard.welcome.other") },
   ];
 
@@ -77,7 +82,9 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
         <div className="flex flex-col items-center gap-4 text-center">
           <LogoBox />
           <div>
-            <Heading className="font-bold">{t("onboard.welcome.title")}</Heading>
+            <Heading className="font-bold">
+              {t("onboard.welcome.title")}
+            </Heading>
             <Text size="small" leading="normal" className="text-ui-fg-subtle">
               {t("onboard.welcome.description")}
             </Text>
@@ -91,7 +98,10 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
               <Form.Item>
                 <Form.Label>{t("onboard.welcome.fields.name")}</Form.Label>
                 <Form.Control>
-                  <Input placeholder={t("onboard.welcome.placeholders.name")} {...field} />
+                  <Input
+                    placeholder={t("onboard.welcome.placeholders.name")}
+                    {...field}
+                  />
                 </Form.Control>
                 <Form.ErrorMessage />
               </Form.Item>
@@ -102,7 +112,9 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
             control={form.control}
             render={({ field }) => (
               <Form.Item>
-                <Form.Label optional>{t("onboard.welcome.fields.type")}</Form.Label>
+                <Form.Label optional>
+                  {t("onboard.welcome.fields.type")}
+                </Form.Label>
                 <Form.Control>
                   <RadioGroup
                     className="grid grid-cols-1 gap-2 sm:grid-cols-2"
@@ -110,7 +122,11 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
                     onValueChange={field.onChange}
                   >
                     {choices.map((choice) => (
-                      <RadioGroup.ChoiceBox key={choice.value} value={choice.value} label={choice.label} />
+                      <RadioGroup.ChoiceBox
+                        key={choice.value}
+                        value={choice.value}
+                        label={choice.label}
+                      />
                     ))}
                   </RadioGroup>
                 </Form.Control>
@@ -119,7 +135,11 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
           />
         </div>
         <div className="flex w-full max-w-[300px] flex-col items-center gap-3">
-          <Button type="submit" className="w-full" isLoading={form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full"
+            isLoading={form.formState.isSubmitting}
+          >
             {t("onboard.welcome.submit")}
           </Button>
           <Text size="small" className="text-ui-fg-subtle">
@@ -131,7 +151,12 @@ export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
               {t("onboard.welcome.joinLink")}
             </Link>
           </Text>
-          <Button type="button" variant="transparent" size="small" onClick={() => logout()}>
+          <Button
+            type="button"
+            variant="transparent"
+            size="small"
+            onClick={() => logout()}
+          >
             {t("app.menus.actions.logout")}
           </Button>
         </div>

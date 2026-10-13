@@ -11,7 +11,11 @@ import { AgentBuilder } from "./agent-builder";
 const mockMatchMedia = (matches: boolean) => {
   vi.stubGlobal(
     "matchMedia",
-    vi.fn(() => ({ matches, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    vi.fn(() => ({
+      matches,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
   );
 };
 
@@ -84,18 +88,31 @@ vi.mock("@/hooks/api", () => ({
   // actual connect behavior with its own, more specific mocks.
   useUnlinkAccounts: (...args: unknown[]) => unlinkAccounts(...args),
   useLinkAccount: () => ({ mutateAsync: linkAccount, isPending: false }),
-  useLinkChatbotAccount: () => ({ mutateAsync: linkChatbotAccount, isPending: false }),
-  useUnlinkChatbotAccount: () => ({ mutateAsync: unlinkChatbotAccount, isPending: false }),
-  useProvisionWebsiteWidget: () => ({ mutateAsync: provisionWebsiteWidget, isPending: false }),
+  useLinkChatbotAccount: () => ({
+    mutateAsync: linkChatbotAccount,
+    isPending: false,
+  }),
+  useUnlinkChatbotAccount: () => ({
+    mutateAsync: unlinkChatbotAccount,
+    isPending: false,
+  }),
+  useProvisionWebsiteWidget: () => ({
+    mutateAsync: provisionWebsiteWidget,
+    isPending: false,
+  }),
 }));
 vi.mock("@/hooks/use-oauth-login", () => ({
   useOAuthLogin: () => ({ handleLinkClick: oAuthLoginClick }),
 }));
 vi.mock("@medusajs/ui", async () => {
-  const actual = await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
+  const actual =
+    await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
   return {
     ...actual,
-    toast: { ...actual.toast, error: (...args: unknown[]) => toastError(...args) },
+    toast: {
+      ...actual.toast,
+      error: (...args: unknown[]) => toastError(...args),
+    },
     usePrompt: () => prompt,
   };
 });
@@ -111,21 +128,34 @@ vi.mock("./components/test-panel", () => ({
   },
 }));
 vi.mock("@/components/modals", () => ({
-  RouteFocusModal: { Header: ({ children }: never) => <div>{children}</div>, Body: ({ children }: never) => <div>{children}</div> },
+  RouteFocusModal: {
+    Header: ({ children }: never) => <div>{children}</div>,
+    Body: ({ children }: never) => <div>{children}</div>,
+  },
   useRouteModal: () => ({ setCloseOnEscape }),
 }));
 
 const renderBuilder = (path = "/ws/chatbot/create") =>
-  render(<MemoryRouter initialEntries={[path]}><AgentBuilder /></MemoryRouter>);
+  render(
+    <MemoryRouter initialEntries={[path]}>
+      <AgentBuilder />
+    </MemoryRouter>,
+  );
 
 // Answers the open question with whatever makes it valid, then clicks Next.
 async function answerCurrent() {
-  const text = screen.queryByRole("textbox", { name: /agentBuilder\.(questions|facts)/ });
-  if (text && !(text as HTMLInputElement).value) await userEvent.type(text, "Lotus");
+  const text = screen.queryByRole("textbox", {
+    name: /agentBuilder\.(questions|facts)/,
+  });
+  if (text && !(text as HTMLInputElement).value)
+    await userEvent.type(text, "Lotus");
   await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
 }
 
-const pickBeautyTemplate = () => userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
+const pickBeautyTemplate = () =>
+  userEvent.click(
+    screen.getByRole("button", { name: "agentBuilder.types.beauty" }),
+  );
 
 // The draft is created once agentName (step 3) is answered: businessName,
 // then agentName, both text questions that answerCurrent fills with "Lotus".
@@ -140,7 +170,9 @@ describe("AgentBuilder", () => {
     update.mockReset().mockResolvedValue({});
     suggest.mockReset();
     chatbot.mockReset().mockReturnValue({ chatbot: undefined });
-    prefillAccount.mockReset().mockReturnValue({ account: undefined, isError: false });
+    prefillAccount
+      .mockReset()
+      .mockReturnValue({ account: undefined, isError: false });
     activate.mockReset().mockResolvedValue({});
     toastError.mockReset();
     testPanelMounts.mockReset();
@@ -158,11 +190,19 @@ describe("AgentBuilder", () => {
   describe("the hero (step 0)", () => {
     it("shows the title, subtitle, a large input and template cards", () => {
       renderBuilder();
-      expect(screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" })).toBeInTheDocument();
-      expect(screen.getByText("agentBuilder.ui.heroSubtitle")).toBeInTheDocument();
-      const input = screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder");
+      expect(
+        screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("agentBuilder.ui.heroSubtitle"),
+      ).toBeInTheDocument();
+      const input = screen.getByPlaceholderText(
+        "agentBuilder.ui.startPlaceholder",
+      );
       expect(input).toHaveAttribute("rows", "4");
-      expect(screen.getByRole("button", { name: "agentBuilder.types.beauty" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "agentBuilder.types.beauty" }),
+      ).toBeInTheDocument();
     });
 
     it("starts that template when a card is clicked", async () => {
@@ -170,21 +210,37 @@ describe("AgentBuilder", () => {
       await pickBeautyTemplate();
       // The template already chose the business type (section B), so it asks
       // for the business name next instead of asking the type again.
-      expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
-      expect(screen.getByText("agentBuilder.groups.identity")).toBeInTheDocument();
+      expect(
+        screen.getByRole("textbox", {
+          name: "agentBuilder.questions.businessName.title",
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("agentBuilder.groups.identity"),
+      ).toBeInTheDocument();
     });
   });
 
   describe("arriving from the welcome screen", () => {
     it("starts the chosen template with the business name filled in", async () => {
-      renderBuilder("/ws/chatbot/create?template=beauty&businessName=Lotus%20Spa");
-      expect(await screen.findByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toHaveValue("Lotus Spa");
-      expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
+      renderBuilder(
+        "/ws/chatbot/create?template=beauty&businessName=Lotus%20Spa",
+      );
+      expect(
+        await screen.findByRole("textbox", {
+          name: "agentBuilder.questions.businessName.title",
+        }),
+      ).toHaveValue("Lotus Spa");
+      expect(
+        screen.getByText("agentBuilder.ui.templateAnswer"),
+      ).toBeInTheDocument();
     });
 
     it("shows the hero when the template is not one the builder knows", () => {
       renderBuilder("/ws/chatbot/create?template=nope&businessName=Lotus");
-      expect(screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -192,23 +248,42 @@ describe("AgentBuilder", () => {
     it("offers to turn the draft on before every question is answered", async () => {
       renderBuilder();
       await pickBeautyTemplate();
-      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" }),
+      ).not.toBeInTheDocument();
       await answerToAgentName();
 
-      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.activateNow" }));
+      await userEvent.click(
+        await screen.findByRole("button", {
+          name: "agentBuilder.ui.activateNow",
+        }),
+      );
 
       expect(activate).toHaveBeenCalledWith({ id: "bot-1", active: true });
       await screen.findByText("agentBuilder.ui.finished");
-      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" }),
+      ).not.toBeInTheDocument();
       // The rest of the questions stay open: answers keep saving to the live agent.
-      expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "actions.next" }),
+      ).toBeInTheDocument();
     });
   });
 
   it("shows the suggestion badge after describing the business", async () => {
-    suggest.mockResolvedValue({ businessType: { value: "beauty", confidence: 0.95 }, personality: null, formality: null, goals: {}, rules: {} });
+    suggest.mockResolvedValue({
+      businessType: { value: "beauty", confidence: 0.95 },
+      personality: null,
+      formality: null,
+      goals: {},
+      rules: {},
+    });
     renderBuilder();
-    await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "Nail spa in Da Nang{enter}");
+    await userEvent.type(
+      screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"),
+      "Nail spa in Da Nang{enter}",
+    );
     await screen.findByText("agentBuilder.ui.auto");
     expect(screen.getByText("agentBuilder.ui.suggested")).toBeInTheDocument();
   });
@@ -216,16 +291,28 @@ describe("AgentBuilder", () => {
   it("keeps going with plain questions when the suggestion fails", async () => {
     suggest.mockRejectedValue(new Error("down"));
     renderBuilder();
-    await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "something{enter}");
+    await userEvent.type(
+      screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"),
+      "something{enter}",
+    );
     await screen.findByText("agentBuilder.ui.suggestFailed");
-    expect(screen.getByRole("group", { name: "agentBuilder.questions.businessType.title" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", {
+        name: "agentBuilder.questions.businessType.title",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("shows a business-type icon on each businessType choice", async () => {
     suggest.mockRejectedValue(new Error("down"));
     renderBuilder();
-    await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "something{enter}");
-    await screen.findByRole("group", { name: "agentBuilder.questions.businessType.title" });
+    await userEvent.type(
+      screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"),
+      "something{enter}",
+    );
+    await screen.findByRole("group", {
+      name: "agentBuilder.questions.businessType.title",
+    });
     const radios = screen.getAllByRole("radio");
     expect(radios.length).toBeGreaterThan(0);
     for (const radio of radios) {
@@ -239,8 +326,18 @@ describe("AgentBuilder", () => {
     await answerCurrent(); // businessName
     await answerCurrent(); // agentName
     await screen.findByText("agentBuilder.channels.messenger");
-    for (const channel of ["messenger", "zalo", "telegram", "website", "instagram", "tiktok", "shopee"]) {
-      const card = screen.getByText(`agentBuilder.channels.${channel}`).closest("button");
+    for (const channel of [
+      "messenger",
+      "zalo",
+      "telegram",
+      "website",
+      "instagram",
+      "tiktok",
+      "shopee",
+    ]) {
+      const card = screen
+        .getByText(`agentBuilder.channels.${channel}`)
+        .closest("button");
       expect(card?.querySelector("img")).toBeInTheDocument();
     }
   });
@@ -249,8 +346,12 @@ describe("AgentBuilder", () => {
     it("shows the friendly ask on the left and the lead-in on the right for the current question", async () => {
       renderBuilder();
       await pickBeautyTemplate();
-      expect(screen.getByText("agentBuilder.questions.businessName.ask")).toBeInTheDocument();
-      expect(screen.getByText("agentBuilder.questions.businessName.lead")).toBeInTheDocument();
+      expect(
+        screen.getByText("agentBuilder.questions.businessName.ask"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("agentBuilder.questions.businessName.lead"),
+      ).toBeInTheDocument();
     });
 
     it("shows an answered step as the ask, then the lead-in and answer given", async () => {
@@ -261,20 +362,31 @@ describe("AgentBuilder", () => {
       const answered = screen.getByText(/Lotus/);
       expect(asked).toBeInTheDocument();
       expect(answered).toBeInTheDocument();
-      expect(answered.textContent).toBe("agentBuilder.questions.businessName.lead Lotus");
+      expect(answered.textContent).toBe(
+        "agentBuilder.questions.businessName.lead Lotus",
+      );
       // The assistant "asked" bubble comes before the user "answered" bubble.
-      expect(asked.compareDocumentPosition(answered) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(
+        asked.compareDocumentPosition(answered) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
     });
   });
 
   it("shows step 0 as a pair using the hero subtitle, and its answer bubble goes back to the hero", async () => {
     renderBuilder();
     await pickBeautyTemplate();
-    expect(screen.getByText("agentBuilder.ui.heroSubtitle")).toBeInTheDocument();
-    expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
+    expect(
+      screen.getByText("agentBuilder.ui.heroSubtitle"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("agentBuilder.ui.templateAnswer"),
+    ).toBeInTheDocument();
 
     await userEvent.click(screen.getByText("agentBuilder.ui.templateAnswer"));
-    expect(screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" }),
+    ).toBeInTheDocument();
   });
 
   it("updates the same draft instead of creating a second one after going back to the hero", async () => {
@@ -284,7 +396,9 @@ describe("AgentBuilder", () => {
     await waitFor(() => expect(create).toHaveBeenCalledOnce());
 
     await userEvent.click(screen.getByText("agentBuilder.ui.templateAnswer"));
-    await userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.restaurant" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "agentBuilder.types.restaurant" }),
+    );
     await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 2000 });
 
     expect(create).toHaveBeenCalledOnce();
@@ -298,13 +412,25 @@ describe("AgentBuilder", () => {
     expect(create).not.toHaveBeenCalled();
     await answerCurrent(); // agentName
     await waitFor(() => expect(create).toHaveBeenCalledOnce());
-    expect(create.mock.calls[0][0]).toMatchObject({ status: "inactive", type: "beauty" });
-    await waitFor(() => expect(screen.getByTestId("test-panel")).toHaveTextContent("bot-1"));
+    expect(create.mock.calls[0][0]).toMatchObject({
+      status: "inactive",
+      type: "beauty",
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("test-panel")).toHaveTextContent("bot-1"),
+    );
     // Moved to right after the agent-name answer (batch 3, step 3).
-    expect(screen.getByText("agentBuilder.ui.draftCreated")).toBeInTheDocument();
-    const agentNameAnswer = screen.getByText(/agentBuilder.questions.agentName.lead/);
+    expect(
+      screen.getByText("agentBuilder.ui.draftCreated"),
+    ).toBeInTheDocument();
+    const agentNameAnswer = screen.getByText(
+      /agentBuilder.questions.agentName.lead/,
+    );
     const draftCreated = screen.getByText("agentBuilder.ui.draftCreated");
-    expect(agentNameAnswer.compareDocumentPosition(draftCreated) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      agentNameAnswer.compareDocumentPosition(draftCreated) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("lets the user edit an earlier answer", async () => {
@@ -312,7 +438,11 @@ describe("AgentBuilder", () => {
     await pickBeautyTemplate();
     await answerCurrent();
     await userEvent.click(screen.getByText(/Lotus/));
-    expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", {
+        name: "agentBuilder.questions.businessName.title",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("keeps a local answer through a hydrate refetch (e.g. after an autosave)", async () => {
@@ -336,7 +466,9 @@ describe("AgentBuilder", () => {
 
     // Edit the (already-hydrated) businessName answer locally.
     await userEvent.click(screen.getByText(/Lotus/));
-    const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+    const input = screen.getByRole("textbox", {
+      name: "agentBuilder.questions.businessName.title",
+    });
     await userEvent.clear(input);
     await userEvent.type(input, "Lotus Spa");
     await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
@@ -369,7 +501,9 @@ describe("AgentBuilder", () => {
     // Both businessName and agentName read "Lotus" at this point, so match
     // the businessName answer specifically.
     await userEvent.click(screen.getByText(/businessName\.lead Lotus/));
-    const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+    const input = screen.getByRole("textbox", {
+      name: "agentBuilder.questions.businessName.title",
+    });
     await userEvent.type(input, " Spa");
     await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
     await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
@@ -393,10 +527,14 @@ describe("AgentBuilder", () => {
     );
     const renameTo = async (name: string) => {
       await userEvent.click(screen.getByText(/Lotus/));
-      const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+      const input = screen.getByRole("textbox", {
+        name: "agentBuilder.questions.businessName.title",
+      });
       await userEvent.clear(input);
       await userEvent.type(input, name);
-      await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+      await userEvent.click(
+        screen.getByRole("button", { name: "actions.next" }),
+      );
     };
     const settle = () => new Promise((r) => setTimeout(r, 900));
 
@@ -415,8 +553,13 @@ describe("AgentBuilder", () => {
 
     it("waits for the save in flight, so an older answer never lands after a newer one", async () => {
       let finishFirst!: () => void;
-      update.mockReset()
-        .mockReturnValueOnce(new Promise<void>((resolve) => { finishFirst = resolve; }))
+      update
+        .mockReset()
+        .mockReturnValueOnce(
+          new Promise<void>((resolve) => {
+            finishFirst = resolve;
+          }),
+        )
         .mockResolvedValue(undefined);
       chatbot.mockReturnValue({ chatbot: bot() });
       render(tree());
@@ -425,16 +568,22 @@ describe("AgentBuilder", () => {
       await waitFor(() => expect(update).toHaveBeenCalledOnce());
 
       await userEvent.click(screen.getByText(/Lotus Spa$/));
-      const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+      const input = screen.getByRole("textbox", {
+        name: "agentBuilder.questions.businessName.title",
+      });
       await userEvent.clear(input);
       await userEvent.type(input, "Lotus Nails");
-      await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+      await userEvent.click(
+        screen.getByRole("button", { name: "actions.next" }),
+      );
       await settle();
       expect(update).toHaveBeenCalledOnce();
 
       await act(async () => finishFirst());
       await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
-      expect(update.mock.calls[1][0].body.agentProfile.businessName).toBe("Lotus Nails");
+      expect(update.mock.calls[1][0].body.agentProfile.businessName).toBe(
+        "Lotus Nails",
+      );
     });
 
     // Changing the type resets the answers that depend on it, and autosave
@@ -442,8 +591,12 @@ describe("AgentBuilder", () => {
     describe("changing the business type", () => {
       const changeTypeToFashion = async () => {
         await userEvent.click(screen.getByText(/businessType\.lead/));
-        await userEvent.click(screen.getByRole("radio", { name: /agentBuilder\.types\.fashion/ }));
-        await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+        await userEvent.click(
+          screen.getByRole("radio", { name: /agentBuilder\.types\.fashion/ }),
+        );
+        await userEvent.click(
+          screen.getByRole("button", { name: "actions.next" }),
+        );
       };
 
       it("asks first on a live bot, and keeps the old type when cancelled", async () => {
@@ -454,7 +607,9 @@ describe("AgentBuilder", () => {
         await changeTypeToFashion();
 
         await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
-        expect(prompt.mock.calls[0][0]).toMatchObject({ title: "agentBuilder.ui.changeTypeTitle" });
+        expect(prompt.mock.calls[0][0]).toMatchObject({
+          title: "agentBuilder.ui.changeTypeTitle",
+        });
         await settle();
         expect(update).not.toHaveBeenCalled();
       });
@@ -467,7 +622,9 @@ describe("AgentBuilder", () => {
         await changeTypeToFashion();
 
         await waitFor(() => expect(update).toHaveBeenCalled());
-        expect(update.mock.calls.at(-1)?.[0].body.agentProfile.businessType).toBe("fashion");
+        expect(
+          update.mock.calls.at(-1)?.[0].body.agentProfile.businessType,
+        ).toBe("fashion");
       });
 
       it("does not ask on a draft that is not live yet", async () => {
@@ -485,7 +642,9 @@ describe("AgentBuilder", () => {
     it("sends no update when a refetch only changes read-only fields", async () => {
       chatbot.mockReturnValue({ chatbot: bot() });
       const { rerender } = render(tree());
-      chatbot.mockReturnValue({ chatbot: bot({ updatedAt: "2026-09-24T01:00:00.000Z" }) });
+      chatbot.mockReturnValue({
+        chatbot: bot({ updatedAt: "2026-09-24T01:00:00.000Z" }),
+      });
       rerender(tree());
       await settle();
       expect(update).not.toHaveBeenCalled();
@@ -496,7 +655,9 @@ describe("AgentBuilder", () => {
     // (built from the hydrated chatbot) no longer carries `accounts` at all.
     it("never reintroduces a hydrated chatbot's existing linked accounts into an autosave body", async () => {
       chatbot.mockReturnValue({
-        chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
+        chatbot: bot({
+          accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }],
+        }),
       });
       render(tree());
       await renameTo("Lotus Spa");
@@ -508,10 +669,16 @@ describe("AgentBuilder", () => {
       activate.mockRejectedValue(new Error("down"));
       chatbot.mockReturnValue({ chatbot: bot() });
       render(tree());
-      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.finish" }));
-      await waitFor(() => expect(toastError).toHaveBeenCalledWith("chatbot.edit.error"));
+      await userEvent.click(
+        screen.getByRole("button", { name: "agentBuilder.ui.finish" }),
+      );
+      await waitFor(() =>
+        expect(toastError).toHaveBeenCalledWith("chatbot.edit.error"),
+      );
       expect(screen.queryByText("agentBuilder.ui.finished")).toBeNull();
-      expect(screen.getByRole("button", { name: "agentBuilder.ui.finish" })).toBeDefined();
+      expect(
+        screen.getByRole("button", { name: "agentBuilder.ui.finish" }),
+      ).toBeDefined();
     });
 
     it("flushes the pending autosave on unmount", async () => {
@@ -520,7 +687,12 @@ describe("AgentBuilder", () => {
       await renameTo("Lotus Spa");
       unmount();
       expect(update).toHaveBeenCalledOnce();
-      expect(update.mock.calls[0][0]).toMatchObject({ id: "bot-9", body: { agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }) } });
+      expect(update.mock.calls[0][0]).toMatchObject({
+        id: "bot-9",
+        body: {
+          agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }),
+        },
+      });
     });
 
     // Fix round 3: account membership never travels through the autosave
@@ -530,19 +702,36 @@ describe("AgentBuilder", () => {
     // (or even the correct) linked set.
     it("sends accounts: [] in the next autosave even after a channel is linked through the channels turn", async () => {
       chatbot.mockReturnValue({
-        chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
+        chatbot: bot({
+          accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }],
+        }),
       });
-      linkAccount.mockResolvedValue({ data: { data: { id: "a2", type: "TELEGRAM_BOT", name: "New Bot" } } });
-      linkChatbotAccount.mockResolvedValue({ data: { data: { linked: ["a2"], skipped: [] } } });
+      linkAccount.mockResolvedValue({
+        data: { data: { id: "a2", type: "TELEGRAM_BOT", name: "New Bot" } },
+      });
+      linkChatbotAccount.mockResolvedValue({
+        data: { data: { linked: ["a2"], skipped: [] } },
+      });
       render(tree());
 
       // Reopen the (already-hydrated) channels turn and link a Telegram bot.
-      await userEvent.click(screen.getByText(/agentBuilder\.questions\.channels\.lead/));
+      await userEvent.click(
+        screen.getByText(/agentBuilder\.questions\.channels\.lead/),
+      );
       await userEvent.click(screen.getByText("agentBuilder.channels.telegram"));
       const token = `123456:${"A".repeat(40)}`;
-      await userEvent.type(screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"), token);
-      await userEvent.click(screen.getByRole("button", { name: "accounts.create.connect.telegram.cta" }));
-      await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["a2"] }));
+      await userEvent.type(
+        screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"),
+        token,
+      );
+      await userEvent.click(
+        screen.getByRole("button", {
+          name: "accounts.create.connect.telegram.cta",
+        }),
+      );
+      await waitFor(() =>
+        expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["a2"] }),
+      );
 
       // An unrelated answer edit triggers the next autosave.
       await renameTo("Lotus Spa");
@@ -558,9 +747,13 @@ describe("AgentBuilder", () => {
     // all), and the flushed body's accounts is always [].
     it("flushes a debounced answer with accounts: [] if the builder unmounts while a link is still in flight", async () => {
       chatbot.mockReturnValue({
-        chatbot: bot({ accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }] }),
+        chatbot: bot({
+          accounts: [{ id: "a1", type: "FACEBOOK_ACCOUNT", name: "Existing" }],
+        }),
       });
-      linkAccount.mockResolvedValue({ data: { data: { id: "a2", type: "TELEGRAM_BOT", name: "New Bot" } } });
+      linkAccount.mockResolvedValue({
+        data: { data: { id: "a2", type: "TELEGRAM_BOT", name: "New Bot" } },
+      });
       // Never resolves: the link is still in flight when the builder unmounts.
       linkChatbotAccount.mockReturnValue(new Promise(() => {}));
       const { unmount } = render(tree());
@@ -569,11 +762,20 @@ describe("AgentBuilder", () => {
       await renameTo("Lotus Spa");
 
       // Before that debounce fires, start a link (still pending at unmount).
-      await userEvent.click(screen.getByText(/agentBuilder\.questions\.channels\.lead/));
+      await userEvent.click(
+        screen.getByText(/agentBuilder\.questions\.channels\.lead/),
+      );
       await userEvent.click(screen.getByText("agentBuilder.channels.telegram"));
       const token = `123456:${"A".repeat(40)}`;
-      await userEvent.type(screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"), token);
-      await userEvent.click(screen.getByRole("button", { name: "accounts.create.connect.telegram.cta" }));
+      await userEvent.type(
+        screen.getByLabelText("agentBuilder.ui.telegramTokenLabel"),
+        token,
+      );
+      await userEvent.click(
+        screen.getByRole("button", {
+          name: "accounts.create.connect.telegram.cta",
+        }),
+      );
       await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalled());
 
       unmount();
@@ -582,7 +784,9 @@ describe("AgentBuilder", () => {
       const lastCall = update.mock.calls.at(-1)?.[0];
       expect(lastCall).toMatchObject({
         id: "bot-9",
-        body: { agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }) },
+        body: {
+          agentProfile: expect.objectContaining({ businessName: "Lotus Spa" }),
+        },
       });
       expect(lastCall.body.accounts).toEqual([]);
     });
@@ -590,7 +794,13 @@ describe("AgentBuilder", () => {
 
   it("starts fresh when the chatbot has no builder profile, so the draft never takes its accounts", async () => {
     chatbot.mockReturnValue({
-      chatbot: { id: "legacy-1", name: "Legacy bot", status: "active", accounts: [{ id: "acc-1" }], welcomeMessage: "Hi" },
+      chatbot: {
+        id: "legacy-1",
+        name: "Legacy bot",
+        status: "active",
+        accounts: [{ id: "acc-1" }],
+        welcomeMessage: "Hi",
+      },
     });
     render(
       <MemoryRouter initialEntries={["/ws/chatbot/create?chatbotId=legacy-1"]}>
@@ -613,38 +823,61 @@ describe("AgentBuilder", () => {
 
     beforeEach(() => {
       prefillAccount.mockReturnValue({
-        account: { id: "acc-1", type: "FACEBOOK_PAGE", name: "Axios English Center" },
+        account: {
+          id: "acc-1",
+          type: "FACEBOOK_PAGE",
+          name: "Axios English Center",
+        },
         isError: false,
       });
     });
 
     it("prefills the business name and connects the channel to the draft", async () => {
-      linkChatbotAccount.mockResolvedValue({ data: { data: { linked: ["acc-1"], skipped: [] } } });
+      linkChatbotAccount.mockResolvedValue({
+        data: { data: { linked: ["acc-1"], skipped: [] } },
+      });
       renderFromChannel();
 
       await pickBeautyTemplate();
       expect(
-        screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" }),
+        screen.getByRole("textbox", {
+          name: "agentBuilder.questions.businessName.title",
+        }),
       ).toHaveValue("Axios English Center");
 
       await answerCurrent(); // businessName (keeps the prefilled value)
       await answerCurrent(); // agentName, creates the draft
-      await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-1"] }));
+      await waitFor(() =>
+        expect(linkChatbotAccount).toHaveBeenCalledWith({
+          accounts: ["acc-1"],
+        }),
+      );
       await screen.findByText("agentBuilder.ui.connected");
-      expect(screen.getByRole("button", { name: "agentBuilder.ui.unlinkChannel" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "agentBuilder.ui.unlinkChannel" }),
+      ).toBeInTheDocument();
     });
 
     it("tells the owner when the channel already belongs to another agent", async () => {
       linkChatbotAccount.mockResolvedValue({
-        data: { data: { linked: [], skipped: [{ id: "acc-1", name: "Axios English Center" }] } },
+        data: {
+          data: {
+            linked: [],
+            skipped: [{ id: "acc-1", name: "Axios English Center" }],
+          },
+        },
       });
       renderFromChannel();
       await pickBeautyTemplate();
       await answerCurrent();
       await answerCurrent();
 
-      await waitFor(() => expect(toastError).toHaveBeenCalledWith("agentBuilder.ui.channelInUse"));
-      expect(screen.queryByText("agentBuilder.ui.connected")).not.toBeInTheDocument();
+      await waitFor(() =>
+        expect(toastError).toHaveBeenCalledWith("agentBuilder.ui.channelInUse"),
+      );
+      expect(
+        screen.queryByText("agentBuilder.ui.connected"),
+      ).not.toBeInTheDocument();
     });
 
     it("keeps going when the connect request fails", async () => {
@@ -654,7 +887,11 @@ describe("AgentBuilder", () => {
       await answerCurrent();
       await answerCurrent();
 
-      await waitFor(() => expect(toastError).toHaveBeenCalledWith("agentBuilder.ui.connectFailed"));
+      await waitFor(() =>
+        expect(toastError).toHaveBeenCalledWith(
+          "agentBuilder.ui.connectFailed",
+        ),
+      );
     });
 
     it("starts without prefill when the channel cannot be loaded", async () => {
@@ -662,11 +899,15 @@ describe("AgentBuilder", () => {
       renderFromChannel();
 
       await waitFor(() =>
-        expect(toastError).toHaveBeenCalledWith("agentBuilder.ui.channelLoadFailed"),
+        expect(toastError).toHaveBeenCalledWith(
+          "agentBuilder.ui.channelLoadFailed",
+        ),
       );
       await pickBeautyTemplate();
       expect(
-        screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" }),
+        screen.getByRole("textbox", {
+          name: "agentBuilder.questions.businessName.title",
+        }),
       ).toHaveValue("");
       await answerCurrent();
       await answerCurrent();
@@ -675,13 +916,19 @@ describe("AgentBuilder", () => {
 
     it("ignores a channel type the builder never connects", async () => {
       prefillAccount.mockReturnValue({
-        account: { id: "acc-1", type: "FACEBOOK_ACCOUNT", name: "Owner Account" },
+        account: {
+          id: "acc-1",
+          type: "FACEBOOK_ACCOUNT",
+          name: "Owner Account",
+        },
         isError: false,
       });
       renderFromChannel();
       await pickBeautyTemplate();
       expect(
-        screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" }),
+        screen.getByRole("textbox", {
+          name: "agentBuilder.questions.businessName.title",
+        }),
       ).toHaveValue("");
       await answerCurrent();
       await answerCurrent();
@@ -691,12 +938,16 @@ describe("AgentBuilder", () => {
   });
 
   describe("the test panel", () => {
-    const desktopPanel = () => screen.getByTestId("test-panel").closest('[aria-hidden], [inert]') ?? screen.getByTestId("test-panel").parentElement!.parentElement!;
+    const desktopPanel = () =>
+      screen.getByTestId("test-panel").closest("[aria-hidden], [inert]") ??
+      screen.getByTestId("test-panel").parentElement!.parentElement!;
 
     it("shows neither the panel nor the Try agent button before the draft exists", () => {
       mockMatchMedia(true);
       renderBuilder();
-      expect(screen.queryByRole("button", { name: "agentBuilder.ui.tryAgent" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "agentBuilder.ui.tryAgent" }),
+      ).not.toBeInTheDocument();
       expect(screen.queryByTestId("test-panel")).not.toBeInTheDocument();
     });
 
@@ -711,13 +962,23 @@ describe("AgentBuilder", () => {
       renderBuilder();
       await pickBeautyTemplate();
       await answerToAgentName();
-      await waitFor(() => expect(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" })).toBeInTheDocument());
-      await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }),
+        ).toBeInTheDocument(),
+      );
+      await waitFor(() =>
+        expect(desktopPanel()).not.toHaveAttribute("aria-hidden"),
+      );
 
-      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
+      await userEvent.click(
+        screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }),
+      );
       expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
 
-      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
+      await userEvent.click(
+        screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }),
+      );
       expect(desktopPanel()).not.toHaveAttribute("aria-hidden");
     });
 
@@ -727,17 +988,25 @@ describe("AgentBuilder", () => {
       await pickBeautyTemplate();
       await answerToAgentName();
       await waitFor(() => expect(create).toHaveBeenCalledOnce());
-      await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
+      await waitFor(() =>
+        expect(desktopPanel()).not.toHaveAttribute("aria-hidden"),
+      );
 
       // Closing it by hand is respected: it does not reopen itself again.
-      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }));
+      await userEvent.click(
+        screen.getByRole("button", { name: "agentBuilder.ui.tryAgent" }),
+      );
       expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
 
       // ...even once a later answer triggers another save.
       await userEvent.click(screen.getByText(/businessName\.lead Lotus/));
-      const input = screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" });
+      const input = screen.getByRole("textbox", {
+        name: "agentBuilder.questions.businessName.title",
+      });
       await userEvent.type(input, " Spa");
-      await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
+      await userEvent.click(
+        screen.getByRole("button", { name: "actions.next" }),
+      );
       await waitFor(() => expect(update).toHaveBeenCalled());
       expect(desktopPanel()).toHaveAttribute("aria-hidden", "true");
     });
@@ -747,18 +1016,24 @@ describe("AgentBuilder", () => {
       renderBuilder();
       await pickBeautyTemplate();
       await answerToAgentName();
-      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByTestId("test-panel")).toBeInTheDocument(),
+      );
 
       const sheet = screen.getByTestId("test-panel").closest("aside")!;
       expect(sheet).toHaveAttribute("aria-hidden", "true");
 
       // Both the header toggle and the floating "Try agent" button share the
       // same label on mobile; the floating one is the last in the DOM.
-      const tryAgentButtons = screen.getAllByRole("button", { name: "agentBuilder.ui.tryAgent" });
+      const tryAgentButtons = screen.getAllByRole("button", {
+        name: "agentBuilder.ui.tryAgent",
+      });
       await userEvent.click(tryAgentButtons[tryAgentButtons.length - 1]!);
       expect(sheet).not.toHaveAttribute("aria-hidden");
 
-      await userEvent.click(screen.getByRole("button", { name: "actions.close" }));
+      await userEvent.click(
+        screen.getByRole("button", { name: "actions.close" }),
+      );
       expect(sheet).toHaveAttribute("aria-hidden", "true");
     });
 
@@ -767,16 +1042,22 @@ describe("AgentBuilder", () => {
       renderBuilder();
       await pickBeautyTemplate();
       await answerToAgentName();
-      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByTestId("test-panel")).toBeInTheDocument(),
+      );
       expect(testPanelMounts).toHaveBeenCalledOnce();
 
       // Cross from desktop to mobile, and back.
       act(() => viewport.flip());
-      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByTestId("test-panel")).toBeInTheDocument(),
+      );
       expect(testPanelMounts).toHaveBeenCalledOnce();
 
       act(() => viewport.flip());
-      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByTestId("test-panel")).toBeInTheDocument(),
+      );
       expect(testPanelMounts).toHaveBeenCalledOnce();
     });
     it("keeps the desktop panel visible with reduced motion (the opacity crossfade is mobile-only)", async () => {
@@ -784,8 +1065,12 @@ describe("AgentBuilder", () => {
       renderBuilder();
       await pickBeautyTemplate();
       await answerToAgentName();
-      await waitFor(() => expect(desktopPanel()).not.toHaveAttribute("aria-hidden"));
-      expect(screen.getByTestId("test-panel").closest("aside")).toHaveClass("md:motion-reduce:opacity-100");
+      await waitFor(() =>
+        expect(desktopPanel()).not.toHaveAttribute("aria-hidden"),
+      );
+      expect(screen.getByTestId("test-panel").closest("aside")).toHaveClass(
+        "md:motion-reduce:opacity-100",
+      );
     });
 
     it("reflects the panel state in aria-expanded on the header toggle (desktop)", async () => {
@@ -793,8 +1078,12 @@ describe("AgentBuilder", () => {
       renderBuilder();
       await pickBeautyTemplate();
       await answerToAgentName();
-      const toggle = await screen.findByRole("button", { name: "agentBuilder.ui.tryAgent" });
-      await waitFor(() => expect(toggle).toHaveAttribute("aria-expanded", "true"));
+      const toggle = await screen.findByRole("button", {
+        name: "agentBuilder.ui.tryAgent",
+      });
+      await waitFor(() =>
+        expect(toggle).toHaveAttribute("aria-expanded", "true"),
+      );
       await userEvent.click(toggle);
       expect(toggle).toHaveAttribute("aria-expanded", "false");
     });
@@ -804,10 +1093,14 @@ describe("AgentBuilder", () => {
       renderBuilder();
       await pickBeautyTemplate();
       await answerToAgentName();
-      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByTestId("test-panel")).toBeInTheDocument(),
+      );
 
       const sheet = screen.getByTestId("test-panel").closest("aside")!;
-      const [headerToggle, floating] = screen.getAllByRole("button", { name: "agentBuilder.ui.tryAgent" });
+      const [headerToggle, floating] = screen.getAllByRole("button", {
+        name: "agentBuilder.ui.tryAgent",
+      });
       expect(headerToggle).toHaveAttribute("aria-expanded", "false");
       expect(floating).toHaveAttribute("aria-expanded", "false");
 
@@ -832,11 +1125,17 @@ describe("AgentBuilder", () => {
       renderBuilder();
       await pickBeautyTemplate();
       await answerToAgentName();
-      await waitFor(() => expect(screen.getByTestId("test-panel")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByTestId("test-panel")).toBeInTheDocument(),
+      );
 
-      const floating = screen.getAllByRole("button", { name: "agentBuilder.ui.tryAgent" }).at(-1)!;
+      const floating = screen
+        .getAllByRole("button", { name: "agentBuilder.ui.tryAgent" })
+        .at(-1)!;
       await userEvent.click(floating);
-      await userEvent.click(screen.getByRole("button", { name: "actions.close" }));
+      await userEvent.click(
+        screen.getByRole("button", { name: "actions.close" }),
+      );
       expect(document.activeElement).toBe(floating);
     });
   });
@@ -844,15 +1143,32 @@ describe("AgentBuilder", () => {
   it("makes the step-0 bubble read-only once the agent is activated", async () => {
     renderBuilder();
     await pickBeautyTemplate();
-    for (let i = 0; i < 60 && !screen.queryByRole("button", { name: "agentBuilder.ui.finish" }); i++) {
+    for (
+      let i = 0;
+      i < 60 &&
+      !screen.queryByRole("button", { name: "agentBuilder.ui.finish" });
+      i++
+    ) {
       await answerCurrent();
     }
-    expect(screen.getByRole("button", { name: "agentBuilder.ui.templateAnswer" })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("button", { name: "agentBuilder.ui.finish" })).toBeEnabled());
-    await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.finish" }));
+    expect(
+      screen.getByRole("button", { name: "agentBuilder.ui.templateAnswer" }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "agentBuilder.ui.finish" }),
+      ).toBeEnabled(),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "agentBuilder.ui.finish" }),
+    );
     await screen.findByText("agentBuilder.ui.finished");
 
-    expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "agentBuilder.ui.templateAnswer" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText("agentBuilder.ui.templateAnswer"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "agentBuilder.ui.templateAnswer" }),
+    ).not.toBeInTheDocument();
   }, 20000);
 });

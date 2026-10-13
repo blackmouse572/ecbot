@@ -610,6 +610,15 @@
             "manual": "Nhập thủ công"
           }
         }
+      },
+      "linkAgent": {
+        "title": "Chọn agent trả lời trên kênh này",
+        "description": "Kênh chỉ trả lời khách khi đã gắn với một agent đang hoạt động.",
+        "pick": "Agent",
+        "link": "Gắn agent",
+        "linked": "{{name}} đã trả lời trên kênh này.",
+        "taken": "Kênh này đã có agent khác. Hãy gỡ agent đó ở trang kênh trước.",
+        "create": "Tạo agent cho kênh này"
       }
     },
     "edit": {

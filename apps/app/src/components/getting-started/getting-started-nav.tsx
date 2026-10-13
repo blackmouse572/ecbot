@@ -18,18 +18,31 @@ export const GettingStartedNav: FC = () => {
   const onDashboard = useMatch(`/:workspaceSlug/${ROUTES.Dashboard}`);
   const doneCount = steps.filter((step) => step.done).length;
 
-  if (onDashboard || steps.length === 0 || doneCount === steps.length) return null;
+  if (onDashboard || steps.length === 0 || doneCount === steps.length)
+    return null;
 
   return (
     <Can I="manage" a="CHATBOT">
       <section aria-labelledby="getting-started-nav" className="px-3 py-2">
         <div className="bg-ui-bg-base shadow-borders-base flex flex-col gap-y-2 rounded-lg p-3">
           <div className="flex items-center justify-between gap-x-2">
-            <Text id="getting-started-nav" size="small" weight="plus" leading="compact">
+            <Text
+              id="getting-started-nav"
+              size="small"
+              weight="plus"
+              leading="compact"
+            >
               {t("dashboard.gettingStarted.title")}
             </Text>
-            <Text size="xsmall" leading="compact" className="text-ui-fg-muted tabular-nums">
-              {t("dashboard.gettingStarted.progress", { done: doneCount, total: steps.length })}
+            <Text
+              size="xsmall"
+              leading="compact"
+              className="text-ui-fg-muted tabular-nums"
+            >
+              {t("dashboard.gettingStarted.progress", {
+                done: doneCount,
+                total: steps.length,
+              })}
             </Text>
           </div>
           <div className="flex gap-x-1" aria-hidden>
@@ -45,13 +58,21 @@ export const GettingStartedNav: FC = () => {
           </div>
           <ol className="flex flex-col gap-y-0.5">
             {steps.map((step) => {
-              const title = t(`dashboard.gettingStarted.steps.${step.key}.title`);
+              const title = t(
+                `dashboard.gettingStarted.steps.${step.key}.title`,
+              );
               return (
                 <li key={step.key}>
                   {step.done ? (
                     <span className="text-ui-fg-muted flex items-center gap-x-2 py-1">
                       <CheckCircleSolid className="text-ui-tag-green-icon shrink-0" />
-                      <Text size="xsmall" leading="compact" className="line-through">{title}</Text>
+                      <Text
+                        size="xsmall"
+                        leading="compact"
+                        className="line-through"
+                      >
+                        {title}
+                      </Text>
                     </span>
                   ) : (
                     <Link
@@ -59,7 +80,9 @@ export const GettingStartedNav: FC = () => {
                       className="text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover -mx-1 flex items-center gap-x-2 rounded-md px-1 py-1 transition-colors"
                     >
                       <span className="size-[15px] shrink-0 rounded-full border border-ui-border-strong" />
-                      <Text size="xsmall" leading="compact" weight="plus">{title}</Text>
+                      <Text size="xsmall" leading="compact" weight="plus">
+                        {title}
+                      </Text>
                     </Link>
                   )}
                 </li>

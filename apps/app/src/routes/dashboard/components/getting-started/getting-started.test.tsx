@@ -19,7 +19,9 @@ vi.mock("@/hooks/api/chatbot", () => ({
 vi.mock("@/hooks/api/accounts", () => ({
   useAccounts: () => ({
     ...query(counts.accounts),
-    accounts: Array.from({ length: counts.accounts }, () => ({ chatbot: { id: "bot-1" } })),
+    accounts: Array.from({ length: counts.accounts }, () => ({
+      chatbot: { id: "bot-1" },
+    })),
   }),
 }));
 vi.mock("@/hooks/api/conversations", () => ({
