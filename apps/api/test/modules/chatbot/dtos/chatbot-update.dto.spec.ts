@@ -57,8 +57,18 @@ describe('ChatbotUpdateRequestDto', () => {
         'handoffKeywords',
         'guardrailCustomInstruction',
         'followupRules',
+        'timezone',
     ])('accepts null for %s, which clears it', field => {
         expect(errorsFor({ [field]: null })).toEqual([]);
+    });
+
+    it('accepts an IANA timezone', () => {
+        expect(errorsFor({ timezone: 'Asia/Bangkok' })).toEqual([]);
+    });
+
+    it('rejects a timezone that is not an IANA zone', () => {
+        expect(errorsFor({ timezone: 'Mars/Olympus' })).toEqual(['timezone']);
+        expect(errorsFor({ timezone: '' })).toEqual(['timezone']);
     });
 });
 

@@ -29,6 +29,7 @@ dependencies = [
     "vcrpy>=6.0.1",
     # Direct imports previously satisfied only transitively (configs.variables / repos.ai).
     "pydantic-settings>=2.0.0",
+    "tzdata>=2026.4",
 ]
 
 [project.scripts]

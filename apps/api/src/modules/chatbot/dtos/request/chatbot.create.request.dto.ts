@@ -8,6 +8,7 @@ import {
     IsObject,
     IsOptional,
     IsString,
+    IsTimeZone,
     Max,
     MaxLength,
     Min,
@@ -315,4 +316,14 @@ export class ChatbotCreateRequestDto {
         required: false,
     })
     followupRules?: string;
+
+    @IsTimeZone()
+    @IsOptional()
+    @ApiProperty({
+        description:
+            'IANA timezone the agent uses for the current date and time. Defaults to the deployment timezone.',
+        example: 'Asia/Ho_Chi_Minh',
+        required: false,
+    })
+    timezone?: string;
 }

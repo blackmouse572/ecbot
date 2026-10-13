@@ -120,6 +120,10 @@ export class ChatbotEntity extends DatabaseEntityBase {
     @Property({ type: 'text', nullable: true })
     followupRules?: string;
 
+    // IANA zone the agent reads "now" in. Null follows APP_TIMEZONE.
+    @Property({ type: 'varchar', length: 64, nullable: true })
+    timezone?: string;
+
     // Token budget caps — null means uncapped, and the guard skips the query
     // entirely rather than summing usage for nothing.
     @Property({ type: new BigIntType('number'), nullable: true })
