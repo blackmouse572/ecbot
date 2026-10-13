@@ -2,6 +2,7 @@ import { DatabaseRepository } from '@app/common/database/bases/database.reposito
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
 import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
+import { ConversationActivityEntity } from '@app/modules/conversation/repository/entities/conversation-activity.entity';
 import { ConversationReadEntity } from '@app/modules/conversation/repository/entities/conversation-read.entity';
 import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
@@ -55,35 +56,47 @@ export class CustomerRepository extends DatabaseRepository<CustomerEntity> {
         const customerIds = scope.customers.map(c => c.id);
         const conversationIds = scope.conversations.map(c => c.id);
         const convs = { $in: conversationIds };
-        const [messages, tagAssignments, followups, toolInvocations] =
-            await Promise.all([
-                conversationIds.length
-                    ? em.find(
-                          MessageEntity,
-                          { conversation: convs },
-                          { orderBy: { dateSent: 'ASC' } }
-                      )
-                    : [],
-                em.find(
-                    CustomerTagAssignmentEntity,
-                    { customer: { $in: customerIds }, deletedAt: null },
-                    { populate: ['tag'] }
-                ),
-                conversationIds.length
-                    ? em.find(
-                          FollowupEntity,
-                          { conversation: convs },
-                          { orderBy: { scheduledAt: 'ASC' } }
-                      )
-                    : [],
-                conversationIds.length
-                    ? em.find(
-                          ToolInvocationEntity,
-                          { conversationId: convs },
-                          { orderBy: { createdAt: 'ASC' } }
-                      )
-                    : [],
-            ]);
+        const [
+            messages,
+            tagAssignments,
+            followups,
+            toolInvocations,
+            activities,
+        ] = await Promise.all([
+            conversationIds.length
+                ? em.find(
+                      MessageEntity,
+                      { conversation: convs },
+                      { orderBy: { dateSent: 'ASC' } }
+                  )
+                : [],
+            em.find(
+                CustomerTagAssignmentEntity,
+                { customer: { $in: customerIds }, deletedAt: null },
+                { populate: ['tag'] }
+            ),
+            conversationIds.length
+                ? em.find(
+                      FollowupEntity,
+                      { conversation: convs },
+                      { orderBy: { scheduledAt: 'ASC' } }
+                  )
+                : [],
+            conversationIds.length
+                ? em.find(
+                      ToolInvocationEntity,
+                      { conversationId: convs },
+                      { orderBy: { createdAt: 'ASC' } }
+                  )
+                : [],
+            conversationIds.length
+                ? em.find(
+                      ConversationActivityEntity,
+                      { conversationId: convs },
+                      { orderBy: { createdAt: 'ASC' } }
+                  )
+                : [],
+        ]);
 
         return {
             ...scope,
@@ -91,6 +104,7 @@ export class CustomerRepository extends DatabaseRepository<CustomerEntity> {
             tagAssignments,
             followups,
             toolInvocations,
+            activities,
         };
     }
 
@@ -135,6 +149,9 @@ export class CustomerRepository extends DatabaseRepository<CustomerEntity> {
                 }
 
                 await em.nativeDelete(ToolInvocationEntity, {
+                    conversationId: convs,
+                });
+                await em.nativeDelete(ConversationActivityEntity, {
                     conversationId: convs,
                 });
                 await em.nativeDelete(FollowupEntity, { conversation: convs });

@@ -5408,6 +5408,12 @@ export type CustomerDataExportResponseDto = {
     toolInvocations: Array<{
         [key: string]: unknown;
     }>;
+    /**
+     * Skills the agent loaded and knowledge it searched in these conversations
+     */
+    activities: Array<{
+        [key: string]: unknown;
+    }>;
 };
 
 export type ContactPointGetResponseDto = {
