@@ -1,10 +1,13 @@
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
+import { REQUEST_VALIDATION_PIPE_OPTIONS } from '../../../../src/common/request/constants/request.constant';
 import { ConversationUpdateTimezoneRequestDto } from '../../../../src/modules/conversation/dtos/request/conversation.update-timezone.request.dto';
 
 function errorsFor(payload: Record<string, unknown>): string[] {
+    // Same options as the app's ValidationPipe, so skipUndefinedProperties applies.
     return validateSync(
-        plainToInstance(ConversationUpdateTimezoneRequestDto, payload)
+        plainToInstance(ConversationUpdateTimezoneRequestDto, payload),
+        REQUEST_VALIDATION_PIPE_OPTIONS
     ).map(e => e.property);
 }
 
