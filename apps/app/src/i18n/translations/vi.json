@@ -2727,8 +2727,7 @@
       },
       "handoff": {
         "yes": "Có",
-        "no": "Không",
-        "notify": "Chỉ thông báo"
+        "no": "Không"
       },
       "emptyTitle": "Chưa có nhãn nào",
       "empty": "Nhãn giúp bạn phân nhóm khách hàng, ví dụ VIP hoặc khách sỉ."

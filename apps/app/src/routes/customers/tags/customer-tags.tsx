@@ -195,20 +195,24 @@ const useColumns = ({
       columnHelper.display({
         id: "triggersHandoff",
         header: () => t("settings.customerTags.fields.triggersHandoff"),
-        cell: ({ row }) =>
-          !row.original.triggersHandoff && row.original.notifiesTeam ? (
-            <StatusBadge color="blue">
-              {t("settings.customerTags.handoff.notify")}
-            </StatusBadge>
-          ) : (
-            <StatusBadge
-              color={row.original.triggersHandoff ? "green" : "grey"}
-            >
-              {row.original.triggersHandoff
-                ? t("settings.customerTags.handoff.yes")
-                : t("settings.customerTags.handoff.no")}
-            </StatusBadge>
-          ),
+        cell: ({ row }) => (
+          <StatusBadge color={row.original.triggersHandoff ? "green" : "grey"}>
+            {row.original.triggersHandoff
+              ? t("settings.customerTags.handoff.yes")
+              : t("settings.customerTags.handoff.no")}
+          </StatusBadge>
+        ),
+      }),
+      columnHelper.display({
+        id: "notifiesTeam",
+        header: () => t("settings.customerTags.fields.notifiesTeam"),
+        cell: ({ row }) => (
+          <StatusBadge color={row.original.notifiesTeam ? "blue" : "grey"}>
+            {row.original.notifiesTeam
+              ? t("settings.customerTags.handoff.yes")
+              : t("settings.customerTags.handoff.no")}
+          </StatusBadge>
+        ),
       }),
       columnHelper.display({
         id: "actions",

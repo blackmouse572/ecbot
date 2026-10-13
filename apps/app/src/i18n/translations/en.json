@@ -2679,8 +2679,7 @@
       },
       "handoff": {
         "yes": "Yes",
-        "no": "No",
-        "notify": "Notify only"
+        "no": "No"
       },
       "emptyTitle": "No tags yet",
       "empty": "Tags help you group customers, for example VIP or wholesale."

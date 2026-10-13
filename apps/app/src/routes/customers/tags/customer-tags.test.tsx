@@ -206,12 +206,13 @@ describe("CustomerTags settings page", () => {
 
     render(<CustomerTags />);
 
+    // Angry hands off; neither tag notifies the team on its own.
     expect(
-      screen.getByText("settings.customerTags.handoff.yes"),
-    ).toBeInTheDocument();
+      screen.getAllByText("settings.customerTags.handoff.yes"),
+    ).toHaveLength(1);
     expect(
-      screen.getByText("settings.customerTags.handoff.no"),
-    ).toBeInTheDocument();
+      screen.getAllByText("settings.customerTags.handoff.no"),
+    ).toHaveLength(3);
     expect(
       screen.queryByText("accounts.details.statuses.active.label"),
     ).not.toBeInTheDocument();
@@ -324,7 +325,7 @@ describe("CustomerTags settings page", () => {
     expect(payload.triggersHandoff).toBe(false);
   });
 
-  it("marks a notify-only tag in the list", () => {
+  it("shows whether each tag notifies the team in its own column", () => {
     useListMock.mockReturnValue({
       tags: [orderPlacedTag],
       isLoading: false,
@@ -333,7 +334,16 @@ describe("CustomerTags settings page", () => {
     render(<CustomerTags />);
 
     expect(
-      screen.getByText("settings.customerTags.handoff.notify"),
+      screen.getByRole("columnheader", {
+        name: "settings.customerTags.fields.notifiesTeam",
+      }),
+    ).toBeInTheDocument();
+    // Order placed: no handoff, notifies the team.
+    expect(
+      screen.getByText("settings.customerTags.handoff.no"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("settings.customerTags.handoff.yes"),
     ).toBeInTheDocument();
   });
 
