@@ -1156,7 +1156,12 @@
       "removeChannel": "Remove {{name}}",
       "changeTypeTitle": "Change the business type?",
       "changeTypeDescription": "This agent is live. A new business type resets the answers that depend on it, such as goals, rules and what to collect, and customers see the change as soon as it saves.",
-      "changeTypeConfirm": "Change type"
+      "changeTypeConfirm": "Change type",
+      "customCollectLabel": "Add your own",
+      "customCollectPlaceholder": "e.g. Deadline, design file, size",
+      "customCollectAdd": "Add",
+      "customCollectRemove": "Remove {{label}}",
+      "customCollectLimit": "You can add up to {{count}} fields."
     },
     "groups": {
       "identity": "About your business",
@@ -1225,7 +1230,8 @@
       "collect": {
         "title": "What details should it collect from customers?",
         "ask": "When a customer is ready, what details should your agent collect?",
-        "lead": "Please collect:"
+        "lead": "Please collect:",
+        "askOrder": "What does a complete order or booking need? Your agent collects these before confirming."
       },
       "handoffWhen": {
         "title": "When should it pass the chat to you?",

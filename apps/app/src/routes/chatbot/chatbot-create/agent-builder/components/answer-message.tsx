@@ -9,7 +9,11 @@ export function summarize(question: Question, raw: unknown, t: TFunction): strin
   if (question.kind === "text") return String(raw ?? "");
   const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
   return values
-    .map((v) => t(question.choices?.find((c) => c.value === v)?.labelKey ?? String(v)))
+    // A value with no choice is the owner's own label (custom collect fields), shown as typed.
+    .map((v) => {
+      const choice = question.choices?.find((c) => c.value === v);
+      return choice ? t(choice.labelKey) : String(v);
+    })
     .join(", ");
 }
 

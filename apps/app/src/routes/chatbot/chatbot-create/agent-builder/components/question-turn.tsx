@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { minutesLeft, type LinkedAccountRef } from "../builder-state";
 import { businessTypeIcon } from "./business-type-icon";
 import { ChannelConnect } from "./channel-connect";
+import { CustomCollectEditor } from "./custom-collect-editor";
 import { channelIcon } from "./channel-icon";
 
 type Props = {
@@ -79,6 +80,9 @@ export function QuestionTurn({
   const [value, setValue] = useState(() => toFormValue(question, readAnswer(profile, question.path)));
   const badge = badgeFor(question, suggestion);
   const choices = question.kind === "boolean" ? BOOLEAN_CHOICES : (question.choices ?? []);
+  // The collect answer also carries the owner's own labels after the fixed ids.
+  const isChoice = (v: string) => choices.some((c) => c.value === v);
+  const customLabels = question.id === "collect" ? (value as string[]).filter((v) => !isChoice(v)) : [];
   // The greeting example reuses the names given so far, or the type's examples.
   const placeholderNames = {
     agentName: profile.agentName.trim() || t("agentBuilder.questions.agentName.placeholder"),
@@ -152,6 +156,12 @@ export function QuestionTurn({
                     <QuestionnaireChoice key={c.value} value={c.value} label={t(c.labelKey)} icon={choiceIcon(question, c.value)} />
                   ))}
                 </QuestionnaireChoices>
+              )}
+              {question.id === "collect" && (
+                <CustomCollectEditor
+                  labels={customLabels}
+                  onChange={(labels) => setValue([...(value as string[]).filter(isChoice), ...labels])}
+                />
               )}
               <QuestionnaireError>{t("agentBuilder.ui.required")}</QuestionnaireError>
             </QuestionnaireItem>

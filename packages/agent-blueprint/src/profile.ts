@@ -6,7 +6,7 @@ import {
 } from "./libraries";
 import { PRESETS } from "./presets";
 
-export const PROFILE_LIMITS = { shortText: 120, longText: 1000 } as const;
+export const PROFILE_LIMITS = { shortText: 120, longText: 1000, customCollect: { count: 10, length: 60 } } as const;
 
 const shortText = z.string().trim().max(PROFILE_LIMITS.shortText);
 const longText = z.string().trim().max(PROFILE_LIMITS.longText);
@@ -24,6 +24,10 @@ export const agentProfileSchema = z.object({
   formality: z.enum(idsOf(FORMALITY)),
   facts: z.partialRecord(z.enum(idsOf(FACTS)), longText),
   collect: z.array(z.enum(idsOf(COLLECT))),
+  // Business-specific details to collect, in the owner's words (#287).
+  customCollect: z.array(z.string().trim().min(1).max(PROFILE_LIMITS.customCollect.length))
+    .max(PROFILE_LIMITS.customCollect.count)
+    .optional(),
   handoffWhen: z.array(z.enum(idsOf(HANDOFF_WHEN))),
   rules: z.array(z.enum(idsOf(RULES))),
   unsure: z.enum(idsOf(UNSURE)),
