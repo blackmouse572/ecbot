@@ -1,5 +1,7 @@
 import { MikroORM } from '@mikro-orm/core';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { Logger } from '@nestjs/common';
+import { AccountRepository } from '../../../../src/modules/account/repository/repositories/account.repository';
 import { TokenEncryptionError } from '../../../../src/common/helper/exceptions/token-encryption.exception';
 import { AccountTokenRefreshScheduler } from '../../../../src/modules/account/schedulers/account-token-refresh.scheduler';
 import {
@@ -491,5 +493,45 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
                 'Token refresh run: refreshed 1, blocked 1, config faults 1'
             );
         });
+    });
+});
+
+// The query behind the scheduler's early refresh window.
+describe('AccountRepository.findExpiringSoon', () => {
+    const NOW = new Date('2026-10-12T10:00:00Z').getTime();
+    let repo: AccountRepository;
+    let find: jest.SpyInstance;
+
+    beforeEach(() => {
+        jest.spyOn(Date, 'now').mockReturnValue(NOW);
+        repo = new AccountRepository({} as EntityManager);
+        find = jest.spyOn(repo as any, 'find').mockResolvedValue([]);
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('looks thresholdMinutes ahead for every account', async () => {
+        await repo.findExpiringSoon(30);
+        expect(find).toHaveBeenCalledWith({
+            $or: [{ tokenExpiresAt: { $lte: new Date(NOW + 30 * 60_000) } }],
+            status: { $ne: ENUM_ACCOUNT_STATUS.BLOCKED },
+            deletedAt: null,
+        });
+    });
+
+    it('looks further ahead for the types given an early window', async () => {
+        await repo.findExpiringSoon(30, {
+            types: [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE],
+            minutes: 7 * 24 * 60,
+        });
+        expect(find.mock.calls[0][0].$or).toEqual([
+            { tokenExpiresAt: { $lte: new Date(NOW + 30 * 60_000) } },
+            {
+                type: { $in: [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE] },
+                tokenExpiresAt: {
+                    $lte: new Date(NOW + 7 * 24 * 60 * 60_000),
+                },
+            },
+        ]);
     });
 });

@@ -1,9 +1,13 @@
 import { HttpService } from '@nestjs/axios';
 import { INestApplication, VersioningType } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { EntityManager } from '@mikro-orm/postgresql';
 import axios from 'axios';
 import { createHmac } from 'crypto';
 import request from 'supertest';
+import { ENUM_MESSAGE_AUTHOR } from '../../../src/modules/conversation/enums/message.enum';
+import { MessageEntity } from '../../../src/modules/conversation/repository/entities/message.entity';
+import { MessageRepository } from '../../../src/modules/conversation/repository/repositories/message.repository';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { InstagramPlatformAdapter } from '../../../src/modules/platform/adapters/instagram/instagram.platform-adapter';
 import { PlatformWebhookPublicController } from '../../../src/modules/platform/controllers/platform-webhook.public.controller';
@@ -192,5 +196,54 @@ describe('Instagram webhook through the edge queue consumer', () => {
 
         expect(res).toEqual({ processed: 0 });
         expect(processor.process).not.toHaveBeenCalled();
+    });
+});
+
+// A platform echo of our own send can be processed before the send stamps
+// its externalId (the webhook beat the send's response). When the echo has
+// no app id to mark it as ours, processEcho stores it as an operator
+// message under that externalId, and stamping the real row would then
+// break UQ_messages_conversation_externalId.
+describe('MessageRepository.markOutboundSent', () => {
+    const conversation = { id: 'conv-1' };
+    let em: { nativeDelete: jest.Mock };
+    let repo: MessageRepository;
+    let findOne: jest.SpyInstance;
+    let updateEntity: jest.SpyInstance;
+
+    beforeEach(() => {
+        em = { nativeDelete: jest.fn().mockResolvedValue(0) };
+        repo = new MessageRepository(em as unknown as EntityManager);
+        findOne = jest
+            .spyOn(repo, 'findOne')
+            .mockResolvedValue({ conversation } as MessageEntity);
+        updateEntity = jest.spyOn(repo, 'updateEntity').mockResolvedValue(null);
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('drops an operator copy stored from an early echo before stamping the id', async () => {
+        await repo.markOutboundSent('nonce-1', 'mid-1');
+
+        expect(findOne).toHaveBeenCalledWith({ clientNonce: 'nonce-1' });
+        expect(em.nativeDelete).toHaveBeenCalledWith(MessageEntity, {
+            conversation,
+            externalId: 'mid-1',
+            clientNonce: null,
+            authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
+        });
+        expect(em.nativeDelete.mock.invocationCallOrder[0]).toBeLessThan(
+            updateEntity.mock.invocationCallOrder[0]
+        );
+        expect(updateEntity).toHaveBeenCalledWith(
+            { clientNonce: 'nonce-1' },
+            expect.objectContaining({ externalId: 'mid-1' })
+        );
+    });
+
+    it('deletes nothing when the pending row is gone', async () => {
+        findOne.mockResolvedValue(null);
+        await repo.markOutboundSent('nonce-1', 'mid-1');
+        expect(em.nativeDelete).not.toHaveBeenCalled();
     });
 });
