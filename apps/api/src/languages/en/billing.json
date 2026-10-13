@@ -42,6 +42,7 @@
         "planNotPurchasable": "This plan cannot be bought with this payment provider.",
         "subscriptionAlreadyPaid": "This workspace already has a paid subscription. Change its plan instead of checking out again.",
         "paymentOrderNotFound": "Payment order not found.",
-        "providerRequestFailed": "The payment provider refused the request. Nothing was changed."
+        "providerRequestFailed": "The payment provider refused the request. Nothing was changed.",
+        "subscriptionNotSelfServe": "This change is not available on your current plan. Contact us and we will help."
     }
 }
