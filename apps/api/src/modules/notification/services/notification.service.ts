@@ -368,15 +368,20 @@ export class NotificationService {
             fromPlan: string;
             toPlan: string;
             note?: string;
+            scheduledOn?: string;
         }
     ): Promise<NotificationEntity> {
+        const scheduled = Boolean(data.scheduledOn);
         const message = this.messageService.setMessage(
-            'notification.subscriptionPlanChanged.message',
+            scheduled
+                ? 'notification.subscriptionPlanChanged.scheduledMessage'
+                : 'notification.subscriptionPlanChanged.message',
             {
                 properties: {
                     workspaceName: data.workspaceName,
                     fromPlan: data.fromPlan,
                     toPlan: data.toPlan,
+                    scheduledOn: data.scheduledOn,
                 },
             }
         );
@@ -389,7 +394,9 @@ export class NotificationService {
 
         return this.create({
             title: this.messageService.setMessage(
-                'notification.subscriptionPlanChanged.title'
+                scheduled
+                    ? 'notification.subscriptionPlanChanged.scheduledTitle'
+                    : 'notification.subscriptionPlanChanged.title'
             ),
             message: messageWithNote,
             type: NotificationType.SUCCESS,

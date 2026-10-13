@@ -51,6 +51,8 @@
     "subscriptionPlanChanged": {
         "title": "Gói của bạn đã thay đổi",
         "message": "Không gian làm việc \"{workspaceName}\" hiện dùng gói {toPlan} (trước đó là {fromPlan}).",
+        "scheduledTitle": "Thay đổi gói đã được lên lịch",
+        "scheduledMessage": "Không gian làm việc \"{workspaceName}\" sẽ chuyển sang gói {toPlan} vào ngày {scheduledOn}.",
         "note": "Ghi chú từ đội ngũ của chúng tôi: {note}",
         "actionText": "Xem gói"
     },

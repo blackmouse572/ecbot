@@ -68,6 +68,40 @@ describe('NotificationService subscription notifications', () => {
             );
             expect(dto.metadata.data.note).toBeUndefined();
         });
+
+        it('announces a scheduled change with the date instead of "now"', async () => {
+            await service.createSubscriptionPlanChanged('user-1', 'ws-1', {
+                workspaceName: 'Acme',
+                fromPlan: 'free',
+                toPlan: 'pro',
+                scheduledOn: '2026-11-01',
+                note: 'Downgrade confirmed',
+            });
+
+            const dto = create.mock.calls[0][0];
+
+            expect(dto).toMatchObject({
+                title: 'notification.subscriptionPlanChanged.scheduledTitle',
+                type: NotificationType.SUCCESS,
+                priority: NotificationPriority.MEDIUM,
+                recipient: 'user-1',
+                workspace: 'ws-1',
+            });
+            expect(dto.message).toBe(
+                'notification.subscriptionPlanChanged.scheduledMessage notification.subscriptionPlanChanged.note'
+            );
+            expect(messageService.setMessage).toHaveBeenCalledWith(
+                'notification.subscriptionPlanChanged.scheduledMessage',
+                {
+                    properties: {
+                        workspaceName: 'Acme',
+                        fromPlan: 'free',
+                        toPlan: 'pro',
+                        scheduledOn: '2026-11-01',
+                    },
+                }
+            );
+        });
     });
 
     describe('createSubscriptionCanceled', () => {
@@ -158,6 +192,14 @@ describe('NotificationService subscription notifications', () => {
         }
         expect(subscriptionPlanChanged.message).toContain('{fromPlan}');
         expect(subscriptionPlanChanged.message).toContain('{toPlan}');
+        expect(subscriptionPlanChanged.scheduledTitle).toBeTruthy();
+        expect(subscriptionPlanChanged.scheduledMessage).toContain(
+            '{workspaceName}'
+        );
+        expect(subscriptionPlanChanged.scheduledMessage).toContain('{toPlan}');
+        expect(subscriptionPlanChanged.scheduledMessage).toContain(
+            '{scheduledOn}'
+        );
         expect(subscriptionPlanChanged.note).toContain('{note}');
         expect(subscriptionCanceled.message).toContain('{planName}');
         expect(subscriptionCanceled.message).toContain('{periodEnd}');

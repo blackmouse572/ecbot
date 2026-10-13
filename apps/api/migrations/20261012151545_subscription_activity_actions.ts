@@ -2,6 +2,8 @@ import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20261012151545_subscription_activity_actions extends Migration {
     override async up(): Promise<void> {
+        // Fail fast rather than queue behind long transactions on a busy table.
+        this.addSql(`set local lock_timeout = '5s';`);
         this.addSql(
             `alter table "activities" drop constraint if exists "activities_action_check";`
         );
@@ -14,6 +16,8 @@ export class Migration20261012151545_subscription_activity_actions extends Migra
     }
 
     override async down(): Promise<void> {
+        // Fail fast rather than queue behind long transactions on a busy table.
+        this.addSql(`set local lock_timeout = '5s';`);
         this.addSql(
             `alter table "activities" drop constraint if exists "activities_action_check";`
         );

@@ -761,6 +761,11 @@
       "update": "updated the conversation with <link/>",
       "unknownCustomer": "a customer"
     },
+    "plan": {
+      "changePlan": "Changed the subscription plan",
+      "cancel": "Cancelled the subscription",
+      "resume": "Resumed the subscription"
+    },
     "generic": {
       "create": "created <link/>",
       "update": "updated <link/>",

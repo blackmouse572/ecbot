@@ -2,7 +2,14 @@ import { type ActivityListResponseDto } from "@repo/client";
 import type { ParseKeys } from "i18next";
 
 type ActivitySubject = ActivityListResponseDto["subject"];
-type ActivityAction = ActivityListResponseDto["action"];
+// The generated client predates the subscription actions, and regenerating it
+// also picked up unrelated test-helper routes, so name the three here until
+// the client is regenerated from a clean swagger document.
+type ActivityAction =
+  | ActivityListResponseDto["action"]
+  | "subscription_change_plan"
+  | "subscription_cancel"
+  | "subscription_resume";
 
 // Generic actions (create/update/delete) mean different things per subject -
 // override by "SUBJECT:action" first, fall back to ACTIVITY_MESSAGE_MAP by action.
@@ -37,6 +44,9 @@ export const ACTIVITY_SUBJECT_MESSAGE_MAP: Partial<
   "CUSTOMER:customer_unmerge": "activities.customer.unmerge",
   "CUSTOMER:customer_merge_confirm": "activities.customer.mergeConfirm",
   "CUSTOMER:customer_merge_dismiss": "activities.customer.mergeDismiss",
+  "PLAN:subscription_change_plan": "activities.plan.changePlan",
+  "PLAN:subscription_cancel": "activities.plan.cancel",
+  "PLAN:subscription_resume": "activities.plan.resume",
 };
 
 // Subject-agnostic fallback, used when no SUBJECT:action override exists above.

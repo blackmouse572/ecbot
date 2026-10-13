@@ -782,6 +782,11 @@
       "update": "đã cập nhật hội thoại với <link/>",
       "unknownCustomer": "một khách hàng"
     },
+    "plan": {
+      "changePlan": "đã thay đổi gói đăng ký",
+      "cancel": "đã huỷ gói đăng ký",
+      "resume": "đã tiếp tục gói đăng ký"
+    },
     "generic": {
       "create": "đã tạo <link/>",
       "update": "đã cập nhật <link/>",

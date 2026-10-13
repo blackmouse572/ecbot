@@ -120,4 +120,20 @@ describe("ActivityItemDefault", () => {
       ),
     ).toContain("sent a message to 84912345678");
   });
+
+  it.each([
+    ["subscription_change_plan", "Changed the subscription plan"],
+    ["subscription_cancel", "Cancelled the subscription"],
+    ["subscription_resume", "Resumed the subscription"],
+  ])("labels a PLAN %s activity", (action, message) => {
+    expect(renderItem(activity("PLAN", action, {}))).toContain(message);
+  });
+
+  it("labels a PLAN plan change in vi", async () => {
+    await i18n.changeLanguage("vi");
+    expect(
+      renderItem(activity("PLAN", "subscription_change_plan", {})),
+    ).toContain("đã thay đổi gói đăng ký");
+    await i18n.changeLanguage("en");
+  });
 });

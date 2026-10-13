@@ -51,6 +51,8 @@
     "subscriptionPlanChanged": {
         "title": "Your plan has changed",
         "message": "Workspace \"{workspaceName}\" is now on the {toPlan} plan (was {fromPlan}).",
+        "scheduledTitle": "Your plan change is scheduled",
+        "scheduledMessage": "Workspace \"{workspaceName}\" will move to the {toPlan} plan on {scheduledOn}.",
         "note": "Note from our team: {note}",
         "actionText": "View plan"
     },
