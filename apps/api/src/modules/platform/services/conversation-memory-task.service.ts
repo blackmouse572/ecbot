@@ -76,9 +76,19 @@ export class ConversationMemoryTaskService {
                 dto.conversationId,
                 { populate: ['chatbot', 'chatbot.workspace'] } as any
             );
-        if (!conversation) return;
+        if (!conversation) {
+            this.logger.debug(
+                `Summary skipped: no conversation ${dto.conversationId}`
+            );
+            return;
+        }
         const cursorId = conversation.memorySummaryUntilId ?? undefined;
-        if (cursorId !== dto.fromMessageId) return;
+        if (cursorId !== dto.fromMessageId) {
+            this.logger.debug(
+                `Summary skipped for ${dto.conversationId}: cursor moved since queued`
+            );
+            return;
+        }
 
         const { chatbot } = conversation;
         const workspaceId = chatbot.workspace.id;
@@ -86,22 +96,47 @@ export class ConversationMemoryTaskService {
         const budget = (await this.meter?.check(workspaceId, chatbot)) ?? {
             allowed: true,
         };
-        if (!budget.allowed) return;
+        if (!budget.allowed) {
+            this.logger.debug(
+                `Summary skipped for ${dto.conversationId}: workspace out of tokens`
+            );
+            return;
+        }
 
         const filter = await this.messageRepository.untilFilter(
+            dto.conversationId,
             await this.messageRepository.afterCursorFilter(
                 dto.conversationId,
                 cursorId
             ),
             dto.untilMessageId
         );
-        if (!filter) return;
-        const rows = await this.messageRepository.findNewest(
+        if (!filter) {
+            // The next window step queues a job with a new bound.
+            this.logger.debug(
+                `Summary skipped for ${dto.conversationId}: message ${dto.untilMessageId} is gone`
+            );
+            return;
+        }
+        // Oldest first: a range over the cap is folded from its start and
+        // the cursor stops at the last folded row, so nothing is skipped;
+        // the next Turn queues the rest from the new cursor.
+        const rows = await this.messageRepository.findOldest(
             filter,
             CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES
         );
+        const untilId =
+            rows.length === CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES
+                ? rows[rows.length - 1].id
+                : dto.untilMessageId;
+        if (untilId !== dto.untilMessageId) {
+            this.logger.debug(
+                `Summary for ${dto.conversationId} folds ${rows.length} messages up to ${untilId}; the rest goes in a later job`
+            );
+        }
 
         const result = await this.chatbotAIService.summarizeConversation({
+            chatbot_id: chatbot.id,
             previous_summary: conversation.memorySummary ?? undefined,
             messages: rows
                 .map(m => this.toSummaryMessage(m))
@@ -123,13 +158,22 @@ export class ConversationMemoryTaskService {
                     )
                 );
         }
-        if (!result.summary) throw new Error('apps/ai returned no summary');
+        if (result.blocked) {
+            // Retrying would block again: keep the old summary and move on.
+            this.logger.warn(
+                `Summary for ${dto.conversationId} blocked by the input guardrail`
+            );
+        } else if (!result.summary) {
+            throw new Error('apps/ai returned no summary');
+        }
 
         await this.conversationRepository.updateEntity(
             { id: dto.conversationId, memorySummaryUntilId: cursorId ?? null },
             {
-                memorySummary: result.summary,
-                memorySummaryUntilId: dto.untilMessageId,
+                memorySummary: result.blocked
+                    ? conversation.memorySummary
+                    : result.summary,
+                memorySummaryUntilId: untilId,
             }
         );
     }

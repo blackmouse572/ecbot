@@ -193,10 +193,17 @@ async def describe_images_endpoint(describe_request: DescribeImagesRequest):
 @router.post("/summarize")
 async def summarize_endpoint(summarize_request: SummarizeRequest):
     """Fold messages that left apps/api's history window into the
-    conversation summary. An empty summary means the call failed."""
-    text, usage = await summary.summarize(summarize_request)
+    conversation summary. An empty summary means the call failed, unless
+    `blocked` says the input guardrail stopped it."""
+    ctx = await get_agent(summarize_request.chatbot_id)
+    text, blocked, usage = await summary.summarize(summarize_request, ctx.chatbot)
     return AppResponse(
-        data={"summary": text, "usage": usage, "model": AppVars.CLASSIFIER_MODEL}
+        data={
+            "summary": text,
+            "blocked": blocked,
+            "usage": usage,
+            "model": AppVars.CLASSIFIER_MODEL,
+        }
     )
 
 

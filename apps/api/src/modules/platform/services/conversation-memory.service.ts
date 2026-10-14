@@ -55,8 +55,9 @@ export class ConversationMemoryService {
         return { summary: conversation?.memorySummary ?? undefined, rows };
     }
 
-    /** Named by the last dropped message, so every Turn of one step queues
-     *  the same task and Cloud Tasks keeps one. */
+    /** Named by the cursor and the last dropped message, so every Turn of
+     *  one step queues the same task and Cloud Tasks keeps one, while a job
+     *  that folded only part of its range lets the next Turn queue the rest. */
     private queueSummary(
         conversationId: string,
         fromMessageId: string | undefined,
@@ -67,7 +68,9 @@ export class ConversationMemoryService {
                 CONVERSATION_MEMORY_QUEUE,
                 ENUM_CONVERSATION_MEMORY_PROCESS.SUMMARIZE,
                 { conversationId, fromMessageId, untilMessageId },
-                { taskName: `summarize-${conversationId}-${untilMessageId}` }
+                {
+                    taskName: `summarize-${conversationId}-${fromMessageId ?? 'start'}-${untilMessageId}`,
+                }
             )
             .catch((err: unknown) =>
                 this.logger.warn(

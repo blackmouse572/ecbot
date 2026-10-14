@@ -176,12 +176,17 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         } as FilterQuery<MessageEntity>;
     }
 
-    /** `filter` narrowed to rows up to and including `untilId`. */
+    /** `filter` narrowed to rows up to and including `untilId`, looked up
+     *  within the conversation like the cursor in {@link afterCursorFilter}. */
     async untilFilter(
+        conversationId: string,
         filter: FilterQuery<MessageEntity>,
         untilId: string
     ): Promise<FilterQuery<MessageEntity> | null> {
-        const until = await this.findOne({ id: untilId } as any);
+        const until = await this.findOne({
+            id: untilId,
+            conversation: conversationId,
+        } as any);
         if (!until) return null;
         return {
             $and: [
@@ -194,6 +199,17 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
                 },
             ],
         } as FilterQuery<MessageEntity>;
+    }
+
+    /** The oldest `limit` rows matching `filter`, oldest→newest. */
+    async findOldest(
+        filter: FilterQuery<MessageEntity>,
+        limit: number
+    ): Promise<MessageEntity[]> {
+        return this.find(filter, {
+            orderBy: { dateSent: 'ASC', id: 'ASC' } as any,
+            paging: { limit, offset: 0 },
+        });
     }
 
     /** The newest `limit` rows matching `filter`, oldest→newest. */

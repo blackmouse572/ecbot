@@ -202,7 +202,8 @@ async def test_summary_comes_first_as_data(monkeypatch):
     request.summary = "Wants 2 red shirts, size M."
     result = await get_agent_input(request)
     messages = result["messages"]
-    assert isinstance(messages[0], SystemMessage)
+    # User content like the history it replaces, never system weight.
+    assert isinstance(messages[0], HumanMessage)
     assert "<conversation_summary>" in messages[0].content
     assert "2 red shirts" in messages[0].content
     assert messages[1].content == "first"

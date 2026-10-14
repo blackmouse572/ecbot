@@ -80,7 +80,7 @@ describe('ConversationMemoryService.window', () => {
                 fromMessageId: 'cur',
                 untilMessageId: 'm-19',
             },
-            { taskName: 'summarize-c-m-19' }
+            { taskName: 'summarize-c-cur-m-19' }
         );
     });
 

@@ -1,6 +1,7 @@
 import { ENUM_AI_USAGE_SOURCE } from '@app/app/ai-usage-meter.interface';
 import {
     CONVERSATION_MEMORY_MAX_ATTEMPTS,
+    CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES,
     ENUM_CONVERSATION_MEMORY_PROCESS,
 } from '@app/modules/platform/constants/conversation-memory.constant';
 import { ConversationMemoryTaskService } from '@app/modules/platform/services/conversation-memory-task.service';
@@ -15,7 +16,8 @@ const DTO = {
 
 function taskOver(
     conversation: object | null,
-    summary = 'Wants 2 red shirts.'
+    summary = 'Wants 2 red shirts.',
+    blocked = false
 ) {
     const conversationRepository = {
         findOneById: jest.fn(async () => conversation),
@@ -24,20 +26,23 @@ function taskOver(
     const messageRepository = {
         afterCursorFilter: jest.fn(async () => ({ after: 1 })),
         untilFilter: jest.fn(async () => ({ until: 1 })),
-        findNewest: jest.fn(async () => [
+        findOldest: jest.fn(async (): Promise<object[]> => [
             {
+                id: 'm-17',
                 direction: 'INBOUND',
                 authorType: 'USER',
                 text: '2 cái size M',
                 attachments: [],
             },
             {
+                id: 'm-18',
                 direction: 'OUTBOUND',
                 authorType: 'BOT',
                 text: 'Dạ',
                 attachments: [],
             },
             {
+                id: 'm-19',
                 direction: 'OUTBOUND',
                 authorType: 'OPERATOR',
                 text: '',
@@ -48,6 +53,7 @@ function taskOver(
     const ai = {
         summarizeConversation: jest.fn(async () => ({
             summary,
+            blocked,
             usage: USAGE,
             model: 'm',
         })),
@@ -89,10 +95,16 @@ describe('ConversationMemoryTaskService', () => {
             'cur'
         );
         expect(messageRepository.untilFilter).toHaveBeenCalledWith(
+            'c',
             { after: 1 },
             'm-19'
         );
+        expect(messageRepository.findOldest).toHaveBeenCalledWith(
+            { until: 1 },
+            CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES
+        );
         expect(ai.summarizeConversation).toHaveBeenCalledWith({
+            chatbot_id: 'bot',
             previous_summary: 'Asked about shirts.',
             messages: [
                 { role: 'customer', text: '2 cái size M' },
@@ -111,6 +123,50 @@ describe('ConversationMemoryTaskService', () => {
             { id: 'c', memorySummaryUntilId: 'cur' },
             {
                 memorySummary: 'Wants 2 red shirts.',
+                memorySummaryUntilId: 'm-19',
+            }
+        );
+    });
+
+    it('folds an oversized range from its oldest end and stops the cursor there', async () => {
+        const { service, messageRepository, conversationRepository } =
+            taskOver(CONVERSATION);
+        const rows = Array.from(
+            { length: CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES },
+            (_, i) => ({
+                id: `m-${i}`,
+                direction: 'INBOUND',
+                authorType: 'USER',
+                text: `msg ${i}`,
+                attachments: [],
+            })
+        );
+        messageRepository.findOldest.mockResolvedValue(rows);
+
+        await service.handle({ ...DTO, untilMessageId: 'm-250' }, 0);
+
+        // The rest stays after the cursor; the next Turn queues it.
+        expect(conversationRepository.updateEntity).toHaveBeenCalledWith(
+            { id: 'c', memorySummaryUntilId: 'cur' },
+            expect.objectContaining({
+                memorySummaryUntilId: `m-${CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES - 1}`,
+            })
+        );
+    });
+
+    it('keeps the old summary but moves past messages the guardrail blocks', async () => {
+        const { service, conversationRepository } = taskOver(
+            CONVERSATION,
+            '',
+            true
+        );
+
+        await service.handle(DTO, 0);
+
+        expect(conversationRepository.updateEntity).toHaveBeenCalledWith(
+            { id: 'c', memorySummaryUntilId: 'cur' },
+            {
+                memorySummary: 'Asked about shirts.',
                 memorySummaryUntilId: 'm-19',
             }
         );

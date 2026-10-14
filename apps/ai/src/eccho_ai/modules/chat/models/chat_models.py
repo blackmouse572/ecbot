@@ -70,5 +70,6 @@ class SummaryMessage(BaseModel):
 
 
 class SummarizeRequest(BaseModel):
+    chatbot_id: str = Field(..., description="Chatbot whose input guardrail screens the new summary.")
     previous_summary: Optional[str] = Field(default=None, description="The summary so far, of the messages before `messages`.")
     messages: list[SummaryMessage] = Field(..., description="The messages to fold in, oldest first.")
