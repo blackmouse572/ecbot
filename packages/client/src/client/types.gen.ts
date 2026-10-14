@@ -14119,6 +14119,14 @@ export type ActivityAdminControllerListV1Data = {
     };
     query?: {
         /**
+         * value with ',' delimiter
+         */
+        action?: string;
+        /**
+         * value with ',' delimiter
+         */
+        subject?: string;
+        /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
         search?: string;

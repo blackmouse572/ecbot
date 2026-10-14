@@ -7,6 +7,8 @@ import {
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
 import { ActivityListResponseDto } from 'src/modules/activity/dtos/response/activity.list.response.dto';
+import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
+import { ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { UserDocParamsId } from 'src/modules/user/constants/user.doc.constant';
 
 export function ActivityAdminListDoc(): MethodDecorator {
@@ -16,6 +18,22 @@ export function ActivityAdminListDoc(): MethodDecorator {
         }),
         DocRequest({
             params: UserDocParamsId,
+            queries: [
+                {
+                    name: 'action',
+                    type: String,
+                    required: false,
+                    example: Object.values(ENUM_ACTIVITY_ACTION).join(','),
+                    description: "value with ',' delimiter",
+                },
+                {
+                    name: 'subject',
+                    type: String,
+                    required: false,
+                    example: Object.values(ENUM_POLICY_SUBJECT).join(','),
+                    description: "value with ',' delimiter",
+                },
+            ],
         }),
         DocAuth({
             xApiKey: true,

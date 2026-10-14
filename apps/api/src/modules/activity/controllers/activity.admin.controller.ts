@@ -1,6 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
+import {
+    PaginationQuery,
+    PaginationQueryFilterInEnum,
+} from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
 import { RequestRequiredPipe } from 'src/common/request/pipes/request.required.pipe';
@@ -8,6 +11,7 @@ import { ResponsePaging } from 'src/common/response/decorators/response.decorato
 import { IResponsePaging } from 'src/common/response/interfaces/response.interface';
 import { ActivityAdminListDoc } from 'src/modules/activity/docs/activity.admin.doc';
 import { ActivityListResponseDto } from 'src/modules/activity/dtos/response/activity.list.response.dto';
+import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
 import { ActivityService } from 'src/modules/activity/services/activity.service';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
 import { AuthJwtAccessProtected } from 'src/modules/auth/decorators/auth.jwt.decorator';
@@ -53,23 +57,24 @@ export class ActivityAdminController {
     async list(
         @UserParam('user', RequestRequiredPipe, UserParsePipe) user: UserEntity,
         @PaginationQuery()
-        { _limit, _offset, _order }: PaginationListDto
+        { _limit, _offset, _order }: PaginationListDto,
+        @PaginationQueryFilterInEnum('action', undefined, ENUM_ACTIVITY_ACTION)
+        _action?: Record<string, any>,
+        @PaginationQueryFilterInEnum('subject', undefined, ENUM_POLICY_SUBJECT)
+        _subject?: Record<string, any>
     ): Promise<IResponsePaging<ActivityListResponseDto>> {
+        const find: Record<string, any> = { ..._action, ..._subject };
         const userHistories: ActivityEntity[] =
-            await this.activityService.findAllByUser(
-                user.id,
-                {},
-                {
-                    paging: {
-                        limit: _limit,
-                        offset: _offset,
-                    },
-                    order: _order,
-                }
-            );
+            await this.activityService.findAllByUser(user.id, find, {
+                paging: {
+                    limit: _limit,
+                    offset: _offset,
+                },
+                order: _order,
+            });
         const total: number = await this.activityService.getTotalByUser(
             user.id,
-            {}
+            find
         );
         const totalPage: number = this.paginationService.totalPage(
             total,
