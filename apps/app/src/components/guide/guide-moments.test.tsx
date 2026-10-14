@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const data = vi.hoisted(() => ({ active: 0, conversations: 0 }));
+const data = vi.hoisted(() => ({ active: 0, conversations: 0, ws: "ws1" }));
 const query = (count: number) => ({ count, isLoading: false, isError: false });
 
 vi.mock("@/hooks/api/chatbot", () => ({
@@ -14,7 +14,7 @@ vi.mock("@/hooks/api/conversations", () => ({
   useConversations: () => query(data.conversations),
 }));
 vi.mock("@/hooks/api/workspace", () => ({
-  useWorkspace: () => ({ workspace: { id: "ws1", slug: "kunmart" } }),
+  useWorkspace: () => ({ workspace: { id: data.ws, slug: "kunmart" } }),
 }));
 vi.mock("@/hooks/use-workspace-params", () => ({
   useWorkspaceParams: () => ({ workspaceSlug: "kunmart" }),
@@ -41,6 +41,23 @@ describe("GuideMoments", () => {
     localStorage.clear();
     data.active = 0;
     data.conversations = 1;
+    data.ws = "ws1";
+  });
+
+  it("does not carry an open tour into another workspace", () => {
+    localStorage.setItem("ecbot.guide.tour.ws1", "pending");
+    data.active = 1;
+    const view = renderAt();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    data.ws = "ws2";
+    view.rerender(
+      <MemoryRouter initialEntries={["/kunmart/dashboard"]}>
+        <GuideMoments />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(localStorage.getItem("ecbot.guide.tour.ws2")).toBeNull();
   });
 
   it("never tours a workspace that already had an active agent", () => {

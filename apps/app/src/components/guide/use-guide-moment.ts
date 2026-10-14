@@ -34,19 +34,21 @@ export function useGuideMoment(moment: GuideMoment, count: number | undefined) {
   const key = workspace
     ? `${GUIDE_STORAGE_PREFIX}.${moment}.${workspace.id}`
     : undefined;
-  const [open, setOpen] = useState(false);
+  // Keyed so a moment opened in one workspace never shows, or gets marked
+  // done, in the next one after the workspace switcher.
+  const [openedKey, setOpenedKey] = useState<string>();
 
   useEffect(() => {
     if (!key || count === undefined) return;
     const state = read(key);
     if (count === 0 && !state) write(key, PENDING);
-    if (count > 0 && state === PENDING) setOpen(true);
+    if (count > 0 && state === PENDING) setOpenedKey(key);
   }, [key, count]);
 
   const close = useCallback(() => {
     if (key) write(key, DONE);
-    setOpen(false);
+    setOpenedKey(undefined);
   }, [key]);
 
-  return [open, close] as const;
+  return [!!key && openedKey === key, close] as const;
 }

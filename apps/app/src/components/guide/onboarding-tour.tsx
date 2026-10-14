@@ -1,7 +1,14 @@
 import { Button, IconButton, Text, clx, toast } from "@medusajs/ui";
 import { XMark } from "@medusajs/icons";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useLayoutEffect, useRef, useState, type FC } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FC,
+} from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { TOUR_STEPS } from "./constants";
@@ -48,10 +55,13 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
 
   useEffect(() => nextRef.current?.focus(), [index]);
 
-  const finish = (skipped: boolean) => {
-    onClose();
-    toast.info(t(skipped ? "guide.tour.skipped" : "guide.tour.finished"));
-  };
+  const finish = useCallback(
+    (skipped: boolean) => {
+      onClose();
+      toast.info(t(skipped ? "guide.tour.skipped" : "guide.tour.finished"));
+    },
+    [onClose, t],
+  );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -59,7 +69,14 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+  }, [finish]);
+
+  // A coach mark, not a modal: the highlighted link stays clickable. Focus
+  // goes back where it was when the tour closes.
+  const [previous] = useState(
+    () => document.activeElement as HTMLElement | null,
+  );
+  useEffect(() => () => previous?.focus?.(), [previous]);
 
   const hole = target && {
     x: target.left - RING,
@@ -94,7 +111,6 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
       <motion.div
         key={index}
         role="dialog"
-        aria-modal
         aria-labelledby="onboarding-tour-title"
         initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
         animate={{ opacity: 1, y: 0 }}
