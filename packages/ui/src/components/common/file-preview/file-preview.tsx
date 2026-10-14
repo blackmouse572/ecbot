@@ -1,5 +1,6 @@
-import { ArrowDownTray, Spinner, Trash } from "@medusajs/icons";
+import { ArrowDownTray, ArrowPath, Spinner, Trash } from "@medusajs/icons";
 import { IconButton, Text } from "@medusajs/ui";
+import type { ReactNode } from "react";
 import { FileType, getFileType } from "../../ui/file-type";
 import { type ActionGroup, ActionMenu } from "../action-menu";
 
@@ -12,6 +13,9 @@ export const FilePreview = ({
   hideThumbnail,
   mime,
   description,
+  status,
+  progress,
+  onRetry,
   onRemove,
 }: {
   filename: string;
@@ -24,19 +28,25 @@ export const FilePreview = ({
   mime?: string;
   /** A second line under the name, e.g. the file size. */
   description?: string;
+  /** Follows the description after a dot, e.g. "Uploaded". */
+  status?: ReactNode;
+  /** Upload percent; shows a bar in place of the second line. */
+  progress?: number;
+  onRetry?: () => void;
   onRemove?: () => void;
 }) => {
+  const uploading = progress !== undefined;
   return (
     <div className="shadow-elevation-card-rest bg-ui-bg-component transition-fg rounded-md px-3 py-2">
       <div className="flex flex-row items-center justify-between gap-2">
-        <div className="flex flex-row items-center gap-3">
+        <div className="flex min-w-0 flex-1 flex-row items-center gap-3">
           {!hideThumbnail &&
             (mime ? (
               <FileType type={getFileType(mime)} aria-hidden />
             ) : (
               <FileThumbnail />
             ))}
-          <div className="flex flex-col justify-center">
+          <div className="flex min-w-0 flex-1 flex-col justify-center">
             <Text
               size="small"
               leading="compact"
@@ -45,14 +55,46 @@ export const FilePreview = ({
               {filename}
             </Text>
 
-            {!!description && !(loading && activity) && (
-              <Text
-                leading="compact"
-                size="xsmall"
-                className="text-ui-fg-subtle"
-              >
-                {description}
-              </Text>
+            {uploading ? (
+              // Same height as the text line, so the row doesn't jump.
+              <div className="flex h-4 items-center gap-2">
+                <div
+                  role="progressbar"
+                  aria-valuenow={progress}
+                  aria-label={filename}
+                  className="bg-ui-bg-switch-off h-1 flex-1 overflow-hidden rounded-full"
+                >
+                  <div
+                    className="bg-ui-fg-interactive h-full transition-[width]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <Text
+                  size="xsmall"
+                  leading="compact"
+                  className="text-ui-fg-subtle w-8 text-right tabular-nums"
+                >
+                  {progress}%
+                </Text>
+              </div>
+            ) : (
+              (!!description || !!status) &&
+              !(loading && activity) && (
+                <Text
+                  leading="compact"
+                  size="xsmall"
+                  className="text-ui-fg-subtle"
+                >
+                  {description}
+                  {!!description && !!status && (
+                    <span
+                      aria-hidden
+                      className="bg-ui-fg-muted mx-1.5 inline-block size-1 rounded-full align-middle"
+                    />
+                  )}
+                  {status}
+                </Text>
+              )
             )}
             {loading && !!activity && (
               <Text
@@ -66,13 +108,19 @@ export const FilePreview = ({
           </div>
         </div>
 
-        {loading && <Spinner className="animate-spin" />}
+        {loading && !uploading && <Spinner className="animate-spin" />}
         {!loading && actions && <ActionMenu groups={actions} />}
         {!loading && url && (
           <IconButton variant="transparent" asChild>
             <a href={url} download={filename ?? `${Date.now()}`}>
               <ArrowDownTray />
             </a>
+          </IconButton>
+        )}
+        {!loading && onRetry && (
+          <IconButton type="button" variant="transparent" onClick={onRetry}>
+            <ArrowPath />
+            <span className="sr-only">Retry upload</span>
           </IconButton>
         )}
         {!loading && onRemove && (

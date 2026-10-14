@@ -72,7 +72,7 @@ export const FileForm: FC<FileFormProps> = ({
                 mime={field.value.file.type || field.value.file.name}
                 description={formatFileSize(field.value.file.size)}
                 loading={isLoading}
-                activity={isLoading ? `${uploadProgress}%` : undefined}
+                progress={isLoading ? uploadProgress : undefined}
                 onRemove={() => {
                   field.onChange(null);
                 }}

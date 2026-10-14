@@ -2476,7 +2476,13 @@
       "description_pending": "Your agent will describe this file once it is processed.",
       "open_pdf": "Open PDF",
       "description_hint": "Your agent finds this file by its title and this description. Leave it empty to let the agent describe it again.",
-      "cost_hint": "Processed by vision AI: about 2,000 tokens per image, 500 per picture page in a PDF."
+      "cost_hint": "Processed by vision AI: about 2,000 tokens per image, 500 per picture page in a PDF.",
+      "upload_summary": "{{done}} of {{count}} uploaded",
+      "upload_summary_failed": "{{done}} of {{count}} uploaded, {{failed}} failed",
+      "uploaded": "Uploaded",
+      "failed_at": "Failed at {{progress}}%",
+      "upload_total_one": "{{count}} file, {{size}}",
+      "upload_total_other": "{{count}} files, {{size}} in total"
     }
   },
   "conversations": {

@@ -3,7 +3,7 @@ import { KeyboundForm } from "@/components/utils/keybound-form";
 import { readApiError } from "@/libs/api-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, toast } from "@medusajs/ui";
-import { ChipGroup, Form } from "@repo/ui/common-components";
+import { ChipGroup, Form, type FileType } from "@repo/ui/common-components";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useMemo, useRef, useState, type FC } from "react";
 import { useFieldArray, useForm, type Resolver } from "react-hook-form";
@@ -25,6 +25,7 @@ import {
   createTextSchema,
   createUrlSchema,
   type KnowledgeItemCreateFormValues,
+  type MediaUpload,
 } from "./schema";
 import { runWithLimit } from "./run-with-limit";
 import { KB_MEDIA_UPLOAD_CONCURRENCY } from "../../constants";
@@ -49,7 +50,8 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedIds, setUploadedIds] = useState<string[]>([]);
+  // Media upload state per picked file, by its id.
+  const [uploads, setUploads] = useState<Record<string, MediaUpload>>({});
 
   // Dynamic schema based on type
   const schema = useMemo(() => {
@@ -107,26 +109,39 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
   };
 
   // Each media file becomes its own item named after it; a few upload at
-  // once, and one failing upload does not stop the rest. Failed files stay in
-  // the form to try again; the uploaded ones leave it.
-  const createMedia = async (data: KnowledgeItemCreateFormValues) => {
-    const files = data.files ?? [];
-    const uploaded: string[] = [];
+  // once, and one failing upload does not stop the rest. Rows show each
+  // file's progress; a failed file can be retried on its own.
+  const uploadMedia = async (
+    data: KnowledgeItemCreateFormValues,
+    targets: FileType[],
+  ) => {
     let linkFailed = 0;
     let processFailed = 0;
-    setUploadedIds([]);
-    await runWithLimit(
-      files,
+    const setUpload = (id: string, upload: MediaUpload) =>
+      setUploads((current) => ({ ...current, [id]: upload }));
+    const { failed } = await runWithLimit(
+      targets,
       KB_MEDIA_UPLOAD_CONCURRENCY,
       async ({ id, file }) => {
-        const created = await mutateAsync({
-          type: "MEDIA",
-          title: fileTitle(file.name),
-          tags: data.tags,
-          file,
-        });
-        uploaded.push(id);
-        setUploadedIds([...uploaded]);
+        let progress = 0;
+        setUpload(id, { status: "uploading", progress });
+        let created;
+        try {
+          created = await mutateAsync({
+            type: "MEDIA",
+            title: fileTitle(file.name),
+            tags: data.tags,
+            file,
+            onUploadProgress: (value) => {
+              progress = value;
+              setUpload(id, { status: "uploading", progress });
+            },
+          });
+        } catch (error) {
+          setUpload(id, { status: "failed", progress });
+          throw error;
+        }
+        setUpload(id, { status: "done", progress: 100 });
         const createdId = created.data?.data?.id;
         if (!createdId) return;
         // The item exists now: a processing hiccup is not a failed upload, or
@@ -147,24 +162,35 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
     }
     if (processFailed)
       toast.info(t("knowledge_item.process_after_create_error"));
+    return failed;
+  };
 
-    const failed = files.filter(({ id }) => !uploaded.includes(id));
-    if (failed.length === 0) {
+  // Uploads the files not uploaded yet; closes once every file is in.
+  const createMedia = async (
+    data: KnowledgeItemCreateFormValues,
+    only?: FileType,
+  ) => {
+    const files = data.files ?? [];
+    const targets = only
+      ? [only]
+      : files.filter(({ id }) => uploads[id]?.status !== "done");
+    const failed = await uploadMedia(data, targets);
+    if (failed === 0 && !only) {
       toast.success(
-        t("knowledge_item.media.create_success", { count: uploaded.length }),
+        t("knowledge_item.media.create_success", { count: files.length }),
       );
       handleSuccess();
-    } else if (uploaded.length > 0) {
-      form.setValue("files", failed);
-      toast.info(
-        t("knowledge_item.media.create_partial", {
-          added: uploaded.length,
-          failed: failed.length,
-          count: files.length,
-        }),
-      );
-    } else {
+    } else if (failed === targets.length && !only) {
       toast.error(t("knowledge_item.create_error"));
+    }
+  };
+
+  const retryMedia = async (file: FileType) => {
+    setIsLoading(true);
+    try {
+      await createMedia(form.getValues(), file);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -382,7 +408,8 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                     <MediaForm
                       form={form}
                       isLoading={isLoading}
-                      uploadedIds={uploadedIds}
+                      uploads={uploads}
+                      onRetry={retryMedia}
                     />
                   )}
                   {selectedType === "TEXT" && <TextForm form={form} />}

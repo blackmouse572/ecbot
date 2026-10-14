@@ -303,6 +303,7 @@ describe("KnowledgeItemCreateForm", () => {
 
       expect(screen.getByText("menu.pdf")).toBeInTheDocument();
       expect(screen.getByText("4 bytes")).toBeInTheDocument();
+      expect(screen.getByText("1 file, 4 bytes")).toBeInTheDocument();
       expect(
         container.querySelector('[data-slot="file-type"][data-type="pdf"]'),
       ).not.toBeNull();
@@ -333,7 +334,7 @@ describe("KnowledgeItemCreateForm", () => {
       expect(api.created).toHaveLength(0);
     });
 
-    it("says how many uploads failed and keeps the rest", async () => {
+    it("marks the failed file and retries just that one", async () => {
       let calls = 0;
       api.createError = null;
       const { container } = render(
@@ -350,11 +351,17 @@ describe("KnowledgeItemCreateForm", () => {
       };
       fireEvent.submit(container.querySelector("form")!);
 
-      await waitFor(() => expect(toast.info).toHaveBeenCalled());
+      expect(
+        await screen.findByText("2 of 3 uploaded, 1 failed"),
+      ).toBeInTheDocument();
+      expect(screen.getAllByText(/Uploaded/)).toHaveLength(2);
+      expect(screen.getByText(/Failed at/)).toBeInTheDocument();
       expect(api.processed).toHaveLength(2);
-      // The failed file stays, ready to try again.
-      expect(screen.getByText("b.png")).toBeInTheDocument();
-      expect(screen.queryByText("a.png")).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Retry upload" }));
+      expect(await screen.findByText("3 of 3 uploaded")).toBeInTheDocument();
+      expect(api.created).toHaveLength(3);
+      expect(api.processed).toHaveLength(3);
     });
   });
 });

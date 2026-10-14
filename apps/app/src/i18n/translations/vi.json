@@ -2524,7 +2524,13 @@
       "description_pending": "Agent sẽ tự mô tả tệp này sau khi xử lý xong.",
       "open_pdf": "Mở PDF",
       "description_hint": "Agent tìm tệp này theo tên và mô tả này. Để trống nếu muốn agent tự mô tả lại.",
-      "cost_hint": "Xử lý bằng AI vision: khoảng 2.000 token mỗi ảnh, 500 token mỗi trang ảnh trong PDF."
+      "cost_hint": "Xử lý bằng AI vision: khoảng 2.000 token mỗi ảnh, 500 token mỗi trang ảnh trong PDF.",
+      "upload_summary": "Đã tải lên {{done}}/{{count}} tệp",
+      "upload_summary_failed": "Đã tải lên {{done}}/{{count}} tệp, {{failed}} lỗi",
+      "uploaded": "Đã tải lên",
+      "failed_at": "Lỗi ở {{progress}}%",
+      "upload_total_one": "{{count}} tệp, tổng {{size}}",
+      "upload_total_other": "{{count}} tệp, tổng {{size}}"
     }
   },
   "conversations": {

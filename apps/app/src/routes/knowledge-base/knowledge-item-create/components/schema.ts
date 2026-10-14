@@ -109,3 +109,9 @@ export type {
   TextSchema,
   KnowledgeItemCreateFormValues,
 };
+
+/** Where one Media file is in its upload. */
+export type MediaUpload = {
+  status: "uploading" | "done" | "failed";
+  progress: number;
+};

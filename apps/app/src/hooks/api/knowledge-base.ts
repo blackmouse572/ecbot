@@ -280,9 +280,14 @@ export const useCreateKnowledgeItem = (
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationKey: ["create-knowledge-item"] as const,
-    mutationFn: async (
-      data: KnowledgeItemCreateRequestDto & { file?: File },
-    ) => {
+    mutationFn: async ({
+      onUploadProgress = options?.onUploadProgress,
+      ...data
+    }: KnowledgeItemCreateRequestDto & {
+      file?: File;
+      /** Per call, for a batch tracking each file's own progress. */
+      onUploadProgress?: (progress: number) => void;
+    }) => {
       // Endpoint is multipart/form-data — the generated client serializes the
       // plain object into FormData (incl. the File and array tags) via
       // formDataBodySerializer. Do NOT pre-build a FormData or override
@@ -295,11 +300,11 @@ export const useCreateKnowledgeItem = (
         },
         body: data as A,
         onUploadProgress: (progressEvent) => {
-          if (options?.onUploadProgress && progressEvent.total) {
+          if (onUploadProgress && progressEvent.total) {
             const progress = Math.round(
               (progressEvent.loaded / progressEvent.total) * 100,
             );
-            options.onUploadProgress(progress);
+            onUploadProgress(progress);
           }
         },
       });
