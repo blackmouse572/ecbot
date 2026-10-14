@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt } from "@/components/guide";
 import { Outlet, useNavigate } from "react-router-dom";
 import { TOOL_CONSTANTS } from "../../../constants";
 import { ToolActions } from "./tool-actions";
@@ -105,7 +106,7 @@ export const ToolsListTable = () => {
             onClick: handleMarketplace,
             label: t("tools.actions.browseMarketplace"),
           },
-          icon: <IconTool />,
+          illustration: <FeatureArt feature="tools" icon={<IconTool />} />,
         }}
       />
       <Outlet />

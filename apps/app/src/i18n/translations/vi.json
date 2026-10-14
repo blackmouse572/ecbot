@@ -397,6 +397,64 @@
       "progress": "{{done}}/{{total}}"
     }
   },
+  "guide": {
+    "features": {
+      "chatbot": {
+        "title": "Agent trả lời khách thay bạn",
+        "body": "Agent trả lời khách trên các kênh dựa trên thông tin bạn cung cấp về cửa hàng. Bạn có thể tạo nhiều agent, ví dụ mỗi kênh một agent.",
+        "customer": "Shop còn size M không?",
+        "agent": "Dạ còn ạ, bạn lấy màu nào?"
+      },
+      "accounts": {
+        "title": "Nơi khách nhắn cho bạn",
+        "body": "Kết nối Fanpage, Zalo OA, website hoặc Telegram rồi gắn agent vào. Agent trả lời mọi tin nhắn gửi tới kênh đó.",
+        "customer": "Shop ơi, mẫu này còn không?",
+        "agent": "Dạ còn ạ, mình giữ cho bạn nhé?"
+      },
+      "conversations": {
+        "title": "Tin nhắn của khách ở đây",
+        "body": "Mỗi cuộc trò chuyện từ kênh đã kết nối đều hiện trong Hội thoại. Xem agent trả lời gì và nhắn thay khi cần.",
+        "customer": "Bánh kem còn không shop?",
+        "agent": "Còn ạ, 250.000đ một ổ nhé!"
+      },
+      "knowledge": {
+        "title": "Dạy agent về cửa hàng",
+        "body": "Tải lên menu, bảng giá hoặc chính sách đổi trả. Agent đọc trước khi trả lời, nên giờ mở cửa hay phí ship luôn đúng.",
+        "customer": "Mấy giờ shop mở cửa?",
+        "agent": "Tiệm mở từ 7h đến 21h ạ."
+      },
+      "tools": {
+        "title": "Cho agent làm việc thật",
+        "body": "Công cụ giúp agent tra đơn hàng, đặt lịch hẹn hoặc gọi tới hệ thống riêng của bạn, không chỉ trò chuyện.",
+        "customer": "Đơn của mình tới đâu rồi?",
+        "agent": "Đơn #1024 đang được giao ạ."
+      },
+      "skills": {
+        "title": "Chỉ agent cách xử lý một việc",
+        "body": "Skill là hướng dẫn ngắn cho một việc cụ thể, như đổi size hay nhận đặt lịch. Agent làm theo từng bước.",
+        "customer": "Mình muốn đổi size lớn hơn",
+        "agent": "Dạ, bạn gửi giúp mã đơn nhé."
+      }
+    },
+    "tour": {
+      "next": "Tiếp",
+      "done": "Xong",
+      "skip": "Bỏ qua",
+      "progress": "Bước {{current}}/{{total}}",
+      "finished": "Xong! Rê chuột lên một mục ở thanh bên để xem mục đó làm gì.",
+      "skipped": "Đã bỏ qua hướng dẫn. Rê chuột lên một mục ở thanh bên để xem mục đó làm gì.",
+      "openMenu": {
+        "title": "Mở menu để bắt đầu",
+        "body": "Bấm vào đây, mình chỉ bạn ba mục hay dùng nhất."
+      }
+    },
+    "firstConversation": {
+      "title": "Cuộc hội thoại đầu tiên đã tới!",
+      "body": "Một khách vừa nhắn vào kênh của bạn. Mở ra xem agent đã trả lời thế nào.",
+      "open": "Xem hội thoại",
+      "later": "Để sau"
+    }
+  },
   "onboard": {
     "select": {
       "create": {
@@ -2783,7 +2841,7 @@
         "triggersHandoff": "Chuyển cho nhân viên",
         "triggersHandoffHelp": "Khi nhãn này được gắn, tự động chuyển hội thoại cho nhân viên trực tiếp xử lý.",
         "notifiesTeam": "Báo cho đội ngũ",
-        "notifiesTeamHelp": "Khi agent gắn nhãn này, báo cho đội ngũ trong ứng dụng và qua email. Trợ lý vẫn tiếp tục trả lời.",
+        "notifiesTeamHelp": "Khi agent gắn nhãn này, báo cho đội ngũ trong ứng dụng và qua email. Agent vẫn tiếp tục trả lời.",
         "notifiesTeamByHandoff": "Khi chuyển cho nhân viên, đội ngũ đã được báo."
       },
       "toast": {

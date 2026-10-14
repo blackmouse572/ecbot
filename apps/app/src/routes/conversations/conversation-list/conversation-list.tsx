@@ -1,6 +1,7 @@
 import { Button, Select, Text } from "@medusajs/ui";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt } from "@/components/guide";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
   useConversations,
@@ -198,7 +199,9 @@ export const ConversationList = () => {
               to: `/${workspace?.slug}/${ROUTES.Accounts}`,
               label: t("customers.list.connectChannel"),
             }}
-            icon={<IconMessages />}
+            illustration={
+              <FeatureArt feature="conversations" icon={<IconMessages />} />
+            }
           />
         ) : groups ? (
           groups.map((group) => (

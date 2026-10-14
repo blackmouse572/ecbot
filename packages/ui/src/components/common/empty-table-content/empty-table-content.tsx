@@ -51,6 +51,8 @@ export type NoRecordsProps = {
   className?: string;
   buttonVariant?: string;
   icon?: React.ReactNode;
+  /** Replaces the icon with a larger picture, for first-run empty pages. */
+  illustration?: React.ReactNode;
   /** `small` fits side panels and nested sections: tighter, no min height. */
   size?: "base" | "small";
 } & ActionProps;
@@ -96,6 +98,7 @@ export const NoRecords = ({
   className,
   buttonVariant = "default",
   icon = <ExclamationCircle />,
+  illustration,
   size = "base",
 }: NoRecordsProps) => {
   const isSmall = size === "small";
@@ -109,16 +112,18 @@ export const NoRecords = ({
         className,
       )}
     >
-      <div className="flex flex-col items-center gap-y-3">
-        <div
-          aria-hidden
-          className={clx(
-            "bg-ui-bg-component shadow-borders-base text-ui-fg-subtle flex items-center justify-center rounded-lg",
-            isSmall ? "size-8 [&_svg]:size-4" : "size-10 [&_svg]:size-5",
-          )}
-        >
-          {icon}
-        </div>
+      <div className="flex w-full flex-col items-center gap-y-3">
+        {illustration ?? (
+          <div
+            aria-hidden
+            className={clx(
+              "bg-ui-bg-component shadow-borders-base text-ui-fg-subtle flex items-center justify-center rounded-lg",
+              isSmall ? "size-8 [&_svg]:size-4" : "size-10 [&_svg]:size-5",
+            )}
+          >
+            {icon}
+          </div>
+        )}
 
         <div className="flex max-w-sm flex-col items-center gap-y-1 text-center">
           <Text size="small" leading="compact" weight="plus">

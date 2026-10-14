@@ -2,6 +2,7 @@ import { IconPlugConnected } from "@tabler/icons-react";
 import { Button, Container, Heading, usePrompt } from "@medusajs/ui";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt } from "@/components/guide";
 import { Link, Outlet, useLoaderData } from "react-router-dom";
 
 import { createSelectColumn } from "@/components/table/columns";
@@ -91,7 +92,9 @@ export const AccountListTable = () => {
           title: t("accounts.list.noRecordsTitle"),
           message: t("accounts.list.noRecordsMessage"),
           action: { to: "create", label: t("actions.linkAccount") },
-          icon: <IconPlugConnected />,
+          illustration: (
+            <FeatureArt feature="accounts" icon={<IconPlugConnected />} />
+          ),
         }}
       />
       <Outlet />

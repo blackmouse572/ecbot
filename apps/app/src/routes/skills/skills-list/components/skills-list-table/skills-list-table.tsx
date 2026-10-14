@@ -15,6 +15,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt } from "@/components/guide";
 import { Link, Outlet } from "react-router-dom";
 import {
   useSkillTableColumns,
@@ -94,7 +95,7 @@ export const SkillsListTable = () => {
           title: t("skills.list.noRecordsTitle"),
           message: t("skills.list.noRecordsMessage"),
           action: { to: "create", label: t("skills.list.createFirst") },
-          icon: <IconSparkles />,
+          illustration: <FeatureArt feature="skills" icon={<IconSparkles />} />,
         }}
       />
       <Outlet />

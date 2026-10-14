@@ -1,0 +1,172 @@
+/* driver.js tour card in ecbot tokens: same surface, type and buttons as
+   @medusajs/ui, so the card reads as part of the app in both themes. */
+.driver-popover.ecbot-tour {
+  font-family: var(--font-sans);
+  color: var(--fg-base);
+  background-color: var(--bg-base);
+  box-shadow: var(--elevation-flyout);
+  border-radius: 12px;
+  padding: 0;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  overflow: visible;
+  /* The phone sidebar sheet turns off pointer events on the page behind it. */
+  pointer-events: auto;
+}
+
+.ecbot-tour .ecbot-tour-art {
+  /* The scene's usual height, held before React draws it so driver.js
+     places the card close to right on its first pass. */
+  min-height: 7rem;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+
+.ecbot-tour .driver-popover-title {
+  padding: 12px 16px 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.ecbot-tour .driver-popover-description {
+  padding: 4px 16px 0;
+  color: var(--fg-subtle);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.ecbot-tour .driver-popover-close-btn {
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  color: var(--fg-subtle);
+  background-color: var(--bg-base);
+  box-shadow: var(--elevation-flyout);
+  font-size: 16px;
+  line-height: 28px;
+}
+
+/* The "open the menu" card has no scene and no buttons: the title lines up
+   with the X and the text keeps the card's bottom padding. */
+.ecbot-tour.ecbot-tour-plain .driver-popover-title {
+  padding: 16px 52px 0 16px;
+}
+
+.ecbot-tour.ecbot-tour-plain .driver-popover-description {
+  padding-bottom: 16px;
+}
+
+.ecbot-tour.ecbot-tour-plain .driver-popover-close-btn {
+  top: 12px;
+  right: 12px;
+}
+
+.ecbot-tour .driver-popover-close-btn:hover,
+.ecbot-tour .driver-popover-close-btn:focus-visible {
+  color: var(--fg-base);
+}
+
+.ecbot-tour .driver-popover-footer {
+  margin: 0;
+  padding: 12px 16px 16px;
+  gap: 8px;
+}
+
+.ecbot-tour .driver-popover-progress-text {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.ecbot-tour .driver-popover-progress-text span {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: var(--border-strong);
+  transition: width 200ms var(--ease-out);
+}
+
+.ecbot-tour .driver-popover-progress-text span.is-active {
+  width: 16px;
+  background-color: var(--fg-interactive);
+}
+
+.ecbot-tour .driver-popover-footer-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  text-shadow: none;
+  color: var(--fg-base);
+  background-color: var(--button-transparent);
+}
+
+.ecbot-tour .driver-popover-footer-btn:hover {
+  background-color: var(--button-transparent-hover);
+}
+
+.ecbot-tour .driver-popover-next-btn {
+  color: var(--fg-on-inverted);
+  background-color: var(--button-inverted);
+}
+
+.ecbot-tour .driver-popover-next-btn:hover {
+  background-color: var(--button-inverted-hover);
+}
+
+.ecbot-tour .driver-popover-footer-btn:focus-visible {
+  box-shadow: var(--borders-focus);
+}
+
+.ecbot-tour .driver-popover-footer-btn[hidden] {
+  display: none;
+}
+
+.ecbot-tour .driver-popover-arrow {
+  border-width: 6px;
+  border-color: var(--bg-base);
+}
+
+.ecbot-tour .driver-popover-arrow-side-left,
+.ecbot-tour .driver-popover-arrow-side-right {
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.ecbot-tour .driver-popover-arrow-side-left {
+  border-right-color: transparent;
+}
+
+.ecbot-tour .driver-popover-arrow-side-right {
+  border-left-color: transparent;
+}
+
+.ecbot-tour .driver-popover-arrow-side-top,
+.ecbot-tour .driver-popover-arrow-side-bottom {
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.ecbot-tour .driver-popover-arrow-side-top {
+  border-bottom-color: transparent;
+}
+
+.ecbot-tour .driver-popover-arrow-side-bottom {
+  border-top-color: transparent;
+}
+
+/* The ring around the highlighted sidebar link. */
+.driver-active .driver-active-element {
+  box-shadow: var(--borders-interactive-with-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ecbot-tour .driver-popover-progress-text span {
+    transition: none;
+  }
+}

@@ -16,6 +16,7 @@ import {
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt } from "@/components/guide";
 import { Outlet, useNavigate } from "react-router-dom";
 import { KnowledgeItemTitleCell } from "./knowledge-item-title-cell";
 import { KnowledgeItemStatusCell } from "./knowledge-item-status-cell";
@@ -151,7 +152,7 @@ export const KnowledgeBaseListTable = () => {
           action: firstKB
             ? { onClick: handleCreate, label: t("actions.create") }
             : undefined,
-          icon: <IconBooks />,
+          illustration: <FeatureArt feature="knowledge" icon={<IconBooks />} />,
         }}
       />
       <Outlet />

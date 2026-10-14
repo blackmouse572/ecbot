@@ -15,7 +15,10 @@ interface DataTableProps<TData>
   isLoading?: boolean;
   pageSize: number;
   queryObject?: Record<string, A>;
-  noRecords?: Pick<NoRecordsProps, "title" | "message" | "action" | "icon">;
+  noRecords?: Pick<
+    NoRecordsProps,
+    "title" | "message" | "action" | "icon" | "illustration"
+  >;
 }
 
 // Maybe we should use the memoized version of DataTableRoot

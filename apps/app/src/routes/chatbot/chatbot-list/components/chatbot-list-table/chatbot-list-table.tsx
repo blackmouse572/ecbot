@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt } from "@/components/guide";
 import { Link, Outlet, useLoaderData } from "react-router-dom";
 import { CHATBOT_CONSTANTS } from "../../../constants";
 import { chatbotLoader } from "../../loader";
@@ -96,7 +97,7 @@ export const ChatbotListTable = () => {
           title: t("chatbot.list.noRecordsTitle"),
           message: t("chatbot.list.noRecordsMessage"),
           action: { to: "create", label: t("chatbot.list.createFirst") },
-          icon: <IconRobot />,
+          illustration: <FeatureArt feature="chatbot" icon={<IconRobot />} />,
         }}
       />
       <Outlet />
