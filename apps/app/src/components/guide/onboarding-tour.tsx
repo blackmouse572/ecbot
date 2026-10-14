@@ -17,6 +17,9 @@ import { FeatureArt } from "./feature-art";
 const CARD_WIDTH = 300;
 const GAP = 16;
 const RING = 4;
+const CARD_HEIGHT = 300;
+const ARROW_FROM_TOP = 150;
+const ARROW_SIZE = 12;
 
 interface OnboardingTourProps {
   onClose: () => void;
@@ -84,15 +87,25 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
     w: target.width + RING * 2,
     h: target.height + RING * 2,
   };
-  const cardTop = target
-    ? Math.max(GAP, Math.min(target.top - 40, window.innerHeight - 340 - GAP))
-    : undefined;
+  // The arrow points at the link from the text, below the art.
+  const targetMiddle = target ? target.top + target.height / 2 : 0;
+  const cardTop = Math.max(
+    GAP,
+    Math.min(
+      targetMiddle - ARROW_FROM_TOP,
+      window.innerHeight - CARD_HEIGHT - GAP,
+    ),
+  );
+  const arrowTop = Math.max(
+    ARROW_SIZE,
+    Math.min(targetMiddle - cardTop, CARD_HEIGHT - ARROW_SIZE * 2),
+  );
 
   return createPortal(
     <div className="fixed inset-0 z-50">
       <div
         aria-hidden
-        className="bg-ui-bg-overlay absolute inset-0"
+        className="bg-ui-bg-overlay absolute inset-0 transition-[clip-path] duration-200 ease-out"
         style={
           hole
             ? {
@@ -116,7 +129,7 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", duration: 0.3, bounce: 0 }}
         className={clx(
-          "bg-ui-bg-base shadow-elevation-flyout absolute overflow-hidden rounded-xl",
+          "shadow-elevation-flyout absolute rounded-xl",
           !target && "inset-x-4 top-1/2 mx-auto max-w-[300px] -translate-y-1/2",
         )}
         style={
@@ -125,68 +138,77 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
             : undefined
         }
       >
-        <div className="relative">
-          <FeatureArt
-            feature={step.feature}
-            icon={<Icon />}
-            className="max-w-none rounded-none"
+        {target && (
+          <span
+            aria-hidden
+            className="bg-ui-bg-base absolute -left-1.5 size-3 rotate-45 rounded-[2px]"
+            style={{ top: arrowTop - ARROW_SIZE / 2 }}
           />
-          <IconButton
-            size="small"
-            variant="transparent"
-            className="bg-ui-bg-base/90 absolute top-2 right-2 rounded-full"
-            aria-label={t("guide.tour.skip")}
-            onClick={() => finish(true)}
-          >
-            <XMark />
-          </IconButton>
-        </div>
-        <div className="flex flex-col gap-y-1 px-4 pt-3 pb-4">
-          <Text
-            id="onboarding-tour-title"
-            size="base"
-            weight="plus"
-            leading="compact"
-          >
-            {t(`guide.features.${step.feature}.title`)}
-          </Text>
-          <Text size="small" className="text-ui-fg-subtle">
-            {t(`guide.features.${step.feature}.body`)}
-          </Text>
-          <div className="mt-3 flex items-center gap-x-2">
-            <div
-              className="flex flex-1 items-center gap-x-1.5"
-              aria-label={t("guide.tour.progress", {
-                current: index + 1,
-                total: TOUR_STEPS.length,
-              })}
-              role="img"
-            >
-              {TOUR_STEPS.map((tourStep, i) => (
-                <span
-                  key={tourStep.feature}
-                  className={
-                    i === index
-                      ? "bg-ui-fg-interactive h-1.5 w-4 rounded-full"
-                      : "bg-ui-border-strong size-1.5 rounded-full"
-                  }
-                />
-              ))}
-            </div>
-            <Button
+        )}
+        <div className="bg-ui-bg-base relative overflow-hidden rounded-xl">
+          <div className="relative">
+            <FeatureArt
+              feature={step.feature}
+              icon={<Icon />}
+              className="max-w-none rounded-none"
+            />
+            <IconButton
               size="small"
               variant="transparent"
+              className="bg-ui-bg-base/90 absolute top-2 right-2 rounded-full"
+              aria-label={t("guide.tour.skip")}
               onClick={() => finish(true)}
             >
-              {t("guide.tour.skip")}
-            </Button>
-            <Button
-              ref={nextRef}
-              size="small"
-              onClick={() => (last ? finish(false) : setIndex(index + 1))}
+              <XMark />
+            </IconButton>
+          </div>
+          <div className="flex flex-col gap-y-1 px-4 pt-3 pb-4">
+            <Text
+              id="onboarding-tour-title"
+              size="base"
+              weight="plus"
+              leading="compact"
             >
-              {t(last ? "guide.tour.done" : "guide.tour.next")}
-            </Button>
+              {t(`guide.features.${step.feature}.title`)}
+            </Text>
+            <Text size="small" className="text-ui-fg-subtle">
+              {t(`guide.features.${step.feature}.body`)}
+            </Text>
+            <div className="mt-3 flex items-center gap-x-2">
+              <div
+                className="flex flex-1 items-center gap-x-1.5"
+                aria-label={t("guide.tour.progress", {
+                  current: index + 1,
+                  total: TOUR_STEPS.length,
+                })}
+                role="img"
+              >
+                {TOUR_STEPS.map((tourStep, i) => (
+                  <span
+                    key={tourStep.feature}
+                    className={
+                      i === index
+                        ? "bg-ui-fg-interactive h-1.5 w-4 rounded-full"
+                        : "bg-ui-border-strong size-1.5 rounded-full"
+                    }
+                  />
+                ))}
+              </div>
+              <Button
+                size="small"
+                variant="transparent"
+                onClick={() => finish(true)}
+              >
+                {t("guide.tour.skip")}
+              </Button>
+              <Button
+                ref={nextRef}
+                size="small"
+                onClick={() => (last ? finish(false) : setIndex(index + 1))}
+              >
+                {t(last ? "guide.tour.done" : "guide.tour.next")}
+              </Button>
+            </div>
           </div>
         </div>
       </motion.div>

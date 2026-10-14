@@ -42,4 +42,19 @@ function HoverCardContent({
   );
 }
 
-export { HoverCard, HoverCardContent, HoverCardTrigger };
+function HoverCardArrow({
+  className,
+  ...props
+}: React.ComponentProps<typeof HoverCardPrimitive.Arrow>) {
+  return (
+    <HoverCardPrimitive.Arrow
+      data-slot="hover-card-arrow"
+      width={12}
+      height={6}
+      className={clx("fill-ui-bg-base", className)}
+      {...props}
+    />
+  );
+}
+
+export { HoverCard, HoverCardArrow, HoverCardContent, HoverCardTrigger };

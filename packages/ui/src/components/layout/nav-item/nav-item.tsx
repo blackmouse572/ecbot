@@ -4,6 +4,7 @@ import React, { type ReactNode, useCallback, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   HoverCard,
+  HoverCardArrow,
   HoverCardContent,
   HoverCardTrigger,
 } from "../../ui/hover-card";
@@ -257,9 +258,11 @@ const WithHint = ({
         side="right"
         align="start"
         sideOffset={12}
-        className="w-[300px] overflow-hidden p-0"
+        className="w-[300px] p-0"
       >
-        {hint}
+        {/* Clipped inside, so the arrow can sit outside the card. */}
+        <div className="overflow-hidden rounded-lg">{hint}</div>
+        <HoverCardArrow />
       </HoverCardContent>
     </HoverCard>
   );

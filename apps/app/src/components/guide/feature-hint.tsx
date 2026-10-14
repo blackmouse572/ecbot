@@ -15,11 +15,6 @@ export const FeatureHint: FC<FeatureHintProps> = ({ feature, icon }) => {
 
   return (
     <>
-      <FeatureArt
-        feature={feature}
-        icon={icon}
-        className="max-w-none rounded-none"
-      />
       <div className="flex flex-col gap-y-1 px-4 py-3">
         <Text size="small" weight="plus" leading="compact">
           {t(`guide.features.${feature}.title`)}
@@ -28,6 +23,12 @@ export const FeatureHint: FC<FeatureHintProps> = ({ feature, icon }) => {
           {t(`guide.features.${feature}.body`)}
         </Text>
       </div>
+      {/* Text first, so the card's arrow points at the title. */}
+      <FeatureArt
+        feature={feature}
+        icon={icon}
+        className="max-w-none rounded-none"
+      />
     </>
   );
 };
