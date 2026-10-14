@@ -1,5 +1,6 @@
 import { ENUM_CONVERSATION_ACTIVITY_KIND } from '@app/modules/conversation/enums/conversation-activity.enum';
 import {
+    ConversationActivityBuiltInToolKind,
     IConversationActivitySource,
     IConversationActivityTool,
     IReplyActivity,
@@ -8,8 +9,16 @@ import {
 /** The UI-message part fields the collector reads; parts are free-form JSON. */
 type StreamPart = { type: string } & Record<string, unknown>;
 
-/** `data-tool-meta` kinds of the built-in tools (apps/ai SYSTEM_TOOL_KINDS). */
-const BUILT_IN_TOOL_KINDS = new Set(['customer', 'tag', 'followup', 'image']);
+/**
+ * `data-tool-meta` kinds of the built-in tools (apps/ai SYSTEM_TOOL_KINDS).
+ * `image` is left out: the sent image is its own record, as in the live chat.
+ */
+const BUILT_IN_TOOL_KINDS: readonly string[] = ['customer', 'tag', 'followup'];
+
+const isBuiltInToolKind = (
+    kind: string
+): kind is ConversationActivityBuiltInToolKind =>
+    BUILT_IN_TOOL_KINDS.includes(kind);
 
 /**
  * Reads what the agent did off a reply stream (#286): skills it loaded,
@@ -22,7 +31,7 @@ export class ReplyActivityCollector {
     private readonly list: IReplyActivity[] = [];
     private readonly toolInputs = new Map<
         string,
-        { name: string; input: Record<string, unknown> }
+        { name?: string; input: Record<string, unknown> }
     >();
     private readonly toolCalls = new Map<string, IReplyActivity>();
     private knowledge?: IReplyActivity;
@@ -31,15 +40,16 @@ export class ReplyActivityCollector {
         if (part.type === 'tool-input-available') {
             if (typeof part.toolCallId === 'string')
                 this.toolInputs.set(part.toolCallId, {
-                    name:
-                        typeof part.toolName === 'string' ? part.toolName : '',
+                    ...(typeof part.toolName === 'string' && {
+                        name: part.toolName,
+                    }),
                     input: (part.input as Record<string, unknown>) ?? {},
                 });
         } else if (part.type === 'data-tool-meta') {
             const kind = (part.data as { kind?: unknown } | undefined)?.kind;
             if (typeof part.id !== 'string' || typeof kind !== 'string') return;
             const call = this.toolInputs.get(part.id);
-            if (BUILT_IN_TOOL_KINDS.has(kind)) {
+            if (isBuiltInToolKind(kind)) {
                 const activity: IReplyActivity = {
                     kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
                     label: call?.name,
@@ -97,7 +107,7 @@ function applyToolOutput(
     const out = (output ?? {}) as Record<string, unknown>;
     if (typeof out.error === 'string') tool.error = out.error;
     else if (out.ok === false)
-        tool.error = typeof out.reason === 'string' ? out.reason : '';
+        tool.error = typeof out.reason === 'string' ? out.reason : 'failed';
     else tool.result = output;
     if (tool.kind === 'tag' && out.triggeredHandoff === true)
         tool.kind = 'handoff';

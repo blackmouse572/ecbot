@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-// Built-in tool calls (customer fields, tags, handoffs, follow-ups, images)
+// Built-in tool calls (customer fields, tags, handoffs, follow-ups)
 // become a third activity kind, so the inbox trace shows them.
 const KINDS_BEFORE = `'SKILL', 'KNOWLEDGE'`;
 const KINDS_AFTER = `${KINDS_BEFORE}, 'TOOL'`;

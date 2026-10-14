@@ -892,6 +892,34 @@ describe('StreamingDelivery — agent activity', () => {
                         toolCallId: 'call-2',
                         output: { error: 'invalid phone' },
                     }),
+                    line({
+                        type: 'tool-input-available',
+                        toolCallId: 'call-3',
+                        toolName: 'cancel_followup',
+                        input: { id: 'f-1' },
+                    }),
+                    line({
+                        type: 'data-tool-meta',
+                        id: 'call-3',
+                        data: { kind: 'followup' },
+                    }),
+                    line({
+                        type: 'tool-output-available',
+                        toolCallId: 'call-3',
+                        output: { ok: false },
+                    }),
+                    // The sent image is its own record, as in the live chat.
+                    line({
+                        type: 'tool-input-available',
+                        toolCallId: 'call-4',
+                        toolName: 'send_image',
+                        input: { url: 'https://cdn/a.jpg' },
+                    }),
+                    line({
+                        type: 'data-tool-meta',
+                        id: 'call-4',
+                        data: { kind: 'image' },
+                    }),
                     line({ type: 'text-delta', id: 't1', delta: 'ok' }),
                     line({ type: 'finish' }),
                     DONE,
@@ -918,6 +946,16 @@ describe('StreamingDelivery — agent activity', () => {
                     kind: 'customer',
                     args: { key: 'phone', value: 'x' },
                     error: 'invalid phone',
+                },
+                at: expect.any(Date),
+            },
+            {
+                kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
+                label: 'cancel_followup',
+                tool: {
+                    kind: 'followup',
+                    args: { id: 'f-1' },
+                    error: 'failed',
                 },
                 at: expect.any(Date),
             },

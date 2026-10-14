@@ -34,10 +34,18 @@ export interface ToolCallSerialization {
     /** Absent for a skill load, which is not timed. */
     durationMs?: number;
     /**
-     * Tool kind, lowercased like the live stream's `data-tool-meta`; built-in
-     * tools add customer, tag, followup, image and handoff.
+     * Tool kind, lowercased like the live stream's `data-tool-meta`; mirrors
+     * the app's `ToolKind`. `handoff` is a tag that handed the chat to staff.
      */
-    kind?: string;
+    kind?:
+        | 'http'
+        | 'mcp'
+        | 'skill'
+        | 'customer'
+        | 'tag'
+        | 'followup'
+        | 'image'
+        | 'handoff';
 }
 
 /**

@@ -8,13 +8,17 @@ export interface IConversationActivitySource {
     sourceUrl?: string;
 }
 
+/** Built-in tool kinds as apps/ai's `data-tool-meta` reports them. */
+export type ConversationActivityBuiltInToolKind =
+    'customer' | 'tag' | 'followup';
+
 /**
- * A built-in tool call (customer fields, tags, follow-ups, images), which no
+ * A built-in tool call (customer fields, tags, follow-ups), which no
  * tool invocation row records. `kind` is the stream's `data-tool-meta` kind,
  * or `handoff` for a tag that handed the chat to staff.
  */
 export interface IConversationActivityTool {
-    kind: string;
+    kind: ConversationActivityBuiltInToolKind | 'handoff';
     args: Record<string, unknown>;
     result?: unknown;
     error?: string;
