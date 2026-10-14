@@ -8,6 +8,7 @@ import {
   conversationWorkspaceControllerReactToMessageV1,
   conversationWorkspaceControllerSendMessageV1,
   conversationWorkspaceControllerUpdateBotV1,
+  conversationWorkspaceControllerUpdateTimezoneV1,
   conversationWorkspaceControllerUpdateStatusV1,
   type ConversationGetResponseDto,
   type ConversationSendMessageRequestDto,
@@ -470,6 +471,27 @@ export const useUpdateConversationBot = (id: string | undefined) => {
       queryClient.invalidateQueries({
         queryKey: conversationQueryKeys.pausedCount(),
       });
+    },
+  });
+};
+
+export const useUpdateConversationTimezone = (id: string | undefined) => {
+  const { workspace } = useWorkspace();
+  const slug = workspace?.slug;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (timezone: string | null) =>
+      conversationWorkspaceControllerUpdateTimezoneV1({
+        path: { workspace: slug!, id: id! },
+        body: { timezone },
+      }).then((res) => res.data?.data as ConversationGetResponseDto),
+    onSuccess: () => {
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: conversationQueryKeys.detail(id),
+        });
+      }
     },
   });
 };

@@ -2522,7 +2522,7 @@ export type ChatbotAdminResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
     /**
      * Chatbot associate accounts
      */
@@ -2694,7 +2694,7 @@ export type ChatbotGetDetailShortResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
 };
 
 export type WorkSpaceListResponseDto = {
@@ -3615,7 +3615,7 @@ export type ChatbotListResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
 };
 
 export type ChatbotModelResponseDto = {
@@ -3778,7 +3778,7 @@ export type ChatbotGetDetailResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
     /**
      * Workspace the chatbot belongs to
      */
@@ -3937,7 +3937,7 @@ export type ChatbotCreateResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
 };
 
 export type ChatbotCreateRequestDto = {
