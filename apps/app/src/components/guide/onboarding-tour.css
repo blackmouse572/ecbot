@@ -49,6 +49,21 @@
   line-height: 28px;
 }
 
+/* The "open the menu" card has no scene and no buttons: the title lines up
+   with the X and the text keeps the card's bottom padding. */
+.ecbot-tour.ecbot-tour-plain .driver-popover-title {
+  padding: 16px 52px 0 16px;
+}
+
+.ecbot-tour.ecbot-tour-plain .driver-popover-description {
+  padding-bottom: 16px;
+}
+
+.ecbot-tour.ecbot-tour-plain .driver-popover-close-btn {
+  top: 12px;
+  right: 12px;
+}
+
 .ecbot-tour .driver-popover-close-btn:hover,
 .ecbot-tour .driver-popover-close-btn:focus-visible {
   color: var(--fg-base);

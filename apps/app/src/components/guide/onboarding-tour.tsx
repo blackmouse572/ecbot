@@ -186,6 +186,7 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
     if (menu) {
       menu.addEventListener("click", onMenuOpen);
       start({
+        popoverClass: "ecbot-tour ecbot-tour-plain",
         showButtons: ["close"],
         steps: [
           {
