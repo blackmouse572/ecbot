@@ -239,6 +239,7 @@ const useColumns = (kb?: KnowledgeBaseResponseDto) => {
           <KnowledgeItemTitleCell
             title={info.getValue()}
             type={info.row.original.type}
+            mime={info.row.original.attachment?.mime}
           />
         ),
       }),

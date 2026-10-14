@@ -8,6 +8,7 @@ import {
     ENUM_MESSAGE_STATUS,
 } from '../../enums/message.enum';
 import { IMessageAttachment } from '../../interfaces/message-media.interface';
+import { ConversationEntity } from '../entities/conversation.entity';
 import { MessageEntity, MessageReaction } from '../entities/message.entity';
 
 export interface IMessageUpsertData {
@@ -48,11 +49,16 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
             return existing;
         }
 
-        return this.create({
+        const message = await this.create({
             conversation: { id: conversationId } as any,
             externalId,
             ...data,
         } as any);
+        // Inbound messages are touched by the inbound path (touchLastMessage).
+        if (data.direction === ENUM_MESSAGE_DIRECTION.OUTBOUND) {
+            await this.touchConversation(conversationId, data.dateSent);
+        }
+        return message;
     }
 
     /** Replace a message's attachments (e.g. with the descriptions of what
@@ -70,13 +76,28 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         clientNonce: string,
         data: IMessageOutboundData
     ): Promise<MessageEntity> {
-        return this.create({
+        const message = await this.create({
             conversation: { id: conversationId } as any,
             clientNonce,
             direction: ENUM_MESSAGE_DIRECTION.OUTBOUND,
             status: ENUM_MESSAGE_STATUS.PENDING,
             ...data,
         } as any);
+        await this.touchConversation(conversationId, data.dateSent);
+        return message;
+    }
+
+    /** The inbox sorts by lastMessageAt: any new message, bot and staff
+     *  replies included, moves its conversation to the top. */
+    private async touchConversation(
+        conversationId: string,
+        at: Date
+    ): Promise<void> {
+        await this.em.nativeUpdate(
+            ConversationEntity,
+            { id: conversationId },
+            { lastMessageAt: at }
+        );
     }
 
     async markOutboundSent(
@@ -251,6 +272,9 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
             {
                 conversation: conversationId,
                 deletedAt: null,
+                // The website widget polls this for the visitor: staff-side
+                // notes stay out.
+                authorType: { $ne: ENUM_MESSAGE_AUTHOR.SYSTEM },
                 // Tie-broken on id, not `dateSent` alone. `dateSent` comes from
                 // `new Date()`, so two messages can share a millisecond; if such
                 // a pair straddles a page boundary, a `$gt: dateSent` cursor

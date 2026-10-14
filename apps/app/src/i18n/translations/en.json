@@ -2405,7 +2405,8 @@
     "type": {
       "FILE": "File",
       "URL": "URL",
-      "TEXT": "Text"
+      "TEXT": "Text",
+      "MEDIA": "Media"
     },
     "status": {
       "DRAFT": "Draft",
@@ -2522,11 +2523,13 @@
     "type": {
       "type": "Type",
       "file": "File",
-      "file_desc": "Upload a document or file",
+      "file_desc": "Documents your agent reads, never sends",
       "url": "URL",
       "url_desc": "Link to a web page",
       "text": "Text",
-      "text_desc": "Write custom text content"
+      "text_desc": "Write custom text content",
+      "media": "Media",
+      "media_desc": "Images and PDFs your agent sends to customers"
     },
     "status": "Status",
     "created_at": "Created At",
@@ -2557,7 +2560,30 @@
     "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
     "learn_failed": "Could not learn this file. Try Process again.",
     "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
-    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section."
+    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section.",
+    "media": {
+      "files": "Files",
+      "files_hint": "Product photos, banners, PDF menus. Each file becomes its own item, named after the file, so give files clear names.",
+      "pick": "Choose or drop files",
+      "formats": "JPG, PNG, WEBP up to 5MB, PDF up to 20MB, up to 50 files at a time",
+      "required": "Add at least one file",
+      "too_many": "Add up to {{count}} files at a time",
+      "invalid": "Use JPG, PNG, WEBP images up to 5MB, or PDFs up to 20MB",
+      "create_success_one": "{{count}} media item added",
+      "create_success_other": "{{count}} media items added",
+      "create_partial": "{{added}} of {{count}} files added. {{failed}} could not be uploaded, try them again.",
+      "description": "What your agent searches by",
+      "description_pending": "Your agent will describe this file once it is processed.",
+      "open_pdf": "Open PDF",
+      "description_hint": "Your agent finds this file by its title and this description. Leave it empty to let the agent describe it again.",
+      "cost_hint": "Processed by vision AI: about 2,000 tokens per image, 500 per picture page in a PDF.",
+      "upload_summary": "{{done}} of {{count}} uploaded",
+      "upload_summary_failed": "{{done}} of {{count}} uploaded, {{failed}} failed",
+      "uploaded": "Uploaded",
+      "failed_at": "Failed at {{progress}}%",
+      "upload_total_one": "{{count}} file, {{size}}",
+      "upload_total_other": "{{count}} files, {{size}} in total"
+    }
   },
   "conversations": {
     "title": "Conversations",
@@ -2599,13 +2625,24 @@
       "lifecycle": {
         "OPEN": "Open",
         "RESOLVED": "Resolved"
-      }
+      },
+      "hint": {
+        "botActive": "The bot is replying to the customer.",
+        "needsYou": "The bot handed this chat to your team and stopped replying. Someone should answer the customer.",
+        "youHandling": "Your team paused the bot and is replying. The bot stays quiet until it is switched back on.",
+        "resolved": "Your team handled what was handed over. The bot answers again, and a new customer message reopens the chat."
+      },
+      "resolveTip": "Click <b>Resolve</b> when you're done and want the bot to continue.",
+      "learnMore": "Learn more"
     },
     "author": {
       "user": "Customer",
       "bot": "Bot",
       "operator": "You",
       "you": "You"
+    },
+    "systemNote": {
+      "handled": "Handled by staff. The bot is answering again."
     },
     "detail": {
       "empty": {
@@ -2623,8 +2660,7 @@
       "send": "Send",
       "retry": "Retry",
       "failed": "Failed to send",
-      "tooLong": "Message must be 4096 characters or fewer",
-      "disabledResolved": "This conversation is resolved. Restore it to auto to reply."
+      "tooLong": "Message must be 4096 characters or fewer"
     },
     "actions": {
       "botLabel": "Bot",
@@ -2639,9 +2675,9 @@
       "pauseReasonLabel": "Reason (optional)",
       "pauseReasonPlaceholder": "e.g. Customer requested human support",
       "resolveConfirmTitle": "Mark conversation as resolved?",
-      "resolveConfirmDescription": "Resolved conversations cannot receive operator replies until restored.",
+      "resolveConfirmDescription": "The bot keeps answering the customer and will not hand over again what your team already handled. You can still send messages.",
       "restoreConfirmTitle": "Hand back to the bot?",
-      "restoreConfirmDescription": "Bot will resume answering. If the conversation was resolved, the AI memory will be reset."
+      "restoreConfirmDescription": "The conversation opens again and the bot keeps answering."
     },
     "errors": {
       "sendFailed": "Couldn't send your message. Try again.",
@@ -2672,6 +2708,11 @@
           "title": "Contact points",
           "empty": "No contact points yet",
           "emptyHint": "Ways to reach this customer, like a phone number or email, show up here."
+        },
+        "conversations": {
+          "title": "Conversations",
+          "empty": "No conversations yet",
+          "current": "Current"
         },
         "followups": {
           "title": "Followups",
@@ -2812,6 +2853,9 @@
       "unnamed": "Unnamed customer",
       "phone": "Phone",
       "firstSeen": "First seen",
+      "conversations": "Conversations",
+      "conversationCount_one": "{{count}} conversation",
+      "conversationCount_other": "{{count}} conversations",
       "emptyTitle": "No customers yet",
       "emptyMessage": "Customers appear here once they message one of your channels.",
       "connectChannel": "Connect a channel"

@@ -127,6 +127,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 {},
+                {},
                 {}
             );
 
@@ -167,6 +168,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 {},
+                {},
                 {}
             );
 
@@ -182,6 +184,42 @@ describe('ConversationWorkspaceController', () => {
             ).toHaveBeenCalledWith(
                 workspaceId,
                 expect.objectContaining(statusFilter)
+            );
+        });
+
+        it('should pass customer filter to service when provided', async () => {
+            // The pipe transforms '?customer=<id>' into this object
+            const customerFilter = {
+                'contactPoint.customer.id': { $eq: 'customer-1' },
+            };
+
+            mockConversationService.findByWorkspace.mockResolvedValue([]);
+            mockConversationService.countByWorkspace.mockResolvedValue(0);
+
+            await controller.list(
+                workspace,
+                operatorId,
+                basePagination as any,
+                {},
+                {},
+                {},
+                {},
+                {},
+                customerFilter
+            );
+
+            expect(
+                mockConversationService.findByWorkspace
+            ).toHaveBeenCalledWith(
+                workspaceId,
+                expect.objectContaining(customerFilter),
+                expect.anything()
+            );
+            expect(
+                mockConversationService.countByWorkspace
+            ).toHaveBeenCalledWith(
+                workspaceId,
+                expect.objectContaining(customerFilter)
             );
         });
 
@@ -202,6 +240,7 @@ describe('ConversationWorkspaceController', () => {
                 basePagination as any,
                 {},
                 accountTypeFilter,
+                {},
                 {},
                 {},
                 {}
@@ -238,6 +277,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 accountFilter,
+                {},
                 {},
                 {}
             );
@@ -278,6 +318,7 @@ describe('ConversationWorkspaceController', () => {
                 statusFilter,
                 accountTypeFilter,
                 accountFilter,
+                {},
                 {},
                 {}
             );
@@ -320,6 +361,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 {},
+                {},
                 {}
             );
 
@@ -346,6 +388,7 @@ describe('ConversationWorkspaceController', () => {
                 workspace,
                 operatorId,
                 paginationWithOffset as any,
+                {},
                 {},
                 {},
                 {},
@@ -382,6 +425,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 {},
+                {},
                 {}
             );
 
@@ -410,6 +454,7 @@ describe('ConversationWorkspaceController', () => {
                 workspace,
                 operatorId,
                 basePagination as any,
+                {},
                 {},
                 {},
                 {},

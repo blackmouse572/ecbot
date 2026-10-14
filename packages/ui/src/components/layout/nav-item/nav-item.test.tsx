@@ -2,28 +2,66 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { NavAccessProvider } from "./nav-access-context";
+import { NavHintPopover } from "./nav-hint-popover";
 import { NavItem } from "./nav-item";
+
+/** Base UI listens for native mouse events on the trigger wrapper. */
+const hover = (link: HTMLElement) => {
+  const trigger = link.parentElement!;
+  fireEvent.pointerEnter(trigger, { pointerType: "mouse" });
+  fireEvent.mouseEnter(trigger);
+  fireEvent.mouseMove(trigger);
+};
 
 describe("NavItem", () => {
   it("shows the hint only after the pointer rests on the link", () => {
     vi.useFakeTimers();
     render(
       <MemoryRouter initialEntries={["/dashboard"]}>
+        <NavHintPopover />
         <NavItem
           label="Knowledge"
           to="/knowledge"
           hint={<p>Teach the agent</p>}
         />
+        <NavItem label="Tools" to="/tools" hint={<p>Connect the agent</p>} />
       </MemoryRouter>,
     );
 
     const link = screen.getByRole("link", { name: "Knowledge" });
-    fireEvent.pointerEnter(link, { pointerType: "mouse" });
+    hover(link);
     act(() => vi.advanceTimersByTime(300));
     expect(screen.queryByText("Teach the agent")).not.toBeInTheDocument();
 
     act(() => vi.advanceTimersByTime(600));
     expect(screen.getByText("Teach the agent")).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("keeps the link a plain link and swaps the hint when moving to another link", () => {
+    vi.useFakeTimers();
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <NavHintPopover />
+        <NavItem
+          label="Knowledge"
+          to="/knowledge"
+          hint={<p>Teach the agent</p>}
+        />
+        <NavItem label="Tools" to="/tools" hint={<p>Connect the agent</p>} />
+      </MemoryRouter>,
+    );
+
+    const knowledge = screen.getByRole("link", { name: "Knowledge" });
+    expect(knowledge.closest("[aria-haspopup]")).toBeNull();
+    hover(knowledge);
+    act(() => vi.advanceTimersByTime(900));
+    expect(screen.getByText("Teach the agent")).toBeInTheDocument();
+
+    fireEvent.mouseLeave(knowledge.parentElement!);
+    hover(screen.getByRole("link", { name: "Tools" }));
+    act(() => vi.advanceTimersByTime(900));
+    expect(screen.getByText("Connect the agent")).toBeInTheDocument();
     vi.useRealTimers();
   });
 
@@ -197,9 +235,9 @@ describe("NavItem", () => {
         </MemoryRouter>,
       );
 
-      expect(
-        screen.getByRole("link", { name: "Profile" }).className,
-      ).toContain("shadow-elevation-card-rest");
+      expect(screen.getByRole("link", { name: "Profile" }).className).toContain(
+        "shadow-elevation-card-rest",
+      );
     });
 
     it("for type=extension, isActive respects `end`, unlike type=core's prefix override", () => {

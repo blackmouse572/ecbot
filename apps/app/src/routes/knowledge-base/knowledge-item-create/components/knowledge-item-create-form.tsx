@@ -3,7 +3,7 @@ import { KeyboundForm } from "@/components/utils/keybound-form";
 import { readApiError } from "@/libs/api-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, toast } from "@medusajs/ui";
-import { ChipGroup, Form } from "@repo/ui/common-components";
+import { ChipGroup, Form, type FileType } from "@repo/ui/common-components";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useMemo, useRef, useState, type FC } from "react";
 import { useFieldArray, useForm, type Resolver } from "react-hook-form";
@@ -15,15 +15,20 @@ import {
   useProcessKnowledgeItem,
 } from "../../../../hooks/api";
 import { FileForm, TextForm, UrlForm } from "./forms";
+import { MediaForm } from "./forms/media-form";
 import { fileTitle } from "./forms/file-title";
 import { KnowledgeItemTypeSelector } from "./knowledge-item-type-selector/index";
 import { KnowledgeItemTypeEnum } from "./knowledge-item-type-selector/knowledge-item-type-selector";
 import {
   createFileSchema,
+  createMediaSchema,
   createTextSchema,
   createUrlSchema,
   type KnowledgeItemCreateFormValues,
+  type MediaUpload,
 } from "./schema";
+import { runWithLimit } from "./run-with-limit";
+import { KB_MEDIA_UPLOAD_CONCURRENCY } from "../../constants";
 import { KnowledgeItemEditTag } from "../../knowledge-item-edit/components/knowledge-item-edit-tags";
 
 interface KnowledgeItemCreateFormProps {
@@ -45,6 +50,8 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  // Media upload state per picked file, by its id.
+  const [uploads, setUploads] = useState<Record<string, MediaUpload>>({});
 
   // Dynamic schema based on type
   const schema = useMemo(() => {
@@ -55,8 +62,10 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
         return createUrlSchema();
       case "TEXT":
         return createTextSchema();
+      case "MEDIA":
+        return createMediaSchema();
       default:
-        return z.object({ type: z.enum(["FILE", "URL", "TEXT"]) });
+        return z.object({ type: z.enum(["FILE", "URL", "TEXT", "MEDIA"]) });
     }
   }, [selectedType]);
 
@@ -84,7 +93,117 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
   });
   const { mutateAsync: processItem } = useProcessKnowledgeItem();
   const { mutateAsync: linkAgents } = useLinkKnowledgeItemToChatbots();
+
+  // Link before processing: ingestion tags the item's content with the
+  // agents linked at that moment. Returns how many agent links failed.
+  const linkAndProcess = async (createdId: string) => {
+    let linkFailed = 0;
+    if (agentId) {
+      ({ failed: linkFailed } = await linkAgents({
+        knowledgeItemId: createdId,
+        chatbotIds: [agentId],
+      }));
+    }
+    await processItem({ knowledgeBaseId, id: createdId });
+    return linkFailed;
+  };
+
+  // Each media file becomes its own item named after it; a few upload at
+  // once, and one failing upload does not stop the rest. Rows show each
+  // file's progress; a failed file can be retried on its own.
+  const uploadMedia = async (
+    data: KnowledgeItemCreateFormValues,
+    targets: FileType[],
+  ) => {
+    let linkFailed = 0;
+    let processFailed = 0;
+    const setUpload = (id: string, upload: MediaUpload) =>
+      setUploads((current) => ({ ...current, [id]: upload }));
+    const { failed } = await runWithLimit(
+      targets,
+      KB_MEDIA_UPLOAD_CONCURRENCY,
+      async ({ id, file }) => {
+        let progress = 0;
+        setUpload(id, { status: "uploading", progress });
+        let created;
+        try {
+          created = await mutateAsync({
+            type: "MEDIA",
+            title: fileTitle(file.name),
+            tags: data.tags,
+            file,
+            onUploadProgress: (value) => {
+              progress = value;
+              setUpload(id, { status: "uploading", progress });
+            },
+          });
+        } catch (error) {
+          setUpload(id, { status: "failed", progress });
+          throw error;
+        }
+        setUpload(id, { status: "done", progress: 100 });
+        const createdId = created.data?.data?.id;
+        if (!createdId) return;
+        // The item exists now: a processing hiccup is not a failed upload, or
+        // trying again would create it twice.
+        try {
+          linkFailed += await linkAndProcess(createdId);
+        } catch (processError) {
+          console.error("Error auto-processing media item:", processError);
+          processFailed += 1;
+        }
+      },
+    );
+
+    if (linkFailed) {
+      toast.info(
+        t("knowledge_item.link_after_create_error", { count: linkFailed }),
+      );
+    }
+    if (processFailed)
+      toast.info(t("knowledge_item.process_after_create_error"));
+    return failed;
+  };
+
+  // Uploads the files not uploaded yet; closes once every file is in.
+  const createMedia = async (
+    data: KnowledgeItemCreateFormValues,
+    only?: FileType,
+  ) => {
+    const files = data.files ?? [];
+    const targets = only
+      ? [only]
+      : files.filter(({ id }) => uploads[id]?.status !== "done");
+    const failed = await uploadMedia(data, targets);
+    if (failed === 0 && !only) {
+      toast.success(
+        t("knowledge_item.media.create_success", { count: files.length }),
+      );
+      handleSuccess();
+    } else if (failed === targets.length && !only) {
+      toast.error(t("knowledge_item.create_error"));
+    }
+  };
+
+  const retryMedia = async (file: FileType) => {
+    setIsLoading(true);
+    try {
+      await createMedia(form.getValues(), file);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = form.handleSubmit(async (data) => {
+    if (selectedType === "MEDIA") {
+      setIsLoading(true);
+      try {
+        await createMedia(data);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
     try {
       setIsLoading(true);
       setUploadProgress(0);
@@ -198,43 +317,48 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
               {selectedType && (
                 <div className="border-t pt-6 space-y-4">
                   {/* Title */}
-                  <Form.Field
-                    control={form.control}
-                    name="title"
-                    render={({ field, fieldState }) => (
-                      <Form.Item>
-                        <Form.Label>{t("knowledge_item.title")}</Form.Label>
-                        <Form.Control>
-                          <Input
-                            {...field}
-                            onFocus={(e) => {
-                              // A title filled in from the file name is a
-                              // suggestion: select it so typing replaces it.
-                              const file = form.getValues("file");
-                              if (
-                                file &&
-                                field.value === fileTitle(file.file.name)
-                              ) {
-                                e.currentTarget.select();
-                                keepTitleSelection.current = true;
-                              }
-                            }}
-                            onMouseUp={(e) => {
-                              // The click that focused the field would
-                              // otherwise drop the caret and undo the select.
-                              if (keepTitleSelection.current)
-                                e.preventDefault();
-                              keepTitleSelection.current = false;
-                            }}
-                            placeholder={t("knowledge_item.title_placeholder")}
-                            aria-invalid={!!fieldState.error}
-                            aria-errormessage={fieldState.error?.message}
-                          />
-                        </Form.Control>
-                        <Form.ErrorMessage />
-                      </Form.Item>
-                    )}
-                  />
+                  {selectedType !== "MEDIA" && (
+                    <Form.Field
+                      control={form.control}
+                      name="title"
+                      render={({ field, fieldState }) => (
+                        <Form.Item>
+                          <Form.Label>{t("knowledge_item.title")}</Form.Label>
+                          <Form.Control>
+                            <Input
+                              {...field}
+                              onFocus={(e) => {
+                                // A title filled in from the file name is a
+                                // suggestion: select it so typing replaces it.
+                                const file = form.getValues("file");
+                                if (
+                                  file &&
+                                  field.value === fileTitle(file.file.name)
+                                ) {
+                                  e.currentTarget.select();
+                                  keepTitleSelection.current = true;
+                                }
+                              }}
+                              onMouseUp={(e) => {
+                                // The click that focused the field would
+                                // otherwise drop the caret and undo the select.
+                                if (keepTitleSelection.current)
+                                  e.preventDefault();
+                                keepTitleSelection.current = false;
+                              }}
+                              placeholder={t(
+                                "knowledge_item.title_placeholder",
+                              )}
+                              aria-invalid={!!fieldState.error}
+                              aria-errormessage={fieldState.error?.message}
+                            />
+                          </Form.Control>
+                          <Form.ErrorMessage />
+                        </Form.Item>
+                      )}
+                    />
+                  )}
+                  {/* One field: the label sits on the input, chosen tags below. */}
                   <Form.Field
                     control={form.control}
                     name="tags"
@@ -243,31 +367,6 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                       return (
                         <Form.Item>
                           <Form.Label>{t("knowledge_item.addTag")}</Form.Label>
-                          <ChipGroup
-                            onRemove={(index) => {
-                              remove(index);
-                            }}
-                            onClearAll={() => {
-                              remove();
-                            }}
-                          >
-                            {tags.map((tag, index) => (
-                              <ChipGroup.Chip key={`${tag}`} index={index}>
-                                {tag}
-                              </ChipGroup.Chip>
-                            ))}
-                          </ChipGroup>
-                        </Form.Item>
-                      );
-                    }}
-                  />
-                  <Form.Field
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => {
-                      const tags = field.value || [];
-                      return (
-                        <Form.Item>
                           <KnowledgeItemEditTag
                             defaultValues={tags}
                             knowledgeBaseId={knowledgeBaseId}
@@ -277,6 +376,22 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                               }
                             }}
                           />
+                          {tags.length > 0 && (
+                            <ChipGroup
+                              onRemove={(index) => {
+                                remove(index);
+                              }}
+                              onClearAll={() => {
+                                remove();
+                              }}
+                            >
+                              {tags.map((tag, index) => (
+                                <ChipGroup.Chip key={`${tag}`} index={index}>
+                                  {tag}
+                                </ChipGroup.Chip>
+                              ))}
+                            </ChipGroup>
+                          )}
                         </Form.Item>
                       );
                     }}
@@ -289,6 +404,14 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                     />
                   )}
                   {selectedType === "URL" && <UrlForm form={form} />}
+                  {selectedType === "MEDIA" && (
+                    <MediaForm
+                      form={form}
+                      isLoading={isLoading}
+                      uploads={uploads}
+                      onRetry={retryMedia}
+                    />
+                  )}
                   {selectedType === "TEXT" && <TextForm form={form} />}
                 </div>
               )}

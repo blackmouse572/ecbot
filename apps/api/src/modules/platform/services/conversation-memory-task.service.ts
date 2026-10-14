@@ -183,9 +183,11 @@ export class ConversationMemoryTaskService {
     ): AISummarizeParams['messages'][number] {
         const inbound = m.direction === ENUM_MESSAGE_DIRECTION.INBOUND;
         return {
+            // A staff handled note is staff's doing: fold it in as theirs.
             role: inbound
                 ? 'customer'
-                : m.authorType === ENUM_MESSAGE_AUTHOR.OPERATOR
+                : m.authorType === ENUM_MESSAGE_AUTHOR.OPERATOR ||
+                    m.authorType === ENUM_MESSAGE_AUTHOR.SYSTEM
                   ? 'operator'
                   : 'bot',
             text: [m.text, inbound ? historyNote(m.attachments ?? []) : '']

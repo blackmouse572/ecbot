@@ -27,7 +27,7 @@ import { useWorkspace } from "./workspace";
 
 export type ConversationStatus = "OPEN" | "RESOLVED";
 export type MessageDirection = "INBOUND" | "OUTBOUND";
-export type MessageAuthorType = "USER" | "BOT" | "OPERATOR";
+export type MessageAuthorType = "USER" | "BOT" | "OPERATOR" | "SYSTEM";
 export type MessageStatus = "PENDING" | "SENT" | "FAILED";
 
 export const CONVERSATION_QUERY_KEY = "conversation" as const;
@@ -40,6 +40,7 @@ export type ConversationListQuery = {
   accountType?: string[];
   account?: string;
   chatbot?: string;
+  customer?: string;
   botEnabled?: boolean;
   orderBy?: string;
   orderDirection?: "ASC" | "DESC";
@@ -90,6 +91,7 @@ export const useConversations = (query: ConversationListQuery = {}) => {
           }),
           ...(query.account && { account: query.account }),
           ...(query.chatbot && { chatbot: query.chatbot }),
+          ...(query.customer && { customer: query.customer }),
           ...(query.botEnabled !== undefined && {
             botEnabled: String(query.botEnabled),
           }),
@@ -437,6 +439,10 @@ export const useUpdateConversationStatus = (id: string | undefined) => {
         queryClient.invalidateQueries({
           queryKey: conversationQueryKeys.detail(id),
         });
+        // Handing back to the bot leaves a note in the timeline.
+        queryClient.invalidateQueries({
+          queryKey: [CONVERSATION_QUERY_KEY, "messages", id],
+        });
       }
       queryClient.invalidateQueries({
         queryKey: conversationQueryKeys.lists(),
@@ -463,6 +469,10 @@ export const useUpdateConversationBot = (id: string | undefined) => {
       if (id) {
         queryClient.invalidateQueries({
           queryKey: conversationQueryKeys.detail(id),
+        });
+        // Handing back to the bot leaves a note in the timeline.
+        queryClient.invalidateQueries({
+          queryKey: [CONVERSATION_QUERY_KEY, "messages", id],
         });
       }
       queryClient.invalidateQueries({
@@ -536,6 +546,12 @@ export const useMarkConversationRead = (id: string | undefined) => {
         }
       }
     },
+    // The cancel above drops a list that was still loading (a conversation
+    // opened from a link), so fetch it again rather than wait for the poll.
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      }),
   });
 };
 

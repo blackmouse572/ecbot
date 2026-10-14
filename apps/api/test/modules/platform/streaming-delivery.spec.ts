@@ -856,6 +856,112 @@ describe('StreamingDelivery — agent activity', () => {
         expect(res.activities).toEqual(expected);
     });
 
+    it('records built-in tool calls, a handoff tag as a handoff', async () => {
+        const res = await new StreamingDelivery().deliver(
+            params(
+                sse([
+                    line({
+                        type: 'tool-input-available',
+                        toolCallId: 'call-1',
+                        toolName: 'apply_customer_tag',
+                        input: { name: 'Đã cọc' },
+                    }),
+                    line({
+                        type: 'data-tool-meta',
+                        id: 'call-1',
+                        data: { kind: 'tag' },
+                    }),
+                    line({
+                        type: 'tool-output-available',
+                        toolCallId: 'call-1',
+                        output: { ok: true, triggeredHandoff: true },
+                    }),
+                    line({
+                        type: 'tool-input-available',
+                        toolCallId: 'call-2',
+                        toolName: 'set_customer_field',
+                        input: { key: 'phone', value: 'x' },
+                    }),
+                    line({
+                        type: 'data-tool-meta',
+                        id: 'call-2',
+                        data: { kind: 'customer' },
+                    }),
+                    line({
+                        type: 'tool-output-available',
+                        toolCallId: 'call-2',
+                        output: { error: 'invalid phone' },
+                    }),
+                    line({
+                        type: 'tool-input-available',
+                        toolCallId: 'call-3',
+                        toolName: 'cancel_followup',
+                        input: { id: 'f-1' },
+                    }),
+                    line({
+                        type: 'data-tool-meta',
+                        id: 'call-3',
+                        data: { kind: 'followup' },
+                    }),
+                    line({
+                        type: 'tool-output-available',
+                        toolCallId: 'call-3',
+                        output: { ok: false },
+                    }),
+                    // The sent image is its own record, as in the live chat.
+                    line({
+                        type: 'tool-input-available',
+                        toolCallId: 'call-4',
+                        toolName: 'send_image',
+                        input: { url: 'https://cdn/a.jpg' },
+                    }),
+                    line({
+                        type: 'data-tool-meta',
+                        id: 'call-4',
+                        data: { kind: 'image' },
+                    }),
+                    line({ type: 'text-delta', id: 't1', delta: 'ok' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                GUARD_OFF
+            ) as any
+        );
+
+        expect(res.activities).toEqual([
+            {
+                kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
+                label: 'apply_customer_tag',
+                tool: {
+                    kind: 'handoff',
+                    args: { name: 'Đã cọc' },
+                    result: { ok: true, triggeredHandoff: true },
+                },
+                at: expect.any(Date),
+            },
+            {
+                kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
+                label: 'set_customer_field',
+                tool: {
+                    kind: 'customer',
+                    args: { key: 'phone', value: 'x' },
+                    error: 'invalid phone',
+                },
+                at: expect.any(Date),
+            },
+            {
+                kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
+                label: 'cancel_followup',
+                tool: {
+                    kind: 'followup',
+                    args: { id: 'f-1' },
+                    error: 'failed',
+                },
+                at: expect.any(Date),
+            },
+        ]);
+    });
+
     it('records nothing for a text-only reply', async () => {
         const res = await new StreamingDelivery().deliver(
             params(

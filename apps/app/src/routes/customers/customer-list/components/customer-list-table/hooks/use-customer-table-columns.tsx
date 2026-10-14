@@ -5,6 +5,7 @@ import { Text } from "@medusajs/ui";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { ConversationsCell } from "../components/conversations-cell";
 
 const columnHelper = createColumnHelper<CustomerGetResponseDto>();
 
@@ -31,6 +32,16 @@ export const useCustomerTableColumns = () => {
       columnHelper.accessor("email", {
         header: () => t("fields.email"),
         cell: ({ getValue }) => <TextCell text={getValue() ?? undefined} />,
+      }),
+      columnHelper.display({
+        id: "conversations",
+        header: () => t("customers.list.conversations"),
+        cell: ({ row }) => (
+          <ConversationsCell
+            conversationCount={row.original.conversationCount ?? 0}
+            channels={row.original.channels ?? []}
+          />
+        ),
       }),
       columnHelper.accessor("createdAt", {
         header: () => t("customers.list.firstSeen"),

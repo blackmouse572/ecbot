@@ -1,4 +1,5 @@
 import "@/i18n";
+import { TooltipProvider } from "@medusajs/ui";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
@@ -9,38 +10,40 @@ const renderRow = (
   chatbot?: { id?: string; name?: string },
 ) =>
   render(
-    <MemoryRouter initialEntries={["/acme/conversations"]}>
-      <Routes>
-        <Route
-          path=":workspaceSlug/*"
-          element={
-            <ConversationListItem
-              conversation={
-                {
-                  id: "conv-1",
-                  senderId: "sender-1",
-                  senderName: "Alice",
-                  account: {
-                    id: "acc-1",
-                    name: "Kunmart Bot",
-                    type: "TELEGRAM",
-                  },
-                  status: "OPEN",
-                  updatedAt: "2026-06-15T00:00:00Z",
-                  botEnabled: false,
-                  handoffReason,
-                  chatbot,
-                } as never
-              }
-              basePath="/acme/conversations"
-              isActive={false}
-              hasNewHandoff={false}
-              showChatbot={!!chatbot}
-            />
-          }
-        />
-      </Routes>
-    </MemoryRouter>,
+    <TooltipProvider>
+      <MemoryRouter initialEntries={["/acme/conversations"]}>
+        <Routes>
+          <Route
+            path=":workspaceSlug/*"
+            element={
+              <ConversationListItem
+                conversation={
+                  {
+                    id: "conv-1",
+                    senderId: "sender-1",
+                    senderName: "Alice",
+                    account: {
+                      id: "acc-1",
+                      name: "Kunmart Bot",
+                      type: "TELEGRAM",
+                    },
+                    status: "OPEN",
+                    updatedAt: "2026-06-15T00:00:00Z",
+                    botEnabled: false,
+                    handoffReason,
+                    chatbot,
+                  } as never
+                }
+                basePath="/acme/conversations"
+                isActive={false}
+                hasNewHandoff={false}
+                showChatbot={!!chatbot}
+              />
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    </TooltipProvider>,
   );
 
 describe("ConversationListItem", () => {

@@ -595,6 +595,17 @@ describe('ConversationMessagingService', () => {
             expect(dto.author).toEqual({ id: 'op-2', name: 'op-2' });
         });
 
+        it('names a SYSTEM note after the platform, not the customer', async () => {
+            const service = buildService();
+            const msg = buildMessage({
+                authorId: 'SYSTEM',
+                authorType: ENUM_MESSAGE_AUTHOR.SYSTEM,
+            });
+            const conversation = { senderName: 'Lan' } as ConversationEntity;
+            const dto = await service.mapMessage(msg, conversation);
+            expect(dto.author).toEqual({ id: 'SYSTEM', name: 'SYSTEM' });
+        });
+
         it('uses chatbot name for BOT messages when conversation.chatbot is populated', async () => {
             const service = buildService();
             const msg = buildMessage({
@@ -781,6 +792,60 @@ describe('ConversationMessagingService', () => {
                 },
             ]);
             expect(second.knowledgeCount).toBeUndefined();
+        });
+
+        it('shows a built-in tool call as its step, failed ones as errors', async () => {
+            const [dto] = await buildService().mapMessages(
+                [bot('2026-10-01T10:00:05Z')],
+                undefined,
+                undefined,
+                [],
+                [
+                    activity({
+                        id: 'a',
+                        kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
+                        label: 'apply_customer_tag',
+                        payload: {
+                            tool: {
+                                kind: 'handoff',
+                                args: { name: 'Đã cọc' },
+                                result: { ok: true, triggeredHandoff: true },
+                            },
+                        },
+                    }),
+                    activity({
+                        id: 'b',
+                        kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
+                        label: 'set_customer_field',
+                        payload: {
+                            tool: {
+                                kind: 'customer',
+                                args: { key: 'phone' },
+                                error: 'invalid phone',
+                            },
+                        },
+                    }),
+                ]
+            );
+
+            expect(dto.toolCalls).toEqual([
+                {
+                    invocationId: 'a',
+                    toolName: 'apply_customer_tag',
+                    args: { name: 'Đã cọc' },
+                    status: 'success',
+                    result: { ok: true, triggeredHandoff: true },
+                    kind: 'handoff',
+                },
+                {
+                    invocationId: 'b',
+                    toolName: 'set_customer_field',
+                    args: { key: 'phone' },
+                    status: 'error',
+                    error: 'invalid phone',
+                    kind: 'customer',
+                },
+            ]);
         });
 
         it('orders skill steps and tool calls by when they happened', async () => {

@@ -1,9 +1,14 @@
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { IconFile, IconLink, IconLetterCase } from "@tabler/icons-react";
+import {
+  IconFile,
+  IconLink,
+  IconLetterCase,
+  IconPhoto,
+} from "@tabler/icons-react";
 import { RadioGroup } from "@medusajs/ui";
 
-export const KnowledgeItemTypeEnum = ["FILE", "URL", "TEXT"] as const;
+export const KnowledgeItemTypeEnum = ["FILE", "URL", "TEXT", "MEDIA"] as const;
 export type KnowledgeItemType = (typeof KnowledgeItemTypeEnum)[number];
 
 interface KnowledgeItemTypeSelectorProps {
@@ -45,11 +50,17 @@ export const KnowledgeItemTypeSelector: FC<KnowledgeItemTypeSelectorProps> = ({
       description: t("knowledge_item.type.text_desc"),
       icon: IconLetterCase,
     },
+    {
+      id: "MEDIA",
+      label: t("knowledge_item.type.media"),
+      description: t("knowledge_item.type.media_desc"),
+      icon: IconPhoto,
+    },
   ];
 
   return (
     <RadioGroup
-      className="grid grid-cols-3 gap-4"
+      className="grid grid-cols-2 gap-4 sm:grid-cols-4"
       disabled={disabled}
       value={value || undefined}
       onValueChange={(v) => onChange(v as KnowledgeItemType)}

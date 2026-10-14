@@ -4496,7 +4496,7 @@ export type KnowledgeItemResponseDto = {
     /**
      * Item type (FILE, URL, TEXT)
      */
-    type: 'FILE' | 'URL' | 'TEXT';
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
     /**
      * Item title
      */
@@ -4541,7 +4541,7 @@ export type KnowledgeItemCreateRequestDto = {
     /**
      * Item type
      */
-    type: 'FILE' | 'URL' | 'TEXT';
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
     /**
      * Item title
      */
@@ -4903,7 +4903,7 @@ export type MessageGetResponseDto = {
      */
     id: string;
     direction: 'INBOUND' | 'OUTBOUND';
-    authorType: 'USER' | 'BOT' | 'OPERATOR';
+    authorType: 'USER' | 'BOT' | 'OPERATOR' | 'SYSTEM';
     /**
      * Sender ID — platform PSID, bot account ID, or operator user ID
      */
@@ -5415,6 +5415,14 @@ export type CustomerGetResponseDto = {
     notes?: string | null;
     profileSummary?: string | null;
     mergedIntoCustomerId?: string | null;
+    /**
+     * Number of conversations this customer has. Present on list responses only.
+     */
+    conversationCount?: number;
+    /**
+     * Distinct channel (account) types the customer talked on. Present on list responses only.
+     */
+    channels?: Array<string>;
 };
 
 export type CustomerUpdateRequestDto = {
@@ -5835,7 +5843,7 @@ export type KnowledgeItemShortResponseDto = {
     /**
      * Item type (FILE, URL, TEXT)
      */
-    type: 'FILE' | 'URL' | 'TEXT';
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
     /**
      * Item title
      */

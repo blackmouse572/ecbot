@@ -23,9 +23,8 @@ async def get_pool() -> asyncpg.Pool:
                     dsn=_asyncpg_dsn(),
                     min_size=1,
                     max_size=10,
-                    # Resolve unqualified table names to the dedicated `rag` schema
-                    # first; keep `public` for the `vector` type/extension.
-                    server_settings={"search_path": "rag, public"},
+                    # No connect-time search_path: Neon's pooler drops it, so
+                    # every query names its table as `rag.<table>`.
                 )
     return _POOL
 
@@ -95,7 +94,7 @@ class PgVectorStore:
         async with pool.acquire() as conn:
             await conn.execute(
                 """
-                INSERT INTO rag_documents (
+                INSERT INTO rag.rag_documents (
                     id, source_filename, local_path, mime_type, content_hash,
                     content_chars, chunk_size, chunk_overlap, embedding_model,
                     embedding_dimension, status, metadata
@@ -127,15 +126,15 @@ class PgVectorStore:
         async with pool.acquire() as conn:
             async with conn.transaction():
                 await conn.execute(
-                    "DELETE FROM rag_document_chunks WHERE document_id = $1",
+                    "DELETE FROM rag.rag_document_chunks WHERE document_id = $1",
                     document_id,
                 )
                 await conn.executemany(
                     """
-                    INSERT INTO rag_document_chunks (
+                    INSERT INTO rag.rag_document_chunks (
                         id, document_id, chunk_index, content, content_chars, embedding, metadata
                     )
-                    VALUES ($1, $2, $3, $4, $5, $6::vector, $7::jsonb)
+                    VALUES ($1, $2, $3, $4, $5, $6::public.vector, $7::jsonb)
                     """,
                     [
                         (
@@ -152,7 +151,7 @@ class PgVectorStore:
                 )
                 await conn.execute(
                     """
-                    UPDATE rag_documents
+                    UPDATE rag.rag_documents
                     SET chunk_count = $2, status = 'COMPLETED', error_message = NULL, updated_at = now()
                     WHERE id = $1
                     """,
@@ -165,7 +164,7 @@ class PgVectorStore:
         async with pool.acquire() as conn:
             await conn.execute(
                 """
-                UPDATE rag_documents
+                UPDATE rag.rag_documents
                 SET status = 'FAILED', error_message = $2, updated_at = now()
                 WHERE id = $1
                 """,
@@ -182,7 +181,7 @@ class PgVectorStore:
         pool = await get_pool()
         async with pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM rag_documents WHERE metadata->>'knowledge_item_id' = $1",
+                "DELETE FROM rag.rag_documents WHERE metadata->>'knowledge_item_id' = $1",
                 knowledge_item_id,
             )
             # asyncpg returns e.g. "DELETE 1"
@@ -193,13 +192,73 @@ class PgVectorStore:
         async with pool.acquire() as conn:
             result = await conn.execute(
                 """
-                UPDATE rag_documents
+                UPDATE rag.rag_documents
                 SET metadata = jsonb_set(metadata, '{chatbot_ids}', $2::jsonb, true),
                     updated_at = now()
                 WHERE metadata->>'knowledge_item_id' = $1
                 """,
                 knowledge_item_id,
                 json.dumps(chatbot_ids),
+            )
+            return int(result.split()[-1]) if result else 0
+
+    async def upsert_media(
+        self,
+        *,
+        knowledge_item_id: str,
+        chatbot_ids: list[str],
+        title: str,
+        description: str,
+        url: str,
+        mime_type: str,
+        embedding: list[float],
+    ) -> None:
+        """One row per media item; re-ingesting the item replaces it."""
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO rag.rag_media (
+                    id, knowledge_item_id, chatbot_ids, title, description, url, mime_type, embedding
+                )
+                VALUES ($1, $2, $3::text[], $4, $5, $6, $7, $8::public.vector)
+                ON CONFLICT (knowledge_item_id) DO UPDATE SET
+                    chatbot_ids = EXCLUDED.chatbot_ids,
+                    title = EXCLUDED.title,
+                    description = EXCLUDED.description,
+                    url = EXCLUDED.url,
+                    mime_type = EXCLUDED.mime_type,
+                    embedding = EXCLUDED.embedding,
+                    updated_at = now()
+                """,
+                uuid4(),
+                knowledge_item_id,
+                chatbot_ids,
+                title,
+                description,
+                url,
+                mime_type,
+                _vector_literal(embedding),
+            )
+
+    async def delete_media_by_knowledge_item(self, knowledge_item_id: str) -> int:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            result = await conn.execute(
+                "DELETE FROM rag.rag_media WHERE knowledge_item_id = $1", knowledge_item_id
+            )
+            return int(result.split()[-1]) if result else 0
+
+    async def update_media_chatbot_links(self, knowledge_item_id: str, chatbot_ids: list[str]) -> int:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE rag.rag_media SET chatbot_ids = $2::text[], updated_at = now()
+                WHERE knowledge_item_id = $1
+                """,
+                knowledge_item_id,
+                chatbot_ids,
             )
             return int(result.split()[-1]) if result else 0
 
@@ -223,7 +282,7 @@ class PgVectorStore:
                     error_message,
                     metadata,
                     created_at
-                FROM rag_documents
+                FROM rag.rag_documents
                 ORDER BY created_at DESC
                 LIMIT $1
                 """,
@@ -260,13 +319,13 @@ class PgVectorStore:
                     d.local_path AS stored_path,
                     d.metadata AS document_metadata,
                     d.created_at AS document_created_at,
-                    c.embedding <=> $1::vector AS distance
-                FROM rag_document_chunks c
-                JOIN rag_documents d ON d.id = c.document_id
+                    c.embedding <=> $1::public.vector AS distance
+                FROM rag.rag_document_chunks c
+                JOIN rag.rag_documents d ON d.id = c.document_id
                 WHERE
                     d.status = 'COMPLETED'
                     AND (d.metadata->'chatbot_ids' ? $2 OR d.metadata->>'chatbot_id' = $2)
-                ORDER BY c.embedding <=> $1::vector
+                ORDER BY c.embedding <=> $1::public.vector
                 LIMIT $3
                 """,
                 _vector_literal(embedding),
@@ -281,7 +340,7 @@ class PgVectorStore:
             return await conn.fetchval(
                 """
                 SELECT COUNT(*)
-                FROM rag_documents
+                FROM rag.rag_documents
                 WHERE status = 'COMPLETED'
                     AND (metadata->'chatbot_ids' ? $1 OR metadata->>'chatbot_id' = $1)
                 """,
@@ -320,8 +379,8 @@ class PgVectorStore:
                         ),
                         q.query
                     ) AS fts_rank
-                FROM rag_document_chunks c
-                JOIN rag_documents d ON d.id = c.document_id
+                FROM rag.rag_document_chunks c
+                JOIN rag.rag_documents d ON d.id = c.document_id
                 CROSS JOIN q
                 WHERE
                     d.status = 'COMPLETED'

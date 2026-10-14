@@ -2,12 +2,7 @@ import { Text, clx } from "@medusajs/ui";
 import { Collapsible as RadixCollapsible } from "radix-ui";
 import React, { type ReactNode, useCallback, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import {
-  HoverCard,
-  HoverCardArrow,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../../ui/hover-card";
+import { NavHintTrigger } from "./nav-hint-popover";
 import { type NavAbility, useNavAccess } from "./nav-access-context";
 
 type ItemType = "core" | "extension" | "setting";
@@ -35,9 +30,6 @@ export type INavItem = {
    * it. Rendered only while open, so a lazy component loads on first use. */
   hint?: ReactNode;
 };
-
-/** Long enough that passing over the sidebar never opens a hint. */
-const HINT_OPEN_DELAY_MS = 800;
 
 const BASE_NAV_LINK_CLASSES =
   "text-ui-fg-subtle transition-fg hover:bg-ui-bg-subtle-hover flex items-center gap-x-2 rounded-md py-0.5 pl-0.5 pr-2 outline-none [&>svg]:text-ui-fg-subtle focus-visible:shadow-borders-focus";
@@ -111,7 +103,7 @@ export const NavItem = ({
   return (
     <Wrapper>
       <div className="px-3">
-        <WithHint hint={hint}>
+        <NavHintTrigger hint={hint}>
           <NavLink
             to={to}
             end={end ?? items?.some((i) => i.to === pathname)}
@@ -140,7 +132,7 @@ export const NavItem = ({
               <span className="ml-auto flex items-center">{badge}</span>
             )}
           </NavLink>
-        </WithHint>
+        </NavHintTrigger>
         {items && items.length > 0 && (
           <RadixCollapsible.Root open={open} onOpenChange={setOpen}>
             <RadixCollapsible.Trigger
@@ -191,7 +183,7 @@ export const NavItem = ({
                     {items.map((item) => {
                       return (
                         <li key={item.to} className="flex h-7 items-center">
-                          <WithHint hint={item.hint}>
+                          <NavHintTrigger hint={item.hint}>
                             <NavLink
                               to={item.to}
                               end
@@ -226,7 +218,7 @@ export const NavItem = ({
                                 </span>
                               )}
                             </NavLink>
-                          </WithHint>
+                          </NavHintTrigger>
                         </li>
                       );
                     })}
@@ -238,33 +230,6 @@ export const NavItem = ({
         )}
       </div>
     </Wrapper>
-  );
-};
-
-const WithHint = ({
-  hint,
-  children,
-}: React.PropsWithChildren<{ hint?: ReactNode }>) => {
-  if (!hint) return children;
-
-  return (
-    <HoverCard openDelay={HINT_OPEN_DELAY_MS} closeDelay={100}>
-      {/* A wrapper, not asChild: Slot would merge NavLink's className
-          function into a string. */}
-      <HoverCardTrigger asChild>
-        <div className="w-full">{children}</div>
-      </HoverCardTrigger>
-      <HoverCardContent
-        side="right"
-        align="start"
-        sideOffset={12}
-        className="w-[300px] p-0"
-      >
-        {/* Clipped inside, so the arrow can sit outside the card. */}
-        <div className="overflow-hidden rounded-lg">{hint}</div>
-        <HoverCardArrow />
-      </HoverCardContent>
-    </HoverCard>
   );
 };
 

@@ -249,4 +249,119 @@ describe("KnowledgeItemCreateForm", () => {
       screen.getByPlaceholderText("Enter tag name..."),
     ).toBeInTheDocument();
   });
+
+  // Media: many images and PDFs at once, each becoming its own item named
+  // after its file, linked and processed like any other item.
+  describe("media", () => {
+    const pick = (container: HTMLElement, files: File[]) =>
+      fireEvent.change(container.querySelector('input[type="file"]')!, {
+        target: { files },
+      });
+    const image = (name: string) =>
+      new File(["x"], name, { type: "image/png" });
+
+    beforeEach(() => {
+      URL.createObjectURL = vi.fn(() => "blob:preview");
+    });
+
+    it("creates one MEDIA item per file, named after the file", async () => {
+      const { container } = render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm
+            workspaceSlug="ws"
+            knowledgeBaseId="kb-1"
+            agentId="bot-1"
+          />
+        </NuqsTestingAdapter>,
+      );
+      expect(container.querySelector('input[name="title"]')).toBeNull();
+
+      pick(container, [
+        image("banner-1.png"),
+        new File(["%PDF"], "menu do uong.pdf", { type: "application/pdf" }),
+      ]);
+      fireEvent.submit(container.querySelector("form")!);
+
+      await waitFor(() => expect(api.processed).toHaveLength(2));
+      expect(api.created).toEqual([
+        expect.objectContaining({ type: "MEDIA", title: "banner-1" }),
+        expect.objectContaining({ type: "MEDIA", title: "menu do uong" }),
+      ]);
+      expect(api.linked).toHaveLength(2);
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it("lists each picked file with its type icon and size", () => {
+      const { container } = render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+        </NuqsTestingAdapter>,
+      );
+      pick(container, [
+        new File(["%PDF"], "menu.pdf", { type: "application/pdf" }),
+      ]);
+
+      expect(screen.getByText("menu.pdf")).toBeInTheDocument();
+      expect(screen.getByText("4 bytes")).toBeInTheDocument();
+      expect(screen.getByText("1 file, 4 bytes")).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-slot="file-type"][data-type="pdf"]'),
+      ).not.toBeNull();
+    });
+
+    it("says media is processed by vision AI and what it costs", () => {
+      render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+        </NuqsTestingAdapter>,
+      );
+      expect(screen.getByText(/vision AI.*2,000 tokens/)).toBeInTheDocument();
+    });
+
+    it("refuses a file that is not an image or a PDF", async () => {
+      const { container } = render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+        </NuqsTestingAdapter>,
+      );
+
+      pick(container, [new File(["x"], "notes.txt", { type: "text/plain" })]);
+      fireEvent.submit(container.querySelector("form")!);
+
+      await waitFor(() =>
+        expect(screen.getByText(/JPG, PNG, WEBP/)).toBeInTheDocument(),
+      );
+      expect(api.created).toHaveLength(0);
+    });
+
+    it("marks the failed file and retries just that one", async () => {
+      let calls = 0;
+      api.createError = null;
+      const { container } = render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+        </NuqsTestingAdapter>,
+      );
+      pick(container, [image("a.png"), image("b.png"), image("c.png")]);
+      const realPush = api.created.push.bind(api.created);
+      api.created.push = (...items: unknown[]) => {
+        calls += 1;
+        if (calls === 2) throw new Error("boom");
+        return realPush(...items);
+      };
+      fireEvent.submit(container.querySelector("form")!);
+
+      expect(
+        await screen.findByText("2 of 3 uploaded, 1 failed"),
+      ).toBeInTheDocument();
+      expect(screen.getAllByText(/Uploaded/)).toHaveLength(2);
+      expect(screen.getByText(/Failed at/)).toBeInTheDocument();
+      expect(api.processed).toHaveLength(2);
+
+      fireEvent.click(screen.getByRole("button", { name: "Retry upload" }));
+      expect(await screen.findByText("3 of 3 uploaded")).toBeInTheDocument();
+      expect(api.created).toHaveLength(3);
+      expect(api.processed).toHaveLength(3);
+    });
+  });
 });

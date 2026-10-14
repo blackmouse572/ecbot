@@ -27,6 +27,7 @@ const mockCustomerService = {
     findByWorkspace: jest.fn(),
     countByWorkspace: jest.fn(),
     mapList: jest.fn(),
+    summarizeConversations: jest.fn(),
     findOneById: jest.fn(),
     findOneByIdInWorkspace: jest.fn(),
     update: jest.fn(),
@@ -98,6 +99,9 @@ describe('CustomerWorkspaceController', () => {
             ]);
             mockCustomerService.countByWorkspace.mockResolvedValue(45);
             mockCustomerService.mapList.mockReturnValue([mappedDto]);
+            mockCustomerService.summarizeConversations.mockResolvedValue(
+                new Map()
+            );
             const search = { $or: [{ name: { $ilike: '%ali%' } }] };
 
             const result = await controller.list(
@@ -128,6 +132,41 @@ describe('CustomerWorkspaceController', () => {
                 _pagination: { total: 45, totalPage: 3 },
                 data: [mappedDto],
             });
+        });
+
+        it("adds each listed customer's conversation count and channels", async () => {
+            const summaries = new Map([
+                [
+                    'cust-1',
+                    { conversationCount: 2, channels: ['FACEBOOK_PAGE'] },
+                ],
+            ]);
+            mockCustomerService.findByWorkspace.mockResolvedValue([
+                customerEntity,
+            ]);
+            mockCustomerService.countByWorkspace.mockResolvedValue(1);
+            mockCustomerService.summarizeConversations.mockResolvedValue(
+                summaries
+            );
+            mockCustomerService.mapList.mockReturnValue([mappedDto]);
+
+            await controller.list(
+                { id: 'ws-1' } as any,
+                {
+                    _search: {},
+                    _limit: 20,
+                    _offset: 0,
+                    _order: {},
+                } as any
+            );
+
+            expect(
+                mockCustomerService.summarizeConversations
+            ).toHaveBeenCalledWith(['cust-1'], 'ws-1');
+            expect(mockCustomerService.mapList).toHaveBeenCalledWith(
+                [customerEntity],
+                summaries
+            );
         });
     });
 

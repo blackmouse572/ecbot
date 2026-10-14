@@ -3,15 +3,25 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { createElement, type PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-const { reactToMessage, toastError, listMessages } = vi.hoisted(() => ({
+const {
+  reactToMessage,
+  toastError,
+  listMessages,
+  listConversations,
+  markRead,
+} = vi.hoisted(() => ({
   reactToMessage: vi.fn(),
   toastError: vi.fn(),
   listMessages: vi.fn(),
+  listConversations: vi.fn(),
+  markRead: vi.fn(),
 }));
 
 vi.mock("@repo/client", () => ({
   conversationWorkspaceControllerReactToMessageV1: reactToMessage,
   conversationWorkspaceControllerListMessagesV1: listMessages,
+  conversationWorkspaceControllerListV1: listConversations,
+  conversationWorkspaceControllerMarkReadV1: markRead,
 }));
 
 vi.mock("./workspace", () => ({
@@ -34,6 +44,8 @@ vi.mock("@medusajs/ui", async () => {
 import {
   conversationQueryKeys,
   useConversationMessages,
+  useConversations,
+  useMarkConversationRead,
   useReactToMessage,
 } from "./conversations";
 
@@ -189,6 +201,46 @@ describe("useReactToMessage", () => {
     expect(cached.pages[0].data[0].reactions).toHaveLength(0);
     expect(toastError).toHaveBeenCalledWith(
       "conversations.reactions.toastFailed",
+    );
+  });
+});
+
+describe("useMarkConversationRead", () => {
+  // Opening a conversation from a link marks it read while the list is still
+  // loading. The optimistic update cancels that first load, so the list must
+  // be fetched again or it stays empty until the next poll.
+  it("refetches a conversation list it cancelled before it loaded", async () => {
+    let resolveFirst: (v: unknown) => void = () => {};
+    listConversations
+      .mockImplementationOnce(
+        () => new Promise((resolve) => (resolveFirst = resolve)),
+      )
+      .mockResolvedValue({ data: { data: [{ id: "conv-1" }] } });
+    markRead.mockResolvedValue({});
+
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const localWrapper = ({ children }: PropsWithChildren) =>
+      createElement(QueryClientProvider, { client }, children);
+
+    const { result } = renderHook(
+      () => ({
+        list: useConversations({ perPage: 50 }),
+        markRead: useMarkConversationRead("conv-1"),
+      }),
+      { wrapper: localWrapper },
+    );
+
+    await waitFor(() => expect(listConversations).toHaveBeenCalledTimes(1));
+    result.current.markRead.mutate();
+    resolveFirst({ data: { data: [] } });
+
+    await waitFor(() =>
+      expect(result.current.list.conversations).toEqual([{ id: "conv-1" }]),
     );
   });
 });

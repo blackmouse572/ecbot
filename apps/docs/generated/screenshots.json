@@ -51,6 +51,86 @@
       }
     }
   },
+  "api-key-created": {
+    "en": {
+      "src": "/_docs/screenshots/en/api-key-created.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "warning": {
+          "x": 62.01,
+          "y": 9.11,
+          "w": 35.97,
+          "h": 4
+        },
+        "copy": {
+          "x": 62.01,
+          "y": 14,
+          "w": 35.97,
+          "h": 9.2
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/api-key-created.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "warning": {
+          "x": 62.01,
+          "y": 9.11,
+          "w": 35.97,
+          "h": 4
+        },
+        "copy": {
+          "x": 62.01,
+          "y": 14,
+          "w": 35.97,
+          "h": 9.2
+        }
+      }
+    }
+  },
+  "api-keys": {
+    "en": {
+      "src": "/_docs/screenshots/en/api-keys.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "nav": {
+          "x": 0.56,
+          "y": 33.56,
+          "w": 14.1,
+          "h": 4
+        },
+        "create": {
+          "x": 93.24,
+          "y": 8.56,
+          "w": 4.54,
+          "h": 4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/api-keys.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "nav": {
+          "x": 0.56,
+          "y": 33.56,
+          "w": 14.1,
+          "h": 4
+        },
+        "create": {
+          "x": 92.72,
+          "y": 8.56,
+          "w": 5.06,
+          "h": 4
+        }
+      }
+    }
+  },
   "builder-question": {
     "en": {
       "src": "/_docs/screenshots/en/builder-question.png",

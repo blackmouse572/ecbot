@@ -2453,7 +2453,8 @@
     "type": {
       "FILE": "Tệp",
       "URL": "URL",
-      "TEXT": "Văn bản"
+      "TEXT": "Văn bản",
+      "MEDIA": "Media"
     },
     "status": {
       "DRAFT": "Bản nháp",
@@ -2571,11 +2572,13 @@
     "type": {
       "type": "Loại",
       "file": "Tệp",
-      "file_desc": "Tải lên tài liệu hoặc tệp",
+      "file_desc": "Tài liệu agent đọc, không gửi cho khách",
       "url": "URL",
       "url_desc": "Liên kết đến một trang web",
       "text": "Văn bản",
-      "text_desc": "Viết nội dung văn bản tùy chỉnh"
+      "text_desc": "Viết nội dung văn bản tùy chỉnh",
+      "media": "Media",
+      "media_desc": "Ảnh, menu PDF agent gửi cho khách"
     },
     "status": "Trạng thái",
     "created_at": "Tạo vào",
@@ -2604,7 +2607,30 @@
     "not_learned_yet": "Chưa học. Agent có thể dùng tệp này khi xử lý xong.",
     "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại.",
     "link_after_create_error_one": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của agent.",
-    "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent."
+    "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent.",
+    "media": {
+      "files": "Tệp",
+      "files_hint": "Ảnh sản phẩm, banner, menu PDF. Mỗi tệp thành một mục riêng, lấy tên theo tên tệp, nên hãy đặt tên tệp rõ ràng.",
+      "pick": "Chọn hoặc kéo thả tệp",
+      "formats": "Ảnh JPG, PNG, WEBP tối đa 5MB, PDF tối đa 20MB, tối đa 50 tệp mỗi lần",
+      "required": "Hãy thêm ít nhất một tệp",
+      "too_many": "Mỗi lần thêm tối đa {{count}} tệp",
+      "invalid": "Chỉ nhận ảnh JPG, PNG, WEBP tối đa 5MB, hoặc PDF tối đa 20MB",
+      "create_success_one": "Đã thêm {{count}} media",
+      "create_success_other": "Đã thêm {{count}} media",
+      "create_partial": "Đã thêm {{added}}/{{count}} tệp. {{failed}} tệp chưa tải lên được, hãy thử lại.",
+      "description": "Mô tả để agent tìm kiếm",
+      "description_pending": "Agent sẽ tự mô tả tệp này sau khi xử lý xong.",
+      "open_pdf": "Mở PDF",
+      "description_hint": "Agent tìm tệp này theo tên và mô tả này. Để trống nếu muốn agent tự mô tả lại.",
+      "cost_hint": "Xử lý bằng AI vision: khoảng 2.000 token mỗi ảnh, 500 token mỗi trang ảnh trong PDF.",
+      "upload_summary": "Đã tải lên {{done}}/{{count}} tệp",
+      "upload_summary_failed": "Đã tải lên {{done}}/{{count}} tệp, {{failed}} lỗi",
+      "uploaded": "Đã tải lên",
+      "failed_at": "Lỗi ở {{progress}}%",
+      "upload_total_one": "{{count}} tệp, tổng {{size}}",
+      "upload_total_other": "{{count}} tệp, tổng {{size}}"
+    }
   },
   "conversations": {
     "title": "Hội thoại",
@@ -2642,17 +2668,28 @@
       "botActive": "Bot đang trả lời",
       "needsYou": "Cần bạn xử lý",
       "youHandling": "Bạn đang xử lý",
-      "resolved": "Đã đóng",
+      "resolved": "Đã xử lý",
       "lifecycle": {
         "OPEN": "Đang mở",
-        "RESOLVED": "Đã đóng"
-      }
+        "RESOLVED": "Đã xử lý"
+      },
+      "hint": {
+        "botActive": "Bot đang trả lời khách.",
+        "needsYou": "Bot đã chuyển cuộc trò chuyện cho nhóm bạn và ngừng trả lời. Nhân viên cần trả lời khách.",
+        "youHandling": "Nhân viên đã tạm dừng bot và đang tự trả lời. Bot im lặng cho tới khi được bật lại.",
+        "resolved": "Nhóm bạn đã xử lý việc được chuyển. Bot trả lời lại, và tin nhắn mới của khách sẽ mở lại cuộc trò chuyện."
+      },
+      "resolveTip": "Bấm <b>Đã xử lý</b> khi bạn xong việc và muốn bot tiếp tục.",
+      "learnMore": "Xem thêm"
     },
     "author": {
       "user": "Khách hàng",
       "bot": "Bot",
       "operator": "Bạn",
       "you": "Bạn"
+    },
+    "systemNote": {
+      "handled": "Nhân viên đã xử lý. Bot trả lời lại."
     },
     "detail": {
       "empty": {
@@ -2670,25 +2707,24 @@
       "send": "Gửi",
       "retry": "Gửi lại",
       "failed": "Gửi thất bại",
-      "tooLong": "Tin nhắn không được dài quá 4096 ký tự",
-      "disabledResolved": "Hội thoại đã đóng. Khôi phục về tự động để trả lời."
+      "tooLong": "Tin nhắn không được dài quá 4096 ký tự"
     },
     "actions": {
       "botLabel": "Bot",
       "viewProfile": "Xem hồ sơ",
       "viewChatbot": "Xem agent",
       "pause": "Tạm dừng bot",
-      "resolve": "Đóng hội thoại",
+      "resolve": "Đã xử lý",
       "restore": "Khôi phục tự động",
       "cancel": "Huỷ",
       "pauseConfirmTitle": "Tạm dừng trả lời tự động?",
       "pauseConfirmDescription": "Bot sẽ dừng trả lời. Nhân viên cần trực tiếp trả lời.",
       "pauseReasonLabel": "Lý do (tuỳ chọn)",
       "pauseReasonPlaceholder": "VD: Khách hàng yêu cầu hỗ trợ trực tiếp",
-      "resolveConfirmTitle": "Đánh dấu hội thoại đã đóng?",
-      "resolveConfirmDescription": "Hội thoại đã đóng không thể trả lời cho đến khi được khôi phục.",
+      "resolveConfirmTitle": "Đánh dấu hội thoại đã xử lý?",
+      "resolveConfirmDescription": "Bot tiếp tục trả lời khách và không bàn giao lại việc nhóm đã xử lý. Bạn vẫn gửi tin nhắn được.",
       "restoreConfirmTitle": "Bàn giao lại cho bot?",
-      "restoreConfirmDescription": "Bot sẽ tiếp tục trả lời. Nếu hội thoại đã đóng, bộ nhớ AI sẽ được đặt lại."
+      "restoreConfirmDescription": "Hội thoại mở lại và bot tiếp tục trả lời."
     },
     "errors": {
       "sendFailed": "Không thể gửi tin nhắn. Vui lòng thử lại.",
@@ -2719,6 +2755,11 @@
           "title": "Kênh liên hệ",
           "empty": "Chưa có kênh liên hệ",
           "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây."
+        },
+        "conversations": {
+          "title": "Cuộc trò chuyện",
+          "empty": "Chưa có cuộc trò chuyện",
+          "current": "Đang xem"
         },
         "followups": {
           "title": "Nhắc hẹn",
@@ -2859,6 +2900,8 @@
       "unnamed": "Khách chưa có tên",
       "phone": "Số điện thoại",
       "firstSeen": "Lần đầu liên hệ",
+      "conversations": "Hội thoại",
+      "conversationCount_other": "{{count}} hội thoại",
       "emptyTitle": "Chưa có khách hàng nào",
       "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn.",
       "connectChannel": "Liên kết kênh"

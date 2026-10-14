@@ -245,6 +245,7 @@ export class KnowledgeItemService {
             errorMessage?: string | null;
             processedAt?: Date;
             metadata?: Record<string, any>;
+            content?: string;
         }
     ): Promise<void> {
         const item = await this.em.findOneOrFail(KnowledgeItemEntity, id);
@@ -258,6 +259,7 @@ export class KnowledgeItemService {
         if (payload.processedAt !== undefined)
             item.processedAt = payload.processedAt;
         if (payload.metadata !== undefined) item.metadata = payload.metadata;
+        if (payload.content !== undefined) item.content = payload.content;
         item.updatedAt = new Date();
         await this.em.persistAndFlush(item);
     }
