@@ -1,0 +1,89 @@
+---
+title: Máy chủ MCP Ecbot
+description: Kết nối Claude Code, Codex hoặc Cursor với workspace bằng API key, để trợ lý AI quản lý agent, kiến thức, hội thoại và khách hàng giúp bạn.
+faq:
+  - q: Trợ lý làm được gì với API key của tôi?
+    a: Những gì người tạo key đang được làm trong ứng dụng. Key do chủ workspace hoặc thành viên có vai trò Admin có sẵn tạo, và cả hai đều dùng được mọi công cụ trong trang này.
+  - q: Đưa API key cho trợ lý AI có an toàn không?
+    a: Key mở toàn bộ workspace, nên hãy giữ nó như mật khẩu. Mọi thay đổi đều được ghi lại dưới tên người tạo key, và bạn có thể đổi secret hoặc xóa key bất cứ lúc nào trong Cài đặt.
+  - q: Trợ lý không làm được những gì?
+    a: Trợ lý không tải tệp lên, không cài ứng dụng từ kho công cụ và không xóa vĩnh viễn dữ liệu của khách. Hãy làm những việc đó trong ứng dụng.
+  - q: Tin trả lời của trợ lý có đến tay khách không?
+    a: Có, ngay lập tức, như thể người tạo key gửi từ mục Hội thoại. Phần lớn trợ lý sẽ hỏi bạn xác nhận trước khi gọi công cụ gửi tin hoặc xóa dữ liệu.
+---
+
+Máy chủ MCP Ecbot cho phép trợ lý AI như Claude Code, Codex hoặc Cursor làm việc trong workspace của bạn. Kết nối bằng một API key, rồi nhờ bằng lời thường: "liệt kê các cuộc trò chuyện cần mình xử lý", "thêm chính sách đổi trả vào cơ sở kiến thức" hay "gắn thẻ VIP cho khách này". Trợ lý làm được những gì người tạo key làm được.
+
+## Tạo API key
+
+Chủ workspace và thành viên có vai trò **Admin** có sẵn tạo được API key, còn vai trò tự tạo thì không. Mở menu workspace ở đầu thanh bên, chọn **Cài đặt** (thành viên chọn tên workspace), rồi mở **API key**:
+
+<Screenshot name="api-keys" alt="Trang API key trong Cài đặt, với các key của workspace và nút Tạo mới">
+  <Mark id="nav">**API key** trong thanh bên của Cài đặt liệt kê mọi key của workspace.</Mark>
+  <Mark id="create">**Tạo mới** tạo một key mới.</Mark>
+</Screenshot>
+
+Chọn **Tạo mới**, đặt tên cho key, ví dụ "Claude Code", rồi chọn **Tạo mới** lần nữa. Key mới chỉ hiện một lần:
+
+<Screenshot name="api-key-created" alt="Key mới hiện một lần ở mục x-api-key, kèm nút sao chép">
+  <Mark id="warning">Secret chỉ hiện đúng một lần này. Nếu làm mất, hãy đổi secret hoặc tạo key mới.</Mark>
+  <Mark id="copy">Sao chép toàn bộ giá trị ở mục **x-api-key**. Đây là key mà trợ lý gửi đi.</Mark>
+</Screenshot>
+
+Nếu key bị lộ, mở menu của key (**...**) và chọn **Đổi secret**: secret cũ ngừng hoạt động ngay. **Xóa** sẽ thu hồi key vĩnh viễn.
+
+## Kết nối trợ lý
+
+Địa chỉ máy chủ là `https://mcp.ecbot.dev/mcp`. Trợ lý gửi key kèm mọi yêu cầu, qua header `x-api-key` hoặc dưới dạng bearer token. Thay `YOUR_KEY` bên dưới bằng giá trị bạn vừa sao chép.
+
+### Claude Code
+
+```bash
+claude mcp add --transport http --scope user ecbot https://mcp.ecbot.dev/mcp \
+  --header "x-api-key: YOUR_KEY"
+```
+
+### Codex
+
+```bash
+export ECBOT_API_KEY="YOUR_KEY"
+codex mcp add ecbot --url https://mcp.ecbot.dev/mcp \
+  --bearer-token-env-var ECBOT_API_KEY
+```
+
+### Cursor và các trợ lý khác
+
+Các trợ lý cấu hình bằng tệp JSON, như tệp `mcp.json` của Cursor, nhận địa chỉ và một header:
+
+```json
+{
+  "mcpServers": {
+    "ecbot": {
+      "url": "https://mcp.ecbot.dev/mcp",
+      "headers": { "x-api-key": "YOUR_KEY" }
+    }
+  }
+}
+```
+
+Đừng để tệp chứa key trong thư mục dùng chung hay kho mã nguồn.
+
+## Trợ lý làm được gì
+
+| Phần | Xem | Thay đổi |
+| --- | --- | --- |
+| Agent | Liệt kê agent, xem một agent, liệt kê các mô hình AI | Tạo, sửa, kích hoạt hoặc tắt, xóa |
+| Hội thoại | Liệt kê cuộc trò chuyện, xem một cuộc và các tin nhắn | Trả lời, bật hoặc tắt agent trong một cuộc, chuyển sang **Đang mở** hoặc **Đã đóng** |
+| Cơ sở kiến thức | Liệt kê cơ sở kiến thức và các mục, xem một mục | Tạo cơ sở kiến thức, thêm mục văn bản hoặc trang web, sửa, xử lý hoặc xóa một mục |
+| Khách hàng | Liệt kê khách hàng và thẻ, xem một khách và thẻ của họ | Sửa thông tin khách, tạo, sửa hoặc xóa thẻ, gắn hoặc gỡ thẻ cho khách |
+| Công cụ | Liệt kê công cụ của workspace và của một agent | Tạo công cụ HTTP hoặc MCP, sửa hoặc xóa, bật hoặc tắt cho một agent |
+| Kỹ năng | Liệt kê kỹ năng của bạn và các mẫu, xem một kỹ năng | Tạo kỹ năng, sao chép mẫu, sửa hoặc xóa, gắn vào agent hoặc gỡ ra |
+
+Tải tệp lên, cài ứng dụng từ kho công cụ và xóa vĩnh viễn dữ liệu của khách chỉ làm được trong ứng dụng.
+
+## Quyền và nhật ký hoạt động
+
+- **Key hoạt động với tư cách người tạo.** Key luôn có đúng quyền hiện tại của người tạo: nếu họ mất một quyền hoặc rời workspace, key cũng mất theo.
+- **Trợ lý chỉ thấy những công cụ key được dùng**, nên không thử những thao tác sẽ bị từ chối.
+- **Mọi thay đổi đều được ghi lại.** Thay đổi và tin trả lời hiện trong **Nhật ký hoạt động** dưới tên người tạo key, như khi họ làm trong ứng dụng. Mở một cuộc trò chuyện hay một khách hàng cũng được ghi là lượt xem, giống như vậy.
+- **Nội dung của khách là dữ liệu, không phải mệnh lệnh.** Tin nhắn của khách và nội dung tài liệu có thể chứa bất cứ điều gì, nên máy chủ dặn trợ lý không bao giờ làm theo chỉ dẫn nằm trong đó.
