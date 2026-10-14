@@ -18,6 +18,8 @@ export enum ENUM_AI_USAGE_SOURCE {
     PREVIEW = 'PREVIEW',
     /** Tagging a customer and summarising them after a conversation. */
     TAG_CLASSIFIER = 'TAG_CLASSIFIER',
+    /** Summarising a long conversation so the bot remembers its start. */
+    CONVERSATION_MEMORY = 'CONVERSATION_MEMORY',
     /** Suggestions while an owner describes a new agent. */
     AGENT_BUILDER = 'AGENT_BUILDER',
     /** Embedding an uploaded knowledge document. */

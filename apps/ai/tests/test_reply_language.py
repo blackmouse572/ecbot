@@ -62,7 +62,7 @@ async def _last_message(monkeypatch, message, retrieval=None):
         AsyncMock(return_value=None),
     )
     request = SimpleNamespace(
-        action=None, customer_id=None, history=None, message=message
+        action=None, customer_id=None, history=None, summary=None, message=message
     )
     return (await get_agent_input(request, retrieval))["messages"][-1].content
 

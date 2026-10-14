@@ -28,6 +28,7 @@ import { StreamingDelivery } from './services/streaming-delivery.service';
 import { ReplyGenerationService } from './services/reply-generation.service';
 import { TurnContextService } from './services/turn-context.service';
 import { ConversationMemoryService } from './services/conversation-memory.service';
+import { ConversationMemoryTaskService } from './services/conversation-memory-task.service';
 import { InboundInboxService } from './services/inbound-inbox.service';
 import { ActionRouter } from './services/action-router.service';
 import { InboundReconciliationScheduler } from './schedulers/inbound-reconciliation.scheduler';
@@ -92,6 +93,7 @@ const ADAPTERS = [
         HandoffIntentService,
         TurnContextService,
         ConversationMemoryService,
+        ConversationMemoryTaskService,
         MessageDebounceService,
         MessageProcessorService,
         ActionRouter,
@@ -107,6 +109,7 @@ const ADAPTERS = [
         ActionRouter,
         FollowupService,
         ReplyGenerationService,
+        ConversationMemoryTaskService,
     ],
 })
 export class PlatformModule {}

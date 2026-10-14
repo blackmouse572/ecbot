@@ -345,7 +345,7 @@ export class FollowupService {
         );
         // No burst of its own: every recent row, customer images included,
         // is history.
-        const { history } = await this.turnContext.build(
+        const { summary, history } = await this.turnContext.build(
             conversationId,
             { texts: [] },
             chatbot.id
@@ -380,6 +380,7 @@ export class FollowupService {
                     contact_point_id: contactPointId,
                     tools,
                     max_tool_iterations: 5,
+                    summary,
                     history,
                     zones: { chatbot, conversation },
                 },

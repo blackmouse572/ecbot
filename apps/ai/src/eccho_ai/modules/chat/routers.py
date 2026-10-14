@@ -5,14 +5,21 @@ from fastapi.responses import StreamingResponse
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.security import require_internal_token
+from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.agents.agent import invalidate_chatbot
 from eccho_ai.llm.guardrails.content import run_input_guardrail, run_output_guardrail
 from eccho_ai.llm.guardrails.secrets import scan_output_for_secrets
 from eccho_ai.middlewares.cassette_middleware import apply_cassette, cassette_name_for
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.llm.tools.image_urls import is_known_image_url
+from eccho_ai.modules.chat import summary
 from eccho_ai.modules.chat.images import describe_images
-from eccho_ai.modules.chat.models.chat_models import ChatRequest, ChatResponse, DescribeImagesRequest
+from eccho_ai.modules.chat.models.chat_models import (
+    ChatRequest,
+    ChatResponse,
+    DescribeImagesRequest,
+    SummarizeRequest,
+)
 from eccho_ai.modules.chat.services import (
     get_agent,
     get_agent_config,
@@ -179,6 +186,23 @@ async def describe_images_endpoint(describe_request: DescribeImagesRequest):
                 for image, description in zip(describe_request.images, described)
             ],
             "usage": usage,
+        }
+    )
+
+
+@router.post("/summarize")
+async def summarize_endpoint(summarize_request: SummarizeRequest):
+    """Fold messages that left apps/api's history window into the
+    conversation summary. An empty summary means the call failed, unless
+    `blocked` says the input guardrail stopped it."""
+    ctx = await get_agent(summarize_request.chatbot_id)
+    text, blocked, usage = await summary.summarize(summarize_request, ctx.chatbot)
+    return AppResponse(
+        data={
+            "summary": text,
+            "blocked": blocked,
+            "usage": usage,
+            "model": AppVars.CLASSIFIER_MODEL,
         }
     )
 

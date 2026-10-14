@@ -10,7 +10,10 @@ import {
     parseWireTokenUsage,
     TokenUsageDelta,
 } from '../interfaces/token-usage-wire.interface';
-import { AI_STREAM_IDLE_TIMEOUT_MS } from '../constants/chatbot-ai.constant';
+import {
+    AI_STREAM_IDLE_TIMEOUT_MS,
+    CONVERSATION_MEMORY_HTTP_TIMEOUT_MS,
+} from '../constants/chatbot-ai.constant';
 
 export interface AIChatHistoryMessage {
     role: 'user' | 'assistant';
@@ -28,6 +31,8 @@ interface AIChatStreamParams {
     conversation_id?: string;
     customer_id?: string;
     contact_point_id?: string;
+    /** The messages before `history`, summarized. */
+    summary?: string;
     history?: AIChatHistoryMessage[];
     trigger_message_id?: string;
     /** Where the timezones come from; sent to apps/ai resolved (#292). */
@@ -48,6 +53,24 @@ export interface AIDescribeImagesParams {
 export interface AIDescribedImages {
     images: { id: string; description: string | null }[];
     usage?: TokenUsageDelta;
+}
+
+/** Messages that left a conversation's history window, to fold into its
+ *  summary. */
+export interface AISummarizeParams {
+    /** Whose input guardrail screens the new summary. */
+    chatbot_id: string;
+    previous_summary?: string;
+    messages: { role: 'customer' | 'bot' | 'operator'; text: string }[];
+}
+
+/** The new summary ("" when apps/ai could not make one, or when `blocked`:
+ *  the input guardrail stopped it) and what it cost. */
+export interface AISummary {
+    summary: string;
+    blocked?: boolean;
+    usage?: TokenUsageDelta;
+    model?: string;
 }
 
 @Injectable()
@@ -98,6 +121,27 @@ export class ChatbotAIService {
         }>(`${this.aiBackendUrl}/api/chat/describe`, params, { headers });
         const { images, usage } = response.data.data;
         return { images, usage: parseWireTokenUsage(usage) ?? undefined };
+    }
+
+    async summarizeConversation(params: AISummarizeParams): Promise<AISummary> {
+        const response = await this.httpService.axiosRef.post<{
+            data: {
+                summary: string;
+                blocked?: boolean;
+                usage?: unknown;
+                model?: string;
+            };
+        }>(`${this.aiBackendUrl}/api/chat/summarize`, params, {
+            headers: await this.buildHeaders(),
+            timeout: CONVERSATION_MEMORY_HTTP_TIMEOUT_MS,
+        });
+        const { summary, blocked, usage, model } = response.data.data;
+        return {
+            summary,
+            blocked,
+            usage: parseWireTokenUsage(usage) ?? undefined,
+            model,
+        };
     }
 
     async deleteSession(sessionId: string): Promise<void> {

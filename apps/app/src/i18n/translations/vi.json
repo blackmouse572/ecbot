@@ -3263,6 +3263,7 @@
       "column": "Platform",
       "preview": "Preview (chat thử)",
       "TAG_CLASSIFIER": "Gắn tag khách hàng",
+      "CONVERSATION_MEMORY": "Ghi nhớ hội thoại",
       "AGENT_BUILDER": "Tạo agent",
       "KNOWLEDGE_INGEST": "Xử lý kiến thức"
     },

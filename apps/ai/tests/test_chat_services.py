@@ -9,7 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from pydantic import ValidationError
 
 from eccho_ai.modules.chat import ui_message_stream as ui
@@ -191,6 +191,23 @@ async def test_customer_context_rides_on_the_newest_message_after_history(monkey
     assert [type(m) for m in messages] == [HumanMessage, HumanMessage]
     assert messages[0].content == "first"
     assert messages[-1].content == "Customer: VIP\n\nhello"
+
+
+async def test_summary_comes_first_as_data(monkeypatch):
+    monkeypatch.setattr(
+        "eccho_ai.modules.chat.services.build_customer_context_block",
+        AsyncMock(return_value=None),
+    )
+    request = _req(history=[{"role": "user", "content": "first"}])
+    request.summary = "Wants 2 red shirts, size M."
+    result = await get_agent_input(request)
+    messages = result["messages"]
+    # User content like the history it replaces, never system weight.
+    assert isinstance(messages[0], HumanMessage)
+    assert "<conversation_summary>" in messages[0].content
+    assert "2 red shirts" in messages[0].content
+    assert messages[1].content == "first"
+    assert messages[-1].content == "hello"
 
 
 async def test_empty_history_list_behaves_like_no_history(monkeypatch):

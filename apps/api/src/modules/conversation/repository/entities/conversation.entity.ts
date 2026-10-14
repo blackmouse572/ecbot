@@ -64,6 +64,14 @@ export class ConversationEntity extends DatabaseEntityBase {
     @Property({ type: 'timestamptz', nullable: true })
     senderProfileFetchedAt?: Date;
 
+    /** What the bot remembers of the messages before its history window. */
+    @Property({ type: 'text', nullable: true })
+    memorySummary?: string;
+
+    /** The last message `memorySummary` covers; later ones are the window. */
+    @Property({ type: 'uuid', nullable: true })
+    memorySummaryUntilId?: string;
+
     // IANA zone for times the customer states (#292). Null follows the
     // agent's timezone; see ChatbotTimezoneService.
     @Property({ type: 'varchar', length: 64, nullable: true })

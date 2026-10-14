@@ -171,7 +171,11 @@ export class WidgetChatService {
             return;
         }
 
-        const { history, usage: describeUsage } = await this.turnContext.build(
+        const {
+            summary,
+            history,
+            usage: describeUsage,
+        } = await this.turnContext.build(
             conversation.id,
             { texts: [text], messageIds: [inbound.id] },
             chatbot.id
@@ -208,6 +212,7 @@ export class WidgetChatService {
                     conversation_id: conversation.id,
                     customer_id: customerId,
                     contact_point_id: contactPoint.id,
+                    summary,
                     history,
                     zones: { chatbot, conversation },
                 },

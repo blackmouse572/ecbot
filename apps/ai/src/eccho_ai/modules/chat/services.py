@@ -30,6 +30,7 @@ from eccho_ai.modules.chat.constants import (
 from eccho_ai.modules.chat.customer_context import build_customer_context_block
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 from eccho_ai.modules.chat.models.chat_models import ChatRequest
+from eccho_ai.modules.chat.summary import render_summary_block
 
 if TYPE_CHECKING:
     from langgraph.graph.state import Command
@@ -101,11 +102,16 @@ async def get_agent_input(
 
         return Command(resume=chat_request.action)
 
-    # The history only grows between window steps (apps/api), so the
-    # provider's prompt cache keeps hitting. The customer context changes
-    # whenever a tag or field does, so it rides with the newest message
-    # (like <current_time>, see llm/prompts/current_time.py).
+    # Stable blocks first, volatile ones on the newest message: the summary
+    # only changes once per window step and the history only grows between
+    # steps (apps/api), so the provider's prompt cache keeps hitting. The
+    # summary is customer-derived, so it rides as user content like the
+    # history it replaces, never with system weight. The customer context
+    # changes whenever a tag or field does, so it rides with the newest
+    # message (like <current_time>, see llm/prompts/current_time.py).
     messages: list[Any] = []
+    if chat_request.summary:
+        messages.append(HumanMessage(content=render_summary_block(chat_request.summary)))
 
     for turn in chat_request.history or []:
         if turn.role == "user":
