@@ -1,6 +1,6 @@
 import i18n from "@/i18n";
 import { CheckCircleSolid, XCircle } from "@medusajs/icons";
-import { Container, Heading, Text } from "@medusajs/ui";
+import { StatusAlertCard } from "@/components/common";
 import type { AccountGetDetailResponseDto } from "@repo/client";
 
 type AccountAlertSectionProps = {
@@ -10,17 +10,11 @@ type AccountAlertSectionProps = {
 export const AccountAlertSection = ({ item }: AccountAlertSectionProps) => {
   const statusTerms = AccountStatusTerms[item.status];
   return (
-    <Container className="flex gap-4">
-      <span className="flex-shrink-0 py-1">{statusTerms.icon}</span>
-      <div>
-        <Heading level="h3">{statusTerms.title}</Heading>
-        {statusTerms.description && (
-          <Text size="xsmall" className="text-ui-fg-muted">
-            {statusTerms.description}
-          </Text>
-        )}
-      </div>
-    </Container>
+    <StatusAlertCard
+      icon={statusTerms.icon}
+      title={statusTerms.title}
+      description={statusTerms.description}
+    />
   );
 };
 

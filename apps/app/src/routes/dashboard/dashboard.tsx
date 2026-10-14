@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { GettingStarted, RecentActivityListTable } from "./components";
 import { StatsContainer } from "./components/stats-container";
 import { StatsItem } from "./components/stats-item";
+import { enterpriseDashboardAlerts } from "../enterprise.dashboard-alert";
 import { useStatsData } from "./hooks/use-stats-data";
 
 export function Dashboard() {
@@ -14,6 +15,9 @@ export function Dashboard() {
       <Helmet>
         <title>{t("app.nav.dashboard.header")} - Ecbot</title>
       </Helmet>
+      {enterpriseDashboardAlerts().map((Alert, index) => (
+        <Alert key={index} />
+      ))}
       <GettingStarted />
       <StatsContainer>
         {data.map((item) => (
