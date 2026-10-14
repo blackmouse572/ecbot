@@ -50,7 +50,7 @@ const Harness = () => {
 
 const renderForm = () => render(<Harness />);
 
-describe("ChatbotSettingsFields model select", () => {
+describe("ChatbotSettingsFields", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -87,9 +87,7 @@ describe("ChatbotSettingsFields model select", () => {
     // The standalone "AI Provider" select is gone.
     expect(screen.queryByText("AI Provider")).not.toBeInTheDocument();
 
-    const combos = screen.getAllByRole("combobox");
-    const modelTrigger = combos[combos.length - 1];
-    await user.click(modelTrigger);
+    await user.click(screen.getByRole("combobox"));
 
     // Radix Select also renders a hidden native <select> mirror for form
     // semantics, so scope assertions to the visible listbox to avoid
@@ -110,9 +108,30 @@ describe("ChatbotSettingsFields model select", () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderForm();
 
-    const combos = screen.getAllByRole("combobox");
-    await user.click(combos[combos.length - 1]);
+    await user.click(screen.getByRole("combobox"));
 
     expect(screen.getByText("Loading models...")).toBeInTheDocument();
+  });
+
+  it("shows the model, handoff keywords and follow-up rules before Advanced", () => {
+    mockedUseChatbotModels.mockReturnValue({
+      models: [],
+      isLoading: false,
+    } as A);
+    renderForm();
+
+    const advanced = screen.getByText("Advanced Settings");
+    for (const key of ["AI Model", "Handoff Keywords", "Follow-up rules"]) {
+      const label = screen.getByText(key);
+      expect(
+        label.compareDocumentPosition(advanced) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+    const maxTokens = screen.getByText("Max Tokens");
+    expect(
+      advanced.compareDocumentPosition(maxTokens) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });
