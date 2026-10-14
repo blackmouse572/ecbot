@@ -127,6 +127,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 {},
+                {},
                 {}
             );
 
@@ -164,6 +165,7 @@ describe('ConversationWorkspaceController', () => {
                 operatorId,
                 basePagination as any,
                 statusFilter,
+                {},
                 {},
                 {},
                 {},
@@ -240,6 +242,7 @@ describe('ConversationWorkspaceController', () => {
                 accountTypeFilter,
                 {},
                 {},
+                {},
                 {}
             );
 
@@ -274,6 +277,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 accountFilter,
+                {},
                 {},
                 {}
             );
@@ -314,6 +318,7 @@ describe('ConversationWorkspaceController', () => {
                 statusFilter,
                 accountTypeFilter,
                 accountFilter,
+                {},
                 {},
                 {}
             );
@@ -356,6 +361,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 {},
+                {},
                 {}
             );
 
@@ -382,6 +388,7 @@ describe('ConversationWorkspaceController', () => {
                 workspace,
                 operatorId,
                 paginationWithOffset as any,
+                {},
                 {},
                 {},
                 {},
@@ -418,6 +425,7 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 {},
+                {},
                 {}
             );
 
@@ -446,6 +454,7 @@ describe('ConversationWorkspaceController', () => {
                 workspace,
                 operatorId,
                 basePagination as any,
+                {},
                 {},
                 {},
                 {},
