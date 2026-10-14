@@ -2948,9 +2948,17 @@ export type SkillGetResponseDto = {
      */
     workspaceName?: string;
     /**
-     * Full skill instructions (markdown), loaded from S3
+     * CONTENT: the markdown the owner wrote. STEPS: the compiled body the agent loads.
      */
     instructions: string;
+    format: 'CONTENT' | 'STEPS';
+    /**
+     * Step tree of a STEPS skill
+     */
+    steps?: Array<{
+        [key: string]: unknown;
+    }>;
+    guardrails: Array<string>;
 };
 
 export type CreateSkillRequestDto = {
@@ -2963,9 +2971,23 @@ export type CreateSkillRequestDto = {
      */
     description?: string;
     /**
-     * Full skill instructions (markdown). Stored on S3.
+     * Skill instructions (markdown). Required for CONTENT skills, ignored for STEPS.
      */
-    instructions: string;
+    instructions?: string;
+    /**
+     * CONTENT: free markdown in `instructions`. STEPS: structured `steps`. Defaults to CONTENT.
+     */
+    format?: 'CONTENT' | 'STEPS';
+    /**
+     * Step tree for a STEPS skill: ask, say, tell, tool ({ toolId, action? }) and if ({ branches: [{ condition, steps }], otherwise }). Each step and branch needs a unique `id`.
+     */
+    steps?: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Rules the agent always follows while using this skill
+     */
+    guardrails?: Array<string>;
     /**
      * Skill status
      */
@@ -2985,6 +3007,20 @@ export type UpdateSkillRequestDto = {
      * Full skill instructions (markdown). Overwrites the S3 object.
      */
     instructions?: string;
+    /**
+     * CONTENT: free markdown in `instructions`. STEPS: structured `steps`. Defaults to CONTENT.
+     */
+    format?: 'CONTENT' | 'STEPS';
+    /**
+     * Step tree for a STEPS skill: ask, say, tell, tool ({ toolId, action? }) and if ({ branches: [{ condition, steps }], otherwise }). Each step and branch needs a unique `id`.
+     */
+    steps?: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Rules the agent always follows while using this skill
+     */
+    guardrails?: Array<string>;
     status?: 'ACTIVE' | 'INACTIVE';
 };
 

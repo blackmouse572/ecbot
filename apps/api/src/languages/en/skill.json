@@ -39,5 +39,10 @@
     },
     "batchDelete": {
         "success": "Skills deleted successfully."
+    },
+    "error": {
+        "invalidSteps": "Some steps are incomplete. Fix the highlighted steps and save again.",
+        "instructionsRequired": "Write the skill instructions.",
+        "tooLong": "This skill is too long for the agent to load. Shorten it and save again."
     }
 }
