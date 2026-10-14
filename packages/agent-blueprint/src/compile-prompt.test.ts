@@ -50,8 +50,18 @@ describe("compilePrompt", () => {
   it("joins handoff conditions with or", () => {
     const out = compilePrompt({ ...sample("beauty", "en"), handoffWhen: ["asks_for_human", "upset", "complaint"] });
     expect(out).toContain(
-      "Hand the conversation to a person when the customer asks for a person, the customer is upset or the customer makes a complaint.",
+      "Hand the conversation to a person when the customer asks for a person, the customer is upset or complains or the customer makes a complaint.",
     );
+  });
+
+  // #191: agents apologised and asked for the order number instead of
+  // handing an upset customer over.
+  it("hands an upset customer over before asking for details", () => {
+    const first = "For an upset customer, hand over in your first reply, before asking for order details.";
+    expect(compilePrompt({ ...sample("beauty", "en"), handoffWhen: ["upset"] })).toContain(
+      `Hand the conversation to a person when the customer is upset or complains. ${first}`,
+    );
+    expect(compilePrompt({ ...sample("beauty", "en"), handoffWhen: ["asks_for_human"] })).not.toContain(first);
   });
 
   it("separates collect items with semicolons when one of them contains and", () => {
