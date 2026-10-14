@@ -33,6 +33,7 @@ export class ChatbotGetDetailShortResponseDto extends PickType(
         'name',
         'avatar',
         'type',
+        'timezone',
         'workspace',
         'createdAt',
         'updatedAt',

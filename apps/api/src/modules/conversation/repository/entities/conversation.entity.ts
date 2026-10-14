@@ -63,4 +63,9 @@ export class ConversationEntity extends DatabaseEntityBase {
 
     @Property({ type: 'timestamptz', nullable: true })
     senderProfileFetchedAt?: Date;
+
+    // IANA zone for times the customer states (#292). Null follows the
+    // agent's timezone; see ChatbotTimezoneService.
+    @Property({ type: 'varchar', length: 64, nullable: true })
+    timezone?: string | null;
 }

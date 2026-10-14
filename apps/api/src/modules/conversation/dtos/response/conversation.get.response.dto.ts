@@ -74,6 +74,17 @@ export class ConversationGetResponseDto {
     senderAvatar?: string;
 
     @Expose()
+    @ApiProperty({
+        description:
+            "IANA timezone for times the customer states. null follows the agent's timezone.",
+        required: false,
+        nullable: true,
+        type: String,
+        example: 'America/New_York',
+    })
+    timezone?: string | null;
+
+    @Expose()
     @ApiProperty({ description: 'Creation timestamp' })
     createdAt: Date;
 
