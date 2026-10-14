@@ -14,11 +14,17 @@ interface OnboardingTourProps {
 
 // The sidebar link of a step's page, when a sidebar is on screen. The
 // desktop sidebar stays in the DOM, hidden, while the mobile sheet is open.
-// Without one (a phone with the sheet closed) the card sits mid-screen.
-const findTarget = (route: string) =>
+const findLink = (route: string) =>
   [
     ...document.querySelectorAll<HTMLElement>(`aside a[href$="/${route}"]`),
   ].find((link) => link.getBoundingClientRect().width > 0);
+
+// With the sidebar folded away (a phone, or a collapsed desktop sidebar) the
+// card points at the button that opens it.
+const findMenuButton = () =>
+  [...document.querySelectorAll<HTMLElement>("[data-sidebar-toggle]")].find(
+    (button) => button.getBoundingClientRect().width > 0,
+  );
 
 /**
  * Three cards after the first agent goes live, each pointing at the sidebar
@@ -105,17 +111,26 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
       nextBtnText: t("guide.tour.next"),
       prevBtnText: t("actions.back"),
       doneBtnText: t("guide.tour.done"),
-      steps: TOUR_STEPS.map((step) => ({
-        element: findTarget(step.route),
-        popover: {
-          title: t(`guide.features.${step.feature}.title`),
-          description: t(`guide.features.${step.feature}.body`),
-          side: "right",
-          align: "center",
-        },
-      })),
+      steps: TOUR_STEPS.map((step) => {
+        const link = findLink(step.route);
+        const menu = link ? undefined : findMenuButton();
+        return {
+          element: link ?? menu,
+          popover: {
+            title: menu
+              ? t("guide.tour.inMenu", { page: t(step.label) })
+              : t(`guide.features.${step.feature}.title`),
+            description: t(`guide.features.${step.feature}.body`),
+            side: menu ? "bottom" : "right",
+            align: menu ? "start" : "center",
+          },
+        };
+      }),
       onPopoverRender: (popover, { state }) =>
         renderArt(popover, state.activeIndex ?? 0),
+      // driver.js places the card before React draws the scene into it, so
+      // place it again once the step settles and the card has its real size.
+      onHighlighted: () => tour.refresh(),
       onDoneClick: () => close(true),
       // The X and Escape both land here; Done has its own hook above.
       onDestroyStarted: () => close(false),

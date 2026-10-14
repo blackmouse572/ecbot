@@ -13,6 +13,9 @@
 }
 
 .ecbot-tour .ecbot-tour-art {
+  /* The scene's usual height, held before React draws it so driver.js
+     places the card close to right on its first pass. */
+  min-height: 7rem;
   overflow: hidden;
   border-radius: 12px 12px 0 0;
 }

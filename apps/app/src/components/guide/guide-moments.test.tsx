@@ -102,6 +102,21 @@ describe("GuideMoments", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("points at the menu button while the sidebar is folded away", () => {
+    const menu = document.createElement("button");
+    menu.setAttribute("data-sidebar-toggle", "");
+    menu.getBoundingClientRect = () => new DOMRect(0, 0, 28, 28);
+    document.body.append(menu);
+    localStorage.setItem("ecbot.guide.tour.ws1", "pending");
+    data.active = 1;
+    renderAt();
+
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Open the menu, then Conversations",
+    );
+    menu.remove();
+  });
+
   it("waits while the builder is open over the page", () => {
     localStorage.setItem("ecbot.guide.tour.ws1", "pending");
     data.active = 1;

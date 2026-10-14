@@ -27,6 +27,7 @@ const ToggleSidebar = () => {
         className="hidden lg:flex"
         variant="transparent"
         onClick={() => toggle("desktop")}
+        data-sidebar-toggle
         size="small"
       >
         <SidebarLeft className="text-ui-fg-muted" />
@@ -35,6 +36,7 @@ const ToggleSidebar = () => {
         className="hidden max-lg:flex"
         variant="transparent"
         onClick={() => toggle("mobile")}
+        data-sidebar-toggle
         size="small"
       >
         <SidebarLeft className="text-ui-fg-muted" />

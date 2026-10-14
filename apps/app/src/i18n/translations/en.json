@@ -387,7 +387,7 @@
       },
       "conversations": {
         "title": "Customer messages land here",
-        "body": "Every chat from a connected channel shows up here. Read what the agent replied and step in yourself when needed.",
+        "body": "Every chat from a connected channel shows up in Conversations. Read what the agent replied and step in yourself when needed.",
         "customer": "Is the birthday cake available?",
         "agent": "Yes, it's 250,000đ each!"
       },
@@ -416,7 +416,8 @@
       "skip": "Skip",
       "progress": "Step {{current}} of {{total}}",
       "finished": "All set. Rest the pointer on a sidebar item to see what it does.",
-      "skipped": "Tour skipped. Rest the pointer on a sidebar item to see what it does."
+      "skipped": "Tour skipped. Rest the pointer on a sidebar item to see what it does.",
+      "inMenu": "Open the menu, then {{page}}"
     },
     "firstConversation": {
       "title": "Your first conversation is here!",

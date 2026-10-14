@@ -413,7 +413,7 @@
       },
       "conversations": {
         "title": "Tin nhắn của khách ở đây",
-        "body": "Mỗi cuộc trò chuyện từ kênh đã kết nối hiện ở đây. Xem agent trả lời gì và nhắn thay khi cần.",
+        "body": "Mỗi cuộc trò chuyện từ kênh đã kết nối đều hiện trong Hội thoại. Xem agent trả lời gì và nhắn thay khi cần.",
         "customer": "Bánh kem còn không shop?",
         "agent": "Còn ạ, 250.000đ một ổ nhé!"
       },
@@ -442,7 +442,8 @@
       "skip": "Bỏ qua",
       "progress": "Bước {{current}}/{{total}}",
       "finished": "Xong! Rê chuột lên một mục ở thanh bên để xem mục đó làm gì.",
-      "skipped": "Đã bỏ qua hướng dẫn. Rê chuột lên một mục ở thanh bên để xem mục đó làm gì."
+      "skipped": "Đã bỏ qua hướng dẫn. Rê chuột lên một mục ở thanh bên để xem mục đó làm gì.",
+      "inMenu": "Mở menu, chọn {{page}}"
     },
     "firstConversation": {
       "title": "Cuộc hội thoại đầu tiên đã tới!",
