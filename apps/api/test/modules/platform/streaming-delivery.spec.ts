@@ -488,6 +488,106 @@ describe('StreamingDelivery — send_image file parts', () => {
     );
 });
 
+describe('StreamingDelivery — send_media file parts', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        '%s: sends a PDF as a named file and an image with its compact copy',
+        async (_mode, chatbot) => {
+            const adapter = makeAdapter();
+            const persisted: { text: string; attachments?: unknown[] }[] = [];
+            await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({
+                        type: 'file',
+                        url: 'https://cdn/menu.pdf',
+                        mediaType: 'application/pdf',
+                        providerMetadata: {
+                            ecbot: {
+                                filename: 'Thực đơn',
+                                size: 2048,
+                                compact: null,
+                            },
+                        },
+                    }),
+                    line({
+                        type: 'file',
+                        url: 'https://cdn/a.webp',
+                        mediaType: 'image/webp',
+                        providerMetadata: {
+                            ecbot: {
+                                filename: 'Bánh mì',
+                                size: 3_000_000,
+                                compact: {
+                                    url: 'https://cdn/a-compact.jpg',
+                                    mediaType: 'image/jpeg',
+                                    size: 400_000,
+                                },
+                            },
+                        },
+                    }),
+                    line({
+                        type: 'file',
+                        url: 'https://x/a.zip',
+                        mediaType: 'application/zip',
+                    }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async (text, attachments) => {
+                    persisted.push({ text, attachments });
+                    return 'nonce';
+                },
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(persisted).toEqual([
+                {
+                    text: '',
+                    attachments: [
+                        {
+                            type: 'file',
+                            url: 'https://cdn/menu.pdf',
+                            name: 'Thực đơn',
+                        },
+                    ],
+                },
+                {
+                    text: '',
+                    attachments: [{ type: 'image', url: 'https://cdn/a.webp' }],
+                },
+            ]);
+            expect(adapter.sendMessage.mock.calls[0][2].content).toEqual({
+                kind: 'media',
+                url: 'https://cdn/menu.pdf',
+                mediaType: 'file',
+                mime: 'application/pdf',
+                filename: 'Thực đơn',
+                size: 2048,
+            });
+            expect(adapter.sendMessage.mock.calls[1][2].content).toMatchObject({
+                mediaType: 'image',
+                alternatives: [
+                    {
+                        url: 'https://cdn/a-compact.jpg',
+                        mime: 'image/jpeg',
+                        size: 400_000,
+                    },
+                ],
+            });
+            expect(adapter.sendMessage).toHaveBeenCalledTimes(2);
+        }
+    );
+});
+
 describe('guardrailDeliveryPolicy', () => {
     it('no chatbot -> buffered (safe default)', () => {
         expect(guardrailDeliveryPolicy()).toEqual({

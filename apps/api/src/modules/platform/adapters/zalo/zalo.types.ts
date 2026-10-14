@@ -67,3 +67,24 @@ export interface ZaloOaInfoData {
     avatar?: string;
     oa_alias?: string;
 }
+
+// ─── Zalo OA outbound media ───────────────────────────────────────────────────
+// UNCONFIRMED: the Zalo docs site was unreachable while writing these, so the
+// shapes follow Zalo OA's published CS-message examples from memory; verify
+// against a real request/response and add a fixture once confirmed.
+
+/** `message.attachment` of a `message/cs` send. */
+export type ZaloOutboundAttachment =
+    | {
+          type: 'template';
+          payload: {
+              template_type: 'media';
+              elements: { media_type: 'image'; url: string }[];
+          };
+      }
+    | { type: 'file'; payload: { token: string } };
+
+/** `data` of `v2.0/oa/upload/file`: the token a file message sends. */
+export interface ZaloUploadFileData {
+    token?: string;
+}

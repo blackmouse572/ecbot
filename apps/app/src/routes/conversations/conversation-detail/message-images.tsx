@@ -1,6 +1,7 @@
 import { clx } from "@medusajs/ui";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { FileLink } from "@/components/common/file-link";
 import type { MessageAttachment } from "@/types/chat-message";
 
 interface Props {
@@ -8,13 +9,15 @@ interface Props {
   align: "start" | "end";
 }
 
-/** Image attachments of a message (customer photos, images the bot sent). */
+/** Image and file attachments of a message (customer photos, images and
+ *  files such as PDFs the bot sent). */
 export const MessageImages: FC<Props> = ({ attachments, align }) => {
   const { t } = useTranslation();
-  const urls = (attachments ?? [])
-    .filter((a) => a.type === "image" && a.url)
-    .map((a) => a.url as string);
-  if (urls.length === 0) return null;
+  const shown = (attachments ?? []).filter(
+    (a): a is MessageAttachment & { url: string } =>
+      (a.type === "image" || a.type === "file") && !!a.url,
+  );
+  if (shown.length === 0) return null;
 
   return (
     <div
@@ -23,16 +26,25 @@ export const MessageImages: FC<Props> = ({ attachments, align }) => {
         align === "end" ? "justify-end" : "justify-start",
       )}
     >
-      {urls.map((url, i) => (
-        <a key={`${url}-${i}`} href={url} target="_blank" rel="noreferrer">
-          <img
-            src={url}
-            alt={t("conversations.image")}
-            loading="lazy"
-            className="border-ui-border-base max-h-60 max-w-60 rounded-lg border object-cover"
-          />
-        </a>
-      ))}
+      {shown.map((a, i) =>
+        a.type === "file" ? (
+          <FileLink key={`${a.url}-${i}`} url={a.url} name={a.name} />
+        ) : (
+          <a
+            key={`${a.url}-${i}`}
+            href={a.url}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <img
+              src={a.url}
+              alt={t("conversations.image")}
+              loading="lazy"
+              className="border-ui-border-base max-h-60 max-w-60 rounded-lg border object-cover"
+            />
+          </a>
+        ),
+      )}
     </div>
   );
 };

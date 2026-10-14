@@ -6,6 +6,7 @@ import { AssistantTranscriptCollector } from '../utils/assistant-transcript.coll
 import { isAgentInternalFrame } from '../utils/customer-stream.filter';
 import { SafeErrorStream } from '../utils/safe-error-stream.transform';
 import { TokenUsageDelta } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
+import { IMediaPart } from 'src/modules/chatbot/interfaces/media-part-wire.interface';
 
 export interface ISseStreamParams {
     res: ExpressResponse;
@@ -17,9 +18,10 @@ export interface ISseStreamParams {
     logContext: string;
     /**
      * Called once the stream ends, on success and failure alike, with whatever
-     * assistant text was collected. Skipped when there is nothing worth keeping.
+     * assistant text and media were collected. Skipped when there is nothing
+     * worth keeping.
      */
-    onFinalize: (assistantText: string, images: string[]) => Promise<void>;
+    onFinalize: (assistantText: string, media: IMediaPart[]) => Promise<void>;
     /**
      * Called once the stream ends with the token counts apps/ai reported, if
      * any. Separate from `onFinalize` because the conditions differ: a blocked
@@ -88,7 +90,7 @@ export class ChatbotAiSseStreamService {
 
             if (!collector.shouldPersist()) return;
             try {
-                await onFinalize(collector.assistantText(), collector.images());
+                await onFinalize(collector.assistantText(), collector.media());
             } catch (error) {
                 this.logger.error(
                     `Failed to persist turn for ${logContext}: ${error}`

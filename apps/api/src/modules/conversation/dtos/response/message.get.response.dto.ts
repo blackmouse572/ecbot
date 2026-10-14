@@ -58,8 +58,9 @@ export class MessageReactionResponseDto {
     at: string;
 }
 
-/** A media attachment on a message — a customer's photo or an image the
- *  bot sent. `url` is absent when the platform only gave a file id. */
+/** A media attachment on a message: a customer's photo, or an image or a
+ *  file (a PDF, `type: 'file'`) the bot sent. `url` is absent when the
+ *  platform only gave a file id. */
 export class MessageAttachmentResponseDto {
     @ApiProperty({
         description: 'Attachment kind',
@@ -69,6 +70,12 @@ export class MessageAttachmentResponseDto {
 
     @ApiPropertyOptional({ description: 'Media URL, when known' })
     url?: string;
+
+    @ApiPropertyOptional({
+        description: 'File name of a file the bot sent',
+        example: 'Thực đơn',
+    })
+    name?: string;
 }
 
 /** One knowledge source behind a BOT reply, for the operator trace. */

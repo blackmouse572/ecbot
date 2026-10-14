@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -25,6 +26,7 @@ from eccho_ai.modules.chat.services import (
     get_agent_config,
     get_agent_context,
     get_agent_input,
+    get_media_retrieval,
     get_rag_retrieval,
 )
 from eccho_ai.modules.chat.stream_keepalive import with_keepalive
@@ -54,7 +56,9 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             msg="Message is required",
         ).as_json_response()
 
-    retrieval = await get_rag_retrieval(chat_request)
+    retrieval, media = await asyncio.gather(
+        get_rag_retrieval(chat_request), get_media_retrieval(chat_request)
+    )
     source_attributions = (
         retrieval.source_attributions if retrieval and retrieval.has_context else []
     )
@@ -80,7 +84,7 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
         config = get_agent_config(chat_request, request)
         with apply_cassette(cassette_name_for(chat_request.message)):
             response = await ctx.agent.ainvoke(
-                input=await get_agent_input(chat_request, retrieval=retrieval),
+                input=await get_agent_input(chat_request, retrieval=retrieval, media=media),
                 context=get_agent_context(chat_request, request, ctx.chatbot),
                 config=config,
                 version="v2",
@@ -249,7 +253,9 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
     retrieval_summary: dict[str, Any] = {}
 
     async def _agent_events():
-        retrieval = await get_rag_retrieval(chat_request)
+        retrieval, media = await asyncio.gather(
+            get_rag_retrieval(chat_request), get_media_retrieval(chat_request)
+        )
         source_attributions[:] = (
             retrieval.source_attributions if retrieval and retrieval.has_context else []
         )
@@ -258,7 +264,7 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
         config = get_agent_config(chat_request, request)
         with apply_cassette(cassette_name_for(message)):
             async for event in ctx.agent.astream_events(
-                input=await get_agent_input(chat_request, retrieval=retrieval),
+                input=await get_agent_input(chat_request, retrieval=retrieval, media=media),
                 context=get_agent_context(chat_request, request, ctx.chatbot),
                 config=config,
                 version="v2",

@@ -1,6 +1,7 @@
 import { TURNED_OFF_CHATBOT_STATUSES } from '@app/modules/platform/constants/turned-off-chatbot.constant';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
-import { botImage } from '@app/modules/conversation/utils/message-attachment';
+import { botMedia } from '@app/modules/conversation/utils/message-attachment';
+import { IMediaPart } from '@app/modules/chatbot/interfaces/media-part-wire.interface';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ChatbotAiSseStreamService } from '@app/modules/chatbot/services/chatbot-ai-sse-stream.service';
@@ -233,8 +234,8 @@ export class WidgetChatService {
             // The widget is the customer's chat: the reply only, never how the
             // agent got there.
             audience: 'customer',
-            onFinalize: (assistantText, images) =>
-                this.persistReply(conversation.id, assistantText, images),
+            onFinalize: (assistantText, media) =>
+                this.persistReply(conversation.id, assistantText, media),
             onUsage: async usage => {
                 await this.meter?.record({
                     workspaceId: account.workspace.id,
@@ -258,11 +259,11 @@ export class WidgetChatService {
     private async persistReply(
         conversationId: string,
         text: string,
-        images: string[]
+        media: IMediaPart[]
     ): Promise<void> {
         // The row IS the delivery for this channel — the visitor already saw the
         // stream, and their poll reads this back on the next page load.
-        const attachments = images.map(botImage);
+        const attachments = media.map(botMedia);
         const nonce = randomUUID();
         await this.messageRepository.insertPendingOutbound(
             conversationId,

@@ -42,7 +42,7 @@ export class MessageMediaService {
         return { type: 'image', key };
     }
 
-    /** Stored attachments → `{ type, url }` for the inbox and the AI. Only
+    /** Stored attachments → `{ type, url, name? }` for the inbox and the AI. Only
      *  keys under this conversation's folder are signed: the private bucket
      *  holds other files too. */
     async resolve(
@@ -56,10 +56,11 @@ export class MessageMediaService {
     }
 
     private async resolveOne(
-        { type, url, key }: IMessageAttachment,
+        { type, url, key, name }: IMessageAttachment,
         folder: string
     ): Promise<IMessageAttachment> {
-        if (!key) return url ? { type, url } : { type };
+        // A file the bot sent keeps its name, for the inbox link.
+        if (!key) return { type, ...(url && { url }), ...(name && { name }) };
         if (!key.startsWith(folder)) return { type };
         try {
             return { type, url: await this.s3.signGetUrl(key, PRIVATE) };

@@ -92,10 +92,17 @@ import { FileTypePipe } from '../../../common/file/pipes/file.type.pipe';
 import { randomUUID } from 'crypto';
 import {
     KNOWLEDGE_FILE_MIMES,
+    KNOWLEDGE_MEDIA_COMPACT_MIME,
     KNOWLEDGE_MEDIA_IMAGE_MIMES,
     KNOWLEDGE_UPLOAD_MAX_BYTES,
 } from '../constants/knowledge-upload.constant';
 import { assertKnowledgeUpload } from '../utils/knowledge-upload.util';
+import {
+    compactImage,
+    compactKey,
+    needsCompact,
+} from '../utils/knowledge-media-compact.util';
+import { IKnowledgeMediaCompact } from '../interfaces/knowledge-media.interface';
 import { AwsS3Entity } from '../../aws/repository/entities/aws.s3.entity';
 import { ENUM_AWS_S3_ACCESSIBILITY } from '../../aws/enums/aws.enum';
 
@@ -413,6 +420,10 @@ export class KnowledgeItemWorkspaceController {
                         fileName: safeFileName,
                         mimeType: file.mimetype,
                     };
+                    if (isMedia) {
+                        const compact = await this.uploadCompact(key, file);
+                        if (compact) metadata.compact = compact;
+                    }
                 } catch (error) {
                     this.logger.error(
                         `Failed to upload file to S3: ${error instanceof Error ? error.message : JSON.stringify(error)}`
@@ -802,5 +813,39 @@ export class KnowledgeItemWorkspaceController {
         }
 
         return item;
+    }
+
+    /**
+     * A JPG copy under 1MB next to a media image that is not already a small
+     * jpg/png, for channels that cap photos (Zalo). Best effort: without it
+     * those channels get the image's link.
+     */
+    private async uploadCompact(
+        key: string,
+        file: Express.Multer.File
+    ): Promise<IKnowledgeMediaCompact | undefined> {
+        if (!needsCompact(file.mimetype, file.size)) return undefined;
+        try {
+            const jpeg = await compactImage(file.buffer);
+            const uploaded = await this.awsS3Service.putItem(
+                {
+                    key: compactKey(key),
+                    file: jpeg,
+                    size: jpeg.length,
+                    mime: KNOWLEDGE_MEDIA_COMPACT_MIME,
+                },
+                { access: ENUM_AWS_S3_ACCESSIBILITY.PUBLIC }
+            );
+            return {
+                url: uploaded.cdnUrl || uploaded.completedUrl,
+                mime: KNOWLEDGE_MEDIA_COMPACT_MIME,
+                size: jpeg.length,
+            };
+        } catch (error) {
+            this.logger.warn(
+                `Compact copy of ${key} failed: ${error instanceof Error ? error.message : JSON.stringify(error)}`
+            );
+            return undefined;
+        }
     }
 }

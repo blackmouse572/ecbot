@@ -183,10 +183,10 @@ def _stub_api_client_all(monkeypatch, *, post=None, get=None, delete=None):
     return calls
 
 
-def test_ten_system_tools_registered():
-    assert len(SYSTEM_TOOLS) == 10
+def test_eleven_system_tools_registered():
+    assert len(SYSTEM_TOOLS) == 11
     names = {t.name for t in SYSTEM_TOOLS}
-    assert {"schedule_followup", "list_pending_followups", "cancel_followup", "send_image"} <= names
+    assert {"schedule_followup", "list_pending_followups", "cancel_followup", "send_image", "send_media"} <= names
 
 
 async def test_schedule_followup_no_context_returns_error(monkeypatch):

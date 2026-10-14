@@ -1,3 +1,4 @@
+import { IMediaPart } from '../../../../src/modules/chatbot/interfaces/media-part-wire.interface';
 import { PassThrough, Readable } from 'stream';
 import { ChatbotAiSseStreamService } from '../../../../src/modules/chatbot/services/chatbot-ai-sse-stream.service';
 import { TokenUsageDelta } from '../../../../src/modules/chatbot/interfaces/token-usage-wire.interface';
@@ -178,7 +179,7 @@ describe('ChatbotAiSseStreamService', () => {
             let out = '';
             res.on('data', (c: Buffer) => (out += c.toString()));
             let finalized: string | undefined;
-            let images: string[] = [];
+            let images: IMediaPart[] = [];
             let reported: TokenUsageDelta | undefined;
             await new ChatbotAiSseStreamService().pipe({
                 res,
@@ -221,7 +222,7 @@ describe('ChatbotAiSseStreamService', () => {
         it('still saves the reply and meters the tokens', async () => {
             const { finalized, images, reported } = await run('customer');
             expect(finalized).toBe('Còn hàng');
-            expect(images).toEqual(['https://cdn/s.jpg']);
+            expect(images).toEqual([{ url: 'https://cdn/s.jpg' }]);
             expect(reported).toEqual({
                 inputTokens: 9,
                 outputTokens: 1,

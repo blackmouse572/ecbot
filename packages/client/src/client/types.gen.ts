@@ -805,6 +805,10 @@ export type MessageAttachmentResponseDto = {
      * Media URL, when known
      */
     url?: string;
+    /**
+     * File name of a file the bot sent
+     */
+    name?: string;
 };
 
 export type WidgetMessageResponseDto = {

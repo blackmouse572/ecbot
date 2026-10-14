@@ -2,15 +2,23 @@ import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { MEDIA_FETCH_TIMEOUT_MS } from '../constants/media.constant';
+import {
+    MEDIA_FETCH_TIMEOUT_MS,
+    MEDIA_MIME_BY_EXTENSION,
+    MEDIA_UNKNOWN_SIZE_BYTES,
+} from '../constants/media.constant';
 import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
 import { readCappedBody } from '@app/common/utils/read-capped-body.util';
 import { isAxiosError } from 'axios';
 import {
     AdapterCapabilities,
     Card,
+    MediaContent,
+    MediaLimit,
+    mediaText,
     OutboundMessage,
     QuickReply,
+    TextContent,
 } from '../interfaces/message-model';
 import {
     PlatformAttachment,
@@ -188,6 +196,8 @@ export abstract class PlatformAdapter {
                 kind: 'text',
                 text: content.caption ?? msg.fallbackText,
             };
+        } else if (content.kind === 'media') {
+            content = this.fitMedia(content);
         }
 
         // quickReplies → appended to text when unsupported
@@ -202,6 +212,28 @@ export abstract class PlatformAdapter {
         }
 
         return { ...msg, content, quickReplies };
+    }
+
+    /**
+     * Media the channel takes: the original when it fits the limit for its
+     * kind, else the first alternative that does, else its link as text.
+     * Decided here from what we know, never by asking the channel. What a
+     * `send_image` picture lacks is assumed: its mime from the URL, its size
+     * as large as the images we accept.
+     */
+    private fitMedia(c: MediaContent): MediaContent | TextContent {
+        const limits = this.capabilities.mediaLimits;
+        const limit =
+            c.mediaType === 'image'
+                ? limits?.image
+                : c.mediaType === 'file'
+                  ? limits?.file
+                  : undefined;
+        if (!limit || fits(c, limit)) return c;
+        const { alternatives, ...original } = c;
+        const alt = alternatives?.find(a => fits(a, limit));
+        if (alt) return { ...original, ...alt };
+        return { kind: 'text', text: mediaText(c) };
     }
 
     // ---- shared truncate (grapheme-aware — won't split surrogate pairs / ZWJ emoji) ----
@@ -252,4 +284,21 @@ export abstract class PlatformAdapter {
         }
         throw error instanceof Error ? error : new Error(String(error));
     }
+}
+
+function fits(
+    { url, mime, size }: { url: string; mime?: string; size?: number },
+    limit: MediaLimit
+): boolean {
+    const type = mime && mime !== 'image/*' ? mime : mimeFromUrl(url);
+    return (
+        !!type &&
+        limit.mimes.includes(type) &&
+        (size ?? MEDIA_UNKNOWN_SIZE_BYTES) <= limit.maxBytes
+    );
+}
+
+function mimeFromUrl(url: string): string | undefined {
+    const ext = /\.([a-z0-9]+)(?:[?#]|$)/i.exec(url)?.[1]?.toLowerCase();
+    return ext ? MEDIA_MIME_BY_EXTENSION[ext] : undefined;
 }

@@ -189,7 +189,13 @@ export function partsToRenderModel(
       model.files.push({
         url: (part.url as string | undefined) ?? "",
         mediaType: (part.mediaType as string | undefined) ?? "",
-        filename: part.filename as string | undefined,
+        // A file the agent sent names itself in `providerMetadata.ecbot`.
+        filename:
+          (part.filename as string | undefined) ??
+          (
+            part.providerMetadata as
+              { ecbot?: { filename?: string } } | undefined
+          )?.ecbot?.filename,
       });
     } else if (part.type === "data-guardrail") {
       const data = part.data as { reason: string } | undefined;

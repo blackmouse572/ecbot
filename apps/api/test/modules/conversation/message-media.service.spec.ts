@@ -36,6 +36,7 @@ describe('MessageMediaService', () => {
             [
                 { type: 'image', key: 'conversations/c/a.jpg' },
                 { type: 'image', url: 'https://kb/shirt.jpg' },
+                { type: 'file', url: 'https://kb/menu.pdf', name: 'Menu' },
                 { type: 'video' },
             ],
             'c'
@@ -44,6 +45,7 @@ describe('MessageMediaService', () => {
         expect(out).toEqual([
             { type: 'image', url: 'https://s3/conversations/c/a.jpg?sig' },
             { type: 'image', url: 'https://kb/shirt.jpg' },
+            { type: 'file', url: 'https://kb/menu.pdf', name: 'Menu' },
             { type: 'video' },
         ]);
         expect(s3.signGetUrl).toHaveBeenCalledWith('conversations/c/a.jpg', {

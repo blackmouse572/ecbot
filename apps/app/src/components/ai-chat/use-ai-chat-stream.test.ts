@@ -128,6 +128,24 @@ describe("partsToRenderModel", () => {
     ]);
   });
 
+  it("names a sent file from providerMetadata.ecbot.filename", () => {
+    const model = partsToRenderModel([
+      {
+        type: "file",
+        url: "https://cdn/k/1790-bang-gia.pdf",
+        mediaType: "application/pdf",
+        providerMetadata: { ecbot: { filename: "Bảng giá", size: 1024 } },
+      },
+    ]);
+    expect(model.files).toEqual([
+      {
+        url: "https://cdn/k/1790-bang-gia.pdf",
+        mediaType: "application/pdf",
+        filename: "Bảng giá",
+      },
+    ]);
+  });
+
   it("falls back to empty strings for a bare file part missing url/mediaType", () => {
     const model = partsToRenderModel([{ type: "file" }]);
     expect(model.files).toEqual([{ url: "", mediaType: "" }]);

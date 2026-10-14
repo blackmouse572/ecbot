@@ -13,6 +13,9 @@ CITATION_MAX_HELD = 64
 
 # Tool whose successful result is also sent to the client as a `file` part.
 SEND_IMAGE_TOOL = "send_image"
+# Same, for a media library item; its `file` part carries filename, size and the
+# compact copy in `providerMetadata.ecbot`.
+SEND_MEDIA_TOOL = "send_media"
 
 # Key on a StructuredTool's `metadata` that says what kind of tool it is
 # ({"kind": ..., "label"?: ...}). LangChain passes tool
@@ -33,6 +36,7 @@ SYSTEM_TOOL_KINDS = {
     "list_pending_followups": "followup",
     "cancel_followup": "followup",
     "send_image": "image",
+    "send_media": "image",
 }
 
 # Shown to clients on any stream-side failure (including a LangGraph

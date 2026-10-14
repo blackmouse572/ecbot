@@ -71,6 +71,38 @@ def _chunk_row(row: asyncpg.Record) -> dict[str, Any]:
     return data
 
 
+def _media_row(row: asyncpg.Record) -> dict[str, Any]:
+    data = dict(row)
+    # `attachment_size` is a numeric column: asyncpg gives a Decimal.
+    data["size"] = int(data["size"]) if data["size"] is not None else None
+    compact = data["compact"]
+    if isinstance(compact, str):
+        compact = json.loads(compact)
+    data["compact"] = compact if isinstance(compact, dict) else None
+    return data
+
+
+# The media library a chatbot can send: only items the API finished
+# (COMPLETED) and did not delete. `knowledge_base_items` sits in `public`, on
+# the search_path next to `rag`, in every deploy. $1 is the chatbot id.
+_MEDIA_SELECT = """
+    SELECT
+        m.knowledge_item_id AS id,
+        m.title,
+        m.description,
+        m.url,
+        m.mime_type,
+        k.attachment_size AS size,
+        k.metadata->'compact' AS compact
+"""
+_MEDIA_FROM = """
+    FROM rag_media m
+    JOIN knowledge_base_items k
+        ON k.id::text = m.knowledge_item_id AND k.status = 'COMPLETED' AND NOT k.deleted
+    WHERE $1 = ANY(m.chatbot_ids)
+"""
+
+
 class PgVectorStore:
     # The `rag` schema and its tables come from the API's migrations
     # (apps/api/migrations/*_create_rag_schema.ts). Nothing here runs DDL.
@@ -262,6 +294,43 @@ class PgVectorStore:
                 chatbot_ids,
             )
             return int(result.split()[-1]) if result else 0
+
+    async def search_media(
+        self,
+        *,
+        embedding: list[float],
+        chatbot_id: str,
+        limit: int,
+        max_distance: float,
+    ) -> list[dict[str, Any]]:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                f"""
+                SELECT * FROM (
+                    {_MEDIA_SELECT}, m.embedding <=> $2::vector AS distance
+                    {_MEDIA_FROM}
+                ) media
+                WHERE distance <= $3
+                ORDER BY distance
+                LIMIT $4
+                """,
+                chatbot_id,
+                _vector_literal(embedding),
+                max_distance,
+                limit,
+            )
+            return [_media_row(row) for row in rows]
+
+    async def get_media(self, *, chatbot_id: str, knowledge_item_id: str) -> dict[str, Any] | None:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                f"{_MEDIA_SELECT} {_MEDIA_FROM} AND m.knowledge_item_id = $2",
+                chatbot_id,
+                knowledge_item_id,
+            )
+            return _media_row(row) if row is not None else None
 
     async def list_documents(self, *, limit: int = 20) -> list[dict[str, Any]]:
         pool = await get_pool()

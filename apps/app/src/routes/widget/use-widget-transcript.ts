@@ -1,5 +1,6 @@
 import { useAIChat } from "@/components/ai-chat/ai-chat-provider";
 import type { MessageAttachment } from "@/types/chat-message";
+import { fileNameFromUrl } from "@/utils/file-name";
 import { widgetPublicControllerMessagesV1 } from "@repo/client";
 import type { UIMessage } from "ai";
 import { useQuery } from "@tanstack/react-query";
@@ -111,16 +112,22 @@ export function useWidgetTranscript({
   }, [data, isOpen, setMessages]);
 }
 
-/** A persisted row as a chat message — images the bot sent come back as
- *  `file` parts, the same shape the live stream used. */
+/** A persisted row as a chat message — images and files the bot sent come
+ *  back as `file` parts, the same shape the live stream used. */
 export function toUiMessage(message: WidgetMessage): UIMessage {
   const files = (message.attachments ?? [])
-    .filter((a) => a.type === "image" && a.url)
-    .map((a) => ({
-      type: "file" as const,
-      url: a.url as string,
-      mediaType: "image/*",
-    }));
+    .filter((a) => (a.type === "image" || a.type === "file") && a.url)
+    .map((a) =>
+      a.type === "image"
+        ? { type: "file" as const, url: a.url as string, mediaType: "image/*" }
+        : {
+            type: "file" as const,
+            url: a.url as string,
+            // The row keeps no mime; the icon reads the URL's extension.
+            mediaType: "application/octet-stream",
+            filename: a.name ?? fileNameFromUrl(a.url as string),
+          },
+    );
   const text = { type: "text" as const, text: message.text ?? "" };
   return {
     id: message.id,

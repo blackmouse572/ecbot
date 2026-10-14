@@ -1,10 +1,6 @@
 import "@/styles/streamdown.css";
 import "@/styles/chat-bubble.css";
-import {
-  ArrowPathMini,
-  DocumentText,
-  ExclamationCircle,
-} from "@medusajs/icons";
+import { ArrowPathMini, ExclamationCircle } from "@medusajs/icons";
 import { Button, clx, Container, Heading, Text } from "@medusajs/ui";
 import {
   Attachment,
@@ -29,6 +25,7 @@ import type { SourceUrlUIPart } from "ai";
 import type { ReactNode } from "react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
+import { FileLink } from "@/components/common/file-link";
 import { AIChatProvider, useAIChat } from "./ai-chat-provider";
 import { AIChatSources } from "./ai-chat-sources";
 import { metadataSources } from "./message-sources";
@@ -65,24 +62,19 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
   }
   return (
     <AttachmentGroup className="mt-2">
-      {files.map((file, index) => {
-        const isImage = file.mediaType.startsWith("image/");
-        return (
+      {files.map((file, index) =>
+        file.mediaType.startsWith("image/") ? (
           <Attachment
             key={`${file.url}-${index}`}
             size="sm"
             className="w-[200px] shrink-0"
           >
-            <AttachmentMedia variant={isImage ? "image" : "icon"}>
-              {isImage ? (
-                <img
-                  src={file.url}
-                  alt={file.filename ?? file.mediaType}
-                  className="size-full object-cover"
-                />
-              ) : (
-                <DocumentText />
-              )}
+            <AttachmentMedia variant="image">
+              <img
+                src={file.url}
+                alt={file.filename ?? file.mediaType}
+                className="size-full object-cover"
+              />
             </AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle>
@@ -91,8 +83,16 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
               <AttachmentDescription>{file.mediaType}</AttachmentDescription>
             </AttachmentContent>
           </Attachment>
-        );
-      })}
+        ) : (
+          <FileLink
+            key={`${file.url}-${index}`}
+            url={file.url}
+            name={file.filename}
+            mediaType={file.mediaType}
+            className="shrink-0"
+          />
+        ),
+      )}
     </AttachmentGroup>
   );
 }

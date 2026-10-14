@@ -1,3 +1,5 @@
+import { IMediaPart } from '@app/modules/chatbot/interfaces/media-part-wire.interface';
+
 export type TextContent = { kind: 'text'; text: string };
 export type CardContent = { kind: 'card'; card: Card };
 export type MediaContent = {
@@ -5,7 +7,25 @@ export type MediaContent = {
     url: string;
     mediaType: 'image' | 'video' | 'file';
     caption?: string;
+    /** Known for knowledge media; absent for a `send_image` picture. */
+    mime?: string;
+    size?: number;
+    filename?: string;
+    /** Smaller copies to send when the original is over a channel's limit. */
+    alternatives?: MediaAlternative[];
 };
+
+export interface MediaAlternative {
+    url: string;
+    mime: string;
+    size: number;
+}
+
+/** What a channel takes for one kind of media. */
+export interface MediaLimit {
+    mimes: string[];
+    maxBytes: number;
+}
 
 export interface Card {
     title?: string;
@@ -46,31 +66,44 @@ export interface AdapterCapabilities {
      */
     typingRefreshMs?: number;
     markRead: boolean;
+    /** Per-kind caps on outbound media; a kind left out has no limit. */
+    mediaLimits?: { image?: MediaLimit; file?: MediaLimit };
 }
 
 export function text(s: string): OutboundMessage {
     return { content: { kind: 'text', text: s }, fallbackText: s };
 }
 
-function image(url: string): OutboundMessage {
-    return {
-        content: { kind: 'media', url, mediaType: 'image' },
-        fallbackText: url,
-    };
+/** A file sent as a plain link: its name, then its url. */
+export function mediaText(c: MediaContent): string {
+    return `${c.filename ?? c.caption ?? ''}\n${c.url}`.trim();
 }
 
-/** One reply segment: its text, and the images (apps/ai `file` parts) that
+function media(m: IMediaPart): OutboundMessage {
+    const content: MediaContent = {
+        kind: 'media',
+        url: m.url,
+        mediaType: !m.mime || m.mime.startsWith('image/') ? 'image' : 'file',
+        ...(m.mime && { mime: m.mime }),
+        ...(m.filename && { filename: m.filename }),
+        ...(m.size !== undefined && { size: m.size }),
+        ...(m.compact && { alternatives: [m.compact] }),
+    };
+    return { content, fallbackText: mediaText(content) };
+}
+
+/** One reply segment: its text, and the media (apps/ai `file` parts) that
  *  arrived while it was open. */
 export interface ReplySegment {
     text: string;
-    images: string[];
+    media: IMediaPart[];
 }
 
-/** A segment's platform messages: its text, then each image. Markdown in the
+/** A segment's platform messages: its text, then each media. Markdown in the
  *  text is not read: apps/ai already turned allowed images into file parts. */
 export function segmentMessages(segment: ReplySegment): OutboundMessage[] {
     const rest = segment.text.trim();
-    return [...(rest ? [text(rest)] : []), ...segment.images.map(image)];
+    return [...(rest ? [text(rest)] : []), ...segment.media.map(media)];
 }
 
 // Round-trip a button/quick-reply id+value through a platform payload string.

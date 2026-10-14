@@ -15,6 +15,7 @@ from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
 from eccho_ai.modules.chat.constants import (
     GENERIC_STREAM_ERROR,
     SEND_IMAGE_TOOL,
+    SEND_MEDIA_TOOL,
     SYSTEM_TOOL_KINDS,
     TOOL_META_KEY,
 )
@@ -193,12 +194,19 @@ async def events_to_ui_parts(
                     except json.JSONDecodeError:
                         pass
                 yield ui.tool_output_available(tool_call_id, output)
-                if (
-                    tool_names.get(tool_call_id) == SEND_IMAGE_TOOL
-                    and isinstance(output, dict)
-                    and output.get("ok")
-                ):
+                sent = isinstance(output, dict) and output.get("ok")
+                if sent and tool_names.get(tool_call_id) == SEND_IMAGE_TOOL:
                     yield ui.file(output["url"], "image/*")
+                elif sent and tool_names.get(tool_call_id) == SEND_MEDIA_TOOL:
+                    yield ui.file(
+                        output["url"],
+                        output["media_type"],
+                        {"ecbot": {
+                            "filename": output["filename"],
+                            "size": output["size"],
+                            "compact": output["compact"],
+                        }},
+                    )
                 yield ui.finish_step()
                 step_open = False
 

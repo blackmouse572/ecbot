@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { POLICY_ROLE_META_KEY } from '@app/modules/policy/constants/policy.constant';
 import { KnowledgeItemWorkspaceController } from '@app/modules/knowledge-base/controllers/knowledge-item.workspace.controller';
@@ -149,6 +150,78 @@ describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
             type: 'MEDIA',
             attachment: { cdnUrl: 'https://cdn/k', mime: 'image/png' },
         });
+    });
+
+    it('stores a compact jpg next to a webp and keeps it on the item', async () => {
+        const webp = await sharp({
+            create: {
+                width: 32,
+                height: 32,
+                channels: 3,
+                background: '#ff0000',
+            },
+        })
+            .webp()
+            .toBuffer();
+        awsS3Service.putItem
+            .mockResolvedValueOnce({
+                bucket: 'public-bucket',
+                key: 'knowledge-media/a.webp',
+                completedUrl: 'https://s3/a.webp',
+                cdnUrl: 'https://cdn/a.webp',
+            })
+            .mockResolvedValueOnce({
+                bucket: 'public-bucket',
+                key: 'knowledge-media/a-compact.jpg',
+                completedUrl: 'https://s3/a-compact.jpg',
+                cdnUrl: 'https://cdn/a-compact.jpg',
+            });
+
+        await create(ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA, {
+            ...file('image/webp', webp.length),
+            originalname: 'Bánh mì.webp',
+            buffer: webp,
+        });
+
+        const [original] = awsS3Service.putItem.mock.calls[0];
+        const [compact, options] = awsS3Service.putItem.mock.calls[1];
+        expect(compact.key).toBe(
+            original.key.replace(/\.webp$/, '-compact.jpg')
+        );
+        expect(compact.mime).toBe('image/jpeg');
+        expect(options).toEqual({ access: 'PUBLIC' });
+        expect(
+            knowledgeItemService.create.mock.calls[0][0].metadata.compact
+        ).toEqual({
+            url: 'https://cdn/a-compact.jpg',
+            mime: 'image/jpeg',
+            size: compact.size,
+        });
+    });
+
+    it('makes no compact copy of a small png or a PDF', async () => {
+        await create(ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA, file('image/png'));
+        await create(
+            ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA,
+            file('application/pdf')
+        );
+
+        expect(awsS3Service.putItem).toHaveBeenCalledTimes(2);
+        for (const [input] of knowledgeItemService.create.mock.calls) {
+            expect(input.metadata.compact).toBeUndefined();
+        }
+    });
+
+    it('still creates the item when the compact copy fails', async () => {
+        await create(
+            ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA,
+            file('image/webp') // not a real image: sharp refuses it
+        );
+
+        expect(awsS3Service.putItem).toHaveBeenCalledTimes(1);
+        expect(
+            knowledgeItemService.create.mock.calls[0][0].metadata.compact
+        ).toBeUndefined();
     });
 
     it('takes a PDF menu up to 20MB', async () => {

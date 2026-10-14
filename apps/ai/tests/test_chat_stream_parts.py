@@ -214,6 +214,47 @@ async def test_send_image_tool_emits_a_file_part():
 
 
 @pytest.mark.asyncio
+async def test_send_media_tool_emits_the_contract_file_part():
+    output = {
+        "ok": True, "url": "https://cdn/x.webp", "media_type": "image/webp",
+        "filename": "Lunch banner", "size": 2048000,
+        "compact": {"url": "https://cdn/x-compact.jpg", "mediaType": "image/jpeg", "size": 900000},
+    }
+
+    async def fake_events():
+        yield {"event": "on_tool_start", "run_id": "r1", "name": "send_media",
+               "data": {"input": {"id": "item-1"}}}
+        yield {"event": "on_tool_end", "run_id": "r1", "name": "send_media",
+               "data": {"output": _tool_msg(json.dumps(output))}}
+
+    parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
+    assert [p for p in parts if p["type"] == "file"] == [{
+        "type": "file",
+        "url": "https://cdn/x.webp",
+        "mediaType": "image/webp",
+        "providerMetadata": {"ecbot": {
+            "filename": "Lunch banner",
+            "size": 2048000,
+            "compact": {"url": "https://cdn/x-compact.jpg", "mediaType": "image/jpeg", "size": 900000},
+        }},
+    }]
+    meta = next(p for p in parts if p["type"] == "data-tool-meta")
+    assert meta["data"]["kind"] == "image"
+
+
+@pytest.mark.asyncio
+async def test_rejected_send_media_emits_no_file_part():
+    async def fake_events():
+        yield {"event": "on_tool_start", "run_id": "r1", "name": "send_media",
+               "data": {"input": {"id": "nope"}}}
+        yield {"event": "on_tool_end", "run_id": "r1", "name": "send_media",
+               "data": {"output": _tool_msg('{"ok": false, "error": "unknown"}')}}
+
+    parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
+    assert not [p for p in parts if p["type"] == "file"]
+
+
+@pytest.mark.asyncio
 async def test_rejected_send_image_emits_no_file_part():
     async def fake_events():
         yield {"event": "on_tool_start", "run_id": "r1", "name": "send_image",

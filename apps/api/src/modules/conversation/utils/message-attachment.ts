@@ -3,7 +3,7 @@ import {
     ITurnImages,
 } from '../interfaces/message-media.interface';
 
-const FIELDS = ['url', 'key', 'description'] as const;
+const FIELDS = ['url', 'key', 'description', 'name'] as const;
 
 /** A stored attachments value as typed attachments: anything that is not an
  *  object with a string `type` is dropped, and so are unknown fields. */
@@ -25,13 +25,21 @@ function isImage(attachment: IMessageAttachment): boolean {
     return attachment.type === 'image';
 }
 
-/** How a message's images read in chat history: what the AI saw in them
- *  when it described them, else a bare marker. '' when there is no image. */
+/** How a message's images and files read in chat history: an image by what
+ *  the AI saw in it when it described it, a file by its name, else a bare
+ *  marker. '' when there is neither. */
 export function historyNote(attachments: IMessageAttachment[]): string {
     const images = attachments.filter(isImage);
-    if (!images.length) return '';
     const described = images.find(a => a.description)?.description;
-    return described ? `[image: ${described}]` : '[image]';
+    const imageNote = !images.length
+        ? ''
+        : described
+          ? `[image: ${described}]`
+          : '[image]';
+    const fileNotes = attachments
+        .filter(a => a.type === 'file')
+        .map(a => (a.name ? `[file: ${a.name}]` : '[file]'));
+    return [imageNote, ...fileNotes].filter(Boolean).join(' ');
 }
 
 /** The attachments with each given description set, by position. */
@@ -44,9 +52,20 @@ export function withDescriptions(
     );
 }
 
-/** The attachment of an image the bot sent. */
-export function botImage(url: string): IMessageAttachment {
-    return { type: 'image', url };
+/** The attachment of media the bot sent: an image, or a file (a PDF) kept
+ *  with its name so the inbox can show it as a link. */
+export function botMedia(media: {
+    url: string;
+    mime?: string;
+    filename?: string;
+}): IMessageAttachment {
+    if (!media.mime || media.mime.startsWith('image/'))
+        return { type: 'image', url: media.url };
+    return {
+        type: 'file',
+        url: media.url,
+        ...(media.filename && { name: media.filename }),
+    };
 }
 
 /** Resolved attachments (stored images already signed) as apps/ai gets them. */

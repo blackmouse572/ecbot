@@ -258,6 +258,49 @@ describe('WhatsAppPlatformAdapter.doSend', () => {
         });
     });
 
+    it('sends the compact jpg in place of a webp photo', async () => {
+        const { post, a } = makeSender();
+        await a.sendMessage(ACCOUNT, '8490', {
+            content: {
+                kind: 'media',
+                url: 'https://x/a.webp',
+                mediaType: 'image',
+                mime: 'image/webp',
+                size: 2000,
+                alternatives: [
+                    {
+                        url: 'https://x/a-compact.jpg',
+                        mime: 'image/jpeg',
+                        size: 1000,
+                    },
+                ],
+            },
+            fallbackText: 'https://x/a.webp',
+        });
+        expect(post.mock.calls[0][1]).toMatchObject({
+            type: 'image',
+            image: { link: 'https://x/a-compact.jpg' },
+        });
+    });
+
+    it('names a PDF document by its title', async () => {
+        const { post, a } = makeSender();
+        await a.sendMessage(ACCOUNT, '8490', {
+            content: {
+                kind: 'media',
+                url: 'https://x/menu.pdf',
+                mediaType: 'file',
+                mime: 'application/pdf',
+                filename: 'Thực đơn',
+            },
+            fallbackText: 'Thực đơn',
+        });
+        expect(post.mock.calls[0][1].document).toEqual({
+            link: 'https://x/menu.pdf',
+            filename: 'Thực đơn',
+        });
+    });
+
     it('renders up to 3 quick replies as interactive reply buttons', async () => {
         const { post, a } = makeSender();
         await a.sendMessage(ACCOUNT, '8490', {

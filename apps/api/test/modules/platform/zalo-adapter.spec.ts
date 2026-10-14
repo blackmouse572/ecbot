@@ -228,11 +228,9 @@ const account = { accessToken: 'enc' } as any;
 
 describe('ZaloPlatformAdapter.doSend', () => {
     it('POSTs text to /message/cs with the decrypted token and returns message_id', async () => {
-        const post = jest
-            .fn()
-            .mockResolvedValue({
-                data: { error: 0, data: { message_id: 'zm1' } },
-            });
+        const post = jest.fn().mockResolvedValue({
+            data: { error: 0, data: { message_id: 'zm1' } },
+        });
         const a = makeAdapter({ axiosRef: { post } });
 
         const res = await a.sendMessage(account, 'S', {
@@ -253,12 +251,10 @@ describe('ZaloPlatformAdapter.doSend', () => {
         );
     });
 
-    it('degrades a card to its fallbackText (capabilities all false)', async () => {
-        const post = jest
-            .fn()
-            .mockResolvedValue({
-                data: { error: 0, data: { message_id: 'zm2' } },
-            });
+    it('degrades a card to its fallbackText (cards off)', async () => {
+        const post = jest.fn().mockResolvedValue({
+            data: { error: 0, data: { message_id: 'zm2' } },
+        });
         const a = makeAdapter({ axiosRef: { post } });
 
         await a.sendMessage(account, 'S', {
@@ -272,11 +268,9 @@ describe('ZaloPlatformAdapter.doSend', () => {
     });
 
     it('throws when Zalo returns a non-zero error code', async () => {
-        const post = jest
-            .fn()
-            .mockResolvedValue({
-                data: { error: -216, message: 'user blocked OA' },
-            });
+        const post = jest.fn().mockResolvedValue({
+            data: { error: -216, message: 'user blocked OA' },
+        });
         const a = makeAdapter({ axiosRef: { post } });
 
         await expect(
@@ -299,6 +293,152 @@ describe('ZaloPlatformAdapter.doSend', () => {
         ).rejects.toThrow();
         expect(post).not.toHaveBeenCalled();
     });
+});
+
+describe('ZaloPlatformAdapter.doSend media', () => {
+    const MB = 1024 * 1024;
+    const ok = (data: object) => ({ data: { error: 0, data } });
+
+    it('sends an image as a media template to /message/cs', async () => {
+        const post = jest.fn().mockResolvedValue(ok({ message_id: 'zi1' }));
+        const a = makeAdapter({ axiosRef: { post, get: jest.fn() } });
+
+        const res = await a.sendMessage(account, 'S', {
+            content: {
+                kind: 'media',
+                url: 'https://cdn/a.png',
+                mediaType: 'image',
+                mime: 'image/png',
+                size: 500_000,
+            },
+            fallbackText: 'https://cdn/a.png',
+        });
+
+        expect(res).toEqual({ externalId: 'zi1' });
+        expect(post).toHaveBeenCalledWith(
+            expect.stringContaining('/v3.0/oa/message/cs'),
+            {
+                recipient: { user_id: 'S' },
+                message: {
+                    attachment: {
+                        type: 'template',
+                        payload: {
+                            template_type: 'media',
+                            elements: [
+                                {
+                                    media_type: 'image',
+                                    url: 'https://cdn/a.png',
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+            expect.objectContaining({
+                headers: expect.objectContaining({ access_token: 'TOKEN' }),
+            })
+        );
+    });
+
+    it('uploads a PDF, then sends the file by its token', async () => {
+        const get = jest
+            .fn()
+            .mockResolvedValue({ data: Buffer.from('%PDF-1.4') });
+        const post = jest
+            .fn()
+            .mockResolvedValueOnce(ok({ token: 'file-token' }))
+            .mockResolvedValueOnce(ok({ message_id: 'zf1' }));
+        const a = makeAdapter({ axiosRef: { post, get } });
+
+        const res = await a.sendMessage(account, 'S', {
+            content: {
+                kind: 'media',
+                url: 'https://cdn/menu.pdf',
+                mediaType: 'file',
+                mime: 'application/pdf',
+                size: 2 * MB,
+                filename: 'Thực đơn',
+            },
+            fallbackText: 'Thực đơn\nhttps://cdn/menu.pdf',
+        });
+
+        expect(res).toEqual({ externalId: 'zf1' });
+        expect(get).toHaveBeenCalledWith(
+            'https://cdn/menu.pdf',
+            expect.objectContaining({ responseType: 'arraybuffer' })
+        );
+        const [uploadUrl, form, uploadOptions] = post.mock.calls[0];
+        expect(uploadUrl).toBe('https://openapi.zalo.me/v2.0/oa/upload/file');
+        expect(form.getHeaders()['content-type']).toContain(
+            'multipart/form-data'
+        );
+        expect(uploadOptions.headers.access_token).toBe('TOKEN');
+        expect(post.mock.calls[1][1]).toEqual({
+            recipient: { user_id: 'S' },
+            message: {
+                attachment: { type: 'file', payload: { token: 'file-token' } },
+            },
+        });
+    });
+
+    it('throws when the upload returns no token', async () => {
+        const get = jest.fn().mockResolvedValue({ data: Buffer.from('x') });
+        const post = jest
+            .fn()
+            .mockResolvedValue({ data: { error: -201, message: 'bad file' } });
+        const a = makeAdapter({ axiosRef: { post, get } });
+
+        await expect(
+            a.sendMessage(account, 'S', {
+                content: {
+                    kind: 'media',
+                    url: 'https://cdn/menu.pdf',
+                    mediaType: 'file',
+                    mime: 'application/pdf',
+                },
+                fallbackText: 'https://cdn/menu.pdf',
+            })
+        ).rejects.toThrow();
+        expect(post).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+        [
+            'an image over 1MB',
+            { mediaType: 'image', mime: 'image/png', size: 2 * MB },
+        ],
+        [
+            'a webp image',
+            { mediaType: 'image', mime: 'image/webp', size: 1000 },
+        ],
+        [
+            'a PDF over 5MB',
+            { mediaType: 'file', mime: 'application/pdf', size: 8 * MB },
+        ],
+    ])(
+        'sends %s as its link in text, without uploading anything',
+        async (_, media) => {
+            const get = jest.fn();
+            const post = jest.fn().mockResolvedValue(ok({ message_id: 'zt' }));
+            const a = makeAdapter({ axiosRef: { post, get } });
+
+            await a.sendMessage(account, 'S', {
+                content: {
+                    kind: 'media',
+                    url: 'https://cdn/x',
+                    filename: 'Bánh mì',
+                    ...(media as any),
+                },
+                fallbackText: 'https://cdn/x',
+            });
+
+            expect(get).not.toHaveBeenCalled();
+            expect(post).toHaveBeenCalledTimes(1);
+            expect(post.mock.calls[0][1].message).toEqual({
+                text: 'Bánh mì\nhttps://cdn/x',
+            });
+        }
+    );
 });
 
 describe('ZaloPlatformAdapter.fetchSenderProfile', () => {

@@ -221,7 +221,14 @@ describe('WidgetChatService.handleTurn', () => {
     it('persists reply images as attachments', async () => {
         const { service, messageRepository, sseStream } = setup();
         sseStream.pipe.mockImplementationOnce(async ({ onFinalize }: any) => {
-            await onFinalize('Mẫu này nè', ['https://cdn/s.jpg']);
+            await onFinalize('Mẫu này nè', [
+                { url: 'https://cdn/s.jpg' },
+                {
+                    url: 'https://cdn/menu.pdf',
+                    mime: 'application/pdf',
+                    filename: 'Thực đơn',
+                },
+            ]);
         });
 
         await service.handleTurn(res, turn);
@@ -231,7 +238,14 @@ describe('WidgetChatService.handleTurn', () => {
             expect.any(String),
             expect.objectContaining({
                 text: 'Mẫu này nè',
-                attachments: [{ type: 'image', url: 'https://cdn/s.jpg' }],
+                attachments: [
+                    { type: 'image', url: 'https://cdn/s.jpg' },
+                    {
+                        type: 'file',
+                        url: 'https://cdn/menu.pdf',
+                        name: 'Thực đơn',
+                    },
+                ],
             })
         );
     });

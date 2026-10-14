@@ -24,6 +24,7 @@ import {
     verifyMetaChallenge,
     verifyMetaSignature,
 } from '../meta/meta-webhook.util';
+import { WHATSAPP_MEDIA_LIMITS } from '../../constants/media.constant';
 import { PlatformAdapter } from '../platform-adapter.base';
 import {
     WhatsAppChangeValue,
@@ -68,6 +69,7 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
         reactions: { inbound: true, outbound: true },
         typing: false,
         markRead: false,
+        mediaLimits: WHATSAPP_MEDIA_LIMITS,
     };
 
     private readonly apiVersion: string;
@@ -343,7 +345,16 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
 
         if (c.kind === 'media') {
             const type = c.mediaType === 'file' ? 'document' : c.mediaType;
-            return { type, [type]: { link: c.url, caption: c.caption } };
+            // A document shows its file name; photos and videos have none.
+            const filename = type === 'document' ? c.filename : undefined;
+            return {
+                type,
+                [type]: {
+                    link: c.url,
+                    caption: c.caption,
+                    ...(filename && { filename }),
+                },
+            };
         }
 
         // Cards never reach here — `cards: false` makes degrade() turn them

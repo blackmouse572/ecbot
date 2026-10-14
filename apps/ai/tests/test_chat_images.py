@@ -174,6 +174,9 @@ def test_system_prompt_image_guidance_is_business_neutral():
     rules = " ".join(section[start:end].lower().split())
     assert "image description" in rules
     assert "send_image" in rules
+    # Uploaded media goes by id from the per-turn library, never by pasted URL.
+    assert "send_media" in rules and "<media_library>" in rules
+    assert "never paste its url" in rules
     assert "price" not in rules and "product" not in rules
     # Sending back the catalog photo of what the user just showed is noise.
     assert "already shows" in rules

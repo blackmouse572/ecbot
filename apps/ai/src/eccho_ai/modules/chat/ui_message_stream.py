@@ -79,8 +79,11 @@ def source_url(source_id: str, url: str, title: str | None = None) -> str:
     return _frame(part)
 
 
-def file(url: str, media_type: str) -> str:
-    return _frame({"type": "file", "url": url, "mediaType": media_type})
+def file(url: str, media_type: str, provider_metadata: dict | None = None) -> str:
+    frame: dict = {"type": "file", "url": url, "mediaType": media_type}
+    if provider_metadata is not None:
+        frame["providerMetadata"] = provider_metadata
+    return _frame(frame)
 
 
 def message_metadata(metadata: dict) -> str:

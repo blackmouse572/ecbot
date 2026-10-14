@@ -2,6 +2,7 @@
 import { PlatformAdapter } from '../../../src/modules/platform/adapters/platform-adapter.base';
 import {
     AdapterCapabilities,
+    MediaContent,
     OutboundMessage,
     text,
 } from '../../../src/modules/platform/interfaces/message-model';
@@ -104,6 +105,119 @@ describe('PlatformAdapter.degrade', () => {
         const d = a.pubDegrade(msg);
         expect((d.content as any).text).toContain('Q1');
         expect(d.quickReplies).toBeUndefined();
+    });
+});
+
+const MB = 1024 * 1024;
+const LIMITS: AdapterCapabilities['mediaLimits'] = {
+    image: { mimes: ['image/jpeg', 'image/png'], maxBytes: MB },
+    file: { mimes: ['application/pdf'], maxBytes: 5 * MB },
+};
+const media = (content: Partial<MediaContent>): OutboundMessage => ({
+    content: {
+        kind: 'media',
+        url: 'https://cdn/a.png',
+        mediaType: 'image',
+        ...content,
+    },
+    fallbackText: 'https://cdn/a.png',
+});
+
+describe('PlatformAdapter.degrade media limits', () => {
+    const a = new TestAdapter({ media: true, mediaLimits: LIMITS });
+
+    it('keeps media that fits the limit for its kind', () => {
+        const msg = media({ mime: 'image/png', size: 500_000 });
+        expect(a.pubDegrade(msg).content).toEqual(msg.content);
+    });
+
+    it('swaps in the first alternative that fits', () => {
+        const out = a.pubDegrade(
+            media({
+                url: 'https://cdn/a.webp',
+                mime: 'image/webp',
+                size: 3 * MB,
+                alternatives: [
+                    {
+                        url: 'https://cdn/a-compact.jpg',
+                        mime: 'image/jpeg',
+                        size: 400_000,
+                    },
+                ],
+            })
+        );
+        expect(out.content).toEqual({
+            kind: 'media',
+            url: 'https://cdn/a-compact.jpg',
+            mediaType: 'image',
+            mime: 'image/jpeg',
+            size: 400_000,
+        });
+    });
+
+    it('sends the link as text when nothing fits', () => {
+        const out = a.pubDegrade(
+            media({
+                url: 'https://cdn/menu.pdf',
+                mediaType: 'file',
+                mime: 'application/pdf',
+                size: 8 * MB,
+                filename: 'Thực đơn',
+            })
+        );
+        expect(out.content).toEqual({
+            kind: 'text',
+            text: 'Thực đơn\nhttps://cdn/menu.pdf',
+        });
+    });
+
+    it('sends a too-large image with no alternative as its bare link', () => {
+        const out = a.pubDegrade(media({ mime: 'image/png', size: 2 * MB }));
+        expect(out.content).toEqual({
+            kind: 'text',
+            text: 'https://cdn/a.png',
+        });
+    });
+
+    // A `send_image` picture comes with no mime or size: what can't be
+    // checked is assumed (mime from the URL, size as large as the 5MB images
+    // we accept), so a strict channel gets the link instead of a failed send.
+    it('assumes an unknown size is 5MB', () => {
+        const strict = a.pubDegrade(media({ mime: 'image/jpeg' }));
+        expect(strict.content).toEqual({
+            kind: 'text',
+            text: 'https://cdn/a.png',
+        });
+        const loose = new TestAdapter({
+            media: true,
+            mediaLimits: {
+                image: { mimes: ['image/jpeg', 'image/png'], maxBytes: 5 * MB },
+            },
+        });
+        const msg = media({ mime: 'image/jpeg' });
+        expect(loose.pubDegrade(msg).content).toEqual(msg.content);
+    });
+
+    it('reads an unknown mime from the URL extension', () => {
+        const loose = new TestAdapter({
+            media: true,
+            mediaLimits: {
+                image: { mimes: ['image/jpeg', 'image/png'], maxBytes: 5 * MB },
+            },
+        });
+        const png = media({ url: 'https://cdn/a.PNG?v=2' });
+        expect(loose.pubDegrade(png).content).toEqual(png.content);
+        const webp = loose.pubDegrade(media({ url: 'https://cdn/a.webp' }));
+        expect(webp.content).toEqual({
+            kind: 'text',
+            text: 'https://cdn/a.webp',
+        });
+    });
+
+    it('applies no limit when the channel declares none', () => {
+        const open = new TestAdapter({ media: true });
+        const msg = media({ mime: 'image/webp', size: 30 * MB });
+        expect(open.pubDegrade(msg).content).toEqual(msg.content);
     });
 });
 

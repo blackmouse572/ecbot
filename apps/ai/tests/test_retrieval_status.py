@@ -3,6 +3,7 @@ plus the stable chunk id and score kind on each source."""
 from __future__ import annotations
 
 import json
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -224,6 +225,7 @@ def test_blocked_turn_still_reports_retrieval(client, monkeypatch):
         return "off topic"
 
     monkeypatch.setattr(routers, "get_rag_retrieval", retrieval)
+    monkeypatch.setattr(routers, "get_media_retrieval", AsyncMock(return_value=[]))
     monkeypatch.setattr(routers, "get_agent", agent)
     monkeypatch.setattr(routers, "run_input_guardrail", block)
 

@@ -3,6 +3,10 @@ import {
     parseWireTokenUsage,
     TokenUsageDelta,
 } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
+import {
+    IMediaPart,
+    parseWireMediaPart,
+} from 'src/modules/chatbot/interfaces/media-part-wire.interface';
 
 /** One parsed AI SDK v5 UI-message-stream `data:` frame. */
 export type UiStreamFrame = Record<string, unknown> & { type?: unknown };
@@ -15,7 +19,7 @@ export type UiStreamFrame = Record<string, unknown> & { type?: unknown };
  */
 export class AssistantTranscriptCollector {
     private text = '';
-    private imageUrls: string[] = [];
+    private sentMedia: IMediaPart[] = [];
     /** A guardrail tripped. apps/ai emits `data-guardrail` *after* the text has
      * already streamed, so blocked content reaches the wire — it must never be
      * written to history, or the next turn feeds it back to the model. */
@@ -34,14 +38,11 @@ export class AssistantTranscriptCollector {
             if (typeof delta === 'string') this.text += delta;
             return;
         }
-        // An image the reply sent (send_image, or an allowed markdown image).
-        if (
-            type === 'file' &&
-            typeof frame.url === 'string' &&
-            typeof frame.mediaType === 'string' &&
-            frame.mediaType.startsWith('image/')
-        ) {
-            this.imageUrls.push(frame.url);
+        // An image or PDF the reply sent (send_image, send_media, or an
+        // allowed markdown image).
+        const media = parseWireMediaPart(frame);
+        if (media) {
+            this.sentMedia.push(media);
             return;
         }
         if (type === 'message-metadata') {
@@ -59,9 +60,9 @@ export class AssistantTranscriptCollector {
         return this.text;
     }
 
-    /** URLs of the images the reply sent, in order. */
-    images(): string[] {
-        return this.imageUrls;
+    /** The images and PDFs the reply sent, in order. */
+    media(): IMediaPart[] {
+        return this.sentMedia;
     }
 
     /** Whether this turn is safe and meaningful to persist. */
@@ -69,7 +70,7 @@ export class AssistantTranscriptCollector {
         return (
             !this.blocked &&
             !this.errored &&
-            (this.text.trim().length > 0 || this.imageUrls.length > 0)
+            (this.text.trim().length > 0 || this.sentMedia.length > 0)
         );
     }
 }

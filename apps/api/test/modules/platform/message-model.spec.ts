@@ -33,7 +33,7 @@ describe('message-model images', () => {
         expect(
             segmentMessages({
                 text: 'Mẫu này giá 350k nhé',
-                images: ['https://cdn/shirt.jpg'],
+                media: [{ url: 'https://cdn/shirt.jpg' }],
             })
         ).toEqual([
             text('Mẫu này giá 350k nhé'),
@@ -51,7 +51,67 @@ describe('message-model images', () => {
     it('segmentMessages() leaves markdown in the text alone', () => {
         // apps/ai already turned allowed images into file parts; anything
         // left in the text is plain text.
-        const segment = { text: '![x](https://evil/x.png)', images: [] };
+        const segment = { text: '![x](https://evil/x.png)', media: [] };
         expect(segmentMessages(segment)).toEqual([text(segment.text)]);
+    });
+});
+
+describe('message-model media', () => {
+    it('segmentMessages() sends a PDF as a file named by its title', () => {
+        expect(
+            segmentMessages({
+                text: '',
+                media: [
+                    {
+                        url: 'https://cdn/menu.pdf',
+                        mime: 'application/pdf',
+                        filename: 'Thực đơn',
+                        size: 2048,
+                    },
+                ],
+            })
+        ).toEqual([
+            {
+                content: {
+                    kind: 'media',
+                    url: 'https://cdn/menu.pdf',
+                    mediaType: 'file',
+                    mime: 'application/pdf',
+                    filename: 'Thực đơn',
+                    size: 2048,
+                },
+                fallbackText: 'Thực đơn\nhttps://cdn/menu.pdf',
+            },
+        ]);
+    });
+
+    it('segmentMessages() offers the compact copy as an alternative', () => {
+        const [msg] = segmentMessages({
+            text: '',
+            media: [
+                {
+                    url: 'https://cdn/a.webp',
+                    mime: 'image/webp',
+                    size: 3_000_000,
+                    compact: {
+                        url: 'https://cdn/a-compact.jpg',
+                        mime: 'image/jpeg',
+                        size: 400_000,
+                    },
+                },
+            ],
+        });
+        expect(msg.content).toMatchObject({
+            kind: 'media',
+            mediaType: 'image',
+            mime: 'image/webp',
+            alternatives: [
+                {
+                    url: 'https://cdn/a-compact.jpg',
+                    mime: 'image/jpeg',
+                    size: 400_000,
+                },
+            ],
+        });
     });
 });

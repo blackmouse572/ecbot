@@ -24,6 +24,33 @@ describe("toUiMessage", () => {
     });
   });
 
+  it("restores a bot file as a named file part", () => {
+    expect(
+      toUiMessage({
+        id: "m3",
+        authorType: "BOT",
+        dateSent: "2026-01-01T00:00:00Z",
+        attachments: [
+          { type: "file", url: "https://cdn/k/bang-gia.pdf", name: "Bảng giá" },
+          { type: "file", url: "https://cdn/k/menu.pdf" },
+        ],
+      }).parts,
+    ).toEqual([
+      {
+        type: "file",
+        url: "https://cdn/k/bang-gia.pdf",
+        mediaType: "application/octet-stream",
+        filename: "Bảng giá",
+      },
+      {
+        type: "file",
+        url: "https://cdn/k/menu.pdf",
+        mediaType: "application/octet-stream",
+        filename: "menu.pdf",
+      },
+    ]);
+  });
+
   it("keeps a plain text message as one text part", () => {
     expect(
       toUiMessage({

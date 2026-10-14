@@ -23,6 +23,8 @@ from eccho_ai.models.customers import Customers
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 from eccho_ai.core.api_client import ApiClient, ApiClientError
 from eccho_ai.core.postgres import PostgresRepo
+from eccho_ai.core.variables import AppVars
+from eccho_ai.llm.retrievers.vector_store import PgVectorStore
 from eccho_ai.llm.tools.constants import (
     FOLLOWUP_FAILED,
     FOLLOWUP_TIME_REJECTED,
@@ -33,6 +35,8 @@ from eccho_ai.llm.tools.constants import (
 from eccho_ai.llm.tools.image_urls import is_known_image_url
 
 logger = logging.getLogger("uvicorn.info")
+
+media_store = PgVectorStore(embedding_dimension=AppVars.RAG_EMBEDDING_DIMENSION)
 
 
 def _get_customer_id() -> str | None:
@@ -56,6 +60,16 @@ def _get_chatbot() -> Any:
     except Exception:  # pragma: no cover — runtime missing outside agent
         return None
     return getattr(ctx, "chatbot", None)
+
+
+def _get_chatbot_id() -> str | None:
+    from langgraph.runtime import get_runtime
+
+    try:
+        ctx = get_runtime(AgentRequestContext).context
+    except Exception:  # pragma: no cover — runtime missing outside agent
+        return None
+    return getattr(ctx, "chatbot_id", None)
 
 
 def _get_session_id() -> str | None:
@@ -473,6 +487,44 @@ async def send_image(url: str) -> dict[str, Any]:
     return {"ok": True, "url": url}
 
 
+_UNKNOWN_MEDIA = "Unknown media id. Use an id from the media library in this message."
+
+
+@tool
+async def send_media(id: str) -> dict[str, Any]:
+    """Send one image or PDF from the media library to the user as its own
+    message, by its `id` from <media_library>. Never paste the media URL in
+    your reply; this tool sends the file."""
+    chatbot_id = _get_chatbot_id()
+    if not chatbot_id:
+        _log_call("send_media", _truncate(id), "no_context", 0)
+        return {"ok": False, "error": _UNKNOWN_MEDIA}
+    try:
+        item = await media_store.get_media(chatbot_id=chatbot_id, knowledge_item_id=id)
+    except Exception as exc:
+        logger.warning("send_media lookup failed: %s", exc)
+        _log_call("send_media", _truncate(id), "error", 0)
+        return {"ok": False, "error": "The media library is not available right now."}
+    if item is None:
+        _log_call("send_media", _truncate(id), "rejected", 0)
+        return {"ok": False, "error": _UNKNOWN_MEDIA}
+    compact = item.get("compact")
+    _log_call("send_media", _truncate(id), "ok", 0)
+    return {
+        "ok": True,
+        "url": item["url"],
+        "media_type": item["mime_type"],
+        "filename": item["title"],
+        "size": item["size"],
+        # Stored as {url, mime, size} by apps/api; the stream contract says mediaType.
+        "compact": (
+            {"url": compact["url"], "mediaType": compact.get("mime"), "size": compact.get("size")}
+            if compact and compact.get("url")
+            else None
+        ),
+    }
+
+
 SYSTEM_TOOLS: list[Any] = [
     get_customer_field,
     list_customer_fields,
@@ -484,6 +536,7 @@ SYSTEM_TOOLS: list[Any] = [
     list_pending_followups,
     cancel_followup,
     send_image,
+    send_media,
 ]
 
 

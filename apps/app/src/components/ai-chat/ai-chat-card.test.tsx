@@ -211,3 +211,28 @@ describe("AIChatCard sources", () => {
     expect(screen.queryByText(/Chính sách đổi trả/)).not.toBeInTheDocument();
   });
 });
+
+describe("AIChatCard files", () => {
+  it("shows a sent PDF as a link under its name", () => {
+    chat.messages = [
+      {
+        id: "m1",
+        role: "assistant",
+        parts: [
+          { type: "text", text: "Bảng giá đây ạ" },
+          {
+            type: "file",
+            url: "https://cdn/k/1790-bang-gia.pdf",
+            mediaType: "application/pdf",
+            providerMetadata: { ecbot: { filename: "Bảng giá" } },
+          },
+        ],
+      },
+    ];
+    render(<AIChatCard chatbotId="bot-1" transport={transport} />);
+
+    const link = screen.getByRole("link", { name: "Bảng giá" });
+    expect(link).toHaveAttribute("href", "https://cdn/k/1790-bang-gia.pdf");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+});

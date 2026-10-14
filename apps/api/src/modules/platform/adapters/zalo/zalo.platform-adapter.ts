@@ -9,10 +9,18 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, timingSafeEqual } from 'crypto';
+import FormData from 'form-data';
 import {
     AdapterCapabilities,
+    MediaContent,
+    mediaText,
     OutboundMessage,
 } from '../../interfaces/message-model';
+import {
+    MEDIA_FETCH_TIMEOUT_MS,
+    ZALO_FILE_MAX_BYTES,
+    ZALO_MEDIA_LIMITS,
+} from '../../constants/media.constant';
 import {
     PlatformOAuthCapability,
     PlatformOAuthTokens,
@@ -25,13 +33,17 @@ import { PlatformAdapter } from '../platform-adapter.base';
 import {
     ZaloApiResponse,
     ZaloOaInfoData,
+    ZaloOutboundAttachment,
     ZaloSendMessageData,
+    ZaloUploadFileData,
     ZaloUserProfileData,
     ZaloWebhookAttachment,
     ZaloWebhookPayload,
 } from './zalo.types';
 
 const OPENAPI_BASE = 'https://openapi.zalo.me/v3.0/oa';
+// UNCONFIRMED: Zalo uploads files on the v2.0 API; see zalo.types.ts.
+const UPLOAD_FILE_URL = 'https://openapi.zalo.me/v2.0/oa/upload/file';
 const MESSAGE_LIMIT = 2000;
 // Reject webhooks whose (signed) timestamp is older than this — replay guard.
 const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
@@ -39,20 +51,20 @@ const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
 @Injectable()
 export class ZaloPlatformAdapter extends PlatformAdapter {
     readonly type = ENUM_ACCOUNT_TYPE.ZALO_PAGE;
-    // First-pass scope: text-only outbound. Zalo OA *does* support images,
-    // files, stickers and templates via the CS API — enabling those is a
-    // tracked follow-up. Until then all capabilities are false so degrade()
-    // collapses richer content to plain text.
+    // Text, images and PDFs. Zalo OA also has stickers and templates with
+    // buttons via the CS API; those stay off, so degrade() turns cards into
+    // text.
     readonly capabilities: AdapterCapabilities = {
         cards: false,
         buttons: false,
         quickReplies: false,
-        media: false,
+        media: true,
         editMessage: false,
         deleteMessage: false,
         reactions: { inbound: true, outbound: true },
         typing: false,
         markRead: false,
+        mediaLimits: ZALO_MEDIA_LIMITS,
     };
 
     private readonly logger = new Logger(ZaloPlatformAdapter.name);
@@ -285,29 +297,111 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         senderId: string,
         msg: OutboundMessage
     ): Promise<{ externalId: string }> {
-        // capabilities are all false → degrade() collapses everything to text.
-        const text =
-            msg.content.kind === 'text' ? msg.content.text : msg.fallbackText;
-        const res = await this.httpPost<ZaloApiResponse<ZaloSendMessageData>>(
-            `${OPENAPI_BASE}/message/cs`,
-            {
-                recipient: { user_id: senderId },
-                message: { text: this.truncate(text) },
-            },
-            this.token(account)
-        );
-        if (res.error !== 0) {
-            throw new UnprocessableEntityException({
-                message: 'platform.error.sendFailed',
-                statusCode: 422,
-                errors: {
-                    provider: 'zalo',
-                    error: res.error,
-                    detail: res.message,
-                },
+        const c = msg.content;
+        if (c.kind === 'media' && c.mediaType !== 'video') {
+            const token = this.token(account);
+            return this.send(token, senderId, {
+                attachment: await this.attachment(c, token),
             });
         }
+        // Cards degrade to text; a video has no Zalo message here, so its link.
+        const text =
+            c.kind === 'text'
+                ? c.text
+                : c.kind === 'media'
+                  ? mediaText(c)
+                  : msg.fallbackText;
+        return this.send(this.token(account), senderId, {
+            text: this.truncate(text),
+        });
+    }
+
+    private async send(
+        accessToken: string,
+        senderId: string,
+        message: Record<string, unknown>
+    ): Promise<{ externalId: string }> {
+        const res = await this.httpPost<ZaloApiResponse<ZaloSendMessageData>>(
+            `${OPENAPI_BASE}/message/cs`,
+            { recipient: { user_id: senderId }, message },
+            accessToken
+        );
+        if (res.error !== 0) throw this.sendFailed(res);
         return { externalId: res.data?.message_id ?? '' };
+    }
+
+    // UNCONFIRMED request shapes (see zalo.types.ts): an image goes as a media
+    // template by its public url; a file is uploaded first, then sent by the
+    // token the upload returns.
+    private async attachment(
+        c: MediaContent,
+        accessToken: string
+    ): Promise<ZaloOutboundAttachment> {
+        if (c.mediaType === 'image') {
+            return {
+                type: 'template',
+                payload: {
+                    template_type: 'media',
+                    elements: [{ media_type: 'image', url: c.url }],
+                },
+            };
+        }
+        return {
+            type: 'file',
+            payload: { token: await this.uploadFile(c, accessToken) },
+        };
+    }
+
+    private async uploadFile(
+        c: MediaContent,
+        accessToken: string
+    ): Promise<string> {
+        const { data } = await this.httpService.axiosRef.get<ArrayBuffer>(
+            c.url,
+            {
+                responseType: 'arraybuffer',
+                timeout: MEDIA_FETCH_TIMEOUT_MS,
+                maxContentLength: ZALO_FILE_MAX_BYTES,
+            }
+        );
+        // Zalo shows the customer this name; the item title may lack `.pdf`.
+        const name = c.filename || 'file';
+        const form = new FormData();
+        form.append('file', Buffer.from(data), {
+            filename: /\.pdf$/i.test(name) ? name : `${name}.pdf`,
+            contentType: c.mime ?? 'application/pdf',
+        });
+        let res: ZaloApiResponse<ZaloUploadFileData>;
+        try {
+            res = (
+                await this.httpService.axiosRef.post<
+                    ZaloApiResponse<ZaloUploadFileData>
+                >(UPLOAD_FILE_URL, form, {
+                    headers: {
+                        ...form.getHeaders(),
+                        access_token: accessToken,
+                    },
+                })
+            ).data;
+        } catch (error) {
+            this.rethrowPlatformError(error, 'Zalo upload file');
+        }
+        if (res.error !== 0 || !res.data?.token) throw this.sendFailed(res);
+        return res.data.token;
+    }
+
+    private sendFailed(
+        res: ZaloApiResponse<unknown>
+    ): UnprocessableEntityException {
+        return new UnprocessableEntityException({
+            message: 'platform.error.sendFailed',
+            statusCode: 422,
+            errors: {
+                provider: 'zalo',
+                error: res.error,
+                detail: res.message,
+            },
+        });
     }
 
     private truncate(t: string): string {

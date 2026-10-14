@@ -352,6 +352,25 @@ Always implement the verification against the **raw bytes** received — never t
 re-stringified parsed JSON. The controller hands the adapter `req.rawBody` for
 that reason.
 
+## Outbound media limits
+
+The agent sends knowledge media (images and PDFs) as `MediaContent` with its
+`mime`, `size`, `filename` and, for images, `alternatives` (the compact JPG
+under 1MB the API makes at upload). An adapter that caps media declares
+`capabilities.mediaLimits` (constants in `constants/media.constant.ts`); the
+base `degrade()` then sends the original when it fits, else the first
+alternative that does, else the link as text. It never asks the channel.
+
+| Platform | Image              | File (PDF)  |
+| -------- | ------------------ | ----------- |
+| Zalo OA  | jpg/png, up to 1MB | up to 5MB   |
+| WhatsApp | jpg/png, up to 5MB | up to 100MB |
+| Others   | no limit declared  | no limit    |
+
+A `send_image` picture has no known mime or size, so it is not checked. Zalo
+sends an image as a `media` template by url, and a PDF by uploading it to
+`v2.0/oa/upload/file` and sending the returned token (both shapes unconfirmed).
+
 ## Operational notes
 
 - **Idempotency.** Providers retry aggressively on non-2xx ACKs. The controller

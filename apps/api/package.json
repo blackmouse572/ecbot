@@ -128,6 +128,7 @@
         "response-time": "^2.3.4",
         "rotating-file-stream": "^3.2.10",
         "rxjs": "^7.8.2",
+        "sharp": "^0.35.4",
         "slugify": "^1.6.9",
         "stripe": "^22.6.2",
         "undici": "^7.29.1",
