@@ -32,6 +32,7 @@ import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ProvisionStep } from "./provision-step";
 import { isProvisionedPlatform } from "./provisioned-platforms";
+import { LinkAgentPanel } from "./link-agent-panel";
 import { WhatsAppCredentialFields } from "./whatsapp-credential-fields";
 
 // ─── Step definitions ────────────────────────────────────────────────────────
@@ -298,10 +299,19 @@ export const AccountCreateForm = () => {
                 />
               ) : (
                 linkedData && (
-                  <SuccessStep
-                    data={linkedData}
-                    onDone={() => handleSuccess?.()}
-                  />
+                  <div className="flex w-full max-w-[720px] flex-col gap-y-8">
+                    <SuccessStep
+                      data={linkedData}
+                      onDone={() => handleSuccess?.()}
+                    />
+                    <LinkAgentPanel
+                      accounts={
+                        linkedData.pages?.length
+                          ? linkedData.pages
+                          : [linkedData]
+                      }
+                    />
+                  </div>
                 )
               )}
             </ProgressTabs.Content>

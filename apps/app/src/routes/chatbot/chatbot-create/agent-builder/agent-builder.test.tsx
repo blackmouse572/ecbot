@@ -115,10 +115,14 @@ vi.mock("@/components/modals", () => ({
   useRouteModal: () => ({ setCloseOnEscape }),
 }));
 
-const renderBuilder = () => render(<MemoryRouter initialEntries={["/ws/chatbot/create"]}><AgentBuilder /></MemoryRouter>);
+const renderBuilder = (path = "/ws/chatbot/create") =>
+  render(<MemoryRouter initialEntries={[path]}><AgentBuilder /></MemoryRouter>);
 
 // Answers the open question with whatever makes it valid, then clicks Next.
+// The ask to activate after the channel step is answered with "later".
 async function answerCurrent() {
+  const later = screen.queryByRole("button", { name: "agentBuilder.ui.activateLater" });
+  if (later) return userEvent.click(later);
   const text = screen.queryByRole("textbox", { name: /agentBuilder\.(questions|facts)/ });
   if (text && !(text as HTMLInputElement).value) await userEvent.type(text, "Lotus");
   await userEvent.click(screen.getByRole("button", { name: "actions.next" }));
@@ -171,6 +175,65 @@ describe("AgentBuilder", () => {
       // for the business name next instead of asking the type again.
       expect(screen.getByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
       expect(screen.getByText("agentBuilder.groups.identity")).toBeInTheDocument();
+    });
+  });
+
+  describe("arriving from the welcome screen", () => {
+    it("starts the chosen template with the business name filled in", async () => {
+      renderBuilder("/ws/chatbot/create?template=beauty&businessName=Lotus%20Spa");
+      expect(await screen.findByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toHaveValue("Lotus Spa");
+      expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
+    });
+
+    it("keeps the shop name when the owner picked Other and describes the business", async () => {
+      suggest.mockResolvedValue({ businessType: { value: "beauty", confidence: 0.95 }, personality: null, formality: null, goals: {}, rules: {} });
+      renderBuilder("/ws/chatbot/create?businessName=Lotus%20Spa");
+      await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "Nail spa in Da Nang{enter}");
+      await screen.findByText("agentBuilder.ui.auto");
+      await answerCurrent(); // businessType, already suggested
+
+      expect(await screen.findByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toHaveValue("Lotus Spa");
+    });
+
+    it("shows the hero when the template is not one the builder knows", () => {
+      renderBuilder("/ws/chatbot/create?template=nope&businessName=Lotus");
+      expect(screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" })).toBeInTheDocument();
+    });
+  });
+
+  describe("turning the agent on early", () => {
+    it("asks whether to activate once the channel step is answered or skipped", async () => {
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerToAgentName();
+      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
+
+      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" }));
+
+      expect(await screen.findByText("agentBuilder.ui.activateAsk")).toBeInTheDocument();
+      // The next question waits for the answer.
+      expect(screen.queryByRole("button", { name: "actions.next" })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.activateNow" }));
+
+      expect(activate).toHaveBeenCalledWith({ id: "bot-1", active: true });
+      await screen.findByText("agentBuilder.ui.finished");
+      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
+      // The rest of the questions stay open: answers keep saving to the live agent.
+      expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
+    });
+
+    it("keeps the agent off and moves on when the owner picks later", async () => {
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerToAgentName();
+      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.activateLater" }));
+
+      expect(activate).not.toHaveBeenCalled();
+      expect(screen.getByText("agentBuilder.ui.activateLater")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
     });
   });
 

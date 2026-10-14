@@ -7,8 +7,9 @@ import {
 import { motion, useReducedMotion } from "motion/react";
 import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { currentStep, isComplete, steps } from "../builder-state";
+import { activationAnchor, asksActivation, awaitsActivation, currentStep, isComplete, steps } from "../builder-state";
 import type { AgentBuilderController } from "../use-agent-builder";
+import { ActivationAsk } from "./activation-ask";
 import { AnswerMessage } from "./answer-message";
 import { ChannelsAnswer } from "./channels-answer";
 import { Hero } from "./hero";
@@ -55,6 +56,9 @@ export function BuilderThread(builder: AgentBuilderController) {
   const all = steps(profile);
   const current = currentStep(state);
   const complete = isComplete(state);
+  const asking = asksActivation(state);
+  const waiting = awaitsActivation(state);
+  const anchor = activationAnchor(profile);
 
   // Section E (kept by the wireframe delta): step 0's answer, once a
   // description or template was chosen.
@@ -62,6 +66,24 @@ export function BuilderThread(builder: AgentBuilderController) {
     state.source === "template" ? t("agentBuilder.ui.templateAnswer", { name: t(`agentBuilder.types.${profile.businessType}`) })
     : state.source === "describe" ? (state.describeText ?? "")
     : null; // hydrate: no original step-0 choice to redisplay.
+
+  // Section F.4: plays once when the agent becomes active.
+  const finishedMessage = (
+    <motion.div
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={
+        reduceMotion
+          ? { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
+          : { type: "spring", duration: 0.5, bounce: 0.2 }
+      }
+      style={{ transformOrigin: "left bottom" }}
+    >
+      <Message from="assistant">
+        <MessageContent>{t("agentBuilder.ui.finished")}</MessageContent>
+      </Message>
+    </motion.div>
+  );
 
   return (
     <MessageScroller className="h-full">
@@ -96,7 +118,7 @@ export function BuilderThread(builder: AgentBuilderController) {
 
           {buildQuestionGroups(profile).map((group) => {
             const visible = group.questions.filter(
-              (q) => state.answered.includes(q.id) || q.id === current?.question.id,
+              (q) => state.answered.includes(q.id) || (!waiting && q.id === current?.question.id),
             );
             if (!visible.length) return null;
             return (
@@ -148,6 +170,12 @@ export function BuilderThread(builder: AgentBuilderController) {
                         <MessageContent>{t("agentBuilder.ui.draftCreated")}</MessageContent>
                       </Message>
                     )}
+                    {question.id === anchor && asking && (
+                      <MessageScrollerItem messageId="activation" scrollAnchor={waiting} className={clx("flex flex-col gap-4", QUESTION_ENTRANCE)}>
+                        <ActivationAsk {...builder} />
+                        {state.finished && !state.activateLater && finishedMessage}
+                      </MessageScrollerItem>
+                    )}
                   </Fragment>
                 ))}
               </div>
@@ -160,7 +188,7 @@ export function BuilderThread(builder: AgentBuilderController) {
             </Marker>
           )}
 
-          {complete && !state.finished && (
+          {complete && !state.finished && !waiting && (
             <Message from="assistant">
               <MessageContent className="flex flex-col items-start gap-3">
                 {t("agentBuilder.ui.done")}
@@ -170,23 +198,8 @@ export function BuilderThread(builder: AgentBuilderController) {
               </MessageContent>
             </Message>
           )}
-          {state.finished && (
-            // Section F.4: plays once when the agent becomes active.
-            <motion.div
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
-                  : { type: "spring", duration: 0.5, bounce: 0.2 }
-              }
-              style={{ transformOrigin: "left bottom" }}
-            >
-              <Message from="assistant">
-                <MessageContent>{t("agentBuilder.ui.finished")}</MessageContent>
-              </Message>
-            </motion.div>
-          )}
+          {/* Activated from the ask above shows its message there. */}
+          {state.finished && (!asking || state.activateLater) && finishedMessage}
         </MessageScrollerContent>
       </MessageScrollerViewport>
       <MessageScrollerButton />

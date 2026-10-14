@@ -1,3 +1,4 @@
+import { TURNED_OFF_CHATBOT_STATUSES } from '@app/modules/platform/constants/turned-off-chatbot.constant';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { botImage } from '@app/modules/conversation/utils/message-attachment';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
@@ -122,6 +123,13 @@ export class WidgetChatService {
         // recorded for the inbox but the bot stays quiet. Their poll picks up
         // the operator's reply.
         if (!conversation.botEnabled) {
+            this.endStreamQuietly(res);
+            return;
+        }
+
+        // A turned-off agent keeps the inbox but does not answer, as on
+        // platform channels.
+        if (TURNED_OFF_CHATBOT_STATUSES.includes(chatbot.status)) {
             this.endStreamQuietly(res);
             return;
         }
