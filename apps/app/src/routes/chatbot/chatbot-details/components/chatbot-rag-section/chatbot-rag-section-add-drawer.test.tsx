@@ -49,6 +49,11 @@ vi.mock(
   }),
 );
 
+vi.mock(
+  "../../../../knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-status-cell",
+  () => ({ KnowledgeItemStatusCell: () => null }),
+);
+
 vi.mock("@/hooks/api/knowledge-tag", () => ({
   useKnowledgeTags: () => ({ tags: ["menu"] }),
 }));

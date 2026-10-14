@@ -26,7 +26,11 @@ import {
 import { useKnowledgeTags } from "@/hooks/api/knowledge-tag";
 import { useBatchResultToast } from "@/hooks/use-batch-result-toast";
 import type { KnowledgeItemResponseDto } from "@repo/client";
-import { KB_TYPE_CONFIG } from "../../../../knowledge-base/constants";
+import {
+  KB_STATUS_CONFIG,
+  KB_TYPE_CONFIG,
+} from "../../../../knowledge-base/constants";
+import { KnowledgeItemStatusCell } from "../../../../knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-status-cell";
 import { KnowledgeItemTagListCell } from "../../../../knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-tag-list-cell";
 import { KnowledgeItemTitleCell } from "../../../../knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-title-cell";
 import { PlusMini } from "@medusajs/icons";
@@ -70,16 +74,20 @@ export function ChatbotRAGSectionAddDrawer({
     enabled: !!knowledgeBaseId,
   });
 
-  const selectedTags = (filtering.tags as string[] | undefined) ?? [];
-  const selectedTypes = (filtering.type as string[] | undefined) ?? [];
+  // Filter values as comma lists: the API's format, and stable memo keys.
+  const asList = (value: unknown) =>
+    Array.isArray(value) && value.length ? value.join(",") : undefined;
+  const tagsParam = asList(filtering.tags);
+  const typeParam = asList(filtering.type);
+  const statusParam = asList(filtering.status);
   const filters = useMemo(
     () => ({
       search: search || undefined,
-      tags: selectedTags.length ? selectedTags.join(",") : undefined,
-      type: selectedTypes.length ? selectedTypes.join(",") : undefined,
+      status: statusParam,
+      tags: tagsParam,
+      type: typeParam,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [search, selectedTags.join(","), selectedTypes.join(",")],
+    [search, statusParam, tagsParam, typeParam],
   );
 
   const { items, count, isLoading } = useKnowledgeItems(
@@ -105,6 +113,17 @@ export function ChatbotRAGSectionAddDrawer({
           <KnowledgeItemTitleCell
             title={row.original.title}
             type={row.original.type}
+            mime={row.original.attachment?.mime}
+          />
+        ),
+      }),
+      columnHelper.accessor("status", {
+        header: t("knowledgeBase.list.columns.status"),
+        cell: ({ row }) => (
+          <KnowledgeItemStatusCell
+            status={row.original.status}
+            errorMessage={row.original.errorMessage}
+            processedAt={row.original.processedAt}
           />
         ),
       }),
@@ -124,6 +143,14 @@ export function ChatbotRAGSectionAddDrawer({
         label: t("fields.type"),
         type: "multiselect",
         options: Object.entries(KB_TYPE_CONFIG).map(([value, { label }]) => ({
+          label,
+          value,
+        })),
+      }),
+      filterHelper.accessor("status", {
+        label: t("fields.status"),
+        type: "multiselect",
+        options: Object.entries(KB_STATUS_CONFIG).map(([value, { label }]) => ({
           label,
           value,
         })),
