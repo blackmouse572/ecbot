@@ -194,13 +194,15 @@ export const OnboardingTour: FC<OnboardingTourProps> = ({ onClose }) => {
                   />
                 ))}
               </div>
-              <Button
-                size="small"
-                variant="transparent"
-                onClick={() => finish(true)}
-              >
-                {t("guide.tour.skip")}
-              </Button>
+              {index > 0 && (
+                <Button
+                  size="small"
+                  variant="transparent"
+                  onClick={() => setIndex(index - 1)}
+                >
+                  {t("actions.back")}
+                </Button>
+              )}
               <Button
                 ref={nextRef}
                 size="small"

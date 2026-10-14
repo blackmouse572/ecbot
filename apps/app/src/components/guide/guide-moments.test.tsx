@@ -80,11 +80,19 @@ describe("GuideMoments", () => {
     expect(screen.getByRole("dialog")).toHaveTextContent(
       "Customer messages land here",
     );
+    expect(
+      screen.queryByRole("button", { name: "Go Back" }),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByRole("dialog")).toHaveTextContent(
       "Teach the agent about your shop",
     );
+    fireEvent.click(screen.getByRole("button", { name: "Go Back" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Customer messages land here",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
