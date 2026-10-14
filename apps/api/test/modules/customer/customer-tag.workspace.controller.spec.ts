@@ -106,6 +106,7 @@ describe('CustomerTagWorkspaceController', () => {
                 emoji: '⭐',
                 description: 'High value',
                 triggersHandoff: true,
+                notifiesTeam: true,
             };
             const result = await controller.create(workspace, dto as any, user);
 
@@ -115,11 +116,12 @@ describe('CustomerTagWorkspaceController', () => {
                 emoji: '⭐',
                 description: 'High value',
                 triggersHandoff: true,
+                notifiesTeam: true,
             });
             expect(result).toEqual({ data: tagDto });
         });
 
-        it('defaults triggersHandoff to false when the request omits it', async () => {
+        it('defaults triggersHandoff and notifiesTeam to false when the request omits it', async () => {
             mockCustomerTagService.create.mockResolvedValue(tagEntity);
 
             await controller.create(
@@ -132,6 +134,7 @@ describe('CustomerTagWorkspaceController', () => {
 
             const [payload] = mockCustomerTagService.create.mock.calls[0];
             expect(payload.triggersHandoff).toBe(false);
+            expect(payload.notifiesTeam).toBe(false);
         });
     });
 

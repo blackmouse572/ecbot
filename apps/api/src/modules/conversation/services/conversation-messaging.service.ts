@@ -355,7 +355,6 @@ export class ConversationMessagingService {
                 toolName: 'load_skill',
                 args: act.label ? { slug: act.label } : {},
                 status: 'success',
-                durationMs: 0,
                 kind: 'skill',
             });
         } else if (act.kind === ENUM_CONVERSATION_ACTIVITY_KIND.KNOWLEDGE) {

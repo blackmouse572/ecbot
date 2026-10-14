@@ -13,6 +13,7 @@ from langchain_core.runnables.config import RunnableConfig
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.llm.agents.agent import AgentContext, get_agent  # re-exported
+from eccho_ai.llm.prompts.reply_language import reply_language_note
 from eccho_ai.llm.retrievers.retrieval import (
     RETRIEVAL_ERROR,
     RAGRetrievalResult,
@@ -112,7 +113,11 @@ async def get_agent_input(
         else:
             messages.append(AIMessage(content=turn.content))
 
-    message = _build_rag_message(chat_request.message or "", retrieval)
+    customer_message = chat_request.message or ""
+    note = reply_language_note(customer_message)
+    if note:
+        customer_message = f"{note}\n\n{customer_message}"
+    message = _build_rag_message(customer_message, retrieval)
     block = await build_customer_context_block(chat_request.customer_id)
     if block:
         message = f"{block}\n\n{message}"
@@ -134,6 +139,8 @@ def get_agent_context(
         customer_id=chat_request.customer_id,
         contact_point_id=chat_request.contact_point_id,
         trigger_message_id=chat_request.trigger_message_id,
+        agent_timezone=chat_request.agent_timezone,
+        customer_timezone=chat_request.customer_timezone,
     )
 
 

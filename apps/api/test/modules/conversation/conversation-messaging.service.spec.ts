@@ -737,14 +737,15 @@ describe('ConversationMessagingService', () => {
                 ]
             );
 
+            // No duration: a skill load is not timed, so no "0ms".
             expect(dto.toolCalls).toEqual([
-                expect.objectContaining({
+                {
                     invocationId: 'a',
                     toolName: 'load_skill',
                     args: { slug: 'refunds' },
                     status: 'success',
                     kind: 'skill',
-                }),
+                },
             ]);
         });
 

@@ -3,6 +3,7 @@ import { useChatbot } from "@/hooks/api";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SidebarRight, XMark } from "@medusajs/icons";
 import { Button, IconButton, Text, clx } from "@medusajs/ui";
+import { BUSINESS_TYPE_IDS, type BusinessTypeId } from "@repo/agent-blueprint";
 import { SidebarProvider, useSidebar } from "@repo/ui/layout";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,7 +27,20 @@ export function AgentBuilder() {
   const builder = useAgentBuilder({
     hydrateFrom: hydrateId ? chatbot : undefined,
     ensurePrefillChannel: prefill.ensure,
+    businessName: params.get("businessName")?.trim() || undefined,
   });
+
+  // The welcome screen sends a new owner here with their business type and
+  // name: start that template right away instead of showing the hero.
+  const template = params.get("template") ?? "";
+  const { startFromTemplate } = builder;
+  const templateStarted = useRef(false);
+  useEffect(() => {
+    if (hydrateId || templateStarted.current) return;
+    if (!BUSINESS_TYPE_IDS.includes(template as BusinessTypeId)) return;
+    templateStarted.current = true;
+    void startFromTemplate(template as BusinessTypeId);
+  }, [hydrateId, template, startFromTemplate]);
 
   return (
     // A SidebarProvider scoped to the builder for the test panel's

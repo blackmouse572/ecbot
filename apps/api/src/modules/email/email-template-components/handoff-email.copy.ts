@@ -10,6 +10,13 @@ export interface IHandoffEmailCopy {
     why: (workspaceName: string) => string;
     support: string;
     signOff: string;
+    /** A notify-only tag (#288): the assistant keeps the conversation. */
+    notice: {
+        subject: (chatbotName: string, tagName: string) => string;
+        heading: string;
+        intro: (chatbotName: string, tagName: string) => string;
+        body: string;
+    };
 }
 
 // Same wording as the in-app handoff notification (notification.handoff.*).
@@ -46,6 +53,14 @@ const COPY: Record<
             `You get this email because you can see conversations in ${workspaceName}.`,
         support: 'Questions? Write to',
         signOff: `The ${homeName} team`,
+        notice: {
+            subject: (chatbotName, tagName) =>
+                `${chatbotName} tagged a customer "${tagName}"`,
+            heading: 'Customer update',
+            intro: (chatbotName, tagName) =>
+                `${chatbotName} tagged a customer "${tagName}" in a conversation.`,
+            body: 'The assistant keeps replying. Open the conversation to follow up.',
+        },
     }),
     [ENUM_MESSAGE_LANGUAGE.VI]: homeName => ({
         subject: chatbotName => `Khách hàng cần người hỗ trợ (${chatbotName})`,
@@ -59,6 +74,14 @@ const COPY: Record<
             `Bạn nhận được email này vì bạn có quyền xem hội thoại trong ${workspaceName}.`,
         support: 'Cần hỗ trợ? Hãy gửi email tới',
         signOff: `Đội ngũ ${homeName}`,
+        notice: {
+            subject: (chatbotName, tagName) =>
+                `${chatbotName} đã gắn thẻ "${tagName}" cho một khách hàng`,
+            heading: 'Cập nhật từ khách hàng',
+            intro: (chatbotName, tagName) =>
+                `${chatbotName} đã gắn thẻ "${tagName}" cho một khách hàng trong cuộc hội thoại.`,
+            body: 'Trợ lý vẫn tiếp tục trả lời. Mở cuộc hội thoại để theo dõi.',
+        },
     }),
 };
 

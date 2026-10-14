@@ -122,7 +122,7 @@ describe("compilePrompt", () => {
   // #158: the configured address style and length hold from the first reply.
   it("applies address style and reply length to every reply, including the first", () => {
     const out = compilePrompt(sample("beauty", "vi"));
-    expect(out).toContain('In every reply, including the first, refer to yourself as "em" and address them as "anh" or "chị". Never call them "bạn".');
+    expect(out).toContain('In every Vietnamese reply, including the first, refer to yourself as "em" and address them as "anh" or "chị". Never call them "bạn".');
     expect(out).toContain("Keep every reply, including the first, to one or two sentences.");
   });
 
@@ -216,8 +216,28 @@ describe("compilePrompt", () => {
     const out = compilePrompt(sample("ecommerce", "en"));
     expect(out).toContain("place the order with the connected order tool");
     expect(out).toContain("If no order tool is connected, the order is not placed yet");
-    expect(out).toContain("Never say the order is placed, confirmed or complete.");
+    // Scoped to the no-tool branch, so it never contradicts a tool-placed order (#288).
+    expect(out).toContain("Without an order tool, never say the order is placed, confirmed or complete.");
     expect(out).not.toContain("then read the full order back before closing.");
+  });
+
+  // #288: the owner picks what happens after the order tool places an order.
+  it("tells the team about a tool-placed order the way the owner chose", () => {
+    const base = { ...sample("ecommerce", "en"), goals: ["take_orders" as const] };
+    const notify = compilePrompt({ ...base, placedOrders: "notify" });
+    expect(notify).toContain('After the order tool confirms the order, apply the tag marked "(notifies the team)" for placed orders ("Order placed" by default)');
+    expect(notify).toContain('place the order with the connected order tool. After the order tool confirms the order');
+    const handoff = compilePrompt({ ...base, placedOrders: "handoff" });
+    expect(handoff).toContain('After the order tool confirms the order, hand the conversation to a person by applying the tag marked "(triggers handoff)" for new orders');
+    expect(compilePrompt({ ...base, placedOrders: "none" })).toContain("Do not apply a tag or hand the conversation over for it.");
+    // Profiles saved before #288 get the same default as new ones.
+    const { placedOrders: _, ...stored } = base;
+    expect(compilePrompt(stored)).toContain('apply the tag marked "(notifies the team)"');
+  });
+
+  it("leaves the placed-order step out when the agent takes no orders", () => {
+    const out = compilePrompt({ ...sample("ecommerce", "en"), goals: ["answer_questions"], placedOrders: "notify" });
+    expect(out).not.toContain("After the order tool confirms the order");
   });
 
   it("chooses a or an based on the following word", () => {

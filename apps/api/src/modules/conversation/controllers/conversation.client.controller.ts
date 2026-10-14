@@ -50,10 +50,12 @@ import {
     ConversationClientListMessagesDoc,
     ConversationClientSendMessageDoc,
     ConversationClientUpdateBotDoc,
+    ConversationClientUpdateTimezoneDoc,
     ConversationClientUpdateStatusDoc,
 } from '../docs/conversation.client.doc';
 import { ConversationSendMessageRequestDto } from '../dtos/request/conversation.send-message.request.dto';
 import { ConversationUpdateBotRequestDto } from '../dtos/request/conversation.update-bot.request.dto';
+import { ConversationUpdateTimezoneRequestDto } from '../dtos/request/conversation.update-timezone.request.dto';
 import { ConversationUpdateStatusRequestDto } from '../dtos/request/conversation.update-status.request.dto';
 import { ConversationGetResponseDto } from '../dtos/response/conversation.get.response.dto';
 import { MessageGetResponseDto } from '../dtos/response/message.get.response.dto';
@@ -344,6 +346,30 @@ export class ConversationClientController {
             id,
             dto.botEnabled,
             dto.reason
+        );
+        await this.logUpdate(workspace, credential, conversation);
+
+        return { data: this.conversationService.mapGet(updated) };
+    }
+
+    @ConversationClientUpdateTimezoneDoc()
+    @Response('conversation.workspace.updateTimezone')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @Patch('/:id/timezone')
+    async updateTimezone(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('id') id: string,
+        @Body() dto: ConversationUpdateTimezoneRequestDto
+    ): Promise<IResponse<ConversationGetResponseDto>> {
+        const conversation = await this.findConversationOrFail(workspace, id);
+
+        const updated = await this.conversationService.setTimezone(
+            id,
+            dto.timezone
         );
         await this.logUpdate(workspace, credential, conversation);
 

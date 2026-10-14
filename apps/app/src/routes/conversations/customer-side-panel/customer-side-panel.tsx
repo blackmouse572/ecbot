@@ -23,6 +23,7 @@ import { downloadJson } from "@/utils";
 import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { FollowupsSection } from "./components/followups-section";
+import { TimezoneSection } from "./components/timezone-section";
 import { CUSTOMER_DATA_SUBJECT } from "../constants";
 import { Can } from "@repo/auth";
 import { NoRecords } from "@repo/ui/common-components";
@@ -329,6 +330,12 @@ export function CustomerSidePanel({
             </Heading>
             <ContactPointsList contactPoints={contactPoints} />
           </div>
+
+          {conversationId && (
+            <div className="border-ui-border-base border-t px-4 py-4">
+              <TimezoneSection conversationId={conversationId} />
+            </div>
+          )}
 
           {conversationId && (
             <div className="border-ui-border-base border-t px-4 py-4">

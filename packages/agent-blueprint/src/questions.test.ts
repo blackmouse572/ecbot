@@ -40,6 +40,15 @@ describe("buildQuestionGroups", () => {
     expect(question(leads, "collect").askKey).toBe("agentBuilder.questions.collect.ask");
   });
 
+  // #288: only an agent that takes orders is asked what follows a placed one.
+  it("asks what happens after a tool-placed order only when the agent takes orders", () => {
+    const shop = createProfile("ecommerce", "en");
+    expect(ids({ ...shop, goals: ["take_orders"] })).toContain("placedOrders");
+    expect(ids({ ...shop, goals: ["answer_questions"] })).not.toContain("placedOrders");
+    const process = buildQuestionGroups({ ...createProfile("ecommerce", "en"), goals: ["take_orders"] }).find((g) => g.id === "process");
+    expect(process?.questions.map((q) => q.id)).toEqual(["collect", "handoffWhen", "placedOrders"]);
+  });
+
   it("builds six groups in order for an SMB type", () => {
     expect(buildQuestionGroups(createProfile("beauty", "vi")).map((g) => g.id))
       .toEqual(["identity", "essence", "facts", "process", "rules", "interaction"]);

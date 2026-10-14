@@ -5,16 +5,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const counts = vi.hoisted(() => ({
   chatbots: 0,
+  active: 0,
   accounts: 0,
   conversations: 0,
 }));
 const query = (count: number) => ({ count, isLoading: false, isError: false });
 
 vi.mock("@/hooks/api/chatbot", () => ({
-  useChatbots: () => query(counts.chatbots),
+  useChatbots: (q: { status?: string[] }) =>
+    query(q?.status ? counts.active : counts.chatbots),
 }));
+// Every connected channel in these tests has an agent linked.
 vi.mock("@/hooks/api/accounts", () => ({
-  useAccounts: () => query(counts.accounts),
+  useAccounts: () => ({
+    ...query(counts.accounts),
+    accounts: Array.from({ length: counts.accounts }, () => ({
+      chatbot: { id: "bot-1" },
+    })),
+  }),
 }));
 vi.mock("@/hooks/api/conversations", () => ({
   useConversations: () => query(counts.conversations),
@@ -35,6 +43,7 @@ const renderCard = () =>
 describe("GettingStarted", () => {
   beforeEach(() => {
     counts.chatbots = 0;
+    counts.active = 0;
     counts.accounts = 0;
     counts.conversations = 0;
   });
@@ -44,6 +53,7 @@ describe("GettingStarted", () => {
 
     expect(screen.getByText("Create your first agent")).toBeInTheDocument();
     expect(screen.getByText("Connect a channel")).toBeInTheDocument();
+    expect(screen.getByText("Activate your agent")).toBeInTheDocument();
     expect(screen.getByText("Get your first conversation")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Create your first agent/ }),
@@ -64,6 +74,7 @@ describe("GettingStarted", () => {
 
   it("disappears once every step is done", () => {
     counts.chatbots = 1;
+    counts.active = 1;
     counts.accounts = 1;
     counts.conversations = 3;
     const { container } = renderCard();

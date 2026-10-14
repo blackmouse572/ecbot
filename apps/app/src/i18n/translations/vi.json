@@ -375,7 +375,7 @@
     "recentActivities": "Hoạt động gần đây",
     "gettingStarted": {
       "title": "Đưa agent vào hoạt động",
-      "description": "Ba bước để bắt đầu trả lời khách hàng.",
+      "description": "Bốn bước để bắt đầu trả lời khách hàng.",
       "steps": {
         "chatbot": {
           "title": "Tạo agent đầu tiên",
@@ -383,26 +383,24 @@
         },
         "account": {
           "title": "Kết nối kênh",
-          "description": "Đặt agent lên website, Telegram, Messenger hoặc Zalo."
+          "description": "Gắn agent vào website, Telegram, Messenger hoặc Zalo."
+        },
+        "activate": {
+          "title": "Kích hoạt agent",
+          "description": "Bật agent để bắt đầu trả lời trên các kênh. Bạn vẫn chỉnh sửa được sau đó."
         },
         "conversation": {
           "title": "Nhận cuộc hội thoại đầu tiên",
           "description": "Nhắn thử từ website hoặc kênh đã kết nối, hoặc chờ khách hàng đầu tiên."
         }
-      }
+      },
+      "progress": "{{done}}/{{total}}"
     }
   },
   "onboard": {
     "select": {
-      "welcome": "Chào mừng đến với Ecbot! 🎉",
-      "description": "Bắt đầu hành trình của bạn với Ecbot",
-      "join": {
-        "label": "Tham gia không gian làm việc",
-        "description": "Tôi muốn tham gia vào không gian làm việc hiện có và cùng nhau làm việc vui vẻ"
-      },
       "create": {
-        "label": "Tạo không gian làm việc",
-        "description": "Tôi muốn tạo một không gian làm việc mới và trở thành thủ lĩnh của riêng mình"
+        "label": "Tạo không gian làm việc"
       },
       "existing": {
         "title": "Không gian làm việc của bạn",
@@ -447,6 +445,21 @@
         "description": "Yêu cầu tham gia của bạn đã được gửi thành công. Chúng tôi sẽ thông báo cho bạn khi có tin vui! 📬"
       },
       "joinWorkspace": "Tham gia không gian làm việc"
+    },
+    "welcome": {
+      "title": "Chào mừng đến với Ecbot",
+      "description": "Cho chúng tôi biết về cửa hàng của bạn, rồi tạo agent đầu tiên trong vài phút.",
+      "fields": {
+        "name": "Tên cửa hàng",
+        "type": "Bạn kinh doanh gì?"
+      },
+      "placeholders": {
+        "name": "Ví dụ: Tiệm bánh Mây"
+      },
+      "other": "Khác",
+      "submit": "Tạo agent đầu tiên",
+      "invited": "Được mời vào một không gian làm việc?",
+      "joinLink": "Tham gia bằng mã"
     }
   },
   "join": {
@@ -597,6 +610,15 @@
             "manual": "Nhập thủ công"
           }
         }
+      },
+      "linkAgent": {
+        "title": "Chọn agent trả lời trên kênh này",
+        "description": "Kênh chỉ trả lời khách khi đã gắn với một agent đang hoạt động.",
+        "pick": "Agent",
+        "link": "Gắn agent",
+        "linked": "{{name}} đã trả lời trên kênh này.",
+        "taken": "Kênh này đã có agent khác. Hãy gỡ agent đó ở trang kênh trước.",
+        "create": "Tạo agent cho kênh này"
       }
     },
     "edit": {
@@ -1168,11 +1190,11 @@
       "skipped": "Đã bỏ qua",
       "yes": "Có",
       "no": "Không",
-      "draftCreated": "Agent đã được lưu nháp. Hãy thử ở bên phải trong khi mình tiếp tục nhé.",
+      "draftCreated": "Agent đã được lưu nháp. Hãy thử trò chuyện ở bên phải.",
       "saveFailed": "Chưa lưu được agent. Câu trả lời vẫn được giữ và sẽ thử lại ở câu tiếp theo.",
       "done": "Đã xong. Hãy kích hoạt agent khi bạn thấy hài lòng.",
       "finish": "Kích hoạt agent",
-      "finished": "Agent đã được kích hoạt. Bạn có thể sửa bất kỳ câu trả lời nào ở trên.",
+      "finished": "Agent đã được kích hoạt và sẽ trả lời khách trên mọi kênh được gắn với agent. Bạn có thể trả lời tiếp hoặc sửa bất kỳ câu nào.",
       "tryAgent": "Trò chuyện với {{name}}",
       "yourAgent": "agent của bạn",
       "promptTab": "Prompt",
@@ -1190,7 +1212,7 @@
       "factLead": "Câu trả lời:",
       "existingChannels": "Dùng kênh đã kết nối",
       "useChannel": "Dùng",
-      "connectLater": "Kết nối sau",
+      "connectLater": "Bỏ qua",
       "comingSoon": "Sắp ra mắt",
       "connectFailed": "Chưa kết nối được kênh này. Vui lòng thử lại.",
       "connected": "Đã kết nối",
@@ -1217,7 +1239,10 @@
       "customCollectAdd": "Thêm",
       "customCollectRemove": "Xoá {{label}}",
       "customCollectLimit": "Bạn có thể thêm tối đa {{count}} mục.",
-      "customCollectOther": "Khác"
+      "customCollectOther": "Khác",
+      "activateNow": "Kích hoạt ngay",
+      "activateLater": "Để sau",
+      "activateAsk": "Kích hoạt agent ngay để agent bắt đầu trả lời khách? Dù chọn gì, bạn vẫn trả lời tiếp các câu còn lại được."
     },
     "groups": {
       "identity": "Về doanh nghiệp",
@@ -1293,6 +1318,11 @@
         "title": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn?",
         "ask": "Khi nào agent nên chuyển cuộc trò chuyện cho bạn? Khi đó, bạn và đội ngũ sẽ nhận thông báo trong ứng dụng (biểu tượng chuông ở trên cùng) kèm đường dẫn tới cuộc trò chuyện.",
         "lead": "Chuyển cho tôi khi:"
+      },
+      "placedOrders": {
+        "title": "Sau khi công cụ đặt hàng tạo đơn thì sao?",
+        "ask": "Sau khi agent đặt đơn qua công cụ đặt hàng đã kết nối, bạn muốn điều gì xảy ra? Nếu chọn nhận thông báo, bạn và đội ngũ sẽ được báo trong ứng dụng (biểu tượng chuông ở trên cùng) và qua email.",
+        "lead": "Sau khi đơn được đặt:"
       },
       "rules": {
         "title": "Agent tuyệt đối không được làm gì?",
@@ -1519,6 +1549,11 @@
       "reply_normally": "Trả lời bình thường",
       "share_hours": "Trả lời và báo giờ mở cửa",
       "promise_callback": "Hẹn liên hệ lại trong giờ làm việc"
+    },
+    "placedOrders": {
+      "none": "Không báo, chỉ xác nhận với khách",
+      "notify": "Báo cho tôi, agent vẫn tiếp tục trò chuyện",
+      "handoff": "Báo cho tôi và chuyển cuộc trò chuyện cho tôi"
     },
     "channels": {
       "messenger": "Facebook Messenger",
@@ -2222,7 +2257,7 @@
     "close": "Đóng",
     "copy": "Sao chép",
     "previous": "Trước",
-    "next": "Sau",
+    "next": "Tiếp theo",
     "skip": "Bỏ qua",
     "preview": "Xem trước",
     "createNew": "Tạo mới",
@@ -2645,6 +2680,17 @@
             "success": "Đã xóa khách hàng và mọi cuộc trò chuyện.",
             "failed": "Không thể xóa khách hàng."
           }
+        },
+        "timezone": {
+          "title": "Múi giờ của khách",
+          "followAgent": "Giống agent",
+          "hint": "Giờ khách nhắc đến, ví dụ \"gọi lại lúc 9h\", được hiểu theo múi giờ này. Giờ mở cửa vẫn theo agent.",
+          "hintWithZone": "Giờ khách nhắc đến, ví dụ \"gọi lại lúc 9h\", được hiểu theo múi giờ này. Giờ mở cửa vẫn theo agent ({{zone}}).",
+          "toast": {
+            "saving": "Đang lưu múi giờ…",
+            "updated": "Đã cập nhật múi giờ.",
+            "updateFailed": "Không cập nhật được múi giờ."
+          }
         }
       }
     },
@@ -2735,7 +2781,10 @@
         "description": "Mô tả",
         "descriptionPlaceholder": "Nhãn này dùng để làm gì?",
         "triggersHandoff": "Chuyển cho nhân viên",
-        "triggersHandoffHelp": "Khi nhãn này được gắn, tự động chuyển hội thoại cho nhân viên trực tiếp xử lý."
+        "triggersHandoffHelp": "Khi nhãn này được gắn, tự động chuyển hội thoại cho nhân viên trực tiếp xử lý.",
+        "notifiesTeam": "Báo cho đội ngũ",
+        "notifiesTeamHelp": "Khi agent gắn nhãn này, báo cho đội ngũ trong ứng dụng và qua email. Trợ lý vẫn tiếp tục trả lời.",
+        "notifiesTeamByHandoff": "Khi chuyển cho nhân viên, đội ngũ đã được báo."
       },
       "toast": {
         "created": "Đã tạo nhãn.",

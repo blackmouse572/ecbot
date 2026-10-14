@@ -9,6 +9,7 @@ interface HandoffEmailProps {
     chatbotName: string;
     workspaceName: string;
     reason: string;
+    tagName?: string;
     conversationUrl: string;
     supportEmail?: string;
     homeUrl: string;
@@ -16,11 +17,15 @@ interface HandoffEmailProps {
     language?: string;
 }
 
-/** A conversation was handed to a person: tell the team and link to it. */
+/**
+ * A conversation was handed to a person, or a customer got a notify-only tag:
+ * tell the team and link to it.
+ */
 const HandoffEmail: React.FC<HandoffEmailProps> = ({
     chatbotName,
     workspaceName,
     reason,
+    tagName,
     conversationUrl,
     supportEmail,
     homeUrl,
@@ -28,23 +33,39 @@ const HandoffEmail: React.FC<HandoffEmailProps> = ({
     language,
 }) => {
     const copy = handoffEmailCopy(language, homeName);
+    // A notify-only tag (#288): no handoff, the assistant keeps replying.
+    const notice = reason === 'tag_notice' && tagName ? copy.notice : null;
+    const summary = notice
+        ? notice.intro(chatbotName, tagName as string)
+        : copy.reason(reason);
 
     return (
         <EmailLayout
             language={language}
-            preview={copy.reason(reason)}
-            heading={copy.heading}
+            preview={summary}
+            heading={notice ? notice.heading : copy.heading}
             homeUrl={homeUrl}
             homeName={homeName}
             supportEmail={supportEmail}
             supportLabel={copy.support}
             signOff={copy.signOff}
         >
-            <Text style={EMAIL_BODY}>{copy.intro(chatbotName)}</Text>
-            <Text style={{ ...EMAIL_BODY, fontWeight: 500 }}>
-                {copy.reason(reason)}
-            </Text>
-            <Text style={EMAIL_BODY}>{copy.paused}</Text>
+            {notice ? (
+                <>
+                    <Text style={{ ...EMAIL_BODY, fontWeight: 500 }}>
+                        {summary}
+                    </Text>
+                    <Text style={EMAIL_BODY}>{notice.body}</Text>
+                </>
+            ) : (
+                <>
+                    <Text style={EMAIL_BODY}>{copy.intro(chatbotName)}</Text>
+                    <Text style={{ ...EMAIL_BODY, fontWeight: 500 }}>
+                        {summary}
+                    </Text>
+                    <Text style={EMAIL_BODY}>{copy.paused}</Text>
+                </>
+            )}
             <div style={{ margin: '24px 0' }}>
                 <EmailButton href={conversationUrl}>{copy.action}</EmailButton>
             </div>

@@ -664,7 +664,13 @@ export class AwsSESProvider implements IEmailService {
 
     async sendHandoff(
         { name, email }: EmailSendDto,
-        { chatbotName, workspaceName, reason, conversationUrl }: EmailHandoffDto
+        {
+            chatbotName,
+            workspaceName,
+            reason,
+            tagName,
+            conversationUrl,
+        }: EmailHandoffDto
     ): Promise<boolean> {
         try {
             await this.awsSESService.send({
@@ -679,6 +685,7 @@ export class AwsSESProvider implements IEmailService {
                     chatbotName,
                     workspaceName,
                     reason,
+                    tagName: tagName ?? '',
                     conversationUrl: `${this.homeUrl}${conversationUrl}`,
                 },
             });

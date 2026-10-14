@@ -349,7 +349,7 @@
     },
     "gettingStarted": {
       "title": "Get your agent live",
-      "description": "Three steps to start answering your customers.",
+      "description": "Four steps to start answering your customers.",
       "steps": {
         "chatbot": {
           "title": "Create your first agent",
@@ -357,26 +357,24 @@
         },
         "account": {
           "title": "Connect a channel",
-          "description": "Put it on your website, Telegram, Messenger or Zalo."
+          "description": "Put your agent on your website, Telegram, Messenger or Zalo."
+        },
+        "activate": {
+          "title": "Activate your agent",
+          "description": "Turn it on so it starts replying on its channels. You can keep refining it afterwards."
         },
         "conversation": {
           "title": "Get your first conversation",
           "description": "Message it from your website or a connected channel, or wait for your first customer."
         }
-      }
+      },
+      "progress": "{{done}} of {{total}}"
     }
   },
   "onboard": {
     "select": {
-      "welcome": "Setup",
-      "description": "Choose an option to get started.",
-      "join": {
-        "label": "Join Workspace",
-        "description": "Join an existing workspace."
-      },
       "create": {
-        "label": "Create Workspace",
-        "description": "Create a new workspace to get started."
+        "label": "Create Workspace"
       },
       "existing": {
         "title": "Your Workspaces",
@@ -421,6 +419,21 @@
         "description": "Your request has been sent to the workspace owner."
       },
       "joinWorkspace": "Join Workspace"
+    },
+    "welcome": {
+      "title": "Welcome to Ecbot",
+      "description": "Tell us about your business, then build your first agent in a few minutes.",
+      "fields": {
+        "name": "Business name",
+        "type": "What does your business do?"
+      },
+      "placeholders": {
+        "name": "e.g. Cloud Bakery"
+      },
+      "other": "Other",
+      "submit": "Create my first agent",
+      "invited": "Invited to a workspace?",
+      "joinLink": "Join with a code"
     }
   },
   "join": {
@@ -570,6 +583,15 @@
             "manual": "Enter manually"
           }
         }
+      },
+      "linkAgent": {
+        "title": "Choose the agent that answers here",
+        "description": "The channel replies to customers only once an active agent is linked to it.",
+        "pick": "Agent",
+        "link": "Link agent",
+        "linked": "{{name}} now answers on this channel.",
+        "taken": "This channel already has another agent. Unlink it from the channel page first.",
+        "create": "Create an agent for this channel"
       }
     },
     "edit": {
@@ -1124,11 +1146,11 @@
       "skipped": "Skipped",
       "yes": "Yes",
       "no": "No",
-      "draftCreated": "Your agent is saved as a draft. Try it on the right while we keep going.",
+      "draftCreated": "Your agent is saved as a draft. Try it on the right.",
       "saveFailed": "Could not save your agent. Your answers are kept, and we will retry on the next answer.",
       "done": "All set. Activate your agent when you are happy with it.",
       "finish": "Activate agent",
-      "finished": "Your agent is active. You can change any answer above at any time.",
+      "finished": "Your agent is active and replies to customers on every channel linked to it. Keep answering, or change any answer at any time.",
       "tryAgent": "Talk with {{name}}",
       "yourAgent": "your agent",
       "promptTab": "Prompt",
@@ -1146,7 +1168,7 @@
       "factLead": "Here's the answer:",
       "existingChannels": "Use an existing channel",
       "useChannel": "Use",
-      "connectLater": "Connect later",
+      "connectLater": "Skip",
       "comingSoon": "Coming soon",
       "connectFailed": "Could not connect this channel. Please try again.",
       "connected": "Connected",
@@ -1173,7 +1195,10 @@
       "customCollectAdd": "Add",
       "customCollectRemove": "Remove {{label}}",
       "customCollectLimit": "You can add up to {{count}} fields.",
-      "customCollectOther": "Other"
+      "customCollectOther": "Other",
+      "activateNow": "Activate now",
+      "activateLater": "Later",
+      "activateAsk": "Turn your agent on now so it starts replying to customers? You can keep answering the remaining questions either way."
     },
     "groups": {
       "identity": "About your business",
@@ -1249,6 +1274,11 @@
         "title": "When should it pass the chat to you?",
         "ask": "When should your agent hand the chat over to you? When it does, you and your team get a notification in the app (the bell at the top) with a link to the chat.",
         "lead": "Hand over to me when:"
+      },
+      "placedOrders": {
+        "title": "What happens after the order tool places an order?",
+        "ask": "What should happen after your agent places an order with the connected order tool? If you pick a notification, you and your team get one in the app (the bell at the top) and by email.",
+        "lead": "After an order is placed:"
       },
       "rules": {
         "title": "What must it never do?",
@@ -1475,6 +1505,11 @@
       "reply_normally": "Reply as usual",
       "share_hours": "Reply and share opening hours",
       "promise_callback": "Promise a call back during opening hours"
+    },
+    "placedOrders": {
+      "none": "Nothing, just confirm it to the customer",
+      "notify": "Notify me, the agent keeps chatting",
+      "handoff": "Notify me and pass the chat to me"
     },
     "channels": {
       "messenger": "Facebook Messenger",
@@ -2597,6 +2632,17 @@
             "success": "Customer and all conversations deleted.",
             "failed": "Could not delete the customer."
           }
+        },
+        "timezone": {
+          "title": "Customer timezone",
+          "followAgent": "Same as the agent",
+          "hint": "Times this customer mentions, like \"call me at 9\", are read in this timezone. Opening hours still follow the agent.",
+          "hintWithZone": "Times this customer mentions, like \"call me at 9\", are read in this timezone. Opening hours still follow the agent ({{zone}}).",
+          "toast": {
+            "saving": "Saving timezone…",
+            "updated": "Timezone updated.",
+            "updateFailed": "Couldn't update the timezone."
+          }
         }
       }
     },
@@ -2687,7 +2733,10 @@
         "description": "Description",
         "descriptionPlaceholder": "What is this tag used for?",
         "triggersHandoff": "Triggers handoff",
-        "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator."
+        "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator.",
+        "notifiesTeam": "Notify the team",
+        "notifiesTeamHelp": "When the agent applies this tag, notify the team in the app and by email. The assistant keeps replying.",
+        "notifiesTeamByHandoff": "A handoff already notifies the team."
       },
       "toast": {
         "created": "Tag created.",

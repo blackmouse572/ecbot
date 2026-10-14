@@ -171,10 +171,10 @@ async def test_current_time_rides_the_newest_turn_not_the_system_prompt(monkeypa
     monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
     monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
 
-    chatbot = MagicMock(timezone="Asia/Ho_Chi_Minh")
     ctx = AgentRequestContext(
-        chatbot=chatbot,
+        chatbot=MagicMock(),
         chatbot_id="x",
+        agent_timezone="Asia/Ho_Chi_Minh",
         now=datetime(2026, 10, 13, 16, 50, tzinfo=UTC),
     )
     result = await _agent().ainvoke({"messages": [("user", "deliver now?")]}, context=ctx)
@@ -186,6 +186,34 @@ async def test_current_time_rides_the_newest_turn_not_the_system_prompt(monkeypa
     )
     # Model input only: the conversation state keeps the customer's own words.
     assert result["messages"][0].content == "deliver now?"
+
+
+async def test_a_conversation_timezone_adds_the_customer_clock(monkeypatch):
+    from datetime import datetime
+
+    seen: dict = {}
+
+    class _RecordingModel(_FakeToolModel):
+        def _generate(self, messages, *a, **kw):
+            seen["messages"] = messages
+            return super()._generate(messages, *a, **kw)
+
+    fake = _RecordingModel(messages=iter([AIMessage(content="ok")]))
+    monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+
+    ctx = AgentRequestContext(
+        chatbot=MagicMock(),
+        chatbot_id="x",
+        agent_timezone="Asia/Ho_Chi_Minh",
+        customer_timezone="America/New_York",
+        now=datetime(2026, 10, 13, 16, 50, tzinfo=UTC),
+    )
+    await _agent().ainvoke({"messages": [("user", "call me at 9?")]}, context=ctx)
+
+    newest = seen["messages"][-1].content
+    assert "Business: Tuesday, 2026-10-13 23:50 (Asia/Ho_Chi_Minh" in newest
+    assert "Customer: Tuesday, 2026-10-13 12:50 (America/New_York" in newest
 
 
 async def test_opening_status_follows_the_clock_on_the_newest_turn(monkeypatch):
@@ -203,12 +231,12 @@ async def test_opening_status_follows_the_clock_on_the_newest_turn(monkeypatch):
     monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
 
     chatbot = MagicMock(
-        timezone="Asia/Ho_Chi_Minh",
         agent_profile={"openingHours": {"tue": [{"open": "08:00", "close": "22:00"}]}},
     )
     ctx = AgentRequestContext(
         chatbot=chatbot,
         chatbot_id="x",
+        agent_timezone="Asia/Ho_Chi_Minh",
         now=datetime(2026, 10, 13, 16, 50, tzinfo=UTC),
     )
     await _agent().ainvoke({"messages": [("user", "open?")]}, context=ctx)

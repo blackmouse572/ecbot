@@ -37,6 +37,12 @@ const tagFields = {
     .describe(
       "If true, the chatbot hands the conversation to the team when it applies this tag during a conversation.",
     ),
+  notifiesTeam: z
+    .boolean()
+    .optional()
+    .describe(
+      "If true, the team gets a notification when the chatbot applies this tag, and the chatbot keeps replying.",
+    ),
 };
 
 export function registerCustomerTools(

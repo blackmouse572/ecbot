@@ -7,7 +7,7 @@ import {
 import { WORKSPACE_DEFAULT_MEMBER_ROLES } from '../../../src/modules/workspace/constants/workspace.constant';
 import { WorkspaceOwnerService } from '../../../src/modules/workspace/services/workspace.owner.service';
 
-// What this spec asserts: the workspace creation hook seeds the 11 default
+// What this spec asserts: the workspace creation hook seeds the 12 default
 // customer tags atomically *inside* the same MikroORM session that the rest
 // of the workspace setup runs in. This is the contract operators rely on —
 // a workspace cannot exist without its baseline tag catalog, and a failure
@@ -110,11 +110,11 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         );
     });
 
-    it('seeds exactly 11 default customer tags on workspace creation', async () => {
+    it('seeds exactly 12 default customer tags on workspace creation', async () => {
         await service.create(owner, dto);
 
-        expect(customerTagService.create).toHaveBeenCalledTimes(11);
-        expect(CUSTOMER_TAG_DEFAULTS.en).toHaveLength(11);
+        expect(customerTagService.create).toHaveBeenCalledTimes(12);
+        expect(CUSTOMER_TAG_DEFAULTS.en).toHaveLength(12);
     });
 
     it('creates default workspace roles with CUSTOMER manage permission', async () => {
@@ -154,6 +154,7 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
             expect(seeded.emoji).toBe(expected.emoji);
             expect(seeded.description).toBe(expected.description);
             expect(seeded.triggersHandoff).toBe(expected.triggersHandoff);
+            expect(seeded.notifiesTeam).toBe(expected.notifiesTeam ?? false);
         }
     });
 
@@ -172,26 +173,43 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         expect(seeded.map((tag: any) => tag.name)).toContain('Đơn hàng mới');
         expect(seeded.map((tag: any) => tag.name)).toContain('Cần nhân viên');
         expect(seeded.map((tag: any) => tag.name)).toContain('Lịch hẹn mới');
+        expect(seeded.map((tag: any) => tag.name)).toContain('Đã đặt đơn');
         expect(seeded.filter((tag: any) => tag.triggersHandoff).length).toBe(5);
     });
 
     it("keeps every language's catalog in step (same emoji and handoff flags)", () => {
         for (const catalog of Object.values(CUSTOMER_TAG_DEFAULTS)) {
             expect(
-                catalog.map(({ emoji, triggersHandoff }) => ({
+                catalog.map(({ emoji, triggersHandoff, notifiesTeam }) => ({
                     emoji,
                     triggersHandoff,
+                    notifiesTeam,
                 }))
             ).toEqual(
-                CUSTOMER_TAG_DEFAULTS.en.map(({ emoji, triggersHandoff }) => ({
-                    emoji,
-                    triggersHandoff,
-                }))
+                CUSTOMER_TAG_DEFAULTS.en.map(
+                    ({ emoji, triggersHandoff, notifiesTeam }) => ({
+                        emoji,
+                        triggersHandoff,
+                        notifiesTeam,
+                    })
+                )
             );
         }
     });
 
-    it('Complaint, Angry, New order, Needs staff and New booking are seeded with triggersHandoff=true; the other 6 are false', async () => {
+    // #288: Order placed tells the team about an order the order tool
+    // placed, and the assistant keeps replying.
+    it('seeds Order placed as the only notify-only tag', async () => {
+        await service.create(owner, dto);
+
+        const notifyOnly = customerTagService.create.mock.calls
+            .map(([payload]: any[]) => payload)
+            .filter((tag: any) => tag.notifiesTeam && !tag.triggersHandoff)
+            .map((tag: any) => tag.name);
+        expect(notifyOnly).toEqual(['Order placed']);
+    });
+
+    it('Complaint, Angry, New order, Needs staff and New booking are seeded with triggersHandoff=true; the other 7 are false', async () => {
         await service.create(owner, dto);
 
         const handoffTrue: string[] = [];
@@ -214,7 +232,7 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
             'New booking',
             'New order',
         ]);
-        expect(handoffFalse).toHaveLength(6);
+        expect(handoffFalse).toHaveLength(7);
         expect(handoffFalse).not.toContain('Complaint');
         expect(handoffFalse).not.toContain('Angry');
     });

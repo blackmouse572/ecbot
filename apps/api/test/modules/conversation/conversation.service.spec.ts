@@ -22,6 +22,7 @@ describe('ConversationService', () => {
     const mockNotificationService = {
         create: jest.fn(),
         createHandoff: jest.fn(),
+        createTagNotice: jest.fn(),
     };
 
     const mockChatbotAIService = {
@@ -149,6 +150,22 @@ describe('ConversationService', () => {
                     fallbackCount: 0,
                 })
             );
+        });
+    });
+
+    describe('setTimezone', () => {
+        it('writes the timezone, null included', async () => {
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+
+            await service.setTimezone('conv-1', 'America/New_York');
+            await service.setTimezone('conv-1', null);
+
+            expect(mockConversationRepository.updateEntity.mock.calls).toEqual([
+                [{ id: 'conv-1' }, { timezone: 'America/New_York' }],
+                [{ id: 'conv-1' }, { timezone: null }],
+            ]);
         });
     });
 
@@ -555,6 +572,52 @@ describe('ConversationService', () => {
             );
 
             expect(triggered).toBe(false);
+        });
+    });
+
+    // #288: tell the team about a tagged customer without a handoff.
+    describe('notifyTeam', () => {
+        it('notifies every member and emails the team, leaving the bot on', async () => {
+            const send = jest.fn().mockResolvedValue(undefined);
+            mockModuleRef.get.mockReturnValue({ send });
+            mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
+                [
+                    { user: { id: 'user-1' }, workspace: { slug: 'acme' } },
+                    { user: { id: 'user-2' }, workspace: { slug: 'acme' } },
+                ]
+            );
+            mockNotificationService.createTagNotice.mockResolvedValue({});
+
+            await service.notifyTeam(
+                { id: 'conv-1' } as any,
+                'workspace-1',
+                'Order placed',
+                'vi'
+            );
+
+            expect(
+                mockConversationRepository.updateEntity
+            ).not.toHaveBeenCalled();
+            expect(
+                mockNotificationService.createTagNotice
+            ).toHaveBeenCalledTimes(2);
+            expect(
+                mockNotificationService.createTagNotice
+            ).toHaveBeenCalledWith('user-1', {
+                conversationId: 'conv-1',
+                workspaceId: 'workspace-1',
+                workspaceSlug: 'acme',
+                tagName: 'Order placed',
+                language: 'vi',
+            });
+            expect(send).toHaveBeenCalledWith(
+                'conv-1',
+                'workspace-1',
+                'tag_notice',
+                'vi',
+                'Order placed'
+            );
+            mockModuleRef.get.mockReset();
         });
     });
 

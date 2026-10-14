@@ -72,9 +72,6 @@ class Chatbots(SQLModel, table=True):
     # Proactive followups (#140)
     followup_rules: str | None = Field(default=None)
 
-    # IANA zone for the per-turn clock (#285); None follows APP_TIMEZONE.
-    timezone: str | None = Field(default=None)
-
     # Agent builder answers (jsonb). Read for the weekly opening hours (#289).
     agent_profile: Dict[str, Any] | None = Field(default=None, sa_column=Column(JSON()))
 

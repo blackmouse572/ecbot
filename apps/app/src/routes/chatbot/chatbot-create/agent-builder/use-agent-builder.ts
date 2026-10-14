@@ -35,9 +35,12 @@ function baseFrom(chatbot: ChatbotGetDetailResponseDto): Partial<ChatbotCreateRe
 export function useAgentBuilder({
   hydrateFrom: source,
   ensurePrefillChannel,
+  businessName,
 }: {
   hydrateFrom?: ChatbotGetDetailResponseDto;
   ensurePrefillChannel?: () => Promise<LinkedAccountRef | undefined>;
+  /** The shop name typed on the welcome screen, filled in on either start. */
+  businessName?: string;
 }) {
   // A chatbot made without the builder has no profile to resume: start fresh
   // instead, so the new draft never takes over its accounts or settings.
@@ -101,10 +104,11 @@ export function useAgentBuilder({
       suggestion: profile ? suggestion : null,
       source: "describe",
       description,
-      prefillBusinessName: channel?.name,
+      prefillBusinessName: channel?.name ?? businessName,
     });
   };
 
+  // A quick-create channel's name wins over the welcome screen's.
   const startFromTemplate = async (type: BusinessTypeId) => {
     const channel = await ensurePrefillChannel?.();
     dispatch({
@@ -112,7 +116,7 @@ export function useAgentBuilder({
       profile: createProfile(type, language),
       suggestion: null,
       source: "template",
-      prefillBusinessName: channel?.name,
+      prefillBusinessName: channel?.name ?? businessName,
     });
   };
 
