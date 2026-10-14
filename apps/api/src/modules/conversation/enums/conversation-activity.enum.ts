@@ -2,4 +2,5 @@
 export enum ENUM_CONVERSATION_ACTIVITY_KIND {
     SKILL = 'SKILL',
     KNOWLEDGE = 'KNOWLEDGE',
+    TOOL = 'TOOL',
 }

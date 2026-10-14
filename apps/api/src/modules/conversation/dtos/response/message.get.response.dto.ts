@@ -33,8 +33,11 @@ export interface ToolCallSerialization {
     error?: string;
     /** Absent for a skill load, which is not timed. */
     durationMs?: number;
-    /** Tool kind, lowercased like the live stream's `data-tool-meta`. */
-    kind?: 'http' | 'mcp' | 'skill';
+    /**
+     * Tool kind, lowercased like the live stream's `data-tool-meta`; built-in
+     * tools add customer, tag, followup, image and handoff.
+     */
+    kind?: string;
 }
 
 /**

@@ -13,7 +13,7 @@ export const ConversationActivityTableName = 'conversation_activities';
 
 /**
  * What the agent did for a channel reply that left no other record: a skill
- * loaded, a knowledge search. Spliced under the next BOT message like tool
+ * loaded, a built-in tool call (a handoff tag among them), a knowledge search. Spliced under the next BOT message like tool
  * invocations, and like them an audit log: no soft delete, the prune
  * scheduler hard-deletes rows after the same retention.
  */

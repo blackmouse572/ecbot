@@ -296,8 +296,9 @@ export class ConversationMessagingService {
 
     /**
      * Map messages to DTOs, resolving author names and splicing persisted tool
-     * invocations and agent activities (skills, knowledge searches) under the
-     * nearest-following BOT message, in the order they happened.
+     * invocations and agent activities (skills, built-in tools, knowledge
+     * searches) under the nearest-following BOT message, in the order they
+     * happened.
      */
     async mapMessages(
         messages: MessageEntity[],
@@ -344,7 +345,10 @@ export class ConversationMessagingService {
         return dtos;
     }
 
-    /** A skill load reads as a skill step; a knowledge search as its count. */
+    /**
+     * A skill load reads as a skill step, a built-in tool call as its own step,
+     * a knowledge search as its count.
+     */
     private applyActivity(
         dto: MessageGetResponseDto,
         act: ConversationActivityEntity
@@ -356,6 +360,17 @@ export class ConversationMessagingService {
                 args: act.label ? { slug: act.label } : {},
                 status: 'success',
                 kind: 'skill',
+            });
+        } else if (act.kind === ENUM_CONVERSATION_ACTIVITY_KIND.TOOL) {
+            const tool = act.payload?.tool;
+            (dto.toolCalls ??= []).push({
+                invocationId: act.id,
+                toolName: act.label ?? 'unknown',
+                args: tool?.args ?? {},
+                status: tool?.error !== undefined ? 'error' : 'success',
+                ...(tool?.result !== undefined && { result: tool.result }),
+                ...(tool?.error !== undefined && { error: tool.error }),
+                ...(tool?.kind && { kind: tool.kind }),
             });
         } else if (act.kind === ENUM_CONVERSATION_ACTIVITY_KIND.KNOWLEDGE) {
             dto.knowledgeCount = act.payload?.count;

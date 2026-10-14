@@ -15,13 +15,13 @@ export class ConversationActivityRepository extends EntityRepository<Conversatio
     ): Promise<void> {
         await this.em.insertMany(
             ConversationActivityEntity,
-            activities.map(({ kind, label, count, sources, at }) => ({
+            activities.map(({ kind, label, count, sources, tool, at }) => ({
                 conversationId,
                 kind,
                 label,
                 payload:
-                    count !== undefined || sources?.length
-                        ? { count, sources }
+                    count !== undefined || sources?.length || tool
+                        ? { count, sources, tool }
                         : undefined,
                 createdAt: at,
             }))

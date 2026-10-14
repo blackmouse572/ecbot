@@ -856,6 +856,74 @@ describe('StreamingDelivery — agent activity', () => {
         expect(res.activities).toEqual(expected);
     });
 
+    it('records built-in tool calls, a handoff tag as a handoff', async () => {
+        const res = await new StreamingDelivery().deliver(
+            params(
+                sse([
+                    line({
+                        type: 'tool-input-available',
+                        toolCallId: 'call-1',
+                        toolName: 'apply_customer_tag',
+                        input: { name: 'Đã cọc' },
+                    }),
+                    line({
+                        type: 'data-tool-meta',
+                        id: 'call-1',
+                        data: { kind: 'tag' },
+                    }),
+                    line({
+                        type: 'tool-output-available',
+                        toolCallId: 'call-1',
+                        output: { ok: true, triggeredHandoff: true },
+                    }),
+                    line({
+                        type: 'tool-input-available',
+                        toolCallId: 'call-2',
+                        toolName: 'set_customer_field',
+                        input: { key: 'phone', value: 'x' },
+                    }),
+                    line({
+                        type: 'data-tool-meta',
+                        id: 'call-2',
+                        data: { kind: 'customer' },
+                    }),
+                    line({
+                        type: 'tool-output-available',
+                        toolCallId: 'call-2',
+                        output: { error: 'invalid phone' },
+                    }),
+                    line({ type: 'text-delta', id: 't1', delta: 'ok' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                GUARD_OFF
+            ) as any
+        );
+
+        expect(res.activities).toEqual([
+            {
+                kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
+                label: 'apply_customer_tag',
+                tool: {
+                    kind: 'handoff',
+                    args: { name: 'Đã cọc' },
+                    result: { ok: true, triggeredHandoff: true },
+                },
+                at: expect.any(Date),
+            },
+            {
+                kind: ENUM_CONVERSATION_ACTIVITY_KIND.TOOL,
+                label: 'set_customer_field',
+                tool: {
+                    kind: 'customer',
+                    args: { key: 'phone', value: 'x' },
+                    error: 'invalid phone',
+                },
+                at: expect.any(Date),
+            },
+        ]);
+    });
+
     it('records nothing for a text-only reply', async () => {
         const res = await new StreamingDelivery().deliver(
             params(
