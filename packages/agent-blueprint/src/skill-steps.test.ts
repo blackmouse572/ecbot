@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   compileSkill,
+  parseSkillSteps,
   skillStepsSchema,
   validateSkillSteps,
   type SkillStep,
@@ -84,6 +85,27 @@ describe("validateSkillSteps", () => {
     ]);
   });
 
+  it("flags ids used twice anywhere in the tree", () => {
+    const steps: SkillStep[] = [
+      { id: "a", type: "tell", text: "x" },
+      {
+        id: "i",
+        type: "if",
+        branches: [
+          {
+            id: "a",
+            condition: "c",
+            steps: [{ id: "i", type: "tell", text: "y" }],
+          },
+        ],
+      },
+    ];
+    expect(validateSkillSteps(steps)).toEqual([
+      { id: "a", code: "duplicate_id" },
+      { id: "i", code: "duplicate_id" },
+    ]);
+  });
+
   it("requires at least one step", () => {
     expect(validateSkillSteps([])).toEqual([{ code: "steps_empty" }]);
   });
@@ -133,6 +155,47 @@ describe("skillStepsSchema", () => {
         { id: "x", type: "say", text: "a".repeat(1001) },
       ]).success,
     ).toBe(false);
+  });
+});
+
+describe("parseSkillSteps", () => {
+  it("returns the parsed tree", () => {
+    expect(parseSkillSteps(orderTracking)).toEqual({
+      success: true,
+      steps: orderTracking,
+    });
+  });
+
+  it("keys a malformed step by the nearest id", () => {
+    const input = [
+      { id: "ok", type: "tell", text: "x" },
+      {
+        id: "i",
+        type: "if",
+        branches: [
+          {
+            id: "b",
+            condition: "c",
+            steps: [{ id: "deep", type: "say", text: "a".repeat(1001) }],
+          },
+        ],
+      },
+      { id: "g", type: "goto" },
+    ];
+    expect(parseSkillSteps(input)).toEqual({
+      success: false,
+      issues: [
+        { id: "deep", code: "invalid" },
+        { id: "g", code: "invalid" },
+      ],
+    });
+  });
+
+  it("reports a non-list without an id", () => {
+    expect(parseSkillSteps("nope")).toEqual({
+      success: false,
+      issues: [{ code: "invalid" }],
+    });
   });
 });
 

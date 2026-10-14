@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import {
     compileSkill,
-    skillStepsSchema,
+    parseSkillSteps,
     validateSkillSteps,
     type SkillStep,
     type SkillToolNamer,
@@ -391,7 +391,10 @@ export class SkillService {
             const source = this.sourceOf({
                 format,
                 guardrails: dto.guardrails ?? skill.guardrails,
-                steps: dto.steps ?? skill.steps,
+                steps:
+                    format === ENUM_SKILL_FORMAT.STEPS
+                        ? (dto.steps ?? skill.steps ?? undefined)
+                        : dto.steps,
                 instructions:
                     dto.instructions ??
                     (format === ENUM_SKILL_FORMAT.CONTENT
@@ -420,24 +423,33 @@ export class SkillService {
     }
 
     // What the owner wrote, normalised: a skill keeps either `instructions`
-    // (CONTENT) or `steps` (STEPS), never both.
+    // (CONTENT) or `steps` (STEPS), never both. Sending the other format's field
+    // is rejected rather than dropped, so an edit never silently vanishes.
     private sourceOf(dto: {
         format?: ENUM_SKILL_FORMAT;
-        instructions?: string;
-        steps?: SkillStep[];
+        instructions?: string | null;
+        steps?: SkillStep[] | null;
         guardrails?: string[];
     }): ISkillSource {
         const format = dto.format ?? ENUM_SKILL_FORMAT.CONTENT;
+        const isSteps = format === ENUM_SKILL_FORMAT.STEPS;
+        if (isSteps ? dto.instructions != null : dto.steps != null) {
+            throw new BadRequestException({
+                statusCode: 400,
+                message: 'skill.error.formatMismatch',
+                data: { format },
+            });
+        }
         const guardrails = (dto.guardrails ?? [])
             .map(g => g.trim())
             .filter(Boolean);
-        if (format === ENUM_SKILL_FORMAT.STEPS) {
-            const parsed = skillStepsSchema.safeParse(dto.steps ?? []);
-            if (!parsed.success) this.throwInvalidSteps([{ code: 'invalid' }]);
+        if (isSteps) {
+            const parsed = parseSkillSteps(dto.steps ?? []);
+            if ('issues' in parsed) this.throwInvalidSteps(parsed.issues);
             return {
                 format,
                 guardrails,
-                steps: parsed.data,
+                steps: parsed.steps,
                 instructions: null,
             };
         }

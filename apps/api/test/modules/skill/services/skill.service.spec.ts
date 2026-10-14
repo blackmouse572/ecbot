@@ -442,6 +442,88 @@ describe('SkillService', () => {
             ).rejects.toBeInstanceOf(BadRequestException);
         });
 
+        it('keys a malformed step by its id', async () => {
+            await expect(
+                service.create(
+                    workspaceId,
+                    {
+                        name: 'x',
+                        format: ENUM_SKILL_FORMAT.STEPS,
+                        steps: [{ id: 'a', type: 'goto' }],
+                    } as unknown as CreateSkillRequestDto,
+                    user
+                )
+            ).rejects.toMatchObject({
+                response: {
+                    message: 'skill.error.invalidSteps',
+                    data: { issues: [{ id: 'a', code: 'invalid' }] },
+                },
+            });
+        });
+
+        it('rejects fields that do not match the format instead of dropping them', async () => {
+            await expect(
+                service.create(
+                    workspaceId,
+                    {
+                        name: 'x',
+                        instructions: 'Body',
+                        steps: [{ id: 'a', type: 'tell', text: 'Hi' }],
+                    } as CreateSkillRequestDto,
+                    user
+                )
+            ).rejects.toMatchObject({
+                response: { message: 'skill.error.formatMismatch' },
+            });
+
+            const skill: any = {
+                id: randomUUID(),
+                name: 'Steps',
+                format: ENUM_SKILL_FORMAT.STEPS,
+                guardrails: [],
+                steps: [{ id: 'a', type: 'tell', text: 'Hi' }],
+                s3: { key: 'skills/ws/steps.md', size: 3 },
+            };
+            mockSkillRepository.findOneOwned.mockResolvedValue(skill);
+            await expect(
+                service.update(
+                    workspaceId,
+                    skill.id,
+                    { instructions: 'Edited' } as UpdateSkillRequestDto,
+                    user
+                )
+            ).rejects.toMatchObject({
+                response: { message: 'skill.error.formatMismatch' },
+            });
+            expect(mockAwsS3Service.putItem).not.toHaveBeenCalled();
+        });
+
+        it('turns a STEPS skill into CONTENT when the format is sent with instructions', async () => {
+            const skill: any = {
+                id: randomUUID(),
+                name: 'Steps',
+                format: ENUM_SKILL_FORMAT.STEPS,
+                guardrails: [],
+                steps: [{ id: 'a', type: 'tell', text: 'Hi' }],
+                s3: { key: 'skills/ws/steps.md', size: 3 },
+            };
+            mockSkillRepository.findOneOwned.mockResolvedValue(skill);
+
+            await service.update(
+                workspaceId,
+                skill.id,
+                {
+                    format: ENUM_SKILL_FORMAT.CONTENT,
+                    instructions: 'Edited',
+                } as UpdateSkillRequestDto,
+                user
+            );
+
+            expect(bodyOf()).toBe('Edited');
+            expect(skill.format).toBe(ENUM_SKILL_FORMAT.CONTENT);
+            expect(skill.steps).toBeNull();
+        });
+
         it('stores CONTENT as written and appends guardrails only in the S3 body', async () => {
             const created: any = await service.create(
                 workspaceId,

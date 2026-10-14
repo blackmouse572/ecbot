@@ -3,8 +3,6 @@ import * as z from "zod";
 // A Skill is written either as free markdown (CONTENT) or as structured steps
 // (STEPS). Both compile to the one markdown body the agent loads with
 // `load_skill`, so the AI service never sees the step tree.
-export const SKILL_FORMATS = ["CONTENT", "STEPS"] as const;
-export type SkillFormat = (typeof SKILL_FORMATS)[number];
 
 export const SKILL_STEPS_MAX = 50;
 export const SKILL_STEP_MAX_DEPTH = 3;
@@ -66,11 +64,10 @@ export const skillStepSchema: z.ZodType<SkillStep> = z.lazy(() =>
   ]),
 );
 export const skillStepsSchema = z.array(skillStepSchema);
-export const skillGuardrailsSchema = z
-  .array(z.string().trim().min(1).max(SKILL_GUARDRAIL_MAX))
-  .max(SKILL_GUARDRAILS_MAX);
 
 export type SkillStepIssueCode =
+  | "invalid"
+  | "duplicate_id"
   | "steps_empty"
   | "too_many_steps"
   | "too_deep"
@@ -89,6 +86,32 @@ export type SkillToolNamer = (
 
 const blank = (s: string | undefined) => !s?.trim();
 
+/** Parses an untrusted step tree; a malformed step is reported as `invalid` on the nearest id. */
+export function parseSkillSteps(
+  input: unknown,
+):
+  | { success: true; steps: SkillStep[] }
+  | { success: false; issues: SkillStepIssue[] } {
+  const parsed = skillStepsSchema.safeParse(input);
+  if (parsed.success) return { success: true, steps: parsed.data };
+  const issues: SkillStepIssue[] = [];
+  for (const { path } of parsed.error.issues) {
+    let node: unknown = input;
+    let id: string | undefined;
+    for (const key of path) {
+      if (node === null || typeof node !== "object") break;
+      node = (node as Record<PropertyKey, unknown>)[key];
+      const nodeId = (node as { id?: unknown } | null)?.id;
+      if (typeof nodeId === "string") id = nodeId;
+    }
+    if (!issues.some((i) => i.id === id))
+      issues.push(
+        id === undefined ? { code: "invalid" } : { id, code: "invalid" },
+      );
+  }
+  return { success: false, issues };
+}
+
 /** Everything that would stop a step list from compiling, in reading order. */
 export function validateSkillSteps(
   steps: SkillStep[],
@@ -97,16 +120,24 @@ export function validateSkillSteps(
   const issues: SkillStepIssue[] = [];
   if (steps.length === 0) return [{ code: "steps_empty" }];
   let count = 0;
+  // Issues are keyed by id, so ids must be unique across the whole tree.
+  const seen = new Set<string>();
+  const mark = (id: string) => {
+    if (seen.has(id)) issues.push({ id, code: "duplicate_id" });
+    seen.add(id);
+  };
 
   const walk = (list: SkillStep[], depth: number) => {
     for (const step of list) {
       count++;
+      mark(step.id);
       if (step.type === "if") {
         if (depth >= SKILL_STEP_MAX_DEPTH) {
           issues.push({ id: step.id, code: "too_deep" });
           continue;
         }
         for (const branch of step.branches) {
+          mark(branch.id);
           if (blank(branch.condition))
             issues.push({ id: branch.id, code: "condition_required" });
           if (branch.steps.length === 0)
