@@ -28,6 +28,68 @@ describe('CustomerService', () => {
         );
     });
 
+    describe('summarizeConversations', () => {
+        it('maps the repository rows by customer id', async () => {
+            const summarize = jest.fn().mockResolvedValue([
+                {
+                    customerId: 'cust-1',
+                    conversationCount: 3,
+                    channels: ['FACEBOOK_PAGE', 'ZALO_PAGE'],
+                },
+            ]);
+            service = new CustomerService(
+                mockCustomerRepository as any,
+                mockContactPointRepository as any,
+                {
+                    get: jest.fn().mockReturnValue({
+                        summarizeByCustomerIds: summarize,
+                    }),
+                } as any
+            );
+
+            const result = await service.summarizeConversations(
+                ['cust-1', 'cust-2'],
+                'ws-1'
+            );
+
+            expect(summarize).toHaveBeenCalledWith(['cust-1', 'cust-2'], 'ws-1');
+            expect(result.get('cust-1')).toEqual({
+                conversationCount: 3,
+                channels: ['FACEBOOK_PAGE', 'ZALO_PAGE'],
+            });
+            expect(result.has('cust-2')).toBe(false);
+        });
+
+        it('skips the lookup for an empty page', async () => {
+            const result = await service.summarizeConversations([], 'ws-1');
+
+            expect(result.size).toBe(0);
+        });
+    });
+
+    describe('mapList', () => {
+        it('adds the summary, and zero conversations for a customer without one', () => {
+            const rows = service.mapList(
+                [{ id: 'cust-1' }, { id: 'cust-2' }] as any,
+                new Map([
+                    [
+                        'cust-1',
+                        { conversationCount: 2, channels: ['ZALO_PAGE'] },
+                    ],
+                ])
+            );
+
+            expect(rows[0]).toMatchObject({
+                conversationCount: 2,
+                channels: ['ZALO_PAGE'],
+            });
+            expect(rows[1]).toMatchObject({
+                conversationCount: 0,
+                channels: [],
+            });
+        });
+    });
+
     describe('resolveContactPoint', () => {
         const params = {
             workspaceId: 'workspace-1',

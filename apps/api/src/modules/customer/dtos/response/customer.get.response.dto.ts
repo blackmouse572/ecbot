@@ -30,4 +30,21 @@ export class CustomerGetResponseDto extends DatabaseDto {
     @Expose()
     @ApiProperty({ required: false, nullable: true })
     mergedIntoCustomerId?: string;
+
+    @Expose()
+    @ApiProperty({
+        required: false,
+        description:
+            'Number of conversations this customer has. Present on list responses only.',
+    })
+    conversationCount?: number;
+
+    @Expose()
+    @ApiProperty({
+        required: false,
+        type: [String],
+        description:
+            'Distinct channel (account) types the customer talked on. Present on list responses only.',
+    })
+    channels?: string[];
 }

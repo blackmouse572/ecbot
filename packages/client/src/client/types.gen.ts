@@ -5404,6 +5404,14 @@ export type CustomerGetResponseDto = {
     notes?: string | null;
     profileSummary?: string | null;
     mergedIntoCustomerId?: string | null;
+    /**
+     * Number of conversations this customer has. Present on list responses only.
+     */
+    conversationCount?: number;
+    /**
+     * Distinct channel (account) types the customer talked on. Present on list responses only.
+     */
+    channels?: Array<string>;
 };
 
 export type CustomerUpdateRequestDto = {

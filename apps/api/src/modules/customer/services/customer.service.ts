@@ -7,6 +7,7 @@ import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
 import {
+    ICustomerConversationSummary,
     ICustomerService,
     ICustomerUpdate,
     IResolveContactPoint,
@@ -15,6 +16,7 @@ import {
 import { CustomerEntity } from '../repository/entities/customer.entity';
 import { ContactPointRepository } from '../repository/repositories/contact-point.repository';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
+import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { CustomerMergeSuggestionService } from './customer-merge-suggestion.service';
 
 @Injectable()
@@ -311,7 +313,49 @@ export class CustomerService implements ICustomerService {
         });
     }
 
-    mapList(customers: CustomerEntity[]): CustomerGetResponseDto[] {
-        return customers.map(c => this.mapGet(c));
+    /**
+     * Conversation count and channels per customer, for the list page.
+     * Customers with no conversation are absent from the map.
+     */
+    async summarizeConversations(
+        customerIds: string[],
+        workspaceId: string
+    ): Promise<Map<string, ICustomerConversationSummary>> {
+        if (customerIds.length === 0) return new Map();
+
+        // Resolved lazily: the conversation module already depends on this one.
+        const conversationRepository = this.moduleRef.get(
+            ConversationRepository,
+            { strict: false }
+        );
+        const rows = await conversationRepository.summarizeByCustomerIds(
+            customerIds,
+            workspaceId
+        );
+
+        return new Map(
+            rows.map(row => [
+                row.customerId,
+                {
+                    conversationCount: row.conversationCount,
+                    channels: row.channels,
+                },
+            ])
+        );
+    }
+
+    mapList(
+        customers: CustomerEntity[],
+        summaries?: Map<string, ICustomerConversationSummary>
+    ): CustomerGetResponseDto[] {
+        return customers.map(c => {
+            const dto = this.mapGet(c);
+            if (summaries) {
+                const summary = summaries.get(c.id);
+                dto.conversationCount = summary?.conversationCount ?? 0;
+                dto.channels = summary?.channels ?? [];
+            }
+            return dto;
+        });
     }
 }

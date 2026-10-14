@@ -42,3 +42,8 @@ export interface ICustomerService {
     ): Promise<IResolveContactPointResult>;
     mapGet(customer: CustomerEntity): CustomerGetResponseDto;
 }
+
+export interface ICustomerConversationSummary {
+    conversationCount: number;
+    channels: string[];
+}

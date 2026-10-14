@@ -2878,6 +2878,8 @@
       "unnamed": "Khách chưa có tên",
       "phone": "Số điện thoại",
       "firstSeen": "Lần đầu liên hệ",
+      "conversations": "Hội thoại",
+      "conversationCount_other": "{{count}} hội thoại",
       "emptyTitle": "Chưa có khách hàng nào",
       "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn.",
       "connectChannel": "Liên kết kênh"
