@@ -408,6 +408,11 @@ export class ConversationMessagingService {
             return { id, name };
         }
 
+        // A platform note: nobody in the conversation wrote it.
+        if (message.authorType === ENUM_MESSAGE_AUTHOR.SYSTEM) {
+            return { id, name: id };
+        }
+
         // USER message
         const name = conversation?.senderName ?? id;
         return { id, name };
