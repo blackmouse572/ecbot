@@ -17,12 +17,14 @@ import pytest
 
 from eccho_ai.llm.retrievers import vector_store
 from eccho_ai.llm.tools import image_urls
+from eccho_ai.modules.rag import media
 
-# A rag table name not preceded by `rag.`
-UNQUALIFIED = re.compile(r"(?<!rag\.)\brag_document(s|_chunks)\b")
+# A table name in a FROM / INTO / UPDATE / JOIN clause that starts with
+# `rag_` and is not preceded by `rag.`
+UNQUALIFIED = re.compile(r"\b(FROM|INTO|UPDATE|JOIN)\s+rag_\w+", re.IGNORECASE)
 
 
-@pytest.mark.parametrize("module", [vector_store, image_urls])
+@pytest.mark.parametrize("module", [vector_store, image_urls, media])
 def test_rag_tables_are_schema_qualified(module):
     source = inspect.getsource(module)
     lines = [line.strip() for line in source.splitlines() if UNQUALIFIED.search(line)]

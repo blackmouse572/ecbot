@@ -218,7 +218,7 @@ class PgVectorStore:
         async with pool.acquire() as conn:
             await conn.execute(
                 """
-                INSERT INTO rag_media (
+                INSERT INTO rag.rag_media (
                     id, knowledge_item_id, chatbot_ids, title, description, url, mime_type, embedding
                 )
                 VALUES ($1, $2, $3::text[], $4, $5, $6, $7, $8::vector)
@@ -245,7 +245,7 @@ class PgVectorStore:
         pool = await get_pool()
         async with pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM rag_media WHERE knowledge_item_id = $1", knowledge_item_id
+                "DELETE FROM rag.rag_media WHERE knowledge_item_id = $1", knowledge_item_id
             )
             return int(result.split()[-1]) if result else 0
 
@@ -254,7 +254,7 @@ class PgVectorStore:
         async with pool.acquire() as conn:
             result = await conn.execute(
                 """
-                UPDATE rag_media SET chatbot_ids = $2::text[], updated_at = now()
+                UPDATE rag.rag_media SET chatbot_ids = $2::text[], updated_at = now()
                 WHERE knowledge_item_id = $1
                 """,
                 knowledge_item_id,
