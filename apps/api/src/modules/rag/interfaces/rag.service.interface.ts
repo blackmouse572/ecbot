@@ -75,6 +75,6 @@ export interface IRAGService {
         options?: IDatabaseDeleteOptions
     ) => Promise<void>;
 
-    mapGet: (rag: RAGEntity) => RAGGetResponseDto;
+    mapGet: (rag: RAGEntity, groups?: string[]) => RAGGetResponseDto;
     mapList: (rag: RAGEntity) => any;
 }
