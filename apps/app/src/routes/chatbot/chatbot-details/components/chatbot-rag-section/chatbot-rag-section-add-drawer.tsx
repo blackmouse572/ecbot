@@ -26,6 +26,7 @@ import {
 import { useKnowledgeTags } from "@/hooks/api/knowledge-tag";
 import { useBatchResultToast } from "@/hooks/use-batch-result-toast";
 import type { KnowledgeItemResponseDto } from "@repo/client";
+import { KB_TYPE_CONFIG } from "../../../../knowledge-base/constants";
 import { KnowledgeItemTagListCell } from "../../../../knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-tag-list-cell";
 import { KnowledgeItemTitleCell } from "../../../../knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-title-cell";
 import { PlusMini } from "@medusajs/icons";
@@ -70,13 +71,15 @@ export function ChatbotRAGSectionAddDrawer({
   });
 
   const selectedTags = (filtering.tags as string[] | undefined) ?? [];
+  const selectedTypes = (filtering.type as string[] | undefined) ?? [];
   const filters = useMemo(
     () => ({
       search: search || undefined,
       tags: selectedTags.length ? selectedTags.join(",") : undefined,
+      type: selectedTypes.length ? selectedTypes.join(",") : undefined,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [search, selectedTags.join(",")],
+    [search, selectedTags.join(","), selectedTypes.join(",")],
   );
 
   const { items, count, isLoading } = useKnowledgeItems(
@@ -117,6 +120,14 @@ export function ChatbotRAGSectionAddDrawer({
 
   const tableFilters = useMemo(
     () => [
+      filterHelper.accessor("type", {
+        label: t("fields.type"),
+        type: "multiselect",
+        options: Object.entries(KB_TYPE_CONFIG).map(([value, { label }]) => ({
+          label,
+          value,
+        })),
+      }),
       filterHelper.accessor("tags", {
         label: t("knowledgeBase.list.columns.tags"),
         type: "multiselect",
