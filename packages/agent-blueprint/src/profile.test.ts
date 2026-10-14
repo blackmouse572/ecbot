@@ -108,6 +108,18 @@ describe("migrateProfile", () => {
     ).toBe("30k nationwide");
   });
 
+  // #288: agents saved before the placed-orders question get the new default.
+  it("gives a shop saved before #288 the notify default", () => {
+    const { placedOrders: _, ...stored } = createProfile("ecommerce", "en");
+    expect(migrateProfile(stored).placedOrders).toBe("notify");
+    expect(migrateProfile({ ...stored, placedOrders: "none" }).placedOrders).toBe("none");
+  });
+
+  it("leaves personal assistants without a placed-orders choice", () => {
+    const personal = createProfile("personal_tasks", "en");
+    expect(migrateProfile(personal).placedOrders).toBeUndefined();
+  });
+
   it("leaves restaurants, which still ask about delivery, alone", () => {
     const restaurant = {
       ...createProfile("restaurant", "en"),

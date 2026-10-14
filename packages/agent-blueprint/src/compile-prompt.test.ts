@@ -216,7 +216,8 @@ describe("compilePrompt", () => {
     const out = compilePrompt(sample("ecommerce", "en"));
     expect(out).toContain("place the order with the connected order tool");
     expect(out).toContain("If no order tool is connected, the order is not placed yet");
-    expect(out).toContain("Never say the order is placed, confirmed or complete.");
+    // Scoped to the no-tool branch, so it never contradicts a tool-placed order (#288).
+    expect(out).toContain("Without an order tool, never say the order is placed, confirmed or complete.");
     expect(out).not.toContain("then read the full order back before closing.");
   });
 
@@ -229,9 +230,9 @@ describe("compilePrompt", () => {
     const handoff = compilePrompt({ ...base, placedOrders: "handoff" });
     expect(handoff).toContain('After the order tool confirms the order, hand the conversation to a person by applying the tag marked "(triggers handoff)" for new orders');
     expect(compilePrompt({ ...base, placedOrders: "none" })).toContain("Do not apply a tag or hand the conversation over for it.");
-    // Profiles saved before #288 compile as before.
+    // Profiles saved before #288 get the same default as new ones.
     const { placedOrders: _, ...stored } = base;
-    expect(compilePrompt(stored)).not.toContain("After the order tool confirms the order");
+    expect(compilePrompt(stored)).toContain('apply the tag marked "(notifies the team)"');
   });
 
   it("leaves the placed-order step out when the agent takes no orders", () => {
