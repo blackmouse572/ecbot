@@ -1,4 +1,4 @@
-import { createProfile } from "@repo/agent-blueprint";
+import { compileFollowupRules, createProfile } from "@repo/agent-blueprint";
 import { describe, expect, it } from "vitest";
 import { toChatbotPayload } from "./to-chatbot-payload";
 
@@ -81,5 +81,21 @@ describe("toChatbotPayload", () => {
 
   it("keeps the chatbot's existing handoff fallback threshold when a base is given", () => {
     expect(toChatbotPayload(profile, "", { handoffFallbackThreshold: 5 } as never).handoffFallbackThreshold).toBe(5);
+  });
+
+  // Agents know when to check in without the owner writing rules.
+  it("prefills the default follow-up rules when the chatbot has none", () => {
+    expect(toChatbotPayload(profile, "").followupRules).toBe(compileFollowupRules(profile));
+    expect(toChatbotPayload(profile, "", { followupRules: "  " } as never).followupRules).toBe(compileFollowupRules(profile));
+  });
+
+  it("keeps follow-up rules the owner wrote", () => {
+    expect(toChatbotPayload(profile, "", { followupRules: "Call after 2 days" } as never).followupRules).toBe("Call after 2 days");
+  });
+
+  it("updates the default follow-up rules when the builder's goals change", () => {
+    const before = { ...profile, goals: ["answer_questions"] } as typeof profile;
+    const base = { followupRules: compileFollowupRules(before), agentProfile: before } as never;
+    expect(toChatbotPayload(profile, "", base).followupRules).toBe(compileFollowupRules(profile));
   });
 });
