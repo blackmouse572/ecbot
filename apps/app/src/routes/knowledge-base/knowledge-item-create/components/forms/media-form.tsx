@@ -1,10 +1,11 @@
-import { Text } from "@medusajs/ui";
+import { formatFileSize } from "@/utils";
+import { Spinner, XMark } from "@medusajs/icons";
+import { IconButton, Text } from "@medusajs/ui";
+import { FileUpload, Form, type FileType } from "@repo/ui/common-components";
 import {
-  FilePreview,
-  FileUpload,
-  Form,
-  type FileType,
-} from "@repo/ui/common-components";
+  FileType as FileTypeIcon,
+  getFileType,
+} from "@repo/ui/components/ui/file-type";
 import type { FC } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -50,26 +51,61 @@ export const MediaForm: FC<MediaFormProps> = ({
               {t("knowledge_item.media.cost_hint")}
             </Text>
             {files.length > 0 && (
-              <div className="flex flex-col gap-y-2">
+              <ul className="flex flex-col gap-y-2">
                 {files.map((file) => {
                   const uploaded = uploadedIds.includes(file.id);
                   return (
-                    <FilePreview
+                    <li
                       key={file.id}
-                      filename={file.file.name}
-                      loading={isLoading && !uploaded}
-                      onRemove={
-                        isLoading
-                          ? undefined
-                          : () =>
+                      className="flex items-center gap-x-3 rounded-lg border border-ui-border-base px-3 py-2"
+                    >
+                      {/* The name below ends in its extension. */}
+                      <FileTypeIcon
+                        type={getFileType(file.file.type || file.file.name)}
+                        size="sm"
+                        aria-hidden
+                      />
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <Text
+                          size="small"
+                          leading="compact"
+                          weight="plus"
+                          className="truncate"
+                          title={file.file.name}
+                        >
+                          {file.file.name}
+                        </Text>
+                        <Text
+                          size="xsmall"
+                          leading="compact"
+                          className="text-ui-fg-subtle tabular-nums"
+                        >
+                          {formatFileSize(file.file.size)}
+                        </Text>
+                      </div>
+                      {isLoading && !uploaded ? (
+                        <Spinner className="animate-spin text-ui-fg-muted" />
+                      ) : (
+                        !isLoading && (
+                          <IconButton
+                            type="button"
+                            size="small"
+                            variant="transparent"
+                            aria-label={t("actions.delete")}
+                            onClick={() =>
                               field.onChange(
                                 files.filter(({ id }) => id !== file.id),
                               )
-                      }
-                    />
+                            }
+                          >
+                            <XMark />
+                          </IconButton>
+                        )
+                      )}
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
             <Form.ErrorMessage />
           </Form.Item>

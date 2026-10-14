@@ -291,6 +291,23 @@ describe("KnowledgeItemCreateForm", () => {
       expect(toast.error).not.toHaveBeenCalled();
     });
 
+    it("lists each picked file with its type icon and size", () => {
+      const { container } = render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+        </NuqsTestingAdapter>,
+      );
+      pick(container, [
+        new File(["%PDF"], "menu.pdf", { type: "application/pdf" }),
+      ]);
+
+      expect(screen.getByText("menu.pdf")).toBeInTheDocument();
+      expect(screen.getByText("4 bytes")).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-slot="file-type"][data-type="pdf"]'),
+      ).not.toBeNull();
+    });
+
     it("says media is processed by vision AI and what it costs", () => {
       render(
         <NuqsTestingAdapter searchParams="?t=MEDIA">

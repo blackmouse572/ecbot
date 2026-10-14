@@ -14,7 +14,8 @@ import {
   useLinkKnowledgeItemToChatbots,
   useProcessKnowledgeItem,
 } from "../../../../hooks/api";
-import { FileForm, MediaForm, TextForm, UrlForm } from "./forms";
+import { FileForm, TextForm, UrlForm } from "./forms";
+import { MediaForm } from "./forms/media-form";
 import { fileTitle } from "./forms/file-title";
 import { KnowledgeItemTypeSelector } from "./knowledge-item-type-selector/index";
 import { KnowledgeItemTypeEnum } from "./knowledge-item-type-selector/knowledge-item-type-selector";
