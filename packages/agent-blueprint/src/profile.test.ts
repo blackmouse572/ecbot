@@ -12,6 +12,7 @@ describe("createProfile", () => {
     expect(p.channels).toEqual(["messenger"]);
     expect(p.handoffWhen).toEqual(["asks_for_human", "upset"]);
     expect(p.unsure).toBe("handoff");
+    expect(p.placedOrders).toBe("notify");
     expect(p.addressStyle).toBe("em_anhchi");
     expect(agentProfileSchema.parse(p)).toEqual(p);
   });
@@ -21,6 +22,7 @@ describe("createProfile", () => {
     expect(p.channels).toEqual([]);
     expect(p.handoffWhen).toEqual([]);
     expect(p.unsure).toBe("say_unknown");
+    expect(p.placedOrders).toBeUndefined();
     expect(p.addressStyle).toBeNull();
   });
 });
@@ -104,6 +106,18 @@ describe("migrateProfile", () => {
         withFacts({ delivery: "old", shipping_fee: "30k nationwide" }),
       ).facts.shipping_fee,
     ).toBe("30k nationwide");
+  });
+
+  // #288: agents saved before the placed-orders question get the new default.
+  it("gives a shop saved before #288 the notify default", () => {
+    const { placedOrders: _, ...stored } = createProfile("ecommerce", "en");
+    expect(migrateProfile(stored).placedOrders).toBe("notify");
+    expect(migrateProfile({ ...stored, placedOrders: "none" }).placedOrders).toBe("none");
+  });
+
+  it("leaves personal assistants without a placed-orders choice", () => {
+    const personal = createProfile("personal_tasks", "en");
+    expect(migrateProfile(personal).placedOrders).toBeUndefined();
   });
 
   it("leaves restaurants, which still ask about delivery, alone", () => {

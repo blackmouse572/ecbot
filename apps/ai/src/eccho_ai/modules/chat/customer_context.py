@@ -24,7 +24,7 @@ from eccho_ai.core.postgres import PostgresRepo
 logger = logging.getLogger("uvicorn.info")
 
 
-MAX_CATALOG_TAGS = 12
+MAX_CATALOG_TAGS = 20
 MAX_FIELD_LEN = 500
 
 
@@ -46,7 +46,9 @@ def _safe(value: Any, *, limit: int = MAX_FIELD_LEN) -> str:
     return text
 
 
-def _format_tag_line(name: str, emoji: str | None, description: str | None, triggers_handoff: bool) -> str:
+def _format_tag_line(
+    name: str, emoji: str | None, description: str | None, triggers_handoff: bool, notifies_team: bool = False
+) -> str:
     parts = [f'- "{_safe(name, limit=80)}"']
     if emoji:
         parts.append(_safe(emoji, limit=8))
@@ -54,6 +56,8 @@ def _format_tag_line(name: str, emoji: str | None, description: str | None, trig
         parts.append(f"— {_safe(description, limit=160)}")
     if triggers_handoff:
         parts.append("(triggers handoff)")
+    elif notifies_team:
+        parts.append("(notifies the team)")
     return " ".join(parts)
 
 
@@ -104,6 +108,7 @@ async def build_customer_context_block(customer_id: str | None) -> str:
                     col(CustomerTags.emoji),
                     col(CustomerTags.description),
                     col(CustomerTags.triggers_handoff),
+                    col(CustomerTags.notifies_team),
                     col(CustomerTags.created_at),
                 )
                 .where(
@@ -139,8 +144,10 @@ async def build_customer_context_block(customer_id: str | None) -> str:
         lines.append("- (no tags defined in this workspace)")
     else:
         for row in capped_rows:
-            name, emoji, description, triggers_handoff, _ = row
-            lines.append(_format_tag_line(name, emoji, description, bool(triggers_handoff)))
+            name, emoji, description, triggers_handoff, notifies_team, _ = row
+            lines.append(
+                _format_tag_line(name, emoji, description, bool(triggers_handoff), bool(notifies_team))
+            )
         if truncated:
             lines.append("- …")
     return "\n".join(lines)
