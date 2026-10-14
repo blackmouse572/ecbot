@@ -8,7 +8,14 @@ import {
     DocResponse,
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
-import { ChatbotAdminDocParamsId } from '../constants/chatbot.admin.doc.constant';
+import {
+    ChatbotAdminDocParamsId,
+    ChatbotAdminDocQueryWorkspace,
+} from '../constants/chatbot.admin.doc.constant';
+import {
+    ChatbotDocQueryStatus,
+    ChatbotDocQueryType,
+} from '../constants/chatbot.doc.constant';
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
 import { ChatbotAdminResponseDto } from '../dtos/response/chatbot.admin.response.dto';
 
@@ -18,7 +25,11 @@ export function ChatbotAdminListDoc(): MethodDecorator {
             summary: 'get all chatbots (admin)',
         }),
         DocRequest({
-            queries: [],
+            queries: [
+                ...ChatbotDocQueryStatus,
+                ...ChatbotDocQueryType,
+                ...ChatbotAdminDocQueryWorkspace,
+            ],
         }),
         DocAuth({
             xApiKey: true,

@@ -2370,23 +2370,14 @@ export type AccountUpdateStatusRequestDto = {
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
 };
 
-export type WorkspaceSummary = {
+export type WorkspaceGetShortResponseDto = {
     /**
-     * Workspace ID
+     * Alias id of api key
      */
     id: string;
-    /**
-     * Workspace name
-     */
     name: string;
-    /**
-     * Workspace slug
-     */
+    avatar?: string;
     slug: string;
-    /**
-     * Workspace avatar URL
-     */
-    avatar: string;
 };
 
 export type ChatbotAdminResponseDto = {
@@ -2531,13 +2522,13 @@ export type ChatbotAdminResponseDto = {
      */
     timezone?: string | null;
     /**
+     * Workspace the chatbot belongs to
+     */
+    workspace: WorkspaceGetShortResponseDto;
+    /**
      * Chatbot associate accounts
      */
     accounts: Array<AccountGetDetailResponseDto>;
-    /**
-     * Populated workspace details
-     */
-    workspace: WorkspaceSummary;
 };
 
 export type ChatbotUpdateRequestDto = {
@@ -3633,16 +3624,6 @@ export type ChatbotModelResponseDto = {
         [key: string]: unknown;
     } | null;
     description?: string;
-};
-
-export type WorkspaceGetShortResponseDto = {
-    /**
-     * Alias id of api key
-     */
-    id: string;
-    name: string;
-    avatar?: string;
-    slug: string;
 };
 
 export type ChatbotGetDetailResponseDto = {
@@ -14692,6 +14673,18 @@ export type ChatbotAdminControllerFindAllV1Data = {
     };
     path?: never;
     query?: {
+        /**
+         * The status of the chatbot, value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * The type of the chatbot, value with ',' delimiter
+         */
+        type?: string;
+        /**
+         * workspace id
+         */
+        workspace?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
