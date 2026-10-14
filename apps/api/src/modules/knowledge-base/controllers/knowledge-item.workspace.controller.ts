@@ -355,7 +355,10 @@ export class KnowledgeItemWorkspaceController {
             let attachment: AwsS3Entity = undefined;
             let metadata: Record<string, any> = {};
             const isMedia = dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA;
-            if (file) {
+            if (
+                file &&
+                (isMedia || dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE)
+            ) {
                 // Sanitize filename using slugify to remove special characters
                 const nameWithoutExt = file.originalname.replace(
                     /\.[^/.]+$/,

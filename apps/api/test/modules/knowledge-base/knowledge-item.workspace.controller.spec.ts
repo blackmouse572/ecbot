@@ -159,6 +159,15 @@ describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
         expect(awsS3Service.putItem).toHaveBeenCalled();
     });
 
+    it('ignores a file sent with a TEXT or URL item', async () => {
+        await create(ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT, file('image/png'));
+
+        expect(awsS3Service.putItem).not.toHaveBeenCalled();
+        expect(
+            knowledgeItemService.create.mock.calls[0][0].attachment
+        ).toBeUndefined();
+    });
+
     it.each([
         ['a MEDIA item with no file', 'MEDIA', undefined, 'fileRequired'],
         [

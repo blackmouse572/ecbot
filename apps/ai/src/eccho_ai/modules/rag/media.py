@@ -65,6 +65,7 @@ _READ_PAGES_PROMPT = (
 class MediaIngestResponse(BaseModel):
     description: str
     embedding_model: str
+    chunk_count: int = 0
     usage: TokenUsage | None = None
 
 
@@ -207,6 +208,16 @@ class MediaIngestService:
         if len(embeddings) != 1 or len(embeddings[0]) != self.embedding_dimension:
             raise ValueError("Embedding dimension mismatch for media item")
 
+        usage = _add(usage, embed_usage)
+        # Chunk first: if it fails, the item is marked failed and must leave
+        # no media row behind for retrieval to find.
+        chunk_count = 0
+        if pdf_text:
+            chunked = await self._ingest_text(
+                knowledge_item_id=knowledge_item_id, text=pdf_text, title=title, chatbot_ids=chatbot_ids,
+            )
+            usage = _add(usage, chunked.usage)
+            chunk_count = chunked.chunk_count
         await self.store.upsert_media(
             knowledge_item_id=knowledge_item_id,
             chatbot_ids=chatbot_ids,
@@ -216,14 +227,9 @@ class MediaIngestService:
             mime_type=mime_type,
             embedding=embeddings[0],
         )
-        usage = _add(usage, embed_usage)
-        if pdf_text:
-            chunked = await self._ingest_text(
-                knowledge_item_id=knowledge_item_id, text=pdf_text, title=title, chatbot_ids=chatbot_ids,
-            )
-            usage = _add(usage, chunked.usage)
         return MediaIngestResponse(
             description=description,
             embedding_model=self.embedding_model,
+            chunk_count=chunk_count,
             usage=usage,
         )

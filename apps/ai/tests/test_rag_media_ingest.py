@@ -62,7 +62,7 @@ async def test_a_given_description_skips_the_vision_call(monkeypatch):
 
 def _pdf_service(monkeypatch, pages, read=None):
     service, store, embed = _service()
-    service._ingest_text = AsyncMock(return_value=SimpleNamespace(usage=None))
+    service._ingest_text = AsyncMock(return_value=SimpleNamespace(usage=None, chunk_count=0))
     monkeypatch.setattr(media, "_pdf_pages", lambda content: pages)
     if read is not None:
         monkeypatch.setattr(media, "read_pdf_page_images", read)
@@ -118,6 +118,28 @@ async def test_the_whole_pdf_text_goes_to_the_knowledge_chunks(monkeypatch):
     assert kwargs["chatbot_ids"] == ["c1"]
     assert kwargs["title"] == "Menu Moc"
     assert kwargs["text"] == "Welcome to Moc\n\nCanh ga chien mam - 69.000"
+
+
+async def test_a_pdf_that_fails_to_chunk_leaves_no_media_row(monkeypatch):
+    # A failed item must not stay findable, so the media row is written last.
+    pages = [("Welcome to Moc", None)]
+    service, store, _ = _pdf_service(monkeypatch, pages)
+    service._ingest_text = AsyncMock(side_effect=ValueError("embedding down"))
+
+    with pytest.raises(ValueError):
+        await _ingest_pdf(service)
+
+    store.upsert_media.assert_not_awaited()
+
+
+async def test_a_pdf_reports_how_many_chunks_it_made(monkeypatch):
+    pages = [("Welcome to Moc", None)]
+    service, _, _ = _pdf_service(monkeypatch, pages)
+    service._ingest_text = AsyncMock(return_value=SimpleNamespace(usage=None, chunk_count=12))
+
+    result = await _ingest_pdf(service)
+
+    assert result.chunk_count == 12
 
 
 async def test_an_image_media_item_adds_no_knowledge_chunks(monkeypatch):
