@@ -23,6 +23,7 @@ import {
     Controller,
     Delete,
     Get,
+    ConflictException,
     InternalServerErrorException,
     Logger,
     NotFoundException,
@@ -193,11 +194,21 @@ export class ChatbotKnowledgeItemWorkspaceController {
                     });
                 }
 
-                await this.chatbotKnowledgeItemService.linkItem(
-                    chatbotId,
-                    knowledgeItemId,
-                    { em: session, actionBy: user.id }
-                );
+                try {
+                    await this.chatbotKnowledgeItemService.linkItem(
+                        chatbotId,
+                        knowledgeItemId,
+                        { em: session, actionBy: user.id }
+                    );
+                } catch (err: unknown) {
+                    // Already linked: the chatbot has the item, which is
+                    // what the caller asked for.
+                    if (err instanceof ConflictException) {
+                        await session.rollback();
+                        return;
+                    }
+                    throw err;
+                }
                 await this.activityService.createByUser(
                     user,
                     {

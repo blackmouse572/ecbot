@@ -218,7 +218,7 @@ export function KnowledgeItemWorkspaceBatchTagDoc(): MethodDecorator {
             xApiKey: true,
             jwtAccessToken: true,
         }),
-        DocGuard({ role: true, policy: true }),
+        DocGuard({ policy: true }),
         DocResponse<BatchResultResponseDto>('knowledgeItem.batchTag', {
             dto: BatchResultResponseDto,
             httpStatus: HttpStatus.OK,

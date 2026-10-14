@@ -101,11 +101,19 @@ export function ChatbotKnowledgeItemBatchLinkDoc(): MethodDecorator {
         Doc({
             summary: 'link several knowledge items to a chatbot',
             description:
-                'Link every item in `ids` to the chatbot. Each id is processed independently, so the response reports which ones succeeded (items already linked are reported in `failed`) and which ones failed.',
+                'Link every item in `ids` to the chatbot. Each id is processed independently, so the response reports which ones succeeded and which ones failed. An item already linked counts as succeeded.',
         }),
         DocRequest({
             dto: BatchIdsRequestDto,
-            params: [...WorkspaceDocParamsId, ...ChatbotDocParamsId],
+            params: [
+                ...WorkspaceDocParamsId,
+                {
+                    name: 'chatbotId',
+                    description: 'Chatbot ID',
+                    required: true,
+                    schema: { type: 'string', format: 'uuid' },
+                },
+            ],
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
         }),
         DocAuth({

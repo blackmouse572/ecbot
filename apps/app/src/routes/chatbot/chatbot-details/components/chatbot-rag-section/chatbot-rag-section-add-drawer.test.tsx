@@ -118,7 +118,9 @@ describe("ChatbotRAGSectionAddDrawer multi-select", () => {
     kb.link
       .mockReset()
       .mockResolvedValue({ succeeded: ["a", "b"], failed: [] });
-    kb.fetchAllIds.mockReset().mockResolvedValue(["a", "b", "c", "z"]);
+    kb.fetchAllIds
+      .mockReset()
+      .mockResolvedValue({ ids: ["a", "b", "c", "z"], truncated: false });
   });
 
   it("hides linked items and links every ticked item in one call", async () => {

@@ -315,17 +315,23 @@ export const useBatchLinkKnowledgeItemsToChatbot = (chatbotId: string) => {
   });
 };
 
+// The list endpoint serves at most 20 pages (PAGINATION_DEFAULT_MAX_PAGE).
+const MAX_LIST_PAGES = 20;
+
 /**
- * Ids of every item matching `filters` (search, tags), across all pages, for
- * "select all matching". Reads the list endpoint at its max page size.
+ * Ids of the items matching `filters` (search, tags) across pages, for
+ * "select all matching". Reads the list endpoint at its max page size, so it
+ * stops at 2000 items; `truncated` says more matched than were returned.
  */
 export const useFetchAllKnowledgeItemIds = (knowledgeBaseId: string) => {
   const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
 
-  return async (filters: Record<string, A>): Promise<string[]> => {
+  return async (
+    filters: Record<string, A>,
+  ): Promise<{ ids: string[]; truncated: boolean }> => {
     const ids: string[] = [];
-    for (let page = 1; ; page += 1) {
+    for (let page = 1; page <= MAX_LIST_PAGES; page += 1) {
       const res = await queryClient.fetchQuery({
         ...knowledgeItemListQueryOptions(workspace!.slug, knowledgeBaseId, {
           ...filters,
@@ -336,8 +342,9 @@ export const useFetchAllKnowledgeItemIds = (knowledgeBaseId: string) => {
       });
       const items = (res?.data ?? []) as KnowledgeItemResponseDto[];
       ids.push(...items.map((item) => item.id));
-      if (items.length < BATCH_MAX_IDS) return ids;
+      if (items.length < BATCH_MAX_IDS) return { ids, truncated: false };
     }
+    return { ids, truncated: true };
   };
 };
 

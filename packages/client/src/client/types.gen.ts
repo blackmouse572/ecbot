@@ -22664,13 +22664,10 @@ export type KnowledgeItemWorkspaceControllerBatchTagV1Errors = {
     /**
      * 403
      */
-    403: (ResponseDto & {
+    403: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
+    };
     /**
      * 408
      */
@@ -23498,12 +23495,14 @@ export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Data = {
         'x-custom-lang'?: string;
     };
     path: {
+        /**
+         * Chatbot ID
+         */
         chatbotId: string;
         /**
          * The ID or slug of the workspace
          */
         workspace: string;
-        id: string;
     };
     query?: never;
     url: '/api/v1/workspace/{workspace}/chatbots/{chatbotId}/knowledge-items/batch/link';

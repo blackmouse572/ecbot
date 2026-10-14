@@ -2479,7 +2479,8 @@
       "searchPlaceholder": "Search by title",
       "selected": "{{count}} selected",
       "selectAllMatching": "Select all matching",
-      "addCount": "Add {{count}}"
+      "addCount": "Add {{count}}",
+      "selectionTruncated": "Too many items match. Selected the first {{count}}; narrow the filter to pick the rest."
     },
     "selectItem": "Select Item",
     "error": {

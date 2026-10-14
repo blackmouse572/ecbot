@@ -2527,7 +2527,8 @@
       "searchPlaceholder": "Tìm theo tiêu đề",
       "selected": "Đã chọn {{count}}",
       "selectAllMatching": "Chọn tất cả kết quả",
-      "addCount": "Thêm {{count}}"
+      "addCount": "Thêm {{count}}",
+      "selectionTruncated": "Có quá nhiều kết quả. Đã chọn {{count}} mục đầu, hãy thu hẹp bộ lọc để chọn phần còn lại."
     },
     "selectItem": "Chọn mục",
     "error": {

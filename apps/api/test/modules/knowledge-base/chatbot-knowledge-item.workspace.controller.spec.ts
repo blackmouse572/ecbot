@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ChatbotKnowledgeItemWorkspaceController } from '@app/modules/knowledge-base/controllers/chatbot-knowledge-item.workspace.controller';
 
 describe('ChatbotKnowledgeItemWorkspaceController.link', () => {
@@ -143,6 +143,23 @@ describe('ChatbotKnowledgeItemWorkspaceController.batchLink', () => {
         expect(service.linkItem).toHaveBeenCalledTimes(1);
         expect(service.syncChatbotLinks).toHaveBeenCalledTimes(1);
         expect(service.syncChatbotLinks).toHaveBeenCalledWith('a');
+    });
+
+    it('counts an item that is already linked as done, without a second sync', async () => {
+        const { controller, service } = build({
+            a: { id: 'a', knowledgeBase: { workspace: { id: 'workspace-1' } } },
+        });
+        service.linkItem.mockRejectedValue(new ConflictException('linked'));
+
+        const { data } = await controller.batchLink(
+            user,
+            workspace,
+            'chatbot-1',
+            { ids: ['a'] }
+        );
+
+        expect(data).toEqual({ succeeded: ['a'], failed: [] });
+        expect(service.syncChatbotLinks).not.toHaveBeenCalled();
     });
 
     it('404s when the chatbot is not in the workspace', async () => {

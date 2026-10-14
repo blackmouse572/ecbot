@@ -161,7 +161,12 @@ export function ChatbotRAGSectionAddDrawer({
   const handleSelectAllMatching = async () => {
     setIsSelectingAll(true);
     try {
-      const ids = await fetchAllIds(filters);
+      const { ids, truncated } = await fetchAllIds(filters);
+      if (truncated) {
+        toast.warning(
+          t("knowledgeBase.link.selectionTruncated", { count: ids.length }),
+        );
+      }
       setRowSelection((prev) => ({
         ...prev,
         ...Object.fromEntries(
