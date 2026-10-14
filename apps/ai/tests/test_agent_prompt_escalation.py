@@ -39,3 +39,12 @@ def test_upset_or_complaining_customer_is_handed_over_in_the_same_turn():
     assert "in that same reply" in block
     assert "Do not only apologize" in block
     assert "do not ask whether they want to talk to someone" in block
+
+
+def test_upset_customer_is_described_by_its_signs():
+    # #191: a late-order complaint with "😤" was answered with an apology
+    # and a question for the order number, without a handover.
+    block = " ".join(_escalation_block().split())
+    assert "A customer is upset when they complain (a late, missing or wrong order" in block
+    assert "😤" in block
+    assert "in that same reply, even if you could also help" in block
