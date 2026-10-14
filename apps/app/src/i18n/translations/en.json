@@ -2697,6 +2697,11 @@
           "empty": "No contact points yet",
           "emptyHint": "Ways to reach this customer, like a phone number or email, show up here."
         },
+        "conversations": {
+          "title": "Conversations",
+          "empty": "No conversations yet",
+          "current": "Current"
+        },
         "followups": {
           "title": "Followups",
           "empty": "No pending followups",
@@ -2836,6 +2841,9 @@
       "unnamed": "Unnamed customer",
       "phone": "Phone",
       "firstSeen": "First seen",
+      "conversations": "Conversations",
+      "conversationCount_one": "{{count}} conversation",
+      "conversationCount_other": "{{count}} conversations",
       "emptyTitle": "No customers yet",
       "emptyMessage": "Customers appear here once they message one of your channels.",
       "connectChannel": "Connect a channel"

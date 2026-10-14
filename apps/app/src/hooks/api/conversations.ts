@@ -40,6 +40,7 @@ export type ConversationListQuery = {
   accountType?: string[];
   account?: string;
   chatbot?: string;
+  customer?: string;
   botEnabled?: boolean;
   orderBy?: string;
   orderDirection?: "ASC" | "DESC";
@@ -90,6 +91,7 @@ export const useConversations = (query: ConversationListQuery = {}) => {
           }),
           ...(query.account && { account: query.account }),
           ...(query.chatbot && { chatbot: query.chatbot }),
+          ...(query.customer && { customer: query.customer }),
           ...(query.botEnabled !== undefined && {
             botEnabled: String(query.botEnabled),
           }),

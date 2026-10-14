@@ -110,12 +110,17 @@ export class CustomerWorkspaceController {
             this.customerService.countByWorkspace(workspace.id, find),
         ]);
 
+        const summaries = await this.customerService.summarizeConversations(
+            customers.map(c => c.id),
+            workspace.id
+        );
+
         return {
             _pagination: {
                 total,
                 totalPage: this.paginationService.totalPage(total, _limit),
             },
-            data: this.customerService.mapList(customers),
+            data: this.customerService.mapList(customers, summaries),
         };
     }
 
