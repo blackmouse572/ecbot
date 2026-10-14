@@ -1,5 +1,4 @@
 import { FileContentPipe } from 'src/common/file/pipes/file.content.pipe';
-import { ENUM_REQUEST_STATUS_CODE_ERROR } from 'src/common/request/enums/request.status-code.enum';
 import {
     PaginationQuery,
     PaginationQueryFilterContainInArray,
@@ -90,7 +89,13 @@ import { KnowledgeItemFolderService } from '../services/knowledge-item-folder.se
 import { KnowledgeStorageQuotaService } from '../services/knowledge-storage-quota.service';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '../../../common/pagination/enums/pagination.enum';
 import { FileTypePipe } from '../../../common/file/pipes/file.type.pipe';
-import { ENUM_FILE_MIME_DOCUMENT } from '@app/common/file/enums/file.enum';
+import { randomUUID } from 'crypto';
+import {
+    KNOWLEDGE_FILE_MIMES,
+    KNOWLEDGE_MEDIA_IMAGE_MIMES,
+    KNOWLEDGE_UPLOAD_MAX_BYTES,
+} from '../constants/knowledge-upload.constant';
+import { assertKnowledgeUpload } from '../utils/knowledge-upload.util';
 import { AwsS3Entity } from '../../aws/repository/entities/aws.s3.entity';
 import { ENUM_AWS_S3_ACCESSIBILITY } from '../../aws/enums/aws.enum';
 
@@ -246,8 +251,12 @@ export class KnowledgeItemWorkspaceController {
             }
         );
 
-        // If item has attachment, generate signed URL for preview
-        if (item?.attachment) {
+        // If item has attachment, generate signed URL for preview. Media is
+        // already public.
+        if (
+            item?.attachment &&
+            item.type !== ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA
+        ) {
             const signedPreviewUrl = item.attachment
                 ? await this.awsS3Service.presignGetItem(item.attachment.key, {
                       access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE, // Internal doc, use private access
@@ -285,7 +294,7 @@ export class KnowledgeItemWorkspaceController {
         FileInterceptor('file', {
             storage: multer.memoryStorage(),
             limits: {
-                fileSize: 5 * 1024 * 1024,
+                fileSize: KNOWLEDGE_UPLOAD_MAX_BYTES,
                 files: 1,
             },
         })
@@ -299,23 +308,14 @@ export class KnowledgeItemWorkspaceController {
         @Body() dto: KnowledgeItemCreateRequestDto,
         @UploadedFile(
             new FileTypePipe([
-                ENUM_FILE_MIME_DOCUMENT.DOCX,
-                ENUM_FILE_MIME_DOCUMENT.PDF,
-                ENUM_FILE_MIME_DOCUMENT.MD,
-                ENUM_FILE_MIME_DOCUMENT.TXT,
-                ENUM_FILE_MIME_DOCUMENT.HTML,
+                ...KNOWLEDGE_FILE_MIMES,
+                ...KNOWLEDGE_MEDIA_IMAGE_MIMES,
             ]),
             new FileContentPipe()
         )
         file?: Express.Multer.File
     ): Promise<IResponse<DatabaseIdResponseDto>> {
-        // Without this, the item was saved and only failed later at ingest.
-        if (dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE && !file) {
-            throw new UnprocessableEntityException({
-                statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
-                message: 'knowledgeItem.error.fileRequired',
-            });
-        }
+        assertKnowledgeUpload(dto.type, file);
         if (file) {
             await this.knowledgeStorageQuotaService.assertCanStore(
                 workspace.id,
@@ -351,10 +351,14 @@ export class KnowledgeItemWorkspaceController {
                 });
             }
 
-            // Upload file to S3 if type is FILE
+            // Upload file to S3 if type is FILE or MEDIA
             let attachment: AwsS3Entity = undefined;
             let metadata: Record<string, any> = {};
-            if (dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE && file) {
+            const isMedia = dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA;
+            if (
+                file &&
+                (isMedia || dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE)
+            ) {
                 // Sanitize filename using slugify to remove special characters
                 const nameWithoutExt = file.originalname.replace(
                     /\.[^/.]+$/,
@@ -369,7 +373,11 @@ export class KnowledgeItemWorkspaceController {
                 });
                 const safeFileName = `${sanitizedName}.${ext}`;
 
-                const key = `knowledge-items/${workspace.id}/${knowledgeBaseId}/${Date.now()}-${safeFileName}`;
+                // Media is public so the channels can fetch it when the agent
+                // sends it; the random id keeps its address unguessable.
+                const key = isMedia
+                    ? `knowledge-media/${workspace.id}/${knowledgeBaseId}/${randomUUID()}-${safeFileName}`
+                    : `knowledge-items/${workspace.id}/${knowledgeBaseId}/${Date.now()}-${safeFileName}`;
                 this.logger.debug(
                     `Uploading file to S3 with key: ${key}, original filename: ${file.originalname}, sanitized filename: ${safeFileName}`
                 );
@@ -380,9 +388,14 @@ export class KnowledgeItemWorkspaceController {
                             key,
                             file: file.buffer,
                             size: file.size,
+                            // Channels and browsers fetch media by its link,
+                            // so it must say what it is (checked above).
+                            ...(isMedia && { mime: file.mimetype }),
                         },
                         {
-                            access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE,
+                            access: isMedia
+                                ? ENUM_AWS_S3_ACCESSIBILITY.PUBLIC
+                                : ENUM_AWS_S3_ACCESSIBILITY.PRIVATE,
                         }
                     );
 

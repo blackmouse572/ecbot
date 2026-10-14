@@ -203,6 +203,66 @@ class PgVectorStore:
             )
             return int(result.split()[-1]) if result else 0
 
+    async def upsert_media(
+        self,
+        *,
+        knowledge_item_id: str,
+        chatbot_ids: list[str],
+        title: str,
+        description: str,
+        url: str,
+        mime_type: str,
+        embedding: list[float],
+    ) -> None:
+        """One row per media item; re-ingesting the item replaces it."""
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO rag_media (
+                    id, knowledge_item_id, chatbot_ids, title, description, url, mime_type, embedding
+                )
+                VALUES ($1, $2, $3::text[], $4, $5, $6, $7, $8::vector)
+                ON CONFLICT (knowledge_item_id) DO UPDATE SET
+                    chatbot_ids = EXCLUDED.chatbot_ids,
+                    title = EXCLUDED.title,
+                    description = EXCLUDED.description,
+                    url = EXCLUDED.url,
+                    mime_type = EXCLUDED.mime_type,
+                    embedding = EXCLUDED.embedding,
+                    updated_at = now()
+                """,
+                uuid4(),
+                knowledge_item_id,
+                chatbot_ids,
+                title,
+                description,
+                url,
+                mime_type,
+                _vector_literal(embedding),
+            )
+
+    async def delete_media_by_knowledge_item(self, knowledge_item_id: str) -> int:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            result = await conn.execute(
+                "DELETE FROM rag_media WHERE knowledge_item_id = $1", knowledge_item_id
+            )
+            return int(result.split()[-1]) if result else 0
+
+    async def update_media_chatbot_links(self, knowledge_item_id: str, chatbot_ids: list[str]) -> int:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE rag_media SET chatbot_ids = $2::text[], updated_at = now()
+                WHERE knowledge_item_id = $1
+                """,
+                knowledge_item_id,
+                chatbot_ids,
+            )
+            return int(result.split()[-1]) if result else 0
+
     async def list_documents(self, *, limit: int = 20) -> list[dict[str, Any]]:
         pool = await get_pool()
         async with pool.acquire() as conn:

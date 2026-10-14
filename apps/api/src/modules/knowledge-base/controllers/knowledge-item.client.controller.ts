@@ -174,8 +174,12 @@ export class KnowledgeItemClientController {
             });
         }
 
-        // The stored URL is private; hand out a short-lived signed one.
-        if (item.attachment) {
+        // The stored URL is private; hand out a short-lived signed one. Media
+        // is already public.
+        if (
+            item.attachment &&
+            item.type !== ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA
+        ) {
             const signed = await this.awsS3Service.presignGetItem(
                 item.attachment.key,
                 { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
@@ -200,7 +204,10 @@ export class KnowledgeItemClientController {
         @Param('knowledgeBaseId') knowledgeBaseId: string,
         @Body() { folderId, ...dto }: KnowledgeItemCreateRequestDto
     ): Promise<IResponse<KnowledgeItemShortResponseDto>> {
-        if (dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE) {
+        if (
+            dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE ||
+            dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA
+        ) {
             throw new UnprocessableEntityException({
                 statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
                 message: 'knowledgeItem.error.fileRequired',

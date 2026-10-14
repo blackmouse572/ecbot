@@ -43,7 +43,7 @@ describe('KnowledgeItemWorkspaceController.create', () => {
             workspace,
             'kb-1',
             { type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE, title: 'x' } as any,
-            { size: 1234 } as any
+            { size: 1234, mimetype: 'application/pdf' } as any
         );
 
         await expect(result).rejects.toBe(refusal);
@@ -73,6 +73,129 @@ describe('KnowledgeItemWorkspaceController.create', () => {
         });
         expect(em.fork).not.toHaveBeenCalled();
         expect(knowledgeItemService.create).not.toHaveBeenCalled();
+    });
+});
+
+// MEDIA items are images or PDFs the agent sends to customers, so they are
+// stored where the channels can fetch them, and only those types are taken.
+describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
+    const user = { id: 'user-1' } as any;
+    const workspace = { id: 'workspace-1' } as any;
+    const MB = 1024 * 1024;
+    let controller: KnowledgeItemWorkspaceController;
+    let session: Record<string, jest.Mock>;
+    let knowledgeItemService: Record<string, jest.Mock>;
+    let awsS3Service: { putItem: jest.Mock };
+
+    const file = (mimetype: string, size = 1000) =>
+        ({
+            originalname: 'Bánh mì đặc biệt.png',
+            mimetype,
+            size,
+            buffer: Buffer.from('x'),
+        }) as any;
+    const create = (type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE, upload?: any) =>
+        controller.create(
+            user,
+            workspace,
+            'kb-1',
+            { type, title: 'Bánh mì' } as any,
+            upload
+        );
+
+    beforeEach(() => {
+        session = {
+            begin: jest.fn(),
+            commit: jest.fn(),
+            rollback: jest.fn(),
+        };
+        knowledgeItemService = {
+            create: jest
+                .fn()
+                .mockResolvedValue({ id: 'item-1', type: 'MEDIA' }),
+            mapShort: jest.fn().mockReturnValue({ id: 'item-1' }),
+        };
+        awsS3Service = {
+            putItem: jest.fn().mockResolvedValue({
+                bucket: 'public-bucket',
+                key: 'k',
+                completedUrl: 'https://s3/k',
+                cdnUrl: 'https://cdn/k',
+            }),
+        };
+        controller = new KnowledgeItemWorkspaceController(
+            { fork: () => session } as any,
+            knowledgeItemService as any,
+            { findOne: jest.fn().mockResolvedValue({ id: 'kb-1' }) } as any,
+            {} as any,
+            { createByUser: jest.fn() } as any,
+            { findOne: jest.fn().mockResolvedValue(null) } as any,
+            awsS3Service as any,
+            {} as any,
+            { assertCanStore: jest.fn() } as any
+        );
+    });
+
+    it('stores an image in the public bucket, where channels can fetch it', async () => {
+        await create(ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA, file('image/png'));
+
+        const [put, options] = awsS3Service.putItem.mock.calls[0];
+        expect(options).toEqual({ access: 'PUBLIC' });
+        expect(put.mime).toBe('image/png');
+        expect(put.key).toMatch(
+            /^knowledge-media\/workspace-1\/kb-1\/[0-9a-f-]{36}-banh-mi-.+\.png$/
+        );
+        expect(knowledgeItemService.create.mock.calls[0][0]).toMatchObject({
+            type: 'MEDIA',
+            attachment: { cdnUrl: 'https://cdn/k', mime: 'image/png' },
+        });
+    });
+
+    it('takes a PDF menu up to 20MB', async () => {
+        await create(
+            ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA,
+            file('application/pdf', 19 * MB)
+        );
+        expect(awsS3Service.putItem).toHaveBeenCalled();
+    });
+
+    it('ignores a file sent with a TEXT or URL item', async () => {
+        await create(ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT, file('image/png'));
+
+        expect(awsS3Service.putItem).not.toHaveBeenCalled();
+        expect(
+            knowledgeItemService.create.mock.calls[0][0].attachment
+        ).toBeUndefined();
+    });
+
+    it.each([
+        ['a MEDIA item with no file', 'MEDIA', undefined, 'fileRequired'],
+        [
+            'a document as MEDIA',
+            'MEDIA',
+            file('text/plain'),
+            'mediaTypeInvalid',
+        ],
+        ['an image as FILE', 'FILE', file('image/png'), 'fileTypeInvalid'],
+        [
+            'an image over 5MB',
+            'MEDIA',
+            file('image/png', 6 * MB),
+            'fileTooLarge',
+        ],
+        [
+            'a FILE over 5MB',
+            'FILE',
+            file('application/pdf', 6 * MB),
+            'fileTooLarge',
+        ],
+    ])('refuses %s (422)', async (_, type, upload, key) => {
+        const result = create(type as ENUM_KNOWLEDGE_BASE_ITEM_TYPE, upload);
+
+        await expect(result).rejects.toMatchObject({
+            response: { message: `knowledgeItem.error.${key}` },
+        });
+        expect(awsS3Service.putItem).not.toHaveBeenCalled();
     });
 });
 

@@ -15,6 +15,13 @@ export const RAG_INGEST_MAX_ATTEMPTS = 3;
 /** HTTP timeout for apps/api -> apps/ai ingest (embedding can be slow). */
 export const RAG_INGEST_HTTP_TIMEOUT_MS = 120 * 1000;
 
+/**
+ * Media ingest can read a PDF's picture pages with the vision model (a
+ * 30-page photo menu took up to 80s); still under Cloud Tasks' 10 minute
+ * dispatch deadline.
+ */
+export const RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS = 300 * 1000;
+
 /** What failed for a knowledge item; picks the notification the owner gets. */
 export enum ENUM_KNOWLEDGE_FAILURE_KIND {
     INGEST = 'ingest',
