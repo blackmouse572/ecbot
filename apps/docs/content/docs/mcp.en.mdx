@@ -3,7 +3,7 @@ title: Ecbot MCP Server
 description: Connect Claude Code, Codex or Cursor to your workspace with an API key, so an AI assistant can manage your agents, knowledge, chats and customers.
 faq:
   - q: What can the assistant do with my API key?
-    a: What the person who created the key can do in the app, right now. Only the workspace owner can create keys today, so a key can use every tool on this page.
+    a: What the person who created the key can do in the app, right now. Keys are created by the workspace owner or a member with the built-in Admin role, and both can use every tool on this page.
   - q: Is it safe to give an AI assistant my API key?
     a: The key opens your whole workspace, so treat it like a password. Every change is logged under the key creator's name, and you can rotate or delete the key at any time in Settings.
   - q: What can the assistant not do?
@@ -16,7 +16,7 @@ The Ecbot MCP Server lets an AI assistant such as Claude Code, Codex or Cursor w
 
 ## Create an API key
 
-The workspace owner creates API keys. Open the workspace menu at the top of the sidebar, choose **Settings**, then open **API key**:
+The workspace owner and members with the built-in **Admin** role can create API keys. Custom roles can't. Open the workspace menu at the top of the sidebar, choose **Settings** (members choose the workspace name), then open **API key**:
 
 <Screenshot name="api-keys" alt="The API key page in Settings, with the workspace's keys and the Create button">
   <Mark id="nav">**API key** in the settings sidebar lists every key in the workspace.</Mark>
