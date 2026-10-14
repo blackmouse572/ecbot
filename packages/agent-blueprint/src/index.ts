@@ -1,5 +1,6 @@
 export * from "./business-types";
 export * from "./compile-prompt";
+export * from "./followup-rules";
 export * from "./libraries";
 export * from "./migrate-profile";
 export * from "./opening-hours";

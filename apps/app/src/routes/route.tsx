@@ -216,11 +216,14 @@ function getRouteMaps(): RouteObject[] {
                       },
                     };
                   },
-                },
-                {
-                  path: ":id/edit",
-                  ErrorBoundary: ErrorBoundary,
-                  lazy: () => import("./chatbot/chatbot-edit"),
+                  children: [
+                    {
+                      // `edit`, `edit/messages` or `edit/settings`: one
+                      // drawer per card on the detail page.
+                      path: "edit/:section?",
+                      lazy: () => import("./chatbot/chatbot-edit"),
+                    },
+                  ],
                 },
                 {
                   path: ":id/clone",

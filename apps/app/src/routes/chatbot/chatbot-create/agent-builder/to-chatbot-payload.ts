@@ -1,4 +1,4 @@
-import type { AgentProfile } from "@repo/agent-blueprint";
+import { compileFollowupRules, migrateProfile, type AgentProfile } from "@repo/agent-blueprint";
 import type { ChatbotCreateRequestDto } from "@repo/client";
 import { CHATBOT_FORM_DEFAULTS } from "../../constants";
 
@@ -50,5 +50,18 @@ export function toChatbotPayload(
     welcomeMessage: profile.greeting.trim() ? profile.greeting : (base.welcomeMessage ?? ""),
     agentProfile: profile as unknown as Record<string, unknown>,
     extraInstructions,
+    followupRules: followupRulesFor(profile, base),
   } as ChatbotCreateRequestDto;
+}
+
+/**
+ * Default follow-up rules so the agent knows when to check in. They follow the
+ * builder's answers until the owner edits them; edited rules are kept.
+ */
+function followupRulesFor(profile: AgentProfile, base: Partial<ChatbotCreateRequestDto>): string {
+  const current = base.followupRules?.trim();
+  const previousDefault = base.agentProfile
+    ? compileFollowupRules(migrateProfile(base.agentProfile as unknown as AgentProfile))
+    : undefined;
+  return current && current !== previousDefault ? base.followupRules! : compileFollowupRules(profile);
 }

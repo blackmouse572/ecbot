@@ -1,18 +1,12 @@
 import { TipTapEditor } from "@/components/common/tiptap-editor/tiptap-editor";
 import { useUpdateChatbot } from "@/hooks/api/chatbot";
-import { Pencil } from "@medusajs/icons";
-import {
-  Button,
-  Container,
-  Heading,
-  IconButton,
-  Text,
-  toast,
-} from "@medusajs/ui";
+import { Button, Container, Text, toast } from "@medusajs/ui";
 import type { ChatbotGetDetailResponseDto } from "@repo/client";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
+import { ChatbotSectionHeader } from "../chatbot-section-header";
+import { ChatbotPromptDrawer } from "./chatbot-prompt-drawer";
 
 type Props = {
   item: ChatbotGetDetailResponseDto;
@@ -29,6 +23,9 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
     item.extraInstructions ??
     (item.agentProfile ? "" : (item.generalKnowledge ?? ""));
   const [draft, setDraft] = useState(saved);
+  const [promptOpen, setPromptOpen] = useState(false);
+  // Only builder agents compile a prompt beyond what the owner typed here.
+  const compiledPrompt = item.agentProfile ? item.generalKnowledge : null;
 
   const handleSave = async () => {
     try {
@@ -50,21 +47,24 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
 
   return (
     <Container className="divide-y p-0">
-      <div className="flex items-center justify-between p-6 py-4">
-        <Heading>{t("agentBuilder.ui.extraInstructions")}</Heading>
-        {!editing && (
-          <IconButton
-            variant="transparent"
-            size="small"
-            onClick={() => {
-              setDraft(saved);
-              setEditing(true);
-            }}
-          >
-            <Pencil />
-          </IconButton>
-        )}
-      </div>
+      <ChatbotSectionHeader
+        title={t("agentBuilder.ui.extraInstructions")}
+        description={t("agentBuilder.ui.extraInstructionsHint")}
+        actions={
+          !editing && (
+            <Button
+              size="small"
+              variant="secondary"
+              onClick={() => {
+                setDraft(saved);
+                setEditing(true);
+              }}
+            >
+              {t("actions.edit")}
+            </Button>
+          )
+        }
+      />
 
       {editing ? (
         <div className="flex flex-col gap-4">
@@ -90,7 +90,7 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
         </div>
       ) : !saved.trim() ? (
         <Text size="small" className="p-6 py-4 text-ui-fg-muted">
-          {t("agentBuilder.ui.extraInstructionsHint")}
+          {t("chatbot.details.messages.notSet")}
         </Text>
       ) : (
         <div className="scroll-fade-y max-h-96 overflow-y-auto p-6 py-4 prose max-w-none txt-compact-small text-ui-fg-subtle">
@@ -106,6 +106,24 @@ export const ChatbotGeneralKnowledgeSection = ({ item }: Props) => {
           >
             {saved}
           </ReactMarkdown>
+        </div>
+      )}
+
+      {compiledPrompt && (
+        <div className="px-6 py-3">
+          <Button
+            size="small"
+            variant="transparent"
+            className="text-ui-fg-interactive"
+            onClick={() => setPromptOpen(true)}
+          >
+            {t("agentBuilder.ui.showFullPrompt")}
+          </Button>
+          <ChatbotPromptDrawer
+            open={promptOpen}
+            onOpenChange={setPromptOpen}
+            prompt={compiledPrompt}
+          />
         </div>
       )}
     </Container>

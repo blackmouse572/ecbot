@@ -1190,7 +1190,36 @@
       "noAccounts": "Chưa liên kết tài khoản nào",
       "noAccountsDescription": "Liên kết Fanpage Facebook, Zalo OA hoặc kênh khác để agent này bắt đầu trả lời khách hàng.",
       "title": "Chi tiết agent",
-      "generalKnowledge": "Kiến thức chung"
+      "generalKnowledge": "Kiến thức chung",
+      "general": {
+        "channels": "Kênh đang trả lời",
+        "createdAt": "Tạo lúc {{date}}",
+        "updatedAt": "Sửa lần cuối {{date}}"
+      },
+      "profile": {
+        "title": "Hồ sơ agent",
+        "description": "Câu trả lời bạn chọn trong trình tạo. Agent dựa vào đây để trả lời khách.",
+        "showMore_other": "Xem thêm {{count}} nhóm",
+        "showLess": "Thu gọn"
+      },
+      "messages": {
+        "title": "Tin nhắn",
+        "description": "Những câu agent gửi đúng như bạn viết, không do AI soạn.",
+        "editTitle": "Sửa tin nhắn",
+        "notSet": "Chưa đặt",
+        "welcomeWhen": "Khi khách bắt đầu trò chuyện",
+        "fallbackWhen": "Khi agent không tìm được câu trả lời",
+        "handoffWhen": "Khi cuộc trò chuyện được chuyển cho nhân viên"
+      },
+      "settings": {
+        "title": "Cài đặt",
+        "editTitle": "Sửa cài đặt"
+      },
+      "capabilities": {
+        "title": "Năng lực",
+        "description": "Những gì agent tra cứu và làm được ngoài trò chuyện.",
+        "knowledgeDescription": "Tài liệu và trang agent đọc để trả lời."
+      }
     },
     "rag": {
       "title": "Nền tảng kiến thức",

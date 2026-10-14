@@ -238,3 +238,66 @@ export const CHATBOT_FORM_DEFAULTS: Partial<ChatbotFormData> = {
   followupRules: "",
   timezone: null,
 };
+
+/**
+ * The fields each detail-page card edits in its own drawer. A drawer saves
+ * only its card's fields, so it never overwrites what another card shows.
+ */
+export const CHATBOT_GENERAL_FIELDS = [
+  "name",
+  "type",
+  "primaryLanguage",
+  "deferedLanguage",
+  "timezone",
+] as const satisfies readonly (keyof ChatbotFormData)[];
+
+export const CHATBOT_MESSAGE_FIELDS = [
+  "welcomeMessage",
+  "fallbackMessage",
+  "handoffMessage",
+] as const satisfies readonly (keyof ChatbotFormData)[];
+
+export const CHATBOT_SETTINGS_FIELDS = [
+  "typingIndicator",
+  "autoRead",
+  "handoffKeywords",
+  "handoffFallbackThreshold",
+  "guardrailEnabled",
+  "guardrailModelEnabled",
+  "guardrailCustomInstruction",
+  "guardrailEscalateOnBlock",
+  "followupRules",
+  "modelTextName",
+  "modelTemperature",
+  "maxTokens",
+] as const satisfies readonly (keyof ChatbotFormData)[];
+
+/** The hint under each message on the messages card: when it goes out. */
+export const CHATBOT_MESSAGE_WHEN_KEYS = {
+  welcomeMessage: "chatbot.details.messages.welcomeWhen",
+  fallbackMessage: "chatbot.details.messages.fallbackWhen",
+  handoffMessage: "chatbot.details.messages.handoffWhen",
+} as const satisfies Record<(typeof CHATBOT_MESSAGE_FIELDS)[number], string>;
+
+/**
+ * Cards with their own edit drawer, keyed by the `edit/:section` slug. The
+ * general card's drawer is plain `edit`; any other slug closes the drawer.
+ */
+export const CHATBOT_EDIT_SECTIONS = {
+  messages: {
+    path: "edit/messages",
+    titleKey: "chatbot.details.messages.editTitle",
+    fields: CHATBOT_MESSAGE_FIELDS,
+  },
+  settings: {
+    path: "edit/settings",
+    titleKey: "chatbot.details.settings.editTitle",
+    fields: CHATBOT_SETTINGS_FIELDS,
+  },
+} as const satisfies Record<
+  string,
+  { path: `edit/${string}`; titleKey: string; fields: readonly string[] }
+>;
+
+/** Profile groups shown before "Show more": who the agent is and how it sounds. */
+export const CHATBOT_PROFILE_VISIBLE_GROUPS = 2;

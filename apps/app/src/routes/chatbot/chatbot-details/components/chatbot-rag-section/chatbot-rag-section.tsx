@@ -11,7 +11,7 @@ import type {
   ChatbotGetDetailResponseDto,
   KnowledgeItemResponseDto,
 } from "@repo/client";
-import { GeneralSectionSkeleton, NoRecords } from "@repo/ui/common-components";
+import { ListSkeleton, NoRecords } from "@repo/ui/common-components";
 import { IconBooks } from "@tabler/icons-react";
 import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -84,7 +84,7 @@ export function ChatbotRAGSection({ item, className }: ChatbotRAGSectionProps) {
   };
 
   if (isLoading) {
-    return <GeneralSectionSkeleton rowCount={3} />;
+    return <ListSkeleton label={t("general.loading")} className="px-6 py-4" />;
   }
 
   if (items?.length === 0) {

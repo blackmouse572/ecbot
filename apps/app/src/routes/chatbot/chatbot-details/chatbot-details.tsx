@@ -5,16 +5,16 @@ import { SingleColumnPage, TwoColumnPage } from "@repo/ui/layout";
 import { useMemo } from "react";
 import { useLoaderData, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AccountList } from "./components/account-list";
-import { ChatbotGeneralSection } from "./components/chatbot-general-section/chatbot-general-section";
-import { ChatbotRAGSection } from "./components/chatbot-rag-section";
-import { ChatbotSummarySection } from "./components/chatbot-summary-section/chatbot-summary-section";
-import { ChatbotToolsTab } from "../components/chatbot-tools-tab";
-import { ChatbotSkillsTab } from "../components/chatbot-skills-tab";
-import { ChatbotToolInvocations } from "../components/chatbot-tool-invocations";
+import {
+  ChatbotCapabilitiesSection,
+  ChatbotGeneralKnowledgeSection,
+  ChatbotGeneralSection,
+  ChatbotMessagesSection,
+  ChatbotProfileSection,
+  ChatbotSettingsSection,
+} from "./components";
 
 import type { chatbotDetailsLoader } from "./loader";
-import { ChatbotGeneralKnowledgeSection } from "./components/chatbot-general-knowledge/chatbot-general-knowledge";
 import { AIChatCard } from "../../../components/ai-chat/ai-chat-card";
 import { TestChatNotice } from "../../../components/ai-chat/test-chat-notice";
 import { AIChatInput } from "../../../components/ai-chat/ai-chat-input";
@@ -62,26 +62,22 @@ export function ChatbotDetails() {
   }
 
   return (
+    // SingleColumnPage renders the Outlet for each card's edit drawer.
     <SingleColumnPage>
       <TwoColumnPage hasOutlet={false}>
+        {/* Who the agent is and what it says, in the order it was set up. */}
         <TwoColumnPage.Main>
           <ChatbotGeneralSection item={chatbot} />
+          <ChatbotProfileSection item={chatbot} />
           <ChatbotGeneralKnowledgeSection item={chatbot} />
-          <AccountList
+          <ChatbotMessagesSection item={chatbot} />
+          <ChatbotCapabilitiesSection
             item={chatbot}
-            accounts={chatbot.accounts}
-            linkedCount={chatbot.accounts.length}
-          />
-          <ChatbotRAGSection item={chatbot} />
-          <ChatbotToolsTab chatbotId={chatbot.id} workspace={workspaceSlug} />
-          <ChatbotSkillsTab chatbotId={chatbot.id} workspace={workspaceSlug} />
-          <ChatbotToolInvocations
-            chatbotId={chatbot.id}
             workspace={workspaceSlug}
           />
         </TwoColumnPage.Main>
+        {/* Trying it out, then the switches. */}
         <TwoColumnPage.Sidebar>
-          <ChatbotSummarySection item={chatbot} />
           <AIChatCard
             heading={t("chatbot.chat.heading")}
             subheading={<TestChatNotice />}
@@ -92,6 +88,7 @@ export function ChatbotDetails() {
             renderHeaderActions={<ChatbotShareDialog chatbotId={chatbot.id} />}
             showKnowledgeSources
           />
+          <ChatbotSettingsSection item={chatbot} />
         </TwoColumnPage.Sidebar>
       </TwoColumnPage>
     </SingleColumnPage>

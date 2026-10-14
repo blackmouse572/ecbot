@@ -5,16 +5,7 @@ import {
   useUpdateEnabledActions,
   type ChatbotToolListItem,
 } from "@/hooks/api/tools";
-import {
-  Badge,
-  Button,
-  Checkbox,
-  Container,
-  Heading,
-  IconButton,
-  Text,
-  toast,
-} from "@medusajs/ui";
+import { Badge, Button, Checkbox, IconButton, Text, toast } from "@medusajs/ui";
 import { NoRecords } from "@repo/ui/common-components";
 import { Accordion } from "@repo/ui/components";
 import { IconTool, IconTrash } from "@tabler/icons-react";
@@ -47,25 +38,25 @@ export function ChatbotToolsTab({
   let toolsList: React.ReactNode;
   if (isError) {
     toolsList = (
-      <Container className="p-0">
+      <div>
         <SectionHeader onAdd={() => setDrawerOpen(true)} />
         <div className="px-6 py-10 text-center">
           <Text size="small" className="text-ui-fg-subtle">
             {t("tools.chatbotTab.loadError")}
           </Text>
         </div>
-      </Container>
+      </div>
     );
   } else if (isLoading) {
     toolsList = (
-      <Container className="p-0">
+      <div>
         <SectionHeader onAdd={() => setDrawerOpen(true)} />
         <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
-      </Container>
+      </div>
     );
   } else if (!tools || tools.length === 0) {
     toolsList = (
-      <Container className="p-0">
+      <div>
         <SectionHeader onAdd={() => setDrawerOpen(true)} />
         <NoRecords
           title={t("tools.chatbotTab.empty.title")}
@@ -76,11 +67,11 @@ export function ChatbotToolsTab({
           }}
           icon={<IconTool />}
         />
-      </Container>
+      </div>
     );
   } else {
     toolsList = (
-      <Container className="p-0">
+      <div>
         <SectionHeader onAdd={() => setDrawerOpen(true)} />
         <div className="divide-y">
           {tools.map((tool) => (
@@ -92,7 +83,7 @@ export function ChatbotToolsTab({
             />
           ))}
         </div>
-      </Container>
+      </div>
     );
   }
 
@@ -113,15 +104,10 @@ export function ChatbotToolsTab({
 function SectionHeader({ onAdd }: { onAdd: () => void }) {
   const { t } = useTranslation();
   return (
-    <div className="px-6 py-4 border-b flex items-center justify-between">
-      <div>
-        <Heading level="h3" className="text-lg font-semibold">
-          {t("tools.chatbotTab.title")}
-        </Heading>
-        <Text size="small" className="text-ui-fg-subtle">
-          {t("tools.chatbotTab.subtitle")}
-        </Text>
-      </div>
+    <div className="px-6 py-3 border-b flex items-center justify-between gap-4">
+      <Text size="small" className="text-ui-fg-subtle">
+        {t("tools.chatbotTab.subtitle")}
+      </Text>
       <Button size="small" variant="secondary" onClick={onAdd}>
         <PlusMini />
         {t("actions.add")}
