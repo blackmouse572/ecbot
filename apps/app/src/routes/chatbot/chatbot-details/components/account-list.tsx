@@ -3,9 +3,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import { ArrowUpRightOnBox, PlusMini, XMarkMini } from "@medusajs/icons";
 import {
-  clx,
-  Container,
-  Heading,
+  Button,
   IconButton,
   StatusBadge,
   Text,
@@ -74,19 +72,11 @@ const LinkedAccountRow = ({
 
 interface AccountListProps {
   item: Pick<ChatbotGetDetailResponseDto, "id">;
-  title?: string;
-  linkedCount?: number;
   accounts: LinkedAccount[];
-  className?: string;
 }
 
-export function AccountList({
-  title,
-  item,
-  linkedCount,
-  accounts,
-  className = "",
-}: AccountListProps) {
+/** The channels the agent answers on, as a block inside the general card. */
+export function AccountList({ item, accounts }: AccountListProps) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const accountsHref = useLinkedAccountsHref(item.id);
@@ -119,56 +109,55 @@ export function AccountList({
 
   return (
     <>
-      <Container className={clx("divide-y p-0", className)}>
-        <div className="flex items-start justify-between px-6 pt-4 pb-2">
-          <div>
-            <Heading level="h3" className="text-lg font-semibold">
-              {title ?? t("accounts.title")}
-            </Heading>
-            {linkedCount !== undefined && (
-              <Text size="small" className="text-ui-fg-muted">
-                {linkedCount} {t("chatbot.details.linkedAccounts")}
-              </Text>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            <IconButton
-              variant="transparent"
+      <div className="flex flex-col gap-y-3 px-6 py-4">
+        <div className="flex items-center justify-between gap-x-2">
+          <Text size="small" weight="plus" className="text-ui-fg-subtle">
+            {t("chatbot.details.general.channels")}
+          </Text>
+          <div className="flex items-center gap-x-1">
+            <Button
               size="small"
+              variant="transparent"
               onClick={() => setDrawerOpen(true)}
             >
               <PlusMini />
-            </IconButton>
+              {t("actions.linkAccount")}
+            </Button>
             <Link to={accountsHref} state={{ prev: pathname }}>
-              <IconButton variant="transparent" size="small">
+              <IconButton
+                variant="transparent"
+                size="small"
+                aria-label={t("accounts.title")}
+              >
                 <ArrowUpRightOnBox />
               </IconButton>
             </Link>
           </div>
         </div>
-        <div className="px-6 py-4 flex flex-col gap-6">
-          {accounts.length > 0 ? (
-            accounts.map((account) => (
+        {accounts.length > 0 ? (
+          <div className="flex flex-col gap-y-3">
+            {accounts.map((account) => (
               <LinkedAccountRow
                 key={account.id}
                 account={account}
                 busy={unlinkingId === account.id}
                 onUnlink={() => confirmUnlink(account)}
               />
-            ))
-          ) : (
-            <NoRecords
-              title={t("chatbot.details.noAccounts")}
-              message={t("chatbot.details.noAccountsDescription")}
-              action={{
-                onClick: () => setDrawerOpen(true),
-                label: t("actions.linkAccount"),
-              }}
-              icon={<IconPlugConnected />}
-            />
-          )}
-        </div>
-      </Container>
+            ))}
+          </div>
+        ) : (
+          <NoRecords
+            size="small"
+            title={t("chatbot.details.noAccounts")}
+            message={t("chatbot.details.noAccountsDescription")}
+            action={{
+              onClick: () => setDrawerOpen(true),
+              label: t("actions.linkAccount"),
+            }}
+            icon={<IconPlugConnected />}
+          />
+        )}
+      </div>
 
       <AccountLinkDrawer
         isOpen={drawerOpen}

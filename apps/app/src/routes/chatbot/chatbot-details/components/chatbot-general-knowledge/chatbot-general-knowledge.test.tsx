@@ -47,7 +47,7 @@ describe("ChatbotGeneralKnowledgeSection", () => {
     const user = userEvent.setup();
     render(<ChatbotGeneralKnowledgeSection item={item} />);
 
-    await user.click(screen.getByRole("button"));
+    await user.click(screen.getByRole("button", { name: "actions.edit" }));
     await user.clear(screen.getByLabelText("editor"));
     await user.type(screen.getByLabelText("editor"), "new");
     await user.click(screen.getByRole("button", { name: "actions.save" }));
@@ -97,5 +97,27 @@ describe("ChatbotGeneralKnowledgeSection", () => {
       screen.getByText("agentBuilder.ui.extraInstructionsHint"),
     ).toBeInTheDocument();
     expect(screen.queryByText("Compiled prompt")).not.toBeInTheDocument();
+  });
+
+  // The compiled prompt stays one click away, read-only (#159).
+  it("shows the full prompt read-only on request for builder agents", async () => {
+    const user = userEvent.setup();
+    render(
+      <ChatbotGeneralKnowledgeSection
+        item={
+          {
+            ...item,
+            agentProfile: { version: 1 },
+            generalKnowledge: "Compiled prompt",
+          } as unknown as ChatbotGetDetailResponseDto
+        }
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "agentBuilder.ui.showFullPrompt" }),
+    );
+
+    expect(await screen.findByText("Compiled prompt")).toBeInTheDocument();
   });
 });

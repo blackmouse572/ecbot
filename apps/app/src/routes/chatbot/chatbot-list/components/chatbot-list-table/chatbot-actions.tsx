@@ -1,6 +1,6 @@
 import { useDeleteChatbot } from "@/hooks/api";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { PencilSquare, SquareTwoStack, Trash, XCircle } from "@medusajs/icons";
+import { PencilSquare, SquareTwoStack, Trash } from "@medusajs/icons";
 import { toast, usePrompt } from "@medusajs/ui";
 import type { ChatbotGetDetailResponseDto } from "@repo/client";
 import { ActionMenu } from "@repo/ui/common-components";
@@ -9,8 +9,11 @@ import { useNavigate } from "react-router-dom";
 
 export const ChatbotActions = ({
   item,
+  showEdit = true,
 }: {
   item: Pick<ChatbotGetDetailResponseDto, "id" | "name">;
+  /** The detail page has its own Edit button, so its menu leaves it out. */
+  showEdit?: boolean;
 }) => {
   const { t } = useTranslation();
   const deleteChatbot = useDeleteChatbot();
@@ -47,22 +50,21 @@ export const ChatbotActions = ({
       groups={[
         {
           actions: [
-            {
-              icon: <PencilSquare />,
-              label: t("actions.edit"),
-              onClick: () =>
-                navigate(`/${workspaceSlug}/chatbot/${item.id}/edit`),
-            },
+            ...(showEdit
+              ? [
+                  {
+                    icon: <PencilSquare />,
+                    label: t("actions.edit"),
+                    onClick: () =>
+                      navigate(`/${workspaceSlug}/chatbot/${item.id}/edit`),
+                  },
+                ]
+              : []),
             {
               icon: <SquareTwoStack />,
               label: t("chatbot.list.action.clone"),
               onClick: () =>
                 navigate(`/${workspaceSlug}/chatbot/${item.id}/clone`),
-            },
-            {
-              icon: <XCircle />,
-              label: t("chatbot.list.action.stop"),
-              onClick: () => navigate(`/${workspaceSlug}/chatbot/${item.id}`),
             },
           ],
         },

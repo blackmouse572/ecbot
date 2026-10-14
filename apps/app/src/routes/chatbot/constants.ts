@@ -238,3 +238,39 @@ export const CHATBOT_FORM_DEFAULTS: Partial<ChatbotFormData> = {
   followupRules: "",
   timezone: null,
 };
+
+/**
+ * The fields each detail-page card edits in its own drawer. A drawer saves
+ * only its card's fields, so it never overwrites what another card shows.
+ */
+export const CHATBOT_GENERAL_FIELDS = [
+  "name",
+  "type",
+  "primaryLanguage",
+  "deferedLanguage",
+  "timezone",
+] as const satisfies readonly (keyof ChatbotFormData)[];
+
+export const CHATBOT_MESSAGE_FIELDS = [
+  "welcomeMessage",
+  "fallbackMessage",
+  "handoffMessage",
+] as const satisfies readonly (keyof ChatbotFormData)[];
+
+export const CHATBOT_SETTINGS_FIELDS = [
+  "typingIndicator",
+  "autoRead",
+  "handoffKeywords",
+  "handoffFallbackThreshold",
+  "guardrailEnabled",
+  "guardrailModelEnabled",
+  "guardrailCustomInstruction",
+  "guardrailEscalateOnBlock",
+  "followupRules",
+  "modelTextName",
+  "modelTemperature",
+  "maxTokens",
+] as const satisfies readonly (keyof ChatbotFormData)[];
+
+/** Profile groups shown before "Show more": who the agent is and how it sounds. */
+export const CHATBOT_PROFILE_VISIBLE_GROUPS = 2;

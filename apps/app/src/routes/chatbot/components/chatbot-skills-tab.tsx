@@ -4,15 +4,7 @@ import {
   useToggleSkillOnChatbot,
 } from "@/hooks/api/skills";
 import { PlusMini, Trash } from "@medusajs/icons";
-import {
-  Button,
-  Container,
-  Heading,
-  IconButton,
-  Switch,
-  Text,
-  toast,
-} from "@medusajs/ui";
+import { Button, IconButton, Switch, Text, toast } from "@medusajs/ui";
 import { NoRecords } from "@repo/ui/common-components";
 import { IconSparkles } from "@tabler/icons-react";
 import { ROUTES } from "@/routes/constants";
@@ -62,16 +54,11 @@ export function ChatbotSkillsTab({ chatbotId, workspace }: Props) {
   };
 
   return (
-    <Container className="p-0">
-      <div className="px-6 py-4 border-b flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <Heading level="h3" className="text-lg font-semibold">
-            {t("skills.chatbotTab.title")}
-          </Heading>
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("skills.chatbotTab.subtitle")}
-          </Text>
-        </div>
+    <div>
+      <div className="px-6 py-3 border-b flex items-center justify-between gap-4">
+        <Text size="small" className="min-w-0 text-ui-fg-subtle">
+          {t("skills.chatbotTab.subtitle")}
+        </Text>
         <Button
           size="small"
           variant="secondary"
@@ -145,6 +132,6 @@ export function ChatbotSkillsTab({ chatbotId, workspace }: Props) {
         workspace={workspace}
         attachedSkillIds={chatbotSkills.map((s) => s.id)}
       />
-    </Container>
+    </div>
   );
 }

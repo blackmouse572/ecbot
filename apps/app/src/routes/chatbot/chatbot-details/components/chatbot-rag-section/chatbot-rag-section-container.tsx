@@ -1,4 +1,4 @@
-import { Button, clx, Container, Heading } from "@medusajs/ui";
+import { Button, clx, Text } from "@medusajs/ui";
 import type { ChatbotGetDetailResponseDto } from "@repo/client";
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
@@ -20,15 +20,11 @@ export function ChatbotRAGSectionContainer({
   const { t } = useTranslation();
 
   return (
-    <Container
-      className={clx("divide-y p-0 border border-transparent", className)}
-    >
-      <div className="flex items-start justify-between px-6 py-4">
-        <div>
-          <Heading level="h3" className="text-lg font-semibold">
-            {t("knowledgeBase.title")}
-          </Heading>
-        </div>
+    <div className={clx("divide-y", className)}>
+      <div className="flex items-center justify-between gap-4 px-6 py-3">
+        <Text size="small" className="text-ui-fg-subtle">
+          {t("chatbot.details.capabilities.knowledgeDescription")}
+        </Text>
         <div className="flex items-center gap-2">
           {actions}
           {onAddClick && (
@@ -40,6 +36,6 @@ export function ChatbotRAGSectionContainer({
         </div>
       </div>
       {children}
-    </Container>
+    </div>
   );
 }

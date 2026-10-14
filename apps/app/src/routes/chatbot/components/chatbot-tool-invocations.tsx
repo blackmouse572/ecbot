@@ -3,14 +3,7 @@ import {
   useToolInvocations,
   type ToolInvocationResponseDto,
 } from "@/hooks/api/tools";
-import {
-  Badge,
-  Button,
-  Container,
-  Heading,
-  IconButton,
-  Text,
-} from "@medusajs/ui";
+import { Badge, Button, IconButton, Text } from "@medusajs/ui";
 import { Accordion } from "@repo/ui/components";
 import { ChevronDown } from "@medusajs/icons";
 import { NoRecords } from "@repo/ui/common-components";
@@ -47,16 +40,11 @@ export function ChatbotToolInvocations({
   }, [tools]);
 
   return (
-    <Container className="p-0">
+    <div>
       <div className="px-6 py-4 border-b flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <Heading level="h3" className="text-lg font-semibold">
-            {t("tools.invocations.title")}
-          </Heading>
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("tools.invocations.subtitle")}
-          </Text>
-        </div>
+        <Text size="small" className="min-w-0 text-ui-fg-subtle">
+          {t("tools.invocations.subtitle")}
+        </Text>
         <Button
           size="small"
           variant="secondary"
@@ -88,7 +76,7 @@ export function ChatbotToolInvocations({
           ))}
         </div>
       )}
-    </Container>
+    </div>
   );
 }
 

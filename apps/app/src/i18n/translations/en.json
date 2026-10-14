@@ -914,7 +914,37 @@
         "active": "Active"
       },
       "noAccounts": "No linked accounts yet",
-      "noAccountsDescription": "Connect a Facebook page, Zalo OA, or another channel so this agent can start replying to customers."
+      "noAccountsDescription": "Connect a Facebook page, Zalo OA, or another channel so this agent can start replying to customers.",
+      "general": {
+        "channels": "Channels it answers on",
+        "createdAt": "Created {{date}}",
+        "updatedAt": "Last edited {{date}}"
+      },
+      "profile": {
+        "title": "Agent profile",
+        "description": "Your answers from the builder. The agent replies based on them.",
+        "showMore_one": "Show {{count}} more group",
+        "showMore_other": "Show {{count}} more groups",
+        "showLess": "Show less"
+      },
+      "messages": {
+        "title": "Messages",
+        "description": "Set messages the agent sends as written, not composed by AI.",
+        "editTitle": "Edit messages",
+        "notSet": "Not set",
+        "welcomeWhen": "When a customer starts a conversation",
+        "fallbackWhen": "When the agent can't find an answer",
+        "handoffWhen": "When the conversation goes to a person"
+      },
+      "settings": {
+        "title": "Settings",
+        "editTitle": "Edit settings"
+      },
+      "capabilities": {
+        "title": "Capabilities",
+        "description": "What the agent can look up and do besides chatting.",
+        "knowledgeDescription": "Documents and pages the agent reads to answer."
+      }
     },
     "edit": {
       "title": "Edit agent",
@@ -2735,7 +2765,7 @@
         "triggersHandoff": "Triggers handoff",
         "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator.",
         "notifiesTeam": "Notify the team",
-        "notifiesTeamHelp": "When the agent applies this tag, notify the team in the app and by email. The assistant keeps replying.",
+        "notifiesTeamHelp": "When the agent applies this tag, notify the team in the app and by email. The agent keeps replying.",
         "notifiesTeamByHandoff": "A handoff already notifies the team."
       },
       "toast": {
