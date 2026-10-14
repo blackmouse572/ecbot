@@ -122,7 +122,11 @@ export class ConversationWorkspaceController {
         @PaginationQueryFilterInBoolean('botEnabled', [true, false], {
             queryField: 'botEnabled',
         })
-        botEnabled: Record<string, any>
+        botEnabled: Record<string, any>,
+        @PaginationQueryFilterEqual('contactPoint.customer.id', {
+            queryField: 'customer',
+        })
+        customer: Record<string, any>
     ): Promise<IResponsePaging<ConversationGetResponseDto>> {
         const find: Record<string, any> = {
             ..._search,
@@ -131,6 +135,7 @@ export class ConversationWorkspaceController {
             ...account,
             ...chatbot,
             ...botEnabled,
+            ...customer,
         };
 
         const [conversations, total] = await Promise.all([

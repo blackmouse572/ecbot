@@ -2687,6 +2687,11 @@
           "empty": "No contact points yet",
           "emptyHint": "Ways to reach this customer, like a phone number or email, show up here."
         },
+        "conversations": {
+          "title": "Conversations",
+          "empty": "No conversations yet",
+          "current": "Current"
+        },
         "followups": {
           "title": "Followups",
           "empty": "No pending followups",

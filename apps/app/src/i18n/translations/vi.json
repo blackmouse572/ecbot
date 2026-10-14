@@ -2734,6 +2734,11 @@
           "empty": "Chưa có kênh liên hệ",
           "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây."
         },
+        "conversations": {
+          "title": "Cuộc trò chuyện",
+          "empty": "Chưa có cuộc trò chuyện",
+          "current": "Đang xem"
+        },
         "followups": {
           "title": "Nhắc hẹn",
           "empty": "Không có nhắc hẹn đang chờ",
