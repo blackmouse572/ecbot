@@ -21,8 +21,8 @@ async def _chunk_contains(chatbot_id: str, text: str) -> bool:
             """
             SELECT EXISTS (
                 SELECT 1
-                FROM rag_document_chunks c
-                JOIN rag_documents d ON d.id = c.document_id
+                FROM rag.rag_document_chunks c
+                JOIN rag.rag_documents d ON d.id = c.document_id
                 WHERE d.status = 'COMPLETED'
                     AND (d.metadata->'chatbot_ids' ? $1 OR d.metadata->>'chatbot_id' = $1)
                     AND strpos(c.content, $2) > 0
