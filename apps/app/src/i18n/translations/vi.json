@@ -443,7 +443,10 @@
       "progress": "Bước {{current}}/{{total}}",
       "finished": "Xong! Rê chuột lên một mục ở thanh bên để xem mục đó làm gì.",
       "skipped": "Đã bỏ qua hướng dẫn. Rê chuột lên một mục ở thanh bên để xem mục đó làm gì.",
-      "inMenu": "Mở menu, chọn {{page}}"
+      "openMenu": {
+        "title": "Mở menu để bắt đầu",
+        "body": "Bấm vào đây, mình chỉ bạn ba mục hay dùng nhất."
+      }
     },
     "firstConversation": {
       "title": "Cuộc hội thoại đầu tiên đã tới!",

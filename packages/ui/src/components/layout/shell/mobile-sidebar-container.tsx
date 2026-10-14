@@ -22,6 +22,15 @@ export const MobileSidebarContainer = ({
           )}
         />
         <RadixDialog.Content
+          // Guides that point into the open sheet (the first-run tour) mark
+          // their card and backdrop so pressing them keeps the sheet open.
+          onInteractOutside={(event) => {
+            if (
+              event.target instanceof Element &&
+              event.target.closest("[data-keep-sidebar-open]")
+            )
+              event.preventDefault();
+          }}
           className={clx(
             "bg-ui-bg-subtle shadow-elevation-modal fixed inset-y-2 left-2 flex w-full max-w-[304px] flex-col overflow-hidden rounded-lg border-r",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-left-1/2 data-[state=open]:slide-in-from-left-1/2 duration-200",

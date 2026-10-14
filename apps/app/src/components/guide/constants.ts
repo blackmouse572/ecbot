@@ -22,21 +22,19 @@ export const GUIDE_BACKGROUND: Record<GuideFeature, string> = {
 export const CELEBRATION_BACKGROUND = BACKGROUNDS.sunset;
 
 /** The tour after the first agent goes live: each step points at the
- * sidebar link of a page the owner needs next. `label` is the link's text. */
+ * sidebar link of a page the owner needs next. */
 export const TOUR_STEPS = [
   {
     feature: "conversations",
     route: ROUTES.Conversations,
-    label: "conversations.title",
     icon: ChatBubbleLeftRight,
   },
   {
     feature: "knowledge",
     route: ROUTES.KnowledgeBase,
-    label: "knowledgeBase.title",
     icon: FolderOpen,
   },
-  { feature: "tools", route: ROUTES.Tools, label: "tools.title", icon: Puzzle },
+  { feature: "tools", route: ROUTES.Tools, icon: Puzzle },
 ] as const;
 
 export const GUIDE_STORAGE_PREFIX = "ecbot.guide";

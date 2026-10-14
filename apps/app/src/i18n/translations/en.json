@@ -417,7 +417,10 @@
       "progress": "Step {{current}} of {{total}}",
       "finished": "All set. Rest the pointer on a sidebar item to see what it does.",
       "skipped": "Tour skipped. Rest the pointer on a sidebar item to see what it does.",
-      "inMenu": "Open the menu, then {{page}}"
+      "openMenu": {
+        "title": "Open the menu to start",
+        "body": "Tap here and we will show you the three pages you will use most."
+      }
     },
     "firstConversation": {
       "title": "Your first conversation is here!",

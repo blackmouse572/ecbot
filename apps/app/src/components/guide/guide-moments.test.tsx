@@ -102,19 +102,39 @@ describe("GuideMoments", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("points at the menu button while the sidebar is folded away", () => {
-    const menu = document.createElement("button");
+  it("waits for the menu to open on a folded sidebar", async () => {
+    const visible = <T extends HTMLElement>(el: T) => {
+      el.getBoundingClientRect = () => new DOMRect(0, 0, 28, 28);
+      return el;
+    };
+    const menu = visible(document.createElement("button"));
     menu.setAttribute("data-sidebar-toggle", "");
-    menu.getBoundingClientRect = () => new DOMRect(0, 0, 28, 28);
     document.body.append(menu);
     localStorage.setItem("ecbot.guide.tour.ws1", "pending");
     data.active = 1;
     renderAt();
 
     expect(screen.getByRole("dialog")).toHaveTextContent(
-      "Open the menu, then Conversations",
+      "Open the menu to start",
     );
+    expect(
+      screen.queryByRole("button", { name: "Next" }),
+    ).not.toBeInTheDocument();
+
+    const aside = document.createElement("aside");
+    for (const route of ["conversations", "knowledge-base", "tools"]) {
+      const link = visible(document.createElement("a"));
+      link.href = `/kunmart/${route}`;
+      aside.append(link);
+    }
+    menu.addEventListener("click", () => document.body.append(aside));
+    fireEvent.click(menu);
+
+    expect(
+      await screen.findByText("Customer messages land here"),
+    ).toBeInTheDocument();
     menu.remove();
+    aside.remove();
   });
 
   it("waits while the builder is open over the page", () => {

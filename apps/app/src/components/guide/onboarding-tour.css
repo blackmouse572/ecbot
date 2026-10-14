@@ -10,6 +10,8 @@
   width: 300px;
   max-width: calc(100vw - 32px);
   overflow: visible;
+  /* The phone sidebar sheet turns off pointer events on the page behind it. */
+  pointer-events: auto;
 }
 
 .ecbot-tour .ecbot-tour-art {
