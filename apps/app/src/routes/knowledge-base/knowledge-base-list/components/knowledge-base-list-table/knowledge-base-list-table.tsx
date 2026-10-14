@@ -22,6 +22,7 @@ import { KnowledgeItemTitleCell } from "./knowledge-item-title-cell";
 import { KnowledgeItemStatusCell } from "./knowledge-item-status-cell";
 import { KnowledgeItemTagListCell } from "./knowledge-item-tag-list-cell";
 import { KnowledgeBaseActions } from "./knowledge-base-actions";
+import { KnowledgeBaseBatchTagDrawer } from "./knowledge-base-batch-tag-drawer";
 import { CHATBOT_CONSTANTS } from "../../../../chatbot/constants";
 import type {
   KnowledgeBaseResponseDto,
@@ -94,7 +95,8 @@ export const KnowledgeBaseListTable = () => {
     rowSelection: { state: rowSelection, updater: setRowSelection },
   });
 
-  const commands = useCommands(firstKB?.id ?? "");
+  const [tagTargetIds, setTagTargetIds] = useState<string[] | null>(null);
+  const commands = useCommands(firstKB?.id ?? "", setTagTargetIds);
 
   if (kbsError || itemsError) {
     throw error;
@@ -155,6 +157,13 @@ export const KnowledgeBaseListTable = () => {
           illustration: <FeatureArt feature="knowledge" icon={<IconBooks />} />,
         }}
       />
+      {firstKB && (
+        <KnowledgeBaseBatchTagDrawer
+          knowledgeBaseId={firstKB.id}
+          itemIds={tagTargetIds}
+          onClose={() => setTagTargetIds(null)}
+        />
+      )}
       <Outlet />
     </Container>
   );
@@ -163,7 +172,10 @@ export const KnowledgeBaseListTable = () => {
 // Bulk actions shown in the command bar once rows are selected.
 // The backend decides which items are eligible to process and reports the rest
 // as failures, so no client-side status filtering here.
-const useCommands = (knowledgeBaseId: string) => {
+const useCommands = (
+  knowledgeBaseId: string,
+  onAddTags: (ids: string[]) => void,
+) => {
   const { t } = useTranslation();
   const prompt = usePrompt();
   const notifyBatchResult = useBatchResultToast();
@@ -194,6 +206,13 @@ const useCommands = (knowledgeBaseId: string) => {
         },
       },
       {
+        label: t("knowledgeBase.batch.tag.label"),
+        shortcut: "t",
+        action: async (selection: Record<string, boolean>) => {
+          onAddTags(Object.keys(selection));
+        },
+      },
+      {
         label: t("knowledgeBase.batch.process.label"),
         shortcut: "p",
         action: async (selection: Record<string, boolean>) => {
@@ -203,7 +222,7 @@ const useCommands = (knowledgeBaseId: string) => {
         },
       },
     ],
-    [t, prompt, notifyBatchResult, batchDelete, batchProcess],
+    [t, prompt, notifyBatchResult, batchDelete, batchProcess, onAddTags],
   );
 };
 

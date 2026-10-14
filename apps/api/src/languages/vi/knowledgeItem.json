@@ -6,6 +6,8 @@
     "delete": "Mục kiến thức được xóa thành công.",
     "batchDelete": "Đã xóa các knowledge item.",
     "batchProcess": "Đã đưa các knowledge item vào hàng đợi xử lý.",
+    "batchTag": "Đã thêm thẻ cho các knowledge item.",
+    "batchLink": "Đã liên kết các knowledge item với chatbot.",
     "error": {
         "notFound": "Không tìm thấy mục kiến thức.",
         "processing": "Item này đang được xử lý.",

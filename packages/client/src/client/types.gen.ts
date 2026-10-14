@@ -4591,6 +4591,17 @@ export type KnowledgeItemUpdateRequestDto = {
     };
 };
 
+export type KnowledgeItemBatchTagRequestDto = {
+    /**
+     * Ids to act on (max 100).
+     */
+    ids: Array<string>;
+    /**
+     * Tags to add to every item (max 20). Tags an item already has are kept as they are.
+     */
+    tags: Array<string>;
+};
+
 export type KnowledgeItemFolderResponseDto = {
     /**
      * Folder ID
@@ -22608,6 +22619,96 @@ export type KnowledgeItemWorkspaceControllerBatchProcessV1Responses = {
 
 export type KnowledgeItemWorkspaceControllerBatchProcessV1Response = KnowledgeItemWorkspaceControllerBatchProcessV1Responses[keyof KnowledgeItemWorkspaceControllerBatchProcessV1Responses];
 
+export type KnowledgeItemWorkspaceControllerBatchTagV1Data = {
+    body: KnowledgeItemBatchTagRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/knowledge-bases/{knowledgeBaseId}/items/batch/tag';
+};
+
+export type KnowledgeItemWorkspaceControllerBatchTagV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemWorkspaceControllerBatchTagV1Error = KnowledgeItemWorkspaceControllerBatchTagV1Errors[keyof KnowledgeItemWorkspaceControllerBatchTagV1Errors];
+
+export type KnowledgeItemWorkspaceControllerBatchTagV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: BatchResultResponseDto;
+    };
+};
+
+export type KnowledgeItemWorkspaceControllerBatchTagV1Response = KnowledgeItemWorkspaceControllerBatchTagV1Responses[keyof KnowledgeItemWorkspaceControllerBatchTagV1Responses];
+
 export type KnowledgeItemWorkspaceControllerDeleteV1Data = {
     body?: never;
     headers?: {
@@ -23387,6 +23488,94 @@ export type ChatbotKnowledgeItemWorkspaceControllerListV1Responses = {
 };
 
 export type ChatbotKnowledgeItemWorkspaceControllerListV1Response = ChatbotKnowledgeItemWorkspaceControllerListV1Responses[keyof ChatbotKnowledgeItemWorkspaceControllerListV1Responses];
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Data = {
+    body: BatchIdsRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/chatbots/{chatbotId}/knowledge-items/batch/link';
+};
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Error = ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Errors[keyof ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Errors];
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: BatchResultResponseDto;
+    };
+};
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Response = ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses[keyof ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses];
 
 export type ChatbotKnowledgeItemWorkspaceControllerLinkV1Data = {
     body?: never;

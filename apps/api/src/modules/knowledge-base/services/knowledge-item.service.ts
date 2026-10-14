@@ -262,6 +262,32 @@ export class KnowledgeItemService {
         await this.em.persistAndFlush(item);
     }
 
+    /**
+     * Add `tags` to an item without touching the tags it already has (the
+     * single-item `update` replaces them all).
+     */
+    async addTags(
+        id: string,
+        tags: string[],
+        options?: IDatabaseCreateOptions
+    ): Promise<void> {
+        const em = options?.em ?? this.em;
+
+        for (const tag of tags) {
+            await this.knowledgeItemTagService.findOneOrCreate(
+                { knowledgeItem: id, tag },
+                { em }
+            );
+        }
+
+        const item = await em.findOneOrFail(KnowledgeItemEntity, id);
+        item.updatedBy = options?.actionBy
+            ? em.getReference('UserEntity', options.actionBy)
+            : item.updatedBy;
+        item.updatedAt = new Date();
+        await em.persist(item).flush();
+    }
+
     async softDelete(
         id: string,
         options?: IDatabaseSoftDeleteOptions

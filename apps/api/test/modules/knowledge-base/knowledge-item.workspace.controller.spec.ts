@@ -93,3 +93,47 @@ describe('KnowledgeItemWorkspaceController delete routes', () => {
         }
     );
 });
+
+describe('KnowledgeItemWorkspaceController.batchTag', () => {
+    it('adds the tags to each item and reports a missing one as failed', async () => {
+        const session = {
+            begin: jest.fn(),
+            commit: jest.fn(),
+            rollback: jest.fn(),
+        };
+        const service = {
+            findOne: jest.fn(async ({ id }: { id: string }) =>
+                id === 'a' ? { id: 'a', type: 'TEXT', title: 'A' } : null
+            ),
+            addTags: jest.fn().mockResolvedValue(undefined),
+        };
+        const kbService = {
+            findOne: jest.fn().mockResolvedValue({ id: 'kb' }),
+        };
+        const controller = new KnowledgeItemWorkspaceController(
+            { fork: () => session } as any,
+            service as any,
+            kbService as any,
+            {} as any,
+            { createByUser: jest.fn() } as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any
+        );
+
+        const { data } = await controller.batchTag(
+            { id: 'u' } as any,
+            { id: 'w' } as any,
+            'kb',
+            { ids: ['a', 'b'], tags: ['FAQ'] }
+        );
+
+        expect(data.succeeded).toEqual(['a']);
+        expect(data.failed.map(f => f.id)).toEqual(['b']);
+        expect(service.addTags).toHaveBeenCalledWith('a', ['FAQ'], {
+            em: session,
+            actionBy: 'u',
+        });
+    });
+});

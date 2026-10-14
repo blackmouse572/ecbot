@@ -8,6 +8,8 @@ import {
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
+import { BatchIdsRequestDto } from 'src/common/batch/dtos/batch.request.dto';
+import { BatchResultResponseDto } from 'src/common/batch/dtos/batch.response.dto';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { KnowledgeBaseDocParamsKnowledgeBaseId } from '../constants/knowledge-base.doc.constant';
 import { ChatbotKnowledgeItemResponseDto } from '../dtos/response/chatbot-knowledge-item.response.dto';
@@ -89,6 +91,30 @@ export function ChatbotKnowledgeItemUnlinkDoc(): MethodDecorator {
         }),
         DocGuard({ policy: true }),
         DocResponse<void>('chatbotKnowledgeItem.unlink', {
+            httpStatus: HttpStatus.OK,
+        })
+    );
+}
+
+export function ChatbotKnowledgeItemBatchLinkDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'link several knowledge items to a chatbot',
+            description:
+                'Link every item in `ids` to the chatbot. Each id is processed independently, so the response reports which ones succeeded (items already linked are reported in `failed`) and which ones failed.',
+        }),
+        DocRequest({
+            dto: BatchIdsRequestDto,
+            params: [...WorkspaceDocParamsId, ...ChatbotDocParamsId],
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocGuard({ policy: true }),
+        DocResponse<BatchResultResponseDto>('knowledgeItem.batchLink', {
+            dto: BatchResultResponseDto,
             httpStatus: HttpStatus.OK,
         })
     );

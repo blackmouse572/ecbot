@@ -18,6 +18,8 @@ import {
   type ChatbotKnowledgeItemResponseDto,
   knowledgeItemWorkspaceControllerBatchDeleteV1,
   knowledgeItemWorkspaceControllerBatchProcessV1,
+  knowledgeItemWorkspaceControllerBatchTagV1,
+  chatbotKnowledgeItemWorkspaceControllerBatchLinkV1,
   knowledgeItemWorkspaceControllerDeleteV1,
   knowledgeItemWorkspaceControllerCreateV1,
   type KnowledgeItemCreateRequestDto,
@@ -32,6 +34,7 @@ import {
   type MutationOptions,
 } from "@tanstack/react-query";
 import { useWorkspace } from "./workspace";
+import { knowledgeTagQueryKeys } from "./knowledge-tag";
 
 export const KNOWLEDGE_BASE_QUERY_KEY = "knowledge-base" as const;
 export const knowledgeBaseQueryKeys = {
@@ -243,6 +246,99 @@ export const useBatchProcessKnowledgeItems = (knowledgebaseId: string) => {
       });
     },
   });
+};
+
+// The API takes at most 100 ids per batch request.
+const BATCH_MAX_IDS = 100;
+
+/** Run `request` over `ids` in API-sized chunks and merge the results. */
+const runChunked = async (
+  ids: string[],
+  request: (chunk: string[]) => Promise<BatchResult>,
+): Promise<BatchResult> => {
+  const merged: BatchResult = { succeeded: [], failed: [] };
+  for (let i = 0; i < ids.length; i += BATCH_MAX_IDS) {
+    const result = await request(ids.slice(i, i + BATCH_MAX_IDS));
+    merged.succeeded.push(...result.succeeded);
+    merged.failed.push(...result.failed);
+  }
+  return merged;
+};
+
+/** Adds `tags` to every item in `ids`, keeping the tags they already have. */
+export const useBatchTagKnowledgeItems = (knowledgebaseId: string) => {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  return useMutation<BatchResult, Error, { ids: string[]; tags: string[] }>({
+    mutationKey: ["batch-tag-knowledge-items"] as const,
+    mutationFn: ({ ids, tags }) =>
+      runChunked(ids, (chunk) =>
+        knowledgeItemWorkspaceControllerBatchTagV1({
+          path: {
+            knowledgeBaseId: knowledgebaseId,
+            workspace: workspace!.slug,
+          },
+          body: { ids: chunk, tags },
+        }).then((res) => (res.data as A)?.data as BatchResult),
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: knowledgeBaseQueryKeys.items(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: knowledgeTagQueryKeys.all,
+      });
+    },
+  });
+};
+
+/** Links many knowledge items to one agent in as few requests as possible. */
+export const useBatchLinkKnowledgeItemsToChatbot = (chatbotId: string) => {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  return useMutation<BatchResult, Error, string[]>({
+    mutationKey: ["batch-link-knowledge-items", chatbotId] as const,
+    mutationFn: (ids) =>
+      runChunked(ids, (chunk) =>
+        chatbotKnowledgeItemWorkspaceControllerBatchLinkV1({
+          path: { workspace: workspace!.slug, chatbotId },
+          body: { ids: chunk },
+        }).then((res) => (res.data as A)?.data as BatchResult),
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: chatbotKnowledgeItemQueryKeys.lists(),
+      });
+    },
+  });
+};
+
+/**
+ * Ids of every item matching `filters` (search, tags), across all pages, for
+ * "select all matching". Reads the list endpoint at its max page size.
+ */
+export const useFetchAllKnowledgeItemIds = (knowledgeBaseId: string) => {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  return async (filters: Record<string, A>): Promise<string[]> => {
+    const ids: string[] = [];
+    for (let page = 1; ; page += 1) {
+      const res = await queryClient.fetchQuery({
+        ...knowledgeItemListQueryOptions(workspace!.slug, knowledgeBaseId, {
+          ...filters,
+          perPage: BATCH_MAX_IDS,
+          page,
+        }),
+        staleTime: 0,
+      });
+      const items = (res?.data ?? []) as KnowledgeItemResponseDto[];
+      ids.push(...items.map((item) => item.id));
+      if (items.length < BATCH_MAX_IDS) return ids;
+    }
+  };
 };
 
 export const useDeleteKnowledgeItem = (knowledgebaseId: string) => {

@@ -111,3 +111,37 @@ describe('KnowledgeItemService.softDelete', () => {
         warn.mockRestore();
     });
 });
+
+describe('KnowledgeItemService.addTags', () => {
+    it('adds each tag through findOneOrCreate and leaves existing tags alone', async () => {
+        const item = { id: 'item-1' } as any;
+        const em = {
+            findOneOrFail: jest.fn().mockResolvedValue(item),
+            getReference: jest.fn(() => 'user-ref'),
+            persist: jest.fn(() => ({ flush: jest.fn() })),
+        } as unknown as EntityManager;
+        const tagService = { findOneOrCreate: jest.fn() };
+        type Ctor = ConstructorParameters<typeof KnowledgeItemService>;
+        const service = new KnowledgeItemService(
+            em,
+            undefined as unknown as Ctor[1],
+            undefined as unknown as Ctor[2],
+            undefined as unknown as Ctor[3],
+            tagService as unknown as Ctor[4],
+            undefined as unknown as Ctor[5],
+            undefined as unknown as Ctor[6]
+        );
+
+        await service.addTags('item-1', ['FAQ', 'menu'], {
+            em,
+            actionBy: 'user-1',
+        });
+
+        expect(tagService.findOneOrCreate).toHaveBeenCalledTimes(2);
+        expect(tagService.findOneOrCreate).toHaveBeenCalledWith(
+            { knowledgeItem: 'item-1', tag: 'menu' },
+            { em }
+        );
+        expect(item.updatedBy).toBe('user-ref');
+    });
+});

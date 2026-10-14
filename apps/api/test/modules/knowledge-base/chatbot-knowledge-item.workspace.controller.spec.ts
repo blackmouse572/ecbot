@@ -93,3 +93,64 @@ describe('ChatbotKnowledgeItemWorkspaceController.link', () => {
         );
     });
 });
+
+describe('ChatbotKnowledgeItemWorkspaceController.batchLink', () => {
+    const user = { id: 'user-1' } as any;
+    const workspace = { id: 'workspace-1' } as any;
+
+    const build = (items: Record<string, any>) => {
+        const chatbotService = {
+            findOne: jest.fn().mockResolvedValue({ id: 'chatbot-1' }),
+        };
+        const service = {
+            linkItem: jest.fn().mockResolvedValue({ id: 'link' }),
+            syncChatbotLinks: jest.fn().mockResolvedValue(undefined),
+        };
+        const session = {
+            begin: jest.fn(),
+            commit: jest.fn(),
+            rollback: jest.fn(),
+            getRepository: jest.fn(() => ({
+                findOne: jest.fn(async ({ id }: { id: string }) => items[id]),
+            })),
+        };
+        const controller = new ChatbotKnowledgeItemWorkspaceController(
+            { fork: () => session } as any,
+            chatbotService as any,
+            {} as any,
+            service as any,
+            {} as any,
+            { createByUser: jest.fn() } as any
+        );
+        return { controller, service, chatbotService };
+    };
+
+    it('links each item once and reports foreign items as failed', async () => {
+        const { controller, service } = build({
+            a: { id: 'a', knowledgeBase: { workspace: { id: 'workspace-1' } } },
+            b: { id: 'b', knowledgeBase: { workspace: { id: 'other' } } },
+        });
+
+        const { data } = await controller.batchLink(
+            user,
+            workspace,
+            'chatbot-1',
+            { ids: ['a', 'b'] }
+        );
+
+        expect(data.succeeded).toEqual(['a']);
+        expect(data.failed.map(f => f.id)).toEqual(['b']);
+        expect(service.linkItem).toHaveBeenCalledTimes(1);
+        expect(service.syncChatbotLinks).toHaveBeenCalledTimes(1);
+        expect(service.syncChatbotLinks).toHaveBeenCalledWith('a');
+    });
+
+    it('404s when the chatbot is not in the workspace', async () => {
+        const { controller, chatbotService } = build({});
+        chatbotService.findOne.mockResolvedValue(null);
+
+        await expect(
+            controller.batchLink(user, workspace, 'nope', { ids: ['a'] })
+        ).rejects.toThrow(NotFoundException);
+    });
+});

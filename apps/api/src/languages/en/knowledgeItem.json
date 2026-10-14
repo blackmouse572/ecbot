@@ -6,6 +6,8 @@
     "delete": "Knowledge item deleted successfully.",
     "batchDelete": "Knowledge items deleted successfully.",
     "batchProcess": "Knowledge items queued for processing.",
+    "batchTag": "Tags added to the knowledge items.",
+    "batchLink": "Knowledge items linked to the chatbot.",
     "error": {
         "notFound": "Knowledge item not found.",
         "processing": "This item is already being processed.",
