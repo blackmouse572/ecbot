@@ -19,7 +19,9 @@ router = APIRouter(
 )
 rag_ingest_service = RAGIngestService()
 rag_retrieval_service = RAGRetrievalService()
-media_ingest_service = MediaIngestService(store=rag_ingest_service.store)
+media_ingest_service = MediaIngestService(
+    store=rag_ingest_service.store, ingest_text=rag_ingest_service.ingest_text
+)
 
 
 @router.post("/ingest/upload")

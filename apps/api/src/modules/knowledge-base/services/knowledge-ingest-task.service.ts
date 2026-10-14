@@ -20,6 +20,7 @@ import {
     ENUM_KNOWLEDGE_FAILURE_KIND,
     ENUM_RAG_INGEST_PROCESS,
     RAG_INGEST_HTTP_TIMEOUT_MS,
+    RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS,
     RAG_INGEST_MAX_ATTEMPTS,
     RAG_INGEST_NO_TOKENS_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
@@ -351,7 +352,7 @@ export class KnowledgeIngestTaskService {
                 `${this.aiBackendUrl}/api/rag/ingest/media`,
                 form,
                 {
-                    timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
+                    timeout: RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS,
                     headers: await this.authHeaders(form.getHeaders()),
                     maxBodyLength: Infinity,
                 }

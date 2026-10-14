@@ -5,6 +5,7 @@ import {
     ENUM_RAG_INGEST_PROCESS,
     RAG_INGEST_HTTP_TIMEOUT_MS,
     RAG_INGEST_MAX_ATTEMPTS,
+    RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS,
     RAG_INGEST_NO_TOKENS_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
     ENUM_KNOWLEDGE_FAILURE_KIND,
@@ -324,8 +325,10 @@ describe('KnowledgeIngestTaskService', () => {
                 'knowledge-media/ws/kb/b.png',
                 { access: ENUM_AWS_S3_ACCESSIBILITY.PUBLIC }
             );
-            const [url, form] = httpPost.mock.calls[0];
+            const [url, form, config] = httpPost.mock.calls[0];
             expect(url).toBe('http://ai.example.test/api/rag/ingest/media');
+            // A PDF's picture pages are read by the vision model: slower.
+            expect(config.timeout).toBe(RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS);
             const body = form.getBuffer().toString();
             expect(body).toContain('name="url"\r\n\r\nhttps://cdn/b.png');
             expect(body).toContain('name="chatbot_ids"\r\n\r\ncb-1');

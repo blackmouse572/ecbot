@@ -3,6 +3,7 @@ knowledge chunks: one row per item, embedded from its title and description,
 so they never take a place in the chunk retrieval."""
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -59,18 +60,104 @@ async def test_a_given_description_skips_the_vision_call(monkeypatch):
     assert result.description == "Áo thun trắng cổ tròn"
 
 
-async def test_a_pdf_is_described_by_the_start_of_its_text(monkeypatch):
-    service, _, embed = _service()
-    monkeypatch.setattr(media, "_pdf_text", lambda content: "Drinks menu\nPeach tea 45.000\n" + "x" * 5000)
+def _pdf_service(monkeypatch, pages, read=None):
+    service, store, embed = _service()
+    service._ingest_text = AsyncMock(return_value=SimpleNamespace(usage=None))
+    monkeypatch.setattr(media, "_pdf_pages", lambda content: pages)
+    if read is not None:
+        monkeypatch.setattr(media, "read_pdf_page_images", read)
+    return service, store, embed
 
-    result = await service.ingest(
+
+async def _ingest_pdf(service, description=None):
+    return await service.ingest(
         content=b"%PDF-1.4", mime_type="application/pdf", knowledge_item_id="item-2",
-        chatbot_ids=[], title="Menu do uong", url="https://cdn/m.pdf", description=None,
+        chatbot_ids=["c1"], title="Menu Moc", url="https://cdn/m.pdf", description=description,
     )
+
+
+async def test_a_pdf_is_described_by_the_start_of_its_text(monkeypatch):
+    pages = [("Drinks menu\nPeach tea 45.000\n" + "x" * 5000, None)]
+    service, _, embed = _pdf_service(monkeypatch, pages)
+
+    result = await _ingest_pdf(service)
 
     assert result.description.startswith("Drinks menu\nPeach tea 45.000")
     assert len(result.description) <= media.MEDIA_DESCRIPTION_MAX_CHARS
-    assert embed.await_args.args[0][0].startswith("Menu do uong\nDrinks menu")
+    assert embed.await_args.args[0][0].startswith("Menu Moc\nDrinks menu")
+
+
+async def test_pdf_pages_that_are_pictures_are_read_by_the_vision_model(monkeypatch):
+    # A restaurant menu: an intro page with text, then dishes as photos.
+    pages = [("Welcome to Moc", None), ("", b"img-2"), ("", b"img-3")]
+    read = AsyncMock(return_value=(
+        ["Canh ga chien mam - 69.000", "Cua gach - 75.000/100gr"],
+        TokenUsage(input_tokens=900, output_tokens=40, total_tokens=940),
+    ))
+    service, _, _ = _pdf_service(monkeypatch, pages, read)
+
+    result = await _ingest_pdf(service)
+
+    assert read.await_args.args[0] == [b"img-2", b"img-3"]
+    assert "Canh ga chien mam - 69.000" in result.description
+    # Page order is kept.
+    assert result.description.index("Welcome") < result.description.index("Canh ga")
+    assert result.usage.total_tokens == 947
+
+
+async def test_the_whole_pdf_text_goes_to_the_knowledge_chunks(monkeypatch):
+    # The description is capped, so a long menu is also chunked for retrieval.
+    pages = [("Welcome to Moc", None), ("", b"img-2")]
+    read = AsyncMock(return_value=(["Canh ga chien mam - 69.000"], None))
+    service, _, _ = _pdf_service(monkeypatch, pages, read)
+
+    await _ingest_pdf(service, description="Thuc don chinh")
+
+    kwargs = service._ingest_text.await_args.kwargs
+    assert kwargs["knowledge_item_id"] == "item-2"
+    assert kwargs["chatbot_ids"] == ["c1"]
+    assert kwargs["title"] == "Menu Moc"
+    assert kwargs["text"] == "Welcome to Moc\n\nCanh ga chien mam - 69.000"
+
+
+async def test_an_image_media_item_adds_no_knowledge_chunks(monkeypatch):
+    service, _, _ = _service()
+    service._ingest_text = AsyncMock()
+    monkeypatch.setattr(media, "describe_media_image", AsyncMock(return_value=("A banner.", None)))
+
+    await service.ingest(
+        content=PNG, mime_type="image/png", knowledge_item_id="item-1",
+        chatbot_ids=[], title="Banner", url="https://cdn/b.png", description=None,
+    )
+
+    service._ingest_text.assert_not_awaited()
+
+
+async def test_page_images_are_read_in_parallel_batches(monkeypatch):
+    calls = []
+
+    async def fake_read(batch):
+        calls.append(batch)
+        return f"read {len(batch)}", TokenUsage(input_tokens=1, output_tokens=1, total_tokens=2)
+
+    monkeypatch.setattr(media, "_read_page_batch", fake_read)
+
+    texts, usage = await media.read_pdf_page_images([b"p"] * 19)
+
+    assert [len(b) for b in calls] == [8, 8, 3]
+    assert texts == ["read 8", "read 8", "read 3"]
+    assert usage.total_tokens == 6
+
+
+async def test_a_batch_the_model_cannot_read_is_skipped(monkeypatch):
+    async def fake_read(batch):
+        return (None, None) if batch[0] == b"bad" else ("ok", None)
+
+    monkeypatch.setattr(media, "_read_page_batch", fake_read)
+
+    texts, _ = await media.read_pdf_page_images([b"bad"] * 8 + [b"good"])
+
+    assert texts == ["ok"]
 
 
 async def test_an_image_the_model_cannot_read_still_indexes_by_title(monkeypatch):
@@ -119,8 +206,13 @@ async def test_ingest_media_endpoint_returns_the_description(monkeypatch):
     assert fake.await_args.kwargs["description"] is None
 
 
-def test_pdf_text_drops_page_markers(monkeypatch):
-    doc = type("Doc", (), {"page_content": "[Page 1]\nMenu do uong\nTra dao 45.000\n[Page 2]\nCa phe 30.000"})()
-    monkeypatch.setattr(media, "load_document", lambda *a, **k: doc)
+def test_pdf_pages_keep_text_and_render_pages_without_it():
+    import fitz
 
-    assert media._pdf_text(b"%PDF") == "Menu do uong\nTra dao 45.000\nCa phe 30.000"
+    doc = fitz.open()
+    doc.new_page().insert_text((72, 72), "Menu do uong: Tra dao 45.000, Ca phe 30.000")
+    doc.new_page().insert_text((72, 72), "12")  # a photo page carries only its number
+    pages = media._pdf_pages(doc.tobytes())
+
+    assert pages[0][0].startswith("Menu do uong") and pages[0][1] is None
+    assert pages[1][1][:2] == b"\xff\xd8"  # rendered as a JPEG
