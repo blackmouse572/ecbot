@@ -7,7 +7,7 @@ faq:
   - q: What happens when two profiles have the same phone number?
     a: Ecbot creates a suggestion under Suggestion. You choose which profile to keep and which details to use, or dismiss it. A merge can be undone with Unmerge.
   - q: Does the agent keep replying after a handoff?
-    a: No. The agent pauses in that conversation and your staff get a notification. Reply from the conversation, then choose Restore to auto to give it back to the agent.
+    a: No. The agent pauses in that conversation and your staff get a notification. Reply from the conversation, then choose Resolve when you are done and want the agent to continue.
 ---
 
 Every person who messages your agent becomes a customer in Ecbot. The profile keeps their name, contact details, notes and tags, and it follows them across channels, so a customer who writes on Messenger and later on Zalo can be treated as one person. You see and edit it next to each conversation.
@@ -35,14 +35,28 @@ Choose **Review** on a suggestion, pick the customer to keep and which name, pho
 
 ## Conversations and handoff
 
-Open **Conversations** to read every chat. Each conversation has a status:
+Open **Conversations** to read every chat.
+
+### Conversation statuses [#conversation-statuses]
+
+Each conversation shows one status. Hover it in the app to see what it means.
 
 | Status | Meaning |
 | --- | --- |
-| **Bot active** | The agent is replying. |
-| **Needs you** | The agent handed the chat to your staff. |
-| **You're handling** | A staff member paused the agent and is replying. |
-| **Resolved** | The conversation is closed. A new message from the customer reopens it. |
+| **Bot active** | The agent is replying to the customer. |
+| **Needs you** | The agent handed the chat to your staff and stopped replying. Someone on your team should answer. |
+| **You're handling** | A staff member paused the agent and is replying. The agent stays quiet until it is switched back on. |
+| **Resolved** | Staff handled what was handed over. The agent answers again and does not hand the same matter over again. You can still send messages. |
+
+<ConversationStatusDiagram />
+
+How a conversation moves between them:
+
+- **Bot active** becomes **Needs you** when the agent hands over (see below).
+- **Bot active** becomes **You're handling** when a staff member chooses **Pause bot**.
+- **Needs you** or **You're handling** becomes **Resolved** when a staff member chooses **Resolve**, or **Bot active** when they switch the bot back on.
+- **Resolved** becomes **Bot active** again when the customer sends a new message, or when a staff member chooses **Restore to auto** from the conversation menu.
+- A new request that needs staff, such as an order change, hands over again even after **Resolved**.
 
 The agent hands a conversation to your staff when:
 
@@ -51,4 +65,4 @@ The agent hands a conversation to your staff when:
 - the customer gets a tag that triggers a handoff, see [Customer tags](/docs/customers/tags);
 - a guardrail blocks a message and the agent is set to escalate blocked messages.
 
-On handoff the agent stops replying in that conversation and everyone in the workspace gets a notification. Reply from the conversation, use **Pause bot** to take over a chat yourself, **Resolve** when you are done, or **Restore to auto** to let the agent answer again.
+On handoff the agent stops replying in that conversation and everyone in the workspace gets a notification. Reply from the conversation, use **Pause bot** to take over a chat yourself, **Resolve** when you are done (the agent answers again and does not hand that over again), or **Restore to auto** to let the agent answer again.

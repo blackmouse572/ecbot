@@ -3,7 +3,9 @@ import { MessageRepository } from '../../../src/modules/conversation/repository/
 function makeRepository() {
     const find = jest.fn(async () => []);
     const findOne = jest.fn(async () => null);
-    const repo = Object.create(MessageRepository.prototype) as MessageRepository;
+    const repo = Object.create(
+        MessageRepository.prototype
+    ) as MessageRepository;
     (repo as any).find = find;
     (repo as any).findOne = findOne;
     return { repo, find, findOne };
@@ -19,6 +21,8 @@ describe('MessageRepository.findAfter', () => {
         expect(where).toMatchObject({
             conversation: 'conv-1',
             deletedAt: null,
+            // The website visitor never sees the platform's own notes.
+            authorType: { $ne: 'SYSTEM' },
         });
         expect(options.orderBy).toEqual({ dateSent: 'ASC', id: 'ASC' });
         expect(options.paging).toEqual({ limit: 50, offset: 0 });

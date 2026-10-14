@@ -3,7 +3,10 @@ import {
     AIDescribedImages,
     ChatbotAIService,
 } from '@app/modules/chatbot/services/chatbot-ai.service';
-import { ENUM_MESSAGE_DIRECTION } from '@app/modules/conversation/enums/message.enum';
+import {
+    ENUM_MESSAGE_AUTHOR,
+    ENUM_MESSAGE_DIRECTION,
+} from '@app/modules/conversation/enums/message.enum';
 import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
@@ -18,6 +21,9 @@ import {
 } from '../constants/media.constant';
 import { ITurnBurst, ITurnContext } from '../interfaces/turn-context.interface';
 import { ConversationMemoryService } from './conversation-memory.service';
+
+/** Starts a staff reply in the history; AGENT.md names the same label. */
+const STAFF_REPLY_LABEL = '[Staff]';
 
 /** One burst image: its message, its position there, and what we know. */
 interface IBurstImage {
@@ -76,9 +82,22 @@ export class TurnContextService {
             .map(m => {
                 const inbound = m.direction === ENUM_MESSAGE_DIRECTION.INBOUND;
                 const note = inbound ? historyNote(m.attachments ?? []) : '';
+                // Staff replies go out like the bot's own; the label tells the
+                // bot what staff already took on, so it is not handed over
+                // again (AGENT.md <escalation>).
+                const staff =
+                    m.authorType === ENUM_MESSAGE_AUTHOR.OPERATOR && m.text
+                        ? STAFF_REPLY_LABEL
+                        : '';
+                // A platform note is not the bot's own words: it reads as
+                // context, like the customer's side.
+                const system = m.authorType === ENUM_MESSAGE_AUTHOR.SYSTEM;
                 return {
-                    role: inbound ? ('user' as const) : ('assistant' as const),
-                    content: [m.text, note].filter(Boolean).join(' '),
+                    role:
+                        inbound || system
+                            ? ('user' as const)
+                            : ('assistant' as const),
+                    content: [staff, m.text, note].filter(Boolean).join(' '),
                 };
             })
             .filter(m => m.content);

@@ -595,6 +595,17 @@ describe('ConversationMessagingService', () => {
             expect(dto.author).toEqual({ id: 'op-2', name: 'op-2' });
         });
 
+        it('names a SYSTEM note after the platform, not the customer', async () => {
+            const service = buildService();
+            const msg = buildMessage({
+                authorId: 'SYSTEM',
+                authorType: ENUM_MESSAGE_AUTHOR.SYSTEM,
+            });
+            const conversation = { senderName: 'Lan' } as ConversationEntity;
+            const dto = await service.mapMessage(msg, conversation);
+            expect(dto.author).toEqual({ id: 'SYSTEM', name: 'SYSTEM' });
+        });
+
         it('uses chatbot name for BOT messages when conversation.chatbot is populated', async () => {
             const service = buildService();
             const msg = buildMessage({

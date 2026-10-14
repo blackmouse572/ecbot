@@ -16,6 +16,7 @@ import type {
 } from "@/hooks/api/conversations";
 import { useConversationFollowups } from "@/hooks/api/followups";
 import { MessageBubble } from "./message-bubble";
+import { SystemNote } from "./system-note";
 import { IconMessage } from "@tabler/icons-react";
 
 interface Props {
@@ -99,16 +100,20 @@ export const MessageList = ({
                   messageId={m.id}
                   scrollAnchor={m.direction === "OUTBOUND"}
                 >
-                  <MessageBubble
-                    id={`msg-${m.id}`}
-                    message={m}
-                    currentOperatorId={currentOperatorId}
-                    onRetry={onRetry}
-                    hasFollowup={triggerIds.has(m.id)}
-                    canReact={canReact}
-                    reactionWindowClosed={reactionWindowClosed}
-                    onReact={onReact}
-                  />
+                  {m.authorType === "SYSTEM" ? (
+                    <SystemNote />
+                  ) : (
+                    <MessageBubble
+                      id={`msg-${m.id}`}
+                      message={m}
+                      currentOperatorId={currentOperatorId}
+                      onRetry={onRetry}
+                      hasFollowup={triggerIds.has(m.id)}
+                      canReact={canReact}
+                      reactionWindowClosed={reactionWindowClosed}
+                      onReact={onReact}
+                    />
+                  )}
                 </MessageScrollerItem>
               ))}
             </>

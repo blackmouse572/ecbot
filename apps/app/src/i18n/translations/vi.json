@@ -2656,17 +2656,28 @@
       "botActive": "Bot đang trả lời",
       "needsYou": "Cần bạn xử lý",
       "youHandling": "Bạn đang xử lý",
-      "resolved": "Đã đóng",
+      "resolved": "Đã xử lý",
       "lifecycle": {
         "OPEN": "Đang mở",
-        "RESOLVED": "Đã đóng"
-      }
+        "RESOLVED": "Đã xử lý"
+      },
+      "hint": {
+        "botActive": "Bot đang trả lời khách.",
+        "needsYou": "Bot đã chuyển cuộc trò chuyện cho nhóm bạn và ngừng trả lời. Nhân viên cần trả lời khách.",
+        "youHandling": "Nhân viên đã tạm dừng bot và đang tự trả lời. Bot im lặng cho tới khi được bật lại.",
+        "resolved": "Nhóm bạn đã xử lý việc được chuyển. Bot trả lời lại, và tin nhắn mới của khách sẽ mở lại cuộc trò chuyện."
+      },
+      "resolveTip": "Bấm <b>Đã xử lý</b> khi bạn xong việc và muốn bot tiếp tục.",
+      "learnMore": "Xem thêm"
     },
     "author": {
       "user": "Khách hàng",
       "bot": "Bot",
       "operator": "Bạn",
       "you": "Bạn"
+    },
+    "systemNote": {
+      "handled": "Nhân viên đã xử lý. Bot trả lời lại."
     },
     "detail": {
       "empty": {
@@ -2684,25 +2695,24 @@
       "send": "Gửi",
       "retry": "Gửi lại",
       "failed": "Gửi thất bại",
-      "tooLong": "Tin nhắn không được dài quá 4096 ký tự",
-      "disabledResolved": "Hội thoại đã đóng. Khôi phục về tự động để trả lời."
+      "tooLong": "Tin nhắn không được dài quá 4096 ký tự"
     },
     "actions": {
       "botLabel": "Bot",
       "viewProfile": "Xem hồ sơ",
       "viewChatbot": "Xem agent",
       "pause": "Tạm dừng bot",
-      "resolve": "Đóng hội thoại",
+      "resolve": "Đã xử lý",
       "restore": "Khôi phục tự động",
       "cancel": "Huỷ",
       "pauseConfirmTitle": "Tạm dừng trả lời tự động?",
       "pauseConfirmDescription": "Bot sẽ dừng trả lời. Nhân viên cần trực tiếp trả lời.",
       "pauseReasonLabel": "Lý do (tuỳ chọn)",
       "pauseReasonPlaceholder": "VD: Khách hàng yêu cầu hỗ trợ trực tiếp",
-      "resolveConfirmTitle": "Đánh dấu hội thoại đã đóng?",
-      "resolveConfirmDescription": "Hội thoại đã đóng không thể trả lời cho đến khi được khôi phục.",
+      "resolveConfirmTitle": "Đánh dấu hội thoại đã xử lý?",
+      "resolveConfirmDescription": "Bot tiếp tục trả lời khách và không bàn giao lại việc nhóm đã xử lý. Bạn vẫn gửi tin nhắn được.",
       "restoreConfirmTitle": "Bàn giao lại cho bot?",
-      "restoreConfirmDescription": "Bot sẽ tiếp tục trả lời. Nếu hội thoại đã đóng, bộ nhớ AI sẽ được đặt lại."
+      "restoreConfirmDescription": "Hội thoại mở lại và bot tiếp tục trả lời."
     },
     "errors": {
       "sendFailed": "Không thể gửi tin nhắn. Vui lòng thử lại.",

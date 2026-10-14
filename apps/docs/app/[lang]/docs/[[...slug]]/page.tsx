@@ -13,6 +13,7 @@ import { notFound } from "next/navigation";
 import { Faq } from "@/components/faq";
 import { JsonLd } from "@/components/json-ld";
 import { getMDXComponents } from "@/components/mdx";
+import { ConversationStatusDiagram } from "@/components/conversation-status-diagram";
 import { Mark, Screenshot } from "@/components/screenshot";
 import {
   alternateLanguages,
@@ -24,7 +25,13 @@ import {
   TITLE_SUFFIX,
 } from "@/lib/seo";
 import { type DocsPage as Page, pageLocales, source } from "@/lib/source";
-import { markdownPath, ogImagePath, pageUrl, repoUrl, SITE_URL } from "@/lib/urls";
+import {
+  markdownPath,
+  ogImagePath,
+  pageUrl,
+  repoUrl,
+  SITE_URL,
+} from "@/lib/urls";
 
 type Props = { params: Promise<{ lang: string; slug?: string[] }> };
 
@@ -40,7 +47,11 @@ function trail(lang: string, page: Page) {
   const crumbs = [];
   for (let i = 0; i < page.slugs.length; i++) {
     const ancestor = source.getPage(page.slugs.slice(0, i), lang);
-    if (ancestor) crumbs.push({ name: ancestor.data.title, url: pageUrl(lang, ancestor.slugs) });
+    if (ancestor)
+      crumbs.push({
+        name: ancestor.data.title,
+        url: pageUrl(lang, ancestor.slugs),
+      });
   }
   crumbs.push({ name: page.data.title, url: pageUrl(lang, page.slugs) });
   return crumbs;
@@ -73,7 +84,9 @@ export default async function DocPage(props: Props) {
     >
       <JsonLd data={jsonLd} />
       <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
+      <DocsDescription className="mb-0">
+        {page.data.description}
+      </DocsDescription>
       <div className="flex flex-row items-center gap-2 border-b pb-6">
         <MarkdownCopyButton markdownUrl={markdownUrl} />
         <ViewOptionsPopover
@@ -86,17 +99,25 @@ export default async function DocPage(props: Props) {
           components={getMDXComponents({
             // Content links to "/docs/x"; keep the reader in their language.
             a: ({ href = "", ...rest }) => (
-              <Link href={href.startsWith("/docs") ? `/${lang}${href}` : href} {...rest} />
+              <Link
+                href={href.startsWith("/docs") ? `/${lang}${href}` : href}
+                {...rest}
+              />
             ),
-            Screenshot: (props: Omit<ComponentProps<typeof Screenshot>, "lang">) => (
-              <Screenshot lang={lang} {...props} />
-            ),
+            Screenshot: (
+              props: Omit<ComponentProps<typeof Screenshot>, "lang">,
+            ) => <Screenshot lang={lang} {...props} />,
             Mark,
+            ConversationStatusDiagram: () => (
+              <ConversationStatusDiagram lang={lang === "vi" ? "vi" : "en"} />
+            ),
           })}
         />
         <Faq
           items={page.data.faq}
-          title={lang === "vi" ? "Câu hỏi thường gặp" : "Frequently asked questions"}
+          title={
+            lang === "vi" ? "Câu hỏi thường gặp" : "Frequently asked questions"
+          }
         />
       </DocsBody>
     </DocsPage>
@@ -112,7 +133,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const url = pageUrl(lang, page.slugs);
   const title = `${page.data.title}${TITLE_SUFFIX}`;
   const description = page.data.description;
-  const image = { url: ogImagePath(page), width: 1200, height: 630, alt: page.data.title };
+  const image = {
+    url: ogImagePath(page),
+    width: 1200,
+    height: 630,
+    alt: page.data.title,
+  };
   const locales = pageLocales(page.slugs);
 
   return {
@@ -135,6 +161,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       modifiedTime: page.data.lastModified?.toISOString(),
       images: [image],
     },
-    twitter: { card: "summary_large_image", title, description, images: [image.url] },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image.url],
+    },
   };
 }

@@ -4892,7 +4892,7 @@ export type MessageGetResponseDto = {
      */
     id: string;
     direction: 'INBOUND' | 'OUTBOUND';
-    authorType: 'USER' | 'BOT' | 'OPERATOR';
+    authorType: 'USER' | 'BOT' | 'OPERATOR' | 'SYSTEM';
     /**
      * Sender ID — platform PSID, bot account ID, or operator user ID
      */

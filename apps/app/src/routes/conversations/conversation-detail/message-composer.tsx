@@ -1,4 +1,3 @@
-import { Tooltip } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 import {
   PromptInput,
@@ -10,38 +9,29 @@ import {
 } from "@repo/ui/common-components";
 
 interface Props {
-  disabled?: boolean;
-  disabledReason?: string;
   isSending: boolean;
   onSubmit: (text: string) => void;
 }
 
-export const MessageComposer = ({
-  disabled,
-  disabledReason,
-  isSending,
-  onSubmit,
-}: Props) => {
+export const MessageComposer = ({ isSending, onSubmit }: Props) => {
   const { t } = useTranslation();
 
-  const composer = (
+  return (
     <PromptInput
       onSubmit={({ text }) => {
-        if (!text.trim() || disabled) return;
+        if (!text.trim()) return;
         onSubmit(text.trim());
       }}
       className="[&>div]:rounded-none"
     >
       <PromptInputBody>
         <PromptInputTextarea
-          placeholder={disabled ? "" : t("conversations.composer.placeholder")}
-          disabled={disabled}
+          placeholder={t("conversations.composer.placeholder")}
           maxLength={4097}
         />
       </PromptInputBody>
       <PromptInputFooter>
         <PromptInputEmojiButton
-          disabled={disabled}
           tooltip={t("general.emojiTooltip")}
           searchPlaceholder={t("general.emojiSearch")}
           noResultsLabel={t("general.emojiNoResults")}
@@ -50,19 +40,8 @@ export const MessageComposer = ({
         <PromptInputSubmit
           className="ml-auto bg-ui-bg-interactive text-ui-fg-on-color hover:bg-ui-bg-interactive/80"
           status={isSending ? "submitted" : "idle"}
-          disabled={disabled}
         />
       </PromptInputFooter>
     </PromptInput>
   );
-
-  if (disabled && disabledReason) {
-    return (
-      <Tooltip content={disabledReason}>
-        <div>{composer}</div>
-      </Tooltip>
-    );
-  }
-
-  return composer;
 };

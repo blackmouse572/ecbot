@@ -2613,13 +2613,24 @@
       "lifecycle": {
         "OPEN": "Open",
         "RESOLVED": "Resolved"
-      }
+      },
+      "hint": {
+        "botActive": "The bot is replying to the customer.",
+        "needsYou": "The bot handed this chat to your team and stopped replying. Someone should answer the customer.",
+        "youHandling": "Your team paused the bot and is replying. The bot stays quiet until it is switched back on.",
+        "resolved": "Your team handled what was handed over. The bot answers again, and a new customer message reopens the chat."
+      },
+      "resolveTip": "Click <b>Resolve</b> when you're done and want the bot to continue.",
+      "learnMore": "Learn more"
     },
     "author": {
       "user": "Customer",
       "bot": "Bot",
       "operator": "You",
       "you": "You"
+    },
+    "systemNote": {
+      "handled": "Handled by staff. The bot is answering again."
     },
     "detail": {
       "empty": {
@@ -2637,8 +2648,7 @@
       "send": "Send",
       "retry": "Retry",
       "failed": "Failed to send",
-      "tooLong": "Message must be 4096 characters or fewer",
-      "disabledResolved": "This conversation is resolved. Restore it to auto to reply."
+      "tooLong": "Message must be 4096 characters or fewer"
     },
     "actions": {
       "botLabel": "Bot",
@@ -2653,9 +2663,9 @@
       "pauseReasonLabel": "Reason (optional)",
       "pauseReasonPlaceholder": "e.g. Customer requested human support",
       "resolveConfirmTitle": "Mark conversation as resolved?",
-      "resolveConfirmDescription": "Resolved conversations cannot receive operator replies until restored.",
+      "resolveConfirmDescription": "The bot keeps answering the customer and will not hand over again what your team already handled. You can still send messages.",
       "restoreConfirmTitle": "Hand back to the bot?",
-      "restoreConfirmDescription": "Bot will resume answering. If the conversation was resolved, the AI memory will be reset."
+      "restoreConfirmDescription": "The conversation opens again and the bot keeps answering."
     },
     "errors": {
       "sendFailed": "Couldn't send your message. Try again.",

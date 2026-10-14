@@ -5,6 +5,7 @@ import {
   EllipsisHorizontal,
 } from "@medusajs/icons";
 import {
+  Button,
   DropdownMenu,
   IconButton,
   Label,
@@ -13,7 +14,7 @@ import {
   Text,
   Textarea,
 } from "@medusajs/ui";
-import { useRef, useState } from "react";
+import { type ReactElement, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type {
@@ -49,6 +50,40 @@ function getSenderProfileUrl(
   }
 }
 
+/** Asks before resolving; `children` is the element that opens it. */
+const ResolveConfirm = ({
+  conversation,
+  children,
+}: Props & { children: ReactElement }) => {
+  const { t } = useTranslation();
+  const update = useUpdateConversationStatus(conversation.id);
+
+  return (
+    <Prompt variant="confirmation">
+      <Prompt.Trigger asChild>{children}</Prompt.Trigger>
+      <Prompt.Content>
+        <Prompt.Header>
+          <Prompt.Title>
+            {t("conversations.actions.resolveConfirmTitle")}
+          </Prompt.Title>
+          <Prompt.Description>
+            {t("conversations.actions.resolveConfirmDescription")}
+          </Prompt.Description>
+        </Prompt.Header>
+        <Prompt.Footer>
+          <Prompt.Cancel>{t("conversations.actions.cancel")}</Prompt.Cancel>
+          <Prompt.Action
+            onClick={() => update.mutateAsync({ status: "RESOLVED" })}
+          >
+            <CheckCircleSolid />
+            {t("conversations.actions.resolve")}
+          </Prompt.Action>
+        </Prompt.Footer>
+      </Prompt.Content>
+    </Prompt>
+  );
+};
+
 export const BotPauseSwitch = ({ conversation }: Props) => {
   const { t } = useTranslation();
   const update = useUpdateConversationBot(conversation.id);
@@ -58,6 +93,18 @@ export const BotPauseSwitch = ({ conversation }: Props) => {
   if (conversation.status === "RESOLVED") return null;
 
   const isActive = (conversation as A).botEnabled !== false;
+
+  // Handed over (bot off): resolving is how staff give it back to the bot.
+  if (!isActive) {
+    return (
+      <ResolveConfirm conversation={conversation}>
+        <Button size="small" variant="secondary">
+          <CheckCircleSolid />
+          {t("conversations.actions.resolve")}
+        </Button>
+      </ResolveConfirm>
+    );
+  }
 
   const handleToggle = (checked: boolean) => {
     if (!checked) {
@@ -201,33 +248,9 @@ export const StatusActionsMenu = ({ conversation }: Props) => {
         </DropdownMenu.Content>
       </DropdownMenu>
 
-      <Prompt variant="confirmation">
-        <Prompt.Trigger asChild>
-          <button
-            ref={resolveRef}
-            className="hidden"
-            aria-hidden
-            tabIndex={-1}
-          />
-        </Prompt.Trigger>
-        <Prompt.Content>
-          <Prompt.Header>
-            <Prompt.Title>
-              {t("conversations.actions.resolveConfirmTitle")}
-            </Prompt.Title>
-            <Prompt.Description>
-              {t("conversations.actions.resolveConfirmDescription")}
-            </Prompt.Description>
-          </Prompt.Header>
-          <Prompt.Footer>
-            <Prompt.Cancel>{t("conversations.actions.cancel")}</Prompt.Cancel>
-            <Prompt.Action onClick={() => apply("RESOLVED")}>
-              <CheckCircleSolid />
-              {t("conversations.actions.resolve")}
-            </Prompt.Action>
-          </Prompt.Footer>
-        </Prompt.Content>
-      </Prompt>
+      <ResolveConfirm conversation={conversation}>
+        <button ref={resolveRef} className="hidden" aria-hidden tabIndex={-1} />
+      </ResolveConfirm>
 
       <Prompt>
         <Prompt.Trigger asChild>

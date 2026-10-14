@@ -24,6 +24,13 @@ import { ConversationGetResponseDto } from '../dtos/response/conversation.get.re
 import { ConversationEntity } from '../repository/entities/conversation.entity';
 import { ConversationRepository } from '../repository/repositories/conversation.repository';
 import { ConversationReadRepository } from '../repository/repositories/conversation-read.repository';
+import { MessageRepository } from '../repository/repositories/message.repository';
+import { STAFF_HANDLED_NOTE } from '../constants/message.constant';
+import {
+    ENUM_MESSAGE_AUTHOR,
+    ENUM_MESSAGE_DIRECTION,
+    ENUM_MESSAGE_STATUS,
+} from '../enums/message.enum';
 
 const DEFAULT_HANDOFF_KEYWORDS = [
     'human',
@@ -57,7 +64,8 @@ export class ConversationService implements IConversationService {
         private readonly chatbotAIService: ChatbotAIService,
         private readonly conversationReadRepository: ConversationReadRepository,
         private readonly customerTagClassifierService: CustomerTagClassifierService,
-        private readonly moduleRef: ModuleRef
+        private readonly moduleRef: ModuleRef,
+        private readonly messageRepository: MessageRepository
     ) {}
 
     private get handoffEmail(): HandoffEmailService | undefined {
@@ -218,6 +226,7 @@ export class ConversationService implements IConversationService {
         // End-of-conversation analytical tag + summary refresh (#170). Fire
         // immediately on resolve so operators see updated tags right away.
         if (status === ENUM_CONVERSATION_STATUS.RESOLVED) {
+            await this.leaveStaffHandledNote(conversationId);
             this.customerTagClassifierService
                 .scheduleOnResolved(conversationId)
                 .catch(err =>
@@ -245,6 +254,8 @@ export class ConversationService implements IConversationService {
             });
         }
 
+        // Read before the update: the ORM changes the loaded entity in place.
+        const handsBack = botEnabled && !conversation.botEnabled;
         const updateData: Partial<ConversationEntity> = { botEnabled };
 
         if (botEnabled) {
@@ -288,7 +299,33 @@ export class ConversationService implements IConversationService {
             });
         }
 
+        if (handsBack) {
+            await this.leaveStaffHandledNote(conversationId);
+        }
+
         return updated;
+    }
+
+    /** Staff hand the conversation back to the bot (resolve, or switch the
+     *  bot on): mark the point in its history so it does not hand over again
+     *  what staff already took care of. */
+    private async leaveStaffHandledNote(conversationId: string): Promise<void> {
+        // Switching the bot on and then resolving is one hand-back: one note.
+        const [newest] = await this.messageRepository.findNewest(
+            { conversation: conversationId, deletedAt: null } as any,
+            1
+        );
+        if (newest?.authorType === ENUM_MESSAGE_AUTHOR.SYSTEM) return;
+
+        await this.messageRepository.create({
+            conversation: { id: conversationId },
+            direction: ENUM_MESSAGE_DIRECTION.OUTBOUND,
+            authorType: ENUM_MESSAGE_AUTHOR.SYSTEM,
+            authorId: ENUM_MESSAGE_AUTHOR.SYSTEM,
+            text: STAFF_HANDLED_NOTE,
+            dateSent: new Date(),
+            status: ENUM_MESSAGE_STATUS.SENT,
+        } as any);
     }
 
     async setTimezone(

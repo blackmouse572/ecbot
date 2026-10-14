@@ -7,7 +7,7 @@ faq:
   - q: Nếu hai hồ sơ có cùng số điện thoại thì sao?
     a: Ecbot tạo một gợi ý trong mục Gợi ý. Bạn chọn giữ hồ sơ nào và dùng thông tin nào, hoặc bỏ qua. Việc gộp có thể hoàn tác bằng Tách gộp.
   - q: Sau khi chuyển cho nhân viên, agent còn trả lời không?
-    a: Không. Agent tạm dừng trong cuộc trò chuyện đó và nhân viên nhận thông báo. Hãy trả lời trong cuộc trò chuyện, rồi chọn Khôi phục tự động để giao lại cho agent.
+    a: Không. Agent tạm dừng trong cuộc trò chuyện đó và nhân viên nhận thông báo. Hãy trả lời trong cuộc trò chuyện, rồi chọn Đã xử lý khi xong việc và muốn agent tiếp tục.
 ---
 
 Mỗi người nhắn tin cho agent trở thành một khách hàng trong Ecbot. Hồ sơ lưu tên, thông tin liên hệ, ghi chú và nhãn, và được dùng chung trên các kênh, nên khách nhắn qua Messenger rồi sau đó qua Zalo vẫn có thể được xem là một người. Bạn xem và sửa hồ sơ ngay bên cạnh mỗi cuộc trò chuyện.
@@ -35,14 +35,28 @@ Chọn **Xem xét** ở một gợi ý, chọn khách hàng giữ lại và gi�
 
 ## Hội thoại và chuyển cho nhân viên
 
-Mở **Hội thoại** để đọc mọi cuộc trò chuyện. Mỗi cuộc trò chuyện có một trạng thái:
+Mở **Hội thoại** để đọc mọi cuộc trò chuyện.
+
+### Trạng thái hội thoại [#conversation-statuses]
+
+Mỗi cuộc trò chuyện có một trạng thái. Di chuột lên trạng thái trong ứng dụng để xem ý nghĩa.
 
 | Trạng thái | Ý nghĩa |
 | --- | --- |
 | **Bot đang trả lời** | Agent đang trả lời khách. |
-| **Cần bạn xử lý** | Agent đã chuyển cuộc trò chuyện cho nhân viên. |
-| **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. |
-| **Đã đóng** | Cuộc trò chuyện đã kết thúc. Tin nhắn mới của khách sẽ mở lại. |
+| **Cần bạn xử lý** | Agent đã chuyển cuộc trò chuyện cho nhân viên và ngừng trả lời. Nhân viên cần trả lời khách. |
+| **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. Agent im lặng cho tới khi được bật lại. |
+| **Đã xử lý** | Nhân viên đã xử lý xong việc được chuyển. Agent trả lời lại và không chuyển lại việc đó. Bạn vẫn gửi tin nhắn được. |
+
+<ConversationStatusDiagram />
+
+Cách cuộc trò chuyện chuyển giữa các trạng thái:
+
+- **Bot đang trả lời** thành **Cần bạn xử lý** khi agent chuyển cho nhân viên (xem bên dưới).
+- **Bot đang trả lời** thành **Bạn đang xử lý** khi nhân viên chọn **Tạm dừng bot**.
+- **Cần bạn xử lý** hoặc **Bạn đang xử lý** thành **Đã xử lý** khi nhân viên chọn **Đã xử lý**, hoặc thành **Bot đang trả lời** khi nhân viên bật bot lại.
+- **Đã xử lý** trở lại **Bot đang trả lời** khi khách nhắn tin mới, hoặc khi nhân viên chọn **Khôi phục tự động** trong menu của cuộc trò chuyện.
+- Một yêu cầu mới cần nhân viên, ví dụ đổi đơn, vẫn được chuyển lại kể cả sau khi **Đã xử lý**.
 
 Agent chuyển cuộc trò chuyện cho nhân viên khi:
 
@@ -51,4 +65,4 @@ Agent chuyển cuộc trò chuyện cho nhân viên khi:
 - khách được gắn một nhãn có bật chuyển cho nhân viên, xem trang [Nhãn khách hàng](/docs/customers/tags);
 - guardrail chặn một tin nhắn và agent được cài để chuyển khi bị chặn.
 
-Khi chuyển, agent ngừng trả lời trong cuộc trò chuyện đó và mọi người trong không gian làm việc nhận thông báo. Bạn trả lời ngay trong cuộc trò chuyện, dùng **Tạm dừng bot** để tự tiếp quản, **Đóng hội thoại** khi xong việc, hoặc **Khôi phục tự động** để agent trả lời lại.
+Khi chuyển, agent ngừng trả lời trong cuộc trò chuyện đó và mọi người trong không gian làm việc nhận thông báo. Bạn trả lời ngay trong cuộc trò chuyện, dùng **Tạm dừng bot** để tự tiếp quản, **Đã xử lý** khi xong việc (agent trả lời lại và không chuyển lại việc đó), hoặc **Khôi phục tự động** để agent trả lời lại.
