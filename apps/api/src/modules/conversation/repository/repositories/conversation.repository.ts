@@ -3,7 +3,8 @@ import {
     IDatabaseFindAllOptions,
     IDatabaseFindOneOptions,
 } from '@app/common/database/interfaces/database.interface';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
+import { EntityManager, QueryOrder } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ENUM_CONVERSATION_STATUS } from '../../enums/conversation.enum';
 import { ConversationEntity } from '../entities/conversation.entity';
@@ -53,7 +54,7 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
 
         return this.find(filter as any, {
             populate: ['chatbot', 'account'] as any,
-            ...options,
+            ...withLastMessageOrder(options),
         });
     }
 
@@ -71,4 +72,26 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
             populate: ['chatbot', 'account'] as any,
         });
     }
+}
+
+/**
+ * Newest message first, rows without a lastMessageAt (older conversations)
+ * last instead of on top as Postgres puts nulls on DESC, then newest created.
+ */
+function withLastMessageOrder(
+    options?: IDatabaseFindAllOptions
+): IDatabaseFindAllOptions | undefined {
+    const direction = options?.order?.lastMessageAt;
+    if (!direction) return options;
+    const { order: _order, ...rest } = options;
+    const asc = direction === ENUM_PAGINATION_ORDER_DIRECTION_TYPE.ASC;
+    return {
+        ...rest,
+        orderBy: {
+            lastMessageAt: asc
+                ? QueryOrder.ASC_NULLS_LAST
+                : QueryOrder.DESC_NULLS_LAST,
+            createdAt: asc ? QueryOrder.ASC : QueryOrder.DESC,
+        },
+    };
 }

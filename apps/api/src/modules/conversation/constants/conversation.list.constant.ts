@@ -7,6 +7,13 @@ export const CONVERSATION_DEFAULT_AVAILABLE_SEARCH = [
     'senderId',
 ];
 
+/** The inbox sorts by newest message; createdAt stays for API clients. */
+export const CONVERSATION_DEFAULT_ORDER_BY = 'lastMessageAt';
+export const CONVERSATION_DEFAULT_AVAILABLE_ORDER_BY = [
+    'lastMessageAt',
+    'createdAt',
+];
+
 export const CONVERSATION_DEFAULT_STATUS = Object.values(
     ENUM_CONVERSATION_STATUS
 );

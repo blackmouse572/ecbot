@@ -67,7 +67,9 @@ import {
     ConversationWorkspaceUpdateStatusDoc,
 } from '../docs/conversation.workspace.doc';
 import {
+    CONVERSATION_DEFAULT_AVAILABLE_ORDER_BY,
     CONVERSATION_DEFAULT_AVAILABLE_SEARCH,
+    CONVERSATION_DEFAULT_ORDER_BY,
     CONVERSATION_DEFAULT_STATUS,
     CONVERSATION_DEFAULT_ACCOUNT_TYPE,
 } from '../constants/conversation.list.constant';
@@ -100,6 +102,8 @@ export class ConversationWorkspaceController {
         @AuthJwtPayload('user') operatorId: string,
         @PaginationQuery({
             availableSearch: CONVERSATION_DEFAULT_AVAILABLE_SEARCH,
+            defaultOrderBy: CONVERSATION_DEFAULT_ORDER_BY,
+            availableOrderBy: CONVERSATION_DEFAULT_AVAILABLE_ORDER_BY,
         })
         { _search, _limit, _offset, _order }: PaginationListDto,
         @PaginationQueryFilterInEnum(
