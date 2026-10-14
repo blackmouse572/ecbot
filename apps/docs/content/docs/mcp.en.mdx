@@ -1,0 +1,82 @@
+---
+title: Ecbot MCP Server
+description: Connect Claude Code, Codex or Cursor to your workspace with an API key, so an AI assistant can manage your agents, knowledge, chats and customers.
+faq:
+  - q: What can the assistant do with my API key?
+    a: What the person who created the key can do in the app, right now. Only the workspace owner can create keys today, so a key can use every tool on this page.
+  - q: Is it safe to give an AI assistant my API key?
+    a: The key opens your whole workspace, so treat it like a password. Every change is logged under the key creator's name, and you can rotate or delete the key at any time in Settings.
+  - q: What can the assistant not do?
+    a: It cannot upload files, install marketplace apps or permanently erase a customer's data. Do those in the app.
+  - q: Does a reply from the assistant reach the customer?
+    a: Yes, right away, as if the key's creator sent it from Conversations. Most assistants ask you to confirm before they call a tool that sends or deletes something.
+---
+
+The Ecbot MCP Server lets an AI assistant such as Claude Code, Codex or Cursor work in your workspace. Connect it with an API key, then ask in plain words: "list the chats that need me", "add our new return policy to the knowledge base" or "tag this customer VIP". The assistant can do what the key's creator can do in the app.
+
+## Create an API key
+
+The workspace owner creates API keys.
+
+1. Open the workspace menu at the top of the sidebar and choose **Settings**.
+2. Open **API key** and choose **Create**.
+3. Give the key a name, such as "Claude Code", and choose **Create**.
+4. Copy the value under **x-api-key**. It is shown only once.
+
+If a key leaks, open its menu and choose **Rotate secret**: the old secret stops working right away. **Delete** revokes the key for good.
+
+## Connect your assistant
+
+The server address is `https://mcp.ecbot.dev/mcp`. Your assistant sends the key with every request, as an `x-api-key` header or as a bearer token. Replace `YOUR_KEY` below with the value you copied.
+
+### Claude Code
+
+```bash
+claude mcp add --transport http --scope user ecbot https://mcp.ecbot.dev/mcp \
+  --header "x-api-key: YOUR_KEY"
+```
+
+### Codex
+
+```bash
+export ECBOT_API_KEY="YOUR_KEY"
+codex mcp add ecbot --url https://mcp.ecbot.dev/mcp \
+  --bearer-token-env-var ECBOT_API_KEY
+```
+
+### Cursor and other clients
+
+Clients set up with a JSON file, such as Cursor's `mcp.json`, take the address and a header:
+
+```json
+{
+  "mcpServers": {
+    "ecbot": {
+      "url": "https://mcp.ecbot.dev/mcp",
+      "headers": { "x-api-key": "YOUR_KEY" }
+    }
+  }
+}
+```
+
+Keep a file that holds your key out of shared folders and code repositories.
+
+## What the assistant can do
+
+| Area | Read | Change |
+| --- | --- | --- |
+| Agents | List agents, read one, list the AI models | Create, edit, activate or deactivate, delete |
+| Conversations | List chats, read one and its messages | Reply, turn the agent on or off in a chat, mark **Open** or **Resolved** |
+| Knowledge base | List knowledge bases and their items, read an item | Create a knowledge base, add text or web page items, edit, process or delete an item |
+| Customers | List customers and tags, read a customer and their tags | Edit a customer, create, edit or delete tags, tag or untag a customer |
+| Tools | List the workspace's tools and an agent's tools | Create an HTTP or MCP tool, edit or delete it, turn it on or off for an agent |
+| Skills | List your skills and the templates, read one | Create a skill, copy a template, edit or delete it, attach it to an agent or detach it |
+
+Uploading files, installing marketplace apps and permanently erasing a customer's data are only available in the app.
+
+## Permissions and the activity log
+
+- **The key acts as its creator.** It always has the creator's current permissions: if they lose a permission or leave the workspace, the key loses it too.
+- **The assistant sees only the tools the key may use**, so it does not try actions that would be refused.
+- **Every change is logged.** Changes and replies show in **Activity** under the creator's name, as if they made them in the app. Opening a chat or a customer is logged as a view, the same way.
+- **Customer text is data, not instructions.** Messages from customers and the text of your documents can say anything, so the server tells the assistant never to follow instructions found in them.
