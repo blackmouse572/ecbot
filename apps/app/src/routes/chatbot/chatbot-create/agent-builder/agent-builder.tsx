@@ -27,20 +27,20 @@ export function AgentBuilder() {
   const builder = useAgentBuilder({
     hydrateFrom: hydrateId ? chatbot : undefined,
     ensurePrefillChannel: prefill.ensure,
+    businessName: params.get("businessName")?.trim() || undefined,
   });
 
   // The welcome screen sends a new owner here with their business type and
   // name: start that template right away instead of showing the hero.
   const template = params.get("template") ?? "";
-  const businessName = params.get("businessName")?.trim() || undefined;
   const { startFromTemplate } = builder;
   const templateStarted = useRef(false);
   useEffect(() => {
     if (hydrateId || templateStarted.current) return;
     if (!BUSINESS_TYPE_IDS.includes(template as BusinessTypeId)) return;
     templateStarted.current = true;
-    void startFromTemplate(template as BusinessTypeId, businessName);
-  }, [hydrateId, template, businessName, startFromTemplate]);
+    void startFromTemplate(template as BusinessTypeId);
+  }, [hydrateId, template, startFromTemplate]);
 
   return (
     // A SidebarProvider scoped to the builder for the test panel's

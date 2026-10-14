@@ -25,6 +25,9 @@ describe('Migration20261014020000_activate_inactive_chatbots_with_channels', () 
         expect(sql).toContain(`c."deleted_at" is null`);
         expect(sql).toContain(`a."chatbot_id" = c."id"`);
         expect(sql).toContain(`a."deleted_at" is null`);
+        // Only agents that have served a conversation, not a draft whose
+        // channel was linked moments before the deploy.
+        expect(sql).toContain(`conv."chatbot_id" = c."id"`);
     });
 
     it('leaves statuses alone on rollback', async () => {

@@ -5,7 +5,7 @@ import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useMatch } from "react-router-dom";
 import { ROUTES } from "@/routes/constants";
-import { useGettingStartedSteps } from "./use-getting-started-steps";
+import { useGettingStartedSteps } from "../../hooks/use-getting-started-steps";
 
 /**
  * The getting-started checklist in the sidebar, so a new owner sees the next

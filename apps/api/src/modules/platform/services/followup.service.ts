@@ -1,3 +1,4 @@
+import { TURNED_OFF_CHATBOT_STATUSES } from '@app/modules/platform/constants/turned-off-chatbot.constant';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ChatbotTimezoneService } from '@app/modules/chatbot/services/chatbot-timezone.service';
@@ -329,6 +330,12 @@ export class FollowupService {
         }
 
         const chatbot = account.chatbot;
+        if (TURNED_OFF_CHATBOT_STATUSES.includes(chatbot.status)) {
+            return this.recordOutcome(followup, conversationId, {
+                status: ENUM_FOLLOWUP_STATUS.SKIPPED,
+                outcomeReason: ENUM_FOLLOWUP_SKIP_REASON.BOT_DISABLED,
+            });
+        }
         const adapter = this.registry.get(account.type);
         const tools = await this.manifestBuilder.build(
             chatbot.id,

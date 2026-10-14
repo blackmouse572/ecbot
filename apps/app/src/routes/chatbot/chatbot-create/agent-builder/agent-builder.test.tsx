@@ -185,6 +185,16 @@ describe("AgentBuilder", () => {
       expect(screen.getByText("agentBuilder.ui.templateAnswer")).toBeInTheDocument();
     });
 
+    it("keeps the shop name when the owner picked Other and describes the business", async () => {
+      suggest.mockResolvedValue({ businessType: { value: "beauty", confidence: 0.95 }, personality: null, formality: null, goals: {}, rules: {} });
+      renderBuilder("/ws/chatbot/create?businessName=Lotus%20Spa");
+      await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "Nail spa in Da Nang{enter}");
+      await screen.findByText("agentBuilder.ui.auto");
+      await answerCurrent(); // businessType, already suggested
+
+      expect(await screen.findByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toHaveValue("Lotus Spa");
+    });
+
     it("shows the hero when the template is not one the builder knows", () => {
       renderBuilder("/ws/chatbot/create?template=nope&businessName=Lotus");
       expect(screen.getByRole("heading", { name: "agentBuilder.ui.heroTitle" })).toBeInTheDocument();

@@ -5,11 +5,11 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import {
   ACTIVE_CHATBOT_COUNT_QUERY,
-  COUNT_QUERY,
+  STATS_COUNT_QUERY,
   GETTING_STARTED_STEPS,
   LINKED_ACCOUNT_QUERY,
-} from "./constants";
-import type { GettingStartedStep, GettingStartedStepKey } from "./types";
+} from "../constants";
+import type { GettingStartedStep, GettingStartedStepKey } from "../types";
 
 /**
  * The getting-started checklist with each step's done state, read from what
@@ -19,10 +19,10 @@ import type { GettingStartedStep, GettingStartedStepKey } from "./types";
  */
 export function useGettingStartedSteps(): GettingStartedStep[] {
   const { workspaceSlug } = useWorkspaceParams();
-  const chatbots = useChatbots(COUNT_QUERY);
+  const chatbots = useChatbots(STATS_COUNT_QUERY);
   const active = useChatbots(ACTIVE_CHATBOT_COUNT_QUERY);
   const accounts = useAccounts(LINKED_ACCOUNT_QUERY);
-  const conversations = useConversations(COUNT_QUERY);
+  const conversations = useConversations(STATS_COUNT_QUERY);
 
   if (
     [chatbots, active, accounts, conversations].some(

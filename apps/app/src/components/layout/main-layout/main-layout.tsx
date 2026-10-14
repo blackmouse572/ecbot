@@ -16,7 +16,7 @@ import {
   Sparkles,
   Users,
 } from "@medusajs/icons";
-import { GettingStartedNav } from "@/components/getting-started";
+import { GettingStartedNav } from "@/routes/dashboard/components/getting-started-nav/getting-started-nav";
 import { BlockedAccountsBadge } from "./blocked-accounts-badge";
 import { RecentAgentsSection } from "./recent-agents-section";
 import { PausedConversationsBadge } from "./paused-conversations-badge";
