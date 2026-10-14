@@ -10,6 +10,7 @@ import type {
 import { type ReactNode, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import type { z } from "zod/v4";
 import {
   createChatbotSchema,
   type ChatbotFormData,
@@ -34,6 +35,8 @@ export function ChatbotEditForm({
 
   // Validate only this card's fields: another card's stored value that the
   // form schema would reject must not block this save.
+  // `fields` is only known at runtime, so the picked schema is typed as the
+  // partial form it validates.
   const schema = useMemo(
     () =>
       createChatbotSchema.pick(
@@ -41,15 +44,19 @@ export function ChatbotEditForm({
           keyof ChatbotFormData,
           true
         >,
-      ),
+      ) as z.ZodType<Partial<ChatbotFormData>, Partial<ChatbotFormInput>>,
     [fields],
   );
 
-  const form = useForm<ChatbotFormInput, unknown, Partial<ChatbotFormData>>({
-    resolver: zodResolver(schema) as never,
+  const form = useForm<
+    Partial<ChatbotFormInput>,
+    unknown,
+    Partial<ChatbotFormData>
+  >({
+    resolver: zodResolver(schema),
     defaultValues: Object.fromEntries(
       fields.map((f) => [f, chatbot[f as keyof ChatbotGetDetailResponseDto]]),
-    ) as ChatbotFormInput,
+    ),
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {

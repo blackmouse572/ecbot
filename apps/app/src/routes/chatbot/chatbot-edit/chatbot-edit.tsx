@@ -3,18 +3,20 @@ import { useChatbot } from "@/hooks/api/chatbot";
 import { Heading } from "@medusajs/ui";
 import { FormSkeleton } from "@repo/ui/common-components";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import type { FC } from "react";
+import { Navigate, useParams } from "react-router-dom";
 import {
   ChatbotGeneralFields,
   ChatbotMessageFields,
   ChatbotSettingsFields,
 } from "../components/chatbot-form";
-import {
-  CHATBOT_GENERAL_FIELDS,
-  CHATBOT_MESSAGE_FIELDS,
-  CHATBOT_SETTINGS_FIELDS,
-} from "../constants";
+import { CHATBOT_EDIT_SECTIONS, CHATBOT_GENERAL_FIELDS } from "../constants";
 import { ChatbotEditForm } from "./components";
+
+const SECTION_FIELDS = {
+  messages: ChatbotMessageFields,
+  settings: ChatbotSettingsFields,
+} satisfies Record<keyof typeof CHATBOT_EDIT_SECTIONS, FC>;
 
 /**
  * A detail-page card's edit drawer: `edit` for the general card,
@@ -32,24 +34,18 @@ export function ChatbotEdit() {
     throw error;
   }
 
-  const { title, fields, children } =
-    section === "messages"
-      ? {
-          title: t("chatbot.details.messages.editTitle"),
-          fields: CHATBOT_MESSAGE_FIELDS,
-          children: <ChatbotMessageFields />,
-        }
-      : section === "settings"
-        ? {
-            title: t("chatbot.details.settings.editTitle"),
-            fields: CHATBOT_SETTINGS_FIELDS,
-            children: <ChatbotSettingsFields />,
-          }
-        : {
-            title: t("chatbot.edit.title"),
-            fields: CHATBOT_GENERAL_FIELDS,
-            children: <ChatbotGeneralFields />,
-          };
+  if (section && !Object.hasOwn(CHATBOT_EDIT_SECTIONS, section)) {
+    return <Navigate to=".." replace />;
+  }
+
+  const slug = section as keyof typeof CHATBOT_EDIT_SECTIONS | undefined;
+  const Fields = slug ? SECTION_FIELDS[slug] : ChatbotGeneralFields;
+  const title = t(
+    slug ? CHATBOT_EDIT_SECTIONS[slug].titleKey : "chatbot.edit.title",
+  );
+  const fields = slug
+    ? CHATBOT_EDIT_SECTIONS[slug].fields
+    : CHATBOT_GENERAL_FIELDS;
 
   return (
     <RouteDrawer>
@@ -67,7 +63,7 @@ export function ChatbotEdit() {
         </RouteDrawer.Body>
       ) : (
         <ChatbotEditForm chatbot={chatbot} fields={fields}>
-          {children}
+          <Fields />
         </ChatbotEditForm>
       )}
     </RouteDrawer>

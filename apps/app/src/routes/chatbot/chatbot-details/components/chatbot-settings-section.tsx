@@ -4,6 +4,7 @@ import type { ChatbotGetDetailResponseDto } from "@repo/client";
 import { SectionRow } from "@repo/ui/common-components";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { CHATBOT_EDIT_SECTIONS } from "../../constants";
 import { ChatbotSectionEditButton } from "./chatbot-section-edit-button";
 import { ChatbotSectionHeader } from "./chatbot-section-header";
 
@@ -51,7 +52,9 @@ export const ChatbotSettingsSection: FC<ChatbotSettingsSectionProps> = ({
     <Container className="divide-y p-0">
       <ChatbotSectionHeader
         title={t("chatbot.details.settings.title")}
-        actions={<ChatbotSectionEditButton to="edit/settings" />}
+        actions={
+          <ChatbotSectionEditButton to={CHATBOT_EDIT_SECTIONS.settings.path} />
+        }
       />
       {toggleRow("typingIndicator", t("chatbot.create.typingIndicator.label"))}
       {toggleRow("autoRead", t("chatbot.create.autoRead.label"))}

@@ -50,6 +50,17 @@ const chatbot = {
   accounts: [],
 } as unknown as ChatbotGetDetailResponseDto;
 
+const NameInput = () => {
+  const { register, formState } = useFormContext();
+  return (
+    <input
+      aria-label="name"
+      aria-invalid={!!formState.errors.name}
+      {...register("name")}
+    />
+  );
+};
+
 const MaxTokensInput = () => {
   const { register } = useFormContext();
   return <input aria-label="max tokens" {...register("maxTokens")} />;
@@ -94,5 +105,27 @@ describe("ChatbotEditForm", () => {
 
     await waitFor(() => expect(updateChatbot).toHaveBeenCalled());
     expect(updateChatbot.mock.calls[0][0].body).toEqual({ maxTokens: null });
+  });
+
+  // The picked schema still validates: an empty name blocks the save.
+  it("marks the name invalid and blocks the save when it is empty", async () => {
+    updateChatbot.mockClear();
+    render(
+      <ChatbotEditForm chatbot={chatbot} fields={["name"]}>
+        <NameInput />
+      </ChatbotEditForm>,
+    );
+    const user = userEvent.setup();
+
+    await user.clear(screen.getByLabelText("name"));
+    await user.click(screen.getByRole("button", { name: "actions.save" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("name")).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      ),
+    );
+    expect(updateChatbot).not.toHaveBeenCalled();
   });
 });
