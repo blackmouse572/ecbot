@@ -116,7 +116,7 @@ describe("GuideMoments", () => {
     renderAt();
 
     act(() => {
-      fireEvent.keyDown(window, { key: "Escape" });
+      fireEvent.keyUp(window, { key: "Escape" });
     });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(localStorage.getItem("ecbot.guide.tour.ws1")).toBe("done");
