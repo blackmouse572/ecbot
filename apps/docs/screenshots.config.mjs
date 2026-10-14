@@ -160,4 +160,30 @@ export const shots = [
       { id: "alerts", target: "text=/^(Alert settings|Cấu hình cảnh báo)$/", up: 0, pad: 6 },
     ],
   },
+  {
+    name: "api-keys",
+    path: "/:ws/settings/client-credentials",
+    marks: [
+      { id: "nav", target: "role=link[name=/^API key$/]", pad: 4 },
+      { id: "create", target: "main >> role=button[name=/^(Create|Tạo mới)$/]", pad: 4 },
+    ],
+  },
+  {
+    // Creates a real key each run, so capture it after "api-keys".
+    name: "api-key-created",
+    path: "/:ws/settings/client-credentials",
+    setup: async (page) => {
+      await page.getByRole("main").getByRole("button", { name: /^(Create|Tạo mới)$/ }).click();
+      const drawer = page.getByRole("dialog");
+      await drawer.locator("input").first().fill("Claude Code");
+      await drawer.getByRole("button", { name: /^(Create|Tạo mới)$/ }).click();
+      await drawer.getByText(/^x-api-key$/).waitFor();
+      // The success toast covers the drawer title until it closes.
+      await page.getByText(/^(Credential created\.|Đã tạo credential\.)$/).waitFor({ state: "hidden", timeout: 15000 });
+    },
+    marks: [
+      { id: "warning", target: "[role=dialog] >> text=/^(Copy the secret now|Sao chép secret ngay)/", pad: 4 },
+      { id: "copy", target: "[role=dialog] >> text=/^x-api-key$/", up: 1, pad: 4 },
+    ],
+  },
 ];

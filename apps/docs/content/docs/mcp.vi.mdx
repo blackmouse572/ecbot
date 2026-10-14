@@ -16,14 +16,21 @@ Máy chủ MCP Ecbot cho phép trợ lý AI như Claude Code, Codex hoặc Curso
 
 ## Tạo API key
 
-Chủ workspace là người tạo API key.
+Chủ workspace là người tạo API key. Mở menu workspace ở đầu thanh bên, chọn **Cài đặt**, rồi mở **API key**:
 
-1. Mở menu workspace ở đầu thanh bên và chọn **Cài đặt**.
-2. Mở **API key** và chọn **Tạo mới**.
-3. Đặt tên cho key, ví dụ "Claude Code", rồi chọn **Tạo mới**.
-4. Sao chép giá trị ở mục **x-api-key**. Giá trị này chỉ hiện một lần.
+<Screenshot name="api-keys" alt="Trang API key trong Cài đặt, với các key của workspace và nút Tạo mới">
+  <Mark id="nav">**API key** trong thanh bên của Cài đặt liệt kê mọi key của workspace.</Mark>
+  <Mark id="create">**Tạo mới** tạo một key mới.</Mark>
+</Screenshot>
 
-Nếu key bị lộ, mở menu của key và chọn **Đổi secret**: secret cũ ngừng hoạt động ngay. **Xóa** sẽ thu hồi key vĩnh viễn.
+Chọn **Tạo mới**, đặt tên cho key, ví dụ "Claude Code", rồi chọn **Tạo mới** lần nữa. Key mới chỉ hiện một lần:
+
+<Screenshot name="api-key-created" alt="Key mới hiện một lần ở mục x-api-key, kèm nút sao chép">
+  <Mark id="warning">Secret chỉ hiện đúng một lần này. Nếu làm mất, hãy đổi secret hoặc tạo key mới.</Mark>
+  <Mark id="copy">Sao chép toàn bộ giá trị ở mục **x-api-key**. Đây là key mà trợ lý gửi đi.</Mark>
+</Screenshot>
+
+Nếu key bị lộ, mở menu của key (**...**) và chọn **Đổi secret**: secret cũ ngừng hoạt động ngay. **Xóa** sẽ thu hồi key vĩnh viễn.
 
 ## Kết nối trợ lý
 

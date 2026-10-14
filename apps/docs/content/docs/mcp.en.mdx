@@ -16,14 +16,21 @@ The Ecbot MCP Server lets an AI assistant such as Claude Code, Codex or Cursor w
 
 ## Create an API key
 
-The workspace owner creates API keys.
+The workspace owner creates API keys. Open the workspace menu at the top of the sidebar, choose **Settings**, then open **API key**:
 
-1. Open the workspace menu at the top of the sidebar and choose **Settings**.
-2. Open **API key** and choose **Create**.
-3. Give the key a name, such as "Claude Code", and choose **Create**.
-4. Copy the value under **x-api-key**. It is shown only once.
+<Screenshot name="api-keys" alt="The API key page in Settings, with the workspace's keys and the Create button">
+  <Mark id="nav">**API key** in the settings sidebar lists every key in the workspace.</Mark>
+  <Mark id="create">**Create** makes a new key.</Mark>
+</Screenshot>
 
-If a key leaks, open its menu and choose **Rotate secret**: the old secret stops working right away. **Delete** revokes the key for good.
+Choose **Create**, give the key a name such as "Claude Code", and choose **Create** again. The new key appears once:
+
+<Screenshot name="api-key-created" alt="The new key, shown once under x-api-key with a copy button">
+  <Mark id="warning">The secret is shown only this once. If you lose it, rotate the secret or create a new key.</Mark>
+  <Mark id="copy">Copy the whole value under **x-api-key**. This is the key your assistant sends.</Mark>
+</Screenshot>
+
+If a key leaks, open its menu (**...**) and choose **Rotate secret**: the old secret stops working right away. **Delete** revokes the key for good.
 
 ## Connect your assistant
 
