@@ -60,6 +60,11 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
   const audience = type.personal ? "the owner" : "customers";
 
   const header = `# ${agent} · ${business}\n━━━━━━━━━━━━━━━━`;
+  // "upset" already reads "upset or complains" (#191), so a ticked
+  // "complaint" next to it would only repeat it.
+  const handoffWhen = profile.handoffWhen.includes("upset")
+    ? profile.handoffWhen.filter((h) => h !== "complaint")
+    : profile.handoffWhen;
 
   const requirements = section("Requirements", [
     type.personal
@@ -114,7 +119,10 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
     "If you have a tool that looks up products, prices, stock or orders, call it before you answer or recommend, without asking first, and share the product link when the result includes one.",
     "Before you create, change or cancel an order, booking or payment, read the key details back and wait for a clear yes.",
     CALLBACK_FLOW,
-    profile.handoffWhen.length ? `Hand the conversation to a person when ${list(profile.handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.` : "",
+    profile.handoffWhen.length ? `Hand the conversation to a person when ${list(handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.${
+      // #191: without this, agents apologised and asked for the order number first.
+      profile.handoffWhen.some((h) => h === "upset" || h === "complaint") ? " For an upset customer, hand over in your first reply, before asking for order details." : ""
+    }` : "",
     type.mode === "detailed" ? "Explain step by step and check that the customer understood before moving on." : "",
   ]));
 

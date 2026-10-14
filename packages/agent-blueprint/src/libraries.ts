@@ -45,7 +45,7 @@ export const UNSURE = [
 
 export const HANDOFF_WHEN = [
   { id: "asks_for_human", prompt: "the customer asks for a person" },
-  { id: "upset", prompt: "the customer is upset" },
+  { id: "upset", prompt: "the customer is upset or complains" },
   { id: "unsure", prompt: "you are not sure of the answer" },
   { id: "large_order", prompt: "the order or deal is large or unusual" },
   { id: "complaint", prompt: "the customer makes a complaint" },
