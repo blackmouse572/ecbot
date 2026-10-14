@@ -2587,7 +2587,14 @@
       "lifecycle": {
         "OPEN": "Open",
         "RESOLVED": "Resolved"
-      }
+      },
+      "hint": {
+        "botActive": "The bot is replying to the customer.",
+        "needsYou": "The bot handed this chat to your team and stopped replying. Someone should answer the customer.",
+        "youHandling": "Your team paused the bot and is replying. The bot stays quiet until it is switched back on.",
+        "resolved": "Your team handled what was handed over. The bot answers again, and a new customer message reopens the chat."
+      },
+      "learnMore": "Learn more"
     },
     "author": {
       "user": "Customer",

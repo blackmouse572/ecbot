@@ -35,14 +35,26 @@ Choose **Review** on a suggestion, pick the customer to keep and which name, pho
 
 ## Conversations and handoff
 
-Open **Conversations** to read every chat. Each conversation has a status:
+Open **Conversations** to read every chat.
+
+### Conversation statuses [#conversation-statuses]
+
+Each conversation shows one status. Hover it in the app to see what it means.
 
 | Status | Meaning |
 | --- | --- |
-| **Bot active** | The agent is replying. |
-| **Needs you** | The agent handed the chat to your staff. |
-| **You're handling** | A staff member paused the agent and is replying. |
-| **Resolved** | Staff handled what was handed over and the agent answers again. A new message from the customer reopens the conversation. |
+| **Bot active** | The agent is replying to the customer. |
+| **Needs you** | The agent handed the chat to your staff and stopped replying. Someone on your team should answer. |
+| **You're handling** | A staff member paused the agent and is replying. The agent stays quiet until it is switched back on. |
+| **Resolved** | Staff handled what was handed over. The agent answers again and does not hand the same matter over again. You can still send messages. |
+
+How a conversation moves between them:
+
+- **Bot active** becomes **Needs you** when the agent hands over (see below).
+- **Bot active** becomes **You're handling** when a staff member chooses **Pause bot**.
+- **Needs you** or **You're handling** becomes **Resolved** when a staff member chooses **Resolve**, or **Bot active** when they switch the bot back on.
+- **Resolved** becomes **Bot active** again when the customer sends a new message, or when a staff member chooses **Restore to auto** from the conversation menu.
+- A new request that needs staff, such as an order change, hands over again even after **Resolved**.
 
 The agent hands a conversation to your staff when:
 

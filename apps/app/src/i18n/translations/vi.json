@@ -2634,7 +2634,14 @@
       "lifecycle": {
         "OPEN": "Đang mở",
         "RESOLVED": "Đã xử lý"
-      }
+      },
+      "hint": {
+        "botActive": "Bot đang trả lời khách.",
+        "needsYou": "Bot đã chuyển cuộc trò chuyện cho nhóm bạn và ngừng trả lời. Nhân viên cần trả lời khách.",
+        "youHandling": "Nhân viên đã tạm dừng bot và đang tự trả lời. Bot im lặng cho tới khi được bật lại.",
+        "resolved": "Nhóm bạn đã xử lý việc được chuyển. Bot trả lời lại, và tin nhắn mới của khách sẽ mở lại cuộc trò chuyện."
+      },
+      "learnMore": "Xem thêm"
     },
     "author": {
       "user": "Khách hàng",

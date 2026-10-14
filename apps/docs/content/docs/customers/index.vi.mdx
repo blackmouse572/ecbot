@@ -35,14 +35,26 @@ Chọn **Xem xét** ở một gợi ý, chọn khách hàng giữ lại và gi�
 
 ## Hội thoại và chuyển cho nhân viên
 
-Mở **Hội thoại** để đọc mọi cuộc trò chuyện. Mỗi cuộc trò chuyện có một trạng thái:
+Mở **Hội thoại** để đọc mọi cuộc trò chuyện.
+
+### Trạng thái hội thoại [#conversation-statuses]
+
+Mỗi cuộc trò chuyện có một trạng thái. Di chuột lên trạng thái trong ứng dụng để xem ý nghĩa.
 
 | Trạng thái | Ý nghĩa |
 | --- | --- |
 | **Bot đang trả lời** | Agent đang trả lời khách. |
-| **Cần bạn xử lý** | Agent đã chuyển cuộc trò chuyện cho nhân viên. |
-| **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. |
-| **Đã xử lý** | Nhân viên đã xử lý xong việc được chuyển, agent trả lời lại. Tin nhắn mới của khách sẽ mở lại cuộc trò chuyện. |
+| **Cần bạn xử lý** | Agent đã chuyển cuộc trò chuyện cho nhân viên và ngừng trả lời. Nhân viên cần trả lời khách. |
+| **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. Agent im lặng cho tới khi được bật lại. |
+| **Đã xử lý** | Nhân viên đã xử lý xong việc được chuyển. Agent trả lời lại và không chuyển lại việc đó. Bạn vẫn gửi tin nhắn được. |
+
+Cách cuộc trò chuyện chuyển giữa các trạng thái:
+
+- **Bot đang trả lời** thành **Cần bạn xử lý** khi agent chuyển cho nhân viên (xem bên dưới).
+- **Bot đang trả lời** thành **Bạn đang xử lý** khi nhân viên chọn **Tạm dừng bot**.
+- **Cần bạn xử lý** hoặc **Bạn đang xử lý** thành **Đã xử lý** khi nhân viên chọn **Đã xử lý**, hoặc thành **Bot đang trả lời** khi nhân viên bật bot lại.
+- **Đã xử lý** trở lại **Bot đang trả lời** khi khách nhắn tin mới, hoặc khi nhân viên chọn **Khôi phục tự động** trong menu của cuộc trò chuyện.
+- Một yêu cầu mới cần nhân viên, ví dụ đổi đơn, vẫn được chuyển lại kể cả sau khi **Đã xử lý**.
 
 Agent chuyển cuộc trò chuyện cho nhân viên khi:
 
