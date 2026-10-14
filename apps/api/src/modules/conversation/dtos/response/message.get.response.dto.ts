@@ -33,8 +33,19 @@ export interface ToolCallSerialization {
     error?: string;
     /** Absent for a skill load, which is not timed. */
     durationMs?: number;
-    /** Tool kind, lowercased like the live stream's `data-tool-meta`. */
-    kind?: 'http' | 'mcp' | 'skill';
+    /**
+     * Tool kind, lowercased like the live stream's `data-tool-meta`; mirrors
+     * the app's `ToolKind`. `handoff` is a tag that handed the chat to staff.
+     */
+    kind?:
+        | 'http'
+        | 'mcp'
+        | 'skill'
+        | 'customer'
+        | 'tag'
+        | 'followup'
+        | 'image'
+        | 'handoff';
 }
 
 /**

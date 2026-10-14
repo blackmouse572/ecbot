@@ -4025,7 +4025,8 @@
           "comment": null,
           "enumItems": [
             "SKILL",
-            "KNOWLEDGE"
+            "KNOWLEDGE",
+            "TOOL"
           ],
           "mappedType": "enum"
         },
