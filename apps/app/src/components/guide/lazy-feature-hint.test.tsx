@@ -8,7 +8,12 @@ describe("LazyFeatureHint", () => {
     render(<LazyFeatureHint feature="knowledge" icon={<span />} />);
 
     expect(
-      await screen.findByText("Teach the agent about your shop"),
+      // The first dynamic import compiles the module, which can be slow.
+      await screen.findByText(
+        "Teach the agent about your shop",
+        {},
+        { timeout: 5000 },
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("What time do you open?")).toBeInTheDocument();
   });
