@@ -30,7 +30,8 @@ export function KnowledgeItemTitleCell({
       ) : (
         IconComponent && (
           <Tooltip content={typeConfig?.label}>
-            <IconComponent size={16} className="flex-shrink-0 text-grey-40" />
+            {/* 18px, the width of the mini file type icon, so titles align. */}
+            <IconComponent size={18} className="flex-shrink-0 text-grey-40" />
           </Tooltip>
         )
       )}
