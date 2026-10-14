@@ -2630,10 +2630,10 @@
       "botActive": "Bot đang trả lời",
       "needsYou": "Cần bạn xử lý",
       "youHandling": "Bạn đang xử lý",
-      "resolved": "Đã đóng",
+      "resolved": "Đã xử lý",
       "lifecycle": {
         "OPEN": "Đang mở",
-        "RESOLVED": "Đã đóng"
+        "RESOLVED": "Đã xử lý"
       }
     },
     "author": {
@@ -2668,14 +2668,14 @@
       "viewProfile": "Xem hồ sơ",
       "viewChatbot": "Xem agent",
       "pause": "Tạm dừng bot",
-      "resolve": "Đóng hội thoại",
+      "resolve": "Đã xử lý",
       "restore": "Khôi phục tự động",
       "cancel": "Huỷ",
       "pauseConfirmTitle": "Tạm dừng trả lời tự động?",
       "pauseConfirmDescription": "Bot sẽ dừng trả lời. Nhân viên cần trực tiếp trả lời.",
       "pauseReasonLabel": "Lý do (tuỳ chọn)",
       "pauseReasonPlaceholder": "VD: Khách hàng yêu cầu hỗ trợ trực tiếp",
-      "resolveConfirmTitle": "Đánh dấu hội thoại đã đóng?",
+      "resolveConfirmTitle": "Đánh dấu hội thoại đã xử lý?",
       "resolveConfirmDescription": "Bot tiếp tục trả lời khách và không bàn giao lại việc nhóm đã xử lý. Bạn vẫn gửi tin nhắn được.",
       "restoreConfirmTitle": "Bàn giao lại cho bot?",
       "restoreConfirmDescription": "Hội thoại mở lại và bot tiếp tục trả lời."

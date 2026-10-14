@@ -42,7 +42,7 @@ Open **Conversations** to read every chat. Each conversation has a status:
 | **Bot active** | The agent is replying. |
 | **Needs you** | The agent handed the chat to your staff. |
 | **You're handling** | A staff member paused the agent and is replying. |
-| **Resolved** | The conversation is closed. A new message from the customer reopens it. |
+| **Resolved** | Staff handled what was handed over and the agent answers again. A new message from the customer reopens the conversation. |
 
 The agent hands a conversation to your staff when:
 
@@ -51,4 +51,4 @@ The agent hands a conversation to your staff when:
 - the customer gets a tag that triggers a handoff, see [Customer tags](/docs/customers/tags);
 - a guardrail blocks a message and the agent is set to escalate blocked messages.
 
-On handoff the agent stops replying in that conversation and everyone in the workspace gets a notification. Reply from the conversation, use **Pause bot** to take over a chat yourself, **Resolve** when you are done, or **Restore to auto** to let the agent answer again.
+On handoff the agent stops replying in that conversation and everyone in the workspace gets a notification. Reply from the conversation, use **Pause bot** to take over a chat yourself, **Resolve** when you are done (the agent answers again and does not hand that over again), or **Restore to auto** to let the agent answer again.
