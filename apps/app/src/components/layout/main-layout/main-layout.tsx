@@ -28,7 +28,7 @@ import { useTranslation } from "react-i18next";
 
 import { LogoBoxSpinner, Skeleton } from "@repo/ui/common-components";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { NavItem, Shell, type INavItem } from "@repo/ui/layout";
+import { NavHintPopover, NavItem, Shell, type INavItem } from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
 import { NotificationMenu } from "../notification-menu/notification-menu";
 
@@ -438,6 +438,7 @@ const CoreRouteSection = () => {
 
   return (
     <div className="flex flex-col">
+      <NavHintPopover />
       <nav className="flex flex-col gap-y-1 py-3">
         <Searchbar />
         <DashboardItem />
