@@ -83,11 +83,14 @@ export const ChatbotGeneralSection = ({ item }: ChatbotGeneralSectionProps) => {
             date: getFullDate(new Date(item.createdAt)),
           })}
         </Text>
-        <Text size="xsmall" className="text-ui-fg-muted">
-          {t("chatbot.details.general.updatedAt", {
-            date: getFullDate(new Date(item.updatedAt)),
-          })}
-        </Text>
+        {/* Null until the first edit; never show it as 1970. */}
+        {item.updatedAt && (
+          <Text size="xsmall" className="text-ui-fg-muted">
+            {t("chatbot.details.general.updatedAt", {
+              date: getFullDate(new Date(item.updatedAt)),
+            })}
+          </Text>
+        )}
       </div>
     </Container>
   );
