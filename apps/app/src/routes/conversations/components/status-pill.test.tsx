@@ -5,7 +5,21 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { language: "vi" } }),
+  Trans: ({ i18nKey }: { i18nKey: string }) => <>{i18nKey}</>,
 }));
+
+const conversation = (botEnabled: boolean, status = "OPEN") =>
+  ({ id: "c1", status, botEnabled, handoffAt: "x" }) as never;
+
+const hover = async (label: string, convo: never) => {
+  render(
+    <TooltipProvider>
+      <StatusPill conversation={convo} />
+    </TooltipProvider>,
+  );
+  await userEvent.hover(screen.getByText(label));
+  await screen.findAllByText(/conversations\.status\.hint\./);
+};
 
 import { StatusPill } from "./status-pill";
 
@@ -38,5 +52,22 @@ describe("StatusPill", () => {
       "href",
       expect.stringMatching(/\/vi\/docs\/customers#conversation-statuses$/),
     );
+  });
+
+  it("tells staff to Resolve when the bot is waiting on them", async () => {
+    await hover("conversations.status.needsYou", conversation(false));
+    expect(
+      screen.getAllByText("conversations.status.resolveTip")[0],
+    ).toBeInTheDocument();
+  });
+
+  it("has no Resolve tip once the bot answers again", async () => {
+    await hover(
+      "conversations.status.resolved",
+      conversation(true, "RESOLVED"),
+    );
+    expect(
+      screen.queryByText("conversations.status.resolveTip"),
+    ).not.toBeInTheDocument();
   });
 });

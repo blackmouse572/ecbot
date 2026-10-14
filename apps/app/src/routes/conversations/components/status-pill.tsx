@@ -1,5 +1,5 @@
 import { StatusBadge, Tooltip } from "@medusajs/ui";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import type { ConversationGetResponseDto } from "@/hooks/api/conversations";
 import { docsUrl } from "@/libs/docs-url";
 
@@ -36,6 +36,14 @@ export const StatusPill = ({
       content={
         <span className="flex flex-col gap-y-1">
           <span>{t(`conversations.status.hint.${state}`)}</span>
+          {(state === "needsYou" || state === "youHandling") && (
+            <span>
+              <Trans
+                i18nKey="conversations.status.resolveTip"
+                components={{ b: <b className="font-semibold" /> }}
+              />
+            </span>
+          )}
           <a
             href={docsUrl("customers#conversation-statuses", i18n.language)}
             target="_blank"

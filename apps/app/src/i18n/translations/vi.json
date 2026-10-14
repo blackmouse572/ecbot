@@ -2641,6 +2641,7 @@
         "youHandling": "Nhân viên đã tạm dừng bot và đang tự trả lời. Bot im lặng cho tới khi được bật lại.",
         "resolved": "Nhóm bạn đã xử lý việc được chuyển. Bot trả lời lại, và tin nhắn mới của khách sẽ mở lại cuộc trò chuyện."
       },
+      "resolveTip": "Bấm <b>Đã xử lý</b> khi bạn xong việc và muốn bot tiếp tục.",
       "learnMore": "Xem thêm"
     },
     "author": {

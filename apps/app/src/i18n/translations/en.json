@@ -2594,6 +2594,7 @@
         "youHandling": "Your team paused the bot and is replying. The bot stays quiet until it is switched back on.",
         "resolved": "Your team handled what was handed over. The bot answers again, and a new customer message reopens the chat."
       },
+      "resolveTip": "Click <b>Resolve</b> when you're done and want the bot to continue.",
       "learnMore": "Learn more"
     },
     "author": {

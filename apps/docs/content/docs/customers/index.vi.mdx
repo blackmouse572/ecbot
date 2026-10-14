@@ -7,7 +7,7 @@ faq:
   - q: Nếu hai hồ sơ có cùng số điện thoại thì sao?
     a: Ecbot tạo một gợi ý trong mục Gợi ý. Bạn chọn giữ hồ sơ nào và dùng thông tin nào, hoặc bỏ qua. Việc gộp có thể hoàn tác bằng Tách gộp.
   - q: Sau khi chuyển cho nhân viên, agent còn trả lời không?
-    a: Không. Agent tạm dừng trong cuộc trò chuyện đó và nhân viên nhận thông báo. Hãy trả lời trong cuộc trò chuyện, rồi chọn Khôi phục tự động để giao lại cho agent.
+    a: Không. Agent tạm dừng trong cuộc trò chuyện đó và nhân viên nhận thông báo. Hãy trả lời trong cuộc trò chuyện, rồi chọn Đã xử lý khi xong việc và muốn agent tiếp tục.
 ---
 
 Mỗi người nhắn tin cho agent trở thành một khách hàng trong Ecbot. Hồ sơ lưu tên, thông tin liên hệ, ghi chú và nhãn, và được dùng chung trên các kênh, nên khách nhắn qua Messenger rồi sau đó qua Zalo vẫn có thể được xem là một người. Bạn xem và sửa hồ sơ ngay bên cạnh mỗi cuộc trò chuyện.
@@ -47,6 +47,8 @@ Mỗi cuộc trò chuyện có một trạng thái. Di chuột lên trạng thá
 | **Cần bạn xử lý** | Agent đã chuyển cuộc trò chuyện cho nhân viên và ngừng trả lời. Nhân viên cần trả lời khách. |
 | **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. Agent im lặng cho tới khi được bật lại. |
 | **Đã xử lý** | Nhân viên đã xử lý xong việc được chuyển. Agent trả lời lại và không chuyển lại việc đó. Bạn vẫn gửi tin nhắn được. |
+
+<ConversationStatusDiagram />
 
 Cách cuộc trò chuyện chuyển giữa các trạng thái:
 
