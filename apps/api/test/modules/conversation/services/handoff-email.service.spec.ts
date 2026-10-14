@@ -112,4 +112,23 @@ describe('HandoffEmailService.send', () => {
         expect(enqueue).not.toHaveBeenCalled();
         expect(claim).not.toHaveBeenCalled();
     });
+
+    // #288: a notify-only tag sends its own email, named by the tag, with a
+    // cooldown of its own so it never uses up the handoff email's.
+    it('sends a tag notice with the tag name and its own conversation window', async () => {
+        await service.send('c-1', 'ws-1', 'tag_notice', 'vi', 'Order placed');
+
+        expect(enqueue.mock.calls[0][2].data).toEqual({
+            chatbotName: 'Linh',
+            workspaceName: 'Kunmart',
+            reason: 'tag_notice',
+            tagName: 'Order placed',
+            conversationUrl: '/kunmart/conversations/c-1',
+            language: 'vi',
+        });
+        expect(claim.mock.calls.map(c => c[0])).toEqual([
+            'handoff-email:notice:conversation:c-1',
+            'handoff-email:workspace:ws-1',
+        ]);
+    });
 });

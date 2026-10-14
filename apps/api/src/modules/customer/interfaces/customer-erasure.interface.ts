@@ -1,3 +1,4 @@
+import type { ConversationActivityEntity } from '@app/modules/conversation/repository/entities/conversation-activity.entity';
 import type { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 import type { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
 import type { FollowupEntity } from '@app/modules/platform/repository/entities/followup.entity';
@@ -24,6 +25,7 @@ export interface ICustomerSubjectData extends ICustomerSubjectScope {
     tagAssignments: CustomerTagAssignmentEntity[];
     followups: FollowupEntity[];
     toolInvocations: ToolInvocationEntity[];
+    activities: ConversationActivityEntity[];
 }
 
 /** What a hard delete of one customer removed from the database. */

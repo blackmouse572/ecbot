@@ -135,6 +135,44 @@ describe("compilePrompt", () => {
     expect(withHours).toContain("Reply as usual and mention the opening hours.");
   });
 
+  // #289: structured hours are the source of truth; the free text stays as notes.
+  it("puts the weekly hours in the knowledge and keeps the free text as notes", () => {
+    const openingHours = { mon: [{ open: "08:00", close: "22:00" }], tue: [{ open: "08:00", close: "22:00" }] };
+    const out = compilePrompt({ ...sample("restaurant", "en"), openingHours });
+    expect(out).toContain("Opening hours: Monday to Tuesday 08:00-22:00; Wednesday to Sunday closed");
+    expect(out).toContain("Opening hours notes: sample opening_hours");
+  });
+
+  it("counts structured hours as known for types that ask no hours question", () => {
+    const openingHours = { sat: [{ open: "09:00", close: "17:00" }] };
+    const out = compilePrompt({ ...sample("hotel", "en"), afterHours: "share_hours", openingHours });
+    expect(out).toContain("Opening hours: Monday to Friday closed; Saturday 09:00-17:00; Sunday closed");
+    expect(out).toContain("Reply as usual and mention the opening hours.");
+  });
+
+  it("compiles a profile without structured hours as before", () => {
+    const out = compilePrompt({ ...sample("restaurant", "en"), openingHours: { mon: [] } });
+    expect(out).toBe(compilePrompt(sample("restaurant", "en")));
+    expect(out).toContain("Opening hours: sample opening_hours");
+  });
+
+  // #291: bookings respect real time and hours, and go to staff with a tag.
+  it("grounds booking goals in the current time and hands confirmed bookings to staff", () => {
+    for (const type of ["beauty", "restaurant"] as const) {
+      const out = compilePrompt(sample(type, "en"));
+      expect(out).toContain("Only offer or accept times that are still ahead of now and inside the opening hours");
+      expect(out).toContain("If no opening hours are given, take the customer's preferred time without promising it.");
+      expect(out).toContain('applying the tag marked "(triggers handoff)" for new bookings ("New booking" by default)');
+      expect(out).toContain("Never say the booking is confirmed.");
+    }
+  });
+
+  it("treats a callback request as a booking for business types only", () => {
+    const callback = "If the customer asks to be called back";
+    expect(compilePrompt(sample("ecommerce", "en"))).toContain(callback);
+    expect(compilePrompt(sample("personal_scheduling", "en"))).not.toContain(callback);
+  });
+
   // #119: no guessing stock or variants, and no "I will check" promise.
   it("forbids stating stock, variants or prices that are not in the facts", () => {
     const out = compilePrompt(sample("ecommerce", "en"));

@@ -83,6 +83,7 @@ export class CustomerTagClientController {
             emoji: dto.emoji,
             description: dto.description,
             triggersHandoff: dto.triggersHandoff ?? false,
+            notifiesTeam: dto.notifiesTeam ?? false,
         });
         await this.log(ENUM_ACTIVITY_ACTION.CREATE, workspace, credential, tag);
 

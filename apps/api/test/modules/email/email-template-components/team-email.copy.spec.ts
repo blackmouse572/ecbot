@@ -15,6 +15,23 @@ describe('team email copy', () => {
         );
     });
 
+    it('tag notice (#288): names the tag and says the assistant keeps replying', () => {
+        const en = handoffEmailCopy('en', 'Ecbot').notice;
+
+        expect(en.subject('Linh', 'Order placed')).toBe(
+            'Linh tagged a customer "Order placed"'
+        );
+        expect(en.intro('Linh', 'Order placed')).toBe(
+            'Linh tagged a customer "Order placed" in a conversation.'
+        );
+        expect(en.body).toBe(
+            'The assistant keeps replying. Open the conversation to follow up.'
+        );
+        expect(handoffEmailCopy('vi', 'Ecbot').notice.body).toBe(
+            'Trợ lý vẫn tiếp tục trả lời. Mở cuộc hội thoại để theo dõi.'
+        );
+    });
+
     it('member joined: names who joined which workspace', () => {
         expect(
             memberJoinedEmailCopy('en', 'Ecbot').subject('Tran Linh', 'Kunmart')

@@ -28,6 +28,10 @@ import { MessageEntity } from '../repository/entities/message.entity';
 import { ConversationRepository } from '../repository/repositories/conversation.repository';
 import { MessageRepository } from '../repository/repositories/message.repository';
 import { MessageMediaService } from './message-media.service';
+import { ENUM_CONVERSATION_ACTIVITY_KIND } from '../enums/conversation-activity.enum';
+import { IReplyActivity } from '../interfaces/conversation-activity.interface';
+import { ConversationActivityEntity } from '../repository/entities/conversation-activity.entity';
+import { ConversationActivityRepository } from '../repository/repositories/conversation-activity.repository';
 
 /**
  * Dispatches operator-initiated messages to the customer's platform via the
@@ -53,7 +57,8 @@ export class ConversationMessagingService {
         private readonly userRepository: UserRepository,
         private readonly toolInvocationRepository: ToolInvocationRepository,
         private readonly moduleRef: ModuleRef,
-        private readonly messageMedia: MessageMediaService
+        private readonly messageMedia: MessageMediaService,
+        private readonly conversationActivityRepository: ConversationActivityRepository
     ) {}
 
     private get platformRegistry(): PlatformAdapterRegistry {
@@ -249,6 +254,28 @@ export class ConversationMessagingService {
         });
     }
 
+    /** Store what the agent did for a reply that reached the customer (#286). */
+    async recordActivities(
+        conversationId: string,
+        activities: IReplyActivity[]
+    ): Promise<void> {
+        await this.conversationActivityRepository.insertForReply(
+            conversationId,
+            activities
+        );
+    }
+
+    /** Activities of a conversation, bounded like `listToolInvocations`. */
+    async listActivities(
+        conversationId: string,
+        range?: { from?: Date; to?: Date }
+    ): Promise<ConversationActivityEntity[]> {
+        return this.conversationActivityRepository.findByConversation(
+            conversationId,
+            range
+        );
+    }
+
     async mapMessage(
         message: MessageEntity,
         conversation?: ConversationEntity,
@@ -269,19 +296,19 @@ export class ConversationMessagingService {
 
     /**
      * Map messages to DTOs, resolving author names and splicing persisted tool
-     * invocations under the nearest-following BOT message.
+     * invocations and agent activities (skills, knowledge searches) under the
+     * nearest-following BOT message, in the order they happened.
      */
     async mapMessages(
         messages: MessageEntity[],
         conversation?: ConversationEntity,
         userNameMap?: Map<string, string>,
-        invocations: ToolInvocationEntity[] = []
+        invocations: ToolInvocationEntity[] = [],
+        activities: ConversationActivityEntity[] = []
     ): Promise<MessageGetResponseDto[]> {
         const dtos = await Promise.all(
             messages.map(m => this.mapMessage(m, conversation, userNameMap))
         );
-
-        if (!invocations.length) return dtos;
 
         const botIndices = messages
             .map((m, i) => (m.authorType === ENUM_MESSAGE_AUTHOR.BOT ? i : -1))
@@ -289,24 +316,51 @@ export class ConversationMessagingService {
 
         if (!botIndices.length) return dtos;
 
-        for (const inv of invocations) {
-            // Find the nearest BOT message whose dateSent is >= invocation.createdAt.
-            // The bot reply is persisted *after* the tool call completes, so the
-            // invocation's createdAt precedes (or equals) the BOT message's dateSent.
-            let targetIdx = botIndices.find(
-                i => messages[i].dateSent.getTime() >= inv.createdAt.getTime()
-            );
-            if (targetIdx === undefined) {
-                // Invocation is later than every BOT message in this page —
-                // attach to the last BOT message so it's still visible.
-                targetIdx = botIndices[botIndices.length - 1];
-            }
-            const dto = dtos[targetIdx];
-            if (!dto.toolCalls) dto.toolCalls = [];
-            dto.toolCalls.push(this.serializeInvocation(inv));
+        const steps = [
+            ...invocations.map(inv => ({
+                at: inv.createdAt,
+                apply: (dto: MessageGetResponseDto) =>
+                    (dto.toolCalls ??= []).push(this.serializeInvocation(inv)),
+            })),
+            ...activities.map(act => ({
+                at: act.createdAt,
+                apply: (dto: MessageGetResponseDto) =>
+                    this.applyActivity(dto, act),
+            })),
+        ].sort((a, b) => a.at.getTime() - b.at.getTime());
+
+        for (const step of steps) {
+            // The nearest BOT message whose dateSent is >= the step: the reply
+            // is persisted *after* the agent acted, so the step precedes it.
+            // A step later than every BOT message in this page attaches to the
+            // last one so it's still visible.
+            const targetIdx =
+                botIndices.find(
+                    i => messages[i].dateSent.getTime() >= step.at.getTime()
+                ) ?? botIndices[botIndices.length - 1];
+            step.apply(dtos[targetIdx]);
         }
 
         return dtos;
+    }
+
+    /** A skill load reads as a skill step; a knowledge search as its count. */
+    private applyActivity(
+        dto: MessageGetResponseDto,
+        act: ConversationActivityEntity
+    ): void {
+        if (act.kind === ENUM_CONVERSATION_ACTIVITY_KIND.SKILL) {
+            (dto.toolCalls ??= []).push({
+                invocationId: act.id,
+                toolName: 'load_skill',
+                args: act.label ? { slug: act.label } : {},
+                status: 'success',
+                kind: 'skill',
+            });
+        } else if (act.kind === ENUM_CONVERSATION_ACTIVITY_KIND.KNOWLEDGE) {
+            dto.knowledgeCount = act.payload?.count;
+            if (act.payload?.sources?.length) dto.sources = act.payload.sources;
+        }
     }
 
     private serializeInvocation(

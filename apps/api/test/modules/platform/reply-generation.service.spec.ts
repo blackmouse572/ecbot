@@ -250,4 +250,90 @@ describe('ReplyGenerationService.run', () => {
             expect.objectContaining({ usage })
         );
     });
+    // #286: the operator view shows what the agent did for a channel reply.
+    describe('agent activity', () => {
+        const activities = [
+            { kind: 'SKILL', label: 'refunds', at: new Date() },
+        ];
+
+        function deliveringService(anySent: boolean) {
+            const conversations = {
+                findOneById: jest.fn().mockResolvedValue({
+                    botEnabled: true,
+                    account: 'acc-1',
+                }),
+                resetFallbackCount: jest.fn(),
+                recordFallback: jest.fn().mockResolvedValue({
+                    triggered: false,
+                }),
+                recordActivities: jest.fn().mockResolvedValue(undefined),
+            };
+            const svc = new ReplyGenerationService(
+                {
+                    findOne: jest.fn().mockResolvedValue({
+                        id: 'acc-1',
+                        type: 'FACEBOOK_PAGE',
+                        chatbot: { id: 'bot-1', workspace: { id: 'ws-1' } },
+                    }),
+                } as any,
+                { streamChat: jest.fn().mockResolvedValue({}) } as any,
+                {
+                    findLatestInbound: jest
+                        .fn()
+                        .mockResolvedValue({ id: 'm-1' }),
+                } as any,
+                { get: () => ({ startTyping: jest.fn() }) } as any,
+                {
+                    current: jest.fn().mockResolvedValue(1),
+                    isCurrent: jest.fn().mockResolvedValue(true),
+                } as any,
+                {
+                    deliver: jest.fn().mockResolvedValue({
+                        anySent,
+                        superseded: false,
+                        guardrailBlocked: false,
+                        guardrailReason: '',
+                        generationFailed: false,
+                        activities,
+                    }),
+                } as any,
+                { get: jest.fn(() => conversations) } as any,
+                { em: { fork: () => ({}) } } as any,
+                { build: jest.fn().mockResolvedValue([]) } as any,
+                {
+                    build: jest
+                        .fn()
+                        .mockResolvedValue({ history: [], message: 'x' }),
+                } as any
+            );
+            const run = () =>
+                svc.run({
+                    conversationId: 'c',
+                    senderId: 's',
+                    customerId: 'cu',
+                    contactPointId: 'cp',
+                    texts: ['hoàn tiền?'],
+                });
+            return { run, conversations };
+        }
+
+        it('records what the agent did once the reply reached the customer', async () => {
+            const { run, conversations } = deliveringService(true);
+
+            await run();
+
+            expect(conversations.recordActivities).toHaveBeenCalledWith(
+                'c',
+                activities
+            );
+        });
+
+        it('records nothing when no reply was sent', async () => {
+            const { run, conversations } = deliveringService(false);
+
+            await run();
+
+            expect(conversations.recordActivities).not.toHaveBeenCalled();
+        });
+    });
 });

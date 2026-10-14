@@ -4849,6 +4849,21 @@ export type MessageAuthorDto = {
     name: string;
 };
 
+export type MessageKnowledgeSourceResponseDto = {
+    /**
+     * Knowledge item id
+     */
+    id: string;
+    /**
+     * Knowledge item or page title
+     */
+    title?: string;
+    /**
+     * Web page link, when the item has one
+     */
+    sourceUrl?: string;
+};
+
 export type MessageReactionResponseDto = {
     /**
      * Reaction emoji
@@ -4909,6 +4924,14 @@ export type MessageGetResponseDto = {
     toolCalls?: Array<{
         [key: string]: unknown;
     }>;
+    /**
+     * Knowledge sources the agent found before this BOT reply. Only on channel replies.
+     */
+    knowledgeCount?: number;
+    /**
+     * The knowledge sources behind this BOT reply, when the AI service reported them
+     */
+    sources?: Array<MessageKnowledgeSourceResponseDto>;
     /**
      * Images and other media on this message
      */
@@ -5438,6 +5461,12 @@ export type CustomerDataExportResponseDto = {
     toolInvocations: Array<{
         [key: string]: unknown;
     }>;
+    /**
+     * Skills the agent loaded and knowledge it searched in these conversations
+     */
+    activities: Array<{
+        [key: string]: unknown;
+    }>;
 };
 
 export type ContactPointGetResponseDto = {
@@ -5486,6 +5515,7 @@ export type CustomerTagGetResponseDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff: boolean;
+    notifiesTeam: boolean;
     createdAt: string;
     updatedAt?: string;
 };
@@ -5495,6 +5525,10 @@ export type CustomerTagCreateRequestDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff?: boolean;
+    /**
+     * Notify the team when the agent applies this tag, without handing the conversation over
+     */
+    notifiesTeam?: boolean;
 };
 
 export type CustomerTagUpdateRequestDto = {
@@ -5502,6 +5536,10 @@ export type CustomerTagUpdateRequestDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff?: boolean;
+    /**
+     * Notify the team when the agent applies this tag, without handing the conversation over
+     */
+    notifiesTeam?: boolean;
 };
 
 export type CustomerTagAssignmentGetResponseDto = {

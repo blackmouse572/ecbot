@@ -5,6 +5,7 @@ export interface ICustomerTagSeed {
     emoji: string;
     description: string;
     triggersHandoff: boolean;
+    notifiesTeam?: boolean;
 }
 
 const CUSTOMER_TAG_DEFAULTS_EN: ICustomerTagSeed[] = [
@@ -68,6 +69,20 @@ const CUSTOMER_TAG_DEFAULTS_EN: ICustomerTagSeed[] = [
         description: 'Customer asked to talk to a person.',
         triggersHandoff: true,
     },
+    {
+        name: 'New booking',
+        emoji: '🗓️',
+        description:
+            'Customer confirmed a booking or callback for staff to confirm.',
+        triggersHandoff: true,
+    },
+    {
+        name: 'Order placed',
+        emoji: '🛒',
+        description: 'The order tool placed an order for the customer.',
+        triggersHandoff: false,
+        notifiesTeam: true,
+    },
 ];
 
 const CUSTOMER_TAG_DEFAULTS_VI: ICustomerTagSeed[] = [
@@ -130,6 +145,20 @@ const CUSTOMER_TAG_DEFAULTS_VI: ICustomerTagSeed[] = [
         emoji: '🙋',
         description: 'Khách muốn trao đổi với nhân viên.',
         triggersHandoff: true,
+    },
+    {
+        name: 'Lịch hẹn mới',
+        emoji: '🗓️',
+        description:
+            'Khách đã chốt lịch hẹn hoặc nhờ gọi lại, cần nhân viên xác nhận.',
+        triggersHandoff: true,
+    },
+    {
+        name: 'Đã đặt đơn',
+        emoji: '🛒',
+        description: 'Đơn hàng đã được đặt qua công cụ đặt hàng.',
+        triggersHandoff: false,
+        notifiesTeam: true,
     },
 ];
 

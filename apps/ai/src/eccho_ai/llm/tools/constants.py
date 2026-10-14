@@ -15,6 +15,11 @@ FOLLOWUP_FAILED = (
     "The follow-up could not be scheduled. "
     "Do not promise a reminder: tell the customer you could not set it right now."
 )
+FOLLOWUP_TIME_REJECTED = (
+    "That follow-up time was rejected: it has passed, is less than a minute "
+    "away, is more than 30 days ahead, or is not a real date. Check the current "
+    "time and call again with a later `at`, or ask the customer which time they mean."
+)
 HANDOFF_FAILED = (
     "The tag could not be applied. "
     "Do not tell the customer a staff member will take over."
