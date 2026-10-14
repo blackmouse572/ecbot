@@ -12,7 +12,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import { StatusPill } from "../../../components/status-pill";
 
-const PER_PAGE = 20;
+const PER_PAGE = 100;
 
 interface Props {
   customerId: string;
