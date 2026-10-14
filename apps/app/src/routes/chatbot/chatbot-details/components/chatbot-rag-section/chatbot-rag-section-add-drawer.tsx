@@ -1,11 +1,21 @@
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
-import { Button, Checkbox, Drawer, Input, Text, toast } from "@medusajs/ui";
-import { Combobox } from "@repo/ui/common-components";
-import { useCallback, useMemo, useState } from "react";
+import {
+  Button,
+  createDataTableColumnHelper,
+  createDataTableFilterHelper,
+  DataTable,
+  Drawer,
+  Text,
+  toast,
+  useDataTable,
+  type DataTableFilteringState,
+  type DataTablePaginationState,
+  type DataTableRowSelectionState,
+} from "@medusajs/ui";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { useDebounceValue } from "usehooks-ts";
 import { withOriginAgent } from "@/utils/origin-agent";
 import {
   useBatchLinkKnowledgeItemsToChatbot,
@@ -15,6 +25,7 @@ import {
 } from "@/hooks/api/knowledge-base";
 import { useKnowledgeTags } from "@/hooks/api/knowledge-tag";
 import { useBatchResultToast } from "@/hooks/use-batch-result-toast";
+import type { KnowledgeItemResponseDto } from "@repo/client";
 import { KnowledgeItemTagListCell } from "../../../../knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-tag-list-cell";
 import { KnowledgeItemTitleCell } from "../../../../knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-title-cell";
 import { PlusMini } from "@medusajs/icons";
@@ -26,8 +37,10 @@ type ChatbotRAGSectionAddDrawerProps = {
   linkedItemIds?: string[];
 };
 
-// Rows shown at once; "Select all matching" reaches past them.
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 10;
+
+const columnHelper = createDataTableColumnHelper<KnowledgeItemResponseDto>();
+const filterHelper = createDataTableFilterHelper<KnowledgeItemResponseDto>();
 
 export function ChatbotRAGSectionAddDrawer({
   isOpen,
@@ -39,10 +52,15 @@ export function ChatbotRAGSectionAddDrawer({
   const { workspaceSlug } = useWorkspaceParams();
   const notifyBatchResult = useBatchResultToast();
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [rowSelection, setRowSelection] = useState<DataTableRowSelectionState>(
+    {},
+  );
   const [search, setSearch] = useState("");
-  const [debouncedSearch] = useDebounceValue(search, 300);
-  const [tag, setTag] = useState("");
+  const [filtering, setFiltering] = useState<DataTableFilteringState>({});
+  const [pagination, setPagination] = useState<DataTablePaginationState>({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+  });
   const [isSelectingAll, setIsSelectingAll] = useState(false);
 
   const { knowledgeBases } = useKnowledgeBases();
@@ -51,17 +69,19 @@ export function ChatbotRAGSectionAddDrawer({
     enabled: !!knowledgeBaseId,
   });
 
+  const selectedTags = (filtering.tags as string[] | undefined) ?? [];
   const filters = useMemo(
     () => ({
-      search: debouncedSearch || undefined,
-      tags: tag || undefined,
+      search: search || undefined,
+      tags: selectedTags.length ? selectedTags.join(",") : undefined,
     }),
-    [debouncedSearch, tag],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [search, selectedTags.join(",")],
   );
 
   const { items, count, isLoading } = useKnowledgeItems(
     knowledgeBaseId || "",
-    { ...filters, perPage: PAGE_SIZE },
+    { ...filters, perPage: PAGE_SIZE, page: pagination.pageIndex + 1 },
     { enabled: !!knowledgeBaseId },
   );
   const fetchAllIds = useFetchAllKnowledgeItemIds(knowledgeBaseId || "");
@@ -73,24 +93,81 @@ export function ChatbotRAGSectionAddDrawer({
     [items, linked],
   );
 
-  const toggle = useCallback((id: string, checked: boolean) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-  }, []);
+  const columns = useMemo(
+    () => [
+      columnHelper.select(),
+      columnHelper.accessor("title", {
+        header: t("knowledgeBase.list.columns.title"),
+        cell: ({ row }) => (
+          <KnowledgeItemTitleCell
+            title={row.original.title}
+            type={row.original.type}
+          />
+        ),
+      }),
+      columnHelper.accessor("tags", {
+        header: t("knowledgeBase.list.columns.tags"),
+        cell: ({ row }) => (
+          <KnowledgeItemTagListCell tags={row.original.tags} />
+        ),
+      }),
+    ],
+    [t],
+  );
+
+  const tableFilters = useMemo(
+    () => [
+      filterHelper.accessor("tags", {
+        label: t("knowledgeBase.list.columns.tags"),
+        type: "multiselect",
+        options: (tags || []).map((name) => ({ label: name, value: name })),
+      }),
+    ],
+    [t, tags],
+  );
+
+  const selectedIds = Object.keys(rowSelection).filter(
+    (id) => rowSelection[id],
+  );
+
+  const table = useDataTable({
+    data: visibleItems,
+    columns,
+    getRowId: (row) => row.id,
+    rowCount: count,
+    isLoading,
+    filters: tableFilters,
+    filtering: {
+      state: filtering,
+      onFilteringChange: (state) => {
+        setFiltering(state);
+        setPagination((p) => ({ ...p, pageIndex: 0 }));
+      },
+    },
+    search: {
+      state: search,
+      onSearchChange: (value) => {
+        setSearch(value);
+        setPagination((p) => ({ ...p, pageIndex: 0 }));
+      },
+    },
+    pagination: { state: pagination, onPaginationChange: setPagination },
+    rowSelection: {
+      state: rowSelection,
+      onRowSelectionChange: setRowSelection,
+    },
+  });
 
   const handleSelectAllMatching = async () => {
     setIsSelectingAll(true);
     try {
       const ids = await fetchAllIds(filters);
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        ids.filter((id) => !linked.has(id)).forEach((id) => next.add(id));
-        return next;
-      });
+      setRowSelection((prev) => ({
+        ...prev,
+        ...Object.fromEntries(
+          ids.filter((id) => !linked.has(id)).map((id) => [id, true]),
+        ),
+      }));
     } catch {
       toast.error(t("general.loadFailed"));
     } finally {
@@ -98,25 +175,22 @@ export function ChatbotRAGSectionAddDrawer({
     }
   };
 
-  const reset = () => {
-    setSelectedIds(new Set());
-    setSearch("");
-    setTag("");
-  };
-
   const handleClose = () => {
-    reset();
+    setRowSelection({});
+    setSearch("");
+    setFiltering({});
+    setPagination({ pageIndex: 0, pageSize: PAGE_SIZE });
     onClose();
   };
 
   const handleAdd = async () => {
-    if (selectedIds.size === 0) {
+    if (selectedIds.length === 0) {
       toast.error(t("knowledgeBase.error.selectItem", "Please select an item"));
       return;
     }
 
     try {
-      const result = await linkMutation.mutateAsync([...selectedIds]);
+      const result = await linkMutation.mutateAsync(selectedIds);
       notifyBatchResult(result);
       handleClose();
     } catch {
@@ -137,87 +211,46 @@ export function ChatbotRAGSectionAddDrawer({
             {t("knowledgeBase.link.description")}
           </Drawer.Description>
         </Drawer.Header>
-        <Drawer.Body className="flex flex-col gap-4 overflow-hidden">
-          <div className="flex flex-col gap-2">
-            <Input
-              type="search"
-              size="small"
-              value={search}
-              placeholder={t("knowledgeBase.link.searchPlaceholder")}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Combobox
-              value={tag}
-              allowClear
-              placeholder={t("knowledgeBase.link.tagFilter")}
-              options={(tags || []).map((name) => ({
-                label: name,
-                value: name,
-              }))}
-              onChange={(v) => setTag(v ?? "")}
-            />
-          </div>
-
-          <div className="flex items-center justify-between gap-2">
-            <Text size="small" className="text-ui-fg-subtle">
-              {t("knowledgeBase.link.selected", { count: selectedIds.size })}
-            </Text>
-            <div className="flex items-center gap-1">
-              {selectedIds.size > 0 && (
+        <Drawer.Body className="flex flex-col gap-4 overflow-y-auto p-0">
+          <DataTable instance={table}>
+            <DataTable.Toolbar
+              className="flex flex-col gap-2 px-4 pt-4"
+              translations={{ clearAll: t("actions.clearAll") }}
+            >
+              <div className="flex w-full items-center justify-between gap-2">
+                <DataTable.FilterMenu tooltip={t("filters.addFilter")} />
+                <DataTable.Search
+                  placeholder={t("knowledgeBase.link.searchPlaceholder")}
+                />
+              </div>
+              <div className="flex w-full items-center justify-between gap-2">
+                <Text size="small" className="text-ui-fg-subtle">
+                  {t("knowledgeBase.link.selected", {
+                    count: selectedIds.length,
+                  })}
+                </Text>
                 <Button
                   size="small"
-                  variant="transparent"
-                  onClick={() => setSelectedIds(new Set())}
+                  variant="secondary"
+                  onClick={handleSelectAllMatching}
+                  isLoading={isSelectingAll}
+                  disabled={count === 0}
                 >
-                  {t("knowledgeBase.link.clear")}
+                  {t("knowledgeBase.link.selectAllMatching")}
                 </Button>
-              )}
-              <Button
-                size="small"
-                variant="secondary"
-                onClick={handleSelectAllMatching}
-                isLoading={isSelectingAll}
-                disabled={count === 0}
-              >
-                {t("knowledgeBase.link.selectAllMatching", { count })}
-              </Button>
-            </div>
-          </div>
-
-          <ul
-            className="flex min-h-0 flex-1 flex-col divide-y overflow-y-auto rounded-lg border bg-ui-bg-component"
-            aria-label={t("knowledgeBase.selectItem", "Select Item")}
-          >
-            {isLoading && (
-              <li className="px-3 py-4 text-ui-fg-subtle">
-                <Text size="small">{t("general.loading")}</Text>
-              </li>
-            )}
-            {!isLoading && visibleItems.length === 0 && (
-              <li className="px-3 py-4 text-ui-fg-subtle">
-                <Text size="small">{t("knowledgeBase.link.noItems")}</Text>
-              </li>
-            )}
-            {visibleItems.map((item) => (
-              <li key={item.id}>
-                <label className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-ui-bg-component-hover">
-                  <Checkbox
-                    checked={selectedIds.has(item.id)}
-                    onCheckedChange={(checked) =>
-                      toggle(item.id, checked === true)
-                    }
-                  />
-                  <div className="min-w-0 flex-1">
-                    <KnowledgeItemTitleCell
-                      title={item.title}
-                      type={item.type}
-                    />
-                  </div>
-                  <KnowledgeItemTagListCell tags={item.tags} />
-                </label>
-              </li>
-            ))}
-          </ul>
+              </div>
+            </DataTable.Toolbar>
+            <DataTable.Table />
+            <DataTable.Pagination
+              translations={{
+                of: t("general.of"),
+                results: t("general.results"),
+                pages: t("general.pages"),
+                prev: t("general.prev"),
+                next: t("general.next"),
+              }}
+            />
+          </DataTable>
         </Drawer.Body>
         <Drawer.Footer>
           {knowledgeBaseId && (
@@ -240,10 +273,12 @@ export function ChatbotRAGSectionAddDrawer({
             <Button
               onClick={handleAdd}
               isLoading={linkMutation.isPending}
-              disabled={selectedIds.size === 0}
+              disabled={selectedIds.length === 0}
             >
-              {selectedIds.size > 0
-                ? t("knowledgeBase.link.addCount", { count: selectedIds.size })
+              {selectedIds.length > 0
+                ? t("knowledgeBase.link.addCount", {
+                    count: selectedIds.length,
+                  })
                 : t("actions.add")}
             </Button>
           </div>

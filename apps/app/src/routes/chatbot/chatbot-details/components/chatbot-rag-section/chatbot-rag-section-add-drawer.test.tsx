@@ -1,3 +1,4 @@
+import { TooltipProvider } from "@medusajs/ui";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -11,6 +12,9 @@ class ResizeObserverMock {
 }
 (globalThis as A).ResizeObserver =
   (globalThis as A).ResizeObserver ?? ResizeObserverMock;
+
+// jsdom has no Element.scroll, which the DataTable body calls on mount.
+Element.prototype.scroll = Element.prototype.scroll ?? (() => {});
 
 const kb = vi.hoisted(() => ({
   bases: [] as { id: string }[],
@@ -65,12 +69,14 @@ import { ChatbotRAGSectionAddDrawer } from "./chatbot-rag-section-add-drawer";
 const renderDrawer = (linkedItemIds: string[] = []) =>
   render(
     <MemoryRouter>
-      <ChatbotRAGSectionAddDrawer
-        isOpen
-        onClose={() => {}}
-        chatbotId="bot-1"
-        linkedItemIds={linkedItemIds}
-      />
+      <TooltipProvider>
+        <ChatbotRAGSectionAddDrawer
+          isOpen
+          onClose={() => {}}
+          chatbotId="bot-1"
+          linkedItemIds={linkedItemIds}
+        />
+      </TooltipProvider>
     </MemoryRouter>,
   );
 
@@ -120,8 +126,11 @@ describe("ChatbotRAGSectionAddDrawer multi-select", () => {
 
     expect(screen.queryByText("Already")).not.toBeInTheDocument();
     const user = userEvent.setup();
-    await user.click(screen.getByRole("checkbox", { name: /Menu/ }));
-    await user.click(screen.getByRole("checkbox", { name: /Hours/ }));
+    // [0] is the header select-all; rows follow in order.
+    const boxes = screen.getAllByRole("checkbox");
+    expect(boxes).toHaveLength(3);
+    await user.click(boxes[1]);
+    await user.click(screen.getAllByRole("checkbox")[2]);
     await user.click(
       screen.getByRole("button", { name: "knowledgeBase.link.addCount" }),
     );

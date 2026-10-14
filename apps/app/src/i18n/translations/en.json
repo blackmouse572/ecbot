@@ -2477,11 +2477,8 @@
       "title": "Add Knowledge Item",
       "description": "Pick the knowledge items this agent can use.",
       "searchPlaceholder": "Search by title",
-      "tagFilter": "Filter by tag",
       "selected": "{{count}} selected",
-      "clear": "Clear",
-      "selectAllMatching": "Select all matching ({{count}})",
-      "noItems": "No items to add.",
+      "selectAllMatching": "Select all matching",
       "addCount": "Add {{count}}"
     },
     "selectItem": "Select Item",

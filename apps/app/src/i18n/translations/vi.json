@@ -2525,11 +2525,8 @@
       "title": "Thêm mục kiến thức",
       "description": "Chọn các knowledge item mà agent này được dùng.",
       "searchPlaceholder": "Tìm theo tiêu đề",
-      "tagFilter": "Lọc theo thẻ",
       "selected": "Đã chọn {{count}}",
-      "clear": "Bỏ chọn",
-      "selectAllMatching": "Chọn tất cả kết quả ({{count}})",
-      "noItems": "Không có item nào để thêm.",
+      "selectAllMatching": "Chọn tất cả kết quả",
       "addCount": "Thêm {{count}}"
     },
     "selectItem": "Chọn mục",
