@@ -291,24 +291,13 @@ describe("KnowledgeItemCreateForm", () => {
       expect(toast.error).not.toHaveBeenCalled();
     });
 
-    it("explains what Media is for and estimates its AI token cost", async () => {
-      const { container } = render(
+    it("says media is processed by vision AI and what it costs", () => {
+      render(
         <NuqsTestingAdapter searchParams="?t=MEDIA">
           <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
         </NuqsTestingAdapter>,
       );
-      expect(screen.getByText(/per picture page/)).toBeInTheDocument();
-
-      pick(container, [
-        image("a.png"),
-        image("b.png"),
-        new File(["%PDF"], "menu.pdf", { type: "application/pdf" }),
-      ]);
-
-      expect(
-        await screen.findByText(/About 4,000 AI tokens for 2 images/),
-      ).toBeInTheDocument();
-      expect(screen.getByText(/1 PDF/)).toBeInTheDocument();
+      expect(screen.getByText(/vision AI.*2,000 tokens/)).toBeInTheDocument();
     });
 
     it("refuses a file that is not an image or a PDF", async () => {

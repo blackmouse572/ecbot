@@ -2476,10 +2476,7 @@
       "description_pending": "Your agent will describe this file once it is processed.",
       "open_pdf": "Open PDF",
       "description_hint": "Your agent finds this file by its title and this description. Leave it empty to let the agent describe it again.",
-      "cost_hint": "Your agent reads each file with AI so it can find it when customers ask. Each image costs about 2,000 tokens. In a PDF, text pages cost little and picture pages (photo menus, scans) cost about 500 tokens per picture page. For example, a 38-page menu with 33 picture pages costs about 15,000 tokens. Editing the title or description reads the file again.",
-      "cost_estimate_images": "About {{tokens}} AI tokens for {{images}} images",
-      "cost_estimate_pdfs": ", plus about {{pageTokens}} per picture page in {{count}} PDF",
-      "cost_estimate_pdfs_only": "About {{pageTokens}} AI tokens per picture page in {{count}} PDF"
+      "cost_hint": "Processed by vision AI: about 2,000 tokens per image, 500 per picture page in a PDF."
     }
   },
   "conversations": {

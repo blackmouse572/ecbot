@@ -137,10 +137,3 @@ export const KB_MEDIA_PDF_MAX_BYTES = 20 * 1024 * 1024;
 export const KB_MEDIA_MAX_FILES = 50;
 /** Uploads running at once, so a big batch does not flood the API. */
 export const KB_MEDIA_UPLOAD_CONCURRENCY = 3;
-
-/**
- * Rough AI tokens to read media, measured with the vision model: about 2,000
- * per image, about 500 per picture page of a PDF (text pages cost little).
- */
-export const KB_MEDIA_IMAGE_TOKENS = 2000;
-export const KB_MEDIA_PDF_PICTURE_PAGE_TOKENS = 500;

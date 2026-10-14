@@ -2524,10 +2524,7 @@
       "description_pending": "Agent sẽ tự mô tả tệp này sau khi xử lý xong.",
       "open_pdf": "Mở PDF",
       "description_hint": "Agent tìm tệp này theo tên và mô tả này. Để trống nếu muốn agent tự mô tả lại.",
-      "cost_hint": "Agent đọc từng tệp bằng AI để tìm được khi khách hỏi. Mỗi ảnh tốn khoảng 2.000 token. Với PDF, trang có chữ gần như không tốn, trang ảnh (menu chụp, bản scan) khoảng 500 token mỗi trang. Ví dụ menu 38 trang có 33 trang ảnh tốn khoảng 15.000 token. Sửa tên hoặc mô tả sẽ đọc lại tệp.",
-      "cost_estimate_images": "Ước tính khoảng {{tokens}} token AI cho {{images}} ảnh",
-      "cost_estimate_pdfs": ", cộng khoảng {{pageTokens}} token cho mỗi trang ảnh trong {{count}} PDF",
-      "cost_estimate_pdfs_only": "Ước tính khoảng {{pageTokens}} token AI cho mỗi trang ảnh trong {{count}} PDF"
+      "cost_hint": "Xử lý bằng AI vision: khoảng 2.000 token mỗi ảnh, 500 token mỗi trang ảnh trong PDF."
     }
   },
   "conversations": {
