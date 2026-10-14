@@ -55,6 +55,53 @@ describe('TurnContextService', () => {
         expect(context.history).toEqual([{ role: 'user', content: 'hi' }]);
     });
 
+    it('marks staff replies in the history so the bot does not take them as its own', async () => {
+        const { service } = contextOver([
+            { id: 'm-1', text: 'order 2 roses', direction: 'INBOUND' },
+            {
+                id: 'm-2',
+                text: 'Passed to our staff',
+                direction: 'OUTBOUND',
+                authorType: 'BOT',
+            },
+            {
+                id: 'm-3',
+                text: 'Confirmed, delivering this afternoon',
+                direction: 'OUTBOUND',
+                authorType: 'OPERATOR',
+            },
+        ]);
+        const context = await service.build('c', { texts: [] }, 'bot');
+        expect(context.history).toEqual([
+            { role: 'user', content: 'order 2 roses' },
+            { role: 'assistant', content: 'Passed to our staff' },
+            {
+                role: 'assistant',
+                content: '[Staff] Confirmed, delivering this afternoon',
+            },
+        ]);
+    });
+
+    it('passes a staff handled note to the bot as a note, not as its own reply', async () => {
+        const { service } = contextOver([
+            { id: 'm-1', text: 'order 2 roses', direction: 'INBOUND' },
+            {
+                id: 'm-2',
+                text: '[Handled by staff] Staff took care of it.',
+                direction: 'OUTBOUND',
+                authorType: 'SYSTEM',
+            },
+        ]);
+        const context = await service.build('c', { texts: [] }, 'bot');
+        expect(context.history).toEqual([
+            { role: 'user', content: 'order 2 roses' },
+            {
+                role: 'user',
+                content: '[Handled by staff] Staff took care of it.',
+            },
+        ]);
+    });
+
     it('describes the burst images once, keeps each description, and sends them as text', async () => {
         const { service, ai, updateAttachments } = contextOver([
             {

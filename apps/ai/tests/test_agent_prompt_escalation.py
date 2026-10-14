@@ -48,3 +48,15 @@ def test_upset_customer_is_described_by_its_signs():
     assert "A customer is upset when they complain (a late, missing or wrong order" in block
     assert "😤" in block
     assert "in that same reply, even if you could also help" in block
+
+
+def test_what_staff_handled_is_not_handed_over_again():
+    # Staff confirmed a handed-over order and switched the bot back on; when
+    # the customer answered the staff's question the bot handed the same
+    # order over again. apps/api starts staff replies with "[Staff]" and
+    # leaves a "[Handled by staff]" note when staff hand the conversation back.
+    block = " ".join(_escalation_block().split())
+    assert 'start with "[Staff]" were written by a staff member' in block
+    assert 'A "[Handled by staff]" note in the chat history means staff took care' in block
+    assert "do not hand that over again" in block
+    assert "A new request after the note" in block

@@ -2595,6 +2595,9 @@
       "operator": "You",
       "you": "You"
     },
+    "systemNote": {
+      "handled": "Handled by staff. The bot is answering again."
+    },
     "detail": {
       "empty": {
         "title": "Select a conversation",
@@ -2611,8 +2614,7 @@
       "send": "Send",
       "retry": "Retry",
       "failed": "Failed to send",
-      "tooLong": "Message must be 4096 characters or fewer",
-      "disabledResolved": "This conversation is resolved. Restore it to auto to reply."
+      "tooLong": "Message must be 4096 characters or fewer"
     },
     "actions": {
       "botLabel": "Bot",
@@ -2627,9 +2629,9 @@
       "pauseReasonLabel": "Reason (optional)",
       "pauseReasonPlaceholder": "e.g. Customer requested human support",
       "resolveConfirmTitle": "Mark conversation as resolved?",
-      "resolveConfirmDescription": "Resolved conversations cannot receive operator replies until restored.",
+      "resolveConfirmDescription": "The bot keeps answering the customer and will not hand over again what your team already handled. You can still send messages.",
       "restoreConfirmTitle": "Hand back to the bot?",
-      "restoreConfirmDescription": "Bot will resume answering. If the conversation was resolved, the AI memory will be reset."
+      "restoreConfirmDescription": "The conversation opens again and the bot keeps answering."
     },
     "errors": {
       "sendFailed": "Couldn't send your message. Try again.",

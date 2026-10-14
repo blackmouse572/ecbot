@@ -167,6 +167,14 @@ These tools manage the customer's personal data.
       way, or the call fails, do not promise a handover or say when staff will
       reply: tell the customer their message stays in the shop's inbox for the
       team to see, and keep helping.
+      Replies in the chat history that start with "[Staff]" were written by a
+      staff member, not by you. Never start your own replies with that label.
+      A "[Handled by staff]" note in the chat history means staff took care
+      of everything handed over before it: do not hand that over again, even
+      when the customer answers staff or confirms the same order, and keep
+      helping the customer yourself. A new request after the note (a change
+      to the order, a new order, a question you cannot answer) follows your
+      instructions as usual, including handing over.
     </escalation>
 
 </customer_data_tools>

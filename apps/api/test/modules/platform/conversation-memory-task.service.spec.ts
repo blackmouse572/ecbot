@@ -154,6 +154,32 @@ describe('ConversationMemoryTaskService', () => {
         );
     });
 
+    it('folds a staff handled note in as staff, so the summary keeps it', async () => {
+        const { service, ai, messageRepository } = taskOver(CONVERSATION);
+        messageRepository.findOldest.mockResolvedValue([
+            {
+                id: 'm-19',
+                direction: 'OUTBOUND',
+                authorType: 'SYSTEM',
+                text: '[Handled by staff] Staff took care of it.',
+                attachments: [],
+            },
+        ]);
+
+        await service.handle(DTO, 0);
+
+        expect(ai.summarizeConversation).toHaveBeenCalledWith(
+            expect.objectContaining({
+                messages: [
+                    {
+                        role: 'operator',
+                        text: '[Handled by staff] Staff took care of it.',
+                    },
+                ],
+            })
+        );
+    });
+
     it('keeps the old summary but moves past messages the guardrail blocks', async () => {
         const { service, conversationRepository } = taskOver(
             CONVERSATION,

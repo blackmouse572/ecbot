@@ -2642,6 +2642,9 @@
       "operator": "Bạn",
       "you": "Bạn"
     },
+    "systemNote": {
+      "handled": "Nhân viên đã xử lý. Bot trả lời lại."
+    },
     "detail": {
       "empty": {
         "title": "Chọn một hội thoại",
@@ -2658,8 +2661,7 @@
       "send": "Gửi",
       "retry": "Gửi lại",
       "failed": "Gửi thất bại",
-      "tooLong": "Tin nhắn không được dài quá 4096 ký tự",
-      "disabledResolved": "Hội thoại đã đóng. Khôi phục về tự động để trả lời."
+      "tooLong": "Tin nhắn không được dài quá 4096 ký tự"
     },
     "actions": {
       "botLabel": "Bot",
@@ -2674,9 +2676,9 @@
       "pauseReasonLabel": "Lý do (tuỳ chọn)",
       "pauseReasonPlaceholder": "VD: Khách hàng yêu cầu hỗ trợ trực tiếp",
       "resolveConfirmTitle": "Đánh dấu hội thoại đã đóng?",
-      "resolveConfirmDescription": "Hội thoại đã đóng không thể trả lời cho đến khi được khôi phục.",
+      "resolveConfirmDescription": "Bot tiếp tục trả lời khách và không bàn giao lại việc nhóm đã xử lý. Bạn vẫn gửi tin nhắn được.",
       "restoreConfirmTitle": "Bàn giao lại cho bot?",
-      "restoreConfirmDescription": "Bot sẽ tiếp tục trả lời. Nếu hội thoại đã đóng, bộ nhớ AI sẽ được đặt lại."
+      "restoreConfirmDescription": "Hội thoại mở lại và bot tiếp tục trả lời."
     },
     "errors": {
       "sendFailed": "Không thể gửi tin nhắn. Vui lòng thử lại.",

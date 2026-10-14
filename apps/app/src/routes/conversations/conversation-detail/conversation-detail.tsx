@@ -122,8 +122,6 @@ export function ConversationDetail() {
     );
   }
 
-  const isResolved = conversation.status === "RESOLVED";
-
   const onSend = (text: string) => {
     send.mutate(
       { text },
@@ -193,14 +191,7 @@ export function ConversationDetail() {
         reactionWindowClosed={reactionWindowClosed}
         onReact={onReact}
       />
-      <MessageComposer
-        disabled={isResolved}
-        disabledReason={
-          isResolved ? t("conversations.composer.disabledResolved") : undefined
-        }
-        isSending={send.isPending}
-        onSubmit={onSend}
-      />
+      <MessageComposer isSending={send.isPending} onSubmit={onSend} />
     </>
   );
 

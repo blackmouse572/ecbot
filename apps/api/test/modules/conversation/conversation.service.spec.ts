@@ -45,6 +45,20 @@ describe('ConversationService', () => {
         get: jest.fn(),
     };
 
+    const mockMessageRepository = {
+        create: jest.fn().mockResolvedValue(undefined),
+        findNewest: jest.fn().mockResolvedValue([]),
+    };
+
+    // What the bot reads in its history once staff hand a conversation back.
+    const handledNote = () =>
+        expect.objectContaining({
+            conversation: { id: 'conv-1' },
+            direction: 'OUTBOUND',
+            authorType: 'SYSTEM',
+            text: expect.stringContaining('[Handled by staff]'),
+        });
+
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -77,7 +91,8 @@ describe('ConversationService', () => {
                         mockChatbotAIService as any,
                         mockConversationReadRepository as any,
                         mockCustomerTagClassifierService as any,
-                        mockModuleRef as any
+                        mockModuleRef as any,
+                        mockMessageRepository as any
                     ),
             })
             .compile();
@@ -238,6 +253,38 @@ describe('ConversationService', () => {
             expect(mockChatbotAIService.deleteSession).toHaveBeenCalledWith(
                 'conv-1'
             );
+        });
+
+        it('leaves a handled note for the bot when staff switch it back on', async () => {
+            const conversation = { id: 'conv-1', botEnabled: false };
+            mockConversationRepository.findOneById.mockResolvedValue(
+                conversation
+            );
+            // The ORM updates the loaded entity in place.
+            mockConversationRepository.updateEntity.mockImplementation(
+                async (_find, patch) => Object.assign(conversation, patch)
+            );
+
+            await service.setBotEnabled('conv-1', true);
+
+            expect(mockMessageRepository.create).toHaveBeenCalledWith(
+                handledNote()
+            );
+        });
+
+        it('leaves no note when the bot was already on or is switched off', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue({
+                id: 'conv-1',
+                botEnabled: true,
+            });
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+
+            await service.setBotEnabled('conv-1', true);
+            await service.setBotEnabled('conv-1', false);
+
+            expect(mockMessageRepository.create).not.toHaveBeenCalled();
         });
 
         it('does NOT delete the AI session when the bot is already enabled (true -> true no-op)', async () => {
@@ -420,6 +467,65 @@ describe('ConversationService', () => {
                 })
             );
             expect(result.status).toBe(ENUM_CONVERSATION_STATUS.RESOLVED);
+        });
+
+        it('leaves a handled note for the bot when resolving', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue({
+                id: 'conv-1',
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+            });
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+                status: ENUM_CONVERSATION_STATUS.RESOLVED,
+            });
+
+            await service.updateStatus(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.RESOLVED
+            );
+
+            expect(mockMessageRepository.create).toHaveBeenCalledWith(
+                handledNote()
+            );
+        });
+
+        it('leaves one note when staff switch the bot on and then resolve', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue({
+                id: 'conv-1',
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+            });
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+            mockMessageRepository.findNewest.mockResolvedValueOnce([
+                { authorType: 'SYSTEM' },
+            ]);
+
+            await service.updateStatus(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.RESOLVED
+            );
+
+            expect(mockMessageRepository.findNewest).toHaveBeenCalledWith(
+                { conversation: 'conv-1', deletedAt: null },
+                1
+            );
+            expect(mockMessageRepository.create).not.toHaveBeenCalled();
+        });
+
+        it('leaves no note when reopening', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue({
+                id: 'conv-1',
+                status: ENUM_CONVERSATION_STATUS.RESOLVED,
+            });
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+            });
+
+            await service.updateStatus('conv-1', ENUM_CONVERSATION_STATUS.OPEN);
+
+            expect(mockMessageRepository.create).not.toHaveBeenCalled();
         });
 
         it('should clear resolvedAt and re-enable the bot when reopening', async () => {

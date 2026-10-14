@@ -43,7 +43,11 @@ describe('Classifier wiring (#170)', () => {
                 chatbotAIService as any,
                 conversationReadRepository as any,
                 classifierService as any,
-                moduleRef as any
+                moduleRef as any,
+                {
+                    create: jest.fn().mockResolvedValue(undefined),
+                    findNewest: jest.fn().mockResolvedValue([]),
+                } as any
             );
 
             conversationRepository.findOneById.mockResolvedValue({

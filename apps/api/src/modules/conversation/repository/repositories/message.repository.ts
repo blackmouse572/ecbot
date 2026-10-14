@@ -251,6 +251,9 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
             {
                 conversation: conversationId,
                 deletedAt: null,
+                // The website widget polls this for the visitor: staff-side
+                // notes stay out.
+                authorType: { $ne: ENUM_MESSAGE_AUTHOR.SYSTEM },
                 // Tie-broken on id, not `dateSent` alone. `dateSent` comes from
                 // `new Date()`, so two messages can share a millisecond; if such
                 // a pair straddles a page boundary, a `$gt: dateSent` cursor

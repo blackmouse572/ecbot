@@ -11038,7 +11038,8 @@
           "enumItems": [
             "USER",
             "BOT",
-            "OPERATOR"
+            "OPERATOR",
+            "SYSTEM"
           ],
           "mappedType": "enum"
         },

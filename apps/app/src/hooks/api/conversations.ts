@@ -27,7 +27,7 @@ import { useWorkspace } from "./workspace";
 
 export type ConversationStatus = "OPEN" | "RESOLVED";
 export type MessageDirection = "INBOUND" | "OUTBOUND";
-export type MessageAuthorType = "USER" | "BOT" | "OPERATOR";
+export type MessageAuthorType = "USER" | "BOT" | "OPERATOR" | "SYSTEM";
 export type MessageStatus = "PENDING" | "SENT" | "FAILED";
 
 export const CONVERSATION_QUERY_KEY = "conversation" as const;
@@ -437,6 +437,10 @@ export const useUpdateConversationStatus = (id: string | undefined) => {
         queryClient.invalidateQueries({
           queryKey: conversationQueryKeys.detail(id),
         });
+        // Handing back to the bot leaves a note in the timeline.
+        queryClient.invalidateQueries({
+          queryKey: [CONVERSATION_QUERY_KEY, "messages", id],
+        });
       }
       queryClient.invalidateQueries({
         queryKey: conversationQueryKeys.lists(),
@@ -463,6 +467,10 @@ export const useUpdateConversationBot = (id: string | undefined) => {
       if (id) {
         queryClient.invalidateQueries({
           queryKey: conversationQueryKeys.detail(id),
+        });
+        // Handing back to the bot leaves a note in the timeline.
+        queryClient.invalidateQueries({
+          queryKey: [CONVERSATION_QUERY_KEY, "messages", id],
         });
       }
       queryClient.invalidateQueries({
