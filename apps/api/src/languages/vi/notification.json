@@ -82,5 +82,9 @@
             "tag_trigger": "Khách hàng được gắn thẻ cần nhân viên hỗ trợ",
             "other": "Trợ lý gặp một tin nhắn không nên tự trả lời"
         }
+    },
+    "tagNotice": {
+        "title": "Khách hàng được gắn thẻ \"{tag}\"",
+        "message": "Trợ lý vẫn tiếp tục trả lời. Mở cuộc hội thoại để theo dõi."
     }
 }

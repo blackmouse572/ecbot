@@ -598,6 +598,49 @@ export class NotificationService {
         });
     }
 
+    /** A customer got a notify-only tag; the assistant keeps replying (#288). */
+    async createTagNotice(
+        recipientId: string,
+        data: {
+            conversationId: string;
+            workspaceId: string;
+            workspaceSlug: string;
+            tagName: string;
+            language?: string;
+        }
+    ): Promise<NotificationEntity> {
+        const {
+            conversationId,
+            workspaceId,
+            workspaceSlug,
+            tagName,
+            language,
+        } = data;
+
+        return this.create({
+            title: this.messageService.setMessage(
+                'notification.tagNotice.title',
+                { customLanguage: language, properties: { tag: tagName } }
+            ),
+            message: this.messageService.setMessage(
+                'notification.tagNotice.message',
+                { customLanguage: language }
+            ),
+            type: NotificationType.INFO,
+            priority: NotificationPriority.HIGH,
+            recipient: recipientId,
+            metadata: {
+                actionUrl: `/${workspaceSlug}/conversations/${conversationId}`,
+                actionText: this.messageService.setMessage(
+                    'notification.handoff.actionText',
+                    { customLanguage: language }
+                ),
+                // No conversationId: the app reads it as a handoff marker.
+                data: { kind: 'tag_notice', workspaceId, tagName },
+            },
+        });
+    }
+
     async createRequestToJoinWorkspace(
         recipientId: string,
         senderId: string,

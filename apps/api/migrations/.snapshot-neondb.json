@@ -6827,6 +6827,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "boolean"
+        },
+        "notifies_team": {
+          "name": "notifies_team",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
         }
       },
       "name": "customer_tags",

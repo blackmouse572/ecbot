@@ -31,7 +31,8 @@ interface RemoveResponse {
  *
  * Apply path: resolves the tag by NAME within the customer's workspace, applies
  * idempotently, and — if the tag is `triggersHandoff` — reuses the existing
- * Phase 3 escalation path on the supplied conversation. The agent supplies the
+ * Phase 3 escalation path on the supplied conversation. A `notifiesTeam` tag
+ * that does not hand off tells the team and leaves the bot on (#288). The agent supplies the
  * conversation id via `chat_session_id`; without it we cannot pick a single
  * conversation to escalate, so handoff is skipped (apply still succeeds).
  */
@@ -88,10 +89,13 @@ export class CustomerTagSystemController {
         await this.customerTagAssignmentService.apply(customerId, tag.id);
 
         let triggeredHandoff = false;
-        if (tag.triggersHandoff) {
+        // A handoff already notifies the team, so a notify-only flag only
+        // matters on a tag that does not hand over (#288).
+        const notifiesOnly = tag.notifiesTeam && !tag.triggersHandoff;
+        if (tag.triggersHandoff || notifiesOnly) {
             if (!dto.conversationId) {
                 this.logger.warn(
-                    `Tag ${tag.name} triggers handoff but no conversationId supplied for customer ${customerId}; skipping handoff`
+                    `Tag ${tag.name} needs a conversation but no conversationId supplied for customer ${customerId}; skipping`
                 );
             } else {
                 const conversation =
@@ -101,9 +105,9 @@ export class CustomerTagSystemController {
                     );
                 if (!conversation) {
                     this.logger.warn(
-                        `Tag ${tag.name} triggers handoff but conversation ${dto.conversationId} not found`
+                        `Tag ${tag.name} needs a conversation but ${dto.conversationId} was not found`
                     );
-                } else {
+                } else if (tag.triggersHandoff) {
                     await this.conversationService.triggerHandoff(
                         conversation,
                         workspaceId,
@@ -111,6 +115,13 @@ export class CustomerTagSystemController {
                         conversation.chatbot?.primaryLanguage
                     );
                     triggeredHandoff = true;
+                } else {
+                    await this.conversationService.notifyTeam(
+                        conversation,
+                        workspaceId,
+                        tag.name,
+                        conversation.chatbot?.primaryLanguage
+                    );
                 }
             }
         }

@@ -180,8 +180,14 @@ export class CustomerTagClassifierTaskService {
 
         const catalog =
             await this.customerTagService.findAllByWorkspace(workspaceId);
+        // A tag that hands off or notifies the team has a side effect, so
+        // only the agent applies it during the conversation (#288).
+        const hasSideEffect = (t: {
+            triggersHandoff: boolean;
+            notifiesTeam: boolean;
+        }) => t.triggersHandoff || t.notifiesTeam;
         const availableTags: IClassifierTagDef[] = catalog
-            .filter(t => !t.triggersHandoff)
+            .filter(t => !hasSideEffect(t))
             .map(t => ({
                 name: t.name,
                 emoji: t.emoji ?? null,
@@ -230,7 +236,7 @@ export class CustomerTagClassifierTaskService {
         );
         const handoffNames = new Set(
             catalog
-                .filter(t => t.triggersHandoff)
+                .filter(t => hasSideEffect(t))
                 .map(t => normalizeTagName(t.name))
         );
         const findTag = (name: string) =>

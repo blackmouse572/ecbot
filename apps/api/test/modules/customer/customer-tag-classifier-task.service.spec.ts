@@ -173,6 +173,48 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         expect(customerTagAssignmentService.apply).toHaveBeenCalledTimes(1);
     });
 
+    // #288 review: a notify-only tag (Order placed) tells the team, so only
+    // the agent may apply it; the classifier must neither add nor drop it.
+    it('keeps notify-only tags out of the classifier, both ways', async () => {
+        customerTagService.findAllByWorkspace.mockResolvedValue([
+            {
+                id: 'tag-vip',
+                name: 'VIP',
+                emoji: null,
+                description: '',
+                triggersHandoff: false,
+                notifiesTeam: false,
+            },
+            {
+                id: 'tag-order',
+                name: 'Order placed',
+                emoji: null,
+                description: '',
+                triggersHandoff: false,
+                notifiesTeam: true,
+            },
+        ]);
+        customerTagAssignmentService.listByCustomer.mockResolvedValue([
+            { tag: { id: 'tag-order', name: 'Order placed' } },
+        ]);
+        httpService.post.mockReturnValue(
+            classifierResponse({
+                tags_to_add: ['Order placed'],
+                tags_to_remove: ['Order placed'],
+                profile_summary: '',
+            })
+        );
+
+        await service.handle(dto() as any, 0);
+
+        const [, body] = httpService.post.mock.calls[0];
+        expect(body.available_tags.map((tag: any) => tag.name)).toEqual([
+            'VIP',
+        ]);
+        expect(customerTagAssignmentService.apply).not.toHaveBeenCalled();
+        expect(customerTagAssignmentService.remove).not.toHaveBeenCalled();
+    });
+
     it('applies only catalog-known additions and currently assigned removals', async () => {
         const tagVip = {
             id: 'tag-vip',

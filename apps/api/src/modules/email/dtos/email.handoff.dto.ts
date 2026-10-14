@@ -11,9 +11,16 @@ export class EmailHandoffDto {
         required: true,
         example: 'keyword_trigger',
         description:
-            'Handoff reason code (keyword_trigger, fallback_threshold, tag_trigger, or other)',
+            'Handoff reason code (keyword_trigger, fallback_threshold, tag_trigger, or other), or tag_notice for a notify-only tag',
     })
     reason: string;
+
+    @ApiProperty({
+        required: false,
+        example: 'Order placed',
+        description: 'The notify-only tag the customer got (tag_notice only)',
+    })
+    tagName?: string;
 
     @ApiProperty({
         required: true,

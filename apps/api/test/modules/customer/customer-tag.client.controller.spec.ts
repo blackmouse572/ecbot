@@ -93,6 +93,7 @@ describe('CustomerTagClientController', () => {
             emoji: undefined,
             description: undefined,
             triggersHandoff: false,
+            notifiesTeam: false,
         });
         expect(
             mockActivityService.createByUserWithWorkspace

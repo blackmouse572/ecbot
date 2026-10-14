@@ -95,4 +95,51 @@ describe('NotificationService.createHandoff', () => {
             expect(handoff.reason[reason]).toBeTruthy();
         }
     });
+
+    // #288: a notify-only tag, the conversation stays with the assistant.
+    describe('createTagNotice', () => {
+        it('names the tag and links to the conversation, in the chatbot language', async () => {
+            messageService.setMessage.mockClear();
+
+            await service.createTagNotice('user-1', {
+                conversationId: 'conv-1',
+                workspaceId: 'ws-1',
+                workspaceSlug: 'acme',
+                tagName: 'Order placed',
+                language: 'vi',
+            });
+
+            expect(
+                (create.mock.calls[0][0] as any).metadata.data.conversationId
+            ).toBeUndefined();
+            expect(create.mock.calls[0][0]).toMatchObject({
+                title: 'notification.tagNotice.title(Order placed)',
+                message: 'notification.tagNotice.message',
+                recipient: 'user-1',
+                metadata: {
+                    actionUrl: '/acme/conversations/conv-1',
+                    actionText: 'notification.handoff.actionText',
+                    // No conversationId: the app reads that as a handoff
+                    // (red icon, stays unread until clicked).
+                    data: {
+                        kind: 'tag_notice',
+                        workspaceId: 'ws-1',
+                        tagName: 'Order placed',
+                    },
+                },
+            });
+            for (const [, options] of messageService.setMessage.mock.calls) {
+                expect(options).toMatchObject({ customLanguage: 'vi' });
+            }
+        });
+
+        it.each([
+            ['en', en],
+            ['vi', vi],
+        ])('has the tag notice strings in %s', (_lang, messages) => {
+            const notice = (messages as any).tagNotice;
+            expect(notice.title).toContain('{tag}');
+            expect(notice.message).toBeTruthy();
+        });
+    });
 });
