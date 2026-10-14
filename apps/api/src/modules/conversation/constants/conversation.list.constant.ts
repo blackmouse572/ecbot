@@ -8,8 +8,8 @@ export const CONVERSATION_DEFAULT_AVAILABLE_SEARCH = [
 ];
 
 /**
- * The inbox sorts by newest customer message (`lastMessageAt` is bumped on
- * inbound messages only); createdAt stays for API clients.
+ * The inbox sorts by newest message: `lastMessageAt` is bumped on every new
+ * message, customer, bot or staff. createdAt stays for API clients.
  */
 export const CONVERSATION_DEFAULT_ORDER_BY = 'lastMessageAt';
 export const CONVERSATION_DEFAULT_AVAILABLE_ORDER_BY = [
