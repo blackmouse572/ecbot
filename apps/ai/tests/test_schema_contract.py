@@ -116,5 +116,11 @@ async def test_every_rag_query_runs_on_the_migrated_database():
             query="hello", limit=1, chatbot_id="contract-bot"
         )
         await store.mark_failed(document_id=document_id, error_message="contract")
+        await store.upsert_media(
+            knowledge_item_id=item_id, chatbot_ids=["contract-bot"], title="t",
+            description="d", url="https://cdn/t.png", mime_type="image/png", embedding=vector,
+        )
+        await store.update_media_chatbot_links(item_id, ["contract-bot"])
+        assert await store.delete_media_by_knowledge_item(item_id) == 1
     finally:
         assert await store.delete_by_knowledge_item(item_id) == 1

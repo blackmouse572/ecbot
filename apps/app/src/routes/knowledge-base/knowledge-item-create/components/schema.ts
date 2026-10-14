@@ -1,5 +1,12 @@
 import i18n from "@/i18n";
 import z from "zod";
+import {
+  KB_MEDIA_IMAGE_MAX_BYTES,
+  KB_MEDIA_IMAGE_MIMES,
+  KB_MEDIA_MAX_FILES,
+  KB_MEDIA_PDF_MAX_BYTES,
+  KB_MEDIA_PDF_MIME,
+} from "../../constants";
 
 // Form schemas for each type
 const baseSchema = z.object({
@@ -48,6 +55,33 @@ type UrlSchema = z.infer<ReturnType<typeof createUrlSchema>>;
 
 const createTextSchema = () => baseSchema;
 
+const isMediaFile = (file: File) =>
+  file.type === KB_MEDIA_PDF_MIME
+    ? file.size <= KB_MEDIA_PDF_MAX_BYTES
+    : KB_MEDIA_IMAGE_MIMES.includes(file.type) &&
+      file.size <= KB_MEDIA_IMAGE_MAX_BYTES;
+
+// Each picked file becomes its own item named after it, so there is no title.
+const createMediaSchema = () =>
+  z.object({
+    tags: z.array(z.string()).optional(),
+    files: z
+      .array(z.object({ id: z.string(), url: z.string(), file: z.file() }), {
+        error: i18n.t("knowledge_item.media.required"),
+      })
+      .min(1, { error: i18n.t("knowledge_item.media.required") })
+      .max(KB_MEDIA_MAX_FILES, {
+        error: i18n.t("knowledge_item.media.too_many", {
+          count: KB_MEDIA_MAX_FILES,
+        }),
+      })
+      .refine((files) => files.every(({ file }) => isMediaFile(file)), {
+        error: i18n.t("knowledge_item.media.invalid"),
+      }),
+  });
+
+type MediaSchema = z.infer<ReturnType<typeof createMediaSchema>>;
+
 type TextSchema = z.infer<ReturnType<typeof createTextSchema>>;
 
 /**
@@ -57,13 +91,20 @@ type TextSchema = z.infer<ReturnType<typeof createTextSchema>>;
  */
 type KnowledgeItemCreateFormValues = TextSchema &
   Partial<Pick<FileSchema, "file">> &
-  Partial<Pick<UrlSchema, "metadata">> & {
-    type: "FILE" | "URL" | "TEXT";
+  Partial<Pick<UrlSchema, "metadata">> &
+  Partial<Pick<MediaSchema, "files">> & {
+    type: "FILE" | "URL" | "TEXT" | "MEDIA";
   };
 
-export { createFileSchema, createUrlSchema, createTextSchema };
+export {
+  createFileSchema,
+  createUrlSchema,
+  createTextSchema,
+  createMediaSchema,
+};
 export type {
   FileSchema,
+  MediaSchema,
   UrlSchema,
   TextSchema,
   KnowledgeItemCreateFormValues,

@@ -2311,7 +2311,8 @@
     "type": {
       "FILE": "File",
       "URL": "URL",
-      "TEXT": "Text"
+      "TEXT": "Text",
+      "MEDIA": "Media"
     },
     "status": {
       "DRAFT": "Draft",
@@ -2426,7 +2427,9 @@
       "url": "URL",
       "url_desc": "Link to a web page",
       "text": "Text",
-      "text_desc": "Write custom text content"
+      "text_desc": "Write custom text content",
+      "media": "Media",
+      "media_desc": "Images and PDFs your agent can send"
     },
     "status": "Status",
     "created_at": "Created At",
@@ -2457,7 +2460,23 @@
     "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
     "learn_failed": "Could not learn this file. Try Process again.",
     "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
-    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section."
+    "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section.",
+    "media": {
+      "files": "Files",
+      "files_hint": "Product photos, banners, PDF menus. Each file becomes its own item, named after the file, so give files clear names.",
+      "pick": "Choose or drop files",
+      "formats": "JPG, PNG, WEBP up to 5MB, PDF up to 20MB, up to 50 files at a time",
+      "required": "Add at least one file",
+      "too_many": "Add up to {{count}} files at a time",
+      "invalid": "Use JPG, PNG, WEBP images up to 5MB, or PDFs up to 20MB",
+      "create_success_one": "{{count}} media item added",
+      "create_success_other": "{{count}} media items added",
+      "create_partial": "{{added}} of {{count}} files added. {{failed}} could not be uploaded, try them again.",
+      "description": "What your agent searches by",
+      "description_pending": "Your agent will describe this file once it is processed.",
+      "open_pdf": "Open PDF",
+      "description_hint": "Your agent finds this file by its title and this description. Leave it empty to let the agent describe it again."
+    }
   },
   "conversations": {
     "title": "Conversations",

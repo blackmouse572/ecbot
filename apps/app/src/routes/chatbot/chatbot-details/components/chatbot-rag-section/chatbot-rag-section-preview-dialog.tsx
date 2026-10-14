@@ -5,6 +5,7 @@ import type { KnowledgeItemResponseDto } from "@repo/client";
 import { Skeleton } from "@repo/ui/common-components";
 import { useTranslation } from "react-i18next";
 import { KnowledgeItemContentActionType } from "@/routes/knowledge-base/knowledge-item-details/components/knowlege-item-content-action-type";
+import { KnowledgeMediaPreview } from "@/routes/knowledge-base/knowledge-item-details/components/knowledge-media-preview";
 
 type ChatbotRAGSectionPreviewDialogProps = {
   knowledgeBaseId: string;
@@ -61,6 +62,9 @@ export default function ChatbotRAGSectionPreviewDialog({
 function PreviewContent({ item }: { item: KnowledgeItemResponseDto }) {
   const { t } = useTranslation();
 
+  if (item.type === "MEDIA") {
+    return <KnowledgeMediaPreview item={item} />;
+  }
   if (item.type === "FILE") {
     const { attachment } = item;
     if (attachment?.mime === "application/pdf" && attachment.cdnUrl) {

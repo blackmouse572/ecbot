@@ -8,6 +8,7 @@ from eccho_ai.modules.rag.constants import URL_FETCH_FAILED
 from eccho_ai.modules.rag.models import RAGChatbotLinksRequest, RAGRetrieveRequest, RAGTextIngestRequest, RAGUrlIngestRequest
 from eccho_ai.llm.retrievers.retrieval import RAGRetrievalService
 from eccho_ai.modules.rag.services import RAGIngestService
+from eccho_ai.modules.rag.media import MediaIngestService
 from eccho_ai.core.postgres import PostgresRepo
 
 
@@ -18,6 +19,7 @@ router = APIRouter(
 )
 rag_ingest_service = RAGIngestService()
 rag_retrieval_service = RAGRetrievalService()
+media_ingest_service = MediaIngestService(store=rag_ingest_service.store)
 
 
 @router.post("/ingest/upload")
@@ -85,6 +87,30 @@ async def ingest_text(request: RAGTextIngestRequest):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@router.post("/ingest/media")
+async def ingest_media(
+    file: UploadFile = File(...),
+    knowledge_item_id: str = Form(...),
+    title: str = Form(...),
+    url: str = Form(...),
+    chatbot_ids: str = Form(default=""),
+    description: str | None = Form(default=None),
+):
+    try:
+        result = await media_ingest_service.ingest(
+            content=await file.read(),
+            mime_type=file.content_type or "",
+            knowledge_item_id=knowledge_item_id,
+            chatbot_ids=[s.strip() for s in chatbot_ids.split(",") if s.strip()],
+            title=title,
+            url=url,
+            description=description,
+        )
+        return AppResponse(data=result)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @router.get("/documents")
 async def list_documents(limit: int = 20):
     documents = await rag_ingest_service.list_documents(limit=limit)
@@ -109,15 +135,17 @@ async def list_chatbots(limit: int = 50):
 
 @router.patch("/documents/by-item/{knowledge_item_id}/chatbots")
 async def update_document_chatbots(knowledge_item_id: str, request: RAGChatbotLinksRequest):
-    updated = await rag_ingest_service.store.update_chatbot_links(
-        knowledge_item_id, request.chatbot_ids
-    )
+    store = rag_ingest_service.store
+    updated = await store.update_chatbot_links(knowledge_item_id, request.chatbot_ids)
+    updated += await store.update_media_chatbot_links(knowledge_item_id, request.chatbot_ids)
     return AppResponse(data={"updated": updated})
 
 
 @router.delete("/documents/by-item/{knowledge_item_id}")
 async def delete_document_by_item(knowledge_item_id: str):
-    removed = await rag_ingest_service.store.delete_by_knowledge_item(knowledge_item_id)
+    store = rag_ingest_service.store
+    removed = await store.delete_by_knowledge_item(knowledge_item_id)
+    removed += await store.delete_media_by_knowledge_item(knowledge_item_id)
     return AppResponse(data={"removed": removed})
 
 

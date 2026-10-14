@@ -283,6 +283,81 @@ describe('KnowledgeIngestTaskService', () => {
         );
     });
 
+    describe('MEDIA items', () => {
+        const media = (extra: Record<string, unknown> = {}) => ({
+            id: 'item-1',
+            type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA,
+            title: 'Banner khai trương',
+            attachment: {
+                key: 'knowledge-media/ws/kb/b.png',
+                mime: 'image/png',
+                completedUrl: 'https://s3/b.png',
+                cdnUrl: 'https://cdn/b.png',
+            },
+            knowledgeBase: { id: 'kb-1' },
+            ...extra,
+        });
+        const ingest = () =>
+            service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                0
+            );
+
+        beforeEach(() => {
+            httpPost.mockReturnValue(
+                of({ data: { data: { description: 'A red banner.' } } })
+            );
+        });
+
+        it('sends the public file and its address to the media index', async () => {
+            findOneById.mockResolvedValue(media());
+            findByKnowledgeItem.mockResolvedValue([
+                { chatbot: { id: 'cb-1' } },
+            ]);
+
+            await ingest();
+
+            expect(getItemBuffer).toHaveBeenCalledWith(
+                'knowledge-media/ws/kb/b.png',
+                { access: ENUM_AWS_S3_ACCESSIBILITY.PUBLIC }
+            );
+            const [url, form] = httpPost.mock.calls[0];
+            expect(url).toBe('http://ai.example.test/api/rag/ingest/media');
+            const body = form.getBuffer().toString();
+            expect(body).toContain('name="url"\r\n\r\nhttps://cdn/b.png');
+            expect(body).toContain('name="chatbot_ids"\r\n\r\ncb-1');
+            expect(body).not.toContain('name="description"');
+        });
+
+        it('keeps the description apps/ai wrote on the item', async () => {
+            findOneById.mockResolvedValue(media());
+
+            await ingest();
+
+            expect(updateStatus).toHaveBeenLastCalledWith(
+                'item-1',
+                expect.objectContaining({
+                    status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
+                    content: 'A red banner.',
+                })
+            );
+        });
+
+        it("sends the owner's own description instead of asking for one", async () => {
+            findOneById.mockResolvedValue(media({ content: 'Áo thun trắng' }));
+
+            await ingest();
+
+            const form = httpPost.mock.calls[0][1];
+            expect(form.getBuffer().toString()).toContain(
+                'name="description"\r\n\r\nÁo thun trắng'
+            );
+        });
+    });
+
     it('dispatches reindex-links with timeout, auth, and chatbot IDs', async () => {
         await service.handle(
             {

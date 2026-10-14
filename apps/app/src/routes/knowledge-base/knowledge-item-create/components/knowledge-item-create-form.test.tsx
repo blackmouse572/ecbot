@@ -249,4 +249,86 @@ describe("KnowledgeItemCreateForm", () => {
       screen.getByPlaceholderText("Enter tag name..."),
     ).toBeInTheDocument();
   });
+
+  // Media: many images and PDFs at once, each becoming its own item named
+  // after its file, linked and processed like any other item.
+  describe("media", () => {
+    const pick = (container: HTMLElement, files: File[]) =>
+      fireEvent.change(container.querySelector('input[type="file"]')!, {
+        target: { files },
+      });
+    const image = (name: string) =>
+      new File(["x"], name, { type: "image/png" });
+
+    beforeEach(() => {
+      URL.createObjectURL = vi.fn(() => "blob:preview");
+    });
+
+    it("creates one MEDIA item per file, named after the file", async () => {
+      const { container } = render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm
+            workspaceSlug="ws"
+            knowledgeBaseId="kb-1"
+            agentId="bot-1"
+          />
+        </NuqsTestingAdapter>,
+      );
+      expect(container.querySelector('input[name="title"]')).toBeNull();
+
+      pick(container, [
+        image("banner-1.png"),
+        new File(["%PDF"], "menu do uong.pdf", { type: "application/pdf" }),
+      ]);
+      fireEvent.submit(container.querySelector("form")!);
+
+      await waitFor(() => expect(api.processed).toHaveLength(2));
+      expect(api.created).toEqual([
+        expect.objectContaining({ type: "MEDIA", title: "banner-1" }),
+        expect.objectContaining({ type: "MEDIA", title: "menu do uong" }),
+      ]);
+      expect(api.linked).toHaveLength(2);
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it("refuses a file that is not an image or a PDF", async () => {
+      const { container } = render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+        </NuqsTestingAdapter>,
+      );
+
+      pick(container, [new File(["x"], "notes.txt", { type: "text/plain" })]);
+      fireEvent.submit(container.querySelector("form")!);
+
+      await waitFor(() =>
+        expect(screen.getByText(/JPG, PNG, WEBP/)).toBeInTheDocument(),
+      );
+      expect(api.created).toHaveLength(0);
+    });
+
+    it("says how many uploads failed and keeps the rest", async () => {
+      let calls = 0;
+      api.createError = null;
+      const { container } = render(
+        <NuqsTestingAdapter searchParams="?t=MEDIA">
+          <KnowledgeItemCreateForm workspaceSlug="ws" knowledgeBaseId="kb-1" />
+        </NuqsTestingAdapter>,
+      );
+      pick(container, [image("a.png"), image("b.png"), image("c.png")]);
+      const realPush = api.created.push.bind(api.created);
+      api.created.push = (...items: unknown[]) => {
+        calls += 1;
+        if (calls === 2) throw new Error("boom");
+        return realPush(...items);
+      };
+      fireEvent.submit(container.querySelector("form")!);
+
+      await waitFor(() => expect(toast.info).toHaveBeenCalled());
+      expect(api.processed).toHaveLength(2);
+      // The failed file stays, ready to try again.
+      expect(screen.getByText("b.png")).toBeInTheDocument();
+      expect(screen.queryByText("a.png")).not.toBeInTheDocument();
+    });
+  });
 });

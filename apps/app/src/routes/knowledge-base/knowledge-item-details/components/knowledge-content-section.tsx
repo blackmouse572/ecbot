@@ -2,6 +2,7 @@ import { Container, Heading, Text } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 import type { KnowledgeItemResponseDto } from "@repo/client";
 import { KnowledgeFilePreview } from "./knowledge-file-preview";
+import { KnowledgeMediaPreview } from "./knowledge-media-preview";
 import { KnowledgeItemContentActionType } from "./knowlege-item-content-action-type";
 
 type KnowledgeContentSectionProps = {
@@ -27,6 +28,8 @@ export const KnowledgeContentSection = ({
       <div className="px-6 py-4">
         {item.type === "FILE" ? (
           <KnowledgeFilePreview item={item} />
+        ) : item.type === "MEDIA" ? (
+          <KnowledgeMediaPreview item={item} />
         ) : (
           <Text className="max-h-96 overflow-y-auto whitespace-pre-wrap break-words text-ui-fg-base">
             {item.content}

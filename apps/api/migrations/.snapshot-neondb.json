@@ -9629,7 +9629,8 @@
           "enumItems": [
             "FILE",
             "URL",
-            "TEXT"
+            "TEXT",
+            "MEDIA"
           ],
           "mappedType": "enum"
         },
