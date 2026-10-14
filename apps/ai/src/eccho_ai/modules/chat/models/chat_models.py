@@ -54,6 +54,8 @@ class ChatRequest(BaseModel):
     customer_id: Optional[str] = Field(None, description="The Customer record the sender resolves to (apps/api).")
     contact_point_id: Optional[str] = Field(None, description="The ContactPoint linking sender→Customer (apps/api).")
     trigger_message_id: Optional[str] = Field(default=None, description="apps/api message id that triggered this turn; attached to a scheduled followup so the UI can link back.")
+    agent_timezone: Optional[str] = Field(None, description="IANA zone of the business, resolved by apps/api (agent timezone, else the deployment default).")
+    customer_timezone: Optional[str] = Field(None, description="IANA zone of the customer, resolved by apps/api (conversation timezone, else the agent's).")
     max_tool_iterations: Optional[int] = Field(None, ge=1, le=50, description="Caps the agent's tool-call rounds this turn; bounds the LangGraph recursion_limit (see get_agent_config). Defaults to 10 when omitted.")
 
 

@@ -22,11 +22,16 @@ const jobData: IFollowupJob = {
     reason: 'payment_check',
 };
 
-function buildService(rows: any[] = [], agentTimezone?: string) {
+function buildService(
+    rows: any[] = [],
+    agentTimezone?: string,
+    conversationTimezone?: string
+) {
     const conversationService = {
         findOneById: jest.fn().mockResolvedValue({
             id: 'conv-1',
             chatbot: { id: 'cb-1', timezone: agentTimezone },
+            timezone: conversationTimezone,
         }),
     };
     const moduleRef = { get: jest.fn().mockReturnValue(conversationService) };
@@ -363,6 +368,21 @@ describe('FollowupService', () => {
 
             expect(scheduledAtOf(followupRepository).toISOString()).toBe(
                 '2026-10-14T00:00:00.000Z'
+            );
+        });
+
+        // #292: "remind me tomorrow 9" means 9 in the customer's zone.
+        it("uses the conversation's own timezone over the agent's", async () => {
+            const { service, followupRepository } = buildService(
+                [],
+                'Asia/Tokyo',
+                'America/New_York'
+            );
+
+            await service.schedule(jobData, { at: '2026-10-14T09:00' });
+
+            expect(scheduledAtOf(followupRepository).toISOString()).toBe(
+                '2026-10-14T13:00:00.000Z'
             );
         });
 

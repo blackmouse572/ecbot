@@ -33,12 +33,35 @@ describe('ChatbotTimezoneService', () => {
         expect(service.resolveAgentTimezone(null)).toBe('UTC');
     });
 
-    it('resolves a conversation through its chatbot', () => {
+    it('resolves a conversation without its own zone through its chatbot', () => {
         const service = buildService('Asia/Ho_Chi_Minh');
         expect(
             service.resolveConversationTimezone({
                 chatbot: { timezone: 'Asia/Bangkok' } as any,
+                timezone: null,
             })
         ).toBe('Asia/Bangkok');
+    });
+
+    // #292: business hours stay in the agent's zone; only the customer's
+    // clock moves to the conversation's.
+    it('puts the conversation timezone in front for the customer only', () => {
+        const service = buildService('Asia/Ho_Chi_Minh');
+        expect(
+            service.resolve(
+                { timezone: 'Asia/Bangkok' },
+                { timezone: 'America/New_York' }
+            )
+        ).toEqual({ agent: 'Asia/Bangkok', customer: 'America/New_York' });
+        expect(service.resolve({ timezone: null }, null)).toEqual({
+            agent: 'Asia/Ho_Chi_Minh',
+            customer: 'Asia/Ho_Chi_Minh',
+        });
+        expect(
+            service.resolveConversationTimezone({
+                chatbot: { timezone: 'Asia/Bangkok' } as any,
+                timezone: 'Europe/London',
+            })
+        ).toBe('Europe/London');
     });
 });

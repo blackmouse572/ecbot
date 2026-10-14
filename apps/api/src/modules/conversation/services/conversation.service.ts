@@ -291,6 +291,25 @@ export class ConversationService implements IConversationService {
         return updated;
     }
 
+    async setTimezone(
+        conversationId: string,
+        timezone: string | null
+    ): Promise<ConversationEntity> {
+        const updated = await this.conversationRepository.updateEntity(
+            { id: conversationId },
+            { timezone }
+        );
+
+        if (!updated) {
+            throw new NotFoundException({
+                message: 'conversation.error.notFound',
+                statusCode: 404,
+            });
+        }
+
+        return updated;
+    }
+
     async recordFallback(
         chatbotId: string,
         accountId: string,

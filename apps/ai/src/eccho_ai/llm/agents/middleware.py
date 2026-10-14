@@ -20,8 +20,8 @@ from langchain.agents.middleware import AgentMiddleware, AgentState
 
 from eccho_ai.llm.prompts.current_time import (
     render_current_time,
-    resolve_timezone,
     with_current_time,
+    zone,
 )
 from eccho_ai.llm.prompts.loader import render_system_prompt
 from eccho_ai.llm.prompts.opening_hours import render_opening_hours
@@ -52,10 +52,16 @@ def _with_sticky_session(model, conversation_id: str | None):
     )
 
 
-def _turn_context(chatbot, now) -> str:
-    """The clock, then the open/closed status when the agent has weekly hours (#289)."""
-    tz = resolve_timezone(chatbot)
-    blocks = [render_current_time(now, tz), render_opening_hours(chatbot, now, tz)]
+def _turn_context(context: AgentRequestContext) -> str:
+    """The clock, then the open/closed status when the agent has weekly hours
+    (#289). Hours are the business's, so they use the agent zone; only the
+    clock adds the customer's zone (#292)."""
+    agent_tz = zone(context.agent_timezone)
+    customer_tz = zone(context.customer_timezone or context.agent_timezone)
+    blocks = [
+        render_current_time(context.now, agent_tz, customer_tz),
+        render_opening_hours(context.chatbot, context.now, agent_tz),
+    ]
     return "\n".join(b for b in blocks if b)
 
 
@@ -76,7 +82,7 @@ class ChatbotConfigMiddleware(AgentMiddleware[AgentState[Any], AgentRequestConte
                 ),
                 tools=[*request.tools, *injected],
                 system_prompt=render_system_prompt(chatbot),
-                messages=with_current_time(request.messages, _turn_context(chatbot, context.now)),
+                messages=with_current_time(request.messages, _turn_context(context)),
             )
         return await handler(request)
 
