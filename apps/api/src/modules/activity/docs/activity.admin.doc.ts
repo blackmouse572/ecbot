@@ -16,6 +16,18 @@ export function ActivityAdminListDoc(): MethodDecorator {
         }),
         DocRequest({
             params: UserDocParamsId,
+            queries: [
+                {
+                    name: 'action',
+                    type: String,
+                    required: false,
+                },
+                {
+                    name: 'subject',
+                    type: String,
+                    required: false,
+                },
+            ],
         }),
         DocAuth({
             xApiKey: true,
