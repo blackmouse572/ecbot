@@ -2,6 +2,7 @@ import { IconPlugConnected } from "@tabler/icons-react";
 import { Button, Container, Heading, usePrompt } from "@medusajs/ui";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt, HowItWorks } from "@/components/guide";
 import { Link, Outlet, useLoaderData } from "react-router-dom";
 
 import { createSelectColumn } from "@/components/table/columns";
@@ -63,7 +64,10 @@ export const AccountListTable = () => {
   return (
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
-        <Heading level="h2">{t("accounts.title")}</Heading>
+        <div className="flex items-center gap-x-2">
+          <Heading level="h2">{t("accounts.title")}</Heading>
+          <HowItWorks feature="accounts" icon={<IconPlugConnected />} />
+        </div>
         <div className="flex items-center justify-center gap-x-2">
           <Button size="small" variant="secondary" asChild>
             <Link to="create">{t("actions.linkAccount")}</Link>
@@ -91,7 +95,9 @@ export const AccountListTable = () => {
           title: t("accounts.list.noRecordsTitle"),
           message: t("accounts.list.noRecordsMessage"),
           action: { to: "create", label: t("actions.linkAccount") },
-          icon: <IconPlugConnected />,
+          illustration: (
+            <FeatureArt feature="accounts" icon={<IconPlugConnected />} />
+          ),
         }}
       />
       <Outlet />

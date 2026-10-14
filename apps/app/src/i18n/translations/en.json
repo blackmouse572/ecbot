@@ -371,6 +371,61 @@
       "progress": "{{done}} of {{total}}"
     }
   },
+  "guide": {
+    "howItWorks": "How it works",
+    "features": {
+      "chatbot": {
+        "title": "Your agent answers customers",
+        "body": "An agent replies to customers on your channels using what you tell it about your shop. You can create several, for example one per channel.",
+        "customer": "Do you have size M?",
+        "agent": "Yes! Which color would you like?"
+      },
+      "accounts": {
+        "title": "Where customers reach you",
+        "body": "Connect a Fanpage, Zalo OA, website or Telegram, then link an agent to it. The agent answers every message that arrives there.",
+        "customer": "Hi, is this still in stock?",
+        "agent": "It is! Shall I hold one for you?"
+      },
+      "conversations": {
+        "title": "Customer messages land here",
+        "body": "Every chat from a connected channel shows up here. Read what the agent replied and step in yourself when needed.",
+        "customer": "Is the birthday cake available?",
+        "agent": "Yes, it's 250,000đ each!"
+      },
+      "knowledge": {
+        "title": "Teach the agent about your shop",
+        "body": "Upload your menu, price list or return policy. The agent reads them before it answers, so opening hours and shipping fees come out right.",
+        "customer": "What time do you open?",
+        "agent": "We're open 7am to 9pm daily."
+      },
+      "tools": {
+        "title": "Let the agent get things done",
+        "body": "Tools let the agent look up orders, book appointments or call your own system, so it does more than chat.",
+        "customer": "Where is my order?",
+        "agent": "Order #1024 is out for delivery."
+      },
+      "skills": {
+        "title": "Show the agent how to handle a task",
+        "body": "A skill is a short playbook for one job, like swapping a size or taking a booking. The agent follows it step by step.",
+        "customer": "Can I swap to a bigger size?",
+        "agent": "Sure, send me your order code."
+      }
+    },
+    "tour": {
+      "next": "Next",
+      "done": "Done",
+      "skip": "Skip",
+      "progress": "Step {{current}} of {{total}}",
+      "finished": "All set. Open \"How it works\" on any page to see this again.",
+      "skipped": "Tour skipped. \"How it works\" on each page explains it anytime."
+    },
+    "firstConversation": {
+      "title": "Your first conversation is here!",
+      "body": "A customer just messaged one of your channels. Open it to see how your agent answered.",
+      "open": "See conversation",
+      "later": "Later"
+    }
+  },
   "onboard": {
     "select": {
       "create": {
@@ -2735,7 +2790,7 @@
         "triggersHandoff": "Triggers handoff",
         "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator.",
         "notifiesTeam": "Notify the team",
-        "notifiesTeamHelp": "When the agent applies this tag, notify the team in the app and by email. The assistant keeps replying.",
+        "notifiesTeamHelp": "When the agent applies this tag, notify the team in the app and by email. The agent keeps replying.",
         "notifiesTeamByHandoff": "A handoff already notifies the team."
       },
       "toast": {

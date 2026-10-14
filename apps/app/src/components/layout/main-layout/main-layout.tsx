@@ -16,6 +16,7 @@ import {
   Sparkles,
   Users,
 } from "@medusajs/icons";
+import { GuideMoments } from "@/components/guide";
 import { GettingStartedNav } from "@/routes/dashboard/components/getting-started-nav/getting-started-nav";
 import { BlockedAccountsBadge } from "./blocked-accounts-badge";
 import { RecentAgentsSection } from "./recent-agents-section";
@@ -59,17 +60,21 @@ export const MainLayout = () => {
   }
 
   return (
-    <Shell
-      mobileNavLabels={{
-        title: t("app.nav.accessibility.title"),
-        description: t("app.nav.accessibility.description"),
-      }}
-      topbarActions={<NotificationMenu />}
-    >
-      {workspace && (
-        <MainSidebar workspaces={workspaces} currentWorkspace={workspace} />
-      )}
-    </Shell>
+    <>
+      <Shell
+        mobileNavLabels={{
+          title: t("app.nav.accessibility.title"),
+          description: t("app.nav.accessibility.description"),
+        }}
+        topbarActions={<NotificationMenu />}
+      >
+        {workspace && (
+          <MainSidebar workspaces={workspaces} currentWorkspace={workspace} />
+        )}
+      </Shell>
+      {/* Outside the shell, whose children render in both sidebars. */}
+      {workspace && <GuideMoments />}
+    </>
   );
 };
 

@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt, HowItWorks } from "@/components/guide";
 import { Link, Outlet, useLoaderData } from "react-router-dom";
 import { CHATBOT_CONSTANTS } from "../../../constants";
 import { chatbotLoader } from "../../loader";
@@ -64,7 +65,10 @@ export const ChatbotListTable = () => {
   return (
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
-        <Heading level="h2">{t("chatbot.title")}</Heading>
+        <div className="flex items-center gap-x-2">
+          <Heading level="h2">{t("chatbot.title")}</Heading>
+          <HowItWorks feature="chatbot" icon={<IconRobot />} />
+        </div>
         <div className="flex items-center justify-center gap-x-2">
           <Button size="small" variant="secondary" asChild>
             <Link to="create">
@@ -96,7 +100,7 @@ export const ChatbotListTable = () => {
           title: t("chatbot.list.noRecordsTitle"),
           message: t("chatbot.list.noRecordsMessage"),
           action: { to: "create", label: t("chatbot.list.createFirst") },
-          icon: <IconRobot />,
+          illustration: <FeatureArt feature="chatbot" icon={<IconRobot />} />,
         }}
       />
       <Outlet />

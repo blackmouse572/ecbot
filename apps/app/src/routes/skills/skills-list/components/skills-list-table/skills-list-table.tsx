@@ -15,6 +15,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt, HowItWorks } from "@/components/guide";
 import { Link, Outlet } from "react-router-dom";
 import {
   useSkillTableColumns,
@@ -61,7 +62,10 @@ export const SkillsListTable = () => {
   return (
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
-        <Heading level="h2">{t("skills.title")}</Heading>
+        <div className="flex items-center gap-x-2">
+          <Heading level="h2">{t("skills.title")}</Heading>
+          <HowItWorks feature="skills" icon={<IconSparkles />} />
+        </div>
         <div className="flex items-center gap-x-2">
           <Button size="small" variant="secondary" asChild>
             <Link to="browse">{t("skills.actions.browse")}</Link>
@@ -94,7 +98,7 @@ export const SkillsListTable = () => {
           title: t("skills.list.noRecordsTitle"),
           message: t("skills.list.noRecordsMessage"),
           action: { to: "create", label: t("skills.list.createFirst") },
-          icon: <IconSparkles />,
+          illustration: <FeatureArt feature="skills" icon={<IconSparkles />} />,
         }}
       />
       <Outlet />

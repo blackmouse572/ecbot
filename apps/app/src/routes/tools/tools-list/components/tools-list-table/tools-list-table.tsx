@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FeatureArt, HowItWorks } from "@/components/guide";
 import { Outlet, useNavigate } from "react-router-dom";
 import { TOOL_CONSTANTS } from "../../../constants";
 import { ToolActions } from "./tool-actions";
@@ -69,8 +70,9 @@ export const ToolsListTable = () => {
   return (
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
-        <div>
+        <div className="flex items-center gap-x-2">
           <Heading level="h2">{t("tools.title")}</Heading>
+          <HowItWorks feature="tools" icon={<IconTool />} />
         </div>
         <div className="flex items-center gap-x-2">
           <Button size="small" variant="secondary" onClick={handleMarketplace}>
@@ -105,7 +107,7 @@ export const ToolsListTable = () => {
             onClick: handleMarketplace,
             label: t("tools.actions.browseMarketplace"),
           },
-          icon: <IconTool />,
+          illustration: <FeatureArt feature="tools" icon={<IconTool />} />,
         }}
       />
       <Outlet />
