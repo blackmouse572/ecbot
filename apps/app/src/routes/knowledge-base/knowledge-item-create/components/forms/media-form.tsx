@@ -92,7 +92,9 @@ export const MediaForm: FC<MediaFormProps> = ({
                       }
                       status={
                         upload?.status === "done" ? (
-                          t("knowledge_item.media.uploaded")
+                          <span className="text-ui-tag-green-text">
+                            {t("knowledge_item.media.uploaded")}
+                          </span>
                         ) : upload?.status === "failed" ? (
                           <span className="text-ui-fg-error">
                             {t("knowledge_item.media.failed_at", {
