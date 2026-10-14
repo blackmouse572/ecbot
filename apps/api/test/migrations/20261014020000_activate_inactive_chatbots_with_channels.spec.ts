@@ -1,4 +1,4 @@
-import { Migration20261013170000_activate_inactive_chatbots_with_channels as Migration } from '../../migrations/20261013170000_activate_inactive_chatbots_with_channels';
+import { Migration20261014020000_activate_inactive_chatbots_with_channels as Migration } from '../../migrations/20261014020000_activate_inactive_chatbots_with_channels';
 
 type MigrationHarness = {
     addSql: (sql: string) => void;
@@ -16,7 +16,7 @@ const runMigration = async (method: 'up' | 'down') => {
     return sql.join('\n');
 };
 
-describe('Migration20261013170000_activate_inactive_chatbots_with_channels', () => {
+describe('Migration20261014020000_activate_inactive_chatbots_with_channels', () => {
     it('turns on only inactive, live agents that a live channel is linked to', async () => {
         const sql = await runMigration('up');
 

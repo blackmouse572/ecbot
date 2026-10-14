@@ -5,7 +5,7 @@ import { Migration } from '@mikro-orm/migrations';
 // agent stays quiet. Agents that are inactive today but already linked to a
 // channel have been answering customers, so turn them on to keep those shops
 // answering. Agents with no channel stay drafts.
-export class Migration20261013170000_activate_inactive_chatbots_with_channels extends Migration {
+export class Migration20261014020000_activate_inactive_chatbots_with_channels extends Migration {
     override async up(): Promise<void> {
         this.addSql(`
             update "chatbots" c
