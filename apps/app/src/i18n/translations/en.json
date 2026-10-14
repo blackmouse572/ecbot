@@ -1181,6 +1181,15 @@
       "changeTypeTitle": "Change the business type?",
       "changeTypeDescription": "This agent is live. A new business type resets the answers that depend on it, such as goals, rules and what to collect, and customers see the change as soon as it saves.",
       "changeTypeConfirm": "Change type",
+      "hoursOpen": "Open",
+      "hoursClosed": "Closed",
+      "hoursAddRange": "Add hours",
+      "hoursRemoveRange": "Remove these hours",
+      "hoursCopyToAll": "Use these hours every day",
+      "hoursFrom": "Opens at",
+      "hoursTo": "Closes at",
+      "hoursInvalid": "Check the hours: closing time must be after opening time, and the hours in a day must not overlap.",
+      "hoursEveryDay": "Every day",
       "customCollectLabel": "Add your own",
       "customCollectPlaceholder": "e.g. Deadline, design file, size",
       "customCollectAdd": "Add",
@@ -1300,6 +1309,11 @@
         "title": "What should it do outside opening hours?",
         "ask": "What should happen outside opening hours?",
         "lead": "Outside opening hours:"
+      },
+      "openingHours": {
+        "title": "When are you open?",
+        "ask": "When are you open each week?",
+        "lead": "Opening hours:"
       }
     },
     "examples": {
@@ -1498,8 +1512,8 @@
     },
     "facts": {
       "opening_hours": {
-        "title": "What are your opening hours?",
-        "placeholder": "Mon to Sun, 9:00 to 21:00"
+        "title": "Anything else about your opening hours?",
+        "placeholder": "Kitchen takes last orders at 21:30, closed for Lunar New Year"
       },
       "address": {
         "title": "Where are you located?",
@@ -1681,6 +1695,24 @@
         "title": "How often should you follow up with contacts?",
         "placeholder": "Every 2 weeks for warm leads"
       }
+    },
+    "weekdays": {
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
+    },
+    "weekdaysShort": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
     }
   },
   "followups": {
@@ -2680,7 +2712,10 @@
         "description": "Description",
         "descriptionPlaceholder": "What is this tag used for?",
         "triggersHandoff": "Triggers handoff",
-        "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator."
+        "triggersHandoffHelp": "When this tag is applied, automatically hand the conversation off to a human operator.",
+        "notifiesTeam": "Notify the team",
+        "notifiesTeamHelp": "When the agent applies this tag, notify the team in the app and by email. The assistant keeps replying.",
+        "notifiesTeamByHandoff": "A handoff already notifies the team."
       },
       "toast": {
         "created": "Tag created.",

@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from fastapi import Request
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
 
 from eccho_ai.core.app_logger import get_logger
@@ -100,10 +100,11 @@ async def get_agent_input(
 
         return Command(resume=chat_request.action)
 
+    # The history only grows between window steps (apps/api), so the
+    # provider's prompt cache keeps hitting. The customer context changes
+    # whenever a tag or field does, so it rides with the newest message
+    # (like <current_time>, see llm/prompts/current_time.py).
     messages: list[Any] = []
-    block = await build_customer_context_block(chat_request.customer_id)
-    if block:
-        messages.append(SystemMessage(content=block))
 
     for turn in chat_request.history or []:
         if turn.role == "user":
@@ -112,6 +113,9 @@ async def get_agent_input(
             messages.append(AIMessage(content=turn.content))
 
     message = _build_rag_message(chat_request.message or "", retrieval)
+    block = await build_customer_context_block(chat_request.customer_id)
+    if block:
+        message = f"{block}\n\n{message}"
     messages.append(HumanMessage(content=message))
     return {"messages": messages}
 

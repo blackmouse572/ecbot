@@ -124,6 +124,7 @@ export class CustomerTagWorkspaceController {
             emoji: dto.emoji,
             description: dto.description,
             triggersHandoff: dto.triggersHandoff ?? false,
+            notifiesTeam: dto.notifiesTeam ?? false,
         });
 
         await this.activityService.createByUserWithWorkspace(user, workspace, {

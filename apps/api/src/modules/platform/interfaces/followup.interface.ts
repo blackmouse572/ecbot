@@ -3,6 +3,12 @@ import {
     ENUM_FOLLOWUP_STATUS,
 } from '../constants/followup.constant';
 
+/**
+ * When a followup fires: a relative delay, or a local wall-clock time
+ * (`YYYY-MM-DDTHH:mm`, no offset) read in the conversation's timezone.
+ */
+export type IFollowupWhen = { delayMinutes: number } | { at: string };
+
 /** Everything `fire()` needs to regenerate and deliver the followup message. */
 export interface IFollowupJob {
     conversationId: string;

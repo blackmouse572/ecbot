@@ -318,11 +318,16 @@ export class ResendProvider implements IEmailService {
             chatbotName,
             workspaceName,
             reason,
+            tagName,
             conversationUrl,
             language,
         }: EmailHandoffDto
     ): Promise<boolean> {
         const copy = handoffEmailCopy(language, this.homeName);
+        const subject =
+            reason === 'tag_notice' && tagName
+                ? copy.notice.subject(chatbotName, tagName)
+                : copy.subject(chatbotName);
         return this.sendEmailTemplate(
             email,
             EmailSubject.Handoff,
@@ -330,13 +335,14 @@ export class ResendProvider implements IEmailService {
                 chatbotName,
                 workspaceName,
                 reason,
+                tagName,
                 conversationUrl: `${this.homeUrl}${conversationUrl}`,
                 supportEmail: this.supportEmail,
                 homeUrl: this.homeUrl,
                 homeName: this.homeName,
                 language,
             },
-            copy.subject(chatbotName)
+            subject
         );
     }
 

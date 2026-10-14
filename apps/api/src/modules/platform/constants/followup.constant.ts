@@ -13,6 +13,12 @@ export const OUTCOME_REASON_MAX_LENGTH = 255;
  */
 export const MAX_PENDING_FOLLOWUPS_PER_CONVERSATION = 5;
 
+/** A bot has no business scheduling further out than 30 days. */
+export const FOLLOWUP_MAX_AHEAD_MINUTES = 43_200;
+
+/** A wall-clock follow-up must be at least this far ahead to be accepted. */
+export const FOLLOWUP_MIN_LEAD_MINUTES = 1;
+
 export enum ENUM_FOLLOWUP_PROCESS {
     FIRE = 'fire',
 }

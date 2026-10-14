@@ -14,6 +14,7 @@ import { ChatbotAiSseStreamService } from './services/chatbot-ai-sse-stream.serv
 import { ChatbotPreviewService } from './services/chatbot-preview.service';
 import { ChatbotPreviewSessionService } from './services/chatbot-preview-session.service';
 import { ChatbotShareTokenService } from './services/chatbot-share-token.service';
+import { ChatbotTimezoneService } from './services/chatbot-timezone.service';
 
 @Module({
     imports: [
@@ -34,6 +35,7 @@ import { ChatbotShareTokenService } from './services/chatbot-share-token.service
         ChatbotPreviewService,
         ChatbotPreviewSessionService,
         ChatbotShareTokenService,
+        ChatbotTimezoneService,
     ],
     providers: [
         ChatbotService,
@@ -43,6 +45,7 @@ import { ChatbotShareTokenService } from './services/chatbot-share-token.service
         ChatbotPreviewService,
         ChatbotPreviewSessionService,
         ChatbotShareTokenService,
+        ChatbotTimezoneService,
     ],
     controllers: [],
 })

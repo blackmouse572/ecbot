@@ -231,6 +231,31 @@ describe('ResendProvider team emails', () => {
         expect(subject()).toBe('Khách hàng cần người hỗ trợ (Linh)');
     });
 
+    it('tag notice (#288): names the tag in the subject and passes it to the template', async () => {
+        await provider.sendHandoff(
+            { name: 'Chi', email: 'chi@b.com' },
+            {
+                chatbotName: 'Linh',
+                workspaceName: 'Kunmart',
+                reason: 'tag_notice',
+                tagName: 'Đã đặt đơn',
+                conversationUrl: '/kunmart/conversations/c-1',
+                language: 'vi',
+            }
+        );
+
+        expect(render).toHaveBeenCalledWith(
+            EmailSubject.Handoff,
+            expect.objectContaining({
+                reason: 'tag_notice',
+                tagName: 'Đã đặt đơn',
+            })
+        );
+        expect(subject()).toBe(
+            'Linh đã gắn thẻ "Đã đặt đơn" cho một khách hàng'
+        );
+    });
+
     it('member joined: tells the owner who joined, with a link to the members page', async () => {
         await provider.sendMemberJoined(
             { name: 'Chi', email: 'owner@b.com' },

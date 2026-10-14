@@ -421,6 +421,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                         emoji: tag.emoji,
                         description: tag.description,
                         triggersHandoff: tag.triggersHandoff,
+                        notifiesTeam: tag.notifiesTeam ?? false,
                     },
                     { em: session }
                 );

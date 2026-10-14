@@ -1,4 +1,3 @@
-import { MESSAGE_HISTORY_WINDOW } from '@app/modules/platform/constants/message-debounce.constant';
 import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 
 const UNVIEWABLE = '[The user sent an image that could not be viewed.]';
@@ -10,7 +9,6 @@ const USAGE = { inputTokens: 900, outputTokens: 60, totalTokens: 960 };
  * `describeImages` is replaced.
  */
 function contextOver(rows: object[], describeImages?: jest.Mock) {
-    const findRecentByConversation = jest.fn().mockResolvedValue(rows);
     const updateAttachments = jest.fn().mockResolvedValue(undefined);
     const ai = {
         describeImages:
@@ -30,7 +28,7 @@ function contextOver(rows: object[], describeImages?: jest.Mock) {
             ),
     };
     const service = new TurnContextService(
-        { findRecentByConversation, updateAttachments } as any,
+        { updateAttachments } as any,
         {
             resolve: jest.fn(
                 async (list: { type: string; key?: string }[] = []) =>
@@ -39,19 +37,21 @@ function contextOver(rows: object[], describeImages?: jest.Mock) {
                     )
             ),
         } as any,
-        ai as any
+        ai as any,
+        {
+            window: jest.fn(async () => ({ rows })),
+        } as any
     );
-    return { service, findRecentByConversation, updateAttachments, ai };
+    return { service, updateAttachments, ai };
 }
 
 describe('TurnContextService', () => {
-    it('reads the history window plus the burst', async () => {
-        const { service, findRecentByConversation } = contextOver([]);
-        await service.build('c', { texts: ['a', 'b'] }, 'bot');
-        expect(findRecentByConversation).toHaveBeenCalledWith(
-            'c',
-            MESSAGE_HISTORY_WINDOW + 2
-        );
+    it('sends the memory window before the burst as history', async () => {
+        const { service } = contextOver([
+            { id: 'm-1', text: 'hi', direction: 'INBOUND' },
+        ]);
+        const context = await service.build('c', { texts: [] }, 'bot');
+        expect(context.history).toEqual([{ role: 'user', content: 'hi' }]);
     });
 
     it('describes the burst images once, keeps each description, and sends them as text', async () => {
