@@ -331,6 +331,7 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                       )}
                     />
                   )}
+                  {/* One field: the label sits on the input, chosen tags below. */}
                   <Form.Field
                     control={form.control}
                     name="tags"
@@ -339,31 +340,6 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                       return (
                         <Form.Item>
                           <Form.Label>{t("knowledge_item.addTag")}</Form.Label>
-                          <ChipGroup
-                            onRemove={(index) => {
-                              remove(index);
-                            }}
-                            onClearAll={() => {
-                              remove();
-                            }}
-                          >
-                            {tags.map((tag, index) => (
-                              <ChipGroup.Chip key={`${tag}`} index={index}>
-                                {tag}
-                              </ChipGroup.Chip>
-                            ))}
-                          </ChipGroup>
-                        </Form.Item>
-                      );
-                    }}
-                  />
-                  <Form.Field
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => {
-                      const tags = field.value || [];
-                      return (
-                        <Form.Item>
                           <KnowledgeItemEditTag
                             defaultValues={tags}
                             knowledgeBaseId={knowledgeBaseId}
@@ -373,6 +349,22 @@ export const KnowledgeItemCreateForm: FC<KnowledgeItemCreateFormProps> = ({
                               }
                             }}
                           />
+                          {tags.length > 0 && (
+                            <ChipGroup
+                              onRemove={(index) => {
+                                remove(index);
+                              }}
+                              onClearAll={() => {
+                                remove();
+                              }}
+                            >
+                              {tags.map((tag, index) => (
+                                <ChipGroup.Chip key={`${tag}`} index={index}>
+                                  {tag}
+                                </ChipGroup.Chip>
+                              ))}
+                            </ChipGroup>
+                          )}
                         </Form.Item>
                       );
                     }}
