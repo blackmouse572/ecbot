@@ -1,7 +1,7 @@
 import { Button, Select, Text } from "@medusajs/ui";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FeatureArt, HowItWorks } from "@/components/guide";
+import { FeatureArt } from "@/components/guide";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
   useConversations,
@@ -143,12 +143,9 @@ export const ConversationList = () => {
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
-        <div className="flex items-center gap-x-1">
-          <Text size="large" weight="plus">
-            {t("conversations.title")}
-          </Text>
-          <HowItWorks feature="conversations" icon={<IconMessages />} />
-        </div>
+        <Text size="large" weight="plus">
+          {t("conversations.title")}
+        </Text>
         <Select
           size="small"
           value={groupBy}

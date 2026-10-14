@@ -1,10 +1,32 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { NavAccessProvider } from "./nav-access-context";
 import { NavItem } from "./nav-item";
 
 describe("NavItem", () => {
+  it("shows the hint only after the pointer rests on the link", () => {
+    vi.useFakeTimers();
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <NavItem
+          label="Knowledge"
+          to="/knowledge"
+          hint={<p>Teach the agent</p>}
+        />
+      </MemoryRouter>,
+    );
+
+    const link = screen.getByRole("link", { name: "Knowledge" });
+    fireEvent.pointerEnter(link, { pointerType: "mouse" });
+    act(() => vi.advanceTimersByTime(300));
+    expect(screen.queryByText("Teach the agent")).not.toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(600));
+    expect(screen.getByText("Teach the agent")).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
   describe("without a NavAccessProvider", () => {
     it("renders every item, including ones that declare an ability (allow-all default)", () => {
       render(

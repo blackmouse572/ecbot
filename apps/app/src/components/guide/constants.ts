@@ -38,3 +38,12 @@ export const GUIDE_STORAGE_PREFIX = "ecbot.guide";
 /** Routes that open over the page (builder, create and edit forms); the
  * tour waits until they close. */
 export const OVERLAY_ROUTE = /\/(create|edit|clone)(\/|$)/;
+
+export const CONFETTI_COUNT = 32;
+export const CONFETTI_COLORS = [
+  "bg-ui-tag-blue-icon",
+  "bg-ui-tag-green-icon",
+  "bg-ui-tag-orange-icon",
+  "bg-ui-tag-purple-icon",
+  "bg-ui-tag-red-icon",
+];

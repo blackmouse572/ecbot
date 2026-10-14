@@ -16,7 +16,7 @@ import {
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FeatureArt, HowItWorks } from "@/components/guide";
+import { FeatureArt } from "@/components/guide";
 import { Outlet, useNavigate } from "react-router-dom";
 import { KnowledgeItemTitleCell } from "./knowledge-item-title-cell";
 import { KnowledgeItemStatusCell } from "./knowledge-item-status-cell";
@@ -105,10 +105,7 @@ export const KnowledgeBaseListTable = () => {
   return (
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-x-2">
-          <Heading level="h2">{t("knowledgeBase.list.title")}</Heading>
-          <HowItWorks feature="knowledge" icon={<IconBooks />} />
-        </div>
+        <Heading level="h2">{t("knowledgeBase.list.title")}</Heading>
         <Button
           onClick={handleCreate}
           disabled={!firstKB}

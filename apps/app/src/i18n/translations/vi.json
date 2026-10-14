@@ -398,7 +398,6 @@
     }
   },
   "guide": {
-    "howItWorks": "Cách hoạt động",
     "features": {
       "chatbot": {
         "title": "Agent trả lời khách thay bạn",
@@ -442,8 +441,8 @@
       "done": "Xong",
       "skip": "Bỏ qua",
       "progress": "Bước {{current}}/{{total}}",
-      "finished": "Xong! Bấm \"Cách hoạt động\" ở mỗi trang để xem lại.",
-      "skipped": "Đã bỏ qua hướng dẫn. Nút \"Cách hoạt động\" ở mỗi trang luôn giải thích lại."
+      "finished": "Xong! Rê chuột lên một mục ở thanh bên để xem mục đó làm gì.",
+      "skipped": "Đã bỏ qua hướng dẫn. Rê chuột lên một mục ở thanh bên để xem mục đó làm gì."
     },
     "firstConversation": {
       "title": "Cuộc hội thoại đầu tiên đã tới!",

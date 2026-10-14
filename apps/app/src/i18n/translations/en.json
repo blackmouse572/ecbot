@@ -372,7 +372,6 @@
     }
   },
   "guide": {
-    "howItWorks": "How it works",
     "features": {
       "chatbot": {
         "title": "Your agent answers customers",
@@ -416,8 +415,8 @@
       "done": "Done",
       "skip": "Skip",
       "progress": "Step {{current}} of {{total}}",
-      "finished": "All set. Open \"How it works\" on any page to see this again.",
-      "skipped": "Tour skipped. \"How it works\" on each page explains it anytime."
+      "finished": "All set. Rest the pointer on a sidebar item to see what it does.",
+      "skipped": "Tour skipped. Rest the pointer on a sidebar item to see what it does."
     },
     "firstConversation": {
       "title": "Your first conversation is here!",

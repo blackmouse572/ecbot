@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
+import { Confetti } from "./confetti";
 import { CELEBRATION_BACKGROUND } from "./constants";
 
 interface FirstConversationCelebrationProps {
@@ -81,6 +82,7 @@ export const FirstConversationCelebration: FC<
               </div>
             </div>
           </motion.div>
+          <Confetti />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

@@ -16,7 +16,7 @@ import {
   Sparkles,
   Users,
 } from "@medusajs/icons";
-import { GuideMoments } from "@/components/guide";
+import { GuideMoments, LazyFeatureHint } from "@/components/guide";
 import { GettingStartedNav } from "@/routes/dashboard/components/getting-started-nav/getting-started-nav";
 import { BlockedAccountsBadge } from "./blocked-accounts-badge";
 import { RecentAgentsSection } from "./recent-agents-section";
@@ -295,6 +295,7 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
         action: "manage",
         subject: "ACCOUNT",
       },
+      hint: <LazyFeatureHint feature="accounts" icon={<SquaresPlus />} />,
       badge: <BlockedAccountsBadge />,
     },
     {
@@ -329,6 +330,12 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
         action: "manage",
         subject: "CHATBOT",
       },
+      hint: (
+        <LazyFeatureHint
+          feature="conversations"
+          icon={<ChatBubbleLeftRight />}
+        />
+      ),
       badge: <PausedConversationsBadge />,
     },
     {
@@ -339,6 +346,7 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
         action: "manage",
         subject: "CHATBOT",
       },
+      hint: <LazyFeatureHint feature="chatbot" icon={<Sparkles />} />,
       items: [
         {
           label: t("knowledgeBase.title"),
@@ -348,6 +356,7 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
             action: "manage",
             subject: "KNOWLEDGE_BASE",
           },
+          hint: <LazyFeatureHint feature="knowledge" icon={<FolderOpen />} />,
         },
         {
           label: t("tools.title"),
@@ -357,6 +366,7 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
             action: "manage",
             subject: "TOOL",
           },
+          hint: <LazyFeatureHint feature="tools" icon={<Puzzle />} />,
           badge: <ToolsAttentionBadge />,
         },
         {
@@ -367,6 +377,7 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
             action: "read",
             subject: "SKILL",
           },
+          hint: <LazyFeatureHint feature="skills" icon={<AcademicCap />} />,
         },
         {
           label: t("followups.title"),

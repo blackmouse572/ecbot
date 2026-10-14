@@ -2,6 +2,11 @@ import { Text, clx } from "@medusajs/ui";
 import { Collapsible as RadixCollapsible } from "radix-ui";
 import React, { type ReactNode, useCallback, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "../../ui/hover-card";
 import { type NavAbility, useNavAccess } from "./nav-access-context";
 
 type ItemType = "core" | "extension" | "setting";
@@ -12,6 +17,7 @@ type NestedItemProps = {
   icon?: ReactNode;
   badge?: ReactNode;
   ability?: NavAbility;
+  hint?: ReactNode;
 };
 
 export type INavItem = {
@@ -24,7 +30,13 @@ export type INavItem = {
   end?: boolean;
   badge?: ReactNode;
   ability?: NavAbility;
+  /** Explains the page in a card beside the link once the pointer rests on
+   * it. Rendered only while open, so a lazy component loads on first use. */
+  hint?: ReactNode;
 };
+
+/** Long enough that passing over the sidebar never opens a hint. */
+const HINT_OPEN_DELAY_MS = 800;
 
 const BASE_NAV_LINK_CLASSES =
   "text-ui-fg-subtle transition-fg hover:bg-ui-bg-subtle-hover flex items-center gap-x-2 rounded-md py-0.5 pl-0.5 pr-2 outline-none [&>svg]:text-ui-fg-subtle focus-visible:shadow-borders-focus";
@@ -43,6 +55,7 @@ export const NavItem = ({
   end,
   ability,
   badge,
+  hint,
 }: INavItem) => {
   const { pathname } = useLocation();
   const canAccess = useNavAccess();
@@ -53,8 +66,7 @@ export const NavItem = ({
    * the rail height would still be sized for an item the user cannot see.
    */
   const items = useMemo(
-    () =>
-      rawItems?.filter((item) => !item.ability || canAccess(item.ability)),
+    () => rawItems?.filter((item) => !item.ability || canAccess(item.ability)),
     [rawItems, canAccess],
   );
 
@@ -98,32 +110,36 @@ export const NavItem = ({
   return (
     <Wrapper>
       <div className="px-3">
-        <NavLink
-          to={to}
-          end={end ?? items?.some((i) => i.to === pathname)}
-          state={
-            from
-              ? {
-                  from,
-                }
-              : undefined
-          }
-          className={({ isActive }) => {
-            return clx(navLinkClassNames({ isActive, isSetting, to }), {
-              "max-lg:hidden": !!items?.length,
-            });
-          }}
-        >
-          {type !== "setting" && (
-            <div className="flex size-6 items-center justify-center">
-              <Icon icon={icon} type={type} />
-            </div>
-          )}
-          <Text size="small" weight="plus" leading="compact">
-            {label}
-          </Text>
-          {badge && <span className="ml-auto flex items-center">{badge}</span>}
-        </NavLink>
+        <WithHint hint={hint}>
+          <NavLink
+            to={to}
+            end={end ?? items?.some((i) => i.to === pathname)}
+            state={
+              from
+                ? {
+                    from,
+                  }
+                : undefined
+            }
+            className={({ isActive }) => {
+              return clx(navLinkClassNames({ isActive, isSetting, to }), {
+                "max-lg:hidden": !!items?.length,
+              });
+            }}
+          >
+            {type !== "setting" && (
+              <div className="flex size-6 items-center justify-center">
+                <Icon icon={icon} type={type} />
+              </div>
+            )}
+            <Text size="small" weight="plus" leading="compact">
+              {label}
+            </Text>
+            {badge && (
+              <span className="ml-auto flex items-center">{badge}</span>
+            )}
+          </NavLink>
+        </WithHint>
         {items && items.length > 0 && (
           <RadixCollapsible.Root open={open} onOpenChange={setOpen}>
             <RadixCollapsible.Trigger
@@ -174,40 +190,42 @@ export const NavItem = ({
                     {items.map((item) => {
                       return (
                         <li key={item.to} className="flex h-7 items-center">
-                          <NavLink
-                            to={item.to}
-                            end
-                            className={({ isActive }) => {
-                              return clx(
-                                navLinkClassNames({
-                                  to: item.to,
-                                  isActive,
-                                  isSetting,
-                                  isNested: true,
-                                }),
-                              );
-                            }}
-                          >
-                            <span className="flex items-center gap-x-1.5">
-                              {item.icon && (
-                                <div className="flex size-4 items-center justify-center [&>svg]:size-3">
-                                  <Icon icon={item.icon} type={type} />
-                                </div>
-                              )}
-                              <Text
-                                size="small"
-                                weight="plus"
-                                leading="compact"
-                              >
-                                {item.label}
-                              </Text>
-                            </span>
-                            {item.badge && (
-                              <span className="ml-auto flex items-center">
-                                {item.badge}
+                          <WithHint hint={item.hint}>
+                            <NavLink
+                              to={item.to}
+                              end
+                              className={({ isActive }) => {
+                                return clx(
+                                  navLinkClassNames({
+                                    to: item.to,
+                                    isActive,
+                                    isSetting,
+                                    isNested: true,
+                                  }),
+                                );
+                              }}
+                            >
+                              <span className="flex items-center gap-x-1.5">
+                                {item.icon && (
+                                  <div className="flex size-4 items-center justify-center [&>svg]:size-3">
+                                    <Icon icon={item.icon} type={type} />
+                                  </div>
+                                )}
+                                <Text
+                                  size="small"
+                                  weight="plus"
+                                  leading="compact"
+                                >
+                                  {item.label}
+                                </Text>
                               </span>
-                            )}
-                          </NavLink>
+                              {item.badge && (
+                                <span className="ml-auto flex items-center">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </NavLink>
+                          </WithHint>
                         </li>
                       );
                     })}
@@ -219,6 +237,31 @@ export const NavItem = ({
         )}
       </div>
     </Wrapper>
+  );
+};
+
+const WithHint = ({
+  hint,
+  children,
+}: React.PropsWithChildren<{ hint?: ReactNode }>) => {
+  if (!hint) return children;
+
+  return (
+    <HoverCard openDelay={HINT_OPEN_DELAY_MS} closeDelay={100}>
+      {/* A wrapper, not asChild: Slot would merge NavLink's className
+          function into a string. */}
+      <HoverCardTrigger asChild>
+        <div className="w-full">{children}</div>
+      </HoverCardTrigger>
+      <HoverCardContent
+        side="right"
+        align="start"
+        sideOffset={12}
+        className="w-[300px] overflow-hidden p-0"
+      >
+        {hint}
+      </HoverCardContent>
+    </HoverCard>
   );
 };
 

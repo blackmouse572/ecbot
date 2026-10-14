@@ -123,6 +123,7 @@ describe("GuideMoments", () => {
     expect(
       screen.getByRole("dialog", { name: "Your first conversation is here!" }),
     ).toBeInTheDocument();
+    expect(screen.getByTestId("confetti")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "See conversation" }),
     ).toHaveAttribute("href", "/kunmart/conversations");
