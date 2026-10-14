@@ -1,3 +1,4 @@
+import { formatFileSize } from "@/utils";
 import { Textarea } from "@medusajs/ui";
 import {
   FilePreview,
@@ -68,6 +69,8 @@ export const FileForm: FC<FileFormProps> = ({
             {field.value && (
               <FilePreview
                 filename={field.value.file.name}
+                mime={field.value.file.type || field.value.file.name}
+                description={formatFileSize(field.value.file.size)}
                 loading={isLoading}
                 activity={isLoading ? `${uploadProgress}%` : undefined}
                 onRemove={() => {

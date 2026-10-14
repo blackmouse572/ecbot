@@ -1,5 +1,6 @@
 import { ArrowDownTray, Spinner, Trash } from "@medusajs/icons";
 import { IconButton, Text } from "@medusajs/ui";
+import { FileType, getFileType } from "../../ui/file-type";
 import { type ActionGroup, ActionMenu } from "../action-menu";
 
 export const FilePreview = ({
@@ -9,6 +10,8 @@ export const FilePreview = ({
   activity,
   actions,
   hideThumbnail,
+  mime,
+  description,
   onRemove,
 }: {
   filename: string;
@@ -17,13 +20,22 @@ export const FilePreview = ({
   activity?: string;
   actions?: ActionGroup[];
   hideThumbnail?: boolean;
+  /** Shows the file type icon for this mime instead of the plain thumbnail. */
+  mime?: string;
+  /** A second line under the name, e.g. the file size. */
+  description?: string;
   onRemove?: () => void;
 }) => {
   return (
     <div className="shadow-elevation-card-rest bg-ui-bg-component transition-fg rounded-md px-3 py-2">
       <div className="flex flex-row items-center justify-between gap-2">
         <div className="flex flex-row items-center gap-3">
-          {!hideThumbnail && <FileThumbnail />}
+          {!hideThumbnail &&
+            (mime ? (
+              <FileType type={getFileType(mime)} aria-hidden />
+            ) : (
+              <FileThumbnail />
+            ))}
           <div className="flex flex-col justify-center">
             <Text
               size="small"
@@ -33,6 +45,15 @@ export const FilePreview = ({
               {filename}
             </Text>
 
+            {!!description && !(loading && activity) && (
+              <Text
+                leading="compact"
+                size="xsmall"
+                className="text-ui-fg-subtle"
+              >
+                {description}
+              </Text>
+            )}
             {loading && !!activity && (
               <Text
                 leading="compact"
