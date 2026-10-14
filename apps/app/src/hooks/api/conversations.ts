@@ -536,6 +536,12 @@ export const useMarkConversationRead = (id: string | undefined) => {
         }
       }
     },
+    // The cancel above drops a list that was still loading (a conversation
+    // opened from a link), so fetch it again rather than wait for the poll.
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      }),
   });
 };
 

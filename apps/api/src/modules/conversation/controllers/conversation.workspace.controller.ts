@@ -40,6 +40,7 @@ import {
     PaginationQueryFilterInEnum,
 } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
 import {
     Response,
@@ -67,7 +68,9 @@ import {
     ConversationWorkspaceUpdateStatusDoc,
 } from '../docs/conversation.workspace.doc';
 import {
+    CONVERSATION_DEFAULT_AVAILABLE_ORDER_BY,
     CONVERSATION_DEFAULT_AVAILABLE_SEARCH,
+    CONVERSATION_DEFAULT_ORDER_BY,
     CONVERSATION_DEFAULT_STATUS,
     CONVERSATION_DEFAULT_ACCOUNT_TYPE,
 } from '../constants/conversation.list.constant';
@@ -100,6 +103,9 @@ export class ConversationWorkspaceController {
         @AuthJwtPayload('user') operatorId: string,
         @PaginationQuery({
             availableSearch: CONVERSATION_DEFAULT_AVAILABLE_SEARCH,
+            defaultOrderBy: CONVERSATION_DEFAULT_ORDER_BY,
+            defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+            availableOrderBy: CONVERSATION_DEFAULT_AVAILABLE_ORDER_BY,
         })
         { _search, _limit, _offset, _order }: PaginationListDto,
         @PaginationQueryFilterInEnum(

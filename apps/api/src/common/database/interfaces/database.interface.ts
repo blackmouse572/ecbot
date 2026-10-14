@@ -2,6 +2,7 @@ import {
     CreateOptions,
     EntityManager,
     PopulateHint,
+    QueryOrder,
     UpsertOptions,
 } from '@mikro-orm/postgresql';
 import { IPaginationOrder } from 'src/common/pagination/interfaces/pagination.interface';
@@ -41,7 +42,8 @@ export interface IDatabaseFindAllOptions extends IDatabaseFindOneOptions {
     paging?: IDatabaseFindAllPagingOptions;
     limit?: number;
     offset?: number;
-    orderBy?: Record<string, 'ASC' | 'DESC'>;
+    /** Passed to MikroORM as is, so `QueryOrder` values like `DESC NULLS LAST` work. */
+    orderBy?: Record<string, `${QueryOrder}`>;
 }
 
 // Action
