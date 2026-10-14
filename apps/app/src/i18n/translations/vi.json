@@ -2473,13 +2473,13 @@
     "type": {
       "type": "Loại",
       "file": "Tệp",
-      "file_desc": "Tải lên tài liệu hoặc tệp",
+      "file_desc": "Tài liệu agent đọc, không gửi cho khách",
       "url": "URL",
       "url_desc": "Liên kết đến một trang web",
       "text": "Văn bản",
       "text_desc": "Viết nội dung văn bản tùy chỉnh",
       "media": "Media",
-      "media_desc": "Ảnh và PDF để agent gửi cho khách"
+      "media_desc": "Ảnh, menu PDF agent gửi cho khách"
     },
     "status": "Trạng thái",
     "created_at": "Tạo vào",
@@ -2523,7 +2523,11 @@
       "description": "Mô tả để agent tìm kiếm",
       "description_pending": "Agent sẽ tự mô tả tệp này sau khi xử lý xong.",
       "open_pdf": "Mở PDF",
-      "description_hint": "Agent tìm tệp này theo tên và mô tả này. Để trống nếu muốn agent tự mô tả lại."
+      "description_hint": "Agent tìm tệp này theo tên và mô tả này. Để trống nếu muốn agent tự mô tả lại.",
+      "cost_hint": "Agent đọc từng tệp bằng AI để tìm được khi khách hỏi. Mỗi ảnh tốn khoảng 2.000 token. Với PDF, trang có chữ gần như không tốn, trang ảnh (menu chụp, bản scan) khoảng 500 token mỗi trang. Ví dụ menu 38 trang có 33 trang ảnh tốn khoảng 15.000 token. Sửa tên hoặc mô tả sẽ đọc lại tệp.",
+      "cost_estimate_images": "Ước tính khoảng {{tokens}} token AI cho {{images}} ảnh",
+      "cost_estimate_pdfs": ", cộng khoảng {{pageTokens}} token cho mỗi trang ảnh trong {{count}} PDF",
+      "cost_estimate_pdfs_only": "Ước tính khoảng {{pageTokens}} token AI cho mỗi trang ảnh trong {{count}} PDF"
     }
   },
   "conversations": {

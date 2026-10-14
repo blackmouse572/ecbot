@@ -1,3 +1,4 @@
+import { Text } from "@medusajs/ui";
 import {
   FilePreview,
   FileUpload,
@@ -7,7 +8,12 @@ import {
 import type { FC } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { KB_MEDIA_IMAGE_MIMES, KB_MEDIA_PDF_MIME } from "../../../constants";
+import {
+  KB_MEDIA_IMAGE_MIMES,
+  KB_MEDIA_IMAGE_TOKENS,
+  KB_MEDIA_PDF_MIME,
+  KB_MEDIA_PDF_PICTURE_PAGE_TOKENS,
+} from "../../../constants";
 import type { KnowledgeItemCreateFormValues } from "../schema";
 
 interface MediaFormProps {
@@ -22,7 +28,7 @@ export const MediaForm: FC<MediaFormProps> = ({
   isLoading,
   uploadedIds = [],
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <Form.Field
@@ -31,6 +37,10 @@ export const MediaForm: FC<MediaFormProps> = ({
       shouldUnregister
       render={({ field, fieldState }) => {
         const files: FileType[] = field.value ?? [];
+        const pdfs = files.filter(
+          ({ file }) => file.type === KB_MEDIA_PDF_MIME,
+        ).length;
+        const images = files.length - pdfs;
         return (
           <Form.Item>
             <Form.Label>{t("knowledge_item.media.files")}</Form.Label>
@@ -45,6 +55,32 @@ export const MediaForm: FC<MediaFormProps> = ({
                 formats={[...KB_MEDIA_IMAGE_MIMES, KB_MEDIA_PDF_MIME]}
               />
             </Form.Control>
+            <div className="bg-ui-bg-subtle flex flex-col gap-y-1 rounded-lg p-3">
+              <Text size="small" className="text-ui-fg-subtle">
+                {t("knowledge_item.media.cost_hint")}
+              </Text>
+              {files.length > 0 && (
+                <Text size="small" weight="plus">
+                  {images > 0 &&
+                    t("knowledge_item.media.cost_estimate_images", {
+                      tokens: new Intl.NumberFormat(i18n.language).format(
+                        images * KB_MEDIA_IMAGE_TOKENS,
+                      ),
+                      images,
+                    })}
+                  {pdfs > 0 &&
+                    t(
+                      images > 0
+                        ? "knowledge_item.media.cost_estimate_pdfs"
+                        : "knowledge_item.media.cost_estimate_pdfs_only",
+                      {
+                        count: pdfs,
+                        pageTokens: KB_MEDIA_PDF_PICTURE_PAGE_TOKENS,
+                      },
+                    )}
+                </Text>
+              )}
+            </div>
             {files.length > 0 && (
               <div className="flex flex-col gap-y-2">
                 {files.map((file) => {
