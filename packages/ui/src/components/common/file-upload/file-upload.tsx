@@ -1,6 +1,12 @@
 import { ArrowDownTray } from "@medusajs/icons";
 import { Text, clx } from "@medusajs/ui";
-import { type ChangeEvent, type DragEvent, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  type ReactNode,
+  useRef,
+  useState,
+} from "react";
 
 export interface FileType {
   id: string;
@@ -11,7 +17,7 @@ export interface FileType {
 export interface FileUploadProps {
   label: string;
   multiple?: boolean;
-  hint?: string;
+  hint?: ReactNode;
   hasError?: boolean;
   formats: string[];
   onUploaded: (files: FileType[]) => void;

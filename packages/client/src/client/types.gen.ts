@@ -4496,7 +4496,7 @@ export type KnowledgeItemResponseDto = {
     /**
      * Item type (FILE, URL, TEXT)
      */
-    type: 'FILE' | 'URL' | 'TEXT';
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
     /**
      * Item title
      */
@@ -4541,7 +4541,7 @@ export type KnowledgeItemCreateRequestDto = {
     /**
      * Item type
      */
-    type: 'FILE' | 'URL' | 'TEXT';
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
     /**
      * Item title
      */
@@ -5824,7 +5824,7 @@ export type KnowledgeItemShortResponseDto = {
     /**
      * Item type (FILE, URL, TEXT)
      */
-    type: 'FILE' | 'URL' | 'TEXT';
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
     /**
      * Item title
      */

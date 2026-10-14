@@ -20,6 +20,7 @@ import {
     ENUM_KNOWLEDGE_FAILURE_KIND,
     ENUM_RAG_INGEST_PROCESS,
     RAG_INGEST_HTTP_TIMEOUT_MS,
+    RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS,
     RAG_INGEST_MAX_ATTEMPTS,
     RAG_INGEST_NO_TOKENS_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
@@ -242,6 +243,8 @@ export class KnowledgeIngestTaskService {
         let data: any;
         if (item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE) {
             data = await this.ingestFile(item, chatbotIds);
+        } else if (item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA) {
+            data = await this.ingestMedia(item, chatbotIds);
         } else if (item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL) {
             data = await this.ingestUrl(item, chatbotIds);
         } else {
@@ -266,6 +269,11 @@ export class KnowledgeIngestTaskService {
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
             errorMessage: null,
             processedAt: new Date(),
+            // A media item keeps its description, so the owner can read and
+            // correct what the agent searches by.
+            ...(item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA && {
+                content: data?.description ?? '',
+            }),
             metadata: {
                 ...(item.metadata ?? {}),
                 chunkCount: data?.chunk_count ?? 0,
@@ -306,6 +314,45 @@ export class KnowledgeIngestTaskService {
                 form,
                 {
                     timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
+                    headers: await this.authHeaders(form.getHeaders()),
+                    maxBodyLength: Infinity,
+                }
+            )
+        );
+        return (resp.data as any)?.data;
+    }
+
+    private async ingestMedia(item: any, chatbotIds: string[]): Promise<any> {
+        if (!item.attachment?.key) {
+            throw new PermanentIngestError(
+                'Knowledge item has no attachment, cannot ingest media'
+            );
+        }
+        const buffer = await this.awsS3Service.getItemBuffer(
+            item.attachment.key,
+            { access: ENUM_AWS_S3_ACCESSIBILITY.PUBLIC }
+        );
+        const form = new FormData();
+        form.append('file', buffer, {
+            filename: item.attachment.key.split('/').pop() ?? 'media',
+            contentType: item.attachment.mime,
+        });
+        form.append('knowledge_item_id', item.id);
+        form.append('chatbot_ids', chatbotIds.join(','));
+        form.append('title', item.title);
+        form.append(
+            'url',
+            item.attachment.cdnUrl || item.attachment.completedUrl
+        );
+        // The owner's own words win; without them apps/ai describes the file.
+        if (item.content?.trim()) form.append('description', item.content);
+
+        const resp = await firstValueFrom(
+            this.httpService.post(
+                `${this.aiBackendUrl}/api/rag/ingest/media`,
+                form,
+                {
+                    timeout: RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS,
                     headers: await this.authHeaders(form.getHeaders()),
                     maxBodyLength: Infinity,
                 }

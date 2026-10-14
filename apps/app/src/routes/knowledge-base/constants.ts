@@ -3,6 +3,7 @@ import {
   IconFileText,
   IconLink,
   IconTextPlus,
+  IconPhoto,
   IconClock,
   IconCheck,
   IconAlertCircle,
@@ -48,6 +49,11 @@ export const KB_TYPE_CONFIG: Record<
     color: "purple",
     icon: "IconTextPlus",
   },
+  MEDIA: {
+    label: i18n.t("knowledgeBase.type.MEDIA"),
+    color: "orange",
+    icon: "IconPhoto",
+  },
 };
 
 export const KB_STATUS_CONFIG: Record<
@@ -89,6 +95,7 @@ export const KB_TYPE_ICON_COMPONENTS = {
   IconFileText,
   IconLink,
   IconTextPlus,
+  IconPhoto,
 };
 
 export const KB_STATUS_ICON_COMPONENTS = {
@@ -120,3 +127,13 @@ export const KB_INGEST_ERROR_KEYS: Record<string, string> = {
   "Your workspace has no AI tokens left. Top up or renew your plan, then process this item again.":
     "knowledge_item.ingestErrors.noTokens",
 };
+
+/** What a MEDIA item takes: images sent as photos, PDFs sent as files. */
+export const KB_MEDIA_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
+export const KB_MEDIA_PDF_MIME = "application/pdf";
+export const KB_MEDIA_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const KB_MEDIA_PDF_MAX_BYTES = 20 * 1024 * 1024;
+/** Files picked in one go; each becomes its own item. */
+export const KB_MEDIA_MAX_FILES = 50;
+/** Uploads running at once, so a big batch does not flood the API. */
+export const KB_MEDIA_UPLOAD_CONCURRENCY = 3;

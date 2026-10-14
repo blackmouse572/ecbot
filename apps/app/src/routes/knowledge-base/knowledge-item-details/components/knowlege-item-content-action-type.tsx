@@ -21,10 +21,14 @@ export function KnowledgeItemContentActionType(props: {
         </a>
       </Button>
     );
-  } else if (type === "FILE") {
+  } else if (type === "FILE" || type === "MEDIA") {
     return (
       <Button variant="secondary" asChild>
-        <a href={item.attachment?.cdnUrl} target="_blank" rel="noreferrer">
+        <a
+          href={item.attachment?.cdnUrl || item.attachment?.completedUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
           <ArrowDownTray />
           {t("actions.download")}
         </a>

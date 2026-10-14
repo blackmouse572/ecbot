@@ -1,7 +1,10 @@
-import { useUpdateKnowledgeItem } from "@/hooks/api/knowledge-base";
+import {
+  useProcessKnowledgeItem,
+  useUpdateKnowledgeItem,
+} from "@/hooks/api/knowledge-base";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input, toast } from "@medusajs/ui";
+import { Button, Input, Textarea, toast } from "@medusajs/ui";
 import type { KnowledgeItemResponseDto } from "@repo/client";
 import { ChipGroup, Form } from "@repo/ui/common-components";
 import { useCallback } from "react";
@@ -22,6 +25,7 @@ type KnowledgeItemEditFormProps = {
 const KnowledgeItemEditSchema = z.object({
   title: z.string().min(1),
   tags: z.array(z.string().min(1)).optional(),
+  content: z.string().optional(),
 });
 
 export type KnowledgeItemEditFormValues = z.infer<
@@ -42,6 +46,7 @@ export function KnowledgeItemEditForm({
     defaultValues: {
       tags: item.tags,
       title: item.title,
+      content: item.content ?? "",
     },
   });
   const { remove, append } = useFieldArray({
@@ -57,6 +62,9 @@ export function KnowledgeItemEditForm({
     item.id,
   );
 
+  const isMedia = item.type === "MEDIA";
+  const { mutateAsync: processItem } = useProcessKnowledgeItem();
+
   const onClose = useCallback(() => {
     navigate(
       `/${workspaceSlug}/${ROUTES.KnowledgeBase}/${knowledgeBaseId}/item/${item.id}`,
@@ -65,7 +73,16 @@ export function KnowledgeItemEditForm({
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
-      await updateMutation.mutateAsync(data);
+      const { content, ...rest } = data;
+      await updateMutation.mutateAsync(isMedia ? data : rest);
+      // A media item is searched by its title and description: index the
+      // new words again.
+      if (
+        isMedia &&
+        (content !== (item.content ?? "") || data.title !== item.title)
+      ) {
+        await processItem({ knowledgeBaseId, id: item.id });
+      }
       handleSuccess();
       toast.success(t("knowledge_item.edit.success"));
       onClose();
@@ -96,6 +113,26 @@ export function KnowledgeItemEditForm({
                 </Form.Item>
               )}
             />
+
+            {isMedia && (
+              <Form.Field
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <Form.Item>
+                    <Form.Label optional>
+                      {t("knowledge_item.media.description")}
+                    </Form.Label>
+                    <Form.Control>
+                      <Textarea {...field} rows={5} />
+                    </Form.Control>
+                    <Form.Hint>
+                      {t("knowledge_item.media.description_hint")}
+                    </Form.Hint>
+                  </Form.Item>
+                )}
+              />
+            )}
 
             <Form.Field
               control={form.control}

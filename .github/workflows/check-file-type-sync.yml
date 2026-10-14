@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "apps/api/src/common/file/enums/file.enum.ts"
-      - "apps/api/src/modules/knowledge-base/controllers/knowledge-item.workspace.controller.ts"
+      - "apps/api/src/modules/knowledge-base/constants/knowledge-upload.constant.ts"
       - "apps/app/src/routes/knowledge-base/knowledge-item-create/components/schema.ts"
       - "apps/app/src/routes/knowledge-base/knowledge-item-create/components/forms/file-form.tsx"
       - "apps/ai/src/eccho_ai/llm/retrievers/text_processing.py"
@@ -16,7 +16,7 @@ on:
       - main
     paths:
       - "apps/api/src/common/file/enums/file.enum.ts"
-      - "apps/api/src/modules/knowledge-base/controllers/knowledge-item.workspace.controller.ts"
+      - "apps/api/src/modules/knowledge-base/constants/knowledge-upload.constant.ts"
       - "apps/app/src/routes/knowledge-base/knowledge-item-create/components/schema.ts"
       - "apps/app/src/routes/knowledge-base/knowledge-item-create/components/forms/file-form.tsx"
       - "apps/ai/src/eccho_ai/llm/retrievers/text_processing.py"

@@ -11,6 +11,7 @@ import {
   IconEye,
   IconFileTypePdf,
   IconInvoice,
+  IconPhoto,
   IconTrash,
   type IconProps,
 } from "@tabler/icons-react";
@@ -114,6 +115,8 @@ export function ChatbotRAGSectionItemIcon(props: { type: string } & IconProps) {
   switch (typeUpper) {
     case "FILE":
       return <IconFileTypePdf {...props} />;
+    case "MEDIA":
+      return <IconPhoto {...props} />;
     case "URL":
       return <IconInvoice {...props} />;
     case "TEXT":

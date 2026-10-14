@@ -110,13 +110,17 @@ and the route for the server's domain.
 
 ## Connect
 
+The hosted server is `https://mcp.ecbot.dev/mcp`. The user guide, with
+Cursor's config too, is the docs page at `ecbot.dev/en/docs/mcp`
+(`apps/docs/content/docs/mcp.<lang>.mdx`).
+
 ```bash
 # Claude Code
-claude mcp add --transport http --scope user ecbot https://<mcp-host>/mcp \
+claude mcp add --transport http --scope user ecbot https://mcp.ecbot.dev/mcp \
   --header "x-api-key: KEY:SECRET"
 
 # Codex
-codex mcp add ecbot --url https://<mcp-host>/mcp --bearer-token-env-var ECBOT_API_KEY
+codex mcp add ecbot --url https://mcp.ecbot.dev/mcp --bearer-token-env-var ECBOT_API_KEY
 ```
 
 ## Commands

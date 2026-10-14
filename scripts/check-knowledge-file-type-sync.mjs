@@ -11,8 +11,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const FILE_ENUM_PATH =
   "apps/api/src/common/file/enums/file.enum.ts";
-const CONTROLLER_PATH =
-  "apps/api/src/modules/knowledge-base/controllers/knowledge-item.workspace.controller.ts";
+const API_ALLOWLIST_PATH =
+  "apps/api/src/modules/knowledge-base/constants/knowledge-upload.constant.ts";
 const FE_SCHEMA_PATH =
   "apps/app/src/routes/knowledge-base/knowledge-item-create/components/schema.ts";
 const FE_FILE_FORM_PATH =
@@ -74,20 +74,21 @@ for (const [key, mime] of keyToMime) {
   if (extension) mimeToExtension.set(mime, `.${extension}`);
 }
 
-// ── 2. apps/api — knowledge-item /create FileTypePipe allowlist ──
+// ── 2. apps/api — KNOWLEDGE_FILE_MIMES, the FILE allowlist the /create ──
+// FileTypePipe and assertKnowledgeUpload check (MEDIA images are separate) ──
 
-const controllerSource = read(CONTROLLER_PATH);
-const pipeMatch = controllerSource.match(
-  /new FileTypePipe\(\[([\s\S]*?)\]\)/,
+const apiSource = read(API_ALLOWLIST_PATH);
+const allowlistMatch = apiSource.match(
+  /KNOWLEDGE_FILE_MIMES[^=]*=\s*\[([\s\S]*?)\]/,
 );
-if (!pipeMatch) {
-  fail(`Could not find FileTypePipe([...]) allowlist in ${CONTROLLER_PATH}`);
+if (!allowlistMatch) {
+  fail(`Could not find KNOWLEDGE_FILE_MIMES in ${API_ALLOWLIST_PATH}`);
   process.exit(1);
 }
 const apiExtensions = new Set(
-  [...pipeMatch[1].matchAll(/ENUM_FILE_MIME_DOCUMENT\.(\w+)/g)].map((m) => {
+  [...allowlistMatch[1].matchAll(/ENUM_FILE_MIME_DOCUMENT\.(\w+)/g)].map((m) => {
     const ext = keyToExtension.get(m[1]);
-    if (!ext) fail(`Unknown ENUM_FILE_MIME_DOCUMENT key "${m[1]}" referenced in ${CONTROLLER_PATH}`);
+    if (!ext) fail(`Unknown ENUM_FILE_MIME_DOCUMENT key "${m[1]}" referenced in ${API_ALLOWLIST_PATH}`);
     return `.${ext}`;
   }),
 );
@@ -150,7 +151,7 @@ if (process.exitCode) process.exit(1);
 // ── Diff all three, pairwise ──
 
 const layers = [
-  { name: "apps/api (FileTypePipe)", set: apiExtensions },
+  { name: "apps/api (KNOWLEDGE_FILE_MIMES)", set: apiExtensions },
   { name: "apps/app (FE schema.ts)", set: feExtensions },
   { name: "apps/app (FE file-form.tsx)", set: fileFormExtensions },
   { name: "apps/ai (SUPPORTED_EXTENSIONS)", set: normalizeExtensions(aiExtensions) },
