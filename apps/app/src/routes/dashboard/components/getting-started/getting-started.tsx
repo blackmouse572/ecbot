@@ -23,15 +23,23 @@ export const GettingStarted: FC = () => {
         </Text>
       </div>
       <ol className="divide-y">
-        {steps.map((step, index) => {
+        {steps.map((step) => {
           const title = t(`dashboard.gettingStarted.steps.${step.key}.title`);
           const content = (
             <>
               {step.done ? (
-                <CheckCircleSolid className="text-ui-tag-green-icon size-5 shrink-0" />
+                <span
+                  aria-hidden
+                  className="bg-ui-tag-green-bg shadow-borders-base flex size-8 shrink-0 items-center justify-center rounded-md"
+                >
+                  <CheckCircleSolid className="text-ui-tag-green-icon" />
+                </span>
               ) : (
-                <span className="txt-compact-small-plus text-ui-fg-muted flex size-5 shrink-0 items-center justify-center rounded-full border">
-                  {index + 1}
+                <span
+                  aria-hidden
+                  className="bg-ui-bg-component text-ui-fg-subtle shadow-borders-base flex shrink-0 items-center justify-center rounded-md size-8"
+                >
+                  <step.icon />
                 </span>
               )}
               <div className="min-w-0">

@@ -300,7 +300,8 @@ export class ChatbotListResponseDto extends DatabaseDto {
         example: 'Asia/Ho_Chi_Minh',
         type: String,
         required: false,
+        nullable: true,
     })
     @Expose()
-    timezone?: string;
+    timezone?: string | null;
 }

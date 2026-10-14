@@ -18,6 +18,7 @@ class CustomerTags(SQLModel, table=True):
     emoji: str | None = Field(default=None)
     description: str | None = Field(default=None)
     triggers_handoff: bool = Field(default=False)
+    notifies_team: bool = Field(default=False)
 
     deleted: bool = Field(default=False)
     created_at: datetime = Field(default_factory=get_current_time)

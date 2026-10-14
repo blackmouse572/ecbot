@@ -2,7 +2,7 @@ import { z } from "zod";
 import { BUSINESS_TYPE_IDS, getBusinessType, type BusinessTypeId } from "./business-types";
 import {
   ADDRESS_STYLE, AFTER_HOURS, CHANNELS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN,
-  PERSONALITY, REPLY_LENGTH, RULES, UNSURE, idsOf, type FactId,
+  PERSONALITY, PLACED_ORDERS, REPLY_LENGTH, RULES, UNSURE, idsOf, type FactId,
 } from "./libraries";
 import { openingHoursSchema } from "./opening-hours";
 import { PRESETS } from "./presets";
@@ -31,6 +31,8 @@ export const agentProfileSchema = z.object({
     .max(PROFILE_LIMITS.customCollect.count)
     .optional(),
   handoffWhen: z.array(z.enum(idsOf(HANDOFF_WHEN))),
+  // After the order tool places an order (#288); absent on older profiles.
+  placedOrders: z.enum(idsOf(PLACED_ORDERS)).optional(),
   rules: z.array(z.enum(idsOf(RULES))),
   unsure: z.enum(idsOf(UNSURE)),
   replyLength: z.enum(idsOf(REPLY_LENGTH)),
@@ -67,6 +69,7 @@ export function createProfile(type: BusinessTypeId, primaryLanguage: string): Ag
     facts: {},
     collect: [...preset.collect],
     handoffWhen: personal ? [] : ["asks_for_human", "upset"],
+    ...(personal ? {} : { placedOrders: "notify" as const }),
     rules: [...preset.rules],
     unsure: personal ? "say_unknown" : "handoff",
     replyLength: "short",

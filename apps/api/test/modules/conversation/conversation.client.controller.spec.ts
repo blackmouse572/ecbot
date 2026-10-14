@@ -23,6 +23,7 @@ const mockConversationService = {
     mapGet: jest.fn(),
     updateStatus: jest.fn(),
     setBotEnabled: jest.fn(),
+    setTimezone: jest.fn(),
 };
 
 const mockPaginationService = {
@@ -73,6 +74,7 @@ describe('ConversationClientController', () => {
         'sendMessage',
         'updateStatus',
         'updateBot',
+        'updateTimezone',
     ] as const)(
         '%s is guarded by the client credential and the creator policy',
         handler => {
@@ -104,22 +106,24 @@ describe('ConversationClientController', () => {
         }
     );
 
-    it.each(['sendMessage', 'updateStatus', 'updateBot'] as const)(
-        '%s requires CHATBOT update',
-        handler => {
-            expect(
-                Reflect.getMetadata(
-                    CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
-                    ConversationClientController.prototype[handler]
-                )
-            ).toEqual([
-                {
-                    subject: ENUM_POLICY_SUBJECT.CHATBOT,
-                    action: [ENUM_POLICY_ACTION.UPDATE],
-                },
-            ]);
-        }
-    );
+    it.each([
+        'sendMessage',
+        'updateStatus',
+        'updateBot',
+        'updateTimezone',
+    ] as const)('%s requires CHATBOT update', handler => {
+        expect(
+            Reflect.getMetadata(
+                CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
+                ConversationClientController.prototype[handler]
+            )
+        ).toEqual([
+            {
+                subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                action: [ENUM_POLICY_ACTION.UPDATE],
+            },
+        ]);
+    });
 
     // @repo/client is generated from these docs, so an undocumented filter
     // is one the MCP server can't send.
@@ -354,6 +358,12 @@ describe('ConversationClientController', () => {
             'setBotEnabled',
             { botEnabled: false, reason: 'mine' },
             ['conv-1', false, 'mine'],
+        ],
+        [
+            'updateTimezone',
+            'setTimezone',
+            { timezone: 'America/New_York' },
+            ['conv-1', 'America/New_York'],
         ],
     ] as const)('%s', (handler, serviceMethod, dto, serviceArgs) => {
         it('changes a conversation in the credential workspace and logs it', async () => {

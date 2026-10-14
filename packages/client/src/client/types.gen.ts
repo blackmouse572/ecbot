@@ -2529,7 +2529,7 @@ export type ChatbotAdminResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
     /**
      * Chatbot associate accounts
      */
@@ -2698,6 +2698,10 @@ export type ChatbotGetDetailShortResponseDto = {
      * Workspace the chatbot belongs to
      */
     workspace: string;
+    /**
+     * IANA timezone the agent uses for the current date and time
+     */
+    timezone?: string | null;
 };
 
 export type WorkSpaceListResponseDto = {
@@ -3618,7 +3622,7 @@ export type ChatbotListResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
 };
 
 export type ChatbotModelResponseDto = {
@@ -3781,7 +3785,7 @@ export type ChatbotGetDetailResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
     /**
      * Workspace the chatbot belongs to
      */
@@ -3940,7 +3944,7 @@ export type ChatbotCreateResponseDto = {
     /**
      * IANA timezone the agent uses for the current date and time
      */
-    timezone?: string;
+    timezone?: string | null;
 };
 
 export type ChatbotCreateRequestDto = {
@@ -4797,6 +4801,10 @@ export type ConversationGetResponseDto = {
     senderName?: string;
     senderAvatar?: string;
     /**
+     * IANA timezone for times the customer states. null follows the agent's timezone.
+     */
+    timezone?: string | null;
+    /**
      * Creation timestamp
      */
     createdAt: string;
@@ -4843,6 +4851,13 @@ export type ConversationUpdateBotRequestDto = {
      * Optional reason when manually taking over (bot off)
      */
     reason?: string;
+};
+
+export type ConversationUpdateTimezoneRequestDto = {
+    /**
+     * IANA timezone for times the customer states. null follows the agent's timezone.
+     */
+    timezone: string | null;
 };
 
 export type MessageAuthorDto = {
@@ -5522,6 +5537,7 @@ export type CustomerTagGetResponseDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff: boolean;
+    notifiesTeam: boolean;
     createdAt: string;
     updatedAt?: string;
 };
@@ -5531,6 +5547,10 @@ export type CustomerTagCreateRequestDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff?: boolean;
+    /**
+     * Notify the team when the agent applies this tag, without handing the conversation over
+     */
+    notifiesTeam?: boolean;
 };
 
 export type CustomerTagUpdateRequestDto = {
@@ -5538,6 +5558,10 @@ export type CustomerTagUpdateRequestDto = {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff?: boolean;
+    /**
+     * Notify the team when the agent applies this tag, without handing the conversation over
+     */
+    notifiesTeam?: boolean;
 };
 
 export type CustomerTagAssignmentGetResponseDto = {
@@ -23937,6 +23961,86 @@ export type ConversationWorkspaceControllerUpdateBotV1Responses = {
 
 export type ConversationWorkspaceControllerUpdateBotV1Response = ConversationWorkspaceControllerUpdateBotV1Responses[keyof ConversationWorkspaceControllerUpdateBotV1Responses];
 
+export type ConversationWorkspaceControllerUpdateTimezoneV1Data = {
+    body: ConversationUpdateTimezoneRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/conversations/{id}/timezone';
+};
+
+export type ConversationWorkspaceControllerUpdateTimezoneV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationWorkspaceControllerUpdateTimezoneV1Error = ConversationWorkspaceControllerUpdateTimezoneV1Errors[keyof ConversationWorkspaceControllerUpdateTimezoneV1Errors];
+
+export type ConversationWorkspaceControllerUpdateTimezoneV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ConversationGetResponseDto;
+    };
+};
+
+export type ConversationWorkspaceControllerUpdateTimezoneV1Response = ConversationWorkspaceControllerUpdateTimezoneV1Responses[keyof ConversationWorkspaceControllerUpdateTimezoneV1Responses];
+
 export type ConversationWorkspaceControllerListMessagesV1Data = {
     body?: never;
     headers?: {
@@ -30549,6 +30653,79 @@ export type ConversationClientControllerUpdateBotV1Responses = {
 };
 
 export type ConversationClientControllerUpdateBotV1Response = ConversationClientControllerUpdateBotV1Responses[keyof ConversationClientControllerUpdateBotV1Responses];
+
+export type ConversationClientControllerUpdateTimezoneV1Data = {
+    body: ConversationUpdateTimezoneRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/conversations/{id}/timezone';
+};
+
+export type ConversationClientControllerUpdateTimezoneV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationClientControllerUpdateTimezoneV1Error = ConversationClientControllerUpdateTimezoneV1Errors[keyof ConversationClientControllerUpdateTimezoneV1Errors];
+
+export type ConversationClientControllerUpdateTimezoneV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ConversationGetResponseDto;
+    };
+};
+
+export type ConversationClientControllerUpdateTimezoneV1Response = ConversationClientControllerUpdateTimezoneV1Responses[keyof ConversationClientControllerUpdateTimezoneV1Responses];
 
 export type CustomerClientControllerListV1Data = {
     body?: never;

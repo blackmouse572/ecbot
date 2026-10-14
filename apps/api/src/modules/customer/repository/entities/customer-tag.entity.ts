@@ -28,4 +28,8 @@ export class CustomerTagEntity extends DatabaseEntityBase {
 
     @Property({ type: 'boolean', default: false })
     triggersHandoff: boolean = false;
+
+    // Tells the team when applied, without turning the bot off (#288).
+    @Property({ type: 'boolean', default: false })
+    notifiesTeam: boolean = false;
 }

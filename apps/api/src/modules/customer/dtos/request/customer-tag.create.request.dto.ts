@@ -30,4 +30,14 @@ export class CustomerTagCreateRequestDto {
     @IsBoolean()
     @ApiProperty({ required: false, default: false })
     triggersHandoff?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    @ApiProperty({
+        required: false,
+        default: false,
+        description:
+            'Notify the team when the agent applies this tag, without handing the conversation over',
+    })
+    notifiesTeam?: boolean;
 }

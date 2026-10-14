@@ -1,3 +1,4 @@
+import { getBusinessType } from "./business-types";
 import type { FactId } from "./libraries";
 import { PRESETS } from "./presets";
 import type { AgentProfile } from "./profile";
@@ -22,5 +23,10 @@ export function migrateProfile(profile: AgentProfile): AgentProfile {
     if (asked.has(from) || !asked.has(to) || !old || facts[to]?.trim()) continue;
     facts = { ...facts, [to]: old };
   }
-  return facts === profile.facts ? profile : { ...profile, facts };
+  // Agents saved before #288 never saw the placed-orders question; give them
+  // the default a new profile gets.
+  const placedOrders =
+    profile.placedOrders ?? (getBusinessType(profile.businessType).personal ? undefined : "notify");
+  if (facts === profile.facts && placedOrders === profile.placedOrders) return profile;
+  return { ...profile, facts, ...(placedOrders ? { placedOrders } : {}) };
 }

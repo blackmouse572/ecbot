@@ -19,6 +19,8 @@ export type BuilderState = {
   editing: string | null;
   chatbotId: string | null;
   finished: boolean;
+  // The owner chose "later" when asked to activate after the channel step.
+  activateLater: boolean;
   // The accounts currently linked to this draft, tracked locally (not just
   // ids) so both the channels answer and the answered summary can be
   // derived synchronously right after a link/unlink, without waiting on a
@@ -42,13 +44,14 @@ export type BuilderAction =
   | { type: "restart" }
   | { type: "draftCreated"; chatbotId: string }
   | { type: "finished" }
+  | { type: "activateLater" }
   | { type: "accountsLinked"; accounts: LinkedAccountRef[] }
   | { type: "accountsUnlinked"; ids: string[] };
 
 export type Step = { group: QuestionGroup; question: Question };
 
 export const initialBuilderState: BuilderState = {
-  profile: null, suggestion: null, source: null, describeText: null, answered: [], editing: null, chatbotId: null, finished: false,
+  profile: null, suggestion: null, source: null, describeText: null, answered: [], editing: null, chatbotId: null, finished: false, activateLater: false,
   linkedAccounts: [],
 };
 
@@ -76,6 +79,25 @@ export function currentStep(state: BuilderState): Step | null {
 // holds regardless of type, not right after businessType.
 export function isDraftReady(state: BuilderState): boolean {
   return !!state.profile && state.answered.includes("agentName");
+}
+
+/** The question after which the builder asks whether to activate: the
+ * channel step, or the agent name for personal types, which have none. */
+export function activationAnchor(profile: AgentProfile): string {
+  return steps(profile).some((s) => s.question.id === "channels") ? "channels" : "agentName";
+}
+
+/** Whether the ask to activate shows in the thread. Not for a reopened
+ * agent, which already went through the builder once. */
+export function asksActivation(state: BuilderState): boolean {
+  if (!state.profile || !state.chatbotId || state.source === "hydrate") return false;
+  const anchor = activationAnchor(state.profile);
+  return state.answered.includes(anchor) && state.editing !== anchor;
+}
+
+/** The ask is shown and not answered yet: the next question waits. */
+export function awaitsActivation(state: BuilderState): boolean {
+  return asksActivation(state) && !state.finished && !state.activateLater;
 }
 
 export function isComplete(state: BuilderState): boolean {
@@ -165,6 +187,8 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       return { ...state, chatbotId: action.chatbotId };
     case "finished":
       return { ...state, finished: true };
+    case "activateLater":
+      return { ...state, activateLater: true };
     case "accountsLinked": {
       const existingIds = new Set(state.linkedAccounts.map((a) => a.id));
       const additions = action.accounts.filter((a) => !existingIds.has(a.id));

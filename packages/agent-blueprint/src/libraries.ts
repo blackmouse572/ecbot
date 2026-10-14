@@ -1,11 +1,18 @@
 type Entry = { readonly id: string; readonly prompt: string };
 
+// Shared by the scheduling goals (#291): times grounded in the current time and
+// opening hours, and a confirmed booking handed to staff like a new order.
+const BOOKING_FLOW = "Only offer or accept times that are still ahead of now and inside the opening hours; if the customer asks for a time that has passed or when the business is closed, say so and offer the nearest time that works. If no opening hours are given, take the customer's preferred time without promising it. Read the booking back and, after the customer's clear yes, hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new bookings (\"New booking\" by default), then tell the customer a staff member will confirm it. Never say the booking is confirmed.";
+
+// A callback is a booking of the same kind (#291): no timer, a person calls.
+export const CALLBACK_FLOW = "If the customer asks to be called back, ask for their phone number and a time inside the opening hours, read it back and, after a clear yes, hand the conversation to a person by applying the tag for new bookings (\"New booking\" by default) so the team calls them back.";
+
 export const GOALS = [
   { id: "answer_questions", prompt: "Answer questions about products, services, prices and policies using only the business facts, knowledge and tool results you were given." },
   { id: "recommend", prompt: "Recommend the most suitable product or service after asking one or two short questions about what the customer needs." },
-  { id: "take_orders", prompt: "Take orders: confirm items, quantity, price, delivery address and phone number, and read the full order back. After the customer's clear yes, place the order with the connected order tool. If no order tool is connected, the order is not placed yet: hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new orders (\"New order\" by default), then tell the customer you have passed the order to the team and a staff member will confirm it. Never say the order is placed, confirmed or complete." },
-  { id: "book_appointments", prompt: "Book appointments: offer available times, confirm the service, date, time and contact details, then read the booking back." },
-  { id: "reservations", prompt: "Take reservations: confirm the date, time, number of guests or rooms, and contact details." },
+  { id: "take_orders", prompt: "Take orders: confirm items, quantity, price, delivery address and phone number, and read the full order back. After the customer's clear yes, place the order with the connected order tool. If no order tool is connected, the order is not placed yet: hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new orders (\"New order\" by default), then tell the customer you have passed the order to the team and a staff member will confirm it. Without an order tool, never say the order is placed, confirmed or complete." },
+  { id: "book_appointments", prompt: `Book appointments: confirm the service, date, time and contact details. ${BOOKING_FLOW}` },
+  { id: "reservations", prompt: `Take reservations: confirm the date, time, number of guests or rooms, and contact details. ${BOOKING_FLOW}` },
   { id: "capture_leads", prompt: "Collect contact details from interested customers so the team can follow up." },
   { id: "qualify_leads", prompt: "Qualify leads by asking about budget, timeline and needs before handing over to the team." },
   { id: "order_status", prompt: "Help customers check the status of an existing order." },
@@ -44,6 +51,15 @@ export const HANDOFF_WHEN = [
   { id: "complaint", prompt: "the customer makes a complaint" },
 ] as const satisfies readonly Entry[];
 
+// What follows an order the connected order tool placed (#288). Without an
+// explicit "none", live runs still handed placed orders over (the no-tool
+// branch below it names a tag).
+export const PLACED_ORDERS = [
+  { id: "none", prompt: "After the order tool confirms the order, tell the customer the order is placed. Do not apply a tag or hand the conversation over for it." },
+  { id: "notify", prompt: "After the order tool confirms the order, apply the tag marked \"(notifies the team)\" for placed orders (\"Order placed\" by default) so the team knows, then tell the customer the order is placed." },
+  { id: "handoff", prompt: "After the order tool confirms the order, hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new orders (\"New order\" by default), then tell the customer the order is placed and a staff member will follow up." },
+] as const satisfies readonly Entry[];
+
 export const COLLECT = [
   { id: "name", prompt: "full name" },
   { id: "phone", prompt: "phone number" },
@@ -78,10 +94,10 @@ export const REPLY_LENGTH = [
 ] as const satisfies readonly Entry[];
 
 export const ADDRESS_STYLE = [
-  { id: "em_anhchi", prompt: "In every reply, including the first, refer to yourself as \"em\" and address them as \"anh\" or \"chị\". Never call them \"bạn\"." },
-  { id: "minh_ban", prompt: "In every reply, including the first, refer to yourself as \"mình\" and address them as \"bạn\"." },
-  { id: "shop_ban", prompt: "In every reply, including the first, refer to yourself as \"shop\" and address them as \"bạn\"." },
-  { id: "toi_quykhach", prompt: "In every reply, including the first, refer to yourself as \"tôi\" and address them as \"quý khách\". Never call them \"bạn\"." },
+  { id: "em_anhchi", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"em\" and address them as \"anh\" or \"chị\". Never call them \"bạn\"." },
+  { id: "minh_ban", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"mình\" and address them as \"bạn\"." },
+  { id: "shop_ban", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"shop\" and address them as \"bạn\"." },
+  { id: "toi_quykhach", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"tôi\" and address them as \"quý khách\". Never call them \"bạn\"." },
 ] as const satisfies readonly Entry[];
 
 export const AFTER_HOURS = [

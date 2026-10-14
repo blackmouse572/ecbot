@@ -78,6 +78,7 @@ async def _make_tag(
     emoji: str | None = None,
     description: str | None = None,
     triggers_handoff: bool = False,
+    notifies_team: bool = False,
 ) -> CustomerTags:
     tag = CustomerTags(
         workspace_id=workspace_id,
@@ -85,6 +86,7 @@ async def _make_tag(
         emoji=emoji,
         description=description,
         triggers_handoff=triggers_handoff,
+        notifies_team=notifies_team,
     )
     async with factory() as session:
         session.add(tag)
@@ -133,6 +135,26 @@ async def test_catalog_header_says_to_pass_the_bare_tag_name(sqlite_repo):
     assert "apply_customer_tag" in block
     assert "applyCustomerTag" not in block
     assert "only the text inside the quotes" in block
+
+
+async def test_catalog_marks_notify_only_tags(sqlite_repo):
+    # #288: the agent applies a notify-only tag after its order tool places
+    # an order; the prompt finds it by this marker, like "(triggers handoff)".
+    customer = await _make_customer(sqlite_repo)
+    await _make_tag(sqlite_repo, customer.workspace_id, "Order placed", emoji="🛒", notifies_team=True)
+    await _make_tag(
+        sqlite_repo, customer.workspace_id, "New order", triggers_handoff=True, notifies_team=True
+    )
+
+    block = await build_customer_context_block(customer.id)
+
+    lines = block.splitlines()
+    placed = next(line for line in lines if '"Order placed"' in line)
+    assert placed.endswith("(notifies the team)")
+    # A handoff tag already notifies, so it keeps its one marker.
+    new_order = next(line for line in lines if '"New order"' in line)
+    assert new_order.endswith("(triggers handoff)")
+    assert "notifies the team" not in new_order
 
 
 async def test_block_lists_applied_tag_names(sqlite_repo):
@@ -184,10 +206,10 @@ async def test_merged_customer_is_invisible_to_agent(sqlite_repo):
     assert block_b == ""
 
 
-async def test_catalog_caps_at_twelve_and_marks_truncation(sqlite_repo):
+async def test_catalog_caps_at_twenty_and_marks_truncation(sqlite_repo):
     customer = await _make_customer(sqlite_repo, name="Alice")
-    # Create 15 tags; only 12 most-recent should appear, plus a "…" truncation row.
-    for i in range(15):
+    # Create 23 tags; only 20 most-recent should appear, plus a "…" truncation row.
+    for i in range(23):
         await _make_tag(sqlite_repo, customer.workspace_id, f"tag-{i:02d}")
 
     block = await build_customer_context_block(customer.id)
@@ -195,6 +217,6 @@ async def test_catalog_caps_at_twelve_and_marks_truncation(sqlite_repo):
     catalog_lines = [
         line for line in block.splitlines() if line.startswith("- ")
     ]
-    # 12 tag rows + 1 truncation row.
-    assert len(catalog_lines) == 13
+    # 20 tag rows + 1 truncation row.
+    assert len(catalog_lines) == 21
     assert catalog_lines[-1].strip() == "- …"

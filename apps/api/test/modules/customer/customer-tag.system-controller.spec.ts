@@ -14,6 +14,7 @@ describe('CustomerTagSystemController (#174)', () => {
     };
     const mockConversationService = {
         triggerHandoff: jest.fn(),
+        notifyTeam: jest.fn(),
     };
     const mockConversationRepository = {
         findOneById: jest.fn(),
@@ -101,6 +102,67 @@ describe('CustomerTagSystemController (#174)', () => {
                 'vi'
             );
             expect(result).toEqual({ ok: true, triggeredHandoff: true });
+        });
+    });
+
+    // #288: an "Order placed" style tag tells the team without turning the
+    // bot off.
+    describe('POST /apply with a notifiesTeam=true tag', () => {
+        it('assigns the tag and notifies the team with the tag name, without a handoff', async () => {
+            mockCustomerTagService.findOneByWorkspaceAndName.mockResolvedValue({
+                id: 'tag-order',
+                name: 'Order placed',
+                triggersHandoff: false,
+                notifiesTeam: true,
+            });
+            const conversation = {
+                id: 'conv-1',
+                chatbot: { primaryLanguage: 'vi' },
+            };
+            mockConversationRepository.findOneById.mockResolvedValue(
+                conversation
+            );
+
+            const result = await controller.apply('cust-1', {
+                tagName: 'Order placed',
+                conversationId: 'conv-1',
+            } as any);
+
+            expect(mockCustomerTagAssignmentService.apply).toHaveBeenCalledWith(
+                'cust-1',
+                'tag-order'
+            );
+            expect(mockConversationService.notifyTeam).toHaveBeenCalledWith(
+                conversation,
+                'ws-1',
+                'Order placed',
+                'vi'
+            );
+            expect(
+                mockConversationService.triggerHandoff
+            ).not.toHaveBeenCalled();
+            expect(result).toEqual({ ok: true, triggeredHandoff: false });
+        });
+
+        it('only hands off when the tag also triggers handoff (the handoff already notifies)', async () => {
+            mockCustomerTagService.findOneByWorkspaceAndName.mockResolvedValue({
+                id: 'tag-both',
+                name: 'New order',
+                triggersHandoff: true,
+                notifiesTeam: true,
+            });
+            mockConversationRepository.findOneById.mockResolvedValue({
+                id: 'conv-1',
+                chatbot: { primaryLanguage: 'en' },
+            });
+
+            await controller.apply('cust-1', {
+                tagName: 'New order',
+                conversationId: 'conv-1',
+            } as any);
+
+            expect(mockConversationService.triggerHandoff).toHaveBeenCalled();
+            expect(mockConversationService.notifyTeam).not.toHaveBeenCalled();
         });
     });
 

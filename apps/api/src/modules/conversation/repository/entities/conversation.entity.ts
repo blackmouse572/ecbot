@@ -71,4 +71,9 @@ export class ConversationEntity extends DatabaseEntityBase {
     /** The last message `memorySummary` covers; later ones are the window. */
     @Property({ type: 'uuid', nullable: true })
     memorySummaryUntilId?: string;
+
+    // IANA zone for times the customer states (#292). Null follows the
+    // agent's timezone; see ChatbotTimezoneService.
+    @Property({ type: 'varchar', length: 64, nullable: true })
+    timezone?: string | null;
 }

@@ -23,12 +23,10 @@ import { useScrollEdges } from "./use-scroll-edges";
 
 export const NotificationMenu: FC = () => {
   const { t } = useTranslation();
-  // One tab polls in the background and plays the sound, so several open
-  // tabs don't ring several times for one notification.
+  // One tab plays the sound, so several open tabs don't ring several times
+  // for one notification.
   const isLeader = useIsLeaderTab("eccho:notifications");
-  const { count, isFetched } = useUnreadNotificationCount({
-    pollInBackground: isLeader,
-  });
+  const { count, isFetched } = useUnreadNotificationCount();
   const {
     notifications,
     isLoading,

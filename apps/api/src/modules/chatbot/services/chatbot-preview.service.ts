@@ -89,6 +89,7 @@ export class ChatbotPreviewService {
                     message,
                     chat_session_id: chatSessionId,
                     history,
+                    zones: { chatbot },
                 },
                 abort.signal
             );

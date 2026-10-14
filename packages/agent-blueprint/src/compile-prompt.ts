@@ -1,8 +1,8 @@
 import { migrateProfile } from "./migrate-profile";
 import { getBusinessType } from "./business-types";
 import {
-  ADDRESS_STYLE, AFTER_HOURS, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
-  NO_FACTS_PROVIDED, PERSONALITY, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
+  ADDRESS_STYLE, AFTER_HOURS, CALLBACK_FLOW, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
+  NO_FACTS_PROVIDED, PERSONALITY, PLACED_ORDERS, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
 } from "./libraries";
 import { describeOpeningHours, hasOpeningHours } from "./opening-hours";
 import { PRESETS } from "./presets";
@@ -42,6 +42,16 @@ function section(title: string, body: string[]): string {
   return lines.length ? `## ${title}\n${lines.join("\n")}` : "";
 }
 
+// The owner's choice for tool-placed orders (#288) follows the step that
+// places the order, ahead of the no-tool branch.
+const PLACE_WITH_TOOL = "place the order with the connected order tool.";
+
+function goalPrompt(goal: AgentProfile["goals"][number], profile: AgentProfile): string {
+  const prompt = promptOf(GOALS, goal);
+  const after = goal === "take_orders" && profile.placedOrders ? promptOf(PLACED_ORDERS, profile.placedOrders) : "";
+  return after ? prompt.replace(PLACE_WITH_TOOL, `${PLACE_WITH_TOOL} ${after}`) : prompt;
+}
+
 export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}): string {
   const profile = migrateProfile(stored);
   const type = getBusinessType(profile.businessType);
@@ -56,7 +66,7 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
       ? `- You are a personal ${type.promptLabel} working for ${business}.`
       : `- Business: ${business}, ${withArticle(type.promptLabel)}.`,
     profile.goals.length ? "- Your jobs:" : "",
-    ...profile.goals.map((g, i) => `  ${i + 1}. ${promptOf(GOALS, g)}`),
+    ...profile.goals.map((g, i) => `  ${i + 1}. ${goalPrompt(g, profile)}`),
   ]);
 
   // "First conversation" read as every turn to models, which re-introduced
@@ -103,6 +113,7 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
     // made agents ask for a yes before every product search.
     "If you have a tool that looks up products, prices, stock or orders, call it before you answer or recommend, without asking first, and share the product link when the result includes one.",
     "Before you create, change or cancel an order, booking or payment, read the key details back and wait for a clear yes.",
+    CALLBACK_FLOW,
     profile.handoffWhen.length ? `Hand the conversation to a person when ${list(profile.handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.` : "",
     type.mode === "detailed" ? "Explain step by step and check that the customer understood before moving on." : "",
   ]));

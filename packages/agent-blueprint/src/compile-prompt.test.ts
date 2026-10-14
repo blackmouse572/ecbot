@@ -122,7 +122,7 @@ describe("compilePrompt", () => {
   // #158: the configured address style and length hold from the first reply.
   it("applies address style and reply length to every reply, including the first", () => {
     const out = compilePrompt(sample("beauty", "vi"));
-    expect(out).toContain('In every reply, including the first, refer to yourself as "em" and address them as "anh" or "chị". Never call them "bạn".');
+    expect(out).toContain('In every Vietnamese reply, including the first, refer to yourself as "em" and address them as "anh" or "chị". Never call them "bạn".');
     expect(out).toContain("Keep every reply, including the first, to one or two sentences.");
   });
 
@@ -154,6 +154,23 @@ describe("compilePrompt", () => {
     const out = compilePrompt({ ...sample("restaurant", "en"), openingHours: { mon: [] } });
     expect(out).toBe(compilePrompt(sample("restaurant", "en")));
     expect(out).toContain("Opening hours: sample opening_hours");
+  });
+
+  // #291: bookings respect real time and hours, and go to staff with a tag.
+  it("grounds booking goals in the current time and hands confirmed bookings to staff", () => {
+    for (const type of ["beauty", "restaurant"] as const) {
+      const out = compilePrompt(sample(type, "en"));
+      expect(out).toContain("Only offer or accept times that are still ahead of now and inside the opening hours");
+      expect(out).toContain("If no opening hours are given, take the customer's preferred time without promising it.");
+      expect(out).toContain('applying the tag marked "(triggers handoff)" for new bookings ("New booking" by default)');
+      expect(out).toContain("Never say the booking is confirmed.");
+    }
+  });
+
+  it("treats a callback request as a booking for business types only", () => {
+    const callback = "If the customer asks to be called back";
+    expect(compilePrompt(sample("ecommerce", "en"))).toContain(callback);
+    expect(compilePrompt(sample("personal_scheduling", "en"))).not.toContain(callback);
   });
 
   // #119: no guessing stock or variants, and no "I will check" promise.
@@ -199,8 +216,28 @@ describe("compilePrompt", () => {
     const out = compilePrompt(sample("ecommerce", "en"));
     expect(out).toContain("place the order with the connected order tool");
     expect(out).toContain("If no order tool is connected, the order is not placed yet");
-    expect(out).toContain("Never say the order is placed, confirmed or complete.");
+    // Scoped to the no-tool branch, so it never contradicts a tool-placed order (#288).
+    expect(out).toContain("Without an order tool, never say the order is placed, confirmed or complete.");
     expect(out).not.toContain("then read the full order back before closing.");
+  });
+
+  // #288: the owner picks what happens after the order tool places an order.
+  it("tells the team about a tool-placed order the way the owner chose", () => {
+    const base = { ...sample("ecommerce", "en"), goals: ["take_orders" as const] };
+    const notify = compilePrompt({ ...base, placedOrders: "notify" });
+    expect(notify).toContain('After the order tool confirms the order, apply the tag marked "(notifies the team)" for placed orders ("Order placed" by default)');
+    expect(notify).toContain('place the order with the connected order tool. After the order tool confirms the order');
+    const handoff = compilePrompt({ ...base, placedOrders: "handoff" });
+    expect(handoff).toContain('After the order tool confirms the order, hand the conversation to a person by applying the tag marked "(triggers handoff)" for new orders');
+    expect(compilePrompt({ ...base, placedOrders: "none" })).toContain("Do not apply a tag or hand the conversation over for it.");
+    // Profiles saved before #288 get the same default as new ones.
+    const { placedOrders: _, ...stored } = base;
+    expect(compilePrompt(stored)).toContain('apply the tag marked "(notifies the team)"');
+  });
+
+  it("leaves the placed-order step out when the agent takes no orders", () => {
+    const out = compilePrompt({ ...sample("ecommerce", "en"), goals: ["answer_questions"], placedOrders: "notify" });
+    expect(out).not.toContain("After the order tool confirms the order");
   });
 
   it("chooses a or an based on the following word", () => {

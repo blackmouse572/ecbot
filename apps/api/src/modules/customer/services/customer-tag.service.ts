@@ -24,6 +24,7 @@ export interface ICustomerTagCreate {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff?: boolean;
+    notifiesTeam?: boolean;
 }
 
 export interface ICustomerTagUpdate {
@@ -31,6 +32,7 @@ export interface ICustomerTagUpdate {
     emoji?: string | null;
     description?: string | null;
     triggersHandoff?: boolean;
+    notifiesTeam?: boolean;
 }
 
 @Injectable()
@@ -113,6 +115,7 @@ export class CustomerTagService {
         tag.emoji = payload.emoji ?? undefined;
         tag.description = payload.description ?? undefined;
         tag.triggersHandoff = payload.triggersHandoff ?? false;
+        tag.notifiesTeam = payload.notifiesTeam ?? false;
 
         await em.persistAndFlush(tag);
         return tag;
@@ -144,6 +147,8 @@ export class CustomerTagService {
             data.description = patch.description ?? undefined;
         if (patch.triggersHandoff !== undefined)
             data.triggersHandoff = patch.triggersHandoff;
+        if (patch.notifiesTeam !== undefined)
+            data.notifiesTeam = patch.notifiesTeam;
 
         const updated = await this.customerTagRepository.updateEntity(
             { id },

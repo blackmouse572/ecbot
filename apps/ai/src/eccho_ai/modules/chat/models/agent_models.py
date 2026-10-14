@@ -32,6 +32,10 @@ class AgentRequestContext(BaseModel):
     customer_id: str | None = Field(default=None)
     contact_point_id: str | None = Field(default=None)
     trigger_message_id: str | None = Field(default=None)
+    # IANA zones apps/api resolved for this conversation (#292): the business's
+    # (agent -> deployment default) and the customer's (conversation -> agent).
+    agent_timezone: str | None = Field(default=None)
+    customer_timezone: str | None = Field(default=None)
     # The turn's clock, fixed when the request arrives so every model call in
     # one turn (tool rounds included) sends the same bytes and keeps the cache.
     now: datetime = Field(default_factory=lambda: datetime.now(UTC))

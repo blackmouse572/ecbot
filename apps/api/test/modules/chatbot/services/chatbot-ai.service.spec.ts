@@ -3,6 +3,7 @@ import {
     AIChatHistoryMessage,
     ChatbotAIService,
 } from 'src/modules/chatbot/services/chatbot-ai.service';
+import { ChatbotTimezoneService } from 'src/modules/chatbot/services/chatbot-timezone.service';
 
 jest.mock('@app/common/utils/gcp-id-token.util', () => ({
     getInternalAuthHeader: jest
@@ -27,18 +28,21 @@ describe('ChatbotAIService', () => {
         );
         service = new ChatbotAIService(
             { axiosRef: { post, delete: del } } as any,
-            configService as any
+            configService as any,
+            new ChatbotTimezoneService({
+                get: () => 'Asia/Ho_Chi_Minh',
+            } as any)
         );
     });
 
     it('sends both the GCP ID token and the internal token header on streamChat', async () => {
         post.mockResolvedValue({ data: {} });
 
-        await service.streamChat({} as any);
+        await service.streamChat({ zones: { chatbot: {} } } as any);
 
         expect(post).toHaveBeenCalledWith(
             'http://ai:8000/api/chat/stream',
-            {},
+            expect.anything(),
             expect.objectContaining({
                 headers: {
                     Authorization: 'Bearer gcp-id-token',
@@ -53,12 +57,31 @@ describe('ChatbotAIService', () => {
     it('gives the reply stream its own idle timeout, longer than the 60s default', async () => {
         post.mockResolvedValue({ data: {} });
 
-        await service.streamChat({} as any);
+        await service.streamChat({ zones: { chatbot: {} } } as any);
 
         expect(post.mock.calls[0][2]).toMatchObject({
             timeout: AI_STREAM_IDLE_TIMEOUT_MS,
         });
         expect(AI_STREAM_IDLE_TIMEOUT_MS).toBeGreaterThan(60_000);
+    });
+
+    // #292: apps/ai gets the zones resolved, never the raw stored values.
+    it('sends the resolved business and customer timezones', async () => {
+        post.mockResolvedValue({ data: {} });
+
+        await service.streamChat({
+            chatbot_id: 'bot-1',
+            zones: {
+                chatbot: { timezone: null },
+                conversation: { timezone: 'America/New_York' },
+            },
+        } as any);
+
+        expect(post.mock.calls[0][1]).toEqual({
+            chatbot_id: 'bot-1',
+            agent_timezone: 'Asia/Ho_Chi_Minh',
+            customer_timezone: 'America/New_York',
+        });
     });
 
     it('sends both the GCP ID token and the internal token header on deleteSession', async () => {

@@ -1,3 +1,4 @@
+import { TURNED_OFF_CHATBOT_STATUSES } from '@app/modules/platform/constants/turned-off-chatbot.constant';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { botImage } from '@app/modules/conversation/utils/message-attachment';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
@@ -126,6 +127,13 @@ export class WidgetChatService {
             return;
         }
 
+        // A turned-off agent keeps the inbox but does not answer, as on
+        // platform channels.
+        if (TURNED_OFF_CHATBOT_STATUSES.includes(chatbot.status)) {
+            this.endStreamQuietly(res);
+            return;
+        }
+
         // The same rule platform channels use (#233).
         const handoffMatch = this.conversationService.detectHandoffKeywords(
             text,
@@ -206,6 +214,7 @@ export class WidgetChatService {
                     contact_point_id: contactPoint.id,
                     summary,
                     history,
+                    zones: { chatbot, conversation },
                 },
                 abort.signal
             );
