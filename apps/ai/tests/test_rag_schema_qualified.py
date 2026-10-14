@@ -1,34 +1,50 @@
-"""The `rag` tables must be named with their schema in every query.
+"""SQL in the AI service must name the schema of everything it uses.
 
 Prod reaches Postgres through Neon's pooler (PgBouncer, transaction mode),
 which does not apply a `search_path` sent at connect time. An unqualified
 `rag_documents` then resolves against `public` and fails with
 `relation "rag_documents" does not exist`, although the migration created
-`rag.rag_documents`.
+`rag.rag_documents`. `tests/test_schema_contract.py` runs the queries against
+a migrated database; this test catches the same mistake in any module,
+including ones the contract test does not call.
 """
 import os
 
 os.environ.setdefault("POSTGRES_URL", "postgresql://u:p@localhost/x")
 
-import inspect
 import re
+from pathlib import Path
 
 import pytest
 
+import eccho_ai
 from eccho_ai.llm.retrievers import vector_store
-from eccho_ai.llm.tools import image_urls
-from eccho_ai.modules.rag import media
 
-# A table name in a FROM / INTO / UPDATE / JOIN clause that starts with
-# `rag_` and is not preceded by `rag.`
-UNQUALIFIED = re.compile(r"\b(FROM|INTO|UPDATE|JOIN)\s+rag_\w+", re.IGNORECASE)
+# A `rag_*` table in a FROM / INTO / UPDATE / JOIN clause without `rag.`
+UNQUALIFIED_TABLE = re.compile(r"\b(FROM|INTO|UPDATE|JOIN)\s+rag_\w+", re.IGNORECASE)
+# A pgvector cast without `public.`, where the migration installs the type
+UNQUALIFIED_VECTOR = re.compile(r"::vector\b")
+
+PACKAGE_DIR = Path(eccho_ai.__file__).parent
+SOURCES = sorted(PACKAGE_DIR.rglob("*.py"))
 
 
-@pytest.mark.parametrize("module", [vector_store, image_urls, media])
-def test_rag_tables_are_schema_qualified(module):
-    source = inspect.getsource(module)
-    lines = [line.strip() for line in source.splitlines() if UNQUALIFIED.search(line)]
-    assert lines == []
+def test_scans_the_modules_that_hold_rag_sql():
+    names = {path.relative_to(PACKAGE_DIR).as_posix() for path in SOURCES}
+    assert "llm/retrievers/vector_store.py" in names
+    assert "llm/tools/image_urls.py" in names
+
+
+@pytest.mark.parametrize(
+    "path", SOURCES, ids=lambda p: p.relative_to(PACKAGE_DIR).as_posix()
+)
+def test_sql_names_its_schema(path):
+    offending = [
+        f"{number}: {line.strip()}"
+        for number, line in enumerate(path.read_text().splitlines(), start=1)
+        if UNQUALIFIED_TABLE.search(line) or UNQUALIFIED_VECTOR.search(line)
+    ]
+    assert offending == []
 
 
 async def test_pool_does_not_rely_on_a_connect_time_search_path(monkeypatch):

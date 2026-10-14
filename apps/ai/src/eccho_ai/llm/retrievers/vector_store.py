@@ -134,7 +134,7 @@ class PgVectorStore:
                     INSERT INTO rag.rag_document_chunks (
                         id, document_id, chunk_index, content, content_chars, embedding, metadata
                     )
-                    VALUES ($1, $2, $3, $4, $5, $6::vector, $7::jsonb)
+                    VALUES ($1, $2, $3, $4, $5, $6::public.vector, $7::jsonb)
                     """,
                     [
                         (
@@ -221,7 +221,7 @@ class PgVectorStore:
                 INSERT INTO rag.rag_media (
                     id, knowledge_item_id, chatbot_ids, title, description, url, mime_type, embedding
                 )
-                VALUES ($1, $2, $3::text[], $4, $5, $6, $7, $8::vector)
+                VALUES ($1, $2, $3::text[], $4, $5, $6, $7, $8::public.vector)
                 ON CONFLICT (knowledge_item_id) DO UPDATE SET
                     chatbot_ids = EXCLUDED.chatbot_ids,
                     title = EXCLUDED.title,
@@ -319,13 +319,13 @@ class PgVectorStore:
                     d.local_path AS stored_path,
                     d.metadata AS document_metadata,
                     d.created_at AS document_created_at,
-                    c.embedding <=> $1::vector AS distance
+                    c.embedding <=> $1::public.vector AS distance
                 FROM rag.rag_document_chunks c
                 JOIN rag.rag_documents d ON d.id = c.document_id
                 WHERE
                     d.status = 'COMPLETED'
                     AND (d.metadata->'chatbot_ids' ? $2 OR d.metadata->>'chatbot_id' = $2)
-                ORDER BY c.embedding <=> $1::vector
+                ORDER BY c.embedding <=> $1::public.vector
                 LIMIT $3
                 """,
                 _vector_literal(embedding),
