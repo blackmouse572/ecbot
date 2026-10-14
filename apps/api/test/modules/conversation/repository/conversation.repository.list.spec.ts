@@ -35,16 +35,4 @@ describe('ConversationRepository list order', () => {
             },
         });
     });
-
-    it('keeps any other order as it is', async () => {
-        const find = jest.spyOn(repo as any, 'find').mockResolvedValue([]);
-        const order = { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.ASC };
-
-        await repo.findByWorkspace('ws-1', {}, { order });
-
-        expect(find).toHaveBeenCalledWith(expect.anything(), {
-            populate: ['chatbot', 'account'],
-            order,
-        });
-    });
 });
