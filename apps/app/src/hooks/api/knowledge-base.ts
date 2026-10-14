@@ -317,6 +317,27 @@ export const useBatchLinkKnowledgeItemsToChatbot = (chatbotId: string) => {
 
 // The list endpoint serves at most 20 pages (PAGINATION_DEFAULT_MAX_PAGE).
 const MAX_LIST_PAGES = 20;
+const LIST_CONCURRENCY = 4;
+
+/** Runs `fn` over `items` with at most `limit` in flight, keeping order. */
+const mapWithConcurrency = async <T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> => {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await fn(items[index]);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, worker),
+  );
+  return results;
+};
 
 /**
  * Ids of the items matching `filters` (search, tags) across pages, for
@@ -330,8 +351,7 @@ export const useFetchAllKnowledgeItemIds = (knowledgeBaseId: string) => {
   return async (
     filters: Record<string, A>,
   ): Promise<{ ids: string[]; truncated: boolean }> => {
-    const ids: string[] = [];
-    for (let page = 1; page <= MAX_LIST_PAGES; page += 1) {
+    const fetchPage = async (page: number) => {
       const res = await queryClient.fetchQuery({
         ...knowledgeItemListQueryOptions(workspace!.slug, knowledgeBaseId, {
           ...filters,
@@ -340,11 +360,30 @@ export const useFetchAllKnowledgeItemIds = (knowledgeBaseId: string) => {
         }),
         staleTime: 0,
       });
-      const items = (res?.data ?? []) as KnowledgeItemResponseDto[];
-      ids.push(...items.map((item) => item.id));
-      if (items.length < BATCH_MAX_IDS) return { ids, truncated: false };
-    }
-    return { ids, truncated: true };
+      return {
+        ids: ((res?.data ?? []) as KnowledgeItemResponseDto[]).map(
+          (item) => item.id,
+        ),
+        total: res?._metadata?.pagination?.total ?? 0,
+      };
+    };
+
+    // The first page tells how many more there are, so the rest load in
+    // parallel instead of one round trip after another.
+    const first = await fetchPage(1);
+    const pages = Math.min(
+      Math.ceil(first.total / BATCH_MAX_IDS),
+      MAX_LIST_PAGES,
+    );
+    const rest = await mapWithConcurrency(
+      Array.from({ length: Math.max(pages - 1, 0) }, (_, i) => i + 2),
+      LIST_CONCURRENCY,
+      fetchPage,
+    );
+    return {
+      ids: [first, ...rest].flatMap((page) => page.ids),
+      truncated: first.total > MAX_LIST_PAGES * BATCH_MAX_IDS,
+    };
   };
 };
 

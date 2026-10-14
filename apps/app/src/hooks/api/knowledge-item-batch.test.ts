@@ -79,6 +79,7 @@ describe("batch knowledge item hooks", () => {
     sdk.list.mockImplementation(async () => ({
       data: {
         data: Array.from({ length: 100 }, (_, i) => ({ id: `id-${i}` })),
+        _metadata: { pagination: { total: 5000 } },
       },
     }));
     const { result } = renderHook(() => useFetchAllKnowledgeItemIds("kb-1"), {
@@ -90,5 +91,37 @@ describe("batch knowledge item hooks", () => {
     expect(sdk.list).toHaveBeenCalledTimes(20);
     expect(ids).toHaveLength(2000);
     expect(truncated).toBe(true);
+  });
+
+  it("loads only the pages that exist, in parallel after the first", async () => {
+    sdk.list.mockReset();
+    let inFlight = 0;
+    let peak = 0;
+    sdk.list.mockImplementation(async ({ query }) => {
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight -= 1;
+      const start = (query.page - 1) * 100;
+      return {
+        data: {
+          data: Array.from({ length: Math.min(100, 250 - start) }, (_, i) => ({
+            id: `id-${start + i}`,
+          })),
+          _metadata: { pagination: { total: 250 } },
+        },
+      };
+    });
+    const { result } = renderHook(() => useFetchAllKnowledgeItemIds("kb-1"), {
+      wrapper,
+    });
+
+    const { ids, truncated } = await result.current({});
+
+    expect(sdk.list).toHaveBeenCalledTimes(3);
+    expect(ids).toHaveLength(250);
+    expect(ids[249]).toBe("id-249");
+    expect(truncated).toBe(false);
+    expect(peak).toBeGreaterThan(1);
   });
 });
