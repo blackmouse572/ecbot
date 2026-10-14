@@ -14118,7 +14118,13 @@ export type ActivityAdminControllerListV1Data = {
         user: string;
     };
     query?: {
+        /**
+         * value with ',' delimiter
+         */
         action?: string;
+        /**
+         * value with ',' delimiter
+         */
         subject?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
