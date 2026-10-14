@@ -43,6 +43,25 @@ describe("ConversationsCell", () => {
     expect(screen.getAllByTestId("platform-icon")).toHaveLength(1);
   });
 
+  it("caps the stack at four logos and counts the rest", () => {
+    render(
+      <ConversationsCell
+        conversationCount={9}
+        channels={[
+          "FACEBOOK_PAGE",
+          "ZALO_PAGE",
+          "INSTAGRAM_PAGE",
+          "TELEGRAM_BOT",
+          "TIKTOK_SHOP",
+          "SHOPEE_SHOP",
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByTestId("platform-icon")).toHaveLength(4);
+    expect(screen.getByText("+2")).toBeVisible();
+  });
+
   it("falls back to a placeholder for a customer without conversations", () => {
     render(<ConversationsCell conversationCount={0} channels={[]} />);
 
