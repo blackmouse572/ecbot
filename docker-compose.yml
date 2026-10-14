@@ -231,6 +231,7 @@ services:
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/customer-tag-classifier
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/session
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/inbound-event
+      - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/conversation-memory
     # Tasks call API_BACKEND_URL. With the API running on the host, that is
     # http://host.docker.internal:8080, which Docker Desktop resolves but
     # Linux does not without this mapping.
