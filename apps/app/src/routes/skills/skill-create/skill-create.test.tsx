@@ -14,6 +14,7 @@ const api = vi.hoisted(() => ({
   attachError: null as unknown,
   attachGate: null as Promise<void> | null,
   prev: undefined as unknown,
+  from: undefined as unknown,
   handleSuccess: vi.fn(),
 }));
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -25,6 +26,9 @@ vi.mock("@medusajs/ui", async () => {
 });
 
 vi.mock("@/hooks/api/skills", () => ({
+  useGetSkill: (_ws: string, _id: string, opts: { enabled: boolean }) => ({
+    skill: opts.enabled ? api.from : undefined,
+  }),
   useCreateSkill: () => ({
     createSkill: async (body: unknown) => {
       api.created.push(body);
@@ -46,6 +50,7 @@ vi.mock("../components/skill-form", () => ({
   SkillFormFields: ({ form }: { form: UseFormReturn<SkillFormData> }) => (
     <>
       <input {...form.register("name")} />
+      <textarea {...form.register("description")} />
       <textarea {...form.register("instructions")} />
     </>
   ),
@@ -93,6 +98,9 @@ const submit = (container: HTMLElement) => {
   fireEvent.change(container.querySelector('input[name="name"]')!, {
     target: { value: "Refunds" },
   });
+  fireEvent.change(container.querySelector('textarea[name="description"]')!, {
+    target: { value: "When a customer asks for a refund" },
+  });
   fireEvent.change(container.querySelector('textarea[name="instructions"]')!, {
     target: { value: "Explain the refund policy." },
   });
@@ -106,6 +114,7 @@ describe("SkillCreate", () => {
     api.attachError = null;
     api.attachGate = null;
     api.prev = undefined;
+    api.from = undefined;
     api.handleSuccess.mockReset();
     toast.success.mockReset();
     toast.error.mockReset();
@@ -162,5 +171,48 @@ describe("SkillCreate", () => {
     expect(api.created).toHaveLength(1);
     expect(api.attached).toEqual([]);
     expect(toast.success).toHaveBeenCalledWith("Skill created");
+  });
+
+  it("starts from a copy of the skill in ?from=, guardrails included", async () => {
+    api.from = {
+      id: "tpl-1",
+      name: "Refunds",
+      description: "When a customer asks for a refund",
+      guardrails: ["Never promise a refund before checking the order"],
+      format: "CONTENT",
+      instructions: "Explain the refund policy.",
+    };
+    const { container } = renderAt("/ws/skills/create?from=tpl-1");
+
+    await waitFor(() =>
+      expect(
+        container.querySelector<HTMLInputElement>('input[name="name"]')!.value,
+      ).toBe("Refunds"),
+    );
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(api.created).toHaveLength(1));
+    expect(api.created[0]).toEqual({
+      name: "Refunds",
+      description: "When a customer asks for a refund",
+      guardrails: ["Never promise a refund before checking the order"],
+      format: "CONTENT",
+      instructions: "Explain the refund policy.",
+    });
+  });
+
+  it("does not create a skill without When to use", async () => {
+    const { container } = renderAt("/ws/skills/create");
+    fireEvent.change(container.querySelector('input[name="name"]')!, {
+      target: { value: "Refunds" },
+    });
+    fireEvent.change(
+      container.querySelector('textarea[name="instructions"]')!,
+      { target: { value: "Explain the refund policy." } },
+    );
+    fireEvent.submit(container.querySelector("form")!);
+
+    await new Promise((r) => setTimeout(r, 50));
+    expect(api.created).toEqual([]);
   });
 });

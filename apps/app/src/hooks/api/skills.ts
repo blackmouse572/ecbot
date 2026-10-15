@@ -8,12 +8,14 @@ import {
   skillWorkspaceControllerBatchDeleteV1,
   skillWorkspaceControllerDeleteV1,
   skillWorkspaceControllerCloneV1,
+  skillWorkspaceControllerUsageV1,
   chatbotSkillWorkspaceControllerListV1,
   chatbotSkillWorkspaceControllerAttachV1,
   chatbotSkillWorkspaceControllerToggleV1,
   chatbotSkillWorkspaceControllerDetachV1,
   type SkillListResponseDto,
   type SkillGetResponseDto,
+  type SkillUsageResponseDto,
   type ChatbotSkillListResponseDto,
   type SkillWorkspaceControllerListV1Response,
   type SkillWorkspaceControllerGetV1Response,
@@ -37,6 +39,8 @@ export const skillsQueryKeys = {
   ...queryKeysFactory(SKILLS_QUERY_KEY),
   chatbotSkills: (chatbotId: string) =>
     [SKILLS_QUERY_KEY, "chatbot", chatbotId] as const,
+  usages: () => [SKILLS_QUERY_KEY, "usage"] as const,
+  usage: (skillId: string) => [SKILLS_QUERY_KEY, "usage", skillId] as const,
 };
 
 export type SkillSource = "workspace" | "template" | "all";
@@ -115,6 +119,24 @@ export const useGetSkill = (
   };
 };
 
+/** Chatbots the skill is attached to, and the tools its steps call. */
+export const useSkillUsage = (
+  workspace: string,
+  skillId: string,
+  options?: { enabled?: boolean },
+) => {
+  const { data, ...rest } = useQuery({
+    queryKey: skillsQueryKeys.usage(skillId),
+    queryFn: () =>
+      skillWorkspaceControllerUsageV1({
+        path: { workspace, skillId } as A,
+      }).then((res) => (res.data as A)?.data as SkillUsageResponseDto),
+    staleTime: 60 * 1000,
+    ...options,
+  });
+  return { ...rest, usage: data };
+};
+
 // -------------------------------------------------------------------------
 // Skill mutations
 // -------------------------------------------------------------------------
@@ -150,6 +172,9 @@ export const useUpdateSkill = (workspace: string, skillId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: skillsQueryKeys.detail(skillId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: skillsQueryKeys.usage(skillId),
       });
       queryClient.invalidateQueries({ queryKey: skillsQueryKeys.lists() });
     },
@@ -269,6 +294,7 @@ export const useAttachSkillToChatbot = (
       queryClient.invalidateQueries({
         queryKey: skillsQueryKeys.chatbotSkills(chatbotId),
       });
+      queryClient.invalidateQueries({ queryKey: skillsQueryKeys.usages() });
     },
   });
 
@@ -292,6 +318,7 @@ export const useToggleSkillOnChatbot = (
       queryClient.invalidateQueries({
         queryKey: skillsQueryKeys.chatbotSkills(chatbotId),
       });
+      queryClient.invalidateQueries({ queryKey: skillsQueryKeys.usages() });
     },
   });
 
@@ -314,6 +341,7 @@ export const useDetachSkillFromChatbot = (
       queryClient.invalidateQueries({
         queryKey: skillsQueryKeys.chatbotSkills(chatbotId),
       });
+      queryClient.invalidateQueries({ queryKey: skillsQueryKeys.usages() });
     },
   });
 
