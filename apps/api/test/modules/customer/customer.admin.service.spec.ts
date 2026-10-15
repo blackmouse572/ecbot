@@ -150,6 +150,20 @@ describe('CustomerAdminService', () => {
         expect(rows[0]).not.toHaveProperty('notes');
     });
 
+    it('falls back to the sender name when the stored name is empty', async () => {
+        customerRepository.find.mockResolvedValue([
+            customer('c1', { name: '' }),
+        ]);
+        contactPointRepository.find.mockResolvedValue([
+            contactPoint('p1', 'c1', ENUM_ACCOUNT_TYPE.ZALO_PAGE),
+        ]);
+        tagAssignmentRepository.find.mockResolvedValue([]);
+
+        const [row] = await service.findAll({});
+
+        expect(row.displayName).toBe('Sender p1');
+    });
+
     it('skips the batch lookups for an empty page', async () => {
         customerRepository.find.mockResolvedValue([]);
 

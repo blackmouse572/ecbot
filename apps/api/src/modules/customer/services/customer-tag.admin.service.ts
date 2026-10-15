@@ -27,23 +27,28 @@ export class CustomerTagAdminService {
             await this.customerTagAssignmentRepository.countCustomersByTags(
                 tags.map(tag => tag.id)
             );
-        return tags.map(tag =>
-            plainToInstance(
-                CustomerTagAdminListResponseDto,
-                {
-                    id: tag.id,
-                    name: tag.name,
-                    emoji: tag.emoji,
-                    description: tag.description,
-                    triggersHandoff: tag.triggersHandoff,
-                    notifiesTeam: tag.notifiesTeam,
-                    customerCount: counts.get(tag.id) ?? 0,
-                    workspace: tag.workspace,
-                    createdAt: tag.createdAt,
-                    updatedAt: tag.updatedAt,
-                },
-                { excludeExtraneousValues: true }
-            )
+        return this.mapList(tags, counts);
+    }
+
+    mapList(
+        tags: CustomerTagEntity[],
+        counts: Map<string, number>
+    ): CustomerTagAdminListResponseDto[] {
+        return plainToInstance(
+            CustomerTagAdminListResponseDto,
+            tags.map(tag => ({
+                id: tag.id,
+                name: tag.name,
+                emoji: tag.emoji,
+                description: tag.description,
+                triggersHandoff: tag.triggersHandoff,
+                notifiesTeam: tag.notifiesTeam,
+                customerCount: counts.get(tag.id) ?? 0,
+                workspace: tag.workspace,
+                createdAt: tag.createdAt,
+                updatedAt: tag.updatedAt,
+            })),
+            { excludeExtraneousValues: true }
         );
     }
 

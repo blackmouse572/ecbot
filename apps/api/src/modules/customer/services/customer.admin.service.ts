@@ -38,15 +38,13 @@ export class CustomerAdminService {
             this.findContactPoints(ids),
             this.findTags(ids),
         ]);
-        return customers.map(customer =>
-            plainToInstance(
-                CustomerAdminListResponseDto,
+        return this.mapList(
+            customers.map(customer =>
                 this.toPlain(
                     customer,
                     contactPoints.get(customer.id) ?? [],
                     tags.get(customer.id) ?? []
-                ),
-                { excludeExtraneousValues: true }
+                )
             )
         );
     }
@@ -72,26 +70,34 @@ export class CustomerAdminService {
         ]);
         const points = contactPoints.get(customer.id) ?? [];
 
-        return plainToInstance(
-            CustomerAdminGetResponseDto,
-            {
-                ...this.toPlain(customer, points, tags.get(customer.id) ?? []),
-                language: customer.language,
-                notes: customer.notes,
-                profileSummary: customer.profileSummary,
-                mergedIntoCustomerId: customer.mergedIntoCustomerId,
-                conversationCount:
-                    summaries.get(customer.id)?.conversationCount ?? 0,
-                contactPoints: points.map(point => ({
-                    id: point.id,
-                    platform: point.platform,
-                    displayName: point.displaySenderName,
-                    avatar: point.senderAvatar,
-                    createdAt: point.createdAt,
-                })),
-            },
-            { excludeExtraneousValues: true }
-        );
+        return this.mapGet({
+            ...this.toPlain(customer, points, tags.get(customer.id) ?? []),
+            language: customer.language,
+            notes: customer.notes,
+            profileSummary: customer.profileSummary,
+            mergedIntoCustomerId: customer.mergedIntoCustomerId,
+            conversationCount:
+                summaries.get(customer.id)?.conversationCount ?? 0,
+            contactPoints: points.map(point => ({
+                id: point.id,
+                platform: point.platform,
+                displayName: point.displaySenderName,
+                avatar: point.senderAvatar,
+                createdAt: point.createdAt,
+            })),
+        });
+    }
+
+    mapList(rows: Record<string, unknown>[]): CustomerAdminListResponseDto[] {
+        return plainToInstance(CustomerAdminListResponseDto, rows, {
+            excludeExtraneousValues: true,
+        });
+    }
+
+    mapGet(row: Record<string, unknown>): CustomerAdminGetResponseDto {
+        return plainToInstance(CustomerAdminGetResponseDto, row, {
+            excludeExtraneousValues: true,
+        });
     }
 
     // `tag` and `platform` are not columns of the customer: they match live
@@ -170,7 +176,7 @@ export class CustomerAdminService {
             id: customer.id,
             name: customer.name ?? undefined,
             displayName:
-                customer.name ??
+                customer.name ||
                 contactPoints.find(point => point.displaySenderName)
                     ?.displaySenderName,
             phone: customer.phone ?? undefined,

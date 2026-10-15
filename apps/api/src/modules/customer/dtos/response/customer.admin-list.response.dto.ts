@@ -1,7 +1,7 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { ActivityAdminWorkspaceResponseDto } from 'src/modules/activity/dtos/response/activity.admin-workspace.response.dto';
+import { CustomerAdminWorkspaceResponseDto } from './customer.admin-workspace.response.dto';
 import { CustomerAdminTagResponseDto } from './customer.admin-tag.response.dto';
 
 // One row of the admin customer list. An allowlist, never a spread of the
@@ -39,10 +39,10 @@ export class CustomerAdminListResponseDto {
     @Expose()
     avatar?: string;
 
-    @ApiProperty({ type: ActivityAdminWorkspaceResponseDto })
+    @ApiProperty({ type: CustomerAdminWorkspaceResponseDto })
     @Expose()
-    @Type(() => ActivityAdminWorkspaceResponseDto)
-    workspace: ActivityAdminWorkspaceResponseDto;
+    @Type(() => CustomerAdminWorkspaceResponseDto)
+    workspace: CustomerAdminWorkspaceResponseDto;
 
     @ApiProperty({ example: 2 })
     @Expose()

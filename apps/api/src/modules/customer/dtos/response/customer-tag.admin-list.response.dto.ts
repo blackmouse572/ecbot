@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { ActivityAdminWorkspaceResponseDto } from 'src/modules/activity/dtos/response/activity.admin-workspace.response.dto';
+import { CustomerAdminWorkspaceResponseDto } from './customer.admin-workspace.response.dto';
 
 // One row of the admin customer tag list, with how many customers carry it.
 export class CustomerTagAdminListResponseDto {
@@ -38,10 +38,10 @@ export class CustomerTagAdminListResponseDto {
     @Expose()
     customerCount: number;
 
-    @ApiProperty({ type: ActivityAdminWorkspaceResponseDto })
+    @ApiProperty({ type: CustomerAdminWorkspaceResponseDto })
     @Expose()
-    @Type(() => ActivityAdminWorkspaceResponseDto)
-    workspace: ActivityAdminWorkspaceResponseDto;
+    @Type(() => CustomerAdminWorkspaceResponseDto)
+    workspace: CustomerAdminWorkspaceResponseDto;
 
     @ApiProperty({ example: new Date('2026-10-01T05:57:59.265Z') })
     @Expose()
