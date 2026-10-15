@@ -3273,6 +3273,12 @@ export type WorkspaceUpdateStatusRequestDto = {
     status: 'ACTIVE' | 'SUSPENDED';
 };
 
+export type CustomerAdminWorkspaceResponseDto = {
+    id: string;
+    name: string;
+    slug: string;
+};
+
 export type CustomerAdminTagResponseDto = {
     id: string;
     name: string;
@@ -3292,7 +3298,7 @@ export type CustomerAdminListResponseDto = {
      * Avatar of the first channel that has one
      */
     avatar?: string;
-    workspace: ActivityAdminWorkspaceResponseDto;
+    workspace: CustomerAdminWorkspaceResponseDto;
     contactPointCount: number;
     /**
      * Distinct channel types the customer is reachable on
@@ -3327,7 +3333,7 @@ export type CustomerAdminGetResponseDto = {
      * Avatar of the first channel that has one
      */
     avatar?: string;
-    workspace: ActivityAdminWorkspaceResponseDto;
+    workspace: CustomerAdminWorkspaceResponseDto;
     contactPointCount: number;
     /**
      * Distinct channel types the customer is reachable on
@@ -3361,7 +3367,7 @@ export type CustomerTagAdminListResponseDto = {
      */
     notifiesTeam: boolean;
     customerCount: number;
-    workspace: ActivityAdminWorkspaceResponseDto;
+    workspace: CustomerAdminWorkspaceResponseDto;
     createdAt: string;
     updatedAt?: string;
 };
