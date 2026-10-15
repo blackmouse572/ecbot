@@ -1,4 +1,5 @@
 import { queryKeysFactory } from "@/libs/query-factory";
+import { isWorkspaceSuspendedError } from "@/libs/workspace-suspended";
 import {
   useLastWorkspaceSlug,
   useSetLastWorkspaceSlug,
@@ -121,17 +122,11 @@ export function useWorkspace() {
   };
 }
 
-/** The API's 403 for a workspace an admin suspended. */
-export const WORKSPACE_SUSPENDED_STATUS_CODE = 5215;
-
 // Context provider for workspace
 export function useEnsureWorkspace() {
   const { workspaces, isLoading: isLoadingWorkspaces } = useWorkspaceList();
   const { workspace, isLoading: isLoadingWorkspace, error } = useWorkspace();
-  // The client rejects with the axios error; the API body is on response.data.
-  const isSuspended =
-    (error as { response?: { data?: { statusCode?: number } } } | null)
-      ?.response?.data?.statusCode === WORKSPACE_SUSPENDED_STATUS_CODE;
+  const isSuspended = isWorkspaceSuspendedError(error);
   const navigate = useNavigate();
   const { workspaceSlug } = useParams<{ workspaceSlug: string }>();
   const location = useLocation();
