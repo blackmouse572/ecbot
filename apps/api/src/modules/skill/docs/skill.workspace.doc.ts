@@ -17,6 +17,7 @@ import { CreateSkillRequestDto } from '../dtos/request/create-skill.request.dto'
 import { UpdateSkillRequestDto } from '../dtos/request/update-skill.request.dto';
 import { SkillGetResponseDto } from '../dtos/response/skill.get.response.dto';
 import { SkillListResponseDto } from '../dtos/response/skill.list.response.dto';
+import { SkillUsageResponseDto } from '../dtos/response/skill-usage.response.dto';
 
 export function SkillWorkspaceListDoc(): MethodDecorator {
     return applyDecorators(
@@ -107,5 +108,18 @@ export function SkillWorkspaceBatchDeleteDoc(): MethodDecorator {
         DocResponse<BatchResultResponseDto>('skill.batchDelete.success', {
             dto: BatchResultResponseDto,
         })
+    );
+}
+
+export function SkillWorkspaceUsageDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                'chatbots a skill is attached to and the tools its steps call',
+        }),
+        DocRequest({ params: [...WorkspaceDocParamsId, ...SkillDocParamsId] }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ policy: true }),
+        DocResponse('skill.usage.success', { dto: SkillUsageResponseDto })
     );
 }

@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import {
     compileSkill,
-    isSystemToolId,
     parseSkillSteps,
+    skillToolRefs,
     validateSkillSteps,
     type SkillStep,
     type SkillToolNamer,
@@ -520,7 +520,7 @@ export class SkillService {
         workspaceId: string | null,
         steps: SkillStep[]
     ): Promise<SkillToolNamer> {
-        const ids = [...new Set(this.toolIdsOf(steps))];
+        const ids = [...new Set(skillToolRefs(steps).map(r => r.toolId))];
         const tools =
             workspaceId && ids.length
                 ? await this.toolRepository.findByIdsInWorkspace(
@@ -540,23 +540,6 @@ export class SkillService {
             );
             return known ? action!.replace(TOOL_NAME_INVALID, '_') : undefined;
         };
-    }
-
-    private toolIdsOf(steps: SkillStep[]): string[] {
-        return steps.flatMap(step => {
-            if (step.type === 'tool') {
-                return step.toolId && !isSystemToolId(step.toolId)
-                    ? [step.toolId]
-                    : [];
-            }
-            if (step.type === 'if') {
-                return [
-                    ...step.branches.flatMap(b => this.toolIdsOf(b.steps)),
-                    ...this.toolIdsOf(step.otherwise ?? []),
-                ];
-            }
-            return [];
-        });
     }
 
     private throwInvalidSteps(issues: unknown[]): never {

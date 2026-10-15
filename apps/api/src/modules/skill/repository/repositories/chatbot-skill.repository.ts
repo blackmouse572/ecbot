@@ -48,4 +48,19 @@ export class ChatbotSkillRepository extends EntityRepository<ChatbotSkillEntity>
             deleted: false,
         });
     }
+
+    /** The workspace's chatbots the skill is attached to, enabled or not. */
+    async findBySkillId(
+        skillId: string,
+        workspaceId: string
+    ): Promise<ChatbotSkillEntity[]> {
+        return this.find(
+            {
+                skill: { id: skillId },
+                chatbot: { workspace: { id: workspaceId }, deleted: false },
+                deleted: false,
+            },
+            { populate: ['chatbot'], orderBy: { chatbot: { name: 'ASC' } } }
+        );
+    }
 }

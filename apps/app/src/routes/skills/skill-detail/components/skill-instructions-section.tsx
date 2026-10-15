@@ -5,17 +5,24 @@ import { Pencil } from "@medusajs/icons";
 import { Button, Container, Heading, IconButton, toast } from "@medusajs/ui";
 import type { SkillGetResponseDto } from "@repo/client";
 import { useHotkey } from "@tanstack/react-hotkeys";
+import type { SkillStep, ToolStep } from "@repo/agent-blueprint";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
+import { useNavigate } from "react-router-dom";
+import { SkillStepsView } from "../../components/skill-steps-view";
 
 type Props = {
   skill: SkillGetResponseDto;
+  toolLabel?: (step: Pick<ToolStep, "toolId" | "action">) => string;
 };
 
 // Markdown view + inline edit for the skill instructions (mirrors the chatbot
-// general-knowledge section). Builtin templates are read-only.
-export const SkillInstructionsSection = ({ skill }: Props) => {
+// general-knowledge section). Steps show read only and are edited in the
+// edit modal. Builtin templates are read-only.
+export const SkillInstructionsSection = ({ skill, toolLabel }: Props) => {
+  const navigate = useNavigate();
+  const isSteps = skill.format === "STEPS";
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const { updateSkill, isPending } = useUpdateSkill(workspaceSlug, skill.id);
@@ -54,7 +61,9 @@ export const SkillInstructionsSection = ({ skill }: Props) => {
           <IconButton
             variant="transparent"
             size="small"
+            aria-label={t("actions.edit")}
             onClick={() => {
+              if (isSteps) return navigate("edit");
               setDraft(skill.instructions ?? "");
               setEditing(true);
             }}
@@ -81,6 +90,13 @@ export const SkillInstructionsSection = ({ skill }: Props) => {
               {t("actions.save")}
             </Button>
           </div>
+        </div>
+      ) : isSteps ? (
+        <div className="p-6 py-4">
+          <SkillStepsView
+            steps={(skill.steps ?? []) as SkillStep[]}
+            toolLabel={toolLabel}
+          />
         </div>
       ) : (
         <div className="scroll-fade-y prose max-w-none max-h-96 overflow-y-auto p-6 py-4 txt-compact-small text-ui-fg-subtle">

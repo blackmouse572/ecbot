@@ -130,6 +130,32 @@ export function parseSkillSteps(
   return { success: false, issues };
 }
 
+/** The workspace tools (and MCP actions) a step tree calls, each once, in reading order. Built-in actions are left out. */
+export function skillToolRefs(
+  steps: SkillStep[],
+): Pick<ToolStep, "toolId" | "action">[] {
+  const refs = new Map<string, Pick<ToolStep, "toolId" | "action">>();
+  const walk = (list: SkillStep[]) => {
+    for (const step of list) {
+      if (
+        step.type === "tool" &&
+        !blank(step.toolId) &&
+        !isSystemToolId(step.toolId)
+      ) {
+        const ref = step.action
+          ? { toolId: step.toolId, action: step.action }
+          : { toolId: step.toolId };
+        refs.set(`${step.toolId}:${step.action ?? ""}`, ref);
+      } else if (step.type === "if") {
+        step.branches.forEach((b) => walk(b.steps));
+        walk(step.otherwise ?? []);
+      }
+    }
+  };
+  walk(steps);
+  return [...refs.values()];
+}
+
 /** Everything that would stop a step list from compiling, in reading order. */
 export function validateSkillSteps(
   steps: SkillStep[],
@@ -183,6 +209,14 @@ export function validateSkillSteps(
   return issues;
 }
 
+const RULES_HEADING = "## Rules (always, even when a step says otherwise)";
+
+/** A compiled body without its Rules section, for when the guardrails are kept apart. */
+export const withoutSkillRules = (body: string) => {
+  const at = body.lastIndexOf(`\n\n${RULES_HEADING}\n`);
+  return at === -1 ? body : body.slice(0, at);
+};
+
 export type CompileSkillInput =
   | { name: string; guardrails: string[]; format: "CONTENT"; content: string }
   | {
@@ -196,7 +230,7 @@ export type CompileSkillInput =
 /** The markdown body stored for `load_skill`. Validate steps first: invalid ones compile as written. */
 export function compileSkill(input: CompileSkillInput): string {
   const rules = input.guardrails.length
-    ? `## Rules (always, even when a step says otherwise)\n${input.guardrails.map((g) => `- ${g.trim()}`).join("\n")}`
+    ? `${RULES_HEADING}\n${input.guardrails.map((g) => `- ${g.trim()}`).join("\n")}`
     : "";
   if (input.format === "CONTENT")
     return [input.content, rules].filter(Boolean).join("\n\n");

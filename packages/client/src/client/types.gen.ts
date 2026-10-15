@@ -5468,6 +5468,49 @@ export type CompleteInstallRequestDto = {
     code?: string;
 };
 
+export type SkillUsageToolResponseDto = {
+    /**
+     * Tool id
+     */
+    id: string;
+    name: string;
+    kind: 'HTTP' | 'MCP';
+    /**
+     * The MCP action a step calls
+     */
+    action?: string;
+};
+
+export type SkillUsageChatbotResponseDto = {
+    /**
+     * Chatbot id
+     */
+    id: string;
+    name: string;
+    /**
+     * Whether the skill is enabled on the chatbot
+     */
+    enabled: boolean;
+    /**
+     * Tools the skill calls that this chatbot does not have enabled (an MCP tool also when the action is off)
+     */
+    missingTools: Array<{
+        id: string;
+        action?: string;
+    }>;
+};
+
+export type SkillUsageResponseDto = {
+    /**
+     * Workspace tools the skill steps call
+     */
+    tools: Array<SkillUsageToolResponseDto>;
+    /**
+     * Chatbots the skill is attached to
+     */
+    chatbots: Array<SkillUsageChatbotResponseDto>;
+};
+
 export type ChatbotSkillListResponseDto = {
     /**
      * Skill id
@@ -27256,6 +27299,86 @@ export type SkillWorkspaceControllerUpdateV1Responses = {
 };
 
 export type SkillWorkspaceControllerUpdateV1Response = SkillWorkspaceControllerUpdateV1Responses[keyof SkillWorkspaceControllerUpdateV1Responses];
+
+export type SkillWorkspaceControllerUsageV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        skillId: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/skill/{skillId}/usage';
+};
+
+export type SkillWorkspaceControllerUsageV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type SkillWorkspaceControllerUsageV1Error = SkillWorkspaceControllerUsageV1Errors[keyof SkillWorkspaceControllerUsageV1Errors];
+
+export type SkillWorkspaceControllerUsageV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: SkillUsageResponseDto;
+    };
+};
+
+export type SkillWorkspaceControllerUsageV1Response = SkillWorkspaceControllerUsageV1Responses[keyof SkillWorkspaceControllerUsageV1Responses];
 
 export type SkillWorkspaceControllerCloneV1Data = {
     body?: never;

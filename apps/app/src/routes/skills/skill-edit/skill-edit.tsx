@@ -1,87 +1,99 @@
-import { RouteDrawer } from "@/components/modals";
-import { useGetSkill, useUpdateSkill } from "@/hooks/api/skills";
+import { RouteFocusModal, useRouteModal } from "@/components/modals";
+import { KeyboundForm } from "@/components/utils/keybound-form";
+import { useGetSkill, useSkillUsage, useUpdateSkill } from "@/hooks/api/skills";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Text, toast } from "@medusajs/ui";
+import type { SkillGetResponseDto } from "@repo/client";
+import { FormSkeleton } from "@repo/ui/common-components";
 import { Helmet } from "react-helmet-async";
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
 import { skillFormSchema, type SkillFormData } from "../schemas";
-import { FormSkeleton } from "@repo/ui/common-components";
+import { formValuesToBody, skillToFormValues, toolLabelOf } from "../utils";
 
-const SkillEditInner = () => {
+const SkillEditForm = ({ skill }: { skill: SkillGetResponseDto }) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { workspaceSlug } = useWorkspaceParams();
-  const { skillId } = useParams<{ skillId: string }>();
-
-  const { skill, isLoading, isError, error } = useGetSkill(
-    workspaceSlug,
-    skillId ?? "",
-    {
-      enabled: !!skillId,
-    },
-  );
-  const { updateSkill, isPending } = useUpdateSkill(
-    workspaceSlug,
-    skillId ?? "",
-  );
+  const { handleSuccess } = useRouteModal();
+  const { updateSkill, isPending } = useUpdateSkill(workspaceSlug, skill.id);
+  const { usage } = useSkillUsage(workspaceSlug, skill.id, {
+    enabled: skill.format === "STEPS",
+  });
+  const toolLabel = toolLabelOf(usage?.tools);
 
   const form = useForm<SkillFormData>({
     resolver: zodResolver(skillFormSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      instructions: "",
-    },
+    defaultValues: skillToFormValues(skill),
   });
-
-  useEffect(() => {
-    if (skill) {
-      form.reset({
-        name: skill.name,
-        description: skill.description ?? "",
-        instructions: skill.instructions ?? "",
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [skill]);
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
-      await updateSkill({
-        name: data.name,
-        description: data.description || undefined,
-        instructions: data.instructions,
-      });
+      await updateSkill(formValuesToBody(data));
       toast.success(t("skills.edit.success"));
-      navigate("..");
+      handleSuccess();
     } catch (error) {
       toast.error((error as A)?.body?.message ?? t("skills.edit.error"));
     }
   });
 
-  if (isError) {
-    throw error;
-  }
+  return (
+    <RouteFocusModal.Form form={form}>
+      <KeyboundForm onSubmit={handleSubmit} className="flex h-full flex-col">
+        <RouteFocusModal.Header />
+        <RouteFocusModal.Body className="flex flex-1 flex-col overflow-y-auto">
+          <div className="mx-auto flex w-full max-w-[720px] flex-col gap-y-6 px-6 py-10">
+            <div>
+              <Heading>{t("skills.edit.title")}</Heading>
+              <Text size="small" className="text-ui-fg-subtle">
+                {t("skills.edit.subtitle")}
+              </Text>
+            </div>
+            <SkillFormFields form={form} toolLabel={toolLabel} />
+          </div>
+        </RouteFocusModal.Body>
+        <RouteFocusModal.Footer>
+          <div className="flex items-center gap-x-2">
+            <RouteFocusModal.Close asChild>
+              <Button variant="secondary" type="button">
+                {t("actions.cancel")}
+              </Button>
+            </RouteFocusModal.Close>
+            <Button
+              type="submit"
+              isLoading={isPending}
+              disabled={form.formState.isSubmitting}
+            >
+              {t("actions.save")}
+            </Button>
+          </div>
+        </RouteFocusModal.Footer>
+      </KeyboundForm>
+    </RouteFocusModal.Form>
+  );
+};
+
+const SkillEditInner = () => {
+  const { t } = useTranslation();
+  const { workspaceSlug } = useWorkspaceParams();
+  const { skillId } = useParams<{ skillId: string }>();
+  const { skill, isLoading, isError, error } = useGetSkill(
+    workspaceSlug,
+    skillId ?? "",
+    { enabled: !!skillId },
+  );
+
+  if (isError) throw error;
 
   if (isLoading || !skill) {
     return (
       <>
-        <RouteDrawer.Header>
-          <RouteDrawer.Title asChild>
-            <Heading level="h2">{t("skills.edit.title")}</Heading>
-          </RouteDrawer.Title>
-          <RouteDrawer.Description className="sr-only">
-            {t("skills.edit.subtitle")}
-          </RouteDrawer.Description>
-        </RouteDrawer.Header>
-        <RouteDrawer.Body className="p-6">
+        <RouteFocusModal.Header />
+        <RouteFocusModal.Body className="mx-auto w-full max-w-[720px] px-6 py-10">
           <FormSkeleton label={t("general.loading")} fieldCount={4} />
-        </RouteDrawer.Body>
+        </RouteFocusModal.Body>
       </>
     );
   }
@@ -93,35 +105,7 @@ const SkillEditInner = () => {
           {skill.name} · {t("skills.edit.title")} - Ecbot
         </title>
       </Helmet>
-      <RouteDrawer.Header>
-        <RouteDrawer.Title asChild>
-          <Heading level="h2">{skill.name}</Heading>
-        </RouteDrawer.Title>
-        <RouteDrawer.Description asChild>
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("skills.edit.subtitle")}
-          </Text>
-        </RouteDrawer.Description>
-      </RouteDrawer.Header>
-      <RouteDrawer.Form form={form}>
-        <RouteDrawer.Body className="flex flex-1 flex-col overflow-y-auto p-6">
-          <SkillFormFields form={form} />
-        </RouteDrawer.Body>
-        <RouteDrawer.Footer>
-          <div className="ml-auto flex items-center gap-x-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate("..")}
-            >
-              {t("actions.cancel")}
-            </Button>
-            <Button type="submit" onClick={handleSubmit} isLoading={isPending}>
-              {t("actions.save")}
-            </Button>
-          </div>
-        </RouteDrawer.Footer>
-      </RouteDrawer.Form>
+      <SkillEditForm skill={skill} />
     </>
   );
 };
@@ -130,8 +114,8 @@ export const SkillEdit = () => {
   const { workspaceSlug } = useWorkspaceParams();
   const { skillId } = useParams<{ skillId: string }>();
   return (
-    <RouteDrawer prev={`/${workspaceSlug}/skills/${skillId}`}>
+    <RouteFocusModal prev={`/${workspaceSlug}/skills/${skillId}`}>
       <SkillEditInner />
-    </RouteDrawer>
+    </RouteFocusModal>
   );
 };

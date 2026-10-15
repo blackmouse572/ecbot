@@ -28,7 +28,7 @@
       }
     },
     "title": "Skills",
-    "subtitle": "Know-how tái sử dụng, agent nạp khi cần.",
+    "subtitle": "Quy trình hướng dẫn agent làm từng bước cho một việc.",
     "builtin": "Có sẵn",
     "tabs": {
       "mySkills": "Skill của tôi",
@@ -39,7 +39,7 @@
       "inactive": "Tắt"
     },
     "list": {
-      "noRecordsMessage": "Skill hướng dẫn agent cách xử lý từng việc cụ thể. Hãy tạo mới, hoặc bắt đầu từ một mẫu có sẵn.",
+      "noRecordsMessage": "Mỗi skill là một quy trình: các bước agent làm theo để xử lý một việc, như hoàn tiền hay đặt lịch. Hãy tạo mới, hoặc bắt đầu từ một mẫu có sẵn.",
       "noTemplates": "Chưa có mẫu nào.",
       "filters": {
         "source": "Nguồn"
@@ -47,12 +47,9 @@
       "noRecordsTitle": "Chưa có skill nào",
       "createFirst": "Tạo skill"
     },
-    "actions": {
-      "browse": "Duyệt mẫu"
-    },
     "chatbotTab": {
       "title": "Skills",
-      "subtitle": "Know-how agent này nạp khi cần.",
+      "subtitle": "Các quy trình agent này làm theo từng bước khi gặp việc phù hợp.",
       "addTitle": "Gắn skill",
       "selectLabel": "Chọn skill",
       "noAvailable": "Không còn skill workspace để gắn.",
@@ -62,29 +59,32 @@
       "detachError": "Gỡ skill thất bại",
       "updateError": "Cập nhật skill thất bại",
       "loadError": "Tải skill thất bại",
-      "empty": "Gắn skill để agent này biết cách xử lý những việc cụ thể.",
+      "empty": "Gắn skill để agent này biết các bước cần làm cho từng việc.",
       "emptyTitle": "Chưa gắn skill nào"
     },
     "form": {
       "namePlaceholder": "vd: Chính sách hoàn tiền",
-      "descriptionHint": "Gợi ý ngắn, cho agent biết khi nào nạp skill này.",
       "instructions": "Hướng dẫn",
-      "instructionsHint": "Nội dung markdown đầy đủ, nạp khi skill phù hợp.",
-      "importHint": "Kéo thả file .md vào đây hoặc bấm để nhập"
-    },
-    "browse": {
-      "title": "Duyệt mẫu",
-      "subtitle": "Sao chép mẫu có sẵn về workspace rồi tùy biến.",
-      "searchPlaceholder": "Tìm mẫu",
-      "pageInfo": "Trang {{page}}/{{totalPage}}"
-    },
-    "copy": {
-      "title": "Sao chép skill",
-      "subtitle": "Xem lại và chỉnh sửa hướng dẫn, rồi tạo bản sao của bạn."
+      "instructionsHint": "Các bước agent làm theo, đúng thứ tự, khi skill này phù hợp.",
+      "whenToUse": "Khi nào dùng",
+      "whenToUseHint": "Cho agent biết khi nào nạp skill này. Nêu những yêu cầu của khách mà skill xử lý.",
+      "whenToUsePlaceholder": "vd: Khi khách muốn đổi trả hoặc hoàn tiền đơn hàng",
+      "guardrails": "Quy tắc",
+      "guardrailsHint": "Những quy tắc agent luôn giữ khi dùng skill này.",
+      "guardrailPlaceholder": "vd: Không hứa hoàn tiền trước khi kiểm tra đơn hàng",
+      "addGuardrail": "Thêm quy tắc",
+      "removeGuardrail": "Xoá quy tắc",
+      "stepsHint": "Skill này được viết theo các bước. Trình chỉnh sửa các bước sẽ có sớm; hiện tại bạn có thể chuyển sang dạng văn bản để sửa.",
+      "toText": {
+        "title": "Chuyển sang dạng văn bản?",
+        "description": "Các bước sẽ thành hướng dẫn dạng văn bản, còn quy tắc vẫn giữ nguyên. Bạn không thể chuyển văn bản ngược lại thành các bước.",
+        "confirm": "Chuyển sang văn bản",
+        "action": "Chuyển sang dạng văn bản"
+      }
     },
     "create": {
       "title": "Tạo skill",
-      "subtitle": "Viết hướng dẫn agent sẽ làm theo khi skill này phù hợp.",
+      "subtitle": "Viết một quy trình: các bước agent làm theo khi skill này phù hợp.",
       "success": "Đã tạo skill",
       "error": "Tạo skill thất bại",
       "attachedSuccess": "Đã tạo skill và thêm vào agent",
@@ -92,7 +92,7 @@
     },
     "edit": {
       "title": "Sửa skill",
-      "subtitle": "Cập nhật hướng dẫn của skill.",
+      "subtitle": "Cập nhật các bước agent làm theo khi skill này phù hợp.",
       "success": "Đã cập nhật skill",
       "error": "Cập nhật skill thất bại"
     },
@@ -113,6 +113,35 @@
         "createdAt": "Ngày tạo",
         "updatedAt": "Ngày cập nhật"
       }
+    },
+    "steps": {
+      "ask": "Hỏi",
+      "say": "Nói",
+      "tell": "Dặn",
+      "tool": "Công cụ",
+      "if": "Nếu",
+      "elseIf": "Nếu không, nếu",
+      "else": "Nếu không",
+      "unknownTool": "Công cụ không rõ",
+      "builtin": {
+        "handoff": "Chuyển cho nhân viên",
+        "notify_team": "Báo cho đội ngũ",
+        "add_tag": "Gắn tag",
+        "remove_tag": "Gỡ tag",
+        "schedule_followup": "Hẹn nhắn lại",
+        "save_customer_field": "Lưu thông tin khách"
+      }
+    },
+    "start": {
+      "title": "Bắt đầu với",
+      "import": "Nhập file",
+      "error": "Không tải được mẫu này"
+    },
+    "usage": {
+      "usedBy": "Được dùng bởi",
+      "notAttached": "Chưa có agent nào dùng skill này.",
+      "missingTool": "Agent này chưa có {{tool}}, nên bước đó sẽ không chạy được.",
+      "uses": "Sử dụng"
     }
   },
   "app": {

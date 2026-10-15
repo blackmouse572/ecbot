@@ -28,7 +28,7 @@
       }
     },
     "title": "Skills",
-    "subtitle": "Reusable know-how the agent loads on demand.",
+    "subtitle": "Procedures that guide the agent step by step through a task.",
     "builtin": "Builtin",
     "tabs": {
       "mySkills": "My skills",
@@ -39,7 +39,7 @@
       "inactive": "Inactive"
     },
     "list": {
-      "noRecordsMessage": "Skills teach your agents how to handle specific tasks. Create one, or start from a template.",
+      "noRecordsMessage": "A skill is a procedure: the steps your agent follows to handle a task, like a refund or a booking. Create one, or start from a template.",
       "noTemplates": "No templates available.",
       "filters": {
         "source": "Source"
@@ -47,12 +47,9 @@
       "noRecordsTitle": "No skills yet",
       "createFirst": "Create skill"
     },
-    "actions": {
-      "browse": "Browse templates"
-    },
     "chatbotTab": {
       "title": "Skills",
-      "subtitle": "Know-how this agent can load on demand.",
+      "subtitle": "Procedures this agent follows step by step when a task comes up.",
       "addTitle": "Attach a skill",
       "selectLabel": "Select a skill",
       "noAvailable": "No more workspace skills to attach.",
@@ -62,29 +59,32 @@
       "detachError": "Failed to detach skill",
       "updateError": "Failed to update skill",
       "loadError": "Failed to load skills",
-      "empty": "Attach a skill so this agent knows how to handle specific tasks.",
+      "empty": "Attach a skill so this agent knows the steps to follow for a task.",
       "emptyTitle": "No skills attached yet"
     },
     "form": {
       "namePlaceholder": "e.g. Refund policy",
-      "descriptionHint": "Short trigger hint that tells the agent when to load this skill.",
       "instructions": "Instructions",
-      "instructionsHint": "Full markdown instructions loaded when the skill applies.",
-      "importHint": "Drop a .md file here or click to import"
-    },
-    "browse": {
-      "title": "Browse templates",
-      "subtitle": "Copy a builtin template into your workspace, then customize it.",
-      "searchPlaceholder": "Search templates",
-      "pageInfo": "Page {{page}} of {{totalPage}}"
-    },
-    "copy": {
-      "title": "Copy skill",
-      "subtitle": "Review and edit the instructions, then create your own copy."
+      "instructionsHint": "The steps the agent follows, in order, when this skill applies.",
+      "whenToUse": "When to use",
+      "whenToUseHint": "Tells the agent when to load this skill. Name the customer requests it covers.",
+      "whenToUsePlaceholder": "e.g. When a customer asks to return or refund an order",
+      "guardrails": "Guardrails",
+      "guardrailsHint": "Rules the agent always keeps while using this skill.",
+      "guardrailPlaceholder": "e.g. Never promise a refund before checking the order",
+      "addGuardrail": "Add guardrail",
+      "removeGuardrail": "Remove guardrail",
+      "stepsHint": "This skill is written as steps. A steps editor is coming soon; for now you can turn it into text and edit that.",
+      "toText": {
+        "title": "Write as text instead?",
+        "description": "The steps become plain text instructions, and the guardrails stay as they are. You cannot turn the text back into steps.",
+        "confirm": "Write as text",
+        "action": "Write as text instead"
+      }
     },
     "create": {
       "title": "Create skill",
-      "subtitle": "Write instructions the agent will follow when this skill applies.",
+      "subtitle": "Write a procedure: the steps the agent follows when this skill applies.",
       "success": "Skill created",
       "error": "Failed to create skill",
       "attachedSuccess": "Skill created and added to the agent",
@@ -92,7 +92,7 @@
     },
     "edit": {
       "title": "Edit skill",
-      "subtitle": "Update the skill's instructions.",
+      "subtitle": "Update the steps the agent follows when this skill applies.",
       "success": "Skill updated",
       "error": "Failed to update skill"
     },
@@ -113,6 +113,35 @@
         "createdAt": "Created",
         "updatedAt": "Updated"
       }
+    },
+    "steps": {
+      "ask": "Ask",
+      "say": "Say",
+      "tell": "Tell",
+      "tool": "Tool",
+      "if": "If",
+      "elseIf": "Else if",
+      "else": "Else",
+      "unknownTool": "Unknown tool",
+      "builtin": {
+        "handoff": "Hand off to staff",
+        "notify_team": "Notify the team",
+        "add_tag": "Add tag",
+        "remove_tag": "Remove tag",
+        "schedule_followup": "Schedule a follow-up",
+        "save_customer_field": "Save customer info"
+      }
+    },
+    "start": {
+      "title": "Get started with",
+      "import": "Import file",
+      "error": "Could not load this template"
+    },
+    "usage": {
+      "usedBy": "Used by",
+      "notAttached": "No agent uses this skill yet.",
+      "missingTool": "This agent does not have {{tool}}, so that step will not work.",
+      "uses": "Uses"
     }
   },
   "app": {
