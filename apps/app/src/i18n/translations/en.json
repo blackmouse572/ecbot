@@ -810,7 +810,7 @@
       "clone": "cloned agent <link/>"
     },
     "member": {
-      "invite": "invited member <link/>",
+      "invite": "sent an invitation to join the workspace",
       "remove": "removed member <link/>",
       "approve": "approved member <link/>"
     },

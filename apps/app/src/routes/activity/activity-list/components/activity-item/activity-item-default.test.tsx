@@ -66,6 +66,20 @@ describe("ActivityItemDefault", () => {
     ).toContain("deleted VIP");
   });
 
+  // The audit log keeps only the invitation id, never the invitee email.
+  it("says an invitation was sent, with no blank name", async () => {
+    const item = activity("INVITATION", "invite_member", { id: "i1" });
+    expect(renderItem(item)).toContain(
+      "Lan\u00a0sent an invitation to join the workspace",
+    );
+
+    await i18n.changeLanguage("vi");
+    expect(renderItem(item)).toContain(
+      "Lan\u00a0đã gửi lời mời tham gia không gian làm việc",
+    );
+    await i18n.changeLanguage("en");
+  });
+
   it("names the workspace a member joined", () => {
     expect(
       renderItem(

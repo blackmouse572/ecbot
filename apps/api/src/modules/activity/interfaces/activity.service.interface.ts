@@ -12,9 +12,7 @@ import {
     IActivityEntity,
 } from 'src/modules/activity/interfaces/activity.interface';
 import { ActivityDoc } from 'src/modules/activity/repository/entities/activity.entity';
-import { ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
-import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 
 export interface IActivityService {
     findAll(
@@ -50,12 +48,6 @@ export interface IActivityService {
         body: ActivityCreateByAdminResponse,
         options?: IDatabaseCreateOptions
     ): Promise<ActivityDoc>;
-    createView(
-        userId: string,
-        workspace: WorkspaceEntity,
-        subject: ENUM_POLICY_SUBJECT,
-        metadata: Record<string, any> & { id: string }
-    ): Promise<void>;
     mapList(
         userHistories: IActivityDoc[] | IActivityEntity[]
     ): ActivityListResponseDto[];
