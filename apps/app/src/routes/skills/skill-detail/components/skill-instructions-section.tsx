@@ -31,7 +31,13 @@ export const SkillInstructionsSection = ({ skill, toolLabel }: Props) => {
 
   const handleSave = async () => {
     try {
-      await updateSkill({ instructions: draft });
+      // Saving the text keeps (or makes) the skill a CONTENT skill. A STEPS
+      // skill's text is its compiled body, which already holds its rules.
+      await updateSkill({
+        format: "CONTENT",
+        instructions: draft,
+        ...(skill.format === "STEPS" && { guardrails: [] }),
+      });
       toast.success(t("skills.edit.success"));
       setEditing(false);
     } catch {

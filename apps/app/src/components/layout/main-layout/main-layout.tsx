@@ -38,6 +38,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useWorkspaceAbilities } from "@/modules/auth";
 import { ROUTES } from "@/routes";
 import { enterpriseNavItems } from "@/routes/enterprise.nav";
+import { WorkspaceSuspended } from "./workspace-suspended";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
 
 // The type of the nested nav entries used in the workspace nav group below
@@ -49,14 +50,22 @@ export type WorkspaceNavItem = NonNullable<INavItem["items"]>[number];
 export const MainLayout = () => {
   const { t } = useTranslation();
   // Ensure we have a valid workspace
-  const { workspace, isLoading, hasWorkspaces } = useEnsureWorkspace();
+  const { workspace, isLoading, hasWorkspaces, isSuspended } =
+    useEnsureWorkspace();
   const { workspaces } = useWorkspaceList();
+  const { workspaceSlug } = useWorkspaceParams();
   if (isLoading) {
     return <LogoBoxSpinner />;
   }
 
   if (!hasWorkspaces) {
     return <Navigate to={ROUTES.Onboard} replace />;
+  }
+
+  if (isSuspended) {
+    return (
+      <WorkspaceSuspended workspaces={workspaces} currentSlug={workspaceSlug} />
+    );
   }
 
   return (

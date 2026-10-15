@@ -247,7 +247,9 @@
         "empty": "You're all caught up",
         "markAllAsRead": "Mark all as read",
         "emptyHint": "New updates from your workspaces show up here, like a customer who needs a person or a new join request.",
-        "unreadLabel": "Notifications, {{count}} unread"
+        "unreadLabel": "Notifications, {{count}} unread",
+        "newMany": "{{count}} new notifications",
+        "view": "View"
       },
       "actions": {
         "logout": "Log Out"
@@ -880,7 +882,7 @@
       "clone": "cloned agent <link/>"
     },
     "member": {
-      "invite": "invited member <link/>",
+      "invite": "sent an invitation to join the workspace",
       "remove": "removed member <link/>",
       "approve": "approved member <link/>"
     },
@@ -1354,6 +1356,11 @@
       "customCollectRemove": "Remove {{label}}",
       "customCollectLimit": "You can add up to {{count}} fields.",
       "customCollectOther": "Other",
+      "customAddressSelf": "Agent calls itself",
+      "customAddressSelfPlaceholder": "e.g. Shop",
+      "customAddressCustomer": "Agent calls the customer",
+      "customAddressCustomerPlaceholder": "e.g. ba mẹ",
+      "customAddressMissing": "Fill in both words.",
       "activateNow": "Activate now",
       "activateLater": "Later",
       "activateAsk": "Turn your agent on now so it starts replying to customers? You can keep answering the remaining questions either way."
@@ -2233,6 +2240,11 @@
     "avatar": {
       "custom": "Custom avatar",
       "default": "Default avatar"
+    },
+    "suspended": {
+      "title": "This workspace is suspended",
+      "description": "An admin has suspended this workspace, so its agents no longer reply and it can't be opened. Your data is kept. Contact support to restore access.",
+      "goTo": "Go to {{name}}"
     }
   },
   "subscription": {
@@ -2430,6 +2442,12 @@
       },
       "process": {
         "label": "Process"
+      },
+      "tag": {
+        "label": "Add tags",
+        "title": "Add tags",
+        "description": "Add tags to {{count}} knowledge item(s).",
+        "hint": "Existing tags on each item are kept."
       }
     },
     "title": "Knowledge Base",
@@ -2539,7 +2557,13 @@
       "processQueued": "Queued for processing"
     },
     "link": {
-      "title": "Add Knowledge Item"
+      "title": "Add Knowledge Item",
+      "description": "Pick the knowledge items this agent can use.",
+      "searchPlaceholder": "Search by title",
+      "selected": "{{count}} selected",
+      "selectAllMatching": "Select all matching",
+      "addCount": "Add {{count}}",
+      "selectionTruncated": "Too many items match. Selected the first {{count}}; narrow the filter to pick the rest."
     },
     "selectItem": "Select Item",
     "error": {
@@ -2557,6 +2581,8 @@
     }
   },
   "knowledge_item": {
+    "processingDone": "Knowledge is ready",
+    "processingFailed": "Could not process this knowledge item",
     "ingestErrors": {
       "urlNotPublic": "This page is not public. Use a link anyone can open on the internet, not localhost or a private network address.",
       "urlFetchFailed": "Could not read this page. Check that the link opens in a browser without signing in, then process it again.",

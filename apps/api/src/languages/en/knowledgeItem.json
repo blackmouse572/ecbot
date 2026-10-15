@@ -6,7 +6,10 @@
     "delete": "Knowledge item deleted successfully.",
     "batchDelete": "Knowledge items deleted successfully.",
     "batchProcess": "Knowledge items queued for processing.",
+    "batchTag": "Tags added to the knowledge items.",
+    "batchLink": "Knowledge items linked to the chatbot.",
     "error": {
+        "batchTarget": "Send either ids or a filter, not both. A filter also needs the knowledge base it applies to.",
         "notFound": "Knowledge item not found.",
         "processing": "This item is already being processed.",
         "fileRequired": "Attach a file to create a file item.",

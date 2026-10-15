@@ -137,3 +137,6 @@ export const KB_MEDIA_PDF_MAX_BYTES = 20 * 1024 * 1024;
 export const KB_MEDIA_MAX_FILES = 50;
 /** Uploads running at once, so a big batch does not flood the API. */
 export const KB_MEDIA_UPLOAD_CONCURRENCY = 3;
+
+// Most items one "select all matching" request links; the API cuts off the rest.
+export const KB_BATCH_FILTER_MAX = 2000;

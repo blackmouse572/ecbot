@@ -13,6 +13,7 @@ import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
+import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
 
 @Injectable()
 export class EmailService implements IEmailService {
@@ -127,4 +128,6 @@ export class EmailService implements IEmailService {
 
     sendMfaChanged = (dto: EmailSendDto, data: EmailMfaChangedDto) =>
         this.delegate('sendMfaChanged', dto, data);
+    sendPaymentFailed = (dto: EmailSendDto, data: EmailPaymentFailedDto) =>
+        this.delegate('sendPaymentFailed', dto, data);
 }

@@ -1,5 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { validate } from 'class-validator';
+import { ENUM_ACTIVITY_ACTION } from '../../../../src/modules/activity/enums/activity.enum';
+import { ENUM_POLICY_SUBJECT } from '../../../../src/modules/policy/enums/policy.enum';
 import { ChatbotController } from '../../../../src/modules/chatbot/controllers/chatbot.controller';
 import {
     ENUM_CHATBOT_LANGUAGE,
@@ -70,6 +72,7 @@ const mockChatbotService = {
     mapDetails: jest.fn(),
     clone: jest.fn(),
     linkBatchAccounts: jest.fn(),
+    unarchive: jest.fn(),
 };
 
 const mockPaginationService = {
@@ -440,6 +443,45 @@ describe('ChatbotController', () => {
                 mockUser
             );
 
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('unarchive', () => {
+        it('unarchives the chatbot and logs UNARCHIVE_CHATBOT', async () => {
+            mockChatbotService.findOne.mockResolvedValue(mockChatbot);
+            mockChatbotService.mapList.mockReturnValue([
+                { id: mockChatbot.id },
+            ]);
+
+            const result = await controller.unarchive(
+                mockWorkspace,
+                mockChatbot.id,
+                mockUser
+            );
+
+            expect(mockChatbotService.unarchive).toHaveBeenCalledWith(
+                mockChatbot,
+                { actionBy: mockUser.id }
+            );
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(mockUser, mockWorkspace, {
+                action: ENUM_ACTIVITY_ACTION.UNARCHIVE_CHATBOT,
+                subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                metadata: { id: mockChatbot.id, name: mockChatbot.name },
+            });
+            expect(result.data).toEqual({ id: mockChatbot.id });
+        });
+
+        it('throws NotFoundException when chatbot does not exist', async () => {
+            mockChatbotService.findOne.mockResolvedValue(null);
+
+            await expect(
+                controller.unarchive(mockWorkspace, 'nonexistent-id', mockUser)
+            ).rejects.toThrow(NotFoundException);
             expect(
                 mockActivityService.createByUserWithWorkspace
             ).not.toHaveBeenCalled();

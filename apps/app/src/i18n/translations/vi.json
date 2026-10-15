@@ -247,7 +247,9 @@
         "empty": "Bạn đã xem hết thông báo",
         "markAllAsRead": "Đánh dấu đã đọc tất cả",
         "emptyHint": "Các cập nhật mới từ workspace sẽ hiện ở đây, ví dụ khách hàng cần người hỗ trợ hoặc có yêu cầu tham gia mới.",
-        "unreadLabel": "Thông báo, {{count}} chưa đọc"
+        "unreadLabel": "Thông báo, {{count}} chưa đọc",
+        "newMany": "{{count}} thông báo mới",
+        "view": "Xem"
       },
       "actions": {
         "logout": "Đăng xuất"
@@ -901,7 +903,7 @@
       "clone": "đã nhân bản agent <link/>"
     },
     "member": {
-      "invite": "đã mời thành viên <link/>",
+      "invite": "đã gửi lời mời tham gia không gian làm việc",
       "remove": "đã xóa thành viên <link/>",
       "approve": "đã duyệt thành viên <link/>"
     },
@@ -1397,6 +1399,11 @@
       "customCollectRemove": "Xoá {{label}}",
       "customCollectLimit": "Bạn có thể thêm tối đa {{count}} mục.",
       "customCollectOther": "Khác",
+      "customAddressSelf": "Agent xưng là",
+      "customAddressSelfPlaceholder": "Ví dụ: Shop",
+      "customAddressCustomer": "Agent gọi khách là",
+      "customAddressCustomerPlaceholder": "Ví dụ: ba mẹ",
+      "customAddressMissing": "Bạn điền đủ cả hai cách xưng hô nhé.",
       "activateNow": "Kích hoạt ngay",
       "activateLater": "Để sau",
       "activateAsk": "Kích hoạt agent ngay để agent bắt đầu trả lời khách? Dù chọn gì, bạn vẫn trả lời tiếp các câu còn lại được."
@@ -2301,6 +2308,11 @@
     "avatar": {
       "custom": "Ảnh đại diện tùy chỉnh",
       "default": "Ảnh đại diện mặc định"
+    },
+    "suspended": {
+      "title": "Workspace này đã bị tạm khoá",
+      "description": "Quản trị viên đã tạm khoá workspace này, nên agent ngừng trả lời và bạn chưa thể mở workspace. Dữ liệu vẫn được giữ nguyên. Liên hệ bộ phận hỗ trợ để mở lại.",
+      "goTo": "Chuyển đến {{name}}"
     }
   },
   "subscription": {
@@ -2478,6 +2490,12 @@
       },
       "process": {
         "label": "Xử lý"
+      },
+      "tag": {
+        "label": "Thêm thẻ",
+        "title": "Thêm thẻ",
+        "description": "Thêm thẻ cho {{count}} knowledge item.",
+        "hint": "Các thẻ đang có của từng item được giữ nguyên."
       }
     },
     "title": "Cơ sở kiến thức",
@@ -2587,7 +2605,13 @@
       "processQueued": "Đã đưa vào hàng đợi xử lý"
     },
     "link": {
-      "title": "Thêm mục kiến thức"
+      "title": "Thêm mục kiến thức",
+      "description": "Chọn các knowledge item mà agent này được dùng.",
+      "searchPlaceholder": "Tìm theo tiêu đề",
+      "selected": "Đã chọn {{count}}",
+      "selectAllMatching": "Chọn tất cả kết quả",
+      "addCount": "Thêm {{count}}",
+      "selectionTruncated": "Có quá nhiều kết quả. Đã chọn {{count}} mục đầu, hãy thu hẹp bộ lọc để chọn phần còn lại."
     },
     "selectItem": "Chọn mục",
     "error": {
@@ -2605,6 +2629,8 @@
     }
   },
   "knowledge_item": {
+    "processingDone": "Kiến thức đã sẵn sàng",
+    "processingFailed": "Không xử lý được mục kiến thức này",
     "ingestErrors": {
       "urlNotPublic": "Trang này không công khai. Hãy dùng đường link ai cũng mở được trên internet, không phải localhost hay địa chỉ mạng nội bộ.",
       "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",

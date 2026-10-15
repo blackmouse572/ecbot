@@ -63,6 +63,7 @@ import {
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import {
     KnowledgeItemWorkspaceBatchDeleteDoc,
+    KnowledgeItemWorkspaceBatchTagDoc,
     KnowledgeItemWorkspaceBatchProcessDoc,
     KnowledgeItemWorkspaceCreateDoc,
     KnowledgeItemWorkspaceDeleteDoc,
@@ -81,6 +82,7 @@ import {
     ENUM_KNOWLEDGE_BASE_ITEM_TYPE,
     ENUM_KNOWLEDGE_BASE_ITEM_TYPES,
 } from '../enums/knowledge-base-item-type.enum';
+import { KnowledgeItemBatchTagRequestDto } from '../dtos/request/knowledge-item.batch-tag.request.dto';
 import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entity';
 import { KnowledgeBaseService } from '../services/knowledge-base.service';
 import { KnowledgeIngestService } from '../services/knowledge-ingest.service';
@@ -675,6 +677,59 @@ export class KnowledgeItemWorkspaceController {
         });
 
         await this.knowledgeIngestService.enqueueMany(queued);
+
+        return { data };
+    }
+
+    @KnowledgeItemWorkspaceBatchTagDoc()
+    @Response('knowledgeItem.batchTag')
+    @WorkspacePolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Post('/batch/tag')
+    async batchTag(
+        @AuthJwtPayload<IAuthJwtAccessTokenPayload>('user', UserActiveParsePipe)
+        user: UserEntity,
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('knowledgeBaseId') knowledgeBaseId: string,
+        @Body() { ids, tags }: KnowledgeItemBatchTagRequestDto
+    ): Promise<IResponse<BatchResultResponseDto>> {
+        await this.findKnowledgeBaseOrFail(workspace, knowledgeBaseId);
+
+        const data = await runBatch(ids, async id => {
+            const item = await this.findItemOrFail(knowledgeBaseId, id);
+            const session = this.em.fork();
+            await session.begin();
+
+            try {
+                await this.knowledgeItemService.addTags(item.id, tags, {
+                    em: session,
+                    actionBy: user.id,
+                });
+                await this.activityService.createByUser(
+                    user,
+                    {
+                        action: ENUM_ACTIVITY_ACTION.UPDATE,
+                        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+                        metadata: {
+                            knowledgeBaseId,
+                            itemId: item.id,
+                            itemType: item.type,
+                            itemTitle: item.title,
+                        },
+                    },
+                    { em: session }
+                );
+                await session.commit();
+            } catch (err: unknown) {
+                await session.rollback();
+                throw err;
+            }
+        });
 
         return { data };
     }

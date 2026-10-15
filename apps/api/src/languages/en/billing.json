@@ -16,7 +16,8 @@
         "list": "Subscriptions retrieved successfully.",
         "cancel": "Subscription canceled successfully.",
         "resume": "Subscription resumed successfully.",
-        "changePlan": "Subscription plan changed successfully."
+        "changePlan": "Subscription plan changed successfully.",
+        "paymentMethod": "Payment method update started successfully."
     },
     "checkout": {
         "providers": "Checkout providers retrieved successfully.",
@@ -43,6 +44,7 @@
         "subscriptionAlreadyPaid": "This workspace already has a paid subscription. Change its plan instead of checking out again.",
         "paymentOrderNotFound": "Payment order not found.",
         "providerRequestFailed": "The payment provider refused the request. Nothing was changed.",
-        "subscriptionNotSelfServe": "This change is not available on your current plan. Contact us and we will help."
+        "subscriptionNotSelfServe": "This change is not available on your current plan. Contact us and we will help.",
+        "subscriptionNotPastDue": "This subscription has no payment to fix."
     }
 }
