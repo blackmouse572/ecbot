@@ -10,6 +10,8 @@ import { HelperDateService } from 'src/common/helper/services/helper.date.servic
 import { IRequestApp } from 'src/common/request/interfaces/request.interface';
 import { ENUM_CLIENT_CREDENTIAL_STATUS_CODE_ERROR } from 'src/modules/client-credential/enums/client-credential.status-code.enum';
 import { ClientCredentialService } from 'src/modules/client-credential/services/client-credential.service';
+import { ENUM_WORKSPACE_STATUS } from 'src/modules/workspace/enums/workspace.enum';
+import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from 'src/modules/workspace/enums/workspace.status-code.enum';
 
 // Authenticates a 3rd-party request on the /client surface via x-api-key
 // (value = `key:secret`) and derives the owning Workspace from the credential
@@ -100,6 +102,13 @@ export class ClientCredentialGuard implements CanActivate {
                 statusCode:
                     ENUM_CLIENT_CREDENTIAL_STATUS_CODE_ERROR.X_API_KEY_INVALID,
                 message: 'clientCredential.error.xApiKey.invalid',
+            });
+        }
+
+        if (credential.workspace.status === ENUM_WORKSPACE_STATUS.SUSPENDED) {
+            throw new ForbiddenException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.SUSPENDED,
+                message: 'workspace.error.suspended',
             });
         }
 

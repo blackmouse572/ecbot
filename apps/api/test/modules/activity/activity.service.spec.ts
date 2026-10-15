@@ -3,7 +3,7 @@ import { ActivityService } from '../../../src/modules/activity/services/activity
 import { ENUM_POLICY_SUBJECT } from '../../../src/modules/policy/enums/policy.enum';
 
 describe('ActivityService.mapList', () => {
-    const build = () => new ActivityService({} as any, {} as any, {} as any);
+    const build = () => new ActivityService({} as any, {} as any);
 
     const entity = () => ({
         id: 'act1',
@@ -89,16 +89,6 @@ describe('ActivityService request context', () => {
         }),
     });
     const cls = (request?: any) => ({ get: jest.fn(() => request) });
-    // In-memory stand-in for the Redis-backed cache-manager store.
-    const cache = () => {
-        const store = new Map<string, unknown>();
-        return {
-            get: jest.fn(async (key: string) => store.get(key)),
-            set: jest.fn(async (key: string, value: unknown) => {
-                store.set(key, value);
-            }),
-        };
-    };
     const request = {
         ip: '203.0.113.7',
         headers: { 'user-agent': 'Mozilla/5.0 Test' },
@@ -110,8 +100,7 @@ describe('ActivityService request context', () => {
     it('stamps ip and user agent from the current request on createByUser', async () => {
         const service = new ActivityService(
             repository() as any,
-            cls(request) as any,
-            cache() as any
+            cls(request) as any
         );
 
         const entity = await service.createByUser(user, create);
@@ -123,8 +112,7 @@ describe('ActivityService request context', () => {
     it('stamps ip and user agent on createByAdmin and createByUserWithWorkspace', async () => {
         const service = new ActivityService(
             repository() as any,
-            cls(request) as any,
-            cache() as any
+            cls(request) as any
         );
 
         const byAdmin = await service.createByAdmin(user, 'admin-1', create);
@@ -141,128 +129,13 @@ describe('ActivityService request context', () => {
     it('leaves ip and user agent empty outside a request (seeds, workers)', async () => {
         const service = new ActivityService(
             repository() as any,
-            cls(undefined) as any,
-            cache() as any
+            cls(undefined) as any
         );
 
         const entity = await service.createByUser(user, create);
 
         expect(entity.ipAddress).toBeUndefined();
         expect(entity.userAgent).toBeUndefined();
-    });
-
-    it('records a VIEW of a workspace record with one insert and no user lookup', async () => {
-        const repo = repository();
-        const service = new ActivityService(
-            repo as any,
-            cls(request) as any,
-            cache() as any
-        );
-
-        await service.createView('u1', workspace, 'CUSTOMER' as any, {
-            id: 'cust-1',
-        });
-
-        expect(repo.create).toHaveBeenCalledTimes(1);
-        expect(repo.create.mock.calls[0][0]).toMatchObject({
-            action: 'view',
-            subject: 'CUSTOMER',
-            metadata: { id: 'cust-1' },
-            user: { id: 'u1' },
-            by: { id: 'u1' },
-            workspace,
-            ipAddress: '203.0.113.7',
-        });
-    });
-
-    it('records one VIEW per actor, workspace and record within the dedupe window', async () => {
-        const repo = repository();
-        const store = cache();
-        const service = new ActivityService(
-            repo as any,
-            cls(request) as any,
-            store as any
-        );
-
-        // The SPA polls messages every 5s: only the first read is written.
-        await service.createView('u1', workspace, 'CONVERSATION' as any, {
-            id: 'conv-1',
-            resource: 'messages',
-        });
-        await service.createView('u1', workspace, 'CONVERSATION' as any, {
-            id: 'conv-1',
-            resource: 'messages',
-        });
-        await service.createView('u2', workspace, 'CONVERSATION' as any, {
-            id: 'conv-1',
-        });
-
-        expect(repo.create).toHaveBeenCalledTimes(2);
-        expect(store.set).toHaveBeenCalledWith(
-            expect.any(String),
-            true,
-            10 * 60 * 1000
-        );
-    });
-
-    // Opening a conversation reads its detail and its messages: both count.
-    it('dedupes the messages read apart from the detail read', async () => {
-        const repo = repository();
-        const service = new ActivityService(
-            repo as any,
-            cls(request) as any,
-            cache() as any
-        );
-
-        await service.createView('u1', workspace, 'CONVERSATION' as any, {
-            id: 'conv-1',
-        });
-        await service.createView('u1', workspace, 'CONVERSATION' as any, {
-            id: 'conv-1',
-            resource: 'messages',
-        });
-
-        expect(repo.create).toHaveBeenCalledTimes(2);
-    });
-
-    it('still records the VIEW when the dedupe cache is down', async () => {
-        const repo = repository();
-        const store = cache();
-        store.get.mockRejectedValueOnce(new Error('redis down'));
-        const service = new ActivityService(
-            repo as any,
-            cls(request) as any,
-            store as any
-        );
-
-        await service.createView('u1', workspace, 'CUSTOMER' as any, {
-            id: 'cust-1',
-        });
-
-        expect(repo.create).toHaveBeenCalledTimes(1);
-    });
-
-    it('never fails the read when the VIEW cannot be written', async () => {
-        const repo = repository();
-        repo.create.mockRejectedValueOnce(new Error('db down'));
-        const store = cache();
-        store.get.mockRejectedValueOnce(new Error('redis down'));
-        const service = new ActivityService(
-            repo as any,
-            cls(request) as any,
-            store as any
-        );
-
-        await expect(
-            service.createView('u1', workspace, 'CUSTOMER' as any, {
-                id: 'cust-1',
-            })
-        ).resolves.toBeUndefined();
-        await expect(
-            service.createView('u1', workspace, 'CUSTOMER' as any, {
-                id: 'cust-1',
-            })
-        ).resolves.toBeUndefined();
     });
 
     it('attributes entries made during impersonation to the admin', async () => {
@@ -272,20 +145,11 @@ describe('ActivityService request context', () => {
             cls({
                 ...request,
                 user: { user: 'u1', impersonatedBy: 'admin-1' },
-            }) as any,
-            cache() as any
+            }) as any
         );
 
-        await service.createView('u1', workspace, 'CUSTOMER' as any, {
-            id: 'cust-1',
-        });
         const entity = await service.createByUser(user, create);
 
-        expect(repo.create.mock.calls[0][0]).toMatchObject({
-            user: { id: 'u1' },
-            by: { id: 'admin-1' },
-            metadata: { id: 'cust-1', impersonatedBy: 'admin-1' },
-        });
         expect(entity).toMatchObject({
             user: { id: 'u1' },
             by: { id: 'admin-1' },
@@ -299,8 +163,7 @@ describe('ActivityService request context', () => {
             cls({
                 ...request,
                 headers: { 'user-agent': 'x'.repeat(5000) },
-            }) as any,
-            cache() as any
+            }) as any
         );
 
         const entity = await service.createByUser(user, create);
@@ -320,8 +183,7 @@ describe('ActivityService.createByAdminWithWorkspace', () => {
                 }),
             } as any,
             // No request context: `build` reads only `cls.get`.
-            { get: () => undefined } as any,
-            {} as any
+            { get: () => undefined } as any
         );
         const owner = { id: 'u-owner' } as any;
         const workspace = { id: 'w1' } as any;

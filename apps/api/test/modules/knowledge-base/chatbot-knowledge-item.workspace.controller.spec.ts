@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ChatbotKnowledgeItemWorkspaceController } from '@app/modules/knowledge-base/controllers/chatbot-knowledge-item.workspace.controller';
 
 describe('ChatbotKnowledgeItemWorkspaceController.link', () => {
@@ -91,5 +91,125 @@ describe('ChatbotKnowledgeItemWorkspaceController.link', () => {
             chatbotKnowledgeItemService.syncChatbotLinks.mock
                 .invocationCallOrder[0]
         );
+    });
+});
+
+describe('ChatbotKnowledgeItemWorkspaceController.batchLink', () => {
+    const user = { id: 'user-1' } as any;
+    const workspace = { id: 'workspace-1' } as any;
+
+    const build = (items: Record<string, any>) => {
+        const chatbotService = {
+            findOne: jest.fn().mockResolvedValue({ id: 'chatbot-1' }),
+        };
+        const service = {
+            linkItem: jest.fn().mockResolvedValue({ id: 'link' }),
+            syncChatbotLinks: jest.fn().mockResolvedValue(undefined),
+        };
+        const session = {
+            begin: jest.fn(),
+            commit: jest.fn(),
+            rollback: jest.fn(),
+            getRepository: jest.fn(() => ({
+                findOne: jest.fn(async ({ id }: { id: string }) => items[id]),
+            })),
+        };
+        // Stands in for the real filter lookup: a filter matches a, b and c.
+        const knowledgeItemService = {
+            resolveBatchTarget: jest.fn(async (_w: string, t: any) => ({
+                ids: t.ids ?? ['a', 'b', 'c'],
+                truncated: !t.ids && t.filter.search === 'many',
+            })),
+        };
+        const controller = new ChatbotKnowledgeItemWorkspaceController(
+            { fork: () => session } as any,
+            chatbotService as any,
+            knowledgeItemService as any,
+            service as any,
+            {} as any,
+            { createByUser: jest.fn() } as any
+        );
+        return { controller, service, chatbotService, knowledgeItemService };
+    };
+
+    it('links each item once and reports foreign items as failed', async () => {
+        const { controller, service } = build({
+            a: { id: 'a', knowledgeBase: { workspace: { id: 'workspace-1' } } },
+            b: { id: 'b', knowledgeBase: { workspace: { id: 'other' } } },
+        });
+
+        const { data } = await controller.batchLink(
+            user,
+            workspace,
+            'chatbot-1',
+            { ids: ['a', 'b'] }
+        );
+
+        expect(data.succeeded).toEqual(['a']);
+        expect(data.failed.map(f => f.id)).toEqual(['b']);
+        expect(service.linkItem).toHaveBeenCalledTimes(1);
+        expect(service.syncChatbotLinks).toHaveBeenCalledTimes(1);
+        expect(service.syncChatbotLinks).toHaveBeenCalledWith('a');
+    });
+
+    it('counts an item that is already linked as done, without a second sync', async () => {
+        const { controller, service } = build({
+            a: { id: 'a', knowledgeBase: { workspace: { id: 'workspace-1' } } },
+        });
+        service.linkItem.mockRejectedValue(new ConflictException('linked'));
+
+        const { data } = await controller.batchLink(
+            user,
+            workspace,
+            'chatbot-1',
+            { ids: ['a'] }
+        );
+
+        expect(data).toEqual({
+            succeeded: ['a'],
+            failed: [],
+            truncated: false,
+        });
+        expect(service.syncChatbotLinks).not.toHaveBeenCalled();
+    });
+
+    it('links every item a filter matches in one request and reports truncation', async () => {
+        const item = (id: string) => ({
+            id,
+            knowledgeBase: { workspace: { id: 'workspace-1' } },
+        });
+        const { controller, service, knowledgeItemService } = build({
+            a: item('a'),
+            b: item('b'),
+            c: item('c'),
+        });
+        const body = {
+            knowledgeBaseId: 'kb-1',
+            filter: { search: 'many', tags: ['menu'] },
+        };
+
+        const { data } = await controller.batchLink(
+            user,
+            workspace,
+            'chatbot-1',
+            body
+        );
+
+        expect(knowledgeItemService.resolveBatchTarget).toHaveBeenCalledWith(
+            'workspace-1',
+            body
+        );
+        expect(data.succeeded).toEqual(['a', 'b', 'c']);
+        expect(data.truncated).toBe(true);
+        expect(service.linkItem).toHaveBeenCalledTimes(3);
+    });
+
+    it('404s when the chatbot is not in the workspace', async () => {
+        const { controller, chatbotService } = build({});
+        chatbotService.findOne.mockResolvedValue(null);
+
+        await expect(
+            controller.batchLink(user, workspace, 'nope', { ids: ['a'] })
+        ).rejects.toThrow(NotFoundException);
     });
 });

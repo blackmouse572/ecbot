@@ -1,4 +1,4 @@
-import { TURNED_OFF_CHATBOT_STATUSES } from '@app/modules/platform/constants/turned-off-chatbot.constant';
+import { isAgentSilenced } from '@app/modules/platform/utils/agent-silenced.util';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { botImage } from '@app/modules/conversation/utils/message-attachment';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
@@ -127,9 +127,9 @@ export class WidgetChatService {
             return;
         }
 
-        // A turned-off agent keeps the inbox but does not answer, as on
-        // platform channels.
-        if (TURNED_OFF_CHATBOT_STATUSES.includes(chatbot.status)) {
+        // A turned-off agent, or one in a suspended workspace, keeps the inbox
+        // but does not answer, as on platform channels.
+        if (isAgentSilenced(chatbot, account.workspace)) {
             this.endStreamQuietly(res);
             return;
         }

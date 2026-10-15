@@ -5,7 +5,7 @@ import {
 } from "./libraries";
 import { WEEKDAYS } from "./opening-hours";
 import { PRESETS } from "./presets";
-import { applyPreset, type AgentProfile } from "./profile";
+import { applyPreset, type AgentProfile, type CustomAddressStyle } from "./profile";
 
 export type QuestionKind = "single" | "multi" | "text" | "boolean" | "hours";
 export type QuestionPath = { field: Exclude<keyof AgentProfile, "facts"> } | { field: "facts"; fact: FactId };
@@ -162,6 +162,8 @@ const COLLECT_IDS = new Set<string>(COLLECT.map((c) => c.id));
 export function readAnswer(profile: AgentProfile, path: QuestionPath): unknown {
   if (path.field === "facts") return profile.facts[path.fact] ?? "";
   if (path.field === "collect") return [...profile.collect, ...(profile.customCollect ?? [])];
+  // A custom address style answers with its two words instead of an id (#157).
+  if (path.field === "addressStyle" && profile.addressStyle === "custom") return profile.customAddressStyle;
   return profile[path.field];
 }
 
@@ -175,6 +177,12 @@ export function writeAnswer(profile: AgentProfile, path: QuestionPath, value: un
       collect: values.filter((v) => COLLECT_IDS.has(v)) as CollectId[],
       customCollect: values.filter((v) => !COLLECT_IDS.has(v)),
     };
+  }
+  if (path.field === "addressStyle") {
+    const { customAddressStyle: _, ...rest } = profile;
+    return typeof value === "object" && value
+      ? { ...rest, addressStyle: "custom", customAddressStyle: value as CustomAddressStyle }
+      : { ...rest, addressStyle: value as AgentProfile["addressStyle"] };
   }
   return { ...profile, [path.field]: value } as AgentProfile;
 }

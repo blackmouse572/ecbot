@@ -14,4 +14,5 @@ export enum EmailSubject {
     Handoff = 'A customer needs a person',
     MemberJoined = 'New workspace member',
     MfaChanged = 'Two-step verification changed',
+    PaymentFailed = 'Payment failed',
 }

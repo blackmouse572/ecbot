@@ -1,4 +1,3 @@
-import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { EntityManager } from '@mikro-orm/postgresql';
@@ -260,23 +259,6 @@ describe('AuthPublicController MFA login', () => {
             );
             expect(storedAttempts).toBe(0);
         });
-
-        it.each(['totp', 'recovery'])(
-            'records the %s method on the LOGIN activity, without the email',
-            async method => {
-                mfaService.verify.mockResolvedValue(method);
-
-                await mfaLogin();
-
-                expect(activityService.createByUser).toHaveBeenCalledWith(
-                    mfaUser,
-                    expect.objectContaining({
-                        action: ENUM_ACTIVITY_ACTION.LOGIN,
-                        metadata: { id: 'user-mfa', method },
-                    })
-                );
-            }
-        );
 
         it('rejects an unknown or expired challenge', async () => {
             storedChallenge = null;

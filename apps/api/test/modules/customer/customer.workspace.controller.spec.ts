@@ -40,7 +40,6 @@ const mockMergeSuggestionService = {
 
 const mockActivityService = {
     createByUserWithWorkspace: jest.fn(),
-    createView: jest.fn(),
 };
 
 const mockErasureService = {
@@ -178,8 +177,7 @@ describe('CustomerWorkspaceController', () => {
 
             const result = await controller.get(
                 { id: 'ws-1' } as any,
-                'cust-1',
-                'user-1'
+                'cust-1'
             );
 
             // BOLA-safe lookup: service is asked for (id, workspaceId), never id alone.
@@ -192,36 +190,15 @@ describe('CustomerWorkspaceController', () => {
             expect(result).toEqual({ data: mappedDto });
         });
 
-        it('records a VIEW of the customer in the audit trail', async () => {
-            mockCustomerService.findOneByIdInWorkspace.mockResolvedValue(
-                customerEntity
-            );
-            const workspace = { id: 'ws-1' } as any;
-
-            await controller.get(workspace, 'cust-1', 'user-1');
-
-            expect(mockActivityService.createView).toHaveBeenCalledWith(
-                'user-1',
-                workspace,
-                ENUM_POLICY_SUBJECT.CUSTOMER,
-                { id: 'cust-1' }
-            );
-        });
-
         it('throws NotFoundException (not 403) when the customer does not exist in this workspace — collapses missing + cross-workspace into one 404', async () => {
             mockCustomerService.findOneByIdInWorkspace.mockResolvedValue(null);
 
             await expect(
-                controller.get(
-                    { id: 'ws-1' } as any,
-                    'cust-from-other-ws',
-                    'user-1'
-                )
+                controller.get({ id: 'ws-1' } as any, 'cust-from-other-ws')
             ).rejects.toBeInstanceOf(NotFoundException);
             // The mapper must NOT be called when the workspace-scoped lookup
             // returns nothing — that's how cross-workspace access is silenced.
             expect(mockCustomerService.mapGet).not.toHaveBeenCalled();
-            expect(mockActivityService.createView).not.toHaveBeenCalled();
         });
     });
 

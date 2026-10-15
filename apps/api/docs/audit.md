@@ -53,13 +53,6 @@ The Activity module is designed to be used across the application to track impor
     });
     ```
 
-4. **Reads of personal data**: one `VIEW` row per actor, workspace, subject and record id every 10 minutes (`ACTIVITY_VIEW_DEDUPE_TTL_MS`), keyed by the JWT user id (no user lookup). Repeats inside the window cost one Redis check. `createView` never throws: a failed audit write is logged and the read still succeeds.
-    ```typescript
-    await this.activityService.createView(userId, workspace, ENUM_POLICY_SUBJECT.CUSTOMER, {
-        id: customer.id,
-    });
-    ```
-
 Audit metadata holds ids, not names or emails: the table is append-only, so
 personal data copied into it could never be erased.
 Entries that name another person keep only that person's id: member removal
@@ -85,22 +78,21 @@ When the request carries an impersonation token, `by` is the acting admin
 (`impersonatedBy` from the JWT) and `metadata.impersonatedBy` holds the same
 id, so reads in "user view mode" are never attributed to the user.
 
-### Authentication and read actions
+### What is not logged
 
-| Action | Subject | When | `metadata` |
-| --- | --- | --- | --- |
-| `login` | `AUTH` | credential, Google or Apple login succeeds | `{ id }`, plus `method: 'totp' \| 'recovery'` when MFA was used |
-| `login_failed` | `AUTH` | login rejected for an **existing** user | `{ id, reason }` |
-| `view` | `CONVERSATION` | `GET /:workspace/conversations/:id` | `{ id }` |
-| `view` | `CONVERSATION` | `GET /:workspace/conversations/:id/messages`, first page only | `{ id, resource: 'messages' }` |
-| `view` | `CUSTOMER` | `GET /:workspace/customers/:id` | `{ id }` |
+Sign-ins (successful or rejected) and reads (opening a conversation, its
+messages or a customer) write no activity. Sessions already record sign-ins,
+and these rows buried real changes in the activity list (#328). The `login`,
+`login_failed` and `view` actions were removed and their rows deleted by
+migration `20261015100000_remove_noise_activity_actions`, the one time rows
+have been deleted from `activities` (see below). List pages are not logged
+either.
 
-`reason` is one of `invalid_password`, `invalid_mfa_code`, `locked`,
-`blocked`, `inactive`, `role_inactive`, `email_not_verified`,
-`password_expired`. An unknown email
-writes nothing, and the HTTP response is unchanged (a failed audit insert is
-logged and swallowed), so the audit log does not leak which accounts exist.
-List pages are not logged.
+### Workspace invitations
+
+Inviting someone (`POST /invite-member/:workspace`) writes `invite_member`
+(subject `INVITATION`) as the inviter, with `{ id }` of the invitation. The
+invitee's email stays out: it could never be erased from the log.
 
 ### Immutability
 
@@ -126,6 +118,10 @@ The control is tamper-resistant, not tamper-proof:
   update and `CASCADE` a delete. Users and workspaces are soft-deleted or
   anonymised, never hard-deleted; the workspace soft-delete cascade in
   `WorkspaceOwnerService.delete` deliberately skips `activities`.
+- The only rows ever deleted are the `login`, `login_failed` and `view` rows
+  (#328): that migration disables `activities_append_only` around one
+  `DELETE` in its own transaction, as the table owner, and re-enables it
+  before commit, so no other session sees the trigger off.
 - There is no delete method on `ActivityService`. The user seed's `remove`
   refuses to run once audit rows exist; reset a dev database with
   `pnpm db:migrate:fresh` (drops the schema) and `pnpm db:seed`, or

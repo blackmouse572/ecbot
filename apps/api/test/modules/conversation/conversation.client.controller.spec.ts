@@ -42,7 +42,6 @@ const mockMessagingService = {
 };
 
 const mockActivityService = {
-    createView: jest.fn(),
     createByUserWithWorkspace: jest.fn(),
 };
 
@@ -200,18 +199,14 @@ describe('ConversationClientController', () => {
     });
 
     describe('get', () => {
-        it('returns the conversation and logs the view as the creator', async () => {
+        it('returns the conversation of the credential workspace', async () => {
             const conversation = { id: 'conv-1' };
             mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
                 conversation
             );
             mockConversationService.mapGet.mockReturnValue({ id: 'conv-1' });
 
-            const result = await controller.get(
-                workspace,
-                credential,
-                'conv-1'
-            );
+            const result = await controller.get(workspace, 'conv-1');
 
             expect(
                 mockConversationService.findOneByIdInWorkspace
@@ -223,24 +218,17 @@ describe('ConversationClientController', () => {
                     'contactPoint.customer',
                 ],
             });
-            expect(mockActivityService.createView).toHaveBeenCalledWith(
-                'creator-1',
-                workspace,
-                ENUM_POLICY_SUBJECT.CONVERSATION,
-                { id: 'conv-1' }
-            );
             expect(result).toEqual({ data: { id: 'conv-1' } });
         });
 
-        it('returns 404 for a conversation outside the workspace, without logging a view', async () => {
+        it('returns 404 for a conversation outside the workspace', async () => {
             mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
                 null
             );
 
             await expect(
-                controller.get(workspace, credential, 'conv-elsewhere')
+                controller.get(workspace, 'conv-elsewhere')
             ).rejects.toBeInstanceOf(NotFoundException);
-            expect(mockActivityService.createView).not.toHaveBeenCalled();
         });
     });
 
@@ -265,23 +253,13 @@ describe('ConversationClientController', () => {
             ]);
         });
 
-        it('lists messages scoped to the workspace and logs the first page as a view', async () => {
-            const result = await controller.listMessages(
-                workspace,
-                credential,
-                'conv-1'
-            );
+        it('lists messages scoped to the workspace', async () => {
+            const result = await controller.listMessages(workspace, 'conv-1');
 
             expect(mockMessagingService.listMessages).toHaveBeenCalledWith(
                 'conv-1',
                 'workspace-1',
                 { limit: 50, offset: 0 }
-            );
-            expect(mockActivityService.createView).toHaveBeenCalledWith(
-                'creator-1',
-                workspace,
-                ENUM_POLICY_SUBJECT.CONVERSATION,
-                { id: 'conv-1', resource: 'messages' }
             );
             expect(result).toEqual({
                 _pagination: { total: 2, totalPage: 1 },
@@ -289,21 +267,14 @@ describe('ConversationClientController', () => {
             });
         });
 
-        it('pages with perPage capped at 100 and logs only the first page', async () => {
-            await controller.listMessages(
-                workspace,
-                credential,
-                'conv-1',
-                3,
-                500
-            );
+        it('pages with perPage capped at 100', async () => {
+            await controller.listMessages(workspace, 'conv-1', 3, 500);
 
             expect(mockMessagingService.listMessages).toHaveBeenCalledWith(
                 'conv-1',
                 'workspace-1',
                 { limit: 100, offset: 200 }
             );
-            expect(mockActivityService.createView).not.toHaveBeenCalled();
         });
     });
 

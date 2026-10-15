@@ -1,5 +1,6 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { ClientCredentialGuard } from '../../../src/modules/client-credential/guards/client-credential.guard';
+import { ENUM_WORKSPACE_STATUS } from '../../../src/modules/workspace/enums/workspace.enum';
 
 function ctx(headers: Record<string, any>) {
     const request: any = { headers };
@@ -64,6 +65,21 @@ describe('ClientCredentialGuard', () => {
         await expect(
             guard.canActivate(ctx({ 'x-api-key': 'k:s' }))
         ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('rejects a key whose workspace an admin suspended', async () => {
+        mockService.findOneByActiveKey.mockResolvedValue({
+            isActive: true,
+            hash: 'H',
+            workspace: { ...workspace, status: ENUM_WORKSPACE_STATUS.SUSPENDED },
+        });
+        mockService.createHash.mockResolvedValue('HASHED');
+        mockService.validateHash.mockResolvedValue(true);
+        await expect(
+            guard.canActivate(ctx({ 'x-api-key': 'k:s' }))
+        ).rejects.toMatchObject({
+            response: { message: 'workspace.error.suspended' },
+        });
     });
 
     it('rejects a bad secret (hash mismatch)', async () => {
