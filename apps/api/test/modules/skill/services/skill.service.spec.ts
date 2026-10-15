@@ -383,6 +383,43 @@ describe('SkillService', () => {
             expect(created.instructions).toBeNull();
         });
 
+        it('compiles built-in actions without looking them up as workspace tools', async () => {
+            await service
+                .create(
+                    workspaceId,
+                    {
+                        name: 'Escalate',
+                        format: ENUM_SKILL_FORMAT.STEPS,
+                        steps: [
+                            { id: 'a', type: 'tool', toolId: 'http-1' },
+                            { id: 'b', type: 'tool', toolId: 'system:handoff' },
+                        ],
+                    } as CreateSkillRequestDto,
+                    user
+                )
+                .catch(() => undefined);
+            expect(
+                mockToolRepository.findByIdsInWorkspace
+            ).toHaveBeenCalledWith(['http-1'], workspaceId);
+
+            mockToolRepository.findByIdsInWorkspace.mockClear();
+            await service.create(
+                workspaceId,
+                {
+                    name: 'Escalate',
+                    format: ENUM_SKILL_FORMAT.STEPS,
+                    steps: [
+                        { id: 'b', type: 'tool', toolId: 'system:handoff' },
+                    ],
+                } as CreateSkillRequestDto,
+                user
+            );
+            expect(
+                mockToolRepository.findByIdsInWorkspace
+            ).not.toHaveBeenCalled();
+            expect(bodyOf()).toContain('`apply_customer_tag`');
+        });
+
         it('rejects steps that point at a missing tool or action, with the issues', async () => {
             mockToolRepository.findByIdsInWorkspace.mockResolvedValue([
                 { id: 'mcp-1', kind: 'MCP', slug: 'z', discoveredActions: [] },

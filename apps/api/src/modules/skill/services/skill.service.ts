@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import {
     compileSkill,
+    isSystemToolId,
     parseSkillSteps,
     validateSkillSteps,
     type SkillStep,
@@ -531,7 +532,11 @@ export class SkillService {
 
     private toolIdsOf(steps: SkillStep[]): string[] {
         return steps.flatMap(step => {
-            if (step.type === 'tool') return step.toolId ? [step.toolId] : [];
+            if (step.type === 'tool') {
+                return step.toolId && !isSystemToolId(step.toolId)
+                    ? [step.toolId]
+                    : [];
+            }
             if (step.type === 'if') {
                 return [
                     ...step.branches.flatMap(b => this.toolIdsOf(b.steps)),
