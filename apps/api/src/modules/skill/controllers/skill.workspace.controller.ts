@@ -7,7 +7,9 @@ import {
     Patch,
     Post,
     Query,
+    Req,
 } from '@nestjs/common';
+import { IRequestApp } from 'src/common/request/interfaces/request.interface';
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
 import { BatchIdsRequestDto } from 'src/common/batch/dtos/batch.request.dto';
@@ -45,12 +47,15 @@ import {
     SkillWorkspaceGetDoc,
     SkillWorkspaceListDoc,
     SkillWorkspaceUpdateDoc,
+    SkillWorkspaceUsageDoc,
 } from 'src/modules/skill/docs/skill.workspace.doc';
 import { SkillScope } from 'src/modules/skill/repository/repositories/skill.repository';
 import { CreateSkillRequestDto } from 'src/modules/skill/dtos/request/create-skill.request.dto';
 import { UpdateSkillRequestDto } from 'src/modules/skill/dtos/request/update-skill.request.dto';
 import { SkillGetResponseDto } from 'src/modules/skill/dtos/response/skill.get.response.dto';
 import { SkillListResponseDto } from 'src/modules/skill/dtos/response/skill.list.response.dto';
+import { SkillUsageResponseDto } from 'src/modules/skill/dtos/response/skill-usage.response.dto';
+import { ChatbotSkillService } from 'src/modules/skill/services/chatbot-skill.service';
 import { SkillService } from 'src/modules/skill/services/skill.service';
 import { UserParsePipe } from 'src/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
@@ -69,6 +74,7 @@ import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/works
 export class SkillWorkspaceController {
     constructor(
         private readonly skillService: SkillService,
+        private readonly chatbotSkillService: ChatbotSkillService,
         private readonly paginationService: PaginationService,
         private readonly activityService: ActivityService
     ) {}
@@ -91,6 +97,7 @@ export class SkillWorkspaceController {
             defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
         })
         { _search, _limit, _offset, _order }: PaginationListDto,
+        @Req() request: IRequestApp,
         @Query('source') source?: string
     ): Promise<IResponsePaging<SkillListResponseDto>> {
         const scope: SkillScope =
@@ -110,7 +117,7 @@ export class SkillWorkspaceController {
         );
         return {
             _pagination: { total, totalPage },
-            data: this.skillService.mapList(skills),
+            data: this.skillService.mapList(skills, request.__language),
         };
     }
 
@@ -126,13 +133,39 @@ export class SkillWorkspaceController {
     @Get('/:skillId')
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @Param('skillId') skillId: string
+        @Param('skillId') skillId: string,
+        @Req() request: IRequestApp
     ): Promise<IResponse<SkillGetResponseDto>> {
         const { skill, instructions } = await this.skillService.getOne(
             workspace.id,
             skillId
         );
-        return { data: this.skillService.mapOne(skill, instructions) };
+        return {
+            data: this.skillService.mapOne(
+                skill,
+                instructions,
+                request.__language
+            ),
+        };
+    }
+
+    @SkillWorkspaceUsageDoc()
+    @Response('skill.usage.success')
+    @WorkspacePolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.SKILL,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Get('/:skillId/usage')
+    async usage(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('skillId') skillId: string
+    ): Promise<IResponse<SkillUsageResponseDto>> {
+        return {
+            data: await this.chatbotSkillService.usage(workspace.id, skillId),
+        };
     }
 
     @SkillWorkspaceCreateDoc()

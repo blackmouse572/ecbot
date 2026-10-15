@@ -1,0 +1,31 @@
+---
+title: Check an order with your tool
+description: A skill recipe that looks up an order with your own HTTP tool, tells the customer its status and hands late orders to your staff.
+faq:
+  - q: What if I don't have an order lookup tool?
+    a: Replace the Tool step with a Tell step that says the team will check, and hand off to staff.
+  - q: How does the agent know an order is late?
+    a: From what your tool returns, such as a status or a delivery date. Describe it in the If condition.
+  - q: Will the agent make up a delivery date?
+    a: The guardrail tells it to use only what the tool returns. Keep that guardrail.
+---
+
+This recipe answers "where is my order" from your own order system.
+
+**When to use**: the customer asks where their order is. Needs an [HTTP tool](/docs/agents/tools) that looks up orders, here called "Order lookup".
+
+## Steps
+
+1. **Ask**: the order code.
+2. **Tool**: Order lookup, how: "with the order code".
+3. **If** the order is late or lost:
+   1. **Say**: "Sorry for the wait, I'm passing this to our team right now."
+   2. **Tool**: Hand off to staff.
+4. **Else**:
+   1. **Tell**: the status and the expected delivery date.
+
+Guardrail: "Never make up a delivery date. Only use what the tool returns."
+
+## Ask your assistant
+
+> Create a skill "Order status" for when a customer asks where their order is. Ask for the order code, then call my Order lookup tool with it. If the order is late or lost, say sorry and hand off to staff. Otherwise tell them the status and delivery date.
