@@ -2,6 +2,9 @@ import { blankToUndefined } from "@/libs/validations";
 import { t } from "i18next";
 import { z } from "zod/v4";
 
+// The model a new chatbot starts on; owners can pick another per chatbot.
+export const DEFAULT_CHAT_MODEL = "deepseek/deepseek-v4.1-flash";
+
 /** An optional positive integer that a cleared input returns to "unset". */
 const optionalPositiveInt = z.preprocess(
   blankToUndefined,
@@ -25,7 +28,7 @@ export const createChatbotSchema = z.object({
   modelTextName: z
     .string()
     .min(1, t("errors.chatbot.modelTextNameRequired"))
-    .default("google/gemini-2.5-flash"),
+    .default(DEFAULT_CHAT_MODEL),
   // Preprocessed for the same reason as `optionalPositiveInt`: without it a
   // cleared Temperature coerces to 0 rather than falling back to the default.
   modelTemperature: z.preprocess(
