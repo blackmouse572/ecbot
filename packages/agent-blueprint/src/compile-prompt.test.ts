@@ -121,6 +121,12 @@ describe("compilePrompt", () => {
     expect(out).not.toContain('"anh"');
   });
 
+  it("leaves the address line out for a custom style without words", () => {
+    const out = compilePrompt({ ...sample("beauty", "vi"), addressStyle: "custom" });
+    expect(out).not.toMatch(/^- custom$/m);
+    expect(out).not.toContain("refer to yourself");
+  });
+
   it("numbers knowledge in detailed mode and bullets it in simple mode", () => {
     expect(compilePrompt(sample("healthcare"))).toMatch(/## Knowledge\n1\. /);
     expect(compilePrompt(sample("beauty"))).toMatch(/## Knowledge\n- /);
