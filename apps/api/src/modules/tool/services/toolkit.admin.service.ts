@@ -39,9 +39,8 @@ export class ToolkitAdminService {
                 ToolkitAdminEcchoResponseDto,
                 {
                     ...this.toRow(toolkit, usage),
-                    configured: !!ECCHO_TOOLKITS.find(
-                        def => def.slug === toolkit.slug
-                    )?.baseUrl,
+                    configured: !!this.ecchoCatalog.findBySlug(toolkit.slug)
+                        ?.baseUrl,
                 },
                 { excludeExtraneousValues: true }
             )

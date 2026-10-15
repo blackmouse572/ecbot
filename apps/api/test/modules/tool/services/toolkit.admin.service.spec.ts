@@ -2,7 +2,7 @@ import { ToolkitAdminService } from 'src/modules/tool/services/toolkit.admin.ser
 
 describe('ToolkitAdminService', () => {
     const toolRepository = { countUsageByToolkit: jest.fn() };
-    const ecchoCatalog = { getToolkits: jest.fn() };
+    const ecchoCatalog = { getToolkits: jest.fn(), findBySlug: jest.fn() };
     const composioCatalog = { getToolkits: jest.fn() };
     const config = { get: jest.fn() };
     const service = new ToolkitAdminService(
@@ -26,6 +26,10 @@ describe('ToolkitAdminService', () => {
             ],
             total: 1,
         });
+        ecchoCatalog.findBySlug.mockReturnValue({
+            slug: 'kiotviet',
+            baseUrl: 'https://kiotviet.example.com',
+        });
         toolRepository.countUsageByToolkit.mockResolvedValue(
             new Map([['kiotviet', { workspaceCount: 2, toolCount: 3 }]])
         );
@@ -41,7 +45,7 @@ describe('ToolkitAdminService', () => {
                 name: 'KiotViet',
                 workspaceCount: 2,
                 toolCount: 3,
-                configured: expect.any(Boolean),
+                configured: true,
             }),
         ]);
     });
@@ -88,6 +92,22 @@ describe('ToolkitAdminService', () => {
             toolkitCount: 0,
         });
         expect(composioCatalog.getToolkits).not.toHaveBeenCalled();
+    });
+
+    it('reports Composio unreachable when the key is set but the catalog comes back empty', async () => {
+        config.get.mockImplementation((key: string) =>
+            key === 'composio.apiKey' ? 'key' : 'https://backend.composio.dev'
+        );
+        composioCatalog.getToolkits.mockResolvedValue({ items: [], total: 0 });
+        toolRepository.countUsageByToolkit.mockResolvedValue(new Map());
+
+        const status = await service.composioStatus();
+
+        expect(status).toMatchObject({
+            apiKeyConfigured: true,
+            reachable: false,
+            toolkitCount: 0,
+        });
     });
 
     it('reports Composio reachable and sums usage across toolkits', async () => {
