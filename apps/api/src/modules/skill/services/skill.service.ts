@@ -1,6 +1,18 @@
 import { wrap } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
+import {
+    compileSkill,
+    isSystemToolId,
+    parseSkillSteps,
+    validateSkillSteps,
+    type SkillStep,
+    type SkillToolNamer,
+} from '@repo/agent-blueprint';
 import { plainToInstance } from 'class-transformer';
 import slugify from 'slugify';
 import { IPaginationOrder } from 'src/common/pagination/interfaces/pagination.interface';
@@ -11,14 +23,23 @@ import { CreateSkillRequestDto } from 'src/modules/skill/dtos/request/create-ski
 import { UpdateSkillRequestDto } from 'src/modules/skill/dtos/request/update-skill.request.dto';
 import { SkillGetResponseDto } from 'src/modules/skill/dtos/response/skill.get.response.dto';
 import { SkillListResponseDto } from 'src/modules/skill/dtos/response/skill.list.response.dto';
+import {
+    SKILL_INSTRUCTIONS_MAX_LENGTH,
+    TOOL_NAME_INVALID,
+} from 'src/modules/skill/constants/skill.constant';
+import { ENUM_SKILL_FORMAT } from 'src/modules/skill/enums/skill-format.enum';
 import { ENUM_SKILL_STATUS } from 'src/modules/skill/enums/skill-status.enum';
+import { ISkillSource } from 'src/modules/skill/interfaces/skill.interface';
 import { SkillEntity } from 'src/modules/skill/repository/entities/skill.entity';
 import {
     SkillRepository,
     SkillScope,
 } from 'src/modules/skill/repository/repositories/skill.repository';
+import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
+import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.repository';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
+import { localizeBuiltinSkill } from 'src/modules/skill/utils/builtin-skill-localize.util';
 
 const S3_PRIVATE = { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE };
 
@@ -27,7 +48,8 @@ export class SkillService {
     constructor(
         private readonly skillRepository: SkillRepository,
         private readonly awsS3Service: AwsS3Service,
-        private readonly em: EntityManager
+        private readonly em: EntityManager,
+        private readonly toolRepository: ToolRepository
     ) {}
 
     async findAllByWorkspace(
@@ -79,6 +101,10 @@ export class SkillService {
                 slug,
                 description: template.description,
                 status: template.status,
+                format: template.format,
+                steps: template.steps,
+                guardrails: template.guardrails,
+                instructions: template.instructions,
                 s3: this.toS3Embedded(uploaded),
                 createdBy: user,
                 updatedBy: user,
@@ -100,11 +126,7 @@ export class SkillService {
             workspaceId
         );
         if (!skill) throw new NotFoundException('skill.get.error.notFound');
-        const buffer = await this.awsS3Service.getItemBuffer(
-            skill.s3.key,
-            S3_PRIVATE
-        );
-        return { skill, instructions: buffer.toString('utf-8') };
+        return { skill, instructions: await this.readInstructions(skill) };
     }
 
     async create(
@@ -112,9 +134,13 @@ export class SkillService {
         dto: CreateSkillRequestDto,
         user: UserEntity
     ): Promise<SkillEntity> {
+        const source = this.sourceOf(dto);
+        const buffer = Buffer.from(
+            await this.compileBody(workspaceId, dto.name, source),
+            'utf-8'
+        );
         const slug = await this.mintSlug(dto.name, workspaceId);
         const key = `skills/${workspaceId}/${slug}.md`;
-        const buffer = Buffer.from(dto.instructions, 'utf-8');
 
         // Dual-write: S3 first, then DB. On DB failure, best-effort S3 cleanup.
         const uploaded = await this.awsS3Service.putItem(
@@ -128,6 +154,7 @@ export class SkillService {
                 slug,
                 description: dto.description,
                 status: dto.status ?? ENUM_SKILL_STATUS.ACTIVE,
+                ...source,
                 s3: this.toS3Embedded(uploaded),
                 createdBy: user,
                 updatedBy: user,
@@ -152,22 +179,7 @@ export class SkillService {
         );
         if (!skill) throw new NotFoundException('skill.get.error.notFound');
 
-        if (dto.instructions !== undefined) {
-            const buffer = Buffer.from(dto.instructions, 'utf-8');
-            await this.awsS3Service.putItem(
-                { key: skill.s3.key, file: buffer, size: buffer.length },
-                S3_PRIVATE
-            );
-            skill.s3.size = buffer.length;
-            // The S3 object is overwritten in place, so `updatedAt` is the only version
-            // signal consumers get (apps/ai caches skill bodies keyed by it). Set it
-            // explicitly: MikroORM's `onUpdate` hook is skipped when the changeset is
-            // otherwise empty, which a same-length edit by the same user would be.
-            skill.updatedAt = new Date();
-        }
-        if (dto.name !== undefined) skill.name = dto.name;
-        if (dto.description !== undefined) skill.description = dto.description;
-        if (dto.status !== undefined) skill.status = dto.status;
+        await this.applyUpdate(workspaceId, skill, dto);
         skill.updatedBy = user;
         await this.em.flush();
         return skill;
@@ -216,20 +228,20 @@ export class SkillService {
     ): Promise<{ skill: SkillEntity; instructions: string }> {
         const skill = await this.skillRepository.findOneTemplate(skillId);
         if (!skill) throw new NotFoundException('skill.get.error.notFound');
-        const buffer = await this.awsS3Service.getItemBuffer(
-            skill.s3.key,
-            S3_PRIVATE
-        );
-        return { skill, instructions: buffer.toString('utf-8') };
+        return { skill, instructions: await this.readInstructions(skill) };
     }
 
     async createBuiltin(
         dto: CreateSkillRequestDto,
         user: UserEntity
     ): Promise<SkillEntity> {
+        const source = this.sourceOf(dto);
+        const buffer = Buffer.from(
+            await this.compileBody(null, dto.name, source),
+            'utf-8'
+        );
         const slug = await this.mintBuiltinSlug(dto.name);
         const key = `skills/builtin/${slug}.md`;
-        const buffer = Buffer.from(dto.instructions, 'utf-8');
 
         const uploaded = await this.awsS3Service.putItem(
             { key, file: buffer, size: buffer.length },
@@ -242,6 +254,7 @@ export class SkillService {
                 slug,
                 description: dto.description,
                 status: dto.status ?? ENUM_SKILL_STATUS.ACTIVE,
+                ...source,
                 s3: this.toS3Embedded(uploaded),
                 createdBy: user,
                 updatedBy: user,
@@ -262,19 +275,7 @@ export class SkillService {
         const skill = await this.skillRepository.findOneTemplate(skillId);
         if (!skill) throw new NotFoundException('skill.get.error.notFound');
 
-        if (dto.instructions !== undefined) {
-            const buffer = Buffer.from(dto.instructions, 'utf-8');
-            await this.awsS3Service.putItem(
-                { key: skill.s3.key, file: buffer, size: buffer.length },
-                S3_PRIVATE
-            );
-            skill.s3.size = buffer.length;
-            // See `update()` — same in-place overwrite, same cache-invalidation need.
-            skill.updatedAt = new Date();
-        }
-        if (dto.name !== undefined) skill.name = dto.name;
-        if (dto.description !== undefined) skill.description = dto.description;
-        if (dto.status !== undefined) skill.status = dto.status;
+        await this.applyUpdate(null, skill, dto);
         skill.updatedBy = user;
         await this.em.flush();
         return skill;
@@ -314,11 +315,7 @@ export class SkillService {
     ): Promise<{ skill: SkillEntity; instructions: string }> {
         const skill = await this.skillRepository.findOneAnyById(skillId);
         if (!skill) throw new NotFoundException('skill.get.error.notFound');
-        const buffer = await this.awsS3Service.getItemBuffer(
-            skill.s3.key,
-            S3_PRIVATE
-        );
-        return { skill, instructions: buffer.toString('utf-8') };
+        return { skill, instructions: await this.readInstructions(skill) };
     }
 
     // Admin moderation delete — works for builtin and workspace-owned skills.
@@ -348,13 +345,19 @@ export class SkillService {
         return `${base}-${Date.now()}`;
     }
 
-    mapList(skills: SkillEntity[]): SkillListResponseDto[] {
+    // `language` translates builtin templates for the app's reader.
+    mapList(skills: SkillEntity[], language?: string): SkillListResponseDto[] {
         return skills.map(skill => {
             const obj = wrap(skill).toObject() as any;
+            const localized = localizeBuiltinSkill(skill, language);
             return plainToInstance(
                 SkillListResponseDto,
                 {
                     ...obj,
+                    ...(localized && {
+                        name: localized.name,
+                        description: localized.description,
+                    }),
                     isBuiltin: !skill.workspace,
                     workspaceId: obj.workspace?.id,
                     workspaceName: obj.workspace?.name,
@@ -364,16 +367,220 @@ export class SkillService {
         });
     }
 
-    mapOne(skill: SkillEntity, instructions: string): SkillGetResponseDto {
+    mapOne(
+        skill: SkillEntity,
+        instructions: string,
+        language?: string
+    ): SkillGetResponseDto {
         return plainToInstance(
             SkillGetResponseDto,
             {
                 ...wrap(skill).toObject(),
                 isBuiltin: !skill.workspace,
                 instructions,
+                ...localizeBuiltinSkill(skill, language),
             },
             { excludeExtraneousValues: true }
         );
+    }
+
+    // Applies an update and, when anything the agent reads changed, rewrites
+    // the S3 body. Workspace null = builtin template (no tools to point at).
+    private async applyUpdate(
+        workspaceId: string | null,
+        skill: SkillEntity,
+        dto: UpdateSkillRequestDto
+    ): Promise<void> {
+        const format = dto.format ?? skill.format ?? ENUM_SKILL_FORMAT.CONTENT;
+        const name = dto.name ?? skill.name;
+        const recompile =
+            dto.instructions !== undefined ||
+            dto.steps !== undefined ||
+            dto.guardrails !== undefined ||
+            (dto.format !== undefined && dto.format !== skill.format) ||
+            (dto.name !== undefined && format === ENUM_SKILL_FORMAT.STEPS);
+
+        if (recompile) {
+            const source = this.sourceOf({
+                format,
+                guardrails: dto.guardrails ?? skill.guardrails,
+                steps:
+                    format === ENUM_SKILL_FORMAT.STEPS
+                        ? (dto.steps ?? skill.steps ?? undefined)
+                        : dto.steps,
+                instructions:
+                    dto.instructions ??
+                    (format === ENUM_SKILL_FORMAT.CONTENT
+                        ? await this.readInstructions(skill)
+                        : undefined),
+            });
+            const buffer = Buffer.from(
+                await this.compileBody(workspaceId, name, source),
+                'utf-8'
+            );
+            await this.awsS3Service.putItem(
+                { key: skill.s3.key, file: buffer, size: buffer.length },
+                S3_PRIVATE
+            );
+            Object.assign(skill, source);
+            skill.s3.size = buffer.length;
+            // The S3 object is overwritten in place, so `updatedAt` is the only version
+            // signal consumers get (apps/ai caches skill bodies keyed by it). Set it
+            // explicitly: MikroORM's `onUpdate` hook is skipped when the changeset is
+            // otherwise empty, which a same-length edit by the same user would be.
+            skill.updatedAt = new Date();
+        }
+        if (dto.name !== undefined) skill.name = dto.name;
+        if (dto.description !== undefined) skill.description = dto.description;
+        if (dto.status !== undefined) skill.status = dto.status;
+    }
+
+    // What the owner wrote, normalised: a skill keeps either `instructions`
+    // (CONTENT) or `steps` (STEPS), never both. Sending the other format's field
+    // is rejected rather than dropped, so an edit never silently vanishes.
+    private sourceOf(dto: {
+        format?: ENUM_SKILL_FORMAT;
+        instructions?: string | null;
+        steps?: SkillStep[] | null;
+        guardrails?: string[];
+    }): ISkillSource {
+        const format = dto.format ?? ENUM_SKILL_FORMAT.CONTENT;
+        const isSteps = format === ENUM_SKILL_FORMAT.STEPS;
+        if (isSteps ? dto.instructions != null : dto.steps != null) {
+            throw new BadRequestException({
+                statusCode: 400,
+                message: 'skill.error.formatMismatch',
+                data: { format },
+            });
+        }
+        const guardrails = (dto.guardrails ?? [])
+            .map(g => g.trim())
+            .filter(Boolean);
+        if (isSteps) {
+            const parsed = parseSkillSteps(dto.steps ?? []);
+            if ('issues' in parsed) this.throwInvalidSteps(parsed.issues);
+            return {
+                format,
+                guardrails,
+                steps: parsed.steps,
+                instructions: null,
+            };
+        }
+        if (!dto.instructions?.trim()) {
+            throw new BadRequestException({
+                statusCode: 400,
+                message: 'skill.error.instructionsRequired',
+            });
+        }
+        return {
+            format,
+            guardrails,
+            steps: null,
+            instructions: dto.instructions,
+        };
+    }
+
+    private async compileBody(
+        workspaceId: string | null,
+        name: string,
+        source: ISkillSource
+    ): Promise<string> {
+        let body: string;
+        if (source.format === ENUM_SKILL_FORMAT.STEPS) {
+            const toolName = await this.toolNamer(workspaceId, source.steps);
+            const issues = validateSkillSteps(source.steps, { toolName });
+            if (issues.length) this.throwInvalidSteps(issues);
+            body = compileSkill({
+                name,
+                guardrails: source.guardrails,
+                format: 'STEPS',
+                steps: source.steps,
+                toolName,
+            });
+        } else {
+            body = compileSkill({
+                name,
+                guardrails: source.guardrails,
+                format: 'CONTENT',
+                content: source.instructions,
+            });
+        }
+        if (body.length > SKILL_INSTRUCTIONS_MAX_LENGTH) {
+            throw new BadRequestException({
+                statusCode: 400,
+                message: 'skill.error.tooLong',
+            });
+        }
+        return body;
+    }
+
+    // Resolves a Tool step to the function name the agent sees (same rule as
+    // apps/ai operator_tools: HTTP tools by slug, MCP tools by action name).
+    private async toolNamer(
+        workspaceId: string | null,
+        steps: SkillStep[]
+    ): Promise<SkillToolNamer> {
+        const ids = [...new Set(this.toolIdsOf(steps))];
+        const tools =
+            workspaceId && ids.length
+                ? await this.toolRepository.findByIdsInWorkspace(
+                      ids,
+                      workspaceId
+                  )
+                : [];
+        const byId = new Map(tools.map(t => [t.id, t]));
+        return ({ toolId, action }) => {
+            const tool = byId.get(toolId);
+            if (!tool) return undefined;
+            if (tool.kind === ENUM_TOOL_KIND.HTTP) {
+                return tool.slug.replace(TOOL_NAME_INVALID, '_');
+            }
+            const known = (tool.discoveredActions ?? []).some(
+                a => a.name === action
+            );
+            return known ? action!.replace(TOOL_NAME_INVALID, '_') : undefined;
+        };
+    }
+
+    private toolIdsOf(steps: SkillStep[]): string[] {
+        return steps.flatMap(step => {
+            if (step.type === 'tool') {
+                return step.toolId && !isSystemToolId(step.toolId)
+                    ? [step.toolId]
+                    : [];
+            }
+            if (step.type === 'if') {
+                return [
+                    ...step.branches.flatMap(b => this.toolIdsOf(b.steps)),
+                    ...this.toolIdsOf(step.otherwise ?? []),
+                ];
+            }
+            return [];
+        });
+    }
+
+    private throwInvalidSteps(issues: unknown[]): never {
+        throw new BadRequestException({
+            statusCode: 400,
+            message: 'skill.error.invalidSteps',
+            data: { issues },
+        });
+    }
+
+    // CONTENT source: the stored markdown, or the S3 body for skills made
+    // before it was stored. STEPS: the compiled body (a read-only preview).
+    private async readInstructions(skill: SkillEntity): Promise<string> {
+        if (
+            skill.format !== ENUM_SKILL_FORMAT.STEPS &&
+            skill.instructions != null
+        ) {
+            return skill.instructions;
+        }
+        const buffer = await this.awsS3Service.getItemBuffer(
+            skill.s3.key,
+            S3_PRIVATE
+        );
+        return buffer.toString('utf-8');
     }
 
     private toS3Embedded(uploaded: AwsS3Dto): Record<string, any> {

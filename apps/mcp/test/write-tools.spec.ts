@@ -343,6 +343,33 @@ const cases: [
     ADDS,
   ],
   [
+    "create_skill",
+    {
+      name: "Order tracking",
+      format: "STEPS",
+      guardrails: ["Never share another customer's order."],
+      steps: [
+        { id: "s1", type: "ask", text: "The order code" },
+        { id: "s2", type: "tool", toolId: "tool-1" },
+      ],
+    },
+    "skillClientControllerCreateV1",
+    {
+      body: {
+        name: "Order tracking",
+        format: "STEPS",
+        guardrails: ["Never share another customer's order."],
+        steps: [
+          { id: "s1", type: "ask", text: "The order code" },
+          { id: "s2", type: "tool", toolId: "tool-1" },
+        ],
+      },
+    },
+    { data: { id: "skill-3" } },
+    { id: "skill-3" },
+    ADDS,
+  ],
+  [
     "clone_skill_template",
     { templateId: "tpl-1" },
     "skillClientControllerCloneV1",

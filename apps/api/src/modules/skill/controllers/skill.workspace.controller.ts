@@ -7,7 +7,9 @@ import {
     Patch,
     Post,
     Query,
+    Req,
 } from '@nestjs/common';
+import { IRequestApp } from 'src/common/request/interfaces/request.interface';
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
 import { BatchIdsRequestDto } from 'src/common/batch/dtos/batch.request.dto';
@@ -91,6 +93,7 @@ export class SkillWorkspaceController {
             defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
         })
         { _search, _limit, _offset, _order }: PaginationListDto,
+        @Req() request: IRequestApp,
         @Query('source') source?: string
     ): Promise<IResponsePaging<SkillListResponseDto>> {
         const scope: SkillScope =
@@ -110,7 +113,7 @@ export class SkillWorkspaceController {
         );
         return {
             _pagination: { total, totalPage },
-            data: this.skillService.mapList(skills),
+            data: this.skillService.mapList(skills, request.__language),
         };
     }
 
@@ -126,13 +129,20 @@ export class SkillWorkspaceController {
     @Get('/:skillId')
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @Param('skillId') skillId: string
+        @Param('skillId') skillId: string,
+        @Req() request: IRequestApp
     ): Promise<IResponse<SkillGetResponseDto>> {
         const { skill, instructions } = await this.skillService.getOne(
             workspace.id,
             skillId
         );
-        return { data: this.skillService.mapOne(skill, instructions) };
+        return {
+            data: this.skillService.mapOne(
+                skill,
+                instructions,
+                request.__language
+            ),
+        };
     }
 
     @SkillWorkspaceCreateDoc()

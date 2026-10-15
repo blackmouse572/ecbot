@@ -39,5 +39,11 @@
     },
     "batchDelete": {
         "success": "Đã xóa các skill."
+    },
+    "error": {
+        "invalidSteps": "Một số bước chưa hoàn chỉnh. Hãy sửa các bước được đánh dấu rồi lưu lại.",
+        "instructionsRequired": "Hãy viết hướng dẫn cho kỹ năng.",
+        "tooLong": "Kỹ năng này quá dài để bot đọc. Hãy rút gọn rồi lưu lại.",
+        "formatMismatch": "Chỉ gửi nội dung hoặc các bước, đúng với cách kỹ năng này được viết. Muốn đổi cách viết, hãy gửi kèm định dạng mới."
     }
 }
