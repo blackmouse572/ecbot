@@ -210,8 +210,7 @@ export class ConversationWorkspaceController {
     @Get('/:id')
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @Param('id') id: string,
-        @AuthJwtPayload('user') userId: string
+        @Param('id') id: string
     ): Promise<IResponse<ConversationGetResponseDto>> {
         const conversation =
             await this.conversationService.findOneByIdInWorkspace(
@@ -233,13 +232,6 @@ export class ConversationWorkspaceController {
                 statusCode: 404,
             });
         }
-
-        await this.activityService.createView(
-            userId,
-            workspace,
-            ENUM_POLICY_SUBJECT.CONVERSATION,
-            { id: conversation.id }
-        );
 
         return { data: this.conversationService.mapGet(conversation) };
     }
@@ -397,7 +389,6 @@ export class ConversationWorkspaceController {
     async listMessages(
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('id') id: string,
-        @AuthJwtPayload('user') userId: string,
         @Query('page') page?: number,
         @Query('perPage') perPage?: number
     ): Promise<IResponsePaging<MessageGetResponseDto>> {
@@ -413,17 +404,6 @@ export class ConversationWorkspaceController {
                     offset,
                 }
             );
-
-        // Infinite scroll refetches every loaded page: the first page stands
-        // for the whole read.
-        if (offset === 0) {
-            await this.activityService.createView(
-                userId,
-                workspace,
-                ENUM_POLICY_SUBJECT.CONVERSATION,
-                { id: conversation.id, resource: 'messages' }
-            );
-        }
 
         const userNameMap =
             await this.conversationMessagingService.buildUserNameMap(messages);

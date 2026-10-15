@@ -4,34 +4,23 @@ import {
 } from '@app/common/database/interfaces/database.interface';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { FilterQuery } from '@mikro-orm/postgresql';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Cache } from 'cache-manager';
+import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { isObject } from 'lodash';
 import { CLS_REQ, ClsService } from 'nestjs-cls';
 import { IRequestApp } from 'src/common/request/interfaces/request.interface';
-import {
-    ACTIVITY_USER_AGENT_MAX_LENGTH,
-    ACTIVITY_VIEW_CACHE_PREFIX,
-    ACTIVITY_VIEW_DEDUPE_TTL_MS,
-} from 'src/modules/activity/constants/activity.constant';
+import { ACTIVITY_USER_AGENT_MAX_LENGTH } from 'src/modules/activity/constants/activity.constant';
 import { ActivityCreateRequest } from 'src/modules/activity/dtos/request/activity.create.response.dto';
 import { ActivityListResponseDto } from 'src/modules/activity/dtos/response/activity.list.response.dto';
-import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
 import { ActivityEntity } from 'src/modules/activity/repository/entities/activity.entity';
 import { ActivityRepository } from 'src/modules/activity/repository/repositories/activity.repository';
-import { ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 
 @Injectable()
 export class ActivityService {
-    private readonly logger = new Logger(ActivityService.name);
-
     constructor(
         private readonly activityRepository: ActivityRepository,
-        private readonly cls: ClsService,
-        @Inject(CACHE_MANAGER) private readonly cache: Cache
+        private readonly cls: ClsService
     ) {}
 
     async findAll(
@@ -132,44 +121,6 @@ export class ActivityService {
         create.workspace = workspace;
 
         return this.activityRepository.create(create, options);
-    }
-
-    // A read of personal data (conversation, customer). Takes the user id
-    // from the JWT, so a repeated read costs one cache check and no user
-    // lookup: one row per actor, workspace and record per dedupe window.
-    // Never fails the read: an audit error is logged and swallowed.
-    async createView(
-        userId: string,
-        workspace: WorkspaceEntity,
-        subject: ENUM_POLICY_SUBJECT,
-        metadata: Record<string, any> & { id: string }
-    ): Promise<void> {
-        try {
-            const user = this.activityRepository
-                .getEntityManager()
-                .getReference(UserEntity, userId);
-            const create = this.build(user, user, {
-                action: ENUM_ACTIVITY_ACTION.VIEW,
-                subject,
-                metadata,
-            });
-            create.workspace = workspace;
-
-            // `resource` keeps a messages read apart from the detail read.
-            const key = `${ACTIVITY_VIEW_CACHE_PREFIX}:${create.by.id}:${userId}:${workspace.id}:${subject}:${metadata.id}:${metadata.resource ?? ''}`;
-            // A cache outage costs a duplicate row, never a missing one.
-            const seen = await this.cache.get(key).catch(() => undefined);
-            if (seen) return;
-
-            await this.activityRepository.create(create);
-            await this.cache
-                .set(key, true, ACTIVITY_VIEW_DEDUPE_TTL_MS)
-                .catch(() => undefined);
-        } catch (err: unknown) {
-            this.logger.warn(
-                `View activity for user [${userId}] not recorded: ${(err as Error)?.message}`
-            );
-        }
     }
 
     // Stamps the caller's IP and user agent from the current request, so no
