@@ -23,6 +23,7 @@ import {
     Controller,
     Delete,
     Get,
+    ConflictException,
     InternalServerErrorException,
     Logger,
     NotFoundException,
@@ -53,8 +54,12 @@ import { ChatbotKnowledgeItemResponseDto } from '../dtos/response/chatbot-knowle
 import {
     ChatbotKnowledgeItemListDoc,
     ChatbotKnowledgeItemLinkDoc,
+    ChatbotKnowledgeItemBatchLinkDoc,
     ChatbotKnowledgeItemUnlinkDoc,
 } from '../docs/chatbot-knowledge-item.workspace.doc';
+import { ChatbotKnowledgeItemBatchLinkRequestDto } from '../dtos/request/chatbot-knowledge-item.batch-link.request.dto';
+import { KnowledgeItemBatchResultResponseDto } from '../dtos/response/knowledge-item.batch-result.response.dto';
+import { runBatch } from '@app/common/batch/utils/run-batch.util';
 import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entity';
 
 @ApiTags('modules.workspace.chatbot-knowledge-item')
@@ -134,6 +139,105 @@ export class ChatbotKnowledgeItemWorkspaceController {
                 totalPage,
             },
         };
+    }
+
+    @ChatbotKnowledgeItemBatchLinkDoc()
+    @Response('knowledgeItem.batchLink')
+    @WorkspacePolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.CREATE],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Post('/batch/link')
+    async batchLink(
+        @AuthJwtPayload<IAuthJwtAccessTokenPayload>('user', UserActiveParsePipe)
+        user: UserEntity,
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('chatbotId') chatbotId: string,
+        @Body() body: ChatbotKnowledgeItemBatchLinkRequestDto
+    ): Promise<IResponse<KnowledgeItemBatchResultResponseDto>> {
+        const chatbot = await this.chatbotService.findOne(
+            { id: chatbotId, workspace: workspace.id },
+            { populate: [] }
+        );
+
+        if (!chatbot) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'chatbot.error.notFound',
+            });
+        }
+
+        const { ids, truncated } =
+            await this.knowledgeItemService.resolveBatchTarget(
+                workspace.id,
+                body
+            );
+
+        const result = await runBatch(ids, async knowledgeItemId => {
+            const session = this.em.fork();
+            await session.begin();
+
+            try {
+                // The item's knowledge base must belong to this workspace, so
+                // a foreign id fails like a nonexistent one.
+                const knowledgeItem = await session
+                    .getRepository(KnowledgeItemEntity)
+                    .findOne(
+                        { id: knowledgeItemId, deletedAt: null },
+                        { populate: ['knowledgeBase'] }
+                    );
+
+                if (
+                    !knowledgeItem ||
+                    knowledgeItem.knowledgeBase.workspace.id !== workspace.id
+                ) {
+                    throw new NotFoundException({
+                        statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                        message: 'knowledgeItem.error.notFound',
+                    });
+                }
+
+                try {
+                    await this.chatbotKnowledgeItemService.linkItem(
+                        chatbotId,
+                        knowledgeItemId,
+                        { em: session, actionBy: user.id }
+                    );
+                } catch (err: unknown) {
+                    // Already linked: the chatbot has the item, which is
+                    // what the caller asked for.
+                    if (err instanceof ConflictException) {
+                        await session.rollback();
+                        return;
+                    }
+                    throw err;
+                }
+                await this.activityService.createByUser(
+                    user,
+                    {
+                        action: ENUM_ACTIVITY_ACTION.CREATE,
+                        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+                        metadata: { chatbotId, knowledgeItemId },
+                    },
+                    { em: session }
+                );
+                await session.commit();
+            } catch (err: unknown) {
+                await session.rollback();
+                throw err;
+            }
+
+            // After the commit, so a rolled-back link never reaches the
+            // vector store. One sync per item, as in the single link.
+            await this.chatbotKnowledgeItemService.syncChatbotLinks(
+                knowledgeItemId
+            );
+        });
+
+        return { data: { ...result, truncated } };
     }
 
     @ChatbotKnowledgeItemLinkDoc()

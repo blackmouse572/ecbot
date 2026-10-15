@@ -154,7 +154,6 @@ export class ConversationClientController {
     @Get('/:id')
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @ClientCredentialPayload() credential: ClientCredentialEntity,
         @Param('id') id: string
     ): Promise<IResponse<ConversationGetResponseDto>> {
         const conversation =
@@ -177,13 +176,6 @@ export class ConversationClientController {
             });
         }
 
-        await this.activityService.createView(
-            credential.createdBy?.id,
-            workspace,
-            ENUM_POLICY_SUBJECT.CONVERSATION,
-            { id: conversation.id }
-        );
-
         return { data: this.conversationService.mapGet(conversation) };
     }
 
@@ -196,7 +188,6 @@ export class ConversationClientController {
     @Get('/:id/messages')
     async listMessages(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @ClientCredentialPayload() credential: ClientCredentialEntity,
         @Param('id') id: string,
         @Query('page') page?: number,
         @Query('perPage') perPage?: number
@@ -210,16 +201,6 @@ export class ConversationClientController {
                 workspace.id,
                 { limit, offset }
             );
-
-        // Paging through a conversation is one read: log the first page.
-        if (offset === 0) {
-            await this.activityService.createView(
-                credential.createdBy?.id,
-                workspace,
-                ENUM_POLICY_SUBJECT.CONVERSATION,
-                { id: conversation.id, resource: 'messages' }
-            );
-        }
 
         const userNameMap =
             await this.conversationMessagingService.buildUserNameMap(messages);

@@ -10,4 +10,5 @@ export const BUILDER_UI_KEYS = [
   "hoursOpen", "hoursClosed", "hoursAddRange", "hoursRemoveRange", "hoursCopyToAll", "hoursFrom", "hoursTo",
   "hoursInvalid", "hoursEveryDay",
   "customCollectLabel", "customCollectPlaceholder", "customCollectAdd", "customCollectRemove", "customCollectLimit", "customCollectOther",
+  "customAddressSelf", "customAddressSelfPlaceholder", "customAddressCustomer", "customAddressCustomerPlaceholder", "customAddressMissing",
 ].map((k) => `agentBuilder.ui.${k}`);

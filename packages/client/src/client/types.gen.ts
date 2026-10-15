@@ -1306,7 +1306,7 @@ export type EmailTaskDto = {
     data?: {
         [key: string]: unknown;
     };
-    jobName: 'CHANGE_PASSWORD' | 'TEMPORARY_PASSWORD' | 'WELCOME' | 'CREATE' | 'RESET_PASSWORD' | 'VERIFICATION' | 'EMAIL_VERIFIED' | 'MOBILE_NUMBER_VERIFIED' | 'INVITE_TO_WORKSPACE' | 'ACCOUNT_BLOCKED' | 'ACCOUNT_BANNED' | 'LOW_TOKEN_BALANCE' | 'HANDOFF' | 'MEMBER_JOINED' | 'MFA_CHANGED';
+    jobName: 'CHANGE_PASSWORD' | 'TEMPORARY_PASSWORD' | 'WELCOME' | 'CREATE' | 'RESET_PASSWORD' | 'VERIFICATION' | 'EMAIL_VERIFIED' | 'MOBILE_NUMBER_VERIFIED' | 'INVITE_TO_WORKSPACE' | 'ACCOUNT_BLOCKED' | 'ACCOUNT_BANNED' | 'LOW_TOKEN_BALANCE' | 'HANDOFF' | 'MEMBER_JOINED' | 'MFA_CHANGED' | 'PAYMENT_FAILED';
 };
 
 export type SmsSendRequestDto = {
@@ -2106,7 +2106,7 @@ export type ActivityListResponseDto = {
      */
     deletedBy?: UserMetaResponseDto;
     user: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'login' | 'login_failed' | 'view' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     by: UserShortResponseDto;
     metadata?: {
@@ -3200,6 +3200,42 @@ export type WaitlistListResponseDto = {
     email: string;
     source?: string;
     locale?: string;
+};
+
+export type WorkspaceAdminResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    name: string;
+    avatar?: string;
+    slug: string;
+    /**
+     * Owner user id
+     */
+    owner: UserShortResponseDto;
+    /**
+     * Active members, owner included
+     */
+    memberCount: number;
+    chatbotCount: number;
+    /**
+     * Tokens granted outside the plan quota
+     */
+    tokenCreditBalance: number;
+    status: 'ACTIVE' | 'SUSPENDED';
+};
+
+export type WorkspaceUpdateStatusRequestDto = {
+    status: 'ACTIVE' | 'SUSPENDED';
 };
 
 export type UserUpdateProfileRequestDto = {
@@ -4627,6 +4663,17 @@ export type KnowledgeItemUpdateRequestDto = {
     };
 };
 
+export type KnowledgeItemBatchTagRequestDto = {
+    /**
+     * Ids to act on (max 100).
+     */
+    ids: Array<string>;
+    /**
+     * Tags to add to every item (max 20). Tags an item already has are kept as they are.
+     */
+    tags: Array<string>;
+};
+
 export type KnowledgeItemFolderResponseDto = {
     /**
      * Folder ID
@@ -4713,6 +4760,49 @@ export type ChatbotKnowledgeItemResponseDto = {
      * Is the link active
      */
     isActive: boolean;
+};
+
+export type KnowledgeItemBatchResultResponseDto = {
+    /**
+     * Ids processed successfully.
+     */
+    succeeded: Array<string>;
+    /**
+     * Ids that failed.
+     */
+    failed: Array<BatchFailureDto>;
+    /**
+     * True when a filter matched more items than one request acts on, so the rest were left out.
+     */
+    truncated: boolean;
+};
+
+export type KnowledgeItemFilterRequestDto = {
+    /**
+     * Text the title contains.
+     */
+    search?: string;
+    type?: Array<'FILE' | 'URL' | 'TEXT' | 'MEDIA'>;
+    status?: Array<'DRAFT' | 'READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>;
+    /**
+     * Items that have any of these tags.
+     */
+    tags?: Array<string>;
+};
+
+export type ChatbotKnowledgeItemBatchLinkRequestDto = {
+    /**
+     * Ids to link (max 100). Send this or `filter`.
+     */
+    ids?: Array<string>;
+    /**
+     * Link every item matching these filters instead of listing ids. An empty filter matches the whole knowledge base.
+     */
+    filter?: KnowledgeItemFilterRequestDto;
+    /**
+     * Knowledge base the `filter` applies to. Required with `filter`.
+     */
+    knowledgeBaseId?: string;
 };
 
 export type AccountGetResponseDto = {
@@ -16275,6 +16365,265 @@ export type WaitlistAdminControllerListV1Responses = {
 
 export type WaitlistAdminControllerListV1Response = WaitlistAdminControllerListV1Responses[keyof WaitlistAdminControllerListV1Responses];
 
+export type WorkspaceAdminControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/workspace/list';
+};
+
+export type WorkspaceAdminControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceAdminControllerListV1Error = WorkspaceAdminControllerListV1Errors[keyof WorkspaceAdminControllerListV1Errors];
+
+export type WorkspaceAdminControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<WorkspaceAdminResponseDto>;
+    };
+};
+
+export type WorkspaceAdminControllerListV1Response = WorkspaceAdminControllerListV1Responses[keyof WorkspaceAdminControllerListV1Responses];
+
+export type WorkspaceAdminControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/workspace/get/{workspace}';
+};
+
+export type WorkspaceAdminControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceAdminControllerGetV1Error = WorkspaceAdminControllerGetV1Errors[keyof WorkspaceAdminControllerGetV1Errors];
+
+export type WorkspaceAdminControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: WorkspaceAdminResponseDto;
+    };
+};
+
+export type WorkspaceAdminControllerGetV1Response = WorkspaceAdminControllerGetV1Responses[keyof WorkspaceAdminControllerGetV1Responses];
+
+export type WorkspaceAdminControllerUpdateStatusV1Data = {
+    body: WorkspaceUpdateStatusRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/workspace/update/{workspace}/status';
+};
+
+export type WorkspaceAdminControllerUpdateStatusV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceAdminControllerUpdateStatusV1Error = WorkspaceAdminControllerUpdateStatusV1Errors[keyof WorkspaceAdminControllerUpdateStatusV1Errors];
+
+export type WorkspaceAdminControllerUpdateStatusV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceAdminControllerUpdateStatusV1Response = WorkspaceAdminControllerUpdateStatusV1Responses[keyof WorkspaceAdminControllerUpdateStatusV1Responses];
+
 export type UserSharedControllerProfileV1Data = {
     body?: never;
     headers?: {
@@ -19797,6 +20146,82 @@ export type ChatbotControllerArchiveV1Responses = {
 
 export type ChatbotControllerArchiveV1Response = ChatbotControllerArchiveV1Responses[keyof ChatbotControllerArchiveV1Responses];
 
+export type ChatbotControllerUnarchiveV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/shared/{workspace}/chatbots/{id}/unarchive';
+};
+
+export type ChatbotControllerUnarchiveV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotControllerUnarchiveV1Error = ChatbotControllerUnarchiveV1Errors[keyof ChatbotControllerUnarchiveV1Errors];
+
+export type ChatbotControllerUnarchiveV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotControllerUnarchiveV1Response = ChatbotControllerUnarchiveV1Responses[keyof ChatbotControllerUnarchiveV1Responses];
+
 export type ChatbotControllerLinkAccountV1Data = {
     body: ChatbotLinkAccountRequestDto;
     headers?: {
@@ -22652,6 +23077,93 @@ export type KnowledgeItemWorkspaceControllerBatchProcessV1Responses = {
 
 export type KnowledgeItemWorkspaceControllerBatchProcessV1Response = KnowledgeItemWorkspaceControllerBatchProcessV1Responses[keyof KnowledgeItemWorkspaceControllerBatchProcessV1Responses];
 
+export type KnowledgeItemWorkspaceControllerBatchTagV1Data = {
+    body: KnowledgeItemBatchTagRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/knowledge-bases/{knowledgeBaseId}/items/batch/tag';
+};
+
+export type KnowledgeItemWorkspaceControllerBatchTagV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemWorkspaceControllerBatchTagV1Error = KnowledgeItemWorkspaceControllerBatchTagV1Errors[keyof KnowledgeItemWorkspaceControllerBatchTagV1Errors];
+
+export type KnowledgeItemWorkspaceControllerBatchTagV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: BatchResultResponseDto;
+    };
+};
+
+export type KnowledgeItemWorkspaceControllerBatchTagV1Response = KnowledgeItemWorkspaceControllerBatchTagV1Responses[keyof KnowledgeItemWorkspaceControllerBatchTagV1Responses];
+
 export type KnowledgeItemWorkspaceControllerDeleteV1Data = {
     body?: never;
     headers?: {
@@ -23431,6 +23943,96 @@ export type ChatbotKnowledgeItemWorkspaceControllerListV1Responses = {
 };
 
 export type ChatbotKnowledgeItemWorkspaceControllerListV1Response = ChatbotKnowledgeItemWorkspaceControllerListV1Responses[keyof ChatbotKnowledgeItemWorkspaceControllerListV1Responses];
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Data = {
+    body: ChatbotKnowledgeItemBatchLinkRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * Chatbot ID
+         */
+        chatbotId: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/chatbots/{chatbotId}/knowledge-items/batch/link';
+};
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Error = ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Errors[keyof ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Errors];
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemBatchResultResponseDto;
+    };
+};
+
+export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Response = ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses[keyof ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses];
 
 export type ChatbotKnowledgeItemWorkspaceControllerLinkV1Data = {
     body?: never;

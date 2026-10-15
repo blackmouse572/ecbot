@@ -22,8 +22,6 @@ import { MfaService } from '@app/modules/auth/services/mfa.service';
 import { ENUM_SEND_EMAIL_PROCESS } from '@app/modules/email/enums/email.enum';
 import { ENUM_TURNSTILE_ACTION } from '@app/common/turnstile/enums/turnstile.action.enum';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
-import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
-import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 
 describe('AuthPublicController.signUp', () => {
     let controller: AuthPublicController;
@@ -651,7 +649,7 @@ describe('AuthPublicController.loginWithCredential', () => {
         expect(rehashPassword).not.toHaveBeenCalled();
     });
 
-    describe('audit trail', () => {
+    describe('activity log', () => {
         const login = (password = 'pass') =>
             controller
                 .loginWithCredential(
@@ -661,72 +659,35 @@ describe('AuthPublicController.loginWithCredential', () => {
                 )
                 .catch(err => err);
 
-        // Strict: the append-only audit log keeps ids, never the email.
-        const failedWith = (user: any, reason: string) => {
-            const [who, body] = createByUserActivity.mock.calls.at(-1);
-            expect(who).toBe(user);
-            expect(body).toStrictEqual({
-                action: ENUM_ACTIVITY_ACTION.LOGIN_FAILED,
-                subject: ENUM_POLICY_SUBJECT.AUTH,
-                metadata: { id: user.id, reason },
-            });
-        };
-
-        it('records a successful login as LOGIN', async () => {
+        // Sessions already record sign-ins; the activity log is for changes.
+        it('writes no activity for a successful or rejected login', async () => {
             findOneByEmail.mockResolvedValue(activeUser);
-
             await login();
 
-            expect(createByUserActivity).toHaveBeenCalledWith(
-                activeUser,
-                expect.objectContaining({
-                    action: ENUM_ACTIVITY_ACTION.LOGIN,
-                    subject: ENUM_POLICY_SUBJECT.AUTH,
-                })
-            );
-        });
-
-        it('records a wrong password as LOGIN_FAILED', async () => {
-            findOneByEmail.mockResolvedValue(activeUser);
-            validateUser.mockResolvedValue(false);
-
+            validateUser.mockResolvedValueOnce(false);
             await login('wrong');
 
-            failedWith(activeUser, 'invalid_password');
-        });
-
-        it('records an attempt on a locked account as LOGIN_FAILED', async () => {
-            const locked = { ...activeUser, passwordAttempt: 5 };
-            findOneByEmail.mockResolvedValue(locked);
-            getPasswordAttempt.mockReturnValue(true);
-
+            findOneByEmail.mockResolvedValue({
+                ...activeUser,
+                passwordAttempt: 5,
+            });
+            getPasswordAttempt.mockReturnValueOnce(true);
             await login();
 
-            failedWith(locked, 'locked');
-        });
-
-        it('records a blocked or inactive account as LOGIN_FAILED', async () => {
-            const blocked = { ...activeUser, status: 'BLOCKED' };
-            findOneByEmail.mockResolvedValue(blocked);
+            findOneByEmail.mockResolvedValue({
+                ...activeUser,
+                status: 'BLOCKED',
+            });
             await login();
-            failedWith(blocked, 'blocked');
 
-            const inactive = { ...activeUser, status: 'INACTIVE' };
-            findOneByEmail.mockResolvedValue(inactive);
-            await login();
-            failedWith(inactive, 'inactive');
-        });
-
-        it('records an unverified email as LOGIN_FAILED', async () => {
             findOneByEmail.mockResolvedValue(activeUser);
-            join.mockResolvedValue({
+            join.mockResolvedValueOnce({
                 ...activeUser,
                 verification: { email: false },
             });
-
             await login();
 
-            failedWith(activeUser, 'email_not_verified');
+            expect(createByUserActivity).not.toHaveBeenCalled();
         });
 
         it('returns the user id with an unverified email, so the app can open the code page', async () => {
@@ -764,27 +725,6 @@ describe('AuthPublicController.loginWithCredential', () => {
 
             findOneByEmail.mockResolvedValue(undefined);
             expect((await login()).getResponse().data).toBeUndefined();
-        });
-
-        it('records nothing for an unknown email', async () => {
-            findOneByEmail.mockResolvedValue(undefined);
-
-            await login();
-
-            expect(createByUserActivity).not.toHaveBeenCalled();
-        });
-
-        it('returns the same error when the audit insert fails', async () => {
-            findOneByEmail.mockResolvedValue(activeUser);
-            validateUser.mockResolvedValue(false);
-            createByUserActivity.mockRejectedValue(new Error('db down'));
-
-            const error = await login('wrong');
-
-            expect(error.response).toStrictEqual({
-                statusCode: ENUM_USER_STATUS_CODE_ERROR.PASSWORD_NOT_MATCH,
-                message: 'auth.error.invalidCredential',
-            });
         });
     });
 });

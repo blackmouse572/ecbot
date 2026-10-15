@@ -70,6 +70,16 @@ describe("agentProfileSchema", () => {
     expect(agentProfileSchema.safeParse({ ...p, customCollect: Array.from({ length: max.count + 1 }, (_, i) => `f${i}`) }).success).toBe(false);
   });
 
+  it("accepts a custom address style only with both words filled in", () => {
+    const p = createProfile("beauty", "vi");
+    const custom = { ...p, addressStyle: "custom" as const, customAddressStyle: { self: " Shop ", customer: "ba mẹ" } };
+    expect(agentProfileSchema.parse(custom).customAddressStyle).toEqual({ self: "Shop", customer: "ba mẹ" });
+    expect(agentProfileSchema.safeParse({ ...p, addressStyle: "custom" }).success).toBe(false);
+    expect(agentProfileSchema.safeParse({ ...custom, customAddressStyle: { self: "Shop", customer: " " } }).success).toBe(false);
+    const max = PROFILE_LIMITS.customAddressStyle.length;
+    expect(agentProfileSchema.safeParse({ ...custom, customAddressStyle: { self: "x".repeat(max + 1), customer: "bạn" } }).success).toBe(false);
+  });
+
   it("rejects unknown goals, too many personality words and oversized text", () => {
     const base = createProfile("beauty", "vi");
     expect(agentProfileSchema.safeParse({ ...base, goals: ["hack"] }).success).toBe(false);

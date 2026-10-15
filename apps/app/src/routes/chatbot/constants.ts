@@ -2,7 +2,7 @@
 
 import i18n from "@/i18n";
 import type { ChatbotGetDetailResponseDto } from "@repo/client";
-import type { ChatbotFormData } from "./schemas";
+import { DEFAULT_CHAT_MODEL, type ChatbotFormData } from "./schemas";
 
 export const CHATBOT_CONSTANTS = {
   PAGE_SIZE: 20,
@@ -229,7 +229,7 @@ export const CHATBOT_FORM_DEFAULTS: Partial<ChatbotFormData> = {
   welcomeMessage: "",
   fallbackMessage: "",
   type: "beauty",
-  modelTextName: "google/gemini-2.5-flash",
+  modelTextName: DEFAULT_CHAT_MODEL,
   modelTemperature: 1.0,
   guardrailEnabled: false,
   guardrailModelEnabled: false,

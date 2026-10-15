@@ -11,6 +11,7 @@ import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
+import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
 
 export interface IEmailService {
     importChangePassword(): Promise<boolean>;
@@ -84,5 +85,9 @@ export interface IEmailService {
     sendMfaChanged(
         dto: EmailSendDto,
         data: EmailMfaChangedDto
+    ): Promise<boolean>;
+    sendPaymentFailed(
+        dto: EmailSendDto,
+        data: EmailPaymentFailedDto
     ): Promise<boolean>;
 }

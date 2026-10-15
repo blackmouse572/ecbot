@@ -63,6 +63,7 @@ import { CHATBOT_EDITABLE_FIELDS } from '../constants/chatbot.update.constant';
 import {
     ChatbotActiveDoc,
     ChatbotArchiveDoc,
+    ChatbotUnarchiveDoc,
     ChatbotBatchDeleteDoc,
     ChatbotBatchStatusDoc,
     ChatbotCreateDoc,
@@ -676,6 +677,50 @@ export class ChatbotController {
         });
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.ARCHIVE_CHATBOT,
+            subject: ENUM_POLICY_SUBJECT.CHATBOT,
+            metadata: {
+                id: chatbot.id,
+                name: chatbot.name,
+            },
+        });
+        return {
+            data: this.chatbotService.mapList([chatbot])[0],
+        };
+    }
+
+    @ChatbotUnarchiveDoc()
+    @Response('chatbot.unarchive')
+    @WorkspacePolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Post('/:id/unarchive')
+    async unarchive(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('id') id: string,
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+    ): Promise<IResponse<ChatbotListResponseDto>> {
+        const chatbot = await this.chatbotService.findOne({
+            id: id,
+            workspace: workspace.id,
+            deletedAt: null,
+        });
+
+        if (!chatbot) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'chatbot.error.notFound',
+            });
+        }
+
+        await this.chatbotService.unarchive(chatbot, {
+            actionBy: user.id,
+        });
+        await this.activityService.createByUserWithWorkspace(user, workspace, {
+            action: ENUM_ACTIVITY_ACTION.UNARCHIVE_CHATBOT,
             subject: ENUM_POLICY_SUBJECT.CHATBOT,
             metadata: {
                 id: chatbot.id,

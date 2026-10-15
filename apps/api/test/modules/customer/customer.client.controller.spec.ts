@@ -25,7 +25,6 @@ const mockCustomerService = {
 };
 
 const mockActivityService = {
-    createView: jest.fn(),
     createByUserWithWorkspace: jest.fn(),
 };
 
@@ -121,37 +120,26 @@ describe('CustomerClientController', () => {
     });
 
     describe('get', () => {
-        it('returns the customer and logs the view as the creator', async () => {
+        it('returns the customer of the credential workspace', async () => {
             mockCustomerService.findOneByIdInWorkspace.mockResolvedValue({
                 id: 'cust-1',
             });
             mockCustomerService.mapGet.mockReturnValue({ id: 'cust-1' });
 
-            const result = await controller.get(
-                workspace,
-                credential,
-                'cust-1'
-            );
+            const result = await controller.get(workspace, 'cust-1');
 
             expect(
                 mockCustomerService.findOneByIdInWorkspace
             ).toHaveBeenCalledWith('cust-1', 'workspace-1');
-            expect(mockActivityService.createView).toHaveBeenCalledWith(
-                'creator-1',
-                workspace,
-                ENUM_POLICY_SUBJECT.CUSTOMER,
-                { id: 'cust-1' }
-            );
             expect(result).toEqual({ data: { id: 'cust-1' } });
         });
 
-        it('returns 404 for a customer outside the workspace, without logging a view', async () => {
+        it('returns 404 for a customer outside the workspace', async () => {
             mockCustomerService.findOneByIdInWorkspace.mockResolvedValue(null);
 
             await expect(
-                controller.get(workspace, credential, 'cust-elsewhere')
+                controller.get(workspace, 'cust-elsewhere')
             ).rejects.toBeInstanceOf(NotFoundException);
-            expect(mockActivityService.createView).not.toHaveBeenCalled();
         });
     });
 
