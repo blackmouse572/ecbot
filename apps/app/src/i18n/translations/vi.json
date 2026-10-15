@@ -2236,6 +2236,11 @@
     "avatar": {
       "custom": "Ảnh đại diện tùy chỉnh",
       "default": "Ảnh đại diện mặc định"
+    },
+    "suspended": {
+      "title": "Workspace này đã bị tạm khoá",
+      "description": "Quản trị viên đã tạm khoá workspace này, nên chatbot ngừng trả lời và bạn chưa thể mở workspace. Dữ liệu vẫn được giữ nguyên. Liên hệ bộ phận hỗ trợ để mở lại.",
+      "goTo": "Chuyển đến {{name}}"
     }
   },
   "subscription": {

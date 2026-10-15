@@ -121,10 +121,16 @@ export function useWorkspace() {
   };
 }
 
+/** The API's 403 for a workspace an admin suspended. */
+export const WORKSPACE_SUSPENDED_STATUS_CODE = 5215;
+
 // Context provider for workspace
 export function useEnsureWorkspace() {
   const { workspaces, isLoading: isLoadingWorkspaces } = useWorkspaceList();
-  const { workspace, isLoading: isLoadingWorkspace } = useWorkspace();
+  const { workspace, isLoading: isLoadingWorkspace, error } = useWorkspace();
+  const isSuspended =
+    (error as { statusCode?: number } | null)?.statusCode ===
+    WORKSPACE_SUSPENDED_STATUS_CODE;
   const navigate = useNavigate();
   const { workspaceSlug } = useParams<{ workspaceSlug: string }>();
   const location = useLocation();
@@ -182,6 +188,7 @@ export function useEnsureWorkspace() {
     workspace,
     isLoading: isLoadingWorkspaces || isLoadingWorkspace,
     hasWorkspaces: workspaces.length > 0,
+    isSuspended,
   };
 }
 

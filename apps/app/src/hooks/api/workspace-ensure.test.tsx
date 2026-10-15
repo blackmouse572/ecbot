@@ -9,16 +9,23 @@ const ALPHA = { id: "1", slug: "alpha", name: "Alpha" };
 const BETA = { id: "2", slug: "beta", name: "Beta" };
 // Just created: the workspace exists, but the cached list predates it.
 const GAMMA = { id: "3", slug: "gamma", name: "Gamma" };
+// Listed, but an admin suspended it: its details answer 403 / 5215.
+const DELTA = { id: "4", slug: "delta", name: "Delta" };
 
 vi.mock("@repo/client", () => ({
   workspaceControllerGetListWorkSpaceV1: vi.fn(async () => ({
-    data: { data: [ALPHA, BETA] },
+    data: { data: [ALPHA, BETA, DELTA] },
   })),
-  workspaceControllerDetailsV1: vi.fn(async ({ path }: A) => ({
-    data: {
-      data: [ALPHA, BETA, GAMMA].find((w) => w.slug === path.workspace),
-    },
-  })),
+  workspaceControllerDetailsV1: vi.fn(async ({ path }: A) => {
+    if (path.workspace === DELTA.slug) {
+      throw { statusCode: 5215, message: "suspended" };
+    }
+    return {
+      data: {
+        data: [ALPHA, BETA, GAMMA].find((w) => w.slug === path.workspace),
+      },
+    };
+  }),
   workspaceControllerCreateWorkSpaceV1: vi.fn(),
   workspaceControllerUpdateWorkSpaceV1: vi.fn(),
   workspaceControllerDeleteWorkSpaceV1: vi.fn(),
@@ -106,5 +113,28 @@ describe("useEnsureWorkspace with a workspace missing from a stale list", () => 
         "/alpha/dashboard",
       ),
     );
+  });
+});
+
+describe("useEnsureWorkspace with a suspended workspace", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("reports the workspace as suspended and stays on it", async () => {
+    const { result } = renderAt("/delta/dashboard");
+
+    await waitFor(() => expect(result.current.isSuspended).toBe(true));
+    expect(result.current.workspace).toBeUndefined();
+    expect(document.querySelector('[data-testid="path"]')?.textContent).toBe(
+      "/delta/dashboard",
+    );
+  });
+
+  it("does not flag a workspace that loads", async () => {
+    const { result } = renderAt("/beta/dashboard");
+
+    await waitFor(() => expect(result.current.workspace).toBeDefined());
+    expect(result.current.isSuspended).toBe(false);
   });
 });

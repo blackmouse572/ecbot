@@ -2168,6 +2168,11 @@
     "avatar": {
       "custom": "Custom avatar",
       "default": "Default avatar"
+    },
+    "suspended": {
+      "title": "This workspace is suspended",
+      "description": "An admin has suspended this workspace, so its chatbots no longer reply and it can't be opened. Your data is kept. Contact support to restore access.",
+      "goTo": "Go to {{name}}"
     }
   },
   "subscription": {
