@@ -6,6 +6,7 @@ import {
     PaginationQueryFilterEqual,
     PaginationQueryFilterInEnum,
 } from 'src/common/pagination/decorators/pagination.decorator';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
 import { ResponsePaging } from 'src/common/response/decorators/response.decorator';
@@ -51,7 +52,11 @@ export class ActivityAdminGlobalController {
     @ApiKeyProtected()
     @Get('/list')
     async list(
-        @PaginationQuery({ availableSearch: ACTIVITY_ADMIN_AVAILABLE_SEARCH })
+        @PaginationQuery({
+            availableSearch: ACTIVITY_ADMIN_AVAILABLE_SEARCH,
+            defaultOrderBy: 'createdAt',
+            defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+        })
         { _search, _limit, _offset, _order }: PaginationListDto,
         @PaginationQueryFilterInEnum('action', undefined, ENUM_ACTIVITY_ACTION)
         _action?: Record<string, any>,

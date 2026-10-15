@@ -10,7 +10,16 @@ import { ActivityListResponseDto } from './activity.list.response.dto';
 // credentials and the invitation code never leave the service.
 export class ActivityAdminListResponseDto extends OmitType(
     ActivityListResponseDto,
-    ['user', 'by'] as const
+    // The mapper returns no audit trail fields, so they stay out of the contract.
+    [
+        'user',
+        'by',
+        'createdBy',
+        'updatedBy',
+        'deleted',
+        'deletedAt',
+        'deletedBy',
+    ] as const
 ) {
     @ApiProperty({ type: UserMetaResponseDto, required: true })
     @Type(() => UserMetaResponseDto)

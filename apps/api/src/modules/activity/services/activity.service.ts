@@ -14,11 +14,11 @@ import { ActivityCreateRequest } from 'src/modules/activity/dtos/request/activit
 import { ActivityListResponseDto } from 'src/modules/activity/dtos/response/activity.list.response.dto';
 import { ActivityEntity } from 'src/modules/activity/repository/entities/activity.entity';
 import { ActivityRepository } from 'src/modules/activity/repository/repositories/activity.repository';
+import { UserMetaResponseDto } from 'src/modules/user/dtos/response/user.meta.response.dto';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 
 import { ActivityAdminListResponseDto } from '../dtos/response/activity.admin-list.response.dto';
 import { ActivityAdminWorkspaceResponseDto } from '../dtos/response/activity.admin-workspace.response.dto';
-import { UserMetaResponseDto } from 'src/modules/user/dtos/response/user.meta.response.dto';
 @Injectable()
 export class ActivityService {
     constructor(
