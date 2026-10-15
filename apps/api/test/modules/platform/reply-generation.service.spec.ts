@@ -256,7 +256,10 @@ describe('ReplyGenerationService.run', () => {
             { kind: 'SKILL', label: 'refunds', at: new Date() },
         ];
 
-        function deliveringService(anySent: boolean) {
+        function deliveringService(
+            anySent: boolean,
+            endedWithoutReply = false
+        ) {
             const conversations = {
                 findOneById: jest.fn().mockResolvedValue({
                     botEnabled: true,
@@ -295,6 +298,7 @@ describe('ReplyGenerationService.run', () => {
                         guardrailReason: '',
                         generationFailed: false,
                         activities,
+                        endedWithoutReply,
                     }),
                 } as any,
                 { get: jest.fn(() => conversations) } as any,
@@ -326,6 +330,16 @@ describe('ReplyGenerationService.run', () => {
                 'c',
                 activities
             );
+        });
+
+        it('sends no fallback when the agent chose to end without a reply', async () => {
+            const { run, conversations } = deliveringService(false, true);
+
+            await expect(run()).resolves.toEqual({
+                status: 'skipped',
+                reason: 'ended_without_reply',
+            });
+            expect(conversations.recordFallback).not.toHaveBeenCalled();
         });
 
         it('records nothing when no reply was sent', async () => {

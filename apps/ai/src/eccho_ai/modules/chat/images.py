@@ -37,6 +37,13 @@ _DESCRIBE_PROMPT = (
     'only: {"images": [{"image": <number>, "description": "<text>"}]}, one entry '
     "per user image."
 )
+_STICKER_PROMPT = (
+    "Images labelled (sticker) are chat stickers or emoji the user sent as a "
+    "reaction. For each sticker, instead of describing it, say in a few words "
+    "what the user means by it (for example: ok / agreed, thanks, does not "
+    "understand / asking, laughing, love, sad, angry, goodbye), then any text on "
+    "it. Never match a sticker with a catalog image."
+)
 _CATALOG_PROMPT = (
     "After the user's images come the business's own catalog images, each after "
     "its label. They are for comparison only: describe only the user's images. "
@@ -142,11 +149,18 @@ async def describe_images(
     if not fetched:
         return [None] * len(images), {}
 
-    catalog = await _catalog_parts(chatbot.general_knowledge)
-    prompt = f"{_DESCRIBE_PROMPT} {_CATALOG_PROMPT}" if catalog else _DESCRIBE_PROMPT
-    content: list[dict] = [{"type": "text", "text": prompt}]
-    for number, (_, data_url) in enumerate(fetched, start=1):
-        content += [{"type": "text", "text": f"Image {number}"}, _image(data_url)]
+    stickers = [wanted[index].kind == "sticker" for index, _ in fetched]
+    # Stickers are never products: a burst of only stickers skips the catalog.
+    catalog = [] if all(stickers) else await _catalog_parts(chatbot.general_knowledge)
+    prompt = [_DESCRIBE_PROMPT]
+    if any(stickers):
+        prompt.append(_STICKER_PROMPT)
+    if catalog:
+        prompt.append(_CATALOG_PROMPT)
+    content: list[dict] = [{"type": "text", "text": " ".join(prompt)}]
+    for number, ((_, data_url), sticker) in enumerate(zip(fetched, stickers), start=1):
+        label = f"Image {number} (sticker)" if sticker else f"Image {number}"
+        content += [{"type": "text", "text": label}, _image(data_url)]
     content += catalog
     try:
         model = build_chat_model(

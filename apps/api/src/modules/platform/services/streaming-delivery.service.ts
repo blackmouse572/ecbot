@@ -132,6 +132,9 @@ export interface DeliveryResult {
     usage?: TokenUsageDelta;
     /** Skills loaded and knowledge searched for this reply (#286). */
     activities: IReplyActivity[];
+    /** The agent ended the turn on purpose with nothing to send, so no
+     *  fallback goes out. */
+    endedWithoutReply?: boolean;
 }
 
 @Injectable()
@@ -253,6 +256,7 @@ export class StreamingDelivery {
                         generationFailed: failed,
                         usage,
                         activities: activity.activities,
+                        endedWithoutReply: activity.endedWithoutReply,
                     })
                 );
             };
@@ -358,6 +362,7 @@ export class StreamingDelivery {
             generationFailed: false,
             usage: result.usage,
             activities: result.activities,
+            endedWithoutReply: result.endedWithoutReply,
         };
     }
 
@@ -412,6 +417,7 @@ export class StreamingDelivery {
         generationFailed: boolean;
         usage?: TokenUsageDelta;
         activities: IReplyActivity[];
+        endedWithoutReply: boolean;
     }> {
         return new Promise(resolve => {
             const segments: ReplySegment[] = [];
@@ -506,6 +512,7 @@ export class StreamingDelivery {
                     generationFailed,
                     usage,
                     activities: activity.activities,
+                    endedWithoutReply: activity.endedWithoutReply,
                 });
             };
 

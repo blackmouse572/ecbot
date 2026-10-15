@@ -71,6 +71,42 @@ describe('StreamingDelivery.deliver (UI Message Stream)', () => {
         expect(res).toMatchObject({ anySent: true, superseded: false });
     });
 
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        'reports a turn the agent ended without a reply (%s)',
+        async (_path, chatbot) => {
+            const adapter = makeAdapter();
+            const res = await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({
+                        type: 'tool-input-start',
+                        toolCallId: 'c1',
+                        toolName: 'end_without_reply',
+                    }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async () => 'nonce',
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(adapter.sendMessage).not.toHaveBeenCalled();
+            expect(res).toMatchObject({
+                anySent: false,
+                endedWithoutReply: true,
+            });
+        }
+    );
+
     it('stops sending when superseded (keeps already-sent)', async () => {
         let sent = 0;
         const adapter = {

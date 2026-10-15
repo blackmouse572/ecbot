@@ -183,10 +183,23 @@ def _stub_api_client_all(monkeypatch, *, post=None, get=None, delete=None):
     return calls
 
 
-def test_ten_system_tools_registered():
-    assert len(SYSTEM_TOOLS) == 10
+def test_eleven_system_tools_registered():
+    assert len(SYSTEM_TOOLS) == 11
     names = {t.name for t in SYSTEM_TOOLS}
-    assert {"schedule_followup", "list_pending_followups", "cancel_followup", "send_image"} <= names
+    assert {
+        "schedule_followup",
+        "list_pending_followups",
+        "cancel_followup",
+        "send_image",
+        "end_without_reply",
+    } <= names
+
+
+async def test_end_without_reply_ends_the_turn_at_the_call():
+    # The model writing "No reply needed." after the call would reach the customer.
+    assert system_tools_module.end_without_reply.return_direct is True
+    out = await system_tools_module.end_without_reply.ainvoke({"reason": "customer said ok"})
+    assert out == {"ok": True}
 
 
 async def test_schedule_followup_no_context_returns_error(monkeypatch):
@@ -376,3 +389,33 @@ async def test_schedule_followup_cap_with_at_is_still_a_failure(monkeypatch):
         {"at": "2026-10-14T09:00", "prompt": "remind", "reason": "reminder"}
     )
     assert result["instruction"] == system_tools_module.FOLLOWUP_FAILED
+
+
+async def test_the_shared_agent_stops_at_end_without_reply():
+    # A model that would write a line after the call never gets the step to.
+    from langchain.agents import create_agent
+    from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
+    from langchain_core.messages import AIMessage, ToolMessage
+
+    class _Model(GenericFakeChatModel):
+        def bind_tools(self, tools, **kw):
+            return self
+
+    model = _Model(
+        messages=iter(
+            [
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {"name": "end_without_reply", "args": {"reason": "ok"}, "id": "c1", "type": "tool_call"}
+                    ],
+                ),
+                AIMessage(content="No reply needed."),
+            ]
+        )
+    )
+    agent = create_agent(model=model, tools=SYSTEM_TOOLS)
+    result = await agent.ainvoke({"messages": [("user", "👍")]})
+
+    assert isinstance(result["messages"][-1], ToolMessage)
+    assert all(m.content != "No reply needed." for m in result["messages"])
