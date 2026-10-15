@@ -10,6 +10,8 @@ describe('ChatbotSkillService admin', () => {
         repo as any,
         {} as any,
         {} as any,
+        {} as any,
+        {} as any,
         {} as any
     );
 
