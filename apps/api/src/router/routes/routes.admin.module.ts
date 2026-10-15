@@ -9,6 +9,7 @@ import { RAGAdminController } from '@app/modules/rag/controllers/rag.admin.contr
 import { SkillAdminController } from '@app/modules/skill/controllers/skill.admin.controller';
 import { SkillModule } from '@app/modules/skill/skill.module';
 import { ToolAdminController } from '@app/modules/tool/controllers/tool.admin.controller';
+import { ToolkitAdminController } from '@app/modules/tool/controllers/toolkit.admin.controller';
 import { ToolModule } from '@app/modules/tool/tool.module';
 import { RAGModule } from '@app/modules/rag/rag.module';
 import { WorkSpaceModule } from '@app/modules/workspace/workspace.module';
@@ -56,6 +57,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         RAGAdminController,
         SkillAdminController,
         ToolAdminController,
+        ToolkitAdminController,
         WaitlistAdminController,
         WorkspaceAdminController,
         KnowledgeItemAdminController,

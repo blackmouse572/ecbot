@@ -3,6 +3,8 @@ import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import { IPaginationOrder } from 'src/common/pagination/interfaces/pagination.interface';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
 import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
+import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
+import { IToolkitUsage } from 'src/modules/tool/interfaces/toolkit-usage.interface';
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
 
 @Injectable()
@@ -82,5 +84,42 @@ export class ToolRepository extends DatabaseRepository<ToolEntity> {
                 ],
             },
         });
+    }
+
+    /**
+     * Live tools per marketplace toolkit: how many workspaces installed it and
+     * how many tools that made. Keyed by the toolkit slug in `source`.
+     */
+    async countUsageByToolkit(
+        provider: ENUM_MCP_PROVIDER.ECCHO | ENUM_MCP_PROVIDER.COMPOSIO
+    ): Promise<Map<string, IToolkitUsage>> {
+        const key =
+            provider === ENUM_MCP_PROVIDER.ECCHO ? 'service' : 'toolkit';
+        const rows: {
+            slug: string;
+            workspace_count: string;
+            tool_count: string;
+        }[] = await this.em.getConnection().execute(
+            `
+            SELECT source->>'${key}' AS slug,
+                   COUNT(DISTINCT workspace_id) AS workspace_count,
+                   COUNT(*) AS tool_count
+            FROM tools
+            WHERE deleted = false AND mcp_provider = ?
+              AND source->>'${key}' IS NOT NULL
+            GROUP BY 1
+            `,
+            [provider]
+        );
+
+        return new Map(
+            rows.map(row => [
+                row.slug,
+                {
+                    workspaceCount: Number(row.workspace_count),
+                    toolCount: Number(row.tool_count),
+                },
+            ])
+        );
     }
 }
