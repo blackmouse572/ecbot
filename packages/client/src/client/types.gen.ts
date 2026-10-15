@@ -3273,6 +3273,114 @@ export type WorkspaceUpdateStatusRequestDto = {
     status: 'ACTIVE' | 'SUSPENDED';
 };
 
+export type FollowupChatbotResponseDto = {
+    /**
+     * Chatbot ID
+     */
+    id: string;
+    /**
+     * Chatbot name
+     */
+    name: string;
+    /**
+     * Chatbot avatar URL
+     */
+    avatar: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type FollowupAdminListResponseDto = {
+    /**
+     * Follow-up job ID
+     */
+    followupId: string;
+    chatbot: FollowupChatbotResponseDto;
+    /**
+     * Conversation the follow-up belongs to
+     */
+    conversationId: string;
+    /**
+     * Sender name on the conversation
+     */
+    senderName: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Message that triggered scheduling this follow-up
+     */
+    triggerMessageId: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Reason the follow-up was scheduled
+     */
+    reason: string;
+    status: 'SCHEDULED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'CANCELLED';
+    /**
+     * When the follow-up is due to fire
+     */
+    scheduledAt: string;
+    /**
+     * When the follow-up actually ran
+     */
+    firedAt: string | null;
+    /**
+     * Skip reason, or the error message when the run failed
+     */
+    outcomeReason: string | null;
+    /**
+     * Minutes remaining until the follow-up fires; 0 once it is no longer scheduled
+     */
+    firesInMinutes: number;
+    workspace: ActivityAdminWorkspaceResponseDto;
+    /**
+     * Instruction the bot follows when the follow-up fires
+     */
+    prompt: string;
+    /**
+     * Cloud Tasks delivery attempts so far
+     */
+    attempts: number;
+    cancelledAt: string | null;
+    createdAt: string;
+};
+
+export type ChatbotSkillAdminChatbotResponseDto = {
+    id: string;
+    name: string;
+    avatar: string | null;
+};
+
+export type ChatbotSkillAdminSkillResponseDto = {
+    id: string;
+    name: string;
+    slug: string;
+    status: 'ACTIVE' | 'INACTIVE';
+    /**
+     * True for Ecbot builtin skills
+     */
+    isBuiltin: boolean;
+};
+
+export type ChatbotSkillAdminListResponseDto = {
+    /**
+     * Link id
+     */
+    id: string;
+    /**
+     * Whether the agent uses the skill now
+     */
+    enabled: boolean;
+    chatbot: ChatbotSkillAdminChatbotResponseDto;
+    skill: ChatbotSkillAdminSkillResponseDto;
+    workspace: ActivityAdminWorkspaceResponseDto;
+    /**
+     * When the skill was attached
+     */
+    createdAt: string;
+};
+
 export type UserUpdateProfileRequestDto = {
     name: string;
     country: string;
@@ -5814,23 +5922,6 @@ export type NavCountGetResponseDto = {
      * Tools with a broken connection (re-auth / expired / revoked)
      */
     toolsNeedingAttention: number;
-};
-
-export type FollowupChatbotResponseDto = {
-    /**
-     * Chatbot ID
-     */
-    id: string;
-    /**
-     * Chatbot name
-     */
-    name: string;
-    /**
-     * Chatbot avatar URL
-     */
-    avatar: {
-        [key: string]: unknown;
-    } | null;
 };
 
 export type FollowupListResponseDto = {
@@ -16843,6 +16934,308 @@ export type WorkspaceAdminControllerUpdateStatusV1Responses = {
 };
 
 export type WorkspaceAdminControllerUpdateStatusV1Response = WorkspaceAdminControllerUpdateStatusV1Responses[keyof WorkspaceAdminControllerUpdateStatusV1Responses];
+
+export type FollowupAdminControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Filter by workspace id
+         */
+        workspace?: string;
+        /**
+         * Filter by chatbot id
+         */
+        chatbot?: string;
+        /**
+         * value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/followup/list';
+};
+
+export type FollowupAdminControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type FollowupAdminControllerListV1Error = FollowupAdminControllerListV1Errors[keyof FollowupAdminControllerListV1Errors];
+
+export type FollowupAdminControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<FollowupAdminListResponseDto>;
+    };
+};
+
+export type FollowupAdminControllerListV1Response = FollowupAdminControllerListV1Responses[keyof FollowupAdminControllerListV1Responses];
+
+export type FollowupAdminControllerCancelV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        followup: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/followup/cancel/{followup}';
+};
+
+export type FollowupAdminControllerCancelV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type FollowupAdminControllerCancelV1Error = FollowupAdminControllerCancelV1Errors[keyof FollowupAdminControllerCancelV1Errors];
+
+export type FollowupAdminControllerCancelV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type FollowupAdminControllerCancelV1Response = FollowupAdminControllerCancelV1Responses[keyof FollowupAdminControllerCancelV1Responses];
+
+export type ChatbotSkillAdminControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Filter by workspace id
+         */
+        workspace?: string;
+        /**
+         * Filter by chatbot id
+         */
+        chatbot?: string;
+        /**
+         * Filter by skill id
+         */
+        skill?: string;
+        /**
+         * true, false, or both with ',' delimiter
+         */
+        enabled?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/chatbot-skill/list';
+};
+
+export type ChatbotSkillAdminControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotSkillAdminControllerListV1Error = ChatbotSkillAdminControllerListV1Errors[keyof ChatbotSkillAdminControllerListV1Errors];
+
+export type ChatbotSkillAdminControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ChatbotSkillAdminListResponseDto>;
+    };
+};
+
+export type ChatbotSkillAdminControllerListV1Response = ChatbotSkillAdminControllerListV1Responses[keyof ChatbotSkillAdminControllerListV1Responses];
 
 export type UserSharedControllerProfileV1Data = {
     body?: never;
