@@ -39,6 +39,7 @@ import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.repository';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
+import { localizeBuiltinSkill } from 'src/modules/skill/utils/builtin-skill-localize.util';
 
 const S3_PRIVATE = { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE };
 
@@ -344,13 +345,19 @@ export class SkillService {
         return `${base}-${Date.now()}`;
     }
 
-    mapList(skills: SkillEntity[]): SkillListResponseDto[] {
+    // `language` translates builtin templates for the app's reader.
+    mapList(skills: SkillEntity[], language?: string): SkillListResponseDto[] {
         return skills.map(skill => {
             const obj = wrap(skill).toObject() as any;
+            const localized = localizeBuiltinSkill(skill, language);
             return plainToInstance(
                 SkillListResponseDto,
                 {
                     ...obj,
+                    ...(localized && {
+                        name: localized.name,
+                        description: localized.description,
+                    }),
                     isBuiltin: !skill.workspace,
                     workspaceId: obj.workspace?.id,
                     workspaceName: obj.workspace?.name,
@@ -360,13 +367,18 @@ export class SkillService {
         });
     }
 
-    mapOne(skill: SkillEntity, instructions: string): SkillGetResponseDto {
+    mapOne(
+        skill: SkillEntity,
+        instructions: string,
+        language?: string
+    ): SkillGetResponseDto {
         return plainToInstance(
             SkillGetResponseDto,
             {
                 ...wrap(skill).toObject(),
                 isBuiltin: !skill.workspace,
                 instructions,
+                ...localizeBuiltinSkill(skill, language),
             },
             { excludeExtraneousValues: true }
         );
