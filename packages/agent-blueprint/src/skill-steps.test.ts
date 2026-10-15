@@ -160,12 +160,13 @@ describe("skillStepsSchema", () => {
 });
 
 describe("skillToolRefs", () => {
-  it("lists each tool and action once, nested steps included", () => {
+  it("lists each workspace tool and action once, nested steps included", () => {
     expect(
       skillToolRefs([
         ...orderTracking,
         { id: "again", type: "tool", toolId: "t-lookup" },
         { id: "blank", type: "tool", toolId: "" },
+        { id: "builtin", type: "tool", toolId: "system:handoff" },
       ]),
     ).toEqual([
       { toolId: "t-lookup" },
@@ -295,5 +296,93 @@ describe("compileSkill", () => {
     ).toBe(
       "Body\n\n## Rules (always, even when a step says otherwise)\n- No promises.",
     );
+  });
+});
+
+describe("built-in actions", () => {
+  const compile = (steps: SkillStep[], guardrails: string[] = []) =>
+    compileSkill({
+      name: "T",
+      guardrails,
+      format: "STEPS",
+      steps,
+      toolName: () => undefined,
+    });
+
+  it("are valid without a workspace tool", () => {
+    expect(
+      validateSkillSteps(
+        [{ id: "h", type: "tool", toolId: "system:handoff" }],
+        { toolName: () => undefined },
+      ),
+    ).toEqual([]);
+  });
+
+  it("need a tag or field name where the action takes one", () => {
+    expect(
+      validateSkillSteps(
+        [
+          { id: "a", type: "tool", toolId: "system:add_tag" },
+          {
+            id: "f",
+            type: "tool",
+            toolId: "system:save_customer_field",
+            action: " ",
+          },
+          { id: "x", type: "tool", toolId: "system:nope" },
+        ],
+        { toolName: () => undefined },
+      ),
+    ).toEqual([
+      { id: "a", code: "action_required" },
+      { id: "f", code: "action_required" },
+      { id: "x", code: "tool_unknown" },
+    ]);
+  });
+
+  it("compile to the agent's system tool calls", () => {
+    const body = compile(
+      [
+        { id: "t", type: "tool", toolId: "system:add_tag", action: "VIP" },
+        {
+          id: "r",
+          type: "tool",
+          toolId: "system:remove_tag",
+          action: "New lead",
+        },
+        {
+          id: "f",
+          type: "tool",
+          toolId: "system:save_customer_field",
+          action: "budget",
+        },
+        {
+          id: "s",
+          type: "tool",
+          toolId: "system:schedule_followup",
+          text: "Remind them about the booking the day before.",
+        },
+        { id: "h", type: "tool", toolId: "system:handoff" },
+        { id: "n", type: "tool", toolId: "system:notify_team" },
+      ],
+      ["Be kind."],
+    );
+    expect(body).toContain('1. Call `apply_customer_tag` with the tag "VIP".');
+    expect(body).toContain(
+      '2. Call `remove_customer_tag` with the tag "New lead".',
+    );
+    expect(body).toContain(
+      '3. Call `set_customer_field` to save the customer\'s "budget" from what they told you.',
+    );
+    expect(body).toContain(
+      "4. Call `schedule_followup` to follow up with the customer later. How: Remind them about the booking the day before.",
+    );
+    expect(body).toContain(
+      '5. Hand the conversation to a person now: in this same reply, before you write to the customer, call `apply_customer_tag` with the name of the tag marked "(triggers handoff)" that fits best. Writing that staff will help does nothing without this call.',
+    );
+    expect(body).toContain(
+      '6. Let the team know now: in this same reply, call `apply_customer_tag` with the name of the tag marked "(notifies the team)" that fits best, then go on helping the customer.',
+    );
+    expect(body).not.toContain("check the result against the Rules");
   });
 });

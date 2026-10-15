@@ -14,7 +14,9 @@ export const SKILL_GUARDRAIL_MAX = 500;
 export type AskStep = { id: string; type: "ask"; text: string };
 export type SayStep = { id: string; type: "say"; text: string };
 export type TellStep = { id: string; type: "tell"; text: string };
-// `toolId` points at the workspace tool; `action` picks one action of an MCP tool.
+// `toolId` points at the workspace tool, or names a built-in action
+// ("system:handoff", ...); `action` picks one action of an MCP tool, or holds the
+// tag or field name a built-in action needs.
 export type ToolStep = {
   id: string;
   type: "tool";
@@ -30,6 +32,21 @@ export type IfStep = {
   branches: IfBranch[];
   otherwise?: SkillStep[];
 };
+// Actions every agent has (apps/ai system_tools), usable as Tool steps without a
+// workspace tool. `needsName`: the step's `action` holds the tag or field name.
+export const SKILL_SYSTEM_ACTIONS = {
+  "system:handoff": { needsName: false },
+  "system:notify_team": { needsName: false },
+  "system:add_tag": { needsName: true },
+  "system:remove_tag": { needsName: true },
+  "system:schedule_followup": { needsName: false },
+  "system:save_customer_field": { needsName: true },
+} as const;
+export type SkillSystemAction = keyof typeof SKILL_SYSTEM_ACTIONS;
+const SYSTEM_PREFIX = "system:";
+export const isSystemToolId = (toolId: string) =>
+  toolId.startsWith(SYSTEM_PREFIX);
+
 export type SkillStep = AskStep | SayStep | TellStep | ToolStep | IfStep;
 
 const id = z.string().min(1).max(64);
@@ -75,7 +92,8 @@ export type SkillStepIssueCode =
   | "condition_required"
   | "branch_empty"
   | "tool_required"
-  | "tool_unknown";
+  | "tool_unknown"
+  | "action_required";
 /** `id` is the step or branch the issue belongs to; none for the whole list. */
 export type SkillStepIssue = { id?: string; code: SkillStepIssueCode };
 
@@ -112,14 +130,18 @@ export function parseSkillSteps(
   return { success: false, issues };
 }
 
-/** The tools (and MCP actions) a step tree calls, each once, in reading order. */
+/** The workspace tools (and MCP actions) a step tree calls, each once, in reading order. Built-in actions are left out. */
 export function skillToolRefs(
   steps: SkillStep[],
 ): Pick<ToolStep, "toolId" | "action">[] {
   const refs = new Map<string, Pick<ToolStep, "toolId" | "action">>();
   const walk = (list: SkillStep[]) => {
     for (const step of list) {
-      if (step.type === "tool" && !blank(step.toolId)) {
+      if (
+        step.type === "tool" &&
+        !blank(step.toolId) &&
+        !isSystemToolId(step.toolId)
+      ) {
         const ref = step.action
           ? { toolId: step.toolId, action: step.action }
           : { toolId: step.toolId };
@@ -170,7 +192,12 @@ export function validateSkillSteps(
       } else if (step.type === "tool") {
         if (blank(step.toolId))
           issues.push({ id: step.id, code: "tool_required" });
-        else if (opts.toolName && !opts.toolName(step))
+        else if (isSystemToolId(step.toolId)) {
+          const action = SKILL_SYSTEM_ACTIONS[step.toolId as SkillSystemAction];
+          if (!action) issues.push({ id: step.id, code: "tool_unknown" });
+          else if (action.needsName && blank(step.action))
+            issues.push({ id: step.id, code: "action_required" });
+        } else if (opts.toolName && !opts.toolName(step))
           issues.push({ id: step.id, code: "tool_unknown" });
       } else if (blank(step.text)) {
         issues.push({ id: step.id, code: "text_required" });
@@ -251,6 +278,8 @@ function compileStep(
       ];
     case "tool": {
       const how = blank(step.text) ? "" : ` How: ${sentence(step.text!)}.`;
+      if (isSystemToolId(step.toolId))
+        return [`${head}${compileSystemAction(step)}${how}`];
       const check = checkRules
         ? " When it returns, check the result against the Rules below before you tell the customer anything from it."
         : "";
@@ -290,5 +319,25 @@ function compileStep(
         out.push(`${inner}Then continue with step ${next}.`);
       return out;
     }
+  }
+}
+
+function compileSystemAction(step: ToolStep): string {
+  const name = `"${step.action?.trim()}"`;
+  switch (step.toolId as SkillSystemAction) {
+    case "system:handoff":
+      return 'Hand the conversation to a person now: in this same reply, before you write to the customer, call `apply_customer_tag` with the name of the tag marked "(triggers handoff)" that fits best. Writing that staff will help does nothing without this call.';
+    case "system:notify_team":
+      return 'Let the team know now: in this same reply, call `apply_customer_tag` with the name of the tag marked "(notifies the team)" that fits best, then go on helping the customer.';
+    case "system:add_tag":
+      return `Call \`apply_customer_tag\` with the tag ${name}.`;
+    case "system:remove_tag":
+      return `Call \`remove_customer_tag\` with the tag ${name}.`;
+    case "system:schedule_followup":
+      return "Call `schedule_followup` to follow up with the customer later.";
+    case "system:save_customer_field":
+      return `Call \`set_customer_field\` to save the customer's ${name} from what they told you.`;
+    default:
+      return `Call the \`${step.toolId}\` tool.`;
   }
 }

@@ -6,7 +6,11 @@ import {
   Tools,
 } from "@medusajs/icons";
 import { Badge, Text } from "@medusajs/ui";
-import type { SkillStep, ToolStep } from "@repo/agent-blueprint";
+import {
+  isSystemToolId,
+  type SkillStep,
+  type ToolStep,
+} from "@repo/agent-blueprint";
 import type { FC, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -71,8 +75,15 @@ const Row: FC<{ number: string; children: ReactNode }> = ({
 // (1, 2, 3.1, 3.2, ...).
 export const SkillStepsView: FC<Props> = ({ steps, toolLabel }) => {
   const { t } = useTranslation();
-  const labelOf: ToolLabel = (s) =>
-    toolLabel?.(s) || s.action || t("skills.steps.unknownTool");
+  const labelOf: ToolLabel = (s) => {
+    if (isSystemToolId(s.toolId)) {
+      const name = t(
+        `skills.steps.builtin.${s.toolId.slice("system:".length)}`,
+      );
+      return s.action ? `${name} · ${s.action}` : name;
+    }
+    return toolLabel?.(s) || s.action || t("skills.steps.unknownTool");
+  };
 
   // `next` hands out numbers in reading order, so nested steps number on
   // across branches (3.1, 3.2 | 3.3) like the compiled prompt.

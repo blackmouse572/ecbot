@@ -122,7 +122,15 @@
       "if": "Nếu",
       "elseIf": "Nếu không, nếu",
       "else": "Nếu không",
-      "unknownTool": "Công cụ không rõ"
+      "unknownTool": "Công cụ không rõ",
+      "builtin": {
+        "handoff": "Chuyển cho nhân viên",
+        "notify_team": "Báo cho đội ngũ",
+        "add_tag": "Gắn tag",
+        "remove_tag": "Gỡ tag",
+        "schedule_followup": "Hẹn nhắn lại",
+        "save_customer_field": "Lưu thông tin khách"
+      }
     },
     "start": {
       "title": "Bắt đầu với",

@@ -22,7 +22,7 @@ export const SkillStartChips: FC<Props> = ({ onTemplate, onImport }) => {
   const [loading, setLoading] = useState<string | null>(null);
   const { skills: templates } = useListSkills(workspaceSlug, {
     source: "template",
-    perPage: 8,
+    perPage: 20,
   });
 
   const pick = async (id: string) => {

@@ -122,7 +122,15 @@
       "if": "If",
       "elseIf": "Else if",
       "else": "Else",
-      "unknownTool": "Unknown tool"
+      "unknownTool": "Unknown tool",
+      "builtin": {
+        "handoff": "Hand off to staff",
+        "notify_team": "Notify the team",
+        "add_tag": "Add tag",
+        "remove_tag": "Remove tag",
+        "schedule_followup": "Schedule a follow-up",
+        "save_customer_field": "Save customer info"
+      }
     },
     "start": {
       "title": "Get started with",

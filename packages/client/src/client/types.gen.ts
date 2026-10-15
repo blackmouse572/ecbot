@@ -2979,7 +2979,7 @@ export type CreateSkillRequestDto = {
      */
     format?: 'CONTENT' | 'STEPS';
     /**
-     * Step tree for a STEPS skill: ask, say, tell, tool ({ toolId, action? }) and if ({ branches: [{ condition, steps }], otherwise }). Each step and branch needs a unique `id`.
+     * Step tree for a STEPS skill: ask, say, tell, tool ({ toolId, action? }; toolId can be a built-in action: system:handoff, system:notify_team, system:add_tag, system:remove_tag, system:schedule_followup, system:save_customer_field, with the tag or field name in action) and if ({ branches: [{ condition, steps }], otherwise }). Each step and branch needs a unique `id`.
      */
     steps?: Array<{
         [key: string]: unknown;
@@ -3012,7 +3012,7 @@ export type UpdateSkillRequestDto = {
      */
     format?: 'CONTENT' | 'STEPS';
     /**
-     * Step tree for a STEPS skill: ask, say, tell, tool ({ toolId, action? }) and if ({ branches: [{ condition, steps }], otherwise }). Each step and branch needs a unique `id`.
+     * Step tree for a STEPS skill: ask, say, tell, tool ({ toolId, action? }; toolId can be a built-in action: system:handoff, system:notify_team, system:add_tag, system:remove_tag, system:schedule_followup, system:save_customer_field, with the tag or field name in action) and if ({ branches: [{ condition, steps }], otherwise }). Each step and branch needs a unique `id`.
      */
     steps?: Array<{
         [key: string]: unknown;
