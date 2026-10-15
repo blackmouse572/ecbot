@@ -10,6 +10,7 @@ vi.mock("@/hooks/use-workspace-params", () => ({
 }));
 vi.mock("@/hooks/api/tools", () => ({
   useGetTool: () => ({ tool: undefined }),
+  useInfiniteToolList: () => ({ tools: [] }),
 }));
 vi.mock("@/hooks/api/customer-tags", () => ({
   useCustomerTagList: () => ({ tags: [] }),
@@ -29,7 +30,6 @@ const Harness = ({
     <SkillStepsEditor
       steps={steps}
       onChange={setSteps}
-      tools={[]}
       showIssues={showIssues}
     />
   );

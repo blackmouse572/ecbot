@@ -3,7 +3,6 @@ import {
   type SkillStep,
   type SkillStepIssueCode,
 } from "@repo/agent-blueprint";
-import type { ToolListResponseDto } from "@repo/client";
 import { useMemo, type FC } from "react";
 import {
   addStep,
@@ -18,7 +17,6 @@ import { SkillStepList } from "./skill-step-list";
 type Props = {
   steps: SkillStep[];
   onChange: (steps: SkillStep[]) => void;
-  tools: ToolListResponseDto[];
   /** Show each step's issue (after the first save attempt). */
   showIssues: boolean;
 };
@@ -28,7 +26,6 @@ type Props = {
 export const SkillStepsEditor: FC<Props> = ({
   steps,
   onChange,
-  tools,
   showIssues,
 }) => {
   const issues = useMemo(() => {
@@ -40,7 +37,6 @@ export const SkillStepsEditor: FC<Props> = ({
   }, [steps, showIssues]);
 
   const api: StepEditorApi = {
-    tools,
     issues,
     add: (key, type) => onChange(addStep(steps, key, newStep(type))),
     update: (id, fn) => onChange(updateStep(steps, id, fn)),

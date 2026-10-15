@@ -1,6 +1,6 @@
 import { TipTapEditor } from "@/components/common/tiptap-editor/tiptap-editor";
 import { PlusMini, XMark } from "@medusajs/icons";
-import { useListTools } from "@/hooks/api/tools";
+import { toolDetailQueryOptions } from "@/hooks/api/tools";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import {
   Button,
@@ -10,9 +10,14 @@ import {
   Textarea,
   usePrompt,
 } from "@medusajs/ui";
-import { compileSkill, validateSkillSteps } from "@repo/agent-blueprint";
+import {
+  compileSkill,
+  skillToolRefs,
+  validateSkillSteps,
+} from "@repo/agent-blueprint";
 import type { SkillGetResponseDto } from "@repo/client";
 import { Form } from "@repo/ui/common-components";
+import { useQueryClient } from "@tanstack/react-query";
 import type { FC } from "react";
 import { useFieldArray, useWatch, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -42,7 +47,7 @@ export const SkillFormFields: FC<Props> = ({ form, showStart }) => {
   });
   const empty = format === "CONTENT" && !instructions.trim();
   const { workspaceSlug } = useWorkspaceParams();
-  const { tools = [] } = useListTools(workspaceSlug, { perPage: 100 });
+  const queryClient = useQueryClient();
   const opts = {
     shouldDirty: true,
     shouldValidate: form.formState.isSubmitted,
@@ -67,13 +72,23 @@ export const SkillFormFields: FC<Props> = ({ form, showStart }) => {
       cancelText: t("actions.cancel"),
     });
     if (!confirmed) return;
+    // Only the tools these steps use, however many the workspace has.
+    const ids = [...new Set(skillToolRefs(steps).map((r) => r.toolId))];
+    const tools = await Promise.all(
+      ids.map((id) =>
+        queryClient
+          .fetchQuery(toolDetailQueryOptions(workspaceSlug, id))
+          .then((res) => res.data)
+          .catch(() => undefined),
+      ),
+    );
     // Guardrails stay a field of their own, as edited in this form.
     const text = compileSkill({
       name: form.getValues("name"),
       guardrails: [],
       format: "STEPS",
       steps,
-      toolName: toolNameOf(tools),
+      toolName: toolNameOf(tools.filter((x) => !!x)),
     });
     form.setValue("instructions", text, opts);
     form.setValue("steps", [], opts);
@@ -185,7 +200,6 @@ export const SkillFormFields: FC<Props> = ({ form, showStart }) => {
           <div className="rounded-lg border bg-ui-bg-subtle p-4">
             <SkillStepsEditor
               steps={steps}
-              tools={tools}
               showIssues={form.formState.isSubmitted}
               onChange={(next) => form.setValue("steps", next, opts)}
             />

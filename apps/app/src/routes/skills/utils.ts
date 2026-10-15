@@ -58,7 +58,9 @@ export const toolLabelOf =
 // The function name the agent calls a Tool step by (same rule as the API's
 // compiler: HTTP tools by slug, MCP tools by action).
 export const toolNameOf =
-  (tools: ToolListResponseDto[] = []): SkillToolNamer =>
+  (
+    tools: Pick<ToolListResponseDto, "id" | "kind" | "slug">[] = [],
+  ): SkillToolNamer =>
   ({ toolId, action }) => {
     const tool = tools.find((t) => t.id === toolId);
     if (!tool) return undefined;
