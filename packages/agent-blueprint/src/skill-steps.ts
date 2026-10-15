@@ -112,6 +112,28 @@ export function parseSkillSteps(
   return { success: false, issues };
 }
 
+/** The tools (and MCP actions) a step tree calls, each once, in reading order. */
+export function skillToolRefs(
+  steps: SkillStep[],
+): Pick<ToolStep, "toolId" | "action">[] {
+  const refs = new Map<string, Pick<ToolStep, "toolId" | "action">>();
+  const walk = (list: SkillStep[]) => {
+    for (const step of list) {
+      if (step.type === "tool" && !blank(step.toolId)) {
+        const ref = step.action
+          ? { toolId: step.toolId, action: step.action }
+          : { toolId: step.toolId };
+        refs.set(`${step.toolId}:${step.action ?? ""}`, ref);
+      } else if (step.type === "if") {
+        step.branches.forEach((b) => walk(b.steps));
+        walk(step.otherwise ?? []);
+      }
+    }
+  };
+  walk(steps);
+  return [...refs.values()];
+}
+
 /** Everything that would stop a step list from compiling, in reading order. */
 export function validateSkillSteps(
   steps: SkillStep[],

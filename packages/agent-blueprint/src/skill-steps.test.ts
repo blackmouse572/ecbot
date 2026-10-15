@@ -3,6 +3,7 @@ import {
   compileSkill,
   parseSkillSteps,
   skillStepsSchema,
+  skillToolRefs,
   validateSkillSteps,
   type SkillStep,
 } from "./skill-steps";
@@ -155,6 +156,21 @@ describe("skillStepsSchema", () => {
         { id: "x", type: "say", text: "a".repeat(1001) },
       ]).success,
     ).toBe(false);
+  });
+});
+
+describe("skillToolRefs", () => {
+  it("lists each tool and action once, nested steps included", () => {
+    expect(
+      skillToolRefs([
+        ...orderTracking,
+        { id: "again", type: "tool", toolId: "t-lookup" },
+        { id: "blank", type: "tool", toolId: "" },
+      ]),
+    ).toEqual([
+      { toolId: "t-lookup" },
+      { toolId: "t-mcp", action: "create_ticket" },
+    ]);
   });
 });
 

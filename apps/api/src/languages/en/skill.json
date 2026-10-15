@@ -45,5 +45,8 @@
         "instructionsRequired": "Write the skill instructions.",
         "tooLong": "This skill is too long for the agent to load. Shorten it and save again.",
         "formatMismatch": "Send either the text or the steps, matching how this skill is written. To change how it is written, send the new format too."
+    },
+    "usage": {
+        "success": "Skill usage retrieved"
     }
 }

@@ -45,5 +45,8 @@
         "instructionsRequired": "Hãy viết hướng dẫn cho kỹ năng.",
         "tooLong": "Kỹ năng này quá dài để bot đọc. Hãy rút gọn rồi lưu lại.",
         "formatMismatch": "Chỉ gửi nội dung hoặc các bước, đúng với cách kỹ năng này được viết. Muốn đổi cách viết, hãy gửi kèm định dạng mới."
+    },
+    "usage": {
+        "success": "Đã lấy nơi dùng skill"
     }
 }
