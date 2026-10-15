@@ -202,3 +202,66 @@ describe('ActivityService.createByAdminWithWorkspace', () => {
         expect(entity.metadata).toEqual({ note: 'partner deal' });
     });
 });
+
+describe('ActivityService.mapAdminList', () => {
+    const service = new ActivityService({} as any, {} as any);
+    const person = (id: string, name: string) => ({
+        id,
+        name,
+        username: name.toLowerCase(),
+        email: `${name.toLowerCase()}@example.com`,
+        password: `${id}-hash`,
+        salt: `${id}-salt`,
+        role: { id: 'r1', permissions: [] },
+    });
+    const entity = (workspace?: Record<string, unknown>) => ({
+        id: 'act1',
+        action: ENUM_ACTIVITY_ACTION.UPDATE,
+        subject: ENUM_POLICY_SUBJECT.WORKSPACE,
+        createdAt: new Date('2026-10-15T00:00:00.000Z'),
+        metadata: { old: { status: 'ACTIVE' }, new: { status: 'SUSPENDED' } },
+        ipAddress: '10.0.0.1',
+        userAgent: 'Mozilla/5.0',
+        user: person('u1', 'Alice'),
+        by: person('b1', 'Bob'),
+        workspace,
+    });
+
+    it('shows who acted, on whose account, in which workspace, without credentials', () => {
+        const [dto] = service.mapAdminList([
+            entity({
+                id: 'w1',
+                name: 'Acme',
+                slug: 'acme',
+                invitationCode: 'ABC123',
+                owner: person('u1', 'Alice'),
+            }) as any,
+        ]);
+
+        expect(dto).toMatchObject({
+            id: 'act1',
+            action: ENUM_ACTIVITY_ACTION.UPDATE,
+            subject: ENUM_POLICY_SUBJECT.WORKSPACE,
+            metadata: {
+                old: { status: 'ACTIVE' },
+                new: { status: 'SUSPENDED' },
+            },
+            ipAddress: '10.0.0.1',
+            userAgent: 'Mozilla/5.0',
+            user: { id: 'u1', name: 'Alice', email: 'alice@example.com' },
+            by: { id: 'b1', name: 'Bob', email: 'bob@example.com' },
+            workspace: { id: 'w1', name: 'Acme', slug: 'acme' },
+        });
+        const json = JSON.stringify(dto);
+        expect(json).not.toContain('hash');
+        expect(json).not.toContain('salt');
+        expect(json).not.toContain('ABC123');
+        expect(json).not.toContain('permissions');
+    });
+
+    it('leaves the workspace empty for activities outside one', () => {
+        const [dto] = service.mapAdminList([entity() as any]);
+
+        expect(dto.workspace).toBeUndefined();
+    });
+});
