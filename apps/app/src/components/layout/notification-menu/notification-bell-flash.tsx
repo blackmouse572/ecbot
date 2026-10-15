@@ -16,7 +16,10 @@ export const NotificationBellFlash: FC<{ flashKey: number }> = ({
       className="border-ui-tag-red-icon pointer-events-none absolute inset-0 rounded-md border-2"
       initial={{ opacity: 0.9, scale: reduceMotion ? 1 : 0.8 }}
       animate={{ opacity: 0, scale: reduceMotion ? 1 : 1.9 }}
-      transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
+      transition={{
+        scale: { duration: 0.9, ease: [0.23, 1, 0.32, 1] },
+        opacity: { duration: 1.2, ease: "linear" },
+      }}
     />
   );
 };
