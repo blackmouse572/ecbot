@@ -175,6 +175,12 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
 
         const messages = (value.messages ?? []).map(msg => ({
             ...this.normalizeMessage(msg),
+            ...(msg.context?.id && {
+                replyTo: {
+                    kind: 'message' as const,
+                    externalMessageId: msg.context.id,
+                },
+            }),
             accountKey: phoneNumberId,
             senderId: msg.from,
             recipientId: phoneNumberId,

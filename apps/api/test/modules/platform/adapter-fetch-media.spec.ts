@@ -52,7 +52,10 @@ describe('PlatformAdapter.fetchMedia', () => {
             {
                 axiosRef: {
                     post: jest.fn().mockResolvedValue({
-                        data: { ok: true, result: { file_path: 'photos/f.jpg' } },
+                        data: {
+                            ok: true,
+                            result: { file_path: 'photos/f.jpg' },
+                        },
                     }),
                     get: jest.fn().mockResolvedValue({
                         data: JPEG,
@@ -69,6 +72,37 @@ describe('PlatformAdapter.fetchMedia', () => {
         });
 
         expect(media).toEqual({ data: JPEG, mime: 'image/jpeg' });
+    });
+
+    it('Telegram labels an untyped sticker download as WebP', async () => {
+        const adapter = new TelegramPlatformAdapter(
+            {
+                get: (k: string) =>
+                    k === 'telegram.apiUrl' ? 'https://api.telegram.org' : '',
+            } as any,
+            {
+                axiosRef: {
+                    post: jest.fn().mockResolvedValue({
+                        data: {
+                            ok: true,
+                            result: { file_path: 'stickers/s.webp' },
+                        },
+                    }),
+                    get: jest.fn().mockResolvedValue({
+                        data: JPEG,
+                        headers: { 'content-type': 'application/octet-stream' },
+                    }),
+                },
+            } as any,
+            { decryptToken: () => 'TOKEN' } as any
+        );
+
+        const media = await adapter.fetchMedia(ACCOUNT, {
+            type: 'sticker',
+            raw: { file_id: 'S1' },
+        });
+
+        expect(media?.mime).toBe('image/webp');
     });
 
     it('WhatsApp looks the media id up on the Graph API and downloads it with the token', async () => {

@@ -798,13 +798,17 @@ export type WidgetSendMessageRequestDto = {
 
 export type MessageAttachmentResponseDto = {
     /**
-     * Attachment kind
+     * Attachment kind: image, sticker, story, share, audio, video, file or location
      */
     type: string;
     /**
      * Media URL, when known
      */
     url?: string;
+    /**
+     * Sticker only: the emoji the platform pairs with it
+     */
+    emoji?: string;
 };
 
 export type WidgetMessageResponseDto = {
@@ -4993,6 +4997,22 @@ export type MessageKnowledgeSourceResponseDto = {
     sourceUrl?: string;
 };
 
+export type MessageReplyToResponseDto = {
+    kind: 'message' | 'story';
+    /**
+     * Our copy of the quoted message, when we have it
+     */
+    messageId?: string;
+    /**
+     * The quoted message text, cut short
+     */
+    text?: string;
+    /**
+     * The quoted message was the customer's own
+     */
+    fromCustomer?: boolean;
+};
+
 export type MessageReactionResponseDto = {
     /**
      * Reaction emoji
@@ -5065,6 +5085,10 @@ export type MessageGetResponseDto = {
      * Images and other media on this message
      */
     attachments?: Array<MessageAttachmentResponseDto>;
+    /**
+     * What this message answers, when it is a reply
+     */
+    replyTo?: MessageReplyToResponseDto;
     /**
      * Reactions left on this message
      */

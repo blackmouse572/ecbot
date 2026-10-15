@@ -73,13 +73,41 @@ export class MessageReactionResponseDto {
  *  bot sent. `url` is absent when the platform only gave a file id. */
 export class MessageAttachmentResponseDto {
     @ApiProperty({
-        description: 'Attachment kind',
+        description:
+            'Attachment kind: image, sticker, story, share, audio, video, file or location',
         example: 'image',
     })
     type: string;
 
     @ApiPropertyOptional({ description: 'Media URL, when known' })
     url?: string;
+
+    @ApiPropertyOptional({
+        description: 'Sticker only: the emoji the platform pairs with it',
+    })
+    emoji?: string;
+}
+
+/** What an inbound message answers: a quoted message or the business's
+ *  story (whose image is the message's `story` attachment). */
+export class MessageReplyToResponseDto {
+    @ApiProperty({ enum: ['message', 'story'] })
+    kind: 'message' | 'story';
+
+    @ApiPropertyOptional({
+        description: 'Our copy of the quoted message, when we have it',
+    })
+    messageId?: string;
+
+    @ApiPropertyOptional({
+        description: 'The quoted message text, cut short',
+    })
+    text?: string;
+
+    @ApiPropertyOptional({
+        description: "The quoted message was the customer's own",
+    })
+    fromCustomer?: boolean;
 }
 
 /** One knowledge source behind a BOT reply, for the operator trace. */
@@ -187,6 +215,13 @@ export class MessageGetResponseDto {
         description: 'Images and other media on this message',
     })
     attachments?: MessageAttachmentResponseDto[];
+
+    @Expose()
+    @ApiPropertyOptional({
+        type: () => MessageReplyToResponseDto,
+        description: 'What this message answers, when it is a reply',
+    })
+    replyTo?: MessageReplyToResponseDto;
 
     @Expose()
     @ApiPropertyOptional({

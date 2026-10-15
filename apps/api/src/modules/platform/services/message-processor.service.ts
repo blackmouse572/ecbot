@@ -1,5 +1,12 @@
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
-import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
+import {
+    IMessageAttachment,
+    IMessageReplyTo,
+} from '@app/modules/conversation/interfaces/message-media.interface';
+import {
+    isVisual,
+    quoteText,
+} from '@app/modules/conversation/utils/message-attachment';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { isAgentSilenced } from '@app/modules/platform/utils/agent-silenced.util';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
@@ -21,6 +28,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import {
     PlatformAttachment,
+    PlatformReplyTo,
     PlatformWebhookEvent,
 } from '../interfaces/platform-adapter.interface';
 import { PlatformAdapter } from '../adapters/platform-adapter.base';
@@ -84,9 +92,9 @@ export class MessageProcessorService implements OnModuleInit {
 
         // Allow action events (postback/quick_reply) through even when kind != 'message'
         if (event.kind !== 'message' && !event.action) return;
-        // An image with no caption is still a customer turn (the AI describes it).
-        const hasImage = event.attachments?.some(a => a.type === 'image');
-        if (!event.text && !event.action && !hasImage) return;
+        // A photo, sticker or voice message with no caption is still a
+        // customer turn: the agent reads a note on what arrived.
+        if (!event.text && !event.action && !event.attachments?.length) return;
 
         const account = await this.accountService.findOne(
             { externalId: event.accountKey },
@@ -206,6 +214,10 @@ export class MessageProcessorService implements OnModuleInit {
                           account,
                           conversation.id,
                           event.attachments
+                      ),
+                      replyTo: await this.storedReplyTo(
+                          conversation.id,
+                          event.replyTo
                       ),
                       raw: event.raw,
                       dateSent: event.timestamp,
@@ -466,9 +478,33 @@ export class MessageProcessorService implements OnModuleInit {
     }
 
     /**
-     * Copy each image into our own storage: platform links expire or need
-     * credentials. On any failure the image keeps its platform link, so the
-     * turn still goes through. The platform `raw` payload is not kept here —
+     * What the message answers, as stored: a quoted message is matched to
+     * our copy, so the inbox and later Turns can show what it said.
+     */
+    private async storedReplyTo(
+        conversationId: string,
+        replyTo: PlatformReplyTo | undefined
+    ): Promise<IMessageReplyTo | undefined> {
+        if (replyTo?.kind !== 'message') return replyTo;
+        const externalId = replyTo.externalMessageId;
+        const quoted = await this.messageRepository.findByExternalId(
+            conversationId,
+            externalId
+        );
+        if (!quoted) return { kind: 'message', externalId };
+        return {
+            kind: 'message',
+            externalId,
+            messageId: quoted.id,
+            text: quoteText(quoted.text),
+            fromCustomer: quoted.direction === ENUM_MESSAGE_DIRECTION.INBOUND,
+        };
+    }
+
+    /**
+     * Copy each image, sticker and story into our own storage: platform links
+     * expire or need credentials. On any failure it keeps its platform link,
+     * so the turn still goes through. The platform `raw` payload is not kept here —
      * it already lives on the message's `raw`.
      */
     private async storeAttachments(
@@ -479,9 +515,13 @@ export class MessageProcessorService implements OnModuleInit {
     ): Promise<IMessageAttachment[] | undefined> {
         if (!attachments?.length) return undefined;
         return Promise.all(
-            attachments.map(async ({ type, url, raw }) => {
-                const kept: IMessageAttachment = url ? { type, url } : { type };
-                if (type !== 'image') return kept;
+            attachments.map(async ({ type, url, emoji, raw }) => {
+                const kept: IMessageAttachment = {
+                    type,
+                    ...(url && { url }),
+                    ...(emoji && { emoji }),
+                };
+                if (!isVisual(kept)) return kept;
                 try {
                     const media = await adapter.fetchMedia(account, {
                         type,
@@ -493,10 +533,11 @@ export class MessageProcessorService implements OnModuleInit {
                         media.data.length > MESSAGE_MEDIA_MAX_BYTES
                     )
                         return kept;
-                    return await this.messageMedia.saveImage(
+                    const saved = await this.messageMedia.saveImage(
                         conversationId,
                         media
                     );
+                    return { ...saved, type, ...(emoji && { emoji }) };
                 } catch (err) {
                     this.logger.warn(
                         `Storing inbound image failed for ${conversationId}: ${(err as Error).message}`

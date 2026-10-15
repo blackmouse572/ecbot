@@ -25,6 +25,8 @@ export interface WhatsAppInboundMessage {
     /** Quick-reply button tapped on a template message. */
     button?: { payload: string; text: string };
     reaction?: { message_id: string; emoji?: string };
+    /** Set on a reply that quotes an earlier message (`id`). */
+    context?: { from?: string; id?: string; forwarded?: boolean };
 }
 
 export interface WhatsAppStatus {

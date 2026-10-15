@@ -45,7 +45,8 @@ interface AIChatStreamParams {
 /** A burst's images for apps/ai to describe (stored ones already signed). */
 export interface AIDescribeImagesParams {
     chatbot_id: string;
-    images: { id: string; url: string }[];
+    /** `sticker`: read for what it means, not described like a photo. */
+    images: { id: string; url: string; kind?: 'sticker' }[];
 }
 
 /** One description per image (null when apps/ai could not make or screen

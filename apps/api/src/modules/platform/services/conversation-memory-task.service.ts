@@ -15,7 +15,7 @@ import { ConversationEntity } from '@app/modules/conversation/repository/entitie
 import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
-import { historyNote } from '@app/modules/conversation/utils/message-attachment';
+import { customerHistoryText } from '@app/modules/conversation/utils/message-attachment';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import * as Sentry from '@sentry/nestjs';
 import {
@@ -190,9 +190,7 @@ export class ConversationMemoryTaskService {
                     m.authorType === ENUM_MESSAGE_AUTHOR.SYSTEM
                   ? 'operator'
                   : 'bot',
-            text: [m.text, inbound ? historyNote(m.attachments ?? []) : '']
-                .filter(Boolean)
-                .join(' '),
+            text: inbound ? customerHistoryText(m) : (m.text ?? ''),
         };
     }
 }

@@ -43,10 +43,27 @@ export type PlatformWebhookEventKind =
     | 'unknown';
 
 export interface PlatformAttachment {
-    type: 'image' | 'video' | 'file' | 'location' | 'sticker' | 'audio';
+    /** `story`: a story the customer replied to or mentioned the account in.
+     *  `share`: a post or reel the customer shared. */
+    type:
+        | 'image'
+        | 'video'
+        | 'file'
+        | 'location'
+        | 'sticker'
+        | 'audio'
+        | 'story'
+        | 'share';
     url?: string;
+    /** Sticker only: the emoji the platform pairs with it, when it sends one. */
+    emoji?: string;
     raw?: unknown;
 }
+
+/** What an inbound message answers: an earlier message the customer quoted,
+ *  or the account's story (its image comes as a `story` attachment). */
+export type PlatformReplyTo =
+    { kind: 'message'; externalMessageId: string } | { kind: 'story' };
 
 export interface PlatformWebhookEvent {
     kind: PlatformWebhookEventKind;
@@ -86,6 +103,7 @@ export interface PlatformWebhookEvent {
     // structured inbound extras (optional — parsers fill when present)
     action?: { id: string; value?: string };
     attachments?: PlatformAttachment[];
+    replyTo?: PlatformReplyTo;
     reaction?: {
         emoji: string;
         messageId: string;

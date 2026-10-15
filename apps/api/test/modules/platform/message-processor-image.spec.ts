@@ -18,7 +18,10 @@ describe('MessageProcessorService — inbound images', () => {
         detectHandoffKeywords: jest.fn(() => false),
         triggerHandoff: jest.fn(),
     };
-    const messageRepository = { upsertByExternalId: jest.fn() };
+    const messageRepository = {
+        upsertByExternalId: jest.fn(),
+        findByExternalId: jest.fn(),
+    };
     const adapter = {
         fetchSenderProfile: jest.fn(),
         markRead: jest.fn(),
@@ -170,12 +173,95 @@ describe('MessageProcessorService — inbound images', () => {
         expect(messageMedia.saveImage).not.toHaveBeenCalled();
     });
 
-    it('still skips a message with no text and no image', async () => {
+    it('keeps a sticker-only message as a sticker, with its emoji', async () => {
+        await processor.process({
+            ...baseEvent,
+            text: undefined,
+            attachments: [
+                { type: 'sticker', emoji: '👍', url: 'https://cdn/like.png' },
+            ],
+        });
+
+        expect(messageMedia.saveImage).toHaveBeenCalledWith('conv-1', JPEG);
+        expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
+            'conv-1',
+            'msg-image-1',
+            expect.objectContaining({
+                attachments: [{ ...stored, type: 'sticker', emoji: '👍' }],
+            })
+        );
+        expect(messageDebounceService.schedule).toHaveBeenCalled();
+    });
+
+    it('keeps a voice message without downloading it, so the bot can answer', async () => {
         await processor.process({
             ...baseEvent,
             text: undefined,
             attachments: [{ type: 'audio', url: 'https://cdn/a.mp3' }],
         });
+
+        expect(adapter.fetchMedia).not.toHaveBeenCalled();
+        expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
+            'conv-1',
+            'msg-image-1',
+            expect.objectContaining({
+                attachments: [{ type: 'audio', url: 'https://cdn/a.mp3' }],
+            })
+        );
+        expect(messageDebounceService.schedule).toHaveBeenCalled();
+    });
+
+    it('stores what a quoted reply answers, with the quoted text', async () => {
+        messageRepository.findByExternalId.mockResolvedValueOnce({
+            id: 'm-quoted',
+            text: 'Áo này còn size M ạ',
+            direction: 'OUTBOUND',
+        });
+
+        await processor.process({
+            ...baseEvent,
+            text: 'lấy cái này',
+            replyTo: { kind: 'message', externalMessageId: 'mid-q' },
+        });
+
+        expect(messageRepository.findByExternalId).toHaveBeenCalledWith(
+            'conv-1',
+            'mid-q'
+        );
+        expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
+            'conv-1',
+            'msg-image-1',
+            expect.objectContaining({
+                replyTo: {
+                    kind: 'message',
+                    externalId: 'mid-q',
+                    messageId: 'm-quoted',
+                    text: 'Áo này còn size M ạ',
+                    fromCustomer: false,
+                },
+            })
+        );
+    });
+
+    it('keeps a quoted reply to a message we never stored', async () => {
+        messageRepository.findByExternalId.mockResolvedValueOnce(null);
+
+        await processor.process({
+            ...baseEvent,
+            replyTo: { kind: 'message', externalMessageId: 'mid-old' },
+        });
+
+        expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
+            'conv-1',
+            'msg-image-1',
+            expect.objectContaining({
+                replyTo: { kind: 'message', externalId: 'mid-old' },
+            })
+        );
+    });
+
+    it('still skips a message with no text and no attachment', async () => {
+        await processor.process({ ...baseEvent, text: undefined });
 
         expect(accountService.findOne).not.toHaveBeenCalled();
         expect(messageDebounceService.schedule).not.toHaveBeenCalled();
