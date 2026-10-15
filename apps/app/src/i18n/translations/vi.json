@@ -177,7 +177,9 @@
         "empty": "Bạn đã xem hết thông báo",
         "markAllAsRead": "Đánh dấu đã đọc tất cả",
         "emptyHint": "Các cập nhật mới từ workspace sẽ hiện ở đây, ví dụ khách hàng cần người hỗ trợ hoặc có yêu cầu tham gia mới.",
-        "unreadLabel": "Thông báo, {{count}} chưa đọc"
+        "unreadLabel": "Thông báo, {{count}} chưa đọc",
+        "newMany": "{{count}} thông báo mới",
+        "view": "Xem"
       },
       "actions": {
         "logout": "Đăng xuất"
@@ -2552,6 +2554,8 @@
     }
   },
   "knowledge_item": {
+    "processingDone": "Kiến thức đã sẵn sàng",
+    "processingFailed": "Không xử lý được mục kiến thức này",
     "ingestErrors": {
       "urlNotPublic": "Trang này không công khai. Hãy dùng đường link ai cũng mở được trên internet, không phải localhost hay địa chỉ mạng nội bộ.",
       "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",

@@ -4,6 +4,8 @@ import {
   useKnowledgeItem,
 } from "@/hooks/api/knowledge-base";
 import { useSoundOnChange } from "@/modules/sound";
+import { toast } from "@medusajs/ui";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { TwoColumnPageSkeleton } from "@repo/ui/common-components";
 import { SingleColumnPage, TwoColumnPage } from "@repo/ui/layout";
@@ -19,6 +21,7 @@ export function KnowledgeItemDetails() {
     id: string;
   }>();
 
+  const { t } = useTranslation();
   const { item, isLoading, isError, error } = useKnowledgeItem(
     knowledgeBaseId || "",
     id || "",
@@ -31,8 +34,20 @@ export function KnowledgeItemDetails() {
     item?.status,
     (previous, next) => {
       if (!KNOWLEDGE_ITEM_PENDING_STATUSES.includes(previous)) return null;
-      if (next === "COMPLETED") return "success";
-      if (next === "FAILED") return "error";
+      if (next === "COMPLETED") {
+        toast.success(t("knowledge_item.processingDone"), {
+          position: "top-right",
+        });
+        return "success";
+      }
+      if (next === "FAILED") {
+        toast.error(t("knowledge_item.processingFailed"), {
+          position: "top-right",
+          duration: Infinity,
+          dismissable: true,
+        });
+        return "error";
+      }
       return null;
     },
     id,
