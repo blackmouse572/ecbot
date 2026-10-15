@@ -26,13 +26,14 @@ export class Migration20261015100000_remove_noise_activity_actions extends Migra
             `alter table "activities" enable trigger "activities_append_only";`
         );
 
-        // No row uses the removed actions any more, so the narrower check is
-        // validated in place rather than left NOT VALID.
+        // The DELETE above already removed every row using the old actions;
+        // NOT VALID skips a second full-table scan under the ACCESS EXCLUSIVE
+        // lock (docs/migration.md, Locks on Busy Tables). Validate out of band.
         this.addSql(
             `alter table "activities" drop constraint if exists "activities_action_check";`
         );
         this.addSql(
-            `alter table "activities" add constraint "activities_action_check" check("action" in (${ACTIONS_AFTER}));`
+            `alter table "activities" add constraint "activities_action_check" check("action" in (${ACTIONS_AFTER})) not valid;`
         );
     }
 

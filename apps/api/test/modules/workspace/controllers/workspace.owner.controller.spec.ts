@@ -90,6 +90,26 @@ describe('WorkspaceController — inviteMemberToWorkSpace', () => {
         });
     });
 
+    // A failed audit write must not 500 an invitation that was already
+    // emailed: the entry is written before the mail goes out.
+    it('logs the invitation before emailing it', async () => {
+        mockUserService.findOneById.mockResolvedValue({ id: 'owner-1' });
+
+        await controller.inviteMemberToWorkSpace(
+            'owner-1',
+            { invitedEmail: 'invitee@mail.com' } as any,
+            workspace
+        );
+
+        expect(
+            mockActivityService.createByUserWithWorkspace.mock
+                .invocationCallOrder[0]
+        ).toBeLessThan(
+            mockEmailService.sendInvitationToWorkSpace.mock
+                .invocationCallOrder[0]
+        );
+    });
+
     it('builds the invitation link from configured home.url, not the Origin header', async () => {
         await controller.inviteMemberToWorkSpace(
             'owner-1',

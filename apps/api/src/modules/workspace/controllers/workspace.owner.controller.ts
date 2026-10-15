@@ -468,6 +468,21 @@ export class WorkspaceController {
         // The invitee has no language of their own yet, so the email follows
         // the inviter's (#185).
         const inviter = await this.userService.findOneById(userId);
+
+        // Before the email: a failed audit write then fails an invitation
+        // nobody received yet, and a retry reuses the pending invitation.
+        await this.activityService.createByUserWithWorkspace(
+            inviter,
+            workspace,
+            {
+                action: ENUM_ACTIVITY_ACTION.INVITE_MEMBER,
+                subject: ENUM_POLICY_SUBJECT.INVITATION,
+                // Ids only: the audit log is append-only and outlives the
+                // invitee's email.
+                metadata: { id: invitationId },
+            }
+        );
+
         await this.emailService.sendInvitationToWorkSpace(
             {
                 email: body.invitedEmail,
@@ -479,18 +494,6 @@ export class WorkspaceController {
                 inviterName: inviter?.name?.trim() || inviter?.email || '',
                 expiresAt,
                 language: request?.__language,
-            }
-        );
-
-        await this.activityService.createByUserWithWorkspace(
-            inviter,
-            workspace,
-            {
-                action: ENUM_ACTIVITY_ACTION.INVITE_MEMBER,
-                subject: ENUM_POLICY_SUBJECT.INVITATION,
-                // Ids only: the audit log is append-only and outlives the
-                // invitee's email.
-                metadata: { id: invitationId },
             }
         );
 
