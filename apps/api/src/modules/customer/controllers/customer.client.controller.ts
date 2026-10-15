@@ -107,7 +107,6 @@ export class CustomerClientController {
     @Get('/:id')
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @ClientCredentialPayload() credential: ClientCredentialEntity,
         @Param('id') id: string
     ): Promise<IResponse<CustomerGetResponseDto>> {
         // Missing and cross-workspace look the same: 404.
@@ -121,13 +120,6 @@ export class CustomerClientController {
                 statusCode: 404,
             });
         }
-
-        await this.activityService.createView(
-            credential.createdBy?.id,
-            workspace,
-            ENUM_POLICY_SUBJECT.CUSTOMER,
-            { id: customer.id }
-        );
 
         return { data: this.customerService.mapGet(customer) };
     }

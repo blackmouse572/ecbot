@@ -209,6 +209,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         token: string;
         expiresAt: Date;
         workspaceId: string;
+        invitationId: string;
     }> {
         // `workspace` is resolved and authorized by the caller (see
         // generateInvitationLink above) — no owner-only re-lookup here.
@@ -233,6 +234,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                 token: existingInvitation.token,
                 expiresAt: existingInvitation.expiresAt,
                 workspaceId: workspace.id,
+                invitationId: existingInvitation.id,
             };
         }
 
@@ -291,7 +293,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         const invitationLink = buildInvitationLink(url, token);
 
         // Save invitation to database
-        await this.invitationService.create({
+        const invitation = await this.invitationService.create({
             workspace: workspace.id,
             user: ownerId,
             email: invitedEmail.toLowerCase(),
@@ -306,6 +308,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
             token,
             expiresAt,
             workspaceId: workspace.id,
+            invitationId: invitation.id,
         };
     }
 

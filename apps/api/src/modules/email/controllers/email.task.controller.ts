@@ -88,6 +88,12 @@ export class EmailTaskController {
                     dto.data as any
                 );
                 break;
+            case ENUM_SEND_EMAIL_PROCESS.PAYMENT_FAILED:
+                await this.emailService.sendPaymentFailed(
+                    dto.send,
+                    dto.data as any
+                );
+                break;
         }
 
         return {};

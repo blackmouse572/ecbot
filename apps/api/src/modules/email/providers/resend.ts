@@ -25,9 +25,11 @@ import {
     invitationEmailCopy,
 } from '../email-template-components/invitation-email.copy';
 import { mfaChangedEmailCopy } from '../email-template-components/mfa-changed-email.copy';
+import { paymentFailedEmailCopy } from '../email-template-components/payment-failed-email.copy';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
+import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
@@ -422,6 +424,39 @@ export class ResendProvider implements IEmailService {
                 language,
             },
             copy.subject(enabled)
+        );
+    }
+
+    async sendPaymentFailed(
+        { name, email }: EmailSendDto,
+        {
+            workspaceName,
+            graceEndsAt,
+            billingUrl,
+            reminder = false,
+            language,
+        }: EmailPaymentFailedDto
+    ): Promise<boolean> {
+        const copy = paymentFailedEmailCopy(language, this.homeName);
+        const stopsAt = this.helperDateService.formatToReadable(
+            graceEndsAt,
+            language === ENUM_MESSAGE_LANGUAGE.VI ? 'vi' : 'en'
+        );
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.PaymentFailed,
+            {
+                name,
+                workspaceName,
+                graceEndsAt: stopsAt,
+                billingUrl: `${this.homeUrl}${billingUrl}`,
+                reminder,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject(workspaceName, stopsAt, reminder)
         );
     }
 }

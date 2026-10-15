@@ -1,6 +1,7 @@
 import {
     BigIntType,
     Entity,
+    Enum,
     Index,
     ManyToOne,
     Property,
@@ -10,6 +11,7 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { WORKSPACE_INVITATION_CODE_LENGTH } from '../../constants/workspace.constant';
+import { ENUM_WORKSPACE_STATUS } from '../../enums/workspace.enum';
 
 export const WorkspaceTableName = 'workspaces';
 
@@ -35,6 +37,12 @@ export class WorkspaceEntity extends DatabaseEntityBase {
     @ManyToOne(() => UserEntity)
     @IsNotEmpty()
     owner: Rel<UserEntity>;
+
+    @Enum({
+        items: () => ENUM_WORKSPACE_STATUS,
+        default: ENUM_WORKSPACE_STATUS.ACTIVE,
+    })
+    status: ENUM_WORKSPACE_STATUS = ENUM_WORKSPACE_STATUS.ACTIVE;
 
     @Property({ type: 'varchar', length: WORKSPACE_INVITATION_CODE_LENGTH })
     @IsString()

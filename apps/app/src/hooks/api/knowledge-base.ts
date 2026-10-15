@@ -11,6 +11,8 @@ import {
   chatbotKnowledgeItemWorkspaceControllerUnlinkV1,
   type KnowledgeBaseResponseDto,
   type KnowledgeItemResponseDto,
+  type KnowledgeItemFilterRequestDto,
+  type ChatbotKnowledgeItemBatchLinkRequestDto,
   type KnowledgeBaseWorkspaceControllerGetV1Response,
   type KnowledgeBaseWorkspaceControllerListV1Response,
   type KnowledgeItemWorkspaceControllerUpdateV1Response,
@@ -18,6 +20,8 @@ import {
   type ChatbotKnowledgeItemResponseDto,
   knowledgeItemWorkspaceControllerBatchDeleteV1,
   knowledgeItemWorkspaceControllerBatchProcessV1,
+  knowledgeItemWorkspaceControllerBatchTagV1,
+  chatbotKnowledgeItemWorkspaceControllerBatchLinkV1,
   knowledgeItemWorkspaceControllerDeleteV1,
   knowledgeItemWorkspaceControllerCreateV1,
   type KnowledgeItemCreateRequestDto,
@@ -32,6 +36,7 @@ import {
   type MutationOptions,
 } from "@tanstack/react-query";
 import { useWorkspace } from "./workspace";
+import { knowledgeTagQueryKeys } from "./knowledge-tag";
 
 export const KNOWLEDGE_BASE_QUERY_KEY = "knowledge-base" as const;
 export const knowledgeBaseQueryKeys = {
@@ -240,6 +245,84 @@ export const useBatchProcessKnowledgeItems = (knowledgebaseId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: knowledgeBaseQueryKeys.items(),
+      });
+    },
+  });
+};
+
+// The API takes at most 100 ids per batch request.
+const BATCH_MAX_IDS = 100;
+
+/** Run `request` over `ids` in API-sized chunks and merge the results. */
+const runChunked = async (
+  ids: string[],
+  request: (chunk: string[]) => Promise<BatchResult>,
+): Promise<BatchResult> => {
+  const merged: BatchResult = { succeeded: [], failed: [] };
+  for (let i = 0; i < ids.length; i += BATCH_MAX_IDS) {
+    const result = await request(ids.slice(i, i + BATCH_MAX_IDS));
+    merged.succeeded.push(...result.succeeded);
+    merged.failed.push(...result.failed);
+  }
+  return merged;
+};
+
+/** Adds `tags` to every item in `ids`, keeping the tags they already have. */
+export const useBatchTagKnowledgeItems = (knowledgebaseId: string) => {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  return useMutation<BatchResult, Error, { ids: string[]; tags: string[] }>({
+    mutationKey: ["batch-tag-knowledge-items"] as const,
+    mutationFn: ({ ids, tags }) =>
+      runChunked(ids, (chunk) =>
+        knowledgeItemWorkspaceControllerBatchTagV1({
+          path: {
+            knowledgeBaseId: knowledgebaseId,
+            workspace: workspace!.slug,
+          },
+          body: { ids: chunk, tags },
+        }).then((res) => (res.data as A)?.data as BatchResult),
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: knowledgeBaseQueryKeys.items(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: knowledgeTagQueryKeys.all,
+      });
+    },
+  });
+};
+
+/** Which items to link: listed ids, or everything matching a filter. */
+export type KnowledgeItemLinkTarget =
+  string[] | { knowledgeBaseId: string; filter: KnowledgeItemFilterRequestDto };
+
+/**
+ * Links many knowledge items to one agent. A filter is sent as is, so the API
+ * finds and links every match in one request; ids go in chunks of 100.
+ */
+export const useBatchLinkKnowledgeItemsToChatbot = (chatbotId: string) => {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  return useMutation<BatchResult, Error, KnowledgeItemLinkTarget>({
+    mutationKey: ["batch-link-knowledge-items", chatbotId] as const,
+    mutationFn: (target) => {
+      const request = (body: ChatbotKnowledgeItemBatchLinkRequestDto) =>
+        chatbotKnowledgeItemWorkspaceControllerBatchLinkV1({
+          path: { workspace: workspace!.slug, chatbotId },
+          body,
+        }).then((res) => (res.data as A)?.data as BatchResult);
+
+      return Array.isArray(target)
+        ? runChunked(target, (ids) => request({ ids }))
+        : request(target);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: chatbotKnowledgeItemQueryKeys.lists(),
       });
     },
   });

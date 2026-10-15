@@ -7,10 +7,11 @@ import {
 import { openingHoursSchema } from "./opening-hours";
 import { PRESETS } from "./presets";
 
-export const PROFILE_LIMITS = { shortText: 120, longText: 1000, customCollect: { count: 10, length: 60 } } as const;
+export const PROFILE_LIMITS = { shortText: 120, longText: 1000, customCollect: { count: 10, length: 60 }, customAddressStyle: { length: 30 } } as const;
 
 const shortText = z.string().trim().max(PROFILE_LIMITS.shortText);
 const longText = z.string().trim().max(PROFILE_LIMITS.longText);
+const addressWord = z.string().trim().min(1).max(PROFILE_LIMITS.customAddressStyle.length);
 
 export const agentProfileSchema = z.object({
   version: z.literal(1),
@@ -37,13 +38,18 @@ export const agentProfileSchema = z.object({
   unsure: z.enum(idsOf(UNSURE)),
   replyLength: z.enum(idsOf(REPLY_LENGTH)),
   emoji: z.boolean(),
-  addressStyle: z.enum(idsOf(ADDRESS_STYLE)).nullable(),
+  addressStyle: z.enum([...idsOf(ADDRESS_STYLE), "custom"]).nullable(),
+  // The owner's own pair for addressStyle "custom", e.g. Shop / ba mẹ (#157).
+  customAddressStyle: z.object({ self: addressWord, customer: addressWord }).strict().optional(),
   followUpQuestions: z.boolean(),
   afterHours: z.enum(idsOf(AFTER_HOURS)),
   // Absent until the owner fills in the week (#289).
   openingHours: openingHoursSchema.optional(),
   primaryLanguage: z.string().min(2).max(8),
 }).strict().refine(
+  (p) => p.addressStyle !== "custom" || !!p.customAddressStyle,
+  { message: "a custom address style needs its words", path: ["customAddressStyle"] },
+).refine(
   // Personal assistants have no opening hours: the prompt and apps/ai's
   // per-turn status would disagree on them (#289).
   (p) => !p.openingHours || !getBusinessType(p.businessType).personal,
@@ -51,6 +57,7 @@ export const agentProfileSchema = z.object({
 );
 
 export type AgentProfile = z.infer<typeof agentProfileSchema>;
+export type CustomAddressStyle = NonNullable<AgentProfile["customAddressStyle"]>;
 
 export function createProfile(type: BusinessTypeId, primaryLanguage: string): AgentProfile {
   const personal = getBusinessType(type).personal;
@@ -98,6 +105,7 @@ export function applyPreset(profile: AgentProfile, type: BusinessTypeId): AgentP
     replyLength: profile.replyLength,
     emoji: profile.emoji,
     addressStyle: profile.addressStyle,
+    ...(profile.customAddressStyle ? { customAddressStyle: profile.customAddressStyle } : {}),
     facts,
     ...(profile.openingHours && !getBusinessType(type).personal ? { openingHours: profile.openingHours } : {}),
   };

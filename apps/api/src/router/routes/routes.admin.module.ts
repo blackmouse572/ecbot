@@ -10,6 +10,7 @@ import { ToolAdminController } from '@app/modules/tool/controllers/tool.admin.co
 import { ToolModule } from '@app/modules/tool/tool.module';
 import { RAGModule } from '@app/modules/rag/rag.module';
 import { WorkSpaceModule } from '@app/modules/workspace/workspace.module';
+import { WorkspaceAdminController } from '@app/modules/workspace/controllers/workspace.admin.controller';
 import { Module } from '@nestjs/common';
 import { ActivityModule } from 'src/modules/activity/activity.module';
 import { ActivityAdminController } from 'src/modules/activity/controllers/activity.admin.controller';
@@ -52,6 +53,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         SkillAdminController,
         ToolAdminController,
         WaitlistAdminController,
+        WorkspaceAdminController,
     ],
     providers: [],
     exports: [],

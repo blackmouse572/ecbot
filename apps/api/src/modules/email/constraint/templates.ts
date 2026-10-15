@@ -22,6 +22,7 @@ export async function renderTemplate<P extends object>(
         HandoffEmail,
         MemberJoinedEmail,
         MfaChangedEmail,
+        PaymentFailedEmail,
         MobileNumberVerificationEmail,
         ResetPasswordEmail,
         TempPasswordEmail,
@@ -49,6 +50,7 @@ export async function renderTemplate<P extends object>(
         [EmailSubject.Handoff]: HandoffEmail,
         [EmailSubject.MemberJoined]: MemberJoinedEmail,
         [EmailSubject.MfaChanged]: MfaChangedEmail,
+        [EmailSubject.PaymentFailed]: PaymentFailedEmail,
     };
 
     return renderEmail(templates[subject], props);
