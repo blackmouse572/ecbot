@@ -2948,9 +2948,17 @@ export type SkillGetResponseDto = {
      */
     workspaceName?: string;
     /**
-     * Full skill instructions (markdown), loaded from S3
+     * CONTENT: the markdown the owner wrote. STEPS: the compiled body the agent loads.
      */
     instructions: string;
+    format: 'CONTENT' | 'STEPS';
+    /**
+     * Step tree of a STEPS skill
+     */
+    steps?: Array<{
+        [key: string]: unknown;
+    }>;
+    guardrails: Array<string>;
 };
 
 export type CreateSkillRequestDto = {
@@ -2963,9 +2971,23 @@ export type CreateSkillRequestDto = {
      */
     description?: string;
     /**
-     * Full skill instructions (markdown). Stored on S3.
+     * Skill instructions (markdown). Required for CONTENT skills, ignored for STEPS.
      */
-    instructions: string;
+    instructions?: string;
+    /**
+     * CONTENT: free markdown in `instructions`. STEPS: structured `steps`. Defaults to CONTENT.
+     */
+    format?: 'CONTENT' | 'STEPS';
+    /**
+     * Step tree for a STEPS skill: ask, say, tell, tool ({ toolId, action? }; toolId can be a built-in action: system:handoff, system:notify_team, system:add_tag, system:remove_tag, system:schedule_followup, system:save_customer_field, with the tag or field name in action) and if ({ branches: [{ condition, steps }], otherwise }). Each step and branch needs a unique `id`.
+     */
+    steps?: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Rules the agent always follows while using this skill
+     */
+    guardrails?: Array<string>;
     /**
      * Skill status
      */
@@ -2985,6 +3007,20 @@ export type UpdateSkillRequestDto = {
      * Full skill instructions (markdown). Overwrites the S3 object.
      */
     instructions?: string;
+    /**
+     * CONTENT: free markdown in `instructions`. STEPS: structured `steps`. Defaults to CONTENT.
+     */
+    format?: 'CONTENT' | 'STEPS';
+    /**
+     * Step tree for a STEPS skill: ask, say, tell, tool ({ toolId, action? }; toolId can be a built-in action: system:handoff, system:notify_team, system:add_tag, system:remove_tag, system:schedule_followup, system:save_customer_field, with the tag or field name in action) and if ({ branches: [{ condition, steps }], otherwise }). Each step and branch needs a unique `id`.
+     */
+    steps?: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Rules the agent always follows while using this skill
+     */
+    guardrails?: Array<string>;
     status?: 'ACTIVE' | 'INACTIVE';
 };
 
@@ -5430,6 +5466,49 @@ export type CompleteInstallRequestDto = {
      * Opaque bearer token returned by Ecbot-managed MCP consent flows
      */
     code?: string;
+};
+
+export type SkillUsageToolResponseDto = {
+    /**
+     * Tool id
+     */
+    id: string;
+    name: string;
+    kind: 'HTTP' | 'MCP';
+    /**
+     * The MCP action a step calls
+     */
+    action?: string;
+};
+
+export type SkillUsageChatbotResponseDto = {
+    /**
+     * Chatbot id
+     */
+    id: string;
+    name: string;
+    /**
+     * Whether the skill is enabled on the chatbot
+     */
+    enabled: boolean;
+    /**
+     * Tools the skill calls that this chatbot does not have enabled (an MCP tool also when the action is off)
+     */
+    missingTools: Array<{
+        id: string;
+        action?: string;
+    }>;
+};
+
+export type SkillUsageResponseDto = {
+    /**
+     * Workspace tools the skill steps call
+     */
+    tools: Array<SkillUsageToolResponseDto>;
+    /**
+     * Chatbots the skill is attached to
+     */
+    chatbots: Array<SkillUsageChatbotResponseDto>;
 };
 
 export type ChatbotSkillListResponseDto = {
@@ -27220,6 +27299,86 @@ export type SkillWorkspaceControllerUpdateV1Responses = {
 };
 
 export type SkillWorkspaceControllerUpdateV1Response = SkillWorkspaceControllerUpdateV1Responses[keyof SkillWorkspaceControllerUpdateV1Responses];
+
+export type SkillWorkspaceControllerUsageV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        skillId: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/skill/{skillId}/usage';
+};
+
+export type SkillWorkspaceControllerUsageV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type SkillWorkspaceControllerUsageV1Error = SkillWorkspaceControllerUsageV1Errors[keyof SkillWorkspaceControllerUsageV1Errors];
+
+export type SkillWorkspaceControllerUsageV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: SkillUsageResponseDto;
+    };
+};
+
+export type SkillWorkspaceControllerUsageV1Response = SkillWorkspaceControllerUsageV1Responses[keyof SkillWorkspaceControllerUsageV1Responses];
 
 export type SkillWorkspaceControllerCloneV1Data = {
     body?: never;

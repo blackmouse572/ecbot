@@ -23,8 +23,28 @@ import {
   respond,
 } from "./shared";
 
-// A Skill is markdown know-how a chatbot loads when a request needs it,
-// e.g. how to handle a refund with the tools it has.
+// A Skill is know-how a chatbot loads when a request needs it, e.g. how to
+// handle a refund with the tools it has: free markdown, or structured steps.
+
+// The API validates the step tree; this only tells the caller its shape.
+const steps = z
+  .array(z.record(z.string(), z.unknown()))
+  .describe(
+    [
+      "For format STEPS: the steps in order. Each has a unique id and a type: ask {text}, say {text: exact words}, tell {text}, tool {toolId, action?, text?: how to use it}, if {branches: [{id, condition, steps}], otherwise?: steps}. Ifs nest at most 3 deep.",
+      "A tool step's toolId is a workspace tool id (list_workspace_tools; MCP tools also need action, one of its discovered actions) or a built-in action every chatbot has:",
+      "system:handoff (hand the chat to staff), system:notify_team (alert staff, keep helping), system:add_tag and system:remove_tag (action: the customer tag name, see list_customer_tags), system:schedule_followup (follow up later), system:save_customer_field (action: the field name to save).",
+    ].join(" "),
+  );
+const guardrails = z
+  .array(z.string().max(500))
+  .max(20)
+  .describe("Rules the chatbot always follows while using the Skill.");
+const format = z
+  .enum(["CONTENT", "STEPS"])
+  .describe(
+    "CONTENT (default): markdown in instructions. STEPS: structured steps.",
+  );
 
 export function registerSkillTools(
   server: McpServer,
@@ -105,7 +125,13 @@ function registerCreateTools(server: McpServer, api: ApiOptions) {
           .describe(
             "When to use it: the chatbot sees this until it loads the Skill.",
           ),
-        instructions: z.string().describe("The Skill itself, in markdown."),
+        format: format.optional(),
+        instructions: z
+          .string()
+          .optional()
+          .describe("The Skill itself, in markdown. Required for CONTENT."),
+        steps: steps.optional(),
+        guardrails: guardrails.optional(),
         status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
       }),
       annotations: ADDS,
@@ -141,7 +167,10 @@ function registerUpdateTools(server: McpServer, api: ApiOptions) {
         skillId: z.string(),
         name: z.string().max(150).optional(),
         description: z.string().max(500).optional(),
+        format: format.optional(),
         instructions: z.string().optional(),
+        steps: steps.optional(),
+        guardrails: guardrails.optional(),
         status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
       }),
       annotations: OVERWRITES,

@@ -111,8 +111,8 @@ and the route for the server's domain.
 ## Connect
 
 The hosted server is `https://mcp.ecbot.dev/mcp`. The user guide, with
-Cursor's config too, is the docs page at `ecbot.dev/en/docs/mcp`
-(`apps/docs/content/docs/mcp.<lang>.mdx`).
+Cursor's config too, is the docs page at `ecbot.dev/en/docs/dev/mcp`
+(`apps/docs/content/docs/dev/mcp.<lang>.mdx`).
 
 ```bash
 # Claude Code

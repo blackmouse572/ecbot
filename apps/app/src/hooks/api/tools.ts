@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { BatchResult } from "@/hooks/use-batch-result-toast";
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
@@ -37,6 +38,7 @@ import {
 export type { ComposioToolkitAccessResponseDto };
 import {
   queryOptions,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -132,6 +134,34 @@ export const useListTools = (
     tools: data?.data as ToolListResponseDto[] | undefined,
     count: data?._metadata?.pagination?.total ?? 0,
   };
+};
+
+// One page of tools at a time, for pickers that search on the server and
+// load more on scroll.
+export const useInfiniteToolList = (workspace: string, search: string) => {
+  const perPage = 20;
+  const { data, ...rest } = useInfiniteQuery({
+    queryKey: toolsQueryKeys.list({ workspace, search, infinite: true }),
+    queryFn: ({ pageParam }) =>
+      toolWorkspaceControllerListV1({
+        path: { workspace } as never,
+        query: { search: search || undefined, page: pageParam, perPage } as A,
+      }).then((res) => res.data as A as ToolWorkspaceControllerListV1Response),
+    initialPageParam: 1,
+    getNextPageParam: (last, pages) => {
+      const totalPage = (last as A)?._metadata?.pagination?.totalPage ?? 1;
+      return pages.length < totalPage ? pages.length + 1 : undefined;
+    },
+    enabled: !!workspace,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const tools = useMemo(
+    () =>
+      (data?.pages.flatMap((page) => page.data) ?? []) as ToolListResponseDto[],
+    [data?.pages],
+  );
+  return { ...rest, tools };
 };
 
 export const useGetTool = (

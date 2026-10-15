@@ -1,15 +1,26 @@
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
-import { useAttachSkillToChatbot, useCreateSkill } from "@/hooks/api/skills";
+import {
+  useAttachSkillToChatbot,
+  useCreateSkill,
+  useGetSkill,
+} from "@/hooks/api/skills";
 import { useOriginAgent } from "@/hooks/use-origin-agent";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Text, toast } from "@medusajs/ui";
 import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
 import { skillFormSchema, type SkillFormData } from "../schemas";
+import {
+  EMPTY_SKILL_FORM,
+  formValuesToBody,
+  skillToFormValues,
+} from "../utils";
 
 const SkillCreateForm = () => {
   const { t } = useTranslation();
@@ -22,23 +33,28 @@ const SkillCreateForm = () => {
     agentId ?? "",
   );
 
+  // `?from=<skillId>` starts from a copy of that skill (a template or one
+  // of the workspace's own).
+  const [params] = useSearchParams();
+  const fromId = params.get("from") ?? "";
+  const { skill: from } = useGetSkill(workspaceSlug, fromId, {
+    enabled: !!fromId,
+  });
+
   const form = useForm<SkillFormData>({
     resolver: zodResolver(skillFormSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      instructions: "",
-    },
+    defaultValues: EMPTY_SKILL_FORM,
   });
+
+  useEffect(() => {
+    if (from) form.reset(skillToFormValues(from), { keepDefaultValues: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [from]);
 
   const handleSubmit = form.handleSubmit(async (data) => {
     let skillId: string | undefined;
     try {
-      const res = await createSkill({
-        name: data.name,
-        description: data.description || undefined,
-        instructions: data.instructions,
-      });
+      const res = await createSkill(formValuesToBody(data));
       skillId = res.data?.data?.id;
     } catch (error) {
       toast.error((error as A)?.body?.message ?? t("skills.create.error"));
@@ -74,7 +90,7 @@ const SkillCreateForm = () => {
                 {t("skills.create.subtitle")}
               </Text>
             </div>
-            <SkillFormFields form={form} />
+            <SkillFormFields form={form} showStart={!fromId} />
           </div>
         </RouteFocusModal.Body>
         <RouteFocusModal.Footer>
