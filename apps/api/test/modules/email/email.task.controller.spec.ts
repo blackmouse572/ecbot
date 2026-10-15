@@ -8,16 +8,22 @@ describe('EmailTaskController.handle', () => {
     let controller: EmailTaskController;
     const sendWelcome = jest.fn();
     const sendVerification = jest.fn();
+    const sendPaymentFailed = jest.fn();
 
     beforeEach(async () => {
         sendWelcome.mockReset();
         sendVerification.mockReset();
+        sendPaymentFailed.mockReset();
         const module: TestingModule = await Test.createTestingModule({
             controllers: [EmailTaskController],
             providers: [
                 {
                     provide: EmailService,
-                    useValue: { sendWelcome, sendVerification },
+                    useValue: {
+                        sendWelcome,
+                        sendVerification,
+                        sendPaymentFailed,
+                    },
                 },
                 // ApiKeyCloudTasksProtected's guard reads the Cloud Tasks key.
                 { provide: ConfigService, useValue: { get: () => undefined } },
@@ -49,5 +55,23 @@ describe('EmailTaskController.handle', () => {
             { otp: '123456', expiredAt: new Date(0), reference: 'ref' }
         );
         expect(res).toEqual({});
+    });
+
+    it('dispatches PAYMENT_FAILED to EmailService.sendPaymentFailed', async () => {
+        const data = {
+            workspaceName: 'Kunmart',
+            graceEndsAt: '2026-10-22T03:00:00.000Z',
+            billingUrl: '/kunmart/dashboard',
+            reminder: true,
+        };
+        await controller.handle({
+            jobName: ENUM_SEND_EMAIL_PROCESS.PAYMENT_FAILED,
+            send: { email: 'a@b.com', name: 'A' },
+            data,
+        } as any);
+        expect(sendPaymentFailed).toHaveBeenCalledWith(
+            { email: 'a@b.com', name: 'A' },
+            data
+        );
     });
 });

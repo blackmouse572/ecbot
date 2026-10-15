@@ -22,6 +22,7 @@ import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
 import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
+import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 
 @Injectable()
 export class AwsSESProvider implements IEmailService {
@@ -818,6 +819,11 @@ export class AwsSESProvider implements IEmailService {
             language,
         }: EmailPaymentFailedDto
     ): Promise<boolean> {
+        // The SES template has only these two branches, as the Resend copy.
+        const lang =
+            language === ENUM_MESSAGE_LANGUAGE.VI
+                ? ENUM_MESSAGE_LANGUAGE.VI
+                : ENUM_MESSAGE_LANGUAGE.EN;
         try {
             await this.awsSESService.send({
                 templateName: ENUM_SEND_EMAIL_PROCESS.PAYMENT_FAILED,
@@ -831,11 +837,11 @@ export class AwsSESProvider implements IEmailService {
                     workspaceName,
                     graceEndsAt: this.helperDateService.formatToReadable(
                         graceEndsAt,
-                        language === 'vi' ? 'vi' : 'en'
+                        lang
                     ),
                     billingUrl: `${this.homeUrl}${billingUrl}`,
                     reminder,
-                    language: language ?? '',
+                    language: lang,
                 },
             });
             return true;
