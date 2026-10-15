@@ -10,8 +10,6 @@ import {
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
-import { BatchIdsRequestDto } from 'src/common/batch/dtos/batch.request.dto';
-import { BatchResultResponseDto } from 'src/common/batch/dtos/batch.response.dto';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { KnowledgeBaseDocParamsKnowledgeBaseId } from '../constants/knowledge-base.doc.constant';
 import { ChatbotKnowledgeItemResponseDto } from '../dtos/response/chatbot-knowledge-item.response.dto';
