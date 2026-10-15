@@ -5,7 +5,7 @@ description: "Work safely in an Ecbot workspace through the Ecbot MCP Server: wh
 
 # Ecbot
 
-Ecbot runs AI chatbots ("agents") that reply to a business's customers on Messenger, Zalo, Instagram, the website and other channels. The Ecbot MCP Server gives you the workspace's API through tools. Setup and the full tool list: https://ecbot.dev/en/docs/mcp
+Ecbot runs AI chatbots ("agents") that reply to a business's customers on Messenger, Zalo, Instagram, the website and other channels. The Ecbot MCP Server gives you the workspace's API through tools. Setup and the full tool list: https://ecbot.dev/en/docs/dev/mcp
 
 ## Before you act
 
