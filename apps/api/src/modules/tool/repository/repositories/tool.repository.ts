@@ -15,6 +15,18 @@ export class ToolRepository extends DatabaseRepository<ToolEntity> {
         return this.find({ workspace: { id: workspaceId }, deleted: false });
     }
 
+    async findByIdsInWorkspace(
+        toolIds: string[],
+        workspaceId: string
+    ): Promise<ToolEntity[]> {
+        if (!toolIds.length) return [];
+        return this.find({
+            id: { $in: toolIds },
+            workspace: { id: workspaceId },
+            deleted: false,
+        });
+    }
+
     async findOneInWorkspace(
         toolId: string,
         workspaceId: string

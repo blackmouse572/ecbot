@@ -1,0 +1,99 @@
+---
+title: Turn a requirement into a skill
+description: A step-by-step tutorial on reading a business requirement, finding its questions, decisions, actions and rules, and writing it as a skill.
+faq:
+  - q: How long should a requirement be before I start?
+    a: A few sentences is enough. Write how the owner or staff handle the request today, in their own words, then work through the questions on this page.
+  - q: What if one requirement covers several requests?
+    a: Split it. Make one skill per kind of request, such as booking and cancelling, each with its own When to use.
+  - q: Can my AI assistant do the analysis?
+    a: Yes. Paste the requirement into an assistant connected to the Ecbot MCP Server and ask it to follow this page. Check the skill it creates in the app before you attach it.
+---
+
+This tutorial shows how to turn a plain description of how your business handles a request into a [skill](/docs/agents/skills) written as steps. You read the requirement once for each part of a skill: when to use it, what to ask, what to say, what to decide, what to do, and which rules never bend.
+
+## The requirement
+
+We use one example: a spa owner explains how bookings work.
+
+> When someone wants to book, find out which service and when they want to come. We open 9:00 to 18:00. Packages over 1,000,000đ need a 100,000đ deposit, so send our bank details for those. Tag new bookings "New booking" so the front desk sees them. If they want to cancel less than 24 hours before, a staff member has to handle it. Never promise a discount.
+
+Copy your own requirement into a note, then go through the questions below. Each answer becomes part of the skill.
+
+## 1. When does it apply?
+
+Look for the moment the customer starts this request. That is **When to use**. Write it the way customers say it.
+
+- Requirement: "When someone wants to book."
+- When to use: "Use when the customer wants to book a service or asks for a free time."
+
+The requirement also mentions cancelling. That is a second request with its own trigger, so it becomes a **second skill**. One skill per job keeps each one short and easy to test.
+
+## 2. What do you need to know?
+
+List every piece of information the requirement needs from the customer. Each one is an **Ask** step. The agent skips an Ask when the customer already said it.
+
+- "which service" → **Ask**: the service they want.
+- "when they want to come" → **Ask**: the day and time.
+- A booking needs a name to hold it → **Ask**: their name and phone number.
+
+## 3. What must you tell them?
+
+Facts the customer needs become **Tell** steps, in the agent's own words. Sentences that must be word for word, such as bank details, become **Say** steps.
+
+- "We open 9:00 to 18:00" → **Tell**: the opening hours when the time asked is outside them.
+- "send our bank details" → **Say**: the exact transfer details.
+
+## 4. Where does it branch?
+
+Words like "if", "only", "over" and "unless" mark a decision. Each one is an **If** step, with **Else if** or **Else** for the other cases.
+
+- "Packages over 1,000,000đ need a deposit" → **If** the service is a package over 1,000,000đ: **Say** the bank details.
+- "We open 9:00 to 18:00" → **If** the time is outside opening hours: **Tell** the hours and **Ask** for another time.
+
+## 5. What should happen in the system?
+
+Actions that change something, outside the chat, are **Tool** steps. Use a built-in action when one fits, or one of your [tools](/docs/agents/tools).
+
+- "Tag new bookings" → **Tool**: Add tag, tag "New booking".
+- "a staff member has to handle it" → **Tool**: Hand off to staff (in the cancelling skill).
+- A booking system or calendar you connected → **Tool**: that tool, to check and create the booking.
+
+## 6. What must never happen?
+
+Sentences with "never", "always" or "don't" are rules that hold no matter which step the agent is on. They become **Guardrails**, not steps.
+
+- "Never promise a discount" → Guardrail: "Never promise a discount or a price you have not checked."
+
+## 7. Put it together
+
+Order the steps the way a good staff member would handle the chat:
+
+1. **Ask**: the service they want.
+2. **Ask**: the day and time.
+3. **If** the time is outside 9:00 to 18:00:
+   1. **Tell**: the opening hours.
+   2. **Ask**: another time.
+4. **Ask**: their name and phone number.
+5. **Tell**: a summary of the booking to confirm.
+6. **If** the service is a package over 1,000,000đ:
+   1. **Say**: "Please transfer a 100,000đ deposit to account 0123456789, Spa Hoa Xinh. Your booking is held once we receive it."
+7. **Tool**: Add tag, tag "New booking".
+
+The cancelling skill is short: **Ask** for the booking, then **If** it is less than 24 hours away, **Tool** Hand off to staff, **Else** **Tell** that it is cancelled.
+
+## 8. Test and adjust
+
+Attach the skill to your agent and chat with it as a customer. Try the normal case first, then each branch: a time outside opening hours, a package, a customer who gives everything in one message.
+
+- The agent asks for something the customer already gave: make the Ask more specific.
+- The agent skips a branch: write the If condition the way customers say it.
+- The agent breaks a rule: move the rule from a step into Guardrails.
+
+## Ask your assistant to do it
+
+With the [Ecbot MCP Server](/docs/dev/mcp) connected, paste the requirement and ask:
+
+> Read this requirement and turn it into skills written as steps. Find when each one applies, what to ask, what to tell or say word for word, where it branches, which actions to take with built-in actions or my tools, and the rules as guardrails. Split it into one skill per request. Show me the steps before you create them.
+
+For finished examples, see the [use cases](/docs/cookbook/use-cases/capture-lead).

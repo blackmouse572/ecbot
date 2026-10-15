@@ -1,4 +1,5 @@
-import { useDeleteSkill, useGetSkill } from "@/hooks/api/skills";
+import { useDeleteSkill, useGetSkill, useSkillUsage } from "@/hooks/api/skills";
+import { toolLabelOf } from "../utils";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { PencilSquare, SquareTwoStack, Trash } from "@medusajs/icons";
 import {
@@ -18,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { SkillInstructionsSection } from "./components/skill-instructions-section";
 import { SkillMetaSection } from "./components/skill-meta-section";
+import { SkillUsageSection } from "./components/skill-usage-section";
 
 export function SkillDetail() {
   const { t } = useTranslation();
@@ -32,6 +34,11 @@ export function SkillDetail() {
   );
   const { deleteSkill } = useDeleteSkill(workspaceSlug);
   const prompt = usePrompt();
+  // Shared with SkillUsageSection through the query cache.
+  const { usage } = useSkillUsage(workspaceSlug, skillId ?? "", {
+    enabled: !!skill && !skill.isBuiltin,
+  });
+  const toolLabel = toolLabelOf(usage?.tools);
 
   if (isLoading || !skill) {
     return <SingleColumnPageSkeleton sections={2} showJSON={false} />;
@@ -61,7 +68,7 @@ export function SkillDetail() {
   const copyAction = {
     icon: <SquareTwoStack />,
     label: t("actions.copy"),
-    onClick: () => navigate("copy"),
+    onClick: () => navigate(`/${workspaceSlug}/skills/create?from=${skill.id}`),
   };
 
   const actionGroups = skill.isBuiltin
@@ -107,14 +114,30 @@ export function SkillDetail() {
           {skill.description && (
             <div className="flex flex-col gap-y-1 px-6 py-4">
               <Text size="small" weight="plus" className="text-ui-fg-subtle">
-                {t("fields.description")}
+                {t("skills.form.whenToUse")}
               </Text>
               <Text size="small">{skill.description}</Text>
             </div>
           )}
+
+          {skill.guardrails.length > 0 && (
+            <div className="flex flex-col gap-y-1 px-6 py-4">
+              <Text size="small" weight="plus" className="text-ui-fg-subtle">
+                {t("skills.form.guardrails")}
+              </Text>
+              <ul className="list-disc pl-5">
+                {skill.guardrails.map((rule, i) => (
+                  <li key={i}>
+                    <Text size="small">{rule}</Text>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </Container>
 
-        <SkillInstructionsSection skill={skill} />
+        <SkillInstructionsSection skill={skill} toolLabel={toolLabel} />
+        <SkillUsageSection skill={skill} />
         <SkillMetaSection item={skill} />
       </div>
     </SingleColumnPage>

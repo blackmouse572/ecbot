@@ -343,6 +343,33 @@ const cases: [
     ADDS,
   ],
   [
+    "create_skill",
+    {
+      name: "Order tracking",
+      format: "STEPS",
+      guardrails: ["Never share another customer's order."],
+      steps: [
+        { id: "s1", type: "ask", text: "The order code" },
+        { id: "s2", type: "tool", toolId: "tool-1" },
+      ],
+    },
+    "skillClientControllerCreateV1",
+    {
+      body: {
+        name: "Order tracking",
+        format: "STEPS",
+        guardrails: ["Never share another customer's order."],
+        steps: [
+          { id: "s1", type: "ask", text: "The order code" },
+          { id: "s2", type: "tool", toolId: "tool-1" },
+        ],
+      },
+    },
+    { data: { id: "skill-3" } },
+    { id: "skill-3" },
+    ADDS,
+  ],
+  [
     "clone_skill_template",
     { templateId: "tpl-1" },
     "skillClientControllerCloneV1",
@@ -431,6 +458,40 @@ describe("write tools", () => {
       );
     },
   );
+
+  it("steers workflows out of a chatbot's extra instructions into skills", async () => {
+    vi.mocked(api.clientCredentialClientControllerMeV1).mockResolvedValue(
+      {} as never,
+    );
+    const client = await connect({ "x-api-key": KEY });
+
+    const { tools } = await client.listTools();
+    const extra = tools.find((t) => t.name === "update_chatbot")?.inputSchema
+      .properties?.extraInstructions as { description?: string };
+
+    expect(extra.description).toContain("Skill");
+  });
+
+  it("tells the caller which built-in actions a skill's Tool step can use", async () => {
+    vi.mocked(api.clientCredentialClientControllerMeV1).mockResolvedValue(
+      {} as never,
+    );
+    const client = await connect({ "x-api-key": KEY });
+
+    const { tools } = await client.listTools();
+    const steps = tools.find((t) => t.name === "create_skill")?.inputSchema
+      .properties?.steps as { description?: string };
+
+    for (const id of [
+      "system:handoff",
+      "system:notify_team",
+      "system:add_tag",
+      "system:remove_tag",
+      "system:schedule_followup",
+      "system:save_customer_field",
+    ])
+      expect(steps.description).toContain(id);
+  });
 
   it.each([
     ["CHATBOT", "list_conversations", "reply_to_conversation"],

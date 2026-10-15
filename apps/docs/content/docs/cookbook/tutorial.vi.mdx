@@ -1,0 +1,99 @@
+---
+title: Biến yêu cầu thành kỹ năng
+description: Hướng dẫn từng bước cách đọc một yêu cầu nghiệp vụ, tìm câu hỏi, rẽ nhánh, thao tác và quy tắc, rồi viết thành một kỹ năng.
+faq:
+  - q: Yêu cầu cần dài bao nhiêu thì bắt đầu được?
+    a: Vài câu là đủ. Hãy ghi lại cách chủ shop hoặc nhân viên đang xử lý yêu cầu đó, bằng lời của họ, rồi đi qua các câu hỏi trong trang này.
+  - q: Nếu một yêu cầu gồm nhiều việc thì sao?
+    a: Hãy tách ra. Mỗi loại yêu cầu là một kỹ năng, như đặt lịch và hủy lịch, mỗi kỹ năng có Khi nào dùng riêng.
+  - q: Trợ lý AI có phân tích giúp được không?
+    a: Được. Dán yêu cầu vào trợ lý đã kết nối Ecbot MCP Server và nhờ làm theo trang này. Hãy kiểm tra kỹ năng nó tạo trong ứng dụng trước khi gắn cho agent.
+---
+
+Bài này hướng dẫn cách biến một đoạn mô tả bình thường về cách cửa hàng xử lý một yêu cầu thành [kỹ năng](/docs/agents/skills) viết theo các bước. Bạn đọc yêu cầu một lượt cho mỗi phần của kỹ năng: khi nào dùng, cần hỏi gì, cần nói gì, cần quyết định gì, cần làm gì, và những quy tắc không được phá.
+
+## Yêu cầu
+
+Ta dùng một ví dụ: chủ một spa kể cách nhận đặt lịch.
+
+> Khi khách muốn đặt lịch, hỏi khách làm dịch vụ gì và muốn đến lúc nào. Spa mở cửa từ 9:00 đến 18:00. Gói trên 1.000.000đ phải cọc 100.000đ, nên gửi số tài khoản cho khách. Gắn tag "Lịch mới" cho các lịch mới để lễ tân thấy. Nếu khách muốn hủy trong vòng 24 giờ trước giờ hẹn thì phải để nhân viên xử lý. Không bao giờ hứa giảm giá.
+
+Chép yêu cầu của bạn ra một ghi chú, rồi lần lượt trả lời các câu hỏi bên dưới. Mỗi câu trả lời là một phần của kỹ năng.
+
+## 1. Khi nào áp dụng?
+
+Tìm lúc khách bắt đầu yêu cầu này. Đó là **Khi nào dùng**. Hãy viết theo cách khách hay nói.
+
+- Yêu cầu: "Khi khách muốn đặt lịch."
+- Khi nào dùng: "Dùng khi khách muốn đặt một dịch vụ hoặc hỏi giờ còn trống."
+
+Yêu cầu còn nhắc đến việc hủy lịch. Đó là một yêu cầu khác, có lúc bắt đầu riêng, nên thành **kỹ năng thứ hai**. Mỗi kỹ năng một việc giúp kỹ năng ngắn và dễ thử.
+
+## 2. Cần biết những gì?
+
+Liệt kê mọi thông tin yêu cầu cần lấy từ khách. Mỗi thông tin là một bước **Hỏi**. Agent bỏ qua bước Hỏi nếu khách đã nói rồi.
+
+- "dịch vụ gì" → **Hỏi**: dịch vụ khách muốn làm.
+- "muốn đến lúc nào" → **Hỏi**: ngày và giờ.
+- Giữ lịch thì cần tên → **Hỏi**: tên và số điện thoại.
+
+## 3. Cần nói gì với khách?
+
+Những thông tin khách cần biết thành bước **Dặn**, agent nói bằng lời của mình. Những câu phải giữ nguyên văn, như số tài khoản, thành bước **Nói**.
+
+- "mở cửa từ 9:00 đến 18:00" → **Dặn**: giờ mở cửa khi khách hỏi giờ nằm ngoài khung đó.
+- "gửi số tài khoản" → **Nói**: thông tin chuyển khoản nguyên văn.
+
+## 4. Rẽ nhánh ở đâu?
+
+Những chữ như "nếu", "chỉ", "trên", "trừ khi" cho thấy có một quyết định. Mỗi quyết định là một bước **Nếu**, kèm **Nếu không, nếu** hoặc **Nếu không** cho các trường hợp còn lại.
+
+- "Gói trên 1.000.000đ phải cọc" → **Nếu** dịch vụ là gói trên 1.000.000đ: **Nói** số tài khoản.
+- "mở cửa từ 9:00 đến 18:00" → **Nếu** giờ hẹn ngoài giờ mở cửa: **Dặn** giờ mở cửa và **Hỏi** giờ khác.
+
+## 5. Hệ thống cần làm gì?
+
+Những việc làm thay đổi một thứ gì đó, ngoài cuộc trò chuyện, là bước **Công cụ**. Dùng thao tác có sẵn khi phù hợp, hoặc một [công cụ](/docs/agents/tools) của bạn.
+
+- "Gắn tag cho các lịch mới" → **Công cụ**: Gắn tag, tag "Lịch mới".
+- "phải để nhân viên xử lý" → **Công cụ**: Chuyển cho nhân viên (trong kỹ năng hủy lịch).
+- Hệ thống đặt lịch hoặc lịch làm việc bạn đã kết nối → **Công cụ**: công cụ đó, để kiểm tra và tạo lịch.
+
+## 6. Điều gì không bao giờ được xảy ra?
+
+Những câu có "không bao giờ", "luôn luôn" hay "đừng" là quy tắc phải giữ dù agent đang ở bước nào. Chúng thành **Quy tắc**, không phải bước.
+
+- "Không bao giờ hứa giảm giá" → Quy tắc: "Không bao giờ hứa giảm giá hay một mức giá chưa kiểm tra."
+
+## 7. Ghép lại
+
+Sắp xếp các bước theo cách một nhân viên giỏi sẽ xử lý cuộc trò chuyện:
+
+1. **Hỏi**: dịch vụ khách muốn làm.
+2. **Hỏi**: ngày và giờ.
+3. **Nếu** giờ hẹn ngoài 9:00 đến 18:00:
+   1. **Dặn**: giờ mở cửa.
+   2. **Hỏi**: giờ khác.
+4. **Hỏi**: tên và số điện thoại.
+5. **Dặn**: tóm tắt lịch hẹn để khách xác nhận.
+6. **Nếu** dịch vụ là gói trên 1.000.000đ:
+   1. **Nói**: "Bạn vui lòng chuyển khoản cọc 100.000đ vào tài khoản 0123456789, Spa Hoa Xinh. Lịch của bạn được giữ khi spa nhận được cọc."
+7. **Công cụ**: Gắn tag, tag "Lịch mới".
+
+Kỹ năng hủy lịch thì ngắn: **Hỏi** lịch hẹn, rồi **Nếu** còn dưới 24 giờ, **Công cụ** Chuyển cho nhân viên, **Nếu không** thì **Dặn** là lịch đã được hủy.
+
+## 8. Thử và chỉnh
+
+Gắn kỹ năng cho agent và nhắn tin thử như một khách hàng. Thử trường hợp bình thường trước, rồi từng nhánh: giờ ngoài giờ mở cửa, khách đặt gói, khách nói hết thông tin trong một tin nhắn.
+
+- Agent hỏi lại điều khách đã nói: viết bước Hỏi cụ thể hơn.
+- Agent bỏ qua một nhánh: viết điều kiện Nếu theo cách khách hay nói.
+- Agent phá quy tắc: chuyển quy tắc đó từ bước sang Quy tắc.
+
+## Nhờ trợ lý làm
+
+Khi đã kết nối [Ecbot MCP Server](/docs/dev/mcp), dán yêu cầu và nhờ:
+
+> Đọc yêu cầu này và biến nó thành các kỹ năng viết theo các bước. Tìm khi nào dùng mỗi kỹ năng, cần hỏi gì, cần dặn hoặc nói nguyên văn gì, rẽ nhánh ở đâu, cần làm gì bằng thao tác có sẵn hoặc công cụ của tôi, và các quy tắc. Mỗi loại yêu cầu là một kỹ năng. Cho tôi xem các bước trước khi tạo.
+
+Xem các ví dụ hoàn chỉnh trong [tình huống sử dụng](/docs/cookbook/use-cases/capture-lead).
