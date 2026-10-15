@@ -2,6 +2,11 @@
     "workspace": {
         "erase": "The customer and all of their conversations have been permanently deleted."
     },
+    "admin": {
+        "list": "Customers retrieved successfully.",
+        "get": "Customer retrieved successfully.",
+        "tagList": "Customer tags retrieved successfully."
+    },
     "error": {
         "notFound": "Customer not found."
     }

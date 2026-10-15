@@ -1,6 +1,15 @@
-import { Entity, Index, ManyToOne, Property } from '@mikro-orm/postgresql';
+import {
+    Collection,
+    Entity,
+    Index,
+    ManyToOne,
+    OneToMany,
+    Property,
+} from '@mikro-orm/postgresql';
 import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
+import type { ContactPointEntity } from './contact-point.entity';
+import type { CustomerTagAssignmentEntity } from './customer-tag-assignment.entity';
 
 export const CustomerTableName = 'customers';
 
@@ -36,4 +45,12 @@ export class CustomerEntity extends DatabaseEntityBase {
 
     @Property({ type: 'uuid', nullable: true })
     mergedIntoCustomerId?: string;
+
+    // Inverse sides, so a list can filter customers by channel or tag. By
+    // name: a class import would cycle with the owning entities.
+    @OneToMany('ContactPointEntity', 'customer')
+    contactPoints = new Collection<ContactPointEntity>(this);
+
+    @OneToMany('CustomerTagAssignmentEntity', 'customer')
+    tagAssignments = new Collection<CustomerTagAssignmentEntity>(this);
 }

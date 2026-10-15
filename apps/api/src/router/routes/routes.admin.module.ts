@@ -1,6 +1,9 @@
 import { AccountModule } from '@app/modules/account/account.module';
 import { AccountAdminController } from '@app/modules/account/controllers/account.admin.controller';
 import { AwsModule } from '@app/modules/aws/aws.module';
+import { CustomerAdminController } from '@app/modules/customer/controllers/customer.admin.controller';
+import { CustomerTagAdminController } from '@app/modules/customer/controllers/customer-tag.admin.controller';
+import { CustomerModule } from '@app/modules/customer/customer.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { ChatbotAdminController } from '@app/modules/chatbot/controllers/chatbot.admin.controller';
 import { RAGAdminController } from '@app/modules/rag/controllers/rag.admin.controller';
@@ -56,6 +59,8 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         ToolAdminController,
         WaitlistAdminController,
         WorkspaceAdminController,
+        CustomerAdminController,
+        CustomerTagAdminController,
     ],
     providers: [],
     exports: [],
@@ -79,6 +84,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         SkillModule,
         ToolModule,
         WaitlistModule,
+        CustomerModule,
         CloudTasksQueueModule,
     ],
 })
