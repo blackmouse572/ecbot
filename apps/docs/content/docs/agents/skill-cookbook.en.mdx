@@ -1,0 +1,103 @@
+---
+title: Skill cookbook
+description: Ready-made skill recipes written as steps, such as capturing a lead, checking an order or booking a slot, with a prompt for your AI assistant.
+faq:
+  - q: Do I need these exact steps?
+    a: No. Each recipe is a starting point. Change the wording, the tags and the tools to match your shop, then test it in a chat.
+  - q: What if I don't have the tool a recipe uses?
+    a: Leave that step out, or replace it with a Tell step that says the team will check. Recipes that only use built-in actions work in every workspace.
+  - q: Can my AI assistant build these for me?
+    a: Yes. Connect the Ecbot MCP Server, then paste the prompt under a recipe. The assistant creates the skill and can attach it to an agent.
+---
+
+Each recipe below is a [skill](/docs/agents/skills) written as steps. Build it in the app with **Create**, **Write as steps**, or paste the prompt under it into an AI assistant connected through the [Ecbot MCP Server](/docs/mcp).
+
+Recipes use the step types **Ask**, **Say**, **Tell**, **Tool** and **If**. Built-in actions such as **Hand off to staff** or **Add tag** work in every workspace. Replace names in quotes with your own tags and tools.
+
+## Capture a lead and alert the team
+
+**When to use**: the customer is interested but wants a consultant to call them back.
+
+1. **Ask**: what they need and their budget.
+2. **Ask**: their name and phone number.
+3. **Tool**: Save customer info, field "budget".
+4. **Tool**: Add tag, tag "Lead".
+5. **Tool**: Notify the team.
+6. **Tell**: a consultant will call them, and roughly when.
+
+Guardrail: "Never promise a price or a discount. The consultant will confirm."
+
+> Create a skill "Capture a lead". Use it when a customer wants a consultant to call back. Steps: ask what they need and their budget, ask their name and phone, save the budget to the customer field "budget", add the tag "Lead", notify the team, then tell them a consultant will call. Attach it to my sales agent.
+
+## Check an order with your own tool
+
+**When to use**: the customer asks where their order is. Needs an [HTTP tool](/docs/agents/tools) that looks up orders, here called "Order lookup".
+
+1. **Ask**: the order code.
+2. **Tool**: Order lookup, how: "with the order code".
+3. **If** the order is late or lost:
+   1. **Say**: "Sorry for the wait, I'm passing this to our team right now."
+   2. **Tool**: Hand off to staff.
+4. **Else**:
+   1. **Tell**: the status and the expected delivery date.
+
+Guardrail: "Never make up a delivery date. Only use what the tool returns."
+
+> Create a skill "Order status" for when a customer asks where their order is. Ask for the order code, then call my Order lookup tool with it. If the order is late or lost, say sorry and hand off to staff. Otherwise tell them the status and delivery date.
+
+## Book a slot with a calendar
+
+**When to use**: the customer wants to book a service. Needs an [MCP tool](/docs/agents/tools) for your calendar, here "Google Calendar".
+
+1. **Ask**: the service and the day and time they prefer.
+2. **Tool**: Google Calendar, action find_free_slots.
+3. **Tell**: two or three free slots close to what they asked.
+4. **If** the customer picks a slot:
+   1. **Ask**: their name and phone number.
+   2. **Tool**: Google Calendar, action create_event.
+   3. **Tell**: the booking summary.
+   4. **Tool**: Schedule a follow-up, how: "remind them the day before".
+5. **Else**:
+   1. **Tool**: Hand off to staff.
+
+> Create a skill "Book a slot". Use it when a customer wants to book. Ask the service and preferred time, check free slots with the find_free_slots action of my Google Calendar tool, offer two or three, and when they pick one ask name and phone, book it with create_event, confirm, and schedule a follow-up to remind them. If nothing fits, hand off to staff.
+
+## Talk to a person after hours
+
+**When to use**: the customer asks for a human. Built-in actions only.
+
+1. **Ask**: a short summary of what they need, so staff don't ask again.
+2. **If** it is outside working hours:
+   1. **Tell**: the working hours, and that the team will reply when they open.
+   2. **Tool**: Schedule a follow-up.
+3. **Else**:
+   1. **Tool**: Hand off to staff.
+   2. **Tell**: a team member will take over now.
+
+Guardrail: "Never pretend to be a human."
+
+> Create a skill "Talk to a person" for when a customer asks for a human. Ask for a short summary. If it's outside working hours, tell them our hours and schedule a follow-up. Otherwise hand off to staff and tell them someone is coming.
+
+## Flag an unhappy customer
+
+**When to use**: the customer is upset or complains. Built-in actions only.
+
+1. **Tell**: that you understand, without making excuses.
+2. **Ask**: what happened, with the order code or date.
+3. **Tool**: Add tag, tag "Complaint".
+4. **If** you can fix it with what you know:
+   1. **Tell**: a concrete fix.
+5. **Else**:
+   1. **Tool**: Notify the team.
+   2. **Tell**: the team has been told and will follow up.
+
+Guardrail: "Stay calm and polite, and never blame the customer."
+
+> Create a skill "Unhappy customer" for when a customer is upset or complains. Acknowledge how they feel, ask what happened, tag them "Complaint". If you can fix it, say how. If not, notify the team and tell the customer they will follow up.
+
+## Tips
+
+- Write **When to use** as the customer would say it: "where is my order", not "order tracking".
+- Keep a skill to one job. Two short skills work better than one long one.
+- Put rules the agent must never break in **Guardrails**, not in a step.
+- After you create a skill, attach it to an agent and try it in a chat before you go live.

@@ -81,6 +81,14 @@ Các trợ lý cấu hình bằng tệp JSON, như tệp `mcp.json` của Cursor
 
 Tải tệp lên, cài ứng dụng từ kho công cụ và xóa vĩnh viễn dữ liệu của khách chỉ làm được trong ứng dụng.
 
+## Tạo kỹ năng cùng trợ lý
+
+Trợ lý có thể viết một [kỹ năng](/docs/agents/skills) theo các bước, có rẽ nhánh, công cụ của bạn và các thao tác có sẵn: chuyển cho nhân viên, báo cho đội ngũ, gắn hoặc gỡ tag, hẹn nhắn lại và lưu thông tin khách. Hãy mô tả quy trình bằng lời thường, ví dụ:
+
+> Tạo kỹ năng "Tình trạng đơn hàng" cho khi khách hỏi đơn đang ở đâu. Hỏi mã đơn và gọi công cụ Order lookup. Nếu đơn trễ, xin lỗi và chuyển cho nhân viên. Nếu không, báo ngày giao. Gắn kỹ năng cho agent của cửa hàng.
+
+Trợ lý có thể tra công cụ và tag của bạn trước, để các bước trỏ đúng vào công cụ và tag có thật. Sau đó hãy mở kỹ năng trong ứng dụng để kiểm tra lại. Xem thêm câu lệnh trong [sổ tay kỹ năng](/docs/agents/skill-cookbook).
+
 ## Quyền và nhật ký hoạt động
 
 - **Key hoạt động với tư cách người tạo.** Key luôn có đúng quyền hiện tại của người tạo: nếu họ mất một quyền hoặc rời workspace, key cũng mất theo.

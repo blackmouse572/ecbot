@@ -1,0 +1,103 @@
+---
+title: Sổ tay kỹ năng
+description: Các công thức kỹ năng viết sẵn theo từng bước, như ghi nhận khách tiềm năng, kiểm tra đơn hay đặt lịch, kèm câu lệnh cho trợ lý AI.
+faq:
+  - q: Tôi có phải làm đúng y các bước này không?
+    a: Không. Mỗi công thức chỉ là điểm bắt đầu. Hãy đổi câu chữ, tag và công cụ cho hợp với cửa hàng của bạn, rồi thử trong một cuộc trò chuyện.
+  - q: Nếu tôi chưa có công cụ mà công thức dùng thì sao?
+    a: Bỏ bước đó, hoặc thay bằng một bước Dặn nói rằng đội ngũ sẽ kiểm tra. Các công thức chỉ dùng thao tác có sẵn chạy được ở mọi workspace.
+  - q: Trợ lý AI có tạo giúp tôi được không?
+    a: Được. Kết nối Ecbot MCP Server, rồi dán câu lệnh bên dưới mỗi công thức. Trợ lý sẽ tạo kỹ năng và có thể gắn nó cho agent.
+---
+
+Mỗi công thức dưới đây là một [kỹ năng](/docs/agents/skills) viết theo các bước. Tạo trong ứng dụng bằng **Tạo mới**, **Viết theo các bước**, hoặc dán câu lệnh bên dưới vào trợ lý AI đã kết nối qua [Ecbot MCP Server](/docs/mcp).
+
+Các công thức dùng những loại bước **Hỏi**, **Nói**, **Dặn**, **Công cụ** và **Nếu**. Thao tác có sẵn như **Chuyển cho nhân viên** hay **Gắn tag** dùng được ở mọi workspace. Hãy thay các tên trong ngoặc kép bằng tag và công cụ của bạn.
+
+## Ghi nhận khách tiềm năng và báo đội ngũ
+
+**Khi nào dùng**: khách quan tâm nhưng muốn chuyên viên gọi lại tư vấn.
+
+1. **Hỏi**: khách cần gì và ngân sách bao nhiêu.
+2. **Hỏi**: tên và số điện thoại.
+3. **Công cụ**: Lưu thông tin khách, trường "budget".
+4. **Công cụ**: Gắn tag, tag "Khách tiềm năng".
+5. **Công cụ**: Báo cho đội ngũ.
+6. **Dặn**: chuyên viên sẽ gọi cho khách, và khoảng khi nào.
+
+Quy tắc: "Không bao giờ hứa giá hay giảm giá. Chuyên viên sẽ xác nhận."
+
+> Tạo kỹ năng "Ghi nhận khách tiềm năng". Dùng khi khách muốn chuyên viên gọi lại. Các bước: hỏi khách cần gì và ngân sách, hỏi tên và số điện thoại, lưu ngân sách vào trường "budget", gắn tag "Khách tiềm năng", báo cho đội ngũ, rồi dặn khách sẽ có chuyên viên gọi. Gắn kỹ năng cho agent bán hàng của tôi.
+
+## Kiểm tra đơn bằng công cụ của bạn
+
+**Khi nào dùng**: khách hỏi đơn hàng đang ở đâu. Cần một [công cụ HTTP](/docs/agents/tools) tra cứu đơn, ở đây tên là "Order lookup".
+
+1. **Hỏi**: mã đơn hàng.
+2. **Công cụ**: Order lookup, cách dùng: "với mã đơn hàng".
+3. **Nếu** đơn bị trễ hoặc thất lạc:
+   1. **Nói**: "Xin lỗi vì đã để bạn chờ, mình chuyển ngay cho đội ngũ xử lý nhé."
+   2. **Công cụ**: Chuyển cho nhân viên.
+4. **Nếu không**:
+   1. **Dặn**: trạng thái đơn và ngày giao dự kiến.
+
+Quy tắc: "Không bao giờ bịa ngày giao. Chỉ dùng thông tin công cụ trả về."
+
+> Tạo kỹ năng "Tình trạng đơn hàng" cho khi khách hỏi đơn đang ở đâu. Hỏi mã đơn, rồi gọi công cụ Order lookup với mã đó. Nếu đơn trễ hoặc thất lạc, xin lỗi và chuyển cho nhân viên. Nếu không, báo trạng thái và ngày giao.
+
+## Đặt lịch với lịch làm việc
+
+**Khi nào dùng**: khách muốn đặt một dịch vụ. Cần một [công cụ MCP](/docs/agents/tools) cho lịch của bạn, ở đây là "Google Calendar".
+
+1. **Hỏi**: dịch vụ, ngày và giờ khách muốn.
+2. **Công cụ**: Google Calendar, thao tác find_free_slots.
+3. **Dặn**: hai hoặc ba khung giờ trống gần với yêu cầu.
+4. **Nếu** khách chọn một khung giờ:
+   1. **Hỏi**: tên và số điện thoại.
+   2. **Công cụ**: Google Calendar, thao tác create_event.
+   3. **Dặn**: tóm tắt lịch hẹn.
+   4. **Công cụ**: Hẹn nhắn lại, cách dùng: "nhắc khách vào hôm trước".
+5. **Nếu không**:
+   1. **Công cụ**: Chuyển cho nhân viên.
+
+> Tạo kỹ năng "Đặt lịch". Dùng khi khách muốn đặt lịch. Hỏi dịch vụ và giờ mong muốn, tìm giờ trống bằng thao tác find_free_slots của công cụ Google Calendar, đưa ra hai hoặc ba lựa chọn, khi khách chọn thì hỏi tên và số điện thoại, đặt bằng create_event, xác nhận, và hẹn nhắn lại để nhắc khách. Nếu không có giờ phù hợp, chuyển cho nhân viên.
+
+## Gặp nhân viên ngoài giờ làm việc
+
+**Khi nào dùng**: khách muốn nói chuyện với người thật. Chỉ dùng thao tác có sẵn.
+
+1. **Hỏi**: tóm tắt ngắn khách cần gì, để nhân viên không phải hỏi lại.
+2. **Nếu** đang ngoài giờ làm việc:
+   1. **Dặn**: giờ làm việc, và đội ngũ sẽ trả lời khi mở cửa.
+   2. **Công cụ**: Hẹn nhắn lại.
+3. **Nếu không**:
+   1. **Công cụ**: Chuyển cho nhân viên.
+   2. **Dặn**: sẽ có nhân viên tiếp nhận ngay.
+
+Quy tắc: "Không bao giờ giả vờ là người thật."
+
+> Tạo kỹ năng "Gặp nhân viên" cho khi khách muốn gặp người thật. Hỏi tóm tắt ngắn. Nếu đang ngoài giờ, báo giờ làm việc và hẹn nhắn lại. Nếu không, chuyển cho nhân viên và báo khách sẽ có người tiếp nhận.
+
+## Đánh dấu khách không hài lòng
+
+**Khi nào dùng**: khách đang bực hoặc khiếu nại. Chỉ dùng thao tác có sẵn.
+
+1. **Dặn**: bạn hiểu cảm giác của khách, không phân bua.
+2. **Hỏi**: chuyện gì đã xảy ra, kèm mã đơn hoặc ngày.
+3. **Công cụ**: Gắn tag, tag "Khiếu nại".
+4. **Nếu** bạn giải quyết được với những gì bạn biết:
+   1. **Dặn**: cách giải quyết cụ thể.
+5. **Nếu không**:
+   1. **Công cụ**: Báo cho đội ngũ.
+   2. **Dặn**: đội ngũ đã được báo và sẽ liên hệ lại.
+
+Quy tắc: "Luôn bình tĩnh, lịch sự, và không bao giờ đổ lỗi cho khách."
+
+> Tạo kỹ năng "Khách không hài lòng" cho khi khách bực hoặc khiếu nại. Thể hiện sự thấu hiểu, hỏi chuyện gì đã xảy ra, gắn tag "Khiếu nại". Nếu giải quyết được thì nói cách làm. Nếu không, báo cho đội ngũ và dặn khách sẽ có người liên hệ lại.
+
+## Mẹo
+
+- Viết **Khi nào dùng** theo cách khách nói: "đơn của tôi đâu", không phải "theo dõi đơn hàng".
+- Mỗi kỹ năng chỉ làm một việc. Hai kỹ năng ngắn hiệu quả hơn một kỹ năng dài.
+- Đặt những điều agent không bao giờ được làm vào **Quy tắc**, không đặt trong một bước.
+- Sau khi tạo, gắn kỹ năng cho agent và thử trong một cuộc trò chuyện trước khi chạy thật.

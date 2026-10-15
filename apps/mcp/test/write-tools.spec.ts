@@ -459,6 +459,27 @@ describe("write tools", () => {
     },
   );
 
+  it("tells the caller which built-in actions a skill's Tool step can use", async () => {
+    vi.mocked(api.clientCredentialClientControllerMeV1).mockResolvedValue(
+      {} as never,
+    );
+    const client = await connect({ "x-api-key": KEY });
+
+    const { tools } = await client.listTools();
+    const steps = tools.find((t) => t.name === "create_skill")?.inputSchema
+      .properties?.steps as { description?: string };
+
+    for (const id of [
+      "system:handoff",
+      "system:notify_team",
+      "system:add_tag",
+      "system:remove_tag",
+      "system:schedule_followup",
+      "system:save_customer_field",
+    ])
+      expect(steps.description).toContain(id);
+  });
+
   it.each([
     ["CHATBOT", "list_conversations", "reply_to_conversation"],
     ["KNOWLEDGE_BASE", "list_knowledge_bases", "create_knowledge_item"],
