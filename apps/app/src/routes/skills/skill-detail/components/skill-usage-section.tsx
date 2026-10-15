@@ -59,7 +59,9 @@ export const SkillUsageSection = ({ skill }: Props) => {
                 >
                   <ExclamationCircle className="shrink-0 text-ui-tag-orange-icon" />
                   {t("skills.usage.missingTool", {
-                    tool: toolLabel({ toolId: m.id, action: m.action }),
+                    tool:
+                      toolLabel({ toolId: m.id, action: m.action }) ||
+                      t("skills.steps.unknownTool"),
                   })}
                 </Text>
               ))}

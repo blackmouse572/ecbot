@@ -77,7 +77,7 @@
       "stepsHint": "Skill này được viết theo các bước. Trình chỉnh sửa các bước sẽ có sớm; hiện tại bạn có thể chuyển sang dạng văn bản để sửa.",
       "toText": {
         "title": "Chuyển sang dạng văn bản?",
-        "description": "Các bước và quy tắc sẽ thành hướng dẫn dạng văn bản. Bạn không thể chuyển ngược lại thành các bước.",
+        "description": "Các bước sẽ thành hướng dẫn dạng văn bản, còn quy tắc vẫn giữ nguyên. Bạn không thể chuyển văn bản ngược lại thành các bước.",
         "confirm": "Chuyển sang văn bản",
         "action": "Chuyển sang dạng văn bản"
       }

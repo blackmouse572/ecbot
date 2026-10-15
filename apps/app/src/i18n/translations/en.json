@@ -77,7 +77,7 @@
       "stepsHint": "This skill is written as steps. A steps editor is coming soon; for now you can turn it into text and edit that.",
       "toText": {
         "title": "Write as text instead?",
-        "description": "The steps and guardrails become plain text instructions. You cannot turn them back into steps.",
+        "description": "The steps become plain text instructions, and the guardrails stay as they are. You cannot turn the text back into steps.",
         "confirm": "Write as text",
         "action": "Write as text instead"
       }

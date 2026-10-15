@@ -11,6 +11,8 @@ import { ChatbotCacheService } from 'src/modules/ai-cache/services/chatbot-cache
 import { SkillUsageResponseDto } from 'src/modules/skill/dtos/response/skill-usage.response.dto';
 import { ENUM_SKILL_FORMAT } from 'src/modules/skill/enums/skill-format.enum';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
+import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
+import { isDestructiveAction } from 'src/modules/tool/utils/destructive-action.util';
 import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.repository';
 import { skillToolRefs } from '@repo/agent-blueprint';
@@ -115,8 +117,8 @@ export class ChatbotSkillService {
     }
 
     // Which tools a skill's steps call, and which chatbots it is attached to,
-    // with the tools each of those chatbots cannot call (not linked, switched
-    // off, or an MCP action left out of the link).
+    // with the tools each of those chatbots cannot call (deleted or revoked,
+    // not linked, switched off, or an MCP action the link does not offer).
     async usage(
         workspaceId: string,
         skillId: string
@@ -149,16 +151,30 @@ export class ChatbotSkillService {
                   rows.map(r => r.chatbot.id)
               )
             : [];
-        const canCall = (chatbotId: string, toolId: string, action?: string) =>
-            links.some(
-                l =>
-                    l.chatbot.id === chatbotId &&
-                    l.tool.id === toolId &&
-                    l.enabled &&
-                    (l.tool.kind !== ENUM_TOOL_KIND.MCP ||
-                        !l.enabledActions ||
-                        (!!action && l.enabledActions.includes(action)))
-            );
+        // Same rule as the manifest the agent gets (manifest-builder.service):
+        // a revoked tool is never offered, and without an action list an MCP
+        // link offers only discovered, non-destructive actions.
+        const canCall = (
+            chatbotId: string,
+            toolId: string,
+            action?: string
+        ) => {
+            const tool = toolById.get(toolId);
+            if (!tool || tool.status === ENUM_TOOL_STATUS.REVOKED) return false;
+            return links.some(l => {
+                if (l.chatbot.id !== chatbotId || l.tool.id !== toolId)
+                    return false;
+                if (!l.enabled) return false;
+                if (tool.kind !== ENUM_TOOL_KIND.MCP) return true;
+                const found = (tool.discoveredActions ?? []).find(
+                    a => a.name === action
+                );
+                if (!found) return false;
+                return l.enabledActions == null
+                    ? !isDestructiveAction(found)
+                    : l.enabledActions.includes(found.name);
+            });
+        };
 
         return {
             tools: used.map(r => {
@@ -174,7 +190,7 @@ export class ChatbotSkillService {
                 id: row.chatbot.id,
                 name: row.chatbot.name,
                 enabled: row.enabled,
-                missingTools: used
+                missingTools: refs
                     .filter(r => !canCall(row.chatbot.id, r.toolId, r.action))
                     .map(r => ({
                         id: r.toolId,

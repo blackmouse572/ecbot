@@ -1,7 +1,7 @@
 import { TipTapEditor } from "@/components/common/tiptap-editor/tiptap-editor";
 import { PlusMini, XMark } from "@medusajs/icons";
 import { Button, IconButton, Input, Textarea, usePrompt } from "@medusajs/ui";
-import type { ToolStep } from "@repo/agent-blueprint";
+import { withoutSkillRules, type ToolStep } from "@repo/agent-blueprint";
 import type { SkillGetResponseDto } from "@repo/client";
 import { Form } from "@repo/ui/common-components";
 import type { FC } from "react";
@@ -45,9 +45,12 @@ export const SkillFormFields: FC<Props> = ({ form, showStart, toolLabel }) => {
     });
     if (!confirmed) return;
     const opts = { shouldDirty: true, shouldValidate: true };
-    // The compiled text already carries the rules, so they move into it.
-    form.setValue("instructions", form.getValues("compiled"), opts);
-    form.setValue("guardrails", [], opts);
+    // Guardrails stay a field of their own, as edited in this form.
+    form.setValue(
+      "instructions",
+      withoutSkillRules(form.getValues("compiled")),
+      opts,
+    );
     form.setValue("steps", [], opts);
     form.setValue("format", "CONTENT", opts);
   };

@@ -8,6 +8,7 @@ import { ChatbotSkillService } from '../../../../src/modules/skill/services/chat
 import { ChatbotCacheService } from '../../../../src/modules/ai-cache/services/chatbot-cache.service';
 import { ChatbotToolRepository } from '../../../../src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { ToolRepository } from '../../../../src/modules/tool/repository/repositories/tool.repository';
+import { ENUM_TOOL_STATUS } from '../../../../src/modules/tool/enums/tool-status.enum';
 
 describe('ChatbotSkillService', () => {
     let service: ChatbotSkillService;
@@ -209,7 +210,16 @@ describe('ChatbotSkillService', () => {
             kind: 'HTTP',
             displayName: 'Lookup order',
         };
-        const zendesk = { id: 'mcp-1', kind: 'MCP', displayName: 'Zendesk' };
+        const zendesk = {
+            id: 'mcp-1',
+            kind: 'MCP',
+            displayName: 'Zendesk',
+            discoveredActions: [
+                { name: 'create_ticket' },
+                { name: 'search' },
+                { name: 'delete_all_tickets' },
+            ],
+        };
 
         it('lists the tools a STEPS skill calls and what each chatbot lacks', async () => {
             mockSkillRepo.findOneReadable.mockResolvedValue({
@@ -269,13 +279,16 @@ describe('ChatbotSkillService', () => {
                     id: 'bot-1',
                     name: 'Shop',
                     enabled: true,
-                    missingTools: [{ id: 'mcp-1', action: 'create_ticket' }],
+                    missingTools: [
+                        { id: 'mcp-1', action: 'create_ticket' },
+                        { id: 'gone' },
+                    ],
                 },
                 {
                     id: 'bot-2',
                     name: 'Spa',
                     enabled: false,
-                    missingTools: [{ id: 'http-1' }],
+                    missingTools: [{ id: 'http-1' }, { id: 'gone' }],
                 },
             ]);
             expect(mockToolRepo.findByIdsInWorkspace).toHaveBeenCalledWith(
@@ -286,6 +299,54 @@ describe('ChatbotSkillService', () => {
                 skillId,
                 workspaceId
             );
+        });
+
+        it('reports actions and tools the agent is not offered at runtime', async () => {
+            const revoked = {
+                id: 'http-2',
+                kind: 'HTTP',
+                displayName: 'Old API',
+                status: ENUM_TOOL_STATUS.REVOKED,
+            };
+            mockSkillRepo.findOneReadable.mockResolvedValue({
+                id: skillId,
+                format: 'STEPS',
+                steps: [
+                    {
+                        id: 'a',
+                        type: 'tool',
+                        toolId: 'mcp-1',
+                        action: 'delete_all_tickets',
+                    },
+                    { id: 'b', type: 'tool', toolId: 'mcp-1', action: 'nope' },
+                    { id: 'c', type: 'tool', toolId: 'http-2' },
+                ],
+            });
+            mockToolRepo.findByIdsInWorkspace.mockResolvedValue([
+                zendesk,
+                revoked,
+            ]);
+            mockChatbotSkillRepo.findBySkillId.mockResolvedValue([
+                { enabled: true, chatbot: { id: 'bot-1', name: 'Shop' } },
+            ]);
+            // No action list: only discovered, non-destructive actions.
+            mockChatbotToolRepo.findByChatbotIds.mockResolvedValue([
+                {
+                    enabled: true,
+                    chatbot: { id: 'bot-1' },
+                    tool: zendesk,
+                    enabledActions: null,
+                },
+                { enabled: true, chatbot: { id: 'bot-1' }, tool: revoked },
+            ]);
+
+            const usage = await service.usage(workspaceId, skillId);
+
+            expect(usage.chatbots[0].missingTools).toEqual([
+                { id: 'mcp-1', action: 'delete_all_tickets' },
+                { id: 'mcp-1', action: 'nope' },
+                { id: 'http-2' },
+            ]);
         });
 
         it('returns no tools for a CONTENT skill and throws for an unknown one', async () => {

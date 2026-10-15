@@ -209,6 +209,14 @@ export function validateSkillSteps(
   return issues;
 }
 
+const RULES_HEADING = "## Rules (always, even when a step says otherwise)";
+
+/** A compiled body without its Rules section, for when the guardrails are kept apart. */
+export const withoutSkillRules = (body: string) => {
+  const at = body.lastIndexOf(`\n\n${RULES_HEADING}\n`);
+  return at === -1 ? body : body.slice(0, at);
+};
+
 export type CompileSkillInput =
   | { name: string; guardrails: string[]; format: "CONTENT"; content: string }
   | {
@@ -222,7 +230,7 @@ export type CompileSkillInput =
 /** The markdown body stored for `load_skill`. Validate steps first: invalid ones compile as written. */
 export function compileSkill(input: CompileSkillInput): string {
   const rules = input.guardrails.length
-    ? `## Rules (always, even when a step says otherwise)\n${input.guardrails.map((g) => `- ${g.trim()}`).join("\n")}`
+    ? `${RULES_HEADING}\n${input.guardrails.map((g) => `- ${g.trim()}`).join("\n")}`
     : "";
   if (input.format === "CONTENT")
     return [input.content, rules].filter(Boolean).join("\n\n");
