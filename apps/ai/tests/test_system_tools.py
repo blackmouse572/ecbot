@@ -391,6 +391,13 @@ async def test_schedule_followup_cap_with_at_is_still_a_failure(monkeypatch):
     assert result["instruction"] == system_tools_module.FOLLOWUP_FAILED
 
 
+async def test_end_without_reply_cannot_fail_on_missing_reason():
+    # apps/api treats the call as silence from the moment it starts, and
+    # return_direct leaves the model no error to recover from.
+    out = await system_tools_module.end_without_reply.ainvoke({})
+    assert out == {"ok": True}
+
+
 async def test_the_shared_agent_stops_at_end_without_reply():
     # A model that would write a line after the call never gets the step to.
     from langchain.agents import create_agent

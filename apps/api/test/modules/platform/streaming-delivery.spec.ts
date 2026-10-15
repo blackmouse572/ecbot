@@ -107,6 +107,43 @@ describe('StreamingDelivery.deliver (UI Message Stream)', () => {
         }
     );
 
+    // Text the model wrote in the same step, before the call, has already
+    // streamed out and cannot be recalled: it is the reply, so the turn is
+    // a normal one (no silence, no fallback). AGENT.md asks for no text.
+    it('delivers text written before end_without_reply as the reply', async () => {
+        const adapter = makeAdapter();
+        const persisted: string[] = [];
+        const res = await new StreamingDelivery().deliver({
+            adapter,
+            account: {} as any,
+            senderId: 'S',
+            conversationId: 'C',
+            chatbot: GUARD_OFF,
+            stream: sse([
+                line({ type: 'text-start', id: 't1' }),
+                line({ type: 'text-delta', id: 't1', delta: 'Thanks!' }),
+                line({
+                    type: 'tool-input-start',
+                    toolCallId: 'c1',
+                    toolName: 'end_without_reply',
+                }),
+                line({ type: 'finish' }),
+                DONE,
+            ]),
+            abort: new AbortController(),
+            isCurrent: async () => true,
+            onSegmentPersist: async t => {
+                persisted.push(t);
+                return 'nonce';
+            },
+            onSent: async () => {},
+            onFailed: async () => {},
+        });
+        expect(persisted).toEqual(['Thanks!']);
+        expect(adapter.sendMessage).toHaveBeenCalledTimes(1);
+        expect(res).toMatchObject({ anySent: true, endedWithoutReply: true });
+    });
+
     it('stops sending when superseded (keeps already-sent)', async () => {
         let sent = 0;
         const adapter = {

@@ -477,7 +477,7 @@ async def send_image(url: str) -> dict[str, Any]:
 # return_direct: the turn stops at this call, so the model gets no further
 # step in which to write a line anyway.
 @tool(return_direct=True)
-async def end_without_reply(reason: str) -> dict[str, Any]:
+async def end_without_reply(reason: str = "") -> dict[str, Any]:
     """End this turn without sending the user anything. Use it only when the
     user's newest message is nothing but a thanks, ok, bye or a sticker that
     means one of those, after their question was already answered. Never use
