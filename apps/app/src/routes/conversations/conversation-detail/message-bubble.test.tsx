@@ -394,3 +394,90 @@ describe("MessageBubble agent activity", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("MessageBubble inbound message kinds", () => {
+  const renderInbound = (message: Record<string, unknown>) =>
+    render(
+      <TooltipProvider>
+        <MessageBubble
+          message={
+            { ...baseMessage, text: "", ...message } as React.ComponentProps<
+              typeof MessageBubble
+            >["message"]
+          }
+        />
+      </TooltipProvider>,
+    );
+
+  it("draws a sticker small and without a bubble", () => {
+    const { container } = renderInbound({
+      attachments: [{ type: "sticker", url: "https://s3/like.webp" }],
+    });
+
+    const sticker = screen.getByRole("img", { name: "conversations.sticker" });
+    expect(sticker).toHaveAttribute("src", "https://s3/like.webp");
+    expect(container.querySelector(".chat-bubble")).toBeNull();
+  });
+
+  it("shows a sticker's emoji when it has no image", () => {
+    renderInbound({ attachments: [{ type: "sticker", emoji: "😂" }] });
+
+    expect(
+      screen.getByRole("img", { name: "conversations.sticker" }),
+    ).toHaveTextContent("😂");
+  });
+
+  it("shows the quoted message above the reply, linked to it", () => {
+    renderInbound({
+      text: "lấy cái này",
+      replyTo: { kind: "message", messageId: "m-9", text: "Hộp tulip 500k" },
+    });
+
+    const quote = screen.getByRole("link", { name: /Hộp tulip 500k/ });
+    expect(quote).toHaveAttribute("href", "#msg-m-9");
+    expect(quote).toHaveTextContent("conversations.quote.yours");
+  });
+
+  it("shows the story a reply answers", () => {
+    renderInbound({
+      text: "giá sao ạ",
+      replyTo: { kind: "story" },
+      attachments: [{ type: "story", url: "https://s3/story.jpg" }],
+    });
+
+    expect(
+      screen.getByRole("img", { name: "conversations.attachment.storyReply" }),
+    ).toHaveAttribute("src", "https://s3/story.jpg");
+  });
+
+  it("plays voice and video, and links files and shared posts", () => {
+    const { container } = renderInbound({
+      attachments: [
+        { type: "audio", url: "https://cdn/a.mp4" },
+        { type: "video", url: "https://cdn/v.mp4" },
+        { type: "file", url: "https://cdn/f.pdf" },
+        { type: "share", url: "https://ig/reel/1" },
+        { type: "audio" },
+      ],
+    });
+
+    expect(container.querySelector("audio")).toHaveAttribute(
+      "src",
+      "https://cdn/a.mp4",
+    );
+    expect(container.querySelector("video")).toHaveAttribute(
+      "src",
+      "https://cdn/v.mp4",
+    );
+    expect(
+      screen.getByRole("link", { name: "conversations.attachment.file" }),
+    ).toHaveAttribute("href", "https://cdn/f.pdf");
+    expect(
+      screen.getByRole("link", { name: "conversations.attachment.share" }),
+    ).toHaveAttribute("href", "https://ig/reel/1");
+    // A voice message with no link still says what arrived.
+    expect(
+      screen.getByText("conversations.attachment.voice"),
+    ).toBeInTheDocument();
+  });
+});

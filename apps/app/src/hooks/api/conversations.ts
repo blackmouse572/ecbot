@@ -14,6 +14,7 @@ import {
   type ConversationSendMessageRequestDto,
   type ConversationUpdateStatusRequestDto,
   type MessageGetResponseDto,
+  type MessageReplyToResponseDto,
 } from "@repo/client";
 import type { InfiniteData } from "@tanstack/react-query";
 import {
@@ -593,4 +594,5 @@ export type {
   ConversationSendMessageRequestDto,
   ConversationUpdateStatusRequestDto,
   MessageGetResponseDto,
+  MessageReplyToResponseDto,
 };
