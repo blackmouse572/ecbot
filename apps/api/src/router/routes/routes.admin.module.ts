@@ -1,6 +1,7 @@
 import { AccountModule } from '@app/modules/account/account.module';
 import { AccountAdminController } from '@app/modules/account/controllers/account.admin.controller';
 import { AwsModule } from '@app/modules/aws/aws.module';
+import { ChatbotSkillAdminController } from '@app/modules/skill/controllers/chatbot-skill.admin.controller';
 import { FollowupAdminController } from '@app/modules/platform/controllers/followup.admin.controller';
 import { PlatformModule } from '@app/modules/platform/platform.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
@@ -59,6 +60,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         WaitlistAdminController,
         WorkspaceAdminController,
         FollowupAdminController,
+        ChatbotSkillAdminController,
     ],
     providers: [],
     exports: [],
