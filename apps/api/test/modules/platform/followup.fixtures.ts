@@ -143,6 +143,7 @@ export function makeFollowupRepository(rows: FollowupRow[] = []) {
             update(id, { attempts: attempts + 1 })
         ),
         getTotal: jest.fn(async (where: FollowupRow) => find(where).length),
+        find: jest.fn(async (where: FollowupRow) => find(where)),
     };
 }
 

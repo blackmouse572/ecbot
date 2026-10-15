@@ -267,3 +267,90 @@ describe('FollowupService.cancelForWorkspace', () => {
         expect(cloudTasksClient.deleteTask).not.toHaveBeenCalled();
     });
 });
+
+describe('FollowupService admin', () => {
+    const now = 1_000_000_000_000;
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('lists live follow-ups of every workspace with chatbot workspace and conversation', async () => {
+        const rows = [
+            followupRow({ id: 'f-1' }),
+            followupRow({ id: 'f-2', deletedAt: new Date(now) }),
+        ];
+        const { service, followupRepository } = svcWith(rows, now);
+
+        const found = await service.findAllForAdmin(
+            { status: { $in: [ENUM_FOLLOWUP_STATUS.SCHEDULED] } },
+            { limit: 20, offset: 0 }
+        );
+
+        expect(found.map(row => row.id)).toEqual(['f-1']);
+        expect(followupRepository.find).toHaveBeenCalledWith(
+            {
+                deletedAt: null,
+                status: { $in: [ENUM_FOLLOWUP_STATUS.SCHEDULED] },
+            },
+            {
+                limit: 20,
+                offset: 0,
+                populate: ['chatbot.workspace', 'conversation'],
+            }
+        );
+        await expect(service.getTotalForAdmin({})).resolves.toBe(1);
+    });
+
+    it('maps an admin row with its workspace, prompt and attempts, nothing more of the workspace', () => {
+        const { service } = svcWith([], now);
+        const [row] = service.mapAdminList([
+            followupRow({
+                id: 'f-1',
+                attempts: 2,
+                createdAt: new Date(now),
+                chatbot: {
+                    id: 'cb-1',
+                    name: 'Beauty',
+                    avatar: null,
+                    workspace: {
+                        id: 'ws-1',
+                        name: 'Spa',
+                        slug: 'spa',
+                        invitationCode: 'secret',
+                    },
+                },
+            }),
+        ] as any);
+
+        expect(row).toMatchObject({
+            followupId: 'f-1',
+            prompt: 'check payment',
+            attempts: 2,
+            cancelledAt: null,
+            createdAt: new Date(now),
+            workspace: { id: 'ws-1', name: 'Spa', slug: 'spa' },
+        });
+        expect(row.workspace).not.toHaveProperty('invitationCode');
+    });
+
+    it('cancels any pending follow-up by id', async () => {
+        const rows = [followupRow({ id: 'f-1' })];
+        const { service, cloudTasksClient } = svcWith(rows, now);
+
+        await expect(service.cancelById('f-1')).resolves.toBe(true);
+        expect(cloudTasksClient.deleteTask).toHaveBeenCalledWith(
+            'followup',
+            'followup-f-1'
+        );
+        expect(rows[0].status).toBe(ENUM_FOLLOWUP_STATUS.CANCELLED);
+    });
+
+    it('does not cancel a follow-up that already ran', async () => {
+        const rows = [
+            followupRow({ id: 'f-1', status: ENUM_FOLLOWUP_STATUS.COMPLETED }),
+        ];
+        const { service, cloudTasksClient } = svcWith(rows, now);
+
+        await expect(service.cancelById('f-1')).resolves.toBe(false);
+        expect(cloudTasksClient.deleteTask).not.toHaveBeenCalled();
+    });
+});
