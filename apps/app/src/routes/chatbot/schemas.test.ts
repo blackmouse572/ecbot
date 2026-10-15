@@ -3,8 +3,6 @@ import { createChatbotSchema } from "./schemas";
 
 const base = { name: "Support bot" };
 
-// `Number("") === 0`, so a bare `z.coerce.number()` turns a cleared field into
-// a real 0: `.default()` never fires and the form quietly submits zero.
 // Gemini 2.5 Flash ignored a Vietnamese steps skill's rules in live tests;
 // DeepSeek V4.1 Flash passed them all.
 describe("createChatbotSchema model", () => {
@@ -15,6 +13,8 @@ describe("createChatbotSchema model", () => {
   });
 });
 
+// `Number("") === 0`, so a bare `z.coerce.number()` turns a cleared field into
+// a real 0: `.default()` never fires and the form quietly submits zero.
 describe("createChatbotSchema numeric fields", () => {
   it("falls back to the default when temperature is cleared", () => {
     const result = createChatbotSchema.safeParse({
