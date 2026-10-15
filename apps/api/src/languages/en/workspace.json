@@ -3,6 +3,7 @@
     "update": "Workspace updated successfully.",
     "delete": "Workspace deleted successfully.",
     "details": "Workspace details retrieved successfully.",
+    "list": "Workspaces retrieved successfully.",
     "error": {
         "notFound": "Workspace not found.",
         "nameExist": "Workspace name already exists.",

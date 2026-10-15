@@ -17,6 +17,7 @@ import { WorkspacePolicyGuard } from './guards/workspace.policy.guard';
 import { WorkspaceRepositoryModule } from './repository/workspace.repository.module';
 import { WorkspaceMemberService } from './services/workspace.member.service';
 import { WorkspaceOwnerService } from './services/workspace.owner.service';
+import { WorkspaceAdminService } from './services/workspace.admin.service';
 import { WorkspaceRequestService } from './services/workspace.request.service';
 import { KnowledgeBaseServicesModule } from '../knowledge-base/services/services.module';
 import { CustomerModule } from '../customer/customer.module';
@@ -45,6 +46,7 @@ import { MemberJoinedEmailService } from './services/member-joined-email.service
     ],
     providers: [
         WorkspaceOwnerService,
+        WorkspaceAdminService,
         WorkspaceMemberService,
         WorkspaceRequestService,
         AwsS3Service,
@@ -54,6 +56,7 @@ import { MemberJoinedEmailService } from './services/member-joined-email.service
     controllers: [WorkspaceController, WorkspaceMemberController],
     exports: [
         WorkspaceOwnerService,
+        WorkspaceAdminService,
         WorkspaceMemberService,
         WorkspaceRequestService,
     ],

@@ -3,6 +3,7 @@
     "update": "Không gian làm việc đã được cập nhật mượt mà như ý muốn.",
     "delete": "Không gian làm việc đã biến mất khỏi vũ trụ số thành công.",
     "details": "Chi tiết không gian làm việc đã được lấy thành công.",
+    "list": "Danh sách không gian làm việc đã được lấy thành công.",
     "error": {
         "notFound": "Ôi không! Không tìm thấy không gian làm việc nào cả.",
         "nameExist": "Tên này đã có chủ rồi! Hãy nghĩ ra cái tên độc đáo hơn nhé.",
