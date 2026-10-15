@@ -13,6 +13,7 @@ import { WorkSpaceModule } from '@app/modules/workspace/workspace.module';
 import { WorkspaceAdminController } from '@app/modules/workspace/controllers/workspace.admin.controller';
 import { Module } from '@nestjs/common';
 import { ActivityModule } from 'src/modules/activity/activity.module';
+import { ActivityAdminGlobalController } from 'src/modules/activity/controllers/activity.admin-global.controller';
 import { ActivityAdminController } from 'src/modules/activity/controllers/activity.admin.controller';
 import { ApiKeyModule } from 'src/modules/api-key/api-key.module';
 import { ApiKeyAdminController } from 'src/modules/api-key/controllers/api-key.admin.controller';
@@ -46,6 +47,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         SessionAdminGlobalController,
         PasswordHistoryAdminController,
         PasswordHistoryAdminGlobalController,
+        ActivityAdminGlobalController,
         ActivityAdminController,
         AccountAdminController,
         ChatbotAdminController,
