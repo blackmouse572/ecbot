@@ -3166,6 +3166,42 @@ export type WaitlistListResponseDto = {
     locale?: string;
 };
 
+export type WorkspaceAdminResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    name: string;
+    avatar?: string;
+    slug: string;
+    /**
+     * Owner user id
+     */
+    owner: UserShortResponseDto;
+    /**
+     * Active members, owner included
+     */
+    memberCount: number;
+    chatbotCount: number;
+    /**
+     * Tokens granted outside the plan quota
+     */
+    tokenCreditBalance: number;
+    status: 'ACTIVE' | 'SUSPENDED';
+};
+
+export type WorkspaceUpdateStatusRequestDto = {
+    status: 'ACTIVE' | 'SUSPENDED';
+};
+
 export type UserUpdateProfileRequestDto = {
     name: string;
     country: string;
@@ -16292,6 +16328,265 @@ export type WaitlistAdminControllerListV1Responses = {
 };
 
 export type WaitlistAdminControllerListV1Response = WaitlistAdminControllerListV1Responses[keyof WaitlistAdminControllerListV1Responses];
+
+export type WorkspaceAdminControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/workspace/list';
+};
+
+export type WorkspaceAdminControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceAdminControllerListV1Error = WorkspaceAdminControllerListV1Errors[keyof WorkspaceAdminControllerListV1Errors];
+
+export type WorkspaceAdminControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<WorkspaceAdminResponseDto>;
+    };
+};
+
+export type WorkspaceAdminControllerListV1Response = WorkspaceAdminControllerListV1Responses[keyof WorkspaceAdminControllerListV1Responses];
+
+export type WorkspaceAdminControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/workspace/get/{workspace}';
+};
+
+export type WorkspaceAdminControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceAdminControllerGetV1Error = WorkspaceAdminControllerGetV1Errors[keyof WorkspaceAdminControllerGetV1Errors];
+
+export type WorkspaceAdminControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: WorkspaceAdminResponseDto;
+    };
+};
+
+export type WorkspaceAdminControllerGetV1Response = WorkspaceAdminControllerGetV1Responses[keyof WorkspaceAdminControllerGetV1Responses];
+
+export type WorkspaceAdminControllerUpdateStatusV1Data = {
+    body: WorkspaceUpdateStatusRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/workspace/update/{workspace}/status';
+};
+
+export type WorkspaceAdminControllerUpdateStatusV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceAdminControllerUpdateStatusV1Error = WorkspaceAdminControllerUpdateStatusV1Errors[keyof WorkspaceAdminControllerUpdateStatusV1Errors];
+
+export type WorkspaceAdminControllerUpdateStatusV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceAdminControllerUpdateStatusV1Response = WorkspaceAdminControllerUpdateStatusV1Responses[keyof WorkspaceAdminControllerUpdateStatusV1Responses];
 
 export type UserSharedControllerProfileV1Data = {
     body?: never;
