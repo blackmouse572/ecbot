@@ -12,7 +12,12 @@ import {
     FilterQuery,
     FindAllOptions,
 } from '@mikro-orm/postgresql';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+    BadRequestException,
+    HttpStatus,
+    Injectable,
+    Logger,
+} from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { AwsS3Entity } from '@app/modules/aws/repository/entities/aws.s3.entity';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '../enums/knowledge-base-item-status.enum';
@@ -28,7 +33,13 @@ import { KnowledgeBaseEntity } from '../repository/entities/knowledge-base.entit
 import { KnowledgeItemTagService } from './knowledge-item-tag.service';
 import { KnowledgeItemShortResponseDto } from '../dtos/response/knowledge-item-short.response.dto';
 import { KnowledgeIngestService } from './knowledge-ingest.service';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { RagSyncService } from './rag-sync.service';
+import {
+    KNOWLEDGE_ITEM_BATCH_FILTER_MAX,
+    KnowledgeItemFilterRequestDto,
+} from '../dtos/request/knowledge-item.filter.request.dto';
+import { DatabaseHelperQueryContain } from '@app/common/database/decorators/database.decorator';
 
 @Injectable()
 export class KnowledgeItemService {
@@ -49,6 +60,53 @@ export class KnowledgeItemService {
         options?: IDatabaseFindAllOptions
     ): Promise<KnowledgeItemEntity[]> {
         return this.knowledgeItemRepository.find(find, options);
+    }
+
+    /**
+     * The items a batch request acts on: the listed `ids`, or every item of
+     * `knowledgeBaseId` (in `workspaceId`) matching `filter`, newest first and
+     * cut at KNOWLEDGE_ITEM_BATCH_FILTER_MAX.
+     */
+    async resolveBatchTarget(
+        workspaceId: string,
+        target: {
+            ids?: string[];
+            knowledgeBaseId?: string;
+            filter?: KnowledgeItemFilterRequestDto;
+        }
+    ): Promise<{ ids: string[]; truncated: boolean }> {
+        const { ids, knowledgeBaseId, filter } = target;
+
+        if (ids && !filter) {
+            return { ids, truncated: false };
+        }
+        if (ids || !filter || !knowledgeBaseId) {
+            throw new BadRequestException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'knowledgeItem.error.batchTarget',
+            });
+        }
+
+        const where: FilterQuery<KnowledgeItemEntity> = {
+            knowledgeBase: { id: knowledgeBaseId, workspace: workspaceId },
+            deletedAt: null,
+            ...(filter.type?.length && { type: { $in: filter.type } }),
+            ...(filter.status?.length && { status: { $in: filter.status } }),
+            ...(filter.tags?.length && { tags: { tag: { $in: filter.tags } } }),
+            ...(filter.search?.trim() &&
+                DatabaseHelperQueryContain('title', filter.search.trim(), {
+                    ignoreCase: true,
+                })),
+        };
+        const items = await this.knowledgeItemRepository.find(where, {
+            limit: KNOWLEDGE_ITEM_BATCH_FILTER_MAX + 1,
+            order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC },
+        });
+
+        return {
+            ids: items.slice(0, KNOWLEDGE_ITEM_BATCH_FILTER_MAX).map(i => i.id),
+            truncated: items.length > KNOWLEDGE_ITEM_BATCH_FILTER_MAX,
+        };
     }
 
     async findByKnowledgeBase(kbId: string): Promise<KnowledgeItemEntity[]> {
@@ -262,6 +320,32 @@ export class KnowledgeItemService {
         if (payload.content !== undefined) item.content = payload.content;
         item.updatedAt = new Date();
         await this.em.persistAndFlush(item);
+    }
+
+    /**
+     * Add `tags` to an item without touching the tags it already has (the
+     * single-item `update` replaces them all).
+     */
+    async addTags(
+        id: string,
+        tags: string[],
+        options?: IDatabaseCreateOptions
+    ): Promise<void> {
+        const em = options?.em ?? this.em;
+
+        for (const tag of tags) {
+            await this.knowledgeItemTagService.findOneOrCreate(
+                { knowledgeItem: id, tag },
+                { em }
+            );
+        }
+
+        const item = await em.findOneOrFail(KnowledgeItemEntity, id);
+        item.updatedBy = options?.actionBy
+            ? em.getReference('UserEntity', options.actionBy)
+            : item.updatedBy;
+        item.updatedAt = new Date();
+        await em.persist(item).flush();
     }
 
     async softDelete(

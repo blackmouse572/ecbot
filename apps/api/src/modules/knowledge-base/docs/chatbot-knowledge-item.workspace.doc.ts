@@ -1,3 +1,5 @@
+import { ChatbotKnowledgeItemBatchLinkRequestDto } from '../dtos/request/chatbot-knowledge-item.batch-link.request.dto';
+import { KnowledgeItemBatchResultResponseDto } from '../dtos/response/knowledge-item.batch-result.response.dto';
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import {
     Doc,
@@ -91,5 +93,40 @@ export function ChatbotKnowledgeItemUnlinkDoc(): MethodDecorator {
         DocResponse<void>('chatbotKnowledgeItem.unlink', {
             httpStatus: HttpStatus.OK,
         })
+    );
+}
+
+export function ChatbotKnowledgeItemBatchLinkDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'link several knowledge items to a chatbot',
+            description:
+                'Link the items in `ids`, or every item matching `filter` in `knowledgeBaseId` (up to 2000, newest first; `truncated` says when more matched), to the chatbot. Each id is processed independently, so the response reports which ones succeeded and which ones failed. An item already linked counts as succeeded.',
+        }),
+        DocRequest({
+            dto: ChatbotKnowledgeItemBatchLinkRequestDto,
+            params: [
+                ...WorkspaceDocParamsId,
+                {
+                    name: 'chatbotId',
+                    description: 'Chatbot ID',
+                    required: true,
+                    schema: { type: 'string', format: 'uuid' },
+                },
+            ],
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocGuard({ policy: true }),
+        DocResponse<KnowledgeItemBatchResultResponseDto>(
+            'knowledgeItem.batchLink',
+            {
+                dto: KnowledgeItemBatchResultResponseDto,
+                httpStatus: HttpStatus.OK,
+            }
+        )
     );
 }

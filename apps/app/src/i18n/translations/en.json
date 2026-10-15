@@ -2360,6 +2360,12 @@
       },
       "process": {
         "label": "Process"
+      },
+      "tag": {
+        "label": "Add tags",
+        "title": "Add tags",
+        "description": "Add tags to {{count}} knowledge item(s).",
+        "hint": "Existing tags on each item are kept."
       }
     },
     "title": "Knowledge Base",
@@ -2469,7 +2475,13 @@
       "processQueued": "Queued for processing"
     },
     "link": {
-      "title": "Add Knowledge Item"
+      "title": "Add Knowledge Item",
+      "description": "Pick the knowledge items this agent can use.",
+      "searchPlaceholder": "Search by title",
+      "selected": "{{count}} selected",
+      "selectAllMatching": "Select all matching",
+      "addCount": "Add {{count}}",
+      "selectionTruncated": "Too many items match. Selected the first {{count}}; narrow the filter to pick the rest."
     },
     "selectItem": "Select Item",
     "error": {

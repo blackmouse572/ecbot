@@ -2408,6 +2408,12 @@
       },
       "process": {
         "label": "Xử lý"
+      },
+      "tag": {
+        "label": "Thêm thẻ",
+        "title": "Thêm thẻ",
+        "description": "Thêm thẻ cho {{count}} knowledge item.",
+        "hint": "Các thẻ đang có của từng item được giữ nguyên."
       }
     },
     "title": "Cơ sở kiến thức",
@@ -2517,7 +2523,13 @@
       "processQueued": "Đã đưa vào hàng đợi xử lý"
     },
     "link": {
-      "title": "Thêm mục kiến thức"
+      "title": "Thêm mục kiến thức",
+      "description": "Chọn các knowledge item mà agent này được dùng.",
+      "searchPlaceholder": "Tìm theo tiêu đề",
+      "selected": "Đã chọn {{count}}",
+      "selectAllMatching": "Chọn tất cả kết quả",
+      "addCount": "Thêm {{count}}",
+      "selectionTruncated": "Có quá nhiều kết quả. Đã chọn {{count}} mục đầu, hãy thu hẹp bộ lọc để chọn phần còn lại."
     },
     "selectItem": "Chọn mục",
     "error": {

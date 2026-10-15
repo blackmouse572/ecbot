@@ -8,6 +8,7 @@ import {
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
+import { KnowledgeItemBatchTagRequestDto } from '../dtos/request/knowledge-item.batch-tag.request.dto';
 import { BatchIdsRequestDto } from 'src/common/batch/dtos/batch.request.dto';
 import { BatchResultResponseDto } from 'src/common/batch/dtos/batch.response.dto';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
@@ -192,6 +193,33 @@ export function KnowledgeItemWorkspaceBatchProcessDoc(): MethodDecorator {
         }),
         DocGuard({ policy: true }),
         DocResponse<BatchResultResponseDto>('knowledgeItem.batchProcess', {
+            dto: BatchResultResponseDto,
+            httpStatus: HttpStatus.OK,
+        })
+    );
+}
+
+export function KnowledgeItemWorkspaceBatchTagDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'add tags to several knowledge items',
+            description:
+                'Add every tag in `tags` to every item in `ids`, keeping the tags an item already has. Each id is processed independently, so the response reports which ones succeeded and which ones failed.',
+        }),
+        DocRequest({
+            dto: KnowledgeItemBatchTagRequestDto,
+            params: [
+                ...WorkspaceDocParamsId,
+                ...KnowledgeBaseDocParamsKnowledgeBaseId,
+            ],
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({
+            xApiKey: true,
+            jwtAccessToken: true,
+        }),
+        DocGuard({ policy: true }),
+        DocResponse<BatchResultResponseDto>('knowledgeItem.batchTag', {
             dto: BatchResultResponseDto,
             httpStatus: HttpStatus.OK,
         })
