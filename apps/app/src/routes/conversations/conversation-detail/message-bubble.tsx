@@ -24,7 +24,8 @@ import type {
   ReactToMessageAction,
 } from "@/hooks/api/conversations";
 import type { ChatToolCall, MessageAttachment } from "@/types/chat-message";
-import { MessageImages } from "./message-images";
+import { MessageAttachments } from "./message-attachments";
+import { MessageQuote } from "./message-quote";
 import { POLICY_URL } from "./reaction-window";
 
 // Telegram's allowed-reaction set is a superset supported across the
@@ -117,6 +118,10 @@ export const MessageBubble = ({
     { id: string; name: string } | undefined;
   const { toolCalls = [], attachments } = message as MessageWithToolCalls;
   const { knowledgeCount, sources = [] } = message;
+  const storyReply = message.replyTo?.kind === "story";
+  // A story goes above the words that answer it, as Instagram shows it.
+  const stories = attachments?.filter((a) => a.type === "story");
+  const others = attachments?.filter((a) => a.type !== "story");
   const showTrace =
     message.authorType === "BOT" && (toolCalls.length > 0 || !!knowledgeCount);
 
@@ -226,11 +231,25 @@ export const MessageBubble = ({
           </Tooltip>
         )}
       </div>
+      {message.replyTo?.kind === "message" && (
+        <MessageQuote
+          replyTo={message.replyTo}
+          align={isInbound ? "start" : "end"}
+        />
+      )}
+      {message.text && (
+        <MessageAttachments
+          attachments={stories}
+          align={isInbound ? "start" : "end"}
+          storyReply={storyReply}
+        />
+      )}
       {/* The picker sits on the bubble's inner side so it never gets pushed
           against the viewport edge. */}
       <div
         className={clx(
-          "flex w-full items-center gap-1",
+          // Positioned so the bubble paints over the quote it tucks into.
+          "relative flex w-full items-center gap-1",
           isInbound ? "justify-start" : "justify-end",
         )}
       >
@@ -247,16 +266,17 @@ export const MessageBubble = ({
             {message.text}
           </MessageContent>
         ) : (
-          <MessageImages
+          <MessageAttachments
             attachments={attachments}
             align={isInbound ? "start" : "end"}
+            storyReply={storyReply}
           />
         )}
         {isInbound && reactTrigger}
       </div>
       {message.text && (
-        <MessageImages
-          attachments={attachments}
+        <MessageAttachments
+          attachments={others}
           align={isInbound ? "start" : "end"}
         />
       )}

@@ -2871,7 +2871,25 @@
         }
       }
     },
-    "image": "Image"
+    "image": "Image",
+    "sticker": "Sticker",
+    "attachment": {
+      "storyReply": "Replied to your story",
+      "storyMention": "Mentioned you in their story",
+      "voice": "Voice message",
+      "video": "Video",
+      "voiceExpired": "Voice message, no longer available",
+      "videoExpired": "Video, no longer available",
+      "file": "File",
+      "share": "Shared post",
+      "location": "Location",
+      "unsupported": "Message type the inbox can't show"
+    },
+    "quote": {
+      "yours": "Replying to your message",
+      "theirs": "Replying to their own message",
+      "unknown": "Replying to an earlier message"
+    }
   },
   "customers": {
     "suggestions": {

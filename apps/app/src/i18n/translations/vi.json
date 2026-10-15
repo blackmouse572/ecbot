@@ -2918,7 +2918,25 @@
         }
       }
     },
-    "image": "Hình ảnh"
+    "image": "Hình ảnh",
+    "sticker": "Nhãn dán",
+    "attachment": {
+      "storyReply": "Đã trả lời tin của bạn",
+      "storyMention": "Đã nhắc đến bạn trong tin",
+      "voice": "Tin nhắn thoại",
+      "video": "Video",
+      "voiceExpired": "Tin nhắn thoại, không còn nghe được",
+      "videoExpired": "Video, không còn xem được",
+      "file": "Tệp",
+      "share": "Bài viết được chia sẻ",
+      "location": "Vị trí",
+      "unsupported": "Loại tin nhắn chưa hiển thị được"
+    },
+    "quote": {
+      "yours": "Trả lời tin nhắn của bạn",
+      "theirs": "Trả lời tin nhắn trước của khách",
+      "unknown": "Trả lời một tin nhắn trước đó"
+    }
   },
   "customers": {
     "suggestions": {
