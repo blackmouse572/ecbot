@@ -89,6 +89,18 @@ The assistant can write a [skill](/docs/agents/skills) as steps, with branches, 
 
 The assistant can look up your tools and tags first, so the steps point at real ones. Open the skill in the app afterwards to check it. More prompts are in the [cookbook](/docs/cookbook).
 
+## Add Ecbot skills to your assistant
+
+Ecbot publishes skills that teach your assistant how to work in your workspace. Install them next to the server, and pick the ones you want:
+
+```bash
+npx skills add blackmouse572/ecbot
+```
+
+- **ecbot**: the safety rules, such as asking before a reply reaches a customer, and where each kind of setting belongs.
+- **ecbot-agent-builder**: sets up an agent, or cleans one up. It keeps **Extra instructions** to tone and a few rules, moves facts to knowledge, and turns each workflow into a [skill](/docs/agents/skills).
+- **ecbot-skill-builder**: turns a requirement into a skill written as steps, the way the [tutorial](/docs/cookbook/tutorial) does.
+
 ## Permissions and the activity log
 
 - **The key acts as its creator.** It always has the creator's current permissions: if they lose a permission or leave the workspace, the key loses it too.

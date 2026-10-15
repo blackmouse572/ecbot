@@ -89,6 +89,18 @@ Trợ lý có thể viết một [kỹ năng](/docs/agents/skills) theo các bư
 
 Trợ lý có thể tra công cụ và tag của bạn trước, để các bước trỏ đúng vào công cụ và tag có thật. Sau đó hãy mở kỹ năng trong ứng dụng để kiểm tra lại. Xem thêm câu lệnh trong [sổ tay công thức](/docs/cookbook).
 
+## Thêm kỹ năng Ecbot cho trợ lý
+
+Ecbot có sẵn các kỹ năng giúp trợ lý của bạn biết cách làm việc trong workspace. Cài chúng cùng với server, rồi chọn những kỹ năng bạn cần:
+
+```bash
+npx skills add blackmouse572/ecbot
+```
+
+- **ecbot**: các quy tắc an toàn, như hỏi bạn trước khi gửi tin nhắn đến khách, và mỗi loại cài đặt nên đặt ở đâu.
+- **ecbot-agent-builder**: thiết lập hoặc dọn lại một agent. Giữ **Hướng dẫn bổ sung** chỉ gồm giọng điệu và vài quy tắc, chuyển thông tin sang kiến thức, và biến mỗi quy trình thành một [kỹ năng](/docs/agents/skills).
+- **ecbot-skill-builder**: biến một yêu cầu thành kỹ năng viết theo các bước, như trong [phần hướng dẫn](/docs/cookbook/tutorial).
+
 ## Quyền và nhật ký hoạt động
 
 - **Key hoạt động với tư cách người tạo.** Key luôn có đúng quyền hiện tại của người tạo: nếu họ mất một quyền hoặc rời workspace, key cũng mất theo.
