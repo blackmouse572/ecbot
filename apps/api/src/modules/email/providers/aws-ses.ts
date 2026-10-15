@@ -21,6 +21,7 @@ import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
+import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
 
 @Injectable()
 export class AwsSESProvider implements IEmailService {
@@ -798,6 +799,43 @@ export class AwsSESProvider implements IEmailService {
                     supportEmail: this.supportEmail ?? '',
                     homeUrl: this.homeUrl,
                     enabled,
+                },
+            });
+            return true;
+        } catch (err: unknown) {
+            this.logger.error(err);
+            return false;
+        }
+    }
+
+    async sendPaymentFailed(
+        { name, email }: EmailSendDto,
+        {
+            workspaceName,
+            graceEndsAt,
+            billingUrl,
+            reminder = false,
+            language,
+        }: EmailPaymentFailedDto
+    ): Promise<boolean> {
+        try {
+            await this.awsSESService.send({
+                templateName: ENUM_SEND_EMAIL_PROCESS.PAYMENT_FAILED,
+                recipients: [email],
+                sender: this.fromEmail,
+                templateData: {
+                    homeName: this.homeName,
+                    name: title(name),
+                    supportEmail: this.supportEmail ?? '',
+                    homeUrl: this.homeUrl,
+                    workspaceName,
+                    graceEndsAt: this.helperDateService.formatToReadable(
+                        graceEndsAt,
+                        language === 'vi' ? 'vi' : 'en'
+                    ),
+                    billingUrl: `${this.homeUrl}${billingUrl}`,
+                    reminder,
+                    language: language ?? '',
                 },
             });
             return true;
