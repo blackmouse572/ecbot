@@ -18,7 +18,9 @@ vi.mock("@repo/client", () => ({
   })),
   workspaceControllerDetailsV1: vi.fn(async ({ path }: A) => {
     if (path.workspace === DELTA.slug) {
-      throw { statusCode: 5215, message: "suspended" };
+      throw {
+        response: { status: 403, data: { statusCode: 5215, message: "x" } },
+      };
     }
     return {
       data: {
