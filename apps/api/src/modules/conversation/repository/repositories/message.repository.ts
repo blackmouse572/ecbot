@@ -73,6 +73,7 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         return this.findOne({
             conversation: conversationId,
             externalId,
+            deletedAt: null,
         } as FilterQuery<MessageEntity>);
     }
 
