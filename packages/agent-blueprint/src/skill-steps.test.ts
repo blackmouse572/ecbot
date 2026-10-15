@@ -229,6 +229,19 @@ describe("compileSkill", () => {
     expect(out).not.toContain("## Rules");
   });
 
+  it("goes on after a Say instead of ending the turn", () => {
+    const out = compileSkill({
+      name: "n",
+      guardrails: [],
+      format: "STEPS",
+      steps: [{ id: "s", type: "say", text: "Hi" }],
+      toolName,
+    });
+    expect(out).toContain(
+      "Do not wait for an answer: go on with the next step.",
+    );
+  });
+
   it("returns content unchanged when there are no guardrails", () => {
     expect(
       compileSkill({

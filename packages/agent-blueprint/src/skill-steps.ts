@@ -218,7 +218,7 @@ function compileStep(
       ];
     case "say":
       return [
-        `${head}Send this message: "${step.text.trim()}". Use these exact words when the customer writes in the same language, otherwise a faithful translation.`,
+        `${head}Send this message: "${step.text.trim()}". Use these exact words when the customer writes in the same language, otherwise a faithful translation. Do not wait for an answer: go on with the next step.`,
       ];
     case "tell":
       return [
