@@ -2808,6 +2808,8 @@
       "storyMention": "Mentioned you in their story",
       "voice": "Voice message",
       "video": "Video",
+      "voiceExpired": "Voice message, no longer available",
+      "videoExpired": "Video, no longer available",
       "file": "File",
       "share": "Shared post",
       "location": "Location",

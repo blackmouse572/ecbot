@@ -248,7 +248,8 @@ export const MessageBubble = ({
           against the viewport edge. */}
       <div
         className={clx(
-          "flex w-full items-center gap-1",
+          // Positioned so the bubble paints over the quote it tucks into.
+          "relative flex w-full items-center gap-1",
           isInbound ? "justify-start" : "justify-end",
         )}
       >

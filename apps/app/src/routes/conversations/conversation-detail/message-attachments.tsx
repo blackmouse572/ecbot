@@ -1,14 +1,10 @@
-import {
-  DocumentText,
-  Link,
-  MapPin,
-  MediaPlay,
-  PaperClip,
-} from "@medusajs/icons";
+import { DocumentText, Link, MapPin, PaperClip } from "@medusajs/icons";
 import { clx } from "@medusajs/ui";
-import type { FC, ReactNode } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { MessageAttachment } from "@/types/chat-message";
+import { AttachmentChip } from "./attachment-chip";
+import { MediaPlayer } from "./media-player";
 
 interface Props {
   attachments: MessageAttachment[] | undefined;
@@ -16,31 +12,6 @@ interface Props {
   /** The message replies to the business's story (else a story is a mention). */
   storyReply?: boolean;
 }
-
-const chipClass =
-  "txt-compact-small border-ui-border-base bg-ui-bg-component text-ui-fg-subtle flex items-center gap-1.5 rounded-lg border px-3 py-2";
-
-const Chip: FC<{ icon: ReactNode; label: string; url?: string }> = ({
-  icon,
-  label,
-  url,
-}) =>
-  url ? (
-    <a
-      href={url}
-      target="_blank"
-      rel="noreferrer"
-      className={clx(chipClass, "hover:bg-ui-bg-component-hover")}
-    >
-      {icon}
-      {label}
-    </a>
-  ) : (
-    <span className={chipClass}>
-      {icon}
-      {label}
-    </span>
-  );
 
 /** What a message carries besides its text: photos, stickers, stories,
  *  voice notes, videos, files and shared posts. */
@@ -112,34 +83,11 @@ export const MessageAttachments: FC<Props> = ({
         );
       }
       case "audio":
-        return a.url ? (
-          <audio key={key} controls preload="none" src={a.url} />
-        ) : (
-          <Chip
-            key={key}
-            icon={<MediaPlay />}
-            label={t("conversations.attachment.voice")}
-          />
-        );
       case "video":
-        return a.url ? (
-          <video
-            key={key}
-            controls
-            preload="metadata"
-            src={a.url}
-            className="border-ui-border-base max-h-60 max-w-60 rounded-lg border"
-          />
-        ) : (
-          <Chip
-            key={key}
-            icon={<MediaPlay />}
-            label={t("conversations.attachment.video")}
-          />
-        );
+        return <MediaPlayer key={key} kind={a.type} url={a.url} />;
       case "file":
         return (
-          <Chip
+          <AttachmentChip
             key={key}
             icon={<PaperClip />}
             label={t("conversations.attachment.file")}
@@ -148,7 +96,7 @@ export const MessageAttachments: FC<Props> = ({
         );
       case "share":
         return (
-          <Chip
+          <AttachmentChip
             key={key}
             icon={<Link />}
             label={t("conversations.attachment.share")}
@@ -157,7 +105,7 @@ export const MessageAttachments: FC<Props> = ({
         );
       case "location":
         return (
-          <Chip
+          <AttachmentChip
             key={key}
             icon={<MapPin />}
             label={t("conversations.attachment.location")}
@@ -166,7 +114,7 @@ export const MessageAttachments: FC<Props> = ({
         );
       default:
         return (
-          <Chip
+          <AttachmentChip
             key={key}
             icon={<DocumentText />}
             label={t("conversations.attachment.unsupported")}

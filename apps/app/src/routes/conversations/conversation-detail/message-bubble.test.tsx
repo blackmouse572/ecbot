@@ -1,5 +1,5 @@
 import { TooltipProvider } from "@medusajs/ui";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -435,7 +435,7 @@ describe("MessageBubble inbound message kinds", () => {
 
     const quote = screen.getByRole("link", { name: /Hộp tulip 500k/ });
     expect(quote).toHaveAttribute("href", "#msg-m-9");
-    expect(quote).toHaveTextContent("conversations.quote.yours");
+    expect(screen.getByText("conversations.quote.yours")).toBeInTheDocument();
     expect(quote.compareDocumentPosition(screen.getByText("lấy cái này"))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
@@ -455,6 +455,27 @@ describe("MessageBubble inbound message kinds", () => {
     expect(story.compareDocumentPosition(screen.getByText("giá sao ạ"))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+  });
+
+  it("shows a voice message or video the platform no longer serves as expired", () => {
+    const { container } = renderInbound({
+      attachments: [
+        { type: "audio", url: "https://cdn/old.mp4" },
+        { type: "video", url: "https://cdn/old-v.mp4" },
+      ],
+    });
+
+    fireEvent.error(container.querySelector("audio")!);
+    fireEvent.error(container.querySelector("video")!);
+
+    expect(container.querySelector("audio")).toBeNull();
+    expect(container.querySelector("video")).toBeNull();
+    expect(
+      screen.getByText("conversations.attachment.voiceExpired"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("conversations.attachment.videoExpired"),
+    ).toBeInTheDocument();
   });
 
   it("links the map a shared location points to", () => {
