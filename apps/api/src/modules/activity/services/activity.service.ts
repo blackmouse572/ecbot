@@ -16,6 +16,9 @@ import { ActivityEntity } from 'src/modules/activity/repository/entities/activit
 import { ActivityRepository } from 'src/modules/activity/repository/repositories/activity.repository';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 
+import { ActivityAdminListResponseDto } from '../dtos/response/activity.admin-list.response.dto';
+import { ActivityAdminWorkspaceResponseDto } from '../dtos/response/activity.admin-workspace.response.dto';
+import { UserMetaResponseDto } from 'src/modules/user/dtos/response/user.meta.response.dto';
 @Injectable()
 export class ActivityService {
     constructor(
@@ -170,5 +173,28 @@ export class ActivityService {
             delete (dto as unknown as Record<string, unknown>).workspace;
             return dto;
         });
+    }
+
+    mapAdminList(activities: ActivityEntity[]): ActivityAdminListResponseDto[] {
+        const narrow = <T>(cls: new () => T, value?: object): T | undefined =>
+            value
+                ? plainToInstance(cls, value, { excludeExtraneousValues: true })
+                : undefined;
+        return activities.map(activity => ({
+            id: activity.id,
+            createdAt: activity.createdAt,
+            updatedAt: activity.updatedAt,
+            action: activity.action,
+            subject: activity.subject,
+            metadata: activity.metadata,
+            ipAddress: activity.ipAddress,
+            userAgent: activity.userAgent,
+            user: narrow(UserMetaResponseDto, activity.user),
+            by: narrow(UserMetaResponseDto, activity.by),
+            workspace: narrow(
+                ActivityAdminWorkspaceResponseDto,
+                activity.workspace
+            ),
+        })) as ActivityAdminListResponseDto[];
     }
 }
