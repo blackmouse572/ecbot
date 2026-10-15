@@ -2072,6 +2072,57 @@ export type PasswordHistoryAdminListResponseDto = {
     by: UserMetaResponseDto;
 };
 
+export type ActivityAdminWorkspaceResponseDto = {
+    id: string;
+    name: string;
+    slug: string;
+};
+
+export type ActivityAdminListResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
+    subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
+    metadata?: {
+        [key: string]: unknown;
+    };
+    user: UserMetaResponseDto;
+    by: UserMetaResponseDto;
+    workspace?: ActivityAdminWorkspaceResponseDto;
+    ipAddress?: string;
+    userAgent?: string;
+};
+
 export type ActivityListResponseDto = {
     /**
      * Alias id of api key
@@ -14203,6 +14254,128 @@ export type PasswordHistoryAdminGlobalControllerListV1Responses = {
 };
 
 export type PasswordHistoryAdminGlobalControllerListV1Response = PasswordHistoryAdminGlobalControllerListV1Responses[keyof PasswordHistoryAdminGlobalControllerListV1Responses];
+
+export type ActivityAdminGlobalControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * value with ',' delimiter
+         */
+        action?: string;
+        /**
+         * value with ',' delimiter
+         */
+        subject?: string;
+        /**
+         * Filter by the id of the user who acted
+         */
+        by?: string;
+        /**
+         * Filter by the id of the account the activity is logged on
+         */
+        user?: string;
+        /**
+         * Filter by workspace id
+         */
+        workspace?: string;
+        /**
+         * Filter createdAt, JSON string with $gte/$lte ISO date operators
+         */
+        createdAt?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/activity/list';
+};
+
+export type ActivityAdminGlobalControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ActivityAdminGlobalControllerListV1Error = ActivityAdminGlobalControllerListV1Errors[keyof ActivityAdminGlobalControllerListV1Errors];
+
+export type ActivityAdminGlobalControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ActivityAdminListResponseDto>;
+    };
+};
+
+export type ActivityAdminGlobalControllerListV1Response = ActivityAdminGlobalControllerListV1Responses[keyof ActivityAdminGlobalControllerListV1Responses];
 
 export type ActivityAdminControllerListV1Data = {
     body?: never;
