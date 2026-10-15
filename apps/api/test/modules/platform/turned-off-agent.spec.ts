@@ -11,6 +11,7 @@ import {
 } from '@app/modules/platform/constants/followup.constant';
 import { IFollowupJob } from '@app/modules/platform/interfaces/followup.interface';
 import { makeFollowupRepository } from './followup.fixtures';
+import { ENUM_WORKSPACE_STATUS } from '../../../src/modules/workspace/enums/workspace.enum';
 
 jest.mock('../../../src/common/utils/fetch-as-base64.util', () => ({
     fetchAsBase64: jest.fn(async (url: string) => `base64:${url}`),
@@ -159,6 +160,26 @@ describe('MessageProcessorService — agent turned off', () => {
         expect(conversationService.touchLastMessage).toHaveBeenCalled();
     });
 
+    it('does not answer while an admin has suspended the workspace', async () => {
+        const base = await accountService.findOne();
+        accountService.findOne.mockResolvedValue({
+            ...base,
+            chatbot: {
+                ...base.chatbot,
+                status: ENUM_CHATBOT_STATUS.ACTIVE,
+                workspace: {
+                    id: 'workspace-1',
+                    status: ENUM_WORKSPACE_STATUS.SUSPENDED,
+                },
+            },
+        });
+
+        await processor.process(live);
+
+        expect(messageRepository.upsertByExternalId).toHaveBeenCalled();
+        expect(messageDebounceService.schedule).not.toHaveBeenCalled();
+    });
+
     it('answers once the agent is active', async () => {
         const base = await accountService.findOne();
         accountService.findOne.mockResolvedValue({
@@ -248,6 +269,57 @@ describe('WidgetChatService — agent turned off', () => {
     );
 });
 
+describe('WidgetChatService — workspace suspended', () => {
+    it('keeps the visitor message but does not answer', async () => {
+        const res = { write: jest.fn(), end: jest.fn(), setHeader: jest.fn() };
+        const messageRepository = {
+            upsertByExternalId: jest.fn(async () => ({ id: 'msg-in' })),
+        };
+        const chatbotAIService = { streamChat: jest.fn() };
+        const service = new WidgetChatService(
+            {
+                resolveContactPoint: jest.fn(async () => ({
+                    contactPoint: { id: 'cp-1' },
+                    customerId: 'cust-1',
+                })),
+            } as any,
+            {
+                findOrCreate: jest.fn(async () => ({
+                    id: 'conv-1',
+                    botEnabled: true,
+                })),
+                touchLastMessage: jest.fn(async () => {}),
+                detectHandoffKeywords: jest.fn(() => null),
+                triggerHandoff: jest.fn(),
+            } as any,
+            messageRepository as any,
+            chatbotAIService as any,
+            {} as any,
+            {} as any,
+            { wantsPerson: jest.fn() } as any
+        );
+
+        await service.handleTurn(res as any, {
+            account: {
+                id: 'acc-1',
+                type: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                chatbot: { id: 'cb-1', status: ENUM_CHATBOT_STATUS.ACTIVE },
+                workspace: {
+                    id: 'ws-1',
+                    status: ENUM_WORKSPACE_STATUS.SUSPENDED,
+                },
+            } as any,
+            visitorId: 'visitor-7',
+            text: 'do you ship to Da Nang?',
+            messageId: 'wm-1',
+        });
+
+        expect(messageRepository.upsertByExternalId).toHaveBeenCalled();
+        expect(chatbotAIService.streamChat).not.toHaveBeenCalled();
+        expect(res.end).toHaveBeenCalled();
+    });
+});
+
 describe('FollowupService — agent turned off', () => {
     const job: IFollowupJob = {
         conversationId: 'conv-1',
@@ -260,14 +332,22 @@ describe('FollowupService — agent turned off', () => {
         reason: 'payment_check',
     };
 
-    it.each([ENUM_CHATBOT_STATUS.INACTIVE, ENUM_CHATBOT_STATUS.ARCHIVED])(
-        'skips the follow-up when the agent is %s',
-        async status => {
+    it.each([
+        [ENUM_CHATBOT_STATUS.INACTIVE, ENUM_WORKSPACE_STATUS.ACTIVE],
+        [ENUM_CHATBOT_STATUS.ARCHIVED, ENUM_WORKSPACE_STATUS.ACTIVE],
+        [ENUM_CHATBOT_STATUS.ACTIVE, ENUM_WORKSPACE_STATUS.SUSPENDED],
+    ])(
+        'skips the follow-up when the agent is %s in a %s workspace',
+        async (status, workspaceStatus) => {
             const streamChat = jest.fn();
             const account = {
                 id: 'acc-1',
                 type: 'telegram',
-                chatbot: { id: 'cb-1', status, workspace: { id: 'ws-1' } },
+                chatbot: {
+                    id: 'cb-1',
+                    status,
+                    workspace: { id: 'ws-1', status: workspaceStatus },
+                },
             };
             const service = new FollowupService(
                 {} as any,

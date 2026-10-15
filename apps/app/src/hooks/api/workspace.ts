@@ -1,4 +1,5 @@
 import { queryKeysFactory } from "@/libs/query-factory";
+import { isWorkspaceSuspendedError } from "@/libs/workspace-suspended";
 import {
   useLastWorkspaceSlug,
   useSetLastWorkspaceSlug,
@@ -124,7 +125,8 @@ export function useWorkspace() {
 // Context provider for workspace
 export function useEnsureWorkspace() {
   const { workspaces, isLoading: isLoadingWorkspaces } = useWorkspaceList();
-  const { workspace, isLoading: isLoadingWorkspace } = useWorkspace();
+  const { workspace, isLoading: isLoadingWorkspace, error } = useWorkspace();
+  const isSuspended = isWorkspaceSuspendedError(error);
   const navigate = useNavigate();
   const { workspaceSlug } = useParams<{ workspaceSlug: string }>();
   const location = useLocation();
@@ -182,6 +184,7 @@ export function useEnsureWorkspace() {
     workspace,
     isLoading: isLoadingWorkspaces || isLoadingWorkspace,
     hasWorkspaces: workspaces.length > 0,
+    isSuspended,
   };
 }
 
