@@ -2815,6 +2815,9 @@
       "location": "Location",
       "unsupported": "Message type the inbox can't show"
     },
+    "noReply": {
+      "label": "Bot chose not to reply"
+    },
     "quote": {
       "yours": "Replying to your message",
       "theirs": "Replying to their own message",
