@@ -3273,6 +3273,99 @@ export type WorkspaceUpdateStatusRequestDto = {
     status: 'ACTIVE' | 'SUSPENDED';
 };
 
+export type CustomerAdminTagResponseDto = {
+    id: string;
+    name: string;
+    emoji?: string;
+};
+
+export type CustomerAdminListResponseDto = {
+    id: string;
+    name?: string;
+    /**
+     * The customer name, or else the name their first channel reports
+     */
+    displayName?: string;
+    phone?: string;
+    email?: string;
+    /**
+     * Avatar of the first channel that has one
+     */
+    avatar?: string;
+    workspace: ActivityAdminWorkspaceResponseDto;
+    contactPointCount: number;
+    /**
+     * Distinct channel types the customer is reachable on
+     */
+    channels: Array<'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS'>;
+    tags: Array<CustomerAdminTagResponseDto>;
+    createdAt: string;
+    updatedAt?: string;
+};
+
+export type CustomerAdminContactPointResponseDto = {
+    id: string;
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    /**
+     * Name the channel reports for the sender
+     */
+    displayName?: string;
+    avatar?: string;
+    createdAt: string;
+};
+
+export type CustomerAdminGetResponseDto = {
+    id: string;
+    name?: string;
+    /**
+     * The customer name, or else the name their first channel reports
+     */
+    displayName?: string;
+    phone?: string;
+    email?: string;
+    /**
+     * Avatar of the first channel that has one
+     */
+    avatar?: string;
+    workspace: ActivityAdminWorkspaceResponseDto;
+    contactPointCount: number;
+    /**
+     * Distinct channel types the customer is reachable on
+     */
+    channels: Array<'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS'>;
+    tags: Array<CustomerAdminTagResponseDto>;
+    createdAt: string;
+    updatedAt?: string;
+    language?: string;
+    notes?: string;
+    profileSummary?: string;
+    /**
+     * Set when this profile was merged into another customer
+     */
+    mergedIntoCustomerId?: string;
+    conversationCount: number;
+    contactPoints: Array<CustomerAdminContactPointResponseDto>;
+};
+
+export type CustomerTagAdminListResponseDto = {
+    id: string;
+    name: string;
+    emoji?: string;
+    description?: string;
+    /**
+     * Applying the tag hands the conversation to the team
+     */
+    triggersHandoff: boolean;
+    /**
+     * Applying the tag notifies the team
+     */
+    notifiesTeam: boolean;
+    customerCount: number;
+    workspace: ActivityAdminWorkspaceResponseDto;
+    createdAt: string;
+    updatedAt?: string;
+};
+
 export type UserUpdateProfileRequestDto = {
     name: string;
     country: string;
@@ -16843,6 +16936,297 @@ export type WorkspaceAdminControllerUpdateStatusV1Responses = {
 };
 
 export type WorkspaceAdminControllerUpdateStatusV1Response = WorkspaceAdminControllerUpdateStatusV1Responses[keyof WorkspaceAdminControllerUpdateStatusV1Responses];
+
+export type CustomerAdminControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Filter by workspace id
+         */
+        workspace?: string;
+        /**
+         * Filter by the id of a tag assigned to the customer
+         */
+        tag?: string;
+        /**
+         * Channel types the customer has a contact point on, with ',' delimiter
+         */
+        channel?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/customer/list';
+};
+
+export type CustomerAdminControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerAdminControllerListV1Error = CustomerAdminControllerListV1Errors[keyof CustomerAdminControllerListV1Errors];
+
+export type CustomerAdminControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<CustomerAdminListResponseDto>;
+    };
+};
+
+export type CustomerAdminControllerListV1Response = CustomerAdminControllerListV1Responses[keyof CustomerAdminControllerListV1Responses];
+
+export type CustomerAdminControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        customer: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/customer/get/{customer}';
+};
+
+export type CustomerAdminControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerAdminControllerGetV1Error = CustomerAdminControllerGetV1Errors[keyof CustomerAdminControllerGetV1Errors];
+
+export type CustomerAdminControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerAdminGetResponseDto;
+    };
+};
+
+export type CustomerAdminControllerGetV1Response = CustomerAdminControllerGetV1Responses[keyof CustomerAdminControllerGetV1Responses];
+
+export type CustomerTagAdminControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Filter by workspace id
+         */
+        workspace?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/customer-tag/list';
+};
+
+export type CustomerTagAdminControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerTagAdminControllerListV1Error = CustomerTagAdminControllerListV1Errors[keyof CustomerTagAdminControllerListV1Errors];
+
+export type CustomerTagAdminControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<CustomerTagAdminListResponseDto>;
+    };
+};
+
+export type CustomerTagAdminControllerListV1Response = CustomerTagAdminControllerListV1Responses[keyof CustomerTagAdminControllerListV1Responses];
 
 export type UserSharedControllerProfileV1Data = {
     body?: never;
