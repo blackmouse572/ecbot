@@ -1,4 +1,4 @@
 {
   "title": "Tài liệu Ecbot",
-  "pages": ["index", "getting-started", "agents", "channels", "customers", "mcp", "dev"]
+  "pages": ["index", "getting-started", "agents", "cookbook", "channels", "customers", "mcp", "dev"]
 }

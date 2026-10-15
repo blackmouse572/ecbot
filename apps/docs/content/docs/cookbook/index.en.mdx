@@ -1,0 +1,30 @@
+---
+title: Cookbook
+description: Ready-made recipes for skills written as steps, with built-in actions, your own tools and a prompt for your AI assistant.
+faq:
+  - q: Do I need these exact steps?
+    a: No. Each recipe is a starting point. Change the wording, the tags and the tools to match your shop, then test it in a chat.
+  - q: What if I don't have the tool a recipe uses?
+    a: Leave that step out, or replace it with a Tell step that says the team will check. Recipes that only use built-in actions work in every workspace.
+  - q: Can my AI assistant build these for me?
+    a: Yes. Connect the Ecbot MCP Server, then paste the prompt from a recipe. The assistant creates the skill and can attach it to an agent.
+---
+
+The cookbook has ready-made [skills](/docs/agents/skills) written as steps. Build a recipe in the app with **Create**, **Write as steps**, or paste its prompt into an AI assistant connected through the [Ecbot MCP Server](/docs/mcp).
+
+Recipes use the step types **Ask**, **Say**, **Tell**, **Tool** and **If**. Built-in actions such as **Hand off to staff** or **Add tag** work in every workspace. Replace names in quotes with your own tags and tools.
+
+## Recipes
+
+- [Capture a lead](/docs/cookbook/capture-lead)
+- [Check an order with your tool](/docs/cookbook/check-order)
+- [Book a slot with a calendar](/docs/cookbook/book-a-slot)
+- [Talk to a person after hours](/docs/cookbook/after-hours)
+- [Flag an unhappy customer](/docs/cookbook/unhappy-customer)
+
+## Tips
+
+- Write **When to use** as the customer would say it: "where is my order", not "order tracking".
+- Keep a skill to one job. Two short skills work better than one long one.
+- Put rules the agent must never break in **Guardrails**, not in a step.
+- After you create a skill, attach it to an agent and try it in a chat before you go live.
