@@ -1,7 +1,7 @@
 import { useCustomerTagList } from "@/hooks/api/customer-tags";
 import { useGetTool } from "@/hooks/api/tools";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { Input, Select } from "@medusajs/ui";
+import { Badge, Input, Select } from "@medusajs/ui";
 import {
   SKILL_SYSTEM_ACTIONS,
   type SkillStep,
@@ -11,6 +11,7 @@ import {
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { StepEditorApi } from "../types";
+import { SkillBuiltinActionIcon } from "./skill-builtin-action-icon";
 
 const BUILTIN = Object.keys(SKILL_SYSTEM_ACTIONS) as SkillSystemAction[];
 const builtinKey = (id: string) => id.slice("system:".length);
@@ -55,12 +56,16 @@ export const SkillToolStepFields: FC<Props> = ({ step, api }) => {
             <Select.Trigger>
               <Select.Value placeholder={t("skills.steps.placeholder.tool")} />
             </Select.Trigger>
-            <Select.Content>
+            {/* Taller than the default, so Your tools shows below the built-ins. */}
+            <Select.Content className="max-h-[400px]">
               <Select.Group>
                 <Select.Label>{t("skills.steps.groups.builtin")}</Select.Label>
                 {BUILTIN.map((id) => (
                   <Select.Item key={id} value={id}>
-                    {t(`skills.steps.builtin.${builtinKey(id)}`)}
+                    <span className="flex items-center gap-x-2">
+                      <SkillBuiltinActionIcon action={id} />
+                      {t(`skills.steps.builtin.${builtinKey(id)}`)}
+                    </span>
                   </Select.Item>
                 ))}
               </Select.Group>
@@ -69,7 +74,15 @@ export const SkillToolStepFields: FC<Props> = ({ step, api }) => {
                   <Select.Label>{t("skills.steps.groups.tools")}</Select.Label>
                   {api.tools.map((x) => (
                     <Select.Item key={x.id} value={x.id}>
-                      {x.displayName}
+                      <span className="flex items-center gap-x-2">
+                        {x.displayName}
+                        <Badge
+                          size="2xsmall"
+                          color={x.kind === "HTTP" ? "blue" : "purple"}
+                        >
+                          {x.kind}
+                        </Badge>
+                      </span>
                     </Select.Item>
                   ))}
                 </Select.Group>
