@@ -338,6 +338,15 @@ export class ReplyGenerationService {
 
             let anySent = deliveryResult.anySent;
 
+            // The agent judged the message needs no answer (an ok sticker
+            // after it already answered): no fallback, no fallback count.
+            if (!anySent && deliveryResult.endedWithoutReply) {
+                this.logger.log(
+                    `Agent ended without a reply in conversation ${conversationId}`
+                );
+                return skipped('ended_without_reply');
+            }
+
             if (!anySent) {
                 const { triggered, conversation: updated } =
                     await this.conversationService.recordFallback(

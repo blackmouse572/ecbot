@@ -31,6 +31,9 @@ class ChatHistoryMessage(BaseModel):
 class ImageToDescribe(BaseModel):
     id: str = Field(..., description="apps/api's id for the image, echoed back with its description.")
     url: str = Field(..., description="A URL apps/ai can fetch the image from (stored images are signed).")
+    kind: Literal["image", "sticker"] = Field(
+        "image", description="A sticker is read for what the sender means by it, not described like a photo."
+    )
 
 
 class DescribeImagesRequest(BaseModel):
