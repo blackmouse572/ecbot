@@ -1,0 +1,32 @@
+---
+title: Đặt lịch với lịch làm việc
+description: Công thức kỹ năng tìm giờ trống trong lịch qua công cụ MCP, đặt khung giờ khách chọn và hẹn nhắn lại để nhắc lịch.
+faq:
+  - q: Công cụ lịch nào dùng được?
+    a: Bất kỳ công cụ MCP nào có thao tác xem giờ trống và tạo sự kiện. Chọn thao tác ở bước Công cụ.
+  - q: Ai nhận được lời nhắc?
+    a: Hẹn nhắn lại khiến agent nhắn lại cho khách sau đó, ở đây là hôm trước ngày hẹn.
+  - q: Nếu không có giờ phù hợp thì sao?
+    a: Nhánh Nếu không sẽ chuyển cuộc trò chuyện cho nhân viên để người thật sắp xếp.
+---
+
+Công thức này đặt lịch hẹn thẳng vào lịch của bạn. Công cụ MCP của bạn cần có thao tác tìm giờ trống và tạo sự kiện.
+
+**Khi nào dùng**: khách muốn đặt một dịch vụ. Cần một [công cụ MCP](/docs/agents/tools) cho lịch của bạn, ở đây là "Google Calendar".
+
+## Các bước
+
+1. **Hỏi**: dịch vụ, ngày và giờ khách muốn.
+2. **Công cụ**: Google Calendar, thao tác find_free_slots.
+3. **Dặn**: hai hoặc ba khung giờ trống gần với yêu cầu.
+4. **Nếu** khách chọn một khung giờ:
+   1. **Hỏi**: tên và số điện thoại.
+   2. **Công cụ**: Google Calendar, thao tác create_event.
+   3. **Dặn**: tóm tắt lịch hẹn.
+   4. **Công cụ**: Hẹn nhắn lại, cách dùng: "nhắc khách vào hôm trước".
+5. **Nếu không**:
+   1. **Công cụ**: Chuyển cho nhân viên.
+
+## Nhờ trợ lý tạo
+
+> Tạo kỹ năng "Đặt lịch". Dùng khi khách muốn đặt lịch. Hỏi dịch vụ và giờ mong muốn, tìm giờ trống bằng thao tác find_free_slots của công cụ Google Calendar, đưa ra hai hoặc ba lựa chọn, khi khách chọn thì hỏi tên và số điện thoại, đặt bằng create_event, xác nhận, và hẹn nhắn lại để nhắc khách. Nếu không có giờ phù hợp, chuyển cho nhân viên.

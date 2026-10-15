@@ -122,6 +122,45 @@ describe('TelegramPlatformAdapter.parse', () => {
         expect(e.attachments?.[0]).toMatchObject({ type: 'image' });
     });
 
+    it('parses a sticker with its emoji, reading an animated one by its thumbnail', () => {
+        const [still] = a.parse(
+            msg({
+                text: undefined,
+                sticker: { file_id: 'stk', emoji: '👍' },
+            })
+        );
+        expect(still.attachments).toEqual([
+            {
+                type: 'sticker',
+                emoji: '👍',
+                raw: { file_id: 'stk', emoji: '👍' },
+            },
+        ]);
+        const [animated] = a.parse(
+            msg({
+                text: undefined,
+                sticker: {
+                    file_id: 'tgs',
+                    emoji: '😂',
+                    is_animated: true,
+                    thumbnail: { file_id: 'thumb' },
+                },
+            })
+        );
+        expect(animated.attachments?.[0]).toMatchObject({
+            type: 'sticker',
+            emoji: '😂',
+            raw: { file_id: 'thumb' },
+        });
+    });
+
+    it('keeps the id of the message a reply answers', () => {
+        const [e] = a.parse(
+            msg({ reply_to_message: { message_id: 40, text: 'giá?' } })
+        );
+        expect(e.replyTo).toEqual({ kind: 'message', externalMessageId: '40' });
+    });
+
     it('parses a callback_query (inline button)', () => {
         const body = JSON.stringify({
             update_id: 2,

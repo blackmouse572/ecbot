@@ -65,8 +65,19 @@ interface TelegramMessage {
     document?: { file_id: string; file_name?: string };
     audio?: { file_id: string };
     voice?: { file_id: string };
-    sticker?: { file_id: string };
+    sticker?: TelegramSticker;
     location?: { latitude: number; longitude: number };
+    reply_to_message?: { message_id: number };
+}
+
+/** Animated (.tgs) and video (.webm) stickers are not images: they are read
+ *  by their still `thumbnail`. */
+interface TelegramSticker {
+    file_id: string;
+    emoji?: string;
+    is_animated?: boolean;
+    is_video?: boolean;
+    thumbnail?: { file_id: string };
 }
 
 interface TelegramCallbackQuery {
@@ -243,7 +254,15 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
         } else if (msg.audio || msg.voice) {
             attachments = [{ type: 'audio', raw: msg.audio ?? msg.voice }];
         } else if (msg.sticker) {
-            attachments = [{ type: 'sticker', raw: msg.sticker }];
+            const { sticker } = msg;
+            const moving = sticker.is_animated || sticker.is_video;
+            attachments = [
+                {
+                    type: 'sticker',
+                    emoji: sticker.emoji,
+                    raw: moving ? sticker.thumbnail : sticker,
+                },
+            ];
         } else if (msg.location) {
             attachments = [{ type: 'location', raw: msg.location }];
         }
@@ -258,6 +277,12 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
             timestamp: new Date(msg.date * 1000),
             raw: msg,
             attachments,
+            ...(msg.reply_to_message && {
+                replyTo: {
+                    kind: 'message',
+                    externalMessageId: String(msg.reply_to_message.message_id),
+                },
+            }),
         };
     }
 
@@ -353,11 +378,14 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
             }
         );
         // Telegram re-encodes photos as JPEG, but its file server labels
-        // them application/octet-stream.
+        // them application/octet-stream. Still stickers are WebP.
         const type = String(file.headers?.['content-type'] ?? '');
+        const fallback = filePath.endsWith('.webp')
+            ? 'image/webp'
+            : 'image/jpeg';
         return {
             data: Buffer.from(file.data),
-            mime: type.startsWith('image/') ? type : 'image/jpeg',
+            mime: type.startsWith('image/') ? type : fallback,
         };
     }
 

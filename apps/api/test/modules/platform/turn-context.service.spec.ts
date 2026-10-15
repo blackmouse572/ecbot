@@ -149,6 +149,136 @@ describe('TurnContextService', () => {
         expect(context.usage).toEqual(USAGE);
     });
 
+    it('asks what a sticker means and says it as the sticker meaning', async () => {
+        const { service, ai } = contextOver([
+            {
+                id: 'm-1',
+                text: '',
+                attachments: [{ type: 'sticker', key: 's.webp', emoji: '👍' }],
+                direction: 'INBOUND',
+            },
+        ]);
+
+        const context = await service.build('c', { texts: [''] }, 'bot');
+
+        expect(ai.describeImages).toHaveBeenCalledWith({
+            chatbot_id: 'bot',
+            images: [
+                { id: 'm-1:0', url: 'https://s3/s.webp', kind: 'sticker' },
+            ],
+        });
+        expect(context.message).toBe(
+            '[Sticker meaning: seen https://s3/s.webp]'
+        );
+    });
+
+    it('falls back to the sticker emoji when it cannot be viewed', async () => {
+        const { service } = contextOver([
+            {
+                id: 'm-1',
+                text: '',
+                attachments: [{ type: 'sticker', emoji: '😂' }],
+                direction: 'INBOUND',
+            },
+        ]);
+
+        const context = await service.build('c', { texts: [''] }, 'bot');
+
+        expect(context.message).toBe('[Sticker: 😂]');
+    });
+
+    it('says what story a reply answers, described like a photo', async () => {
+        const { service, ai } = contextOver([
+            {
+                id: 'm-1',
+                text: 'giá sao ạ',
+                attachments: [{ type: 'story', key: 'st.jpg' }],
+                replyTo: { kind: 'story' },
+                direction: 'INBOUND',
+            },
+        ]);
+
+        const context = await service.build(
+            'c',
+            { texts: ['giá sao ạ'] },
+            'bot'
+        );
+
+        expect(ai.describeImages).toHaveBeenCalledWith({
+            chatbot_id: 'bot',
+            images: [{ id: 'm-1:0', url: 'https://s3/st.jpg' }],
+        });
+        expect(context.message).toBe(
+            'giá sao ạ\n[Replying to your story, which shows: seen https://s3/st.jpg]'
+        );
+    });
+
+    it('puts the quoted message before what the customer wrote', async () => {
+        const { service } = contextOver([
+            {
+                id: 'm-1',
+                text: 'lấy cái này',
+                replyTo: { kind: 'message', text: 'Áo thun trắng 150k' },
+                direction: 'INBOUND',
+            },
+        ]);
+
+        const context = await service.build(
+            'c',
+            { texts: ['lấy cái này'] },
+            'bot'
+        );
+
+        expect(context.message).toBe(
+            '[Replying to your message: "Áo thun trắng 150k"]\nlấy cái này'
+        );
+    });
+
+    it('notes a voice message the bot cannot listen to', async () => {
+        const { service, ai } = contextOver([
+            {
+                id: 'm-1',
+                text: '',
+                attachments: [{ type: 'audio', url: 'https://cdn/a.mp4' }],
+                direction: 'INBOUND',
+            },
+        ]);
+
+        const context = await service.build('c', { texts: [''] }, 'bot');
+
+        expect(ai.describeImages).not.toHaveBeenCalled();
+        expect(context.message).toBe(
+            '[Voice message, which you cannot listen to]'
+        );
+    });
+
+    it('keeps stickers and quoted replies in the history', async () => {
+        const { service } = contextOver([
+            {
+                id: 'm-1',
+                text: '',
+                attachments: [{ type: 'sticker', description: 'ok, agreed' }],
+                direction: 'INBOUND',
+            },
+            {
+                id: 'm-2',
+                text: 'cái đó',
+                replyTo: { kind: 'message', text: 'Váy đỏ' },
+                direction: 'INBOUND',
+            },
+        ]);
+
+        const context = await service.build('c', { texts: [] }, 'bot');
+
+        expect(context.history).toEqual([
+            { role: 'user', content: '[Sticker meaning: ok, agreed]' },
+            {
+                role: 'user',
+                content: '[Replying to your message: "Váy đỏ"] cái đó',
+            },
+        ]);
+    });
+
     it('reuses a description it already kept', async () => {
         const { service, ai } = contextOver([
             {

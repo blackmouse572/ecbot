@@ -242,6 +242,50 @@ describe('MessengerPlatformAdapter.parse', () => {
         ]);
     });
 
+    it('reads an image with a sticker id as a sticker', () => {
+        const [e] = makeAdapter().parse(
+            wrap({
+                sender: { id: 'S' },
+                recipient: { id: 'PAGE' },
+                timestamp: 1,
+                message: {
+                    mid: 'm7',
+                    attachments: [
+                        {
+                            type: 'image',
+                            payload: {
+                                url: 'http://like',
+                                sticker_id: 369239263222822,
+                            },
+                        },
+                    ],
+                },
+            })
+        );
+        expect(e.attachments?.map(a => [a.type, a.url])).toEqual([
+            ['sticker', 'http://like'],
+        ]);
+    });
+
+    it('keeps the id of the message a quoted reply answers', () => {
+        const [e] = makeAdapter().parse(
+            wrap({
+                sender: { id: 'S' },
+                recipient: { id: 'PAGE' },
+                timestamp: 1,
+                message: {
+                    mid: 'm8',
+                    text: 'cái này còn không?',
+                    reply_to: { mid: 'm-quoted' },
+                },
+            })
+        );
+        expect(e.replyTo).toEqual({
+            kind: 'message',
+            externalMessageId: 'm-quoted',
+        });
+    });
+
     it('returns [] for parse("null") without throwing', () => {
         const a = makeAdapter();
         expect(a.parse('null')).toEqual([]);

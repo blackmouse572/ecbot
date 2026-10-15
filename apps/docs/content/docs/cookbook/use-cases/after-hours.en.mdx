@@ -1,0 +1,31 @@
+---
+title: Talk to a person after hours
+description: A skill recipe that hands the chat to staff during working hours and, after hours, shares your hours and schedules a follow-up.
+faq:
+  - q: How does the agent know the working hours?
+    a: From your agent's settings and knowledge. Write the hours there so the If condition can be checked.
+  - q: Does the agent stop replying after the handoff?
+    a: Yes. It pauses in that conversation until your staff resolve it.
+  - q: Why ask for a summary first?
+    a: So your staff can help right away without asking the customer to repeat themselves.
+---
+
+This recipe handles "can I talk to a person" at any time of day. It uses built-in actions only, so it works in every workspace.
+
+**When to use**: the customer asks for a human.
+
+## Steps
+
+1. **Ask**: a short summary of what they need, so staff don't ask again.
+2. **If** it is outside working hours:
+   1. **Tell**: the working hours, and that the team will reply when they open.
+   2. **Tool**: Schedule a follow-up.
+3. **Else**:
+   1. **Tool**: Hand off to staff.
+   2. **Tell**: a team member will take over now.
+
+Guardrail: "Never pretend to be a human."
+
+## Ask your assistant
+
+> Create a skill "Talk to a person" for when a customer asks for a human. Ask for a short summary. If it's outside working hours, tell them our hours and schedule a follow-up. Otherwise hand off to staff and tell them someone is coming.

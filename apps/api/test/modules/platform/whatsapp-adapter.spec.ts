@@ -130,6 +130,31 @@ describe('WhatsAppPlatformAdapter.parse', () => {
         ]);
     });
 
+    it('keeps the id of the message a quoted reply answers', () => {
+        const [e] = makeAdapter().parse(
+            inbound({
+                type: 'text',
+                text: { body: 'size M ạ' },
+                context: { from: 'PHONE', id: 'wamid.quoted' },
+            })
+        );
+        expect(e.replyTo).toEqual({
+            kind: 'message',
+            externalMessageId: 'wamid.quoted',
+        });
+    });
+
+    it('normalizes a sticker into a sticker attachment', () => {
+        const [e] = makeAdapter().parse(
+            inbound({
+                type: 'sticker',
+                sticker: { id: 'STK', mime_type: 'image/webp' },
+            })
+        );
+        expect(e.kind).toBe('message');
+        expect(e.attachments?.map(a => a.type)).toEqual(['sticker']);
+    });
+
     it('normalizes an interactive button reply into a postback action', () => {
         const [e] = makeAdapter().parse(
             inbound({

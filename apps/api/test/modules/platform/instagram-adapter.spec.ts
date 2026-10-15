@@ -207,7 +207,7 @@ describe('InstagramPlatformAdapter.parse', () => {
         expect(events.map(e => e.externalMessageId)).toEqual(['m9']);
     });
 
-    it('keeps media attachments and drops shares it cannot render', () => {
+    it('keeps media, shares, story mentions and the heart sticker', () => {
         const [e] = makeAdapter().parse(
             payload([
                 {
@@ -221,15 +221,60 @@ describe('InstagramPlatformAdapter.parse', () => {
                                 type: 'ig_reel',
                                 payload: { url: 'https://r/1' },
                             },
+                            {
+                                type: 'story_mention',
+                                payload: { url: 'https://s/1' },
+                            },
+                            { type: 'like_heart' },
+                            { type: 'fallback', payload: { url: 'x' } },
                         ],
                     },
                 },
             ])
         );
-        expect(e.attachments?.map(a => [a.type, a.url])).toEqual([
-            ['image', 'https://i/1'],
-            ['audio', 'https://a/1'],
+        expect(e.attachments?.map(a => [a.type, a.url, a.emoji])).toEqual([
+            ['image', 'https://i/1', undefined],
+            ['audio', 'https://a/1', undefined],
+            ['share', 'https://r/1', undefined],
+            ['story', 'https://s/1', undefined],
+            ['sticker', undefined, '❤️'],
         ]);
+    });
+
+    it('turns a story reply into a reply to the story, with its image', () => {
+        const [e] = makeAdapter().parse(
+            payload([
+                {
+                    ...base,
+                    message: {
+                        mid: 'm6',
+                        text: 'giá bao nhiêu ạ',
+                        reply_to: {
+                            story: { url: 'https://story/1', id: 'st1' },
+                        },
+                    },
+                },
+            ])
+        );
+        expect(e.replyTo).toEqual({ kind: 'story' });
+        expect(e.attachments?.map(a => [a.type, a.url])).toEqual([
+            ['story', 'https://story/1'],
+        ]);
+    });
+
+    it('keeps the id of the message a quoted reply answers', () => {
+        const [e] = makeAdapter().parse(
+            payload([
+                {
+                    ...base,
+                    message: { mid: 'm7', text: 'ok', reply_to: { mid: 'q1' } },
+                },
+            ])
+        );
+        expect(e.replyTo).toEqual({
+            kind: 'message',
+            externalMessageId: 'q1',
+        });
     });
 
     it('swaps sender and recipient on an echo so the customer stays the sender', () => {

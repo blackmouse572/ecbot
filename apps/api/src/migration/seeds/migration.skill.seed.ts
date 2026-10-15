@@ -1,9 +1,11 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
+import { compileSkill } from '@repo/agent-blueprint';
 import { Command } from 'nestjs-command';
 import { ENUM_AWS_S3_ACCESSIBILITY } from 'src/modules/aws/enums/aws.enum';
 import { AwsS3Service } from 'src/modules/aws/services/aws.s3.service';
 import { BUILTIN_SKILLS } from 'src/modules/skill/constants/builtin-skills.constant';
+import { ENUM_SKILL_FORMAT } from 'src/modules/skill/enums/skill-format.enum';
 import { ENUM_SKILL_STATUS } from 'src/modules/skill/enums/skill-status.enum';
 import { SkillEntity } from 'src/modules/skill/repository/entities/skill.entity';
 
@@ -30,7 +32,14 @@ export class MigrationSkillSeed {
             if (existing) continue;
 
             const key = `skills/builtin/${template.slug}.md`;
-            const buffer = Buffer.from(template.instructions, 'utf-8');
+            const body = compileSkill({
+                name: template.name,
+                guardrails: template.guardrails,
+                format: 'STEPS',
+                steps: template.steps,
+                toolName: () => undefined,
+            });
+            const buffer = Buffer.from(body, 'utf-8');
             const uploaded = await this.awsS3Service.putItem(
                 { key, file: buffer, size: buffer.length },
                 S3_PRIVATE
@@ -42,6 +51,9 @@ export class MigrationSkillSeed {
                 slug: template.slug,
                 description: template.description,
                 status: ENUM_SKILL_STATUS.ACTIVE,
+                format: ENUM_SKILL_FORMAT.STEPS,
+                steps: template.steps,
+                guardrails: template.guardrails,
                 s3: {
                     bucket: uploaded.bucket,
                     key: uploaded.key,

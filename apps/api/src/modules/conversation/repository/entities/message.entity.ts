@@ -13,7 +13,10 @@ import {
     ENUM_MESSAGE_STATUS,
 } from '../../enums/message.enum';
 import { ConversationEntity } from './conversation.entity';
-import { IMessageAttachment } from '../../interfaces/message-media.interface';
+import {
+    IMessageAttachment,
+    IMessageReplyTo,
+} from '../../interfaces/message-media.interface';
 import { MessageAttachmentsType } from '../types/message-attachments.type';
 
 export const MessageTableName = 'messages';
@@ -63,6 +66,10 @@ export class MessageEntity extends DatabaseEntityBase {
         nullable: true,
     })
     attachments?: IMessageAttachment[];
+
+    /** What an inbound message answers: a quoted message or our story. */
+    @Property({ type: 'jsonb', nullable: true })
+    replyTo?: IMessageReplyTo;
 
     @Property({ type: 'jsonb', nullable: true })
     raw?: unknown;

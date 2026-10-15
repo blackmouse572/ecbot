@@ -8,4 +8,5 @@ export * from "./prefill";
 export * from "./presets";
 export * from "./profile";
 export * from "./questions";
+export * from "./skill-steps";
 export * from "./suggest";

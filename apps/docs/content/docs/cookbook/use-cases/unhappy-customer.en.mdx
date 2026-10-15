@@ -1,0 +1,32 @@
+---
+title: Flag an unhappy customer
+description: A skill recipe that calms an upset customer, tags them Complaint, fixes what it can and alerts your team about the rest.
+faq:
+  - q: Why tag the customer?
+    a: The Complaint tag lets your team find and follow up these customers later, from the customer list.
+  - q: Does notifying the team stop the agent?
+    a: No. Notify the team alerts staff while the agent keeps helping. Use Hand off to staff to pause the agent.
+  - q: Can the agent offer a refund?
+    a: Only if your instructions or guardrails allow it. By default it should say the team will decide.
+---
+
+This recipe calms an upset customer and makes sure your team hears about it. It uses built-in actions only, so it works in every workspace.
+
+**When to use**: the customer is upset or complains.
+
+## Steps
+
+1. **Tell**: that you understand, without making excuses.
+2. **Ask**: what happened, with the order code or date.
+3. **Tool**: Add tag, tag "Complaint".
+4. **If** you can fix it with what you know:
+   1. **Tell**: a concrete fix.
+5. **Else**:
+   1. **Tool**: Notify the team.
+   2. **Tell**: the team has been told and will follow up.
+
+Guardrail: "Stay calm and polite, and never blame the customer."
+
+## Ask your assistant
+
+> Create a skill "Unhappy customer" for when a customer is upset or complains. Acknowledge how they feel, ask what happened, tag them "Complaint". If you can fix it, say how. If not, notify the team and tell the customer they will follow up.

@@ -32,6 +32,7 @@ import {
     verifyMetaChallenge,
     verifyMetaSignature,
 } from '../meta/meta-webhook.util';
+import { metaAttachments, metaReplyTo } from '../meta/meta-message.util';
 import { PlatformAdapter } from '../platform-adapter.base';
 
 const GRAPH_API_BASE = 'https://graph.instagram.com';
@@ -41,7 +42,6 @@ const API_VERSION = 'v23.0';
 const MESSAGE_BYTE_LIMIT = 1000;
 const BUTTON_TITLE_LIMIT = 20;
 const CARD_TEXT_LIMIT = 80;
-const MEDIA_ATTACHMENTS = new Set(['image', 'video', 'audio', 'file']);
 // Instagram accepts a single reaction type, "love".
 const HEART_EMOJI = new Set(['❤️', '❤', '♥️', '♥']);
 
@@ -163,6 +163,7 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
         let action: PlatformWebhookEvent['action'];
         let attachments: PlatformAttachment[] | undefined;
         let reaction: PlatformWebhookEvent['reaction'];
+        let replyTo: PlatformWebhookEvent['replyTo'];
 
         if (event.message) {
             kind = event.message.is_echo ? 'echo' : 'message';
@@ -171,17 +172,8 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             if (event.message.quick_reply) {
                 action = decodeActionPayload(event.message.quick_reply.payload);
             }
-            // Shares, reels and story mentions carry no media we can store.
-            const media = (event.message.attachments ?? []).filter(a =>
-                MEDIA_ATTACHMENTS.has(a.type)
-            );
-            if (media.length) {
-                attachments = media.map(a => ({
-                    type: a.type as PlatformAttachment['type'],
-                    url: a.payload?.url,
-                    raw: a,
-                }));
-            }
+            attachments = metaAttachments(event.message);
+            replyTo = metaReplyTo(event.message);
         } else if (event.postback) {
             kind = 'postback';
             externalMessageId = event.postback.mid;
@@ -222,6 +214,7 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             raw: event,
             action,
             attachments,
+            replyTo,
             reaction,
         };
     }

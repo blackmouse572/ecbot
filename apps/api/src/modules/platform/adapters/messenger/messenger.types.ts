@@ -13,7 +13,16 @@ export interface MessengerAttachmentPayload {
 
 export interface MessengerAttachment {
     payload?: MessengerAttachmentPayload;
-    type: 'image' | 'video' | 'audio' | 'file' | 'fallback' | 'location';
+    /** Messenger: image | video | audio | file | location | fallback.
+     *  Instagram adds share, ig_reel, reel, ig_post, story_mention and
+     *  like_heart. */
+    type: string;
+}
+
+/** What a message answers: a quoted message, or (Instagram) a story. */
+export interface MessengerReplyTo {
+    mid?: string;
+    story?: { id?: string; url?: string };
 }
 
 export interface MessengerMessagePayload {
@@ -23,6 +32,7 @@ export interface MessengerMessagePayload {
     is_echo?: boolean;
     mid: string;
     quick_reply?: { payload: string };
+    reply_to?: MessengerReplyTo;
     text?: string;
 }
 
