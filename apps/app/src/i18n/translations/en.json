@@ -74,13 +74,14 @@
       "guardrailPlaceholder": "e.g. Never promise a refund before checking the order",
       "addGuardrail": "Add guardrail",
       "removeGuardrail": "Remove guardrail",
-      "stepsHint": "This skill is written as steps. A steps editor is coming soon; for now you can turn it into text and edit that.",
+      "stepsHint": "The agent follows these steps in order. Use the menu on a step to move or delete it.",
       "toText": {
         "title": "Write as text instead?",
         "description": "The steps become plain text instructions, and the guardrails stay as they are. You cannot turn the text back into steps.",
         "confirm": "Write as text",
         "action": "Write as text instead"
-      }
+      },
+      "toSteps": "Write as steps"
     },
     "create": {
       "title": "Create skill",
@@ -130,6 +131,46 @@
         "remove_tag": "Remove tag",
         "schedule_followup": "Schedule a follow-up",
         "save_customer_field": "Save customer info"
+      },
+      "addStep": "Add step",
+      "menu": "Step actions",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "removeBranch": "Remove branch",
+      "describe": {
+        "ask": "Ask the customer for something",
+        "say": "Send an exact message",
+        "tell": "Tell something in your own words",
+        "tool": "Use a tool or built-in action",
+        "if": "Branch on a condition"
+      },
+      "placeholder": {
+        "ask": "What to ask for, e.g. The order code",
+        "say": "The exact message to send",
+        "tell": "What to tell, e.g. The refund window and its conditions",
+        "if": "The condition, e.g. The order was not found",
+        "tool": "Pick a tool",
+        "action": "Pick an action",
+        "tag": "Pick a tag",
+        "field": "Field name, e.g. budget",
+        "how": "How to use it (optional)"
+      },
+      "groups": {
+        "builtin": "Built-in actions",
+        "tools": "Your tools"
+      },
+      "issues": {
+        "invalid": "This step is not valid.",
+        "duplicate_id": "This step is duplicated.",
+        "steps_empty": "Add at least one step.",
+        "too_many_steps": "Too many steps. Keep it to 50.",
+        "too_deep": "Too many nested If steps.",
+        "text_required": "Write what this step says.",
+        "condition_required": "Write the condition.",
+        "branch_empty": "Add a step to this branch.",
+        "tool_required": "Pick a tool.",
+        "tool_unknown": "This tool no longer exists. Pick another one.",
+        "action_required": "Pick the tag or write the field name."
       }
     },
     "start": {

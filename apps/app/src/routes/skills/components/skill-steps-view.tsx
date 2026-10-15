@@ -1,11 +1,4 @@
-import {
-  ChatBubble,
-  CodeBranch,
-  QuestionMark,
-  Sparkles,
-  Tools,
-} from "@medusajs/icons";
-import { Badge, Text } from "@medusajs/ui";
+import { Text } from "@medusajs/ui";
 import {
   isSystemToolId,
   type SkillStep,
@@ -13,6 +6,7 @@ import {
 } from "@repo/agent-blueprint";
 import type { FC, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { SkillStepKind } from "./skill-step-kind";
 
 type ToolLabel = (step: Pick<ToolStep, "toolId" | "action">) => string;
 
@@ -20,41 +14,6 @@ type Props = {
   steps: SkillStep[];
   /** How a Tool step names its tool; falls back to the MCP action or the id. */
   toolLabel?: ToolLabel;
-};
-
-const ICON = {
-  ask: QuestionMark,
-  say: ChatBubble,
-  tell: Sparkles,
-  tool: Tools,
-  if: CodeBranch,
-} as const;
-
-// Each step type keeps one tag color, so a long list scans by type.
-const COLOR = {
-  ask: { badge: "blue", icon: "text-ui-tag-blue-icon" },
-  say: { badge: "green", icon: "text-ui-tag-green-icon" },
-  tell: { badge: "purple", icon: "text-ui-tag-purple-icon" },
-  tool: { badge: "orange", icon: "text-ui-tag-orange-icon" },
-  if: { badge: "grey", icon: "text-ui-tag-neutral-icon" },
-} as const;
-
-const Kind: FC<{ type: keyof typeof ICON; label?: string }> = ({
-  type,
-  label,
-}) => {
-  const { t } = useTranslation();
-  const Icon = ICON[type];
-  return (
-    <Badge
-      size="2xsmall"
-      color={COLOR[type].badge}
-      className="shrink-0 gap-x-1"
-    >
-      <Icon className={COLOR[type].icon} />
-      {label ?? t(`skills.steps.${type}`)}
-    </Badge>
-  );
 };
 
 const Row: FC<{ number: string; children: ReactNode }> = ({
@@ -98,7 +57,7 @@ export const SkillStepsView: FC<Props> = ({ steps, toolLabel }) => {
             {step.branches.map((b, bi) => (
               <div key={b.id} className="flex flex-col gap-y-2">
                 <Row number={bi === 0 ? number : ""}>
-                  <Kind
+                  <SkillStepKind
                     type="if"
                     label={
                       bi === 0 ? t("skills.steps.if") : t("skills.steps.elseIf")
@@ -114,7 +73,7 @@ export const SkillStepsView: FC<Props> = ({ steps, toolLabel }) => {
             {!!step.otherwise?.length && (
               <div className="flex flex-col gap-y-2">
                 <Row number="">
-                  <Kind type="if" label={t("skills.steps.else")} />
+                  <SkillStepKind type="if" label={t("skills.steps.else")} />
                 </Row>
                 <ol className="ml-10 flex flex-col gap-y-2 border-l pl-3">
                   {render(step.otherwise, inner)}
@@ -126,7 +85,7 @@ export const SkillStepsView: FC<Props> = ({ steps, toolLabel }) => {
       }
       return (
         <Row key={step.id} number={number}>
-          <Kind type={step.type} />
+          <SkillStepKind type={step.type} />
           <Text size="small" className="min-w-0">
             {step.type === "tool" ? (
               <>

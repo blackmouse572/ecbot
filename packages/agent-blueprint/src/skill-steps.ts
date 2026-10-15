@@ -211,12 +211,6 @@ export function validateSkillSteps(
 
 const RULES_HEADING = "## Rules (always, even when a step says otherwise)";
 
-/** A compiled body without its Rules section, for when the guardrails are kept apart. */
-export const withoutSkillRules = (body: string) => {
-  const at = body.lastIndexOf(`\n\n${RULES_HEADING}\n`);
-  return at === -1 ? body : body.slice(0, at);
-};
-
 export type CompileSkillInput =
   | { name: string; guardrails: string[]; format: "CONTENT"; content: string }
   | {

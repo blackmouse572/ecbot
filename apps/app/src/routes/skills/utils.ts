@@ -2,8 +2,13 @@ import type {
   CreateSkillRequestDto,
   SkillGetResponseDto,
   SkillUsageToolResponseDto,
+  ToolListResponseDto,
 } from "@repo/client";
-import type { SkillStep, ToolStep } from "@repo/agent-blueprint";
+import type {
+  SkillStep,
+  SkillToolNamer,
+  ToolStep,
+} from "@repo/agent-blueprint";
 import type { SkillFormData } from "./schemas";
 
 export const EMPTY_SKILL_FORM: SkillFormData = {
@@ -13,7 +18,6 @@ export const EMPTY_SKILL_FORM: SkillFormData = {
   format: "CONTENT",
   instructions: "",
   steps: [],
-  compiled: "",
 };
 
 export const skillToFormValues = (
@@ -27,7 +31,6 @@ export const skillToFormValues = (
     format: skill.format,
     instructions: steps ? "" : (skill.instructions ?? ""),
     steps: steps ? ((skill.steps ?? []) as SkillStep[]) : [],
-    compiled: steps ? (skill.instructions ?? "") : "",
   };
 };
 
@@ -50,4 +53,18 @@ export const toolLabelOf =
     const tool = tools?.find((t) => t.id === toolId);
     if (!tool) return action ?? "";
     return action ? `${tool.name} · ${action}` : tool.name;
+  };
+
+// The function name the agent calls a Tool step by (same rule as the API's
+// compiler: HTTP tools by slug, MCP tools by action).
+export const toolNameOf =
+  (
+    tools: Pick<ToolListResponseDto, "id" | "kind" | "slug">[] = [],
+  ): SkillToolNamer =>
+  ({ toolId, action }) => {
+    const tool = tools.find((t) => t.id === toolId);
+    if (!tool) return undefined;
+    const clean = (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, "_");
+    if (tool.kind === "HTTP") return clean(tool.slug);
+    return action ? clean(action) : undefined;
   };

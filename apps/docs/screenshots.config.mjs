@@ -128,17 +128,30 @@ export const shots = [
     name: "skills",
     path: "/:ws/skills",
     marks: [
-      { id: "browse", target: "text=/^(Browse templates|Duyệt mẫu)$/", up: 1, pad: 2 },
       { id: "create", target: "text=/^(Create|Tạo mới)$/", up: 1, pad: 2 },
       { id: "skill", target: "text=/^Refund policy$/", up: 1, pad: 4 },
     ],
   },
   {
-    name: "skill-templates",
-    path: "/:ws/skills/browse",
+    name: "skill-create",
+    path: "/:ws/skills/create",
     marks: [
-      { id: "search", target: "input[placeholder]", pad: 4 },
-      { id: "copy", target: "role=button[name=/^(Copy|Sao chép)$/]", nth: 1, pad: 4 },
+      { id: "templates", target: "text=/^(Get started with|Bắt đầu với)$/", up: 1, pad: 6 },
+    ],
+  },
+  {
+    name: "skill-steps",
+    path: "/:ws/skills/create",
+    setup: async (page) => {
+      await page.getByRole("button", { name: /^(Order status|Tình trạng đơn hàng)$/ }).click();
+      // The steps sit below the fold: bring them to the top of the modal.
+      await page.getByText(/^(Instructions|Hướng dẫn)$/).evaluate((el) => el.scrollIntoView());
+    },
+    marks: [
+      { id: "step", target: "text=/^(Ask|Hỏi)$/", up: 2, pad: 4 },
+      { id: "if", target: "text=/^(If|Nếu)$/", up: 2, pad: 4 },
+      { id: "tool", target: "text=/^(Tool|Công cụ)$/", up: 2, pad: 4 },
+      { id: "add", target: "role=button[name=/^(Add step|Thêm bước)$/]", pad: 4 },
     ],
   },
   {

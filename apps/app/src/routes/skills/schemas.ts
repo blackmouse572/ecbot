@@ -1,4 +1,4 @@
-import type { SkillStep } from "@repo/agent-blueprint";
+import { validateSkillSteps, type SkillStep } from "@repo/agent-blueprint";
 import * as z from "zod/v4";
 
 export const skillFormSchema = z
@@ -9,14 +9,16 @@ export const skillFormSchema = z
     guardrails: z.array(z.object({ value: z.string().max(500) })).max(20),
     format: z.enum(["CONTENT", "STEPS"]),
     instructions: z.string(),
-    // Read only until the steps editor lands: kept as the skill has them.
     steps: z.array(z.custom<SkillStep>()),
-    // The compiled body of a STEPS skill, used when it is switched to text.
-    compiled: z.string(),
   })
   .refine((v) => v.format !== "CONTENT" || v.instructions.trim().length > 0, {
     path: ["instructions"],
     message: "Required",
+  })
+  // Each issue shows on its step; this only blocks the save.
+  .refine((v) => v.format !== "STEPS" || !validateSkillSteps(v.steps).length, {
+    path: ["steps"],
+    message: "Invalid",
   });
 
 export type SkillFormData = z.infer<typeof skillFormSchema>;
