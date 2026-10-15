@@ -4,6 +4,7 @@ import { AwsModule } from '@app/modules/aws/aws.module';
 import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
 import { KnowledgeBaseService } from './knowledge-base.service';
 import { KnowledgeItemService } from './knowledge-item.service';
+import { KnowledgeItemAdminService } from './knowledge-item.admin.service';
 import { KnowledgeItemFolderService } from './knowledge-item-folder.service';
 import { KnowledgeItemTagService } from './knowledge-item-tag.service';
 import { ChatbotKnowledgeItemService } from './chatbot-knowledge-item.service';
@@ -30,6 +31,7 @@ import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/wor
     providers: [
         KnowledgeBaseService,
         KnowledgeItemService,
+        KnowledgeItemAdminService,
         KnowledgeItemFolderService,
         KnowledgeItemTagService,
         ChatbotKnowledgeItemService,
@@ -44,6 +46,7 @@ import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/wor
     exports: [
         KnowledgeBaseService,
         KnowledgeItemService,
+        KnowledgeItemAdminService,
         KnowledgeItemFolderService,
         KnowledgeItemTagService,
         ChatbotKnowledgeItemService,

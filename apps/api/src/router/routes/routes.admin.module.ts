@@ -1,6 +1,8 @@
 import { AccountModule } from '@app/modules/account/account.module';
 import { AccountAdminController } from '@app/modules/account/controllers/account.admin.controller';
 import { AwsModule } from '@app/modules/aws/aws.module';
+import { KnowledgeItemAdminController } from '@app/modules/knowledge-base/controllers/knowledge-item.admin.controller';
+import { KnowledgeBaseServicesModule } from '@app/modules/knowledge-base/services/services.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { ChatbotAdminController } from '@app/modules/chatbot/controllers/chatbot.admin.controller';
 import { RAGAdminController } from '@app/modules/rag/controllers/rag.admin.controller';
@@ -56,6 +58,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         ToolAdminController,
         WaitlistAdminController,
         WorkspaceAdminController,
+        KnowledgeItemAdminController,
     ],
     providers: [],
     exports: [],
@@ -79,6 +82,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         SkillModule,
         ToolModule,
         WaitlistModule,
+        KnowledgeBaseServicesModule,
         CloudTasksQueueModule,
     ],
 })
