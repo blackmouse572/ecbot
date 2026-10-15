@@ -6,6 +6,9 @@ import { ChatbotSkillRepository } from '../../../../src/modules/skill/repository
 import { SkillRepository } from '../../../../src/modules/skill/repository/repositories/skill.repository';
 import { ChatbotSkillService } from '../../../../src/modules/skill/services/chatbot-skill.service';
 import { ChatbotCacheService } from '../../../../src/modules/ai-cache/services/chatbot-cache.service';
+import { ChatbotToolRepository } from '../../../../src/modules/tool/repository/repositories/chatbot-tool.repository';
+import { ToolRepository } from '../../../../src/modules/tool/repository/repositories/tool.repository';
+import { ENUM_TOOL_STATUS } from '../../../../src/modules/tool/enums/tool-status.enum';
 
 describe('ChatbotSkillService', () => {
     let service: ChatbotSkillService;
@@ -13,11 +16,16 @@ describe('ChatbotSkillService', () => {
     const mockChatbotSkillRepo = {
         findOneByChatbotAndSkill: jest.fn(),
         findByChatbotId: jest.fn(),
+        findBySkillId: jest.fn(),
         create: jest.fn(),
     };
 
+    const mockChatbotToolRepo = { findByChatbotIds: jest.fn() };
+    const mockToolRepo = { findByIdsInWorkspace: jest.fn() };
+
     const mockSkillRepo = {
         findOneOwned: jest.fn(),
+        findOneReadable: jest.fn(),
     };
 
     const mockEntityManager = {
@@ -40,6 +48,11 @@ describe('ChatbotSkillService', () => {
                     useValue: mockChatbotSkillRepo,
                 },
                 { provide: SkillRepository, useValue: mockSkillRepo },
+                {
+                    provide: ChatbotToolRepository,
+                    useValue: mockChatbotToolRepo,
+                },
+                { provide: ToolRepository, useValue: mockToolRepo },
                 { provide: EntityManager, useValue: mockEntityManager },
                 {
                     provide: ChatbotCacheService,
@@ -187,6 +200,172 @@ describe('ChatbotSkillService', () => {
             expect(mockChatbotSkillRepo.findByChatbotId).toHaveBeenCalledWith(
                 chatbotId,
                 workspaceId
+            );
+        });
+    });
+
+    describe('usage', () => {
+        const lookup = {
+            id: 'http-1',
+            kind: 'HTTP',
+            displayName: 'Lookup order',
+        };
+        const zendesk = {
+            id: 'mcp-1',
+            kind: 'MCP',
+            displayName: 'Zendesk',
+            discoveredActions: [
+                { name: 'create_ticket' },
+                { name: 'search' },
+                { name: 'delete_all_tickets' },
+            ],
+        };
+
+        it('lists the tools a STEPS skill calls and what each chatbot lacks', async () => {
+            mockSkillRepo.findOneReadable.mockResolvedValue({
+                id: skillId,
+                format: 'STEPS',
+                steps: [
+                    { id: 'a', type: 'tool', toolId: 'http-1' },
+                    {
+                        id: 'b',
+                        type: 'tool',
+                        toolId: 'mcp-1',
+                        action: 'create_ticket',
+                    },
+                    { id: 'c', type: 'tool', toolId: 'gone' },
+                ],
+            });
+            mockToolRepo.findByIdsInWorkspace.mockResolvedValue([
+                lookup,
+                zendesk,
+            ]);
+            mockChatbotSkillRepo.findBySkillId.mockResolvedValue([
+                { enabled: true, chatbot: { id: 'bot-1', name: 'Shop' } },
+                { enabled: false, chatbot: { id: 'bot-2', name: 'Spa' } },
+            ]);
+            mockChatbotToolRepo.findByChatbotIds.mockResolvedValue([
+                // bot-1 has the HTTP tool, and Zendesk without create_ticket
+                { enabled: true, chatbot: { id: 'bot-1' }, tool: lookup },
+                {
+                    enabled: true,
+                    chatbot: { id: 'bot-1' },
+                    tool: zendesk,
+                    enabledActions: ['search'],
+                },
+                // bot-2 has the HTTP tool switched off, and all Zendesk actions
+                { enabled: false, chatbot: { id: 'bot-2' }, tool: lookup },
+                {
+                    enabled: true,
+                    chatbot: { id: 'bot-2' },
+                    tool: zendesk,
+                    enabledActions: null,
+                },
+            ]);
+
+            const usage = await service.usage(workspaceId, skillId);
+
+            expect(usage.tools).toEqual([
+                { id: 'http-1', name: 'Lookup order', kind: 'HTTP' },
+                {
+                    id: 'mcp-1',
+                    name: 'Zendesk',
+                    kind: 'MCP',
+                    action: 'create_ticket',
+                },
+            ]);
+            expect(usage.chatbots).toEqual([
+                {
+                    id: 'bot-1',
+                    name: 'Shop',
+                    enabled: true,
+                    missingTools: [
+                        { id: 'mcp-1', action: 'create_ticket' },
+                        { id: 'gone' },
+                    ],
+                },
+                {
+                    id: 'bot-2',
+                    name: 'Spa',
+                    enabled: false,
+                    missingTools: [{ id: 'http-1' }, { id: 'gone' }],
+                },
+            ]);
+            expect(mockToolRepo.findByIdsInWorkspace).toHaveBeenCalledWith(
+                ['http-1', 'mcp-1', 'gone'],
+                workspaceId
+            );
+            expect(mockChatbotSkillRepo.findBySkillId).toHaveBeenCalledWith(
+                skillId,
+                workspaceId
+            );
+        });
+
+        it('reports actions and tools the agent is not offered at runtime', async () => {
+            const revoked = {
+                id: 'http-2',
+                kind: 'HTTP',
+                displayName: 'Old API',
+                status: ENUM_TOOL_STATUS.REVOKED,
+            };
+            mockSkillRepo.findOneReadable.mockResolvedValue({
+                id: skillId,
+                format: 'STEPS',
+                steps: [
+                    {
+                        id: 'a',
+                        type: 'tool',
+                        toolId: 'mcp-1',
+                        action: 'delete_all_tickets',
+                    },
+                    { id: 'b', type: 'tool', toolId: 'mcp-1', action: 'nope' },
+                    { id: 'c', type: 'tool', toolId: 'http-2' },
+                ],
+            });
+            mockToolRepo.findByIdsInWorkspace.mockResolvedValue([
+                zendesk,
+                revoked,
+            ]);
+            mockChatbotSkillRepo.findBySkillId.mockResolvedValue([
+                { enabled: true, chatbot: { id: 'bot-1', name: 'Shop' } },
+            ]);
+            // No action list: only discovered, non-destructive actions.
+            mockChatbotToolRepo.findByChatbotIds.mockResolvedValue([
+                {
+                    enabled: true,
+                    chatbot: { id: 'bot-1' },
+                    tool: zendesk,
+                    enabledActions: null,
+                },
+                { enabled: true, chatbot: { id: 'bot-1' }, tool: revoked },
+            ]);
+
+            const usage = await service.usage(workspaceId, skillId);
+
+            expect(usage.chatbots[0].missingTools).toEqual([
+                { id: 'mcp-1', action: 'delete_all_tickets' },
+                { id: 'mcp-1', action: 'nope' },
+                { id: 'http-2' },
+            ]);
+        });
+
+        it('returns no tools for a CONTENT skill and throws for an unknown one', async () => {
+            mockSkillRepo.findOneReadable.mockResolvedValue({
+                id: skillId,
+                format: 'CONTENT',
+                steps: null,
+            });
+            mockChatbotSkillRepo.findBySkillId.mockResolvedValue([]);
+
+            await expect(service.usage(workspaceId, skillId)).resolves.toEqual({
+                tools: [],
+                chatbots: [],
+            });
+            expect(mockToolRepo.findByIdsInWorkspace).not.toHaveBeenCalled();
+
+            mockSkillRepo.findOneReadable.mockResolvedValue(null);
+            await expect(service.usage(workspaceId, skillId)).rejects.toThrow(
+                NotFoundException
             );
         });
     });

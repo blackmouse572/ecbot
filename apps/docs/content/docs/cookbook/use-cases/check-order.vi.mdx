@@ -1,0 +1,31 @@
+---
+title: Kiểm tra đơn bằng công cụ của bạn
+description: Công thức kỹ năng tra đơn hàng bằng công cụ HTTP của bạn, báo trạng thái cho khách và chuyển đơn trễ cho nhân viên.
+faq:
+  - q: Nếu tôi chưa có công cụ tra đơn thì sao?
+    a: Thay bước Công cụ bằng một bước Dặn nói rằng đội ngũ sẽ kiểm tra, rồi chuyển cho nhân viên.
+  - q: Làm sao agent biết đơn bị trễ?
+    a: Từ thông tin công cụ trả về, như trạng thái hay ngày giao. Hãy mô tả điều đó trong điều kiện Nếu.
+  - q: Agent có bịa ngày giao không?
+    a: Quy tắc dặn agent chỉ dùng thông tin công cụ trả về. Hãy giữ quy tắc đó.
+---
+
+Công thức này trả lời câu "đơn của tôi đâu" từ hệ thống đơn hàng của bạn.
+
+**Khi nào dùng**: khách hỏi đơn hàng đang ở đâu. Cần một [công cụ HTTP](/docs/agents/tools) tra cứu đơn, ở đây tên là "Order lookup".
+
+## Các bước
+
+1. **Hỏi**: mã đơn hàng.
+2. **Công cụ**: Order lookup, cách dùng: "với mã đơn hàng".
+3. **Nếu** đơn bị trễ hoặc thất lạc:
+   1. **Nói**: "Xin lỗi vì đã để bạn chờ, mình chuyển ngay cho đội ngũ xử lý nhé."
+   2. **Công cụ**: Chuyển cho nhân viên.
+4. **Nếu không**:
+   1. **Dặn**: trạng thái đơn và ngày giao dự kiến.
+
+Quy tắc: "Không bao giờ bịa ngày giao. Chỉ dùng thông tin công cụ trả về."
+
+## Nhờ trợ lý tạo
+
+> Tạo kỹ năng "Tình trạng đơn hàng" cho khi khách hỏi đơn đang ở đâu. Hỏi mã đơn, rồi gọi công cụ Order lookup với mã đó. Nếu đơn trễ hoặc thất lạc, xin lỗi và chuyển cho nhân viên. Nếu không, báo trạng thái và ngày giao.

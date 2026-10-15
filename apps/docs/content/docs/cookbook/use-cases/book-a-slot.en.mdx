@@ -1,0 +1,32 @@
+---
+title: Book a slot with a calendar
+description: A skill recipe that finds free slots in your calendar through an MCP tool, books the one the customer picks and schedules a reminder.
+faq:
+  - q: Which calendar tools work?
+    a: Any MCP tool with actions to list free time and create an event. Pick the actions in the Tool step.
+  - q: Who gets the reminder?
+    a: Schedule a follow-up makes the agent message the customer again later, here the day before the booking.
+  - q: What if no slot fits?
+    a: The Else branch hands the conversation to your staff so a person can arrange it.
+---
+
+This recipe books appointments straight into your calendar. Your MCP tool needs actions to find free slots and create events.
+
+**When to use**: the customer wants to book a service. Needs an [MCP tool](/docs/agents/tools) for your calendar, here "Google Calendar".
+
+## Steps
+
+1. **Ask**: the service and the day and time they prefer.
+2. **Tool**: Google Calendar, action find_free_slots.
+3. **Tell**: two or three free slots close to what they asked.
+4. **If** the customer picks a slot:
+   1. **Ask**: their name and phone number.
+   2. **Tool**: Google Calendar, action create_event.
+   3. **Tell**: the booking summary.
+   4. **Tool**: Schedule a follow-up, how: "remind them the day before".
+5. **Else**:
+   1. **Tool**: Hand off to staff.
+
+## Ask your assistant
+
+> Create a skill "Book a slot". Use it when a customer wants to book. Ask the service and preferred time, check free slots with the find_free_slots action of my Google Calendar tool, offer two or three, and when they pick one ask name and phone, book it with create_event, confirm, and schedule a follow-up to remind them. If nothing fits, hand off to staff.

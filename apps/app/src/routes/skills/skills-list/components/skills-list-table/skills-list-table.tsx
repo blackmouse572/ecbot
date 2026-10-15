@@ -65,9 +65,6 @@ export const SkillsListTable = () => {
         <Heading level="h2">{t("skills.title")}</Heading>
         <div className="flex items-center gap-x-2">
           <Button size="small" variant="secondary" asChild>
-            <Link to="browse">{t("skills.actions.browse")}</Link>
-          </Button>
-          <Button size="small" variant="secondary" asChild>
             <Link to="create">
               <PlusMini />
               {t("actions.create")}

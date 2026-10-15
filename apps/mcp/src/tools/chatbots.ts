@@ -65,7 +65,9 @@ const chatbotFields = {
     .string()
     .max(5000)
     .optional()
-    .describe("How it should behave, on top of its business type."),
+    .describe(
+      "Tone and a few rules for every reply, on top of its business type. Keep it short: put each workflow (when a customer asks X, do A then B) in a Skill and attach it.",
+    ),
   welcomeMessage: z.string().max(5000).optional(),
   fallbackMessage: z
     .string()

@@ -38,7 +38,7 @@ export const SkillActions = ({
   const copyAction = {
     icon: <SquareTwoStack />,
     label: t("actions.copy"),
-    onClick: () => navigate(`${item.id}/copy`),
+    onClick: () => navigate(`create?from=${item.id}`),
   };
 
   if (item.isBuiltin) {

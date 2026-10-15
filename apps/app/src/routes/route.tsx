@@ -396,11 +396,6 @@ function getRouteMaps(): RouteObject[] {
                   lazy: () => import("./skills/skill-create"),
                 },
                 {
-                  path: "browse",
-                  ErrorBoundary: ErrorBoundary,
-                  lazy: () => import("./skills/skill-browse"),
-                },
-                {
                   path: ":skillId",
                   ErrorBoundary: ErrorBoundary,
                   lazy: async function () {
@@ -421,11 +416,6 @@ function getRouteMaps(): RouteObject[] {
                       path: "edit",
                       ErrorBoundary: ErrorBoundary,
                       lazy: () => import("./skills/skill-edit"),
-                    },
-                    {
-                      path: "copy",
-                      ErrorBoundary: ErrorBoundary,
-                      lazy: () => import("./skills/skill-copy"),
                     },
                   ],
                 },
