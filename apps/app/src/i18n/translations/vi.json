@@ -74,13 +74,14 @@
       "guardrailPlaceholder": "vd: Không hứa hoàn tiền trước khi kiểm tra đơn hàng",
       "addGuardrail": "Thêm quy tắc",
       "removeGuardrail": "Xoá quy tắc",
-      "stepsHint": "Skill này được viết theo các bước. Trình chỉnh sửa các bước sẽ có sớm; hiện tại bạn có thể chuyển sang dạng văn bản để sửa.",
+      "stepsHint": "Agent làm theo các bước này theo thứ tự. Dùng menu của mỗi bước để di chuyển hoặc xóa.",
       "toText": {
         "title": "Chuyển sang dạng văn bản?",
         "description": "Các bước sẽ thành hướng dẫn dạng văn bản, còn quy tắc vẫn giữ nguyên. Bạn không thể chuyển văn bản ngược lại thành các bước.",
         "confirm": "Chuyển sang văn bản",
         "action": "Chuyển sang dạng văn bản"
-      }
+      },
+      "toSteps": "Viết theo các bước"
     },
     "create": {
       "title": "Tạo skill",
@@ -130,6 +131,46 @@
         "remove_tag": "Gỡ tag",
         "schedule_followup": "Hẹn nhắn lại",
         "save_customer_field": "Lưu thông tin khách"
+      },
+      "addStep": "Thêm bước",
+      "menu": "Thao tác với bước",
+      "moveUp": "Chuyển lên",
+      "moveDown": "Chuyển xuống",
+      "removeBranch": "Xóa nhánh",
+      "describe": {
+        "ask": "Hỏi khách một thông tin",
+        "say": "Gửi đúng một tin nhắn",
+        "tell": "Nói với khách bằng lời của agent",
+        "tool": "Dùng công cụ hoặc thao tác có sẵn",
+        "if": "Rẽ nhánh theo điều kiện"
+      },
+      "placeholder": {
+        "ask": "Cần hỏi gì, vd: Mã đơn hàng",
+        "say": "Tin nhắn cần gửi nguyên văn",
+        "tell": "Cần nói gì, vd: Thời hạn và điều kiện hoàn tiền",
+        "if": "Điều kiện, vd: Không tìm thấy đơn hàng",
+        "tool": "Chọn công cụ",
+        "action": "Chọn thao tác",
+        "tag": "Chọn tag",
+        "field": "Tên thông tin, vd: ngân sách",
+        "how": "Cách dùng (không bắt buộc)"
+      },
+      "groups": {
+        "builtin": "Thao tác có sẵn",
+        "tools": "Công cụ của bạn"
+      },
+      "issues": {
+        "invalid": "Bước này không hợp lệ.",
+        "duplicate_id": "Bước này bị trùng.",
+        "steps_empty": "Thêm ít nhất một bước.",
+        "too_many_steps": "Quá nhiều bước, tối đa 50 bước.",
+        "too_deep": "Quá nhiều bước Nếu lồng nhau.",
+        "text_required": "Nhập nội dung cho bước này.",
+        "condition_required": "Nhập điều kiện.",
+        "branch_empty": "Thêm một bước vào nhánh này.",
+        "tool_required": "Chọn một công cụ.",
+        "tool_unknown": "Công cụ này không còn nữa, hãy chọn công cụ khác.",
+        "action_required": "Chọn tag hoặc nhập tên thông tin."
       }
     },
     "start": {

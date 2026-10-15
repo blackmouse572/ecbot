@@ -1,6 +1,6 @@
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
-import { useGetSkill, useSkillUsage, useUpdateSkill } from "@/hooks/api/skills";
+import { useGetSkill, useUpdateSkill } from "@/hooks/api/skills";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Text, toast } from "@medusajs/ui";
@@ -12,17 +12,13 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
 import { skillFormSchema, type SkillFormData } from "../schemas";
-import { formValuesToBody, skillToFormValues, toolLabelOf } from "../utils";
+import { formValuesToBody, skillToFormValues } from "../utils";
 
 const SkillEditForm = ({ skill }: { skill: SkillGetResponseDto }) => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const { handleSuccess } = useRouteModal();
   const { updateSkill, isPending } = useUpdateSkill(workspaceSlug, skill.id);
-  const { usage } = useSkillUsage(workspaceSlug, skill.id, {
-    enabled: skill.format === "STEPS",
-  });
-  const toolLabel = toolLabelOf(usage?.tools);
 
   const form = useForm<SkillFormData>({
     resolver: zodResolver(skillFormSchema),
@@ -51,7 +47,7 @@ const SkillEditForm = ({ skill }: { skill: SkillGetResponseDto }) => {
                 {t("skills.edit.subtitle")}
               </Text>
             </div>
-            <SkillFormFields form={form} toolLabel={toolLabel} />
+            <SkillFormFields form={form} />
           </div>
         </RouteFocusModal.Body>
         <RouteFocusModal.Footer>

@@ -5,7 +5,7 @@ faq:
   - q: Làm sao agent biết khi nào dùng kỹ năng?
     a: Agent luôn thấy tên và mô tả của các kỹ năng đã gắn. Khi cuộc trò chuyện khớp với một mô tả, agent tải toàn bộ hướng dẫn của kỹ năng đó cho lượt trả lời.
   - q: Tôi có sửa được mẫu có sẵn không?
-    a: Mẫu được sao chép vào không gian làm việc của bạn trước. Bản sao thuộc về bạn, nên bạn có thể đổi tên, mô tả và hướng dẫn tùy ý.
+    a: Chọn một mẫu sẽ điền sẵn biểu mẫu tạo kỹ năng. Bạn sửa tùy ý trước khi tạo, và từ đó kỹ năng thuộc về bạn.
   - q: Một kỹ năng dài tối đa bao nhiêu?
     a: Tên tối đa 150 ký tự, mô tả tối đa 500 ký tự và phần hướng dẫn tối đa 64.000 ký tự. Hướng dẫn ngắn, chia từng bước sẽ hiệu quả nhất.
 ---
@@ -16,35 +16,56 @@ Kỹ năng là quy trình viết sẵn mà agent làm theo cho một loại yêu
 
 Mở **Skills** trong nhóm **Trợ lý AI** ở thanh bên.
 
-<Screenshot name="skills" alt="Danh sách kỹ năng với nút Duyệt mẫu và Tạo mới">
-  <Mark id="browse">**Duyệt mẫu** hiện các kỹ năng có sẵn để sao chép.</Mark>
-  <Mark id="create">**Tạo mới** để viết một kỹ năng từ đầu.</Mark>
+<Screenshot name="skills" alt="Danh sách kỹ năng với nút Tạo mới">
+  <Mark id="create">**Tạo mới** mở biểu mẫu kỹ năng.</Mark>
   <Mark id="skill">Các kỹ năng của bạn. Mở một kỹ năng để sửa hoặc tắt.</Mark>
 </Screenshot>
 
 ## Bắt đầu từ mẫu
 
-<Screenshot name="skill-templates" alt="Danh sách mẫu với Xử lý khiếu nại và Chính sách hoàn tiền">
-  <Mark id="search">Tìm mẫu theo tên.</Mark>
-  <Mark id="copy">**Sao chép** mở mẫu trong một biểu mẫu. Xem lại rồi tạo bản sao của riêng bạn.</Mark>
+<Screenshot
+  name="skill-create"
+  alt="Biểu mẫu tạo kỹ năng với hàng mẫu Bắt đầu với"
+>
+  <Mark id="templates">
+    **Bắt đầu với** điền sẵn biểu mẫu từ một kỹ năng mẫu, như Đặt lịch hẹn hay
+    Tình trạng đơn hàng. Bạn cũng có thể nhập tệp `.md`.
+  </Mark>
 </Screenshot>
 
 ## Viết một kỹ năng
 
 - **Tên**: nhãn ngắn, ví dụ "Đơn giao trễ".
-- **Mô tả**: khi nào dùng kỹ năng, ví dụ "Dùng khi khách báo đơn chưa tới." Agent đọc phần này để quyết định có tải kỹ năng hay không, nên hãy viết cụ thể.
-- **Hướng dẫn**: các bước, viết bằng Markdown. Bạn cũng có thể thả tệp `.md` vào để nhập.
+- **Khi nào dùng**: khi nào agent nên tải kỹ năng, ví dụ "Dùng khi khách báo đơn chưa tới." Hãy viết cụ thể.
+- **Quy tắc** (không bắt buộc): những điều agent luôn giữ khi dùng kỹ năng, kể cả khi một bước nói khác.
+- **Hướng dẫn**: viết dạng văn bản Markdown, hoặc theo các bước. Bấm **Viết theo các bước** trên biểu mẫu trống để dùng các bước.
 
-Ví dụ phần hướng dẫn:
+## Viết theo các bước
 
-```md
-Khi khách báo đơn giao trễ:
-1. Xin lỗi khách ngắn gọn.
-2. Hỏi mã đơn và tra cứu.
-3. Báo trạng thái hiện tại và ngày dự kiến giao.
-4. Nếu trễ hơn 3 ngày, tặng khách voucher 10%.
-Không hứa ngày giao mà trạng thái đơn không cho thấy.
-```
+<Screenshot
+  name="skill-steps"
+  alt="Một kỹ năng viết theo các bước, có Nếu, Nếu không và một bước Công cụ"
+>
+  <Mark id="step">
+    Mỗi bước có loại và nội dung. Menu bên phải để di chuyển hoặc xóa bước.
+  </Mark>
+  <Mark id="if">
+    **Nếu** rẽ nhánh theo điều kiện. Thêm **Nếu không, nếu** hoặc **Nếu không**
+    bên dưới.
+  </Mark>
+  <Mark id="tool">
+    **Công cụ** gọi một công cụ của bạn hoặc một thao tác có sẵn.
+  </Mark>
+  <Mark id="add">**Thêm bước** thêm một bước vào danh sách đó.</Mark>
+</Screenshot>
+
+- **Hỏi**: cần hỏi khách thông tin gì. Agent bỏ qua nếu khách đã nói rồi.
+- **Nói**: một tin nhắn nguyên văn. Agent dịch lại khi khách viết bằng ngôn ngữ khác.
+- **Dặn**: điều cần nói với khách, bằng lời của agent.
+- **Công cụ**: một [công cụ](/docs/agents/tools) của bạn, hoặc thao tác có sẵn: chuyển cho nhân viên, báo cho đội ngũ, gắn hoặc gỡ tag, hẹn nhắn lại, hoặc lưu thông tin khách.
+- **Nếu**: các bước chỉ chạy khi điều kiện đúng.
+
+**Chuyển sang dạng văn bản** biến các bước thành văn bản để sửa tự do. Bạn không thể chuyển văn bản ngược lại thành các bước.
 
 ## Gắn kỹ năng cho agent
 

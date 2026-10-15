@@ -447,41 +447,93 @@
       }
     }
   },
-  "skill-templates": {
+  "skill-create": {
     "en": {
-      "src": "/_docs/screenshots/en/skill-templates.png",
+      "src": "/_docs/screenshots/en/skill-create.png",
       "width": 1440,
       "height": 900,
       "marks": {
-        "search": {
-          "x": 20.28,
-          "y": 18.09,
-          "w": 59.44,
-          "h": 4.44
+        "templates": {
+          "x": 26.25,
+          "y": 86.02,
+          "w": 47.5,
+          "h": 13.98
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/skill-create.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "templates": {
+          "x": 26.25,
+          "y": 86.02,
+          "w": 47.5,
+          "h": 13.98
+        }
+      }
+    }
+  },
+  "skill-steps": {
+    "en": {
+      "src": "/_docs/screenshots/en/skill-steps.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "step": {
+          "x": 27.57,
+          "y": 49.35,
+          "w": 44.86,
+          "h": 4
         },
-        "copy": {
-          "x": 51.32,
-          "y": 35.09,
-          "w": 5.24,
+        "if": {
+          "x": 27.57,
+          "y": 58.24,
+          "w": 44.86,
+          "h": 4
+        },
+        "tool": {
+          "x": 31.25,
+          "y": 66.69,
+          "w": 41.18,
+          "h": 8
+        },
+        "add": {
+          "x": 31.25,
+          "y": 79.58,
+          "w": 6.99,
           "h": 4
         }
       }
     },
     "vi": {
-      "src": "/_docs/screenshots/vi/skill-templates.png",
+      "src": "/_docs/screenshots/vi/skill-steps.png",
       "width": 1440,
       "height": 900,
       "marks": {
-        "search": {
-          "x": 20.28,
-          "y": 18.09,
-          "w": 59.44,
-          "h": 4.44
+        "step": {
+          "x": 27.57,
+          "y": 49.35,
+          "w": 44.86,
+          "h": 4
         },
-        "copy": {
-          "x": 51.32,
-          "y": 35.09,
-          "w": 6.96,
+        "if": {
+          "x": 27.57,
+          "y": 58.24,
+          "w": 44.86,
+          "h": 4
+        },
+        "tool": {
+          "x": 0.56,
+          "y": 38.78,
+          "w": 14.1,
+          "h": 4
+        },
+        "add": {
+          "x": 31.25,
+          "y": 79.58,
+          "w": 7.99,
           "h": 4
         }
       }
@@ -493,22 +545,16 @@
       "width": 1440,
       "height": 900,
       "marks": {
-        "browse": {
-          "x": 82.75,
-          "y": 8.78,
-          "w": 14.89,
-          "h": 3.56
-        },
         "create": {
-          "x": 82.75,
+          "x": 91.92,
           "y": 8.78,
-          "w": 14.89,
+          "w": 5.72,
           "h": 3.56
         },
         "skill": {
           "x": 20.56,
           "y": 27.22,
-          "w": 6.3,
+          "w": 6.47,
           "h": 3.11
         }
       }
@@ -518,22 +564,16 @@
       "width": 1440,
       "height": 900,
       "marks": {
-        "browse": {
-          "x": 85.12,
-          "y": 8.78,
-          "w": 12.52,
-          "h": 3.56
-        },
         "create": {
-          "x": 85.12,
+          "x": 91.4,
           "y": 8.78,
-          "w": 12.52,
+          "w": 6.24,
           "h": 3.56
         },
         "skill": {
           "x": 20.56,
           "y": 27.22,
-          "w": 6.3,
+          "w": 6.47,
           "h": 3.11
         }
       }

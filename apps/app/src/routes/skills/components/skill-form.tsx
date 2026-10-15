@@ -1,26 +1,35 @@
 import { TipTapEditor } from "@/components/common/tiptap-editor/tiptap-editor";
 import { PlusMini, XMark } from "@medusajs/icons";
-import { Button, IconButton, Input, Textarea, usePrompt } from "@medusajs/ui";
-import { withoutSkillRules, type ToolStep } from "@repo/agent-blueprint";
+import { useListTools } from "@/hooks/api/tools";
+import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import {
+  Button,
+  IconButton,
+  Input,
+  Text,
+  Textarea,
+  usePrompt,
+} from "@medusajs/ui";
+import { compileSkill, validateSkillSteps } from "@repo/agent-blueprint";
 import type { SkillGetResponseDto } from "@repo/client";
 import { Form } from "@repo/ui/common-components";
 import type { FC } from "react";
 import { useFieldArray, useWatch, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { SkillFormData } from "../schemas";
-import { skillToFormValues } from "../utils";
+import { newStep } from "../step-tree";
+import { skillToFormValues, toolNameOf } from "../utils";
 import { SkillStartChips } from "./skill-start-chips";
-import { SkillStepsView } from "./skill-steps-view";
+import { SkillStepsEditor } from "./skill-steps-editor";
 
 type Props = {
   form: UseFormReturn<SkillFormData>;
   /** Create shows the "Get started with" row while the form is empty. */
   showStart?: boolean;
-  toolLabel?: (step: Pick<ToolStep, "toolId" | "action">) => string;
 };
 
 // Vertical skill fields, shared by the create and edit focus modals.
-export const SkillFormFields: FC<Props> = ({ form, showStart, toolLabel }) => {
+export const SkillFormFields: FC<Props> = ({ form, showStart }) => {
   const { t } = useTranslation();
   const prompt = usePrompt();
   const guardrails = useFieldArray({
@@ -32,6 +41,20 @@ export const SkillFormFields: FC<Props> = ({ form, showStart, toolLabel }) => {
     name: ["format", "steps", "instructions"],
   });
   const empty = format === "CONTENT" && !instructions.trim();
+  const { workspaceSlug } = useWorkspaceParams();
+  const { tools = [] } = useListTools(workspaceSlug, { perPage: 100 });
+  const opts = {
+    shouldDirty: true,
+    shouldValidate: form.formState.isSubmitted,
+  };
+  const listIssue = form.formState.isSubmitted
+    ? validateSkillSteps(steps).find((i) => !i.id)
+    : undefined;
+
+  const switchToSteps = () => {
+    form.setValue("steps", [newStep("ask")], opts);
+    form.setValue("format", "STEPS", opts);
+  };
 
   const applyTemplate = (skill: SkillGetResponseDto) =>
     form.reset(skillToFormValues(skill), { keepDefaultValues: true });
@@ -44,13 +67,15 @@ export const SkillFormFields: FC<Props> = ({ form, showStart, toolLabel }) => {
       cancelText: t("actions.cancel"),
     });
     if (!confirmed) return;
-    const opts = { shouldDirty: true, shouldValidate: true };
     // Guardrails stay a field of their own, as edited in this form.
-    form.setValue(
-      "instructions",
-      withoutSkillRules(form.getValues("compiled")),
-      opts,
-    );
+    const text = compileSkill({
+      name: form.getValues("name"),
+      guardrails: [],
+      format: "STEPS",
+      steps,
+      toolName: toolNameOf(tools),
+    });
+    form.setValue("instructions", text, opts);
     form.setValue("steps", [], opts);
     form.setValue("format", "CONTENT", opts);
   };
@@ -158,8 +183,18 @@ export const SkillFormFields: FC<Props> = ({ form, showStart, toolLabel }) => {
           </div>
           <Form.Hint>{t("skills.form.stepsHint")}</Form.Hint>
           <div className="rounded-lg border bg-ui-bg-subtle p-4">
-            <SkillStepsView steps={steps} toolLabel={toolLabel} />
+            <SkillStepsEditor
+              steps={steps}
+              tools={tools}
+              showIssues={form.formState.isSubmitted}
+              onChange={(next) => form.setValue("steps", next, opts)}
+            />
           </div>
+          {listIssue && (
+            <Text size="small" className="text-ui-fg-error">
+              {t(`skills.steps.issues.${listIssue.code}`)}
+            </Text>
+          )}
         </Form.Item>
       ) : (
         <Form.Field
@@ -167,7 +202,19 @@ export const SkillFormFields: FC<Props> = ({ form, showStart, toolLabel }) => {
           name="instructions"
           render={({ field }) => (
             <Form.Item>
-              <Form.Label>{t("skills.form.instructions")}</Form.Label>
+              <div className="flex items-center justify-between gap-x-2">
+                <Form.Label>{t("skills.form.instructions")}</Form.Label>
+                {empty && (
+                  <Button
+                    type="button"
+                    size="small"
+                    variant="transparent"
+                    onClick={switchToSteps}
+                  >
+                    {t("skills.form.toSteps")}
+                  </Button>
+                )}
+              </div>
               <Form.Hint>{t("skills.form.instructionsHint")}</Form.Hint>
               <Form.Control>
                 <TipTapEditor

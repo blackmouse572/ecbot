@@ -5,7 +5,6 @@ import {
   skillStepsSchema,
   skillToolRefs,
   validateSkillSteps,
-  withoutSkillRules,
   type SkillStep,
 } from "./skill-steps";
 
@@ -385,21 +384,5 @@ describe("built-in actions", () => {
       '6. Let the team know now: in this same reply, call `apply_customer_tag` with the name of the tag marked "(notifies the team)" that fits best, then go on helping the customer.',
     );
     expect(body).not.toContain("check the result against the Rules");
-  });
-});
-
-describe("withoutSkillRules", () => {
-  it("drops the Rules section a compiled body ends with", () => {
-    const body = compileSkill({
-      name: "T",
-      guardrails: ["Be kind."],
-      format: "STEPS",
-      steps: [{ id: "a", type: "tell", text: "Hi" }],
-      toolName: () => undefined,
-    });
-    expect(withoutSkillRules(body)).toBe(
-      "# T\n\n## Steps\nFollow these steps in order, one at a time.\n1. Tell the customer, in your own words: Hi.",
-    );
-    expect(withoutSkillRules("no rules here")).toBe("no rules here");
   });
 });
