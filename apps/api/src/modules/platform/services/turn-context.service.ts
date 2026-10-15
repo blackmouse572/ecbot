@@ -7,11 +7,15 @@ import {
     ENUM_MESSAGE_AUTHOR,
     ENUM_MESSAGE_DIRECTION,
 } from '@app/modules/conversation/enums/message.enum';
+import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
 import {
-    historyNote,
+    attachmentNote,
+    customerHistoryText,
+    isVisual,
+    replyNote,
     withDescriptions,
 } from '@app/modules/conversation/utils/message-attachment';
 import { Injectable, Logger } from '@nestjs/common';
@@ -29,8 +33,22 @@ const STAFF_REPLY_LABEL = '[Staff]';
 interface IBurstImage {
     message: MessageEntity;
     index: number;
+    attachment: IMessageAttachment;
     url?: string;
     description?: string;
+}
+
+/** What the agent reads for a burst photo, sticker or story. */
+function burstImageNote(image: IBurstImage): string {
+    const { attachment, description, message } = image;
+    if (attachment.type !== 'image')
+        return attachmentNote(
+            { ...attachment, description },
+            message.replyTo?.kind === 'story'
+        );
+    return description
+        ? imageDescriptionNote(description)
+        : UNVIEWABLE_IMAGE_NOTE;
 }
 
 /**
@@ -81,7 +99,6 @@ export class TurnContextService {
             .filter(m => !burstRows.has(m))
             .map(m => {
                 const inbound = m.direction === ENUM_MESSAGE_DIRECTION.INBOUND;
-                const note = inbound ? historyNote(m.attachments ?? []) : '';
                 // Staff replies go out like the bot's own; the label tells the
                 // bot what staff already took on, so it is not handed over
                 // again (AGENT.md <escalation>).
@@ -97,23 +114,30 @@ export class TurnContextService {
                         inbound || system
                             ? ('user' as const)
                             : ('assistant' as const),
-                    content: [staff, m.text, note].filter(Boolean).join(' '),
+                    content: inbound
+                        ? customerHistoryText(m)
+                        : [staff, m.text].filter(Boolean).join(' '),
                 };
             })
             .filter(m => m.content);
 
-        const images = await this.burstImages([...burstRows], conversationId);
+        const rows = [...burstRows];
+        const images = await this.burstImages(rows, conversationId);
         const usage = await this.describe(images, chatbotId);
-        const notes = images.map(image =>
-            image.description
-                ? imageDescriptionNote(image.description)
-                : UNVIEWABLE_IMAGE_NOTE
+        const notes = images.map(burstImageNote);
+        const others = rows.flatMap(m =>
+            (m.attachments ?? [])
+                .filter(a => !isVisual(a))
+                .map(a => attachmentNote(a))
         );
+        const quotes = rows.map(m => replyNote(m.replyTo));
 
         return {
             summary,
             history,
-            message: [texts.join('\n'), ...notes].filter(Boolean).join('\n'),
+            message: [...quotes, texts.join('\n'), ...notes, ...others]
+                .filter(Boolean)
+                .join('\n'),
             usage,
         };
     }
@@ -144,11 +168,12 @@ export class TurnContextService {
                     conversationId
                 );
                 return stored.flatMap((attachment, index) =>
-                    attachment.type === 'image'
+                    isVisual(attachment)
                         ? [
                               {
                                   message,
                                   index,
+                                  attachment,
                                   url: resolved[index]?.url,
                                   description: attachment.description,
                               },
@@ -175,7 +200,14 @@ export class TurnContextService {
         try {
             described = await this.chatbotAIService.describeImages({
                 chatbot_id: chatbotId,
-                images: pending.map(i => ({ id: id(i), url: i.url! })),
+                images: pending.map(i => ({
+                    id: id(i),
+                    url: i.url!,
+                    // Stickers are read for what they mean, not described.
+                    ...(i.attachment.type === 'sticker' && {
+                        kind: 'sticker' as const,
+                    }),
+                })),
             });
         } catch (err) {
             this.logger.warn(

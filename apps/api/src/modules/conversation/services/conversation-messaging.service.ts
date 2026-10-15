@@ -32,6 +32,7 @@ import { ENUM_CONVERSATION_ACTIVITY_KIND } from '../enums/conversation-activity.
 import { IReplyActivity } from '../interfaces/conversation-activity.interface';
 import { ConversationActivityEntity } from '../repository/entities/conversation-activity.entity';
 import { ConversationActivityRepository } from '../repository/repositories/conversation-activity.repository';
+import { toReplyToDto } from '../utils/message-reply-to.util';
 
 /**
  * Dispatches operator-initiated messages to the customer's platform via the
@@ -286,6 +287,7 @@ export class ConversationMessagingService {
         });
         dto.author = this.resolveAuthor(message, conversation, userNameMap);
         dto.reactions = message.reactions ?? [];
+        dto.replyTo = toReplyToDto(message.replyTo);
         // Stored images carry a private key; the inbox gets a short-lived url.
         dto.attachments = await this.messageMedia.resolve(
             message.attachments,

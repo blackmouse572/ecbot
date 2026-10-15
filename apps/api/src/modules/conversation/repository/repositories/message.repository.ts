@@ -7,7 +7,10 @@ import {
     ENUM_MESSAGE_DIRECTION,
     ENUM_MESSAGE_STATUS,
 } from '../../enums/message.enum';
-import { IMessageAttachment } from '../../interfaces/message-media.interface';
+import {
+    IMessageAttachment,
+    IMessageReplyTo,
+} from '../../interfaces/message-media.interface';
 import { ConversationEntity } from '../entities/conversation.entity';
 import { MessageEntity, MessageReaction } from '../entities/message.entity';
 
@@ -17,6 +20,7 @@ export interface IMessageUpsertData {
     authorId: string;
     text?: string;
     attachments?: IMessageAttachment[];
+    replyTo?: IMessageReplyTo;
     raw?: unknown;
     dateSent: Date;
 }
@@ -59,6 +63,17 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
             await this.touchConversation(conversationId, data.dateSent);
         }
         return message;
+    }
+
+    /** The conversation's message with this platform id, if we have it. */
+    async findByExternalId(
+        conversationId: string,
+        externalId: string
+    ): Promise<MessageEntity | null> {
+        return this.findOne({
+            conversation: conversationId,
+            externalId,
+        } as FilterQuery<MessageEntity>);
     }
 
     /** Replace a message's attachments (e.g. with the descriptions of what

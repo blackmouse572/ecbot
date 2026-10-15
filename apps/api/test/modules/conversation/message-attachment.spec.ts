@@ -2,8 +2,10 @@ import { MessageAttachmentsType } from '../../../src/modules/conversation/reposi
 import {
     botImage,
     forTurn,
+    attachmentNote,
     historyNote,
     parseAttachments,
+    replyNote,
     withDescriptions,
 } from '../../../src/modules/conversation/utils/message-attachment';
 
@@ -18,6 +20,7 @@ describe('message attachment', () => {
                     description: 'A shirt',
                 },
                 { type: 'video', url: 42 },
+                { type: 'sticker', key: 'k.webp', emoji: '👍' },
                 { url: 'https://no-type' },
                 'junk',
                 null,
@@ -26,6 +29,7 @@ describe('message attachment', () => {
             { type: 'image', key: 'conversations/c/a.jpg' },
             { type: 'image', url: 'https://kb/s.jpg', description: 'A shirt' },
             { type: 'video' },
+            { type: 'sticker', key: 'k.webp', emoji: '👍' },
         ]);
         expect(parseAttachments(null)).toEqual([]);
         expect(parseAttachments({ type: 'image' })).toEqual([]);
@@ -36,8 +40,57 @@ describe('message attachment', () => {
             historyNote([{ type: 'image', description: 'A red dress' }])
         ).toBe('[image: A red dress]');
         expect(historyNote([{ type: 'image' }])).toBe('[image]');
-        expect(historyNote([{ type: 'video' }])).toBe('');
         expect(historyNote([])).toBe('');
+    });
+
+    it('notes stickers, stories and media the AI cannot open in history', () => {
+        expect(
+            historyNote([
+                { type: 'sticker', description: 'ok, agreed', emoji: '👍' },
+                { type: 'video' },
+            ])
+        ).toBe('[Sticker meaning: ok, agreed] [Video, which you cannot watch]');
+        expect(
+            historyNote([{ type: 'story', description: 'A red dress' }], {
+                kind: 'story',
+            })
+        ).toBe('[Replying to your story, which shows: A red dress]');
+    });
+
+    it('says what a sticker means, else its emoji', () => {
+        expect(
+            attachmentNote({ type: 'sticker', description: 'confused' })
+        ).toBe('[Sticker meaning: confused]');
+        expect(attachmentNote({ type: 'sticker', emoji: '😂' })).toBe(
+            '[Sticker: 😂]'
+        );
+        expect(attachmentNote({ type: 'sticker' })).toBe(
+            '[Sticker that could not be viewed]'
+        );
+    });
+
+    it('tells a story reply from a story mention', () => {
+        expect(attachmentNote({ type: 'story' }, true)).toBe(
+            '[Replying to your story]'
+        );
+        expect(attachmentNote({ type: 'story', description: 'A cake' })).toBe(
+            '[Mentioned you in their story, which shows: A cake]'
+        );
+    });
+
+    it('notes what a quoted reply answers', () => {
+        expect(replyNote({ kind: 'message', text: 'Size M còn không?' })).toBe(
+            '[Replying to your message: "Size M còn không?"]'
+        );
+        expect(
+            replyNote({ kind: 'message', text: 'giá?', fromCustomer: true })
+        ).toBe('[Replying to their own earlier message: "giá?"]');
+        expect(replyNote({ kind: 'message' })).toBe(
+            '[Replying to an earlier message]'
+        );
+        expect(replyNote(undefined)).toBe('');
+        // The story's own note says it.
+        expect(replyNote({ kind: 'story' })).toBe('');
     });
 
     it('sets each description on its own attachment', () => {

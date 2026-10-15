@@ -11189,6 +11189,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "json"
+        },
+        "reply_to": {
+          "name": "reply_to",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         }
       },
       "name": "messages",

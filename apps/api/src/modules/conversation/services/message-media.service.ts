@@ -56,18 +56,19 @@ export class MessageMediaService {
     }
 
     private async resolveOne(
-        { type, url, key }: IMessageAttachment,
+        { type, url, key, emoji }: IMessageAttachment,
         folder: string
     ): Promise<IMessageAttachment> {
-        if (!key) return url ? { type, url } : { type };
-        if (!key.startsWith(folder)) return { type };
+        const base: IMessageAttachment = emoji ? { type, emoji } : { type };
+        if (!key) return url ? { ...base, url } : base;
+        if (!key.startsWith(folder)) return base;
         try {
-            return { type, url: await this.s3.signGetUrl(key, PRIVATE) };
+            return { ...base, url: await this.s3.signGetUrl(key, PRIVATE) };
         } catch (err) {
             this.logger.warn(
                 `presign failed for ${key}: ${(err as Error).message}`
             );
-            return { type };
+            return base;
         }
     }
 }

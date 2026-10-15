@@ -156,7 +156,7 @@ describe('ZaloPlatformAdapter.parse', () => {
         ]);
     });
 
-    it('maps gif attachments to image and unknown types to file', () => {
+    it('maps gif attachments to image, links to share and unknown types to file', () => {
         const a = makeAdapter();
         const [e] = a.parse(
             wrap({
@@ -167,11 +167,16 @@ describe('ZaloPlatformAdapter.parse', () => {
                     attachments: [
                         { type: 'gif', payload: { url: 'http://g' } },
                         { type: 'link', payload: { url: 'http://l' } },
+                        { type: 'business_card', payload: {} },
                     ],
                 },
             })
         );
-        expect(e.attachments?.map(x => x.type)).toEqual(['image', 'file']);
+        expect(e.attachments?.map(x => x.type)).toEqual([
+            'image',
+            'share',
+            'file',
+        ]);
     });
 
     it('classifies oa_send_text as echo', () => {
@@ -228,11 +233,9 @@ const account = { accessToken: 'enc' } as any;
 
 describe('ZaloPlatformAdapter.doSend', () => {
     it('POSTs text to /message/cs with the decrypted token and returns message_id', async () => {
-        const post = jest
-            .fn()
-            .mockResolvedValue({
-                data: { error: 0, data: { message_id: 'zm1' } },
-            });
+        const post = jest.fn().mockResolvedValue({
+            data: { error: 0, data: { message_id: 'zm1' } },
+        });
         const a = makeAdapter({ axiosRef: { post } });
 
         const res = await a.sendMessage(account, 'S', {
@@ -254,11 +257,9 @@ describe('ZaloPlatformAdapter.doSend', () => {
     });
 
     it('degrades a card to its fallbackText (capabilities all false)', async () => {
-        const post = jest
-            .fn()
-            .mockResolvedValue({
-                data: { error: 0, data: { message_id: 'zm2' } },
-            });
+        const post = jest.fn().mockResolvedValue({
+            data: { error: 0, data: { message_id: 'zm2' } },
+        });
         const a = makeAdapter({ axiosRef: { post } });
 
         await a.sendMessage(account, 'S', {
@@ -272,11 +273,9 @@ describe('ZaloPlatformAdapter.doSend', () => {
     });
 
     it('throws when Zalo returns a non-zero error code', async () => {
-        const post = jest
-            .fn()
-            .mockResolvedValue({
-                data: { error: -216, message: 'user blocked OA' },
-            });
+        const post = jest.fn().mockResolvedValue({
+            data: { error: -216, message: 'user blocked OA' },
+        });
         const a = makeAdapter({ axiosRef: { post } });
 
         await expect(

@@ -28,6 +28,7 @@ import {
     verifyMetaChallenge,
     verifyMetaSignature,
 } from '../meta/meta-webhook.util';
+import { metaAttachments, metaReplyTo } from '../meta/meta-message.util';
 import { PlatformAdapter } from '../platform-adapter.base';
 import {
     MessengerMessagingEvent,
@@ -159,6 +160,7 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
         let action: { id: string; value?: string } | undefined;
         let attachments: PlatformWebhookEvent['attachments'];
         let reaction: PlatformWebhookEvent['reaction'];
+        let replyTo: PlatformWebhookEvent['replyTo'];
 
         if (event.message) {
             kind = event.message.is_echo ? 'echo' : 'message';
@@ -167,21 +169,8 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
             if (event.message.quick_reply) {
                 action = decodeActionPayload(event.message.quick_reply.payload);
             }
-            if (event.message.attachments?.length) {
-                attachments = event.message.attachments
-                    .filter(a => a.type !== 'fallback')
-                    .map(a => ({
-                        type: a.type as
-                            | 'image'
-                            | 'video'
-                            | 'file'
-                            | 'location'
-                            | 'sticker'
-                            | 'audio',
-                        url: a.payload?.url,
-                        raw: a,
-                    }));
-            }
+            attachments = metaAttachments(event.message);
+            replyTo = metaReplyTo(event.message);
         } else if (event.postback) {
             kind = 'postback';
             externalMessageId = event.postback.mid;
@@ -226,6 +215,7 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
             raw: event,
             action,
             attachments,
+            replyTo,
             reaction,
         };
     }

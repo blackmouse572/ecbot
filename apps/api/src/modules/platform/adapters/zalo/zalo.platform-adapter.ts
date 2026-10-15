@@ -241,6 +241,8 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
                 return 'sticker';
             case 'location':
                 return 'location';
+            case 'link':
+                return 'share';
             default:
                 return 'file';
         }
