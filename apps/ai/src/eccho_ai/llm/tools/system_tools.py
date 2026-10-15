@@ -484,8 +484,9 @@ async def end_without_reply(reason: str = "") -> dict[str, Any]:
     it when they ask something, want something (to buy, book, order or take
     an item), are unhappy or confused, or have not been answered yet, or
     when your last message asked them for something (an address, a phone
-    number, a choice or a confirmation) they have not given: then reply,
-    and ask again for what is missing. `reason` is a few words on why, for
+    number, a choice) they have not given, or asked them to confirm
+    something: then reply, and ask again for what is missing or act on
+    their yes. `reason` is a few words on why, for
     the staff."""
     _log_call(END_WITHOUT_REPLY, _truncate(reason), "ok", 0)
     return {"ok": True}
