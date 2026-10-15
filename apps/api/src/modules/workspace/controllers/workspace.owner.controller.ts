@@ -453,7 +453,7 @@ export class WorkspaceController {
         // — never a different workspace this caller happens to own — and the
         // guard has already authorized the caller against it, so the service
         // does no separate owner-only lookup.
-        const { invitationLink, expiresAt } =
+        const { invitationLink, expiresAt, invitationId } =
             await this.workSpaceService.generateInvitationLinkWithDetails(
                 userId,
                 body,
@@ -479,6 +479,18 @@ export class WorkspaceController {
                 inviterName: inviter?.name?.trim() || inviter?.email || '',
                 expiresAt,
                 language: request?.__language,
+            }
+        );
+
+        await this.activityService.createByUserWithWorkspace(
+            inviter,
+            workspace,
+            {
+                action: ENUM_ACTIVITY_ACTION.INVITE_MEMBER,
+                subject: ENUM_POLICY_SUBJECT.INVITATION,
+                // Ids only: the audit log is append-only and outlives the
+                // invitee's email.
+                metadata: { id: invitationId },
             }
         );
 

@@ -8,6 +8,8 @@ jest.mock('@app/modules/workspace/decorators/workspace.decorator', () => ({
 }));
 
 import { randomUUID } from 'crypto';
+import { ENUM_ACTIVITY_ACTION } from '../../../../src/modules/activity/enums/activity.enum';
+import { ENUM_POLICY_SUBJECT } from '../../../../src/modules/policy/enums/policy.enum';
 import { WorkspaceController } from '../../../../src/modules/workspace/controllers/workspace.owner.controller';
 
 // Unit tests for the controller's invite-link construction. The invitation
@@ -62,9 +64,30 @@ describe('WorkspaceController — inviteMemberToWorkSpace', () => {
                 invitationLink:
                     'https://ecbot.example.com/join?tokens=signed-jwt',
                 expiresAt: new Date('2026-10-01T00:00:00Z'),
+                invitationId: 'invitation-1',
             }
         );
         mockUserService.findOneByEmail.mockResolvedValue(null);
+    });
+
+    // Ids only: the audit log is append-only, so the invitee email stays out.
+    it('logs INVITE_MEMBER as the inviter, with the invitation id', async () => {
+        const inviter = { id: 'owner-1', name: 'Chi' };
+        mockUserService.findOneById.mockResolvedValue(inviter);
+
+        await controller.inviteMemberToWorkSpace(
+            'owner-1',
+            { invitedEmail: 'invitee@mail.com' } as any,
+            workspace
+        );
+
+        expect(
+            mockActivityService.createByUserWithWorkspace
+        ).toHaveBeenCalledWith(inviter, workspace, {
+            action: ENUM_ACTIVITY_ACTION.INVITE_MEMBER,
+            subject: ENUM_POLICY_SUBJECT.INVITATION,
+            metadata: { id: 'invitation-1' },
+        });
     });
 
     it('builds the invitation link from configured home.url, not the Origin header', async () => {

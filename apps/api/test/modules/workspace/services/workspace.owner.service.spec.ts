@@ -42,7 +42,7 @@ describe('WorkspaceOwnerService', () => {
     };
     const mockInvitationService = {
         checkExistingInvitation: jest.fn(),
-        create: jest.fn().mockResolvedValue(undefined),
+        create: jest.fn().mockResolvedValue({ id: 'invitation-new' }),
     };
 
     beforeEach(async () => {
@@ -85,7 +85,9 @@ describe('WorkspaceOwnerService', () => {
     afterEach(() => {
         jest.clearAllMocks();
         mockJwtService.sign.mockReturnValue('signed-jwt');
-        mockInvitationService.create.mockResolvedValue(undefined);
+        mockInvitationService.create.mockResolvedValue({
+            id: 'invitation-new',
+        });
     });
 
     it('should be defined', () => {
@@ -120,6 +122,7 @@ describe('WorkspaceOwnerService', () => {
             expect(result.token).toBe('signed-jwt');
             expect(result.invitationLink).toBe(`${url}/join?tokens=signed-jwt`);
             expect(result.workspaceId).toBe(workspace.id);
+            expect(result.invitationId).toBe('invitation-new');
             expect(mockInvitationService.create).toHaveBeenCalledWith(
                 expect.objectContaining({
                     workspace: workspace.id,
@@ -132,6 +135,7 @@ describe('WorkspaceOwnerService', () => {
 
         it('should be idempotent — return an existing PENDING invitation without re-signing', async () => {
             mockInvitationService.checkExistingInvitation.mockResolvedValue({
+                id: 'invitation-existing',
                 token: 'existing-token',
                 invitationLink: `${url}/join?tokens=existing-token`,
                 expiresAt: new Date('2026-08-30T00:00:00Z'),
@@ -145,6 +149,7 @@ describe('WorkspaceOwnerService', () => {
             );
 
             expect(result.token).toBe('existing-token');
+            expect(result.invitationId).toBe('invitation-existing');
             expect(mockJwtService.sign).not.toHaveBeenCalled();
             expect(mockInvitationService.create).not.toHaveBeenCalled();
         });

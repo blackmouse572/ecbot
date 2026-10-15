@@ -2106,7 +2106,7 @@ export type ActivityListResponseDto = {
      */
     deletedBy?: UserMetaResponseDto;
     user: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'login' | 'login_failed' | 'view' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     by: UserShortResponseDto;
     metadata?: {
@@ -19814,6 +19814,82 @@ export type ChatbotControllerArchiveV1Responses = {
 };
 
 export type ChatbotControllerArchiveV1Response = ChatbotControllerArchiveV1Responses[keyof ChatbotControllerArchiveV1Responses];
+
+export type ChatbotControllerUnarchiveV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/shared/{workspace}/chatbots/{id}/unarchive';
+};
+
+export type ChatbotControllerUnarchiveV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotControllerUnarchiveV1Error = ChatbotControllerUnarchiveV1Errors[keyof ChatbotControllerUnarchiveV1Errors];
+
+export type ChatbotControllerUnarchiveV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotControllerUnarchiveV1Response = ChatbotControllerUnarchiveV1Responses[keyof ChatbotControllerUnarchiveV1Responses];
 
 export type ChatbotControllerLinkAccountV1Data = {
     body: ChatbotLinkAccountRequestDto;
