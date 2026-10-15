@@ -6,6 +6,7 @@ import {
 } from "@repo/agent-blueprint";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import { summarize } from "./answer-message";
 import { QuestionTurn } from "./question-turn";
 
 const renderQuestion = (profile: AgentProfile, id: string) => {
@@ -228,5 +229,69 @@ describe("QuestionTurn collect step", () => {
     renderCollect({ ...createProfile("ecommerce", "en"), customCollect: full });
     expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
     expect(screen.getByText("You can add up to 10 fields.")).toBeInTheDocument();
+  });
+});
+
+// #157: owners pick their own address style words, e.g. Shop / ba mẹ.
+describe("QuestionTurn address style step", () => {
+  beforeAll(() => i18n.changeLanguage("en"));
+
+  const renderAddress = (profile: AgentProfile) => {
+    const question = buildQuestionGroups(profile)
+      .flatMap((g) => g.questions)
+      .find((q) => q.id === "addressStyle")!;
+    const onAnswer = vi.fn();
+    render(
+      <QuestionTurn
+        question={question}
+        profile={profile}
+        suggestion={null}
+        position={{ current: 1, total: 20 }}
+        onAnswer={onAnswer}
+        onSkip={vi.fn()}
+        chatbotId={null}
+        linkedAccounts={[]}
+        onAccountsLinked={vi.fn()}
+        onAccountsUnlinked={vi.fn()}
+      />,
+    );
+    return onAnswer;
+  };
+
+  it("answers with the owner's own words when Other is picked", () => {
+    const onAnswer = renderAddress(createProfile("ecommerce", "vi"));
+    expect(screen.queryByRole("textbox", { name: "Agent calls itself" })).toBeNull();
+    fireEvent.click(screen.getByRole("radio", { name: "Other" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Agent calls itself" }), { target: { value: " Shop " } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Agent calls the customer" }), { target: { value: "ba mẹ" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onAnswer).toHaveBeenCalledWith({ self: "Shop", customer: "ba mẹ" });
+  });
+
+  it("waits for both words before answering", () => {
+    const onAnswer = renderAddress(createProfile("ecommerce", "vi"));
+    fireEvent.click(screen.getByRole("radio", { name: "Other" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Agent calls itself" }), { target: { value: "Shop" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onAnswer).not.toHaveBeenCalled();
+    expect(screen.getByText("Fill in both words.")).toBeInTheDocument();
+  });
+
+  it("reopens a saved custom style with its words filled in", () => {
+    const onAnswer = renderAddress({
+      ...createProfile("ecommerce", "vi"), addressStyle: "custom", customAddressStyle: { self: "Shop", customer: "ba mẹ" },
+    });
+    expect(screen.getByRole("radio", { name: "Other" })).toBeChecked();
+    expect(screen.getByRole("textbox", { name: "Agent calls the customer" })).toHaveValue("ba mẹ");
+    fireEvent.click(screen.getByRole("radio", { name: "Em / Anh Chị" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onAnswer).toHaveBeenCalledWith("em_anhchi");
+  });
+
+  it("summarizes a custom style as its two words", () => {
+    const question = buildQuestionGroups(createProfile("ecommerce", "vi"))
+      .flatMap((g) => g.questions)
+      .find((q) => q.id === "addressStyle")!;
+    expect(summarize(question, { self: "Shop", customer: "ba mẹ" }, i18n.t)).toBe("Shop / ba mẹ");
   });
 });

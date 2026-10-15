@@ -115,6 +115,12 @@ describe("compilePrompt", () => {
     expect(compilePrompt({ ...sample("beauty", "en"), addressStyle: "em_anhchi" })).not.toContain('"em"');
   });
 
+  it("uses the owner's own address style words in Vietnamese replies", () => {
+    const out = compilePrompt({ ...sample("beauty", "vi"), addressStyle: "custom", customAddressStyle: { self: "Shop", customer: "ba mẹ" } });
+    expect(out).toContain('refer to yourself as "Shop" and address them as "ba mẹ"');
+    expect(out).not.toContain('"anh"');
+  });
+
   it("numbers knowledge in detailed mode and bullets it in simple mode", () => {
     expect(compilePrompt(sample("healthcare"))).toMatch(/## Knowledge\n1\. /);
     expect(compilePrompt(sample("beauty"))).toMatch(/## Knowledge\n- /);

@@ -16,6 +16,12 @@ function plain(text: string): string {
   return text.replace(/^\s*#+\s*/gm, "").replace(/\s*\n+\s*/g, " ").trim();
 }
 
+function addressStyle(profile: AgentProfile): string {
+  const words = profile.customAddressStyle;
+  if (profile.addressStyle !== "custom" || !words) return promptOf(ADDRESS_STYLE, profile.addressStyle ?? "");
+  return `In every Vietnamese reply, including the first, refer to yourself as "${plain(words.self)}" and address them as "${plain(words.customer)}".`;
+}
+
 export function withArticle(text: string): string {
   return `${/^[aeiou]/i.test(text) ? "an" : "a"} ${text}`;
 }
@@ -138,7 +144,7 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
   const interaction = section("Interaction protocol", [
     `- ${promptOf(REPLY_LENGTH, profile.replyLength)}`,
     `- ${profile.emoji ? "Use an emoji now and then when it fits the mood." : "Do not use emoji."}`,
-    profile.primaryLanguage === "vi" && profile.addressStyle ? `- ${promptOf(ADDRESS_STYLE, profile.addressStyle)}` : "",
+    profile.primaryLanguage === "vi" && profile.addressStyle ? `- ${addressStyle(profile)}` : "",
     `- ${profile.followUpQuestions ? "End with a short question that helps the conversation move forward." : "Do not add follow-up questions unless you need information."}`,
     type.personal ? "" : `- Outside opening hours: ${afterHours}`,
   ]);
