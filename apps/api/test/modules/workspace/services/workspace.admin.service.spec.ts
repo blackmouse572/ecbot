@@ -1,3 +1,4 @@
+import { ENUM_WORKSPACE_STATUS } from 'src/modules/workspace/enums/workspace.enum';
 import { WorkspaceAdminService } from 'src/modules/workspace/services/workspace.admin.service';
 
 describe('WorkspaceAdminService', () => {
@@ -9,6 +10,7 @@ describe('WorkspaceAdminService', () => {
         owner,
         invitationCode: 'secret-code',
         tokenCreditBalance: 5000,
+        status: ENUM_WORKSPACE_STATUS.ACTIVE,
         createdAt: new Date('2026-10-01T00:00:00Z'),
         updatedAt: new Date('2026-10-02T00:00:00Z'),
     });
@@ -18,6 +20,7 @@ describe('WorkspaceAdminService', () => {
         getTotal: jest.fn(),
         findOne: jest.fn(),
         countMembersAndChatbots: jest.fn(),
+        save: jest.fn(),
     };
     const service = new WorkspaceAdminService(repository as any);
 
@@ -49,6 +52,7 @@ describe('WorkspaceAdminService', () => {
             memberCount: 3,
             chatbotCount: 2,
             tokenCreditBalance: 5000,
+            status: ENUM_WORKSPACE_STATUS.ACTIVE,
         });
         expect(rows[1]).toMatchObject({ memberCount: 0, chatbotCount: 0 });
         expect(rows[0]).not.toHaveProperty('invitationCode');
@@ -82,5 +86,17 @@ describe('WorkspaceAdminService', () => {
 
         repository.findOne.mockResolvedValueOnce(null);
         await expect(service.findOneById('nope')).resolves.toBeNull();
+    });
+
+    it('saves a new status', async () => {
+        const entity = { id: 'w1', status: ENUM_WORKSPACE_STATUS.ACTIVE };
+
+        await service.updateStatus(
+            entity as any,
+            ENUM_WORKSPACE_STATUS.SUSPENDED
+        );
+
+        expect(entity.status).toBe(ENUM_WORKSPACE_STATUS.SUSPENDED);
+        expect(repository.save).toHaveBeenCalledWith(entity);
     });
 });

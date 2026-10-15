@@ -1,16 +1,25 @@
 import { NotFoundException } from '@nestjs/common';
+import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
+import { ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { WorkspaceAdminController } from 'src/modules/workspace/controllers/workspace.admin.controller';
+import { ENUM_WORKSPACE_STATUS } from 'src/modules/workspace/enums/workspace.enum';
 
 describe('WorkspaceAdminController', () => {
     const workspaceAdminService = {
         findAll: jest.fn(),
         getTotal: jest.fn(),
         findOneById: jest.fn(),
+        findEntityById: jest.fn(),
+        updateStatus: jest.fn(),
     };
+    const activityService = { createByAdminWithWorkspace: jest.fn() };
+    const em = { transactional: jest.fn(async (work: () => any) => work()) };
     const paginationService = { totalPage: jest.fn().mockReturnValue(3) };
     const controller = new WorkspaceAdminController(
         workspaceAdminService as any,
-        paginationService as any
+        paginationService as any,
+        activityService as any,
+        em as any
     );
 
     beforeEach(() => jest.clearAllMocks());
@@ -54,5 +63,71 @@ describe('WorkspaceAdminController', () => {
         await expect(controller.get('nope')).rejects.toBeInstanceOf(
             NotFoundException
         );
+    });
+
+    describe('updateStatus', () => {
+        const owner = { id: 'owner-1' };
+        const admin = { user: 'admin-1' } as any;
+
+        it('suspends a workspace and logs it on the owner', async () => {
+            const workspace = {
+                id: 'w1',
+                owner,
+                status: ENUM_WORKSPACE_STATUS.ACTIVE,
+            };
+            workspaceAdminService.findEntityById.mockResolvedValue(workspace);
+
+            await controller.updateStatus(
+                'w1',
+                { status: ENUM_WORKSPACE_STATUS.SUSPENDED },
+                admin
+            );
+
+            expect(workspaceAdminService.updateStatus).toHaveBeenCalledWith(
+                workspace,
+                ENUM_WORKSPACE_STATUS.SUSPENDED
+            );
+            expect(
+                activityService.createByAdminWithWorkspace
+            ).toHaveBeenCalledWith(owner, 'admin-1', workspace, {
+                action: ENUM_ACTIVITY_ACTION.UPDATE,
+                subject: ENUM_POLICY_SUBJECT.WORKSPACE,
+                metadata: {
+                    old: { status: ENUM_WORKSPACE_STATUS.ACTIVE },
+                    new: { status: ENUM_WORKSPACE_STATUS.SUSPENDED },
+                },
+            });
+        });
+
+        it('does nothing when the status is already set', async () => {
+            workspaceAdminService.findEntityById.mockResolvedValue({
+                id: 'w1',
+                owner,
+                status: ENUM_WORKSPACE_STATUS.SUSPENDED,
+            });
+
+            await controller.updateStatus(
+                'w1',
+                { status: ENUM_WORKSPACE_STATUS.SUSPENDED },
+                admin
+            );
+
+            expect(workspaceAdminService.updateStatus).not.toHaveBeenCalled();
+            expect(
+                activityService.createByAdminWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
+
+        it('answers 404 for an unknown workspace', async () => {
+            workspaceAdminService.findEntityById.mockResolvedValue(null);
+
+            await expect(
+                controller.updateStatus(
+                    'nope',
+                    { status: ENUM_WORKSPACE_STATUS.SUSPENDED },
+                    admin
+                )
+            ).rejects.toBeInstanceOf(NotFoundException);
+        });
     });
 });

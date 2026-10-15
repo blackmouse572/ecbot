@@ -4,6 +4,7 @@
     "delete": "Không gian làm việc đã biến mất khỏi vũ trụ số thành công.",
     "details": "Chi tiết không gian làm việc đã được lấy thành công.",
     "list": "Danh sách không gian làm việc đã được lấy thành công.",
+    "updateStatus": "Trạng thái không gian làm việc đã được cập nhật.",
     "error": {
         "notFound": "Ôi không! Không tìm thấy không gian làm việc nào cả.",
         "nameExist": "Tên này đã có chủ rồi! Hãy nghĩ ra cái tên độc đáo hơn nhé.",
@@ -16,7 +17,8 @@
         "exist": "Người dùng này đã là chủ sở hữu của một không gian khác rồi.",
         "missingWorkspaceId": "Thiếu thông tin user hoặc workspaceId trong request.",
         "invalidInvitationCode": "Mã mời không hợp lệ. Có thể đã hết hạn hoặc sai rồi.",
-        "invalidSlug": "Đường dẫn không gian làm việc chỉ được dùng chữ thường, số và dấu gạch ngang."
+        "invalidSlug": "Đường dẫn không gian làm việc chỉ được dùng chữ thường, số và dấu gạch ngang.",
+        "suspended": "Không gian làm việc này đã bị tạm khoá. Vui lòng liên hệ bộ phận hỗ trợ để mở lại."
     },
     "owner": {
         "inviteMember": {

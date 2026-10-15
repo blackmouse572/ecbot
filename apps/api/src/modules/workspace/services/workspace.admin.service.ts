@@ -1,6 +1,7 @@
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { ENUM_WORKSPACE_STATUS } from '../enums/workspace.enum';
 import { WorkspaceAdminResponseDto } from '../dtos/response/workspace.admin.response.dto';
 import { WorkspaceEntity } from '../repository/entities/workspace.entity';
 import { WorkSpaceRepository } from '../repository/repositories/workspace.repository';
@@ -26,14 +27,25 @@ export class WorkspaceAdminService {
     }
 
     async findOneById(id: string): Promise<WorkspaceAdminResponseDto | null> {
-        const workspace =
-            await this.workspaceRepository.findOne<WorkspaceEntity>(
-                { id, deleted: false },
-                { populate: ['owner'] }
-            );
+        const workspace = await this.findEntityById(id);
         if (!workspace) return null;
         const [mapped] = await this.map([workspace]);
         return mapped;
+    }
+
+    findEntityById(id: string): Promise<WorkspaceEntity | null> {
+        return this.workspaceRepository.findOne<WorkspaceEntity>(
+            { id, deleted: false },
+            { populate: ['owner'] }
+        );
+    }
+
+    async updateStatus(
+        workspace: WorkspaceEntity,
+        status: ENUM_WORKSPACE_STATUS
+    ): Promise<void> {
+        workspace.status = status;
+        await this.workspaceRepository.save(workspace);
     }
 
     private async map(
@@ -50,6 +62,7 @@ export class WorkspaceAdminService {
                 slug: workspace.slug,
                 owner: workspace.owner,
                 tokenCreditBalance: workspace.tokenCreditBalance,
+                status: workspace.status,
                 createdAt: workspace.createdAt,
                 updatedAt: workspace.updatedAt,
                 memberCount: counts.get(workspace.id)?.memberCount ?? 0,

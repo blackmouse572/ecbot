@@ -8,6 +8,8 @@ import {
 } from '@app/common/doc/decorators/doc.decorator';
 import { applyDecorators } from '@nestjs/common';
 import { WorkspaceAdminDocParamsId } from '../constants/workspace.doc.constant';
+import { ENUM_DOC_REQUEST_BODY_TYPE } from '@app/common/doc/enums/doc.enum';
+import { WorkspaceUpdateStatusRequestDto } from '../dtos/request/workspace.update-status.request.dto';
 import { WorkspaceAdminResponseDto } from '../dtos/response/workspace.admin.response.dto';
 
 export function WorkspaceAdminListDoc(): MethodDecorator {
@@ -31,5 +33,22 @@ export function WorkspaceAdminGetDoc(): MethodDecorator {
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
         DocGuard({ policy: true }),
         DocResponse('workspace.details', { dto: WorkspaceAdminResponseDto })
+    );
+}
+
+export function WorkspaceAdminUpdateStatusDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                'suspend or reactivate a workspace; suspended ones are locked for members and their agents stop answering',
+        }),
+        DocRequest({
+            params: [...WorkspaceAdminDocParamsId],
+            dto: WorkspaceUpdateStatusRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ policy: true }),
+        DocResponse('workspace.updateStatus')
     );
 }

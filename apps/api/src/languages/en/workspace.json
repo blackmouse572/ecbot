@@ -4,6 +4,7 @@
     "delete": "Workspace deleted successfully.",
     "details": "Workspace details retrieved successfully.",
     "list": "Workspaces retrieved successfully.",
+    "updateStatus": "Workspace status updated successfully.",
     "error": {
         "notFound": "Workspace not found.",
         "nameExist": "Workspace name already exists.",
@@ -16,7 +17,8 @@
         "exist": "This user is already an owner of a workspace.",
         "missingWorkspaceId": "User or workspaceId is missing in the request param",
         "invalidInvitationCode": "Invalid invitation code.",
-        "invalidSlug": "Use only lowercase letters, numbers and hyphens in the workspace URL."
+        "invalidSlug": "Use only lowercase letters, numbers and hyphens in the workspace URL.",
+        "suspended": "This workspace has been suspended. Contact support to restore access."
     },
     "owner": {
         "inviteMember": {
