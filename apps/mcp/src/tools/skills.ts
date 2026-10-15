@@ -30,7 +30,11 @@ import {
 const steps = z
   .array(z.record(z.string(), z.unknown()))
   .describe(
-    "For format STEPS: the steps in order. Each has a unique id and a type: ask {text}, say {text: exact words}, tell {text}, tool {toolId, action? (MCP tools), text?: how to use it}, if {branches: [{id, condition, steps}], otherwise?: steps}. Tools must be workspace tools.",
+    [
+      "For format STEPS: the steps in order. Each has a unique id and a type: ask {text}, say {text: exact words}, tell {text}, tool {toolId, action?, text?: how to use it}, if {branches: [{id, condition, steps}], otherwise?: steps}. Ifs nest at most 3 deep.",
+      "A tool step's toolId is a workspace tool id (list_workspace_tools; MCP tools also need action, one of its discovered actions) or a built-in action every chatbot has:",
+      "system:handoff (hand the chat to staff), system:notify_team (alert staff, keep helping), system:add_tag and system:remove_tag (action: the customer tag name, see list_customer_tags), system:schedule_followup (follow up later), system:save_customer_field (action: the field name to save).",
+    ].join(" "),
   );
 const guardrails = z
   .array(z.string().max(500))

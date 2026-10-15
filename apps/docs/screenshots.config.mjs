@@ -155,6 +155,44 @@ export const shots = [
     ],
   },
   {
+    name: "skill-tool-picker",
+    path: "/:ws/skills/create",
+    setup: async (page) => {
+      // Demo data: an MCP tool next to the workspace's HTTP tools.
+      const mcp = {
+        id: "00000000-0000-4000-8000-000000000001",
+        kind: "MCP",
+        name: "google-calendar",
+        slug: "google-calendar",
+        displayName: "Google Calendar",
+        status: "ACTIVE",
+      };
+      await page.route(/\/tool\?/, async (route) => {
+        const response = await route.fetch();
+        const json = await response.json();
+        json.data = [...(json.data ?? []), mcp];
+        await route.fulfill({ response, json });
+      });
+      const template = page.getByRole("button", { name: /^(Talk to a person|Gặp nhân viên)$/ });
+      await template.waitFor();
+      await template.click();
+      await page.getByRole("button", { name: /^(Add step|Thêm bước)$/ }).last().click();
+      await page.getByRole("menuitem").filter({ hasText: /Tool|Công cụ/ }).click();
+      const picker = page.getByRole("combobox").last();
+      // Near the top, so the list opens below the picker.
+      await picker.evaluate((el) => el.scrollIntoView({ block: "start" }));
+      await picker.click();
+      const calendar = page.getByRole("option", { name: /Google Calendar/ });
+      await calendar.waitFor();
+      // Built-in actions come first: scroll the list to the workspace's tools.
+      await calendar.evaluate((el) => el.scrollIntoView({ block: "end" }));
+    },
+    marks: [
+      { id: "search", target: "role=combobox >> nth=-1", up: 1, pad: 2 },
+      { id: "tools", target: "role=option[name=/HTTP/] >> nth=0", to: "role=option[name=/Google Calendar/]", pad: 2 },
+    ],
+  },
+  {
     name: "usage",
     path: "/:ws/usage",
     setup: async (page) => {

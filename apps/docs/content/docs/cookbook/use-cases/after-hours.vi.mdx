@@ -1,0 +1,31 @@
+---
+title: Gặp nhân viên ngoài giờ
+description: Công thức kỹ năng chuyển cho nhân viên trong giờ làm việc, còn ngoài giờ thì báo giờ mở cửa và hẹn nhắn lại cho khách.
+faq:
+  - q: Làm sao agent biết giờ làm việc?
+    a: Từ cài đặt và kiến thức của agent. Hãy ghi giờ làm việc ở đó để agent kiểm tra được điều kiện Nếu.
+  - q: Agent có ngừng trả lời sau khi chuyển không?
+    a: Có. Agent tạm dừng trong cuộc trò chuyện đó cho đến khi nhân viên đánh dấu đã xử lý.
+  - q: Sao phải hỏi tóm tắt trước?
+    a: Để nhân viên hỗ trợ được ngay mà không phải hỏi khách nhắc lại.
+---
+
+Công thức này xử lý câu "cho tôi gặp nhân viên" vào bất kỳ giờ nào. Chỉ dùng thao tác có sẵn, nên chạy được ở mọi workspace.
+
+**Khi nào dùng**: khách muốn nói chuyện với người thật.
+
+## Các bước
+
+1. **Hỏi**: tóm tắt ngắn khách cần gì, để nhân viên không phải hỏi lại.
+2. **Nếu** đang ngoài giờ làm việc:
+   1. **Dặn**: giờ làm việc, và đội ngũ sẽ trả lời khi mở cửa.
+   2. **Công cụ**: Hẹn nhắn lại.
+3. **Nếu không**:
+   1. **Công cụ**: Chuyển cho nhân viên.
+   2. **Dặn**: sẽ có nhân viên tiếp nhận ngay.
+
+Quy tắc: "Không bao giờ giả vờ là người thật."
+
+## Nhờ trợ lý tạo
+
+> Tạo kỹ năng "Gặp nhân viên" cho khi khách muốn gặp người thật. Hỏi tóm tắt ngắn. Nếu đang ngoài giờ, báo giờ làm việc và hẹn nhắn lại. Nếu không, chuyển cho nhân viên và báo khách sẽ có người tiếp nhận.
