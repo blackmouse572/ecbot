@@ -52,7 +52,7 @@ export const Providers = ({ children }: ProvidersProps) => {
               <HelmetProvider>
                 <ThemeProvider>
                   <ClientProvider>{children}</ClientProvider>
-                  <Toaster />
+                  <Toaster offset={{ top: 48, right: 12 }} />
                 </ThemeProvider>
               </HelmetProvider>
             </TooltipProvider>
