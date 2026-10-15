@@ -436,6 +436,9 @@ describe("MessageBubble inbound message kinds", () => {
     const quote = screen.getByRole("link", { name: /Hộp tulip 500k/ });
     expect(quote).toHaveAttribute("href", "#msg-m-9");
     expect(quote).toHaveTextContent("conversations.quote.yours");
+    expect(quote.compareDocumentPosition(screen.getByText("lấy cái này"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
   });
 
   it("shows the story a reply answers", () => {
@@ -445,9 +448,23 @@ describe("MessageBubble inbound message kinds", () => {
       attachments: [{ type: "story", url: "https://s3/story.jpg" }],
     });
 
+    const story = screen.getByRole("img", {
+      name: "conversations.attachment.storyReply",
+    });
+    expect(story).toHaveAttribute("src", "https://s3/story.jpg");
+    expect(story.compareDocumentPosition(screen.getByText("giá sao ạ"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it("links the map a shared location points to", () => {
+    renderInbound({
+      attachments: [{ type: "location", url: "https://maps/q=1" }],
+    });
+
     expect(
-      screen.getByRole("img", { name: "conversations.attachment.storyReply" }),
-    ).toHaveAttribute("src", "https://s3/story.jpg");
+      screen.getByRole("link", { name: "conversations.attachment.location" }),
+    ).toHaveAttribute("href", "https://maps/q=1");
   });
 
   it("plays voice and video, and links files and shared posts", () => {

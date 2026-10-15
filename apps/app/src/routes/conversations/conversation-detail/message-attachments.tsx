@@ -161,6 +161,7 @@ export const MessageAttachments: FC<Props> = ({
             key={key}
             icon={<MapPin />}
             label={t("conversations.attachment.location")}
+            url={a.url}
           />
         );
       default:
