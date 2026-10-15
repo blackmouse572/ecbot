@@ -177,7 +177,9 @@
         "empty": "You're all caught up",
         "markAllAsRead": "Mark all as read",
         "emptyHint": "New updates from your workspaces show up here, like a customer who needs a person or a new join request.",
-        "unreadLabel": "Notifications, {{count}} unread"
+        "unreadLabel": "Notifications, {{count}} unread",
+        "newMany": "{{count}} new notifications",
+        "view": "View"
       },
       "actions": {
         "logout": "Log Out"
@@ -2509,6 +2511,8 @@
     }
   },
   "knowledge_item": {
+    "processingDone": "Knowledge is ready",
+    "processingFailed": "Could not process this knowledge item",
     "ingestErrors": {
       "urlNotPublic": "This page is not public. Use a link anyone can open on the internet, not localhost or a private network address.",
       "urlFetchFailed": "Could not read this page. Check that the link opens in a browser without signing in, then process it again.",

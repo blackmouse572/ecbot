@@ -16,9 +16,11 @@ import { useNotificationSound } from "@/modules/sound";
 
 import { NOTIFICATION_PAGE_SIZE } from "./constants";
 import { isHandoffNotification } from "./is-handoff-notification";
+import { NotificationBellFlash } from "./notification-bell-flash";
 import { NotificationEmptyState } from "./notification-empty-state";
 import { NotificationRow } from "./notification-row";
 import { NotificationRowSkeleton } from "./notification-row-skeleton";
+import { useNewNotificationToast } from "./use-new-notification-toast";
 import { useScrollEdges } from "./use-scroll-edges";
 
 export const NotificationMenu: FC = () => {
@@ -42,6 +44,12 @@ export const NotificationMenu: FC = () => {
   const isOpen = useRef(false);
 
   useNotificationSound(isFetched && isLeader ? count : undefined);
+  const { flashKey } = useNewNotificationToast({
+    notifications,
+    count,
+    enabled: isFetched && isLeader && !isLoading,
+    refetch,
+  });
 
   // Seeing a row counts as reading it: mark it read so the bell clears, but
   // keep it highlighted until the menu closes. A customer waiting for a
@@ -93,6 +101,7 @@ export const NotificationMenu: FC = () => {
           }
         >
           <BellAlert className="text-ui-fg-muted" />
+          <NotificationBellFlash flashKey={flashKey} />
           {count > 0 && (
             <span className="bg-ui-tag-red-icon text-ui-fg-on-color absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium leading-none tabular-nums">
               {count > 9 ? "9+" : count}
