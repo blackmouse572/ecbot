@@ -19,14 +19,17 @@ import { Link } from "react-router-dom";
 import { withOriginAgent } from "@/utils/origin-agent";
 import {
   useBatchLinkKnowledgeItemsToChatbot,
-  useFetchAllKnowledgeItemIds,
   useKnowledgeBases,
   useKnowledgeItems,
 } from "@/hooks/api/knowledge-base";
 import { useKnowledgeTags } from "@/hooks/api/knowledge-tag";
 import { useBatchResultToast } from "@/hooks/use-batch-result-toast";
-import type { KnowledgeItemResponseDto } from "@repo/client";
+import type {
+  KnowledgeItemFilterRequestDto,
+  KnowledgeItemResponseDto,
+} from "@repo/client";
 import {
+  KB_BATCH_FILTER_MAX,
   KB_STATUS_CONFIG,
   KB_TYPE_CONFIG,
 } from "../../../../knowledge-base/constants";
@@ -66,7 +69,11 @@ export function ChatbotRAGSectionAddDrawer({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
-  const [isSelectingAll, setIsSelectingAll] = useState(false);
+  // Set by "Select all matching": the filters to link, whatever the page.
+  const [allMatching, setAllMatching] = useState<{
+    filter: KnowledgeItemFilterRequestDto;
+    count: number;
+  } | null>(null);
 
   const { knowledgeBases } = useKnowledgeBases();
   const knowledgeBaseId = knowledgeBases?.[0]?.id;
@@ -90,12 +97,22 @@ export function ChatbotRAGSectionAddDrawer({
     [search, statusParam, tagsParam, typeParam],
   );
 
+  // The same filters as a request body, for "select all matching".
+  const filterBody = useMemo(
+    (): KnowledgeItemFilterRequestDto => ({
+      search: search || undefined,
+      type: filtering.type as KnowledgeItemFilterRequestDto["type"],
+      status: filtering.status as KnowledgeItemFilterRequestDto["status"],
+      tags: filtering.tags as string[] | undefined,
+    }),
+    [search, filtering],
+  );
+
   const { items, count, isLoading } = useKnowledgeItems(
     knowledgeBaseId || "",
     { ...filters, perPage: PAGE_SIZE, page: pagination.pageIndex + 1 },
     { enabled: !!knowledgeBaseId },
   );
-  const fetchAllIds = useFetchAllKnowledgeItemIds(knowledgeBaseId || "");
   const linkMutation = useBatchLinkKnowledgeItemsToChatbot(chatbotId);
 
   const linked = useMemo(() => new Set(linkedItemIds), [linkedItemIds]);
@@ -164,8 +181,17 @@ export function ChatbotRAGSectionAddDrawer({
     [t, tags],
   );
 
-  const selectedIds = Object.keys(rowSelection).filter(
-    (id) => rowSelection[id],
+  const pickedIds = Object.keys(rowSelection).filter((id) => rowSelection[id]);
+  const selectedCount = allMatching
+    ? Math.min(allMatching.count, KB_BATCH_FILTER_MAX)
+    : pickedIds.length;
+  // With everything selected, every row shows as checked on every page.
+  const shownSelection = useMemo(
+    () =>
+      allMatching
+        ? Object.fromEntries(visibleItems.map((item) => [item.id, true]))
+        : rowSelection,
+    [allMatching, visibleItems, rowSelection],
   );
 
   const table = useDataTable({
@@ -179,6 +205,7 @@ export function ChatbotRAGSectionAddDrawer({
       state: filtering,
       onFilteringChange: (state) => {
         setFiltering(state);
+        setAllMatching(null);
         setPagination((p) => ({ ...p, pageIndex: 0 }));
       },
     },
@@ -186,40 +213,34 @@ export function ChatbotRAGSectionAddDrawer({
       state: search,
       onSearchChange: (value) => {
         setSearch(value);
+        setAllMatching(null);
         setPagination((p) => ({ ...p, pageIndex: 0 }));
       },
     },
     pagination: { state: pagination, onPaginationChange: setPagination },
     rowSelection: {
-      state: rowSelection,
-      onRowSelectionChange: setRowSelection,
+      state: shownSelection,
+      onRowSelectionChange: (state) => {
+        setAllMatching(null);
+        setRowSelection(state);
+      },
     },
   });
 
-  const handleSelectAllMatching = async () => {
-    setIsSelectingAll(true);
-    try {
-      const { ids, truncated } = await fetchAllIds(filters);
-      if (truncated) {
-        toast.warning(
-          t("knowledgeBase.link.selectionTruncated", { count: ids.length }),
-        );
-      }
-      setRowSelection((prev) => ({
-        ...prev,
-        ...Object.fromEntries(
-          ids.filter((id) => !linked.has(id)).map((id) => [id, true]),
-        ),
-      }));
-    } catch {
-      toast.error(t("general.loadFailed"));
-    } finally {
-      setIsSelectingAll(false);
+  const handleSelectAllMatching = () => {
+    if (count > KB_BATCH_FILTER_MAX) {
+      toast.warning(
+        t("knowledgeBase.link.selectionTruncated", {
+          count: KB_BATCH_FILTER_MAX,
+        }),
+      );
     }
+    setAllMatching({ filter: filterBody, count });
   };
 
   const handleClose = () => {
     setRowSelection({});
+    setAllMatching(null);
     setSearch("");
     setFiltering({});
     setPagination({ pageIndex: 0, pageSize: PAGE_SIZE });
@@ -227,13 +248,17 @@ export function ChatbotRAGSectionAddDrawer({
   };
 
   const handleAdd = async () => {
-    if (selectedIds.length === 0) {
+    if (selectedCount === 0) {
       toast.error(t("knowledgeBase.error.selectItem", "Please select an item"));
       return;
     }
 
     try {
-      const result = await linkMutation.mutateAsync(selectedIds);
+      const result = await linkMutation.mutateAsync(
+        allMatching && knowledgeBaseId
+          ? { knowledgeBaseId, filter: allMatching.filter }
+          : pickedIds,
+      );
       notifyBatchResult(result);
       handleClose();
     } catch {
@@ -269,15 +294,14 @@ export function ChatbotRAGSectionAddDrawer({
               <div className="flex w-full items-center justify-between gap-2">
                 <Text size="small" className="text-ui-fg-subtle">
                   {t("knowledgeBase.link.selected", {
-                    count: selectedIds.length,
+                    count: selectedCount,
                   })}
                 </Text>
                 <Button
                   size="small"
                   variant="secondary"
                   onClick={handleSelectAllMatching}
-                  isLoading={isSelectingAll}
-                  disabled={count === 0}
+                  disabled={count === 0 || !!allMatching}
                 >
                   {t("knowledgeBase.link.selectAllMatching")}
                 </Button>
@@ -316,11 +340,11 @@ export function ChatbotRAGSectionAddDrawer({
             <Button
               onClick={handleAdd}
               isLoading={linkMutation.isPending}
-              disabled={selectedIds.length === 0}
+              disabled={selectedCount === 0}
             >
-              {selectedIds.length > 0
+              {selectedCount > 0
                 ? t("knowledgeBase.link.addCount", {
-                    count: selectedIds.length,
+                    count: selectedCount,
                   })
                 : t("actions.add")}
             </Button>

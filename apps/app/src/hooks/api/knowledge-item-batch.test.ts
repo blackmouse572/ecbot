@@ -6,14 +6,12 @@ import { describe, expect, it, vi } from "vitest";
 const sdk = vi.hoisted(() => ({
   tag: vi.fn(),
   link: vi.fn(),
-  list: vi.fn(),
 }));
 
 vi.mock("@repo/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@repo/client")>()),
   knowledgeItemWorkspaceControllerBatchTagV1: sdk.tag,
   chatbotKnowledgeItemWorkspaceControllerBatchLinkV1: sdk.link,
-  knowledgeItemWorkspaceControllerListV1: sdk.list,
 }));
 
 vi.mock("./workspace", () => ({
@@ -22,7 +20,6 @@ vi.mock("./workspace", () => ({
 
 import {
   useBatchLinkKnowledgeItemsToChatbot,
-  useFetchAllKnowledgeItemIds,
   useBatchTagKnowledgeItems,
 } from "./knowledge-base";
 
@@ -74,54 +71,21 @@ describe("batch knowledge item hooks", () => {
     expect(sdk.link.mock.calls[0][0].path.chatbotId).toBe("bot-1");
   });
 
-  // The list endpoint clamps page to 20, so page 21 repeats page 20 forever.
-  it("stops select-all at 20 pages and reports the truncation", async () => {
-    sdk.list.mockImplementation(async () => ({
-      data: {
-        data: Array.from({ length: 100 }, (_, i) => ({ id: `id-${i}` })),
-        _metadata: { pagination: { total: 5000 } },
-      },
-    }));
-    const { result } = renderHook(() => useFetchAllKnowledgeItemIds("kb-1"), {
-      wrapper,
+  it("sends a filter as is, in a single request", async () => {
+    sdk.link.mockReset().mockResolvedValue({
+      data: { data: { succeeded: ids, failed: [], truncated: false } },
     });
+    const { result } = renderHook(
+      () => useBatchLinkKnowledgeItemsToChatbot("bot-1"),
+      { wrapper },
+    );
+    const target = { knowledgeBaseId: "kb-1", filter: { tags: ["menu"] } };
 
-    const { ids, truncated } = await result.current({});
+    result.current.mutate(target);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(sdk.list).toHaveBeenCalledTimes(20);
-    expect(ids).toHaveLength(2000);
-    expect(truncated).toBe(true);
-  });
-
-  it("loads only the pages that exist, in parallel after the first", async () => {
-    sdk.list.mockReset();
-    let inFlight = 0;
-    let peak = 0;
-    sdk.list.mockImplementation(async ({ query }) => {
-      inFlight += 1;
-      peak = Math.max(peak, inFlight);
-      await new Promise((resolve) => setTimeout(resolve, 5));
-      inFlight -= 1;
-      const start = (query.page - 1) * 100;
-      return {
-        data: {
-          data: Array.from({ length: Math.min(100, 250 - start) }, (_, i) => ({
-            id: `id-${start + i}`,
-          })),
-          _metadata: { pagination: { total: 250 } },
-        },
-      };
-    });
-    const { result } = renderHook(() => useFetchAllKnowledgeItemIds("kb-1"), {
-      wrapper,
-    });
-
-    const { ids, truncated } = await result.current({});
-
-    expect(sdk.list).toHaveBeenCalledTimes(3);
-    expect(ids).toHaveLength(250);
-    expect(ids[249]).toBe("id-249");
-    expect(truncated).toBe(false);
-    expect(peak).toBeGreaterThan(1);
+    expect(sdk.link).toHaveBeenCalledTimes(1);
+    expect(sdk.link.mock.calls[0][0].body).toEqual(target);
+    expect(result.current.data?.succeeded).toHaveLength(230);
   });
 });

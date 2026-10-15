@@ -11,6 +11,8 @@ import {
   chatbotKnowledgeItemWorkspaceControllerUnlinkV1,
   type KnowledgeBaseResponseDto,
   type KnowledgeItemResponseDto,
+  type KnowledgeItemFilterRequestDto,
+  type ChatbotKnowledgeItemBatchLinkRequestDto,
   type KnowledgeBaseWorkspaceControllerGetV1Response,
   type KnowledgeBaseWorkspaceControllerListV1Response,
   type KnowledgeItemWorkspaceControllerUpdateV1Response,
@@ -293,98 +295,37 @@ export const useBatchTagKnowledgeItems = (knowledgebaseId: string) => {
   });
 };
 
-/** Links many knowledge items to one agent in as few requests as possible. */
+/** Which items to link: listed ids, or everything matching a filter. */
+export type KnowledgeItemLinkTarget =
+  string[] | { knowledgeBaseId: string; filter: KnowledgeItemFilterRequestDto };
+
+/**
+ * Links many knowledge items to one agent. A filter is sent as is, so the API
+ * finds and links every match in one request; ids go in chunks of 100.
+ */
 export const useBatchLinkKnowledgeItemsToChatbot = (chatbotId: string) => {
   const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
 
-  return useMutation<BatchResult, Error, string[]>({
+  return useMutation<BatchResult, Error, KnowledgeItemLinkTarget>({
     mutationKey: ["batch-link-knowledge-items", chatbotId] as const,
-    mutationFn: (ids) =>
-      runChunked(ids, (chunk) =>
+    mutationFn: (target) => {
+      const request = (body: ChatbotKnowledgeItemBatchLinkRequestDto) =>
         chatbotKnowledgeItemWorkspaceControllerBatchLinkV1({
           path: { workspace: workspace!.slug, chatbotId },
-          body: { ids: chunk },
-        }).then((res) => (res.data as A)?.data as BatchResult),
-      ),
+          body,
+        }).then((res) => (res.data as A)?.data as BatchResult);
+
+      return Array.isArray(target)
+        ? runChunked(target, (ids) => request({ ids }))
+        : request(target);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: chatbotKnowledgeItemQueryKeys.lists(),
       });
     },
   });
-};
-
-// The list endpoint serves at most 20 pages (PAGINATION_DEFAULT_MAX_PAGE).
-const MAX_LIST_PAGES = 20;
-const LIST_CONCURRENCY = 4;
-
-/** Runs `fn` over `items` with at most `limit` in flight, keeping order. */
-const mapWithConcurrency = async <T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> => {
-  const results = new Array<R>(items.length);
-  let next = 0;
-  const worker = async () => {
-    while (next < items.length) {
-      const index = next++;
-      results[index] = await fn(items[index]);
-    }
-  };
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, worker),
-  );
-  return results;
-};
-
-/**
- * Ids of the items matching `filters` (search, tags) across pages, for
- * "select all matching". Reads the list endpoint at its max page size, so it
- * stops at 2000 items; `truncated` says more matched than were returned.
- */
-export const useFetchAllKnowledgeItemIds = (knowledgeBaseId: string) => {
-  const { workspace } = useWorkspace();
-  const queryClient = useQueryClient();
-
-  return async (
-    filters: Record<string, A>,
-  ): Promise<{ ids: string[]; truncated: boolean }> => {
-    const fetchPage = async (page: number) => {
-      const res = await queryClient.fetchQuery({
-        ...knowledgeItemListQueryOptions(workspace!.slug, knowledgeBaseId, {
-          ...filters,
-          perPage: BATCH_MAX_IDS,
-          page,
-        }),
-        staleTime: 0,
-      });
-      return {
-        ids: ((res?.data ?? []) as KnowledgeItemResponseDto[]).map(
-          (item) => item.id,
-        ),
-        total: res?._metadata?.pagination?.total ?? 0,
-      };
-    };
-
-    // The first page tells how many more there are, so the rest load in
-    // parallel instead of one round trip after another.
-    const first = await fetchPage(1);
-    const pages = Math.min(
-      Math.ceil(first.total / BATCH_MAX_IDS),
-      MAX_LIST_PAGES,
-    );
-    const rest = await mapWithConcurrency(
-      Array.from({ length: Math.max(pages - 1, 0) }, (_, i) => i + 2),
-      LIST_CONCURRENCY,
-      fetchPage,
-    );
-    return {
-      ids: [first, ...rest].flatMap((page) => page.ids),
-      truncated: first.total > MAX_LIST_PAGES * BATCH_MAX_IDS,
-    };
-  };
 };
 
 export const useDeleteKnowledgeItem = (knowledgebaseId: string) => {

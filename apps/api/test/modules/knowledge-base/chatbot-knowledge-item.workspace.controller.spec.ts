@@ -114,15 +114,22 @@ describe('ChatbotKnowledgeItemWorkspaceController.batchLink', () => {
                 findOne: jest.fn(async ({ id }: { id: string }) => items[id]),
             })),
         };
+        // Stands in for the real filter lookup: a filter matches a, b and c.
+        const knowledgeItemService = {
+            resolveBatchTarget: jest.fn(async (_w: string, t: any) => ({
+                ids: t.ids ?? ['a', 'b', 'c'],
+                truncated: !t.ids && t.filter.search === 'many',
+            })),
+        };
         const controller = new ChatbotKnowledgeItemWorkspaceController(
             { fork: () => session } as any,
             chatbotService as any,
-            {} as any,
+            knowledgeItemService as any,
             service as any,
             {} as any,
             { createByUser: jest.fn() } as any
         );
-        return { controller, service, chatbotService };
+        return { controller, service, chatbotService, knowledgeItemService };
     };
 
     it('links each item once and reports foreign items as failed', async () => {
@@ -158,8 +165,43 @@ describe('ChatbotKnowledgeItemWorkspaceController.batchLink', () => {
             { ids: ['a'] }
         );
 
-        expect(data).toEqual({ succeeded: ['a'], failed: [] });
+        expect(data).toEqual({
+            succeeded: ['a'],
+            failed: [],
+            truncated: false,
+        });
         expect(service.syncChatbotLinks).not.toHaveBeenCalled();
+    });
+
+    it('links every item a filter matches in one request and reports truncation', async () => {
+        const item = (id: string) => ({
+            id,
+            knowledgeBase: { workspace: { id: 'workspace-1' } },
+        });
+        const { controller, service, knowledgeItemService } = build({
+            a: item('a'),
+            b: item('b'),
+            c: item('c'),
+        });
+        const body = {
+            knowledgeBaseId: 'kb-1',
+            filter: { search: 'many', tags: ['menu'] },
+        };
+
+        const { data } = await controller.batchLink(
+            user,
+            workspace,
+            'chatbot-1',
+            body
+        );
+
+        expect(knowledgeItemService.resolveBatchTarget).toHaveBeenCalledWith(
+            'workspace-1',
+            body
+        );
+        expect(data.succeeded).toEqual(['a', 'b', 'c']);
+        expect(data.truncated).toBe(true);
+        expect(service.linkItem).toHaveBeenCalledTimes(3);
     });
 
     it('404s when the chatbot is not in the workspace', async () => {

@@ -20,7 +20,6 @@ const kb = vi.hoisted(() => ({
   bases: [] as { id: string }[],
   items: [] as { id: string; title: string; type: string; tags: string[] }[],
   link: vi.fn(),
-  fetchAllIds: vi.fn(),
 }));
 
 vi.mock("@/hooks/use-workspace-params", () => ({
@@ -34,7 +33,6 @@ vi.mock("@/hooks/api/knowledge-base", () => ({
     count: kb.items.length,
     isLoading: false,
   }),
-  useFetchAllKnowledgeItemIds: () => kb.fetchAllIds,
   useBatchLinkKnowledgeItemsToChatbot: () => ({
     mutateAsync: kb.link,
     isPending: false,
@@ -123,9 +121,6 @@ describe("ChatbotRAGSectionAddDrawer multi-select", () => {
     kb.link
       .mockReset()
       .mockResolvedValue({ succeeded: ["a", "b"], failed: [] });
-    kb.fetchAllIds
-      .mockReset()
-      .mockResolvedValue({ ids: ["a", "b", "c", "z"], truncated: false });
   });
 
   it("hides linked items and links every ticked item in one call", async () => {
@@ -145,7 +140,7 @@ describe("ChatbotRAGSectionAddDrawer multi-select", () => {
     expect(kb.link).toHaveBeenCalledWith(["a", "b"]);
   });
 
-  it("selects all matching across pages but never an already linked item", async () => {
+  it("links everything matching the filters in one request, without listing ids", async () => {
     renderDrawer(["c"]);
 
     const user = userEvent.setup();
@@ -154,10 +149,40 @@ describe("ChatbotRAGSectionAddDrawer multi-select", () => {
         name: "knowledgeBase.link.selectAllMatching",
       }),
     );
+    // Every row shows as ticked, and the count is the matching total.
+    screen.getAllByRole("checkbox").forEach((box) => {
+      expect(box).toBeChecked();
+    });
     await user.click(
       screen.getByRole("button", { name: "knowledgeBase.link.addCount" }),
     );
 
-    expect(kb.link).toHaveBeenCalledWith(["a", "b", "z"]);
+    expect(kb.link).toHaveBeenCalledTimes(1);
+    expect(kb.link).toHaveBeenCalledWith({
+      knowledgeBaseId: "kb-1",
+      filter: {
+        search: undefined,
+        type: undefined,
+        status: undefined,
+        tags: undefined,
+      },
+    });
+  });
+
+  it("falls back to the ticked rows once a row is unticked", async () => {
+    renderDrawer(["c"]);
+
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole("button", {
+        name: "knowledgeBase.link.selectAllMatching",
+      }),
+    );
+    await user.click(screen.getAllByRole("checkbox")[2]);
+    await user.click(
+      screen.getByRole("button", { name: "knowledgeBase.link.addCount" }),
+    );
+
+    expect(kb.link).toHaveBeenCalledWith(["a"]);
   });
 });

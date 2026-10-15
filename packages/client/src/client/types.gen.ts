@@ -4690,6 +4690,49 @@ export type ChatbotKnowledgeItemResponseDto = {
     isActive: boolean;
 };
 
+export type KnowledgeItemBatchResultResponseDto = {
+    /**
+     * Ids processed successfully.
+     */
+    succeeded: Array<string>;
+    /**
+     * Ids that failed.
+     */
+    failed: Array<BatchFailureDto>;
+    /**
+     * True when a filter matched more items than one request acts on, so the rest were left out.
+     */
+    truncated: boolean;
+};
+
+export type KnowledgeItemFilterRequestDto = {
+    /**
+     * Text the title contains.
+     */
+    search?: string;
+    type?: Array<'FILE' | 'URL' | 'TEXT' | 'MEDIA'>;
+    status?: Array<'DRAFT' | 'READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>;
+    /**
+     * Items that have any of these tags.
+     */
+    tags?: Array<string>;
+};
+
+export type ChatbotKnowledgeItemBatchLinkRequestDto = {
+    /**
+     * Ids to link (max 100). Send this or `filter`.
+     */
+    ids?: Array<string>;
+    /**
+     * Link every item matching these filters instead of listing ids. An empty filter matches the whole knowledge base.
+     */
+    filter?: KnowledgeItemFilterRequestDto;
+    /**
+     * Knowledge base the `filter` applies to. Required with `filter`.
+     */
+    knowledgeBaseId?: string;
+};
+
 export type AccountGetResponseDto = {
     /**
      * Alias id of api key
@@ -23495,7 +23538,7 @@ export type ChatbotKnowledgeItemWorkspaceControllerListV1Responses = {
 export type ChatbotKnowledgeItemWorkspaceControllerListV1Response = ChatbotKnowledgeItemWorkspaceControllerListV1Responses[keyof ChatbotKnowledgeItemWorkspaceControllerListV1Responses];
 
 export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Data = {
-    body: BatchIdsRequestDto;
+    body: ChatbotKnowledgeItemBatchLinkRequestDto;
     headers?: {
         /**
          * Custom language header
@@ -23578,7 +23621,7 @@ export type ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: BatchResultResponseDto;
+        data?: KnowledgeItemBatchResultResponseDto;
     };
 };
 

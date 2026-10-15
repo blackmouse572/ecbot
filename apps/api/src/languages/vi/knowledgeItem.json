@@ -9,6 +9,7 @@
     "batchTag": "Đã thêm thẻ cho các knowledge item.",
     "batchLink": "Đã liên kết các knowledge item với chatbot.",
     "error": {
+        "batchTarget": "Hãy gửi danh sách id hoặc bộ lọc, không gửi cả hai. Bộ lọc cần kèm theo kho kiến thức áp dụng.",
         "notFound": "Không tìm thấy mục kiến thức.",
         "processing": "Item này đang được xử lý.",
         "fileRequired": "Hãy đính kèm tệp để tạo mục dạng tệp.",

@@ -3375,7 +3375,7 @@ export const chatbotKnowledgeItemWorkspaceControllerListV1 = <ThrowOnError exten
 /**
  * link several knowledge items to a chatbot
  *
- * Link every item in `ids` to the chatbot. Each id is processed independently, so the response reports which ones succeeded and which ones failed. An item already linked counts as succeeded.
+ * Link the items in `ids`, or every item matching `filter` in `knowledgeBaseId` (up to 2000, newest first; `truncated` says when more matched), to the chatbot. Each id is processed independently, so the response reports which ones succeeded and which ones failed. An item already linked counts as succeeded.
  */
 export const chatbotKnowledgeItemWorkspaceControllerBatchLinkV1 = <ThrowOnError extends boolean = false>(options: Options<ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Data, ThrowOnError>): RequestResult<ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses, ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Errors, ThrowOnError> => (options.client ?? client).post<ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Responses, ChatbotKnowledgeItemWorkspaceControllerBatchLinkV1Errors, ThrowOnError>({
     responseType: 'json',

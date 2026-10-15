@@ -57,8 +57,8 @@ import {
     ChatbotKnowledgeItemBatchLinkDoc,
     ChatbotKnowledgeItemUnlinkDoc,
 } from '../docs/chatbot-knowledge-item.workspace.doc';
-import { BatchIdsRequestDto } from '@app/common/batch/dtos/batch.request.dto';
-import { BatchResultResponseDto } from '@app/common/batch/dtos/batch.response.dto';
+import { ChatbotKnowledgeItemBatchLinkRequestDto } from '../dtos/request/chatbot-knowledge-item.batch-link.request.dto';
+import { KnowledgeItemBatchResultResponseDto } from '../dtos/response/knowledge-item.batch-result.response.dto';
 import { runBatch } from '@app/common/batch/utils/run-batch.util';
 import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entity';
 
@@ -156,8 +156,8 @@ export class ChatbotKnowledgeItemWorkspaceController {
         user: UserEntity,
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('chatbotId') chatbotId: string,
-        @Body() { ids }: BatchIdsRequestDto
-    ): Promise<IResponse<BatchResultResponseDto>> {
+        @Body() body: ChatbotKnowledgeItemBatchLinkRequestDto
+    ): Promise<IResponse<KnowledgeItemBatchResultResponseDto>> {
         const chatbot = await this.chatbotService.findOne(
             { id: chatbotId, workspace: workspace.id },
             { populate: [] }
@@ -170,7 +170,13 @@ export class ChatbotKnowledgeItemWorkspaceController {
             });
         }
 
-        const data = await runBatch(ids, async knowledgeItemId => {
+        const { ids, truncated } =
+            await this.knowledgeItemService.resolveBatchTarget(
+                workspace.id,
+                body
+            );
+
+        const result = await runBatch(ids, async knowledgeItemId => {
             const session = this.em.fork();
             await session.begin();
 
@@ -231,7 +237,7 @@ export class ChatbotKnowledgeItemWorkspaceController {
             );
         });
 
-        return { data };
+        return { data: { ...result, truncated } };
     }
 
     @ChatbotKnowledgeItemLinkDoc()
