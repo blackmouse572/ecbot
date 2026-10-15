@@ -5044,6 +5044,13 @@ export type MessageReplyToResponseDto = {
     fromCustomer?: boolean;
 };
 
+export type MessageNoReplyResponseDto = {
+    /**
+     * Why, in a few words the agent wrote for staff
+     */
+    reason?: string;
+};
+
 export type MessageReactionResponseDto = {
     /**
      * Reaction emoji
@@ -5120,6 +5127,10 @@ export type MessageGetResponseDto = {
      * What this message answers, when it is a reply
      */
     replyTo?: MessageReplyToResponseDto;
+    /**
+     * Set on a customer message the agent chose not to answer (e.g. an ok sticker after its answer)
+     */
+    noReply?: MessageNoReplyResponseDto;
     /**
      * Reactions left on this message
      */

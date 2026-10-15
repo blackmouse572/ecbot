@@ -45,6 +45,17 @@ export class ReplyActivityCollector {
             if (typeof part.toolName === 'string')
                 this.toolNames.add(part.toolName);
         } else if (part.type === 'tool-input-available') {
+            if (part.toolName === END_WITHOUT_REPLY_TOOL) {
+                const reason = (part.input as { reason?: unknown } | undefined)
+                    ?.reason;
+                this.list.push({
+                    kind: ENUM_CONVERSATION_ACTIVITY_KIND.NO_REPLY,
+                    // The label column holds 120 characters.
+                    ...(typeof reason === 'string' &&
+                        reason && { label: reason.slice(0, 120) }),
+                    at: new Date(),
+                });
+            }
             if (typeof part.toolCallId === 'string')
                 this.toolInputs.set(part.toolCallId, {
                     ...(typeof part.toolName === 'string' && {

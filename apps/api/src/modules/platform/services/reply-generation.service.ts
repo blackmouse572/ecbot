@@ -1,6 +1,7 @@
 import { AccountService } from '@app/modules/account/services/account.service';
 import { addTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
+import { ENUM_CONVERSATION_ACTIVITY_KIND } from '@app/modules/conversation/enums/conversation-activity.enum';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
 import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enum';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
@@ -344,6 +345,20 @@ export class ReplyGenerationService {
                 this.logger.log(
                     `Agent ended without a reply in conversation ${conversationId}`
                 );
+                // Staff see the silence under the customer's message. The
+                // turn's other steps stay out: with no reply to sit under,
+                // they would splice under the next, unrelated one.
+                const silence = (deliveryResult.activities ?? []).filter(
+                    a => a.kind === ENUM_CONVERSATION_ACTIVITY_KIND.NO_REPLY
+                );
+                if (silence.length)
+                    await this.messaging
+                        .recordActivities(conversationId, silence)
+                        .catch(err =>
+                            this.logger.warn(
+                                `recordActivities failed for ${conversationId}: ${(err as Error).message}`
+                            )
+                        );
                 return skipped('ended_without_reply');
             }
 

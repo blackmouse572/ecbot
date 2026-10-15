@@ -4023,7 +4023,8 @@
           "enumItems": [
             "SKILL",
             "KNOWLEDGE",
-            "TOOL"
+            "TOOL",
+            "NO_REPLY"
           ],
           "mappedType": "enum"
         },

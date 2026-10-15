@@ -25,6 +25,7 @@ import type {
 } from "@/hooks/api/conversations";
 import type { ChatToolCall, MessageAttachment } from "@/types/chat-message";
 import { MessageAttachments } from "./message-attachments";
+import { MessageNoReply } from "./message-no-reply";
 import { MessageQuote } from "./message-quote";
 import { POLICY_URL } from "./reaction-window";
 
@@ -280,6 +281,7 @@ export const MessageBubble = ({
           align={isInbound ? "start" : "end"}
         />
       )}
+      {message.noReply && <MessageNoReply reason={message.noReply.reason} />}
       {reactionGroups.length > 0 && (
         <div
           className={clx(
