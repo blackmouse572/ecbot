@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { minutesLeft, type LinkedAccountRef } from "../builder-state";
 import { businessTypeIcon } from "./business-type-icon";
 import { ChannelConnect } from "./channel-connect";
+import { CustomAddressEditor } from "./custom-address-editor";
 import { CustomCollectEditor } from "./custom-collect-editor";
 import { channelIcon } from "./channel-icon";
 import { OpeningHoursTurn } from "./opening-hours-turn";
@@ -31,8 +32,10 @@ type Props = {
   onAccountsUnlinked: (ids: string[]) => void;
 };
 
-// The collect step's "Other" choice: ticking it shows the add-your-own input.
+// The "Other" choice of the collect and address style steps: picking it shows
+// the owner's own input.
 const OTHER = "__other__";
+const HAS_OTHER = new Set(["collect", "addressStyle"]);
 
 const BOOLEAN_CHOICES = [
   { value: "yes", labelKey: "agentBuilder.ui.yes" },
@@ -45,6 +48,8 @@ function toFormValue(question: Question, raw: unknown): string | string[] {
     const hasCustom = values.some((v) => !question.choices?.some((c) => c.value === v));
     return hasCustom ? [...values, OTHER] : values;
   }
+  // A custom address style is read back as its words, not an id (#157).
+  if (question.id === "addressStyle" && typeof raw === "object" && raw) return OTHER;
   if (question.kind === "multi") return (raw as string[] | undefined) ?? [];
   if (question.kind === "boolean") return raw ? "yes" : "no";
   return String(raw ?? "");
@@ -93,6 +98,15 @@ export function QuestionTurn({
 }: Props) {
   const { t } = useTranslation();
   const [value, setValue] = useState(() => toFormValue(question, readAnswer(profile, question.path)));
+  const [addressWords, setAddressWords] = useState(() => profile.customAddressStyle ?? { self: "", customer: "" });
+  const [addressMissing, setAddressMissing] = useState(false);
+  const customAddress = question.id === "addressStyle" && value === OTHER;
+  const submit = () => {
+    if (!customAddress) return onAnswer(fromFormValue(question, value));
+    const words = { self: addressWords.self.trim(), customer: addressWords.customer.trim() };
+    if (!words.self || !words.customer) return setAddressMissing(true);
+    onAnswer(words);
+  };
   const badge = badgeFor(question, suggestion);
   const choices = question.kind === "boolean" ? BOOLEAN_CHOICES : (question.choices ?? []);
   // The collect answer also carries the owner's own labels after the fixed ids.
@@ -148,7 +162,7 @@ export function QuestionTurn({
       </Message>
       <Message from="user" variant="outline" className="w-full">
         <MessageContent className="w-full max-w-full">
-          <Questionnaire onSubmit={() => onAnswer(fromFormValue(question, value))}>
+          <Questionnaire onSubmit={submit}>
             <div className="flex items-center gap-2">
               <Text size="small" weight="plus">{t(question.leadKey)}</Text>
               {badge && (
@@ -179,7 +193,7 @@ export function QuestionTurn({
                   {choices.map((c) => (
                     <QuestionnaireChoice key={c.value} value={c.value} label={t(c.labelKey)} icon={choiceIcon(question, c.value)} />
                   ))}
-                  {question.id === "collect" && <QuestionnaireChoice value={OTHER} label={t("agentBuilder.ui.customCollectOther")} />}
+                  {HAS_OTHER.has(question.id) && <QuestionnaireChoice value={OTHER} label={t("agentBuilder.ui.customCollectOther")} />}
                 </QuestionnaireChoices>
               )}
               {otherTicked && (
@@ -191,6 +205,13 @@ export function QuestionTurn({
                     const ids = [...(value as string[]).filter(isChoice), ...ticked.filter((c) => !(value as string[]).includes(c))];
                     setValue([...ids, OTHER, ...labels.filter((l) => !choiceFor(l))]);
                   }}
+                />
+              )}
+              {customAddress && (
+                <CustomAddressEditor
+                  words={addressWords}
+                  onChange={(words) => { setAddressWords(words); setAddressMissing(false); }}
+                  showMissing={addressMissing}
                 />
               )}
               <QuestionnaireError>{t("agentBuilder.ui.required")}</QuestionnaireError>

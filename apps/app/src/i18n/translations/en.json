@@ -1284,6 +1284,11 @@
       "customCollectRemove": "Remove {{label}}",
       "customCollectLimit": "You can add up to {{count}} fields.",
       "customCollectOther": "Other",
+      "customAddressSelf": "Agent calls itself",
+      "customAddressSelfPlaceholder": "e.g. Shop",
+      "customAddressCustomer": "Agent calls the customer",
+      "customAddressCustomerPlaceholder": "e.g. ba mẹ",
+      "customAddressMissing": "Fill in both words.",
       "activateNow": "Activate now",
       "activateLater": "Later",
       "activateAsk": "Turn your agent on now so it starts replying to customers? You can keep answering the remaining questions either way."

@@ -125,6 +125,23 @@ describe("readAnswer / writeAnswer", () => {
     expect(readAnswer(p, { field: "collect" })).toEqual(["name", "phone", "Deadline"]);
   });
 
+  it("reads and writes a custom address style as its two words, and a fixed pick clears them", () => {
+    const words = { self: "Shop", customer: "ba mẹ" };
+    const p = writeAnswer(createProfile("beauty", "vi"), { field: "addressStyle" }, words);
+    expect(p.addressStyle).toBe("custom");
+    expect(p.customAddressStyle).toEqual(words);
+    expect(readAnswer(p, { field: "addressStyle" })).toEqual(words);
+    const fixed = writeAnswer(p, { field: "addressStyle" }, "minh_ban");
+    expect(fixed.addressStyle).toBe("minh_ban");
+    expect(fixed.customAddressStyle).toBeUndefined();
+  });
+
+  it("keeps a custom address style when the business type changes", () => {
+    const words = { self: "Shop", customer: "ba mẹ" };
+    const p = writeAnswer(writeAnswer(createProfile("beauty", "vi"), { field: "addressStyle" }, words), { field: "businessType" }, "fashion");
+    expect(p.customAddressStyle).toEqual(words);
+  });
+
   it("re-applies presets when the business type changes", () => {
     const p = writeAnswer(createProfile("beauty", "vi"), { field: "businessType" }, "restaurant");
     expect(p.goals).toContain("reservations");

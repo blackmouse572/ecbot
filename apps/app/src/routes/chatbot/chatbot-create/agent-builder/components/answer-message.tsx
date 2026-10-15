@@ -1,5 +1,5 @@
 import {
-  groupOpeningHours, hasOpeningHours, readAnswer, type AgentProfile, type OpeningHours, type OpeningRange, type Question,
+  groupOpeningHours, hasOpeningHours, readAnswer, type AgentProfile, type CustomAddressStyle, type OpeningHours, type OpeningRange, type Question,
 } from "@repo/agent-blueprint";
 import { Message, MessageContent } from "@repo/ui/common-components";
 import { IconPencil } from "@tabler/icons-react";
@@ -23,6 +23,11 @@ export function summarize(question: Question, raw: unknown, t: TFunction): strin
   if (question.kind === "hours") return summarizeHours(raw as OpeningHours | undefined, t);
   if (question.kind === "boolean") return t(raw ? "agentBuilder.ui.yes" : "agentBuilder.ui.no");
   if (question.kind === "text") return String(raw ?? "");
+  // A custom address style answers with its two words (#157).
+  if (question.id === "addressStyle" && typeof raw === "object" && raw) {
+    const { self, customer } = raw as CustomAddressStyle;
+    return `${self} / ${customer}`;
+  }
   const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
   return values
     // A value with no choice is the owner's own label (custom collect fields), shown as typed.

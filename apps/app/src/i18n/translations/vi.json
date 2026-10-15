@@ -1327,6 +1327,11 @@
       "customCollectRemove": "Xoá {{label}}",
       "customCollectLimit": "Bạn có thể thêm tối đa {{count}} mục.",
       "customCollectOther": "Khác",
+      "customAddressSelf": "Agent xưng là",
+      "customAddressSelfPlaceholder": "Ví dụ: Shop",
+      "customAddressCustomer": "Agent gọi khách là",
+      "customAddressCustomerPlaceholder": "Ví dụ: ba mẹ",
+      "customAddressMissing": "Bạn điền đủ cả hai cách xưng hô nhé.",
       "activateNow": "Kích hoạt ngay",
       "activateLater": "Để sau",
       "activateAsk": "Kích hoạt agent ngay để agent bắt đầu trả lời khách? Dù chọn gì, bạn vẫn trả lời tiếp các câu còn lại được."
