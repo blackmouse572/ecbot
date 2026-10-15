@@ -126,6 +126,35 @@ async def test_catalog_images_from_the_instructions_go_to_the_vision_model_label
     ]
 
 
+async def test_a_sticker_is_labelled_and_read_for_what_it_means():
+    model = _vision_model({1: "A shirt.", 2: "ok, agreed"})
+    burst = [
+        ImageToDescribe(id="m0", url="https://s3/a.jpg"),
+        ImageToDescribe(id="m1", url="https://s3/s.webp", kind="sticker"),
+    ]
+    with patch.object(images, "fetch_image_data_url", AsyncMock(side_effect=_fetch_all)), \
+         patch.object(images, "build_chat_model", return_value=model):
+        described, _ = await images.describe_images(burst, BOT)
+
+    assert described == ["A shirt.", "ok, agreed"]
+    texts = [p["text"] for p in model.ainvoke.call_args.args[0][0].content if p["type"] == "text"]
+    assert "Image 1" in texts
+    assert "Image 2 (sticker)" in texts
+    assert "sticker" in texts[0] and "means" in texts[0]
+
+
+async def test_a_burst_of_only_stickers_is_not_compared_with_the_catalog():
+    bot = SimpleNamespace(guardrail_enabled=False, general_knowledge="![Shirt](https://kb/shirt.jpg)")
+    model = _vision_model({1: "confused, does not understand"})
+    catalog = AsyncMock(return_value=[])
+    with patch.object(images, "fetch_image_data_url", AsyncMock(side_effect=_fetch_all)), \
+         patch.object(images, "_catalog_parts", catalog), \
+         patch.object(images, "build_chat_model", return_value=model):
+        await images.describe_images([ImageToDescribe(id="m0", url="https://s3/q.webp", kind="sticker")], bot)
+
+    catalog.assert_not_awaited()
+
+
 async def test_a_catalog_image_on_an_internal_address_is_never_fetched():
     # Catalog URLs are typed by the workspace owner, so they get the same
     # egress check as the knowledge-base crawler. Customer images do not: those

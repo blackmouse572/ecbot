@@ -57,3 +57,7 @@ MUTATING_TOOL_NOTE = (
     "This action changes data. Only call it after you have read the details back "
     "to the customer and they clearly said yes in a later message."
 )
+
+# Tool the agent calls to end a turn with no message; apps/api then sends no
+# fallback (streaming-delivery reads this name off the stream).
+END_WITHOUT_REPLY = "end_without_reply"

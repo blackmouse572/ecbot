@@ -6,6 +6,9 @@ import {
     IReplyActivity,
 } from '@app/modules/conversation/interfaces/conversation-activity.interface';
 
+/** apps/ai's tool for ending a turn with no message (llm/tools/constants.py). */
+const END_WITHOUT_REPLY_TOOL = 'end_without_reply';
+
 /** The UI-message part fields the collector reads; parts are free-form JSON. */
 type StreamPart = { type: string } & Record<string, unknown>;
 
@@ -34,10 +37,14 @@ export class ReplyActivityCollector {
         { name?: string; input: Record<string, unknown> }
     >();
     private readonly toolCalls = new Map<string, IReplyActivity>();
+    private readonly toolNames = new Set<string>();
     private knowledge?: IReplyActivity;
 
     observe(part: StreamPart): void {
-        if (part.type === 'tool-input-available') {
+        if (part.type === 'tool-input-start') {
+            if (typeof part.toolName === 'string')
+                this.toolNames.add(part.toolName);
+        } else if (part.type === 'tool-input-available') {
             if (typeof part.toolCallId === 'string')
                 this.toolInputs.set(part.toolCallId, {
                     ...(typeof part.toolName === 'string' && {
@@ -93,6 +100,11 @@ export class ReplyActivityCollector {
 
     get activities(): IReplyActivity[] {
         return this.list;
+    }
+
+    /** The agent chose to send nothing this turn (apps/ai end_without_reply). */
+    get endedWithoutReply(): boolean {
+        return this.toolNames.has(END_WITHOUT_REPLY_TOOL);
     }
 }
 

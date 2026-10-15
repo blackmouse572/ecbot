@@ -2,6 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from langchain_core.messages import ToolMessage
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.security import require_internal_token
@@ -97,7 +98,10 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
     if last_msg is None:
         raise HTTPException(status_code=500, detail="Agent returned no messages")
 
-    if isinstance(last_msg.content, str):
+    if isinstance(last_msg, ToolMessage):
+        # The agent ended on end_without_reply (return_direct): nothing to say.
+        response_text = ""
+    elif isinstance(last_msg.content, str):
         response_text = last_msg.content
     elif isinstance(last_msg.content, list):
         for block in last_msg.content:

@@ -24,6 +24,7 @@ from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 from eccho_ai.core.api_client import ApiClient, ApiClientError
 from eccho_ai.core.postgres import PostgresRepo
 from eccho_ai.llm.tools.constants import (
+    END_WITHOUT_REPLY,
     FOLLOWUP_FAILED,
     FOLLOWUP_TIME_REJECTED,
     FOLLOWUP_UNAVAILABLE,
@@ -473,6 +474,20 @@ async def send_image(url: str) -> dict[str, Any]:
     return {"ok": True, "url": url}
 
 
+# return_direct: the turn stops at this call, so the model gets no further
+# step in which to write a line anyway.
+@tool(return_direct=True)
+async def end_without_reply(reason: str = "") -> dict[str, Any]:
+    """End this turn without sending the user anything. Use it only when the
+    user's newest message is nothing but a thanks, ok, bye or a sticker that
+    means one of those, after their question was already answered. Never use
+    it when they ask something, want something (to buy, book, order or take
+    an item), are unhappy or confused, or have not been answered yet: then
+    reply. `reason` is a few words on why, for the staff."""
+    _log_call(END_WITHOUT_REPLY, _truncate(reason), "ok", 0)
+    return {"ok": True}
+
+
 SYSTEM_TOOLS: list[Any] = [
     get_customer_field,
     list_customer_fields,
@@ -484,6 +499,7 @@ SYSTEM_TOOLS: list[Any] = [
     list_pending_followups,
     cancel_followup,
     send_image,
+    end_without_reply,
 ]
 
 
