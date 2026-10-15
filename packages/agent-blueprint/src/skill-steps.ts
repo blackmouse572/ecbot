@@ -192,6 +192,7 @@ export function compileSkill(input: CompileSkillInput): string {
         `${top}`,
         counter,
         i < input.steps.length - 1 ? top + 1 : undefined,
+        input.guardrails.length > 0,
       ),
     );
   }
@@ -209,6 +210,8 @@ function compileStep(
   prefix: string,
   counter: { n: number },
   next: number | undefined,
+  // The skill has Rules: a tool result is checked against them before use.
+  checkRules: boolean,
 ): string[] {
   const head = `${indent}${label} `;
   switch (step.type) {
@@ -226,8 +229,11 @@ function compileStep(
       ];
     case "tool": {
       const how = blank(step.text) ? "" : ` How: ${sentence(step.text!)}.`;
+      const check = checkRules
+        ? " When it returns, check the result against the Rules below before you tell the customer anything from it."
+        : "";
       return [
-        `${head}Call the \`${toolName(step) ?? step.action ?? step.toolId}\` tool.${how}`,
+        `${head}Call the \`${toolName(step) ?? step.action ?? step.toolId}\` tool.${how}${check}`,
       ];
     }
     case "if": {
@@ -243,6 +249,7 @@ function compileStep(
             `${prefix}.${counter.n}`,
             { n: 0 },
             undefined,
+            checkRules,
           );
         });
       const out: string[] = [];

@@ -6,10 +6,10 @@ exports[`compileSkill > compiles steps with guardrails into numbered instruction
 ## Steps
 Follow these steps in order, one at a time.
 1. Ask the customer for: The order code, or the phone number used to order. If they already gave it in this conversation, do not ask again: use it and go on. Otherwise wait for their answer.
-2. Call the \`lookup_order\` tool. How: Look up the order with what the customer gave.
+2. Call the \`lookup_order\` tool. How: Look up the order with what the customer gave. When it returns, check the result against the Rules below before you tell the customer anything from it.
 3. If this is true: No order was found.
    3.1. Send this message: "Sorry, I can't find that order. Could you check the code again?". Use these exact words when the customer writes in the same language, otherwise a faithful translation. Do not wait for an answer: go on with the next step.
-   3.2. Call the \`create_ticket\` tool.
+   3.2. Call the \`create_ticket\` tool. When it returns, check the result against the Rules below before you tell the customer anything from it.
    Else, if this is true: The order has shipped.
    3.3. Tell the customer, in your own words: The tracking link and the expected delivery date.
    Otherwise:

@@ -242,6 +242,21 @@ describe("compileSkill", () => {
     );
   });
 
+  it("checks a tool's result against the rules only when there are rules", () => {
+    const check =
+      "When it returns, check the result against the Rules below before you tell the customer anything from it.";
+    const compile = (guardrails: string[]) =>
+      compileSkill({
+        name: "n",
+        guardrails,
+        format: "STEPS",
+        steps: [{ id: "t", type: "tool", toolId: "t-lookup" }],
+        toolName,
+      });
+    expect(compile(["No promises."])).toContain(check);
+    expect(compile([])).not.toContain(check);
+  });
+
   it("returns content unchanged when there are no guardrails", () => {
     expect(
       compileSkill({
