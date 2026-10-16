@@ -9,8 +9,11 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, timingSafeEqual } from 'crypto';
+import { readCappedBody } from '@app/common/utils/read-capped-body.util';
+import { MEDIA_FETCH_TIMEOUT_MS } from '../../constants/media.constant';
 import {
     AdapterCapabilities,
+    MediaContent,
     OutboundMessage,
 } from '../../interfaces/message-model';
 import {
@@ -26,12 +29,18 @@ import {
     ZaloApiResponse,
     ZaloOaInfoData,
     ZaloSendMessageData,
+    ZaloUploadFileData,
     ZaloUserProfileData,
     ZaloWebhookAttachment,
     ZaloWebhookPayload,
 } from './zalo.types';
 
 const OPENAPI_BASE = 'https://openapi.zalo.me/v3.0/oa';
+const UPLOAD_FILE_URL = 'https://openapi.zalo.me/v2.0/oa/upload/file';
+// Zalo OA limits: images by link up to 1MB (JPG, PNG), files uploaded up to
+// 5MB (PDF). Anything else goes out as its link (see degrade()).
+const IMAGE_MAX_BYTES = 1_000_000;
+const FILE_MAX_BYTES = 5_000_000;
 const MESSAGE_LIMIT = 2000;
 // Reject webhooks whose (signed) timestamp is older than this — replay guard.
 const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
@@ -39,20 +48,25 @@ const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
 @Injectable()
 export class ZaloPlatformAdapter extends PlatformAdapter {
     readonly type = ENUM_ACCOUNT_TYPE.ZALO_PAGE;
-    // First-pass scope: text-only outbound. Zalo OA *does* support images,
-    // files, stickers and templates via the CS API — enabling those is a
-    // tracked follow-up. Until then all capabilities are false so degrade()
-    // collapses richer content to plain text.
+    // Text, images and PDFs outbound. Cards, buttons and stickers are a
+    // tracked follow-up, so degrade() collapses them to plain text.
     readonly capabilities: AdapterCapabilities = {
         cards: false,
         buttons: false,
         quickReplies: false,
-        media: false,
+        media: true,
         editMessage: false,
         deleteMessage: false,
         reactions: { inbound: true, outbound: true },
         typing: false,
         markRead: false,
+        mediaLimits: {
+            image: {
+                maxBytes: IMAGE_MAX_BYTES,
+                types: ['image/jpeg', 'image/png'],
+            },
+            file: { maxBytes: FILE_MAX_BYTES, types: ['application/pdf'] },
+        },
     };
 
     private readonly logger = new Logger(ZaloPlatformAdapter.name);
@@ -287,14 +301,11 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         senderId: string,
         msg: OutboundMessage
     ): Promise<{ externalId: string }> {
-        // capabilities are all false → degrade() collapses everything to text.
-        const text =
-            msg.content.kind === 'text' ? msg.content.text : msg.fallbackText;
         const res = await this.httpPost<ZaloApiResponse<ZaloSendMessageData>>(
             `${OPENAPI_BASE}/message/cs`,
             {
                 recipient: { user_id: senderId },
-                message: { text: this.truncate(text) },
+                message: await this.renderMessage(account, msg),
             },
             this.token(account)
         );
@@ -310,6 +321,72 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
             });
         }
         return { externalId: res.data?.message_id ?? '' };
+    }
+
+    private async renderMessage(
+        account: AccountEntity,
+        msg: OutboundMessage
+    ): Promise<Record<string, unknown>> {
+        const c = msg.content;
+        // degrade() only lets through media within mediaLimits.
+        if (c.kind === 'media' && c.mediaType === 'image') {
+            return {
+                attachment: {
+                    type: 'template',
+                    payload: {
+                        template_type: 'media',
+                        elements: [{ media_type: 'image', url: c.url }],
+                    },
+                },
+            };
+        }
+        if (c.kind === 'media') {
+            const token = await this.uploadFile(account, c);
+            return { attachment: { type: 'file', payload: { token } } };
+        }
+        const text = c.kind === 'text' ? c.text : msg.fallbackText;
+        return { text: this.truncate(text) };
+    }
+
+    /** Zalo sends files only by an upload token; the name shows on the file. */
+    private async uploadFile(
+        account: AccountEntity,
+        c: MediaContent
+    ): Promise<string> {
+        const res = await fetch(c.url, {
+            signal: AbortSignal.timeout(MEDIA_FETCH_TIMEOUT_MS),
+        });
+        const data = res.ok ? await readCappedBody(res, FILE_MAX_BYTES) : null;
+        if (!data) {
+            throw new UnprocessableEntityException({
+                message: 'platform.error.sendFailed',
+                statusCode: 422,
+                errors: { provider: 'zalo', detail: 'file download failed' },
+            });
+        }
+        const form = new FormData();
+        form.append(
+            'file',
+            new Blob([new Uint8Array(data)], { type: c.mimeType }),
+            c.name ?? 'file.pdf'
+        );
+        const upload = await this.httpPost<ZaloApiResponse<ZaloUploadFileData>>(
+            UPLOAD_FILE_URL,
+            form,
+            this.token(account)
+        );
+        if (upload.error !== 0 || !upload.data?.token) {
+            throw new UnprocessableEntityException({
+                message: 'platform.error.sendFailed',
+                statusCode: 422,
+                errors: {
+                    provider: 'zalo',
+                    error: upload.error,
+                    detail: upload.message,
+                },
+            });
+        }
+        return upload.data.token;
     }
 
     private truncate(t: string): string {
@@ -385,7 +462,7 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
 
     private async httpPost<T>(
         url: string,
-        body: Record<string, unknown>,
+        body: Record<string, unknown> | FormData,
         accessToken: string
     ): Promise<T> {
         try {
@@ -393,9 +470,12 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
                 url,
                 body,
                 {
+                    // A FormData body sets its own multipart content type.
                     headers: {
                         access_token: accessToken,
-                        'Content-Type': 'application/json',
+                        ...(!(body instanceof FormData) && {
+                            'Content-Type': 'application/json',
+                        }),
                     },
                 }
             );

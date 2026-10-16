@@ -619,6 +619,8 @@ describe('StreamingDelivery — send_media file parts', () => {
             url: 'https://cdn/menu.pdf',
             mediaType: 'file',
             name: 'Menu Mộc.pdf',
+            mimeType: 'application/pdf',
+            size: 14010986,
         });
     });
 });

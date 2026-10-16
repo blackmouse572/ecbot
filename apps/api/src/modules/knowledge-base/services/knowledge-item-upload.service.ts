@@ -63,9 +63,10 @@ export class KnowledgeItemUploadService {
         const safeFileName = this.safeFileName(file.originalname);
         const ext = safeFileName.split('.').pop();
         // Media is public so the channels can fetch it when the agent sends
-        // it; the random id keeps its address unguessable.
+        // it; the random id keeps its address unguessable. It is a folder so
+        // the link ends in the file name, which Messenger and Telegram show.
         const key = isMedia
-            ? `knowledge-media/${workspaceId}/${knowledgeBaseId}/${randomUUID()}-${safeFileName}`
+            ? `knowledge-media/${workspaceId}/${knowledgeBaseId}/${randomUUID()}/${safeFileName}`
             : `knowledge-items/${workspaceId}/${knowledgeBaseId}/${Date.now()}-${safeFileName}`;
 
         try {
@@ -218,7 +219,8 @@ export class KnowledgeItemUploadService {
         return `${KNOWLEDGE_UPLOAD_STAGING_PREFIX}/${workspaceId}/${knowledgeBaseId}/`;
     }
 
-    private safeFileName(originalName: string): string {
+    private safeFileName(rawName: string): string {
+        const originalName = readableName(rawName);
         const nameWithoutExt = originalName.replace(/\.[^/.]+$/, '');
         const ext = originalName.includes('.')
             ? originalName.split('.').pop()
@@ -240,4 +242,19 @@ export class KnowledgeItemUploadService {
             size: buffer.length,
         } as IFile;
     }
+}
+
+/**
+ * A file name as the person typed it. Multipart uploads read the name as
+ * latin1, so a UTF-8 name ("Mộc") arrives garbled; macOS names also carry
+ * accents as separate marks. "đ" has no plain-letter form, so it is spelled
+ * "d" here before slugify turns it into "dj".
+ */
+function readableName(name: string): string {
+    let fixed = name;
+    if (/^[\u0000-\u00ff]*$/.test(name)) {
+        const utf8 = Buffer.from(name, 'latin1').toString('utf8');
+        if (!utf8.includes('\ufffd')) fixed = utf8;
+    }
+    return fixed.normalize('NFC').replace(/đ/g, 'd').replace(/Đ/g, 'D');
 }

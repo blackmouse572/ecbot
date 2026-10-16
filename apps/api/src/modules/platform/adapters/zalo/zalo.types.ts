@@ -55,6 +55,10 @@ export interface ZaloSendMessageData {
     user_id?: string;
 }
 
+export interface ZaloUploadFileData {
+    token?: string;
+}
+
 export interface ZaloUserProfileData {
     user_id?: string;
     display_name?: string;
