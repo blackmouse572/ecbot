@@ -4855,23 +4855,6 @@ export type KnowledgeBaseResponseDto = {
     };
 };
 
-export type KnowledgeBaseCreateRequestDto = {
-    /**
-     * Knowledge base name
-     */
-    name: string;
-    /**
-     * Knowledge base description
-     */
-    description?: string;
-    /**
-     * Knowledge base settings as JSON
-     */
-    settings?: {
-        [key: string]: unknown;
-    };
-};
-
 export type KnowledgeBaseUpdateRequestDto = {
     /**
      * Knowledge base name
@@ -24184,92 +24167,6 @@ export type KnowledgeBaseWorkspaceControllerGetV1Responses = {
 
 export type KnowledgeBaseWorkspaceControllerGetV1Response = KnowledgeBaseWorkspaceControllerGetV1Responses[keyof KnowledgeBaseWorkspaceControllerGetV1Responses];
 
-export type KnowledgeBaseWorkspaceControllerCreateV1Data = {
-    body: KnowledgeBaseCreateRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path: {
-        /**
-         * The ID or slug of the workspace
-         */
-        workspace: string;
-    };
-    query?: never;
-    url: '/api/v1/workspace/{workspace}/knowledge-bases/create';
-};
-
-export type KnowledgeBaseWorkspaceControllerCreateV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 422
-     */
-    422: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type KnowledgeBaseWorkspaceControllerCreateV1Error = KnowledgeBaseWorkspaceControllerCreateV1Errors[keyof KnowledgeBaseWorkspaceControllerCreateV1Errors];
-
-export type KnowledgeBaseWorkspaceControllerCreateV1Responses = {
-    /**
-     * 201
-     */
-    201: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: DatabaseIdResponseDto;
-    };
-};
-
-export type KnowledgeBaseWorkspaceControllerCreateV1Response = KnowledgeBaseWorkspaceControllerCreateV1Responses[keyof KnowledgeBaseWorkspaceControllerCreateV1Responses];
-
 export type KnowledgeBaseWorkspaceControllerUpdateV1Data = {
     body: KnowledgeBaseUpdateRequestDto;
     headers?: {
@@ -32205,77 +32102,6 @@ export type KnowledgeBaseClientControllerListV1Responses = {
 };
 
 export type KnowledgeBaseClientControllerListV1Response = KnowledgeBaseClientControllerListV1Responses[keyof KnowledgeBaseClientControllerListV1Responses];
-
-export type KnowledgeBaseClientControllerCreateV1Data = {
-    body: KnowledgeBaseCreateRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/client/knowledge-bases';
-};
-
-export type KnowledgeBaseClientControllerCreateV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 422
-     */
-    422: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type KnowledgeBaseClientControllerCreateV1Error = KnowledgeBaseClientControllerCreateV1Errors[keyof KnowledgeBaseClientControllerCreateV1Errors];
-
-export type KnowledgeBaseClientControllerCreateV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: DatabaseIdResponseDto;
-    };
-};
-
-export type KnowledgeBaseClientControllerCreateV1Response = KnowledgeBaseClientControllerCreateV1Responses[keyof KnowledgeBaseClientControllerCreateV1Responses];
 
 export type KnowledgeBaseClientControllerUpdateV1Data = {
     body: KnowledgeBaseUpdateRequestDto;

@@ -249,7 +249,10 @@ export const useBatchDeleteChatbots = () => {
         path: { workspace: workspace!.slug },
         body: { ids },
       }).then((res) => (res.data as A)?.data as BatchResult),
-    onSuccess: () => {
+    onSuccess: (_, ids) => {
+      for (const id of ids) {
+        queryClient.removeQueries({ queryKey: chatbotQueryKeys.detail(id) });
+      }
       queryClient.invalidateQueries({
         queryKey: chatbotQueryKeys.lists(),
       });

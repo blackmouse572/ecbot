@@ -18,7 +18,7 @@ Why: long instructions with many workflows dilute each other, so the agent skips
 ## Set up a new agent
 
 1. Ask what the business is, who the customers are, and the channels. Pick `type` and `primaryLanguage`; pick `modelTextName` from `list_chatbot_models`.
-2. Fill in `profile`. A new agent starts from its type's preset, so send only what differs: `businessName`, `goals`, `personality`, `formality`, `addressStyle`, `rules`, `handoffWhen`, and short `facts` (hours, address, delivery, ...). Longer material, such as a price list or FAQ, goes in the knowledge base (`create_knowledge_base`, `create_knowledge_item`).
+2. Fill in `profile`. A new agent starts from its type's preset, so send only what differs: `businessName`, `goals`, `personality`, `formality`, `addressStyle`, `rules`, `handoffWhen`, and short `facts` (hours, address, delivery, ...). Longer material, such as a price list or FAQ, goes in the workspace's one knowledge base (`list_knowledge_bases` for its id, then `create_knowledge_item`).
 3. Add `extraInstructions` only for what the profile can't say, in a few lines. No workflows.
 4. List the requests the agent must handle (booking, order status, refunds, ...). For each, check `list_skills` with `source: template` and clone a template that fits (`clone_skill_template`), or write one with the `ecbot-skill-builder` skill. Attach each with `attach_skill`.
 5. Turn on the tools the skills use with `enable_chatbot_tool`.

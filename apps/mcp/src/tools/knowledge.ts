@@ -3,7 +3,6 @@ import {
   chatbotKnowledgeItemClientControllerLinkV1,
   chatbotKnowledgeItemClientControllerListV1,
   chatbotKnowledgeItemClientControllerUnlinkV1,
-  knowledgeBaseClientControllerCreateV1,
   knowledgeBaseClientControllerListV1,
   knowledgeBaseClientControllerUpdateV1,
   knowledgeItemClientControllerCreateV1,
@@ -43,7 +42,7 @@ function registerReadTools(server: McpServer, api: ApiOptions) {
     {
       title: "List knowledge bases",
       description:
-        "List the knowledge bases in the Ecbot workspace. Each holds the knowledge items (files, web pages, text) that chatbots answer from.",
+        "List the Ecbot workspace's knowledge base. A workspace has exactly one: it holds the knowledge items (files, web pages, text) that chatbots answer from, so use its id for every knowledge item tool.",
       inputSchema: z.object({
         search: z.string().optional().describe("Match on the name."),
         ...paging,
@@ -141,25 +140,6 @@ function registerReadTools(server: McpServer, api: ApiOptions) {
 }
 
 function registerCreateTools(server: McpServer, api: ApiOptions) {
-  server.registerTool(
-    "create_knowledge_base",
-    {
-      title: "Create knowledge base",
-      description:
-        "Create an empty knowledge base. Add items with create_knowledge_item.",
-      inputSchema: z.object({
-        name: z.string().min(1),
-        description: z.string().optional(),
-      }),
-      annotations: ADDS,
-    },
-    (body) =>
-      respond(
-        knowledgeBaseClientControllerCreateV1({ ...api, body }),
-        (d) => d.data,
-      ),
-  );
-
   server.registerTool(
     "get_knowledge_upload_url",
     {

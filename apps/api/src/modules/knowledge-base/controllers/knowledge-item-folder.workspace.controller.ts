@@ -131,6 +131,7 @@ export class KnowledgeItemFolderController {
             id: folderId,
             workspace: workspace.id,
             knowledgeBase: knowledgeBaseId,
+            deletedAt: null,
         });
         if (!folder || folder.knowledgeBase.id !== knowledgeBaseId) {
             throw new NotFoundException({
@@ -250,6 +251,7 @@ export class KnowledgeItemFolderController {
                 id: body.parentId,
                 workspace: workspace.id,
                 knowledgeBase: knowledgeBaseId,
+                deletedAt: null,
             });
             if (!parentFolder) {
                 throw new NotFoundException({
@@ -326,6 +328,7 @@ export class KnowledgeItemFolderController {
             id: folderId,
             workspace: workspace.id,
             knowledgeBase: knowledgeBaseId,
+            deletedAt: null,
         });
         if (!folder || folder.knowledgeBase.id !== knowledgeBaseId) {
             throw new NotFoundException({

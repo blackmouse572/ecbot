@@ -32,7 +32,7 @@ replace data, **deletes** remove it.
 |               | `set_conversation_bot`, `set_conversation_status`                            | chatbot update   | switches   |
 | Knowledge     | `list_knowledge_bases`, `list_knowledge_items`, `get_knowledge_item`         | knowledge read   | reads      |
 |               | `list_chatbot_knowledge`                                                     | knowledge read   | reads      |
-|               | `create_knowledge_base`, `create_knowledge_item`                             | knowledge create | adds       |
+|               | `create_knowledge_item`                                                      | knowledge create | adds       |
 |               | `get_knowledge_upload_url`, `link_knowledge_to_chatbot`                      | knowledge create | adds       |
 |               | `update_knowledge_base`, `update_knowledge_item`                             | knowledge update | overwrites |
 |               | `process_knowledge_item`                                                     | knowledge update | switches   |

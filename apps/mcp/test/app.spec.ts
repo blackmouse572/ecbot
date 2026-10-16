@@ -175,6 +175,20 @@ describe("/mcp", () => {
     expect(everything).toEqual(expect.arrayContaining(READ_TOOLS));
   });
 
+  // A workspace has exactly one knowledge base; a second one hid the first
+  // from the app.
+  it("offers no tool to create a knowledge base", async () => {
+    permits([{ subject: "KNOWLEDGE_BASE", action: ["read", "create"] }]);
+    const client = await connect({ "x-api-key": KEY });
+
+    const { tools } = await client.listTools();
+
+    expect(tools.map((tool) => tool.name)).toContain("create_knowledge_item");
+    expect(tools.map((tool) => tool.name)).not.toContain(
+      "create_knowledge_base",
+    );
+  });
+
   it("looks up permissions only to list tools, not to call one", async () => {
     findOne.mockResolvedValue({
       data: { data: { id: "chatbot-1" } },

@@ -193,7 +193,10 @@ export const useBatchDeleteSkills = (workspace: string) => {
         path: { workspace } as A,
         body: { ids },
       }).then((res) => (res.data as A)?.data as BatchResult),
-    onSuccess: () => {
+    onSuccess: (_, ids) => {
+      for (const id of ids) {
+        queryClient.removeQueries({ queryKey: skillsQueryKeys.detail(id) });
+      }
       queryClient.invalidateQueries({ queryKey: skillsQueryKeys.lists() });
     },
   });
@@ -210,7 +213,8 @@ export const useDeleteSkill = (workspace: string) => {
       skillWorkspaceControllerDeleteV1({
         path: { workspace, skillId } as A,
       }),
-    onSuccess: () => {
+    onSuccess: (_, skillId) => {
+      queryClient.removeQueries({ queryKey: skillsQueryKeys.detail(skillId) });
       queryClient.invalidateQueries({ queryKey: skillsQueryKeys.lists() });
     },
   });
