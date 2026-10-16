@@ -48,5 +48,8 @@
     },
     "usage": {
         "success": "Skill usage retrieved"
+    },
+    "chatbotSkill": {
+        "list": "Agent skills retrieved successfully."
     }
 }

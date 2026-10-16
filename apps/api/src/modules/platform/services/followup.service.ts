@@ -22,6 +22,7 @@ import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
 import { DateTime } from 'luxon';
+import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
 import {
     ENUM_FOLLOWUP_PROCESS,
     ENUM_FOLLOWUP_SKIP_REASON,
@@ -34,6 +35,7 @@ import {
     OUTCOME_REASON_MAX_LENGTH,
     PENDING_FOLLOWUP_STATUSES,
 } from '../constants/followup.constant';
+import { FollowupAdminListResponseDto } from '../dtos/response/followup.admin-list.response.dto';
 import { FollowupListResponseDto } from '../dtos/response/followup.list.response.dto';
 import { FollowupPendingResponseDto } from '../dtos/response/followup.pending.response.dto';
 import {
@@ -192,6 +194,37 @@ export class FollowupService {
 
         await this.applyCancellation(followup);
         return { cancelled: true };
+    }
+
+    /** Admin: any pending follow-up, whatever its workspace. */
+    async cancelById(followupId: string): Promise<boolean> {
+        const followup =
+            await this.followupRepository.findPendingById(followupId);
+        if (!followup) return false;
+
+        await this.applyCancellation(followup);
+        return true;
+    }
+
+    /** Admin: follow-ups of every workspace, for the admin list. */
+    findAllForAdmin(
+        find: Record<string, any>,
+        options?: IDatabaseFindAllOptions
+    ): Promise<FollowupEntity[]> {
+        return this.followupRepository.find(
+            { deletedAt: null, ...find },
+            { ...options, populate: ['chatbot.workspace', 'conversation'] }
+        );
+    }
+
+    getTotalForAdmin(find: Record<string, any>): Promise<number> {
+        return this.followupRepository.getTotal({ deletedAt: null, ...find });
+    }
+
+    mapAdminList(followups: FollowupEntity[]): FollowupAdminListResponseDto[] {
+        return plainToInstance(FollowupAdminListResponseDto, followups, {
+            excludeExtraneousValues: true,
+        });
     }
 
     async findScheduledByConversation(

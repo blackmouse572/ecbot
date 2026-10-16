@@ -48,5 +48,8 @@
     },
     "usage": {
         "success": "Đã lấy nơi dùng skill"
+    },
+    "chatbotSkill": {
+        "list": "Lấy danh sách skill của agent thành công."
     }
 }
