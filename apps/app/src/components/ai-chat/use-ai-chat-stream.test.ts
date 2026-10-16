@@ -128,6 +128,21 @@ describe("partsToRenderModel", () => {
     ]);
   });
 
+  it("keeps a rejected send_media in the tool trace", () => {
+    const model = partsToRenderModel([
+      {
+        type: "tool-send_media",
+        toolCallId: "inv2",
+        state: "output-available",
+        input: { id: "made-up" },
+        output: { ok: false, reason: "Unknown media id." },
+      },
+    ]);
+    expect(model.files).toEqual([]);
+    expect(model.toolCalls).toHaveLength(1);
+    expect(model.toolCalls[0].toolName).toBe("send_media");
+  });
+
   it("collects file parts with url/mediaType/filename", () => {
     const model = partsToRenderModel([
       { type: "text", text: "here you go" },

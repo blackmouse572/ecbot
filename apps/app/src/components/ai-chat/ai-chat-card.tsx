@@ -13,6 +13,7 @@ import {
   AttachmentGroup,
   AttachmentMedia,
   AttachmentTitle,
+  AttachmentTrigger,
   Marker,
   MarkerContent,
   MarkerIcon,
@@ -67,8 +68,12 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
     <AttachmentGroup className="mt-2">
       {files.map((file, index) => {
         const isImage = file.mediaType.startsWith("image/");
-        const card = (
-          <Attachment size="sm" className="w-[200px] shrink-0">
+        return (
+          <Attachment
+            key={`${file.url}-${index}`}
+            size="sm"
+            className="w-[200px] shrink-0"
+          >
             <AttachmentMedia variant={isImage ? "image" : "icon"}>
               {isImage ? (
                 <img
@@ -86,20 +91,16 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
               </AttachmentTitle>
               <AttachmentDescription>{file.mediaType}</AttachmentDescription>
             </AttachmentContent>
+            {/* A file (a menu PDF the bot sent) opens in a new tab. */}
+            {!isImage && (
+              <AttachmentTrigger
+                href={file.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={file.filename ?? file.mediaType}
+              />
+            )}
           </Attachment>
-        );
-        // A file (a menu PDF the bot sent) opens in a new tab.
-        return isImage ? (
-          <div key={`${file.url}-${index}`}>{card}</div>
-        ) : (
-          <a
-            key={`${file.url}-${index}`}
-            href={file.url}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {card}
-          </a>
         );
       })}
     </AttachmentGroup>

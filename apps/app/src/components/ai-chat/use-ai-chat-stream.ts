@@ -159,6 +159,13 @@ function fileName(part: UIMessagePartLike): string | undefined {
   return typeof name === "string" ? name : undefined;
 }
 
+/** A send_image or send_media call that apps/ai rejected (`{ok: false}`):
+ * no file part follows it, so it shows in the tool trace instead. */
+function failedCall(part: UIMessagePartLike): boolean {
+  if (part.state !== "output-available") return false;
+  return (part.output as { ok?: boolean } | undefined)?.ok === false;
+}
+
 /**
  * Pure mapper from a `UIMessage["parts"]` array to a flat shape that's easy
  * to render: concatenated text, concatenated reasoning, tool calls keyed by
@@ -213,7 +220,7 @@ export function partsToRenderModel(
       if (data?.count) model.knowledgeCount = data.count;
     } else if (
       part.type.startsWith("tool-") &&
-      !FILE_TOOL_PARTS.has(part.type)
+      (!FILE_TOOL_PARTS.has(part.type) || failedCall(part))
     ) {
       closeSegment();
       model.toolCalls.push({
