@@ -2932,6 +2932,9 @@
       "location": "Vị trí",
       "unsupported": "Loại tin nhắn chưa hiển thị được"
     },
+    "noReply": {
+      "label": "Bot chọn không trả lời"
+    },
     "quote": {
       "yours": "Trả lời tin nhắn của bạn",
       "theirs": "Trả lời tin nhắn trước của khách",

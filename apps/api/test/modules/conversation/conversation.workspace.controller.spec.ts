@@ -517,6 +517,41 @@ describe('ConversationWorkspaceController', () => {
             expect(result._pagination.totalPage).toBe(3);
         });
 
+        it('leaves the newest page open-ended for activities, so a silent turn after the last message shows', async () => {
+            const pageMessages = [
+                { id: 'msg-1', dateSent: new Date('2026-01-01T10:00:00Z') },
+                { id: 'msg-2', dateSent: new Date('2026-01-02T10:00:00Z') },
+            ];
+            mockConversationMessagingService.listMessages.mockResolvedValue({
+                messages: pageMessages,
+                conversation: mockConversation,
+                total: 120,
+            });
+            mockConversationMessagingService.buildUserNameMap.mockResolvedValue(
+                new Map()
+            );
+            mockConversationMessagingService.listToolInvocations.mockResolvedValue(
+                []
+            );
+            mockConversationMessagingService.mapMessages.mockReturnValue([]);
+            const from = new Date('2026-01-01T09:55:00Z');
+
+            await controller.listMessages(workspace, 'conv-1', 1, 50);
+            expect(
+                mockConversationMessagingService.listActivities
+            ).toHaveBeenLastCalledWith('conv-1', { from, to: undefined });
+
+            // Older pages stay bounded: their windows overlap on the lower
+            // buffer, so an open end would draw a later activity twice.
+            await controller.listMessages(workspace, 'conv-1', 2, 50);
+            expect(
+                mockConversationMessagingService.listActivities
+            ).toHaveBeenLastCalledWith('conv-1', {
+                from,
+                to: pageMessages[1].dateSent,
+            });
+        });
+
         it('propagates the 404 thrown by the messaging service for a cross-workspace id', async () => {
             mockConversationMessagingService.listMessages.mockRejectedValue(
                 new NotFoundException({

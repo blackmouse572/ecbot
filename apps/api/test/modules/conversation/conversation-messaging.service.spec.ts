@@ -733,6 +733,36 @@ describe('ConversationMessagingService', () => {
                 ...over,
             }) as unknown as ConversationActivityEntity;
 
+        it('notes a silent turn under the customer message it left unanswered', async () => {
+            const customer = (sent: string) =>
+                ({
+                    authorId: 'cust',
+                    authorType: ENUM_MESSAGE_AUTHOR.USER,
+                    direction: 'INBOUND',
+                    conversation: { id: 'c' },
+                    dateSent: new Date(sent),
+                }) as unknown as MessageEntity;
+            const [asked, , thanked] = await buildService().mapMessages(
+                [
+                    customer('2026-10-01T09:59:00Z'),
+                    bot('2026-10-01T09:59:30Z'),
+                    customer('2026-10-01T10:00:00Z'),
+                ],
+                undefined,
+                undefined,
+                [],
+                [
+                    activity({
+                        kind: ENUM_CONVERSATION_ACTIVITY_KIND.NO_REPLY,
+                        label: 'customer said ok',
+                    }),
+                ]
+            );
+
+            expect(thanked.noReply).toEqual({ reason: 'customer said ok' });
+            expect(asked.noReply).toBeUndefined();
+        });
+
         it('shows a loaded skill as a skill step under the next bot reply', async () => {
             const [dto] = await buildService().mapMessages(
                 [bot('2026-10-01T10:00:05Z')],
