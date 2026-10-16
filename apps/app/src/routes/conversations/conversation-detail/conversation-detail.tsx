@@ -160,7 +160,8 @@ export function ConversationDetail() {
 
   // Meta (Messenger/IG) only allows operator reactions within the 24h window
   // opened by the customer's last inbound message; outside it the picker is
-  // disabled with an explanatory tooltip (#248).
+  // disabled with an explanatory tooltip (#248). Replies follow the same rule,
+  // so the composer is disabled under an overlay too.
   const reactionWindowClosed = isReactionWindowClosed(
     (conversation as A).account?.type as string | undefined,
     messages,
@@ -191,7 +192,11 @@ export function ConversationDetail() {
         reactionWindowClosed={reactionWindowClosed}
         onReact={onReact}
       />
-      <MessageComposer isSending={send.isPending} onSubmit={onSend} />
+      <MessageComposer
+        isSending={send.isPending}
+        onSubmit={onSend}
+        windowClosed={!isLoadingMessages && reactionWindowClosed}
+      />
     </>
   );
 
