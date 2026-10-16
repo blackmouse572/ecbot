@@ -110,6 +110,14 @@ export class MessageReplyToResponseDto {
     fromCustomer?: boolean;
 }
 
+/** The agent chose not to answer this customer message. */
+export class MessageNoReplyResponseDto {
+    @ApiPropertyOptional({
+        description: 'Why, in a few words the agent wrote for staff',
+    })
+    reason?: string;
+}
+
 /** One knowledge source behind a BOT reply, for the operator trace. */
 export class MessageKnowledgeSourceResponseDto {
     @ApiProperty({ description: 'Knowledge item id' })
@@ -222,6 +230,14 @@ export class MessageGetResponseDto {
         description: 'What this message answers, when it is a reply',
     })
     replyTo?: MessageReplyToResponseDto;
+
+    @Expose()
+    @ApiPropertyOptional({
+        type: () => MessageNoReplyResponseDto,
+        description:
+            'Set on a customer message the agent chose not to answer (e.g. an ok sticker after its answer)',
+    })
+    noReply?: MessageNoReplyResponseDto;
 
     @Expose()
     @ApiPropertyOptional({

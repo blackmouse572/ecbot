@@ -421,9 +421,14 @@ export class ConversationWorkspaceController {
                       to: messages[messages.length - 1].dateSent,
                   }
                 : undefined;
+        // A silent turn's NO_REPLY activity is written after the newest
+        // message, so the newest page leaves its upper edge open. Older pages
+        // keep it: their windows overlap on the lower buffer.
+        const activityRange =
+            range && offset === 0 ? { ...range, to: undefined } : range;
         const [invocations, activities] = await Promise.all([
             this.conversationMessagingService.listToolInvocations(id, range),
-            this.conversationMessagingService.listActivities(id, range),
+            this.conversationMessagingService.listActivities(id, activityRange),
         ]);
 
         return {
