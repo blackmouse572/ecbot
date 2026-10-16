@@ -3199,6 +3199,77 @@ export type ToolAdminResponseDto = {
     invocationStats: ToolInvocationStatsResponseDto;
 };
 
+export type ToolkitAdminCategoryResponseDto = {
+    id: string;
+    name: string;
+};
+
+export type ToolkitAdminEcchoResponseDto = {
+    slug: string;
+    name: string;
+    description?: string;
+    /**
+     * Logo URL
+     */
+    logo?: string;
+    categories: Array<ToolkitAdminCategoryResponseDto>;
+    /**
+     * Workspaces with a live tool from it
+     */
+    workspaceCount: number;
+    /**
+     * Live tools installed from it
+     */
+    toolCount: number;
+    /**
+     * Whether the server URL for this toolkit is set
+     */
+    configured: boolean;
+};
+
+export type ToolkitAdminResponseDto = {
+    slug: string;
+    name: string;
+    description?: string;
+    /**
+     * Logo URL
+     */
+    logo?: string;
+    categories: Array<ToolkitAdminCategoryResponseDto>;
+    /**
+     * Workspaces with a live tool from it
+     */
+    workspaceCount: number;
+    /**
+     * Live tools installed from it
+     */
+    toolCount: number;
+};
+
+export type ToolkitAdminComposioStatusResponseDto = {
+    /**
+     * COMPOSIO_API_KEY is set
+     */
+    apiKeyConfigured: boolean;
+    /**
+     * The catalog loaded with that key
+     */
+    reachable: boolean;
+    baseUrl: string;
+    /**
+     * Toolkits in the Composio catalog
+     */
+    toolkitCount: number;
+    /**
+     * Toolkits with at least one live tool
+     */
+    installedToolkitCount: number;
+    /**
+     * Live Composio tools in all workspaces
+     */
+    toolCount: number;
+};
+
 export type WaitlistListResponseDto = {
     /**
      * Alias id of api key
@@ -3273,103 +3344,48 @@ export type WorkspaceUpdateStatusRequestDto = {
     status: 'ACTIVE' | 'SUSPENDED';
 };
 
-export type CustomerAdminWorkspaceResponseDto = {
+export type KnowledgeItemAdminListResponseDto = {
     id: string;
-    name: string;
-    slug: string;
-};
-
-export type CustomerAdminTagResponseDto = {
-    id: string;
-    name: string;
-    emoji?: string;
-};
-
-export type CustomerAdminListResponseDto = {
-    id: string;
-    name?: string;
+    title: string;
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
+    status: 'DRAFT' | 'READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
     /**
-     * The customer name, or else the name their first channel reports
+     * Bytes of the uploaded file, for FILE and MEDIA items
      */
-    displayName?: string;
-    phone?: string;
-    email?: string;
-    /**
-     * Avatar of the first channel that has one
-     */
-    avatar?: string;
-    workspace: CustomerAdminWorkspaceResponseDto;
-    contactPointCount: number;
-    /**
-     * Distinct channel types the customer is reachable on
-     */
-    channels: Array<'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS'>;
-    tags: Array<CustomerAdminTagResponseDto>;
+    size?: number;
+    chunkCount: number;
+    workspace: ActivityAdminWorkspaceResponseDto;
     createdAt: string;
     updatedAt?: string;
 };
 
-export type CustomerAdminContactPointResponseDto = {
-    id: string;
-    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
-    /**
-     * Name the channel reports for the sender
-     */
-    displayName?: string;
-    avatar?: string;
-    createdAt: string;
-};
-
-export type CustomerAdminGetResponseDto = {
-    id: string;
-    name?: string;
-    /**
-     * The customer name, or else the name their first channel reports
-     */
-    displayName?: string;
-    phone?: string;
-    email?: string;
-    /**
-     * Avatar of the first channel that has one
-     */
-    avatar?: string;
-    workspace: CustomerAdminWorkspaceResponseDto;
-    contactPointCount: number;
-    /**
-     * Distinct channel types the customer is reachable on
-     */
-    channels: Array<'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS'>;
-    tags: Array<CustomerAdminTagResponseDto>;
-    createdAt: string;
-    updatedAt?: string;
-    language?: string;
-    notes?: string;
-    profileSummary?: string;
-    /**
-     * Set when this profile was merged into another customer
-     */
-    mergedIntoCustomerId?: string;
-    conversationCount: number;
-    contactPoints: Array<CustomerAdminContactPointResponseDto>;
-};
-
-export type CustomerTagAdminListResponseDto = {
+export type KnowledgeItemAdminChatbotResponseDto = {
     id: string;
     name: string;
-    emoji?: string;
-    description?: string;
+};
+
+export type KnowledgeItemAdminGetResponseDto = {
+    id: string;
+    title: string;
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
+    status: 'DRAFT' | 'READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
     /**
-     * Applying the tag hands the conversation to the team
+     * Bytes of the uploaded file, for FILE and MEDIA items
      */
-    triggersHandoff: boolean;
-    /**
-     * Applying the tag notifies the team
-     */
-    notifiesTeam: boolean;
-    customerCount: number;
-    workspace: CustomerAdminWorkspaceResponseDto;
+    size?: number;
+    chunkCount: number;
+    workspace: ActivityAdminWorkspaceResponseDto;
     createdAt: string;
     updatedAt?: string;
+    /**
+     * Page address of a URL item, or the source link of a TEXT item
+     */
+    sourceUrl?: string;
+    fileName?: string;
+    mimeType?: string;
+    errorMessage?: string;
+    processedAt?: string;
+    chatbots: Array<KnowledgeItemAdminChatbotResponseDto>;
 };
 
 export type UserUpdateProfileRequestDto = {
@@ -16597,6 +16613,279 @@ export type ToolAdminControllerDeleteV1Responses = {
 
 export type ToolAdminControllerDeleteV1Response = ToolAdminControllerDeleteV1Responses[keyof ToolAdminControllerDeleteV1Responses];
 
+export type ToolkitAdminControllerEcchoV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/toolkit/eccho/list';
+};
+
+export type ToolkitAdminControllerEcchoV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolkitAdminControllerEcchoV1Error = ToolkitAdminControllerEcchoV1Errors[keyof ToolkitAdminControllerEcchoV1Errors];
+
+export type ToolkitAdminControllerEcchoV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ToolkitAdminEcchoResponseDto>;
+    };
+};
+
+export type ToolkitAdminControllerEcchoV1Response = ToolkitAdminControllerEcchoV1Responses[keyof ToolkitAdminControllerEcchoV1Responses];
+
+export type ToolkitAdminControllerComposioV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Match on toolkit name or description
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/toolkit/composio/list';
+};
+
+export type ToolkitAdminControllerComposioV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolkitAdminControllerComposioV1Error = ToolkitAdminControllerComposioV1Errors[keyof ToolkitAdminControllerComposioV1Errors];
+
+export type ToolkitAdminControllerComposioV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ToolkitAdminResponseDto>;
+    };
+};
+
+export type ToolkitAdminControllerComposioV1Response = ToolkitAdminControllerComposioV1Responses[keyof ToolkitAdminControllerComposioV1Responses];
+
+export type ToolkitAdminControllerComposioStatusV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/toolkit/composio/status';
+};
+
+export type ToolkitAdminControllerComposioStatusV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolkitAdminControllerComposioStatusV1Error = ToolkitAdminControllerComposioStatusV1Errors[keyof ToolkitAdminControllerComposioStatusV1Errors];
+
+export type ToolkitAdminControllerComposioStatusV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ToolkitAdminComposioStatusResponseDto;
+    };
+};
+
+export type ToolkitAdminControllerComposioStatusV1Response = ToolkitAdminControllerComposioStatusV1Responses[keyof ToolkitAdminControllerComposioStatusV1Responses];
+
 export type WaitlistAdminControllerListV1Data = {
     body?: never;
     headers?: {
@@ -16954,7 +17243,7 @@ export type WorkspaceAdminControllerUpdateStatusV1Responses = {
 
 export type WorkspaceAdminControllerUpdateStatusV1Response = WorkspaceAdminControllerUpdateStatusV1Responses[keyof WorkspaceAdminControllerUpdateStatusV1Responses];
 
-export type CustomerAdminControllerListV1Data = {
+export type KnowledgeItemAdminControllerListV1Data = {
     body?: never;
     headers?: {
         /**
@@ -16969,13 +17258,17 @@ export type CustomerAdminControllerListV1Data = {
          */
         workspace?: string;
         /**
-         * Filter by the id of a tag assigned to the customer
+         * Filter by the id of a chatbot the item is linked to
          */
-        tag?: string;
+        chatbot?: string;
         /**
-         * Channel types the customer has a contact point on, with ',' delimiter
+         * value with ',' delimiter
          */
-        channel?: string;
+        type?: string;
+        /**
+         * value with ',' delimiter
+         */
+        status?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
@@ -16997,10 +17290,10 @@ export type CustomerAdminControllerListV1Data = {
          */
         orderDirection?: 'ASC' | 'DESC';
     };
-    url: '/api/v1/admin/customer/list';
+    url: '/api/v1/admin/knowledge-item/list';
 };
 
-export type CustomerAdminControllerListV1Errors = {
+export type KnowledgeItemAdminControllerListV1Errors = {
     /**
      * 401
      */
@@ -17049,22 +17342,22 @@ export type CustomerAdminControllerListV1Errors = {
     };
 };
 
-export type CustomerAdminControllerListV1Error = CustomerAdminControllerListV1Errors[keyof CustomerAdminControllerListV1Errors];
+export type KnowledgeItemAdminControllerListV1Error = KnowledgeItemAdminControllerListV1Errors[keyof KnowledgeItemAdminControllerListV1Errors];
 
-export type CustomerAdminControllerListV1Responses = {
+export type KnowledgeItemAdminControllerListV1Responses = {
     /**
      * 200
      */
     200: ResponsePagingDto & {
         message?: unknown;
         statusCode?: number;
-        data?: Array<CustomerAdminListResponseDto>;
+        data?: Array<KnowledgeItemAdminListResponseDto>;
     };
 };
 
-export type CustomerAdminControllerListV1Response = CustomerAdminControllerListV1Responses[keyof CustomerAdminControllerListV1Responses];
+export type KnowledgeItemAdminControllerListV1Response = KnowledgeItemAdminControllerListV1Responses[keyof KnowledgeItemAdminControllerListV1Responses];
 
-export type CustomerAdminControllerGetV1Data = {
+export type KnowledgeItemAdminControllerGetV1Data = {
     body?: never;
     headers?: {
         /**
@@ -17073,13 +17366,13 @@ export type CustomerAdminControllerGetV1Data = {
         'x-custom-lang'?: string;
     };
     path: {
-        customer: string;
+        item: string;
     };
     query?: never;
-    url: '/api/v1/admin/customer/get/{customer}';
+    url: '/api/v1/admin/knowledge-item/get/{item}';
 };
 
-export type CustomerAdminControllerGetV1Errors = {
+export type KnowledgeItemAdminControllerGetV1Errors = {
     /**
      * 401
      */
@@ -17128,22 +17421,22 @@ export type CustomerAdminControllerGetV1Errors = {
     };
 };
 
-export type CustomerAdminControllerGetV1Error = CustomerAdminControllerGetV1Errors[keyof CustomerAdminControllerGetV1Errors];
+export type KnowledgeItemAdminControllerGetV1Error = KnowledgeItemAdminControllerGetV1Errors[keyof KnowledgeItemAdminControllerGetV1Errors];
 
-export type CustomerAdminControllerGetV1Responses = {
+export type KnowledgeItemAdminControllerGetV1Responses = {
     /**
      * 200
      */
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: CustomerAdminGetResponseDto;
+        data?: KnowledgeItemAdminGetResponseDto;
     };
 };
 
-export type CustomerAdminControllerGetV1Response = CustomerAdminControllerGetV1Responses[keyof CustomerAdminControllerGetV1Responses];
+export type KnowledgeItemAdminControllerGetV1Response = KnowledgeItemAdminControllerGetV1Responses[keyof KnowledgeItemAdminControllerGetV1Responses];
 
-export type CustomerTagAdminControllerListV1Data = {
+export type KnowledgeItemAdminControllerDeleteV1Data = {
     body?: never;
     headers?: {
         /**
@@ -17151,37 +17444,14 @@ export type CustomerTagAdminControllerListV1Data = {
          */
         'x-custom-lang'?: string;
     };
-    path?: never;
-    query?: {
-        /**
-         * Filter by workspace id
-         */
-        workspace?: string;
-        /**
-         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
-         */
-        search?: string;
-        /**
-         * Data per page, max 100
-         */
-        perPage?: number;
-        /**
-         * page number, max 20
-         */
-        page?: number;
-        /**
-         * Order by base on _metadata.pagination.availableOrderBy
-         */
-        orderBy?: string;
-        /**
-         * Order direction base on _metadata.pagination.availableOrderDirection
-         */
-        orderDirection?: 'ASC' | 'DESC';
+    path: {
+        item: string;
     };
-    url: '/api/v1/admin/customer-tag/list';
+    query?: never;
+    url: '/api/v1/admin/knowledge-item/delete/{item}';
 };
 
-export type CustomerTagAdminControllerListV1Errors = {
+export type KnowledgeItemAdminControllerDeleteV1Errors = {
     /**
      * 401
      */
@@ -17230,20 +17500,97 @@ export type CustomerTagAdminControllerListV1Errors = {
     };
 };
 
-export type CustomerTagAdminControllerListV1Error = CustomerTagAdminControllerListV1Errors[keyof CustomerTagAdminControllerListV1Errors];
+export type KnowledgeItemAdminControllerDeleteV1Error = KnowledgeItemAdminControllerDeleteV1Errors[keyof KnowledgeItemAdminControllerDeleteV1Errors];
 
-export type CustomerTagAdminControllerListV1Responses = {
+export type KnowledgeItemAdminControllerDeleteV1Responses = {
     /**
      * 200
      */
-    200: ResponsePagingDto & {
+    200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: Array<CustomerTagAdminListResponseDto>;
     };
 };
 
-export type CustomerTagAdminControllerListV1Response = CustomerTagAdminControllerListV1Responses[keyof CustomerTagAdminControllerListV1Responses];
+export type KnowledgeItemAdminControllerDeleteV1Response = KnowledgeItemAdminControllerDeleteV1Responses[keyof KnowledgeItemAdminControllerDeleteV1Responses];
+
+export type KnowledgeItemAdminControllerReprocessV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        item: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/knowledge-item/reprocess/{item}';
+};
+
+export type KnowledgeItemAdminControllerReprocessV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemAdminControllerReprocessV1Error = KnowledgeItemAdminControllerReprocessV1Errors[keyof KnowledgeItemAdminControllerReprocessV1Errors];
+
+export type KnowledgeItemAdminControllerReprocessV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemAdminControllerReprocessV1Response = KnowledgeItemAdminControllerReprocessV1Responses[keyof KnowledgeItemAdminControllerReprocessV1Responses];
 
 export type UserSharedControllerProfileV1Data = {
     body?: never;
