@@ -3,8 +3,8 @@ import type { ReplyMedia } from '@app/modules/platform/interfaces/message-model'
 /**
  * The image or file a reply sends, from an apps/ai `file` part (`send_image`,
  * `send_media`, an allowed markdown image). Null for any other part. The file
- * name and size ride in `providerMetadata.eccho`: the AI SDK keeps nothing
- * else on a file part.
+ * name rides in `providerMetadata.eccho`: the AI SDK keeps nothing else on a
+ * file part.
  */
 export function mediaFromFilePart(
     part: Record<string, unknown>
@@ -19,6 +19,5 @@ export function mediaFromFilePart(
         url,
         kind: 'file',
         ...(typeof meta?.filename === 'string' && { name: meta.filename }),
-        ...(typeof meta?.size === 'number' && { size: meta.size }),
     };
 }

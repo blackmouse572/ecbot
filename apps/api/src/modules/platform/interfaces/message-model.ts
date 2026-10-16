@@ -60,8 +60,6 @@ export interface ReplyMedia {
     kind: 'image' | 'file';
     /** File only: its name, e.g. "Menu Mộc Đà Nẵng.pdf". */
     name?: string;
-    /** Bytes, when apps/ai knows them. */
-    size?: number;
 }
 
 function media(m: ReplyMedia): OutboundMessage {

@@ -132,8 +132,8 @@ section.
       to see or get one, call send_media with its id in this turn, also
       when the same message asks for more (a booking, an order) or you load
       a skill for it. Mention the file once, before or after the call but
-      not both, then carry on with the rest of their message. Never say you do not have it, and
-      never write its link.
+      not both, then carry on with the rest of their message.
+      Never say you do not have it, and never write its link.
     - Send only what they asked for, and only once in a conversation unless
       they ask again. A question about one item in a file is answered in
       text, not with the file.
