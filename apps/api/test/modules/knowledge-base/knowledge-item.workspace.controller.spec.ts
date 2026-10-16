@@ -283,3 +283,38 @@ describe('KnowledgeItemWorkspaceController.batchTag', () => {
         });
     });
 });
+
+describe('KnowledgeItemWorkspaceController.list', () => {
+    it('does not list the items of a deleted knowledge base', async () => {
+        const knowledgeBaseService = {
+            findOne: jest.fn().mockResolvedValue(null),
+        };
+        const controller = new KnowledgeItemWorkspaceController(
+            {} as any,
+            {} as any,
+            knowledgeBaseService as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any
+        );
+
+        await expect(
+            controller.list(
+                { id: 'workspace-1' } as any,
+                'kb-1',
+                { _limit: 20, _offset: 0 } as any,
+                {},
+                {},
+                {}
+            )
+        ).rejects.toThrow('knowledgeBase.error.notFound');
+        expect(knowledgeBaseService.findOne).toHaveBeenCalledWith({
+            id: 'kb-1',
+            workspace: 'workspace-1',
+            deletedAt: null,
+        });
+    });
+});

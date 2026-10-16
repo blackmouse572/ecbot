@@ -7,7 +7,7 @@ describe('KnowledgeBaseService', () => {
     // caller's workspace — otherwise a knowledge base id from another
     // workspace can be updated or deleted.
     describe('update', () => {
-        it('scopes the lookup to the given workspace', async () => {
+        it('scopes the lookup to the given workspace, skipping deleted ones', async () => {
             const knowledgeBase = { id: 'kb-1' } as KnowledgeBaseEntity;
             const findOne = jest.fn().mockResolvedValue(knowledgeBase);
             const flush = jest.fn().mockResolvedValue(undefined);
@@ -22,6 +22,7 @@ describe('KnowledgeBaseService', () => {
             expect(findOne).toHaveBeenCalledWith(KnowledgeBaseEntity, {
                 id: 'kb-1',
                 workspace: 'workspace-1',
+                deletedAt: null,
             });
         });
 
@@ -48,7 +49,7 @@ describe('KnowledgeBaseService', () => {
     });
 
     describe('softDelete', () => {
-        it('scopes the lookup to the given workspace', async () => {
+        it('scopes the lookup to the given workspace, skipping deleted ones', async () => {
             const knowledgeBase = { id: 'kb-1' } as KnowledgeBaseEntity;
             const findOne = jest.fn().mockResolvedValue(knowledgeBase);
             const em = {
@@ -63,6 +64,7 @@ describe('KnowledgeBaseService', () => {
             expect(findOne).toHaveBeenCalledWith(KnowledgeBaseEntity, {
                 id: 'kb-1',
                 workspace: 'workspace-1',
+                deletedAt: null,
             });
         });
 

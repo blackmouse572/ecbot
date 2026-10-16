@@ -55,6 +55,11 @@ describe('KnowledgeItemTagController', () => {
             const result = await controller.list(workspace, 'kb-1');
 
             expect(result.data).toEqual(['a']);
+            expect(knowledgeBaseService.findOne).toHaveBeenCalledWith({
+                id: 'kb-1',
+                workspace: workspace.id,
+                deletedAt: null,
+            });
         });
     });
 

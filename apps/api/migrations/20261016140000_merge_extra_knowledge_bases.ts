@@ -38,10 +38,19 @@ export class Migration20261016140000_merge_extra_knowledge_bases extends Migrati
             from (${MERGE}) m
             where kb."id" = m."from_id";
         `);
+        // Keep it at one: a second live knowledge base now fails to insert.
+        this.addSql(`
+            create unique index if not exists "knowledge_bases_workspace_id_live_unique"
+                on "knowledge_bases" ("workspace_id")
+                where "deleted_at" is null;
+        `);
     }
 
     override async down(): Promise<void> {
         // Which items came from which knowledge base is not recorded, so
         // rollback leaves them merged.
+        this.addSql(
+            `drop index if exists "knowledge_bases_workspace_id_live_unique";`
+        );
     }
 }
