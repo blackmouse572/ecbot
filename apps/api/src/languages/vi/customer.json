@@ -2,6 +2,11 @@
     "workspace": {
         "erase": "Đã xóa vĩnh viễn khách hàng và toàn bộ cuộc trò chuyện của họ."
     },
+    "admin": {
+        "list": "Lấy danh sách khách hàng thành công.",
+        "get": "Lấy thông tin khách hàng thành công.",
+        "tagList": "Lấy danh sách thẻ khách hàng thành công."
+    },
     "error": {
         "notFound": "Không tìm thấy khách hàng."
     }
