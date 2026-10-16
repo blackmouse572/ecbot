@@ -1,4 +1,7 @@
 import { HandoffEmailService } from './handoff-email.service';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
+import { ActivityService } from '@app/modules/activity/services/activity.service';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 import {
     IDatabaseFindAllOptions,
     IDatabaseFindOneOptions,
@@ -65,7 +68,8 @@ export class ConversationService implements IConversationService {
         private readonly conversationReadRepository: ConversationReadRepository,
         private readonly customerTagClassifierService: CustomerTagClassifierService,
         private readonly moduleRef: ModuleRef,
-        private readonly messageRepository: MessageRepository
+        private readonly messageRepository: MessageRepository,
+        private readonly activityService: ActivityService
     ) {}
 
     private get handoffEmail(): HandoffEmailService | undefined {
@@ -494,7 +498,8 @@ export class ConversationService implements IConversationService {
         conversation: ConversationEntity,
         workspaceId: string,
         reason: string,
-        language?: string
+        language?: string,
+        tagId?: string
     ): Promise<ConversationEntity> {
         // Auto-escalation: turn the bot off and raise the alarm (handoffAt + notification).
         // This is what distinguishes an escalation from a quiet manual takeover.
@@ -513,6 +518,25 @@ export class ConversationService implements IConversationService {
                 statusCode: 404,
             });
         }
+
+        // The dashboard's handoff rate counts these rows: `handoffAt` is
+        // cleared again once staff resolve the conversation. Never fatal.
+        await this.activityService
+            .createByBotWithWorkspace(workspaceId, {
+                action: ENUM_ACTIVITY_ACTION.CONVERSATION_HANDOFF,
+                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                metadata: {
+                    id: conversation.id,
+                    name: conversation.senderName,
+                    reason,
+                    ...(tagId ? { tagId } : {}),
+                },
+            })
+            .catch((err: unknown) =>
+                this.logger.warn(
+                    `Handoff activity for ${conversation.id} not logged: ${(err as Error).message}`
+                )
+            );
 
         // Notify operators (all active workspace members)
         await this.notifyOperators(

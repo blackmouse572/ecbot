@@ -103,7 +103,8 @@ describe('CustomerTagSystemController (#174)', () => {
                 conversation,
                 'ws-1',
                 'tag_trigger',
-                'vi'
+                'vi',
+                'tag-handoff'
             );
             expect(result).toEqual({ ok: true, triggeredHandoff: true });
         });

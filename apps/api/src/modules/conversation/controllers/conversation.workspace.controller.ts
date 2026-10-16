@@ -1,4 +1,8 @@
 import {
+    botActivityAction,
+    statusActivityAction,
+} from '../utils/conversation-activity-action.util';
+import {
     IResponse,
     IResponsePaging,
 } from '@app/common/response/interfaces/response.interface';
@@ -272,7 +276,7 @@ export class ConversationWorkspaceController {
         );
 
         await this.activityService.createByUserWithWorkspace(user, workspace, {
-            action: ENUM_ACTIVITY_ACTION.UPDATE,
+            action: statusActivityAction(dto.status),
             subject: ENUM_POLICY_SUBJECT.CONVERSATION,
             metadata: {
                 id: conversation.id,
@@ -319,7 +323,7 @@ export class ConversationWorkspaceController {
         );
 
         await this.activityService.createByUserWithWorkspace(user, workspace, {
-            action: ENUM_ACTIVITY_ACTION.UPDATE,
+            action: botActivityAction(dto.botEnabled),
             subject: ENUM_POLICY_SUBJECT.CONVERSATION,
             metadata: {
                 id: conversation.id,

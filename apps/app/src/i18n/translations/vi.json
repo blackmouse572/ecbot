@@ -940,7 +940,12 @@
     "conversation": {
       "create": "đã gửi tin nhắn cho <link/>",
       "update": "đã cập nhật hội thoại với <link/>",
-      "unknownCustomer": "một khách hàng"
+      "unknownCustomer": "một khách hàng",
+      "handoff": "đã chuyển <link/> cho nhân viên",
+      "takeover": "đã nhận xử lý hội thoại với <link/>",
+      "botResumed": "đã giao lại <link/> cho bot",
+      "resolved": "đã xử lý xong hội thoại với <link/>",
+      "reopened": "đã mở lại hội thoại với <link/>"
     },
     "plan": {
       "changePlan": "đã thay đổi gói đăng ký",
@@ -959,7 +964,8 @@
       "update": "đã cập nhật không gian làm việc <link/>",
       "join": "đã tham gia không gian làm việc <link/>",
       "leave": "đã rời không gian làm việc <link/>"
-    }
+    },
+    "bot": "Bot"
   },
   "imports": {
     "title": "Nhập danh sách tài khoản",

@@ -121,7 +121,8 @@ export class CustomerTagSystemController {
                         conversation,
                         workspaceId,
                         'tag_trigger',
-                        conversation.chatbot?.primaryLanguage
+                        conversation.chatbot?.primaryLanguage,
+                        tag.id
                     );
                     triggeredHandoff = true;
                 } else {

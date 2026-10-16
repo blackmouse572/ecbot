@@ -117,25 +117,32 @@ export function ActivityItemDefault({ item }: Props) {
     <ActivityItem>
       <ActivityItem.ByAvatar
         src={(item.by as A)?.photo?.url}
-        fallback={getAvatarFallback(item.by?.name)}
+        fallback={getAvatarFallback(item.by?.name ?? t("activities.bot"))}
       />
       <ActivityItem.Body>
         <ActivityItem.Title>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Link
-                to={`/${workspaceSlug}/${ROUTES.Settings}/${ROUTES.WorkspaceMember}/${item.by.id}`}
-              >
-                <ActivityItem.Name user={item.by} />
-              </Link>
-            </HoverCardTrigger>
-            <HoverCardContent>
-              <Section variant="spaced">
-                <SectionRow title={t("fields.name")} value={item.by.name} />
-                <SectionRow title={t("fields.email")} value={item.by.email} />
-              </Section>
-            </HoverCardContent>
-          </HoverCard>
+          {item.by ? (
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Link
+                  to={`/${workspaceSlug}/${ROUTES.Settings}/${ROUTES.WorkspaceMember}/${item.by.id}`}
+                >
+                  <ActivityItem.Name user={item.by} />
+                </Link>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <Section variant="spaced">
+                  <SectionRow title={t("fields.name")} value={item.by.name} />
+                  <SectionRow title={t("fields.email")} value={item.by.email} />
+                </Section>
+              </HoverCardContent>
+            </HoverCard>
+          ) : (
+            // No member did it: the bot raised a handoff.
+            <span className="txt-compact-small text-ui-fg-base">
+              {t("activities.bot")}
+            </span>
+          )}
           &nbsp;
           <Trans
             i18nKey={getMessage() as A}

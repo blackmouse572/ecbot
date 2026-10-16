@@ -679,12 +679,16 @@ describe('ConversationWorkspaceController', () => {
 
     describe('updateStatus, updateBot and updateTimezone', () => {
         it.each([
-            ['updateStatus', { status: ENUM_CONVERSATION_STATUS.RESOLVED }],
-            ['updateBot', { botEnabled: false }],
-            ['updateTimezone', { timezone: 'America/New_York' }],
+            [
+                'updateStatus',
+                { status: ENUM_CONVERSATION_STATUS.RESOLVED },
+                'conversation_resolved',
+            ],
+            ['updateBot', { botEnabled: false }, 'conversation_takeover'],
+            ['updateTimezone', { timezone: 'America/New_York' }, 'update'],
         ] as const)(
             '%s names the customer in the activity',
-            async (method, dto) => {
+            async (method, dto, action) => {
                 mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
                     { ...mockConversation, senderName: 'Lan Nguyen' }
                 );
@@ -699,7 +703,7 @@ describe('ConversationWorkspaceController', () => {
                 expect(
                     mockActivityService.createByUserWithWorkspace
                 ).toHaveBeenCalledWith(user, workspace, {
-                    action: 'update',
+                    action,
                     subject: ENUM_POLICY_SUBJECT.CONVERSATION,
                     metadata: { id: 'conv-1', name: 'Lan Nguyen' },
                 });

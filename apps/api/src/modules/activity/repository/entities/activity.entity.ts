@@ -24,8 +24,9 @@ export const ActivityTableName = 'activities';
 @Index({ properties: ['workspace'] })
 @Index({ properties: ['by'] })
 export class ActivityEntity extends DatabaseEntityBase {
-    @ManyToOne(() => UserEntity)
-    user: UserEntity;
+    // Empty, with `by`, on a row the bot wrote (a handoff it raised).
+    @ManyToOne(() => UserEntity, { nullable: true, deleteRule: 'no action' })
+    user?: UserEntity;
 
     @ManyToOne(() => WorkspaceEntity, {
         nullable: true,
@@ -51,8 +52,8 @@ export class ActivityEntity extends DatabaseEntityBase {
     @Enum(() => ENUM_ACTIVITY_ACTION)
     action: ENUM_ACTIVITY_ACTION;
 
-    @ManyToOne(() => UserEntity)
-    by: UserEntity;
+    @ManyToOne(() => UserEntity, { nullable: true, deleteRule: 'no action' })
+    by?: UserEntity;
 
     @Property({ type: 'json', nullable: true })
     metadata?: Record<string, any>;

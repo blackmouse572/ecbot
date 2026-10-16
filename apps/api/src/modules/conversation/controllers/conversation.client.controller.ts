@@ -1,4 +1,8 @@
 import {
+    botActivityAction,
+    statusActivityAction,
+} from '../utils/conversation-activity-action.util';
+import {
     PaginationQuery,
     PaginationQueryFilterEqual,
     PaginationQueryFilterInBoolean,
@@ -303,7 +307,12 @@ export class ConversationClientController {
             dto.status,
             dto.reason
         );
-        await this.logUpdate(workspace, credential, conversation);
+        await this.logUpdate(
+            workspace,
+            credential,
+            conversation,
+            statusActivityAction(dto.status)
+        );
 
         return { data: this.conversationService.mapGet(updated) };
     }
@@ -328,7 +337,12 @@ export class ConversationClientController {
             dto.botEnabled,
             dto.reason
         );
-        await this.logUpdate(workspace, credential, conversation);
+        await this.logUpdate(
+            workspace,
+            credential,
+            conversation,
+            botActivityAction(dto.botEnabled)
+        );
 
         return { data: this.conversationService.mapGet(updated) };
     }
@@ -379,13 +393,14 @@ export class ConversationClientController {
     private async logUpdate(
         workspace: WorkspaceEntity,
         credential: ClientCredentialEntity,
-        conversation: ConversationEntity
+        conversation: ConversationEntity,
+        action: ENUM_ACTIVITY_ACTION = ENUM_ACTIVITY_ACTION.UPDATE
     ): Promise<void> {
         await this.activityService.createByUserWithWorkspace(
             credential.createdBy,
             workspace,
             {
-                action: ENUM_ACTIVITY_ACTION.UPDATE,
+                action,
                 subject: ENUM_POLICY_SUBJECT.CONVERSATION,
                 metadata: {
                     id: conversation.id,

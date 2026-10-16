@@ -5,9 +5,9 @@ import {
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 
 export interface IActivityEntity extends Omit<ActivityEntity, 'by'> {
-    by: UserEntity;
+    by?: UserEntity;
 }
 
 export interface IActivityDoc extends Omit<ActivityDoc, 'by'> {
-    by: UserEntity;
+    by?: UserEntity;
 }
