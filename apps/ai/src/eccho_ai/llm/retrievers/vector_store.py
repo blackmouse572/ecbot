@@ -10,6 +10,22 @@ import asyncpg
 from eccho_ai.core.variables import AppVars
 
 
+_MEDIA_COLUMNS = (
+    "m.knowledge_item_id, m.title, m.description, m.url, m.mime_type, k.attachment_size AS size"
+)
+
+
+def _sendable_media(chatbot_param: str) -> str:
+    """FROM/WHERE for a chatbot's sendable media. The item row decides, so no
+    status has to be copied onto rag_media."""
+    return f"""
+    FROM rag.rag_media m
+    JOIN public.knowledge_base_items k ON k.id::text = m.knowledge_item_id
+    WHERE m.chatbot_ids @> ARRAY[{chatbot_param}]::text[]
+        AND k.status = 'COMPLETED' AND NOT k.deleted
+    """
+
+
 _POOL: asyncpg.Pool | None = None
 _POOL_LOCK = asyncio.Lock()
 
@@ -261,6 +277,45 @@ class PgVectorStore:
                 chatbot_ids,
             )
             return int(result.split()[-1]) if result else 0
+
+    async def search_media(
+        self, *, embedding: list[float], chatbot_id: str, limit: int
+    ) -> list[dict[str, Any]]:
+        """The chatbot's sendable media, nearest to the query first. Only items
+        that finished processing and were not deleted: a failed or unfinished
+        upload is never offered to the agent."""
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                f"""
+                SELECT {_MEDIA_COLUMNS}, m.embedding <=> $1::public.vector AS distance
+                {_sendable_media("$2")}
+                ORDER BY m.embedding <=> $1::public.vector
+                LIMIT $3
+                """,
+                _vector_literal(embedding),
+                chatbot_id,
+                limit,
+            )
+            return [dict(row) for row in rows]
+
+    async def has_media(self, *, chatbot_id: str) -> bool:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            return bool(await conn.fetchval(
+                f"SELECT EXISTS (SELECT 1 {_sendable_media('$1')})", chatbot_id
+            ))
+
+    async def get_media(self, *, chatbot_id: str, knowledge_item_id: str) -> dict[str, Any] | None:
+        """One sendable media item of the chatbot, or None."""
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                f"SELECT {_MEDIA_COLUMNS} {_sendable_media('$2')} AND m.knowledge_item_id = $1",
+                knowledge_item_id,
+                chatbot_id,
+            )
+            return dict(row) if row else None
 
     async def list_documents(self, *, limit: int = 20) -> list[dict[str, Any]]:
         pool = await get_pool()

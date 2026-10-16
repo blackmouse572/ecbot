@@ -5,7 +5,8 @@ import { PlatformAdapter } from '../adapters/platform-adapter.base';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { ReplySegment, segmentMessages } from '../interfaces/message-model';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
-import { botImage } from '@app/modules/conversation/utils/message-attachment';
+import { botMedia } from '@app/modules/conversation/utils/message-attachment';
+import { mediaFromFilePart } from '@app/modules/chatbot/utils/ai-file-part';
 import { ReplySegmenter } from '../utils/reply-segmenter';
 import { ReplyActivityCollector } from '../utils/reply-activity-collector';
 import { IReplyActivity } from '@app/modules/conversation/interfaces/conversation-activity.interface';
@@ -106,20 +107,6 @@ function parseSsePart(line: string):
     }
 }
 
-/** A `file` part carrying an image (emitted by apps/ai for `send_image`). */
-function isImagePart(part: {
-    type: string;
-    url?: unknown;
-    mediaType?: unknown;
-}): part is { type: 'file'; url: string; mediaType: string } {
-    return (
-        part.type === 'file' &&
-        typeof part.url === 'string' &&
-        typeof part.mediaType === 'string' &&
-        part.mediaType.startsWith('image/')
-    );
-}
-
 export interface DeliveryResult {
     anySent: boolean;
     superseded: boolean;
@@ -211,6 +198,7 @@ export class StreamingDelivery {
                 const parsed = parseSsePart(line);
                 if (!parsed) return;
                 activity.observe(parsed);
+                const media = mediaFromFilePart(parsed);
                 if (
                     parsed.type === 'text-delta' &&
                     typeof parsed.delta === 'string'
@@ -218,8 +206,8 @@ export class StreamingDelivery {
                     segments.addText(parsed.delta);
                 } else if (parsed.type === 'tool-input-start') {
                     segments.close();
-                } else if (isImagePart(parsed)) {
-                    segments.addImage(parsed.url);
+                } else if (media) {
+                    segments.addMedia(media);
                 } else if (parsed.type === 'data-guardrail') {
                     // No semantic tier here, but apps/ai still cuts a reply
                     // that starts reproducing the system prompt. Stop sending
@@ -367,18 +355,23 @@ export class StreamingDelivery {
     }
 
     /**
-     * Persist and send one reply segment: its text, then each image, each as
-     * its own platform message. Returns whether anything reached the customer.
+     * Persist and send one reply segment: its text, then each image or file,
+     * each as its own platform message. Returns whether anything reached the customer.
      */
     private async sendSegment(
         p: StreamingDeliverParams,
         segment: ReplySegment
     ): Promise<boolean> {
         let sent = false;
-        for (const msg of segmentMessages(segment)) {
+        const messages = segmentMessages(segment);
+        // segmentMessages puts the text first, then one message per media.
+        const firstMedia = messages.length - segment.media.length;
+        for (const [i, msg] of messages.entries()) {
             const nonce =
-                msg.content.kind === 'media'
-                    ? await p.onSegmentPersist('', [botImage(msg.content.url)])
+                i >= firstMedia
+                    ? await p.onSegmentPersist('', [
+                          botMedia(segment.media[i - firstMedia]),
+                      ])
                     : await p.onSegmentPersist(msg.fallbackText);
             try {
                 const { externalId } = await p.adapter.sendMessage(
@@ -465,6 +458,7 @@ export class StreamingDelivery {
                 }
                 if (!parsed || typeof parsed !== 'object') return;
                 activity.observe(parsed);
+                const media = mediaFromFilePart(parsed);
                 if (
                     parsed.type === 'text-delta' &&
                     typeof parsed.delta === 'string'
@@ -472,8 +466,8 @@ export class StreamingDelivery {
                     segmenter.addText(parsed.delta);
                 } else if (parsed.type === 'tool-input-start') {
                     segmenter.close(); // a tool call ends the spoken segment
-                } else if (isImagePart(parsed)) {
-                    segmenter.addImage(parsed.url);
+                } else if (media) {
+                    segmenter.addMedia(media);
                 } else if (parsed.type === 'data-guardrail') {
                     guardrailBlocked = true;
                     guardrailReason =

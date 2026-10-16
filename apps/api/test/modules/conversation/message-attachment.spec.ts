@@ -1,6 +1,6 @@
 import { MessageAttachmentsType } from '../../../src/modules/conversation/repository/types/message-attachments.type';
 import {
-    botImage,
+    botMedia,
     forTurn,
     attachmentNote,
     historyNote,
@@ -109,10 +109,31 @@ describe('message attachment', () => {
     });
 
     it('builds the attachment of an image the bot sent', () => {
-        expect(botImage('https://kb/s.jpg')).toEqual({
+        expect(botMedia({ url: 'https://kb/s.jpg', kind: 'image' })).toEqual({
             type: 'image',
             url: 'https://kb/s.jpg',
         });
+    });
+
+    it('builds the attachment of a file the bot sent, with its name', () => {
+        expect(
+            botMedia({
+                url: 'https://kb/m.pdf',
+                kind: 'file',
+                name: 'Menu.pdf',
+            })
+        ).toEqual({ type: 'file', url: 'https://kb/m.pdf', name: 'Menu.pdf' });
+        expect(
+            parseAttachments([
+                botMedia({
+                    url: 'https://kb/m.pdf',
+                    kind: 'file',
+                    name: 'Menu.pdf',
+                }),
+            ])
+        ).toEqual([
+            { type: 'file', url: 'https://kb/m.pdf', name: 'Menu.pdf' },
+        ]);
     });
 
     it('splits resolved images into urls for the AI and ones it cannot view', () => {

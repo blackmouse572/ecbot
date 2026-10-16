@@ -16,6 +16,8 @@ export interface IMessageAttachment {
     description?: string;
     /** Sticker only: the emoji the platform pairs with it. */
     emoji?: string;
+    /** File only: the name shown on it, e.g. a menu PDF the bot sent. */
+    name?: string;
 }
 
 /** What an inbound message answers, as stored on the message. */

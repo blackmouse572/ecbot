@@ -4,7 +4,7 @@ import {
     ITurnImages,
 } from '../interfaces/message-media.interface';
 
-const FIELDS = ['url', 'key', 'description', 'emoji'] as const;
+const FIELDS = ['url', 'key', 'description', 'emoji', 'name'] as const;
 /** Kinds stored like customer photos and read by the image step. */
 const VISUAL_TYPES = new Set(['image', 'sticker', 'story']);
 /** A quoted message's text is cut to this many characters. */
@@ -137,9 +137,16 @@ export function withDescriptions(
     );
 }
 
-/** The attachment of an image the bot sent. */
-export function botImage(url: string): IMessageAttachment {
-    return { type: 'image', url };
+/** The attachment of an image or file the bot sent. */
+export function botMedia(media: {
+    url: string;
+    kind: 'image' | 'file';
+    name?: string;
+}): IMessageAttachment {
+    if (media.kind === 'image') return { type: 'image', url: media.url };
+    return media.name
+        ? { type: 'file', url: media.url, name: media.name }
+        : { type: 'file', url: media.url };
 }
 
 /** Resolved attachments (stored images already signed) as apps/ai gets them. */

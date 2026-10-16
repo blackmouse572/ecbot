@@ -74,7 +74,7 @@ async def test_agent_input_puts_the_note_before_the_customer_message(monkeypatch
 
 async def test_note_stays_next_to_the_question_when_knowledge_is_retrieved(monkeypatch):
     retrieval = SimpleNamespace(
-        status="ok", has_context=True, context="Pho: 65,000 VND"
+        status="ok", has_context=True, context="Pho: 65,000 VND", media=[]
     )
     content = await _last_message(monkeypatch, "How much is the pho?", retrieval)
     assert (

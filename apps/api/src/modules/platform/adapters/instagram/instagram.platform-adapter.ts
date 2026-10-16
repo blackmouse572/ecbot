@@ -312,7 +312,7 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             // Instagram has no file attachment; send the link instead.
             message = {
                 text: this.truncate(
-                    [c.caption, c.url].filter(Boolean).join('\n')
+                    [c.caption ?? c.name, c.url].filter(Boolean).join('\n')
                 ),
             };
         } else if (c.kind === 'media') {

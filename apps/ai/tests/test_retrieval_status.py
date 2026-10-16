@@ -34,6 +34,12 @@ class _Store:
     async def count_completed_documents(self, *, chatbot_id):
         return self.documents
 
+    async def has_media(self, *, chatbot_id):
+        return False
+
+    async def search_media(self, **_kw):
+        return []
+
     async def similarity_search_chunks(self, **_kw):
         return self.rows
 

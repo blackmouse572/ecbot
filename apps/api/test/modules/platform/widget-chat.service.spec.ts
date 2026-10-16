@@ -221,7 +221,9 @@ describe('WidgetChatService.handleTurn', () => {
     it('persists reply images as attachments', async () => {
         const { service, messageRepository, sseStream } = setup();
         sseStream.pipe.mockImplementationOnce(async ({ onFinalize }: any) => {
-            await onFinalize('Mẫu này nè', ['https://cdn/s.jpg']);
+            await onFinalize('Mẫu này nè', [
+                { url: 'https://cdn/s.jpg', kind: 'image' },
+            ]);
         });
 
         await service.handleTurn(res, turn);

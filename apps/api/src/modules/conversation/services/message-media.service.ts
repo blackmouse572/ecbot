@@ -56,10 +56,14 @@ export class MessageMediaService {
     }
 
     private async resolveOne(
-        { type, url, key, emoji }: IMessageAttachment,
+        { type, url, key, emoji, name }: IMessageAttachment,
         folder: string
     ): Promise<IMessageAttachment> {
-        const base: IMessageAttachment = emoji ? { type, emoji } : { type };
+        const base: IMessageAttachment = {
+            type,
+            ...(emoji && { emoji }),
+            ...(name && { name }),
+        };
         if (!key) return url ? { ...base, url } : base;
         if (!key.startsWith(folder)) return base;
         try {
