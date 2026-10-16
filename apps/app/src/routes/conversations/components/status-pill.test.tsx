@@ -18,7 +18,10 @@ const hover = async (label: string, convo: never) => {
     </TooltipProvider>,
   );
   await userEvent.hover(screen.getByText(label));
-  await screen.findAllByText(/conversations\.status\.hint\./);
+  expect(screen.queryByText(/conversations\.status\.hint\./)).toBeNull();
+  await screen.findAllByText(/conversations\.status\.hint\./, undefined, {
+    timeout: 3000,
+  });
 };
 
 import { StatusPill } from "./status-pill";
@@ -42,8 +45,18 @@ describe("StatusPill", () => {
 
     await userEvent.hover(screen.getByText("conversations.status.needsYou"));
 
+    // Waits two seconds before explaining, so quick passes stay quiet.
     expect(
-      (await screen.findAllByText("conversations.status.hint.needsYou"))[0],
+      screen.queryByText("conversations.status.hint.needsYou"),
+    ).not.toBeInTheDocument();
+    expect(
+      (
+        await screen.findAllByText(
+          "conversations.status.hint.needsYou",
+          undefined,
+          { timeout: 3000 },
+        )
+      )[0],
     ).toBeInTheDocument();
     const link = screen.getAllByRole("link", {
       name: "conversations.status.learnMore",

@@ -2808,7 +2808,13 @@
       "resolveConfirmTitle": "Đánh dấu hội thoại đã xử lý?",
       "resolveConfirmDescription": "Bot tiếp tục trả lời khách và không bàn giao lại việc nhóm đã xử lý. Bạn vẫn gửi tin nhắn được.",
       "restoreConfirmTitle": "Bàn giao lại cho bot?",
-      "restoreConfirmDescription": "Hội thoại mở lại và bot tiếp tục trả lời."
+      "restoreConfirmDescription": "Hội thoại mở lại và bot tiếp tục trả lời.",
+      "resolving": "Đang đánh dấu đã xử lý...",
+      "resolved": "Đã đánh dấu hội thoại đã xử lý",
+      "resolveFailed": "Không đánh dấu được hội thoại. Hãy thử lại.",
+      "restoring": "Đang bàn giao lại cho bot...",
+      "restored": "Đã bàn giao lại cho bot",
+      "restoreFailed": "Không bàn giao lại được. Hãy thử lại."
     },
     "errors": {
       "sendFailed": "Không thể gửi tin nhắn. Vui lòng thử lại.",

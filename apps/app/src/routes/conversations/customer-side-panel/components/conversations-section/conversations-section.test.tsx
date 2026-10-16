@@ -1,3 +1,4 @@
+import { TooltipProvider } from "@medusajs/ui";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -19,7 +20,8 @@ vi.mock("@/components/platform-icon/platform-icon", () => ({
 }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }),
+  Trans: ({ i18nKey }: { i18nKey: string }) => <>{i18nKey}</>,
 }));
 
 const withConversations = (state: object) =>
@@ -42,12 +44,14 @@ const row = (overrides: object) => ({
 
 const renderSection = (conversationId = "conv-1") =>
   render(
-    <MemoryRouter>
-      <ConversationsSection
-        customerId="cust-1"
-        conversationId={conversationId}
-      />
-    </MemoryRouter>,
+    <TooltipProvider>
+      <MemoryRouter>
+        <ConversationsSection
+          customerId="cust-1"
+          conversationId={conversationId}
+        />
+      </MemoryRouter>
+    </TooltipProvider>,
   );
 
 describe("ConversationsSection", () => {
@@ -78,10 +82,11 @@ describe("ConversationsSection", () => {
     });
     renderSection("conv-1");
 
+    // The open conversation is plain content: a link to itself with a hover
+    // state would promise a click that does nothing.
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(2);
-    expect(links[0]).toHaveAttribute("href", "/acme/conversations/conv-1");
-    expect(links[1]).toHaveAttribute("href", "/acme/conversations/conv-2");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/acme/conversations/conv-2");
     expect(screen.getByText("Shop page")).toBeInTheDocument();
     expect(screen.getByText("Support bot")).toBeInTheDocument();
     expect(

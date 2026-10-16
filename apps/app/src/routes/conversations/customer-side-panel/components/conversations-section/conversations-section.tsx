@@ -78,39 +78,55 @@ function ConversationItem({
   const chatbot = (conversation as A).chatbot as { name?: string } | undefined;
   const lastMessageAt = (conversation as A).lastMessageAt as string | undefined;
 
+  const content = (
+    <>
+      <div className="flex items-center gap-x-2">
+        <PlatformIcon type={account?.type} size={16} />
+        <Text size="small" weight="plus" className="min-w-0 flex-1 truncate">
+          {account?.name ?? account?.externalId ?? ""}
+        </Text>
+        {isCurrent && (
+          <Text size="xsmall" className="text-ui-fg-interactive shrink-0">
+            {t("conversations.customer.panel.conversations.current")}
+          </Text>
+        )}
+      </div>
+      <div className="flex items-center justify-between gap-x-2">
+        <Text size="xsmall" className="text-ui-fg-subtle min-w-0 truncate">
+          {chatbot?.name}
+        </Text>
+        <StatusPill conversation={conversation} />
+      </div>
+      {lastMessageAt && (
+        <Text size="xsmall" className="text-ui-fg-muted">
+          {new Date(lastMessageAt).toLocaleString()}
+        </Text>
+      )}
+    </>
+  );
+  const cardClass =
+    "border-ui-border-base bg-ui-bg-base flex flex-col gap-y-1.5 rounded border px-2 py-1.5";
+
   return (
     <li>
-      <Link
-        to={href}
-        aria-current={isCurrent ? "page" : undefined}
-        className={clx(
-          "border-ui-border-base bg-ui-bg-base hover:bg-ui-bg-base-hover flex flex-col gap-y-1.5 rounded border px-2 py-1.5 transition-colors",
-          isCurrent && "border-ui-border-interactive",
-        )}
-      >
-        <div className="flex items-center gap-x-2">
-          <PlatformIcon type={account?.type} size={16} />
-          <Text size="small" weight="plus" className="min-w-0 flex-1 truncate">
-            {account?.name ?? account?.externalId ?? ""}
-          </Text>
-          {isCurrent && (
-            <Text size="xsmall" className="text-ui-fg-interactive shrink-0">
-              {t("conversations.customer.panel.conversations.current")}
-            </Text>
+      {isCurrent ? (
+        <div
+          aria-current="page"
+          className={clx(cardClass, "border-ui-border-interactive")}
+        >
+          {content}
+        </div>
+      ) : (
+        <Link
+          to={href}
+          className={clx(
+            cardClass,
+            "hover:bg-ui-bg-base-hover transition-colors",
           )}
-        </div>
-        <div className="flex items-center justify-between gap-x-2">
-          <Text size="xsmall" className="text-ui-fg-subtle min-w-0 truncate">
-            {chatbot?.name}
-          </Text>
-          <StatusPill conversation={conversation} />
-        </div>
-        {lastMessageAt && (
-          <Text size="xsmall" className="text-ui-fg-muted">
-            {new Date(lastMessageAt).toLocaleString()}
-          </Text>
-        )}
-      </Link>
+        >
+          {content}
+        </Link>
+      )}
     </li>
   );
 }

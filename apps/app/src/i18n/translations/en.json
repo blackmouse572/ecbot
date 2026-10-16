@@ -2761,7 +2761,13 @@
       "resolveConfirmTitle": "Mark conversation as resolved?",
       "resolveConfirmDescription": "The bot keeps answering the customer and will not hand over again what your team already handled. You can still send messages.",
       "restoreConfirmTitle": "Hand back to the bot?",
-      "restoreConfirmDescription": "The conversation opens again and the bot keeps answering."
+      "restoreConfirmDescription": "The conversation opens again and the bot keeps answering.",
+      "resolving": "Resolving...",
+      "resolved": "Conversation resolved",
+      "resolveFailed": "Couldn't resolve the conversation. Try again.",
+      "restoring": "Handing back to the bot...",
+      "restored": "Handed back to the bot",
+      "restoreFailed": "Couldn't hand the conversation back. Try again."
     },
     "errors": {
       "sendFailed": "Couldn't send your message. Try again.",

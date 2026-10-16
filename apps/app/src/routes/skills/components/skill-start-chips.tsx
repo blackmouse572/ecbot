@@ -1,6 +1,6 @@
 import { skillDetailQueryOptions, useListSkills } from "@/hooks/api/skills";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { ArrowUpTray, Sparkles } from "@medusajs/icons";
+import { ArrowUpTray, Sparkles, Spinner } from "@medusajs/icons";
 import { Button, Text, toast } from "@medusajs/ui";
 import type { SkillGetResponseDto } from "@repo/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -74,11 +74,16 @@ export const SkillStartChips: FC<Props> = ({ onTemplate, onImport }) => {
             size="small"
             variant="secondary"
             className="rounded-full"
-            isLoading={loading === tpl.id}
             disabled={!!loading}
             onClick={() => pick(tpl.id)}
           >
-            <Sparkles />
+            {/* Swap the icon: Button's own isLoading wraps the content in a
+                block span, which stacks the icon over the label. */}
+            {loading === tpl.id ? (
+              <Spinner className="animate-spin" />
+            ) : (
+              <Sparkles />
+            )}
             {tpl.name}
           </Button>
         ))}
