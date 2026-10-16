@@ -111,16 +111,23 @@ export function useWidgetTranscript({
   }, [data, isOpen, setMessages]);
 }
 
-/** A persisted row as a chat message — images the bot sent come back as
- *  `file` parts, the same shape the live stream used. */
+/** A persisted row as a chat message — images and files the bot sent come
+ *  back as `file` parts, the same shape the live stream used. */
 export function toUiMessage(message: WidgetMessage): UIMessage {
   const files = (message.attachments ?? [])
-    .filter((a) => a.type === "image" && a.url)
-    .map((a) => ({
-      type: "file" as const,
-      url: a.url as string,
-      mediaType: "image/*",
-    }));
+    .filter((a) => (a.type === "image" || a.type === "file") && a.url)
+    .map((a) =>
+      a.type === "image"
+        ? { type: "file" as const, url: a.url as string, mediaType: "image/*" }
+        : {
+            type: "file" as const,
+            url: a.url as string,
+            mediaType: "application/pdf",
+            ...(a.name && {
+              providerMetadata: { eccho: { filename: a.name } },
+            }),
+          },
+    );
   const text = { type: "text" as const, text: message.text ?? "" };
   return {
     id: message.id,

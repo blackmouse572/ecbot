@@ -24,6 +24,26 @@ describe("toUiMessage", () => {
     });
   });
 
+  it("restores a bot PDF as a named file part", () => {
+    expect(
+      toUiMessage({
+        id: "m3",
+        authorType: "BOT",
+        dateSent: "2026-01-01T00:00:00Z",
+        attachments: [
+          { type: "file", url: "https://cdn/menu.pdf", name: "Menu.pdf" },
+        ],
+      }).parts,
+    ).toEqual([
+      {
+        type: "file",
+        url: "https://cdn/menu.pdf",
+        mediaType: "application/pdf",
+        providerMetadata: { eccho: { filename: "Menu.pdf" } },
+      },
+    ]);
+  });
+
   it("keeps a plain text message as one text part", () => {
     expect(
       toUiMessage({

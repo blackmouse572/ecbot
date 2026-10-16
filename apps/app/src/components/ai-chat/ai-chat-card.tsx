@@ -13,6 +13,7 @@ import {
   AttachmentGroup,
   AttachmentMedia,
   AttachmentTitle,
+  AttachmentTrigger,
   Marker,
   MarkerContent,
   MarkerIcon,
@@ -90,6 +91,15 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
               </AttachmentTitle>
               <AttachmentDescription>{file.mediaType}</AttachmentDescription>
             </AttachmentContent>
+            {/* A file (a menu PDF the bot sent) opens in a new tab. */}
+            {!isImage && (
+              <AttachmentTrigger
+                href={file.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={file.filename ?? file.mediaType}
+              />
+            )}
           </Attachment>
         );
       })}
