@@ -9,6 +9,9 @@ async def test_retrieval_uses_injected_store_without_db():
         async def count_completed_documents(self, *, chatbot_id):
             return 0  # no documents -> retrieve short-circuits before embedding/DB
 
+        async def has_media(self, *, chatbot_id):
+            return False
+
     svc = RAGRetrievalService(store=_FakeStore())
     result = await svc.retrieve(chatbot_id="cb-1", query="hello there")
 

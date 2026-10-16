@@ -349,7 +349,12 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
 
         if (c.kind === 'media') {
             const type = c.mediaType === 'file' ? 'document' : c.mediaType;
-            return { type, [type]: { link: c.url, caption: c.caption } };
+            // A document shows its file name; without one WhatsApp shows "Untitled".
+            const filename = type === 'document' ? c.name : undefined;
+            return {
+                type,
+                [type]: { link: c.url, caption: c.caption, filename },
+            };
         }
 
         // Cards never reach here — `cards: false` makes degrade() turn them

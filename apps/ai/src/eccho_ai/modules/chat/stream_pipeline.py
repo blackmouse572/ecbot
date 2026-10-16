@@ -15,6 +15,7 @@ from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
 from eccho_ai.modules.chat.constants import (
     GENERIC_STREAM_ERROR,
     SEND_IMAGE_TOOL,
+    SEND_MEDIA_TOOL,
     SYSTEM_TOOL_KINDS,
     TOOL_META_KEY,
 )
@@ -30,6 +31,12 @@ def _tool_meta(event: dict, tool_name: str) -> dict[str, Any]:
     if isinstance(meta, dict) and meta.get("kind"):
         return meta
     return {"kind": SYSTEM_TOOL_KINDS.get(tool_name, "tool")}
+
+
+def _media_meta(output: dict) -> dict[str, Any] | None:
+    """The file part's file name and size, for clients and channel limits."""
+    meta = {key: output[key] for key in ("filename", "size") if output.get(key)}
+    return {"eccho": meta} if meta else None
 
 
 async def events_to_ui_parts(
@@ -199,6 +206,12 @@ async def events_to_ui_parts(
                     and output.get("ok")
                 ):
                     yield ui.file(output["url"], "image/*")
+                elif (
+                    tool_names.get(tool_call_id) == SEND_MEDIA_TOOL
+                    and isinstance(output, dict)
+                    and output.get("ok")
+                ):
+                    yield ui.file(output["url"], output["media_type"], _media_meta(output))
                 yield ui.finish_step()
                 step_open = False
 

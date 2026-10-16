@@ -31,6 +31,8 @@ from eccho_ai.llm.tools.constants import (
     HANDOFF_FAILED,
     HANDOFF_UNAVAILABLE,
 )
+from eccho_ai.core.variables import AppVars
+from eccho_ai.llm.retrievers.vector_store import PgVectorStore
 from eccho_ai.llm.tools.image_urls import is_known_image_url
 
 logger = logging.getLogger("uvicorn.info")
@@ -474,6 +476,42 @@ async def send_image(url: str) -> dict[str, Any]:
     return {"ok": True, "url": url}
 
 
+_PDF_MIME = "application/pdf"
+
+
+async def _lookup_media(chatbot_id: str, media_id: str) -> dict[str, Any] | None:
+    store = PgVectorStore(embedding_dimension=AppVars.RAG_EMBEDDING_DIMENSION)
+    return await store.get_media(chatbot_id=chatbot_id, knowledge_item_id=media_id)
+
+
+@tool
+async def send_media(id: str) -> dict[str, Any]:
+    """Send an image or PDF from your media library to the user as its own
+    message, after any text you wrote before this call. `id` is an id listed
+    in <media_library>; other ids are rejected."""
+    chatbot = _get_chatbot()
+    media = None
+    if chatbot is not None:
+        try:
+            media = await _lookup_media(str(chatbot.id), id.strip())
+        except Exception as exc:  # noqa: BLE001 (a failed lookup sends nothing)
+            logger.warning("send_media lookup failed: %s", exc)
+    if media is None:
+        _log_call("send_media", _truncate(id), "rejected", 0)
+        return {"ok": False, "reason": "Unknown media id. Use an id from <media_library>."}
+    _log_call("send_media", _truncate(id), "ok", 0)
+    mime = media["mime_type"]
+    result: dict[str, Any] = {"ok": True, "url": media["url"], "media_type": mime}
+    if mime == _PDF_MIME:
+        # The owner's title, not the stored file name (storage names mangle
+        # Vietnamese): what the customer sees on the file.
+        title = media["title"]
+        result["filename"] = title if title.lower().endswith(".pdf") else f"{title}.pdf"
+    if media.get("size"):
+        result["size"] = int(media["size"])
+    return result
+
+
 # return_direct: the turn stops at this call, so the model gets no further
 # step in which to write a line anyway.
 @tool(return_direct=True)
@@ -503,6 +541,7 @@ SYSTEM_TOOLS: list[Any] = [
     list_pending_followups,
     cancel_followup,
     send_image,
+    send_media,
     end_without_reply,
 ]
 

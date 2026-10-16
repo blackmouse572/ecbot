@@ -5,6 +5,8 @@ export type MediaContent = {
     url: string;
     mediaType: 'image' | 'video' | 'file';
     caption?: string;
+    /** File only: the name the customer sees on it. */
+    name?: string;
 };
 
 export interface Card {
@@ -52,25 +54,43 @@ export function text(s: string): OutboundMessage {
     return { content: { kind: 'text', text: s }, fallbackText: s };
 }
 
-function image(url: string): OutboundMessage {
+/** An image or file the reply sends (an apps/ai `file` part). */
+export interface ReplyMedia {
+    url: string;
+    kind: 'image' | 'file';
+    /** File only: its name, e.g. "Menu Mộc Đà Nẵng.pdf". */
+    name?: string;
+    /** Bytes, when apps/ai knows them. */
+    size?: number;
+}
+
+function media(m: ReplyMedia): OutboundMessage {
+    if (m.kind === 'image') {
+        return {
+            content: { kind: 'media', url: m.url, mediaType: 'image' },
+            fallbackText: m.url,
+        };
+    }
     return {
-        content: { kind: 'media', url, mediaType: 'image' },
-        fallbackText: url,
+        content: { kind: 'media', url: m.url, mediaType: 'file', name: m.name },
+        // A channel that cannot send files gets the link, under its name.
+        fallbackText: m.name ? `${m.name}\n${m.url}` : m.url,
     };
 }
 
-/** One reply segment: its text, and the images (apps/ai `file` parts) that
- *  arrived while it was open. */
+/** One reply segment: its text, and the media that arrived while it was
+ *  open. */
 export interface ReplySegment {
     text: string;
-    images: string[];
+    media: ReplyMedia[];
 }
 
-/** A segment's platform messages: its text, then each image. Markdown in the
- *  text is not read: apps/ai already turned allowed images into file parts. */
+/** A segment's platform messages: its text, then each image or file.
+ *  Markdown in the text is not read: apps/ai already turned allowed images
+ *  into file parts. */
 export function segmentMessages(segment: ReplySegment): OutboundMessage[] {
     const rest = segment.text.trim();
-    return [...(rest ? [text(rest)] : []), ...segment.images.map(image)];
+    return [...(rest ? [text(rest)] : []), ...segment.media.map(media)];
 }
 
 // Round-trip a button/quick-reply id+value through a platform payload string.

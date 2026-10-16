@@ -809,6 +809,10 @@ export type MessageAttachmentResponseDto = {
      * Sticker only: the emoji the platform pairs with it
      */
     emoji?: string;
+    /**
+     * File only: the name shown on it
+     */
+    name?: string;
 };
 
 export type WidgetMessageResponseDto = {

@@ -93,6 +93,8 @@ class _AppVars(BaseSettings):
     RAG_RETRIEVAL_CANDIDATE_LIMIT: int = 24
     RAG_RETRIEVAL_CONTEXT_MAX_CHARS: int = 6000
     RAG_RETRIEVAL_MIN_SCORE: float = 0.05
+    # Media items listed to the agent per turn (send_media), nearest first.
+    RAG_MEDIA_LIMIT: int = 8
     # When False, skip the cross-encoder reranker (no sentence-transformers/torch
     # load) and rank by the hybrid similarity/FTS score. Set False on small instances.
     RAG_RERANK_ENABLED: bool = True
