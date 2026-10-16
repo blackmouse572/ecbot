@@ -168,4 +168,62 @@ describe("chatbot profile", () => {
       primaryLanguage: "en",
     });
   });
+
+  it("merges sent facts into the stored ones", async () => {
+    const stored = {
+      ...createProfile("restaurant", "vi"),
+      facts: { address: "12 Bạch Đằng", menu_highlights: "Cua rang me" },
+    };
+    vi.mocked(api.chatbotClientControllerFindOneV1).mockResolvedValue({
+      data: { data: { ...BOT, agentProfile: stored, followupRules: "" } },
+    } as never);
+    const client = await connect({ "x-api-key": KEY });
+
+    await client.callTool({
+      name: "update_chatbot",
+      arguments: {
+        chatbotId: "bot-1",
+        profile: { facts: { opening_hours: "9:00 to 22:00" } },
+      },
+    });
+
+    expect(sent("chatbotClientControllerUpdateV1").agentProfile).toMatchObject({
+      facts: {
+        address: "12 Bạch Đằng",
+        menu_highlights: "Cua rang me",
+        opening_hours: "9:00 to 22:00",
+      },
+    });
+  });
+
+  it("still creates a chatbot of a type without a preset, with no profile", async () => {
+    const client = await connect({ "x-api-key": KEY });
+
+    await client.callTool({
+      name: "create_chatbot",
+      arguments: { ...BOT, type: "other" },
+    });
+
+    expect(sent("chatbotClientControllerCreateV1")).toEqual({
+      ...BOT,
+      type: "other",
+    });
+  });
+
+  it("names the chatbot read permission when reading the profile fails", async () => {
+    vi.mocked(api.chatbotClientControllerFindOneV1).mockResolvedValue({
+      error: { message: "You do not have permission." },
+    } as never);
+    const client = await connect({ "x-api-key": KEY });
+
+    const output = await client.callTool({
+      name: "update_chatbot",
+      arguments: { chatbotId: "bot-1", profile: { emoji: false } },
+    });
+
+    expect(output.isError).toBe(true);
+    expect(textOf(output)).toContain("chatbot read permission");
+    expect(textOf(output)).toContain("You do not have permission.");
+    expect(api.chatbotClientControllerUpdateV1).not.toHaveBeenCalled();
+  });
 });

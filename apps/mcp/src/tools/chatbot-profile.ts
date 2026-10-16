@@ -24,10 +24,13 @@ export const profileInput = z
   .partial()
   .optional()
   .describe(
-    "The agent's profile, as the Ecbot agent builder asks it: who it is, its goals, tone, rules, facts and when it hands over. The prompt is compiled from it. Send only the answers you set: the rest keep their current value, or the business type's preset on a new chatbot.",
+    "The agent's profile, as the Ecbot agent builder asks it: who it is, its goals, tone, rules, facts and when it hands over. The prompt is compiled from it. Send only the answers you set: the rest keep their current value, or the business type's preset on a new chatbot. facts merge into the stored facts by id (send an empty string to clear one); a list such as goals or rules replaces the whole list.",
   );
 
 export type ProfileAnswers = z.infer<typeof profileInput>;
+
+// Types kept for older chatbots (spa, entertainment, other) have no preset.
+export const NEEDS_BUSINESS_TYPE = `A profile needs a business type: set type to one of ${BUSINESS_TYPE_IDS.join(", ")}.`;
 
 export function isBusinessType(type: string): type is BusinessTypeId {
   return (BUSINESS_TYPE_IDS as readonly string[]).includes(type);
@@ -54,6 +57,7 @@ export function buildProfile(
   const parsed = agentProfileSchema.safeParse({
     ...base,
     ...answers,
+    facts: { ...base.facts, ...answers.facts },
     businessType: chatbot.type,
     primaryLanguage: chatbot.primaryLanguage,
   });

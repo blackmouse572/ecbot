@@ -17,7 +17,12 @@ import {
   nextFollowupRules,
 } from "@repo/agent-blueprint";
 import * as z from "zod";
-import { buildProfile, isBusinessType, profileInput } from "./chatbot-profile";
+import {
+  NEEDS_BUSINESS_TYPE,
+  buildProfile,
+  isBusinessType,
+  profileInput,
+} from "./chatbot-profile";
 import {
   ADDS,
   type Allows,
@@ -32,14 +37,23 @@ import {
   respond,
 } from "./shared";
 
+// Every type the API takes. The last three are kept for older chatbots and
+// have no preset, so a chatbot of those types gets no profile.
+const CHATBOT_TYPES = [
+  ...BUSINESS_TYPE_IDS,
+  "spa",
+  "entertainment",
+  "other",
+] as const satisfies readonly ChatbotCreateRequestDto["type"][];
+
 // What an agent sets on a chatbot. The API checks every value; language
 // codes are many, so it alone validates those.
 const chatbotFields = {
   name: z.string().min(1).max(100),
   type: z
-    .enum(BUSINESS_TYPE_IDS)
+    .enum(CHATBOT_TYPES)
     .describe(
-      "The kind of business it serves. Changing it moves the profile to that type's preset, keeping who it is, its tone and facts.",
+      "The kind of business it serves. Changing it moves the profile to that type's preset, keeping who it is, its tone and facts. spa, entertainment and other are kept for older chatbots and take no profile.",
     ),
   primaryLanguage: z
     .string()
@@ -152,20 +166,25 @@ function registerCreateTools(server: McpServer, api: ApiOptions) {
       annotations: ADDS,
     },
     ({ profile: answers, ...fields }) => {
-      const built = buildProfile(undefined, fields, answers);
+      const create = (body: Record<string, unknown>) =>
+        respond(
+          chatbotClientControllerCreateV1({
+            ...api,
+            // primaryLanguage is a code the API validates.
+            body: body as ChatbotCreateRequestDto,
+          }),
+          (d) => d.data,
+        );
+      const { type } = fields;
+      if (!isBusinessType(type))
+        return answers ? fail(NEEDS_BUSINESS_TYPE) : create(fields);
+      const built = buildProfile(undefined, { ...fields, type }, answers);
       if ("error" in built) return fail(built.error);
-      return respond(
-        chatbotClientControllerCreateV1({
-          ...api,
-          // primaryLanguage is a code the API validates.
-          body: {
-            ...fields,
-            agentProfile: built.profile,
-            followupRules: compileFollowupRules(built.profile),
-          } as ChatbotCreateRequestDto,
-        }),
-        (d) => d.data,
-      );
+      return create({
+        ...fields,
+        agentProfile: built.profile,
+        followupRules: compileFollowupRules(built.profile),
+      });
     },
   );
 }
@@ -197,20 +216,22 @@ function registerUpdateTools(server: McpServer, api: ApiOptions) {
         return update(fields);
 
       // The profile follows the answers, the type and the language, so
-      // merge them onto what is stored.
+      // merge them onto what is stored. Reading it needs chatbot read.
       const { data, error } = await chatbotClientControllerFindOneV1({
         ...api,
         path: { id: chatbotId },
       });
-      if (error || !data?.data) return apiError(error);
+      if (error || !data?.data) {
+        const failed = apiError(error);
+        return fail(
+          `Changing profile, type or primaryLanguage reads the chatbot first, which needs the chatbot read permission. ${failed.content[0].text}`,
+        );
+      }
       const current = data.data;
       const stored = current.agentProfile as AgentProfile | null | undefined;
       if (!answers && !stored) return update(fields);
       const type = fields.type ?? current.type;
-      if (!isBusinessType(type))
-        return fail(
-          `A profile needs a business type: set type to one of ${BUSINESS_TYPE_IDS.join(", ")}.`,
-        );
+      if (!isBusinessType(type)) return fail(NEEDS_BUSINESS_TYPE);
       const built = buildProfile(
         stored,
         {

@@ -24,7 +24,7 @@ replace data, **deletes** remove it.
 | ------------- | ---------------------------------------------------------------------------- | ---------------- | ---------- |
 | Chatbots      | `list_chatbots`, `get_chatbot`, `list_chatbot_models`                        | chatbot read     | reads      |
 |               | `create_chatbot`                                                             | chatbot create   | adds       |
-|               | `update_chatbot`                                                             | chatbot update   | overwrites |
+|               | `update_chatbot` (also chatbot read to change `profile`, `type` or language) | chatbot update   | overwrites |
 |               | `activate_chatbot`, `deactivate_chatbot`                                     | chatbot update   | switches   |
 |               | `delete_chatbot` (update, as in the app)                                     | chatbot update   | deletes    |
 | Conversations | `list_conversations`, `get_conversation`, `list_conversation_messages`       | chatbot read     | reads      |
