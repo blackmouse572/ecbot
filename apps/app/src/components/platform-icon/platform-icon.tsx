@@ -1,6 +1,7 @@
 import { clx } from "@medusajs/ui";
 import type { AccountGetDetailResponseDto } from "@repo/client";
 import type { ComponentProps } from "react";
+import { channelOf } from "./channel-catalog";
 
 export type AccountType = AccountGetDetailResponseDto["type"];
 
@@ -18,21 +19,6 @@ export const PLATFORM_ICON_SRC = {
   whatsapp: "/icons/whatsapp.svg",
 } as const;
 
-const ICON_BY_TYPE: Record<AccountType, { src: string; label: string }> = {
-  FACEBOOK_ACCOUNT: { src: PLATFORM_ICON_SRC.facebookMessenger, label: "Facebook" },
-  FACEBOOK_PAGE: { src: PLATFORM_ICON_SRC.facebookMessenger, label: "Facebook" },
-  INSTAGRAM_ACCOUNT: { src: PLATFORM_ICON_SRC.instagram, label: "Instagram" },
-  INSTAGRAM_PAGE: { src: PLATFORM_ICON_SRC.instagram, label: "Instagram" },
-  ZALO_ACCOUNT: { src: PLATFORM_ICON_SRC.zalo, label: "Zalo" },
-  ZALO_PAGE: { src: PLATFORM_ICON_SRC.zalo, label: "Zalo" },
-  TIKTOK_SHOP: { src: PLATFORM_ICON_SRC.tiktok, label: "TikTok" },
-  SHOPEE_SHOP: { src: PLATFORM_ICON_SRC.shopee, label: "Shopee" },
-  TELEGRAM_BOT: { src: PLATFORM_ICON_SRC.telegram, label: "Telegram" },
-  API_CHANNEL: { src: PLATFORM_ICON_SRC.apiChannel, label: "API" },
-  WEBSITE_WIDGET: { src: PLATFORM_ICON_SRC.websiteWidget, label: "Website" },
-  WHATSAPP_BUSINESS: { src: PLATFORM_ICON_SRC.whatsapp, label: "WhatsApp" },
-};
-
 interface PlatformIconProps extends Omit<ComponentProps<"img">, "src" | "alt"> {
   type?: AccountType | null;
   size?: number; // px, default 14
@@ -46,12 +32,12 @@ export const PlatformIcon = ({
   ...rest
 }: PlatformIconProps) => {
   if (!type) return null;
-  const meta = ICON_BY_TYPE[type] ?? ICON_BY_TYPE["ZALO_PAGE"];
+  const channel = channelOf(type);
   return (
     <img
-      src={meta.src}
-      alt={meta.label}
-      title={meta.label}
+      src={channel.icon}
+      alt={channel.label}
+      title={channel.label}
       width={size}
       height={size}
       className={clx("bg-ui-bg-base rounded-full", className)}

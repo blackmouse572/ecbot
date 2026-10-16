@@ -1,4 +1,5 @@
 import { IssuedPanel } from "@/components/account-connect/issued-panel";
+import { CHANNELS } from "@/components/platform-icon/channel-catalog";
 import { LegalText } from "@/components/common";
 import type { Issued } from "@/components/account-connect/issued";
 import {
@@ -54,84 +55,13 @@ const initialTabState: TabState = {
 
 // ─── Platform config ──────────────────────────────────────────────────────────
 
-type PlatformValue =
-  | "FACEBOOK_ACCOUNT"
-  | "INSTAGRAM_ACCOUNT"
-  | "ZALO_ACCOUNT"
-  | "TIKTOK_SHOP"
-  | "SHOPEE_SHOP"
-  | "TELEGRAM_BOT"
-  | "WHATSAPP_BUSINESS"
-  | "WEBSITE_WIDGET"
-  | "API_CHANNEL";
-
-type PlatformMeta = {
-  value: PlatformValue;
-  label: string;
-  icon: React.ReactNode;
-  /** Declared in ENUM_ACCOUNT_TYPE but the adapter is not implemented yet. */
-  comingSoon?: boolean;
-};
-
-const PLATFORMS: PlatformMeta[] = [
-  {
-    value: "FACEBOOK_ACCOUNT",
-    label: "Facebook",
-    icon: (
-      <img
-        src="/icons/facebook-messenger.svg"
-        alt="Facebook"
-        className="size-8"
-      />
-    ),
-  },
-  {
-    value: "INSTAGRAM_ACCOUNT",
-    label: "Instagram",
-    icon: <img src="/icons/instagram.svg" alt="Instagram" className="size-8" />,
-    // A build without the Instagram app id can't open Instagram Login.
-    comingSoon: !import.meta.env.VITE_INSTAGRAM_APP_ID,
-  },
-  {
-    value: "ZALO_ACCOUNT",
-    label: "Zalo",
-    icon: <img src="/icons/zalo.svg" alt="Zalo" className="size-8" />,
-  },
-  {
-    value: "TIKTOK_SHOP",
-    label: "TikTok Shop",
-    icon: <img src="/icons/tiktok.svg" alt="TikTok" className="size-8" />,
-    comingSoon: true,
-  },
-  {
-    value: "SHOPEE_SHOP",
-    label: "Shopee",
-    icon: <img src="/icons/shopee.svg" alt="Shopee" className="size-8" />,
-    comingSoon: true,
-  },
-  {
-    value: "TELEGRAM_BOT",
-    label: "Telegram",
-    icon: <img src="/icons/telegram.svg" alt="Telegram" className="size-8" />,
-  },
-  {
-    value: "WHATSAPP_BUSINESS",
-    label: "WhatsApp",
-    icon: <img src="/icons/whatsapp.svg" alt="WhatsApp" className="size-8" />,
-  },
-  {
-    value: "WEBSITE_WIDGET",
-    label: "Website",
-    icon: (
-      <img src="/icons/website-widget.svg" alt="Website" className="size-8" />
-    ),
-  },
-  {
-    value: "API_CHANNEL",
-    label: "API",
-    icon: <img src="/icons/api-channel.svg" alt="API" className="size-8" />,
-  },
-];
+// The connect-channel choices come from the shared channel catalog.
+const PLATFORMS = CHANNELS.map((c) => ({
+  value: c.connectAs,
+  label: c.label,
+  icon: <img src={c.icon} alt={c.label} className="size-8" />,
+  comingSoon: c.comingSoon,
+}));
 
 type AccountLinkFormValues = {
   platform: string | null;
