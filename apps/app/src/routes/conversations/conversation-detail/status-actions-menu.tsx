@@ -14,19 +14,13 @@ import {
   Switch,
   Text,
   Textarea,
-  toast,
 } from "@medusajs/ui";
 import { type ReactElement, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import type {
-  ConversationGetResponseDto,
-  ConversationStatus,
-} from "@/hooks/api/conversations";
-import {
-  useUpdateConversationBot,
-  useUpdateConversationStatus,
-} from "@/hooks/api/conversations";
+import type { ConversationGetResponseDto } from "@/hooks/api/conversations";
+import { useUpdateConversationBot } from "@/hooks/api/conversations";
+import type { StatusChange } from "./use-status-change";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 
 interface Props {
@@ -51,30 +45,6 @@ function getSenderProfileUrl(
       return null;
   }
 }
-
-/**
- * Changes the status behind a toast (the confirm dialog closes at once, so
- * the toast is the only sign that the request is running).
- */
-const useStatusChange = (conversation: Props["conversation"]) => {
-  const { t } = useTranslation();
-  const update = useUpdateConversationStatus(conversation.id);
-  const change = (status: ConversationStatus) => {
-    const resolving = status === "RESOLVED";
-    toast.promise(update.mutateAsync({ status }), {
-      loading: resolving
-        ? t("conversations.actions.resolving")
-        : t("conversations.actions.restoring"),
-      success: resolving
-        ? t("conversations.actions.resolved")
-        : t("conversations.actions.restored"),
-      error: resolving
-        ? t("conversations.actions.resolveFailed")
-        : t("conversations.actions.restoreFailed"),
-    });
-  };
-  return { change, isPending: update.isPending };
-};
 
 /** Asks before resolving; `children` is the element that opens it. */
 const ResolveConfirm = ({
@@ -110,10 +80,13 @@ const ResolveConfirm = ({
   );
 };
 
-export const BotPauseSwitch = ({ conversation }: Props) => {
+// `status` is owned by the header so both controls share one pending lock.
+export const BotPauseSwitch = ({
+  conversation,
+  status,
+}: Props & { status: StatusChange }) => {
   const { t } = useTranslation();
   const update = useUpdateConversationBot(conversation.id);
-  const status = useStatusChange(conversation);
   const [pauseReason, setPauseReason] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -207,11 +180,13 @@ export const BotPauseSwitch = ({ conversation }: Props) => {
   );
 };
 
-export const StatusActionsMenu = ({ conversation }: Props) => {
+export const StatusActionsMenu = ({
+  conversation,
+  status: { change, isPending },
+}: Props & { status: StatusChange }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { workspaceSlug } = useWorkspaceParams();
-  const { change, isPending } = useStatusChange(conversation);
   const resolveRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLButtonElement>(null);
 

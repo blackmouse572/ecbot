@@ -34,8 +34,7 @@ describe("SkillStartChips", () => {
 
     const chip = screen.getByRole("button", { name: "Refund policy" });
     expect(chip).toBeDisabled();
-    // Button's isLoading would wrap the content in a block span, which
-    // stacks the icon above the label and makes the chip taller.
-    expect(chip.querySelector("span")).toBeNull();
+    // The icon becomes a spinner in place, so the chip keeps its shape.
+    expect(chip.querySelector("svg.animate-spin")).not.toBeNull();
   });
 });

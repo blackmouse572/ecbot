@@ -1,4 +1,4 @@
-import { StatusBadge, Tooltip } from "@medusajs/ui";
+import { StatusBadge, Tooltip, TooltipProvider } from "@medusajs/ui";
 import { Trans, useTranslation } from "react-i18next";
 import type { ConversationGetResponseDto } from "@/hooks/api/conversations";
 import { docsUrl } from "@/libs/docs-url";
@@ -34,36 +34,40 @@ export const StatusPill = ({
   const { t, i18n } = useTranslation();
   const state = resolveState(conversation);
   return (
-    <Tooltip
-      maxWidth={260}
-      delayDuration={TOOLTIP_DELAY_MS}
-      content={
-        <span className="flex flex-col gap-y-1">
-          <span>{t(`conversations.status.hint.${state}`)}</span>
-          {(state === "needsYou" || state === "youHandling") && (
-            <span>
-              <Trans
-                i18nKey="conversations.status.resolveTip"
-                components={{ b: <b className="font-semibold" /> }}
-              />
-            </span>
-          )}
-          <a
-            href={docsUrl("customers#conversation-statuses", i18n.language)}
-            target="_blank"
-            rel="noreferrer"
-            // The tooltip is portalled, but React still bubbles the click to the list row.
-            onClick={(e) => e.stopPropagation()}
-            className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-          >
-            {t("conversations.status.learnMore")}
-          </a>
-        </span>
-      }
-    >
-      <StatusBadge color={COLOR_BY_STATE[state]}>
-        {t(`conversations.status.${state}`)}
-      </StatusBadge>
-    </Tooltip>
+    // Own provider: the app-level one skips the open delay for 300ms after any
+    // tooltip closes, which would make sweeping down the list pop these instantly.
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS} skipDelayDuration={0}>
+      <Tooltip
+        maxWidth={260}
+        delayDuration={TOOLTIP_DELAY_MS}
+        content={
+          <span className="flex flex-col gap-y-1">
+            <span>{t(`conversations.status.hint.${state}`)}</span>
+            {(state === "needsYou" || state === "youHandling") && (
+              <span>
+                <Trans
+                  i18nKey="conversations.status.resolveTip"
+                  components={{ b: <b className="font-semibold" /> }}
+                />
+              </span>
+            )}
+            <a
+              href={docsUrl("customers#conversation-statuses", i18n.language)}
+              target="_blank"
+              rel="noreferrer"
+              // The tooltip is portalled, but React still bubbles the click to the list row.
+              onClick={(e) => e.stopPropagation()}
+              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+            >
+              {t("conversations.status.learnMore")}
+            </a>
+          </span>
+        }
+      >
+        <StatusBadge color={COLOR_BY_STATE[state]}>
+          {t(`conversations.status.${state}`)}
+        </StatusBadge>
+      </Tooltip>
+    </TooltipProvider>
   );
 };

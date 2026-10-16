@@ -20,18 +20,26 @@ vi.mock("@/hooks/api/conversations", () => ({
 }));
 
 import { BotPauseSwitch } from "./status-actions-menu";
+import { useStatusChange } from "./use-status-change";
+
+const Harness = ({ conversation }: { conversation: never }) => (
+  <BotPauseSwitch
+    conversation={conversation}
+    status={useStatusChange(conversation)}
+  />
+);
 
 const conversation = (botEnabled: boolean) =>
   ({ id: "c1", status: "OPEN", botEnabled }) as never;
 
 describe("BotPauseSwitch", () => {
   it("shows the bot switch while the bot is answering", () => {
-    render(<BotPauseSwitch conversation={conversation(true)} />);
+    render(<Harness conversation={conversation(true)} />);
     expect(screen.getByRole("switch")).toBeInTheDocument();
   });
 
   it("offers Resolve instead of the switch once the bot handed over", async () => {
-    render(<BotPauseSwitch conversation={conversation(false)} />);
+    render(<Harness conversation={conversation(false)} />);
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
 
     await userEvent.click(

@@ -12,6 +12,9 @@ vi.mock("./status-actions-menu", () => ({
   BotPauseSwitch: () => null,
   StatusActionsMenu: () => null,
 }));
+vi.mock("./use-status-change", () => ({
+  useStatusChange: () => ({ change: vi.fn(), isPending: false }),
+}));
 vi.mock("../components/status-pill", () => ({ StatusPill: () => null }));
 vi.mock("../components/chatbot-badge", () => ({ ChatbotBadge: () => null }));
 
