@@ -372,6 +372,45 @@ describe('ZaloPlatformAdapter media', () => {
     });
 
     it.each([
+        ['the download fails', () => new Response('', { status: 403 }), []],
+        [
+            'the real file is over 5MB',
+            () => new Response(Buffer.alloc(5_000_001), { status: 200 }),
+            [],
+        ],
+        [
+            'Zalo rejects the upload',
+            () => new Response(Buffer.from('%PDF-1.4'), { status: 200 }),
+            [{ data: { error: -201, message: 'quota' } }],
+        ],
+    ])(
+        'sends the PDF as its link when %s',
+        async (_label, response, uploads) => {
+            jest.spyOn(global, 'fetch').mockResolvedValue(response());
+            const post = jest.fn();
+            uploads.forEach(u => post.mockResolvedValueOnce(u));
+            post.mockResolvedValueOnce(ok);
+            const a = makeAdapter({ axiosRef: { post } });
+
+            const res = await a.sendMessage(
+                account,
+                'S',
+                media({
+                    url: 'https://cdn/menu.pdf',
+                    mediaType: 'file',
+                    mimeType: 'application/pdf',
+                    size: 2_000_000,
+                })
+            );
+
+            expect(res).toEqual({ externalId: 'zm9' });
+            expect(post.mock.calls.at(-1)[1].message).toEqual({
+                text: 'Menu.pdf\nhttps://cdn/menu.pdf',
+            });
+        }
+    );
+
+    it.each([
         [
             'a PDF over 5MB',
             {

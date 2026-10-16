@@ -340,53 +340,53 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
                 },
             };
         }
-        if (c.kind === 'media') {
-            const token = await this.uploadFile(account, c);
-            return { attachment: { type: 'file', payload: { token } } };
-        }
+        const token =
+            c.kind === 'media' ? await this.uploadFile(account, c) : null;
+        if (token) return { attachment: { type: 'file', payload: { token } } };
         const text = c.kind === 'text' ? c.text : msg.fallbackText;
         return { text: this.truncate(text) };
     }
 
-    /** Zalo sends files only by an upload token; the name shows on the file. */
+    /**
+     * Zalo sends files only by an upload token; the name shows on the file.
+     * Returns null when the real file can't go out (download failed, bigger
+     * than declared, upload rejected), so the message falls back to its link.
+     * Each send uploads again: the endpoint allows 5000 uploads a month per OA
+     * and keeps a file 7 days, so cache the token if that quota gets tight.
+     */
     private async uploadFile(
         account: AccountEntity,
         c: MediaContent
-    ): Promise<string> {
-        const res = await fetch(c.url, {
-            signal: AbortSignal.timeout(MEDIA_FETCH_TIMEOUT_MS),
-        });
-        const data = res.ok ? await readCappedBody(res, FILE_MAX_BYTES) : null;
-        if (!data) {
-            throw new UnprocessableEntityException({
-                message: 'platform.error.sendFailed',
-                statusCode: 422,
-                errors: { provider: 'zalo', detail: 'file download failed' },
+    ): Promise<string | null> {
+        try {
+            const res = await fetch(c.url, {
+                signal: AbortSignal.timeout(MEDIA_FETCH_TIMEOUT_MS),
             });
+            const data = res.ok
+                ? await readCappedBody(res, FILE_MAX_BYTES)
+                : null;
+            if (!data) throw new Error(`download failed (${res.status})`);
+            const form = new FormData();
+            form.append(
+                'file',
+                new Blob([new Uint8Array(data)], { type: c.mimeType }),
+                c.name ?? 'file.pdf'
+            );
+            const upload = await this.httpPost<
+                ZaloApiResponse<ZaloUploadFileData>
+            >(UPLOAD_FILE_URL, form, this.token(account));
+            if (upload.error !== 0 || !upload.data?.token) {
+                throw new Error(
+                    `upload rejected (${upload.error}: ${upload.message})`
+                );
+            }
+            return upload.data.token;
+        } catch (err) {
+            this.logger.warn(
+                `Zalo file send fell back to a link: ${err instanceof Error ? err.message : String(err)}`
+            );
+            return null;
         }
-        const form = new FormData();
-        form.append(
-            'file',
-            new Blob([new Uint8Array(data)], { type: c.mimeType }),
-            c.name ?? 'file.pdf'
-        );
-        const upload = await this.httpPost<ZaloApiResponse<ZaloUploadFileData>>(
-            UPLOAD_FILE_URL,
-            form,
-            this.token(account)
-        );
-        if (upload.error !== 0 || !upload.data?.token) {
-            throw new UnprocessableEntityException({
-                message: 'platform.error.sendFailed',
-                statusCode: 422,
-                errors: {
-                    provider: 'zalo',
-                    error: upload.error,
-                    detail: upload.message,
-                },
-            });
-        }
-        return upload.data.token;
     }
 
     private truncate(t: string): string {
