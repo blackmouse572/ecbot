@@ -21,6 +21,7 @@ import {
 } from '../dtos/response/message.get.response.dto';
 import {
     ENUM_MESSAGE_AUTHOR,
+    ENUM_MESSAGE_DIRECTION,
     ENUM_MESSAGE_STATUS,
 } from '../enums/message.enum';
 import { ConversationEntity } from '../repository/entities/conversation.entity';
@@ -311,6 +312,22 @@ export class ConversationMessagingService {
     ): Promise<MessageGetResponseDto[]> {
         const dtos = await Promise.all(
             messages.map(m => this.mapMessage(m, conversation, userNameMap))
+        );
+
+        // A silent turn sits under the customer message it left unanswered:
+        // the newest inbound one at or before it.
+        for (const act of activities) {
+            if (act.kind !== ENUM_CONVERSATION_ACTIVITY_KIND.NO_REPLY) continue;
+            const idx = messages.findLastIndex(
+                m =>
+                    m.direction === ENUM_MESSAGE_DIRECTION.INBOUND &&
+                    m.dateSent.getTime() <= act.createdAt.getTime()
+            );
+            if (idx !== -1)
+                dtos[idx].noReply = act.label ? { reason: act.label } : {};
+        }
+        activities = activities.filter(
+            a => a.kind !== ENUM_CONVERSATION_ACTIVITY_KIND.NO_REPLY
         );
 
         const botIndices = messages

@@ -258,7 +258,8 @@ describe('ReplyGenerationService.run', () => {
 
         function deliveringService(
             anySent: boolean,
-            endedWithoutReply = false
+            endedWithoutReply = false,
+            delivered: object[] = activities
         ) {
             const conversations = {
                 findOneById: jest.fn().mockResolvedValue({
@@ -297,7 +298,7 @@ describe('ReplyGenerationService.run', () => {
                         guardrailBlocked: false,
                         guardrailReason: '',
                         generationFailed: false,
-                        activities,
+                        activities: delivered,
                         endedWithoutReply,
                     }),
                 } as any,
@@ -330,6 +331,25 @@ describe('ReplyGenerationService.run', () => {
                 'c',
                 activities
             );
+        });
+
+        it('records only the silence for a turn the agent ended without a reply', async () => {
+            const noReply = {
+                kind: 'NO_REPLY',
+                label: 'customer said ok',
+                at: new Date(),
+            };
+            const { run, conversations } = deliveringService(false, true, [
+                ...activities,
+                noReply,
+            ]);
+
+            await run();
+
+            // Its other steps would splice under the next, unrelated reply.
+            expect(conversations.recordActivities).toHaveBeenCalledWith('c', [
+                noReply,
+            ]);
         });
 
         it('sends no fallback when the agent chose to end without a reply', async () => {

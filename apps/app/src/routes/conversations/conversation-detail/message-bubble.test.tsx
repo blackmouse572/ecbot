@@ -478,6 +478,16 @@ describe("MessageBubble inbound message kinds", () => {
     ).toBeInTheDocument();
   });
 
+  it("says when the bot chose not to reply, and why", () => {
+    renderInbound({
+      attachments: [{ type: "sticker", emoji: "👍" }],
+      noReply: { reason: "customer said ok" },
+    });
+
+    expect(screen.getByText("conversations.noReply.label")).toBeInTheDocument();
+    expect(screen.getByText("customer said ok")).toBeInTheDocument();
+  });
+
   it("links the map a shared location points to", () => {
     renderInbound({
       attachments: [{ type: "location", url: "https://maps/q=1" }],
