@@ -20,5 +20,12 @@
         "error": {
             "missingConversationId": "Cần có conversationId để hủy follow-up."
         }
+    },
+    "admin": {
+        "list": "Lấy danh sách follow-up thành công.",
+        "cancel": "Hủy follow-up thành công.",
+        "error": {
+            "notPending": "Follow-up này đã chạy hoặc đã bị hủy."
+        }
     }
 }

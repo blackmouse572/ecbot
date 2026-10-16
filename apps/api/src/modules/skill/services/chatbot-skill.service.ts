@@ -1,7 +1,10 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { IPaginationOrder } from 'src/common/pagination/interfaces/pagination.interface';
 import { ChatbotEntity } from 'src/modules/chatbot/repository/entities/chatbot.entity';
 import { AttachSkillRequestDto } from 'src/modules/skill/dtos/request/attach-skill.request.dto';
+import { ChatbotSkillAdminListResponseDto } from 'src/modules/skill/dtos/response/chatbot-skill.admin-list.response.dto';
 import { ChatbotSkillListResponseDto } from 'src/modules/skill/dtos/response/chatbot-skill.list.response.dto';
 import { ChatbotSkillEntity } from 'src/modules/skill/repository/entities/chatbot-skill.entity';
 import { SkillEntity } from 'src/modules/skill/repository/entities/skill.entity';
@@ -197,6 +200,61 @@ export class ChatbotSkillService {
                         ...(r.action && { action: r.action }),
                     })),
             })),
+        };
+    }
+
+    /** Admin: which agent uses which skill, in every workspace. */
+    findAllForAdmin(
+        find: Record<string, any>,
+        options: { limit?: number; offset?: number; order?: IPaginationOrder }
+    ): Promise<ChatbotSkillEntity[]> {
+        return this.chatbotSkillRepo.findAllForAdmin(
+            this.adminWhere(find),
+            options
+        );
+    }
+
+    getTotalForAdmin(find: Record<string, any>): Promise<number> {
+        return this.chatbotSkillRepo.countForAdmin(this.adminWhere(find));
+    }
+
+    mapAdminList(
+        rows: ChatbotSkillEntity[]
+    ): ChatbotSkillAdminListResponseDto[] {
+        return rows.map(row =>
+            plainToInstance(
+                ChatbotSkillAdminListResponseDto,
+                {
+                    id: row.id,
+                    enabled: row.enabled,
+                    createdAt: row.createdAt,
+                    chatbot: {
+                        id: row.chatbot.id,
+                        name: row.chatbot.name,
+                        avatar: row.chatbot.avatar ?? null,
+                    },
+                    skill: {
+                        id: row.skill.id,
+                        name: row.skill.name,
+                        slug: row.skill.slug,
+                        status: row.skill.status,
+                        isBuiltin: !row.skill.workspace,
+                    },
+                    workspace: row.chatbot.workspace,
+                },
+                { excludeExtraneousValues: true }
+            )
+        );
+    }
+
+    // Only links of live agents and skills; filters on either merge in.
+    private adminWhere(find: Record<string, any>): Record<string, any> {
+        const { chatbot, skill, ...rest } = find;
+        return {
+            deleted: false,
+            ...rest,
+            chatbot: { deleted: false, ...chatbot },
+            skill: { deleted: false, ...skill },
         };
     }
 }

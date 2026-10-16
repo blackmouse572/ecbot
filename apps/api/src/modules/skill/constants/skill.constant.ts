@@ -6,3 +6,11 @@ export const SKILL_INSTRUCTIONS_MAX_LENGTH = 64_000;
 // Characters OpenAI rejects in a function name; apps/ai replaces them with `_`
 // (sanitize_tool_name), so a Tool step names its tool the same way.
 export const TOOL_NAME_INVALID = /[^a-zA-Z0-9_-]/g;
+
+// The admin agent-skill list is searched by agent, skill or workspace name.
+// The search pipe builds its $or only from these paths.
+export const CHATBOT_SKILL_ADMIN_AVAILABLE_SEARCH = [
+    'chatbot.name',
+    'skill.name',
+    'chatbot.workspace.name',
+];

@@ -20,5 +20,12 @@
         "error": {
             "missingConversationId": "conversationId is required to cancel a follow-up."
         }
+    },
+    "admin": {
+        "list": "Follow-ups retrieved successfully.",
+        "cancel": "Follow-up cancelled successfully.",
+        "error": {
+            "notPending": "This follow-up has already run or was cancelled."
+        }
     }
 }

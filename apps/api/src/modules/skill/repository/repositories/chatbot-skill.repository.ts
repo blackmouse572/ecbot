@@ -1,4 +1,9 @@
-import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
+import {
+    EntityManager,
+    EntityRepository,
+    FilterQuery,
+} from '@mikro-orm/postgresql';
+import { IPaginationOrder } from 'src/common/pagination/interfaces/pagination.interface';
 import { Injectable } from '@nestjs/common';
 import { ChatbotSkillEntity } from 'src/modules/skill/repository/entities/chatbot-skill.entity';
 
@@ -62,5 +67,24 @@ export class ChatbotSkillRepository extends EntityRepository<ChatbotSkillEntity>
             },
             { populate: ['chatbot'], orderBy: { chatbot: { name: 'ASC' } } }
         );
+    }
+
+    /** Admin: links in every workspace, with agent, workspace and skill. */
+    async findAllForAdmin(
+        where: FilterQuery<ChatbotSkillEntity>,
+        options: { limit?: number; offset?: number; order?: IPaginationOrder }
+    ): Promise<ChatbotSkillEntity[]> {
+        return this.find(where, {
+            limit: options.limit,
+            offset: options.offset,
+            orderBy: options.order,
+            populate: ['chatbot.workspace', 'skill'],
+        });
+    }
+
+    async countForAdmin(
+        where: FilterQuery<ChatbotSkillEntity>
+    ): Promise<number> {
+        return this.count(where);
     }
 }

@@ -3344,103 +3344,112 @@ export type WorkspaceUpdateStatusRequestDto = {
     status: 'ACTIVE' | 'SUSPENDED';
 };
 
-export type CustomerAdminWorkspaceResponseDto = {
+export type FollowupChatbotResponseDto = {
+    /**
+     * Chatbot ID
+     */
+    id: string;
+    /**
+     * Chatbot name
+     */
+    name: string;
+    /**
+     * Chatbot avatar URL
+     */
+    avatar: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type FollowupAdminListResponseDto = {
+    /**
+     * Follow-up job ID
+     */
+    followupId: string;
+    chatbot: FollowupChatbotResponseDto;
+    /**
+     * Conversation the follow-up belongs to
+     */
+    conversationId: string;
+    /**
+     * Sender name on the conversation
+     */
+    senderName: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Message that triggered scheduling this follow-up
+     */
+    triggerMessageId: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Reason the follow-up was scheduled
+     */
+    reason: string;
+    status: 'SCHEDULED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'CANCELLED';
+    /**
+     * When the follow-up is due to fire
+     */
+    scheduledAt: string;
+    /**
+     * When the follow-up actually ran
+     */
+    firedAt: string | null;
+    /**
+     * Skip reason, or the error message when the run failed
+     */
+    outcomeReason: string | null;
+    /**
+     * Minutes remaining until the follow-up fires; 0 once it is no longer scheduled
+     */
+    firesInMinutes: number;
+    workspace: ActivityAdminWorkspaceResponseDto;
+    /**
+     * Instruction the bot follows when the follow-up fires
+     */
+    prompt: string;
+    /**
+     * Cloud Tasks delivery attempts so far
+     */
+    attempts: number;
+    cancelledAt: string | null;
+    createdAt: string;
+};
+
+export type ChatbotSkillAdminChatbotResponseDto = {
+    id: string;
+    name: string;
+    avatar: string | null;
+};
+
+export type ChatbotSkillAdminSkillResponseDto = {
     id: string;
     name: string;
     slug: string;
+    status: 'ACTIVE' | 'INACTIVE';
+    /**
+     * True for Ecbot builtin skills
+     */
+    isBuiltin: boolean;
 };
 
-export type CustomerAdminTagResponseDto = {
+export type ChatbotSkillAdminListResponseDto = {
+    /**
+     * Link id
+     */
     id: string;
-    name: string;
-    emoji?: string;
-};
-
-export type CustomerAdminListResponseDto = {
-    id: string;
-    name?: string;
     /**
-     * The customer name, or else the name their first channel reports
+     * Whether the agent uses the skill now
      */
-    displayName?: string;
-    phone?: string;
-    email?: string;
+    enabled: boolean;
+    chatbot: ChatbotSkillAdminChatbotResponseDto;
+    skill: ChatbotSkillAdminSkillResponseDto;
+    workspace: ActivityAdminWorkspaceResponseDto;
     /**
-     * Avatar of the first channel that has one
+     * When the skill was attached
      */
-    avatar?: string;
-    workspace: CustomerAdminWorkspaceResponseDto;
-    contactPointCount: number;
-    /**
-     * Distinct channel types the customer is reachable on
-     */
-    channels: Array<'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS'>;
-    tags: Array<CustomerAdminTagResponseDto>;
     createdAt: string;
-    updatedAt?: string;
-};
-
-export type CustomerAdminContactPointResponseDto = {
-    id: string;
-    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
-    /**
-     * Name the channel reports for the sender
-     */
-    displayName?: string;
-    avatar?: string;
-    createdAt: string;
-};
-
-export type CustomerAdminGetResponseDto = {
-    id: string;
-    name?: string;
-    /**
-     * The customer name, or else the name their first channel reports
-     */
-    displayName?: string;
-    phone?: string;
-    email?: string;
-    /**
-     * Avatar of the first channel that has one
-     */
-    avatar?: string;
-    workspace: CustomerAdminWorkspaceResponseDto;
-    contactPointCount: number;
-    /**
-     * Distinct channel types the customer is reachable on
-     */
-    channels: Array<'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS'>;
-    tags: Array<CustomerAdminTagResponseDto>;
-    createdAt: string;
-    updatedAt?: string;
-    language?: string;
-    notes?: string;
-    profileSummary?: string;
-    /**
-     * Set when this profile was merged into another customer
-     */
-    mergedIntoCustomerId?: string;
-    conversationCount: number;
-    contactPoints: Array<CustomerAdminContactPointResponseDto>;
-};
-
-export type CustomerTagAdminListResponseDto = {
-    id: string;
-    name: string;
-    emoji?: string;
-    description?: string;
-    /**
-     * Applying the tag hands the conversation to the team
-     */
-    triggersHandoff: boolean;
-    /**
-     * Applying the tag notifies the team
-     */
-    notifiesTeam: boolean;
-    customerCount: number;
-    workspace: CustomerAdminWorkspaceResponseDto;
-    createdAt: string;
-    updatedAt?: string;
 };
 
 export type KnowledgeItemAdminListResponseDto = {
@@ -6039,23 +6048,6 @@ export type NavCountGetResponseDto = {
      * Tools with a broken connection (re-auth / expired / revoked)
      */
     toolsNeedingAttention: number;
-};
-
-export type FollowupChatbotResponseDto = {
-    /**
-     * Chatbot ID
-     */
-    id: string;
-    /**
-     * Chatbot name
-     */
-    name: string;
-    /**
-     * Chatbot avatar URL
-     */
-    avatar: {
-        [key: string]: unknown;
-    } | null;
 };
 
 export type FollowupListResponseDto = {
@@ -17342,7 +17334,7 @@ export type WorkspaceAdminControllerUpdateStatusV1Responses = {
 
 export type WorkspaceAdminControllerUpdateStatusV1Response = WorkspaceAdminControllerUpdateStatusV1Responses[keyof WorkspaceAdminControllerUpdateStatusV1Responses];
 
-export type CustomerAdminControllerListV1Data = {
+export type FollowupAdminControllerListV1Data = {
     body?: never;
     headers?: {
         /**
@@ -17357,13 +17349,13 @@ export type CustomerAdminControllerListV1Data = {
          */
         workspace?: string;
         /**
-         * Filter by the id of a tag assigned to the customer
+         * Filter by chatbot id
          */
-        tag?: string;
+        chatbot?: string;
         /**
-         * Channel types the customer has a contact point on, with ',' delimiter
+         * value with ',' delimiter
          */
-        channel?: string;
+        status?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
@@ -17385,10 +17377,10 @@ export type CustomerAdminControllerListV1Data = {
          */
         orderDirection?: 'ASC' | 'DESC';
     };
-    url: '/api/v1/admin/customer/list';
+    url: '/api/v1/admin/followup/list';
 };
 
-export type CustomerAdminControllerListV1Errors = {
+export type FollowupAdminControllerListV1Errors = {
     /**
      * 401
      */
@@ -17437,22 +17429,22 @@ export type CustomerAdminControllerListV1Errors = {
     };
 };
 
-export type CustomerAdminControllerListV1Error = CustomerAdminControllerListV1Errors[keyof CustomerAdminControllerListV1Errors];
+export type FollowupAdminControllerListV1Error = FollowupAdminControllerListV1Errors[keyof FollowupAdminControllerListV1Errors];
 
-export type CustomerAdminControllerListV1Responses = {
+export type FollowupAdminControllerListV1Responses = {
     /**
      * 200
      */
     200: ResponsePagingDto & {
         message?: unknown;
         statusCode?: number;
-        data?: Array<CustomerAdminListResponseDto>;
+        data?: Array<FollowupAdminListResponseDto>;
     };
 };
 
-export type CustomerAdminControllerListV1Response = CustomerAdminControllerListV1Responses[keyof CustomerAdminControllerListV1Responses];
+export type FollowupAdminControllerListV1Response = FollowupAdminControllerListV1Responses[keyof FollowupAdminControllerListV1Responses];
 
-export type CustomerAdminControllerGetV1Data = {
+export type FollowupAdminControllerCancelV1Data = {
     body?: never;
     headers?: {
         /**
@@ -17461,13 +17453,13 @@ export type CustomerAdminControllerGetV1Data = {
         'x-custom-lang'?: string;
     };
     path: {
-        customer: string;
+        followup: string;
     };
     query?: never;
-    url: '/api/v1/admin/customer/get/{customer}';
+    url: '/api/v1/admin/followup/cancel/{followup}';
 };
 
-export type CustomerAdminControllerGetV1Errors = {
+export type FollowupAdminControllerCancelV1Errors = {
     /**
      * 401
      */
@@ -17516,22 +17508,21 @@ export type CustomerAdminControllerGetV1Errors = {
     };
 };
 
-export type CustomerAdminControllerGetV1Error = CustomerAdminControllerGetV1Errors[keyof CustomerAdminControllerGetV1Errors];
+export type FollowupAdminControllerCancelV1Error = FollowupAdminControllerCancelV1Errors[keyof FollowupAdminControllerCancelV1Errors];
 
-export type CustomerAdminControllerGetV1Responses = {
+export type FollowupAdminControllerCancelV1Responses = {
     /**
      * 200
      */
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: CustomerAdminGetResponseDto;
     };
 };
 
-export type CustomerAdminControllerGetV1Response = CustomerAdminControllerGetV1Responses[keyof CustomerAdminControllerGetV1Responses];
+export type FollowupAdminControllerCancelV1Response = FollowupAdminControllerCancelV1Responses[keyof FollowupAdminControllerCancelV1Responses];
 
-export type CustomerTagAdminControllerListV1Data = {
+export type ChatbotSkillAdminControllerListV1Data = {
     body?: never;
     headers?: {
         /**
@@ -17545,6 +17536,18 @@ export type CustomerTagAdminControllerListV1Data = {
          * Filter by workspace id
          */
         workspace?: string;
+        /**
+         * Filter by chatbot id
+         */
+        chatbot?: string;
+        /**
+         * Filter by skill id
+         */
+        skill?: string;
+        /**
+         * true, false, or both with ',' delimiter
+         */
+        enabled?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
@@ -17566,10 +17569,10 @@ export type CustomerTagAdminControllerListV1Data = {
          */
         orderDirection?: 'ASC' | 'DESC';
     };
-    url: '/api/v1/admin/customer-tag/list';
+    url: '/api/v1/admin/chatbot-skill/list';
 };
 
-export type CustomerTagAdminControllerListV1Errors = {
+export type ChatbotSkillAdminControllerListV1Errors = {
     /**
      * 401
      */
@@ -17618,20 +17621,20 @@ export type CustomerTagAdminControllerListV1Errors = {
     };
 };
 
-export type CustomerTagAdminControllerListV1Error = CustomerTagAdminControllerListV1Errors[keyof CustomerTagAdminControllerListV1Errors];
+export type ChatbotSkillAdminControllerListV1Error = ChatbotSkillAdminControllerListV1Errors[keyof ChatbotSkillAdminControllerListV1Errors];
 
-export type CustomerTagAdminControllerListV1Responses = {
+export type ChatbotSkillAdminControllerListV1Responses = {
     /**
      * 200
      */
     200: ResponsePagingDto & {
         message?: unknown;
         statusCode?: number;
-        data?: Array<CustomerTagAdminListResponseDto>;
+        data?: Array<ChatbotSkillAdminListResponseDto>;
     };
 };
 
-export type CustomerTagAdminControllerListV1Response = CustomerTagAdminControllerListV1Responses[keyof CustomerTagAdminControllerListV1Responses];
+export type ChatbotSkillAdminControllerListV1Response = ChatbotSkillAdminControllerListV1Responses[keyof ChatbotSkillAdminControllerListV1Responses];
 
 export type KnowledgeItemAdminControllerListV1Data = {
     body?: never;
