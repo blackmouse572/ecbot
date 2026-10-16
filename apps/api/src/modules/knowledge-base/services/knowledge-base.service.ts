@@ -100,6 +100,7 @@ export class KnowledgeBaseService {
         const knowledgeBase = await em.findOne(KnowledgeBaseEntity, {
             id,
             workspace: workspaceId,
+            deletedAt: null,
         });
 
         if (!knowledgeBase) {
@@ -136,6 +137,7 @@ export class KnowledgeBaseService {
         const knowledgeBase = await em.findOne(KnowledgeBaseEntity, {
             id,
             workspace: workspaceId,
+            deletedAt: null,
         });
 
         if (!knowledgeBase) {

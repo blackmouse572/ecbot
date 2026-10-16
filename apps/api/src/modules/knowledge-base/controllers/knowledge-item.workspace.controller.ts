@@ -167,6 +167,7 @@ export class KnowledgeItemWorkspaceController {
         const knowledgeBase = await this.knowledgeBaseService.findOne({
             id: knowledgeBaseId,
             workspace: workspace.id,
+            deletedAt: null,
         });
 
         if (!knowledgeBase) {

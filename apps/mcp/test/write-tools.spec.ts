@@ -62,15 +62,6 @@ const cases: [
     SWITCHES,
   ],
   [
-    "create_knowledge_base",
-    { name: "FAQ", description: "Common questions" },
-    "knowledgeBaseClientControllerCreateV1",
-    { body: { name: "FAQ", description: "Common questions" } },
-    { data: { id: "kb-1" } },
-    { id: "kb-1" },
-    ADDS,
-  ],
-  [
     "update_knowledge_base",
     { knowledgeBaseId: "kb-1", name: "Support FAQ" },
     "knowledgeBaseClientControllerUpdateV1",

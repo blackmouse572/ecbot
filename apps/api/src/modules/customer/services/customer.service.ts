@@ -48,7 +48,12 @@ export class CustomerService implements ICustomerService {
         options?: IDatabaseFindOneOptions
     ): Promise<CustomerEntity | null> {
         return this.customerRepository.findOne(
-            { id, workspace: workspaceId } as any,
+            {
+                id,
+                workspace: workspaceId,
+                deletedAt: null,
+                mergedIntoCustomerId: null,
+            } as any,
             options
         );
     }

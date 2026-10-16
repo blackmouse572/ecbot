@@ -18,12 +18,10 @@ import {
     InternalServerErrorException,
     NotFoundException,
     Param,
-    Post,
     Put,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
-import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { MessageService } from 'src/common/message/services/message.service';
 import { ActivityService } from 'src/modules/activity/services/activity.service';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
@@ -45,12 +43,10 @@ import {
 } from 'src/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import {
-    KnowledgeBaseWorkspaceCreateDoc,
     KnowledgeBaseWorkspaceGetDoc,
     KnowledgeBaseWorkspaceListDoc,
     KnowledgeBaseWorkspaceUpdateDoc,
 } from '../docs/knowledge-base.workspace.doc';
-import { KnowledgeBaseCreateRequestDto } from '../dtos/request/knowledge-base.create.request.dto';
 import { KnowledgeBaseUpdateRequestDto } from '../dtos/request/knowledge-base.update.request.dto';
 import { KnowledgeBaseResponseDto } from '../dtos/response/knowledge-base.response.dto';
 import { KnowledgeBaseService } from '../services/knowledge-base.service';
@@ -136,6 +132,7 @@ export class KnowledgeBaseWorkspaceController {
         const knowledgeBase = await this.knowledgeBaseService.findOne({
             id,
             workspace: workspace.id,
+            deletedAt: null,
         });
 
         if (!knowledgeBase) {
@@ -148,68 +145,6 @@ export class KnowledgeBaseWorkspaceController {
         return {
             data: this.knowledgeBaseService.mapGet(knowledgeBase),
         };
-    }
-
-    @KnowledgeBaseWorkspaceCreateDoc()
-    @Response('knowledgeBase.create')
-    @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
-        action: [ENUM_POLICY_ACTION.CREATE],
-    })
-    @UserProtected()
-    @AuthJwtAccessProtected()
-    @ApiKeyProtected()
-    @Post('/create')
-    async create(
-        @AuthJwtPayload<IAuthJwtAccessTokenPayload>('user', UserActiveParsePipe)
-        user: UserEntity,
-        @WorkspacePayload() workspace: WorkspaceEntity,
-        @Body() dto: KnowledgeBaseCreateRequestDto
-    ): Promise<IResponse<DatabaseIdResponseDto>> {
-        const session = this.em.fork();
-        await session.begin();
-
-        try {
-            const knowledgeBase = await this.knowledgeBaseService.create(
-                {
-                    ...dto,
-                    workspace: workspace.id,
-                },
-                {
-                    em: session,
-                    actionBy: user.id,
-                }
-            );
-
-            await this.activityService.createByUser(
-                user,
-                {
-                    action: ENUM_ACTIVITY_ACTION.CREATE,
-                    subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
-                    metadata: {
-                        knowledgeBaseId: knowledgeBase.id,
-                        knowledgeBaseName: knowledgeBase.name,
-                    },
-                },
-                { em: session }
-            );
-
-            await session.commit();
-
-            return {
-                data: {
-                    id: knowledgeBase.id,
-                },
-            };
-        } catch (err: unknown) {
-            await session.rollback();
-
-            throw new InternalServerErrorException({
-                statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
-                message: 'http.serverError.internalServerError',
-                _error: err,
-            });
-        }
     }
 
     @KnowledgeBaseWorkspaceUpdateDoc()

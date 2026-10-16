@@ -62,6 +62,7 @@ export class KnowledgeItemTagController {
         const knowledgeBase = await this.knowledgeBaseService.findOne({
             id: knowledgeBaseId,
             workspace: workspaceId,
+            deletedAt: null,
         });
 
         if (!knowledgeBase) {
@@ -86,7 +87,10 @@ export class KnowledgeItemTagController {
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('knowledgeBaseId') knowledgeBaseId: string
     ): Promise<IResponse<string[]>> {
-        await this.assertKnowledgeBaseInWorkspace(knowledgeBaseId, workspace.id);
+        await this.assertKnowledgeBaseInWorkspace(
+            knowledgeBaseId,
+            workspace.id
+        );
 
         const tags =
             await this.tagService.findUniqueTagsByKnowledgeBase(
@@ -116,7 +120,10 @@ export class KnowledgeItemTagController {
         @Param('knowledgeBaseId') knowledgeBaseId: string,
         @Param('tag') tag: string
     ): Promise<void> {
-        await this.assertKnowledgeBaseInWorkspace(knowledgeBaseId, workspace.id);
+        await this.assertKnowledgeBaseInWorkspace(
+            knowledgeBaseId,
+            workspace.id
+        );
 
         const session = this.em.fork();
         await session.begin();

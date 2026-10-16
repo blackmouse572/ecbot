@@ -23,15 +23,12 @@ import {
 } from '@app/modules/policy/enums/policy.enum';
 import { WorkspacePayload } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import {
-    KnowledgeBaseClientCreateDoc,
     KnowledgeBaseClientListDoc,
     KnowledgeBaseClientUpdateDoc,
 } from '../docs/knowledge-base.client.doc';
-import { KnowledgeBaseCreateRequestDto } from '../dtos/request/knowledge-base.create.request.dto';
 import { KnowledgeBaseUpdateRequestDto } from '../dtos/request/knowledge-base.update.request.dto';
 import { KnowledgeBaseResponseDto } from '../dtos/response/knowledge-base.response.dto';
 import { KnowledgeBaseService } from '../services/knowledge-base.service';
@@ -87,27 +84,6 @@ export class KnowledgeBaseClientController {
             },
             data: this.knowledgeBaseService.mapList(data),
         };
-    }
-
-    @KnowledgeBaseClientCreateDoc()
-    @Response('knowledgeBase.create')
-    @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
-        action: [ENUM_POLICY_ACTION.CREATE],
-    })
-    @Post('/')
-    async create(
-        @WorkspacePayload() workspace: WorkspaceEntity,
-        @ClientCredentialPayload() credential: ClientCredentialEntity,
-        @Body() dto: KnowledgeBaseCreateRequestDto
-    ): Promise<IResponse<DatabaseIdResponseDto>> {
-        const knowledgeBase = await this.knowledgeBaseService.create(
-            { ...dto, workspace: workspace.id },
-            { actionBy: credential.createdBy.id }
-        );
-        await this.log(ENUM_ACTIVITY_ACTION.CREATE, credential, knowledgeBase);
-
-        return { data: { id: knowledgeBase.id } };
     }
 
     @KnowledgeBaseClientUpdateDoc()
