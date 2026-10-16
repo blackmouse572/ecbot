@@ -420,6 +420,27 @@ describe('ConversationService', () => {
             });
         });
 
+        // A row is one handoff episode: a tag rule or a guardrail can trigger
+        // again while staff already have the conversation.
+        it('does not log another handoff while one is already open', async () => {
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+            mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
+                []
+            );
+
+            await service.triggerHandoff(
+                { id: 'conv-1', handoffAt: new Date() } as any,
+                'workspace-1',
+                'tag_trigger'
+            );
+
+            expect(
+                mockActivityService.createByBotWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
+
         it('still hands over when the activity log write fails', async () => {
             mockConversationRepository.updateEntity.mockResolvedValue({
                 id: 'conv-1',

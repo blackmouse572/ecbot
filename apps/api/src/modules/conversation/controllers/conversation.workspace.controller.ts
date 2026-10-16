@@ -276,7 +276,7 @@ export class ConversationWorkspaceController {
         );
 
         await this.activityService.createByUserWithWorkspace(user, workspace, {
-            action: statusActivityAction(dto.status),
+            action: statusActivityAction(conversation.status, dto.status),
             subject: ENUM_POLICY_SUBJECT.CONVERSATION,
             metadata: {
                 id: conversation.id,
@@ -323,7 +323,7 @@ export class ConversationWorkspaceController {
         );
 
         await this.activityService.createByUserWithWorkspace(user, workspace, {
-            action: botActivityAction(dto.botEnabled),
+            action: botActivityAction(conversation.botEnabled, dto.botEnabled),
             subject: ENUM_POLICY_SUBJECT.CONVERSATION,
             metadata: {
                 id: conversation.id,

@@ -519,24 +519,26 @@ export class ConversationService implements IConversationService {
             });
         }
 
-        // The dashboard's handoff rate counts these rows: `handoffAt` is
-        // cleared again once staff resolve the conversation. Never fatal.
-        await this.activityService
-            .createByBotWithWorkspace(workspaceId, {
-                action: ENUM_ACTIVITY_ACTION.CONVERSATION_HANDOFF,
-                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
-                metadata: {
-                    id: conversation.id,
-                    name: conversation.senderName,
-                    reason,
-                    ...(tagId ? { tagId } : {}),
-                },
-            })
-            .catch((err: unknown) =>
-                this.logger.warn(
-                    `Handoff activity for ${conversation.id} not logged: ${(err as Error).message}`
-                )
-            );
+        // The dashboard's handoff rate counts these rows, one per episode: a
+        // tag rule or guardrail can trigger again while `handoffAt` is still
+        // set (staff clear it on resolve). Never fatal.
+        if (!conversation.handoffAt)
+            await this.activityService
+                .createByBotWithWorkspace(workspaceId, {
+                    action: ENUM_ACTIVITY_ACTION.CONVERSATION_HANDOFF,
+                    subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                    metadata: {
+                        id: conversation.id,
+                        name: conversation.senderName,
+                        reason,
+                        ...(tagId ? { tagId } : {}),
+                    },
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Handoff activity for ${conversation.id} not logged: ${(err as Error).message}`
+                    )
+                );
 
         // Notify operators (all active workspace members)
         await this.notifyOperators(

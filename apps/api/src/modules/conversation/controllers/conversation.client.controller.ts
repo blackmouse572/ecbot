@@ -311,7 +311,7 @@ export class ConversationClientController {
             workspace,
             credential,
             conversation,
-            statusActivityAction(dto.status)
+            statusActivityAction(conversation.status, dto.status)
         );
 
         return { data: this.conversationService.mapGet(updated) };
@@ -341,7 +341,7 @@ export class ConversationClientController {
             workspace,
             credential,
             conversation,
-            botActivityAction(dto.botEnabled)
+            botActivityAction(conversation.botEnabled, dto.botEnabled)
         );
 
         return { data: this.conversationService.mapGet(updated) };
