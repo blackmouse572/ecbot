@@ -21,11 +21,12 @@ Ecbot runs AI chatbots ("agents") that reply to a business's customers on Messen
 
 ## Where things belong in an agent
 
-| What                                       | Where                                               |
-| ------------------------------------------ | --------------------------------------------------- |
-| Facts: products, prices, hours, policies   | `generalKnowledge`, or the knowledge base when long |
-| Tone, persona, a few rules for every reply | `extraInstructions`                                 |
-| "When the customer asks X, do A, then B"   | a Skill, attached to the agent                      |
-| Calling another system                     | a Tool, turned on for the agent                     |
+| What                                                 | Where                                            |
+| ---------------------------------------------------- | ------------------------------------------------ |
+| Goals, tone, address style, rules, when to hand over | `profile`                                        |
+| Short facts: hours, address, delivery, prices        | `profile.facts`, or the knowledge base when long |
+| Anything for every reply the profile can't say       | `extraInstructions`, a few lines                 |
+| "When the customer asks X, do A, then B"             | a Skill, attached to the agent                   |
+| Calling another system                               | a Tool, turned on for the agent                  |
 
 Workflows do not go in `extraInstructions`. See the `ecbot-agent-builder` skill to set up or clean up an agent, and `ecbot-skill-builder` to write a workflow as a Skill.

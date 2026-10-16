@@ -757,6 +757,9 @@ importers:
       '@modelcontextprotocol/server':
         specifier: ^2.3.1
         version: 2.3.1
+      '@repo/agent-blueprint':
+        specifier: workspace:*
+        version: link:../../packages/agent-blueprint
       '@repo/client':
         specifier: workspace:*
         version: link:../../packages/client

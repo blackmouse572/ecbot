@@ -46,16 +46,19 @@ export async function respond<T>(
   pick: (data: T) => unknown,
 ) {
   const { data, error } = await call;
-  if (error) {
-    const message =
-      (error as { message?: unknown }).message ??
-      "The Ecbot API request failed.";
-    return {
-      isError: true,
-      content: [{ type: "text" as const, text: String(message) }],
-    };
-  }
+  if (error) return apiError(error);
   return {
     content: [{ type: "text" as const, text: JSON.stringify(pick(data as T)) }],
   };
+}
+
+export function apiError(error: unknown) {
+  const message =
+    (error as { message?: unknown } | undefined)?.message ??
+    "The Ecbot API request failed.";
+  return fail(String(message));
+}
+
+export function fail(text: string) {
+  return { isError: true, content: [{ type: "text" as const, text }] };
 }
