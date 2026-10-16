@@ -49,6 +49,14 @@ const cases: [
     { id: "item-1", content: "Ship in 2 days" },
   ],
   [
+    "list_chatbot_knowledge",
+    { chatbotId: "chatbot-1", page: 2 },
+    "chatbotKnowledgeItemClientControllerListV1",
+    { path: { chatbotId: "chatbot-1" }, query: { page: 2 } },
+    page([{ id: "link-1" }]),
+    { knowledgeItems: [{ id: "link-1" }], pagination: { total: 1 } },
+  ],
+  [
     "list_conversations",
     { status: "OPEN", chatbot: "chatbot-1", botEnabled: false },
     "conversationClientControllerListV1",

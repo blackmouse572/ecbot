@@ -15,6 +15,7 @@ import { CustomerTagClientController } from '@app/modules/customer/controllers/c
 import { CustomerModule } from '@app/modules/customer/customer.module';
 import { KnowledgeBaseClientController } from '@app/modules/knowledge-base/controllers/knowledge-base.client.controller';
 import { KnowledgeItemClientController } from '@app/modules/knowledge-base/controllers/knowledge-item.client.controller';
+import { ChatbotKnowledgeItemClientController } from '@app/modules/knowledge-base/controllers/chatbot-knowledge-item.client.controller';
 import { KnowledgeBaseServicesModule } from '@app/modules/knowledge-base/services/services.module';
 import { RoleModule } from '@app/modules/role/role.module';
 import { ChatbotSkillClientController } from '@app/modules/skill/controllers/chatbot-skill.client.controller';
@@ -35,6 +36,7 @@ import { Module } from '@nestjs/common';
         ChatbotClientController,
         KnowledgeBaseClientController,
         KnowledgeItemClientController,
+        ChatbotKnowledgeItemClientController,
         ConversationClientController,
         CustomerClientController,
         CustomerTagClientController,

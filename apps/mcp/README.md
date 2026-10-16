@@ -31,10 +31,12 @@ replace data, **deletes** remove it.
 |               | `reply_to_conversation` (also `openWorldHint`: the customer sees it at once) | chatbot update   | adds       |
 |               | `set_conversation_bot`, `set_conversation_status`                            | chatbot update   | switches   |
 | Knowledge     | `list_knowledge_bases`, `list_knowledge_items`, `get_knowledge_item`         | knowledge read   | reads      |
-|               | `create_knowledge_base`, `create_knowledge_item` (text or URL)               | knowledge create | adds       |
+|               | `list_chatbot_knowledge`                                                     | knowledge read   | reads      |
+|               | `create_knowledge_base`, `create_knowledge_item`                             | knowledge create | adds       |
+|               | `get_knowledge_upload_url`, `link_knowledge_to_chatbot`                      | knowledge create | adds       |
 |               | `update_knowledge_base`, `update_knowledge_item`                             | knowledge update | overwrites |
 |               | `process_knowledge_item`                                                     | knowledge update | switches   |
-|               | `delete_knowledge_item`                                                      | knowledge delete | deletes    |
+|               | `delete_knowledge_item`, `unlink_knowledge_from_chatbot`                     | knowledge delete | deletes    |
 | Customers     | `list_customers`, `get_customer`, `list_customer_tags`, `get_customer_tags`  | customer read    | reads      |
 |               | `create_customer_tag`                                                        | customer create  | adds       |
 |               | `update_customer`, `update_customer_tag`                                     | customer update  | overwrites |

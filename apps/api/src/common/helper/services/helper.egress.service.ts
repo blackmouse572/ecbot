@@ -156,9 +156,16 @@ export class HelperEgressService implements IHelperEgressService {
         });
     }
 
-    async fetch(url: string | URL, init: RequestInit = {}): Promise<Response> {
+    async fetch(
+        url: string | URL,
+        init: RequestInit = {},
+        options: { maxBytes?: number } = {}
+    ): Promise<Response> {
         const res = await this.guardedFetch(new URL(url), init, 0);
-        return capResponseSize(res, this.maxResponseBytes());
+        return capResponseSize(
+            res,
+            options.maxBytes ?? this.maxResponseBytes()
+        );
     }
 
     private maxResponseBytes(): number {

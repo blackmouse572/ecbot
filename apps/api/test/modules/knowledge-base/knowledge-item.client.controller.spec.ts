@@ -47,6 +47,14 @@ const mockAwsS3Service = {
     presignGetItem: jest.fn(),
 };
 
+const mockUploadService = {
+    store: jest.fn(),
+    readUpload: jest.fn(),
+    download: jest.fn(),
+    discardUpload: jest.fn(),
+    createUploadUrl: jest.fn(),
+};
+
 describe('KnowledgeItemClientController', () => {
     const workspace = { id: 'workspace-1' } as WorkspaceEntity;
     let controller: KnowledgeItemClientController;
@@ -59,7 +67,8 @@ describe('KnowledgeItemClientController', () => {
             mockPaginationService as any,
             mockAwsS3Service as any,
             mockFolderService as any,
-            mockActivityService as any
+            mockActivityService as any,
+            mockUploadService as any
         );
     });
 
@@ -313,16 +322,146 @@ describe('KnowledgeItemClientController', () => {
                 expect(result).toEqual({ data: { id: 'item-1' } });
             });
 
-            it('refuses a file item, which needs an upload', async () => {
+            it.each([
+                ['no source', {}],
+                [
+                    'both sources',
+                    { fileKey: 'k', fileUrl: 'https://x.test/a.pdf' },
+                ],
+            ])('refuses a file item with %s', async (_label, source) => {
                 await expect(
                     controller.create(workspace, credential, 'kb-1', {
                         type: 'FILE',
                         title: 'Menu',
+                        ...source,
                     } as any)
                 ).rejects.toMatchObject({
-                    response: { message: 'knowledgeItem.error.fileRequired' },
+                    response: { message: 'knowledgeItem.error.fileSource' },
                 });
                 expect(mockKnowledgeItemService.create).not.toHaveBeenCalled();
+            });
+
+            it('refuses a file source on a text item', async () => {
+                await expect(
+                    controller.create(workspace, credential, 'kb-1', {
+                        type: 'TEXT',
+                        title: 'Hours',
+                        fileUrl: 'https://x.test/a.pdf',
+                    } as any)
+                ).rejects.toMatchObject({
+                    response: { message: 'knowledgeItem.error.fileSource' },
+                });
+            });
+
+            it.each(['TEXT', 'URL'])(
+                'refuses a %s item with no content',
+                async type => {
+                    await expect(
+                        controller.create(workspace, credential, 'kb-1', {
+                            type,
+                            title: 'Hours',
+                            content: ' ',
+                        } as any)
+                    ).rejects.toMatchObject({
+                        response: {
+                            message: 'knowledgeItem.error.contentRequired',
+                        },
+                    });
+                    expect(
+                        mockKnowledgeItemService.create
+                    ).not.toHaveBeenCalled();
+                }
+            );
+
+            it('drops a presigned upload when the create fails', async () => {
+                mockKnowledgeBaseService.findOne.mockResolvedValue({
+                    id: 'kb-1',
+                });
+                mockUploadService.readUpload.mockResolvedValue({});
+                mockUploadService.store.mockRejectedValue(new Error('quota'));
+
+                await expect(
+                    controller.create(workspace, credential, 'kb-1', {
+                        type: 'MEDIA',
+                        title: 'Menu',
+                        fileKey: 'knowledge-uploads/workspace-1/kb-1/x.pdf',
+                    } as any)
+                ).rejects.toThrow('quota');
+                expect(mockUploadService.discardUpload).toHaveBeenCalledWith(
+                    'knowledge-uploads/workspace-1/kb-1/x.pdf'
+                );
+            });
+
+            it('creates a media item from a presigned upload, then drops the upload', async () => {
+                const file = { originalname: 'menu.pdf' };
+                const stored = {
+                    attachment: { key: 'knowledge-media/menu.pdf' },
+                    metadata: {
+                        fileName: 'menu.pdf',
+                        mimeType: 'application/pdf',
+                    },
+                };
+                mockKnowledgeBaseService.findOne.mockResolvedValue({
+                    id: 'kb-1',
+                });
+                mockUploadService.readUpload.mockResolvedValue(file);
+                mockUploadService.store.mockResolvedValue(stored);
+                mockKnowledgeItemService.create.mockResolvedValue(item);
+
+                await controller.create(workspace, credential, 'kb-1', {
+                    type: 'MEDIA',
+                    title: 'Menu',
+                    fileKey: 'knowledge-uploads/workspace-1/kb-1/x-menu.pdf',
+                } as any);
+
+                expect(mockUploadService.readUpload).toHaveBeenCalledWith(
+                    'workspace-1',
+                    'kb-1',
+                    'knowledge-uploads/workspace-1/kb-1/x-menu.pdf'
+                );
+                expect(mockUploadService.store).toHaveBeenCalledWith(
+                    'workspace-1',
+                    'kb-1',
+                    'MEDIA',
+                    file
+                );
+                expect(mockKnowledgeItemService.create).toHaveBeenCalledWith(
+                    expect.objectContaining({ type: 'MEDIA', ...stored }),
+                    { actionBy: 'creator-1' }
+                );
+                expect(mockUploadService.discardUpload).toHaveBeenCalledWith(
+                    'knowledge-uploads/workspace-1/kb-1/x-menu.pdf'
+                );
+            });
+
+            it('creates a file item from a public link', async () => {
+                const file = { originalname: 'faq.pdf' };
+                mockKnowledgeBaseService.findOne.mockResolvedValue({
+                    id: 'kb-1',
+                });
+                mockUploadService.download.mockResolvedValue(file);
+                mockUploadService.store.mockResolvedValue({
+                    attachment: {},
+                    metadata: {},
+                });
+                mockKnowledgeItemService.create.mockResolvedValue(item);
+
+                await controller.create(workspace, credential, 'kb-1', {
+                    type: 'FILE',
+                    title: 'FAQ',
+                    fileUrl: 'https://shop.test/faq.pdf',
+                } as any);
+
+                expect(mockUploadService.download).toHaveBeenCalledWith(
+                    'https://shop.test/faq.pdf'
+                );
+                expect(mockUploadService.store).toHaveBeenCalledWith(
+                    'workspace-1',
+                    'kb-1',
+                    'FILE',
+                    file
+                );
+                expect(mockUploadService.discardUpload).not.toHaveBeenCalled();
             });
 
             it('404s a knowledge base outside the credential workspace', async () => {
@@ -332,6 +471,7 @@ describe('KnowledgeItemClientController', () => {
                     controller.create(workspace, credential, 'other', {
                         type: 'TEXT',
                         title: 'x',
+                        content: 'Open 9am',
                     } as any)
                 ).rejects.toBeInstanceOf(NotFoundException);
                 expect(mockKnowledgeItemService.create).not.toHaveBeenCalled();
@@ -347,6 +487,7 @@ describe('KnowledgeItemClientController', () => {
                     controller.create(workspace, credential, 'kb-1', {
                         type: 'TEXT',
                         title: 'x',
+                        content: 'Open 9am',
                         folderId: 'folder-9',
                     } as any)
                 ).rejects.toBeInstanceOf(NotFoundException);

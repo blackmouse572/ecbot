@@ -15,6 +15,7 @@ import { KnowledgeIngestService } from './knowledge-ingest.service';
 import { KnowledgeIngestTaskService } from './knowledge-ingest-task.service';
 import { KnowledgeFailureNotifierService } from './knowledge-failure-notifier.service';
 import { KnowledgeStorageQuotaService } from './knowledge-storage-quota.service';
+import { KnowledgeItemUploadService } from './knowledge-item-upload.service';
 import { KnowledgeBaseRepositoryModule } from '../repository/knowledge-base.repository.module';
 import { NotificationModule } from '@app/modules/notification/notification.module';
 import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/workspace.repository.module';
@@ -42,6 +43,7 @@ import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/wor
         KnowledgeIngestTaskService,
         KnowledgeFailureNotifierService,
         KnowledgeStorageQuotaService,
+        KnowledgeItemUploadService,
     ],
     exports: [
         KnowledgeBaseService,
@@ -56,6 +58,7 @@ import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/wor
         KnowledgeIngestService,
         KnowledgeIngestTaskService,
         KnowledgeStorageQuotaService,
+        KnowledgeItemUploadService,
     ],
 })
 export class KnowledgeBaseServicesModule {}

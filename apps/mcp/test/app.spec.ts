@@ -24,6 +24,7 @@ const READ_TOOLS = [
   "get_knowledge_item",
   "get_skill",
   "get_workspace_tool",
+  "list_chatbot_knowledge",
   "list_chatbot_models",
   "list_chatbot_skills",
   "list_chatbot_tools",

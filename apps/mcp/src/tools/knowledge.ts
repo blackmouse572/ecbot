@@ -1,5 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import {
+  chatbotKnowledgeItemClientControllerLinkV1,
+  chatbotKnowledgeItemClientControllerListV1,
+  chatbotKnowledgeItemClientControllerUnlinkV1,
   knowledgeBaseClientControllerCreateV1,
   knowledgeBaseClientControllerListV1,
   knowledgeBaseClientControllerUpdateV1,
@@ -8,6 +11,7 @@ import {
   knowledgeItemClientControllerGetV1,
   knowledgeItemClientControllerListV1,
   knowledgeItemClientControllerUpdateV1,
+  knowledgeItemClientControllerUploadUrlV1,
 } from "@repo/client";
 import * as z from "zod";
 import {
@@ -65,7 +69,7 @@ function registerReadTools(server: McpServer, api: ApiOptions) {
         type: z
           .string()
           .optional()
-          .describe("Comma-separated types: FILE, URL, TEXT."),
+          .describe("Comma-separated types: FILE, URL, TEXT, MEDIA."),
         status: z
           .string()
           .optional()
@@ -111,6 +115,29 @@ function registerReadTools(server: McpServer, api: ApiOptions) {
         (d) => d.data,
       ),
   );
+
+  server.registerTool(
+    "list_chatbot_knowledge",
+    {
+      title: "List chatbot knowledge",
+      description:
+        "List the knowledge items a chatbot answers from. A chatbot only uses items linked to it with link_knowledge_to_chatbot.",
+      inputSchema: z.object({ chatbotId: z.string(), ...paging }),
+      annotations: READS,
+    },
+    ({ chatbotId, ...query }) =>
+      respond(
+        chatbotKnowledgeItemClientControllerListV1({
+          ...api,
+          path: { chatbotId },
+          query,
+        }),
+        (d) => ({
+          knowledgeItems: d.data,
+          pagination: d._metadata.pagination,
+        }),
+      ),
+  );
 }
 
 function registerCreateTools(server: McpServer, api: ApiOptions) {
@@ -134,21 +161,72 @@ function registerCreateTools(server: McpServer, api: ApiOptions) {
   );
 
   server.registerTool(
+    "get_knowledge_upload_url",
+    {
+      title: "Get knowledge upload URL",
+      description:
+        "Get a URL to upload a file for a FILE or MEDIA item. Send the file with an HTTP PUT to `uploadUrl` within `expiresIn` seconds, with a Content-Length equal to `size`, then call create_knowledge_item with the returned `fileKey`. For a file already online, skip this and pass `fileUrl` to create_knowledge_item instead.",
+      inputSchema: z.object({
+        knowledgeBaseId: z.string(),
+        type: z
+          .enum(["FILE", "MEDIA"])
+          .describe(
+            "FILE for a document read for its text (PDF, DOCX, TXT, Markdown, HTML; up to 5MB). MEDIA for an image or PDF the chatbot sends to customers (JPG, PNG, WEBP up to 5MB; PDF up to 20MB).",
+          ),
+        fileName: z
+          .string()
+          .min(1)
+          .max(200)
+          .describe("The file name with its extension, e.g. menu.pdf."),
+        size: z.number().int().min(1).describe("The file size in bytes."),
+      }),
+      annotations: ADDS,
+    },
+    ({ knowledgeBaseId, ...body }) =>
+      respond(
+        knowledgeItemClientControllerUploadUrlV1({
+          ...api,
+          path: { knowledgeBaseId },
+          body,
+        }),
+        (d) => d.data,
+      ),
+  );
+
+  server.registerTool(
     "create_knowledge_item",
     {
       title: "Create knowledge item",
       description:
-        "Add a text or web page item to a knowledge base. It starts as a draft: call process_knowledge_item so chatbots using the knowledge base can answer from it. Files can only be uploaded in the app.",
+        "Add an item to a knowledge base. It starts as a draft: call process_knowledge_item, then link_knowledge_to_chatbot, so a chatbot can answer from it. A FILE or MEDIA item takes its file from exactly one of `fileKey` (after get_knowledge_upload_url) or `fileUrl`.",
       inputSchema: z.object({
         knowledgeBaseId: z.string(),
         type: z
-          .enum(["TEXT", "URL"])
-          .describe("TEXT for written content, URL for a web page to read."),
+          .enum(["TEXT", "URL", "FILE", "MEDIA"])
+          .describe(
+            "TEXT for written content, URL for a web page to read, FILE for a document read for its text, MEDIA for an image or PDF the chatbot sends to customers.",
+          ),
         title: z.string().min(1),
         content: z
           .string()
           .min(1)
-          .describe("The text itself, or the page URL for a URL item."),
+          .optional()
+          .describe(
+            "TEXT: the text itself. URL: the page URL. MEDIA: optional, what the image or PDF shows (left empty, it is described automatically). FILE: leave empty.",
+          ),
+        fileKey: z
+          .string()
+          .optional()
+          .describe(
+            "FILE or MEDIA: the fileKey from get_knowledge_upload_url.",
+          ),
+        fileUrl: z
+          .string()
+          .url()
+          .optional()
+          .describe(
+            "FILE or MEDIA: a public http(s) link to the file itself, which Ecbot downloads.",
+          ),
         tags: z.array(z.string()).optional(),
       }),
       annotations: ADDS,
@@ -159,6 +237,47 @@ function registerCreateTools(server: McpServer, api: ApiOptions) {
           ...api,
           path: { knowledgeBaseId },
           body,
+        }),
+        (d) => d.data,
+      ),
+  );
+
+  server.registerTool(
+    "link_knowledge_to_chatbot",
+    {
+      title: "Link knowledge to chatbot",
+      description:
+        "Let a chatbot answer from knowledge items. Pass `itemIds`, or `knowledgeBaseId` with an optional `filter` to link every matching item in that knowledge base (up to 2000). An item already linked counts as linked. The result lists which ids succeeded and failed.",
+      inputSchema: z.object({
+        chatbotId: z.string(),
+        itemIds: z.array(z.string()).min(1).optional(),
+        knowledgeBaseId: z.string().optional(),
+        filter: z
+          .object({
+            search: z.string().optional().describe("Text the title contains."),
+            type: z.array(z.enum(["FILE", "URL", "TEXT", "MEDIA"])).optional(),
+            status: z
+              .array(
+                z.enum(["DRAFT", "READY", "PROCESSING", "COMPLETED", "FAILED"]),
+              )
+              .optional(),
+            tags: z
+              .array(z.string())
+              .optional()
+              .describe("Items with any of these tags."),
+          })
+          .optional(),
+      }),
+      annotations: ADDS,
+    },
+    ({ chatbotId, itemIds, knowledgeBaseId, filter }) =>
+      respond(
+        chatbotKnowledgeItemClientControllerLinkV1({
+          ...api,
+          path: { chatbotId },
+          body: itemIds
+            ? { ids: itemIds }
+            : { knowledgeBaseId, filter: filter ?? {} },
         }),
         (d) => d.data,
       ),
@@ -220,7 +339,7 @@ function registerUpdateTools(server: McpServer, api: ApiOptions) {
     {
       title: "Process knowledge item",
       description:
-        "Queue a knowledge item for processing, so chatbots using its knowledge base can answer from it. Processing runs in the background: check the item's status with get_knowledge_item (COMPLETED or FAILED).",
+        "Queue a knowledge item for processing, so the chatbots it is linked to can answer from it. Processing runs in the background: check the item's status with get_knowledge_item (COMPLETED or FAILED).",
       inputSchema: z.object({
         knowledgeBaseId: z.string(),
         itemId: z.string(),
@@ -256,6 +375,25 @@ function registerDeleteTools(server: McpServer, api: ApiOptions) {
         knowledgeItemClientControllerDeleteV1({
           ...api,
           path: { knowledgeBaseId, id: itemId },
+        }),
+        (d) => d.data,
+      ),
+  );
+
+  server.registerTool(
+    "unlink_knowledge_from_chatbot",
+    {
+      title: "Unlink knowledge from chatbot",
+      description:
+        "Stop a chatbot answering from a knowledge item. The item stays in its knowledge base.",
+      inputSchema: z.object({ chatbotId: z.string(), itemId: z.string() }),
+      annotations: DELETES,
+    },
+    ({ chatbotId, itemId }) =>
+      respond(
+        chatbotKnowledgeItemClientControllerUnlinkV1({
+          ...api,
+          path: { chatbotId, knowledgeItemId: itemId },
         }),
         (d) => d.data,
       ),
