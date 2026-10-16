@@ -33,3 +33,13 @@ export const GETTING_STARTED_STEPS = [
     icon: ChatBubbleLeftRight,
   },
 ] as const;
+
+/** Dashboard analytics tabs in order, each shown only to a member who can
+ * read every subject it counts. */
+export const ANALYTICS_TABS = [
+  { value: "conversion", subjects: ["CUSTOMER"] },
+  { value: "marketing", subjects: ["CUSTOMER", "CONVERSATION"] },
+  { value: "bot", subjects: ["CONVERSATION"] },
+  { value: "customers", subjects: ["CUSTOMER"] },
+  { value: "usage", subjects: ["TOKEN_USAGE"] },
+] as const;
