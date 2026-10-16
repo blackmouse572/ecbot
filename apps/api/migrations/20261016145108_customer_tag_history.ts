@@ -2,26 +2,29 @@ import { Migration } from '@mikro-orm/migrations';
 
 const SYSTEM_KEYS = `'hot_lead', 'new_lead', 'returning_customer', 'vip', 'positive', 'negative', 'complaint', 'angry', 'new_order', 'needs_staff', 'new_booking', 'order_placed'`;
 
-// Default tag names (EN and VI seed catalogs) and the key each one means.
-const DEFAULT_TAG_NAMES: Array<[string, string, string]> = [
-    ['hot_lead', 'Hot lead', 'Khách tiềm năng cao'],
-    ['new_lead', 'New lead', 'Khách mới'],
-    ['returning_customer', 'Returning customer', 'Khách quay lại'],
-    ['vip', 'VIP', 'VIP'],
-    ['positive', 'Positive', 'Hài lòng'],
-    ['negative', 'Negative', 'Không hài lòng'],
-    ['complaint', 'Complaint', 'Khiếu nại'],
-    ['angry', 'Angry', 'Bực tức'],
-    ['new_order', 'New order', 'Đơn hàng mới'],
-    ['needs_staff', 'Needs staff', 'Cần nhân viên'],
-    ['new_booking', 'New booking', 'Lịch hẹn mới'],
-    ['order_placed', 'Order placed', 'Đã đặt đơn'],
+// Default tags (EN and VI seed catalogs): key, EN name, VI name, emoji.
+const DEFAULT_TAGS: Array<[string, string, string, string]> = [
+    ['hot_lead', 'Hot lead', 'Khách tiềm năng cao', '🔥'],
+    ['new_lead', 'New lead', 'Khách mới', '✨'],
+    ['returning_customer', 'Returning customer', 'Khách quay lại', '🔁'],
+    ['vip', 'VIP', 'VIP', '⭐'],
+    ['positive', 'Positive', 'Hài lòng', '😊'],
+    ['negative', 'Negative', 'Không hài lòng', '😟'],
+    ['complaint', 'Complaint', 'Khiếu nại', '❗'],
+    ['angry', 'Angry', 'Bực tức', '🚨'],
+    ['new_order', 'New order', 'Đơn hàng mới', '🧾'],
+    ['needs_staff', 'Needs staff', 'Cần nhân viên', '🙋'],
+    ['new_booking', 'New booking', 'Lịch hẹn mới', '🗓️'],
+    ['order_placed', 'Order placed', 'Đã đặt đơn', '🛒'],
 ];
 
 // Tag data the workspace dashboard needs and nothing kept until now:
 // - `customer_tags.system_key`: what a default tag means, so "Order placed"
-//   still counts after the owner renames it. Existing tags get it from their
-//   seeded name (a tag already renamed stays without one).
+//   still counts after the owner renames it. Existing tags get it when both
+//   the seeded name and emoji still match, and only the oldest such tag per
+//   workspace, so a workspace never holds two tags with one key. Nothing
+//   marks a seeded row, so an owner's own tag with exactly a default's name
+//   and emoji is taken as that default; a renamed default stays without a key.
 // - `customer_tag_events`: the history of tags applied and removed (the
 //   assignments table only holds what is on a customer now).
 export class Migration20261016145108_customer_tag_history extends Migration {
@@ -35,9 +38,9 @@ export class Migration20261016145108_customer_tag_history extends Migration {
         this.addSql(
             `create index "customer_tags_workspace_id_system_key_index" on "customer_tags" ("workspace_id", "system_key");`
         );
-        for (const [key, en, vi] of DEFAULT_TAG_NAMES) {
+        for (const [key, en, vi, emoji] of DEFAULT_TAGS) {
             this.addSql(
-                `update "customer_tags" set "system_key" = '${key}' where "name" in ('${en}', '${vi}') and "system_key" is null;`
+                `update "customer_tags" set "system_key" = '${key}' where "id" in (select distinct on ("workspace_id") "id" from "customer_tags" where "name" in ('${en}', '${vi}') and "emoji" = '${emoji}' and "deleted" = false order by "workspace_id", "created_at", "id");`
             );
         }
 
@@ -78,7 +81,7 @@ export class Migration20261016145108_customer_tag_history extends Migration {
             `alter table "customer_tag_events" add constraint "customer_tag_events_workspace_id_foreign" foreign key ("workspace_id") references "workspaces" ("id") on update cascade;`
         );
         this.addSql(
-            `alter table "customer_tag_events" add constraint "customer_tag_events_customer_id_foreign" foreign key ("customer_id") references "customers" ("id") on update cascade;`
+            `alter table "customer_tag_events" add constraint "customer_tag_events_customer_id_foreign" foreign key ("customer_id") references "customers" ("id") on update cascade on delete cascade;`
         );
         this.addSql(
             `alter table "customer_tag_events" add constraint "customer_tag_events_tag_id_foreign" foreign key ("tag_id") references "customer_tags" ("id") on update cascade;`

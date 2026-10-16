@@ -30,7 +30,8 @@ export class CustomerTagEventEntity extends DatabaseEntityBase {
     @ManyToOne(() => WorkspaceEntity)
     workspace: WorkspaceEntity;
 
-    @ManyToOne(() => CustomerEntity)
+    // Erasing a customer erases their tag history with them.
+    @ManyToOne(() => CustomerEntity, { deleteRule: 'cascade' })
     customer: CustomerEntity;
 
     @ManyToOne(() => CustomerTagEntity)

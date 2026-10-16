@@ -6669,7 +6669,7 @@
         },
         "deleted": {
           "name": "deleted",
-          "type": "boolean",
+          "type": "bool",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -6685,7 +6685,7 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -6717,7 +6717,7 @@
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -6749,7 +6749,7 @@
         },
         "deleted_at": {
           "name": "deleted_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -6888,166 +6888,170 @@
       "schema": "public",
       "indexes": [
         {
-          "keyName": "customer_tag_events_deleted_at_index",
-          "columnNames": [
-            "deleted_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "customer_tag_events_updated_at_index",
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "customer_tag_events_created_at_index",
           "columnNames": [
             "created_at"
           ],
           "composite": false,
           "constraint": false,
-          "primary": false,
-          "unique": false
+          "keyName": "customer_tag_events_created_at_index",
+          "unique": false,
+          "primary": false
         },
         {
-          "keyName": "customer_tag_events_deleted_index",
-          "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "customer_tag_events_customer_id_index",
           "columnNames": [
             "customer_id"
           ],
           "composite": false,
           "constraint": false,
-          "primary": false,
-          "unique": false
+          "keyName": "customer_tag_events_customer_id_index",
+          "unique": false,
+          "primary": false
         },
         {
-          "keyName": "customer_tag_events_tag_id_index",
+          "columnNames": [
+            "deleted_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "customer_tag_events_deleted_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "deleted"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "customer_tag_events_deleted_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "customer_tag_events_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
           "columnNames": [
             "tag_id"
           ],
           "composite": false,
           "constraint": false,
-          "primary": false,
-          "unique": false
+          "keyName": "customer_tag_events_tag_id_index",
+          "unique": false,
+          "primary": false
         },
         {
-          "keyName": "customer_tag_events_workspace_id_created_at_index",
+          "columnNames": [
+            "updated_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "customer_tag_events_updated_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
           "columnNames": [
             "workspace_id",
             "created_at"
           ],
           "composite": true,
           "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "customer_tag_events_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "keyName": "customer_tag_events_workspace_id_created_at_index",
+          "unique": false,
+          "primary": false
         }
       ],
       "checks": [],
       "foreignKeys": {
         "customer_tag_events_created_by_id_foreign": {
-          "constraintName": "customer_tag_events_created_by_id_foreign",
           "columnNames": [
             "created_by_id"
           ],
+          "constraintName": "customer_tag_events_created_by_id_foreign",
           "localTableName": "public.customer_tag_events",
-          "referencedColumnNames": [
-            "id"
-          ],
           "referencedTableName": "public.users",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "customer_tag_events_updated_by_id_foreign": {
-          "constraintName": "customer_tag_events_updated_by_id_foreign",
-          "columnNames": [
-            "updated_by_id"
-          ],
-          "localTableName": "public.customer_tag_events",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.users",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "customer_tag_events_deleted_by_id_foreign": {
-          "constraintName": "customer_tag_events_deleted_by_id_foreign",
-          "columnNames": [
-            "deleted_by_id"
-          ],
-          "localTableName": "public.customer_tag_events",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.users",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "customer_tag_events_workspace_id_foreign": {
-          "constraintName": "customer_tag_events_workspace_id_foreign",
-          "columnNames": [
-            "workspace_id"
-          ],
-          "localTableName": "public.customer_tag_events",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.workspaces",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "set null"
         },
         "customer_tag_events_customer_id_foreign": {
-          "constraintName": "customer_tag_events_customer_id_foreign",
           "columnNames": [
             "customer_id"
           ],
+          "constraintName": "customer_tag_events_customer_id_foreign",
           "localTableName": "public.customer_tag_events",
+          "referencedTableName": "public.customers",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.customers",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        },
+        "customer_tag_events_deleted_by_id_foreign": {
+          "columnNames": [
+            "deleted_by_id"
+          ],
+          "constraintName": "customer_tag_events_deleted_by_id_foreign",
+          "localTableName": "public.customer_tag_events",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
         },
         "customer_tag_events_tag_id_foreign": {
-          "constraintName": "customer_tag_events_tag_id_foreign",
           "columnNames": [
             "tag_id"
           ],
+          "constraintName": "customer_tag_events_tag_id_foreign",
           "localTableName": "public.customer_tag_events",
+          "referencedTableName": "public.customer_tags",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.customer_tags",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        },
+        "customer_tag_events_updated_by_id_foreign": {
+          "columnNames": [
+            "updated_by_id"
+          ],
+          "constraintName": "customer_tag_events_updated_by_id_foreign",
+          "localTableName": "public.customer_tag_events",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "customer_tag_events_workspace_id_foreign": {
+          "columnNames": [
+            "workspace_id"
+          ],
+          "constraintName": "customer_tag_events_workspace_id_foreign",
+          "localTableName": "public.customer_tag_events",
+          "referencedTableName": "public.workspaces",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         }
       },
-      "nativeEnums": {}
+      "nativeEnums": {},
+      "comment": null
     },
     {
       "columns": {
@@ -7380,15 +7384,15 @@
           "primary": false
         },
         {
-          "keyName": "customer_tags_workspace_id_system_key_index",
           "columnNames": [
             "workspace_id",
             "system_key"
           ],
           "composite": true,
           "constraint": false,
-          "primary": false,
-          "unique": false
+          "keyName": "customer_tags_workspace_id_system_key_index",
+          "unique": false,
+          "primary": false
         }
       ],
       "checks": [],

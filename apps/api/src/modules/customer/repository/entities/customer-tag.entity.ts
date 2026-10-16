@@ -36,8 +36,9 @@ export class CustomerTagEntity extends DatabaseEntityBase {
     @Property({ type: 'boolean', default: false })
     notifiesTeam: boolean = false;
 
-    // Set on the default catalog only, so analytics can find "Order placed"
-    // or "Positive" whatever the owner renamed them to.
+    // Set on the default catalog only (at most one tag per key in a
+    // workspace), so analytics can find "Order placed" or "Positive" whatever
+    // the owner renamed them to.
     @Enum({ items: () => ENUM_CUSTOMER_TAG_SYSTEM_KEY, nullable: true })
     systemKey?: ENUM_CUSTOMER_TAG_SYSTEM_KEY;
 }
