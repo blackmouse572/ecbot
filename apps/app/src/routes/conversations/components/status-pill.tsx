@@ -5,6 +5,9 @@ import { docsUrl } from "@/libs/docs-url";
 
 type Color = "green" | "orange" | "grey" | "red" | "blue" | "purple";
 
+// Long enough that sweeping the pointer down the list stays quiet.
+const TOOLTIP_DELAY_MS = 2000;
+
 type DisplayState = "botActive" | "needsYou" | "youHandling" | "resolved";
 
 const COLOR_BY_STATE: Record<DisplayState, Color> = {
@@ -33,6 +36,7 @@ export const StatusPill = ({
   return (
     <Tooltip
       maxWidth={260}
+      delayDuration={TOOLTIP_DELAY_MS}
       content={
         <span className="flex flex-col gap-y-1">
           <span>{t(`conversations.status.hint.${state}`)}</span>

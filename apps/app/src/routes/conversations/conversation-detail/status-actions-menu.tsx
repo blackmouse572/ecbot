@@ -3,6 +3,7 @@ import {
   ArrowUturnLeft,
   CheckCircleSolid,
   EllipsisHorizontal,
+  Spinner,
 } from "@medusajs/icons";
 import {
   Button,
@@ -13,6 +14,7 @@ import {
   Switch,
   Text,
   Textarea,
+  toast,
 } from "@medusajs/ui";
 import { type ReactElement, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -50,13 +52,39 @@ function getSenderProfileUrl(
   }
 }
 
-/** Asks before resolving; `children` is the element that opens it. */
-const ResolveConfirm = ({
-  conversation,
-  children,
-}: Props & { children: ReactElement }) => {
+/**
+ * Changes the status behind a toast (the confirm dialog closes at once, so
+ * the toast is the only sign that the request is running).
+ */
+const useStatusChange = (conversation: Props["conversation"]) => {
   const { t } = useTranslation();
   const update = useUpdateConversationStatus(conversation.id);
+  const change = (status: ConversationStatus) => {
+    const resolving = status === "RESOLVED";
+    toast.promise(update.mutateAsync({ status }), {
+      loading: resolving
+        ? t("conversations.actions.resolving")
+        : t("conversations.actions.restoring"),
+      success: resolving
+        ? t("conversations.actions.resolved")
+        : t("conversations.actions.restored"),
+      error: resolving
+        ? t("conversations.actions.resolveFailed")
+        : t("conversations.actions.restoreFailed"),
+    });
+  };
+  return { change, isPending: update.isPending };
+};
+
+/** Asks before resolving; `children` is the element that opens it. */
+const ResolveConfirm = ({
+  onConfirm,
+  children,
+}: {
+  onConfirm: () => void;
+  children: ReactElement;
+}) => {
+  const { t } = useTranslation();
 
   return (
     <Prompt variant="confirmation">
@@ -72,9 +100,7 @@ const ResolveConfirm = ({
         </Prompt.Header>
         <Prompt.Footer>
           <Prompt.Cancel>{t("conversations.actions.cancel")}</Prompt.Cancel>
-          <Prompt.Action
-            onClick={() => update.mutateAsync({ status: "RESOLVED" })}
-          >
+          <Prompt.Action onClick={onConfirm}>
             <CheckCircleSolid />
             {t("conversations.actions.resolve")}
           </Prompt.Action>
@@ -87,6 +113,7 @@ const ResolveConfirm = ({
 export const BotPauseSwitch = ({ conversation }: Props) => {
   const { t } = useTranslation();
   const update = useUpdateConversationBot(conversation.id);
+  const status = useStatusChange(conversation);
   const [pauseReason, setPauseReason] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -97,9 +124,13 @@ export const BotPauseSwitch = ({ conversation }: Props) => {
   // Handed over (bot off): resolving is how staff give it back to the bot.
   if (!isActive) {
     return (
-      <ResolveConfirm conversation={conversation}>
-        <Button size="small" variant="secondary">
-          <CheckCircleSolid />
+      <ResolveConfirm onConfirm={() => status.change("RESOLVED")}>
+        <Button size="small" variant="secondary" disabled={status.isPending}>
+          {status.isPending ? (
+            <Spinner className="animate-spin" />
+          ) : (
+            <CheckCircleSolid />
+          )}
           {t("conversations.actions.resolve")}
         </Button>
       </ResolveConfirm>
@@ -180,13 +211,9 @@ export const StatusActionsMenu = ({ conversation }: Props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { workspaceSlug } = useWorkspaceParams();
-  const update = useUpdateConversationStatus(conversation.id);
+  const { change, isPending } = useStatusChange(conversation);
   const resolveRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLButtonElement>(null);
-
-  const apply = async (status: ConversationStatus) => {
-    await update.mutateAsync({ status });
-  };
 
   const canResolve = conversation.status !== "RESOLVED";
   const canRestore = conversation.status === "RESOLVED";
@@ -200,7 +227,7 @@ export const StatusActionsMenu = ({ conversation }: Props) => {
     <>
       <DropdownMenu>
         <DropdownMenu.Trigger asChild>
-          <IconButton size="small" variant="transparent">
+          <IconButton size="small" variant="transparent" disabled={isPending}>
             <EllipsisHorizontal />
           </IconButton>
         </DropdownMenu.Trigger>
@@ -248,7 +275,7 @@ export const StatusActionsMenu = ({ conversation }: Props) => {
         </DropdownMenu.Content>
       </DropdownMenu>
 
-      <ResolveConfirm conversation={conversation}>
+      <ResolveConfirm onConfirm={() => change("RESOLVED")}>
         <button ref={resolveRef} className="hidden" aria-hidden tabIndex={-1} />
       </ResolveConfirm>
 
@@ -272,7 +299,7 @@ export const StatusActionsMenu = ({ conversation }: Props) => {
           </Prompt.Header>
           <Prompt.Footer>
             <Prompt.Cancel>{t("conversations.actions.cancel")}</Prompt.Cancel>
-            <Prompt.Action onClick={() => apply("OPEN")}>
+            <Prompt.Action onClick={() => change("OPEN")}>
               {t("conversations.actions.restore")}
             </Prompt.Action>
           </Prompt.Footer>

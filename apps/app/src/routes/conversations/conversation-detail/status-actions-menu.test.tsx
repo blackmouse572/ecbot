@@ -5,7 +5,12 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
-const updateStatus = vi.fn();
+const updateStatus = vi.fn(() => Promise.resolve());
+const toastPromise = vi.fn();
+vi.mock("@medusajs/ui", async (orig) => ({
+  ...(await orig<typeof import("@medusajs/ui")>()),
+  toast: { promise: (...args: unknown[]) => toastPromise(...args) },
+}));
 vi.mock("@/hooks/api/conversations", () => ({
   useUpdateConversationBot: () => ({ mutate: vi.fn(), isPending: false }),
   useUpdateConversationStatus: () => ({
@@ -39,5 +44,14 @@ describe("BotPauseSwitch", () => {
       }),
     );
     expect(updateStatus).toHaveBeenCalledWith({ status: "RESOLVED" });
+    // Progress is announced, so the closed dialog never leaves a silent wait.
+    expect(toastPromise).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        loading: "conversations.actions.resolving",
+        success: "conversations.actions.resolved",
+        error: "conversations.actions.resolveFailed",
+      }),
+    );
   });
 });

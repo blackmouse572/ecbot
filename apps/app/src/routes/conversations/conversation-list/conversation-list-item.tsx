@@ -73,9 +73,11 @@ export const ConversationListItem = ({
           navigate(`${basePath}/${conversation.id}`);
       }}
       className={clx(
-        "border-ui-border-base hover:bg-ui-bg-component-hover flex cursor-pointer items-start gap-x-3 border-b px-4 py-3 transition-colors",
-        isActive &&
-          "bg-ui-bg-base shadow-elevation-card-rest border-l-ui-fg-interactive",
+        "border-ui-border-base flex items-start gap-x-3 border-b px-4 py-3 transition-colors",
+        // The open row is already selected, so no hover or pointer cursor.
+        isActive
+          ? "bg-ui-bg-base shadow-elevation-card-rest border-l-ui-fg-interactive"
+          : "hover:bg-ui-bg-component-hover cursor-pointer",
       )}
     >
       <div className="relative shrink-0">
