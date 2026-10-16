@@ -168,7 +168,9 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         ]);
         expect(customerTagAssignmentService.apply).toHaveBeenCalledWith(
             'cust-1',
-            'tag-vip'
+            'tag-vip',
+            undefined,
+            expect.objectContaining({ actor: 'CLASSIFIER' })
         );
         expect(customerTagAssignmentService.apply).toHaveBeenCalledTimes(1);
     });
@@ -239,11 +241,15 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
 
         expect(customerTagAssignmentService.apply).toHaveBeenCalledWith(
             'cust-1',
-            'tag-vip'
+            'tag-vip',
+            undefined,
+            expect.objectContaining({ actor: 'CLASSIFIER' })
         );
         expect(customerTagAssignmentService.remove).toHaveBeenCalledWith(
             'cust-1',
-            'tag-vip'
+            'tag-vip',
+            undefined,
+            expect.objectContaining({ actor: 'CLASSIFIER' })
         );
         expect(customerTagAssignmentService.apply).toHaveBeenCalledTimes(1);
         expect(customerTagAssignmentService.remove).toHaveBeenCalledTimes(1);
@@ -276,11 +282,15 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
 
         expect(customerTagAssignmentService.apply).toHaveBeenCalledWith(
             'cust-1',
-            'tag-returning'
+            'tag-returning',
+            undefined,
+            expect.objectContaining({ actor: 'CLASSIFIER' })
         );
         expect(customerTagAssignmentService.remove).toHaveBeenCalledWith(
             'cust-1',
-            'tag-returning'
+            'tag-returning',
+            undefined,
+            expect.objectContaining({ actor: 'CLASSIFIER' })
         );
     });
 

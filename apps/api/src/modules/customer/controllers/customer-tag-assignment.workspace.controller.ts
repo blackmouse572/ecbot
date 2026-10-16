@@ -1,4 +1,5 @@
 import { IResponse } from '@app/common/response/interfaces/response.interface';
+import { ENUM_CUSTOMER_TAG_EVENT_ACTOR } from '../enums/customer-tag.enum';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { ApiKeyProtected } from '@app/modules/api-key/decorators/api-key.decorator';
@@ -94,7 +95,11 @@ export class CustomerTagAssignmentWorkspaceController {
         const assignment = await this.customerTagAssignmentService.apply(
             customerId,
             tagId,
-            workspace.id
+            workspace.id,
+            {
+                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.OPERATOR,
+                userId: user.id,
+            }
         );
 
         await this.activityService.createByUserWithWorkspace(user, workspace, {
@@ -131,7 +136,11 @@ export class CustomerTagAssignmentWorkspaceController {
         const tag = await this.customerTagAssignmentService.remove(
             customerId,
             tagId,
-            workspace.id
+            workspace.id,
+            {
+                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.OPERATOR,
+                userId: user.id,
+            }
         );
 
         await this.activityService.createByUserWithWorkspace(user, workspace, {

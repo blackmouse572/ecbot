@@ -1,4 +1,5 @@
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
+import { ENUM_CUSTOMER_TAG_EVENT_ACTOR } from '../enums/customer-tag.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import {
     ClientCredentialPayload,
@@ -81,7 +82,11 @@ export class CustomerTagAssignmentClientController {
         const assignment = await this.customerTagAssignmentService.apply(
             customerId,
             tagId,
-            workspace.id
+            workspace.id,
+            {
+                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.CLIENT,
+                userId: credential.createdBy?.id,
+            }
         );
         await this.activityService.createByUserWithWorkspace(
             credential.createdBy,
@@ -115,7 +120,11 @@ export class CustomerTagAssignmentClientController {
         const tag = await this.customerTagAssignmentService.remove(
             customerId,
             tagId,
-            workspace.id
+            workspace.id,
+            {
+                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.CLIENT,
+                userId: credential.createdBy?.id,
+            }
         );
         await this.activityService.createByUserWithWorkspace(
             credential.createdBy,

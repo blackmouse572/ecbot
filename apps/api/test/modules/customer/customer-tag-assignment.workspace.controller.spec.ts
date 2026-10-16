@@ -86,7 +86,8 @@ describe('CustomerTagAssignmentWorkspaceController', () => {
             expect(mockAssignmentService.apply).toHaveBeenCalledWith(
                 'cust-1',
                 'tag-1',
-                'ws-1'
+                'ws-1',
+                expect.objectContaining({ actor: 'OPERATOR' })
             );
             expect(result.data.id).toBe('assn-1');
         });
@@ -106,7 +107,8 @@ describe('CustomerTagAssignmentWorkspaceController', () => {
             expect(mockAssignmentService.remove).toHaveBeenCalledWith(
                 'cust-1',
                 'tag-1',
-                'ws-1'
+                'ws-1',
+                expect.objectContaining({ actor: 'OPERATOR' })
             );
             expect(result).toBeUndefined();
         });
