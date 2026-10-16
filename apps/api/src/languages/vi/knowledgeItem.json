@@ -5,6 +5,7 @@
     "update": "Mục kiến thức được cập nhật thành công.",
     "delete": "Mục kiến thức được xóa thành công.",
     "batchDelete": "Đã xóa các knowledge item.",
+    "reprocess": "Đã đưa mục kiến thức vào hàng đợi xử lý.",
     "batchProcess": "Đã đưa các knowledge item vào hàng đợi xử lý.",
     "batchTag": "Đã thêm thẻ cho các knowledge item.",
     "batchLink": "Đã liên kết các knowledge item với chatbot.",

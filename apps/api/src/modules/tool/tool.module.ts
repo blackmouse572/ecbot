@@ -15,6 +15,7 @@ import { HttpToolExecutorService } from 'src/modules/tool/services/http-tool-exe
 import { ToolExecutionService } from 'src/modules/tool/services/tool-execution.service';
 import { ManifestBuilderService } from 'src/modules/tool/services/manifest-builder.service';
 import { ComposioCatalogService } from 'src/modules/tool/services/composio-catalog.service';
+import { ToolkitAdminService } from 'src/modules/tool/services/toolkit.admin.service';
 import { EcchoCatalogService } from 'src/modules/tool/services/eccho-catalog.service';
 import { McpDiscoveryService } from 'src/modules/tool/services/mcp-discovery.service';
 import { McpToolExecutorService } from 'src/modules/tool/services/mcp-tool-executor.service';
@@ -50,6 +51,7 @@ import { ToolInstallSessionPruneScheduler } from 'src/modules/tool/schedulers/to
         McpToolExecutorService,
         ComposioCatalogService,
         EcchoCatalogService,
+        ToolkitAdminService,
         SlugMinter,
         ComposioToolkitInstaller,
         OperatorToolkitInstaller,
@@ -71,6 +73,7 @@ import { ToolInstallSessionPruneScheduler } from 'src/modules/tool/schedulers/to
         McpToolExecutorService,
         ComposioCatalogService,
         EcchoCatalogService,
+        ToolkitAdminService,
         ToolInstallSessionRepository,
         InstallerRegistry,
     ],

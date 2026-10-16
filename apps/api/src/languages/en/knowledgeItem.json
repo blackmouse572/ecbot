@@ -5,6 +5,7 @@
     "update": "Knowledge item updated successfully.",
     "delete": "Knowledge item deleted successfully.",
     "batchDelete": "Knowledge items deleted successfully.",
+    "reprocess": "Knowledge item queued for processing.",
     "batchProcess": "Knowledge items queued for processing.",
     "batchTag": "Tags added to the knowledge items.",
     "batchLink": "Knowledge items linked to the chatbot.",

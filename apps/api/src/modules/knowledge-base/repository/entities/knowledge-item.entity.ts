@@ -13,6 +13,7 @@ import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
 import { AwsS3Entity } from 'src/modules/aws/repository/entities/aws.s3.entity';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '../../enums/knowledge-base-item-status.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '../../enums/knowledge-base-item-type.enum';
+import type { ChatbotKnowledgeItemEntity } from './chatbot-knowledge-item.entity';
 import { KnowledgeBaseEntity } from './knowledge-base.entity';
 import { KnowledgeItemFolderEntity } from './knowledge-item-folder.entity';
 import { KnowledgeItemTagEntity } from './knowledge-item-tag.entity';
@@ -54,6 +55,11 @@ export class KnowledgeItemEntity extends DatabaseEntityBase {
         cascade: [Cascade.ALL],
     })
     tags = new Collection<KnowledgeItemTagEntity>(this);
+
+    /** Chatbots this item is linked to; lets a list filter by chatbot. */
+    // By name: a class import would cycle with chatbot-knowledge-item.entity.
+    @OneToMany('ChatbotKnowledgeItemEntity', 'knowledgeItem')
+    chatbotLinks = new Collection<ChatbotKnowledgeItemEntity>(this);
 
     @Property({
         type: 'json',

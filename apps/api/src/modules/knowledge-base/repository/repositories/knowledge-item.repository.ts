@@ -87,4 +87,23 @@ export class KnowledgeItemRepository extends DatabaseRepository<KnowledgeItemEnt
             .execute<{ total: string | number }>('get');
         return Number(row?.total ?? 0);
     }
+
+    /** Chunk count per item, in one query for a whole page of items. */
+    async countChunks(itemIds: string[]): Promise<Map<string, number>> {
+        if (itemIds.length === 0) return new Map();
+
+        const rows: { id: string; chunk_count: string }[] = await this.em
+            .getConnection()
+            .execute(
+                `
+                SELECT knowledge_base_item_id AS id, COUNT(*) AS chunk_count
+                FROM knowledge_item_chunks
+                WHERE knowledge_base_item_id IN (?)
+                GROUP BY knowledge_base_item_id
+                `,
+                [itemIds]
+            );
+
+        return new Map(rows.map(row => [row.id, Number(row.chunk_count)]));
+    }
 }
