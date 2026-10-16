@@ -285,12 +285,13 @@ const cases: [
     },
     "chatbotClientControllerCreateV1",
     {
-      body: {
+      // The profile it also sends is covered in chatbot-profile.spec.ts.
+      body: expect.objectContaining({
         name: "Shop bot",
         type: "restaurant",
         primaryLanguage: "vi",
         modelTextName: "google/gemini-2.5-flash",
-      },
+      }),
     },
     { data: { id: "bot-1" } },
     { id: "bot-1" },

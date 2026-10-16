@@ -1,4 +1,5 @@
 import { getBusinessType, type BusinessTypeId } from "./business-types";
+import { migrateProfile } from "./migrate-profile";
 import type { AgentProfile } from "./profile";
 import { PRESETS } from "./presets";
 
@@ -28,6 +29,16 @@ const BOOKING_NAMES: Partial<Record<BusinessTypeId, string>> = {
 
 // Bigger decisions: an undecided customer gets a day, not a few hours.
 const CONSIDERED: readonly BusinessTypeId[] = ["real_estate", "finance", "education", "travel", "automotive", "studio_events", "hotel"];
+
+/**
+ * The follow-up rules to save with a changed profile: they follow the
+ * profile until the owner edits them, and edited rules are kept.
+ */
+export function nextFollowupRules(current: string | null | undefined, previous: AgentProfile | null | undefined, profile: AgentProfile): string {
+  const kept = current?.trim();
+  const previousDefault = previous ? compileFollowupRules(migrateProfile(previous)) : undefined;
+  return kept && kept !== previousDefault ? current! : compileFollowupRules(profile);
+}
 
 /** Default follow-up rules for a business agent; empty when no goal needs a check-in. */
 export function compileFollowupRules(profile: AgentProfile): string {
