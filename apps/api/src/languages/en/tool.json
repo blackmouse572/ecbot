@@ -111,5 +111,10 @@
     },
     "batchDelete": {
         "success": "Tools deleted successfully."
+    },
+    "toolkit": {
+        "eccho": "Ecbot toolkits retrieved",
+        "composio": "Composio toolkits retrieved",
+        "composioStatus": "Composio status retrieved"
     }
 }

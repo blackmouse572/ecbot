@@ -3199,6 +3199,77 @@ export type ToolAdminResponseDto = {
     invocationStats: ToolInvocationStatsResponseDto;
 };
 
+export type ToolkitAdminCategoryResponseDto = {
+    id: string;
+    name: string;
+};
+
+export type ToolkitAdminEcchoResponseDto = {
+    slug: string;
+    name: string;
+    description?: string;
+    /**
+     * Logo URL
+     */
+    logo?: string;
+    categories: Array<ToolkitAdminCategoryResponseDto>;
+    /**
+     * Workspaces with a live tool from it
+     */
+    workspaceCount: number;
+    /**
+     * Live tools installed from it
+     */
+    toolCount: number;
+    /**
+     * Whether the server URL for this toolkit is set
+     */
+    configured: boolean;
+};
+
+export type ToolkitAdminResponseDto = {
+    slug: string;
+    name: string;
+    description?: string;
+    /**
+     * Logo URL
+     */
+    logo?: string;
+    categories: Array<ToolkitAdminCategoryResponseDto>;
+    /**
+     * Workspaces with a live tool from it
+     */
+    workspaceCount: number;
+    /**
+     * Live tools installed from it
+     */
+    toolCount: number;
+};
+
+export type ToolkitAdminComposioStatusResponseDto = {
+    /**
+     * COMPOSIO_API_KEY is set
+     */
+    apiKeyConfigured: boolean;
+    /**
+     * The catalog loaded with that key
+     */
+    reachable: boolean;
+    baseUrl: string;
+    /**
+     * Toolkits in the Composio catalog
+     */
+    toolkitCount: number;
+    /**
+     * Toolkits with at least one live tool
+     */
+    installedToolkitCount: number;
+    /**
+     * Live Composio tools in all workspaces
+     */
+    toolCount: number;
+};
+
 export type WaitlistListResponseDto = {
     /**
      * Alias id of api key
@@ -3273,112 +3344,48 @@ export type WorkspaceUpdateStatusRequestDto = {
     status: 'ACTIVE' | 'SUSPENDED';
 };
 
-export type FollowupChatbotResponseDto = {
-    /**
-     * Chatbot ID
-     */
+export type KnowledgeItemAdminListResponseDto = {
     id: string;
+    title: string;
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
+    status: 'DRAFT' | 'READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
     /**
-     * Chatbot name
+     * Bytes of the uploaded file, for FILE and MEDIA items
      */
-    name: string;
-    /**
-     * Chatbot avatar URL
-     */
-    avatar: {
-        [key: string]: unknown;
-    } | null;
-};
-
-export type FollowupAdminListResponseDto = {
-    /**
-     * Follow-up job ID
-     */
-    followupId: string;
-    chatbot: FollowupChatbotResponseDto;
-    /**
-     * Conversation the follow-up belongs to
-     */
-    conversationId: string;
-    /**
-     * Sender name on the conversation
-     */
-    senderName: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Message that triggered scheduling this follow-up
-     */
-    triggerMessageId: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Reason the follow-up was scheduled
-     */
-    reason: string;
-    status: 'SCHEDULED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'CANCELLED';
-    /**
-     * When the follow-up is due to fire
-     */
-    scheduledAt: string;
-    /**
-     * When the follow-up actually ran
-     */
-    firedAt: string | null;
-    /**
-     * Skip reason, or the error message when the run failed
-     */
-    outcomeReason: string | null;
-    /**
-     * Minutes remaining until the follow-up fires; 0 once it is no longer scheduled
-     */
-    firesInMinutes: number;
+    size?: number;
+    chunkCount: number;
     workspace: ActivityAdminWorkspaceResponseDto;
-    /**
-     * Instruction the bot follows when the follow-up fires
-     */
-    prompt: string;
-    /**
-     * Cloud Tasks delivery attempts so far
-     */
-    attempts: number;
-    cancelledAt: string | null;
     createdAt: string;
+    updatedAt?: string;
 };
 
-export type ChatbotSkillAdminChatbotResponseDto = {
+export type KnowledgeItemAdminChatbotResponseDto = {
     id: string;
     name: string;
-    avatar: string | null;
 };
 
-export type ChatbotSkillAdminSkillResponseDto = {
+export type KnowledgeItemAdminGetResponseDto = {
     id: string;
-    name: string;
-    slug: string;
-    status: 'ACTIVE' | 'INACTIVE';
+    title: string;
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
+    status: 'DRAFT' | 'READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
     /**
-     * True for Ecbot builtin skills
+     * Bytes of the uploaded file, for FILE and MEDIA items
      */
-    isBuiltin: boolean;
-};
-
-export type ChatbotSkillAdminListResponseDto = {
-    /**
-     * Link id
-     */
-    id: string;
-    /**
-     * Whether the agent uses the skill now
-     */
-    enabled: boolean;
-    chatbot: ChatbotSkillAdminChatbotResponseDto;
-    skill: ChatbotSkillAdminSkillResponseDto;
+    size?: number;
+    chunkCount: number;
     workspace: ActivityAdminWorkspaceResponseDto;
-    /**
-     * When the skill was attached
-     */
     createdAt: string;
+    updatedAt?: string;
+    /**
+     * Page address of a URL item, or the source link of a TEXT item
+     */
+    sourceUrl?: string;
+    fileName?: string;
+    mimeType?: string;
+    errorMessage?: string;
+    processedAt?: string;
+    chatbots: Array<KnowledgeItemAdminChatbotResponseDto>;
 };
 
 export type UserUpdateProfileRequestDto = {
@@ -5933,6 +5940,23 @@ export type NavCountGetResponseDto = {
      * Tools with a broken connection (re-auth / expired / revoked)
      */
     toolsNeedingAttention: number;
+};
+
+export type FollowupChatbotResponseDto = {
+    /**
+     * Chatbot ID
+     */
+    id: string;
+    /**
+     * Chatbot name
+     */
+    name: string;
+    /**
+     * Chatbot avatar URL
+     */
+    avatar: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type FollowupListResponseDto = {
@@ -16589,6 +16613,279 @@ export type ToolAdminControllerDeleteV1Responses = {
 
 export type ToolAdminControllerDeleteV1Response = ToolAdminControllerDeleteV1Responses[keyof ToolAdminControllerDeleteV1Responses];
 
+export type ToolkitAdminControllerEcchoV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/toolkit/eccho/list';
+};
+
+export type ToolkitAdminControllerEcchoV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolkitAdminControllerEcchoV1Error = ToolkitAdminControllerEcchoV1Errors[keyof ToolkitAdminControllerEcchoV1Errors];
+
+export type ToolkitAdminControllerEcchoV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ToolkitAdminEcchoResponseDto>;
+    };
+};
+
+export type ToolkitAdminControllerEcchoV1Response = ToolkitAdminControllerEcchoV1Responses[keyof ToolkitAdminControllerEcchoV1Responses];
+
+export type ToolkitAdminControllerComposioV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Match on toolkit name or description
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/admin/toolkit/composio/list';
+};
+
+export type ToolkitAdminControllerComposioV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolkitAdminControllerComposioV1Error = ToolkitAdminControllerComposioV1Errors[keyof ToolkitAdminControllerComposioV1Errors];
+
+export type ToolkitAdminControllerComposioV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ToolkitAdminResponseDto>;
+    };
+};
+
+export type ToolkitAdminControllerComposioV1Response = ToolkitAdminControllerComposioV1Responses[keyof ToolkitAdminControllerComposioV1Responses];
+
+export type ToolkitAdminControllerComposioStatusV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/toolkit/composio/status';
+};
+
+export type ToolkitAdminControllerComposioStatusV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolkitAdminControllerComposioStatusV1Error = ToolkitAdminControllerComposioStatusV1Errors[keyof ToolkitAdminControllerComposioStatusV1Errors];
+
+export type ToolkitAdminControllerComposioStatusV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ToolkitAdminComposioStatusResponseDto;
+    };
+};
+
+export type ToolkitAdminControllerComposioStatusV1Response = ToolkitAdminControllerComposioStatusV1Responses[keyof ToolkitAdminControllerComposioStatusV1Responses];
+
 export type WaitlistAdminControllerListV1Data = {
     body?: never;
     headers?: {
@@ -16946,7 +17243,7 @@ export type WorkspaceAdminControllerUpdateStatusV1Responses = {
 
 export type WorkspaceAdminControllerUpdateStatusV1Response = WorkspaceAdminControllerUpdateStatusV1Responses[keyof WorkspaceAdminControllerUpdateStatusV1Responses];
 
-export type FollowupAdminControllerListV1Data = {
+export type KnowledgeItemAdminControllerListV1Data = {
     body?: never;
     headers?: {
         /**
@@ -16961,9 +17258,13 @@ export type FollowupAdminControllerListV1Data = {
          */
         workspace?: string;
         /**
-         * Filter by chatbot id
+         * Filter by the id of a chatbot the item is linked to
          */
         chatbot?: string;
+        /**
+         * value with ',' delimiter
+         */
+        type?: string;
         /**
          * value with ',' delimiter
          */
@@ -16989,10 +17290,10 @@ export type FollowupAdminControllerListV1Data = {
          */
         orderDirection?: 'ASC' | 'DESC';
     };
-    url: '/api/v1/admin/followup/list';
+    url: '/api/v1/admin/knowledge-item/list';
 };
 
-export type FollowupAdminControllerListV1Errors = {
+export type KnowledgeItemAdminControllerListV1Errors = {
     /**
      * 401
      */
@@ -17041,22 +17342,22 @@ export type FollowupAdminControllerListV1Errors = {
     };
 };
 
-export type FollowupAdminControllerListV1Error = FollowupAdminControllerListV1Errors[keyof FollowupAdminControllerListV1Errors];
+export type KnowledgeItemAdminControllerListV1Error = KnowledgeItemAdminControllerListV1Errors[keyof KnowledgeItemAdminControllerListV1Errors];
 
-export type FollowupAdminControllerListV1Responses = {
+export type KnowledgeItemAdminControllerListV1Responses = {
     /**
      * 200
      */
     200: ResponsePagingDto & {
         message?: unknown;
         statusCode?: number;
-        data?: Array<FollowupAdminListResponseDto>;
+        data?: Array<KnowledgeItemAdminListResponseDto>;
     };
 };
 
-export type FollowupAdminControllerListV1Response = FollowupAdminControllerListV1Responses[keyof FollowupAdminControllerListV1Responses];
+export type KnowledgeItemAdminControllerListV1Response = KnowledgeItemAdminControllerListV1Responses[keyof KnowledgeItemAdminControllerListV1Responses];
 
-export type FollowupAdminControllerCancelV1Data = {
+export type KnowledgeItemAdminControllerGetV1Data = {
     body?: never;
     headers?: {
         /**
@@ -17065,13 +17366,13 @@ export type FollowupAdminControllerCancelV1Data = {
         'x-custom-lang'?: string;
     };
     path: {
-        followup: string;
+        item: string;
     };
     query?: never;
-    url: '/api/v1/admin/followup/cancel/{followup}';
+    url: '/api/v1/admin/knowledge-item/get/{item}';
 };
 
-export type FollowupAdminControllerCancelV1Errors = {
+export type KnowledgeItemAdminControllerGetV1Errors = {
     /**
      * 401
      */
@@ -17120,9 +17421,88 @@ export type FollowupAdminControllerCancelV1Errors = {
     };
 };
 
-export type FollowupAdminControllerCancelV1Error = FollowupAdminControllerCancelV1Errors[keyof FollowupAdminControllerCancelV1Errors];
+export type KnowledgeItemAdminControllerGetV1Error = KnowledgeItemAdminControllerGetV1Errors[keyof KnowledgeItemAdminControllerGetV1Errors];
 
-export type FollowupAdminControllerCancelV1Responses = {
+export type KnowledgeItemAdminControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemAdminGetResponseDto;
+    };
+};
+
+export type KnowledgeItemAdminControllerGetV1Response = KnowledgeItemAdminControllerGetV1Responses[keyof KnowledgeItemAdminControllerGetV1Responses];
+
+export type KnowledgeItemAdminControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        item: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/knowledge-item/delete/{item}';
+};
+
+export type KnowledgeItemAdminControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemAdminControllerDeleteV1Error = KnowledgeItemAdminControllerDeleteV1Errors[keyof KnowledgeItemAdminControllerDeleteV1Errors];
+
+export type KnowledgeItemAdminControllerDeleteV1Responses = {
     /**
      * 200
      */
@@ -17132,9 +17512,9 @@ export type FollowupAdminControllerCancelV1Responses = {
     };
 };
 
-export type FollowupAdminControllerCancelV1Response = FollowupAdminControllerCancelV1Responses[keyof FollowupAdminControllerCancelV1Responses];
+export type KnowledgeItemAdminControllerDeleteV1Response = KnowledgeItemAdminControllerDeleteV1Responses[keyof KnowledgeItemAdminControllerDeleteV1Responses];
 
-export type ChatbotSkillAdminControllerListV1Data = {
+export type KnowledgeItemAdminControllerReprocessV1Data = {
     body?: never;
     headers?: {
         /**
@@ -17142,49 +17522,14 @@ export type ChatbotSkillAdminControllerListV1Data = {
          */
         'x-custom-lang'?: string;
     };
-    path?: never;
-    query?: {
-        /**
-         * Filter by workspace id
-         */
-        workspace?: string;
-        /**
-         * Filter by chatbot id
-         */
-        chatbot?: string;
-        /**
-         * Filter by skill id
-         */
-        skill?: string;
-        /**
-         * true, false, or both with ',' delimiter
-         */
-        enabled?: string;
-        /**
-         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
-         */
-        search?: string;
-        /**
-         * Data per page, max 100
-         */
-        perPage?: number;
-        /**
-         * page number, max 20
-         */
-        page?: number;
-        /**
-         * Order by base on _metadata.pagination.availableOrderBy
-         */
-        orderBy?: string;
-        /**
-         * Order direction base on _metadata.pagination.availableOrderDirection
-         */
-        orderDirection?: 'ASC' | 'DESC';
+    path: {
+        item: string;
     };
-    url: '/api/v1/admin/chatbot-skill/list';
+    query?: never;
+    url: '/api/v1/admin/knowledge-item/reprocess/{item}';
 };
 
-export type ChatbotSkillAdminControllerListV1Errors = {
+export type KnowledgeItemAdminControllerReprocessV1Errors = {
     /**
      * 401
      */
@@ -17233,20 +17578,19 @@ export type ChatbotSkillAdminControllerListV1Errors = {
     };
 };
 
-export type ChatbotSkillAdminControllerListV1Error = ChatbotSkillAdminControllerListV1Errors[keyof ChatbotSkillAdminControllerListV1Errors];
+export type KnowledgeItemAdminControllerReprocessV1Error = KnowledgeItemAdminControllerReprocessV1Errors[keyof KnowledgeItemAdminControllerReprocessV1Errors];
 
-export type ChatbotSkillAdminControllerListV1Responses = {
+export type KnowledgeItemAdminControllerReprocessV1Responses = {
     /**
      * 200
      */
-    200: ResponsePagingDto & {
+    200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: Array<ChatbotSkillAdminListResponseDto>;
     };
 };
 
-export type ChatbotSkillAdminControllerListV1Response = ChatbotSkillAdminControllerListV1Responses[keyof ChatbotSkillAdminControllerListV1Responses];
+export type KnowledgeItemAdminControllerReprocessV1Response = KnowledgeItemAdminControllerReprocessV1Responses[keyof KnowledgeItemAdminControllerReprocessV1Responses];
 
 export type UserSharedControllerProfileV1Data = {
     body?: never;

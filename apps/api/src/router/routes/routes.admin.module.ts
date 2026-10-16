@@ -4,12 +4,15 @@ import { AwsModule } from '@app/modules/aws/aws.module';
 import { ChatbotSkillAdminController } from '@app/modules/skill/controllers/chatbot-skill.admin.controller';
 import { FollowupAdminController } from '@app/modules/platform/controllers/followup.admin.controller';
 import { PlatformModule } from '@app/modules/platform/platform.module';
+import { KnowledgeItemAdminController } from '@app/modules/knowledge-base/controllers/knowledge-item.admin.controller';
+import { KnowledgeBaseServicesModule } from '@app/modules/knowledge-base/services/services.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { ChatbotAdminController } from '@app/modules/chatbot/controllers/chatbot.admin.controller';
 import { RAGAdminController } from '@app/modules/rag/controllers/rag.admin.controller';
 import { SkillAdminController } from '@app/modules/skill/controllers/skill.admin.controller';
 import { SkillModule } from '@app/modules/skill/skill.module';
 import { ToolAdminController } from '@app/modules/tool/controllers/tool.admin.controller';
+import { ToolkitAdminController } from '@app/modules/tool/controllers/toolkit.admin.controller';
 import { ToolModule } from '@app/modules/tool/tool.module';
 import { RAGModule } from '@app/modules/rag/rag.module';
 import { WorkSpaceModule } from '@app/modules/workspace/workspace.module';
@@ -57,10 +60,12 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         RAGAdminController,
         SkillAdminController,
         ToolAdminController,
+        ToolkitAdminController,
         WaitlistAdminController,
         WorkspaceAdminController,
         FollowupAdminController,
         ChatbotSkillAdminController,
+        KnowledgeItemAdminController,
     ],
     providers: [],
     exports: [],
@@ -84,6 +89,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         SkillModule,
         ToolModule,
         WaitlistModule,
+        KnowledgeBaseServicesModule,
         CloudTasksQueueModule,
         PlatformModule,
     ],

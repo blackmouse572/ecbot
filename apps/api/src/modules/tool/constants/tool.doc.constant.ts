@@ -65,3 +65,16 @@ export const ToolAdminDocQueryList = [
         description: 'workspace id',
     },
 ];
+
+// The Composio catalog is filtered in memory, so `search` is a plain query
+// param here, declared so the generated client keeps it.
+export const ToolkitAdminDocQuerySearch = [
+    {
+        name: 'search',
+        allowEmptyValue: true,
+        required: false,
+        type: 'string',
+        example: 'gmail',
+        description: 'Match on toolkit name or description',
+    },
+];
