@@ -10,63 +10,48 @@ import {
   chatbotClientControllerModelsV1,
   chatbotClientControllerUpdateV1,
 } from "@repo/client";
+import {
+  type AgentProfile,
+  BUSINESS_TYPE_IDS,
+  compileFollowupRules,
+  nextFollowupRules,
+} from "@repo/agent-blueprint";
 import * as z from "zod";
+import { buildProfile, isBusinessType, profileInput } from "./chatbot-profile";
 import {
   ADDS,
   type Allows,
   type ApiOptions,
   DELETES,
   OVERWRITES,
+  apiError,
+  fail,
   READS,
   SWITCHES,
   paging,
   respond,
 } from "./shared";
 
-const CHATBOT_TYPES = [
-  "beauty",
-  "fashion",
-  "restaurant",
-  "ecommerce",
-  "healthcare",
-  "finance",
-  "education",
-  "travel",
-  "spa",
-  "fitness",
-  "automotive",
-  "real_estate",
-  "entertainment",
-  "cosmetics",
-  "hotel",
-  "home_services",
-  "studio_events",
-  "health_foods",
-  "other",
-] as const satisfies readonly ChatbotCreateRequestDto["type"][];
-
 // What an agent sets on a chatbot. The API checks every value; language
 // codes are many, so it alone validates those.
 const chatbotFields = {
   name: z.string().min(1).max(100),
-  type: z.enum(CHATBOT_TYPES).describe("The kind of business it serves."),
+  type: z
+    .enum(BUSINESS_TYPE_IDS)
+    .describe(
+      "The kind of business it serves. Changing it moves the profile to that type's preset, keeping who it is, its tone and facts.",
+    ),
   primaryLanguage: z
     .string()
     .describe("Language code it replies in, e.g. vi or en."),
   modelTextName: z.string().describe("A model id from list_chatbot_models."),
-  generalKnowledge: z
-    .string()
-    .max(5000)
-    .optional()
-    .describe(
-      "What it knows about the business: products, prices, hours, policies.",
-    ),
+  profile: profileInput,
   extraInstructions: z
     .string()
     .max(5000)
     .optional()
     .describe(
-      "Tone and a few rules for every reply, on top of its business type. Keep it short: put each workflow (when a customer asks X, do A then B) in a Skill and attach it.",
+      "Anything the profile can't say, added after the prompt compiled from it. Keep it short: put each workflow (when a customer asks X, do A then B) in a Skill and attach it, and longer business facts in a knowledge base.",
     ),
   welcomeMessage: z.string().max(5000).optional(),
   fallbackMessage: z
@@ -166,15 +151,22 @@ function registerCreateTools(server: McpServer, api: ApiOptions) {
       }),
       annotations: ADDS,
     },
-    (body) =>
-      respond(
+    ({ profile: answers, ...fields }) => {
+      const built = buildProfile(undefined, fields, answers);
+      if ("error" in built) return fail(built.error);
+      return respond(
         chatbotClientControllerCreateV1({
           ...api,
           // primaryLanguage is a code the API validates.
-          body: body as ChatbotCreateRequestDto,
+          body: {
+            ...fields,
+            agentProfile: built.profile,
+            followupRules: compileFollowupRules(built.profile),
+          } as ChatbotCreateRequestDto,
         }),
         (d) => d.data,
-      ),
+      );
+    },
   );
 }
 
@@ -184,22 +176,61 @@ function registerUpdateTools(server: McpServer, api: ApiOptions) {
     {
       title: "Update chatbot",
       description:
-        "Change a chatbot's settings. Only the fields you send change; accounts replaces the whole list.",
+        "Change a chatbot's settings. Only the fields you send change, profile answers included; accounts replaces the whole list.",
       inputSchema: z.object({
         chatbotId: z.string(),
         ...z.object(chatbotFields).partial().shape,
       }),
       annotations: OVERWRITES,
     },
-    ({ chatbotId, ...body }) =>
-      respond(
-        chatbotClientControllerUpdateV1({
-          ...api,
-          path: { id: chatbotId },
-          body: body as Partial<ChatbotCreateRequestDto>,
-        }),
-        (d) => d.data,
-      ),
+    async ({ chatbotId, profile: answers, ...fields }) => {
+      const update = (body: Record<string, unknown>) =>
+        respond(
+          chatbotClientControllerUpdateV1({
+            ...api,
+            path: { id: chatbotId },
+            body: body as Partial<ChatbotCreateRequestDto>,
+          }),
+          (d) => d.data,
+        );
+      if (!answers && !fields.type && !fields.primaryLanguage)
+        return update(fields);
+
+      // The profile follows the answers, the type and the language, so
+      // merge them onto what is stored.
+      const { data, error } = await chatbotClientControllerFindOneV1({
+        ...api,
+        path: { id: chatbotId },
+      });
+      if (error || !data?.data) return apiError(error);
+      const current = data.data;
+      const stored = current.agentProfile as AgentProfile | null | undefined;
+      if (!answers && !stored) return update(fields);
+      const type = fields.type ?? current.type;
+      if (!isBusinessType(type))
+        return fail(
+          `A profile needs a business type: set type to one of ${BUSINESS_TYPE_IDS.join(", ")}.`,
+        );
+      const built = buildProfile(
+        stored,
+        {
+          name: fields.name ?? current.name,
+          type,
+          primaryLanguage: fields.primaryLanguage ?? current.primaryLanguage,
+        },
+        answers,
+      );
+      if ("error" in built) return fail(built.error);
+      return update({
+        ...fields,
+        agentProfile: built.profile,
+        followupRules: nextFollowupRules(
+          current.followupRules,
+          stored,
+          built.profile,
+        ),
+      });
+    },
   );
 
   server.registerTool(
