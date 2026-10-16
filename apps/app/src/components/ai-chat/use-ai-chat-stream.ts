@@ -1,7 +1,7 @@
 import { toolsQueryKeys } from "@/hooks/api/tools";
 import {
   BUILT_IN_TOOL_KINDS,
-  SEND_IMAGE_TOOL_PART,
+  FILE_TOOL_PARTS,
   TOOL_STEP_ICONS,
 } from "./constants";
 import { pickAuthToken, tokenAtom } from "@/modules/auth";
@@ -149,6 +149,16 @@ export function isEmptyRenderModel(model: RenderModel): boolean {
   );
 }
 
+/** A file part's name: apps/ai sends it in `providerMetadata.eccho`, since the
+ * AI SDK keeps no `filename` on a streamed file part. */
+function fileName(part: UIMessagePartLike): string | undefined {
+  if (typeof part.filename === "string") return part.filename;
+  const meta = part.providerMetadata as
+    { eccho?: { filename?: unknown } } | undefined;
+  const name = meta?.eccho?.filename;
+  return typeof name === "string" ? name : undefined;
+}
+
 /**
  * Pure mapper from a `UIMessage["parts"]` array to a flat shape that's easy
  * to render: concatenated text, concatenated reasoning, tool calls keyed by
@@ -189,7 +199,7 @@ export function partsToRenderModel(
       model.files.push({
         url: (part.url as string | undefined) ?? "",
         mediaType: (part.mediaType as string | undefined) ?? "",
-        filename: part.filename as string | undefined,
+        filename: fileName(part),
       });
     } else if (part.type === "data-guardrail") {
       const data = part.data as { reason: string } | undefined;
@@ -203,7 +213,7 @@ export function partsToRenderModel(
       if (data?.count) model.knowledgeCount = data.count;
     } else if (
       part.type.startsWith("tool-") &&
-      part.type !== SEND_IMAGE_TOOL_PART
+      !FILE_TOOL_PARTS.has(part.type)
     ) {
       closeSegment();
       model.toolCalls.push({

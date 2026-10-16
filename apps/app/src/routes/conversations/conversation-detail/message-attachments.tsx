@@ -90,7 +90,7 @@ export const MessageAttachments: FC<Props> = ({
           <AttachmentChip
             key={key}
             icon={<PaperClip />}
-            label={t("conversations.attachment.file")}
+            label={a.name ?? t("conversations.attachment.file")}
             url={a.url}
           />
         );
