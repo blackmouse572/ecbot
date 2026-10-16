@@ -29,7 +29,7 @@ describe('ChatbotKnowledgeItemClientController', () => {
         unlinkItem: jest.Mock;
         syncChatbotLinks: jest.Mock;
     };
-    let activityService: { createByUser: jest.Mock };
+    let activityService: { createByUserWithWorkspace: jest.Mock };
     let itemRepository: { findOne: jest.Mock };
     let session: {
         begin: jest.Mock;
@@ -55,7 +55,7 @@ describe('ChatbotKnowledgeItemClientController', () => {
             unlinkItem: jest.fn(),
             syncChatbotLinks: jest.fn().mockResolvedValue(undefined),
         };
-        activityService = { createByUser: jest.fn() };
+        activityService = { createByUserWithWorkspace: jest.fn() };
         itemRepository = { findOne: jest.fn() };
         session = {
             begin: jest.fn(),
@@ -182,9 +182,15 @@ describe('ChatbotKnowledgeItemClientController', () => {
                 'item-1',
                 expect.objectContaining({ actionBy: 'creator-1' })
             );
-            expect(activityService.createByUser).toHaveBeenCalledTimes(1);
-            expect(activityService.createByUser).toHaveBeenCalledWith(
+            expect(
+                activityService.createByUserWithWorkspace
+            ).toHaveBeenCalledTimes(1);
+            // In the workspace, so it shows in the workspace activity feed.
+            expect(
+                activityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
                 credential.createdBy,
+                workspace,
                 expect.objectContaining({
                     metadata: {
                         chatbotId: 'chatbot-1',
@@ -215,6 +221,16 @@ describe('ChatbotKnowledgeItemClientController', () => {
             expect.objectContaining({ actionBy: 'creator-1' })
         );
         expect(session.commit).toHaveBeenCalled();
+        expect(activityService.createByUserWithWorkspace).toHaveBeenCalledWith(
+            credential.createdBy,
+            workspace,
+            expect.objectContaining({
+                metadata: expect.objectContaining({
+                    knowledgeItemId: 'item-1',
+                }),
+            }),
+            expect.anything()
+        );
         expect(
             chatbotKnowledgeItemService.syncChatbotLinks
         ).toHaveBeenCalledWith('item-1');

@@ -235,7 +235,29 @@ export class KnowledgeItemClientController {
         @WorkspacePayload() workspace: WorkspaceEntity,
         @ClientCredentialPayload() credential: ClientCredentialEntity,
         @Param('knowledgeBaseId') knowledgeBaseId: string,
-        @Body()
+        @Body() body: KnowledgeItemClientCreateRequestDto
+    ): Promise<IResponse<KnowledgeItemShortResponseDto>> {
+        try {
+            return await this.createItem(
+                workspace,
+                credential,
+                knowledgeBaseId,
+                body
+            );
+        } finally {
+            // A staged upload is copied into the item, or no longer needed;
+            // either way it must not stay in storage.
+            if (body.fileKey)
+                await this.knowledgeItemUploadService.discardUpload(
+                    body.fileKey
+                );
+        }
+    }
+
+    private async createItem(
+        workspace: WorkspaceEntity,
+        credential: ClientCredentialEntity,
+        knowledgeBaseId: string,
         {
             folderId,
             fileKey,
@@ -244,7 +266,7 @@ export class KnowledgeItemClientController {
         }: KnowledgeItemClientCreateRequestDto
     ): Promise<IResponse<KnowledgeItemShortResponseDto>> {
         // A FILE or MEDIA item takes its file from exactly one of the two;
-        // other items take neither.
+        // other items take neither, and need their content.
         const takesFile =
             dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE ||
             dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA;
@@ -252,6 +274,12 @@ export class KnowledgeItemClientController {
             throw new UnprocessableEntityException({
                 statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
                 message: 'knowledgeItem.error.fileSource',
+            });
+        }
+        if (!takesFile && !dto.content?.trim()) {
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
+                message: 'knowledgeItem.error.contentRequired',
             });
         }
         await this.findKnowledgeBaseOrFail(workspace, knowledgeBaseId);
@@ -294,8 +322,6 @@ export class KnowledgeItemClientController {
             },
             { actionBy: credential.createdBy.id }
         );
-        if (fileKey)
-            await this.knowledgeItemUploadService.discardUpload(fileKey);
         await this.log(
             ENUM_ACTIVITY_ACTION.CREATE,
             credential,

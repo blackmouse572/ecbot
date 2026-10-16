@@ -159,8 +159,9 @@ export class ChatbotKnowledgeItemClientController {
                     }
                     throw err;
                 }
-                await this.activityService.createByUser(
+                await this.activityService.createByUserWithWorkspace(
                     actor,
+                    workspace,
                     {
                         action: ENUM_ACTIVITY_ACTION.CREATE,
                         subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
@@ -208,8 +209,9 @@ export class ChatbotKnowledgeItemClientController {
                 knowledgeItemId,
                 { em: session, actionBy: credential.createdBy.id }
             );
-            await this.activityService.createByUser(
+            await this.activityService.createByUserWithWorkspace(
                 credential.createdBy,
+                workspace,
                 {
                     action: ENUM_ACTIVITY_ACTION.DELETE,
                     subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,

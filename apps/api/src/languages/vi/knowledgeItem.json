@@ -24,7 +24,8 @@
         "uploadKeyInvalid": "fileKey này không thuộc kho kiến thức này. Hãy tạo đường dẫn tải lên mới.",
         "uploadNotFound": "Không tìm thấy tệp đã tải lên cho fileKey này. Hãy tải tệp lên đường dẫn trước, hoặc tạo đường dẫn mới.",
         "fileDownloadFailed": "Không tải được tệp từ đường dẫn này. Hãy dùng đường dẫn http hoặc https công khai trỏ thẳng đến tệp.",
-        "uploadFailed": "Không lưu được tệp. Hãy thử lại."
+        "uploadFailed": "Không lưu được tệp. Hãy thử lại.",
+        "contentRequired": "Mục văn bản hoặc trang web cần có nội dung: chính đoạn văn bản, hoặc đường dẫn trang."
     },
     "notification": {
         "ingestFailed": {

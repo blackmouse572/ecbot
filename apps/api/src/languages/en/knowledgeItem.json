@@ -24,7 +24,8 @@
         "uploadKeyInvalid": "This fileKey does not belong to this knowledge base. Ask for a new upload URL.",
         "uploadNotFound": "No uploaded file was found for this fileKey. Upload the file to the upload URL first, or ask for a new one.",
         "fileDownloadFailed": "The file at this URL could not be downloaded. Use a public http or https link to the file itself.",
-        "uploadFailed": "The file could not be saved. Please try again."
+        "uploadFailed": "The file could not be saved. Please try again.",
+        "contentRequired": "A text or web page item needs its content: the text itself, or the page URL."
     },
     "notification": {
         "ingestFailed": {

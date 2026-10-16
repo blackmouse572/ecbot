@@ -803,13 +803,15 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
         }
 
         const { extension, mime } = this.getFileInfo(key);
-        const isPrivate = options?.access === ENUM_AWS_S3_ACCESSIBILITY.PRIVATE;
+        // No ServerSideEncryption here: it would be a signed header every
+        // uploader must echo, and a plain PUT would fail. R2 and S3 encrypt
+        // new objects at rest by default. The signed Content-Length holds
+        // the upload to the size given.
         const command = new PutObjectCommand({
             Bucket: config.bucket,
             Key: key,
             ContentType: mime,
             ContentLength: size,
-            ...(isPrivate && { ServerSideEncryption: 'AES256' }),
         });
         const expiresIn = options?.expired ?? this.presignExpired;
 

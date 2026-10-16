@@ -353,6 +353,45 @@ describe('KnowledgeItemClientController', () => {
                 });
             });
 
+            it.each(['TEXT', 'URL'])(
+                'refuses a %s item with no content',
+                async type => {
+                    await expect(
+                        controller.create(workspace, credential, 'kb-1', {
+                            type,
+                            title: 'Hours',
+                            content: ' ',
+                        } as any)
+                    ).rejects.toMatchObject({
+                        response: {
+                            message: 'knowledgeItem.error.contentRequired',
+                        },
+                    });
+                    expect(
+                        mockKnowledgeItemService.create
+                    ).not.toHaveBeenCalled();
+                }
+            );
+
+            it('drops a presigned upload when the create fails', async () => {
+                mockKnowledgeBaseService.findOne.mockResolvedValue({
+                    id: 'kb-1',
+                });
+                mockUploadService.readUpload.mockResolvedValue({});
+                mockUploadService.store.mockRejectedValue(new Error('quota'));
+
+                await expect(
+                    controller.create(workspace, credential, 'kb-1', {
+                        type: 'MEDIA',
+                        title: 'Menu',
+                        fileKey: 'knowledge-uploads/workspace-1/kb-1/x.pdf',
+                    } as any)
+                ).rejects.toThrow('quota');
+                expect(mockUploadService.discardUpload).toHaveBeenCalledWith(
+                    'knowledge-uploads/workspace-1/kb-1/x.pdf'
+                );
+            });
+
             it('creates a media item from a presigned upload, then drops the upload', async () => {
                 const file = { originalname: 'menu.pdf' };
                 const stored = {
@@ -432,6 +471,7 @@ describe('KnowledgeItemClientController', () => {
                     controller.create(workspace, credential, 'other', {
                         type: 'TEXT',
                         title: 'x',
+                        content: 'Open 9am',
                     } as any)
                 ).rejects.toBeInstanceOf(NotFoundException);
                 expect(mockKnowledgeItemService.create).not.toHaveBeenCalled();
@@ -447,6 +487,7 @@ describe('KnowledgeItemClientController', () => {
                     controller.create(workspace, credential, 'kb-1', {
                         type: 'TEXT',
                         title: 'x',
+                        content: 'Open 9am',
                         folderId: 'folder-9',
                     } as any)
                 ).rejects.toBeInstanceOf(NotFoundException);
