@@ -279,6 +279,27 @@ describe('HelperEgressService', () => {
             }
         });
 
+        it('lets the caller set its own cap', async () => {
+            const service = buildService();
+            const fetchSpy = jest
+                .spyOn(global, 'fetch')
+                .mockResolvedValueOnce(
+                    new Response(bodyOfBytes(20), { status: 200 })
+                );
+            try {
+                const res = await service.fetch(
+                    'https://example.com/x',
+                    {},
+                    { maxBytes: 10 }
+                );
+                await expect(res.arrayBuffer()).rejects.toThrow(
+                    EgressBlockedError
+                );
+            } finally {
+                fetchSpy.mockRestore();
+            }
+        });
+
         it('allows a response under the configured cap', async () => {
             const cfg = {
                 get: jest.fn((key: string) =>

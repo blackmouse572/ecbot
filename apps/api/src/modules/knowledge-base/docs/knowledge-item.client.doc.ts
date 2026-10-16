@@ -15,7 +15,9 @@ import {
     KnowledgeBaseDocQueryItemTags,
     KnowledgeBaseDocQueryItemType,
 } from '../constants/knowledge-base.doc.constant';
-import { KnowledgeItemCreateRequestDto } from '../dtos/request/knowledge-item.create.request.dto';
+import { KnowledgeItemClientCreateRequestDto } from '../dtos/request/knowledge-item.client-create.request.dto';
+import { KnowledgeItemUploadUrlRequestDto } from '../dtos/request/knowledge-item.upload-url.request.dto';
+import { KnowledgeItemUploadUrlResponseDto } from '../dtos/response/knowledge-item.upload-url.response.dto';
 import { KnowledgeItemUpdateRequestDto } from '../dtos/request/knowledge-item.update.request.dto';
 import { KnowledgeItemResponseDto } from '../dtos/response/knowledge-item.response.dto';
 import { KnowledgeItemShortResponseDto } from '../dtos/response/knowledge-item-short.response.dto';
@@ -64,11 +66,13 @@ export function KnowledgeItemClientCreateDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary:
-                'create a text or URL knowledge item in a knowledge base of the credential workspace',
+                'create a knowledge item in a knowledge base of the credential workspace',
+            description:
+                'TEXT and URL items take their content. FILE and MEDIA items take their file from exactly one of `fileKey` (a presigned upload, see upload-url) or `fileUrl` (a public link the API downloads).',
         }),
         DocRequest({
             params: KnowledgeBaseDocParamsKnowledgeBaseId,
-            dto: KnowledgeItemCreateRequestDto,
+            dto: KnowledgeItemClientCreateRequestDto,
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
         }),
         DocAuth({ xApiKey: true }),
@@ -113,5 +117,24 @@ export function KnowledgeItemClientDeleteDoc(): MethodDecorator {
         }),
         DocAuth({ xApiKey: true }),
         DocResponse('knowledgeItem.delete', { dto: DatabaseIdResponseDto })
+    );
+}
+
+export function KnowledgeItemClientUploadUrlDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: "get a link to upload a FILE or MEDIA item's file",
+            description:
+                'Checks the type (from the file name), size and storage quota, then returns a presigned PUT link. Upload the file there, then create the item with `fileKey`.',
+        }),
+        DocRequest({
+            params: KnowledgeBaseDocParamsKnowledgeBaseId,
+            dto: KnowledgeItemUploadUrlRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({ xApiKey: true }),
+        DocResponse('knowledgeItem.uploadUrl', {
+            dto: KnowledgeItemUploadUrlResponseDto,
+        })
     );
 }

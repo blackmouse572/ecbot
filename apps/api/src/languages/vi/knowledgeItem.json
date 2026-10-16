@@ -9,6 +9,8 @@
     "batchProcess": "Đã đưa các knowledge item vào hàng đợi xử lý.",
     "batchTag": "Đã thêm thẻ cho các knowledge item.",
     "batchLink": "Đã liên kết các knowledge item với chatbot.",
+    "uploadUrl": "Đã tạo đường dẫn tải lên. Hãy PUT tệp vào đường dẫn này, rồi tạo mục bằng fileKey.",
+    "unlink": "Đã gỡ mục kiến thức khỏi chatbot.",
     "error": {
         "batchTarget": "Hãy gửi danh sách id hoặc bộ lọc, không gửi cả hai. Bộ lọc cần kèm theo kho kiến thức áp dụng.",
         "notFound": "Không tìm thấy mục kiến thức.",
@@ -17,7 +19,12 @@
         "storageLimitExceeded": "Tệp này vượt quá dung lượng kiến thức của gói hiện tại. Hãy xóa bớt tệp hoặc nâng cấp gói để thêm.",
         "fileTypeInvalid": "Không đọc được loại tệp này. Hãy tải lên tệp PDF, DOCX, TXT, Markdown hoặc HTML.",
         "mediaTypeInvalid": "Media có thể là ảnh JPG, PNG, WEBP hoặc tệp PDF.",
-        "fileTooLarge": "Tệp quá lớn. Ảnh và tài liệu tối đa 5MB, PDF dạng media tối đa 20MB."
+        "fileTooLarge": "Tệp quá lớn. Ảnh và tài liệu tối đa 5MB, PDF dạng media tối đa 20MB.",
+        "fileSource": "Mục dạng tệp hoặc media cần đúng một trong hai: fileKey hoặc fileUrl. Các loại mục khác không dùng hai trường này.",
+        "uploadKeyInvalid": "fileKey này không thuộc kho kiến thức này. Hãy tạo đường dẫn tải lên mới.",
+        "uploadNotFound": "Không tìm thấy tệp đã tải lên cho fileKey này. Hãy tải tệp lên đường dẫn trước, hoặc tạo đường dẫn mới.",
+        "fileDownloadFailed": "Không tải được tệp từ đường dẫn này. Hãy dùng đường dẫn http hoặc https công khai trỏ thẳng đến tệp.",
+        "uploadFailed": "Không lưu được tệp. Hãy thử lại."
     },
     "notification": {
         "ingestFailed": {

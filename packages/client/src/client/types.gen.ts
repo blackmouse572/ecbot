@@ -6332,6 +6332,40 @@ export type ApiChannelSendMessageRequestDto = {
     timestamp?: string;
 };
 
+export type KnowledgeItemUploadUrlResponseDto = {
+    /**
+     * PUT the file here, with a Content-Length of exactly `size` bytes.
+     */
+    uploadUrl: string;
+    /**
+     * Send as `fileKey` when creating the item
+     */
+    fileKey: string;
+    /**
+     * The type the file name gives the file
+     */
+    mimeType: string;
+    /**
+     * Seconds the link stays valid
+     */
+    expiresIn: number;
+};
+
+export type KnowledgeItemUploadUrlRequestDto = {
+    /**
+     * The item the file is for
+     */
+    type: 'FILE' | 'MEDIA';
+    /**
+     * File name with its extension, which sets its type
+     */
+    fileName: string;
+    /**
+     * File size in bytes
+     */
+    size: number;
+};
+
 export type KnowledgeItemShortResponseDto = {
     /**
      * Alias id of api key
@@ -6397,6 +6431,43 @@ export type KnowledgeItemShortResponseDto = {
      * Tags
      */
     tags?: Array<string>;
+};
+
+export type KnowledgeItemClientCreateRequestDto = {
+    /**
+     * Item type
+     */
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
+    /**
+     * Item title
+     */
+    title: string;
+    /**
+     * Item content (for TEXT/URL types)
+     */
+    content?: string;
+    /**
+     * Folder ID to organize item
+     */
+    folderId?: string;
+    /**
+     * Tags for categorization
+     */
+    tags?: Array<string>;
+    /**
+     * Type-specific metadata
+     */
+    metadata?: {
+        [key: string]: unknown;
+    };
+    /**
+     * For FILE or MEDIA: the `fileKey` from POST upload-url, after the file was PUT to its `uploadUrl`.
+     */
+    fileKey?: string;
+    /**
+     * For FILE or MEDIA: a public http(s) link the API downloads the file from.
+     */
+    fileUrl?: string;
 };
 
 export type RequestUserResponseDto = {
@@ -32375,7 +32446,7 @@ export type KnowledgeItemClientControllerListV1Responses = {
 export type KnowledgeItemClientControllerListV1Response = KnowledgeItemClientControllerListV1Responses[keyof KnowledgeItemClientControllerListV1Responses];
 
 export type KnowledgeItemClientControllerCreateV1Data = {
-    body: KnowledgeItemCreateRequestDto;
+    body: KnowledgeItemClientCreateRequestDto;
     headers?: {
         /**
          * Custom language header
@@ -32654,6 +32725,306 @@ export type KnowledgeItemClientControllerUpdateV1Responses = {
 };
 
 export type KnowledgeItemClientControllerUpdateV1Response = KnowledgeItemClientControllerUpdateV1Responses[keyof KnowledgeItemClientControllerUpdateV1Responses];
+
+export type KnowledgeItemClientControllerUploadUrlV1Data = {
+    body: KnowledgeItemUploadUrlRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items/upload-url';
+};
+
+export type KnowledgeItemClientControllerUploadUrlV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerUploadUrlV1Error = KnowledgeItemClientControllerUploadUrlV1Errors[keyof KnowledgeItemClientControllerUploadUrlV1Errors];
+
+export type KnowledgeItemClientControllerUploadUrlV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemUploadUrlResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerUploadUrlV1Response = KnowledgeItemClientControllerUploadUrlV1Responses[keyof KnowledgeItemClientControllerUploadUrlV1Responses];
+
+export type ChatbotKnowledgeItemClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/chatbots/{chatbotId}/knowledge-items';
+};
+
+export type ChatbotKnowledgeItemClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerListV1Error = ChatbotKnowledgeItemClientControllerListV1Errors[keyof ChatbotKnowledgeItemClientControllerListV1Errors];
+
+export type ChatbotKnowledgeItemClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ChatbotKnowledgeItemResponseDto>;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerListV1Response = ChatbotKnowledgeItemClientControllerListV1Responses[keyof ChatbotKnowledgeItemClientControllerListV1Responses];
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Data = {
+    body: ChatbotKnowledgeItemBatchLinkRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/knowledge-items/link';
+};
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Error = ChatbotKnowledgeItemClientControllerLinkV1Errors[keyof ChatbotKnowledgeItemClientControllerLinkV1Errors];
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemBatchResultResponseDto;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Response = ChatbotKnowledgeItemClientControllerLinkV1Responses[keyof ChatbotKnowledgeItemClientControllerLinkV1Responses];
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+        knowledgeItemId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/knowledge-items/{knowledgeItemId}';
+};
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Error = ChatbotKnowledgeItemClientControllerUnlinkV1Errors[keyof ChatbotKnowledgeItemClientControllerUnlinkV1Errors];
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Response = ChatbotKnowledgeItemClientControllerUnlinkV1Responses[keyof ChatbotKnowledgeItemClientControllerUnlinkV1Responses];
 
 export type ConversationClientControllerListV1Data = {
     body?: never;

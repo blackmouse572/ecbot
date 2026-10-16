@@ -92,7 +92,11 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
     onModuleInit(): void {
         // A custom endpoint (e.g. Cloudflare R2, MinIO) needs path-style
         // addressing; without it the AWS SDK builds AWS virtual-host URLs.
+        // Checksums only when S3 requires one: by default the SDK signs a
+        // presigned PUT with the checksum of an empty body, so S3 rejects
+        // the real upload.
         this.config.public.client = new S3Client({
+            requestChecksumCalculation: 'WHEN_REQUIRED',
             credentials: {
                 accessKeyId: this.config.public.credential.key,
                 secretAccessKey: this.config.public.credential.secret,
@@ -107,6 +111,7 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
         });
 
         this.config.private.client = new S3Client({
+            requestChecksumCalculation: 'WHEN_REQUIRED',
             credentials: {
                 accessKeyId: this.config.private.credential.key,
                 secretAccessKey: this.config.private.credential.secret,
@@ -804,7 +809,6 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             Key: key,
             ContentType: mime,
             ContentLength: size,
-            ChecksumAlgorithm: 'SHA256',
             ...(isPrivate && { ServerSideEncryption: 'AES256' }),
         });
         const expiresIn = options?.expired ?? this.presignExpired;
