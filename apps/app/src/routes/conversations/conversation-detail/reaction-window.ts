@@ -18,6 +18,19 @@ export const POLICY_URL =
 export const isMetaPlatform = (accountType?: string | null): boolean =>
   !!accountType && META_ACCOUNT_TYPES.has(accountType);
 
+type WindowMessage = { direction: "INBOUND" | "OUTBOUND"; dateSent: string };
+
+/** When the customer last wrote, among the loaded messages (oldest first). */
+export const lastInboundAt = (
+  messages: WindowMessage[],
+): number | undefined => {
+  let at: number | undefined;
+  for (const m of messages) {
+    if (m.direction === "INBOUND") at = new Date(m.dateSent).getTime();
+  }
+  return at;
+};
+
 /**
  * Whether operator reactions are blocked by Meta's 24h messaging policy.
  * `true` only for Meta conversations whose window has closed — i.e. the last
@@ -26,18 +39,12 @@ export const isMetaPlatform = (accountType?: string | null): boolean =>
  */
 export const isReactionWindowClosed = (
   accountType: string | null | undefined,
-  messages: { direction: "INBOUND" | "OUTBOUND"; dateSent: string }[],
+  messages: WindowMessage[],
   now: number,
 ): boolean => {
   if (!isMetaPlatform(accountType)) return false;
 
-  let lastInboundAt: number | undefined;
-  for (const m of messages) {
-    if (m.direction === "INBOUND") {
-      lastInboundAt = new Date(m.dateSent).getTime();
-    }
-  }
-
-  if (lastInboundAt === undefined) return true;
-  return now - lastInboundAt > REACTION_WINDOW_MS;
+  const lastInbound = lastInboundAt(messages);
+  if (lastInbound === undefined) return true;
+  return now - lastInbound > REACTION_WINDOW_MS;
 };
