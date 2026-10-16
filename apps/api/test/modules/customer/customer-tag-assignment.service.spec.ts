@@ -1,4 +1,8 @@
 import { NotFoundException } from '@nestjs/common';
+import {
+    ENUM_CUSTOMER_TAG_EVENT_ACTION,
+    ENUM_CUSTOMER_TAG_EVENT_ACTOR,
+} from '../../../src/modules/customer/enums/customer-tag.enum';
 import { CustomerTagAssignmentService } from '../../../src/modules/customer/services/customer-tag-assignment.service';
 
 describe('CustomerTagAssignmentService', () => {
@@ -25,13 +29,23 @@ describe('CustomerTagAssignmentService', () => {
         softDelete: jest.fn(),
     };
 
+    const mockCustomerTagEventRepository = {
+        create: jest.fn(),
+    };
+
+    const byBot = {
+        actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.BOT,
+        conversationId: 'conv-1',
+    };
+
     beforeEach(() => {
         jest.clearAllMocks();
         service = new CustomerTagAssignmentService(
             mockEm as any,
             mockCustomerRepository as any,
             mockCustomerTagRepository as any,
-            mockCustomerTagAssignmentRepository as any
+            mockCustomerTagAssignmentRepository as any,
+            mockCustomerTagEventRepository as any
         );
     });
 
@@ -192,6 +206,114 @@ describe('CustomerTagAssignmentService', () => {
             expect(
                 mockCustomerTagAssignmentRepository.softDelete
             ).not.toHaveBeenCalled();
+        });
+    });
+
+    // The tag history behind the dashboard: one row per real change, never
+    // for a no-op, and a failed write never fails the tagging itself.
+    describe('tag events', () => {
+        const tag = { id: 'tag-1', workspace: { id: 'ws-1' } };
+
+        beforeEach(() => {
+            mockCustomerRepository.findOneById.mockResolvedValue({
+                id: 'cust-1',
+            });
+            mockCustomerTagRepository.findOneById.mockResolvedValue(tag);
+            mockEm.persistAndFlush.mockResolvedValue(undefined);
+        });
+
+        it('records APPLIED with who applied it when a tag is newly applied', async () => {
+            mockCustomerTagAssignmentRepository.findOne.mockResolvedValue(null);
+            mockCustomerTagAssignmentRepository.findOneByCustomerAndTag
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce({ id: 'assn-1' });
+
+            await service.apply('cust-1', 'tag-1', undefined, byBot);
+
+            expect(mockCustomerTagEventRepository.create).toHaveBeenCalledTimes(
+                1
+            );
+            const [event] = mockCustomerTagEventRepository.create.mock.calls[0];
+            expect(event).toMatchObject({
+                workspace: { id: 'ws-1' },
+                customer: { id: 'cust-1' },
+                tag: { id: 'tag-1' },
+                action: ENUM_CUSTOMER_TAG_EVENT_ACTION.APPLIED,
+                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.BOT,
+                conversationId: 'conv-1',
+            });
+        });
+
+        it('records APPLIED when a removed tag is applied again', async () => {
+            mockCustomerTagAssignmentRepository.findOneByCustomerAndTag
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce({ id: 'assn-1' });
+            mockCustomerTagAssignmentRepository.findOne.mockResolvedValue({
+                id: 'assn-1',
+                deleted: true,
+            });
+
+            await service.apply('cust-1', 'tag-1', undefined, byBot);
+
+            const [event] = mockCustomerTagEventRepository.create.mock.calls[0];
+            expect(event.action).toBe(ENUM_CUSTOMER_TAG_EVENT_ACTION.APPLIED);
+        });
+
+        it('records nothing when the tag was already on the customer', async () => {
+            mockCustomerTagAssignmentRepository.findOneByCustomerAndTag.mockResolvedValue(
+                { id: 'assn-1' }
+            );
+
+            await service.apply('cust-1', 'tag-1', undefined, byBot);
+
+            expect(
+                mockCustomerTagEventRepository.create
+            ).not.toHaveBeenCalled();
+        });
+
+        it('records REMOVED with the member who removed it', async () => {
+            mockCustomerTagAssignmentRepository.findOneByCustomerAndTag.mockResolvedValue(
+                { id: 'assn-1' }
+            );
+
+            await service.remove('cust-1', 'tag-1', undefined, {
+                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.OPERATOR,
+                userId: 'user-1',
+            });
+
+            const [event] = mockCustomerTagEventRepository.create.mock.calls[0];
+            expect(event).toMatchObject({
+                workspace: { id: 'ws-1' },
+                action: ENUM_CUSTOMER_TAG_EVENT_ACTION.REMOVED,
+                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.OPERATOR,
+                createdBy: { id: 'user-1' },
+            });
+        });
+
+        it('records nothing when there was no tag to remove', async () => {
+            mockCustomerTagAssignmentRepository.findOneByCustomerAndTag.mockResolvedValue(
+                null
+            );
+
+            await service.remove('cust-1', 'tag-1', undefined, byBot);
+
+            expect(
+                mockCustomerTagEventRepository.create
+            ).not.toHaveBeenCalled();
+        });
+
+        it('still applies the tag when writing the event fails', async () => {
+            mockCustomerTagAssignmentRepository.findOne.mockResolvedValue(null);
+            mockCustomerTagAssignmentRepository.findOneByCustomerAndTag
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce({ id: 'assn-1' });
+            mockCustomerTagEventRepository.create.mockRejectedValueOnce(
+                new Error('db down')
+            );
+
+            await expect(
+                service.apply('cust-1', 'tag-1', undefined, byBot)
+            ).resolves.toEqual({ id: 'assn-1' });
         });
     });
 

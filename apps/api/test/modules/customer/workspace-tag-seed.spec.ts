@@ -155,6 +155,7 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
             expect(seeded.description).toBe(expected.description);
             expect(seeded.triggersHandoff).toBe(expected.triggersHandoff);
             expect(seeded.notifiesTeam).toBe(expected.notifiesTeam ?? false);
+            expect(seeded.systemKey).toBe(expected.systemKey);
         }
     });
 
@@ -177,24 +178,29 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         expect(seeded.filter((tag: any) => tag.triggersHandoff).length).toBe(5);
     });
 
-    it("keeps every language's catalog in step (same emoji and handoff flags)", () => {
+    it("keeps every language's catalog in step (same key, emoji and handoff flags)", () => {
+        const shape = ({
+            systemKey,
+            emoji,
+            triggersHandoff,
+            notifiesTeam,
+        }: (typeof CUSTOMER_TAG_DEFAULTS.en)[number]) => ({
+            systemKey,
+            emoji,
+            triggersHandoff,
+            notifiesTeam,
+        });
         for (const catalog of Object.values(CUSTOMER_TAG_DEFAULTS)) {
-            expect(
-                catalog.map(({ emoji, triggersHandoff, notifiesTeam }) => ({
-                    emoji,
-                    triggersHandoff,
-                    notifiesTeam,
-                }))
-            ).toEqual(
-                CUSTOMER_TAG_DEFAULTS.en.map(
-                    ({ emoji, triggersHandoff, notifiesTeam }) => ({
-                        emoji,
-                        triggersHandoff,
-                        notifiesTeam,
-                    })
-                )
+            expect(catalog.map(shape)).toEqual(
+                CUSTOMER_TAG_DEFAULTS.en.map(shape)
             );
         }
+    });
+
+    // Analytics finds a default tag by its key, so no two may share one.
+    it('gives every default tag its own system key', () => {
+        const keys = CUSTOMER_TAG_DEFAULTS.en.map(tag => tag.systemKey);
+        expect(new Set(keys).size).toBe(keys.length);
     });
 
     // #288: Order placed tells the team about an order the order tool

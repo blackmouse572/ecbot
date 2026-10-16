@@ -8,6 +8,10 @@ import { CustomerEntity } from '../repository/entities/customer.entity';
 import { CustomerTagEntity } from '../repository/entities/customer-tag.entity';
 import { CustomerTagAssignmentRepository } from '../repository/repositories/customer-tag-assignment.repository';
 import { CustomerTagRepository } from '../repository/repositories/customer-tag.repository';
+import { CustomerTagEventRepository } from '../repository/repositories/customer-tag-event.repository';
+import { ENUM_CUSTOMER_TAG_EVENT_ACTION } from '../enums/customer-tag.enum';
+import { ICustomerTagEventContext } from '../interfaces/customer-tag-event.interface';
+import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 
 @Injectable()
@@ -18,7 +22,8 @@ export class CustomerTagAssignmentService {
         private readonly em: EntityManager,
         private readonly customerRepository: CustomerRepository,
         private readonly customerTagRepository: CustomerTagRepository,
-        private readonly customerTagAssignmentRepository: CustomerTagAssignmentRepository
+        private readonly customerTagAssignmentRepository: CustomerTagAssignmentRepository,
+        private readonly customerTagEventRepository: CustomerTagEventRepository
     ) {}
 
     async listByCustomer(
@@ -40,7 +45,8 @@ export class CustomerTagAssignmentService {
     async apply(
         customerId: string,
         tagId: string,
-        workspaceId?: string
+        workspaceId?: string,
+        context?: ICustomerTagEventContext
     ): Promise<CustomerTagAssignmentEntity> {
         // BOLA guard — both customer AND tag must live in the caller's
         // workspace when a workspaceId is provided. Collapse cross-workspace
@@ -92,6 +98,12 @@ export class CustomerTagAssignmentService {
             removed.deleted = false;
             removed.deletedAt = null;
             await this.em.flush();
+            await this.recordEvent(
+                ENUM_CUSTOMER_TAG_EVENT_ACTION.APPLIED,
+                customerId,
+                tag,
+                context
+            );
             const restored =
                 await this.customerTagAssignmentRepository.findOneByCustomerAndTag(
                     customerId,
@@ -120,6 +132,13 @@ export class CustomerTagAssignmentService {
             throw error;
         }
 
+        await this.recordEvent(
+            ENUM_CUSTOMER_TAG_EVENT_ACTION.APPLIED,
+            customerId,
+            tag,
+            context
+        );
+
         // Reload with populated tag for the response.
         const reloaded =
             await this.customerTagAssignmentRepository.findOneByCustomerAndTag(
@@ -132,7 +151,8 @@ export class CustomerTagAssignmentService {
     async remove(
         customerId: string,
         tagId: string,
-        workspaceId?: string
+        workspaceId?: string,
+        context?: ICustomerTagEventContext
     ): Promise<CustomerTagEntity | null> {
         // BOLA guard — ignore the request silently if the customer is not in
         // the caller's workspace.
@@ -157,7 +177,46 @@ export class CustomerTagAssignmentService {
 
         // Fetched for the caller to log a real tag name on the activity -
         // `existing.tag` above is an unpopulated reference (id only).
-        return this.customerTagRepository.findOneById(tagId);
+        const tag = await this.customerTagRepository.findOneById(tagId);
+        if (tag) {
+            await this.recordEvent(
+                ENUM_CUSTOMER_TAG_EVENT_ACTION.REMOVED,
+                customerId,
+                tag,
+                context
+            );
+        }
+        return tag;
+    }
+
+    /**
+     * Adds a row to the tag history. Analytics only: a failed write is
+     * logged and never fails the tagging itself.
+     */
+    private async recordEvent(
+        action: ENUM_CUSTOMER_TAG_EVENT_ACTION,
+        customerId: string,
+        tag: CustomerTagEntity,
+        context?: ICustomerTagEventContext
+    ): Promise<void> {
+        if (!context) return;
+        try {
+            await this.customerTagEventRepository.create({
+                workspace: tag.workspace,
+                customer: this.em.getReference(CustomerEntity, customerId),
+                tag: this.em.getReference(CustomerTagEntity, tag.id),
+                action,
+                actor: context.actor,
+                conversationId: context.conversationId,
+                createdBy: context.userId
+                    ? this.em.getReference(UserEntity, context.userId)
+                    : undefined,
+            });
+        } catch (error) {
+            this.logger.warn(
+                `Tag event ${action} customer=${customerId} tag=${tag.id} failed: ${(error as Error).message}`
+            );
+        }
     }
 
     /**
