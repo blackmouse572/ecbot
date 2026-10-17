@@ -12,9 +12,16 @@ import { CHART_COLORS } from "./chart-colors";
 import { SimpleTable } from "./simple-table";
 import { useAnalyticsFormat } from "./use-analytics-format";
 
+type ConversionSectionProps = {
+  data: ConversionAnalytics;
+  /** Credits per order is usage data: only for members who can read usage. */
+  showTokens: boolean;
+};
+
 /** New customers becoming customers with an order: daily, funnel, per channel. */
-export const ConversionSection: FC<{ data: ConversionAnalytics }> = ({
+export const ConversionSection: FC<ConversionSectionProps> = ({
   data,
+  showTokens,
 }) => {
   const { t } = useTranslation();
   const f = useAnalyticsFormat();
@@ -139,15 +146,19 @@ export const ConversionSection: FC<{ data: ConversionAnalytics }> = ({
             numeric: true,
             cell: (row) => f.share(row.orders, row.newCustomers),
           },
-          {
-            key: "tokens",
-            header: t("dashboard.analytics.kpi.tokensPerOrder"),
-            numeric: true,
-            cell: (row) =>
-              row.tokensPerOrder === undefined
-                ? "–"
-                : f.compact(row.tokensPerOrder),
-          },
+          ...(showTokens
+            ? [
+                {
+                  key: "tokens",
+                  header: t("dashboard.analytics.kpi.tokensPerOrder"),
+                  numeric: true,
+                  cell: (row: ConversionAnalytics["byChannel"][number]) =>
+                    row.tokensPerOrder === undefined
+                      ? "–"
+                      : f.compact(row.tokensPerOrder),
+                },
+              ]
+            : []),
         ]}
       />
     </div>

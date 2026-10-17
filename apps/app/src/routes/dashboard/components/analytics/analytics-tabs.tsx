@@ -57,7 +57,10 @@ export const AnalyticsTabs: FC<AnalyticsTabsProps> = ({
           {data && (
             <>
               <Tabs.Content value="conversion">
-                <ConversionSection data={data.conversion} />
+                <ConversionSection
+                  data={data.conversion}
+                  showTokens={tabs.includes("usage")}
+                />
               </Tabs.Content>
               <Tabs.Content value="marketing">
                 <MarketingSection data={data.marketing} />
