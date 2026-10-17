@@ -126,6 +126,24 @@ export class ActivityService {
         return this.activityRepository.create(create, options);
     }
 
+    // The bot did it (a handoff it raised): no user and no `by`. Shown to
+    // the workspace owner, who sees every row of the workspace.
+    async createByBotWithWorkspace(
+        workspaceId: string,
+        { action, subject, metadata }: ActivityCreateRequest,
+        options?: IDatabaseCreateOptions
+    ): Promise<ActivityEntity> {
+        const create = new ActivityEntity();
+        create.action = action;
+        create.subject = subject;
+        create.metadata = metadata;
+        create.workspace = this.activityRepository
+            .getEntityManager()
+            .getReference(WorkspaceEntity, workspaceId);
+
+        return this.activityRepository.create(create, options);
+    }
+
     // Stamps the caller's IP and user agent from the current request, so no
     // call site passes them; outside a request (seeds, workers) both stay
     // empty. `request.ip` honours the `trust proxy` hops set in main.ts, the

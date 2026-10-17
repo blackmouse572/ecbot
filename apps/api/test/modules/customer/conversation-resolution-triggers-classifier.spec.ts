@@ -47,6 +47,11 @@ describe('Classifier wiring (#170)', () => {
                 {
                     create: jest.fn().mockResolvedValue(undefined),
                     findNewest: jest.fn().mockResolvedValue([]),
+                } as any,
+                {
+                    createByBotWithWorkspace: jest
+                        .fn()
+                        .mockResolvedValue(undefined),
                 } as any
             );
 

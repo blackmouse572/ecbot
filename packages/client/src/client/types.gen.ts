@@ -2099,13 +2099,13 @@ export type ActivityAdminListResponseDto = {
      * Date updated at
      */
     updatedAt: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume' | 'conversation_handoff' | 'conversation_takeover' | 'conversation_bot_resumed' | 'conversation_resolved' | 'conversation_reopened';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     metadata?: {
         [key: string]: unknown;
     };
-    user: UserMetaResponseDto;
-    by: UserMetaResponseDto;
+    user?: UserMetaResponseDto;
+    by?: UserMetaResponseDto;
     workspace?: ActivityAdminWorkspaceResponseDto;
     ipAddress?: string;
     userAgent?: string;
@@ -2144,10 +2144,10 @@ export type ActivityListResponseDto = {
      * Delete by
      */
     deletedBy?: UserMetaResponseDto;
-    user: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
+    user?: string | null;
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume' | 'conversation_handoff' | 'conversation_takeover' | 'conversation_bot_resumed' | 'conversation_resolved' | 'conversation_reopened';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
-    by: UserShortResponseDto;
+    by?: UserShortResponseDto | null;
     metadata?: {
         [key: string]: unknown;
     };

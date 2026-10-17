@@ -919,7 +919,12 @@
     "conversation": {
       "create": "sent a message to <link/>",
       "update": "updated the conversation with <link/>",
-      "unknownCustomer": "a customer"
+      "unknownCustomer": "a customer",
+      "handoff": "handed <link/> over to the team",
+      "takeover": "took over the conversation with <link/>",
+      "botResumed": "handed <link/> back to the bot",
+      "resolved": "resolved the conversation with <link/>",
+      "reopened": "reopened the conversation with <link/>"
     },
     "plan": {
       "changePlan": "Changed the subscription plan",
@@ -938,7 +943,8 @@
       "update": "updated workspace <link/>",
       "join": "joined workspace <link/>",
       "leave": "left workspace <link/>"
-    }
+    },
+    "bot": "Bot"
   },
   "chatbot": {
     "batch": {

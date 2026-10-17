@@ -150,4 +150,37 @@ describe("ActivityItemDefault", () => {
     ).toContain("đã thay đổi gói đăng ký");
     await i18n.changeLanguage("en");
   });
+
+  it.each([
+    ["conversation_takeover", "took over the conversation with Lan Nguyen"],
+    ["conversation_bot_resumed", "handed Lan Nguyen back to the bot"],
+    ["conversation_resolved", "resolved the conversation with Lan Nguyen"],
+    ["conversation_reopened", "reopened the conversation with Lan Nguyen"],
+  ])("labels a CONVERSATION %s activity", (action, message) => {
+    expect(
+      renderItem(
+        activity("CONVERSATION", action, { id: "c1", name: "Lan Nguyen" }),
+      ),
+    ).toContain(message);
+  });
+
+  it("names the bot for a handoff it raised", async () => {
+    const item = {
+      ...activity("CONVERSATION", "conversation_handoff", {
+        id: "c1",
+        name: "Lan Nguyen",
+        reason: "tag_trigger",
+      }),
+      by: null,
+    } as unknown as ActivityListResponseDto;
+    expect(renderItem(item)).toContain(
+      "Bot\u00a0handed Lan Nguyen over to the team",
+    );
+
+    await i18n.changeLanguage("vi");
+    expect(renderItem(item)).toContain(
+      "Bot\u00a0đã chuyển Lan Nguyen cho nhân viên",
+    );
+    await i18n.changeLanguage("en");
+  });
 });

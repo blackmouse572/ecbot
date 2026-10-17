@@ -632,7 +632,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": false,
           "length": null,
           "precision": null,
@@ -751,7 +751,12 @@
             "erase",
             "subscription_change_plan",
             "subscription_cancel",
-            "subscription_resume"
+            "subscription_resume",
+            "conversation_handoff",
+            "conversation_takeover",
+            "conversation_bot_resumed",
+            "conversation_resolved",
+            "conversation_reopened"
           ],
           "mappedType": "enum"
         },
@@ -761,7 +766,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": false,
           "length": null,
           "precision": null,
