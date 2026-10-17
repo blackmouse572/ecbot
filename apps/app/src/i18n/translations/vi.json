@@ -2788,6 +2788,8 @@
     },
     "composer": {
       "placeholder": "Trả lời với tư cách nhân viên…",
+      "windowClosed": "Meta chỉ cho phép trả lời trong vòng 24 giờ kể từ tin nhắn cuối của khách.",
+      "windowClosedHint": "Bạn có thể trả lời lại khi khách nhắn tin tiếp.",
       "send": "Gửi",
       "retry": "Gửi lại",
       "failed": "Gửi thất bại",
