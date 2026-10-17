@@ -435,14 +435,100 @@
       "inviteMembers": "Mời thành viên (càng đông càng vui!)",
       "viewProjects": "Xem các dự án"
     },
-    "stats": {
-      "projects": "Dự án",
-      "members": "Thành viên",
-      "workspaces": "Không gian làm việc",
-      "lastActive": "Hoạt động lần cuối",
-      "chatbots": "Agent",
-      "accounts": "Tài khoản đã kết nối",
-      "conversations": "Hội thoại"
+    "analytics": {
+      "empty": "Chưa có dữ liệu trong khoảng thời gian này.",
+      "error": "Không tải được số liệu. Vui lòng thử lại sau.",
+      "updatedAt": "Cập nhật lúc {{time}}",
+      "refresh": "Làm mới",
+      "range": {
+        "7d": "7 ngày qua",
+        "30d": "30 ngày qua",
+        "90d": "90 ngày qua"
+      },
+      "tabs": {
+        "conversion": "Chuyển đổi",
+        "marketing": "Mức hài lòng",
+        "bot": "Hiệu quả bot",
+        "customers": "Nhóm khách hàng"
+      },
+      "kpi": {
+        "conversionRate": "Tỷ lệ chốt đơn",
+        "positiveRate": "Hội thoại tích cực",
+        "handoffRate": "Tỷ lệ chuyển nhân viên",
+        "tokensPerOrder": "Credit cho mỗi đơn",
+        "previous": "Kỳ trước: {{value}}"
+      },
+      "columns": {
+        "channel": "Kênh",
+        "conversations": "Hội thoại",
+        "agent": "Agent",
+        "customers": "Khách hàng",
+        "share": "Tỷ lệ"
+      },
+      "views": {
+        "share": "Tỷ lệ",
+        "count": "Số lượng"
+      },
+      "conversion": {
+        "dailyTitle": "Khách mới và đơn hàng",
+        "newCustomers": "Khách mới",
+        "orders": "Đơn hàng",
+        "funnelTitle": "Từ tin nhắn đầu đến đơn hàng",
+        "funnel": {
+          "newCustomers": "Khách mới",
+          "engaged": "Tiếp tục trò chuyện",
+          "hotLeads": "Khách tiềm năng cao",
+          "ordered": "Đã đặt đơn"
+        },
+        "byChannelTitle": "Đơn theo kênh",
+        "funnelHint": "Mỗi cột là phần khách mới đi được tới bước đó. Số âm giữa hai cột là phần khách dừng lại ở đó, màu đỏ là chỗ rơi nhiều nhất.",
+        "dropped": "{{value}} khách dừng lại ({{share}})",
+        "timeToOrder": "Thời gian chốt đơn",
+        "hours": "{{value}} giờ",
+        "timeToOrderHint": "Một nửa số đơn được chốt trong vòng {{value}} giờ kể từ tin nhắn đầu tiên của khách."
+      },
+      "marketing": {
+        "dailyTitle": "Hội thoại kết thúc thế nào",
+        "dailyHint": "Cảm xúc bot nhận ra khi mỗi hội thoại kết thúc.",
+        "positive": "Tích cực",
+        "negative": "Tiêu cực",
+        "complaint": "Khiếu nại",
+        "byChannelTitle": "Mức hài lòng theo kênh"
+      },
+      "bot": {
+        "dailyTitle": "Bot tự xử lý hay chuyển nhân viên",
+        "botResolved": "Bot tự xử lý",
+        "handedOver": "Chuyển nhân viên",
+        "reasonsTitle": "Lý do chuyển cho nhân viên",
+        "reasons": {
+          "fallback_threshold": "Bot không trả lời được",
+          "keyword_trigger": "Khách muốn gặp người thật",
+          "tag_trigger": "Theo quy tắc thẻ",
+          "manual": "Nhân viên nhận xử lý",
+          "other": "Khác"
+        },
+        "byChatbotTitle": "Theo agent",
+        "firstReply": "Phản hồi đầu",
+        "seconds": "{{value}} giây",
+        "toolErrors": "Lỗi công cụ"
+      },
+      "customers": {
+        "tagsTitle": "Khách hàng theo thẻ",
+        "untagged": "{{count}} khách chưa có thẻ ({{share}})",
+        "dailyTitle": "Khách mới và khách quay lại",
+        "returning": "Khách quay lại",
+        "byChannelTitle": "Khách hàng theo kênh",
+        "otherTags": "Thẻ khác"
+      },
+      "usage": {
+        "planTitle": "Credit của gói",
+        "usedOf": "Đã dùng {{used}} trên {{limit}}"
+      },
+      "unhappy": {
+        "title": "Khách chưa hài lòng",
+        "description": "Các hội thoại gần đây kết thúc không vui. Mở để chăm sóc lại.",
+        "empty": "Không có khách chưa hài lòng trong khoảng này."
+      }
     },
     "recentActivities": "Hoạt động gần đây",
     "gettingStarted": {

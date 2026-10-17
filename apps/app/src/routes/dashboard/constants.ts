@@ -33,3 +33,15 @@ export const GETTING_STARTED_STEPS = [
     icon: ChatBubbleLeftRight,
   },
 ] as const;
+
+/** Dashboard analytics tabs in order, each shown only to a member who can
+ * read every subject it counts. */
+export const ANALYTICS_TABS = [
+  { value: "conversion", subjects: ["CUSTOMER"] },
+  // Conversations are gated on CHATBOT, like the conversations page:
+  // CONVERSATION is not a subject a workspace role can be granted.
+  { value: "marketing", subjects: ["CUSTOMER", "CHATBOT"] },
+  { value: "bot", subjects: ["CHATBOT"] },
+  { value: "customers", subjects: ["CUSTOMER"] },
+  { value: "usage", subjects: ["TOKEN_USAGE"] },
+] as const;

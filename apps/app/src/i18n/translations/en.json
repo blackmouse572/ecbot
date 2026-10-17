@@ -414,10 +414,100 @@
   "dashboard": {
     "title": "Dashboard",
     "recentActivities": "Recent Activity",
-    "stats": {
-      "chatbots": "Agents",
-      "accounts": "Connected accounts",
-      "conversations": "Conversations"
+    "analytics": {
+      "empty": "No data for this period yet.",
+      "error": "Could not load the numbers. Try again in a moment.",
+      "updatedAt": "Updated at {{time}}",
+      "refresh": "Refresh",
+      "range": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
+      },
+      "tabs": {
+        "conversion": "Conversion",
+        "marketing": "Satisfaction",
+        "bot": "Bot performance",
+        "customers": "Customer groups"
+      },
+      "kpi": {
+        "conversionRate": "Conversion rate",
+        "positiveRate": "Positive conversations",
+        "handoffRate": "Handoff rate",
+        "tokensPerOrder": "Credits per order",
+        "previous": "Previous period: {{value}}"
+      },
+      "columns": {
+        "channel": "Channel",
+        "conversations": "Conversations",
+        "agent": "Agent",
+        "customers": "Customers",
+        "share": "Share"
+      },
+      "views": {
+        "share": "Share",
+        "count": "Count"
+      },
+      "conversion": {
+        "dailyTitle": "New customers and orders",
+        "newCustomers": "New customers",
+        "orders": "Orders",
+        "funnelTitle": "From first message to order",
+        "funnel": {
+          "newCustomers": "New customers",
+          "engaged": "Kept chatting",
+          "hotLeads": "Hot leads",
+          "ordered": "Placed an order"
+        },
+        "byChannelTitle": "Orders by channel",
+        "funnelHint": "Each column shows the share of new customers who got that far. The minus figure between columns is the share who stopped there; red marks the biggest drop.",
+        "dropped": "{{value}} stopped here ({{share}})",
+        "timeToOrder": "Time to order",
+        "hours": "{{value}} hours",
+        "timeToOrderHint": "Half of the orders were placed within {{value}} hours of the customer's first message."
+      },
+      "marketing": {
+        "dailyTitle": "How conversations ended",
+        "dailyHint": "Sentiment the bot reads at the end of each conversation.",
+        "positive": "Positive",
+        "negative": "Negative",
+        "complaint": "Complaint",
+        "byChannelTitle": "Satisfaction by channel"
+      },
+      "bot": {
+        "dailyTitle": "Resolved by the bot or handed over",
+        "botResolved": "Resolved by bot",
+        "handedOver": "Handed over",
+        "reasonsTitle": "Why conversations were handed over",
+        "reasons": {
+          "fallback_threshold": "Bot could not answer",
+          "keyword_trigger": "Customer asked for a person",
+          "tag_trigger": "Tag rule",
+          "manual": "Taken over by staff",
+          "other": "Other"
+        },
+        "byChatbotTitle": "By agent",
+        "firstReply": "First reply",
+        "seconds": "{{value}}s",
+        "toolErrors": "Tool errors"
+      },
+      "customers": {
+        "tagsTitle": "Customers by tag",
+        "untagged": "{{count}} without a tag ({{share}})",
+        "dailyTitle": "New and returning customers",
+        "returning": "Returning customers",
+        "byChannelTitle": "Customers by channel",
+        "otherTags": "Other tags"
+      },
+      "usage": {
+        "planTitle": "Plan credits",
+        "usedOf": "{{used}} of {{limit}} used"
+      },
+      "unhappy": {
+        "title": "Unhappy customers",
+        "description": "Recent conversations that ended badly. Open one to follow up.",
+        "empty": "No unhappy customers in this period."
+      }
     },
     "gettingStarted": {
       "title": "Get your agent live",
