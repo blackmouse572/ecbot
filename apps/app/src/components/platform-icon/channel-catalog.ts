@@ -2,15 +2,55 @@ import type { AccountGetDetailResponseDto } from "@repo/client";
 
 type AccountType = AccountGetDetailResponseDto["type"];
 
+type ChannelKey =
+  | "facebook"
+  | "instagram"
+  | "zalo"
+  | "tiktok"
+  | "shopee"
+  | "telegram"
+  | "whatsapp"
+  | "website"
+  | "api";
+
+/** Platform logos under public/icons, shared with the agent builder's channel
+ * icons so each path exists once. */
+export const PLATFORM_ICON_SRC = {
+  facebookMessenger: "/icons/facebook-messenger.svg",
+  instagram: "/icons/instagram.svg",
+  zalo: "/icons/zalo.svg",
+  tiktok: "/icons/tiktok.svg",
+  shopee: "/icons/shopee.svg",
+  telegram: "/icons/telegram.svg",
+  apiChannel: "/icons/api-channel.svg",
+  websiteWidget: "/icons/website-widget.svg",
+  whatsapp: "/icons/whatsapp.svg",
+} as const;
+
+/** Which channel each account type belongs to. A Record, so a new account type
+ * from the API fails the type check until it is placed in a channel. */
+const CHANNEL_OF_TYPE: Record<AccountType, ChannelKey> = {
+  FACEBOOK_ACCOUNT: "facebook",
+  FACEBOOK_PAGE: "facebook",
+  INSTAGRAM_ACCOUNT: "instagram",
+  INSTAGRAM_PAGE: "instagram",
+  ZALO_ACCOUNT: "zalo",
+  ZALO_PAGE: "zalo",
+  TIKTOK_SHOP: "tiktok",
+  SHOPEE_SHOP: "shopee",
+  TELEGRAM_BOT: "telegram",
+  WHATSAPP_BUSINESS: "whatsapp",
+  WEBSITE_WIDGET: "website",
+  API_CHANNEL: "api",
+};
+
 export type Channel = {
-  key: string;
+  key: ChannelKey;
   label: string;
   /** Logo under public/icons. */
   icon: string;
   /** Series colour on dashboard charts, distinct from every other channel. */
   color: string;
-  /** The account types this channel's connections can have. */
-  accountTypes: AccountType[];
   /** The account type the connect-channel page links. */
   connectAs: AccountType;
   /** Shown on the connect-channel page but not connectable yet. */
@@ -24,17 +64,15 @@ export const CHANNELS: Channel[] = [
   {
     key: "facebook",
     label: "Facebook",
-    icon: "/icons/facebook-messenger.svg",
+    icon: PLATFORM_ICON_SRC.facebookMessenger,
     color: "#2563eb",
-    accountTypes: ["FACEBOOK_ACCOUNT", "FACEBOOK_PAGE"],
     connectAs: "FACEBOOK_ACCOUNT",
   },
   {
     key: "instagram",
     label: "Instagram",
-    icon: "/icons/instagram.svg",
+    icon: PLATFORM_ICON_SRC.instagram,
     color: "#db2777",
-    accountTypes: ["INSTAGRAM_ACCOUNT", "INSTAGRAM_PAGE"],
     connectAs: "INSTAGRAM_ACCOUNT",
     // A build without the Instagram app id can't open Instagram Login.
     comingSoon: !import.meta.env.VITE_INSTAGRAM_APP_ID,
@@ -42,67 +80,66 @@ export const CHANNELS: Channel[] = [
   {
     key: "zalo",
     label: "Zalo",
-    icon: "/icons/zalo.svg",
+    icon: PLATFORM_ICON_SRC.zalo,
     color: "#0d9488",
-    accountTypes: ["ZALO_ACCOUNT", "ZALO_PAGE"],
     connectAs: "ZALO_ACCOUNT",
   },
   {
     key: "tiktok",
     label: "TikTok Shop",
-    icon: "/icons/tiktok.svg",
+    icon: PLATFORM_ICON_SRC.tiktok,
     color: "#64748b",
-    accountTypes: ["TIKTOK_SHOP"],
     connectAs: "TIKTOK_SHOP",
     comingSoon: true,
   },
   {
     key: "shopee",
     label: "Shopee",
-    icon: "/icons/shopee.svg",
+    icon: PLATFORM_ICON_SRC.shopee,
     color: "#ea580c",
-    accountTypes: ["SHOPEE_SHOP"],
     connectAs: "SHOPEE_SHOP",
     comingSoon: true,
   },
   {
     key: "telegram",
     label: "Telegram",
-    icon: "/icons/telegram.svg",
+    icon: PLATFORM_ICON_SRC.telegram,
     color: "#0ea5e9",
-    accountTypes: ["TELEGRAM_BOT"],
     connectAs: "TELEGRAM_BOT",
   },
   {
     key: "whatsapp",
     label: "WhatsApp",
-    icon: "/icons/whatsapp.svg",
+    icon: PLATFORM_ICON_SRC.whatsapp,
     color: "#16a34a",
-    accountTypes: ["WHATSAPP_BUSINESS"],
     connectAs: "WHATSAPP_BUSINESS",
   },
   {
     key: "website",
     label: "Website",
-    icon: "/icons/website-widget.svg",
+    icon: PLATFORM_ICON_SRC.websiteWidget,
     color: "#7c3aed",
-    accountTypes: ["WEBSITE_WIDGET"],
     connectAs: "WEBSITE_WIDGET",
   },
   {
     key: "api",
     label: "API",
-    icon: "/icons/api-channel.svg",
+    icon: PLATFORM_ICON_SRC.apiChannel,
     color: "#ca8a04",
-    accountTypes: ["API_CHANNEL"],
     connectAs: "API_CHANNEL",
   },
 ];
 
-const BY_TYPE = new Map(
-  CHANNELS.flatMap((c) => c.accountTypes.map((type) => [type, c] as const)),
-);
+const BY_KEY = new Map(CHANNELS.map((c) => [c.key, c] as const));
 
-/** The channel an account type belongs to, e.g. Zalo for ZALO_PAGE. */
+/** The account types a channel's connections can have. */
+export const accountTypesOf = (key: ChannelKey): AccountType[] =>
+  (Object.keys(CHANNEL_OF_TYPE) as AccountType[]).filter(
+    (type) => CHANNEL_OF_TYPE[type] === key,
+  );
+
+/** The channel an account type belongs to, e.g. Zalo for ZALO_PAGE. A type the
+ * client doesn't know yet (an API ahead of the generated client) shows as Zalo,
+ * as PlatformIcon did before the catalog. */
 export const channelOf = (type: AccountType): Channel =>
-  BY_TYPE.get(type) ?? CHANNELS[0]!;
+  BY_KEY.get(CHANNEL_OF_TYPE[type] ?? "zalo")!;

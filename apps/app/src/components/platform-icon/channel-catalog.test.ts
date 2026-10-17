@@ -1,30 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { CHANNELS, channelOf } from "./channel-catalog";
-
-// Every account type the backend can emit (AccountGetDetailResponseDto["type"]).
-const ALL_TYPES = [
-  "FACEBOOK_ACCOUNT",
-  "FACEBOOK_PAGE",
-  "INSTAGRAM_ACCOUNT",
-  "INSTAGRAM_PAGE",
-  "ZALO_ACCOUNT",
-  "ZALO_PAGE",
-  "TIKTOK_SHOP",
-  "SHOPEE_SHOP",
-  "TELEGRAM_BOT",
-  "API_CHANNEL",
-  "WEBSITE_WIDGET",
-  "WHATSAPP_BUSINESS",
-] as const;
+import { accountTypesOf, CHANNELS, channelOf } from "./channel-catalog";
 
 describe("channel catalog", () => {
-  it("puts every account type in exactly one channel", () => {
-    const listed = CHANNELS.flatMap((c) => c.accountTypes);
-    expect([...listed].sort()).toEqual([...ALL_TYPES].sort());
+  it("gives every channel at least one account type", () => {
+    for (const c of CHANNELS)
+      expect(accountTypesOf(c.key).length).toBeGreaterThan(0);
   });
 
   it("connects each channel with one of its own account types", () => {
-    for (const c of CHANNELS) expect(c.accountTypes).toContain(c.connectAs);
+    for (const c of CHANNELS)
+      expect(accountTypesOf(c.key)).toContain(c.connectAs);
+  });
+
+  it("gives each channel its own chart colour", () => {
+    expect(new Set(CHANNELS.map((c) => c.color)).size).toBe(CHANNELS.length);
   });
 
   it("groups a page and an account of the same platform", () => {
