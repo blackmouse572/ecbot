@@ -7,6 +7,9 @@ export type MediaContent = {
     caption?: string;
     /** File only: the name the customer sees on it. */
     name?: string;
+    /** Bytes and MIME type when known, for channel limits (`mediaLimits`). */
+    size?: number;
+    mimeType?: string;
 };
 
 export interface Card {
@@ -48,7 +51,17 @@ export interface AdapterCapabilities {
      */
     typingRefreshMs?: number;
     markRead: boolean;
+    /**
+     * The largest size and the types the channel takes, per media kind.
+     * When set, degrade() sends anything else (a kind left out, or a size or
+     * type it does not know) as its link, so a send never fails on a limit.
+     */
+    mediaLimits?: MediaLimits;
 }
+
+export type MediaLimits = Partial<
+    Record<MediaContent['mediaType'], { maxBytes: number; types: string[] }>
+>;
 
 export function text(s: string): OutboundMessage {
     return { content: { kind: 'text', text: s }, fallbackText: s };
@@ -60,17 +73,35 @@ export interface ReplyMedia {
     kind: 'image' | 'file';
     /** File only: its name, e.g. "Menu Mộc Đà Nẵng.pdf". */
     name?: string;
+    /** Bytes and MIME type, when apps/ai knows them. */
+    size?: number;
+    mimeType?: string;
 }
 
 function media(m: ReplyMedia): OutboundMessage {
+    const known = {
+        ...(m.size !== undefined && { size: m.size }),
+        ...(m.mimeType && { mimeType: m.mimeType }),
+    };
     if (m.kind === 'image') {
         return {
-            content: { kind: 'media', url: m.url, mediaType: 'image' },
+            content: {
+                kind: 'media',
+                url: m.url,
+                mediaType: 'image',
+                ...known,
+            },
             fallbackText: m.url,
         };
     }
     return {
-        content: { kind: 'media', url: m.url, mediaType: 'file', name: m.name },
+        content: {
+            kind: 'media',
+            url: m.url,
+            mediaType: 'file',
+            name: m.name,
+            ...known,
+        },
         // A channel that cannot send files gets the link, under its name.
         fallbackText: m.name ? `${m.name}\n${m.url}` : m.url,
     };

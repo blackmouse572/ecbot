@@ -166,7 +166,7 @@ describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
         expect(options).toEqual({ access: 'PUBLIC' });
         expect(put.mime).toBe('image/png');
         expect(put.key).toMatch(
-            /^knowledge-media\/workspace-1\/kb-1\/[0-9a-f-]{36}-banh-mi-.+\.png$/
+            /^knowledge-media\/workspace-1\/kb-1\/[0-9a-f-]{36}\/banh-mi-.+\.png$/
         );
         expect(knowledgeItemService.create.mock.calls[0][0]).toMatchObject({
             type: 'MEDIA',

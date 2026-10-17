@@ -71,6 +71,28 @@ describe('KnowledgeItemUploadService', () => {
             );
         });
 
+        it.each([
+            // A macOS name (decomposed accents) read by multipart as latin1.
+            [
+                Buffer.from(
+                    'Menu Mộc Đà Nẵng.pdf'.normalize('NFD'),
+                    'utf8'
+                ).toString('latin1'),
+            ],
+            ['Menu Mộc Đà Nẵng.pdf'.normalize('NFD')],
+            ['Menu Mộc Đà Nẵng.pdf'],
+        ])('keeps a Vietnamese name readable (%#)', async name => {
+            const result = await service.createUploadUrl(
+                'ws-1',
+                'kb-1',
+                ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA,
+                name,
+                1000
+            );
+
+            expect(result.fileKey).toMatch(/-menu-moc-da-nang\.pdf$/);
+        });
+
         it('refuses a file type the item cannot take before presigning', async () => {
             await expect(
                 service.createUploadUrl(

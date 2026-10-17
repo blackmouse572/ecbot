@@ -44,6 +44,8 @@ describe('AssistantTranscriptCollector', () => {
                 url: 'https://cdn/menu.pdf',
                 kind: 'file',
                 name: 'Menu.pdf',
+                mimeType: 'application/pdf',
+                size: 1200,
             },
         ]);
         expect(c.shouldPersist()).toBe(true);
