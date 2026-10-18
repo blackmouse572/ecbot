@@ -529,3 +529,24 @@ describe("MessageBubble inbound message kinds", () => {
     ).toBeInTheDocument();
   });
 });
+
+// #257: a website visitor's messages were signed with their raw UUID.
+describe("MessageBubble customer name", () => {
+  it("signs the customer's messages with the name the inbox shows", () => {
+    render(
+      <TooltipProvider>
+        <MessageBubble
+          message={
+            {
+              ...baseMessage,
+              author: { id: "2559b020-b33f", name: "2559b020-b33f" },
+            } as never
+          }
+          senderName="Khách website #2559"
+        />
+      </TooltipProvider>,
+    );
+    expect(screen.getByText("Khách website #2559")).toBeInTheDocument();
+    expect(screen.queryByText("2559b020-b33f")).not.toBeInTheDocument();
+  });
+});

@@ -437,24 +437,11 @@ export class ConversationService implements IConversationService {
     }
 
     mapGet(conversation: ConversationEntity): ConversationGetResponseDto {
-        const dto = plainToInstance(ConversationGetResponseDto, conversation, {
-            excludeExtraneousValues: true,
-        });
-        // Surface customerId via the contactPoint relation. We only read
-        // properties when the reference is initialised — touching `customer`
-        // on an uninitialised proxy throws `ReferenceNotInitializedError`
-        // (e.g. list endpoints that don't populate contactPoint).
+        const dto = this.toDto(conversation);
         // The detail endpoint populates `contactPoint.customer`, so the
-        // detail response surfaces it; list responses leave it undefined.
-        const cp = conversation.contactPoint as any;
-        if (cp && wrap(cp).isInitialized()) {
-            const customer = cp.customer;
-            if (customer) {
-                dto.customerId = wrap(customer).isInitialized()
-                    ? customer.id
-                    : customer.id; // FK proxies still expose `id` safely
-            }
-        }
+        // detail response surfaces customerId; list responses leave it out.
+        const customer = this.loadedCustomer(conversation);
+        if (customer) dto.customerId = customer.id;
         dto.canReact = this.resolveCanReact(conversation);
         return dto;
     }
@@ -464,12 +451,42 @@ export class ConversationService implements IConversationService {
         unreadCounts?: Map<string, number>
     ): ConversationGetResponseDto[] {
         return conversations.map(c => {
-            const dto = plainToInstance(ConversationGetResponseDto, c, {
-                excludeExtraneousValues: true,
-            });
+            const dto = this.toDto(c);
             dto.unreadCount = unreadCounts?.get(c.id) ?? 0;
             return dto;
         });
+    }
+
+    /**
+     * The sender's name is the platform profile's. A channel with no profile
+     * (the website widget's anonymous visitors) falls back to the customer's
+     * own name once someone has set it, rather than leaving the inbox with a
+     * raw id (#257).
+     */
+    private toDto(
+        conversation: ConversationEntity
+    ): ConversationGetResponseDto {
+        const dto = plainToInstance(ConversationGetResponseDto, conversation, {
+            excludeExtraneousValues: true,
+        });
+        dto.senderName ||= this.loadedCustomer(conversation)?.name ?? undefined;
+        return dto;
+    }
+
+    /**
+     * The customer behind the conversation, when the query loaded it. Touching
+     * properties of an uninitialised proxy throws
+     * `ReferenceNotInitializedError`, so each hop is checked first.
+     */
+    private loadedCustomer(
+        conversation: ConversationEntity
+    ): { id: string; name?: string | null } | undefined {
+        const cp = conversation.contactPoint as any;
+        if (!cp || !wrap(cp).isInitialized()) return undefined;
+        const customer = cp.customer;
+        if (!customer) return undefined;
+        // An FK proxy still exposes `id` safely; only the name needs loading.
+        return wrap(customer).isInitialized() ? customer : { id: customer.id };
     }
 
     async markConversationRead(

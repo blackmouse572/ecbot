@@ -54,7 +54,13 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
         };
 
         return this.find(filter as any, {
-            populate: ['chatbot', 'account'] as any,
+            // The customer names a sender the platform gave no name (#257).
+            populate: [
+                'chatbot',
+                'account',
+                'contactPoint',
+                'contactPoint.customer',
+            ] as any,
             ...withLastMessageOrder(options),
         });
     }

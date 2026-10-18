@@ -3526,7 +3526,10 @@
       "required": "Please complete the verification first.",
       "failed": "Verification failed. Reload the page and try again."
     },
-    "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>"
+    "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>",
+    "staffNotice": "A staff member has joined and is chatting with you. <privacy>Privacy Policy</privacy>",
+    "staff": "Staff",
+    "visitorName": "Website visitor #{{suffix}}"
   },
   "editor": {
     "toolbar": {

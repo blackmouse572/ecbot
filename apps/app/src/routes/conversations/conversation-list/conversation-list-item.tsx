@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ConversationGetResponseDto } from "@/hooks/api/conversations";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
+import { senderLabel } from "../sender-label";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { StatusPill } from "../components/status-pill";
 import { HANDOFF_REASON_CODES } from "../constants";
@@ -50,7 +51,7 @@ export const ConversationListItem = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { workspaceSlug } = useWorkspaceParams();
-  const senderLabel = (conversation as A).senderName ?? conversation.senderId;
+  const senderName = senderLabel(conversation as A, t);
   const senderAvatar = (conversation as A).senderAvatar as string | undefined;
   const account = conversation.account as A;
   const accountName = account?.name ?? account?.externalId ?? "";
@@ -85,7 +86,7 @@ export const ConversationListItem = ({
           variant="rounded"
           size="small"
           src={senderAvatar ?? undefined}
-          fallback={fallbackInitials(senderLabel)}
+          fallback={fallbackInitials(senderName)}
         />
         {hasNewHandoff && (
           <span className="bg-ui-tag-orange-bg ring-ui-bg-subtle absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full ring-2" />
@@ -104,7 +105,7 @@ export const ConversationListItem = ({
             leading="compact"
             className="truncate flex items-center gap-x-1"
           >
-            {senderLabel}
+            {senderName}
             {hasMergeSuggestion && (
               <Tooltip
                 content={t("conversations.list.row.mergeSuggestionBadge")}
