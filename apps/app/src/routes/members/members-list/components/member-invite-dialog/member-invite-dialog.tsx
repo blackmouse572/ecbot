@@ -9,7 +9,7 @@ import {
 import { IconClipboard, IconClipboardCheckFilled } from "@tabler/icons-react";
 import { t } from "i18next";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCopyToClipboard, useDebounceValue } from "usehooks-ts";
 import { MemberInvitableList } from "./member-invitable-list";
 import { MemberInvitedList } from "./member-invited-list";
@@ -28,6 +28,27 @@ export const MemberInviteDialog = (
 
   const isOpen = props.open === true;
   const invitationCode = workspace?.invitationCode;
+
+  const { onOpenChange } = props;
+
+  // Prompt is an alert dialog, which ignores outside taps, so close it ourselves.
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (
+        target &&
+        !target.closest('[role="alertdialog"], [data-sonner-toast]')
+      ) {
+        onOpenChange?.(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () =>
+      document.removeEventListener("pointerdown", closeOnOutsidePress);
+  }, [isOpen, onOpenChange]);
 
   const copyInvitationCode = () => {
     if (!invitationCode) {
