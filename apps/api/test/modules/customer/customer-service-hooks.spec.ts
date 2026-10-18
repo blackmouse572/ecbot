@@ -140,5 +140,18 @@ describe('CustomerService — _onContactFieldChanged hook (#174)', () => {
 
             expect(hookSpy).not.toHaveBeenCalled();
         });
+
+        it('writes only the fields given, so a phone-only call keeps name, email and language', async () => {
+            await service.updateProfileFromSystemTool('cust-1', {
+                name: undefined,
+                phone: '0901234567',
+                email: undefined,
+                language: undefined,
+            });
+
+            const [, patch] = mockCustomerRepository.updateEntity.mock.calls[0];
+            expect(Object.keys(patch)).toEqual(['phone']);
+            expect(patch.phone).toBe('0901234567');
+        });
     });
 });
