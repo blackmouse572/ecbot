@@ -72,4 +72,41 @@ describe("ProtectedRoute", () => {
     expect(screen.getByText("onboard")).toBeInTheDocument();
     expect(screen.getByText("impersonation-banner")).toBeInTheDocument();
   });
+
+  it.each([
+    "/settings/profile",
+    "/settings/change-password",
+    "/settings/sessions",
+    "/settings/preferences",
+  ])("lets a user with no workspace open %s", (path) => {
+    authToken.current = "token";
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/onboard" element={<p>onboard</p>} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/settings/*" element={<p>settings</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("settings")).toBeInTheDocument();
+  });
+
+  it("still sends a user with no workspace from workspace settings to onboard", () => {
+    authToken.current = "token";
+    render(
+      <MemoryRouter initialEntries={["/settings/subscription"]}>
+        <Routes>
+          <Route path="/onboard" element={<p>onboard</p>} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/settings/*" element={<p>settings</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("onboard")).toBeInTheDocument();
+  });
 });
