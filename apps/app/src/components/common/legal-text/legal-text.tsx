@@ -8,6 +8,7 @@ type LegalTextProps = {
     | "app.auth.register.fields.acceptTerms"
     | "accounts.link.acceptTerms"
     | "widget.aiNotice"
+    | "widget.staffNotice"
     | "termsPrompt.description";
   /** Overrides the Privacy Policy link, e.g. with a business's own policy. */
   privacyUrl?: string;

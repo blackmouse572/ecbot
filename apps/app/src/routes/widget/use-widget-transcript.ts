@@ -32,6 +32,9 @@ type WidgetMessage = {
  *    already on screen from their own stream, and appending them again would
  *    show every answer twice.
  *
+ * The poll also says whether staff have taken over, so the widget stops
+ * telling the visitor an AI is answering.
+ *
  * Polls only while the window is open; the launcher posts `eccho:opened` /
  * `eccho:closed`, and a hidden iframe should not be polling at all.
  */
@@ -58,18 +61,21 @@ export function useWidgetTranscript({
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  const { data } = useQuery({
+  const { data: poll } = useQuery({
     queryKey: ["widget-messages", widgetKey, visitorId],
     queryFn: async () => {
       const res = await widgetPublicControllerMessagesV1({
         path: { key: widgetKey! },
         query: { visitorId, after: cursorRef.current },
       });
-      const rows =
-        (res.data as unknown as { data: WidgetMessage[] }).data ?? [];
+      const body = res.data as unknown as {
+        data?: WidgetMessage[];
+        _metadata?: { staffActive?: boolean };
+      };
+      const rows = body.data ?? [];
       // Advance the cursor so the next poll only asks for what is new.
       if (rows.length) cursorRef.current = rows[rows.length - 1].id;
-      return rows;
+      return { rows, staffActive: body._metadata?.staffActive === true };
     },
     enabled: !!widgetKey && !!visitorId,
     // The first fetch is the history seed and must happen even while closed —
@@ -78,6 +84,8 @@ export function useWidgetTranscript({
     refetchIntervalInBackground: false,
     retry: false,
   });
+
+  const data = poll?.rows;
 
   useEffect(() => {
     if (!data) return;
@@ -109,6 +117,8 @@ export function useWidgetTranscript({
       );
     }
   }, [data, isOpen, setMessages]);
+
+  return { staffActive: poll?.staffActive ?? false };
 }
 
 /** A persisted row as a chat message — images and files the bot sent come
@@ -133,5 +143,9 @@ export function toUiMessage(message: WidgetMessage): UIMessage {
     id: message.id,
     role: message.authorType === "USER" ? "user" : "assistant",
     parts: message.text || !files.length ? [text, ...files] : files,
+    // A staff reply shares the assistant side but is drawn apart (#257).
+    ...(message.authorType === "OPERATOR" && {
+      metadata: { authorType: "OPERATOR" },
+    }),
   };
 }

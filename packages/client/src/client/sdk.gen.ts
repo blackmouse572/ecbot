@@ -460,7 +460,7 @@ export const widgetPublicControllerMetaV1 = <ThrowOnError extends boolean = fals
 /**
  * poll for messages after a cursor
  *
- * How a visitor receives messages produced outside their own request — an operator reply during handoff, or a follow-up. Polled while the chat window is open.
+ * How a visitor receives messages produced outside their own request — an operator reply during handoff, or a follow-up. Polled while the chat window is open. `authorType` tells a staff reply (`OPERATOR`) from the agent (`BOT`), and `_metadata.staffActive` is true while staff have taken over the conversation.
  */
 export const widgetPublicControllerMessagesV1 = <ThrowOnError extends boolean = false>(options: Options<WidgetPublicControllerMessagesV1Data, ThrowOnError>): RequestResult<WidgetPublicControllerMessagesV1Responses, WidgetPublicControllerMessagesV1Errors, ThrowOnError> => (options.client ?? client).get<WidgetPublicControllerMessagesV1Responses, WidgetPublicControllerMessagesV1Errors, ThrowOnError>({
     responseType: 'json',
