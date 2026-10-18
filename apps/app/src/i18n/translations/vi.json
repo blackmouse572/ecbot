@@ -629,7 +629,7 @@
     "unlink": {
       "confirm": {
         "title": "Hủy liên kết tài khoản",
-        "description": "Bạn có chắc chắn muốn hủy liên kết tài khoản này không? Hành động này không thể hoàn tác (và hơi buồn). 😢",
+        "description": "Bạn có chắc muốn hủy liên kết tài khoản này? Hành động này không thể hoàn tác.",
         "confirmButton": "Hủy liên kết"
       },
       "success": "Đã hủy liên kết tài khoản thành công! 👋",
@@ -637,9 +637,9 @@
     },
     "link": {
       "title": "Liên kết tài khoản",
-      "description": "Kết nối với tài khoản và trang Facebook của bạn, chọn các trang bạn muốn quản lý. Dễ như ăn bánh! 🍰",
+      "description": "Kết nối tài khoản và trang Facebook của bạn, rồi chọn các trang muốn quản lý.",
       "acceptTerms": "Khi liên kết tài khoản, bạn đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy> của chúng tôi.",
-      "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}} (Đừng lo, chúng ta sẽ sửa nó!)",
+      "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}}",
       "invalidState": "Không thể xác minh yêu cầu liên kết này. Vui lòng thử liên kết tài khoản lại nhé!",
       "success": {
         "title": "Liên kết tài khoản thành công! 🎊",
@@ -649,11 +649,11 @@
     },
     "create": {
       "title": "Tạo tài khoản mới",
-      "description": "Điền thông tin để tạo tài khoản mới (chúng tôi sẽ không phán xét)",
+      "description": "Tạo tài khoản mới",
       "fields": {
         "link": "Liên kết"
       },
-      "success": "Tài khoản của bạn đã được tạo thành công! Chào mừng đến với gia đình! 🎉",
+      "success": "Đã thêm tài khoản, vui lòng chờ tài khoản được đồng bộ.",
       "steps": {
         "platform": "Chọn nền tảng",
         "connect": "Kết nối",
@@ -1155,7 +1155,7 @@
         "required": "Vui lòng hoàn tất xác minh trước.",
         "failed": "Xác minh thất bại. Tải lại trang và thử lại."
       },
-      "poweredBy": "Powered by eccho"
+      "poweredBy": "Vận hành bởi Ecbot"
     },
     "list": {
       "noRecordsTitle": "Chưa có agent nào",

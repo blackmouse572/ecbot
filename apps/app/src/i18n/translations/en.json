@@ -1181,7 +1181,7 @@
         "required": "Please complete the verification first.",
         "failed": "Verification failed. Reload the page and try again."
       },
-      "poweredBy": "Powered by eccho"
+      "poweredBy": "Powered by Ecbot"
     },
     "list": {
       "noRecordsTitle": "No agents yet",

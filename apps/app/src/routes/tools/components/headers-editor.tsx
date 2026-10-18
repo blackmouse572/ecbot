@@ -219,7 +219,7 @@ export const HeadersEditor: FC<HeadersEditorProps> = ({
                     onChange={(e) =>
                       handleUpdateRow(index, { value: e.target.value })
                     }
-                    placeholder="eccho"
+                    placeholder="ecbot"
                   />
                 </div>
                 <div className="col-span-1 flex justify-end">
@@ -257,7 +257,7 @@ export const HeadersEditor: FC<HeadersEditorProps> = ({
             className="font-mono text-xs"
             value={jsonText}
             onChange={(e) => handleJsonChange(e.target.value)}
-            placeholder={'{\n  "X-Source": "eccho"\n}'}
+            placeholder={'{\n  "X-Source": "ecbot"\n}'}
           />
           {jsonError && (
             <Text size="small" className="text-ui-fg-error">
