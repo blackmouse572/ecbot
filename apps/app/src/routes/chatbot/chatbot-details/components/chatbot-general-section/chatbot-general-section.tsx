@@ -7,7 +7,7 @@ import { ChatbotActions } from "@/routes/chatbot/chatbot-list/components/chatbot
 import { ChatbotNameCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-name-cell";
 import { ChatbotStatusCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-status-cell";
 import { ChatbotTypeCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-type-cell";
-import { CHATBOT_LANGUAGES } from "@/routes/chatbot/constants";
+import { languageName } from "@/libs/language-name";
 import { useUISound } from "@/modules/sound";
 import { Container, Switch, Text } from "@medusajs/ui";
 import { SectionRow } from "@repo/ui/common-components";
@@ -19,12 +19,10 @@ type ChatbotGeneralSectionProps = {
   item: ChatbotGetDetailResponseDto;
 };
 
-const languageLabel = (code: string) =>
-  CHATBOT_LANGUAGES[code as keyof typeof CHATBOT_LANGUAGES] ?? code;
-
 /** The page title card: who the agent is, whether it runs, where it answers. */
 export const ChatbotGeneralSection = ({ item }: ChatbotGeneralSectionProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageLabel = (code: string) => languageName(code, i18n.language);
   const { getFullDate } = useDate();
   const toggle = useToggleChatbotActivate();
   const playSound = useUISound();

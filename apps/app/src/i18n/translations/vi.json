@@ -362,6 +362,9 @@
           "resend": "Gửi lại email",
           "resendIn": "Gửi lại sau {{seconds}} giây",
           "resent": "Chúng tôi đã gửi lại email."
+        },
+        "errors": {
+          "invalidEmail": "Hãy nhập một địa chỉ email hợp lệ."
         }
       },
       "resetPassword": {
@@ -728,7 +731,7 @@
           "cta": "Kết nối Bot"
         },
         "whatsapp": {
-          "description": "Dán phone number ID của WhatsApp Business và một access token System User vĩnh viễn từ Meta.",
+          "description": "Dán phone number ID của WhatsApp Business và một access token system user vĩnh viễn từ Meta.",
           "phoneNumberIdLabel": "Phone number ID",
           "phoneNumberIdInvalid": "Phone number ID chỉ được chứa chữ số",
           "tokenLabel": "Access token",
@@ -1073,11 +1076,11 @@
       "timezoneDefault": "Mặc định (múi giờ hệ thống)"
     },
     "chat": {
-      "heading": "Chat Thử",
+      "heading": "Chat thử",
       "refreshHint": "Làm mới sẽ xóa chat. Nhấn Xóa để bắt đầu lại.",
       "liveOnlyNotice": "Chat thử: nhắc hẹn và chuyển cho nhân viên chỉ hoạt động trên kênh thật.",
       "clear": "Xóa",
-      "restart": "Bắt Đầu Lại",
+      "restart": "Bắt đầu lại",
       "inputPlaceholder": "Nhập tin nhắn của bạn...",
       "thinking": "Đang tạo phản hồi...",
       "trace": {
@@ -1165,9 +1168,9 @@
       },
       "delete": {
         "confirm": {
-          "title": "Xóa Agent",
+          "title": "Xóa agent",
           "description": "Bạn có chắc chắn muốn xóa \"{{name}}\" không? Hành động này không thể hoàn tác.",
-          "confirmButton": "Xóa Agent"
+          "confirmButton": "Xóa agent"
         },
         "success": "Đã xóa agent thành công! 👋",
         "error": "Không thể xóa agent. Hãy thử lại nhé!"
@@ -1328,7 +1331,7 @@
       }
     },
     "clone": {
-      "title": "Sao chép Agent",
+      "title": "Sao chép agent",
       "optionsLabel": "Cũng sao chép:",
       "cloneTools": "Cấu hình công cụ",
       "cloneKnowledgeItems": "Kiến thức",
@@ -2112,7 +2115,7 @@
     },
     "summary": {
       "title": "Vai trò",
-      "roleId": "ID Vai trò",
+      "roleId": "ID vai trò",
       "type": "Loại",
       "modules": "Mô-đun",
       "noModules": "Không có module nào được gán",
@@ -2408,7 +2411,8 @@
       "error": "Không thể cập nhật {{count}} mục."
     },
     "loading": "Đang tải...",
-    "loadFailed": "Không tải được dữ liệu. Vui lòng thử lại sau."
+    "loadFailed": "Không tải được dữ liệu. Vui lòng thử lại sau.",
+    "typeToConfirm": "Nhập {val} để xác nhận:"
   },
   "actions": {
     "edit": "Chỉnh sửa",
@@ -2642,9 +2646,9 @@
       "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",
       "noTokens": "Workspace đã hết token AI. Hãy nạp thêm hoặc gia hạn gói, rồi xử lý lại mục này."
     },
-    "create_title": "Tạo Mục Kiến Thức",
+    "create_title": "Tạo mục kiến thức",
     "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",
-    "select_type_label": "Chọn Loại",
+    "select_type_label": "Chọn loại",
     "create_button": "Tạo",
     "cancel": "Hủy",
     "title": "Tiêu đề",
@@ -2674,7 +2678,7 @@
     "created_at": "Tạo vào",
     "updated_at": "Cập nhật vào",
     "details": "Chi tiết",
-    "base_id": "ID Cơ sở Kiến thức",
+    "base_id": "ID cơ sở kiến thức",
     "timestamps": "Mốc thời gian",
     "create_success": "Mục kiến thức đã được tạo thành công",
     "create_error": "Không thể tạo mục kiến thức",
@@ -3306,7 +3310,7 @@
       "schemaRowDescriptionRequired": "Mô tả thuộc tính là bắt buộc."
     },
     "test": {
-      "title": "Kiểm tra Endpoint",
+      "title": "Kiểm tra endpoint",
       "argsLabel": "Tham số yêu cầu (JSON)",
       "runButton": "Chạy thử",
       "invalidJson": "JSON không hợp lệ",
@@ -3451,7 +3455,7 @@
       "actionsEmptyTitle": "Chưa có action nào"
     },
     "addDrawer": {
-      "title": "Thêm Công Cụ",
+      "title": "Thêm công cụ",
       "selectLabel": "Chọn một công cụ",
       "actionsTitle": "Action",
       "enableSuccess": "Đã thêm công cụ.",

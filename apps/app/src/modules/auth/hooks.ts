@@ -106,6 +106,7 @@ export const useRefreshTokenEffect = () => {
           title: t("app.auth.login.errors.banned.title"),
           description: t("app.auth.login.errors.banned.description"),
           confirmText: t("app.auth.login.actions.ok"),
+          cancelText: t("actions.cancel"),
         });
       }
       // logout() navigates to "/login" itself once its server round-trip

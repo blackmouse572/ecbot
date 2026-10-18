@@ -22,6 +22,8 @@ export const ProfileDeleteSection = ({ user }: ProfileGeneralSectionProps) => {
       variant: "danger",
       confirmText: t("profile.deleteProfile.confirm.confirmButton"),
       verificationText: user.email,
+      verificationInstruction: t("general.typeToConfirm"),
+      cancelText: t("actions.cancel"),
     }).then((confirmed) => {
       if (!confirmed) return;
       return toast.promise(deleteProfile, {

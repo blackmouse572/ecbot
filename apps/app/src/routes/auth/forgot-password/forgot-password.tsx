@@ -107,7 +107,11 @@ function ForgotPasswordPage() {
                   <Input
                     autoComplete="email"
                     autoFocus
-                    errorMessage={fieldState.error?.message}
+                    errorMessage={
+                      fieldState.error?.message === "invalidEmail"
+                        ? t("errors.invalidEmail")
+                        : fieldState.error?.message
+                    }
                     {...field}
                     className="bg-ui-bg-field-component"
                     placeholder={t("fields.email")}

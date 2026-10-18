@@ -362,6 +362,9 @@
           "resend": "Resend email",
           "resendIn": "Resend in {{seconds}}s",
           "resent": "We sent the email again."
+        },
+        "errors": {
+          "invalidEmail": "Enter a valid email address."
         }
       },
       "resetPassword": {
@@ -2367,7 +2370,8 @@
       "error": "Could not update {{count}} item(s)."
     },
     "loading": "Loading...",
-    "loadFailed": "Couldn't load this. Try again later."
+    "loadFailed": "Couldn't load this. Try again later.",
+    "typeToConfirm": "Type {val} to confirm:"
   },
   "fields": {
     "name": "Name",
