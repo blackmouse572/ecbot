@@ -14,6 +14,7 @@ import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
 import { MESSAGE_TYPING_REFRESH_MS } from '../constants/message-debounce.constant';
 import { handoffReplyText } from '../utils/handoff-reply.util';
+import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { text as toText } from '../interfaces/message-model';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
 import { TurnContextService } from './turn-context.service';
@@ -172,13 +173,13 @@ export class ReplyGenerationService {
                 this.logger.log(
                     `Token budget blocked conversation ${conversationId}: ${budget.reason}`
                 );
-                return fallbackOutcome(
-                    chatbot,
-                    await this.sendFallback(
+                return delivered(
+                    await this.sendBotText(
                         chatbot,
                         account,
                         senderId,
-                        conversationId
+                        conversationId,
+                        fallbackReplyText(chatbot)
                     )
                 );
             }

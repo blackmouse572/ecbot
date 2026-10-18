@@ -32,6 +32,7 @@ import {
 import { TurnContextService } from './turn-context.service';
 import { HandoffIntentService } from './handoff-intent.service';
 import { handoffReplyText } from '../utils/handoff-reply.util';
+import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { shouldHandOff } from '../utils/handoff-decision.util';
 import type { ReplyMedia } from '../interfaces/message-model';
 
@@ -168,7 +169,9 @@ export class WidgetChatService {
             chatbot
         )) ?? { allowed: true };
         if (!budget.allowed) {
-            this.streamFallback(res, chatbot.fallbackMessage);
+            const reply = fallbackReplyText(chatbot);
+            await this.persistReply(conversation.id, reply, []);
+            this.streamFallback(res, reply);
             return;
         }
 

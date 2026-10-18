@@ -66,9 +66,22 @@ describe('ReplyGenerationService.run', () => {
     function serviceWith(
         context: object,
         meter?: object,
-        options: { capabilities?: object; typingIndicator?: boolean } = {}
+        options: {
+            capabilities?: object;
+            typingIndicator?: boolean;
+            primaryLanguage?: string;
+        } = {}
     ) {
         const streamChat = jest.fn().mockRejectedValue(new Error('stop'));
+        const sendMessage = jest
+            .fn()
+            .mockResolvedValue({ externalId: 'ext-1' });
+        const messageRepository = {
+            findLatestInbound: jest.fn().mockResolvedValue({ id: 'm-1' }),
+            insertPendingOutbound: jest.fn().mockResolvedValue(undefined),
+            markOutboundSent: jest.fn().mockResolvedValue(undefined),
+            markOutboundFailed: jest.fn().mockResolvedValue(undefined),
+        };
         const turnContext = { build: jest.fn().mockResolvedValue(context) };
         const svc = new ReplyGenerationService(
             {
@@ -79,17 +92,17 @@ describe('ReplyGenerationService.run', () => {
                         id: 'bot-1',
                         workspace: { id: 'ws-1' },
                         typingIndicator: options.typingIndicator,
+                        primaryLanguage: options.primaryLanguage,
                     },
                 }),
             } as any,
             { streamChat } as any,
-            {
-                findLatestInbound: jest.fn().mockResolvedValue({ id: 'm-1' }),
-            } as any,
+            messageRepository as any,
             {
                 get: () => ({
                     capabilities: options.capabilities ?? { typing: true },
                     startTyping: jest.fn().mockResolvedValue(undefined),
+                    sendMessage,
                 }),
             } as any,
             { current: jest.fn().mockResolvedValue(1) } as any,
@@ -115,7 +128,7 @@ describe('ReplyGenerationService.run', () => {
                 contactPointId: 'cp',
                 texts: ['giá bao nhiêu?'],
             });
-        return { run, streamChat, turnContext };
+        return { run, streamChat, turnContext, sendMessage };
     }
 
     // The edge logs a non-2xx /poc/reply; a swallowed stream error used to
@@ -129,25 +142,30 @@ describe('ReplyGenerationService.run', () => {
         });
     });
 
-    // Out of quota with no fallback line is silence the owner chose, not a
-    // failure: a 502 there made the edge log errors for it.
-    it('reports an exhausted budget with no fallback message as skipped', async () => {
+    // Agents made in the builder have no fallback line: out of tokens, the
+    // customer still gets a reply, in the chatbot's language.
+    it('sends the default reply in the chatbot language when the budget is spent and no fallback is set', async () => {
         const meter = {
             check: jest
                 .fn()
                 .mockResolvedValue({ allowed: false, reason: 'quota' }),
             record: jest.fn(),
         };
-        const { run, streamChat } = serviceWith(
+        const { run, streamChat, sendMessage } = serviceWith(
             { history: [], message: 'x' },
-            meter
+            meter,
+            { primaryLanguage: 'vi' }
         );
 
-        await expect(run()).resolves.toEqual({
-            status: 'skipped',
-            reason: 'no_fallback_configured',
-        });
+        await expect(run()).resolves.toEqual({ status: 'delivered' });
         expect(streamChat).not.toHaveBeenCalled();
+        expect(sendMessage).toHaveBeenCalledWith(
+            expect.anything(),
+            's',
+            expect.objectContaining({
+                fallbackText: expect.stringContaining('Xin lỗi'),
+            })
+        );
     });
 
     // Telegram drops a chat action after 5s; the 9s default left the

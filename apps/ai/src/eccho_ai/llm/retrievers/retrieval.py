@@ -375,17 +375,25 @@ class RAGRetrievalService:
         # use). When disabled, fall back to the hybrid similarity/FTS score so the
         # service stays light enough for small instances. See RAG_RERANK_ENABLED.
         if not AppVars.RAG_RERANK_ENABLED:
-            for chunk in chunks:
-                chunk.rerank_score = max(chunk.similarity_score, chunk.fts_score)
-            return sorted(chunks, key=lambda chunk: chunk.rerank_score, reverse=True)
+            return self._hybrid_rank(chunks)
 
-        raw_scores = await asyncio.to_thread(
-            _score_with_cross_encoder,
-            model_name=AppVars.RAG_RERANK_CROSS_ENCODER_MODEL,
-            query=query,
-            chunks=chunks,
-            batch_size=AppVars.RAG_RERANK_BATCH_SIZE,
-        )
+        try:
+            raw_scores = await asyncio.to_thread(
+                _score_with_cross_encoder,
+                model_name=AppVars.RAG_RERANK_CROSS_ENCODER_MODEL,
+                query=query,
+                chunks=chunks,
+                batch_size=AppVars.RAG_RERANK_BATCH_SIZE,
+            )
+        except Exception as exc:  # noqa: BLE001 (un-reranked results beat none)
+            # e.g. the model download returns 403: answer from the hybrid
+            # ranking rather than dropping every result.
+            logger.warning(
+                "rerank_failed",
+                error=str(exc),
+                model=AppVars.RAG_RERANK_CROSS_ENCODER_MODEL,
+            )
+            return self._hybrid_rank(chunks)
 
         for chunk, raw_score in zip(chunks, raw_scores):
             chunk.rerank_score = _sigmoid(raw_score)
@@ -393,6 +401,12 @@ class RAGRetrievalService:
                 "model": AppVars.RAG_RERANK_CROSS_ENCODER_MODEL,
                 "raw_score": raw_score,
             }
+        return sorted(chunks, key=lambda chunk: chunk.rerank_score, reverse=True)
+
+    @staticmethod
+    def _hybrid_rank(chunks: list[RetrievedChunk]) -> list[RetrievedChunk]:
+        for chunk in chunks:
+            chunk.rerank_score = max(chunk.similarity_score, chunk.fts_score)
         return sorted(chunks, key=lambda chunk: chunk.rerank_score, reverse=True)
 
     @staticmethod

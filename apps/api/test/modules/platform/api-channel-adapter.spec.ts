@@ -32,6 +32,7 @@ function makeAdapter() {
         sign: (secret: string, payload: string) =>
             createHmac('sha256', secret).update(payload).digest('hex'),
         deliver: jest.fn(),
+        markFailed: jest.fn().mockResolvedValue(undefined),
     };
     const adapter = new ApiChannelPlatformAdapter(
         accountService as any,
@@ -216,6 +217,52 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
             errorSpy.mockRestore();
         });
 
+        // The reply was marked SENT when the first attempt was handed off;
+        // once every attempt has failed it must read as failed in the inbox.
+        it('marks the outbound message failed after the last attempt fails', async () => {
+            const errorSpy = jest
+                .spyOn(Logger.prototype, 'error')
+                .mockImplementation(() => undefined);
+            const { adapter, callbackService, accountService } =
+                makeAdapter();
+            const account = makeAccount();
+            accountService.findOne.mockResolvedValue(account);
+            (callbackService.deliver as jest.Mock).mockRejectedValue(
+                new Error('receiver down')
+            );
+
+            const { externalId } = await adapter.sendMessage(
+                account,
+                'user-9',
+                textMsg('hi')
+            );
+            await jest.advanceTimersByTimeAsync(40_000);
+            expect(callbackService.markFailed).not.toHaveBeenCalled();
+
+            await jest.advanceTimersByTimeAsync(35_000);
+            expect(callbackService.markFailed).toHaveBeenCalledTimes(1);
+            expect(callbackService.markFailed).toHaveBeenCalledWith(
+                externalId
+            );
+
+            errorSpy.mockRestore();
+        });
+
+        it('does not mark the message failed when a retry succeeds', async () => {
+            const { adapter, callbackService, accountService } =
+                makeAdapter();
+            const account = makeAccount();
+            accountService.findOne.mockResolvedValue(account);
+            (callbackService.deliver as jest.Mock)
+                .mockRejectedValueOnce(new Error('receiver down'))
+                .mockResolvedValueOnce(undefined);
+
+            await adapter.sendMessage(account, 'user-9', textMsg('hi'));
+            await jest.advanceTimersByTimeAsync(75_000);
+
+            expect(callbackService.markFailed).not.toHaveBeenCalled();
+        });
+
         it('does not schedule a retry when the first attempt is blocked by the egress guard', async () => {
             const { adapter, callbackService, accountService } =
                 makeAdapter();
@@ -253,6 +300,7 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
             await jest.advanceTimersByTimeAsync(75_000);
 
             expect(callbackService.deliver).toHaveBeenCalledTimes(2);
+            expect(callbackService.markFailed).toHaveBeenCalledTimes(1);
             errorSpy.mockRestore();
         });
     });
