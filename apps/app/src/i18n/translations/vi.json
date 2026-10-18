@@ -208,7 +208,7 @@
         "home": "Trang chủ"
       },
       "accounts": {
-        "header": "Tài khoản"
+        "header": "Kênh"
       },
       "dashboard": {
         "header": "Bảng điều khiển",
@@ -624,7 +624,7 @@
         "viewAddedUser": "Xem người dùng đã thêm",
         "unlink": "Hủy liên kết tài khoản"
       },
-      "noRecordsTitle": "Chưa liên kết tài khoản nào"
+      "noRecordsTitle": "Chưa kết nối kênh nào"
     },
     "unlink": {
       "confirm": {
@@ -2440,7 +2440,8 @@
     "skip": "Bỏ qua",
     "preview": "Xem trước",
     "createNew": "Tạo mới",
-    "unlink": "Bỏ liên kết"
+    "unlink": "Bỏ liên kết",
+    "connectChannel": "Kết nối kênh"
   },
   "fields": {
     "name": "Tên",

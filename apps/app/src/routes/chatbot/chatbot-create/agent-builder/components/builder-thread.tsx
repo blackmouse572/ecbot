@@ -6,6 +6,7 @@ import {
 } from "@repo/ui/common-components";
 import { motion, useReducedMotion } from "motion/react";
 import { Fragment } from "react";
+import { ConnectChannelButton } from "@/components/channel-connect/connect-channel-button";
 import { useTranslation } from "react-i18next";
 import { activationAnchor, asksActivation, awaitsActivation, currentStep, isComplete, steps } from "../builder-state";
 import type { AgentBuilderController } from "../use-agent-builder";
@@ -80,7 +81,10 @@ export function BuilderThread(builder: AgentBuilderController) {
       style={{ transformOrigin: "left bottom" }}
     >
       <Message from="assistant">
-        <MessageContent>{t("agentBuilder.ui.finished")}</MessageContent>
+        <MessageContent className="flex flex-col items-start gap-3">
+          {t("agentBuilder.ui.finished")}
+          {state.linkedAccounts.length === 0 && <ConnectChannelButton />}
+        </MessageContent>
       </Message>
     </motion.div>
   );

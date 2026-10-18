@@ -79,6 +79,7 @@ interface AccountListProps {
 export function AccountList({ item, accounts }: AccountListProps) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const { workspaceSlug: slug } = useWorkspaceParams();
   const accountsHref = useLinkedAccountsHref(item.id);
   const prompt = usePrompt();
   const unlink = useUnlinkChatbotAccount(item.id);
@@ -151,8 +152,8 @@ export function AccountList({ item, accounts }: AccountListProps) {
             title={t("chatbot.details.noAccounts")}
             message={t("chatbot.details.noAccountsDescription")}
             action={{
-              onClick: () => setDrawerOpen(true),
-              label: t("actions.linkAccount"),
+              to: `/${slug}/${ROUTES.Accounts}/create`,
+              label: t("actions.connectChannel"),
             }}
             icon={<IconPlugConnected />}
           />

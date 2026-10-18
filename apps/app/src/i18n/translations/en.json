@@ -208,7 +208,7 @@
         "home": "Home"
       },
       "accounts": {
-        "header": "Accounts"
+        "header": "Channels"
       },
       "dashboard": {
         "header": "Dashboard",
@@ -597,7 +597,7 @@
         "viewProfile": "View Profile",
         "unlink": "Unlink Account"
       },
-      "noRecordsTitle": "No accounts connected yet"
+      "noRecordsTitle": "No channels connected yet"
     },
     "unlink": {
       "confirm": {
@@ -2328,7 +2328,8 @@
     "skip": "Skip",
     "preview": "Preview",
     "createNew": "Create new",
-    "unlink": "Unlink"
+    "unlink": "Unlink",
+    "connectChannel": "Connect a channel"
   },
   "general": {
     "notSet": "Not set",
