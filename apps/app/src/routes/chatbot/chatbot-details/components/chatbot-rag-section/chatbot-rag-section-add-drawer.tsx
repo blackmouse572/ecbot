@@ -46,6 +46,8 @@ type ChatbotRAGSectionAddDrawerProps = {
 };
 
 const PAGE_SIZE = 10;
+// The app's toasts sit top-right, over this drawer's search box.
+const DRAWER_TOAST = { position: "bottom-left" } as const;
 
 const columnHelper = createDataTableColumnHelper<KnowledgeItemResponseDto>();
 const filterHelper = createDataTableFilterHelper<KnowledgeItemResponseDto>();
@@ -233,6 +235,7 @@ export function ChatbotRAGSectionAddDrawer({
         t("knowledgeBase.link.selectionTruncated", {
           count: KB_BATCH_FILTER_MAX,
         }),
+        DRAWER_TOAST,
       );
     }
     setAllMatching({ filter: filterBody, count });
@@ -249,7 +252,10 @@ export function ChatbotRAGSectionAddDrawer({
 
   const handleAdd = async () => {
     if (selectedCount === 0) {
-      toast.error(t("knowledgeBase.error.selectItem", "Please select an item"));
+      toast.error(
+        t("knowledgeBase.error.selectItem", "Please select an item"),
+        DRAWER_TOAST,
+      );
       return;
     }
 
@@ -264,6 +270,7 @@ export function ChatbotRAGSectionAddDrawer({
     } catch {
       toast.error(
         t("knowledgeBase.error.linkFailed", "Failed to link knowledge item"),
+        DRAWER_TOAST,
       );
     }
   };
