@@ -1,4 +1,4 @@
-import { TooltipProvider } from "@medusajs/ui";
+import { toast, TooltipProvider } from "@medusajs/ui";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -138,6 +138,24 @@ describe("ChatbotRAGSectionAddDrawer multi-select", () => {
     );
 
     expect(kb.link).toHaveBeenCalledWith(["a", "b"]);
+  });
+
+  // The default top-right toast covers the drawer's search box.
+  it("shows its errors away from the drawer's search box", async () => {
+    kb.link.mockRejectedValue(new Error("boom"));
+    const toastError = vi.spyOn(toast, "error");
+    renderDrawer(["c"]);
+
+    const user = userEvent.setup();
+    await user.click(screen.getAllByRole("checkbox")[1]);
+    await user.click(
+      screen.getByRole("button", { name: "knowledgeBase.link.addCount" }),
+    );
+
+    expect(toastError).toHaveBeenCalledWith(expect.any(String), {
+      position: "bottom-left",
+    });
+    toastError.mockRestore();
   });
 
   it("links everything matching the filters in one request, without listing ids", async () => {
