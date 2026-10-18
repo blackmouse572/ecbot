@@ -27,7 +27,12 @@ describe('ConversationRepository list order', () => {
         );
 
         expect(find).toHaveBeenCalledWith(expect.anything(), {
-            populate: ['chatbot', 'account'],
+            populate: [
+                'chatbot',
+                'account',
+                'contactPoint',
+                'contactPoint.customer',
+            ],
             paging: { limit: 50, offset: 0 },
             orderBy: {
                 lastMessageAt: QueryOrder.DESC_NULLS_LAST,

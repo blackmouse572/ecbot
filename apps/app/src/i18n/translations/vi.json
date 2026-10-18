@@ -3577,7 +3577,10 @@
       "required": "Vui lòng hoàn tất xác minh trước.",
       "failed": "Xác minh thất bại. Tải lại trang và thử lại."
     },
-    "aiNotice": "Bạn đang trò chuyện với AI. Tin nhắn của bạn được xử lý để trả lời bạn. <privacy>Chính sách quyền riêng tư</privacy>"
+    "aiNotice": "Bạn đang trò chuyện với AI. Tin nhắn của bạn được xử lý để trả lời bạn. <privacy>Chính sách quyền riêng tư</privacy>",
+    "staffNotice": "Nhân viên đã tham gia và đang trò chuyện với bạn. <privacy>Chính sách quyền riêng tư</privacy>",
+    "staff": "Nhân viên",
+    "visitorName": "Khách website #{{suffix}}"
   },
   "editor": {
     "toolbar": {

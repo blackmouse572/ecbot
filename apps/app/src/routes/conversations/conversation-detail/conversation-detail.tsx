@@ -21,6 +21,7 @@ import {
 } from "@repo/ui/components";
 import { CustomerSidePanel } from "../customer-side-panel";
 import { ConversationDetailSkeleton } from "./conversation-detail-skeleton";
+import { senderLabel } from "../sender-label";
 import { ConversationHeader } from "./conversation-header";
 import { MessageComposer } from "./message-composer";
 import { MessageList } from "./message-list";
@@ -212,6 +213,7 @@ export function ConversationDetail() {
         fetchNextPage={fetchNextPage}
         onRetry={onRetry}
         currentOperatorId={currentOperatorId}
+        senderName={senderLabel(conversation as A, t)}
         canReact={conversation.canReact}
         reactionWindowClosed={reactionWindowClosed}
         onReact={onReact}

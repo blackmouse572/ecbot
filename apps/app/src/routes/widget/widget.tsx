@@ -142,13 +142,8 @@ export function Widget() {
     <div className="bg-ui-bg-base flex h-screen w-screen flex-col">
       <AIChatCard
         heading={data.name}
-        subheading={
-          data.welcomeMessage ? (
-            <Text size="xsmall" className="text-ui-fg-subtle">
-              {data.welcomeMessage}
-            </Text>
-          ) : undefined
-        }
+        // The agent says hello in the conversation itself, not the header.
+        greeting={data.welcomeMessage}
         // The real chatbot id stays server-side — it is only ever resolved from
         // the widget key. The card uses this solely for the tool-invocation
         // query key, which the widget transport disables anyway.
@@ -160,8 +155,11 @@ export function Widget() {
           <>
             {/* Rendered inside AIChatCard's provider — the transcript sync
                 needs the chat context, which the card owns. */}
-            <TranscriptSync widgetKey={key} visitorId={visitorId} />
-            <WidgetAiNotice privacyPolicyUrl={data.privacyPolicyUrl} />
+            <TranscriptSync
+              widgetKey={key}
+              visitorId={visitorId}
+              privacyPolicyUrl={data.privacyPolicyUrl}
+            />
             <AIChatInput />
             <div className="px-4 pb-3 empty:hidden">
               <TurnstileField turnstile={turnstile} />
@@ -174,16 +172,26 @@ export function Widget() {
   );
 }
 
-/** Nothing to draw — it only writes polled messages into the chat context. */
+/**
+ * Writes polled messages into the chat context, and draws the notice of who
+ * is answering, which the same poll keeps current.
+ */
 function TranscriptSync({
   widgetKey,
   visitorId,
+  privacyPolicyUrl,
 }: {
   widgetKey: string | undefined;
   visitorId: string;
+  privacyPolicyUrl?: string;
 }) {
-  useWidgetTranscript({ widgetKey, visitorId });
-  return null;
+  const { staffActive } = useWidgetTranscript({ widgetKey, visitorId });
+  return (
+    <WidgetAiNotice
+      privacyPolicyUrl={privacyPolicyUrl}
+      staffActive={staffActive}
+    />
+  );
 }
 
 type WidgetMeta = {

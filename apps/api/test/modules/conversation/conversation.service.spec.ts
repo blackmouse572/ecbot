@@ -872,6 +872,24 @@ describe('ConversationService', () => {
             const result = service.mapGet(entity as any);
             expect(result).toBeDefined();
         });
+
+        it('names the sender after the customer when the platform gave none', () => {
+            const loaded = <T extends object>(value: T) => ({
+                ...value,
+                isInitialized: () => true,
+            });
+            const result = service.mapGet({
+                id: 'conv-1',
+                senderId: 'visitor-uuid',
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+                fallbackCount: 0,
+                contactPoint: loaded({
+                    customer: loaded({ id: 'cus-1', name: 'Lan' }),
+                }),
+            } as any);
+            expect(result.senderName).toBe('Lan');
+            expect(result.customerId).toBe('cus-1');
+        });
     });
 
     describe('mapList', () => {
@@ -938,6 +956,52 @@ describe('ConversationService', () => {
         it('defaults to 0 when unreadCounts is not provided', () => {
             const dtos = service.mapList([buildConversation('c1')]);
             expect(dtos[0].unreadCount).toBe(0);
+        });
+
+        // A loaded MikroORM reference; plain objects need the helper the
+        // service checks before reading through a relation.
+        const loaded = <T extends object>(value: T) => ({
+            ...value,
+            isInitialized: () => true,
+        });
+
+        // #257: a website visitor has no platform profile, so the inbox
+        // showed the raw visitor UUID. The customer's own name fills in.
+        it("falls back to the customer's name when the sender has none", () => {
+            const dtos = service.mapList([
+                {
+                    ...buildConversation('c1'),
+                    contactPoint: loaded({
+                        customer: loaded({ id: 'cus-1', name: 'Lan' }),
+                    }),
+                },
+            ]);
+            expect(dtos[0].senderName).toBe('Lan');
+        });
+
+        it('keeps the platform name over the customer name', () => {
+            const dtos = service.mapList([
+                {
+                    ...buildConversation('c1'),
+                    senderName: 'Lan Nguyen',
+                    contactPoint: loaded({
+                        customer: loaded({ id: 'cus-1', name: 'Lan' }),
+                    }),
+                },
+            ]);
+            expect(dtos[0].senderName).toBe('Lan Nguyen');
+        });
+
+        it('leaves the name empty when neither has one', () => {
+            const dtos = service.mapList([
+                {
+                    ...buildConversation('c1'),
+                    contactPoint: loaded({
+                        customer: loaded({ id: 'cus-1', name: null }),
+                    }),
+                },
+            ]);
+            expect(dtos[0].senderName).toBeUndefined();
         });
     });
 });

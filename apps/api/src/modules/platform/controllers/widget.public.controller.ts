@@ -211,6 +211,10 @@ export class WidgetPublicController {
         );
 
         return {
+            // Staff have taken over, so the widget stops telling the visitor
+            // an AI is answering (#257). In `_metadata` so the body stays the
+            // message array older widget builds read.
+            _metadata: { staffActive: !conversation.botEnabled },
             data: await Promise.all(
                 messages.map(async m => ({
                     id: m.id,
