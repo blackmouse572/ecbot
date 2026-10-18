@@ -30,6 +30,8 @@ function LoginPage() {
   const { t, i18n } = useTranslation(undefined, {
     keyPrefix: I18N_PREFIX,
   });
+  // Shared labels live outside the login prefix.
+  const { t: tRoot } = useTranslation();
   const locale = i18n.language;
   const [search] = useSearchParams();
   const navigate = useNavigate();
@@ -72,6 +74,7 @@ function LoginPage() {
               title: t("errors.banned.title"),
               description: t("errors.banned.description"),
               confirmText: t("actions.ok"),
+              cancelText: tRoot("actions.cancel"),
             });
             return;
           }

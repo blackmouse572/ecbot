@@ -96,6 +96,8 @@ const RoleActions = ({ item }: { item: RoleListResponseDto }) => {
     const confirmed = await dialog({
       title: t("roles.delete.title"),
       description: t("roles.delete.description"),
+      confirmText: t("actions.delete"),
+      cancelText: t("actions.cancel"),
     });
 
     if (!confirmed) return;

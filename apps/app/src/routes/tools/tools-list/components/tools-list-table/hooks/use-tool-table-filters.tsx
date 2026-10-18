@@ -49,7 +49,7 @@ export function useToolTableFilters(): Filter[] {
         type: "select",
         options: [
           { label: "COMPOSIO", value: "COMPOSIO" },
-          { label: "ECCHO", value: "ECCHO" },
+          { label: "Ecbot", value: "ECCHO" },
           { label: "OPERATOR", value: "OPERATOR" },
         ],
         multiple: false,

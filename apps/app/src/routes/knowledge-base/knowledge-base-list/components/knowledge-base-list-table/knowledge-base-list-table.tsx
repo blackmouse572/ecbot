@@ -259,7 +259,7 @@ const useColumns = (kb?: KnowledgeBaseResponseDto) => {
       }),
       columnHelper.accessor("createdAt", {
         header: t("knowledgeBase.list.columns.created"),
-        cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+        cell: (info) => <DateCell date={info.getValue()} />,
       }),
       columnHelper.accessor("createdBy", {
         header: t("fields.createdBy"),

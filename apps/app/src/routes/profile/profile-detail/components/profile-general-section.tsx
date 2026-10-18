@@ -43,7 +43,7 @@ export const ProfileGeneralSection = ({ user }: ProfileGeneralSectionProps) => {
           {t("fields.name")}
         </Text>
         <Text size="small" leading="compact">
-          {name || "-"} ({username})
+          {username ? `${name || "-"} (${username})` : name || "-"}
         </Text>
       </div>
       <div className="grid grid-cols-2 items-center px-6 py-4">

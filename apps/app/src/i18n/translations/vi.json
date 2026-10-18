@@ -208,7 +208,7 @@
         "home": "Trang chủ"
       },
       "accounts": {
-        "header": "Tài khoản"
+        "header": "Kênh"
       },
       "dashboard": {
         "header": "Bảng điều khiển",
@@ -362,6 +362,9 @@
           "resend": "Gửi lại email",
           "resendIn": "Gửi lại sau {{seconds}} giây",
           "resent": "Chúng tôi đã gửi lại email."
+        },
+        "errors": {
+          "invalidEmail": "Hãy nhập một địa chỉ email hợp lệ."
         }
       },
       "resetPassword": {
@@ -621,12 +624,12 @@
         "viewAddedUser": "Xem người dùng đã thêm",
         "unlink": "Hủy liên kết tài khoản"
       },
-      "noRecordsTitle": "Chưa liên kết tài khoản nào"
+      "noRecordsTitle": "Chưa kết nối kênh nào"
     },
     "unlink": {
       "confirm": {
         "title": "Hủy liên kết tài khoản",
-        "description": "Bạn có chắc chắn muốn hủy liên kết tài khoản này không? Hành động này không thể hoàn tác (và hơi buồn). 😢",
+        "description": "Bạn có chắc muốn hủy liên kết tài khoản này? Hành động này không thể hoàn tác.",
         "confirmButton": "Hủy liên kết"
       },
       "success": "Đã hủy liên kết tài khoản thành công! 👋",
@@ -634,9 +637,9 @@
     },
     "link": {
       "title": "Liên kết tài khoản",
-      "description": "Kết nối với tài khoản và trang Facebook của bạn, chọn các trang bạn muốn quản lý. Dễ như ăn bánh! 🍰",
+      "description": "Kết nối tài khoản và trang Facebook của bạn, rồi chọn các trang muốn quản lý.",
       "acceptTerms": "Khi liên kết tài khoản, bạn đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy> của chúng tôi.",
-      "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}} (Đừng lo, chúng ta sẽ sửa nó!)",
+      "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}}",
       "invalidState": "Không thể xác minh yêu cầu liên kết này. Vui lòng thử liên kết tài khoản lại nhé!",
       "success": {
         "title": "Liên kết tài khoản thành công! 🎊",
@@ -646,11 +649,11 @@
     },
     "create": {
       "title": "Tạo tài khoản mới",
-      "description": "Điền thông tin để tạo tài khoản mới (chúng tôi sẽ không phán xét)",
+      "description": "Tạo tài khoản mới",
       "fields": {
         "link": "Liên kết"
       },
-      "success": "Tài khoản của bạn đã được tạo thành công! Chào mừng đến với gia đình! 🎉",
+      "success": "Đã thêm tài khoản, vui lòng chờ tài khoản được đồng bộ.",
       "steps": {
         "platform": "Chọn nền tảng",
         "connect": "Kết nối",
@@ -728,7 +731,7 @@
           "cta": "Kết nối Bot"
         },
         "whatsapp": {
-          "description": "Dán phone number ID của WhatsApp Business và một access token System User vĩnh viễn từ Meta.",
+          "description": "Dán phone number ID của WhatsApp Business và một access token system user vĩnh viễn từ Meta.",
           "phoneNumberIdLabel": "Phone number ID",
           "phoneNumberIdInvalid": "Phone number ID chỉ được chứa chữ số",
           "tokenLabel": "Access token",
@@ -1073,11 +1076,11 @@
       "timezoneDefault": "Mặc định (múi giờ hệ thống)"
     },
     "chat": {
-      "heading": "Chat Thử",
+      "heading": "Chat thử",
       "refreshHint": "Làm mới sẽ xóa chat. Nhấn Xóa để bắt đầu lại.",
       "liveOnlyNotice": "Chat thử: nhắc hẹn và chuyển cho nhân viên chỉ hoạt động trên kênh thật.",
       "clear": "Xóa",
-      "restart": "Bắt Đầu Lại",
+      "restart": "Bắt đầu lại",
       "inputPlaceholder": "Nhập tin nhắn của bạn...",
       "thinking": "Đang tạo phản hồi...",
       "trace": {
@@ -1152,7 +1155,7 @@
         "required": "Vui lòng hoàn tất xác minh trước.",
         "failed": "Xác minh thất bại. Tải lại trang và thử lại."
       },
-      "poweredBy": "Powered by eccho"
+      "poweredBy": "Vận hành bởi Ecbot"
     },
     "list": {
       "noRecordsTitle": "Chưa có agent nào",
@@ -1165,9 +1168,9 @@
       },
       "delete": {
         "confirm": {
-          "title": "Xóa Agent",
+          "title": "Xóa agent",
           "description": "Bạn có chắc chắn muốn xóa \"{{name}}\" không? Hành động này không thể hoàn tác.",
-          "confirmButton": "Xóa Agent"
+          "confirmButton": "Xóa agent"
         },
         "success": "Đã xóa agent thành công! 👋",
         "error": "Không thể xóa agent. Hãy thử lại nhé!"
@@ -1328,7 +1331,7 @@
       }
     },
     "clone": {
-      "title": "Sao chép Agent",
+      "title": "Sao chép agent",
       "optionsLabel": "Cũng sao chép:",
       "cloneTools": "Cấu hình công cụ",
       "cloneKnowledgeItems": "Kiến thức",
@@ -2112,7 +2115,7 @@
     },
     "summary": {
       "title": "Vai trò",
-      "roleId": "ID Vai trò",
+      "roleId": "ID vai trò",
       "type": "Loại",
       "modules": "Mô-đun",
       "noModules": "Không có module nào được gán",
@@ -2408,7 +2411,8 @@
       "error": "Không thể cập nhật {{count}} mục."
     },
     "loading": "Đang tải...",
-    "loadFailed": "Không tải được dữ liệu. Vui lòng thử lại sau."
+    "loadFailed": "Không tải được dữ liệu. Vui lòng thử lại sau.",
+    "typeToConfirm": "Nhập {val} để xác nhận:"
   },
   "actions": {
     "edit": "Chỉnh sửa",
@@ -2436,7 +2440,8 @@
     "skip": "Bỏ qua",
     "preview": "Xem trước",
     "createNew": "Tạo mới",
-    "unlink": "Bỏ liên kết"
+    "unlink": "Bỏ liên kết",
+    "connectChannel": "Kết nối kênh"
   },
   "fields": {
     "name": "Tên",
@@ -2642,9 +2647,9 @@
       "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",
       "noTokens": "Workspace đã hết token AI. Hãy nạp thêm hoặc gia hạn gói, rồi xử lý lại mục này."
     },
-    "create_title": "Tạo Mục Kiến Thức",
+    "create_title": "Tạo mục kiến thức",
     "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",
-    "select_type_label": "Chọn Loại",
+    "select_type_label": "Chọn loại",
     "create_button": "Tạo",
     "cancel": "Hủy",
     "title": "Tiêu đề",
@@ -2674,7 +2679,7 @@
     "created_at": "Tạo vào",
     "updated_at": "Cập nhật vào",
     "details": "Chi tiết",
-    "base_id": "ID Cơ sở Kiến thức",
+    "base_id": "ID cơ sở kiến thức",
     "timestamps": "Mốc thời gian",
     "create_success": "Mục kiến thức đã được tạo thành công",
     "create_error": "Không thể tạo mục kiến thức",
@@ -3306,7 +3311,7 @@
       "schemaRowDescriptionRequired": "Mô tả thuộc tính là bắt buộc."
     },
     "test": {
-      "title": "Kiểm tra Endpoint",
+      "title": "Kiểm tra endpoint",
       "argsLabel": "Tham số yêu cầu (JSON)",
       "runButton": "Chạy thử",
       "invalidJson": "JSON không hợp lệ",
@@ -3451,7 +3456,7 @@
       "actionsEmptyTitle": "Chưa có action nào"
     },
     "addDrawer": {
-      "title": "Thêm Công Cụ",
+      "title": "Thêm công cụ",
       "selectLabel": "Chọn một công cụ",
       "actionsTitle": "Action",
       "enableSuccess": "Đã thêm công cụ.",

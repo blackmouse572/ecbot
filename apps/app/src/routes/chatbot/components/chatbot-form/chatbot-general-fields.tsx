@@ -3,6 +3,7 @@ import { Form } from "@repo/ui/common-components";
 import { lazy, Suspense } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { languageName } from "@/libs/language-name";
 import { CHATBOT_LANGUAGES } from "../../constants";
 import type { ChatbotFormInput } from "../../schemas";
 import { ChatbotTypeField } from "./chatbot-type-field";
@@ -15,15 +16,13 @@ const TimezoneSelect = lazy(() =>
 
 /** Name, type, languages and timezone: what the general card shows. */
 export function ChatbotGeneralFields() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { control } = useFormContext<ChatbotFormInput>();
-  const languageItems = Object.entries(CHATBOT_LANGUAGES).map(
-    ([code, label]) => (
-      <Select.Item key={code} value={code}>
-        {label}
-      </Select.Item>
-    ),
-  );
+  const languageItems = Object.keys(CHATBOT_LANGUAGES).map((code) => (
+    <Select.Item key={code} value={code}>
+      {languageName(code, i18n.language)}
+    </Select.Item>
+  ));
 
   return (
     <>

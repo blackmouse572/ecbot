@@ -1,30 +1,16 @@
-import { Badge } from "@medusajs/ui";
+import { channelOf } from "@/components/platform-icon/channel-catalog";
+import { PlatformIcon } from "@/components/platform-icon/platform-icon";
+import { Text } from "@medusajs/ui";
 import type { AccountGetDetailResponseDto } from "@repo/client";
 
-type AccountTypeCellProps = Pick<AccountGetDetailResponseDto, "type"> &
-  React.ComponentPropsWithoutRef<typeof Badge>;
-export const AccountTypeCell = ({ type, ...props }: AccountTypeCellProps) => {
-  return (
-    <Badge color={colorMap[type]} {...props}>
-      {type}
-    </Badge>
-  );
-};
+type AccountTypeCellProps = Pick<AccountGetDetailResponseDto, "type">;
 
-const colorMap: Record<
-  AccountTypeCellProps["type"],
-  AccountTypeCellProps["color"]
-> = {
-  FACEBOOK_ACCOUNT: "blue",
-  FACEBOOK_PAGE: "purple",
-  INSTAGRAM_PAGE: "blue",
-  INSTAGRAM_ACCOUNT: "orange",
-  ZALO_ACCOUNT: "blue",
-  ZALO_PAGE: "red",
-  TIKTOK_SHOP: "grey",
-  SHOPEE_SHOP: "orange",
-  TELEGRAM_BOT: "blue",
-  API_CHANNEL: "grey",
-  WEBSITE_WIDGET: "green",
-  WHATSAPP_BUSINESS: "green",
-};
+/** The account's channel by name and logo, e.g. "Website" for WEBSITE_WIDGET. */
+export const AccountTypeCell = ({ type }: AccountTypeCellProps) => (
+  <div className="flex items-center gap-1.5">
+    <PlatformIcon type={type} aria-hidden />
+    <Text size="xsmall" className="truncate">
+      {channelOf(type).label}
+    </Text>
+  </div>
+);
