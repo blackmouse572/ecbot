@@ -1,5 +1,5 @@
 import { useWorkspace } from "@/hooks/api";
-import { IconButton, Prompt, toast } from "@medusajs/ui";
+import { Button, IconButton, Prompt, toast } from "@medusajs/ui";
 import {
   Command,
   CommandEmpty,
@@ -62,23 +62,30 @@ export const MemberInviteDialog = (
             </CommandEmpty>
           </CommandList>
         </Command>
-        <Prompt.Footer className="py-2 px-4 divide-x border-t bg-ui-bg-component">
-          <p className="text-ui-fg-muted text-xs pr-4">
-            {t("members.inviteMember.inviteCode.title")}:
-            <span className="font-bold ml-2">{invitationCode}</span>
-          </p>
-          <IconButton
-            size="small"
-            variant="transparent"
-            onClick={copyInvitationCode}
-            className={justCopied ? "text-ui-tag-green-icon" : ""}
-          >
-            {justCopied ? (
-              <IconClipboardCheckFilled size={14} />
-            ) : (
-              <IconClipboard size={14} />
-            )}
-          </IconButton>
+        <Prompt.Footer className="py-2 px-4 border-t bg-ui-bg-component flex-wrap items-center justify-between gap-2">
+          <Prompt.Cancel asChild>
+            <Button size="small" variant="secondary">
+              {t("actions.close")}
+            </Button>
+          </Prompt.Cancel>
+          <div className="flex items-center gap-x-2">
+            <p className="text-ui-fg-muted text-xs">
+              {t("members.inviteMember.inviteCode.title")}:
+              <span className="font-bold ml-2">{invitationCode}</span>
+            </p>
+            <IconButton
+              size="small"
+              variant="transparent"
+              onClick={copyInvitationCode}
+              className={justCopied ? "text-ui-tag-green-icon" : ""}
+            >
+              {justCopied ? (
+                <IconClipboardCheckFilled size={14} />
+              ) : (
+                <IconClipboard size={14} />
+              )}
+            </IconButton>
+          </div>
         </Prompt.Footer>
       </Prompt.Content>
     </Prompt>
