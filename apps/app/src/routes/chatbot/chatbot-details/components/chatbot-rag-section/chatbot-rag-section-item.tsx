@@ -63,6 +63,7 @@ export function ChatbotRAGSectionItem({
 
       <div className="w-full flex items-center justify-between">
         <StatusBadge
+          className="uppercase"
           color={
             KNOWLEDGE_ITEM_STATUS_BADGE_COLOR[knowledgeItem?.status || "draft"]
           }
