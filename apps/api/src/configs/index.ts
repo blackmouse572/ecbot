@@ -24,6 +24,7 @@ import ResetPasswordConfig from 'src/configs/reset-password.config';
 import SessionConfig from 'src/configs/session.config';
 import UserConfig from 'src/configs/user.config';
 import VerificationConfig from 'src/configs/verification.config';
+import WebPushConfig from 'src/configs/web-push.config';
 import WorkspaceConfig from 'src/configs/workspace.config';
 
 export default [
@@ -54,4 +55,5 @@ export default [
     ChatbotConfig,
     BillingConfig,
     AgentBuilderConfig,
+    WebPushConfig,
 ];

@@ -17,6 +17,7 @@ import {
 } from '../enums/notification.enum';
 import { NotificationEntity } from '../repository/entities/notification.entity';
 import { NotificationRepository } from '../repository/repositories/notification.repository';
+import { NotificationPushService } from './notification.push.service';
 import { NOTIFICATION_HANDOFF_REASONS } from '@app/modules/notification/constants/notification.handoff.constant';
 
 @Injectable()
@@ -24,7 +25,8 @@ export class NotificationService {
     constructor(
         private readonly notificationRepository: NotificationRepository,
         private readonly paginationService: PaginationService,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly notificationPushService?: NotificationPushService
     ) {}
 
     async findAll(find?: Record<string, any>): Promise<NotificationEntity[]> {
@@ -113,7 +115,18 @@ export class NotificationService {
             expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
         };
 
-        return this.notificationRepository.create<any>(notification, options);
+        const created: NotificationEntity =
+            await this.notificationRepository.create<any>(
+                notification,
+                options
+            );
+
+        // Same moment as the bell, so the push and the badge agree.
+        await this.notificationPushService
+            ?.sendToUser(dto.recipient, created)
+            .catch(() => undefined);
+
+        return created;
     }
 
     async update(

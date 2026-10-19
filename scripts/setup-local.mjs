@@ -181,6 +181,29 @@ for (const [key, make] of [
   }
 }
 
+// Web Push needs a matching VAPID pair (P-256, base64url): the public key is
+// the raw uncompressed point, the private key the scalar.
+if (
+  env.api.has("WEB_PUSH_VAPID_PUBLIC_KEY") &&
+  isPlaceholder(env.api.get("WEB_PUSH_VAPID_PUBLIC_KEY"))
+) {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync("ec", {
+    namedCurve: "prime256v1",
+  });
+  const pub = publicKey.export({ format: "jwk" });
+  const point = Buffer.concat([
+    Buffer.from([4]),
+    Buffer.from(pub.x, "base64url"),
+    Buffer.from(pub.y, "base64url"),
+  ]);
+  env.api.set("WEB_PUSH_VAPID_PUBLIC_KEY", point.toString("base64url"));
+  env.api.set(
+    "WEB_PUSH_VAPID_PRIVATE_KEY",
+    privateKey.export({ format: "jwk" }).d,
+  );
+  report.filled.push("WEB_PUSH_VAPID_PUBLIC_KEY + PRIVATE_KEY (generated)");
+}
+
 // A blank expiry makes every invite fail (jsonwebtoken rejects expiresIn "").
 if (
   env.api.has("WORK_SPACE_INVITATION_TOKEN_EXPIRED") &&

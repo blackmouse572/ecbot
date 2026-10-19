@@ -20,7 +20,8 @@ describe('NotificationSharedController.list', () => {
             {
                 totalPage: (total: number, limit: number) =>
                     Math.ceil(total / limit),
-            } as any
+            } as any,
+            {} as any
         );
         return { service, controller };
     };
