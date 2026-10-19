@@ -56,7 +56,7 @@ const AgentRow = ({ chatbot, accountId, onLinked }: RowProps) => {
           name={chatbot.name}
           avatar={chatbot.avatar}
         />
-        {config && <ChatbotTypeBadge config={config} size="xsmall" clamp />}
+        {config && <ChatbotTypeBadge config={config} size="xsmall" />}
       </div>
       <Button
         size="small"
