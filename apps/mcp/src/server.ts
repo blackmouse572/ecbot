@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { clientCredentialClientControllerMeV1 } from "@repo/client";
 import { env } from "./env";
+import { registerAnalyticsTools } from "./tools/analytics";
 import { registerChatbotTools } from "./tools/chatbots";
 import { registerConversationTools } from "./tools/conversations";
 import { registerCustomerTools } from "./tools/customers";
@@ -46,6 +47,7 @@ export async function createEcbotServer(
   registerCustomerTools(server, api, allows);
   registerWorkspaceToolTools(server, api, allows);
   registerSkillTools(server, api, allows);
+  registerAnalyticsTools(server, api, allows);
 
   return server;
 }

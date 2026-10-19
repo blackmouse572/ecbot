@@ -168,6 +168,38 @@ const cases: [
     { data: [{ skillId: "skill-1" }] },
     [{ skillId: "skill-1" }],
   ],
+  [
+    "get_conversion_analytics",
+    { range: "7d", timezone: "Asia/Bangkok" },
+    "analyticsClientControllerConversionV1",
+    { query: { range: "7d", timezone: "Asia/Bangkok" } },
+    { data: { newCustomers: 12 } },
+    { newCustomers: 12 },
+  ],
+  [
+    "get_marketing_analytics",
+    {},
+    "analyticsClientControllerMarketingV1",
+    { query: {} },
+    { data: { unhappy: [] } },
+    { unhappy: [] },
+  ],
+  [
+    "get_bot_analytics",
+    { range: "90d" },
+    "analyticsClientControllerBotV1",
+    { query: { range: "90d" } },
+    { data: { byChatbot: [] } },
+    { byChatbot: [] },
+  ],
+  [
+    "get_customer_analytics",
+    { range: "30d" },
+    "analyticsClientControllerCustomersV1",
+    { query: { range: "30d" } },
+    { data: { total: 40 } },
+    { total: 40 },
+  ],
 ];
 
 describe("read tools", () => {

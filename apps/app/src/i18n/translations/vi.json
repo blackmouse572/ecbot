@@ -944,7 +944,11 @@
       "noChatbot": {
         "title": "Chưa có agent",
         "message": "Tạo agent để trả lời khách hàng trên kênh này.",
-        "action": "Tạo agent"
+        "action": "Tạo agent",
+        "linkExisting": "Liên kết agent có sẵn",
+        "drawerTitle": "Chọn agent",
+        "noneAvailable": "Chưa có agent nào",
+        "loadFailed": "Không tải được danh sách agent. Hãy thử lại."
       }
     },
     "imports": {
@@ -2509,7 +2513,7 @@
     "create": "Tạo mới",
     "clearAll": "Xóa tất cả",
     "continued": "Tiếp tục",
-    "linkAccount": "Liên kết tài khoản",
+    "linkAccount": "Liên kết tài khoản có sẵn",
     "tryAgain": "Thử lại",
     "enable": "Bật",
     "disable": "Tắt",

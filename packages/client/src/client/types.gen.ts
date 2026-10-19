@@ -36117,6 +36117,286 @@ export type ChatbotSkillClientControllerAttachV1Responses = {
 
 export type ChatbotSkillClientControllerAttachV1Response = ChatbotSkillClientControllerAttachV1Responses[keyof ChatbotSkillClientControllerAttachV1Responses];
 
+export type AnalyticsClientControllerConversionV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/client/analytics/conversion';
+};
+
+export type AnalyticsClientControllerConversionV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsClientControllerConversionV1Error = AnalyticsClientControllerConversionV1Errors[keyof AnalyticsClientControllerConversionV1Errors];
+
+export type AnalyticsClientControllerConversionV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsConversionResponseDto;
+    };
+};
+
+export type AnalyticsClientControllerConversionV1Response = AnalyticsClientControllerConversionV1Responses[keyof AnalyticsClientControllerConversionV1Responses];
+
+export type AnalyticsClientControllerMarketingV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/client/analytics/marketing';
+};
+
+export type AnalyticsClientControllerMarketingV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsClientControllerMarketingV1Error = AnalyticsClientControllerMarketingV1Errors[keyof AnalyticsClientControllerMarketingV1Errors];
+
+export type AnalyticsClientControllerMarketingV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsMarketingResponseDto;
+    };
+};
+
+export type AnalyticsClientControllerMarketingV1Response = AnalyticsClientControllerMarketingV1Responses[keyof AnalyticsClientControllerMarketingV1Responses];
+
+export type AnalyticsClientControllerBotV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/client/analytics/bot';
+};
+
+export type AnalyticsClientControllerBotV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsClientControllerBotV1Error = AnalyticsClientControllerBotV1Errors[keyof AnalyticsClientControllerBotV1Errors];
+
+export type AnalyticsClientControllerBotV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsBotResponseDto;
+    };
+};
+
+export type AnalyticsClientControllerBotV1Response = AnalyticsClientControllerBotV1Responses[keyof AnalyticsClientControllerBotV1Responses];
+
+export type AnalyticsClientControllerCustomersV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/client/analytics/customers';
+};
+
+export type AnalyticsClientControllerCustomersV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsClientControllerCustomersV1Error = AnalyticsClientControllerCustomersV1Errors[keyof AnalyticsClientControllerCustomersV1Errors];
+
+export type AnalyticsClientControllerCustomersV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsCustomersResponseDto;
+    };
+};
+
+export type AnalyticsClientControllerCustomersV1Response = AnalyticsClientControllerCustomersV1Responses[keyof AnalyticsClientControllerCustomersV1Responses];
+
 export type RequestControllerGetRequestsV1Data = {
     body?: never;
     headers?: {

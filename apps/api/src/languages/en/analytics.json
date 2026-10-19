@@ -1,0 +1,11 @@
+{
+    "workspace": {
+        "conversion": "Conversion analytics loaded.",
+        "marketing": "Sentiment analytics loaded.",
+        "bot": "Chatbot analytics loaded.",
+        "customers": "Customer analytics loaded."
+    },
+    "error": {
+        "rateLimited": "Too many analytics requests for this key. Wait a minute and try again."
+    }
+}

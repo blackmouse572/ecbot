@@ -43,3 +43,10 @@ export const ANALYTICS_HANDOFF_REASONS = [
     'keyword_trigger',
     'tag_trigger',
 ];
+
+/**
+ * Calls one client credential may make to the /client analytics routes per
+ * window, all tabs together. An uncached call runs several aggregate queries.
+ */
+export const ANALYTICS_CLIENT_RATE_LIMIT = 20;
+export const ANALYTICS_CLIENT_RATE_WINDOW_SECONDS = 60;
