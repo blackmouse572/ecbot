@@ -13,14 +13,14 @@
     "@modelcontextprotocol/server": "^2.3.1",
     "@repo/agent-blueprint": "workspace:*",
     "@repo/client": "workspace:*",
-    "hono": "^4.13.9",
+    "hono": "^4.13.13",
     "valibot": "^1.5.0",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260925.1",
+    "@cloudflare/workers-types": "^5.20261016.1",
     "@modelcontextprotocol/client": "^2.3.1",
     "vitest": "^4.1.11",
-    "wrangler": "^4.137.0"
+    "wrangler": "^4.151.1"
   }
 }
