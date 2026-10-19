@@ -47,6 +47,9 @@ interface ApiChannelInboundBody {
 @Injectable()
 export class ApiChannelPlatformAdapter extends PlatformAdapter {
     readonly type = ENUM_ACCOUNT_TYPE.API_CHANNEL;
+    // The callback is retried in the background; doSend returning says nothing
+    // about whether the receiver got it.
+    protected readonly confirmsDeliveryLater = true;
 
     // Text only for now. `degrade()` collapses richer content, so enabling a
     // capability later needs no structural change — just an honest flag.
@@ -176,6 +179,7 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
 
         try {
             await this.callbackService.deliver(account, payload);
+            this.reportDelivery(account);
         } catch (error) {
             if (error instanceof EgressBlockedError) {
                 // The target is a blocked address (internal/metadata/etc.) —
@@ -183,6 +187,7 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
                 this.logger.error(
                     `API channel callback blocked by egress guard for account ${account.id}, not retrying: ${error}`
                 );
+                this.reportDelivery(account, error);
                 return { externalId };
             }
             // The reply is already persisted by the caller; a receiver being down
@@ -202,18 +207,18 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
         accountId: string,
         payload: ApiChannelCallbackPayload
     ): Promise<void> {
+        let account: AccountEntity | null = null;
+        let lastError: unknown;
         for (
             let attempt = 2;
             attempt <= API_CHANNEL_CALLBACK_MAX_ATTEMPTS;
             attempt++
         ) {
-            await sleep(
-                API_CHANNEL_CALLBACK_BACKOFF_MS * 2 ** (attempt - 2)
-            );
+            await sleep(API_CHANNEL_CALLBACK_BACKOFF_MS * 2 ** (attempt - 2));
 
             // Re-read the account so a callbackUrl or rotated secret changed
             // since the first attempt takes effect on this retry.
-            const account = await this.accountService.findOne({
+            account = await this.accountService.findOne({
                 id: accountId,
             });
             if (!account) {
@@ -225,12 +230,15 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
 
             try {
                 await this.callbackService.deliver(account, payload);
+                this.reportDelivery(account);
                 return;
             } catch (error) {
+                lastError = error;
                 if (error instanceof EgressBlockedError) {
                     this.logger.error(
                         `API channel callback blocked by egress guard for account ${accountId}, giving up: ${error}`
                     );
+                    this.reportDelivery(account, error);
                     return;
                 }
                 this.logger.warn(
@@ -244,6 +252,7 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
         this.logger.error(
             `API channel callback exhausted all ${API_CHANNEL_CALLBACK_MAX_ATTEMPTS} attempts for account ${accountId}, externalId ${payload.externalId} — giving up`
         );
+        if (account) this.reportDelivery(account, lastError);
     }
 
     /** `degrade()` has already collapsed richer content by the time we get here. */

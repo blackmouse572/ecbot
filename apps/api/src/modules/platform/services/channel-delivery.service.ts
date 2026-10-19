@@ -38,11 +38,15 @@ export class ChannelDeliveryService implements ISendGuard, OnModuleInit {
         for (const adapter of this.adapters) adapter.useSendGuard(this);
     }
 
-    async run<T>(account: AccountEntity, send: () => Promise<T>): Promise<T> {
+    async run<T>(
+        account: AccountEntity,
+        send: () => Promise<T>,
+        recordSuccess = true
+    ): Promise<T> {
         for (let attempt = 0; ; attempt++) {
             try {
                 const result = await send();
-                await this.recordSuccess(account);
+                if (recordSuccess) await this.recordSuccess(account);
                 return result;
             } catch (err: unknown) {
                 const kind = classifySendError(err);
@@ -57,6 +61,13 @@ export class ChannelDeliveryService implements ISendGuard, OnModuleInit {
                 throw err;
             }
         }
+    }
+
+    // A late failure is the channel's own (the API channel's receiver is
+    // down), never one customer's, and is not resent here.
+    async report(account: AccountEntity, error?: unknown): Promise<void> {
+        if (error === undefined) return this.recordSuccess(account);
+        return this.recordFailure(account, ENUM_SEND_FAILURE.OTHER, error);
     }
 
     private sleep(ms: number): Promise<void> {

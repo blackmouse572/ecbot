@@ -99,7 +99,14 @@ export class ChannelRateLimitService implements OnModuleDestroy {
             this.inMemoryWindows.delete(key);
             return;
         }
-        await this.redis.client.del(key);
+        try {
+            await this.redis.client.del(key);
+        } catch (error) {
+            // A window left behind only expires on its own; never fail the caller.
+            this.logger.error(
+                `Rate limit reset failed for ${identity}: ${error}`
+            );
+        }
     }
 
     private claimInMemory(

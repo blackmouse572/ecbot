@@ -79,8 +79,11 @@ export function classifySendError(err: unknown): ENUM_SEND_FAILURE {
     }
 
     if (status === 401) return ENUM_SEND_FAILURE.AUTH;
-    // Telegram: the customer blocked the bot.
-    if (status === 403) return ENUM_SEND_FAILURE.RECIPIENT;
+    // Telegram ({ ok: false }): the customer blocked the bot. A 403 from
+    // another platform is a lost permission, which is the channel's problem.
+    if (status === 403 && body?.ok === false) {
+        return ENUM_SEND_FAILURE.RECIPIENT;
+    }
     if (status === 429 || (status !== undefined && status >= 500)) {
         return ENUM_SEND_FAILURE.TRANSIENT;
     }

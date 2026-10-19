@@ -146,3 +146,37 @@ describe('ChannelDeliveryService.run', () => {
         ).rejects.toBe(err);
     });
 });
+
+describe('ChannelDeliveryService late outcomes (API channel callback)', () => {
+    it('does not count a returned send as delivered when the adapter confirms later', async () => {
+        const { service, rateLimit, alerts } = makeService();
+        const acc = { id: 'acc-1', sendFailingSince: new Date() } as any;
+
+        await service.run(acc, async () => ({ externalId: 'm' }), false);
+
+        expect(rateLimit.reset).not.toHaveBeenCalled();
+        expect(alerts.recovered).not.toHaveBeenCalled();
+    });
+
+    it('counts reported failures toward a send-failing alert, even 4xx ones', async () => {
+        const { service, alerts } = makeService();
+        const err = new AxiosError('x', undefined);
+
+        for (let i = 0; i < 3; i++) await service.report(account(), err);
+
+        expect(alerts.open).toHaveBeenCalledWith(
+            expect.anything(),
+            ENUM_CHANNEL_ALERT.SEND_FAILING,
+            err
+        );
+    });
+
+    it('a reported delivery closes an open alert', async () => {
+        const { service, alerts } = makeService();
+        const acc = { id: 'acc-1', sendFailingSince: new Date() } as any;
+
+        await service.report(acc);
+
+        expect(alerts.recovered).toHaveBeenCalledWith(acc);
+    });
+});

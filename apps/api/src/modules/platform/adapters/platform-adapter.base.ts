@@ -88,6 +88,14 @@ export abstract class PlatformAdapter {
         this.sendGuard = guard;
     }
 
+    // True when doSend returns before delivery is known (the API channel's
+    // callback), so the adapter reports the outcome with reportDelivery.
+    protected readonly confirmsDeliveryLater: boolean = false;
+
+    protected reportDelivery(account: AccountEntity, error?: unknown): void {
+        void this.sendGuard?.report(account, error);
+    }
+
     // ---- outbound (concrete: degrade + guard → protected hook) ----
     async sendMessage(
         account: AccountEntity,
@@ -96,7 +104,9 @@ export abstract class PlatformAdapter {
     ): Promise<{ externalId: string }> {
         const degraded = this.degrade(msg);
         const send = () => this.doSend(account, senderId, degraded);
-        return this.sendGuard ? this.sendGuard.run(account, send) : send();
+        return this.sendGuard
+            ? this.sendGuard.run(account, send, !this.confirmsDeliveryLater)
+            : send();
     }
 
     async editMessage(

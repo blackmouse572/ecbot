@@ -87,6 +87,8 @@ describe('classifySendError', () => {
         ['timeout', axiosError('ECONNABORTED')],
         ['connection reset', axiosError('ECONNRESET')],
         ['other 4xx', upstream(400, { error: { code: 100 } })],
+        // Only Telegram's 403 means one customer blocked the bot.
+        ['Meta 403 permission lost', upstream(403, { error: {} })],
         ['plain error', new Error('boom')],
     ])('%s is a failure that is not retried', (_, err) => {
         expect(classifySendError(err)).toBe(ENUM_SEND_FAILURE.OTHER);
