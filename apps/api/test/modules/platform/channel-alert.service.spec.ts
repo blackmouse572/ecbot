@@ -131,6 +131,18 @@ describe('ChannelAlertService', () => {
         );
     });
 
+    it('an email that fails to queue does not stop the other alerts', async () => {
+        const s = makeService();
+        s.cloudTasksClient.enqueue.mockRejectedValueOnce(
+            new Error('tasks down')
+        );
+
+        await expect(
+            s.service.open(account(), ENUM_CHANNEL_ALERT.SEND_FAILING, 'x')
+        ).resolves.toBeUndefined();
+        expect(s.cloudTasksClient.enqueue).toHaveBeenCalledTimes(2);
+    });
+
     it('alerts once per channel and kind until the reminder window passes', async () => {
         const s = makeService();
         const acc = account();

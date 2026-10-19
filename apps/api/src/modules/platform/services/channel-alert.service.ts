@@ -168,22 +168,29 @@ export class ChannelAlertService {
                     },
                 });
                 if (kind === ENUM_CHANNEL_ALERT.RECOVERED || !r.email) return;
-                await this.cloudTasksClient.enqueue(
-                    'email',
-                    ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED,
-                    {
-                        send: { email: r.email, name: r.name },
-                        data: {
-                            accountName: account.name,
-                            reconnectUrl: channelsUrl,
-                            language,
-                            reason: kind,
+                // One person's email not queuing must not cost the others.
+                await this.cloudTasksClient
+                    .enqueue(
+                        'email',
+                        ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED,
+                        {
+                            send: { email: r.email, name: r.name },
+                            data: {
+                                accountName: account.name,
+                                reconnectUrl: channelsUrl,
+                                language,
+                                reason: kind,
+                            },
                         },
-                    },
-                    {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED}-${account.id}-${r.id}-${randomUUID()}`,
-                    }
-                );
+                        {
+                            taskName: `${ENUM_SEND_EMAIL_PROCESS.ACCOUNT_BLOCKED}-${account.id}-${r.id}-${randomUUID()}`,
+                        }
+                    )
+                    .catch((err: unknown) =>
+                        this.logger.warn(
+                            `channel alert email to ${r.id} not queued account=${account.id}: ${String(err)}`
+                        )
+                    );
             })
         );
     }
