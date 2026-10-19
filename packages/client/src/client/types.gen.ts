@@ -6197,7 +6197,13 @@ export type AnalyticsSentimentChannelDto = {
      * Conversations with a customer message
      */
     conversations: number;
+    /**
+     * Percent of those conversations tagged positive
+     */
     positive: number;
+    /**
+     * Percent tagged negative or angry
+     */
     negative: number;
 };
 
