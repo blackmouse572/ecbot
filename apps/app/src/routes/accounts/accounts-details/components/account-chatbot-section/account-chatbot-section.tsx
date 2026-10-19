@@ -3,6 +3,7 @@ import { useAccountChatbot } from "@/hooks/api";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { isConnectableAccountType } from "@/routes/chatbot/chatbot-create/agent-builder/channel-accounts";
 import { ROUTES } from "@/routes/constants";
+import { PlusMini } from "@medusajs/icons";
 import { IconRobot } from "@tabler/icons-react";
 import { Button, Container, Divider, Heading } from "@medusajs/ui";
 import type {
@@ -70,8 +71,10 @@ export const AccountChatbotSection = ({
         <Button
           size="small"
           variant="transparent"
+          className="text-ui-fg-interactive"
           onClick={() => setDrawerOpen(true)}
         >
+          <PlusMini />
           {t("accounts.details.noChatbot.linkExisting")}
         </Button>
       </div>
