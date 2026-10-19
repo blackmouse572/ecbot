@@ -6,7 +6,6 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "lang": "vi",
   "icons": [
     {
       "src": "/favicon/web-app-manifest-192x192.png",

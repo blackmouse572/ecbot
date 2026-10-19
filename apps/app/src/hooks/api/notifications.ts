@@ -191,8 +191,10 @@ export function usePushPublicKey() {
 
 /** Tells the server to send this user's notifications to this browser. */
 export function savePushSubscription(subscription: PushSubscription) {
+  // toJSON() also has expirationTime, which the API rejects as unknown.
+  const { endpoint, keys } = subscription.toJSON();
   return notificationSharedControllerPushSubscribeV1({
-    body: subscription.toJSON() as NotificationPushSubscribeRequestDto,
+    body: { endpoint, keys } as NotificationPushSubscribeRequestDto,
   });
 }
 

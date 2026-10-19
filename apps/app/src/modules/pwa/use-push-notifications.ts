@@ -64,6 +64,10 @@ export function usePushNotifications() {
 export async function removeThisDeviceFromPush(): Promise<void> {
   const subscription = await getBrowserPushSubscription();
   if (!subscription) return;
-  await removePushSubscription(subscription.endpoint);
-  await subscription.unsubscribe();
+  try {
+    await removePushSubscription(subscription.endpoint);
+  } finally {
+    // Even when the server call fails, the next person here gets no pushes.
+    await subscription.unsubscribe();
+  }
 }
