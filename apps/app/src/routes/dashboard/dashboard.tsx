@@ -17,14 +17,10 @@ import { useAnalyticsTabs } from "./hooks/use-analytics-tabs";
 
 export function Dashboard() {
   const { t } = useTranslation();
-  const allowed = useAnalyticsTabs();
-  // Usage is a stat that opens its own page, not a tab.
-  const tabs = allowed.filter((v) => v !== "usage");
+  const tabs = useAnalyticsTabs();
   const { range, setRange, tab, setTab } = useAnalyticsParams(tabs);
-  const analytics = useWorkspaceAnalytics(range);
+  const analytics = useWorkspaceAnalytics(range, tabs);
   const data = analytics.data;
-  // Usage is counted only where the edition meters it.
-  const usage = allowed.includes("usage") ? data?.usage : undefined;
 
   return (
     <SingleColumnPage hasOutlet={false}>
@@ -38,7 +34,7 @@ export function Dashboard() {
       <AnalyticsToolbar
         range={range}
         onRangeChange={setRange}
-        generatedAt={data?.generatedAt}
+        generatedAt={analytics.generatedAt}
         onRefresh={() => analytics.refetch()}
         isRefreshing={analytics.isFetching}
       />
@@ -51,9 +47,8 @@ export function Dashboard() {
       ) : (
         <AnalyticsKpis
           data={data}
-          tabs={allowed}
+          tabs={tabs}
           isLoading={analytics.isLoading}
-          usage={usage}
         />
       )}
       <AnalyticsTabs
@@ -63,12 +58,10 @@ export function Dashboard() {
         onTabChange={setTab}
         sidebar={
           <>
-            {data && tabs.includes("marketing") && (
-              <UnhappyCustomers rows={data.unhappy} />
+            {data.marketing && (
+              <UnhappyCustomers rows={data.marketing.unhappy} />
             )}
-            {data && allowed.includes("customers") && (
-              <CustomerTagsSection data={data.customers} />
-            )}
+            {data.customers && <CustomerTagsSection data={data.customers} />}
             <RecentActivityListTable />
           </>
         }

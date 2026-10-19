@@ -54,24 +54,25 @@ export const AnalyticsTabs: FC<AnalyticsTabsProps> = ({
       )}
       <TwoColumnPage hasOutlet={false}>
         <TwoColumnPage.Main>
-          {data && (
-            <>
-              <Tabs.Content value="conversion">
-                <ConversionSection
-                  data={data.conversion}
-                  showTokens={tabs.includes("usage")}
-                />
-              </Tabs.Content>
-              <Tabs.Content value="marketing">
-                <MarketingSection data={data.marketing} />
-              </Tabs.Content>
-              <Tabs.Content value="bot">
-                <BotSection data={data.bot} />
-              </Tabs.Content>
-              <Tabs.Content value="customers">
-                <CustomersSection data={data.customers} />
-              </Tabs.Content>
-            </>
+          {data?.conversion && (
+            <Tabs.Content value="conversion">
+              <ConversionSection data={data.conversion} />
+            </Tabs.Content>
+          )}
+          {data?.marketing && (
+            <Tabs.Content value="marketing">
+              <MarketingSection data={data.marketing} />
+            </Tabs.Content>
+          )}
+          {data?.bot && (
+            <Tabs.Content value="bot">
+              <BotSection data={data.bot} />
+            </Tabs.Content>
+          )}
+          {data?.customers && (
+            <Tabs.Content value="customers">
+              <CustomersSection data={data.customers} />
+            </Tabs.Content>
           )}
         </TwoColumnPage.Main>
         <TwoColumnPage.Sidebar>{sidebar}</TwoColumnPage.Sidebar>

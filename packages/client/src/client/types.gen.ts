@@ -6136,6 +6136,162 @@ export type NavCountGetResponseDto = {
     toolsNeedingAttention: number;
 };
 
+export type AnalyticsPeriodValueDto = {
+    current: number;
+    previous: number;
+};
+
+export type AnalyticsConversionDayDto = {
+    day: string;
+    newCustomers: number;
+    orders: number;
+};
+
+export type AnalyticsConversionChannelDto = {
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    /**
+     * Customers first seen in the period
+     */
+    newCustomers: number;
+    /**
+     * New customers who sent at least two messages
+     */
+    engaged: number;
+    /**
+     * New customers tagged as a hot lead
+     */
+    hotLeads: number;
+    /**
+     * New customers tagged with an order
+     */
+    orders: number;
+};
+
+export type AnalyticsConversionResponseDto = {
+    generatedAt: string;
+    /**
+     * Percent of new customers who placed an order
+     */
+    conversionRate: AnalyticsPeriodValueDto;
+    daily: Array<AnalyticsConversionDayDto>;
+    byChannel: Array<AnalyticsConversionChannelDto>;
+    /**
+     * Median hours from first contact to the first order
+     */
+    medianHoursToOrder: number;
+};
+
+export type AnalyticsSentimentDayDto = {
+    day: string;
+    positive: number;
+    /**
+     * Negative, angry included
+     */
+    negative: number;
+    complaint: number;
+};
+
+export type AnalyticsSentimentChannelDto = {
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    /**
+     * Conversations with a customer message
+     */
+    conversations: number;
+    positive: number;
+    negative: number;
+};
+
+export type AnalyticsUnhappyCustomerDto = {
+    customerId: string;
+    conversationId?: string;
+    name?: string;
+    platform?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    tagName: string;
+    emoji?: string;
+    at: string;
+};
+
+export type AnalyticsMarketingResponseDto = {
+    generatedAt: string;
+    /**
+     * Percent of classified conversations that were positive
+     */
+    positiveRate: AnalyticsPeriodValueDto;
+    daily: Array<AnalyticsSentimentDayDto>;
+    byChannel: Array<AnalyticsSentimentChannelDto>;
+    unhappy: Array<AnalyticsUnhappyCustomerDto>;
+};
+
+export type AnalyticsBotDayDto = {
+    day: string;
+    botResolved: number;
+    handedOver: number;
+};
+
+export type AnalyticsHandoffReasonDto = {
+    /**
+     * The tag id for a tag rule, else fallback_threshold, keyword_trigger, tag_trigger or other
+     */
+    key: string;
+    tagName?: string;
+    emoji?: string;
+    count: number;
+};
+
+export type AnalyticsBotChatbotDto = {
+    id: string;
+    name: string;
+    conversations: number;
+    botResolvedRate: number;
+    handoffRate: number;
+    /**
+     * Median seconds to the first bot reply
+     */
+    firstReplySeconds: number;
+    toolErrorRate: number;
+};
+
+export type AnalyticsBotResponseDto = {
+    generatedAt: string;
+    /**
+     * Percent of conversations handed over to staff
+     */
+    handoffRate: AnalyticsPeriodValueDto;
+    daily: Array<AnalyticsBotDayDto>;
+    reasons: Array<AnalyticsHandoffReasonDto>;
+    byChatbot: Array<AnalyticsBotChatbotDto>;
+};
+
+export type AnalyticsTagCountDto = {
+    id: string;
+    name: string;
+    emoji?: string;
+    count: number;
+};
+
+export type AnalyticsCustomerDayDto = {
+    day: string;
+    newCustomers: number;
+    /**
+     * Earlier customers who wrote that day
+     */
+    returning: number;
+};
+
+export type AnalyticsChannelCountDto = {
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    count: number;
+};
+
+export type AnalyticsCustomersResponseDto = {
+    generatedAt: string;
+    tags: Array<AnalyticsTagCountDto>;
+    total: number;
+    untagged: number;
+    daily: Array<AnalyticsCustomerDayDto>;
+    byChannel: Array<AnalyticsChannelCountDto>;
+};
+
 export type FollowupListResponseDto = {
     /**
      * Follow-up job ID
@@ -30817,6 +30973,318 @@ export type NavCountWorkspaceControllerGetV1Responses = {
 };
 
 export type NavCountWorkspaceControllerGetV1Response = NavCountWorkspaceControllerGetV1Responses[keyof NavCountWorkspaceControllerGetV1Responses];
+
+export type AnalyticsWorkspaceControllerConversionV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/workspace/{workspace}/analytics/conversion';
+};
+
+export type AnalyticsWorkspaceControllerConversionV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsWorkspaceControllerConversionV1Error = AnalyticsWorkspaceControllerConversionV1Errors[keyof AnalyticsWorkspaceControllerConversionV1Errors];
+
+export type AnalyticsWorkspaceControllerConversionV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsConversionResponseDto;
+    };
+};
+
+export type AnalyticsWorkspaceControllerConversionV1Response = AnalyticsWorkspaceControllerConversionV1Responses[keyof AnalyticsWorkspaceControllerConversionV1Responses];
+
+export type AnalyticsWorkspaceControllerMarketingV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/workspace/{workspace}/analytics/marketing';
+};
+
+export type AnalyticsWorkspaceControllerMarketingV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsWorkspaceControllerMarketingV1Error = AnalyticsWorkspaceControllerMarketingV1Errors[keyof AnalyticsWorkspaceControllerMarketingV1Errors];
+
+export type AnalyticsWorkspaceControllerMarketingV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsMarketingResponseDto;
+    };
+};
+
+export type AnalyticsWorkspaceControllerMarketingV1Response = AnalyticsWorkspaceControllerMarketingV1Responses[keyof AnalyticsWorkspaceControllerMarketingV1Responses];
+
+export type AnalyticsWorkspaceControllerBotV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/workspace/{workspace}/analytics/bot';
+};
+
+export type AnalyticsWorkspaceControllerBotV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsWorkspaceControllerBotV1Error = AnalyticsWorkspaceControllerBotV1Errors[keyof AnalyticsWorkspaceControllerBotV1Errors];
+
+export type AnalyticsWorkspaceControllerBotV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsBotResponseDto;
+    };
+};
+
+export type AnalyticsWorkspaceControllerBotV1Response = AnalyticsWorkspaceControllerBotV1Responses[keyof AnalyticsWorkspaceControllerBotV1Responses];
+
+export type AnalyticsWorkspaceControllerCustomersV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/workspace/{workspace}/analytics/customers';
+};
+
+export type AnalyticsWorkspaceControllerCustomersV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsWorkspaceControllerCustomersV1Error = AnalyticsWorkspaceControllerCustomersV1Errors[keyof AnalyticsWorkspaceControllerCustomersV1Errors];
+
+export type AnalyticsWorkspaceControllerCustomersV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsCustomersResponseDto;
+    };
+};
+
+export type AnalyticsWorkspaceControllerCustomersV1Response = AnalyticsWorkspaceControllerCustomersV1Responses[keyof AnalyticsWorkspaceControllerCustomersV1Responses];
 
 export type FollowupWorkspaceControllerListV1Data = {
     body?: never;

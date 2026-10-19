@@ -458,7 +458,6 @@
         "conversionRate": "Tỷ lệ chốt đơn",
         "positiveRate": "Hội thoại tích cực",
         "handoffRate": "Tỷ lệ chuyển nhân viên",
-        "tokensPerOrder": "Credit cho mỗi đơn",
         "previous": "Kỳ trước: {{value}}"
       },
       "columns": {
@@ -522,10 +521,6 @@
         "returning": "Khách quay lại",
         "byChannelTitle": "Khách hàng theo kênh",
         "otherTags": "Thẻ khác"
-      },
-      "usage": {
-        "planTitle": "Credit của gói",
-        "usedOf": "Đã dùng {{used}} trên {{limit}}"
       },
       "unhappy": {
         "title": "Khách chưa hài lòng",

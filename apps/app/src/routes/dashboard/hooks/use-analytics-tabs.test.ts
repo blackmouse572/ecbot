@@ -22,12 +22,11 @@ describe("useAnalyticsTabs", () => {
   });
 
   it("shows every tab to a member who can read everything", () => {
-    expect(tabsFor("CUSTOMER", "CHATBOT", "TOKEN_USAGE")).toEqual([
+    expect(tabsFor("CUSTOMER", "CHATBOT")).toEqual([
       "conversion",
       "marketing",
       "bot",
       "customers",
-      "usage",
     ]);
   });
 

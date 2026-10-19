@@ -437,7 +437,6 @@
         "conversionRate": "Conversion rate",
         "positiveRate": "Positive conversations",
         "handoffRate": "Handoff rate",
-        "tokensPerOrder": "Credits per order",
         "previous": "Previous period: {{value}}"
       },
       "columns": {
@@ -501,10 +500,6 @@
         "returning": "Returning customers",
         "byChannelTitle": "Customers by channel",
         "otherTags": "Other tags"
-      },
-      "usage": {
-        "planTitle": "Plan credits",
-        "usedOf": "{{used}} of {{limit}} used"
       },
       "unhappy": {
         "title": "Unhappy customers",

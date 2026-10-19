@@ -14,15 +14,10 @@ import { useAnalyticsFormat } from "./use-analytics-format";
 
 type ConversionSectionProps = {
   data: ConversionAnalytics;
-  /** Credits per order is usage data: only for members who can read usage. */
-  showTokens: boolean;
 };
 
 /** New customers becoming customers with an order: daily, funnel, per channel. */
-export const ConversionSection: FC<ConversionSectionProps> = ({
-  data,
-  showTokens,
-}) => {
+export const ConversionSection: FC<ConversionSectionProps> = ({ data }) => {
   const { t } = useTranslation();
   const f = useAnalyticsFormat();
   const empty = t("dashboard.analytics.empty");
@@ -146,19 +141,6 @@ export const ConversionSection: FC<ConversionSectionProps> = ({
             numeric: true,
             cell: (row) => f.share(row.orders, row.newCustomers),
           },
-          ...(showTokens
-            ? [
-                {
-                  key: "tokens",
-                  header: t("dashboard.analytics.kpi.tokensPerOrder"),
-                  numeric: true,
-                  cell: (row: ConversionAnalytics["byChannel"][number]) =>
-                    row.tokensPerOrder === undefined
-                      ? "–"
-                      : f.compact(row.tokensPerOrder),
-                },
-              ]
-            : []),
         ]}
       />
     </div>
