@@ -14,3 +14,10 @@
 /widget/*
   ! X-Frame-Options
   ! Content-Security-Policy
+
+# The service worker and manifest must never be served stale, or a fixed
+# worker would take a day to reach installed apps.
+/sw.js
+  Cache-Control: no-cache
+/favicon/site.webmanifest
+  Cache-Control: no-cache

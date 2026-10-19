@@ -4,8 +4,9 @@ import { Container, Heading, Label, Switch, Text, toast } from "@medusajs/ui";
 import { useAtom } from "jotai";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
+import { PreferencePushRow } from "./preference-push-row";
 
-/** The user's own notification choices: emails, and the in-app sound. */
+/** The user's own notification choices: emails, push, and the in-app sound. */
 export const PreferenceNotificationSection = () => {
   const { t } = useTranslation();
   const id = useId();
@@ -47,6 +48,7 @@ export const PreferenceNotificationSection = () => {
           onCheckedChange={onChange}
         />
       </div>
+      <PreferencePushRow />
       <div className="flex items-center justify-between gap-x-4 px-6 py-4">
         <div className="flex flex-col gap-y-1">
           <Label htmlFor={soundId} size="small" weight="plus">

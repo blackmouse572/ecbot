@@ -4,7 +4,11 @@ import {
   notificationSharedControllerListV1,
   notificationSharedControllerMarkAllAsReadV1,
   notificationSharedControllerMarkAsReadV1,
+  notificationSharedControllerPushPublicKeyV1,
+  notificationSharedControllerPushSubscribeV1,
+  notificationSharedControllerPushUnsubscribeV1,
   notificationSharedControllerUnreadV1,
+  type NotificationPushSubscribeRequestDto,
 } from "@repo/client";
 import {
   useInfiniteQuery,
@@ -167,4 +171,32 @@ export function useMarkAllNotificationsAsRead(
     },
     ...options,
   });
+}
+
+/** The server's Web Push key; null when push is not set up on the server. */
+export function usePushPublicKey() {
+  const { data, ...rest } = useQuery({
+    queryKey: notificationQueryKey.detail("push-public-key"),
+    queryFn: async () => {
+      const response = await notificationSharedControllerPushPublicKeyV1();
+      return response?.data as unknown as {
+        data: { publicKey: string | null };
+      };
+    },
+    staleTime: Infinity,
+  });
+
+  return { publicKey: data?.data?.publicKey ?? null, ...rest };
+}
+
+/** Tells the server to send this user's notifications to this browser. */
+export function savePushSubscription(subscription: PushSubscription) {
+  return notificationSharedControllerPushSubscribeV1({
+    body: subscription.toJSON() as NotificationPushSubscribeRequestDto,
+  });
+}
+
+/** Tells the server to stop sending to this browser. */
+export function removePushSubscription(endpoint: string) {
+  return notificationSharedControllerPushUnsubscribeV1({ body: { endpoint } });
 }

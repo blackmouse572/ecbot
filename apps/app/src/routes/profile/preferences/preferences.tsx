@@ -1,4 +1,5 @@
 import {
+  PreferenceAppSection,
   PreferenceGeneralSection,
   PreferenceNotificationSection,
 } from "./components";
@@ -8,6 +9,7 @@ export const Preferences = () => {
     <div className="flex flex-col gap-y-3">
       <PreferenceGeneralSection />
       <PreferenceNotificationSection />
+      <PreferenceAppSection />
     </div>
   );
 };

@@ -15,6 +15,10 @@ vi.mock("@/hooks/api", () => ({
   }),
 }));
 
+vi.mock("@/modules/pwa", () => ({
+  usePushNotifications: () => ({ status: "off" }),
+}));
+
 import { PreferenceNotificationSection } from "./preference-notification-section";
 
 // Handover emails can be switched off per person (email PR review).

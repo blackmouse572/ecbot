@@ -15,6 +15,7 @@ const api = vi.hoisted(() => ({
 }));
 
 vi.mock("@/hooks/use-leader-tab", () => ({ useIsLeaderTab: () => true }));
+vi.mock("@/modules/pwa", () => ({ usePushBridge: () => undefined }));
 
 vi.mock("@/hooks/api/notifications", () => ({
   useUnreadNotificationCount: () => ({ count: api.count, isFetched: true }),

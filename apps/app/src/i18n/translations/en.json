@@ -2297,7 +2297,22 @@
       "handoffEmailsHint": "Sent when an agent hands a conversation over to your team. You still see it in the app.",
       "saveFailed": "Could not save your choice. Please try again.",
       "sound": "Play sounds in the app",
-      "soundHint": "Short sounds for new notifications and messages, sent messages, connected accounts, agents turned on, and knowledge that finishes or fails processing. Applies to this browser only."
+      "soundHint": "Short sounds for new notifications and messages, sent messages, connected accounts, agents turned on, and knowledge that finishes or fails processing. Applies to this browser only.",
+      "push": "Notifications on this device",
+      "pushHint": "Pop-up notifications on this computer or phone, even when Ecbot is closed. Turn this on for each device you use.",
+      "pushNeedsInstall": "On iPhone and iPad, add Ecbot to your Home Screen first (Share, then Add to Home Screen), then open it from there and turn this on.",
+      "pushDenied": "Notifications are blocked for Ecbot in this browser. Allow them in the browser's site settings, then reload this page.",
+      "pushUnsupported": "This browser can't show notifications. Try Chrome, Edge, Firefox or Safari.",
+      "pushFailed": "Could not change notifications on this device. Please try again."
+    },
+    "app": {
+      "domain": "Ecbot app",
+      "description": "Install Ecbot on this device to open it from your desktop or Home Screen, like any other app.",
+      "install": "Install app",
+      "installHint": "Opens in its own window and keeps you signed in.",
+      "installed": "Ecbot is installed on this device.",
+      "iosSteps": "In Safari, tap Share, then Add to Home Screen. On iPhone and iPad this is also needed for notifications.",
+      "browserMenu": "Use your browser's menu to install Ecbot (look for Install app or Add to Home Screen)."
     }
   },
   "workspace": {
