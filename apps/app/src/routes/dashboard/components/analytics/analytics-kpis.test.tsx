@@ -11,19 +11,18 @@ describe("AnalyticsKpis", () => {
     render(<AnalyticsKpis data={data} tabs={["bot"]} isLoading={false} />);
     expect(screen.getByText("Handoff rate")).toBeTruthy();
     expect(screen.queryByText("Conversion rate")).toBeNull();
-    expect(screen.queryByText("Credits per order")).toBeNull();
   });
 
-  it("drops credits per order where the edition does not count it", () => {
+  it("drops a number whose section did not load", () => {
     render(
       <AnalyticsKpis
-        data={{ ...data, kpis: { ...data.kpis, tokensPerOrder: undefined } }}
-        tabs={["conversion", "usage"]}
+        data={{ bot: data.bot }}
+        tabs={["conversion", "bot"]}
         isLoading={false}
       />,
     );
-    expect(screen.getByText("Conversion rate")).toBeTruthy();
-    expect(screen.queryByText("Credits per order")).toBeNull();
+    expect(screen.getByText("Handoff rate")).toBeTruthy();
+    expect(screen.queryByText("Conversion rate")).toBeNull();
   });
 
   it("renders nothing when no tab is allowed", () => {

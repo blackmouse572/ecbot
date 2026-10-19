@@ -3,8 +3,8 @@ import type {
   WorkspaceAnalytics,
 } from "@/types/workspace-analytics";
 
-// Sample numbers for reviewing the dashboard before its API exists.
-// Deterministic, so screenshots stay the same. Removed when the API lands.
+// Sample numbers for tests and screenshots of the dashboard. Deterministic,
+// so screenshots stay the same.
 
 const RANGE_DAYS: Record<AnalyticsRange, number> = {
   "7d": 7,
@@ -20,7 +20,7 @@ const wave = (i: number, base: number, swing: number, seed: number) =>
 
 export function mockWorkspaceAnalytics(
   range: AnalyticsRange,
-): WorkspaceAnalytics {
+): Required<WorkspaceAnalytics> {
   const n = RANGE_DAYS[range];
   const scale = n / 30;
   const days = Array.from({ length: n }, (_, i) => {
@@ -28,16 +28,12 @@ export function mockWorkspaceAnalytics(
     return d.toISOString().slice(0, 10);
   });
   const r = (v: number) => Math.round(v * scale);
+  const generatedAt = "2026-10-16T15:30:00Z";
 
   return {
-    generatedAt: "2026-10-16T15:30:00Z",
-    kpis: {
-      conversionRate: { current: 18.4, previous: 15.1 },
-      positiveRate: { current: 62, previous: 58 },
-      handoffRate: { current: 21, previous: 26 },
-      tokensPerOrder: { current: 4800, previous: 5600 },
-    },
     conversion: {
+      generatedAt,
+      conversionRate: { current: 18.4, previous: 15.1 },
       daily: days.map((day, i) => ({
         day,
         newCustomers: wave(i, 14, 5, 1),
@@ -50,7 +46,6 @@ export function mockWorkspaceAnalytics(
           engaged: r(140),
           hotLeads: r(62),
           orders: r(38),
-          tokensPerOrder: 4300,
         },
         {
           platform: "ZALO_PAGE",
@@ -58,7 +53,6 @@ export function mockWorkspaceAnalytics(
           engaged: r(88),
           hotLeads: r(38),
           orders: r(24),
-          tokensPerOrder: 5100,
         },
         {
           platform: "WEBSITE_WIDGET",
@@ -66,7 +60,6 @@ export function mockWorkspaceAnalytics(
           engaged: r(48),
           hotLeads: r(20),
           orders: r(9),
-          tokensPerOrder: 6200,
         },
         {
           platform: "INSTAGRAM_PAGE",
@@ -74,12 +67,13 @@ export function mockWorkspaceAnalytics(
           engaged: r(25),
           hotLeads: r(12),
           orders: r(6),
-          tokensPerOrder: 5600,
         },
       ],
       medianHoursToOrder: 5.5,
     },
     marketing: {
+      generatedAt,
+      positiveRate: { current: 62, previous: 58 },
       daily: days.map((day, i) => ({
         day,
         positive: wave(i, 9, 3, 3),
@@ -112,8 +106,49 @@ export function mockWorkspaceAnalytics(
           negative: 12,
         },
       ],
+
+      unhappy: [
+        {
+          customerId: "u1",
+          conversationId: "v1",
+          name: "Trần Minh Khoa",
+          platform: "ZALO_PAGE",
+          tagName: "Khiếu nại",
+          emoji: "❗",
+          at: "2026-10-16T14:52:00Z",
+        },
+        {
+          customerId: "u2",
+          conversationId: "v2",
+          name: "Lê Thu Hà",
+          platform: "FACEBOOK_PAGE",
+          tagName: "Không hài lòng",
+          emoji: "😟",
+          at: "2026-10-16T11:10:00Z",
+        },
+        {
+          customerId: "u3",
+          conversationId: "v3",
+          name: "Phạm Hoàng Anh",
+          platform: "WEBSITE_WIDGET",
+          tagName: "Bực tức",
+          emoji: "🚨",
+          at: "2026-10-15T20:31:00Z",
+        },
+        {
+          customerId: "u4",
+          conversationId: "v4",
+          name: "Nguyễn Thị Lan",
+          platform: "INSTAGRAM_PAGE",
+          tagName: "Không hài lòng",
+          emoji: "😟",
+          at: "2026-10-15T09:05:00Z",
+        },
+      ],
     },
     bot: {
+      generatedAt,
+      handoffRate: { current: 21, previous: 26 },
       daily: days.map((day, i) => ({
         day,
         botResolved: wave(i, 15, 4, 6),
@@ -164,6 +199,7 @@ export function mockWorkspaceAnalytics(
       ],
     },
     customers: {
+      generatedAt,
       tags: [
         { id: "t1", name: "Khách mới", emoji: "✨", count: r(310) },
         { id: "t2", name: "Khách quay lại", emoji: "🔁", count: r(182) },
@@ -188,44 +224,5 @@ export function mockWorkspaceAnalytics(
         { platform: "INSTAGRAM_PAGE", count: r(60) },
       ],
     },
-    usage: { used: r(372_000), limit: 1_000_000 },
-    unhappy: [
-      {
-        customerId: "u1",
-        conversationId: "v1",
-        name: "Trần Minh Khoa",
-        platform: "ZALO_PAGE",
-        tagName: "Khiếu nại",
-        emoji: "❗",
-        at: "2026-10-16T14:52:00Z",
-      },
-      {
-        customerId: "u2",
-        conversationId: "v2",
-        name: "Lê Thu Hà",
-        platform: "FACEBOOK_PAGE",
-        tagName: "Không hài lòng",
-        emoji: "😟",
-        at: "2026-10-16T11:10:00Z",
-      },
-      {
-        customerId: "u3",
-        conversationId: "v3",
-        name: "Phạm Hoàng Anh",
-        platform: "WEBSITE_WIDGET",
-        tagName: "Bực tức",
-        emoji: "🚨",
-        at: "2026-10-15T20:31:00Z",
-      },
-      {
-        customerId: "u4",
-        conversationId: "v4",
-        name: "Nguyễn Thị Lan",
-        platform: "INSTAGRAM_PAGE",
-        tagName: "Không hài lòng",
-        emoji: "😟",
-        at: "2026-10-15T09:05:00Z",
-      },
-    ],
   };
 }

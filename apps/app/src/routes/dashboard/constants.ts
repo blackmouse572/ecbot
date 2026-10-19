@@ -43,5 +43,4 @@ export const ANALYTICS_TABS = [
   { value: "marketing", subjects: ["CUSTOMER", "CHATBOT"] },
   { value: "bot", subjects: ["CHATBOT"] },
   { value: "customers", subjects: ["CUSTOMER"] },
-  { value: "usage", subjects: ["TOKEN_USAGE"] },
 ] as const;
