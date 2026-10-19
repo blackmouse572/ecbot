@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import "@/i18n";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -11,6 +11,10 @@ vi.mock("@/hooks/api", () => ({
     isLoading: false,
     isError: state.error,
   }),
+}));
+vi.mock("./agent-link-drawer", () => ({
+  AgentLinkDrawer: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div>agent-drawer</div> : null,
 }));
 vi.mock("@/components/chatbot/chatbot-section", () => ({
   ChatbotSection: ({ chatbotId }: { chatbotId: string }) => (
@@ -48,6 +52,16 @@ describe("AccountChatbotSection", () => {
       "href",
       "/acme/chatbot/create?accountId=acc-1",
     );
+  });
+
+  it("lets the user pick an existing agent in a drawer", () => {
+    renderSection("FACEBOOK_PAGE");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Link existing agent" }),
+    );
+
+    expect(screen.getByText("agent-drawer")).toBeInTheDocument();
   });
 
   it("renders nothing when the agent lookup failed", () => {

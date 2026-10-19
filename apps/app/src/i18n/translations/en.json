@@ -921,7 +921,11 @@
       "noChatbot": {
         "title": "No agent yet",
         "message": "Create an agent to answer customers on this channel.",
-        "action": "Create agent"
+        "action": "Create agent",
+        "linkExisting": "Link existing agent",
+        "drawerTitle": "Choose an agent",
+        "noneAvailable": "No agents available",
+        "loadFailed": "Could not load agents. Try again."
       }
     },
     "imports": {
@@ -2401,7 +2405,7 @@
     "create": "Create",
     "clearAll": "Clear all",
     "continued": "Continue",
-    "linkAccount": "Connect account",
+    "linkAccount": "Link existing account",
     "tryAgain": "Try Again",
     "enable": "Enable",
     "disable": "Disable",

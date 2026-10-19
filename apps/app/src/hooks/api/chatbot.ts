@@ -30,11 +30,13 @@ import {
 } from "@repo/client";
 import {
   queryOptions,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { accountQueryKeys } from "./accounts";
 import { useWorkspace } from "./workspace";
 
@@ -84,6 +86,34 @@ export const useChatbots = (
     chatbots: data?.data as ChatbotListResponseDto[],
     count: data?._metadata?.pagination?.total ?? 0,
   };
+};
+
+/** One page of agents at a time, searched on the server, for pickers that load more on scroll. */
+export const useInfiniteChatbotList = (search: string) => {
+  const { workspace } = useWorkspace();
+  const perPage = 20;
+  const { data, ...rest } = useInfiniteQuery({
+    queryKey: chatbotQueryKeys.list({ search, infinite: true }),
+    queryFn: ({ pageParam }) =>
+      chatbotControllerFindAllV1({
+        path: { workspace: workspace!.slug },
+        query: { search: search || undefined, page: pageParam, perPage },
+      }).then((res) => res.data),
+    initialPageParam: 1,
+    getNextPageParam: (last, pages) => {
+      const totalPage = last?._metadata?.pagination?.totalPage ?? 1;
+      return pages.length < totalPage ? pages.length + 1 : undefined;
+    },
+    enabled: !!workspace,
+  });
+
+  const chatbots = useMemo(
+    () =>
+      (data?.pages.flatMap((page) => page?.data ?? []) ??
+        []) as ChatbotListResponseDto[],
+    [data?.pages],
+  );
+  return { ...rest, chatbots };
 };
 
 export const chatbotModelsQuery = () => ({
