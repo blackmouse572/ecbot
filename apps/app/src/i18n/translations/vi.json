@@ -439,7 +439,8 @@
       "viewProjects": "Xem các dự án"
     },
     "analytics": {
-      "empty": "Chưa có dữ liệu trong khoảng thời gian này.",
+      "empty": "Chưa có dữ liệu",
+      "emptyMessage": "Số liệu sẽ hiện ở đây khi có khách nhắn tin với chatbot trong khoảng thời gian này.",
       "error": "Không tải được số liệu. Vui lòng thử lại sau.",
       "updatedAt": "Cập nhật lúc {{time}}",
       "refresh": "Làm mới",
@@ -525,7 +526,8 @@
       "unhappy": {
         "title": "Khách chưa hài lòng",
         "description": "Các hội thoại gần đây kết thúc không vui. Mở để chăm sóc lại.",
-        "empty": "Không có khách chưa hài lòng trong khoảng này."
+        "empty": "Không có khách chưa hài lòng",
+        "emptyMessage": "Khách được bot đánh dấu là chưa hài lòng sẽ hiện ở đây để bạn chăm sóc lại."
       }
     },
     "recentActivities": "Hoạt động gần đây",

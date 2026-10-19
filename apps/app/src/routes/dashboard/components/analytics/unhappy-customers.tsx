@@ -2,7 +2,8 @@ import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import type { UnhappyCustomer } from "@/hooks/api/workspace-analytics";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
-import { TriangleRightMini } from "@medusajs/icons";
+import { FaceSmile, TriangleRightMini } from "@medusajs/icons";
+import { ChartPlaceholder } from "@repo/ui/charts";
 import { Container, Heading, Text } from "@medusajs/ui";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,7 +11,10 @@ import { Link } from "react-router-dom";
 
 /** Customers the classifier marked unhappy, newest first, each opening its
  * conversation so someone can follow up. */
-export const UnhappyCustomers: FC<{ rows: UnhappyCustomer[] }> = ({ rows }) => {
+export const UnhappyCustomers: FC<{
+  rows: UnhappyCustomer[];
+  isLoading?: boolean;
+}> = ({ rows, isLoading }) => {
   const { t, i18n } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const when = new Intl.DateTimeFormat(i18n.language, {
@@ -29,9 +33,13 @@ export const UnhappyCustomers: FC<{ rows: UnhappyCustomer[] }> = ({ rows }) => {
         </Text>
       </div>
       {rows.length === 0 ? (
-        <Text size="small" className="text-ui-fg-muted px-6 py-4">
-          {t("dashboard.analytics.unhappy.empty")}
-        </Text>
+        <ChartPlaceholder
+          isLoading={isLoading}
+          className="h-[324px]"
+          icon={<FaceSmile />}
+          title={t("dashboard.analytics.unhappy.empty")}
+          message={t("dashboard.analytics.unhappy.emptyMessage")}
+        />
       ) : (
         <ul className="divide-y">
           {rows.map((row) => (

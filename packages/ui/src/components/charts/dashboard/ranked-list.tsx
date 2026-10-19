@@ -1,3 +1,5 @@
+import { ChartBar } from "@medusajs/icons";
+import { ChartPlaceholder } from "./chart-placeholder";
 import { Container, Heading, Text } from "@medusajs/ui";
 import type { FC, ReactNode } from "react";
 
@@ -15,6 +17,8 @@ type RankedRowsProps = {
   rows: RankedRow[];
   /** Shown when there are no rows. */
   emptyLabel: string;
+  /** One line under the empty title on what will show here. */
+  emptyMessage?: string;
   isLoading?: boolean;
   /** Bars are a share of this; defaults to the biggest row. */
   max?: number;
@@ -29,6 +33,7 @@ type RankedRowsProps = {
 export const RankedRows: FC<RankedRowsProps> = ({
   rows,
   emptyLabel,
+  emptyMessage,
   isLoading,
   max,
   formatCount = String,
@@ -39,9 +44,13 @@ export const RankedRows: FC<RankedRowsProps> = ({
 
   if (rows.length === 0) {
     return (
-      <Text size="small" className="text-ui-fg-muted py-6 text-center">
-        {isLoading ? "–" : emptyLabel}
-      </Text>
+      <ChartPlaceholder
+        isLoading={isLoading}
+        className="h-40"
+        icon={<ChartBar />}
+        title={emptyLabel}
+        message={emptyMessage}
+      />
     );
   }
   return (

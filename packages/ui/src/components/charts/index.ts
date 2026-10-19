@@ -16,3 +16,4 @@ export { SharePie } from "./dashboard/share-pie";
 export type { ShareSlice } from "./dashboard/share-pie";
 export { StatCard } from "./dashboard/stat-card";
 export { TabbedCard } from "./dashboard/tabbed-card";
+export { ChartPlaceholder } from "./dashboard/chart-placeholder";

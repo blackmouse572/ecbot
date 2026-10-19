@@ -1,3 +1,4 @@
+import type { WorkspaceAnalytics } from "@/hooks/api/workspace-analytics";
 import type { RequestPaginationDto } from "@/libs/query-types";
 import {
   Bolt,
@@ -44,3 +45,39 @@ export const ANALYTICS_TABS = [
   { value: "bot", subjects: ["CHATBOT"] },
   { value: "customers", subjects: ["CUSTOMER"] },
 ] as const;
+
+const NO_CHANGE = { current: 0, previous: 0 };
+
+/** Stands in for a section while it loads, so its cards render at full
+ * height with loading placeholders instead of popping in later. */
+export const LOADING_ANALYTICS: Required<WorkspaceAnalytics> = {
+  conversion: {
+    generatedAt: "",
+    conversionRate: NO_CHANGE,
+    daily: [],
+    byChannel: [],
+    medianHoursToOrder: 0,
+  },
+  marketing: {
+    generatedAt: "",
+    positiveRate: NO_CHANGE,
+    daily: [],
+    byChannel: [],
+    unhappy: [],
+  },
+  bot: {
+    generatedAt: "",
+    handoffRate: NO_CHANGE,
+    daily: [],
+    reasons: [],
+    byChatbot: [],
+  },
+  customers: {
+    generatedAt: "",
+    tags: [],
+    total: 0,
+    untagged: 0,
+    daily: [],
+    byChannel: [],
+  },
+};

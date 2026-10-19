@@ -11,12 +11,15 @@ import { ConversionSection } from "./conversion-section";
 import { CustomersSection } from "./customers-section";
 import { MarketingSection } from "./marketing-section";
 import { ScrollShadowRow } from "./scroll-shadow-row";
+import { LOADING_ANALYTICS } from "../../constants";
 
 type AnalyticsTabsProps = {
   data?: WorkspaceAnalytics;
   tabs: AnalyticsTab[];
   tab?: AnalyticsTab;
   onTabChange: (tab: AnalyticsTab) => void;
+  /** Sections still loading render with placeholders at full height. */
+  isLoading?: boolean;
   /** The right-hand column next to the tab content. */
   sidebar: ReactNode;
 };
@@ -28,9 +31,16 @@ export const AnalyticsTabs: FC<AnalyticsTabsProps> = ({
   tabs,
   tab,
   onTabChange,
+  isLoading,
   sidebar,
 }) => {
   const { t } = useTranslation();
+  const section = <K extends AnalyticsTab>(key: K) =>
+    data?.[key] ?? (isLoading ? LOADING_ANALYTICS[key] : undefined);
+  const conversion = section("conversion");
+  const marketing = section("marketing");
+  const bot = section("bot");
+  const customers = section("customers");
   return (
     <Tabs
       value={tab}
@@ -54,24 +64,27 @@ export const AnalyticsTabs: FC<AnalyticsTabsProps> = ({
       )}
       <TwoColumnPage hasOutlet={false}>
         <TwoColumnPage.Main>
-          {data?.conversion && (
+          {conversion && (
             <Tabs.Content value="conversion">
-              <ConversionSection data={data.conversion} />
+              <ConversionSection
+                data={conversion}
+                isLoading={!data?.conversion}
+              />
             </Tabs.Content>
           )}
-          {data?.marketing && (
+          {marketing && (
             <Tabs.Content value="marketing">
-              <MarketingSection data={data.marketing} />
+              <MarketingSection data={marketing} isLoading={!data?.marketing} />
             </Tabs.Content>
           )}
-          {data?.bot && (
+          {bot && (
             <Tabs.Content value="bot">
-              <BotSection data={data.bot} />
+              <BotSection data={bot} isLoading={!data?.bot} />
             </Tabs.Content>
           )}
-          {data?.customers && (
+          {customers && (
             <Tabs.Content value="customers">
-              <CustomersSection data={data.customers} />
+              <CustomersSection data={customers} isLoading={!data?.customers} />
             </Tabs.Content>
           )}
         </TwoColumnPage.Main>

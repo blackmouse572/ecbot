@@ -14,10 +14,14 @@ import { useAnalyticsFormat } from "./use-analytics-format";
 
 type ConversionSectionProps = {
   data: ConversionAnalytics;
+  isLoading?: boolean;
 };
 
 /** New customers becoming customers with an order: daily, funnel, per channel. */
-export const ConversionSection: FC<ConversionSectionProps> = ({ data }) => {
+export const ConversionSection: FC<ConversionSectionProps> = ({
+  data,
+  isLoading,
+}) => {
   const { t } = useTranslation();
   const f = useAnalyticsFormat();
   const empty = t("dashboard.analytics.empty");
@@ -53,6 +57,8 @@ export const ConversionSection: FC<ConversionSectionProps> = ({ data }) => {
         title={t("dashboard.analytics.conversion.dailyTitle")}
         rows={data.daily}
         emptyLabel={empty}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         formatValue={f.compact}
         views={[
           {
@@ -86,6 +92,8 @@ export const ConversionSection: FC<ConversionSectionProps> = ({ data }) => {
           stages={stages}
           series={series}
           emptyLabel={empty}
+          emptyMessage={t("dashboard.analytics.emptyMessage")}
+          isLoading={isLoading}
           formatCount={f.number}
           formatShare={f.share}
           dropLabel={(lost, share) =>
@@ -101,13 +109,15 @@ export const ConversionSection: FC<ConversionSectionProps> = ({ data }) => {
             {t("dashboard.analytics.conversion.timeToOrder")}
           </Text>
           <Text size="small" weight="plus" className="tabular-nums">
-            {t("dashboard.analytics.conversion.hours", {
-              value: f.decimal(data.medianHoursToOrder),
-            })}
+            {isLoading
+              ? "–"
+              : t("dashboard.analytics.conversion.hours", {
+                  value: f.decimal(data.medianHoursToOrder),
+                })}
           </Text>
           <Text size="xsmall" className="text-ui-fg-subtle w-full">
             {t("dashboard.analytics.conversion.timeToOrderHint", {
-              value: f.decimal(data.medianHoursToOrder),
+              value: isLoading ? "–" : f.decimal(data.medianHoursToOrder),
             })}
           </Text>
         </div>
@@ -117,6 +127,8 @@ export const ConversionSection: FC<ConversionSectionProps> = ({ data }) => {
         rows={data.byChannel}
         rowKey={(row) => row.platform}
         emptyLabel={empty}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         columns={[
           {
             key: "channel",

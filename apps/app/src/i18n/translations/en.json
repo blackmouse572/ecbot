@@ -418,7 +418,8 @@
     "title": "Dashboard",
     "recentActivities": "Recent Activity",
     "analytics": {
-      "empty": "No data for this period yet.",
+      "empty": "No data yet",
+      "emptyMessage": "Numbers show up here once customers chat with your agents in this period.",
       "error": "Could not load the numbers. Try again in a moment.",
       "updatedAt": "Updated at {{time}}",
       "refresh": "Refresh",
@@ -504,7 +505,8 @@
       "unhappy": {
         "title": "Unhappy customers",
         "description": "Recent conversations that ended badly. Open one to follow up.",
-        "empty": "No unhappy customers in this period."
+        "empty": "No unhappy customers",
+        "emptyMessage": "Customers the bot marks as unhappy show up here so you can follow up."
       }
     },
     "gettingStarted": {

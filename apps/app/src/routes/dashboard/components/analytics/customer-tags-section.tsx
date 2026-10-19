@@ -7,9 +7,10 @@ import { TAG_SLICE_COLORS } from "./chart-colors";
 import { useAnalyticsFormat } from "./use-analytics-format";
 
 /** How customers split across tags: the biggest groups, the rest as one. */
-export const CustomerTagsSection: FC<{ data: CustomersAnalytics }> = ({
-  data,
-}) => {
+export const CustomerTagsSection: FC<{
+  data: CustomersAnalytics;
+  isLoading?: boolean;
+}> = ({ data, isLoading }) => {
   const { t } = useTranslation();
   const f = useAnalyticsFormat();
   const named = TAG_SLICE_COLORS.length - 1;
@@ -41,16 +42,20 @@ export const CustomerTagsSection: FC<{ data: CustomersAnalytics }> = ({
         <Heading level="h2">
           {t("dashboard.analytics.customers.tagsTitle")}
         </Heading>
-        <Text size="small" className="text-ui-fg-subtle">
-          {t("dashboard.analytics.customers.untagged", {
-            count: data.untagged,
-            share: f.share(data.untagged, data.total),
-          })}
-        </Text>
+        {!isLoading && (
+          <Text size="small" className="text-ui-fg-subtle">
+            {t("dashboard.analytics.customers.untagged", {
+              count: data.untagged,
+              share: f.share(data.untagged, data.total),
+            })}
+          </Text>
+        )}
       </div>
       <SharePie
         slices={slices}
         emptyLabel={t("dashboard.analytics.empty")}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         formatCount={f.number}
         suffix={(slice) => f.share(slice.count, data.total)}
       />
