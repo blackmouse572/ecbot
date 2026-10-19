@@ -5,6 +5,8 @@ const state = vi.hoisted(() => ({
   search: undefined as string | undefined,
   fetchNextPage: vi.fn(),
   hasNextPage: true,
+  isLoading: false,
+  isFetchingNextPage: false,
   observed: [] as Element[],
   trigger: undefined as undefined | (() => void),
 }));
@@ -22,7 +24,8 @@ vi.mock("@/hooks/api/chatbot", () => ({
       chatbots: [{ id: "a", name: "Moc", type: "restaurant" }],
       fetchNextPage: state.fetchNextPage,
       hasNextPage: state.hasNextPage,
-      isFetchingNextPage: false,
+      isFetchingNextPage: state.isFetchingNextPage,
+      isLoading: state.isLoading,
     };
   },
   useLinkChatbotAccount: () => ({ mutateAsync: vi.fn(), isPending: false }),
@@ -46,6 +49,8 @@ beforeEach(() => {
   state.search = undefined;
   state.fetchNextPage.mockReset();
   state.hasNextPage = true;
+  state.isLoading = false;
+  state.isFetchingNextPage = false;
   vi.stubGlobal(
     "IntersectionObserver",
     class {
@@ -81,5 +86,20 @@ describe("AgentLinkDrawer", () => {
     render(<AgentLinkDrawer isOpen onClose={vi.fn()} accountId="acc-1" />);
 
     expect(screen.getByText("type-badge")).toBeInTheDocument();
+  });
+
+  it("shows skeleton rows while the first page loads", () => {
+    state.isLoading = true;
+    render(<AgentLinkDrawer isOpen onClose={vi.fn()} accountId="acc-1" />);
+
+    expect(screen.getAllByTestId("agent-skeleton").length).toBeGreaterThan(0);
+  });
+
+  it("shows skeleton rows under the list while the next page loads", () => {
+    state.isFetchingNextPage = true;
+    render(<AgentLinkDrawer isOpen onClose={vi.fn()} accountId="acc-1" />);
+
+    expect(screen.getByText("Moc")).toBeInTheDocument();
+    expect(screen.getAllByTestId("agent-skeleton").length).toBeGreaterThan(0);
   });
 });

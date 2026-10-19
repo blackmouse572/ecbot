@@ -6,6 +6,7 @@ import { CHATBOT_TYPE_CONFIG } from "@/routes/chatbot/constants";
 import { ChatbotNameCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-name-cell";
 import { ChatbotTypeBadge } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-type-badge";
 import { MagnifyingGlass } from "@medusajs/icons";
+import { Skeleton } from "@repo/ui/common-components";
 import { Button, Drawer, Input, Text, toast } from "@medusajs/ui";
 import type { ChatbotLinkAccountResponseDto } from "@repo/client";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -50,7 +51,7 @@ const AgentRow = ({ chatbot, accountId, onLinked }: RowProps) => {
 
   return (
     <div className="flex items-center justify-between rounded-lg border bg-ui-bg-field border-ui-border-base p-3">
-      <div className="flex min-w-0 flex-col gap-y-1">
+      <div className="flex min-w-0 flex-col items-start gap-y-1">
         <ChatbotNameCell
           size="small"
           name={chatbot.name}
@@ -72,13 +73,37 @@ const AgentRow = ({ chatbot, accountId, onLinked }: RowProps) => {
 
 const SEARCH_DEBOUNCE_MS = 250;
 
+/** Placeholder rows while a page of agents loads. */
+const RowSkeletons = ({ count }: { count: number }) => (
+  <>
+    {Array.from({ length: count }, (_, i) => (
+      <div
+        key={i}
+        data-testid="agent-skeleton"
+        className="flex items-center justify-between rounded-lg border border-ui-border-base p-3"
+      >
+        <div className="flex flex-col gap-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <Skeleton className="h-7 w-14" />
+      </div>
+    ))}
+  </>
+);
+
 /** Pick one of the workspace's agents to answer on this channel. */
 export const AgentLinkDrawer = ({ isOpen, onClose, accountId }: Props) => {
   const { t } = useTranslation();
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
-  const { chatbots, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteChatbotList(search);
+  const {
+    chatbots,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteChatbotList(search);
   const available = chatbots.filter((c) => c.status !== "archived");
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -119,7 +144,11 @@ export const AgentLinkDrawer = ({ isOpen, onClose, accountId }: Props) => {
               onChange={(e) => setInput(e.target.value)}
             />
           </div>
-          {available.length === 0 && !hasNextPage ? (
+          {isLoading ? (
+            <div className="flex flex-col gap-2">
+              <RowSkeletons count={5} />
+            </div>
+          ) : available.length === 0 && !hasNextPage ? (
             <Text size="small" className="text-ui-fg-muted text-center py-6">
               {t("accounts.details.noChatbot.noneAvailable")}
             </Text>
@@ -133,6 +162,7 @@ export const AgentLinkDrawer = ({ isOpen, onClose, accountId }: Props) => {
                   onLinked={onClose}
                 />
               ))}
+              {isFetchingNextPage && <RowSkeletons count={2} />}
               <div ref={sentinel} className="h-px" />
             </div>
           )}
