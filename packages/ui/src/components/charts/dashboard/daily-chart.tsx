@@ -1,5 +1,6 @@
 import { ChartBar } from "@medusajs/icons";
 import { ChartPlaceholder } from "./chart-placeholder";
+import { TOOLTIP_CLASS } from "./tooltip-class";
 import { Container, Heading, Tabs, Text } from "@medusajs/ui";
 import { useState, type ReactNode } from "react";
 import { EvilBarChart } from "../evilcharts/recharts-bar-chart";
@@ -54,7 +55,7 @@ export function DailyChart<T extends { day: string }>({
     ]),
   ) as ChartConfig;
 
-  const pending = !!isLoading && !rows.length;
+  const pending = !!isLoading;
   // Days are zero-filled, so a period with nothing in it still has rows.
   const empty =
     !isLoading &&
@@ -117,7 +118,7 @@ export function DailyChart<T extends { day: string }>({
                 : formatValue(v)
             }
           />
-          <EvilBarChart.Tooltip />
+          <EvilBarChart.Tooltip className={TOOLTIP_CLASS} />
           <EvilBarChart.Legend />
           {view.series.map((s) => (
             <EvilBarChart.Bar key={s.key} dataKey={s.key} />

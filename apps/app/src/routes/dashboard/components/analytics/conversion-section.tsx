@@ -25,6 +25,8 @@ export const ConversionSection: FC<ConversionSectionProps> = ({
   const { t } = useTranslation();
   const f = useAnalyticsFormat();
   const empty = t("dashboard.analytics.empty");
+  // Without an order in the period there is no time to order to show.
+  const hasOrders = data.byChannel.some((row) => row.orders > 0);
   const stageKeys = ["newCustomers", "engaged", "hotLeads", "orders"] as const;
   const stages = stageKeys.map((key) => ({
     key,
@@ -104,23 +106,25 @@ export const ConversionSection: FC<ConversionSectionProps> = ({
             })
           }
         />
-        <div className="bg-ui-bg-subtle flex flex-wrap items-baseline justify-between gap-2 rounded-md px-3 py-2">
-          <Text size="small" weight="plus">
-            {t("dashboard.analytics.conversion.timeToOrder")}
-          </Text>
-          <Text size="small" weight="plus" className="tabular-nums">
-            {isLoading
-              ? "–"
-              : t("dashboard.analytics.conversion.hours", {
-                  value: f.decimal(data.medianHoursToOrder),
-                })}
-          </Text>
-          <Text size="xsmall" className="text-ui-fg-subtle w-full">
-            {t("dashboard.analytics.conversion.timeToOrderHint", {
-              value: isLoading ? "–" : f.decimal(data.medianHoursToOrder),
-            })}
-          </Text>
-        </div>
+        {(isLoading || hasOrders) && (
+          <div className="bg-ui-bg-subtle flex flex-wrap items-baseline justify-between gap-2 rounded-md px-3 py-2">
+            <Text size="small" weight="plus">
+              {t("dashboard.analytics.conversion.timeToOrder")}
+            </Text>
+            <Text size="small" weight="plus" className="tabular-nums">
+              {isLoading
+                ? "–"
+                : t("dashboard.analytics.conversion.hours", {
+                    value: f.decimal(data.medianHoursToOrder),
+                  })}
+            </Text>
+            <Text size="xsmall" className="text-ui-fg-subtle w-full">
+              {t("dashboard.analytics.conversion.timeToOrderHint", {
+                value: isLoading ? "–" : f.decimal(data.medianHoursToOrder),
+              })}
+            </Text>
+          </div>
+        )}
       </Container>
       <SimpleTable
         title={t("dashboard.analytics.conversion.byChannelTitle")}

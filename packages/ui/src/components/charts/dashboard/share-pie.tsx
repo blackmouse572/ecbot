@@ -1,5 +1,6 @@
 import { ChartPie } from "@medusajs/icons";
 import { ChartPlaceholder } from "./chart-placeholder";
+import { TOOLTIP_CLASS } from "./tooltip-class";
 import { Text } from "@medusajs/ui";
 import type { FC, ReactNode } from "react";
 import { type ChartConfig } from "../evilcharts/recharts-chart";
@@ -67,7 +68,7 @@ export const SharePie: FC<SharePieProps> = ({
             paddingAngle={1}
             cornerRadius={4}
           />
-          <EvilPieChart.Tooltip />
+          <EvilPieChart.Tooltip className={TOOLTIP_CLASS} />
         </EvilPieChart>
         <ul className="flex w-full min-w-0 flex-col gap-y-2">
           {slices.map((s) => (
