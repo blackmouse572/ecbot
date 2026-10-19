@@ -86,5 +86,8 @@
     "tagNotice": {
         "title": "A customer was tagged \"{tag}\"",
         "message": "The assistant keeps replying. Open the conversation to follow up."
-    }
+    },
+    "pushPublicKey": "Push settings loaded.",
+    "pushSubscribe": "Notifications are on for this device.",
+    "pushUnsubscribe": "Notifications are off for this device."
 }

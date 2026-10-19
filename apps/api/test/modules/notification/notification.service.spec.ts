@@ -12,7 +12,8 @@ describe('NotificationService subscription notifications', () => {
     const service = new NotificationService(
         {} as any,
         {} as any,
-        messageService as any
+        messageService as any,
+        { sendToUser: async () => undefined } as any
     );
     const create = jest.spyOn(service, 'create').mockResolvedValue({} as any);
 

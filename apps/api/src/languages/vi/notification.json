@@ -86,5 +86,8 @@
     "tagNotice": {
         "title": "Khách hàng được gắn thẻ \"{tag}\"",
         "message": "Trợ lý vẫn tiếp tục trả lời. Mở cuộc hội thoại để theo dõi."
-    }
+    },
+    "pushPublicKey": "Đã tải cài đặt thông báo đẩy.",
+    "pushSubscribe": "Đã bật thông báo trên thiết bị này.",
+    "pushUnsubscribe": "Đã tắt thông báo trên thiết bị này."
 }

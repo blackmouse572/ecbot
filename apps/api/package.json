@@ -133,6 +133,7 @@
         "stripe": "^22.6.2",
         "undici": "^7.29.1",
         "verify-apple-id-token": "^3.1.2",
+        "web-push": "3.6.7",
         "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
         "yargs": "^17.7.3"
     },
@@ -169,6 +170,7 @@
         "@types/react-dom": "19.3.0",
         "@types/response-time": "^2.3.9",
         "@types/supertest": "^6.0.3",
+        "@types/web-push": "3.6.4",
         "cspell": "^8.19.4",
         "eslint": "^9.39.5",
         "eslint-config-prettier": "^10.1.8",
