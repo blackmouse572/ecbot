@@ -8,9 +8,10 @@ import { SimpleTable } from "./simple-table";
 import { useAnalyticsFormat } from "./use-analytics-format";
 
 /** New against returning customers, and where customers come from. */
-export const CustomersSection: FC<{ data: CustomersAnalytics }> = ({
-  data,
-}) => {
+export const CustomersSection: FC<{
+  data: CustomersAnalytics;
+  isLoading?: boolean;
+}> = ({ data, isLoading }) => {
   const { t } = useTranslation();
   const f = useAnalyticsFormat();
   const empty = t("dashboard.analytics.empty");
@@ -21,6 +22,8 @@ export const CustomersSection: FC<{ data: CustomersAnalytics }> = ({
         title={t("dashboard.analytics.customers.dailyTitle")}
         rows={data.daily}
         emptyLabel={empty}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         formatValue={f.compact}
         views={[
           {
@@ -47,6 +50,8 @@ export const CustomersSection: FC<{ data: CustomersAnalytics }> = ({
         rows={data.byChannel}
         rowKey={(row) => row.platform}
         emptyLabel={empty}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         columns={[
           {
             key: "channel",

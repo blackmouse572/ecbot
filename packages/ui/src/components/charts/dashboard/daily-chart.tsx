@@ -1,3 +1,6 @@
+import { ChartBar } from "@medusajs/icons";
+import { ChartPlaceholder } from "./chart-placeholder";
+import { TOOLTIP_CLASS } from "./tooltip-class";
 import { Container, Heading, Tabs, Text } from "@medusajs/ui";
 import { useState, type ReactNode } from "react";
 import { EvilBarChart } from "../evilcharts/recharts-bar-chart";
@@ -24,6 +27,8 @@ type DailyChartProps<T extends { day: string }> = {
   views: [DailyView<T>, ...DailyView<T>[]];
   /** Shown when there are no rows. */
   emptyLabel: string;
+  /** One line under the empty title on what will show here. */
+  emptyMessage?: string;
   formatValue?: (value: number) => string;
   /** Extra content under the heading, e.g. a note on what is counted. */
   description?: ReactNode;
@@ -36,6 +41,7 @@ export function DailyChart<T extends { day: string }>({
   rows,
   views,
   emptyLabel,
+  emptyMessage,
   formatValue = String,
   description,
   isLoading,
@@ -49,8 +55,13 @@ export function DailyChart<T extends { day: string }>({
     ]),
   ) as ChartConfig;
 
-  const pending = !!isLoading && !rows.length;
-  const empty = !isLoading && !rows.length;
+  const pending = !!isLoading;
+  // Days are zero-filled, so a period with nothing in it still has rows.
+  const empty =
+    !isLoading &&
+    rows.every((row) =>
+      view.series.every((s) => !Number(row[s.key as keyof T])),
+    );
 
   return (
     <Container className="flex flex-col gap-y-4">
@@ -76,11 +87,12 @@ export function DailyChart<T extends { day: string }>({
         )}
       </div>
       {empty ? (
-        <div className="flex h-56 items-center justify-center">
-          <Text size="small" className="text-ui-fg-muted">
-            {emptyLabel}
-          </Text>
-        </div>
+        <ChartPlaceholder
+          className="h-56"
+          icon={<ChartBar />}
+          title={emptyLabel}
+          message={emptyMessage}
+        />
       ) : (
         <EvilBarChart
           // A new view is a new set of bars; remount so it animates in.
@@ -106,7 +118,7 @@ export function DailyChart<T extends { day: string }>({
                 : formatValue(v)
             }
           />
-          <EvilBarChart.Tooltip />
+          <EvilBarChart.Tooltip className={TOOLTIP_CLASS} />
           <EvilBarChart.Legend />
           {view.series.map((s) => (
             <EvilBarChart.Bar key={s.key} dataKey={s.key} />

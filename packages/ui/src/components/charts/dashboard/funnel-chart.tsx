@@ -1,3 +1,5 @@
+import { ChartActivity } from "@medusajs/icons";
+import { ChartPlaceholder } from "./chart-placeholder";
 import { clx, Text } from "@medusajs/ui";
 import { useState, type FC } from "react";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
@@ -18,11 +20,14 @@ type FunnelChartProps = {
   stages: FunnelStage[];
   series: FunnelSeries[];
   emptyLabel: string;
+  /** One line under the empty title on what will show here. */
+  emptyMessage?: string;
   formatCount?: (count: number) => string;
   /** A share as text, e.g. "72%". */
   formatShare: (count: number, of: number) => string;
   /** Read out for the drop between two stages, e.g. "119 stopped (28%)". */
   dropLabel: (lost: number, share: string) => string;
+  isLoading?: boolean;
 };
 
 // Each stage holds flat across the middle of its column and curves into the
@@ -36,9 +41,11 @@ export const FunnelChart: FC<FunnelChartProps> = ({
   stages,
   series,
   emptyLabel,
+  emptyMessage,
   formatCount = String,
   formatShare,
   dropLabel,
+  isLoading,
 }) => {
   const [hidden, setHidden] = useState<string[]>([]);
   const shown = series.filter((s) => !hidden.includes(s.key));
@@ -55,11 +62,15 @@ export const FunnelChart: FC<FunnelChartProps> = ({
     shown.reduce((sum, s) => sum + (s.counts[i] ?? 0), 0),
   );
   const first = totals[0] ?? 0;
-  if (!first) {
+  if (isLoading || !first) {
     return (
-      <Text size="small" className="text-ui-fg-muted py-6 text-center">
-        {emptyLabel}
-      </Text>
+      <ChartPlaceholder
+        isLoading={isLoading}
+        className="h-[340px]"
+        icon={<ChartActivity />}
+        title={emptyLabel}
+        message={emptyMessage}
+      />
     );
   }
 

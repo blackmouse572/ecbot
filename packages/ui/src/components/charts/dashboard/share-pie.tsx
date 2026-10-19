@@ -1,3 +1,6 @@
+import { ChartPie } from "@medusajs/icons";
+import { ChartPlaceholder } from "./chart-placeholder";
+import { TOOLTIP_CLASS } from "./tooltip-class";
 import { Text } from "@medusajs/ui";
 import type { FC, ReactNode } from "react";
 import { type ChartConfig } from "../evilcharts/recharts-chart";
@@ -14,23 +17,32 @@ export type ShareSlice = {
 type SharePieProps = {
   slices: ShareSlice[];
   emptyLabel: string;
+  /** One line under the empty title on what will show here. */
+  emptyMessage?: string;
   formatCount?: (count: number) => string;
   /** Shown next to each count in the legend, e.g. a share of all customers. */
   suffix?: (slice: ShareSlice) => string | undefined;
+  isLoading?: boolean;
 };
 
 /** A donut of how a total splits, with a legend that carries the numbers. */
 export const SharePie: FC<SharePieProps> = ({
   slices,
   emptyLabel,
+  emptyMessage,
   formatCount = String,
   suffix,
+  isLoading,
 }) => {
-  if (slices.length === 0) {
+  if (isLoading || slices.length === 0) {
     return (
-      <Text size="small" className="text-ui-fg-muted py-6 text-center">
-        {emptyLabel}
-      </Text>
+      <ChartPlaceholder
+        isLoading={isLoading}
+        className="h-[396px]"
+        icon={<ChartPie />}
+        title={emptyLabel}
+        message={emptyMessage}
+      />
     );
   }
   const config = Object.fromEntries(
@@ -56,7 +68,7 @@ export const SharePie: FC<SharePieProps> = ({
             paddingAngle={1}
             cornerRadius={4}
           />
-          <EvilPieChart.Tooltip />
+          <EvilPieChart.Tooltip className={TOOLTIP_CLASS} />
         </EvilPieChart>
         <ul className="flex w-full min-w-0 flex-col gap-y-2">
           {slices.map((s) => (

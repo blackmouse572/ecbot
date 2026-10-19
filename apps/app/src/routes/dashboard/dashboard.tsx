@@ -14,6 +14,7 @@ import {
 } from "./components/analytics";
 import { useAnalyticsParams } from "./hooks/use-analytics-params";
 import { useAnalyticsTabs } from "./hooks/use-analytics-tabs";
+import { LOADING_ANALYTICS } from "./constants";
 
 export function Dashboard() {
   const { t } = useTranslation();
@@ -21,6 +22,8 @@ export function Dashboard() {
   const { range, setRange, tab, setTab } = useAnalyticsParams(tabs);
   const analytics = useWorkspaceAnalytics(range, tabs);
   const data = analytics.data;
+  const loadingTab = (tab: (typeof tabs)[number]) =>
+    analytics.isLoading && tabs.includes(tab);
 
   return (
     <SingleColumnPage hasOutlet={false}>
@@ -56,12 +59,21 @@ export function Dashboard() {
         tabs={tabs}
         tab={tab}
         onTabChange={setTab}
+        isLoading={analytics.isLoading}
         sidebar={
           <>
-            {data.marketing && (
-              <UnhappyCustomers rows={data.marketing.unhappy} />
+            {(data.marketing || loadingTab("marketing")) && (
+              <UnhappyCustomers
+                rows={data.marketing?.unhappy ?? []}
+                isLoading={!data.marketing}
+              />
             )}
-            {data.customers && <CustomerTagsSection data={data.customers} />}
+            {(data.customers || loadingTab("customers")) && (
+              <CustomerTagsSection
+                data={data.customers ?? LOADING_ANALYTICS.customers}
+                isLoading={!data.customers}
+              />
+            )}
             <RecentActivityListTable />
           </>
         }

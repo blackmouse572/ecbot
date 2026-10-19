@@ -8,7 +8,10 @@ import { SimpleTable } from "./simple-table";
 import { useAnalyticsFormat } from "./use-analytics-format";
 
 /** What the bot finished alone and what it handed over, and why. */
-export const BotSection: FC<{ data: BotAnalytics }> = ({ data }) => {
+export const BotSection: FC<{
+  data: BotAnalytics;
+  isLoading?: boolean;
+}> = ({ data, isLoading }) => {
   const { t } = useTranslation();
   const f = useAnalyticsFormat();
   const empty = t("dashboard.analytics.empty");
@@ -38,6 +41,8 @@ export const BotSection: FC<{ data: BotAnalytics }> = ({ data }) => {
         title={t("dashboard.analytics.bot.dailyTitle")}
         rows={data.daily}
         emptyLabel={empty}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         formatValue={f.compact}
         views={[
           {
@@ -58,13 +63,21 @@ export const BotSection: FC<{ data: BotAnalytics }> = ({ data }) => {
         <Heading level="h2">
           {t("dashboard.analytics.bot.reasonsTitle")}
         </Heading>
-        <RankedRows rows={reasons} emptyLabel={empty} formatCount={f.number} />
+        <RankedRows
+          rows={reasons}
+          emptyLabel={empty}
+          emptyMessage={t("dashboard.analytics.emptyMessage")}
+          isLoading={isLoading}
+          formatCount={f.number}
+        />
       </Container>
       <SimpleTable
         title={t("dashboard.analytics.bot.byChatbotTitle")}
         rows={data.byChatbot}
         rowKey={(row) => row.id}
         emptyLabel={empty}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         columns={[
           {
             key: "name",

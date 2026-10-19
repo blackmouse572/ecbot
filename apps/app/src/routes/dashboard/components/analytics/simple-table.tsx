@@ -1,4 +1,6 @@
-import { Container, Heading, Table, Text, clx } from "@medusajs/ui";
+import { ChartBar } from "@medusajs/icons";
+import { ChartPlaceholder } from "@repo/ui/charts";
+import { Container, Heading, Table, clx } from "@medusajs/ui";
 import type { ReactNode } from "react";
 
 export type SimpleColumn<T> = {
@@ -15,6 +17,8 @@ type SimpleTableProps<T> = {
   columns: SimpleColumn<T>[];
   rowKey: (row: T) => string;
   emptyLabel: string;
+  emptyMessage?: string;
+  isLoading?: boolean;
 };
 
 /** A small, read-only table in its own card: a breakdown, not a list page. */
@@ -24,6 +28,8 @@ export function SimpleTable<T>({
   columns,
   rowKey,
   emptyLabel,
+  emptyMessage,
+  isLoading,
 }: SimpleTableProps<T>) {
   return (
     <Container className="divide-y p-0">
@@ -31,9 +37,13 @@ export function SimpleTable<T>({
         <Heading level="h2">{title}</Heading>
       </div>
       {rows.length === 0 ? (
-        <Text size="small" className="text-ui-fg-muted py-6 text-center">
-          {emptyLabel}
-        </Text>
+        <ChartPlaceholder
+          isLoading={isLoading}
+          className="h-60"
+          icon={<ChartBar />}
+          title={emptyLabel}
+          message={emptyMessage}
+        />
       ) : (
         <div className="overflow-x-auto">
           <Table>

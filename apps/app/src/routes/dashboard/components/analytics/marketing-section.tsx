@@ -8,9 +8,10 @@ import { SimpleTable } from "./simple-table";
 import { useAnalyticsFormat } from "./use-analytics-format";
 
 /** How conversations ended, by the tags the classifier left: daily and per channel. */
-export const MarketingSection: FC<{ data: MarketingAnalytics }> = ({
-  data,
-}) => {
+export const MarketingSection: FC<{
+  data: MarketingAnalytics;
+  isLoading?: boolean;
+}> = ({ data, isLoading }) => {
   const { t } = useTranslation();
   const f = useAnalyticsFormat();
   const empty = t("dashboard.analytics.empty");
@@ -39,6 +40,8 @@ export const MarketingSection: FC<{ data: MarketingAnalytics }> = ({
         description={t("dashboard.analytics.marketing.dailyHint")}
         rows={data.daily}
         emptyLabel={empty}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         formatValue={f.compact}
         views={[
           {
@@ -60,6 +63,8 @@ export const MarketingSection: FC<{ data: MarketingAnalytics }> = ({
         rows={data.byChannel}
         rowKey={(row) => row.platform}
         emptyLabel={empty}
+        emptyMessage={t("dashboard.analytics.emptyMessage")}
+        isLoading={isLoading}
         columns={[
           {
             key: "channel",
