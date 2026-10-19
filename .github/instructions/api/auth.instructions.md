@@ -264,7 +264,7 @@ async systemEndpoint() {
 2. **Layer permissions** - Combine role and ability checks when needed
 3. **Check user status** - Use `@UserProtected()` to verify user is active
 4. **Revoke sessions** - Implement session revocation for logout
-5. **Hash passwords** - Use bcryptjs (never store plain text)
+5. **Hash passwords** - Use `HelperHashService.passwordHash` (argon2id, never store plain text)
 6. **Validate tokens** - Check expiration, signature, and claims
 7. **Use secure algorithms** - ES512 for JWT signing
 8. **Rotate keys** - Regularly update JWT signing keys
