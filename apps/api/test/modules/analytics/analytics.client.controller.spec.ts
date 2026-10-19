@@ -1,5 +1,9 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { GUARDS_METADATA, PATH_METADATA } from '@nestjs/common/constants';
+import { get } from 'lodash';
+import { RESPONSE_MESSAGE_PATH_META_KEY } from '../../../src/common/response/constants/response.constant';
+import en from '../../../src/languages/en/analytics.json';
+import vi from '../../../src/languages/vi/analytics.json';
 import { ENUM_ANALYTICS_RANGE } from '../../../src/modules/analytics/constants/analytics.constant';
 import { AnalyticsClientController } from '../../../src/modules/analytics/controllers/analytics.client.controller';
 import { ENUM_ANALYTICS_STATUS_CODE_ERROR } from '../../../src/modules/analytics/enums/analytics.status-code.enum';
@@ -81,6 +85,22 @@ describe('AnalyticsClientController', () => {
             ).toEqual(abilities);
         }
     );
+
+    // The interceptor sends the raw path as `message` when a locale lacks it.
+    it.each(HANDLERS)('%s answers with a translated message', handler => {
+        const path: string = Reflect.getMetadata(
+            RESPONSE_MESSAGE_PATH_META_KEY,
+            AnalyticsClientController.prototype[handler]
+        );
+        const key = path.replace(/^analytics\./, '');
+        expect(get(en, key)).toEqual(expect.any(String));
+        expect(get(vi, key)).toEqual(expect.any(String));
+    });
+
+    it('translates the rate limit message', () => {
+        expect(en.error.rateLimited).toEqual(expect.any(String));
+        expect(vi.error.rateLimited).toEqual(expect.any(String));
+    });
 
     it.each(HANDLERS)(
         '%s returns the section for the credential workspace',
