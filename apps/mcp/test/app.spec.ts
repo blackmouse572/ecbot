@@ -17,11 +17,15 @@ const findOne = vi.mocked(chatbotClientControllerFindOneV1);
 const me = vi.mocked(clientCredentialClientControllerMeV1);
 
 const READ_TOOLS = [
+  "get_bot_analytics",
   "get_chatbot",
   "get_conversation",
+  "get_conversion_analytics",
   "get_customer",
+  "get_customer_analytics",
   "get_customer_tags",
   "get_knowledge_item",
+  "get_marketing_analytics",
   "get_skill",
   "get_workspace_tool",
   "list_chatbot_knowledge",
@@ -136,7 +140,9 @@ describe("/mcp", () => {
     const { tools } = await client.listTools();
 
     expect(tools.map((tool) => tool.name).sort()).toEqual([
+      "get_conversion_analytics",
       "get_customer",
+      "get_customer_analytics",
       "get_customer_tags",
       "list_customer_tags",
       "list_customers",
@@ -145,6 +151,25 @@ describe("/mcp", () => {
     expect(me).toHaveBeenCalledWith(
       expect.objectContaining({ auth: KEY, adapter: "fetch" }),
     );
+  });
+
+  // As on the dashboard, sentiment reads both customers and conversations.
+  it("lists marketing analytics only to a key that reads customers and chatbots", async () => {
+    permits([{ subject: "CHATBOT", action: ["read"] }]);
+    const chatbotOnly = await connect({ "x-api-key": KEY })
+      .then((client) => client.listTools())
+      .then(({ tools }) => tools.map((tool) => tool.name));
+    permits([
+      { subject: "CHATBOT", action: ["read"] },
+      { subject: "CUSTOMER", action: ["read"] },
+    ]);
+    const both = await connect({ "x-api-key": KEY })
+      .then((client) => client.listTools())
+      .then(({ tools }) => tools.map((tool) => tool.name));
+
+    expect(chatbotOnly).toContain("get_bot_analytics");
+    expect(chatbotOnly).not.toContain("get_marketing_analytics");
+    expect(both).toContain("get_marketing_analytics");
   });
 
   it("lists no tools to a key whose creator left the workspace", async () => {

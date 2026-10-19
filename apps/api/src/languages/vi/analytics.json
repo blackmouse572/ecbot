@@ -1,0 +1,11 @@
+{
+    "workspace": {
+        "conversion": "Đã tải số liệu chuyển đổi.",
+        "marketing": "Đã tải số liệu cảm xúc khách hàng.",
+        "bot": "Đã tải số liệu chatbot.",
+        "customers": "Đã tải số liệu khách hàng."
+    },
+    "error": {
+        "rateLimited": "Khóa này gọi số liệu quá nhiều lần. Vui lòng đợi một phút rồi thử lại."
+    }
+}
