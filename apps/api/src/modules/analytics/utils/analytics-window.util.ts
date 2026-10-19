@@ -36,3 +36,28 @@ export function analyticsWindows(
         days: Array.from({ length: n }, (_, i) => shift(from, i)),
     };
 }
+
+/** Minutes `timezone` is ahead of UTC at `now` (420 for Vietnam). */
+export function utcOffsetMinutes(timezone: string, now: Date): number {
+    const parts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-US', {
+            timeZone: timezone,
+            hourCycle: 'h23',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+        })
+            .formatToParts(now)
+            .map(part => [part.type, Number(part.value)])
+    );
+    const local = Date.UTC(
+        parts.year,
+        parts.month - 1,
+        parts.day,
+        parts.hour,
+        parts.minute
+    );
+    return Math.round((local - now.getTime()) / 60_000);
+}

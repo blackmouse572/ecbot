@@ -16,7 +16,10 @@ import {
     IAnalyticsWindow,
 } from '../interfaces/analytics.interface';
 import { AnalyticsRepository } from '../repository/repositories/analytics.repository';
-import { analyticsWindows } from '../utils/analytics-window.util';
+import {
+    analyticsWindows,
+    utcOffsetMinutes,
+} from '../utils/analytics-window.util';
 
 const round1 = (value: number): number => Math.round(value * 10) / 10;
 const percent = (part: number, whole: number): number =>
@@ -308,9 +311,13 @@ export class AnalyticsService {
             timezone,
             now
         );
+        const dbTimezone = await this.analyticsRepository.resolveTimezone(
+            timezone,
+            utcOffsetMinutes(timezone, now)
+        );
         const result = await compute({
-            current: { workspaceId, timezone, ...current },
-            previous: { workspaceId, timezone, ...previous },
+            current: { workspaceId, timezone: dbTimezone, ...current },
+            previous: { workspaceId, timezone: dbTimezone, ...previous },
             days,
         });
         await this.cacheManager.set(key, result, ANALYTICS_CACHE_TTL_MS);

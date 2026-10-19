@@ -1,7 +1,10 @@
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { ENUM_ANALYTICS_RANGE } from '../../../src/modules/analytics/constants/analytics.constant';
 import { AnalyticsService } from '../../../src/modules/analytics/services/analytics.service';
-import { analyticsWindows } from '../../../src/modules/analytics/utils/analytics-window.util';
+import {
+    analyticsWindows,
+    utcOffsetMinutes,
+} from '../../../src/modules/analytics/utils/analytics-window.util';
 import { ENUM_CUSTOMER_TAG_SYSTEM_KEY } from '../../../src/modules/customer/enums/customer-tag.enum';
 
 // 2026-10-18 20:00 UTC is already 2026-10-19 in Vietnam.
@@ -31,6 +34,14 @@ describe('analyticsWindows', () => {
     });
 });
 
+describe('utcOffsetMinutes', () => {
+    it('reads the offset of an alias too', () => {
+        expect(utcOffsetMinutes('Asia/Saigon', NOW)).toBe(420);
+        expect(utcOffsetMinutes('Asia/Kolkata', NOW)).toBe(330);
+        expect(utcOffsetMinutes('UTC', NOW)).toBe(0);
+    });
+});
+
 describe('AnalyticsService', () => {
     const repo = {
         conversionByChannel: jest.fn(),
@@ -46,6 +57,7 @@ describe('AnalyticsService', () => {
         customerTotals: jest.fn(),
         customersByChannel: jest.fn(),
         customersDaily: jest.fn(),
+        resolveTimezone: jest.fn(),
     };
     const cache = { get: jest.fn(), set: jest.fn() };
     const service = new AnalyticsService(repo as any, cache as any);
@@ -54,6 +66,27 @@ describe('AnalyticsService', () => {
     beforeEach(() => {
         jest.resetAllMocks();
         cache.get.mockResolvedValue(undefined);
+        repo.resolveTimezone.mockImplementation(async (tz: string) => tz);
+    });
+
+    it('queries with the timezone name the database knows', async () => {
+        repo.resolveTimezone.mockResolvedValue('Asia/Bangkok');
+        repo.customerTags.mockResolvedValue([]);
+        repo.customerTotals.mockResolvedValue({ total: 0, untagged: 0 });
+        repo.customersByChannel.mockResolvedValue([]);
+        repo.customersDaily.mockResolvedValue([]);
+
+        await service.getCustomers(
+            'ws-1',
+            ENUM_ANALYTICS_RANGE.DAYS_7,
+            'Asia/Saigon',
+            NOW
+        );
+
+        expect(repo.resolveTimezone).toHaveBeenCalledWith('Asia/Saigon', 420);
+        expect(repo.customersDaily.mock.calls[0][0].timezone).toBe(
+            'Asia/Bangkok'
+        );
     });
 
     it('returns a cached section without querying', async () => {

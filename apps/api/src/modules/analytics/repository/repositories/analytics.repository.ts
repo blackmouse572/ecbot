@@ -125,6 +125,29 @@ export class AnalyticsRepository extends DatabaseRepository<CustomerEntity> {
     }
 
     /**
+     * A timezone name Postgres knows. Browsers can send an alias the
+     * database lacks (Chromium says Asia/Saigon), so fall back to a fixed
+     * zone at the same UTC offset (Etc/GMT-7 for Vietnam), then UTC.
+     */
+    async resolveTimezone(
+        timezone: string,
+        offsetMinutes: number
+    ): Promise<string> {
+        const [row] = await this.run<{ name: string }>(
+            `SELECT COALESCE(
+                (SELECT name FROM pg_timezone_names WHERE name = ?),
+                (SELECT name FROM pg_timezone_names
+                    WHERE utc_offset = make_interval(mins => ?)
+                    ORDER BY is_dst, name NOT LIKE 'Etc/%', name
+                    LIMIT 1),
+                'UTC'
+            ) AS name`,
+            [timezone, offsetMinutes]
+        );
+        return row?.name ?? 'UTC';
+    }
+
+    /**
      * New customers per first channel and how far they got. Each step counts
      * the customers who reached it or a later one, so the funnel narrows.
      */
