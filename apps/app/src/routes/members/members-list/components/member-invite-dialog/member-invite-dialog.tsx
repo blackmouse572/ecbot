@@ -1,5 +1,5 @@
 import { useWorkspace } from "@/hooks/api";
-import { IconButton, Prompt, toast } from "@medusajs/ui";
+import { Button, IconButton, Prompt, toast } from "@medusajs/ui";
 import {
   Command,
   CommandEmpty,
@@ -9,7 +9,7 @@ import {
 import { IconClipboard, IconClipboardCheckFilled } from "@tabler/icons-react";
 import { t } from "i18next";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCopyToClipboard, useDebounceValue } from "usehooks-ts";
 import { MemberInvitableList } from "./member-invitable-list";
 import { MemberInvitedList } from "./member-invited-list";
@@ -28,6 +28,27 @@ export const MemberInviteDialog = (
 
   const isOpen = props.open === true;
   const invitationCode = workspace?.invitationCode;
+
+  const { onOpenChange } = props;
+
+  // Prompt is an alert dialog, which ignores outside taps, so close it ourselves.
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (
+        target &&
+        !target.closest('[role="alertdialog"], [data-sonner-toast]')
+      ) {
+        onOpenChange?.(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () =>
+      document.removeEventListener("pointerdown", closeOnOutsidePress);
+  }, [isOpen, onOpenChange]);
 
   const copyInvitationCode = () => {
     if (!invitationCode) {
@@ -62,23 +83,30 @@ export const MemberInviteDialog = (
             </CommandEmpty>
           </CommandList>
         </Command>
-        <Prompt.Footer className="py-2 px-4 divide-x border-t bg-ui-bg-component">
-          <p className="text-ui-fg-muted text-xs pr-4">
-            {t("members.inviteMember.inviteCode.title")}:
-            <span className="font-bold ml-2">{invitationCode}</span>
-          </p>
-          <IconButton
-            size="small"
-            variant="transparent"
-            onClick={copyInvitationCode}
-            className={justCopied ? "text-ui-tag-green-icon" : ""}
-          >
-            {justCopied ? (
-              <IconClipboardCheckFilled size={14} />
-            ) : (
-              <IconClipboard size={14} />
-            )}
-          </IconButton>
+        <Prompt.Footer className="py-2 px-4 border-t bg-ui-bg-component flex-wrap items-center justify-between gap-2">
+          <Prompt.Cancel asChild>
+            <Button size="small" variant="secondary">
+              {t("actions.close")}
+            </Button>
+          </Prompt.Cancel>
+          <div className="flex items-center gap-x-2">
+            <p className="text-ui-fg-muted text-xs">
+              {t("members.inviteMember.inviteCode.title")}:
+              <span className="font-bold ml-2">{invitationCode}</span>
+            </p>
+            <IconButton
+              size="small"
+              variant="transparent"
+              onClick={copyInvitationCode}
+              className={justCopied ? "text-ui-tag-green-icon" : ""}
+            >
+              {justCopied ? (
+                <IconClipboardCheckFilled size={14} />
+              ) : (
+                <IconClipboard size={14} />
+              )}
+            </IconButton>
+          </div>
         </Prompt.Footer>
       </Prompt.Content>
     </Prompt>

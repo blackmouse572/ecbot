@@ -268,7 +268,10 @@ export const useBatchDeleteTools = (workspace: string) => {
         path: { workspace } as A,
         body: { ids },
       }).then((res) => (res.data as A)?.data as BatchResult),
-    onSuccess: () => {
+    onSuccess: (_, ids) => {
+      for (const id of ids) {
+        queryClient.removeQueries({ queryKey: toolsQueryKeys.detail(id) });
+      }
       queryClient.invalidateQueries({
         queryKey: toolsQueryKeys.lists(),
       });
@@ -290,7 +293,8 @@ export const useDeleteTool = (workspace: string) => {
       toolWorkspaceControllerDeleteV1({
         path: { workspace, toolId } as A,
       }),
-    onSuccess: () => {
+    onSuccess: (_, toolId) => {
+      queryClient.removeQueries({ queryKey: toolsQueryKeys.detail(toolId) });
       queryClient.invalidateQueries({
         queryKey: toolsQueryKeys.lists(),
       });

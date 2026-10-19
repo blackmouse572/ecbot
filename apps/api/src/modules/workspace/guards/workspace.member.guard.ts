@@ -6,12 +6,22 @@ import {
     Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { WORKSPACE_EXCLUDE_OWNER_META_KEY } from '../constants/workspace.constant';
+import { TtlCache } from '@app/common/utils/ttl-cache.util';
+import {
+    WORKSPACE_EXCLUDE_OWNER_META_KEY,
+    WORKSPACE_MEMBER_CACHE_MAX_ENTRIES,
+    WORKSPACE_MEMBER_CACHE_TTL_MS,
+} from '../constants/workspace.constant';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
 import { WorkspaceMemberService } from '../services/workspace.member.service';
 
 @Injectable()
 export class WorkspaceMemberGuard implements CanActivate {
+    private readonly members = new TtlCache<true>(
+        WORKSPACE_MEMBER_CACHE_TTL_MS,
+        WORKSPACE_MEMBER_CACHE_MAX_ENTRIES
+    );
+
     constructor(
         private readonly reflector: Reflector,
         private readonly workspaceMemberService: WorkspaceMemberService
@@ -37,12 +47,11 @@ export class WorkspaceMemberGuard implements CanActivate {
             });
         }
 
-        const isUserInMembers =
-            await this.workspaceMemberService.isUserMemberOfWorkspace(
-                __workspace.id,
-                __user.id
-            );
         const isUserOwner = __workspace.owner.id === __user.id;
+        // The owner passes by default, so no membership query is needed.
+        if (isUserOwner && !excludedOwner) return true;
+
+        const isUserInMembers = await this.isMember(__workspace.id, __user.id);
         if (excludedOwner) {
             // If owner is excluded, user must be a member and not the owner
             if (!isUserInMembers || isUserOwner) {
@@ -66,5 +75,21 @@ export class WorkspaceMemberGuard implements CanActivate {
         }
 
         return true;
+    }
+
+    private async isMember(
+        workspaceId: string,
+        userId: string
+    ): Promise<boolean> {
+        const key = `${workspaceId}:${userId}`;
+        if (this.members.get(key)) return true;
+
+        const isMember =
+            await this.workspaceMemberService.isUserMemberOfWorkspace(
+                workspaceId,
+                userId
+            );
+        if (isMember) this.members.set(key, true);
+        return isMember;
     }
 }

@@ -2,7 +2,7 @@ import { isStrongPassword } from "@repo/ui/utils";
 import { z } from "zod/v4";
 
 export const forgotPasswordSchema = z.object({
-  email: z.email(),
+  email: z.email({ error: "invalidEmail" }),
 });
 
 export type TForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;

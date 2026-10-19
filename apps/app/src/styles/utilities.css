@@ -5,6 +5,9 @@
 /* Questionnaire utilities (the refused-pick nudge) live in @repo/ui alongside
    the Questionnaire component that uses them. */
 @import "@repo/ui/styles/questionnaire.css";
+/* Maps the dashboard charts' shadcn colour names (tooltip background, grid,
+   axis text) onto Medusa tokens. Without it they render unstyled. */
+@import "@repo/ui/styles/evilcharts.css";
 
 @layer component {
   .focus-modal-header-reverse {

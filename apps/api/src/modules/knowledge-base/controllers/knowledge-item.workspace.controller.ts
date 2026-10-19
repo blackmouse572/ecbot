@@ -25,6 +25,7 @@ import {
     Controller,
     Delete,
     Get,
+    HttpException,
     InternalServerErrorException,
     Logger,
     NotFoundException,
@@ -38,7 +39,6 @@ import {
 import { ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
-import slugify from 'slugify';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { AwsS3Service } from 'src/modules/aws/services/aws.s3.service';
@@ -88,17 +88,15 @@ import { KnowledgeBaseService } from '../services/knowledge-base.service';
 import { KnowledgeIngestService } from '../services/knowledge-ingest.service';
 import { KnowledgeItemService } from '../services/knowledge-item.service';
 import { KnowledgeItemFolderService } from '../services/knowledge-item-folder.service';
-import { KnowledgeStorageQuotaService } from '../services/knowledge-storage-quota.service';
+import { KnowledgeItemUploadService } from '../services/knowledge-item-upload.service';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '../../../common/pagination/enums/pagination.enum';
 import { FileTypePipe } from '../../../common/file/pipes/file.type.pipe';
-import { randomUUID } from 'crypto';
 import {
     KNOWLEDGE_FILE_MIMES,
     KNOWLEDGE_MEDIA_IMAGE_MIMES,
     KNOWLEDGE_UPLOAD_MAX_BYTES,
 } from '../constants/knowledge-upload.constant';
 import { assertKnowledgeUpload } from '../utils/knowledge-upload.util';
-import { AwsS3Entity } from '../../aws/repository/entities/aws.s3.entity';
 import { ENUM_AWS_S3_ACCESSIBILITY } from '../../aws/enums/aws.enum';
 
 @ApiTags('modules.workspace.knowledge-item')
@@ -116,7 +114,7 @@ export class KnowledgeItemWorkspaceController {
         private readonly knowledgeItemFolderService: KnowledgeItemFolderService,
         private readonly awsS3Service: AwsS3Service,
         private readonly knowledgeIngestService: KnowledgeIngestService,
-        private readonly knowledgeStorageQuotaService: KnowledgeStorageQuotaService
+        private readonly knowledgeItemUploadService: KnowledgeItemUploadService
     ) {}
 
     private readonly logger = new Logger(KnowledgeItemWorkspaceController.name);
@@ -169,6 +167,7 @@ export class KnowledgeItemWorkspaceController {
         const knowledgeBase = await this.knowledgeBaseService.findOne({
             id: knowledgeBaseId,
             workspace: workspace.id,
+            deletedAt: null,
         });
 
         if (!knowledgeBase) {
@@ -318,12 +317,6 @@ export class KnowledgeItemWorkspaceController {
         file?: Express.Multer.File
     ): Promise<IResponse<DatabaseIdResponseDto>> {
         assertKnowledgeUpload(dto.type, file);
-        if (file) {
-            await this.knowledgeStorageQuotaService.assertCanStore(
-                workspace.id,
-                file.size
-            );
-        }
 
         const session = this.em.fork();
         await session.begin();
@@ -353,88 +346,24 @@ export class KnowledgeItemWorkspaceController {
                 });
             }
 
-            // Upload file to S3 if type is FILE or MEDIA
-            let attachment: AwsS3Entity = undefined;
-            let metadata: Record<string, any> = {};
-            const isMedia = dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA;
-            if (
+            // Store the file of a FILE or MEDIA item.
+            const stored =
                 file &&
-                (isMedia || dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE)
-            ) {
-                // Sanitize filename using slugify to remove special characters
-                const nameWithoutExt = file.originalname.replace(
-                    /\.[^/.]+$/,
-                    ''
-                );
-                const ext = file.originalname.split('.').pop();
-                const sanitizedName = slugify(nameWithoutExt, {
-                    lower: true,
-                    strict: true,
-                    remove: /[*+~.()'"!:@]/g,
-                    trim: true,
-                });
-                const safeFileName = `${sanitizedName}.${ext}`;
-
-                // Media is public so the channels can fetch it when the agent
-                // sends it; the random id keeps its address unguessable.
-                const key = isMedia
-                    ? `knowledge-media/${workspace.id}/${knowledgeBaseId}/${randomUUID()}-${safeFileName}`
-                    : `knowledge-items/${workspace.id}/${knowledgeBaseId}/${Date.now()}-${safeFileName}`;
-                this.logger.debug(
-                    `Uploading file to S3 with key: ${key}, original filename: ${file.originalname}, sanitized filename: ${safeFileName}`
-                );
-
-                try {
-                    const uploaded = await this.awsS3Service.putItem(
-                        {
-                            key,
-                            file: file.buffer,
-                            size: file.size,
-                            // Channels and browsers fetch media by its link,
-                            // so it must say what it is (checked above).
-                            ...(isMedia && { mime: file.mimetype }),
-                        },
-                        {
-                            access: isMedia
-                                ? ENUM_AWS_S3_ACCESSIBILITY.PUBLIC
-                                : ENUM_AWS_S3_ACCESSIBILITY.PRIVATE,
-                        }
-                    );
-
-                    attachment = {
-                        bucket: uploaded.bucket,
-                        key: uploaded.key,
-                        completedUrl: uploaded.completedUrl,
-                        cdnUrl: uploaded.cdnUrl,
-                        mime: file.mimetype,
-                        size: file.size,
-                        extension: ext,
-                    };
-
-                    metadata = {
-                        fileName: safeFileName,
-                        mimeType: file.mimetype,
-                    };
-                } catch (error) {
-                    this.logger.error(
-                        `Failed to upload file to S3: ${error instanceof Error ? error.message : JSON.stringify(error)}`
-                    );
-                    throw new InternalServerErrorException({
-                        statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
-                        message: 'knowledgeItem.error.uploadFailed',
-                        _error:
-                            error instanceof Error
-                                ? error.message
-                                : 'Unknown error',
-                    });
-                }
-            }
+                (dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA ||
+                    dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE)
+                    ? await this.knowledgeItemUploadService.store(
+                          workspace.id,
+                          knowledgeBaseId,
+                          dto.type,
+                          file
+                      )
+                    : undefined;
 
             const item = await this.knowledgeItemService.create(
                 {
                     ...dto,
-                    metadata,
-                    attachment,
+                    metadata: stored?.metadata ?? {},
+                    attachment: stored?.attachment,
                     folder,
                     knowledgeBase: knowledgeBaseId,
                     workspace: workspace.id,
@@ -474,6 +403,8 @@ export class KnowledgeItemWorkspaceController {
                 );
                 throw err;
             }
+            // A refused file (type, bytes, quota) or a failed upload.
+            if (err instanceof HttpException) throw err;
             this.logger.error(
                 `Create knowledge item failed, unexpected error: ${err instanceof Error ? err.stack : JSON.stringify(err)}`
             );

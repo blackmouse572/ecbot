@@ -35,4 +35,11 @@ export enum ENUM_ACTIVITY_ACTION {
     SUBSCRIPTION_CHANGE_PLAN = 'subscription_change_plan',
     SUBSCRIPTION_CANCEL = 'subscription_cancel',
     SUBSCRIPTION_RESUME = 'subscription_resume',
+    // A conversation's lifecycle, counted by the dashboard (handoff rate).
+    // A handoff the bot raised has no `by`.
+    CONVERSATION_HANDOFF = 'conversation_handoff',
+    CONVERSATION_TAKEOVER = 'conversation_takeover',
+    CONVERSATION_BOT_RESUMED = 'conversation_bot_resumed',
+    CONVERSATION_RESOLVED = 'conversation_resolved',
+    CONVERSATION_REOPENED = 'conversation_reopened',
 }

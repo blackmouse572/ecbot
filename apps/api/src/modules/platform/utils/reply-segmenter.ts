@@ -1,15 +1,16 @@
-import { ReplySegment } from '../interfaces/message-model';
+import { ReplyMedia, ReplySegment } from '../interfaces/message-model';
 
 /**
  * Cuts a streamed reply into the segments delivery sends, one call per part.
  * A segment ends at a tool call, at the end of the stream, and (when
  * `splitParagraphs`) at each blank line. An image waits for the text of the
  * segment it arrives in, so it is sent after that text; with no text open
- * (a `send_image` right after a tool call) it goes out on its own at once.
+ * (a `send_image` or `send_media` right after a tool call) it goes out on its
+ * own at once. Files wait the same way.
  */
 export class ReplySegmenter {
     private text = '';
-    private images: string[] = [];
+    private media: ReplyMedia[] = [];
 
     constructor(
         private readonly onSegment: (segment: ReplySegment) => void,
@@ -27,9 +28,9 @@ export class ReplySegmenter {
         }
     }
 
-    addImage(url: string): void {
-        if (this.text.trim()) this.images.push(url);
-        else this.onSegment({ text: '', images: [url] });
+    addMedia(media: ReplyMedia): void {
+        if (this.text.trim()) this.media.push(media);
+        else this.onSegment({ text: '', media: [media] });
     }
 
     /** Close the open segment (a tool call, or the end of the stream). */
@@ -42,14 +43,14 @@ export class ReplySegmenter {
     /** Forget the open segment without sending it (the reply was discarded). */
     reset(): void {
         this.text = '';
-        this.images = [];
+        this.media = [];
     }
 
     private emit(text: string): void {
-        const images = this.images;
-        this.images = [];
-        if (text.trim() || images.length) {
-            this.onSegment({ text: text.trim(), images });
+        const media = this.media;
+        this.media = [];
+        if (text.trim() || media.length) {
+            this.onSegment({ text: text.trim(), media });
         }
     }
 }

@@ -208,7 +208,7 @@
         "home": "Home"
       },
       "accounts": {
-        "header": "Accounts"
+        "header": "Channels"
       },
       "dashboard": {
         "header": "Dashboard",
@@ -362,6 +362,9 @@
           "resend": "Resend email",
           "resendIn": "Resend in {{seconds}}s",
           "resent": "We sent the email again."
+        },
+        "errors": {
+          "invalidEmail": "Enter a valid email address."
         }
       },
       "resetPassword": {
@@ -414,10 +417,97 @@
   "dashboard": {
     "title": "Dashboard",
     "recentActivities": "Recent Activity",
-    "stats": {
-      "chatbots": "Agents",
-      "accounts": "Connected accounts",
-      "conversations": "Conversations"
+    "analytics": {
+      "empty": "No data yet",
+      "emptyMessage": "Numbers show up here once customers chat with your agents in this period.",
+      "error": "Could not load the numbers. Try again in a moment.",
+      "updatedAt": "Updated at {{time}}",
+      "refresh": "Refresh",
+      "range": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
+      },
+      "tabs": {
+        "conversion": "Conversion",
+        "marketing": "Satisfaction",
+        "bot": "Bot performance",
+        "customers": "Customer groups"
+      },
+      "kpi": {
+        "conversionRate": "Conversion rate",
+        "positiveRate": "Positive conversations",
+        "handoffRate": "Handoff rate",
+        "previous": "Previous period: {{value}}"
+      },
+      "columns": {
+        "channel": "Channel",
+        "conversations": "Conversations",
+        "agent": "Agent",
+        "customers": "Customers",
+        "share": "Share"
+      },
+      "views": {
+        "share": "Share",
+        "count": "Count"
+      },
+      "conversion": {
+        "dailyTitle": "New customers and orders",
+        "newCustomers": "New customers",
+        "orders": "Orders",
+        "funnelTitle": "From first message to order",
+        "funnel": {
+          "newCustomers": "New customers",
+          "engaged": "Kept chatting",
+          "hotLeads": "Hot leads",
+          "ordered": "Placed an order"
+        },
+        "byChannelTitle": "Orders by channel",
+        "funnelHint": "Each column shows the share of new customers who got that far. The minus figure between columns is the share who stopped there; red marks the biggest drop.",
+        "dropped": "{{value}} stopped here ({{share}})",
+        "timeToOrder": "Time to order",
+        "hours": "{{value}} hours",
+        "timeToOrderHint": "Half of the orders were placed within {{value}} hours of the customer's first message."
+      },
+      "marketing": {
+        "dailyTitle": "How conversations ended",
+        "dailyHint": "Sentiment the bot reads at the end of each conversation.",
+        "positive": "Positive",
+        "negative": "Negative",
+        "complaint": "Complaint",
+        "byChannelTitle": "Satisfaction by channel"
+      },
+      "bot": {
+        "dailyTitle": "Resolved by the bot or handed over",
+        "botResolved": "Resolved by bot",
+        "handedOver": "Handed over",
+        "reasonsTitle": "Why conversations were handed over",
+        "reasons": {
+          "fallback_threshold": "Bot could not answer",
+          "keyword_trigger": "Customer asked for a person",
+          "tag_trigger": "Tag rule",
+          "manual": "Taken over by staff",
+          "other": "Other"
+        },
+        "byChatbotTitle": "By agent",
+        "firstReply": "First reply",
+        "seconds": "{{value}}s",
+        "toolErrors": "Tool errors"
+      },
+      "customers": {
+        "tagsTitle": "Customers by tag",
+        "untagged": "{{count}} without a tag ({{share}})",
+        "dailyTitle": "New and returning customers",
+        "returning": "Returning customers",
+        "byChannelTitle": "Customers by channel",
+        "otherTags": "Other tags"
+      },
+      "unhappy": {
+        "title": "Unhappy customers",
+        "description": "Recent conversations that ended badly. Open one to follow up.",
+        "empty": "No unhappy customers",
+        "emptyMessage": "Customers the bot marks as unhappy show up here so you can follow up."
+      }
     },
     "gettingStarted": {
       "title": "Get your agent live",
@@ -594,7 +684,7 @@
         "viewProfile": "View Profile",
         "unlink": "Unlink Account"
       },
-      "noRecordsTitle": "No accounts connected yet"
+      "noRecordsTitle": "No channels connected yet"
     },
     "unlink": {
       "confirm": {
@@ -836,7 +926,11 @@
       "noChatbot": {
         "title": "No agent yet",
         "message": "Create an agent to answer customers on this channel.",
-        "action": "Create agent"
+        "action": "Create agent",
+        "linkExisting": "Link existing agent",
+        "drawerTitle": "Choose an agent",
+        "noneAvailable": "No agents available",
+        "loadFailed": "Could not load agents. Try again."
       }
     },
     "imports": {
@@ -924,7 +1018,12 @@
     "conversation": {
       "create": "sent a message to <link/>",
       "update": "updated the conversation with <link/>",
-      "unknownCustomer": "a customer"
+      "unknownCustomer": "a customer",
+      "handoff": "handed <link/> over to the team",
+      "takeover": "took over the conversation with <link/>",
+      "botResumed": "handed <link/> back to the bot",
+      "resolved": "resolved the conversation with <link/>",
+      "reopened": "reopened the conversation with <link/>"
     },
     "plan": {
       "changePlan": "Changed the subscription plan",
@@ -943,7 +1042,8 @@
       "update": "updated workspace <link/>",
       "join": "joined workspace <link/>",
       "leave": "left workspace <link/>"
-    }
+    },
+    "bot": "Bot"
   },
   "chatbot": {
     "batch": {
@@ -1177,7 +1277,7 @@
         "required": "Please complete the verification first.",
         "failed": "Verification failed. Reload the page and try again."
       },
-      "poweredBy": "Powered by eccho"
+      "poweredBy": "Powered by Ecbot"
     },
     "list": {
       "noRecordsTitle": "No agents yet",
@@ -2310,7 +2410,7 @@
     "create": "Create",
     "clearAll": "Clear all",
     "continued": "Continue",
-    "linkAccount": "Connect account",
+    "linkAccount": "Link existing account",
     "tryAgain": "Try Again",
     "enable": "Enable",
     "disable": "Disable",
@@ -2324,7 +2424,8 @@
     "skip": "Skip",
     "preview": "Preview",
     "createNew": "Create new",
-    "unlink": "Unlink"
+    "unlink": "Unlink",
+    "connectChannel": "Connect a channel"
   },
   "general": {
     "notSet": "Not set",
@@ -2366,7 +2467,8 @@
       "error": "Could not update {{count}} item(s)."
     },
     "loading": "Loading...",
-    "loadFailed": "Couldn't load this. Try again later."
+    "loadFailed": "Couldn't load this. Try again later.",
+    "typeToConfirm": "Type {val} to confirm:"
   },
   "fields": {
     "name": "Name",
@@ -2746,6 +2848,8 @@
     },
     "composer": {
       "placeholder": "Reply as operator…",
+      "windowClosed": "Meta only allows replies within 24 hours of the customer's last message.",
+      "windowClosedHint": "You can reply again once the customer messages you.",
       "send": "Send",
       "retry": "Retry",
       "failed": "Failed to send",
@@ -2766,7 +2870,13 @@
       "resolveConfirmTitle": "Mark conversation as resolved?",
       "resolveConfirmDescription": "The bot keeps answering the customer and will not hand over again what your team already handled. You can still send messages.",
       "restoreConfirmTitle": "Hand back to the bot?",
-      "restoreConfirmDescription": "The conversation opens again and the bot keeps answering."
+      "restoreConfirmDescription": "The conversation opens again and the bot keeps answering.",
+      "resolving": "Resolving...",
+      "resolved": "Conversation resolved",
+      "resolveFailed": "Couldn't resolve the conversation. Try again.",
+      "restoring": "Handing back to the bot...",
+      "restored": "Handed back to the bot",
+      "restoreFailed": "Couldn't hand the conversation back. Try again."
     },
     "errors": {
       "sendFailed": "Couldn't send your message. Try again.",
@@ -3517,7 +3627,10 @@
       "required": "Please complete the verification first.",
       "failed": "Verification failed. Reload the page and try again."
     },
-    "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>"
+    "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>",
+    "staffNotice": "A staff member has joined and is chatting with you. <privacy>Privacy Policy</privacy>",
+    "staff": "Staff",
+    "visitorName": "Website visitor #{{suffix}}"
   },
   "editor": {
     "toolbar": {

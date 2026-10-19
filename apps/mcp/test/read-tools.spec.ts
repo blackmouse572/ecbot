@@ -49,6 +49,14 @@ const cases: [
     { id: "item-1", content: "Ship in 2 days" },
   ],
   [
+    "list_chatbot_knowledge",
+    { chatbotId: "chatbot-1", page: 2 },
+    "chatbotKnowledgeItemClientControllerListV1",
+    { path: { chatbotId: "chatbot-1" }, query: { page: 2 } },
+    page([{ id: "link-1" }]),
+    { knowledgeItems: [{ id: "link-1" }], pagination: { total: 1 } },
+  ],
+  [
     "list_conversations",
     { status: "OPEN", chatbot: "chatbot-1", botEnabled: false },
     "conversationClientControllerListV1",
@@ -159,6 +167,38 @@ const cases: [
     { path: { chatbotId: "bot-1" } },
     { data: [{ skillId: "skill-1" }] },
     [{ skillId: "skill-1" }],
+  ],
+  [
+    "get_conversion_analytics",
+    { range: "7d", timezone: "Asia/Bangkok" },
+    "analyticsClientControllerConversionV1",
+    { query: { range: "7d", timezone: "Asia/Bangkok" } },
+    { data: { newCustomers: 12 } },
+    { newCustomers: 12 },
+  ],
+  [
+    "get_marketing_analytics",
+    {},
+    "analyticsClientControllerMarketingV1",
+    { query: {} },
+    { data: { unhappy: [] } },
+    { unhappy: [] },
+  ],
+  [
+    "get_bot_analytics",
+    { range: "90d" },
+    "analyticsClientControllerBotV1",
+    { query: { range: "90d" } },
+    { data: { byChatbot: [] } },
+    { byChatbot: [] },
+  ],
+  [
+    "get_customer_analytics",
+    { range: "30d" },
+    "analyticsClientControllerCustomersV1",
+    { query: { range: "30d" } },
+    { data: { total: 40 } },
+    { total: 40 },
   ],
 ];
 

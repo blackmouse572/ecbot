@@ -1,6 +1,6 @@
 import { isAgentSilenced } from '@app/modules/platform/utils/agent-silenced.util';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
-import { botImage } from '@app/modules/conversation/utils/message-attachment';
+import { botMedia } from '@app/modules/conversation/utils/message-attachment';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ChatbotAiSseStreamService } from '@app/modules/chatbot/services/chatbot-ai-sse-stream.service';
@@ -32,7 +32,9 @@ import {
 import { TurnContextService } from './turn-context.service';
 import { HandoffIntentService } from './handoff-intent.service';
 import { handoffReplyText } from '../utils/handoff-reply.util';
+import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { shouldHandOff } from '../utils/handoff-decision.util';
+import type { ReplyMedia } from '../interfaces/message-model';
 
 export interface IWidgetTurn {
     /** WEBSITE_WIDGET account with `chatbot` and `workspace` populated. */
@@ -167,7 +169,9 @@ export class WidgetChatService {
             chatbot
         )) ?? { allowed: true };
         if (!budget.allowed) {
-            this.streamFallback(res, chatbot.fallbackMessage);
+            const reply = fallbackReplyText(chatbot);
+            await this.persistReply(conversation.id, reply, []);
+            this.streamFallback(res, reply);
             return;
         }
 
@@ -233,8 +237,8 @@ export class WidgetChatService {
             // The widget is the customer's chat: the reply only, never how the
             // agent got there.
             audience: 'customer',
-            onFinalize: (assistantText, images) =>
-                this.persistReply(conversation.id, assistantText, images),
+            onFinalize: (assistantText, media) =>
+                this.persistReply(conversation.id, assistantText, media),
             onUsage: async usage => {
                 await this.meter?.record({
                     workspaceId: account.workspace.id,
@@ -258,11 +262,11 @@ export class WidgetChatService {
     private async persistReply(
         conversationId: string,
         text: string,
-        images: string[]
+        media: ReplyMedia[]
     ): Promise<void> {
         // The row IS the delivery for this channel — the visitor already saw the
         // stream, and their poll reads this back on the next page load.
-        const attachments = images.map(botImage);
+        const attachments = media.map(botMedia);
         const nonce = randomUUID();
         await this.messageRepository.insertPendingOutbound(
             conversationId,

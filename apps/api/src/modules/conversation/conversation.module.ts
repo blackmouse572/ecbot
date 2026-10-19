@@ -1,3 +1,4 @@
+import { ActivityModule } from '@app/modules/activity/activity.module';
 import { AccountModule } from '@app/modules/account/account.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { CustomerModule } from '@app/modules/customer/customer.module';
@@ -27,6 +28,7 @@ import { ConversationActivityPruneScheduler } from './schedulers/conversation-ac
         CustomerModule,
         AwsModule,
         CloudTasksQueueModule,
+        ActivityModule,
     ],
     providers: [
         HandoffEmailService,

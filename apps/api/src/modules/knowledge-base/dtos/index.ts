@@ -1,5 +1,4 @@
 // Request DTOs
-export { KnowledgeBaseCreateRequestDto } from './request/knowledge-base.create.request.dto';
 export { KnowledgeBaseUpdateRequestDto } from './request/knowledge-base.update.request.dto';
 export { KnowledgeItemCreateRequestDto } from './request/knowledge-item.create.request.dto';
 export { KnowledgeItemUpdateRequestDto } from './request/knowledge-item.update.request.dto';

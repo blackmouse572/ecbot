@@ -44,15 +44,20 @@ import {
     UnprocessableEntityException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
 import {
     KnowledgeItemClientCreateDoc,
+    KnowledgeItemClientUploadUrlDoc,
     KnowledgeItemClientDeleteDoc,
     KnowledgeItemClientGetDoc,
     KnowledgeItemClientListDoc,
     KnowledgeItemClientUpdateDoc,
 } from '../docs/knowledge-item.client.doc';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
-import { KnowledgeItemCreateRequestDto } from '../dtos/request/knowledge-item.create.request.dto';
+import { KnowledgeItemClientCreateRequestDto } from '../dtos/request/knowledge-item.client-create.request.dto';
+import { KnowledgeItemUploadUrlRequestDto } from '../dtos/request/knowledge-item.upload-url.request.dto';
+import { KnowledgeItemUploadUrlResponseDto } from '../dtos/response/knowledge-item.upload-url.response.dto';
+import { KnowledgeItemUploadService } from '../services/knowledge-item-upload.service';
 import { KnowledgeItemUpdateRequestDto } from '../dtos/request/knowledge-item.update.request.dto';
 import { KnowledgeItemResponseDto } from '../dtos/response/knowledge-item.response.dto';
 import { KnowledgeItemShortResponseDto } from '../dtos/response/knowledge-item-short.response.dto';
@@ -72,7 +77,7 @@ import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entit
 // 3rd-party surface: authenticated by x-api-key (ClientCredential), tenant
 // derived from the credential (no :workspace param). See ADR-0012. Writes
 // act as the credential's creator, in the records and the activity log.
-// There is no file upload here.
+// Files come as JSON: a presigned upload's key, or a public link.
 @ApiTags('modules.client.knowledgeItem')
 @Controller('/knowledge-bases/:knowledgeBaseId/items')
 export class KnowledgeItemClientController {
@@ -82,7 +87,8 @@ export class KnowledgeItemClientController {
         private readonly paginationService: PaginationService,
         private readonly awsS3Service: AwsS3Service,
         private readonly knowledgeItemFolderService: KnowledgeItemFolderService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly knowledgeItemUploadService: KnowledgeItemUploadService
     ) {}
 
     @KnowledgeItemClientListDoc()
@@ -191,6 +197,33 @@ export class KnowledgeItemClientController {
         return { data: this.knowledgeItemService.mapGet(item) };
     }
 
+    @KnowledgeItemClientUploadUrlDoc()
+    @Response('knowledgeItem.uploadUrl')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
+        action: [ENUM_POLICY_ACTION.CREATE],
+    })
+    @Post('/upload-url')
+    async uploadUrl(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('knowledgeBaseId') knowledgeBaseId: string,
+        @Body() { type, fileName, size }: KnowledgeItemUploadUrlRequestDto
+    ): Promise<IResponse<KnowledgeItemUploadUrlResponseDto>> {
+        await this.findKnowledgeBaseOrFail(workspace, knowledgeBaseId);
+        const upload = await this.knowledgeItemUploadService.createUploadUrl(
+            workspace.id,
+            knowledgeBaseId,
+            type,
+            fileName,
+            size
+        );
+        return {
+            data: plainToInstance(KnowledgeItemUploadUrlResponseDto, upload, {
+                excludeExtraneousValues: true,
+            }),
+        };
+    }
+
     @KnowledgeItemClientCreateDoc()
     @Response('knowledgeItem.create')
     @ClientCredentialProtected({
@@ -202,15 +235,51 @@ export class KnowledgeItemClientController {
         @WorkspacePayload() workspace: WorkspaceEntity,
         @ClientCredentialPayload() credential: ClientCredentialEntity,
         @Param('knowledgeBaseId') knowledgeBaseId: string,
-        @Body() { folderId, ...dto }: KnowledgeItemCreateRequestDto
+        @Body() body: KnowledgeItemClientCreateRequestDto
     ): Promise<IResponse<KnowledgeItemShortResponseDto>> {
-        if (
+        try {
+            return await this.createItem(
+                workspace,
+                credential,
+                knowledgeBaseId,
+                body
+            );
+        } finally {
+            // A staged upload is copied into the item, or no longer needed;
+            // either way it must not stay in storage.
+            if (body.fileKey)
+                await this.knowledgeItemUploadService.discardUpload(
+                    body.fileKey
+                );
+        }
+    }
+
+    private async createItem(
+        workspace: WorkspaceEntity,
+        credential: ClientCredentialEntity,
+        knowledgeBaseId: string,
+        {
+            folderId,
+            fileKey,
+            fileUrl,
+            ...dto
+        }: KnowledgeItemClientCreateRequestDto
+    ): Promise<IResponse<KnowledgeItemShortResponseDto>> {
+        // A FILE or MEDIA item takes its file from exactly one of the two;
+        // other items take neither, and need their content.
+        const takesFile =
             dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE ||
-            dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA
-        ) {
+            dto.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA;
+        if (takesFile !== (!!fileKey !== !!fileUrl) || (fileKey && fileUrl)) {
             throw new UnprocessableEntityException({
                 statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
-                message: 'knowledgeItem.error.fileRequired',
+                message: 'knowledgeItem.error.fileSource',
+            });
+        }
+        if (!takesFile && !dto.content?.trim()) {
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_REQUEST_STATUS_CODE_ERROR.VALIDATION,
+                message: 'knowledgeItem.error.contentRequired',
             });
         }
         await this.findKnowledgeBaseOrFail(workspace, knowledgeBaseId);
@@ -228,9 +297,25 @@ export class KnowledgeItemClientController {
             });
         }
 
+        const stored = takesFile
+            ? await this.knowledgeItemUploadService.store(
+                  workspace.id,
+                  knowledgeBaseId,
+                  dto.type,
+                  fileKey
+                      ? await this.knowledgeItemUploadService.readUpload(
+                            workspace.id,
+                            knowledgeBaseId,
+                            fileKey
+                        )
+                      : await this.knowledgeItemUploadService.download(fileUrl)
+              )
+            : undefined;
+
         const item = await this.knowledgeItemService.create(
             {
                 ...dto,
+                ...stored,
                 folder,
                 knowledgeBase: knowledgeBaseId,
                 workspace: workspace.id,

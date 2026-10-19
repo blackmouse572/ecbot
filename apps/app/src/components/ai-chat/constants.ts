@@ -12,9 +12,9 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 
-// The agent's image tool; its result arrives as a `file` part rendered as the
-// image itself, so the tool call is not shown as a card.
-export const SEND_IMAGE_TOOL_PART = "tool-send_image";
+// The agent's image and file tools; their result arrives as a `file` part
+// rendered as the image or file itself, so the tool call is not shown as a card.
+export const FILE_TOOL_PARTS = new Set(["tool-send_image", "tool-send_media"]);
 
 // Kinds of the agent's built-in tools, for streams from an AI service that
 // predates `data-tool-meta`. Mirrors SYSTEM_TOOL_KINDS in apps/ai.
@@ -30,6 +30,7 @@ export const BUILT_IN_TOOL_KINDS: Record<string, ToolKind> = {
   list_pending_followups: "followup",
   cancel_followup: "followup",
   send_image: "image",
+  send_media: "image",
 };
 
 // Motion for the chat (tool trace, text swaps, bubbles). Curves mirror the

@@ -79,8 +79,13 @@ def source_url(source_id: str, url: str, title: str | None = None) -> str:
     return _frame(part)
 
 
-def file(url: str, media_type: str) -> str:
-    return _frame({"type": "file", "url": url, "mediaType": media_type})
+def file(url: str, media_type: str, provider_metadata: dict | None = None) -> str:
+    # The AI SDK keeps only url, mediaType and providerMetadata on a file part,
+    # so anything else a client needs (a file name) rides in the metadata.
+    part: dict = {"type": "file", "url": url, "mediaType": media_type}
+    if provider_metadata:
+        part["providerMetadata"] = provider_metadata
+    return _frame(part)
 
 
 def message_metadata(metadata: dict) -> str:

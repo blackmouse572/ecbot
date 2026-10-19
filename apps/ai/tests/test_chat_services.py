@@ -52,6 +52,7 @@ class _Retrieval:
         self.context = context
         self.has_context = has_context
         self.status = "ok" if has_context else "below_threshold"
+        self.media = []
 
 
 def test_rag_message_passthrough_when_no_context():

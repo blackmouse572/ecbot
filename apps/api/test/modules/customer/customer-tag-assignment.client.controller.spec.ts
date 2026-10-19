@@ -93,7 +93,8 @@ describe('CustomerTagAssignmentClientController', () => {
         expect(mockAssignmentService.apply).toHaveBeenCalledWith(
             'cust-1',
             'tag-1',
-            'workspace-1'
+            'workspace-1',
+            expect.objectContaining({ actor: 'CLIENT' })
         );
         expect(
             mockActivityService.createByUserWithWorkspace
@@ -113,7 +114,8 @@ describe('CustomerTagAssignmentClientController', () => {
         expect(mockAssignmentService.remove).toHaveBeenCalledWith(
             'cust-1',
             'tag-1',
-            'workspace-1'
+            'workspace-1',
+            expect.objectContaining({ actor: 'CLIENT' })
         );
         expect(
             mockActivityService.createByUserWithWorkspace

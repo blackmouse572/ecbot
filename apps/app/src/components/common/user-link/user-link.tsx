@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 type UserLinkProps = {
   id: string;
+  name?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   email: string;
@@ -12,12 +13,13 @@ type UserLinkProps = {
 
 export const UserLink = ({
   id: id,
+  name: fullName,
   first_name,
   last_name,
   email,
   type = "user",
 }: UserLinkProps) => {
-  const name = [first_name, last_name].filter(Boolean).join(" ");
+  const name = fullName || [first_name, last_name].filter(Boolean).join(" ");
   const fallback = name ? name.slice(0, 1) : email.slice(0, 1);
   const link = type === "user" ? `/settings/users/${id}` : `/customers/${id}`;
 

@@ -425,6 +425,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                         description: tag.description,
                         triggersHandoff: tag.triggersHandoff,
                         notifiesTeam: tag.notifiesTeam ?? false,
+                        systemKey: tag.systemKey,
                     },
                     { em: session }
                 );

@@ -46,6 +46,8 @@ interface Props {
   id?: string;
   message: MessageGetResponseDto;
   currentOperatorId?: string;
+  /** The customer's name as the inbox shows it, for their own messages. */
+  senderName?: string;
   onRetry?: (text: string, clientNonce: string) => void;
   hasFollowup?: boolean;
   canReact?: boolean;
@@ -104,6 +106,7 @@ export const MessageBubble = ({
   id,
   message,
   currentOperatorId,
+  senderName,
   onRetry,
   hasFollowup,
   canReact,
@@ -151,7 +154,9 @@ export const MessageBubble = ({
   const displayName =
     author?.id && currentOperatorId && author.id === currentOperatorId
       ? t("conversations.author.you")
-      : (author?.name ?? t(authorKey(message.authorType)));
+      : message.authorType === "USER" && senderName
+        ? senderName
+        : (author?.name ?? t(authorKey(message.authorType)));
 
   // INBOUND (end user) → left side uses "assistant" role in the shared component
   // OUTBOUND (operator/bot) → right side uses "user" role

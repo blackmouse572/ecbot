@@ -1,12 +1,6 @@
 import type { ComponentType } from "react";
 import type { GETTING_STARTED_STEPS } from "./constants";
 
-export type CountQuery = {
-  count: number;
-  isLoading: boolean;
-  isError: boolean;
-};
-
 export type GettingStartedStepKey =
   (typeof GETTING_STARTED_STEPS)[number]["key"];
 

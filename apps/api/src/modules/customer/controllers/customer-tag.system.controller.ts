@@ -1,4 +1,5 @@
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
+import { ENUM_CUSTOMER_TAG_EVENT_ACTOR } from '../enums/customer-tag.enum';
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import {
     BadRequestException,
@@ -86,7 +87,15 @@ export class CustomerTagSystemController {
             });
         }
 
-        await this.customerTagAssignmentService.apply(customerId, tag.id);
+        await this.customerTagAssignmentService.apply(
+            customerId,
+            tag.id,
+            undefined,
+            {
+                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.BOT,
+                conversationId: dto.conversationId ?? undefined,
+            }
+        );
 
         let triggeredHandoff = false;
         // A handoff already notifies the team, so a notify-only flag only
@@ -112,7 +121,8 @@ export class CustomerTagSystemController {
                         conversation,
                         workspaceId,
                         'tag_trigger',
-                        conversation.chatbot?.primaryLanguage
+                        conversation.chatbot?.primaryLanguage,
+                        tag.id
                     );
                     triggeredHandoff = true;
                 } else {
@@ -158,7 +168,12 @@ export class CustomerTagSystemController {
             // No-op: nothing to remove. Idempotent.
             return { ok: true };
         }
-        await this.customerTagAssignmentService.remove(customerId, tag.id);
+        await this.customerTagAssignmentService.remove(
+            customerId,
+            tag.id,
+            undefined,
+            { actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.BOT }
+        );
         return { ok: true };
     }
 }

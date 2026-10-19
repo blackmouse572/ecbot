@@ -36,9 +36,7 @@ export const useAccountTableColumns = () => {
       columnHelper.display({
         id: "type",
         header: () => headerLabel(t("fields.type")),
-        cell: ({ row }) => (
-          <AccountTypeCell size="2xsmall" type={row.original.type} />
-        ),
+        cell: ({ row }) => <AccountTypeCell type={row.original.type} />,
       }),
       columnHelper.display({
         id: "chatbot",

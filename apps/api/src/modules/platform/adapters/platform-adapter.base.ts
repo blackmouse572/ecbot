@@ -9,6 +9,7 @@ import { isAxiosError } from 'axios';
 import {
     AdapterCapabilities,
     Card,
+    MediaContent,
     OutboundMessage,
     QuickReply,
 } from '../interfaces/message-model';
@@ -202,8 +203,11 @@ export abstract class PlatformAdapter {
             content = { kind: 'card', card: rest as Card };
         }
 
-        // media → text when media unsupported
-        if (content.kind === 'media' && !this.capabilities.media) {
+        // media → text when media unsupported, or over the channel's limits
+        if (
+            content.kind === 'media' &&
+            (!this.capabilities.media || !this.fitsMediaLimits(content))
+        ) {
             content = {
                 kind: 'text',
                 text: content.caption ?? msg.fallbackText,
@@ -222,6 +226,19 @@ export abstract class PlatformAdapter {
         }
 
         return { ...msg, content, quickReplies };
+    }
+
+    private fitsMediaLimits(content: MediaContent): boolean {
+        const limits = this.capabilities.mediaLimits;
+        if (!limits) return true;
+        const limit = limits[content.mediaType];
+        return (
+            !!limit &&
+            content.size !== undefined &&
+            content.size <= limit.maxBytes &&
+            !!content.mimeType &&
+            limit.types.includes(content.mimeType)
+        );
     }
 
     // ---- shared truncate (grapheme-aware — won't split surrogate pairs / ZWJ emoji) ----

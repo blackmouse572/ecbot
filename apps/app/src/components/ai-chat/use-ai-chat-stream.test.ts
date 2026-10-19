@@ -102,6 +102,47 @@ describe("partsToRenderModel", () => {
     ]);
   });
 
+  it("shows send_media as its file, named from the part's metadata", () => {
+    const model = partsToRenderModel([
+      {
+        type: "tool-send_media",
+        toolCallId: "inv1",
+        state: "output-available",
+        input: { id: "item-menu" },
+        output: { ok: true, url: "https://cdn/menu.pdf" },
+      },
+      {
+        type: "file",
+        url: "https://cdn/menu.pdf",
+        mediaType: "application/pdf",
+        providerMetadata: { eccho: { filename: "Menu Mộc.pdf" } },
+      },
+    ]);
+    expect(model.toolCalls).toEqual([]);
+    expect(model.files).toEqual([
+      {
+        url: "https://cdn/menu.pdf",
+        mediaType: "application/pdf",
+        filename: "Menu Mộc.pdf",
+      },
+    ]);
+  });
+
+  it("keeps a rejected send_media in the tool trace", () => {
+    const model = partsToRenderModel([
+      {
+        type: "tool-send_media",
+        toolCallId: "inv2",
+        state: "output-available",
+        input: { id: "made-up" },
+        output: { ok: false, reason: "Unknown media id." },
+      },
+    ]);
+    expect(model.files).toEqual([]);
+    expect(model.toolCalls).toHaveLength(1);
+    expect(model.toolCalls[0].toolName).toBe("send_media");
+  });
+
   it("collects file parts with url/mediaType/filename", () => {
     const model = partsToRenderModel([
       { type: "text", text: "here you go" },

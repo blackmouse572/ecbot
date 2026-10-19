@@ -1,7 +1,9 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
+// Keep the rest of fs: argon2 and bcrypt find their native binaries through it.
 jest.mock('fs', () => ({
+    ...jest.requireActual('fs'),
     readFileSync: jest.fn(() => 'dummy-key'),
 }));
 
@@ -145,11 +147,9 @@ describe('AuthService.googleGetTokenInfo', () => {
     });
 });
 
-// Fix round 1 (Task 18): existing hashes created before the bcrypt cost was
-// raised (8 → 12) still verify fine (bcrypt reads the cost back out of the
-// hash string), but stay that much cheaper to brute-force forever unless
-// they're re-hashed. loginWithCredential calls maybeRehashPassword after a
-// successful password check to upgrade them opportunistically.
+// Passwords used to be bcrypt hashes. They still verify, and
+// loginWithCredential calls maybeRehashPassword after a successful check so
+// each one moves to argon2id the next time its owner logs in.
 describe('AuthService.maybeRehashPassword', () => {
     const configValues: Record<string, any> = {
         'auth.jwt.accessToken.kid': 'access-kid',
@@ -187,74 +187,49 @@ describe('AuthService.maybeRehashPassword', () => {
             configService
         );
 
-    it("rehashes a password whose stored hash's cost is below the configured cost (8 → 12)", async () => {
+    it('rehashes a bcrypt password into argon2id', async () => {
         const service = build();
-        const weakHash = await hashService.bcrypt(
-            'CorrectPass1!',
-            hashService.randomSalt(8)
-        );
+        const bcryptHash =
+            '$2b$12$7h8fVhgeM2bD0rQ/64T6yOMnJHvi3H2/5oMGYi.CIPdg35uAvg0k2';
 
         const result = await service.maybeRehashPassword(
-            'CorrectPass1!',
-            weakHash
+            'aaAA@123',
+            bcryptHash
         );
 
         expect(result).not.toBeNull();
-        expect(result.passwordHash).not.toEqual(weakHash);
+        expect(result.passwordHash.startsWith('$argon2id$')).toBe(true);
         expect(
-            await hashService.bcryptCompare(
-                'CorrectPass1!',
-                result.passwordHash
-            )
+            await hashService.passwordVerify('aaAA@123', result.passwordHash)
         ).toBe(true);
-        expect(hashService.bcryptGetCost(result.passwordHash)).toBe(12);
     });
 
-    it('does not rehash when the stored hash is already at the configured cost', async () => {
+    it('does not rehash a current argon2id password', async () => {
         const service = build();
-        const strongHash = await hashService.bcrypt(
-            'CorrectPass1!',
-            hashService.randomSalt(12)
-        );
+        const current = await hashService.passwordHash('CorrectPass1!');
 
         const result = await service.maybeRehashPassword(
             'CorrectPass1!',
-            strongHash
-        );
-
-        expect(result).toBeNull();
-    });
-
-    it('does not rehash when the stored hash is above the configured cost', async () => {
-        const service = build();
-        const strongerHash = await hashService.bcrypt(
-            'CorrectPass1!',
-            hashService.randomSalt(13)
-        );
-
-        const result = await service.maybeRehashPassword(
-            'CorrectPass1!',
-            strongerHash
+            current
         );
 
         expect(result).toBeNull();
     });
 });
 
-// bcrypt at cost 12 takes ~250 ms; the sync variants blocked the event loop
-// for that long on every (unauthenticated) login. Everything is async now.
+// Hashing a password is slow on purpose; it must run off the event loop.
 describe('password hashing does not block the event loop', () => {
     const hashService = new HelperHashService();
 
-    it('HelperHashService.bcrypt and bcryptCompare are async', async () => {
-        const hashing = hashService.bcrypt('pw', hashService.randomSalt(4));
+    it('HelperHashService.passwordHash and passwordVerify are async', async () => {
+        const hashing = hashService.passwordHash('pw');
         expect(hashing).toBeInstanceOf(Promise);
         const hash = await hashing;
 
-        const comparing = hashService.bcryptCompare('pw', hash);
+        const comparing = hashService.passwordVerify('pw', hash);
         expect(comparing).toBeInstanceOf(Promise);
         expect(await comparing).toBe(true);
-        expect(await hashService.bcryptCompare('nope', hash)).toBe(false);
+        expect(await hashService.passwordVerify('nope', hash)).toBe(false);
     });
 
     it('AuthService validateUser / runDummyPasswordCompare / createPassword are async and correct', async () => {

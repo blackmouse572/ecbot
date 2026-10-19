@@ -53,3 +53,36 @@ describe('KnowledgeBaseWorkspaceController.update', () => {
         expect(session.commit).not.toHaveBeenCalled();
     });
 });
+
+describe('KnowledgeBaseWorkspaceController, one knowledge base per workspace', () => {
+    it('cannot create a knowledge base', () => {
+        expect(KnowledgeBaseWorkspaceController.prototype).not.toHaveProperty(
+            'create'
+        );
+    });
+
+    it('does not return a deleted knowledge base', async () => {
+        const knowledgeBaseService = {
+            findOne: jest.fn().mockResolvedValue(null),
+        };
+        const controller = new KnowledgeBaseWorkspaceController(
+            {} as any,
+            knowledgeBaseService as any,
+            {} as any,
+            {} as any
+        );
+
+        await expect(
+            controller.get(
+                { id: 'user-1' } as any,
+                { id: 'workspace-1' } as any,
+                'kb-1'
+            )
+        ).rejects.toBeInstanceOf(NotFoundException);
+        expect(knowledgeBaseService.findOne).toHaveBeenCalledWith({
+            id: 'kb-1',
+            workspace: 'workspace-1',
+            deletedAt: null,
+        });
+    });
+});

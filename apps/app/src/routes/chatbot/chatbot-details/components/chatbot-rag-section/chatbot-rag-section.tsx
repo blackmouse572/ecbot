@@ -58,6 +58,7 @@ export function ChatbotRAGSection({ item, className }: ChatbotRAGSectionProps) {
         "Are you sure you want to unlink this knowledge item? This action cannot be undone.",
       ),
       confirmText: t("actions.unlink", "Unlink"),
+      cancelText: t("actions.cancel"),
       variant: "danger",
     });
 

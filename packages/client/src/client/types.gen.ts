@@ -809,6 +809,10 @@ export type MessageAttachmentResponseDto = {
      * Sticker only: the emoji the platform pairs with it
      */
     emoji?: string;
+    /**
+     * File only: the name shown on it
+     */
+    name?: string;
 };
 
 export type WidgetMessageResponseDto = {
@@ -2095,13 +2099,13 @@ export type ActivityAdminListResponseDto = {
      * Date updated at
      */
     updatedAt: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume' | 'conversation_handoff' | 'conversation_takeover' | 'conversation_bot_resumed' | 'conversation_resolved' | 'conversation_reopened';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
     metadata?: {
         [key: string]: unknown;
     };
-    user: UserMetaResponseDto;
-    by: UserMetaResponseDto;
+    user?: UserMetaResponseDto;
+    by?: UserMetaResponseDto;
     workspace?: ActivityAdminWorkspaceResponseDto;
     ipAddress?: string;
     userAgent?: string;
@@ -2140,10 +2144,10 @@ export type ActivityListResponseDto = {
      * Delete by
      */
     deletedBy?: UserMetaResponseDto;
-    user: string;
-    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume';
+    user?: string | null;
+    action: 'manage' | 'read' | 'create' | 'update' | 'delete' | 'join_workspace' | 'leave_workspace' | 'invite_member' | 'remove_member' | 'approve_join_workspace' | 'active_chatbot' | 'inactive_chatbot' | 'archive_chatbot' | 'unarchive_chatbot' | 'link_account_chatbot' | 'unlink_account_chatbot' | 'clone_chatbot' | 'customer_unmerge' | 'customer_merge_confirm' | 'customer_merge_dismiss' | 'role_active' | 'role_inactive' | 'api_key_reset' | 'chatbot_tool_enable' | 'chatbot_tool_disable' | 'tool_start_install' | 'tool_complete_install' | 'chatbot_skill_enable' | 'chatbot_skill_disable' | 'impersonate_start' | 'impersonate_end' | 'export' | 'erase' | 'subscription_change_plan' | 'subscription_cancel' | 'subscription_resume' | 'conversation_handoff' | 'conversation_takeover' | 'conversation_bot_resumed' | 'conversation_resolved' | 'conversation_reopened';
     subject: 'ACCOUNT' | 'AUTH' | 'API_KEY' | 'COUNTRY' | 'ROLE' | 'USER' | 'SESSION' | 'ACTIVITY' | 'DASHBOARD' | 'UTILITIES' | 'WORKSPACE' | 'CHATBOT' | 'ORDER' | 'MEMBER' | 'RAG' | 'KNOWLEDGE_BASE' | 'TOOL' | 'CUSTOMER' | 'CUSTOMER_DATA' | 'CONTACT_POINT' | 'CONVERSATION' | 'INVITATION' | 'CLIENT_CREDENTIAL' | 'SKILL' | 'WAITLIST' | 'TOKEN_USAGE' | 'PLAN';
-    by: UserShortResponseDto;
+    by?: UserShortResponseDto | null;
     metadata?: {
         [key: string]: unknown;
     };
@@ -4867,23 +4871,6 @@ export type KnowledgeBaseResponseDto = {
     };
 };
 
-export type KnowledgeBaseCreateRequestDto = {
-    /**
-     * Knowledge base name
-     */
-    name: string;
-    /**
-     * Knowledge base description
-     */
-    description?: string;
-    /**
-     * Knowledge base settings as JSON
-     */
-    settings?: {
-        [key: string]: unknown;
-    };
-};
-
 export type KnowledgeBaseUpdateRequestDto = {
     /**
      * Knowledge base name
@@ -6173,6 +6160,168 @@ export type NavCountGetResponseDto = {
     toolsNeedingAttention: number;
 };
 
+export type AnalyticsPeriodValueDto = {
+    current: number;
+    previous: number;
+};
+
+export type AnalyticsConversionDayDto = {
+    day: string;
+    newCustomers: number;
+    orders: number;
+};
+
+export type AnalyticsConversionChannelDto = {
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    /**
+     * Customers first seen in the period
+     */
+    newCustomers: number;
+    /**
+     * New customers who sent at least two messages
+     */
+    engaged: number;
+    /**
+     * New customers tagged as a hot lead
+     */
+    hotLeads: number;
+    /**
+     * New customers tagged with an order
+     */
+    orders: number;
+};
+
+export type AnalyticsConversionResponseDto = {
+    generatedAt: string;
+    /**
+     * Percent of new customers who placed an order
+     */
+    conversionRate: AnalyticsPeriodValueDto;
+    daily: Array<AnalyticsConversionDayDto>;
+    byChannel: Array<AnalyticsConversionChannelDto>;
+    /**
+     * Median hours from first contact to the first order
+     */
+    medianHoursToOrder: number;
+};
+
+export type AnalyticsSentimentDayDto = {
+    day: string;
+    positive: number;
+    /**
+     * Negative, angry included
+     */
+    negative: number;
+    complaint: number;
+};
+
+export type AnalyticsSentimentChannelDto = {
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    /**
+     * Conversations with a customer message
+     */
+    conversations: number;
+    /**
+     * Percent of those conversations tagged positive
+     */
+    positive: number;
+    /**
+     * Percent tagged negative or angry
+     */
+    negative: number;
+};
+
+export type AnalyticsUnhappyCustomerDto = {
+    customerId: string;
+    conversationId?: string;
+    name?: string;
+    platform?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    tagName: string;
+    emoji?: string;
+    at: string;
+};
+
+export type AnalyticsMarketingResponseDto = {
+    generatedAt: string;
+    /**
+     * Percent of classified conversations that were positive
+     */
+    positiveRate: AnalyticsPeriodValueDto;
+    daily: Array<AnalyticsSentimentDayDto>;
+    byChannel: Array<AnalyticsSentimentChannelDto>;
+    unhappy: Array<AnalyticsUnhappyCustomerDto>;
+};
+
+export type AnalyticsBotDayDto = {
+    day: string;
+    botResolved: number;
+    handedOver: number;
+};
+
+export type AnalyticsHandoffReasonDto = {
+    /**
+     * The tag id for a tag rule, else fallback_threshold, keyword_trigger, tag_trigger or other
+     */
+    key: string;
+    tagName?: string;
+    emoji?: string;
+    count: number;
+};
+
+export type AnalyticsBotChatbotDto = {
+    id: string;
+    name: string;
+    conversations: number;
+    botResolvedRate: number;
+    handoffRate: number;
+    /**
+     * Median seconds to the first bot reply
+     */
+    firstReplySeconds: number;
+    toolErrorRate: number;
+};
+
+export type AnalyticsBotResponseDto = {
+    generatedAt: string;
+    /**
+     * Percent of conversations handed over to staff
+     */
+    handoffRate: AnalyticsPeriodValueDto;
+    daily: Array<AnalyticsBotDayDto>;
+    reasons: Array<AnalyticsHandoffReasonDto>;
+    byChatbot: Array<AnalyticsBotChatbotDto>;
+};
+
+export type AnalyticsTagCountDto = {
+    id: string;
+    name: string;
+    emoji?: string;
+    count: number;
+};
+
+export type AnalyticsCustomerDayDto = {
+    day: string;
+    newCustomers: number;
+    /**
+     * Earlier customers who wrote that day
+     */
+    returning: number;
+};
+
+export type AnalyticsChannelCountDto = {
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
+    count: number;
+};
+
+export type AnalyticsCustomersResponseDto = {
+    generatedAt: string;
+    tags: Array<AnalyticsTagCountDto>;
+    total: number;
+    untagged: number;
+    daily: Array<AnalyticsCustomerDayDto>;
+    byChannel: Array<AnalyticsChannelCountDto>;
+};
+
 export type FollowupListResponseDto = {
     /**
      * Follow-up job ID
@@ -6356,6 +6505,40 @@ export type ApiChannelSendMessageRequestDto = {
     timestamp?: string;
 };
 
+export type KnowledgeItemUploadUrlResponseDto = {
+    /**
+     * PUT the file here, with a Content-Length of exactly `size` bytes.
+     */
+    uploadUrl: string;
+    /**
+     * Send as `fileKey` when creating the item
+     */
+    fileKey: string;
+    /**
+     * The type the file name gives the file
+     */
+    mimeType: string;
+    /**
+     * Seconds the link stays valid
+     */
+    expiresIn: number;
+};
+
+export type KnowledgeItemUploadUrlRequestDto = {
+    /**
+     * The item the file is for
+     */
+    type: 'FILE' | 'MEDIA';
+    /**
+     * File name with its extension, which sets its type
+     */
+    fileName: string;
+    /**
+     * File size in bytes
+     */
+    size: number;
+};
+
 export type KnowledgeItemShortResponseDto = {
     /**
      * Alias id of api key
@@ -6421,6 +6604,43 @@ export type KnowledgeItemShortResponseDto = {
      * Tags
      */
     tags?: Array<string>;
+};
+
+export type KnowledgeItemClientCreateRequestDto = {
+    /**
+     * Item type
+     */
+    type: 'FILE' | 'URL' | 'TEXT' | 'MEDIA';
+    /**
+     * Item title
+     */
+    title: string;
+    /**
+     * Item content (for TEXT/URL types)
+     */
+    content?: string;
+    /**
+     * Folder ID to organize item
+     */
+    folderId?: string;
+    /**
+     * Tags for categorization
+     */
+    tags?: Array<string>;
+    /**
+     * Type-specific metadata
+     */
+    metadata?: {
+        [key: string]: unknown;
+    };
+    /**
+     * For FILE or MEDIA: the `fileKey` from POST upload-url, after the file was PUT to its `uploadUrl`.
+     */
+    fileKey?: string;
+    /**
+     * For FILE or MEDIA: a public http(s) link the API downloads the file from.
+     */
+    fileUrl?: string;
 };
 
 export type RequestUserResponseDto = {
@@ -24133,92 +24353,6 @@ export type KnowledgeBaseWorkspaceControllerGetV1Responses = {
 
 export type KnowledgeBaseWorkspaceControllerGetV1Response = KnowledgeBaseWorkspaceControllerGetV1Responses[keyof KnowledgeBaseWorkspaceControllerGetV1Responses];
 
-export type KnowledgeBaseWorkspaceControllerCreateV1Data = {
-    body: KnowledgeBaseCreateRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path: {
-        /**
-         * The ID or slug of the workspace
-         */
-        workspace: string;
-    };
-    query?: never;
-    url: '/api/v1/workspace/{workspace}/knowledge-bases/create';
-};
-
-export type KnowledgeBaseWorkspaceControllerCreateV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 403
-     */
-    403: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 422
-     */
-    422: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type KnowledgeBaseWorkspaceControllerCreateV1Error = KnowledgeBaseWorkspaceControllerCreateV1Errors[keyof KnowledgeBaseWorkspaceControllerCreateV1Errors];
-
-export type KnowledgeBaseWorkspaceControllerCreateV1Responses = {
-    /**
-     * 201
-     */
-    201: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: DatabaseIdResponseDto;
-    };
-};
-
-export type KnowledgeBaseWorkspaceControllerCreateV1Response = KnowledgeBaseWorkspaceControllerCreateV1Responses[keyof KnowledgeBaseWorkspaceControllerCreateV1Responses];
-
 export type KnowledgeBaseWorkspaceControllerUpdateV1Data = {
     body: KnowledgeBaseUpdateRequestDto;
     headers?: {
@@ -30870,6 +31004,318 @@ export type NavCountWorkspaceControllerGetV1Responses = {
 
 export type NavCountWorkspaceControllerGetV1Response = NavCountWorkspaceControllerGetV1Responses[keyof NavCountWorkspaceControllerGetV1Responses];
 
+export type AnalyticsWorkspaceControllerConversionV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/workspace/{workspace}/analytics/conversion';
+};
+
+export type AnalyticsWorkspaceControllerConversionV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsWorkspaceControllerConversionV1Error = AnalyticsWorkspaceControllerConversionV1Errors[keyof AnalyticsWorkspaceControllerConversionV1Errors];
+
+export type AnalyticsWorkspaceControllerConversionV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsConversionResponseDto;
+    };
+};
+
+export type AnalyticsWorkspaceControllerConversionV1Response = AnalyticsWorkspaceControllerConversionV1Responses[keyof AnalyticsWorkspaceControllerConversionV1Responses];
+
+export type AnalyticsWorkspaceControllerMarketingV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/workspace/{workspace}/analytics/marketing';
+};
+
+export type AnalyticsWorkspaceControllerMarketingV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsWorkspaceControllerMarketingV1Error = AnalyticsWorkspaceControllerMarketingV1Errors[keyof AnalyticsWorkspaceControllerMarketingV1Errors];
+
+export type AnalyticsWorkspaceControllerMarketingV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsMarketingResponseDto;
+    };
+};
+
+export type AnalyticsWorkspaceControllerMarketingV1Response = AnalyticsWorkspaceControllerMarketingV1Responses[keyof AnalyticsWorkspaceControllerMarketingV1Responses];
+
+export type AnalyticsWorkspaceControllerBotV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/workspace/{workspace}/analytics/bot';
+};
+
+export type AnalyticsWorkspaceControllerBotV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsWorkspaceControllerBotV1Error = AnalyticsWorkspaceControllerBotV1Errors[keyof AnalyticsWorkspaceControllerBotV1Errors];
+
+export type AnalyticsWorkspaceControllerBotV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsBotResponseDto;
+    };
+};
+
+export type AnalyticsWorkspaceControllerBotV1Response = AnalyticsWorkspaceControllerBotV1Responses[keyof AnalyticsWorkspaceControllerBotV1Responses];
+
+export type AnalyticsWorkspaceControllerCustomersV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/workspace/{workspace}/analytics/customers';
+};
+
+export type AnalyticsWorkspaceControllerCustomersV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsWorkspaceControllerCustomersV1Error = AnalyticsWorkspaceControllerCustomersV1Errors[keyof AnalyticsWorkspaceControllerCustomersV1Errors];
+
+export type AnalyticsWorkspaceControllerCustomersV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsCustomersResponseDto;
+    };
+};
+
+export type AnalyticsWorkspaceControllerCustomersV1Response = AnalyticsWorkspaceControllerCustomersV1Responses[keyof AnalyticsWorkspaceControllerCustomersV1Responses];
+
 export type FollowupWorkspaceControllerListV1Data = {
     body?: never;
     headers?: {
@@ -32155,77 +32601,6 @@ export type KnowledgeBaseClientControllerListV1Responses = {
 
 export type KnowledgeBaseClientControllerListV1Response = KnowledgeBaseClientControllerListV1Responses[keyof KnowledgeBaseClientControllerListV1Responses];
 
-export type KnowledgeBaseClientControllerCreateV1Data = {
-    body: KnowledgeBaseCreateRequestDto;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/client/knowledge-bases';
-};
-
-export type KnowledgeBaseClientControllerCreateV1Errors = {
-    /**
-     * 401
-     */
-    401: (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    }) | (ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    });
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 422
-     */
-    422: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type KnowledgeBaseClientControllerCreateV1Error = KnowledgeBaseClientControllerCreateV1Errors[keyof KnowledgeBaseClientControllerCreateV1Errors];
-
-export type KnowledgeBaseClientControllerCreateV1Responses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: DatabaseIdResponseDto;
-    };
-};
-
-export type KnowledgeBaseClientControllerCreateV1Response = KnowledgeBaseClientControllerCreateV1Responses[keyof KnowledgeBaseClientControllerCreateV1Responses];
-
 export type KnowledgeBaseClientControllerUpdateV1Data = {
     body: KnowledgeBaseUpdateRequestDto;
     headers?: {
@@ -32399,7 +32774,7 @@ export type KnowledgeItemClientControllerListV1Responses = {
 export type KnowledgeItemClientControllerListV1Response = KnowledgeItemClientControllerListV1Responses[keyof KnowledgeItemClientControllerListV1Responses];
 
 export type KnowledgeItemClientControllerCreateV1Data = {
-    body: KnowledgeItemCreateRequestDto;
+    body: KnowledgeItemClientCreateRequestDto;
     headers?: {
         /**
          * Custom language header
@@ -32678,6 +33053,306 @@ export type KnowledgeItemClientControllerUpdateV1Responses = {
 };
 
 export type KnowledgeItemClientControllerUpdateV1Response = KnowledgeItemClientControllerUpdateV1Responses[keyof KnowledgeItemClientControllerUpdateV1Responses];
+
+export type KnowledgeItemClientControllerUploadUrlV1Data = {
+    body: KnowledgeItemUploadUrlRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        knowledgeBaseId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/knowledge-bases/{knowledgeBaseId}/items/upload-url';
+};
+
+export type KnowledgeItemClientControllerUploadUrlV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type KnowledgeItemClientControllerUploadUrlV1Error = KnowledgeItemClientControllerUploadUrlV1Errors[keyof KnowledgeItemClientControllerUploadUrlV1Errors];
+
+export type KnowledgeItemClientControllerUploadUrlV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemUploadUrlResponseDto;
+    };
+};
+
+export type KnowledgeItemClientControllerUploadUrlV1Response = KnowledgeItemClientControllerUploadUrlV1Responses[keyof KnowledgeItemClientControllerUploadUrlV1Responses];
+
+export type ChatbotKnowledgeItemClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/chatbots/{chatbotId}/knowledge-items';
+};
+
+export type ChatbotKnowledgeItemClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerListV1Error = ChatbotKnowledgeItemClientControllerListV1Errors[keyof ChatbotKnowledgeItemClientControllerListV1Errors];
+
+export type ChatbotKnowledgeItemClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ChatbotKnowledgeItemResponseDto>;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerListV1Response = ChatbotKnowledgeItemClientControllerListV1Responses[keyof ChatbotKnowledgeItemClientControllerListV1Responses];
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Data = {
+    body: ChatbotKnowledgeItemBatchLinkRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/knowledge-items/link';
+};
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Error = ChatbotKnowledgeItemClientControllerLinkV1Errors[keyof ChatbotKnowledgeItemClientControllerLinkV1Errors];
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: KnowledgeItemBatchResultResponseDto;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerLinkV1Response = ChatbotKnowledgeItemClientControllerLinkV1Responses[keyof ChatbotKnowledgeItemClientControllerLinkV1Responses];
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+        knowledgeItemId: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{chatbotId}/knowledge-items/{knowledgeItemId}';
+};
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Error = ChatbotKnowledgeItemClientControllerUnlinkV1Errors[keyof ChatbotKnowledgeItemClientControllerUnlinkV1Errors];
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: DatabaseIdResponseDto;
+    };
+};
+
+export type ChatbotKnowledgeItemClientControllerUnlinkV1Response = ChatbotKnowledgeItemClientControllerUnlinkV1Responses[keyof ChatbotKnowledgeItemClientControllerUnlinkV1Responses];
 
 export type ConversationClientControllerListV1Data = {
     body?: never;
@@ -35230,6 +35905,286 @@ export type ChatbotSkillClientControllerAttachV1Responses = {
 };
 
 export type ChatbotSkillClientControllerAttachV1Response = ChatbotSkillClientControllerAttachV1Responses[keyof ChatbotSkillClientControllerAttachV1Responses];
+
+export type AnalyticsClientControllerConversionV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/client/analytics/conversion';
+};
+
+export type AnalyticsClientControllerConversionV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsClientControllerConversionV1Error = AnalyticsClientControllerConversionV1Errors[keyof AnalyticsClientControllerConversionV1Errors];
+
+export type AnalyticsClientControllerConversionV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsConversionResponseDto;
+    };
+};
+
+export type AnalyticsClientControllerConversionV1Response = AnalyticsClientControllerConversionV1Responses[keyof AnalyticsClientControllerConversionV1Responses];
+
+export type AnalyticsClientControllerMarketingV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/client/analytics/marketing';
+};
+
+export type AnalyticsClientControllerMarketingV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsClientControllerMarketingV1Error = AnalyticsClientControllerMarketingV1Errors[keyof AnalyticsClientControllerMarketingV1Errors];
+
+export type AnalyticsClientControllerMarketingV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsMarketingResponseDto;
+    };
+};
+
+export type AnalyticsClientControllerMarketingV1Response = AnalyticsClientControllerMarketingV1Responses[keyof AnalyticsClientControllerMarketingV1Responses];
+
+export type AnalyticsClientControllerBotV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/client/analytics/bot';
+};
+
+export type AnalyticsClientControllerBotV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsClientControllerBotV1Error = AnalyticsClientControllerBotV1Errors[keyof AnalyticsClientControllerBotV1Errors];
+
+export type AnalyticsClientControllerBotV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsBotResponseDto;
+    };
+};
+
+export type AnalyticsClientControllerBotV1Response = AnalyticsClientControllerBotV1Responses[keyof AnalyticsClientControllerBotV1Responses];
+
+export type AnalyticsClientControllerCustomersV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        range?: '7d' | '30d' | '90d';
+        /**
+         * IANA timezone for day boundaries
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/client/analytics/customers';
+};
+
+export type AnalyticsClientControllerCustomersV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AnalyticsClientControllerCustomersV1Error = AnalyticsClientControllerCustomersV1Errors[keyof AnalyticsClientControllerCustomersV1Errors];
+
+export type AnalyticsClientControllerCustomersV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AnalyticsCustomersResponseDto;
+    };
+};
+
+export type AnalyticsClientControllerCustomersV1Response = AnalyticsClientControllerCustomersV1Responses[keyof AnalyticsClientControllerCustomersV1Responses];
 
 export type RequestControllerGetRequestsV1Data = {
     body?: never;

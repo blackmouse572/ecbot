@@ -86,6 +86,12 @@ export class MessageAttachmentResponseDto {
         description: 'Sticker only: the emoji the platform pairs with it',
     })
     emoji?: string;
+
+    @ApiPropertyOptional({
+        description: 'File only: the name shown on it',
+        example: 'Menu.pdf',
+    })
+    name?: string;
 }
 
 /** What an inbound message answers: a quoted message or the business's

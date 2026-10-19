@@ -64,10 +64,10 @@ export const AccountListTable = () => {
   return (
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
-        <Heading level="h2">{t("accounts.title")}</Heading>
+        <Heading level="h2">{t("channels.title")}</Heading>
         <div className="flex items-center justify-center gap-x-2">
           <Button size="small" variant="secondary" asChild>
-            <Link to="create">{t("actions.linkAccount")}</Link>
+            <Link to="create">{t("actions.connectChannel")}</Link>
           </Button>
         </div>
       </div>
@@ -91,7 +91,7 @@ export const AccountListTable = () => {
         noRecords={{
           title: t("accounts.list.noRecordsTitle"),
           message: t("accounts.list.noRecordsMessage"),
-          action: { to: "create", label: t("actions.linkAccount") },
+          action: { to: "create", label: t("actions.connectChannel") },
           illustration: (
             <FeatureArt feature="accounts" icon={<IconPlugConnected />} />
           ),

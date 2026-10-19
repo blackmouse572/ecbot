@@ -97,7 +97,7 @@ JWT and authentication related settings:
   password: {
     attempt: true,                                                  // Whether to track login attempts
     maxAttempt: 5,                                                  // Maximum allowed failed login attempts
-    saltLength: 8,                                                  // Length of salt for password hashing
+    saltLength: 12,                                                 // Length of the stored salt column (argon2id embeds its own salt)
     expiredIn: ms('182d') / 1000,                                   // Password expiration (0.5 years)
     expiredInTemporary: ms('3d') / 1000,                            // Temporary password expiration (3 days)
     period: ms('90d') / 1000,                                   // Password renewal period (3 months)

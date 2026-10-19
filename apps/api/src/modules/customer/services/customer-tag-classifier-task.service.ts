@@ -1,4 +1,5 @@
 import { normalizeTagName } from '@app/modules/customer/utils/tag-name.util';
+import { ENUM_CUSTOMER_TAG_EVENT_ACTOR } from '../enums/customer-tag.enum';
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -254,7 +255,12 @@ export class CustomerTagClassifierTaskService {
             try {
                 await this.customerTagAssignmentService.apply(
                     customerId,
-                    tag.id
+                    tag.id,
+                    undefined,
+                    {
+                        actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.CLASSIFIER,
+                        conversationId,
+                    }
                 );
             } catch (err) {
                 this.logger.warn(
@@ -273,7 +279,12 @@ export class CustomerTagClassifierTaskService {
             try {
                 await this.customerTagAssignmentService.remove(
                     customerId,
-                    tag.id
+                    tag.id,
+                    undefined,
+                    {
+                        actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.CLASSIFIER,
+                        conversationId,
+                    }
                 );
             } catch (err) {
                 this.logger.warn(

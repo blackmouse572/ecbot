@@ -178,7 +178,7 @@ describe('ChatbotAiSseStreamService', () => {
             let out = '';
             res.on('data', (c: Buffer) => (out += c.toString()));
             let finalized: string | undefined;
-            let images: string[] = [];
+            let images: { url: string; kind: string }[] = [];
             let reported: TokenUsageDelta | undefined;
             await new ChatbotAiSseStreamService().pipe({
                 res,
@@ -221,7 +221,9 @@ describe('ChatbotAiSseStreamService', () => {
         it('still saves the reply and meters the tokens', async () => {
             const { finalized, images, reported } = await run('customer');
             expect(finalized).toBe('Còn hàng');
-            expect(images).toEqual(['https://cdn/s.jpg']);
+            expect(images).toEqual([
+                { url: 'https://cdn/s.jpg', kind: 'image' },
+            ]);
             expect(reported).toEqual({
                 inputTokens: 9,
                 outputTokens: 1,

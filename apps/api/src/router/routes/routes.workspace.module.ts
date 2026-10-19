@@ -3,6 +3,8 @@ import { AccountModule } from '@app/modules/account/account.module';
 import { ActivityWorkspaceController } from '@app/modules/activity/controllers/activity.workspace.controller';
 import { AgentBuilderModule } from '@app/modules/agent-builder/agent-builder.module';
 import { AgentBuilderWorkspaceController } from '@app/modules/agent-builder/controllers/agent-builder.workspace.controller';
+import { AnalyticsModule } from '@app/modules/analytics/analytics.module';
+import { AnalyticsWorkspaceController } from '@app/modules/analytics/controllers/analytics.workspace.controller';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { ClientCredentialModule } from '@app/modules/client-credential/client-credential.module';
 import { ClientCredentialWorkspaceController } from '@app/modules/client-credential/controllers/client-credential.workspace.controller';
@@ -82,6 +84,7 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         CustomerTagAssignmentWorkspaceController,
         CustomerMergeSuggestionWorkspaceController,
         NavCountWorkspaceController,
+        AnalyticsWorkspaceController,
         FollowupWorkspaceController,
         ClientCredentialWorkspaceController,
     ],
@@ -115,6 +118,7 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         CustomerModule,
         ExportModule,
         NavCountModule,
+        AnalyticsModule,
         PlatformModule,
         ChatbotRepositoryModule,
         AgentBuilderModule,

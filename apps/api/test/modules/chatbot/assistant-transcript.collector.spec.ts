@@ -24,7 +24,30 @@ describe('AssistantTranscriptCollector', () => {
         });
 
         expect(c.assistantText()).toBe('Mẫu này nè');
-        expect(c.images()).toEqual(['https://cdn/s.jpg']);
+        expect(c.media()).toEqual([
+            { url: 'https://cdn/s.jpg', kind: 'image' },
+        ]);
+        expect(c.shouldPersist()).toBe(true);
+    });
+
+    it('keeps a PDF the reply sent, with its name', () => {
+        const c = new AssistantTranscriptCollector();
+        c.onFrame({
+            type: 'file',
+            url: 'https://cdn/menu.pdf',
+            mediaType: 'application/pdf',
+            providerMetadata: { eccho: { filename: 'Menu.pdf', size: 1200 } },
+        });
+
+        expect(c.media()).toEqual([
+            {
+                url: 'https://cdn/menu.pdf',
+                kind: 'file',
+                name: 'Menu.pdf',
+                mimeType: 'application/pdf',
+                size: 1200,
+            },
+        ]);
         expect(c.shouldPersist()).toBe(true);
     });
 

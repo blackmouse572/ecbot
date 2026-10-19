@@ -1,4 +1,4 @@
-import { PLATFORM_ICON_SRC } from "@/components/platform-icon/platform-icon";
+import { PLATFORM_ICON_SRC } from "@/components/platform-icon/channel-catalog";
 import type { ChannelId } from "@repo/agent-blueprint";
 
 /** Channel choice -> platform logo, reusing platform-icon's shared paths (wireframe delta section 3). */

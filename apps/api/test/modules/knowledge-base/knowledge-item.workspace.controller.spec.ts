@@ -2,6 +2,7 @@ import { UnprocessableEntityException } from '@nestjs/common';
 import { POLICY_ROLE_META_KEY } from '@app/modules/policy/constants/policy.constant';
 import { KnowledgeItemWorkspaceController } from '@app/modules/knowledge-base/controllers/knowledge-item.workspace.controller';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '@app/modules/knowledge-base/enums/knowledge-base-item-type.enum';
+import { KnowledgeItemUploadService } from '@app/modules/knowledge-base/services/knowledge-item-upload.service';
 import { ENUM_REQUEST_STATUS_CODE_ERROR } from 'src/common/request/enums/request.status-code.enum';
 
 // A FILE item sent without a file used to be created (201) and only failed
@@ -15,20 +16,32 @@ describe('KnowledgeItemWorkspaceController.create', () => {
     const user = { id: 'user-1' } as any;
     const workspace = { id: 'workspace-1' } as any;
 
+    let awsS3Service: { putItem: jest.Mock };
+
     beforeEach(() => {
-        em = { fork: jest.fn() };
+        const session = {
+            begin: jest.fn(),
+            commit: jest.fn(),
+            rollback: jest.fn(),
+        };
+        em = { fork: jest.fn(() => session) };
         knowledgeItemService = { create: jest.fn() };
         knowledgeStorageQuotaService = { assertCanStore: jest.fn() };
+        awsS3Service = { putItem: jest.fn() };
         controller = new KnowledgeItemWorkspaceController(
             em as any,
             knowledgeItemService as any,
+            { findOne: jest.fn().mockResolvedValue({ id: 'kb-1' }) } as any,
             {} as any,
             {} as any,
+            { findOne: jest.fn().mockResolvedValue(null) } as any,
             {} as any,
             {} as any,
-            {} as any,
-            {} as any,
-            knowledgeStorageQuotaService as any
+            new KnowledgeItemUploadService(
+                awsS3Service as any,
+                knowledgeStorageQuotaService as any,
+                {} as any
+            )
         );
     });
 
@@ -43,14 +56,20 @@ describe('KnowledgeItemWorkspaceController.create', () => {
             workspace,
             'kb-1',
             { type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE, title: 'x' } as any,
-            { size: 1234, mimetype: 'application/pdf' } as any
+            {
+                originalname: 'menu.pdf',
+                size: 1234,
+                mimetype: 'application/pdf',
+                buffer: Buffer.from('%PDF-1.4'),
+            } as any
         );
 
         await expect(result).rejects.toBe(refusal);
         expect(
             knowledgeStorageQuotaService.assertCanStore
         ).toHaveBeenCalledWith('workspace-1', 1234);
-        expect(em.fork).not.toHaveBeenCalled();
+        expect(awsS3Service.putItem).not.toHaveBeenCalled();
+        expect(knowledgeItemService.create).not.toHaveBeenCalled();
     });
 
     it('refuses a FILE item with no file attached (422)', async () => {
@@ -92,7 +111,7 @@ describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
             originalname: 'Bánh mì đặc biệt.png',
             mimetype,
             size,
-            buffer: Buffer.from('x'),
+            buffer: Buffer.from('%PDF-1.4'),
         }) as any;
     const create = (type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE, upload?: any) =>
         controller.create(
@@ -130,9 +149,13 @@ describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
             {} as any,
             { createByUser: jest.fn() } as any,
             { findOne: jest.fn().mockResolvedValue(null) } as any,
-            awsS3Service as any,
             {} as any,
-            { assertCanStore: jest.fn() } as any
+            {} as any,
+            new KnowledgeItemUploadService(
+                awsS3Service as any,
+                { assertCanStore: jest.fn() } as any,
+                {} as any
+            )
         );
     });
 
@@ -143,7 +166,7 @@ describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
         expect(options).toEqual({ access: 'PUBLIC' });
         expect(put.mime).toBe('image/png');
         expect(put.key).toMatch(
-            /^knowledge-media\/workspace-1\/kb-1\/[0-9a-f-]{36}-banh-mi-.+\.png$/
+            /^knowledge-media\/workspace-1\/kb-1\/[0-9a-f-]{36}\/banh-mi-.+\.png$/
         );
         expect(knowledgeItemService.create.mock.calls[0][0]).toMatchObject({
             type: 'MEDIA',
@@ -257,6 +280,41 @@ describe('KnowledgeItemWorkspaceController.batchTag', () => {
         expect(service.addTags).toHaveBeenCalledWith('a', ['FAQ'], {
             em: session,
             actionBy: 'u',
+        });
+    });
+});
+
+describe('KnowledgeItemWorkspaceController.list', () => {
+    it('does not list the items of a deleted knowledge base', async () => {
+        const knowledgeBaseService = {
+            findOne: jest.fn().mockResolvedValue(null),
+        };
+        const controller = new KnowledgeItemWorkspaceController(
+            {} as any,
+            {} as any,
+            knowledgeBaseService as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any
+        );
+
+        await expect(
+            controller.list(
+                { id: 'workspace-1' } as any,
+                'kb-1',
+                { _limit: 20, _offset: 0 } as any,
+                {},
+                {},
+                {}
+            )
+        ).rejects.toThrow('knowledgeBase.error.notFound');
+        expect(knowledgeBaseService.findOne).toHaveBeenCalledWith({
+            id: 'kb-1',
+            workspace: 'workspace-1',
+            deletedAt: null,
         });
     });
 });

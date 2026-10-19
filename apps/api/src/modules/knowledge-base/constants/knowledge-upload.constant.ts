@@ -29,3 +29,11 @@ export const KNOWLEDGE_MEDIA_PDF_MAX_BYTES = 20 * MB;
 
 /** The largest upload any item type takes, for the multipart parser. */
 export const KNOWLEDGE_UPLOAD_MAX_BYTES = KNOWLEDGE_MEDIA_PDF_MAX_BYTES;
+
+/**
+ * Where a presigned client upload lands, under `<workspace>/<knowledge base>/`,
+ * until a knowledge item is created from it and it moves to its own key.
+ */
+export const KNOWLEDGE_UPLOAD_STAGING_PREFIX = 'knowledge-uploads';
+/** How long a presigned upload link stays valid, in seconds. */
+export const KNOWLEDGE_UPLOAD_PRESIGN_SECONDS = 900;

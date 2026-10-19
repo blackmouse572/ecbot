@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compileFollowupRules } from "./followup-rules";
+import { compileFollowupRules, nextFollowupRules } from "./followup-rules";
 import { createProfile } from "./profile";
 
 describe("compileFollowupRules", () => {
@@ -28,5 +28,22 @@ describe("compileFollowupRules", () => {
 
   it("leaves personal assistants without rules", () => {
     expect(compileFollowupRules(createProfile("personal_tasks", "en"))).toBe("");
+  });
+});
+
+describe("nextFollowupRules", () => {
+  const before = createProfile("restaurant", "vi");
+  const after = { ...before, goals: [...before.goals, "promotions" as const] };
+
+  it("follows the profile while the rules are still the old default", () => {
+    expect(nextFollowupRules(compileFollowupRules(before), before, after)).toBe(compileFollowupRules(after));
+  });
+
+  it("fills empty rules from the profile", () => {
+    expect(nextFollowupRules("", undefined, after)).toBe(compileFollowupRules(after));
+  });
+
+  it("keeps rules the owner edited", () => {
+    expect(nextFollowupRules("Call back VIPs only.", before, after)).toBe("Call back VIPs only.");
   });
 });

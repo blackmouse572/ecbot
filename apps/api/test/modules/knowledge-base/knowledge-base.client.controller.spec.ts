@@ -109,10 +109,7 @@ describe('KnowledgeBaseClientController', () => {
     describe('writes', () => {
         const credential = { createdBy: { id: 'creator-1' } } as any;
 
-        it.each([
-            ['create', ENUM_POLICY_ACTION.CREATE],
-            ['update', ENUM_POLICY_ACTION.UPDATE],
-        ] as const)(
+        it.each([['update', ENUM_POLICY_ACTION.UPDATE]] as const)(
             '%s is guarded and needs KNOWLEDGE_BASE %s',
             (handler, action) => {
                 const method = KnowledgeBaseClientController.prototype[handler];
@@ -134,32 +131,10 @@ describe('KnowledgeBaseClientController', () => {
             }
         );
 
-        it('creates a knowledge base in the credential workspace as the creator', async () => {
-            mockKnowledgeBaseService.create.mockResolvedValue({
-                id: 'kb-1',
-                name: 'FAQ',
-            });
-
-            const result = await controller.create(workspace, credential, {
-                name: 'FAQ',
-            });
-
-            expect(mockKnowledgeBaseService.create).toHaveBeenCalledWith(
-                { name: 'FAQ', workspace: 'workspace-1' },
-                { actionBy: 'creator-1' }
+        it('cannot create a knowledge base: a workspace has exactly one', () => {
+            expect(KnowledgeBaseClientController.prototype).not.toHaveProperty(
+                'create'
             );
-            expect(mockActivityService.createByUser).toHaveBeenCalledWith(
-                credential.createdBy,
-                {
-                    action: 'create',
-                    subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
-                    metadata: {
-                        knowledgeBaseId: 'kb-1',
-                        knowledgeBaseName: 'FAQ',
-                    },
-                }
-            );
-            expect(result).toEqual({ data: { id: 'kb-1' } });
         });
 
         it('updates a knowledge base only within the credential workspace', async () => {

@@ -21,11 +21,26 @@ Ecbot runs AI chatbots ("agents") that reply to a business's customers on Messen
 
 ## Where things belong in an agent
 
-| What                                       | Where                                               |
-| ------------------------------------------ | --------------------------------------------------- |
-| Facts: products, prices, hours, policies   | `generalKnowledge`, or the knowledge base when long |
-| Tone, persona, a few rules for every reply | `extraInstructions`                                 |
-| "When the customer asks X, do A, then B"   | a Skill, attached to the agent                      |
-| Calling another system                     | a Tool, turned on for the agent                     |
+| What                                                 | Where                                            |
+| ---------------------------------------------------- | ------------------------------------------------ |
+| Goals, tone, address style, rules, when to hand over | `profile`                                        |
+| Short facts: hours, address, delivery, prices        | `profile.facts`, or the knowledge base when long |
+| Anything for every reply the profile can't say       | `extraInstructions`, a few lines                 |
+| "When the customer asks X, do A, then B"             | a Skill, attached to the agent                   |
+| Calling another system                               | a Tool, turned on for the agent                  |
 
 Workflows do not go in `extraInstructions`. See the `ecbot-agent-builder` skill to set up or clean up an agent, and `ecbot-skill-builder` to write a workflow as a Skill.
+
+## Reading the numbers
+
+The `get_*_analytics` tools return the dashboard tabs for the last `7d`, `30d` or `90d` (default `30d`), each compared with the period before. They share 20 calls a minute per key, so fetch each tab once per question and reuse it. Pass the user's `timezone` when it is not Vietnam.
+
+## Adding knowledge to an agent
+
+A chatbot only answers from knowledge items linked to it, not from every item in a knowledge base.
+
+1. `create_knowledge_item` in a knowledge base. TEXT and URL take `content`. FILE (a document read for its text) and MEDIA (an image or PDF the agent sends to customers) take a file in one of two ways:
+   - The file is online: pass its public link as `fileUrl`.
+   - The file is local: call `get_knowledge_upload_url` with its name and size in bytes, `PUT` the bytes to `uploadUrl` (for example `curl -T menu.pdf "<uploadUrl>"`), then pass the returned `fileKey`.
+2. `process_knowledge_item`, then wait for `get_knowledge_item` to show COMPLETED.
+3. `link_knowledge_to_chatbot` with the item ids, or with `knowledgeBaseId` to link a whole knowledge base. `list_chatbot_knowledge` shows what an agent has.

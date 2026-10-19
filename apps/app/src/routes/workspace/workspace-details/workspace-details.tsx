@@ -39,6 +39,7 @@ export const WorkspaceDetails = () => {
       title: t("workspace.delete.confirm.title"),
       description: t("workspace.delete.confirm.description"),
       verificationText: workspace.slug,
+      verificationInstruction: t("general.typeToConfirm"),
       confirmText: t("workspace.delete.confirm.confirm"),
       cancelText: t("actions.cancel"),
     });

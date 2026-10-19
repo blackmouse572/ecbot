@@ -3,9 +3,11 @@ import { Avatar, IconButton, Text } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 import type { ConversationGetResponseDto } from "@/hooks/api/conversations";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
+import { senderLabel } from "../sender-label";
 import { ChatbotBadge } from "../components/chatbot-badge";
 import { StatusPill } from "../components/status-pill";
 import { BotPauseSwitch, StatusActionsMenu } from "./status-actions-menu";
+import { useStatusChange } from "./use-status-change";
 
 interface Props {
   conversation: ConversationGetResponseDto;
@@ -26,7 +28,8 @@ export const ConversationHeader = ({
   onOpenCustomer,
 }: Props) => {
   const { t } = useTranslation();
-  const senderLabel = (conversation as A).senderName ?? conversation.senderId;
+  const status = useStatusChange(conversation);
+  const senderName = senderLabel(conversation as A, t);
   const senderAvatar = (conversation as A).senderAvatar as string | undefined;
   const accountName =
     (conversation.account as A)?.name ??
@@ -39,7 +42,7 @@ export const ConversationHeader = ({
           variant="rounded"
           size="small"
           src={senderAvatar ?? undefined}
-          fallback={fallbackInitials(senderLabel)}
+          fallback={fallbackInitials(senderName)}
         />
         <PlatformIcon
           type={(conversation.account as A)?.type}
@@ -49,7 +52,7 @@ export const ConversationHeader = ({
       </div>
       <div className="flex min-w-0 flex-col gap-y-0.5">
         <Text size="small" weight="plus" leading="compact" className="truncate">
-          {senderLabel}
+          {senderName}
         </Text>
         <div className="flex min-w-0 items-center gap-x-2">
           {accountName && (
@@ -97,8 +100,8 @@ export const ConversationHeader = ({
         <div className="max-sm:hidden">
           <StatusPill conversation={conversation} />
         </div>
-        <BotPauseSwitch conversation={conversation} />
-        <StatusActionsMenu conversation={conversation} />
+        <BotPauseSwitch conversation={conversation} status={status} />
+        <StatusActionsMenu conversation={conversation} status={status} />
       </div>
     </div>
   );

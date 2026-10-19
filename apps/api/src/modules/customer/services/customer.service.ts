@@ -48,7 +48,12 @@ export class CustomerService implements ICustomerService {
         options?: IDatabaseFindOneOptions
     ): Promise<CustomerEntity | null> {
         return this.customerRepository.findOne(
-            { id, workspace: workspaceId } as any,
+            {
+                id,
+                workspace: workspaceId,
+                deletedAt: null,
+                mergedIntoCustomerId: null,
+            } as any,
             options
         );
     }
@@ -274,8 +279,12 @@ export class CustomerService implements ICustomerService {
         }
     ): Promise<CustomerEntity> {
         // `update()` already fires the contact-field-changed hook for phone +
-        // email so we don't double-dispatch here.
-        return this.update(id, patch);
+        // email so we don't double-dispatch here. Drop absent fields so a
+        // phone-only call does not write NULL over the stored name.
+        const given = Object.fromEntries(
+            Object.entries(patch).filter(([, value]) => value !== undefined)
+        );
+        return this.update(id, given);
     }
 
     /**

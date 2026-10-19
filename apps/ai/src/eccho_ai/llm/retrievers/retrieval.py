@@ -11,12 +11,16 @@ from functools import lru_cache
 from async_lru import alru_cache
 from tenacity import retry
 
+from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.retrievers.embeddings import get_embeddings_client
 from eccho_ai.llm.retrievers.retry import _RETRY
 from eccho_ai.llm.retrievers.text_processing import normalize_text
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
 from eccho_ai.utils.rag_utils import public_source_url, source_title
+
+
+logger = get_logger(__name__)
 
 
 @alru_cache(
@@ -131,6 +135,16 @@ def score_kind() -> str:
 
 
 @dataclass
+class RetrievedMedia:
+    """A Media item the agent may send with `send_media`."""
+
+    id: str
+    title: str
+    description: str
+    mime_type: str
+
+
+@dataclass
 class RAGRetrievalResult:
     query: str
     chunks: list[RetrievedChunk]
@@ -140,6 +154,9 @@ class RAGRetrievalResult:
     # Best candidate score, also when nothing passed RAG_RETRIEVAL_MIN_SCORE:
     # what to compare against when tuning the threshold.
     top_score: float | None = None
+    # Sendable media, nearest first. Searched apart from the chunks, so it
+    # never takes one of their places.
+    media: list[RetrievedMedia] = field(default_factory=list)
 
     @property
     def summary(self) -> dict[str, Any]:
@@ -195,9 +212,12 @@ class RAGRetrievalService:
 
         try:
             document_count = await self.store.count_completed_documents(chatbot_id=chatbot_id)
+            # Only a bot without text knowledge pays for this check: an
+            # image-only library still needs the query embedded.
+            has_media = document_count > 0 or await self.store.has_media(chatbot_id=chatbot_id)
         except Exception as exc:
             raise RetrievalStageError("store_failed") from exc
-        if document_count == 0:
+        if not has_media:
             return RAGRetrievalResult(
                 query=clean_query,
                 chunks=[],
@@ -209,19 +229,30 @@ class RAGRetrievalService:
             query_embedding = await self._embed_query(clean_query)
         except Exception as exc:
             raise RetrievalStageError("embedding_failed") from exc
-        try:
-            similarity_rows = await self.store.similarity_search_chunks(
-                embedding=query_embedding,
-                chatbot_id=chatbot_id,
-                limit=AppVars.RAG_RETRIEVAL_CANDIDATE_LIMIT,
-            )
-
-            fts_rows = await self.store.full_text_search_chunks(
+        media_search = asyncio.ensure_future(self._search_media(query_embedding, chatbot_id))
+        if document_count == 0:
+            return RAGRetrievalResult(
                 query=clean_query,
-                chatbot_id=chatbot_id,
-                limit=AppVars.RAG_RETRIEVAL_CANDIDATE_LIMIT,
+                chunks=[],
+                context="",
+                status=RETRIEVAL_NO_DOCUMENTS,
+                media=await media_search,
+            )
+        try:
+            similarity_rows, fts_rows = await asyncio.gather(
+                self.store.similarity_search_chunks(
+                    embedding=query_embedding,
+                    chatbot_id=chatbot_id,
+                    limit=AppVars.RAG_RETRIEVAL_CANDIDATE_LIMIT,
+                ),
+                self.store.full_text_search_chunks(
+                    query=clean_query,
+                    chatbot_id=chatbot_id,
+                    limit=AppVars.RAG_RETRIEVAL_CANDIDATE_LIMIT,
+                ),
             )
         except Exception as exc:
+            media_search.cancel()
             raise RetrievalStageError("store_failed") from exc
 
         candidates = self._merge_candidates(
@@ -244,7 +275,28 @@ class RAGRetrievalService:
             context=self.format_context(selected),
             status=RETRIEVAL_OK if selected else RETRIEVAL_BELOW_THRESHOLD,
             top_score=ranked[0].rerank_score if ranked else None,
+            media=await media_search,
         )
+
+    async def _search_media(self, embedding: list[float], chatbot_id: str) -> list[RetrievedMedia]:
+        """No relevance cutoff: query and description similarity barely tells
+        a menu from a dish photo, so the agent picks from the nearest few."""
+        try:
+            rows = await self.store.search_media(
+                embedding=embedding, chatbot_id=chatbot_id, limit=AppVars.RAG_MEDIA_LIMIT
+            )
+        except Exception as exc:  # noqa: BLE001 (the turn goes on without media)
+            logger.warning("media_search_failed", error=str(exc), chatbot_id=chatbot_id)
+            return []
+        return [
+            RetrievedMedia(
+                id=str(row["knowledge_item_id"]),
+                title=row["title"],
+                description=row.get("description") or "",
+                mime_type=row["mime_type"],
+            )
+            for row in rows
+        ]
 
     def format_context(self, chunks: list[RetrievedChunk]) -> str:
         if not chunks:
@@ -323,17 +375,25 @@ class RAGRetrievalService:
         # use). When disabled, fall back to the hybrid similarity/FTS score so the
         # service stays light enough for small instances. See RAG_RERANK_ENABLED.
         if not AppVars.RAG_RERANK_ENABLED:
-            for chunk in chunks:
-                chunk.rerank_score = max(chunk.similarity_score, chunk.fts_score)
-            return sorted(chunks, key=lambda chunk: chunk.rerank_score, reverse=True)
+            return self._hybrid_rank(chunks)
 
-        raw_scores = await asyncio.to_thread(
-            _score_with_cross_encoder,
-            model_name=AppVars.RAG_RERANK_CROSS_ENCODER_MODEL,
-            query=query,
-            chunks=chunks,
-            batch_size=AppVars.RAG_RERANK_BATCH_SIZE,
-        )
+        try:
+            raw_scores = await asyncio.to_thread(
+                _score_with_cross_encoder,
+                model_name=AppVars.RAG_RERANK_CROSS_ENCODER_MODEL,
+                query=query,
+                chunks=chunks,
+                batch_size=AppVars.RAG_RERANK_BATCH_SIZE,
+            )
+        except Exception as exc:  # noqa: BLE001 (un-reranked results beat none)
+            # e.g. the model download returns 403: answer from the hybrid
+            # ranking rather than dropping every result.
+            logger.warning(
+                "rerank_failed",
+                error=str(exc),
+                model=AppVars.RAG_RERANK_CROSS_ENCODER_MODEL,
+            )
+            return self._hybrid_rank(chunks)
 
         for chunk, raw_score in zip(chunks, raw_scores):
             chunk.rerank_score = _sigmoid(raw_score)
@@ -341,6 +401,12 @@ class RAGRetrievalService:
                 "model": AppVars.RAG_RERANK_CROSS_ENCODER_MODEL,
                 "raw_score": raw_score,
             }
+        return sorted(chunks, key=lambda chunk: chunk.rerank_score, reverse=True)
+
+    @staticmethod
+    def _hybrid_rank(chunks: list[RetrievedChunk]) -> list[RetrievedChunk]:
+        for chunk in chunks:
+            chunk.rerank_score = max(chunk.similarity_score, chunk.fts_score)
         return sorted(chunks, key=lambda chunk: chunk.rerank_score, reverse=True)
 
     @staticmethod

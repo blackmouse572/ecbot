@@ -294,7 +294,10 @@ export const useBatchUnlinkAccounts = () => {
         path: { workspace: workspaceSlug || "" },
         body: { ids },
       }).then((res) => (res.data as A)?.data as BatchResult),
-    onSuccess: () => {
+    onSuccess: (_, ids) => {
+      for (const id of ids) {
+        queryClient.removeQueries({ queryKey: accountQueryKeys.detail(id) });
+      }
       queryClient.invalidateQueries({
         queryKey: accountQueryKeys.lists(),
       });
@@ -313,7 +316,10 @@ export const useUnLinkAccount = () => {
           workspace: workspaceSlug || "",
         },
       }),
-    onSuccess: () => {
+    onSuccess: (_, accountId) => {
+      queryClient.removeQueries({
+        queryKey: accountQueryKeys.detail(accountId),
+      });
       queryClient.invalidateQueries({
         queryKey: accountQueryKeys.lists(),
       });

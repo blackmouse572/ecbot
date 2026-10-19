@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
+import { ENUM_CUSTOMER_TAG_SYSTEM_KEY } from '../enums/customer-tag.enum';
 import { CustomerTagGetResponseDto } from '../dtos/response/customer-tag.get.response.dto';
 import { CustomerTagEntity } from '../repository/entities/customer-tag.entity';
 import { CustomerTagAssignmentRepository } from '../repository/repositories/customer-tag-assignment.repository';
@@ -25,6 +26,7 @@ export interface ICustomerTagCreate {
     description?: string | null;
     triggersHandoff?: boolean;
     notifiesTeam?: boolean;
+    systemKey?: ENUM_CUSTOMER_TAG_SYSTEM_KEY;
 }
 
 export interface ICustomerTagUpdate {
@@ -116,6 +118,7 @@ export class CustomerTagService {
         tag.description = payload.description ?? undefined;
         tag.triggersHandoff = payload.triggersHandoff ?? false;
         tag.notifiesTeam = payload.notifiesTeam ?? false;
+        tag.systemKey = payload.systemKey;
 
         await em.persistAndFlush(tag);
         return tag;

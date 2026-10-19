@@ -1,4 +1,7 @@
 import { HandoffEmailService } from './handoff-email.service';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
+import { ActivityService } from '@app/modules/activity/services/activity.service';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 import {
     IDatabaseFindAllOptions,
     IDatabaseFindOneOptions,
@@ -65,7 +68,8 @@ export class ConversationService implements IConversationService {
         private readonly conversationReadRepository: ConversationReadRepository,
         private readonly customerTagClassifierService: CustomerTagClassifierService,
         private readonly moduleRef: ModuleRef,
-        private readonly messageRepository: MessageRepository
+        private readonly messageRepository: MessageRepository,
+        private readonly activityService: ActivityService
     ) {}
 
     private get handoffEmail(): HandoffEmailService | undefined {
@@ -433,24 +437,11 @@ export class ConversationService implements IConversationService {
     }
 
     mapGet(conversation: ConversationEntity): ConversationGetResponseDto {
-        const dto = plainToInstance(ConversationGetResponseDto, conversation, {
-            excludeExtraneousValues: true,
-        });
-        // Surface customerId via the contactPoint relation. We only read
-        // properties when the reference is initialised — touching `customer`
-        // on an uninitialised proxy throws `ReferenceNotInitializedError`
-        // (e.g. list endpoints that don't populate contactPoint).
+        const dto = this.toDto(conversation);
         // The detail endpoint populates `contactPoint.customer`, so the
-        // detail response surfaces it; list responses leave it undefined.
-        const cp = conversation.contactPoint as any;
-        if (cp && wrap(cp).isInitialized()) {
-            const customer = cp.customer;
-            if (customer) {
-                dto.customerId = wrap(customer).isInitialized()
-                    ? customer.id
-                    : customer.id; // FK proxies still expose `id` safely
-            }
-        }
+        // detail response surfaces customerId; list responses leave it out.
+        const customer = this.loadedCustomer(conversation);
+        if (customer) dto.customerId = customer.id;
         dto.canReact = this.resolveCanReact(conversation);
         return dto;
     }
@@ -460,12 +451,42 @@ export class ConversationService implements IConversationService {
         unreadCounts?: Map<string, number>
     ): ConversationGetResponseDto[] {
         return conversations.map(c => {
-            const dto = plainToInstance(ConversationGetResponseDto, c, {
-                excludeExtraneousValues: true,
-            });
+            const dto = this.toDto(c);
             dto.unreadCount = unreadCounts?.get(c.id) ?? 0;
             return dto;
         });
+    }
+
+    /**
+     * The sender's name is the platform profile's. A channel with no profile
+     * (the website widget's anonymous visitors) falls back to the customer's
+     * own name once someone has set it, rather than leaving the inbox with a
+     * raw id (#257).
+     */
+    private toDto(
+        conversation: ConversationEntity
+    ): ConversationGetResponseDto {
+        const dto = plainToInstance(ConversationGetResponseDto, conversation, {
+            excludeExtraneousValues: true,
+        });
+        dto.senderName ||= this.loadedCustomer(conversation)?.name ?? undefined;
+        return dto;
+    }
+
+    /**
+     * The customer behind the conversation, when the query loaded it. Touching
+     * properties of an uninitialised proxy throws
+     * `ReferenceNotInitializedError`, so each hop is checked first.
+     */
+    private loadedCustomer(
+        conversation: ConversationEntity
+    ): { id: string; name?: string | null } | undefined {
+        const cp = conversation.contactPoint as any;
+        if (!cp || !wrap(cp).isInitialized()) return undefined;
+        const customer = cp.customer;
+        if (!customer) return undefined;
+        // An FK proxy still exposes `id` safely; only the name needs loading.
+        return wrap(customer).isInitialized() ? customer : { id: customer.id };
     }
 
     async markConversationRead(
@@ -494,7 +515,8 @@ export class ConversationService implements IConversationService {
         conversation: ConversationEntity,
         workspaceId: string,
         reason: string,
-        language?: string
+        language?: string,
+        tagId?: string
     ): Promise<ConversationEntity> {
         // Auto-escalation: turn the bot off and raise the alarm (handoffAt + notification).
         // This is what distinguishes an escalation from a quiet manual takeover.
@@ -513,6 +535,27 @@ export class ConversationService implements IConversationService {
                 statusCode: 404,
             });
         }
+
+        // The dashboard's handoff rate counts these rows, one per episode: a
+        // tag rule or guardrail can trigger again while `handoffAt` is still
+        // set (staff clear it on resolve). Never fatal.
+        if (!conversation.handoffAt)
+            await this.activityService
+                .createByBotWithWorkspace(workspaceId, {
+                    action: ENUM_ACTIVITY_ACTION.CONVERSATION_HANDOFF,
+                    subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+                    metadata: {
+                        id: conversation.id,
+                        name: conversation.senderName,
+                        reason,
+                        ...(tagId ? { tagId } : {}),
+                    },
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Handoff activity for ${conversation.id} not logged: ${(err as Error).message}`
+                    )
+                );
 
         // Notify operators (all active workspace members)
         await this.notifyOperators(

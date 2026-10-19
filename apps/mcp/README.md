@@ -20,40 +20,49 @@ use to decide what to confirm with the user: **reads** change nothing,
 **adds** only add, **switches** flip something reversible, **overwrites**
 replace data, **deletes** remove it.
 
-| Area          | Tool                                                                         | Permission       | Kind       |
-| ------------- | ---------------------------------------------------------------------------- | ---------------- | ---------- |
-| Chatbots      | `list_chatbots`, `get_chatbot`, `list_chatbot_models`                        | chatbot read     | reads      |
-|               | `create_chatbot`                                                             | chatbot create   | adds       |
-|               | `update_chatbot`                                                             | chatbot update   | overwrites |
-|               | `activate_chatbot`, `deactivate_chatbot`                                     | chatbot update   | switches   |
-|               | `delete_chatbot` (update, as in the app)                                     | chatbot update   | deletes    |
-| Conversations | `list_conversations`, `get_conversation`, `list_conversation_messages`       | chatbot read     | reads      |
-|               | `reply_to_conversation` (also `openWorldHint`: the customer sees it at once) | chatbot update   | adds       |
-|               | `set_conversation_bot`, `set_conversation_status`                            | chatbot update   | switches   |
-| Knowledge     | `list_knowledge_bases`, `list_knowledge_items`, `get_knowledge_item`         | knowledge read   | reads      |
-|               | `create_knowledge_base`, `create_knowledge_item` (text or URL)               | knowledge create | adds       |
-|               | `update_knowledge_base`, `update_knowledge_item`                             | knowledge update | overwrites |
-|               | `process_knowledge_item`                                                     | knowledge update | switches   |
-|               | `delete_knowledge_item`                                                      | knowledge delete | deletes    |
-| Customers     | `list_customers`, `get_customer`, `list_customer_tags`, `get_customer_tags`  | customer read    | reads      |
-|               | `create_customer_tag`                                                        | customer create  | adds       |
-|               | `update_customer`, `update_customer_tag`                                     | customer update  | overwrites |
-|               | `tag_customer`, `untag_customer`                                             | customer update  | switches   |
-|               | `delete_customer_tag`                                                        | customer delete  | deletes    |
-| Tools         | `list_workspace_tools`, `get_workspace_tool`, `list_chatbot_tools`           | tool read        | reads      |
-|               | `create_http_tool`, `create_mcp_tool`                                        | tool create      | adds       |
-|               | `update_workspace_tool`                                                      | tool update      | overwrites |
-|               | `enable_chatbot_tool`, `disable_chatbot_tool`                                | tool update      | switches   |
-|               | `delete_workspace_tool`                                                      | tool delete      | deletes    |
-| Skills        | `list_skills`, `get_skill`, `list_chatbot_skills`                            | skill read       | reads      |
-|               | `create_skill`, `clone_skill_template`                                       | skill create     | adds       |
-|               | `update_skill`                                                               | skill update     | overwrites |
-|               | `attach_skill`, `detach_skill`                                               | skill update     | switches   |
-|               | `delete_skill`                                                               | skill delete     | deletes    |
+| Area          | Tool                                                                         | Permission              | Kind       |
+| ------------- | ---------------------------------------------------------------------------- | ----------------------- | ---------- |
+| Chatbots      | `list_chatbots`, `get_chatbot`, `list_chatbot_models`                        | chatbot read            | reads      |
+|               | `create_chatbot`                                                             | chatbot create          | adds       |
+|               | `update_chatbot` (also chatbot read to change `profile`, `type` or language) | chatbot update          | overwrites |
+|               | `activate_chatbot`, `deactivate_chatbot`                                     | chatbot update          | switches   |
+|               | `delete_chatbot` (update, as in the app)                                     | chatbot update          | deletes    |
+| Conversations | `list_conversations`, `get_conversation`, `list_conversation_messages`       | chatbot read            | reads      |
+|               | `reply_to_conversation` (also `openWorldHint`: the customer sees it at once) | chatbot update          | adds       |
+|               | `set_conversation_bot`, `set_conversation_status`                            | chatbot update          | switches   |
+| Knowledge     | `list_knowledge_bases`, `list_knowledge_items`, `get_knowledge_item`         | knowledge read          | reads      |
+|               | `list_chatbot_knowledge`                                                     | knowledge read          | reads      |
+|               | `create_knowledge_item`                                                      | knowledge create        | adds       |
+|               | `get_knowledge_upload_url`, `link_knowledge_to_chatbot`                      | knowledge create        | adds       |
+|               | `update_knowledge_base`, `update_knowledge_item`                             | knowledge update        | overwrites |
+|               | `process_knowledge_item`                                                     | knowledge update        | switches   |
+|               | `delete_knowledge_item`, `unlink_knowledge_from_chatbot`                     | knowledge delete        | deletes    |
+| Customers     | `list_customers`, `get_customer`, `list_customer_tags`, `get_customer_tags`  | customer read           | reads      |
+|               | `create_customer_tag`                                                        | customer create         | adds       |
+|               | `update_customer`, `update_customer_tag`                                     | customer update         | overwrites |
+|               | `tag_customer`, `untag_customer`                                             | customer update         | switches   |
+|               | `delete_customer_tag`                                                        | customer delete         | deletes    |
+| Tools         | `list_workspace_tools`, `get_workspace_tool`, `list_chatbot_tools`           | tool read               | reads      |
+|               | `create_http_tool`, `create_mcp_tool`                                        | tool create             | adds       |
+|               | `update_workspace_tool`                                                      | tool update             | overwrites |
+|               | `enable_chatbot_tool`, `disable_chatbot_tool`                                | tool update             | switches   |
+|               | `delete_workspace_tool`                                                      | tool delete             | deletes    |
+| Skills        | `list_skills`, `get_skill`, `list_chatbot_skills`                            | skill read              | reads      |
+|               | `create_skill`, `clone_skill_template`                                       | skill create            | adds       |
+|               | `update_skill`                                                               | skill update            | overwrites |
+|               | `attach_skill`, `detach_skill`                                               | skill update            | switches   |
+|               | `delete_skill`                                                               | skill delete            | deletes    |
+| Analytics     | `get_conversion_analytics`, `get_customer_analytics`                         | customer read           | reads      |
+|               | `get_bot_analytics`                                                          | chatbot read            | reads      |
+|               | `get_marketing_analytics`                                                    | customer + chatbot read | reads      |
 
 The workspace's **Tools** (HTTP endpoints and MCP servers its chatbots call)
 are named `*_workspace_tool` and `*_chatbot_tool`, to keep them apart from
 this server's own MCP tools.
+
+The analytics tools return the workspace dashboard tabs. They share one
+budget of 20 calls a minute per key, counted in Redis by the API (429 past
+it), since an uncached call runs several aggregate queries.
 
 Not exposed: file uploads, the marketplace installs (they need a browser
 for OAuth), and permanent customer erasure.

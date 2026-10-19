@@ -31,17 +31,26 @@ ENV VIRTUAL_ENV=/app/.venv \
 WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
-COPY . /app
 
 # Run as an unprivileged user. Code stays root-owned; only /app/storage is
 # writable: RAG uploads (RAG_LOCAL_STORAGE_DIR) and the Hugging Face cache
-# (HF_HOME), where the reranker's CrossEncoder model downloads on first use.
-# Without a writable cache that download fails and RAG answers silently lose
-# the knowledge base.
+# (HF_HOME). Without a writable cache the reranker can't load and RAG answers
+# silently lose the knowledge base.
 RUN useradd --system --uid 10001 --no-create-home app \
     && mkdir -p /app/storage/rag_uploads /app/storage/hf \
     && chown -R app:app /app/storage
 USER app
+
+# Bake the reranker's CrossEncoder model (RAG_RERANK_CROSS_ENCODER_MODEL) into
+# the HF cache. Otherwise every new instance downloads it in the middle of its
+# first chat, which made that reply take over a minute after a cold start.
+# Kept above `COPY . /app` so source edits don't re-download it;
+# tests/test_dockerfile_reranker_model.py keeps the name in sync.
+ARG RERANK_MODEL=cross-encoder/ms-marco-MiniLM-L-6-v2
+RUN python -c "from sentence_transformers import CrossEncoder; CrossEncoder('${RERANK_MODEL}')"
+
+# Root-owned regardless of USER (COPY ignores it without --chown).
+COPY . /app
 
 EXPOSE 8000
 

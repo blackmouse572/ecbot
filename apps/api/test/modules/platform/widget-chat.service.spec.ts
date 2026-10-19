@@ -221,7 +221,9 @@ describe('WidgetChatService.handleTurn', () => {
     it('persists reply images as attachments', async () => {
         const { service, messageRepository, sseStream } = setup();
         sseStream.pipe.mockImplementationOnce(async ({ onFinalize }: any) => {
-            await onFinalize('Mẫu này nè', ['https://cdn/s.jpg']);
+            await onFinalize('Mẫu này nè', [
+                { url: 'https://cdn/s.jpg', kind: 'image' },
+            ]);
         });
 
         await service.handleTurn(res, turn);
@@ -306,6 +308,43 @@ describe('WidgetChatService token budget', () => {
         expect(written).toContain('Sorry, I cannot answer right now.');
         expect(written).toContain('[DONE]');
         expect(blockedRes.end).toHaveBeenCalled();
+    });
+
+    // Agents made in the builder have no fallback line; the visitor still
+    // gets a reply, in the chatbot's language, and it is kept in the inbox.
+    it('streams a default reply in the chatbot language when no fallback is set', async () => {
+        const { service, meter, messageRepository } = setup();
+        meter.check.mockResolvedValue({ allowed: false });
+        const blockedRes = {
+            write: jest.fn(),
+            end: jest.fn(),
+            setHeader: jest.fn(),
+        } as any;
+        const builderTurn = {
+            ...turn,
+            account: {
+                ...account,
+                chatbot: {
+                    ...account.chatbot,
+                    fallbackMessage: undefined,
+                    primaryLanguage: 'vi',
+                },
+            },
+        };
+
+        await service.handleTurn(blockedRes, builderTurn);
+
+        const written = blockedRes.write.mock.calls
+            .map((c: any[]) => c[0])
+            .join('');
+        expect(written).toContain('Xin lỗi');
+        expect(messageRepository.insertPendingOutbound).toHaveBeenCalledWith(
+            'conv-1',
+            expect.any(String),
+            expect.objectContaining({
+                text: expect.stringContaining('Xin lỗi'),
+            })
+        );
     });
 
     // Public build: no meter is wired, so the turn reaches apps/ai as usual.

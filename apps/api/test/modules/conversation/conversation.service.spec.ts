@@ -50,6 +50,10 @@ describe('ConversationService', () => {
         findNewest: jest.fn().mockResolvedValue([]),
     };
 
+    const mockActivityService = {
+        createByBotWithWorkspace: jest.fn().mockResolvedValue(undefined),
+    };
+
     // What the bot reads in its history once staff hand a conversation back.
     const handledNote = () =>
         expect.objectContaining({
@@ -92,7 +96,8 @@ describe('ConversationService', () => {
                         mockConversationReadRepository as any,
                         mockCustomerTagClassifierService as any,
                         mockModuleRef as any,
-                        mockMessageRepository as any
+                        mockMessageRepository as any,
+                        mockActivityService as any
                     ),
             })
             .compile();
@@ -381,6 +386,79 @@ describe('ConversationService', () => {
                 'vi'
             );
             mockModuleRef.get.mockReset();
+        });
+
+        // The dashboard's handoff rate counts these rows: the conversation's
+        // own handoff fields are cleared once staff resolve it.
+        it('logs the handoff in the activity log as done by the bot', async () => {
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+            mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
+                []
+            );
+
+            await service.triggerHandoff(
+                { id: 'conv-1', senderName: 'Lan' } as any,
+                'workspace-1',
+                'tag_trigger',
+                'vi',
+                'tag-1'
+            );
+
+            expect(
+                mockActivityService.createByBotWithWorkspace
+            ).toHaveBeenCalledWith('workspace-1', {
+                action: 'conversation_handoff',
+                subject: 'CONVERSATION',
+                metadata: {
+                    id: 'conv-1',
+                    name: 'Lan',
+                    reason: 'tag_trigger',
+                    tagId: 'tag-1',
+                },
+            });
+        });
+
+        // A row is one handoff episode: a tag rule or a guardrail can trigger
+        // again while staff already have the conversation.
+        it('does not log another handoff while one is already open', async () => {
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+            mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
+                []
+            );
+
+            await service.triggerHandoff(
+                { id: 'conv-1', handoffAt: new Date() } as any,
+                'workspace-1',
+                'tag_trigger'
+            );
+
+            expect(
+                mockActivityService.createByBotWithWorkspace
+            ).not.toHaveBeenCalled();
+        });
+
+        it('still hands over when the activity log write fails', async () => {
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+            mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
+                []
+            );
+            mockActivityService.createByBotWithWorkspace.mockRejectedValueOnce(
+                new Error('db down')
+            );
+
+            await expect(
+                service.triggerHandoff(
+                    { id: 'conv-1' } as any,
+                    'workspace-1',
+                    'keyword_trigger'
+                )
+            ).resolves.toEqual({ id: 'conv-1' });
         });
     });
 
@@ -794,6 +872,24 @@ describe('ConversationService', () => {
             const result = service.mapGet(entity as any);
             expect(result).toBeDefined();
         });
+
+        it('names the sender after the customer when the platform gave none', () => {
+            const loaded = <T extends object>(value: T) => ({
+                ...value,
+                isInitialized: () => true,
+            });
+            const result = service.mapGet({
+                id: 'conv-1',
+                senderId: 'visitor-uuid',
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+                fallbackCount: 0,
+                contactPoint: loaded({
+                    customer: loaded({ id: 'cus-1', name: 'Lan' }),
+                }),
+            } as any);
+            expect(result.senderName).toBe('Lan');
+            expect(result.customerId).toBe('cus-1');
+        });
     });
 
     describe('mapList', () => {
@@ -860,6 +956,52 @@ describe('ConversationService', () => {
         it('defaults to 0 when unreadCounts is not provided', () => {
             const dtos = service.mapList([buildConversation('c1')]);
             expect(dtos[0].unreadCount).toBe(0);
+        });
+
+        // A loaded MikroORM reference; plain objects need the helper the
+        // service checks before reading through a relation.
+        const loaded = <T extends object>(value: T) => ({
+            ...value,
+            isInitialized: () => true,
+        });
+
+        // #257: a website visitor has no platform profile, so the inbox
+        // showed the raw visitor UUID. The customer's own name fills in.
+        it("falls back to the customer's name when the sender has none", () => {
+            const dtos = service.mapList([
+                {
+                    ...buildConversation('c1'),
+                    contactPoint: loaded({
+                        customer: loaded({ id: 'cus-1', name: 'Lan' }),
+                    }),
+                },
+            ]);
+            expect(dtos[0].senderName).toBe('Lan');
+        });
+
+        it('keeps the platform name over the customer name', () => {
+            const dtos = service.mapList([
+                {
+                    ...buildConversation('c1'),
+                    senderName: 'Lan Nguyen',
+                    contactPoint: loaded({
+                        customer: loaded({ id: 'cus-1', name: 'Lan' }),
+                    }),
+                },
+            ]);
+            expect(dtos[0].senderName).toBe('Lan Nguyen');
+        });
+
+        it('leaves the name empty when neither has one', () => {
+            const dtos = service.mapList([
+                {
+                    ...buildConversation('c1'),
+                    contactPoint: loaded({
+                        customer: loaded({ id: 'cus-1', name: null }),
+                    }),
+                },
+            ]);
+            expect(dtos[0].senderName).toBeUndefined();
         });
     });
 });

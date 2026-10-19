@@ -18,7 +18,18 @@ import { useCallback } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { LogoBoxSpinner } from "@repo/ui/common-components";
 // import { SearchProvider } from "../../../providers/search-provider";
-const ignorePaths = [ROUTES.Onboard, ROUTES.OnboardJoin] as string[];
+// Paths a signed-in user with no workspace may still open: onboarding, and the
+// account settings (so they can change their password or delete the account).
+const ignorePaths = [
+  ROUTES.Onboard,
+  ROUTES.OnboardJoin,
+  ...[
+    ROUTES.Profile,
+    ROUTES.ChangePassword,
+    ROUTES.Sessions,
+    ROUTES.Preferences,
+  ].map((path) => `${ROUTES.Settings}/${path}`),
+] as string[];
 export const ProtectedRoute = () => {
   const token = useAuthToken();
   const { workspaces, isLoading } = useWorkspaceList();

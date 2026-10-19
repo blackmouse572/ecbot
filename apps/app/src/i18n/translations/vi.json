@@ -208,7 +208,7 @@
         "home": "Trang chủ"
       },
       "accounts": {
-        "header": "Tài khoản"
+        "header": "Kênh"
       },
       "dashboard": {
         "header": "Bảng điều khiển",
@@ -362,6 +362,9 @@
           "resend": "Gửi lại email",
           "resendIn": "Gửi lại sau {{seconds}} giây",
           "resent": "Chúng tôi đã gửi lại email."
+        },
+        "errors": {
+          "invalidEmail": "Hãy nhập một địa chỉ email hợp lệ."
         }
       },
       "resetPassword": {
@@ -435,14 +438,97 @@
       "inviteMembers": "Mời thành viên (càng đông càng vui!)",
       "viewProjects": "Xem các dự án"
     },
-    "stats": {
-      "projects": "Dự án",
-      "members": "Thành viên",
-      "workspaces": "Không gian làm việc",
-      "lastActive": "Hoạt động lần cuối",
-      "chatbots": "Agent",
-      "accounts": "Tài khoản đã kết nối",
-      "conversations": "Hội thoại"
+    "analytics": {
+      "empty": "Chưa có dữ liệu",
+      "emptyMessage": "Số liệu sẽ hiện ở đây khi có khách nhắn tin với chatbot trong khoảng thời gian này.",
+      "error": "Không tải được số liệu. Vui lòng thử lại sau.",
+      "updatedAt": "Cập nhật lúc {{time}}",
+      "refresh": "Làm mới",
+      "range": {
+        "7d": "7 ngày qua",
+        "30d": "30 ngày qua",
+        "90d": "90 ngày qua"
+      },
+      "tabs": {
+        "conversion": "Chuyển đổi",
+        "marketing": "Mức hài lòng",
+        "bot": "Hiệu quả bot",
+        "customers": "Nhóm khách hàng"
+      },
+      "kpi": {
+        "conversionRate": "Tỷ lệ chốt đơn",
+        "positiveRate": "Hội thoại tích cực",
+        "handoffRate": "Tỷ lệ chuyển nhân viên",
+        "previous": "Kỳ trước: {{value}}"
+      },
+      "columns": {
+        "channel": "Kênh",
+        "conversations": "Hội thoại",
+        "agent": "Agent",
+        "customers": "Khách hàng",
+        "share": "Tỷ lệ"
+      },
+      "views": {
+        "share": "Tỷ lệ",
+        "count": "Số lượng"
+      },
+      "conversion": {
+        "dailyTitle": "Khách mới và đơn hàng",
+        "newCustomers": "Khách mới",
+        "orders": "Đơn hàng",
+        "funnelTitle": "Từ tin nhắn đầu đến đơn hàng",
+        "funnel": {
+          "newCustomers": "Khách mới",
+          "engaged": "Tiếp tục trò chuyện",
+          "hotLeads": "Khách tiềm năng cao",
+          "ordered": "Đã đặt đơn"
+        },
+        "byChannelTitle": "Đơn theo kênh",
+        "funnelHint": "Mỗi cột là phần khách mới đi được tới bước đó. Số âm giữa hai cột là phần khách dừng lại ở đó, màu đỏ là chỗ rơi nhiều nhất.",
+        "dropped": "{{value}} khách dừng lại ({{share}})",
+        "timeToOrder": "Thời gian chốt đơn",
+        "hours": "{{value}} giờ",
+        "timeToOrderHint": "Một nửa số đơn được chốt trong vòng {{value}} giờ kể từ tin nhắn đầu tiên của khách."
+      },
+      "marketing": {
+        "dailyTitle": "Hội thoại kết thúc thế nào",
+        "dailyHint": "Cảm xúc bot nhận ra khi mỗi hội thoại kết thúc.",
+        "positive": "Tích cực",
+        "negative": "Tiêu cực",
+        "complaint": "Khiếu nại",
+        "byChannelTitle": "Mức hài lòng theo kênh"
+      },
+      "bot": {
+        "dailyTitle": "Bot tự xử lý hay chuyển nhân viên",
+        "botResolved": "Bot tự xử lý",
+        "handedOver": "Chuyển nhân viên",
+        "reasonsTitle": "Lý do chuyển cho nhân viên",
+        "reasons": {
+          "fallback_threshold": "Bot không trả lời được",
+          "keyword_trigger": "Khách muốn gặp người thật",
+          "tag_trigger": "Theo quy tắc thẻ",
+          "manual": "Nhân viên nhận xử lý",
+          "other": "Khác"
+        },
+        "byChatbotTitle": "Theo agent",
+        "firstReply": "Phản hồi đầu",
+        "seconds": "{{value}} giây",
+        "toolErrors": "Lỗi công cụ"
+      },
+      "customers": {
+        "tagsTitle": "Khách hàng theo thẻ",
+        "untagged": "{{count}} khách chưa có thẻ ({{share}})",
+        "dailyTitle": "Khách mới và khách quay lại",
+        "returning": "Khách quay lại",
+        "byChannelTitle": "Khách hàng theo kênh",
+        "otherTags": "Thẻ khác"
+      },
+      "unhappy": {
+        "title": "Khách chưa hài lòng",
+        "description": "Các hội thoại gần đây kết thúc không vui. Mở để chăm sóc lại.",
+        "empty": "Không có khách chưa hài lòng",
+        "emptyMessage": "Khách được bot đánh dấu là chưa hài lòng sẽ hiện ở đây để bạn chăm sóc lại."
+      }
     },
     "recentActivities": "Hoạt động gần đây",
     "gettingStarted": {
@@ -621,12 +707,12 @@
         "viewAddedUser": "Xem người dùng đã thêm",
         "unlink": "Hủy liên kết tài khoản"
       },
-      "noRecordsTitle": "Chưa liên kết tài khoản nào"
+      "noRecordsTitle": "Chưa kết nối kênh nào"
     },
     "unlink": {
       "confirm": {
         "title": "Hủy liên kết tài khoản",
-        "description": "Bạn có chắc chắn muốn hủy liên kết tài khoản này không? Hành động này không thể hoàn tác (và hơi buồn). 😢",
+        "description": "Bạn có chắc muốn hủy liên kết tài khoản này? Hành động này không thể hoàn tác.",
         "confirmButton": "Hủy liên kết"
       },
       "success": "Đã hủy liên kết tài khoản thành công! 👋",
@@ -634,9 +720,9 @@
     },
     "link": {
       "title": "Liên kết tài khoản",
-      "description": "Kết nối với tài khoản và trang Facebook của bạn, chọn các trang bạn muốn quản lý. Dễ như ăn bánh! 🍰",
+      "description": "Kết nối tài khoản và trang Facebook của bạn, rồi chọn các trang muốn quản lý.",
       "acceptTerms": "Khi liên kết tài khoản, bạn đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy> của chúng tôi.",
-      "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}} (Đừng lo, chúng ta sẽ sửa nó!)",
+      "error": "Đã xảy ra lỗi khi liên kết tài khoản của bạn. {{error}}",
       "invalidState": "Không thể xác minh yêu cầu liên kết này. Vui lòng thử liên kết tài khoản lại nhé!",
       "success": {
         "title": "Liên kết tài khoản thành công! 🎊",
@@ -646,11 +732,11 @@
     },
     "create": {
       "title": "Tạo tài khoản mới",
-      "description": "Điền thông tin để tạo tài khoản mới (chúng tôi sẽ không phán xét)",
+      "description": "Tạo tài khoản mới",
       "fields": {
         "link": "Liên kết"
       },
-      "success": "Tài khoản của bạn đã được tạo thành công! Chào mừng đến với gia đình! 🎉",
+      "success": "Đã thêm tài khoản, vui lòng chờ tài khoản được đồng bộ.",
       "steps": {
         "platform": "Chọn nền tảng",
         "connect": "Kết nối",
@@ -728,7 +814,7 @@
           "cta": "Kết nối Bot"
         },
         "whatsapp": {
-          "description": "Dán phone number ID của WhatsApp Business và một access token System User vĩnh viễn từ Meta.",
+          "description": "Dán phone number ID của WhatsApp Business và một access token system user vĩnh viễn từ Meta.",
           "phoneNumberIdLabel": "Phone number ID",
           "phoneNumberIdInvalid": "Phone number ID chỉ được chứa chữ số",
           "tokenLabel": "Access token",
@@ -863,7 +949,11 @@
       "noChatbot": {
         "title": "Chưa có agent",
         "message": "Tạo agent để trả lời khách hàng trên kênh này.",
-        "action": "Tạo agent"
+        "action": "Tạo agent",
+        "linkExisting": "Liên kết agent có sẵn",
+        "drawerTitle": "Chọn agent",
+        "noneAvailable": "Chưa có agent nào",
+        "loadFailed": "Không tải được danh sách agent. Hãy thử lại."
       }
     },
     "imports": {
@@ -945,7 +1035,12 @@
     "conversation": {
       "create": "đã gửi tin nhắn cho <link/>",
       "update": "đã cập nhật hội thoại với <link/>",
-      "unknownCustomer": "một khách hàng"
+      "unknownCustomer": "một khách hàng",
+      "handoff": "đã chuyển <link/> cho nhân viên",
+      "takeover": "đã nhận xử lý hội thoại với <link/>",
+      "botResumed": "đã giao lại <link/> cho bot",
+      "resolved": "đã xử lý xong hội thoại với <link/>",
+      "reopened": "đã mở lại hội thoại với <link/>"
     },
     "plan": {
       "changePlan": "đã thay đổi gói đăng ký",
@@ -964,7 +1059,8 @@
       "update": "đã cập nhật không gian làm việc <link/>",
       "join": "đã tham gia không gian làm việc <link/>",
       "leave": "đã rời không gian làm việc <link/>"
-    }
+    },
+    "bot": "Bot"
   },
   "imports": {
     "title": "Nhập danh sách tài khoản",
@@ -1072,11 +1168,11 @@
       "timezoneDefault": "Mặc định (múi giờ hệ thống)"
     },
     "chat": {
-      "heading": "Chat Thử",
+      "heading": "Chat thử",
       "refreshHint": "Làm mới sẽ xóa chat. Nhấn Xóa để bắt đầu lại.",
       "liveOnlyNotice": "Chat thử: nhắc hẹn và chuyển cho nhân viên chỉ hoạt động trên kênh thật.",
       "clear": "Xóa",
-      "restart": "Bắt Đầu Lại",
+      "restart": "Bắt đầu lại",
       "inputPlaceholder": "Nhập tin nhắn của bạn...",
       "thinking": "Đang tạo phản hồi...",
       "trace": {
@@ -1151,7 +1247,7 @@
         "required": "Vui lòng hoàn tất xác minh trước.",
         "failed": "Xác minh thất bại. Tải lại trang và thử lại."
       },
-      "poweredBy": "Powered by eccho"
+      "poweredBy": "Vận hành bởi Ecbot"
     },
     "list": {
       "noRecordsTitle": "Chưa có agent nào",
@@ -1164,9 +1260,9 @@
       },
       "delete": {
         "confirm": {
-          "title": "Xóa Agent",
+          "title": "Xóa agent",
           "description": "Bạn có chắc chắn muốn xóa \"{{name}}\" không? Hành động này không thể hoàn tác.",
-          "confirmButton": "Xóa Agent"
+          "confirmButton": "Xóa agent"
         },
         "success": "Đã xóa agent thành công! 👋",
         "error": "Không thể xóa agent. Hãy thử lại nhé!"
@@ -1327,7 +1423,7 @@
       }
     },
     "clone": {
-      "title": "Sao chép Agent",
+      "title": "Sao chép agent",
       "optionsLabel": "Cũng sao chép:",
       "cloneTools": "Cấu hình công cụ",
       "cloneKnowledgeItems": "Kiến thức",
@@ -2111,7 +2207,7 @@
     },
     "summary": {
       "title": "Vai trò",
-      "roleId": "ID Vai trò",
+      "roleId": "ID vai trò",
       "type": "Loại",
       "modules": "Mô-đun",
       "noModules": "Không có module nào được gán",
@@ -2407,7 +2503,8 @@
       "error": "Không thể cập nhật {{count}} mục."
     },
     "loading": "Đang tải...",
-    "loadFailed": "Không tải được dữ liệu. Vui lòng thử lại sau."
+    "loadFailed": "Không tải được dữ liệu. Vui lòng thử lại sau.",
+    "typeToConfirm": "Nhập {val} để xác nhận:"
   },
   "actions": {
     "edit": "Chỉnh sửa",
@@ -2421,7 +2518,7 @@
     "create": "Tạo mới",
     "clearAll": "Xóa tất cả",
     "continued": "Tiếp tục",
-    "linkAccount": "Liên kết tài khoản",
+    "linkAccount": "Liên kết tài khoản có sẵn",
     "tryAgain": "Thử lại",
     "enable": "Bật",
     "disable": "Tắt",
@@ -2435,7 +2532,8 @@
     "skip": "Bỏ qua",
     "preview": "Xem trước",
     "createNew": "Tạo mới",
-    "unlink": "Bỏ liên kết"
+    "unlink": "Bỏ liên kết",
+    "connectChannel": "Kết nối kênh"
   },
   "fields": {
     "name": "Tên",
@@ -2641,9 +2739,9 @@
       "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",
       "noTokens": "Workspace đã hết token AI. Hãy nạp thêm hoặc gia hạn gói, rồi xử lý lại mục này."
     },
-    "create_title": "Tạo Mục Kiến Thức",
+    "create_title": "Tạo mục kiến thức",
     "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",
-    "select_type_label": "Chọn Loại",
+    "select_type_label": "Chọn loại",
     "create_button": "Tạo",
     "cancel": "Hủy",
     "title": "Tiêu đề",
@@ -2673,7 +2771,7 @@
     "created_at": "Tạo vào",
     "updated_at": "Cập nhật vào",
     "details": "Chi tiết",
-    "base_id": "ID Cơ sở Kiến thức",
+    "base_id": "ID cơ sở kiến thức",
     "timestamps": "Mốc thời gian",
     "create_success": "Mục kiến thức đã được tạo thành công",
     "create_error": "Không thể tạo mục kiến thức",
@@ -2793,6 +2891,8 @@
     },
     "composer": {
       "placeholder": "Trả lời với tư cách nhân viên…",
+      "windowClosed": "Meta chỉ cho phép trả lời trong vòng 24 giờ kể từ tin nhắn cuối của khách.",
+      "windowClosedHint": "Bạn có thể trả lời lại khi khách nhắn tin tiếp.",
       "send": "Gửi",
       "retry": "Gửi lại",
       "failed": "Gửi thất bại",
@@ -2813,7 +2913,13 @@
       "resolveConfirmTitle": "Đánh dấu hội thoại đã xử lý?",
       "resolveConfirmDescription": "Bot tiếp tục trả lời khách và không bàn giao lại việc nhóm đã xử lý. Bạn vẫn gửi tin nhắn được.",
       "restoreConfirmTitle": "Bàn giao lại cho bot?",
-      "restoreConfirmDescription": "Hội thoại mở lại và bot tiếp tục trả lời."
+      "restoreConfirmDescription": "Hội thoại mở lại và bot tiếp tục trả lời.",
+      "resolving": "Đang đánh dấu đã xử lý...",
+      "resolved": "Đã đánh dấu hội thoại đã xử lý",
+      "resolveFailed": "Không đánh dấu được hội thoại. Hãy thử lại.",
+      "restoring": "Đang bàn giao lại cho bot...",
+      "restored": "Đã bàn giao lại cho bot",
+      "restoreFailed": "Không bàn giao lại được. Hãy thử lại."
     },
     "errors": {
       "sendFailed": "Không thể gửi tin nhắn. Vui lòng thử lại.",
@@ -3297,7 +3403,7 @@
       "schemaRowDescriptionRequired": "Mô tả thuộc tính là bắt buộc."
     },
     "test": {
-      "title": "Kiểm tra Endpoint",
+      "title": "Kiểm tra endpoint",
       "argsLabel": "Tham số yêu cầu (JSON)",
       "runButton": "Chạy thử",
       "invalidJson": "JSON không hợp lệ",
@@ -3442,7 +3548,7 @@
       "actionsEmptyTitle": "Chưa có action nào"
     },
     "addDrawer": {
-      "title": "Thêm Công Cụ",
+      "title": "Thêm công cụ",
       "selectLabel": "Chọn một công cụ",
       "actionsTitle": "Action",
       "enableSuccess": "Đã thêm công cụ.",
@@ -3563,7 +3669,10 @@
       "required": "Vui lòng hoàn tất xác minh trước.",
       "failed": "Xác minh thất bại. Tải lại trang và thử lại."
     },
-    "aiNotice": "Bạn đang trò chuyện với AI. Tin nhắn của bạn được xử lý để trả lời bạn. <privacy>Chính sách quyền riêng tư</privacy>"
+    "aiNotice": "Bạn đang trò chuyện với AI. Tin nhắn của bạn được xử lý để trả lời bạn. <privacy>Chính sách quyền riêng tư</privacy>",
+    "staffNotice": "Nhân viên đã tham gia và đang trò chuyện với bạn. <privacy>Chính sách quyền riêng tư</privacy>",
+    "staff": "Nhân viên",
+    "visitorName": "Khách website #{{suffix}}"
   },
   "editor": {
     "toolbar": {

@@ -181,6 +181,15 @@ for (const [key, make] of [
   }
 }
 
+// A blank expiry makes every invite fail (jsonwebtoken rejects expiresIn "").
+if (
+  env.api.has("WORK_SPACE_INVITATION_TOKEN_EXPIRED") &&
+  env.api.get("WORK_SPACE_INVITATION_TOKEN_EXPIRED") === ""
+) {
+  env.api.set("WORK_SPACE_INVITATION_TOKEN_EXPIRED", "7d");
+  report.filled.push("WORK_SPACE_INVITATION_TOKEN_EXPIRED = 7d");
+}
+
 // Default API key: the seed stores it, every frontend presents it.
 {
   const frontends = [

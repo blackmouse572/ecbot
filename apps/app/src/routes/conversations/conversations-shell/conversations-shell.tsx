@@ -36,7 +36,10 @@ export function ConversationsShell() {
       <Helmet>
         <title>{t("conversations.title")} - Ecbot</title>
       </Helmet>
-      <div className="h-[calc(100dvh-57px)] w-full overflow-hidden">
+      <div
+        data-full-bleed
+        className="h-[calc(100dvh-57px)] w-full overflow-hidden"
+      >
         {isSmallScreen ? (
           // Small screens stack like a mobile app: the list, or the open thread.
           id ? (

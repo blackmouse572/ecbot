@@ -323,20 +323,23 @@ describe('ConversationClientController', () => {
             'updateStatus',
             { status: 'RESOLVED', reason: 'done' },
             ['conv-1', 'RESOLVED', 'done'],
+            'conversation_resolved',
         ],
         [
             'updateBot',
             'setBotEnabled',
             { botEnabled: false, reason: 'mine' },
             ['conv-1', false, 'mine'],
+            'conversation_takeover',
         ],
         [
             'updateTimezone',
             'setTimezone',
             { timezone: 'America/New_York' },
             ['conv-1', 'America/New_York'],
+            'update',
         ],
-    ] as const)('%s', (handler, serviceMethod, dto, serviceArgs) => {
+    ] as const)('%s', (handler, serviceMethod, dto, serviceArgs, action) => {
         it('changes a conversation in the credential workspace and logs it', async () => {
             const conversation = { id: 'conv-1', senderId: 'sender-1' };
             mockConversationService.findOneByIdInWorkspace.mockResolvedValue(
@@ -363,7 +366,7 @@ describe('ConversationClientController', () => {
             expect(
                 mockActivityService.createByUserWithWorkspace
             ).toHaveBeenCalledWith(credential.createdBy, workspace, {
-                action: 'update',
+                action,
                 subject: ENUM_POLICY_SUBJECT.CONVERSATION,
                 metadata: { id: 'conv-1', name: 'sender-1' },
             });

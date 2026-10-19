@@ -54,8 +54,8 @@ export class AuthService implements IAuthService {
     private readonly passwordAttempt: boolean;
     private readonly passwordMaxAttempt: number;
 
-    // A bcrypt hash of a fixed, unrelated string, computed once (lazily, on
-    // first use) at the configured cost. Compared against on an unknown-email login so that
+    // A password hash of a fixed, unrelated string, computed once (lazily,
+    // on first use) with the current settings. Compared against on an unknown-email login so that
     // path costs roughly the same as a real password check — otherwise the
     // response-time gap becomes an account-enumeration oracle.
     private dummyPasswordHash?: Promise<string>;
@@ -243,50 +243,41 @@ export class AuthService implements IAuthService {
         passwordString: string,
         passwordHash: string
     ): Promise<boolean> {
-        return this.helperHashService.bcryptCompare(
+        return this.helperHashService.passwordVerify(
             passwordString,
             passwordHash
         );
     }
 
     // See dummyPasswordHash above. Call this on the unknown-email login
-    // path instead of validateUser, so it still pays a real bcrypt compare.
+    // path instead of validateUser, so it still pays a real password check.
     async runDummyPasswordCompare(passwordString: string): Promise<void> {
-        this.dummyPasswordHash ??= this.helperHashService.bcrypt(
-            'dummy-password-for-timing-safety',
-            this.createSalt(this.passwordSaltLength)
+        this.dummyPasswordHash ??= this.helperHashService.passwordHash(
+            'dummy-password-for-timing-safety'
         );
-        await this.helperHashService.bcryptCompare(
+        await this.helperHashService.passwordVerify(
             passwordString,
             await this.dummyPasswordHash
         );
     }
 
-    // Raising `auth.password.saltLength` (the bcrypt cost) only affects
-    // *new* hashes — bcrypt reads the cost back out of the hash string
-    // itself, so a hash created at a lower cost keeps verifying, and stays
-    // that much cheaper to brute-force, forever. Call this after a
-    // successful password check to opportunistically re-hash the plaintext
-    // at the current cost; returns null when the stored hash is already at
-    // (or above) that cost. Dormant accounts that never log in or reset
-    // their password keep their original, weaker cost until they do.
+    // Older passwords are bcrypt hashes, and argon2 settings can be raised
+    // later. Call this after a successful password check to re-hash the
+    // plaintext with the current argon2id settings; returns null when the
+    // stored hash is already current. Dormant accounts keep their old hash
+    // until they log in or reset their password.
     async maybeRehashPassword(
         passwordString: string,
         currentPasswordHash: string
     ): Promise<Pick<IAuthPassword, 'passwordHash' | 'salt'> | null> {
-        const currentCost =
-            this.helperHashService.bcryptGetCost(currentPasswordHash);
-        if (currentCost >= this.passwordSaltLength) {
+        if (!this.helperHashService.passwordNeedsRehash(currentPasswordHash)) {
             return null;
         }
 
-        const salt = this.createSalt(this.passwordSaltLength);
         return {
-            passwordHash: await this.helperHashService.bcrypt(
-                passwordString,
-                salt
-            ),
-            salt,
+            passwordHash:
+                await this.helperHashService.passwordHash(passwordString),
+            salt: this.createSalt(this.passwordSaltLength),
         };
     }
 
@@ -396,10 +387,8 @@ export class AuthService implements IAuthService {
             })
         );
         const passwordCreated: Date = this.helperDateService.create();
-        const passwordHash = await this.helperHashService.bcrypt(
-            password,
-            salt
-        );
+        const passwordHash =
+            await this.helperHashService.passwordHash(password);
         return {
             passwordHash,
             passwordExpired,

@@ -146,6 +146,18 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         );
     }
 
+    /** For a send whose delivery is confirmed only after the row is SENT
+     *  (the API channel's callback retries). */
+    async markOutboundFailedByExternalId(externalId: string): Promise<void> {
+        await this.updateEntity(
+            {
+                externalId,
+                direction: ENUM_MESSAGE_DIRECTION.OUTBOUND,
+            } as FilterQuery<MessageEntity>,
+            { status: ENUM_MESSAGE_STATUS.FAILED } as any
+        );
+    }
+
     /**
      * Return a page of messages anchored at the NEWEST end of the conversation,
      * in chronological (oldest→newest) reading order.

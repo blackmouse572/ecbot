@@ -58,7 +58,9 @@ describe('CustomerTagSystemController (#174)', () => {
             ).toHaveBeenCalledWith('ws-1', 'VIP');
             expect(mockCustomerTagAssignmentService.apply).toHaveBeenCalledWith(
                 'cust-1',
-                'tag-vip'
+                'tag-vip',
+                undefined,
+                expect.objectContaining({ actor: 'BOT' })
             );
             expect(
                 mockConversationService.triggerHandoff
@@ -93,13 +95,16 @@ describe('CustomerTagSystemController (#174)', () => {
 
             expect(mockCustomerTagAssignmentService.apply).toHaveBeenCalledWith(
                 'cust-1',
-                'tag-handoff'
+                'tag-handoff',
+                undefined,
+                expect.objectContaining({ actor: 'BOT' })
             );
             expect(mockConversationService.triggerHandoff).toHaveBeenCalledWith(
                 conversation,
                 'ws-1',
                 'tag_trigger',
-                'vi'
+                'vi',
+                'tag-handoff'
             );
             expect(result).toEqual({ ok: true, triggeredHandoff: true });
         });
@@ -130,7 +135,9 @@ describe('CustomerTagSystemController (#174)', () => {
 
             expect(mockCustomerTagAssignmentService.apply).toHaveBeenCalledWith(
                 'cust-1',
-                'tag-order'
+                'tag-order',
+                undefined,
+                expect.objectContaining({ actor: 'BOT' })
             );
             expect(mockConversationService.notifyTeam).toHaveBeenCalledWith(
                 conversation,
@@ -204,7 +211,9 @@ describe('CustomerTagSystemController (#174)', () => {
 
             expect(
                 mockCustomerTagAssignmentService.remove
-            ).toHaveBeenCalledWith('cust-1', 'tag-vip');
+            ).toHaveBeenCalledWith('cust-1', 'tag-vip', undefined, {
+                actor: 'BOT',
+            });
             expect(result).toEqual({ ok: true });
         });
 

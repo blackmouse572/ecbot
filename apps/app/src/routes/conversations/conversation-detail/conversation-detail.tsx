@@ -10,6 +10,7 @@ import {
   useSendOperatorReply,
 } from "@/hooks/api/conversations";
 import { useMe } from "@/hooks/api/users";
+import { useNowAt } from "@/hooks/use-now-at";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useSoundOnChange, useUISound } from "@/modules/sound";
 import { ROUTES } from "@/routes";
@@ -20,10 +21,16 @@ import {
 } from "@repo/ui/components";
 import { CustomerSidePanel } from "../customer-side-panel";
 import { ConversationDetailSkeleton } from "./conversation-detail-skeleton";
+import { senderLabel } from "../sender-label";
 import { ConversationHeader } from "./conversation-header";
 import { MessageComposer } from "./message-composer";
 import { MessageList } from "./message-list";
-import { isReactionWindowClosed } from "./reaction-window";
+import {
+  REACTION_WINDOW_MS,
+  isMetaPlatform,
+  isReactionWindowClosed,
+  lastInboundAt,
+} from "./reaction-window";
 import { useConversationSidebar } from "./use-conversation-sidebar";
 
 export function ConversationDetail() {
@@ -45,6 +52,7 @@ export function ConversationDetail() {
   const {
     messages,
     isLoading: isLoadingMessages,
+    isError: isMessagesError,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
@@ -53,6 +61,15 @@ export function ConversationDetail() {
   const markRead = useMarkConversationRead(id);
   const react = useReactToMessage(id, currentOperatorId);
   const playSound = useUISound();
+
+  // Meta's 24h window closes while the page may be open: re-render right then.
+  const accountType = (conversation as A)?.account?.type as string | undefined;
+  const lastInbound = lastInboundAt(messages);
+  const now = useNowAt(
+    isMetaPlatform(accountType) && lastInbound !== undefined
+      ? lastInbound + REACTION_WINDOW_MS + 1
+      : undefined,
+  );
 
   // A new newest message from the customer. Keyed on the newest id, so
   // loading older pages or our own sends stay quiet; so does dropping a
@@ -160,12 +177,21 @@ export function ConversationDetail() {
 
   // Meta (Messenger/IG) only allows operator reactions within the 24h window
   // opened by the customer's last inbound message; outside it the picker is
-  // disabled with an explanatory tooltip (#248).
+  // disabled with an explanatory tooltip (#248). Replies follow the same rule,
+  // so the composer is disabled under an overlay too.
   const reactionWindowClosed = isReactionWindowClosed(
-    (conversation as A).account?.type as string | undefined,
+    accountType,
     messages,
-    Date.now(),
+    now,
   );
+  // The composer locks only when the loaded messages can be trusted: not while
+  // loading or after a failed load, and not when the customer's last message
+  // may sit on an older, unloaded page. Meta still enforces the rule.
+  const replyWindowClosed =
+    reactionWindowClosed &&
+    !isLoadingMessages &&
+    !isMessagesError &&
+    (lastInbound !== undefined || !hasNextPage);
 
   const threadInner = (
     <>
@@ -187,11 +213,16 @@ export function ConversationDetail() {
         fetchNextPage={fetchNextPage}
         onRetry={onRetry}
         currentOperatorId={currentOperatorId}
+        senderName={senderLabel(conversation as A, t)}
         canReact={conversation.canReact}
         reactionWindowClosed={reactionWindowClosed}
         onReact={onReact}
       />
-      <MessageComposer isSending={send.isPending} onSubmit={onSend} />
+      <MessageComposer
+        isSending={send.isPending}
+        onSubmit={onSend}
+        windowClosed={replyWindowClosed}
+      />
     </>
   );
 

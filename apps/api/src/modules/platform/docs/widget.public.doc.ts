@@ -27,7 +27,7 @@ export function WidgetSendMessageDoc(): MethodDecorator {
         Doc({
             summary: 'send a visitor message and stream the reply',
             description:
-                "Streams the chatbot reply back on this same request as SSE (`x-vercel-ai-ui-message-stream: v1`). The conversation is persisted, so it appears in the operator inbox like any other channel. Requires a Turnstile token once per visitor session.",
+                'Streams the chatbot reply back on this same request as SSE (`x-vercel-ai-ui-message-stream: v1`). The conversation is persisted, so it appears in the operator inbox like any other channel. Requires a Turnstile token once per visitor session.',
         }),
         DocRequest({
             dto: WidgetSendMessageRequestDto,
@@ -42,7 +42,7 @@ export function WidgetMessagesDoc(): MethodDecorator {
         Doc({
             summary: 'poll for messages after a cursor',
             description:
-                'How a visitor receives messages produced outside their own request — an operator reply during handoff, or a follow-up. Polled while the chat window is open.',
+                'How a visitor receives messages produced outside their own request — an operator reply during handoff, or a follow-up. Polled while the chat window is open. `authorType` tells a staff reply (`OPERATOR`) from the agent (`BOT`), and `_metadata.staffActive` is true while staff have taken over the conversation.',
         }),
         DocResponse('widget.messages', {
             dto: WidgetMessageResponseDto,

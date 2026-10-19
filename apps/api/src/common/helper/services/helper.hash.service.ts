@@ -1,7 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { compare, genSaltSync, getRounds, hash } from 'bcryptjs';
+import { argon2id, hash, needsRehash, verify } from 'argon2';
+import { compare, genSaltSync } from 'bcrypt';
 import { SHA256, enc } from 'crypto-js';
 import { IHelperHashService } from 'src/common/helper/interfaces/helper.hash-service.interface';
+
+// OWASP's argon2id baseline: 19 MiB, 2 passes, 1 lane.
+const ARGON2_OPTIONS = {
+    type: argon2id,
+    memoryCost: 19_456,
+    timeCost: 2,
+    parallelism: 1,
+};
 
 @Injectable()
 export class HelperHashService implements IHelperHashService {
@@ -9,23 +18,28 @@ export class HelperHashService implements IHelperHashService {
         return genSaltSync(length);
     }
 
-    // Async so a cost-12 hash/compare (~250 ms) never blocks the event loop.
-    bcrypt(passwordString: string, salt: string): Promise<string> {
-        return hash(passwordString, salt);
+    // Both libraries hash on the libuv thread pool, so a password check never
+    // takes CPU from the event loop.
+    passwordHash(passwordString: string): Promise<string> {
+        return hash(passwordString, ARGON2_OPTIONS);
     }
 
-    bcryptCompare(
+    // Passwords set before the move to argon2id are bcrypt hashes ($2a$/$2b$).
+    passwordVerify(
         passwordString: string,
         passwordHashed: string
     ): Promise<boolean> {
-        return compare(passwordString, passwordHashed);
+        return passwordHashed.startsWith('$argon2')
+            ? verify(passwordHashed, passwordString)
+            : compare(passwordString, passwordHashed);
     }
 
-    // The bcrypt cost is embedded in the hash string itself
-    // (`$2a$<cost>$...`), so this reads back whatever cost a given hash
-    // was created at, regardless of the currently configured cost.
-    bcryptGetCost(passwordHashed: string): number {
-        return getRounds(passwordHashed);
+    // True for a bcrypt hash, or an argon2 hash made with older settings.
+    passwordNeedsRehash(passwordHashed: string): boolean {
+        return (
+            !passwordHashed.startsWith('$argon2') ||
+            needsRehash(passwordHashed, ARGON2_OPTIONS)
+        );
     }
 
     sha256(string: string): string {

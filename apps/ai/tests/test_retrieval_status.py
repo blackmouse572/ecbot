@@ -7,6 +7,7 @@ import json
 import pytest
 
 from eccho_ai.core.variables import AppVars
+from eccho_ai.llm.retrievers import retrieval
 from eccho_ai.llm.retrievers.retrieval import RAGRetrievalService, _embed_query_cached, stable_chunk_id
 from eccho_ai.modules.chat import services as chat_services
 from eccho_ai.modules.chat.models.chat_models import ChatRequest
@@ -33,6 +34,12 @@ class _Store:
 
     async def count_completed_documents(self, *, chatbot_id):
         return self.documents
+
+    async def has_media(self, *, chatbot_id):
+        return False
+
+    async def search_media(self, **_kw):
+        return []
 
     async def similarity_search_chunks(self, **_kw):
         return self.rows
@@ -137,6 +144,31 @@ async def test_rerank_scores_are_labelled_rerank(monkeypatch):
 
     assert result.summary["score_kind"] == "rerank"
     assert result.source_attributions[0]["score_kind"] == "rerank"
+
+
+async def test_a_failing_reranker_falls_back_to_the_unreranked_results(monkeypatch):
+    monkeypatch.setattr(AppVars, "RAG_RERANK_ENABLED", True)
+
+    def forbidden(**_kw):
+        raise OSError("403 Client Error: Forbidden for url: https://huggingface.co/...")
+
+    warnings: list[tuple[str, dict]] = []
+
+    class _Logger:
+        def warning(self, event, **kw):
+            warnings.append((event, kw))
+
+    monkeypatch.setattr(retrieval, "_score_with_cross_encoder", forbidden)
+    monkeypatch.setattr(retrieval, "logger", _Logger())
+
+    result = await _service(_Store(rows=[_row("c-9", 0.1), _row("c-4", 0.8)])).retrieve(
+        chatbot_id="bot", query="menu?"
+    )
+
+    assert result.status == "ok"
+    assert [chunk.chunk_id for chunk in result.chunks] == ["c-9"]
+    assert result.top_score == pytest.approx(0.9)
+    assert [event for event, _ in warnings] == ["rerank_failed"]
 
 
 @pytest.mark.parametrize(

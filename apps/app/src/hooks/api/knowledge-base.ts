@@ -220,7 +220,12 @@ export const useBatchDeleteKnowledgeItems = (knowledgebaseId: string) => {
         },
         body: { ids },
       }).then((res) => (res.data as A)?.data as BatchResult),
-    onSuccess: () => {
+    onSuccess: (_, ids) => {
+      for (const id of ids) {
+        queryClient.removeQueries({
+          queryKey: knowledgeBaseQueryKeys.itemDetail(id),
+        });
+      }
       queryClient.invalidateQueries({
         queryKey: knowledgeBaseQueryKeys.items(),
       });
@@ -341,7 +346,10 @@ export const useDeleteKnowledgeItem = (knowledgebaseId: string) => {
           workspace: workspace!.slug,
         },
       }),
-    onSuccess: () => {
+    onSuccess: (_, itemId) => {
+      queryClient.removeQueries({
+        queryKey: knowledgeBaseQueryKeys.itemDetail(itemId),
+      });
       queryClient.invalidateQueries({
         queryKey: knowledgeBaseQueryKeys.items(),
       });

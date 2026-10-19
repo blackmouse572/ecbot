@@ -121,7 +121,7 @@ export class PasswordHistoryService implements IPasswordHistoryService {
         );
 
         for (const historyPassword of allHistoryPasswords) {
-            const isMatch = await this.helperHashService.bcryptCompare(
+            const isMatch = await this.helperHashService.passwordVerify(
                 password,
                 historyPassword.password
             );

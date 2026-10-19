@@ -1,5 +1,5 @@
 import { Button, Select, Text } from "@medusajs/ui";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FeatureArt } from "@/components/guide";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -27,6 +27,10 @@ import { IconMessages } from "@tabler/icons-react";
 const LAST_VIEWED_KEY = "conversations.lastViewedAt";
 const GROUP_BY_KEY = "conversations.groupBy";
 const GROUP_OPTIONS: GroupBy[] = ["none", "account", "chatbot"];
+
+// The list unmounts on small screens while a thread is open; keep where the
+// reader was so going back lands on the same row.
+let savedScroll = { key: "", top: 0 };
 
 const readLastViewed = (id: string): number => {
   try {
@@ -89,6 +93,16 @@ export const ConversationList = () => {
   const { accounts } = useAccounts({ perPage: 100 } as never);
   const { customerIds: pendingMergeCustomerIds } = usePendingMergeCustomerIds();
   const basePath = `/${workspace?.slug}/${ROUTES.Conversations}`;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const restoredRef = useRef(false);
+
+  useLayoutEffect(() => {
+    if (restoredRef.current || isLoading || !scrollRef.current) return;
+    restoredRef.current = true;
+    if (savedScroll.key === basePath) {
+      scrollRef.current.scrollTop = savedScroll.top;
+    }
+  }, [isLoading, basePath]);
 
   const showChatbot = groupBy !== "chatbot";
   const isFiltered = !!(
@@ -171,7 +185,15 @@ export const ConversationList = () => {
         chatbots={chatbots ?? []}
         accounts={accounts ?? []}
       />
-      <div className="flex-1 overflow-y-auto">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto"
+        onScroll={(e) => {
+          if (restoredRef.current) {
+            savedScroll = { key: basePath, top: e.currentTarget.scrollTop };
+          }
+        }}
+      >
         {isLoading ? (
           <ConversationListSkeleton />
         ) : isError ? (

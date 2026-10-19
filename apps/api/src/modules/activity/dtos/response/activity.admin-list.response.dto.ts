@@ -21,13 +21,14 @@ export class ActivityAdminListResponseDto extends OmitType(
         'deletedBy',
     ] as const
 ) {
-    @ApiProperty({ type: UserMetaResponseDto, required: true })
+    // Both empty on a row the bot wrote (a handoff it raised).
+    @ApiProperty({ type: UserMetaResponseDto, required: false })
     @Type(() => UserMetaResponseDto)
-    user: UserMetaResponseDto;
+    user?: UserMetaResponseDto;
 
-    @ApiProperty({ type: UserMetaResponseDto, required: true })
+    @ApiProperty({ type: UserMetaResponseDto, required: false })
     @Type(() => UserMetaResponseDto)
-    by: UserMetaResponseDto;
+    by?: UserMetaResponseDto;
 
     @ApiProperty({ type: ActivityAdminWorkspaceResponseDto, required: false })
     @Type(() => ActivityAdminWorkspaceResponseDto)

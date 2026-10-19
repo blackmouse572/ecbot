@@ -7,10 +7,11 @@ import { ENUM_ACTIVITY_ACTION } from '../../enums/activity.enum';
 
 export class ActivityListResponseDto extends DatabaseDto {
     @ApiProperty({
-        required: true,
+        required: false,
+        nullable: true,
         example: '91dbd24d-0a1c-448d-b360-93b3a6c9b4bf',
     })
-    user: string;
+    user?: string;
 
     @ApiProperty({
         required: true,
@@ -28,13 +29,15 @@ export class ActivityListResponseDto extends DatabaseDto {
     })
     subject: ENUM_POLICY_SUBJECT;
 
+    // Empty when the bot did it (a handoff it raised).
     @ApiProperty({
-        required: true,
+        required: false,
+        nullable: true,
         type: UserShortResponseDto,
         oneOf: [{ $ref: getSchemaPath(UserShortResponseDto) }],
     })
     @Type(() => UserShortResponseDto)
-    by: UserShortResponseDto;
+    by?: UserShortResponseDto;
 
     @ApiProperty({
         required: false,

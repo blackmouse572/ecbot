@@ -90,7 +90,7 @@ function AccountCallbackUrlEditInner() {
                 </Form.Label>
                 <Form.Control>
                   <Input
-                    placeholder="https://your-app.example.com/eccho/replies"
+                    placeholder="https://your-app.example.com/ecbot/replies"
                     autoComplete="off"
                     {...field}
                   />

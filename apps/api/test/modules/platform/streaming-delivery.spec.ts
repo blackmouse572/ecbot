@@ -561,6 +561,70 @@ describe('StreamingDelivery — send_image file parts', () => {
     );
 });
 
+describe('StreamingDelivery — send_media file parts', () => {
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])('%s: sends a PDF as a named file', async (_mode, chatbot) => {
+        const adapter = makeAdapter();
+        const persisted: { text: string; attachments?: unknown[] }[] = [];
+        await new StreamingDelivery().deliver({
+            adapter,
+            account: {} as any,
+            senderId: 'S',
+            conversationId: 'C',
+            chatbot,
+            stream: sse([
+                line({
+                    type: 'tool-input-start',
+                    toolCallId: 'r1',
+                    toolName: 'send_media',
+                }),
+                line({
+                    type: 'file',
+                    url: 'https://cdn/menu.pdf',
+                    mediaType: 'application/pdf',
+                    providerMetadata: {
+                        eccho: { filename: 'Menu Mộc.pdf', size: 14010986 },
+                    },
+                }),
+                line({ type: 'text-delta', id: 't2', delta: 'Menu đây ạ' }),
+                line({ type: 'finish' }),
+                DONE,
+            ]),
+            abort: new AbortController(),
+            isCurrent: async () => true,
+            onSegmentPersist: async (text, attachments) => {
+                persisted.push({ text, attachments });
+                return 'nonce';
+            },
+            onSent: async () => {},
+            onFailed: async () => {},
+        });
+        expect(persisted).toEqual([
+            {
+                text: '',
+                attachments: [
+                    {
+                        type: 'file',
+                        url: 'https://cdn/menu.pdf',
+                        name: 'Menu Mộc.pdf',
+                    },
+                ],
+            },
+            { text: 'Menu đây ạ', attachments: undefined },
+        ]);
+        expect(adapter.sendMessage.mock.calls[0][2].content).toEqual({
+            kind: 'media',
+            url: 'https://cdn/menu.pdf',
+            mediaType: 'file',
+            name: 'Menu Mộc.pdf',
+            mimeType: 'application/pdf',
+            size: 14010986,
+        });
+    });
+});
+
 describe('guardrailDeliveryPolicy', () => {
     it('no chatbot -> buffered (safe default)', () => {
         expect(guardrailDeliveryPolicy()).toEqual({

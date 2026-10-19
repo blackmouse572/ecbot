@@ -62,15 +62,6 @@ const cases: [
     SWITCHES,
   ],
   [
-    "create_knowledge_base",
-    { name: "FAQ", description: "Common questions" },
-    "knowledgeBaseClientControllerCreateV1",
-    { body: { name: "FAQ", description: "Common questions" } },
-    { data: { id: "kb-1" } },
-    { id: "kb-1" },
-    ADDS,
-  ],
-  [
     "update_knowledge_base",
     { knowledgeBaseId: "kb-1", name: "Support FAQ" },
     "knowledgeBaseClientControllerUpdateV1",
@@ -99,6 +90,94 @@ const cases: [
     { data: { id: "item-1", status: "DRAFT" } },
     { id: "item-1", status: "DRAFT" },
     ADDS,
+  ],
+  [
+    "get_knowledge_upload_url",
+    {
+      knowledgeBaseId: "kb-1",
+      type: "MEDIA",
+      fileName: "menu.pdf",
+      size: 1024,
+    },
+    "knowledgeItemClientControllerUploadUrlV1",
+    {
+      path: { knowledgeBaseId: "kb-1" },
+      body: { type: "MEDIA", fileName: "menu.pdf", size: 1024 },
+    },
+    { data: { uploadUrl: "https://s3/put", fileKey: "knowledge-uploads/k" } },
+    { uploadUrl: "https://s3/put", fileKey: "knowledge-uploads/k" },
+    ADDS,
+  ],
+  [
+    "create_knowledge_item",
+    {
+      knowledgeBaseId: "kb-1",
+      type: "MEDIA",
+      title: "Menu",
+      fileKey: "knowledge-uploads/k",
+    },
+    "knowledgeItemClientControllerCreateV1",
+    {
+      path: { knowledgeBaseId: "kb-1" },
+      body: { type: "MEDIA", title: "Menu", fileKey: "knowledge-uploads/k" },
+    },
+    { data: { id: "item-2", status: "DRAFT" } },
+    { id: "item-2", status: "DRAFT" },
+    ADDS,
+  ],
+  [
+    "create_knowledge_item",
+    {
+      knowledgeBaseId: "kb-1",
+      type: "FILE",
+      title: "Price list",
+      fileUrl: "https://shop.vn/prices.pdf",
+    },
+    "knowledgeItemClientControllerCreateV1",
+    {
+      path: { knowledgeBaseId: "kb-1" },
+      body: {
+        type: "FILE",
+        title: "Price list",
+        fileUrl: "https://shop.vn/prices.pdf",
+      },
+    },
+    { data: { id: "item-3", status: "DRAFT" } },
+    { id: "item-3", status: "DRAFT" },
+    ADDS,
+  ],
+  [
+    "link_knowledge_to_chatbot",
+    { chatbotId: "chatbot-1", itemIds: ["item-1", "item-2"] },
+    "chatbotKnowledgeItemClientControllerLinkV1",
+    {
+      path: { chatbotId: "chatbot-1" },
+      body: { ids: ["item-1", "item-2"] },
+    },
+    { data: { succeeded: ["item-1", "item-2"], failed: [] } },
+    { succeeded: ["item-1", "item-2"], failed: [] },
+    ADDS,
+  ],
+  [
+    "link_knowledge_to_chatbot",
+    { chatbotId: "chatbot-1", knowledgeBaseId: "kb-1" },
+    "chatbotKnowledgeItemClientControllerLinkV1",
+    {
+      path: { chatbotId: "chatbot-1" },
+      body: { knowledgeBaseId: "kb-1", filter: {} },
+    },
+    { data: { succeeded: ["item-1"], failed: [], truncated: false } },
+    { succeeded: ["item-1"], failed: [], truncated: false },
+    ADDS,
+  ],
+  [
+    "unlink_knowledge_from_chatbot",
+    { chatbotId: "chatbot-1", itemId: "item-1" },
+    "chatbotKnowledgeItemClientControllerUnlinkV1",
+    { path: { chatbotId: "chatbot-1", knowledgeItemId: "item-1" } },
+    { data: { id: "item-1" } },
+    { id: "item-1" },
+    DELETES,
   ],
   [
     "update_knowledge_item",
@@ -197,12 +276,13 @@ const cases: [
     },
     "chatbotClientControllerCreateV1",
     {
-      body: {
+      // The profile it also sends is covered in chatbot-profile.spec.ts.
+      body: expect.objectContaining({
         name: "Shop bot",
         type: "restaurant",
         primaryLanguage: "vi",
         modelTextName: "google/gemini-2.5-flash",
-      },
+      }),
     },
     { data: { id: "bot-1" } },
     { id: "bot-1" },

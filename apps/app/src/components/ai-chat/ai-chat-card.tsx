@@ -13,6 +13,7 @@ import {
   AttachmentGroup,
   AttachmentMedia,
   AttachmentTitle,
+  AttachmentTrigger,
   Marker,
   MarkerContent,
   MarkerIcon,
@@ -53,7 +54,12 @@ import {
 const BUBBLE_CLASS = {
   user: "chat-bubble chat-bubble--customer origin-bottom-right",
   assistant: "chat-bubble chat-bubble--bot origin-bottom-left",
+  operator: "chat-bubble chat-bubble--operator origin-bottom-left",
 };
+
+/** A staff reply the widget polled in, as opposed to the agent's (#257). */
+const isStaffReply = (metadata: unknown) =>
+  (metadata as { authorType?: string } | undefined)?.authorType === "OPERATOR";
 const REPLY_ENTER =
   "transition-[opacity,filter] duration-270 ease-[ease] starting:opacity-0 starting:blur-[2px] motion-reduce:starting:blur-none";
 const BUBBLE_ENTER =
@@ -90,6 +96,15 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
               </AttachmentTitle>
               <AttachmentDescription>{file.mediaType}</AttachmentDescription>
             </AttachmentContent>
+            {/* A file (a menu PDF the bot sent) opens in a new tab. */}
+            {!isImage && (
+              <AttachmentTrigger
+                href={file.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={file.filename ?? file.mediaType}
+              />
+            )}
           </Attachment>
         );
       })}
@@ -109,9 +124,11 @@ export type ChatAudience = "owner" | "customer";
 function AIChatMessages({
   audience,
   showKnowledgeSources,
+  greeting,
 }: {
   audience: ChatAudience;
   showKnowledgeSources?: boolean;
+  greeting?: string;
 }) {
   const internals = audience === "owner";
   const { messages, status, error } = useAIChat();
@@ -121,6 +138,15 @@ function AIChatMessages({
 
   return (
     <>
+      {greeting && (
+        <MessageScrollerItem key="greeting" messageId="greeting">
+          <Message from="assistant">
+            <MessageContent className={BUBBLE_CLASS.assistant}>
+              <MessageResponse>{greeting}</MessageResponse>
+            </MessageContent>
+          </Message>
+        </MessageScrollerItem>
+      )}
       {displayMessages.map((message, index) => {
         const isLastMessage = index === displayMessages.length - 1;
         const model = partsToRenderModel(message.parts);
@@ -138,6 +164,11 @@ function AIChatMessages({
                   sourceUrl: s.url,
                 }));
         const isAssistant = message.role === "assistant";
+        const isStaff = isAssistant && isStaffReply(message.metadata);
+        const bubbleClass =
+          BUBBLE_CLASS[
+            isStaff ? "operator" : isAssistant ? "assistant" : "user"
+          ];
         // The loader bubble stays put for the whole turn; tool steps are
         // added above it as the agent decides to call them.
         const showSpinner =
@@ -180,6 +211,11 @@ function AIChatMessages({
             scrollAnchor={message.role === "user"}
           >
             <Message from={message.role}>
+              {isStaff && (
+                <Text size="xsmall" className="text-ui-fg-subtle px-1">
+                  {t("widget.staff")}
+                </Text>
+              )}
               {showTrace && (
                 <ToolTrace
                   toolCalls={toolCalls}
@@ -192,21 +228,13 @@ function AIChatMessages({
                 earlierSegments.map((segment, segmentIndex) => (
                   <MessageContent
                     key={segmentIndex}
-                    className={clx(
-                      BUBBLE_CLASS[isAssistant ? "assistant" : "user"],
-                      BUBBLE_ENTER,
-                    )}
+                    className={clx(bubbleClass, BUBBLE_ENTER)}
                   >
                     <MessageResponse>{segment}</MessageResponse>
                   </MessageContent>
                 ))}
               {showBubble && (
-                <MessageContent
-                  className={clx(
-                    BUBBLE_CLASS[isAssistant ? "assistant" : "user"],
-                    BUBBLE_ENTER,
-                  )}
-                >
+                <MessageContent className={clx(bubbleClass, BUBBLE_ENTER)}>
                   {model.guardrail ? (
                     <Marker className="text-ui-fg-error">
                       <MarkerIcon className="text-ui-fg-error">
@@ -305,6 +333,11 @@ export type AIChatCardProps = {
    * Operators only: the widget and the public preview leave it off.
    */
   showKnowledgeSources?: boolean;
+  /**
+   * The agent's greeting, drawn as its first message (the website widget).
+   * Display only: it is never sent back as part of the conversation.
+   */
+  greeting?: string;
 };
 
 export function AIChatCard(props: AIChatCardProps) {
@@ -319,6 +352,7 @@ export function AIChatCard(props: AIChatCardProps) {
     className,
     audience = "owner",
     showKnowledgeSources,
+    greeting,
   } = props;
 
   return (
@@ -349,6 +383,7 @@ export function AIChatCard(props: AIChatCardProps) {
               <AIChatMessages
                 audience={audience}
                 showKnowledgeSources={showKnowledgeSources}
+                greeting={greeting}
               />
             </MessageScrollerContent>
           </MessageScrollerViewport>

@@ -33,7 +33,7 @@ describe('message-model images', () => {
         expect(
             segmentMessages({
                 text: 'Mẫu này giá 350k nhé',
-                images: ['https://cdn/shirt.jpg'],
+                media: [{ url: 'https://cdn/shirt.jpg', kind: 'image' }],
             })
         ).toEqual([
             text('Mẫu này giá 350k nhé'),
@@ -48,10 +48,35 @@ describe('message-model images', () => {
         ]);
     });
 
+    it('segmentMessages() sends a file with its name, and the link as fallback', () => {
+        expect(
+            segmentMessages({
+                text: '',
+                media: [
+                    {
+                        url: 'https://cdn/m.pdf',
+                        kind: 'file',
+                        name: 'Menu.pdf',
+                    },
+                ],
+            })
+        ).toEqual([
+            {
+                content: {
+                    kind: 'media',
+                    url: 'https://cdn/m.pdf',
+                    mediaType: 'file',
+                    name: 'Menu.pdf',
+                },
+                fallbackText: 'Menu.pdf\nhttps://cdn/m.pdf',
+            },
+        ]);
+    });
+
     it('segmentMessages() leaves markdown in the text alone', () => {
         // apps/ai already turned allowed images into file parts; anything
         // left in the text is plain text.
-        const segment = { text: '![x](https://evil/x.png)', images: [] };
+        const segment = { text: '![x](https://evil/x.png)', media: [] };
         expect(segmentMessages(segment)).toEqual([text(segment.text)]);
     });
 });
