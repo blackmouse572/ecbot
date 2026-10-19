@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { NOTIFICATION_PUSH_SERVICE_HOSTS } from '../../constants/notification.push.constant';
 import { Type } from 'class-transformer';
 import {
     IsNotEmpty,
@@ -32,7 +33,11 @@ export class NotificationPushSubscribeRequestDto {
         required: true,
         example: 'https://fcm.googleapis.com/fcm/send/abc123',
     })
-    @IsUrl({ protocols: ['https'], require_protocol: true })
+    @IsUrl({
+        protocols: ['https'],
+        require_protocol: true,
+        host_whitelist: NOTIFICATION_PUSH_SERVICE_HOSTS,
+    })
     @MaxLength(2000)
     endpoint: string;
 

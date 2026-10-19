@@ -32,11 +32,14 @@ describe('NotificationPushService', () => {
         create: jest.fn(),
         save: jest.fn(),
         deleteMany: jest.fn(),
+        findBeyondNewest: jest.fn(),
+        userReference: jest.fn((id: string) => ({ id })),
     };
 
     beforeEach(() => {
         jest.clearAllMocks();
-        send.mockResolvedValue({ statusCode: 201 });
+        send.mockReset().mockResolvedValue({ statusCode: 201 });
+        repository.findBeyondNewest.mockResolvedValue([]);
     });
 
     describe('publicKey', () => {
@@ -99,6 +102,31 @@ describe('NotificationPushService', () => {
             });
         });
 
+        it('sends to many devices a few at a time', async () => {
+            repository.find.mockResolvedValue(
+                Array.from({ length: 25 }, (_, i) =>
+                    subscription(`https://push/${i}`)
+                )
+            );
+            let inFlight = 0;
+            let peak = 0;
+            send.mockImplementation(async () => {
+                peak = Math.max(peak, ++inFlight);
+                await new Promise(resolve => setImmediate(resolve));
+                inFlight--;
+                return { statusCode: 201 };
+            });
+            const service = new NotificationPushService(
+                repository as any,
+                config(keys) as any
+            );
+
+            await service.sendToUser('user-1', notification as any);
+
+            expect(send).toHaveBeenCalledTimes(25);
+            expect(peak).toBeLessThanOrEqual(10);
+        });
+
         it('forgets a device the push service says is gone', async () => {
             repository.find.mockResolvedValue([
                 subscription('https://push/gone'),
@@ -150,7 +178,7 @@ describe('NotificationPushService', () => {
 
     describe('subscribe', () => {
         const body = {
-            endpoint: 'https://push/a',
+            endpoint: 'https://fcm.googleapis.com/fcm/send/a',
             keys: { p256dh: 'p256dh-key', auth: 'auth-key' },
         };
 
@@ -164,18 +192,40 @@ describe('NotificationPushService', () => {
             await service.subscribe('user-1', body, 'Chrome');
 
             expect(repository.create).toHaveBeenCalledWith({
-                user: 'user-1',
-                endpoint: 'https://push/a',
+                user: { id: 'user-1' },
+                endpoint: 'https://fcm.googleapis.com/fcm/send/a',
                 p256dh: 'p256dh-key',
                 auth: 'auth-key',
                 userAgent: 'Chrome',
             });
         });
 
-        it('moves a known device to whoever signed in on it last', async () => {
+        it('keeps only the newest devices of a user', async () => {
+            repository.findOne.mockResolvedValue(null);
+            repository.findBeyondNewest.mockResolvedValue([
+                { id: 'old-1' },
+                { id: 'old-2' },
+            ]);
+            const service = new NotificationPushService(
+                repository as any,
+                config(keys) as any
+            );
+
+            await service.subscribe('user-1', body);
+
+            expect(repository.findBeyondNewest).toHaveBeenCalledWith(
+                'user-1',
+                20
+            );
+            expect(repository.deleteMany).toHaveBeenCalledWith({
+                id: { $in: ['old-1', 'old-2'] },
+            });
+        });
+
+        it('moves a device to whoever signs in on that same browser', async () => {
             const existing = {
-                ...subscription('https://push/a'),
-                user: 'user-old',
+                ...subscription(body.endpoint),
+                user: { id: 'user-old' },
             };
             repository.findOne.mockResolvedValue(existing);
             const service = new NotificationPushService(
@@ -186,12 +236,46 @@ describe('NotificationPushService', () => {
             await service.subscribe('user-1', body, 'Chrome');
 
             expect(repository.create).not.toHaveBeenCalled();
+            // A managed reference, never a raw id, on the M:1 relation.
+            expect(repository.userReference).toHaveBeenCalledWith('user-1');
             expect(repository.save).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    user: 'user-1',
-                    endpoint: 'https://push/a',
-                })
+                expect.objectContaining({ user: { id: 'user-1' } })
             );
+        });
+
+        it('refreshes the keys of the same user device', async () => {
+            const existing = {
+                ...subscription(body.endpoint),
+                auth: 'old-auth',
+                user: { id: 'user-1' },
+            };
+            repository.findOne.mockResolvedValue(existing);
+            const service = new NotificationPushService(
+                repository as any,
+                config(keys) as any
+            );
+
+            await service.subscribe('user-1', body);
+
+            expect(repository.save).toHaveBeenCalledWith(
+                expect.objectContaining({ auth: 'auth-key' })
+            );
+        });
+
+        it("does not take over another user's device with other keys", async () => {
+            repository.findOne.mockResolvedValue({
+                ...subscription(body.endpoint),
+                auth: 'victim-auth',
+                user: { id: 'user-old' },
+            });
+            const service = new NotificationPushService(
+                repository as any,
+                config(keys) as any
+            );
+
+            await service.subscribe('user-1', body);
+
+            expect(repository.save).not.toHaveBeenCalled();
         });
     });
 

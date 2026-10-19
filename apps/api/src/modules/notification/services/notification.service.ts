@@ -26,7 +26,7 @@ export class NotificationService {
         private readonly notificationRepository: NotificationRepository,
         private readonly paginationService: PaginationService,
         private readonly messageService: MessageService,
-        private readonly notificationPushService?: NotificationPushService
+        private readonly notificationPushService: NotificationPushService
     ) {}
 
     async findAll(find?: Record<string, any>): Promise<NotificationEntity[]> {
@@ -122,9 +122,7 @@ export class NotificationService {
             );
 
         // Same moment as the bell, so the push and the badge agree.
-        await this.notificationPushService
-            ?.sendToUser(dto.recipient, created)
-            .catch(() => undefined);
+        await this.notificationPushService.sendToUser(dto.recipient, created);
 
         return created;
     }
