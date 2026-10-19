@@ -6,7 +6,8 @@ describe('NotificationService.createRequestToJoinWorkspace', () => {
     const service = new NotificationService(
         { create } as any,
         {} as any,
-        messageService as any
+        messageService as any,
+        { sendToUser: async () => undefined } as any
     );
 
     it('links to the join requests page of the workspace slug', async () => {

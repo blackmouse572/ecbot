@@ -101,5 +101,8 @@
         "title": "Kênh đã hoạt động lại",
         "message": "Tin trả lời trên \"{accountName}\" đã gửi được bình thường.",
         "actionText": "Xem các kênh"
-    }
+    },
+    "pushPublicKey": "Đã tải cài đặt thông báo đẩy.",
+    "pushSubscribe": "Đã bật thông báo trên thiết bị này.",
+    "pushUnsubscribe": "Đã tắt thông báo trên thiết bị này."
 }

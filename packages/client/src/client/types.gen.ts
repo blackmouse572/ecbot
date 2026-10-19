@@ -1431,6 +1431,27 @@ export type NotificationUnreadDto = {
     count: number;
 };
 
+export type NotificationPushPublicKeyResponseDto = {
+    /**
+     * VAPID public key for PushManager.subscribe; null when push is off
+     */
+    publicKey: string | null;
+};
+
+export type NotificationPushSubscribeKeysRequestDto = {
+    p256dh: string;
+    auth: string;
+};
+
+export type NotificationPushSubscribeRequestDto = {
+    endpoint: string;
+    keys: NotificationPushSubscribeKeysRequestDto;
+};
+
+export type NotificationPushUnsubscribeRequestDto = {
+    endpoint: string;
+};
+
 export type UserDataExportResponseDto = {
     exportedAt: string;
     profile: {
@@ -12052,6 +12073,220 @@ export type NotificationSharedControllerUnreadV1Responses = {
 };
 
 export type NotificationSharedControllerUnreadV1Response = NotificationSharedControllerUnreadV1Responses[keyof NotificationSharedControllerUnreadV1Responses];
+
+export type NotificationSharedControllerPushPublicKeyV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/notification/push/public-key';
+};
+
+export type NotificationSharedControllerPushPublicKeyV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type NotificationSharedControllerPushPublicKeyV1Error = NotificationSharedControllerPushPublicKeyV1Errors[keyof NotificationSharedControllerPushPublicKeyV1Errors];
+
+export type NotificationSharedControllerPushPublicKeyV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: NotificationPushPublicKeyResponseDto;
+    };
+};
+
+export type NotificationSharedControllerPushPublicKeyV1Response = NotificationSharedControllerPushPublicKeyV1Responses[keyof NotificationSharedControllerPushPublicKeyV1Responses];
+
+export type NotificationSharedControllerPushSubscribeV1Data = {
+    body: NotificationPushSubscribeRequestDto;
+    headers: {
+        'user-agent': string;
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/notification/push/subscribe';
+};
+
+export type NotificationSharedControllerPushSubscribeV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type NotificationSharedControllerPushSubscribeV1Error = NotificationSharedControllerPushSubscribeV1Errors[keyof NotificationSharedControllerPushSubscribeV1Errors];
+
+export type NotificationSharedControllerPushSubscribeV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type NotificationSharedControllerPushSubscribeV1Response = NotificationSharedControllerPushSubscribeV1Responses[keyof NotificationSharedControllerPushSubscribeV1Responses];
+
+export type NotificationSharedControllerPushUnsubscribeV1Data = {
+    body: NotificationPushUnsubscribeRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/notification/push/unsubscribe';
+};
+
+export type NotificationSharedControllerPushUnsubscribeV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type NotificationSharedControllerPushUnsubscribeV1Error = NotificationSharedControllerPushUnsubscribeV1Errors[keyof NotificationSharedControllerPushUnsubscribeV1Errors];
+
+export type NotificationSharedControllerPushUnsubscribeV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type NotificationSharedControllerPushUnsubscribeV1Response = NotificationSharedControllerPushUnsubscribeV1Responses[keyof NotificationSharedControllerPushUnsubscribeV1Responses];
 
 export type ExportUserControllerMeV1Data = {
     body?: never;

@@ -474,6 +474,21 @@ export class AppEnvDto {
     @IsString()
     SHOPEE_REDIRECT_URI?: string;
 
+    // Web Push (VAPID) for browser notifications. Push stays off unless all
+    // three are set. Generate a pair with `npx web-push generate-vapid-keys`.
+    @IsOptional()
+    @IsString()
+    WEB_PUSH_VAPID_PUBLIC_KEY?: string;
+
+    @IsOptional()
+    @IsString()
+    WEB_PUSH_VAPID_PRIVATE_KEY?: string;
+
+    // A contact for push services, e.g. mailto:support@ecbot.vn
+    @IsOptional()
+    @IsString()
+    WEB_PUSH_VAPID_SUBJECT?: string;
+
     // Telegram platform integration
     @IsOptional()
     @IsString()

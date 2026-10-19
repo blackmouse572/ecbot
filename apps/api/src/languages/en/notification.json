@@ -101,5 +101,8 @@
         "title": "A channel is working again",
         "message": "Replies on \"{accountName}\" are going through again.",
         "actionText": "View channels"
-    }
+    },
+    "pushPublicKey": "Push settings loaded.",
+    "pushSubscribe": "Notifications are on for this device.",
+    "pushUnsubscribe": "Notifications are off for this device."
 }
