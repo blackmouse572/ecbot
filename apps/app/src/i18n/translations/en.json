@@ -921,7 +921,10 @@
       "noChatbot": {
         "title": "No agent yet",
         "message": "Create an agent to answer customers on this channel.",
-        "action": "Create agent"
+        "action": "Create agent",
+        "linkExisting": "Link existing agent",
+        "drawerTitle": "Choose an agent",
+        "noneAvailable": "No agents available"
       }
     },
     "imports": {

@@ -4,10 +4,15 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { isConnectableAccountType } from "@/routes/chatbot/chatbot-create/agent-builder/channel-accounts";
 import { ROUTES } from "@/routes/constants";
 import { IconRobot } from "@tabler/icons-react";
-import { Container, Divider, Heading } from "@medusajs/ui";
-import type { AccountGetDetailResponseDto, ChatbotListResponseDto } from "@repo/client";
+import { Button, Container, Divider, Heading } from "@medusajs/ui";
+import type {
+  AccountGetDetailResponseDto,
+  ChatbotListResponseDto,
+} from "@repo/client";
 import { NoRecords } from "@repo/ui/common-components";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AgentLinkDrawer } from "./agent-link-drawer";
 
 type Props = {
   accountId: string;
@@ -20,15 +25,25 @@ type Props = {
  * linked, every connectable channel type gets a quick create into the
  * builder; types the builder cannot connect render nothing.
  */
-export const AccountChatbotSection = ({ accountId, type, initialData }: Props) => {
+export const AccountChatbotSection = ({
+  accountId,
+  type,
+  initialData,
+}: Props) => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
-  const { chatbot, isLoading, isError } = useAccountChatbot(accountId, { initialData });
+  const { chatbot, isLoading, isError } = useAccountChatbot(accountId, {
+    initialData,
+  });
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const linkedChatbotId = isLoading ? undefined : chatbot?.id;
 
   if (linkedChatbotId) {
-    return <ChatbotSection chatbotId={linkedChatbotId} title={t("chatbot.title")} />;
+    return (
+      <ChatbotSection chatbotId={linkedChatbotId} title={t("chatbot.title")} />
+    );
   }
 
   // Without a settled lookup there is nothing honest to show: a failed
@@ -50,6 +65,20 @@ export const AccountChatbotSection = ({ accountId, type, initialData }: Props) =
           to: `/${workspaceSlug}/${ROUTES.Chatbot}/create?accountId=${accountId}`,
           label: t("accounts.details.noChatbot.action"),
         }}
+      />
+      <div className="flex justify-center px-6 pb-4">
+        <Button
+          size="small"
+          variant="transparent"
+          onClick={() => setDrawerOpen(true)}
+        >
+          {t("accounts.details.noChatbot.linkExisting")}
+        </Button>
+      </div>
+      <AgentLinkDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        accountId={accountId}
       />
     </Container>
   );

@@ -944,7 +944,10 @@
       "noChatbot": {
         "title": "Chưa có agent",
         "message": "Tạo agent để trả lời khách hàng trên kênh này.",
-        "action": "Tạo agent"
+        "action": "Tạo agent",
+        "linkExisting": "Liên kết agent có sẵn",
+        "drawerTitle": "Chọn agent",
+        "noneAvailable": "Chưa có agent nào"
       }
     },
     "imports": {
