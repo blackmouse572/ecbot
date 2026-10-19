@@ -50,4 +50,23 @@ describe("WidgetAiNotice", () => {
       screen.getByRole("link", { name: "Privacy Policy" }),
     ).toHaveAttribute("href", "https://shop.example.com/privacy");
   });
+
+  // #257: once staff take over, the visitor is no longer talking to an AI.
+  it.each([
+    ["en", /staff member has joined/],
+    ["vi", /Nhân viên đã tham gia/],
+  ])(
+    "%s: says a staff member is chatting while staff have taken over",
+    async (lang, text) => {
+      await i18n.changeLanguage(lang);
+      render(
+        <I18nextProvider i18n={i18n}>
+          <WidgetAiNotice staffActive />
+        </I18nextProvider>,
+      );
+
+      expect(screen.getByText(text)).toBeInTheDocument();
+      expect(screen.queryByText(/\bAI\b/)).not.toBeInTheDocument();
+    },
+  );
 });

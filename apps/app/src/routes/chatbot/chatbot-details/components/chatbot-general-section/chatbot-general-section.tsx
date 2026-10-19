@@ -5,9 +5,8 @@ import {
 import { useDate } from "@/hooks/use-date";
 import { ChatbotActions } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-actions";
 import { ChatbotNameCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-name-cell";
-import { ChatbotStatusCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-status-cell";
 import { ChatbotTypeCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-type-cell";
-import { CHATBOT_LANGUAGES } from "@/routes/chatbot/constants";
+import { languageName } from "@/libs/language-name";
 import { useUISound } from "@/modules/sound";
 import { Container, Switch, Text } from "@medusajs/ui";
 import { SectionRow } from "@repo/ui/common-components";
@@ -19,12 +18,10 @@ type ChatbotGeneralSectionProps = {
   item: ChatbotGetDetailResponseDto;
 };
 
-const languageLabel = (code: string) =>
-  CHATBOT_LANGUAGES[code as keyof typeof CHATBOT_LANGUAGES] ?? code;
-
 /** The page title card: who the agent is, whether it runs, where it answers. */
 export const ChatbotGeneralSection = ({ item }: ChatbotGeneralSectionProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageLabel = (code: string) => languageName(code, i18n.language);
   const { getFullDate } = useDate();
   const toggle = useToggleChatbotActivate();
   const playSound = useUISound();
@@ -32,8 +29,8 @@ export const ChatbotGeneralSection = ({ item }: ChatbotGeneralSectionProps) => {
 
   return (
     <Container className="divide-y p-0">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="flex items-center justify-between gap-x-4 px-6 py-4">
+        <div className="flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           {/* The name is the page title; the cell's avatar keeps a div here. */}
           <ChatbotNameCell
             role="heading"
@@ -44,9 +41,8 @@ export const ChatbotGeneralSection = ({ item }: ChatbotGeneralSectionProps) => {
             className="[&_p]:font-medium"
           />
           <ChatbotTypeCell item={item} />
-          <ChatbotStatusCell item={item} />
         </div>
-        <div className="flex items-center gap-x-2">
+        <div className="flex shrink-0 items-center gap-x-2">
           <Switch
             aria-label={t("fields.status")}
             checked={!turningOn}

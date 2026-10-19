@@ -158,8 +158,8 @@ export class AuthPublicController {
 
         const user: UserEntity = await this.userService.findOneByEmail(email);
         if (!user) {
-            // Same error as a wrong password below, plus a real bcrypt
-            // compare against a fixed hash, so an unknown email can't be
+            // Same error as a wrong password below, plus a real password
+            // check against a fixed hash, so an unknown email can't be
             // told apart from a known one — by response body or timing.
             await this.authService.runDummyPasswordCompare(password);
             throw this.buildInvalidCredentialError();
@@ -201,10 +201,8 @@ export class AuthPublicController {
         }
 
         // Correct password on an unlocked account: opportunistically
-        // upgrade a hash that was created at a lower bcrypt cost (e.g.
-        // before the cost-12 config change) to the current cost. Dormant
-        // accounts that never log in or reset a password keep their
-        // original, weaker cost until they do.
+        // move an old bcrypt hash (or argon2 with older settings) to the
+        // current argon2id settings.
         const rehash = await this.authService.maybeRehashPassword(
             password,
             user.password

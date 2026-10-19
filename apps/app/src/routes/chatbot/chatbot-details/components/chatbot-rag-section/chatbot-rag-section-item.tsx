@@ -1,11 +1,4 @@
-import {
-  clx,
-  Container,
-  StatusBadge,
-  Text,
-  Tooltip,
-  IconButton,
-} from "@medusajs/ui";
+import { clx, Container, StatusBadge, Text, IconButton } from "@medusajs/ui";
 import type { ChatbotKnowledgeItemResponseDto } from "@repo/client";
 import {
   IconEye,
@@ -69,20 +62,16 @@ export function ChatbotRAGSectionItem({
       </div>
 
       <div className="w-full flex items-center justify-between">
-        <Tooltip
-          content={t(`knowledgeItem.status.${knowledgeItem?.status}`, {
+        <StatusBadge
+          className="uppercase"
+          color={
+            KNOWLEDGE_ITEM_STATUS_BADGE_COLOR[knowledgeItem?.status || "draft"]
+          }
+        >
+          {t(`knowledgeItem.status.${knowledgeItem?.status}`, {
             defaultValue: knowledgeItem?.status,
           })}
-        >
-          <StatusBadge
-            className="pr-0"
-            color={
-              KNOWLEDGE_ITEM_STATUS_BADGE_COLOR[
-                knowledgeItem?.status || "draft"
-              ]
-            }
-          />
-        </Tooltip>
+        </StatusBadge>
 
         <div className="flex items-center gap-x-1">
           <IconButton

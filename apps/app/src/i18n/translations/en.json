@@ -208,7 +208,7 @@
         "home": "Home"
       },
       "accounts": {
-        "header": "Accounts"
+        "header": "Channels"
       },
       "dashboard": {
         "header": "Dashboard",
@@ -362,6 +362,9 @@
           "resend": "Resend email",
           "resendIn": "Resend in {{seconds}}s",
           "resent": "We sent the email again."
+        },
+        "errors": {
+          "invalidEmail": "Enter a valid email address."
         }
       },
       "resetPassword": {
@@ -684,7 +687,7 @@
         "viewProfile": "View Profile",
         "unlink": "Unlink Account"
       },
-      "noRecordsTitle": "No accounts connected yet"
+      "noRecordsTitle": "No channels connected yet"
     },
     "unlink": {
       "confirm": {
@@ -1268,7 +1271,7 @@
         "required": "Please complete the verification first.",
         "failed": "Verification failed. Reload the page and try again."
       },
-      "poweredBy": "Powered by eccho"
+      "poweredBy": "Powered by Ecbot"
     },
     "list": {
       "noRecordsTitle": "No agents yet",
@@ -2415,7 +2418,8 @@
     "skip": "Skip",
     "preview": "Preview",
     "createNew": "Create new",
-    "unlink": "Unlink"
+    "unlink": "Unlink",
+    "connectChannel": "Connect a channel"
   },
   "general": {
     "notSet": "Not set",
@@ -2457,7 +2461,8 @@
       "error": "Could not update {{count}} item(s)."
     },
     "loading": "Loading...",
-    "loadFailed": "Couldn't load this. Try again later."
+    "loadFailed": "Couldn't load this. Try again later.",
+    "typeToConfirm": "Type {val} to confirm:"
   },
   "fields": {
     "name": "Name",
@@ -3616,7 +3621,10 @@
       "required": "Please complete the verification first.",
       "failed": "Verification failed. Reload the page and try again."
     },
-    "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>"
+    "aiNotice": "You are chatting with an AI. Your messages are processed to answer you. <privacy>Privacy Policy</privacy>",
+    "staffNotice": "A staff member has joined and is chatting with you. <privacy>Privacy Policy</privacy>",
+    "staff": "Staff",
+    "visitorName": "Website visitor #{{suffix}}"
   },
   "editor": {
     "toolbar": {

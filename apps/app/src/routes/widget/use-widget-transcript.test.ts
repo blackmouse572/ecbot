@@ -54,4 +54,19 @@ describe("toUiMessage", () => {
       }).parts,
     ).toEqual([{ type: "text", text: "hi" }]);
   });
+
+  // #257: the widget draws a staff reply apart from the agent's.
+  it("marks a staff reply so the widget can tell it from the agent", () => {
+    expect(
+      toUiMessage({
+        id: "m4",
+        authorType: "OPERATOR",
+        text: "Chào bạn, mình là nhân viên shop",
+        dateSent: "2026-01-01T00:00:00Z",
+      }),
+    ).toMatchObject({
+      role: "assistant",
+      metadata: { authorType: "OPERATOR" },
+    });
+  });
 });

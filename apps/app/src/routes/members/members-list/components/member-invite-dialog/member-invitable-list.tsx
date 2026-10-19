@@ -1,4 +1,5 @@
 import { useInvitableUsers, useInviteUser } from "@/hooks/api";
+import { readApiError } from "@/libs/api-error";
 import { toast } from "@medusajs/ui";
 import { CommandGroup } from "@repo/ui/components";
 import { useTranslation } from "react-i18next";
@@ -38,12 +39,20 @@ export function MemberInvitableList({
   );
   const inviteUser = useInviteUser();
 
-  const invite = (invitedEmail: string) => {
-    toast.promise(inviteUser.mutateAsync({ invitedEmail }), {
-      loading: t("members.inviteMember.loading"),
-      success: t("members.inviteMember.success"),
-      error: t("errorBoundary.internalServerErrorMessage"),
-    });
+  // The error toast carries the API's reason, so the owner knows why the
+  // invite did not go out.
+  const invite = async (invitedEmail: string) => {
+    const id = toast.loading(t("members.inviteMember.loading"));
+    try {
+      await inviteUser.mutateAsync({ invitedEmail });
+      toast.success(t("members.inviteMember.success"), { id });
+    } catch (error) {
+      toast.error(
+        readApiError(error).message ??
+          t("errorBoundary.internalServerErrorMessage"),
+        { id },
+      );
+    }
   };
 
   const isBusy = isLoading || isFetching;

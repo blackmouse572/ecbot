@@ -28,6 +28,8 @@ interface Props {
   fetchNextPage: () => void;
   onRetry: (text: string, clientNonce: string) => void;
   currentOperatorId?: string;
+  /** The customer's name as the inbox shows it, for their own messages. */
+  senderName?: string;
   canReact?: boolean;
   reactionWindowClosed?: boolean;
   onReact?: (
@@ -46,6 +48,7 @@ export const MessageList = ({
   fetchNextPage,
   onRetry,
   currentOperatorId,
+  senderName,
   canReact,
   reactionWindowClosed,
   onReact,
@@ -107,6 +110,7 @@ export const MessageList = ({
                       id={`msg-${m.id}`}
                       message={m}
                       currentOperatorId={currentOperatorId}
+                      senderName={senderName}
                       onRetry={onRetry}
                       hasFollowup={triggerIds.has(m.id)}
                       canReact={canReact}

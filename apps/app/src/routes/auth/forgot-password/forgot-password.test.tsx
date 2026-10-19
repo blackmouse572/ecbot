@@ -71,6 +71,18 @@ describe("ForgotPasswordPage", () => {
     vi.clearAllMocks();
   });
 
+  it("shows a translated error for an invalid email", async () => {
+    render(<ForgotPasswordPage />);
+
+    fireEvent.change(screen.getByPlaceholderText("fields.email"), {
+      target: { value: "not-an-email" },
+    });
+    fireEvent.submit(document.querySelector("form")!);
+
+    expect(await screen.findByText("errors.invalidEmail")).toBeInTheDocument();
+    expect(requestReset).not.toHaveBeenCalled();
+  });
+
   it("shows the check-your-email state on success and never navigates with a token", async () => {
     render(<ForgotPasswordPage />);
 

@@ -1,7 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Checkbox, Select } from "@medusajs/ui";
-import { Input, Form, CircularLoading } from "@repo/ui/common-components";
+import {
+  CircularLoading,
+  Form,
+  Input,
+  PasswordInput,
+} from "@repo/ui/common-components";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import { HoneypotField, useHoneypot } from "./honeypot";
@@ -270,8 +275,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
             return (
               <Form.Item>
                 <Form.Control>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     errorMessage={fieldState.error?.message}
                     autoComplete="new-password"
                     {...field}
@@ -290,8 +294,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
             return (
               <Form.Item>
                 <Form.Control>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     autoComplete="new-password"
                     errorMessage={fieldState.error?.message}
                     {...field}

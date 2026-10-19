@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, Input } from "@repo/ui/common-components";
+import { Form, Input, PasswordInput } from "@repo/ui/common-components";
 import { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
@@ -120,8 +120,7 @@ const LoginForm: React.FC<ILoginFormProps> = (props: ILoginFormProps) => {
             return (
               <Form.Item>
                 <Form.Control>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     errorMessage={fieldState.error?.message}
                     autoComplete="current-password"
                     {...field}

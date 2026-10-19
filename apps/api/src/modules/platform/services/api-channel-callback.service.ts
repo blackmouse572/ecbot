@@ -2,6 +2,7 @@ import { AccountEntity } from '@app/modules/account/repository/entities/account.
 import { AccountService } from '@app/modules/account/services/account.service';
 import { isApiChannelAccount } from '@app/modules/account/interfaces/account-config.interface';
 import { HelperEgressService } from '@app/common/helper/services/helper.egress.service';
+import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import {
@@ -31,8 +32,14 @@ export interface ApiChannelCallbackPayload {
 export class ApiChannelCallbackService {
     constructor(
         private readonly accountService: AccountService,
-        private readonly egress: HelperEgressService
+        private readonly egress: HelperEgressService,
+        private readonly messageRepository: MessageRepository
     ) {}
+
+    /** Every attempt failed: the reply the inbox shows as SENT never arrived. */
+    async markFailed(externalId: string): Promise<void> {
+        await this.messageRepository.markOutboundFailedByExternalId(externalId);
+    }
 
     /**
      * Timestamp is signed with the body so a captured request can't be replayed

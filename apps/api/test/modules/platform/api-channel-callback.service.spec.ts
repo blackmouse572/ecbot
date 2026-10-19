@@ -35,12 +35,28 @@ function makeService() {
         decryptToken: (v: string) => (v === 'ENCRYPTED' ? SIGNING_SECRET : v),
     };
     const egress = { fetch: jest.fn() };
+    const messageRepository = {
+        markOutboundFailedByExternalId: jest.fn().mockResolvedValue(undefined),
+    };
     const service = new ApiChannelCallbackService(
         accountService as any,
-        egress as any
+        egress as any,
+        messageRepository as any
     );
-    return { service, accountService, egress };
+    return { service, accountService, egress, messageRepository };
 }
+
+describe('ApiChannelCallbackService.markFailed', () => {
+    it('marks the outbound message with that externalId as failed', async () => {
+        const { service, messageRepository } = makeService();
+
+        await service.markFailed('ext-1');
+
+        expect(
+            messageRepository.markOutboundFailedByExternalId
+        ).toHaveBeenCalledWith('ext-1');
+    });
+});
 
 describe('ApiChannelCallbackService.deliver', () => {
     it('throws when the account has no callback URL configured', async () => {

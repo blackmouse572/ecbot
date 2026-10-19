@@ -171,6 +171,73 @@ describe("AIChatCard for a customer", () => {
   });
 });
 
+// #257: a staff reply in the widget looked exactly like the agent's.
+describe("AIChatCard staff reply", () => {
+  it("draws a staff reply in its own bubble, labelled as staff", () => {
+    chat.status = "ready";
+    chat.messages = [
+      {
+        id: "b1",
+        role: "assistant",
+        parts: [{ type: "text", text: "Agent here" }],
+      },
+      {
+        id: "o1",
+        role: "assistant",
+        metadata: { authorType: "OPERATOR" },
+        parts: [{ type: "text", text: "Staff here" }],
+      },
+    ];
+    render(
+      <TooltipProvider>
+        <AIChatCard
+          chatbotId="bot-1"
+          transport={transport}
+          audience="customer"
+        />
+      </TooltipProvider>,
+    );
+    const bubble = (text: string) =>
+      screen.getByText(text).closest(".chat-bubble");
+    expect(bubble("Staff here")).toHaveClass("chat-bubble--operator");
+    expect(bubble("Agent here")).toHaveClass("chat-bubble--bot");
+    expect(screen.getAllByText("Staff")).toHaveLength(1);
+    chat.messages = [];
+  });
+});
+
+// #257: the greeting was small grey text in the header.
+describe("AIChatCard greeting", () => {
+  it("shows the greeting as the agent's first message", () => {
+    chat.status = "ready";
+    chat.messages = [
+      {
+        id: "u1",
+        role: "user",
+        parts: [{ type: "text", text: "Hi" }],
+      },
+    ];
+    render(
+      <TooltipProvider>
+        <AIChatCard
+          chatbotId="bot-1"
+          transport={transport}
+          heading="Shop Helper"
+          greeting="Xin chào! Mình có thể giúp gì cho bạn?"
+        />
+      </TooltipProvider>,
+    );
+    const greeting = screen
+      .getByText("Xin chào! Mình có thể giúp gì cho bạn?")
+      .closest(".chat-bubble");
+    expect(greeting).toHaveClass("chat-bubble--bot");
+    expect(greeting!.compareDocumentPosition(screen.getByText("Hi"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    chat.messages = [];
+  });
+});
+
 // #204: operators see every source that fed the answer, by name; customers
 // (the widget) never see uploaded files or text items.
 describe("AIChatCard sources", () => {

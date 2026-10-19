@@ -231,6 +231,7 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
                     this.logger.error(
                         `API channel callback blocked by egress guard for account ${accountId}, giving up: ${error}`
                     );
+                    await this.callbackService.markFailed(payload.externalId);
                     return;
                 }
                 this.logger.warn(
@@ -244,6 +245,7 @@ export class ApiChannelPlatformAdapter extends PlatformAdapter {
         this.logger.error(
             `API channel callback exhausted all ${API_CHANNEL_CALLBACK_MAX_ATTEMPTS} attempts for account ${accountId}, externalId ${payload.externalId} — giving up`
         );
+        await this.callbackService.markFailed(payload.externalId);
     }
 
     /** `degrade()` has already collapsed richer content by the time we get here. */

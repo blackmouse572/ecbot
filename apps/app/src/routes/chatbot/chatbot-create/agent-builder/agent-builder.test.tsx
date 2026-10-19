@@ -88,6 +88,9 @@ vi.mock("@/hooks/api", () => ({
   useUnlinkChatbotAccount: () => ({ mutateAsync: unlinkChatbotAccount, isPending: false }),
   useProvisionWebsiteWidget: () => ({ mutateAsync: provisionWebsiteWidget, isPending: false }),
 }));
+vi.mock("@/hooks/use-workspace-params", () => ({
+  useWorkspaceParams: () => ({ workspaceSlug: "ws" }),
+}));
 vi.mock("@/hooks/use-oauth-login", () => ({
   useOAuthLogin: () => ({ handleLinkClick: oAuthLoginClick }),
 }));
@@ -218,6 +221,8 @@ describe("AgentBuilder", () => {
 
       expect(activate).toHaveBeenCalledWith({ id: "bot-1", active: true });
       await screen.findByText("agentBuilder.ui.finished");
+      // No channel was connected, so the live agent offers one.
+      expect(screen.getByRole("link", { name: "actions.connectChannel" })).toHaveAttribute("href", "/ws/accounts/create");
       expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
       // The rest of the questions stay open: answers keep saving to the live agent.
       expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
