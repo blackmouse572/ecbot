@@ -15,7 +15,7 @@ export const PreferenceGeneralSection = () => {
           <Text>{t("preferences.general.description")}</Text>
         </div>
       </div>
-      <div className="grid grid-cols-[1fr_minmax(200px,300px)] items-center px-6 py-4">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_minmax(200px,300px)] sm:items-center px-6 py-4">
         <Text size="small" leading="compact" weight="plus">
           {t("preferences.general.fields.language")}
         </Text>
@@ -25,7 +25,7 @@ export const PreferenceGeneralSection = () => {
         <Text size="small" leading="compact" weight="plus">
           {t("preferences.general.fields.theme")}
         </Text>
-        <div className="flex justify-end">
+        <div className="flex sm:justify-end">
           <ThemeSelect />
         </div>
       </div>
@@ -69,11 +69,11 @@ export const ThemeSelect = () => {
     <RadioGroup.Root
       onValueChange={handleThemeChange}
       defaultValue={theme}
-      className="flex gap-x-4"
+      className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row"
     >
       <RadioGroup.Item
         value="light"
-        className="w-[200px] p-2 border border-ui-border-strong rounded-sm aria-checked:border-ui-border-interactive bg-[#f8f8f8] space-y-2"
+        className="w-full sm:w-[200px] p-2 border border-ui-border-strong rounded-sm aria-checked:border-ui-border-interactive bg-[#f8f8f8] space-y-2"
       >
         <div className="space-y-2 px-2 py-1.5 rounded-md border w-full bg-neutral-100 shadow border-neutral-200">
           <div className="h-3 bg-neutral-400 rounded-md w-full" />
@@ -94,7 +94,7 @@ export const ThemeSelect = () => {
       </RadioGroup.Item>
       <RadioGroup.Item
         value="dark"
-        className="w-[200px] p-2 border border-ui-border-strong rounded-sm aria-checked:border-ui-border-interactive space-y-2 bg-[#1a1a1a]"
+        className="w-full sm:w-[200px] p-2 border border-ui-border-strong rounded-sm aria-checked:border-ui-border-interactive space-y-2 bg-[#1a1a1a]"
       >
         <div className="space-y-2 px-2 py-1.5 rounded-md  border w-full shadow border-neutral-600">
           <div className="h-3 bg-neutral-600  rounded-md w-full" />
@@ -115,7 +115,7 @@ export const ThemeSelect = () => {
       </RadioGroup.Item>
       <RadioGroup.Item
         value="system"
-        className="w-[200px] p-2 border border-ui-border-strong rounded-sm aria-checked:border-ui-border-interactive bg-ui-bg-base space-y-2"
+        className="w-full sm:w-[200px] p-2 border border-ui-border-strong rounded-sm aria-checked:border-ui-border-interactive bg-ui-bg-base space-y-2"
       >
         <div className="space-y-2 px-2 py-1.5 rounded-md border w-full bg-ui-bg-subtle shadow border-ui-border-base">
           <div className="h-3 bg-ui-fg-muted rounded-md w-full" />
