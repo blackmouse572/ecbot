@@ -2215,6 +2215,14 @@ export type AccountListResponseDto = {
      */
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
     /**
+     * Set while sends on this channel keep failing; null once one goes through
+     */
+    sendFailingSince?: string | null;
+    /**
+     * The platform error from the last failing send
+     */
+    lastSendError?: string | null;
+    /**
      * Which platform this channel belongs to
      */
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS';
@@ -2293,6 +2301,14 @@ export type AccountGetDetailResponseDto = {
      * BLOCKED means the platform token stopped working
      */
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+    /**
+     * Set while sends on this channel keep failing; null once one goes through
+     */
+    sendFailingSince?: string | null;
+    /**
+     * The platform error from the last failing send
+     */
+    lastSendError?: string | null;
     /**
      * Which platform this channel belongs to
      */
@@ -5215,6 +5231,14 @@ export type AccountGetResponseDto = {
      * BLOCKED means the platform token stopped working
      */
     status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+    /**
+     * Set while sends on this channel keep failing; null once one goes through
+     */
+    sendFailingSince?: string | null;
+    /**
+     * The platform error from the last failing send
+     */
+    lastSendError?: string | null;
     /**
      * Which platform this channel belongs to
      */

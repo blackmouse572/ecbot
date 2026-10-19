@@ -23,11 +23,24 @@ const STATUS_META: Record<AccountStatus, { color: BadgeColor; label: string }> =
     },
   };
 
-export type AccountStatusCellProps = { status: AccountStatus };
+const FAILING_META = {
+  color: "orange" as BadgeColor,
+  label: i18n.t("accounts.details.statuses.failing.label"),
+};
+
+export type AccountStatusCellProps = {
+  status: AccountStatus;
+  /** The channel is connected but its sends keep failing. */
+  failing?: boolean;
+};
 
 /** Status pill for an account row. */
-export const AccountStatusCell = ({ status }: AccountStatusCellProps) => {
-  const { color, label } = STATUS_META[status];
+export const AccountStatusCell = ({
+  status,
+  failing,
+}: AccountStatusCellProps) => {
+  const { color, label } =
+    failing && status === "ACTIVE" ? FAILING_META : STATUS_META[status];
 
   return <StatusBadge color={color}>{label}</StatusBadge>;
 };

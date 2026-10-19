@@ -25,7 +25,12 @@ export const AccountSummarySection = ({ item }: AccountSummarySectionProps) => {
         />
         <SectionRow
           title={t("fields.status")}
-          value={<AccountStatusCell status={item.status} />}
+          value={
+            <AccountStatusCell
+              status={item.status}
+              failing={!!item.sendFailingSince}
+            />
+          }
         />
         <SectionRow
           title={t("fields.createdAt")}

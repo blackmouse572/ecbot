@@ -121,3 +121,8 @@ export interface PlatformOAuthCapability {
 }
 
 export const PLATFORM_ADAPTER = Symbol('PLATFORM_ADAPTER');
+
+/** Runs one platform send: resends what is safe to resend, tracks channel health. */
+export interface ISendGuard {
+    run<T>(account: AccountEntity, send: () => Promise<T>): Promise<T>;
+}

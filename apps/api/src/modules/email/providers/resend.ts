@@ -295,9 +295,9 @@ export class ResendProvider implements IEmailService {
 
     async sendAccountBlocked(
         { name, email }: EmailSendDto,
-        { accountName, reconnectUrl, language }: EmailAccountBlockedDto
+        { accountName, reconnectUrl, language, reason }: EmailAccountBlockedDto
     ): Promise<boolean> {
-        const copy = accountBlockedEmailCopy(language, this.homeName);
+        const copy = accountBlockedEmailCopy(language, this.homeName, reason);
         return this.sendEmailTemplate(
             email,
             EmailSubject.AccountBlocked,
@@ -309,6 +309,7 @@ export class ResendProvider implements IEmailService {
                 homeUrl: this.homeUrl,
                 homeName: this.homeName,
                 language,
+                reason,
             },
             copy.subject(accountName)
         );

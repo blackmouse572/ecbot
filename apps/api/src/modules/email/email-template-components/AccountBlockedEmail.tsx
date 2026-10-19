@@ -2,7 +2,10 @@ import { Text } from '@react-email/components';
 import React from 'react';
 import EmailButton from './EmailButton';
 import EmailLayout from './EmailLayout';
-import { accountBlockedEmailCopy } from './account-blocked-email.copy';
+import {
+    AccountBlockedReason,
+    accountBlockedEmailCopy,
+} from './account-blocked-email.copy';
 import { EMAIL_BODY } from './email-text.styles';
 
 interface AccountBlockedEmailProps {
@@ -13,9 +16,10 @@ interface AccountBlockedEmailProps {
     homeUrl: string;
     homeName: string;
     language?: string;
+    reason?: AccountBlockedReason;
 }
 
-/** A channel's token could not be refreshed: ask the owner to reconnect it. */
+/** A channel stopped working (token refresh or sends failing): ask the owner to act. */
 const AccountBlockedEmail: React.FC<AccountBlockedEmailProps> = ({
     name,
     accountName,
@@ -24,8 +28,9 @@ const AccountBlockedEmail: React.FC<AccountBlockedEmailProps> = ({
     homeUrl,
     homeName,
     language,
+    reason,
 }) => {
-    const copy = accountBlockedEmailCopy(language, homeName);
+    const copy = accountBlockedEmailCopy(language, homeName, reason);
 
     return (
         <EmailLayout

@@ -73,6 +73,29 @@ export class AccountGetResponseDto extends DatabaseDto {
     status: string;
 
     @ApiProperty({
+        description:
+            'Set while sends on this channel keep failing; null once one goes through',
+        required: false,
+        nullable: true,
+        type: Date,
+    })
+    @IsOptional()
+    @Expose()
+    sendFailingSince?: Date | null;
+
+    @ApiProperty({
+        description: 'The platform error from the last failing send',
+        required: false,
+        nullable: true,
+        type: String,
+        example:
+            'Messenger POST failed (HTTP 400): Error validating access token',
+    })
+    @IsOptional()
+    @Expose()
+    lastSendError?: string | null;
+
+    @ApiProperty({
         description: 'Which platform this channel belongs to',
         example: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
         enum: ENUM_ACCOUNT_TYPE,

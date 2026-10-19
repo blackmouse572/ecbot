@@ -85,6 +85,16 @@ export class AccountEntity extends DatabaseEntityBase {
     @IsOptional()
     tokenExpiresAt?: Date;
 
+    // Set while the channel's sends keep failing (ChannelDeliveryService);
+    // cleared by the next send that goes through.
+    @Property({ type: 'timestamptz', nullable: true })
+    @IsOptional()
+    sendFailingSince?: Date | null;
+
+    @Property({ type: 'varchar', length: 500, nullable: true })
+    @IsOptional()
+    lastSendError?: string | null;
+
     // Parent account, for rows derived from a link (e.g. a Facebook page).
     @ManyToOne(() => AccountEntity, { nullable: true, lazy: true })
     @IsOptional()

@@ -40,15 +40,38 @@ export class AccountRepository extends DatabaseRepository<AccountEntity> {
     }
 
     // Accounts needing operator attention: blocked (suspended/banned/errored)
-    // connections. INACTIVE is a normal disconnected state, not an alert.
+    // connections, or ones whose sends keep failing. INACTIVE is a normal
+    // disconnected state, not an alert.
     async countNeedingAttentionByWorkspace(
         workspaceId: string
     ): Promise<number> {
         return this.getTotal({
             workspace: workspaceId,
-            status: ENUM_ACCOUNT_STATUS.BLOCKED,
+            $or: [
+                { status: ENUM_ACCOUNT_STATUS.BLOCKED },
+                { sendFailingSince: { $ne: null } },
+            ],
             deletedAt: null,
         });
+    }
+
+    /** Record a failing channel; the start time is kept if already failing. */
+    async markSendFailing(
+        id: string,
+        since: Date,
+        lastSendError: string
+    ): Promise<void> {
+        await this.updateRaw(
+            { id },
+            { sendFailingSince: since, lastSendError }
+        );
+    }
+
+    async clearSendFailing(id: string): Promise<void> {
+        await this.updateRaw(
+            { id },
+            { sendFailingSince: null, lastSendError: null }
+        );
     }
 
     /**

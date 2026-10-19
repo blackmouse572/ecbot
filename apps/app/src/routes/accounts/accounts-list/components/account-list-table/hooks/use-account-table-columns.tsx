@@ -26,7 +26,12 @@ export const useAccountTableColumns = () => {
       columnHelper.display({
         id: "status",
         header: () => headerLabel(t("fields.status")),
-        cell: ({ row }) => <AccountStatusCell status={row.original.status} />,
+        cell: ({ row }) => (
+          <AccountStatusCell
+            status={row.original.status}
+            failing={!!row.original.sendFailingSince}
+          />
+        ),
       }),
       columnHelper.display({
         id: "type",
@@ -38,7 +43,9 @@ export const useAccountTableColumns = () => {
       columnHelper.display({
         id: "chatbot",
         header: () => headerLabel(t("chatbot.title")),
-        cell: ({ row }) => <AccountChatbotCell chatbot={row.original.chatbot} />,
+        cell: ({ row }) => (
+          <AccountChatbotCell chatbot={row.original.chatbot} />
+        ),
       }),
       columnHelper.display({
         id: "updatedAt",

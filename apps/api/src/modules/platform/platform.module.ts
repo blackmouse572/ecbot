@@ -41,6 +41,10 @@ import { WidgetSessionService } from './services/widget-session.service';
 import { TurnstileModule } from '@app/common/turnstile/turnstile.module';
 import { ConversationRepositoryModule } from '@app/modules/conversation/repository/conversation.repository.module';
 import { AgentBuilderModule } from '@app/modules/agent-builder/agent-builder.module';
+import { NotificationModule } from '@app/modules/notification/notification.module';
+import { WorkspaceRepositoryModule } from '@app/modules/workspace/repository/workspace.repository.module';
+import { ChannelAlertService } from './services/channel-alert.service';
+import { ChannelDeliveryService } from './services/channel-delivery.service';
 import { HandoffIntentService } from './services/handoff-intent.service';
 
 const ADAPTERS = [
@@ -71,6 +75,8 @@ const ADAPTERS = [
         TurnstileModule,
         ConversationRepositoryModule,
         AgentBuilderModule,
+        NotificationModule,
+        WorkspaceRepositoryModule,
     ],
     providers: [
         ...ADAPTERS,
@@ -83,6 +89,8 @@ const ADAPTERS = [
         InboundInboxService,
         ApiChannelCallbackService,
         ChannelRateLimitService,
+        ChannelAlertService,
+        ChannelDeliveryService,
         WidgetSessionService,
         WidgetChatService,
         InboundReconciliationScheduler,

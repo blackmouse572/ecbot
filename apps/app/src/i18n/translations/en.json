@@ -745,6 +745,11 @@
           "label": "Blocked",
           "title": "Blocked",
           "description": "The platform has blocked this channel. You can delete it, or mark it as resolved if you think this is a mistake."
+        },
+        "failing": {
+          "label": "Failing",
+          "title": "Replies are failing",
+          "description": "Replies on this channel keep failing to send, so customers are not getting answers. If the page password or permissions changed, reconnect the channel. This clears by itself once a reply goes through."
         }
       },
       "types": {

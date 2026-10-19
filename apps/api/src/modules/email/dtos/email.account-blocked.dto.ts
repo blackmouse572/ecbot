@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AccountBlockedReason } from '../email-template-components/account-blocked-email.copy';
 
 export class EmailAccountBlockedDto {
     @ApiProperty({
@@ -20,4 +21,12 @@ export class EmailAccountBlockedDto {
         description: 'Language to write the email in; English otherwise',
     })
     language?: string;
+
+    @ApiProperty({
+        required: false,
+        enum: ['refresh_failed', 'auth_failed', 'send_failing'],
+        description:
+            'Why the channel needs attention; refresh_failed otherwise',
+    })
+    reason?: AccountBlockedReason;
 }
