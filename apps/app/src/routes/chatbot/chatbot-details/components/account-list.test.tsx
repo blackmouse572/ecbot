@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -11,7 +11,10 @@ vi.mock("@/hooks/use-workspace-params", () => ({
 vi.mock("@/hooks/api/chatbot", () => ({
   useUnlinkChatbotAccount: () => ({ mutateAsync: vi.fn() }),
 }));
-vi.mock("./account-link-drawer", () => ({ AccountLinkDrawer: () => null }));
+vi.mock("./account-link-drawer", () => ({
+  AccountLinkDrawer: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div>link-drawer</div> : null,
+}));
 
 import { AccountList } from "./account-list";
 
@@ -26,5 +29,17 @@ describe("AccountList", () => {
     expect(
       screen.getByRole("link", { name: "actions.connectChannel" }),
     ).toHaveAttribute("href", "/ws/accounts/create");
+  });
+
+  it("lets the user link an already connected account when the agent has none", () => {
+    render(
+      <MemoryRouter>
+        <AccountList item={{ id: "bot-1" } as never} accounts={[]} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /actions.linkAccount/ }));
+
+    expect(screen.getByText("link-drawer")).toBeInTheDocument();
   });
 });

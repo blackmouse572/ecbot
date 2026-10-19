@@ -120,18 +120,15 @@ export function AccountList({ item, accounts }: AccountListProps) {
             {t("chatbot.details.general.channels")}
           </Text>
           <div className="flex shrink-0 items-center gap-x-1">
-            {/* The empty state carries its own Connect button. */}
-            {accounts.length > 0 && (
-              <Button
-                size="small"
-                variant="transparent"
-                className="whitespace-nowrap"
-                onClick={() => setDrawerOpen(true)}
-              >
-                <PlusMini />
-                {t("actions.linkAccount")}
-              </Button>
-            )}
+            <Button
+              size="small"
+              variant="transparent"
+              className="whitespace-nowrap"
+              onClick={() => setDrawerOpen(true)}
+            >
+              <PlusMini />
+              {t("actions.linkAccount")}
+            </Button>
             <Link to={accountsHref} state={{ prev: pathname }}>
               <IconButton
                 variant="transparent"
