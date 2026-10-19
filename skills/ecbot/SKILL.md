@@ -31,6 +31,10 @@ Ecbot runs AI chatbots ("agents") that reply to a business's customers on Messen
 
 Workflows do not go in `extraInstructions`. See the `ecbot-agent-builder` skill to set up or clean up an agent, and `ecbot-skill-builder` to write a workflow as a Skill.
 
+## Reading the numbers
+
+The `get_*_analytics` tools return the dashboard tabs for the last `7d`, `30d` or `90d` (default `30d`), each compared with the period before. They share 20 calls a minute per key, so fetch each tab once per question and reuse it. Pass the user's `timezone` when it is not Vietnam.
+
 ## Adding knowledge to an agent
 
 A chatbot only answers from knowledge items linked to it, not from every item in a knowledge base.

@@ -1,0 +1,5 @@
+{
+    "error": {
+        "rateLimited": "Too many analytics requests for this key. Wait a minute and try again."
+    }
+}

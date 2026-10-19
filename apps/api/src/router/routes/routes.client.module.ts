@@ -1,3 +1,5 @@
+import { AnalyticsClientController } from '@app/modules/analytics/controllers/analytics.client.controller';
+import { AnalyticsModule } from '@app/modules/analytics/analytics.module';
 import { ClientCredentialModule } from '@app/modules/client-credential/client-credential.module';
 import { ClientCredentialClientController } from '@app/modules/client-credential/controllers/client-credential.client.controller';
 import { PlatformModule } from '@app/modules/platform/platform.module';
@@ -45,6 +47,7 @@ import { Module } from '@nestjs/common';
         ChatbotToolClientController,
         SkillClientController,
         ChatbotSkillClientController,
+        AnalyticsClientController,
     ],
     providers: [],
     exports: [],
@@ -60,6 +63,7 @@ import { Module } from '@nestjs/common';
         CustomerModule,
         ToolModule,
         SkillModule,
+        AnalyticsModule,
         // ClientCredentialPolicyGuard checks the credential creator's roles.
         WorkSpaceModule,
         RoleModule,
