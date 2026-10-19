@@ -43,7 +43,12 @@ const AgentRow = ({ chatbot, accountId, onLinked }: RowProps) => {
         onLinked();
         return;
       }
-      toast.error(t("chatbot.details.accountLinkFailed"));
+      const skipped = result?.skipped?.find((x) => x.id === accountId);
+      toast.error(
+        skipped?.name
+          ? t("agentBuilder.ui.channelInUse", { name: skipped.name })
+          : t("chatbot.details.accountLinkFailed"),
+      );
     } catch {
       toast.error(t("chatbot.details.accountLinkFailed"));
     }
@@ -103,9 +108,19 @@ export const AgentLinkDrawer = ({ isOpen, onClose, accountId }: Props) => {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
+    refetch,
   } = useInfiniteChatbotList(search);
   const available = chatbots.filter((c) => c.status !== "archived");
   const observer = useRef<IntersectionObserver | null>(null);
+
+  // The drawer stays mounted when closed, so clear the query for the next open.
+  useEffect(() => {
+    if (!isOpen) {
+      setInput("");
+      setSearch("");
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const id = setTimeout(() => setSearch(input.trim()), SEARCH_DEBOUNCE_MS);
@@ -147,6 +162,19 @@ export const AgentLinkDrawer = ({ isOpen, onClose, accountId }: Props) => {
           {isLoading ? (
             <div className="flex flex-col gap-2">
               <RowSkeletons count={5} />
+            </div>
+          ) : isError ? (
+            <div className="flex flex-col items-center gap-y-2 py-6">
+              <Text size="small" className="text-ui-fg-muted text-center">
+                {t("accounts.details.noChatbot.loadFailed")}
+              </Text>
+              <Button
+                size="small"
+                variant="secondary"
+                onClick={() => refetch()}
+              >
+                {t("actions.tryAgain")}
+              </Button>
             </div>
           ) : available.length === 0 && !hasNextPage ? (
             <Text size="small" className="text-ui-fg-muted text-center py-6">

@@ -947,7 +947,8 @@
         "action": "Tạo agent",
         "linkExisting": "Liên kết agent có sẵn",
         "drawerTitle": "Chọn agent",
-        "noneAvailable": "Chưa có agent nào"
+        "noneAvailable": "Chưa có agent nào",
+        "loadFailed": "Không tải được danh sách agent. Hãy thử lại."
       }
     },
     "imports": {

@@ -924,7 +924,8 @@
         "action": "Create agent",
         "linkExisting": "Link existing agent",
         "drawerTitle": "Choose an agent",
-        "noneAvailable": "No agents available"
+        "noneAvailable": "No agents available",
+        "loadFailed": "Could not load agents. Try again."
       }
     },
     "imports": {
