@@ -6,6 +6,11 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { TtlCache } from 'src/common/utils/ttl-cache.util';
+import {
+    API_KEY_CACHE_MAX_ENTRIES,
+    API_KEY_CACHE_TTL_MS,
+} from 'src/modules/api-key/constants/api-key.constant';
 import { HelperDateService } from 'src/common/helper/services/helper.date.service';
 import { IRequestApp } from 'src/common/request/interfaces/request.interface';
 import { ENUM_API_KEY_STATUS_CODE_ERROR } from 'src/modules/api-key/enums/api-key.status-code.enum';
@@ -15,6 +20,10 @@ import { ApiKeyService } from 'src/modules/api-key/services/api-key.service';
 @Injectable()
 export class ApiKeyXApiKeyGuard implements CanActivate {
     private readonly header: string;
+    private readonly cache = new TtlCache<ApiKeyEntity>(
+        API_KEY_CACHE_TTL_MS,
+        API_KEY_CACHE_MAX_ENTRIES
+    );
 
     constructor(
         private readonly configService: ConfigService,
@@ -46,21 +55,12 @@ export class ApiKeyXApiKeyGuard implements CanActivate {
 
         const key = xApiKeyArr[0];
         const secret = xApiKeyArr[1];
-        const today = this.helperDateService.create();
-        const apiKey: ApiKeyEntity =
-            await this.apiKeyService.findOneByActiveKey(key);
+        const hashed = await this.apiKeyService.createHashApiKey(key, secret);
+        const cached = this.cache.get(hashed);
+        const apiKey = cached ?? (await this.verify(hashed, key));
 
-        if (!apiKey) {
-            throw new ForbiddenException({
-                statusCode: ENUM_API_KEY_STATUS_CODE_ERROR.X_API_KEY_NOT_FOUND,
-                message: 'apiKey.error.xApiKey.notFound',
-            });
-        } else if (!apiKey.isActive) {
-            throw new ForbiddenException({
-                statusCode: ENUM_API_KEY_STATUS_CODE_ERROR.X_API_KEY_INACTIVE,
-                message: 'apiKey.error.xApiKey.inactive',
-            });
-        } else if (apiKey.startDate && apiKey.endDate) {
+        const today = this.helperDateService.create();
+        if (apiKey.startDate && apiKey.endDate) {
             if (today > apiKey.endDate) {
                 throw new ForbiddenException({
                     statusCode:
@@ -76,7 +76,35 @@ export class ApiKeyXApiKeyGuard implements CanActivate {
             }
         }
 
-        const hashed = await this.apiKeyService.createHashApiKey(key, secret);
+        // Cached after the date check passes, so an expired key is never kept,
+        // and only on a fresh read, so the entry still expires under load.
+        if (!cached) this.cache.set(hashed, apiKey);
+        request.apiKey = {
+            id: apiKey.id,
+            name: apiKey.name,
+            key: apiKey.key,
+            type: apiKey.type,
+        };
+
+        return true;
+    }
+
+    private async verify(hashed: string, key: string): Promise<ApiKeyEntity> {
+        const apiKey: ApiKeyEntity =
+            await this.apiKeyService.findOneByActiveKey(key);
+
+        if (!apiKey) {
+            throw new ForbiddenException({
+                statusCode: ENUM_API_KEY_STATUS_CODE_ERROR.X_API_KEY_NOT_FOUND,
+                message: 'apiKey.error.xApiKey.notFound',
+            });
+        } else if (!apiKey.isActive) {
+            throw new ForbiddenException({
+                statusCode: ENUM_API_KEY_STATUS_CODE_ERROR.X_API_KEY_INACTIVE,
+                message: 'apiKey.error.xApiKey.inactive',
+            });
+        }
+
         const validateApiKey: boolean =
             await this.apiKeyService.validateHashApiKey(hashed, apiKey.hash);
         if (!validateApiKey) {
@@ -86,13 +114,6 @@ export class ApiKeyXApiKeyGuard implements CanActivate {
             });
         }
 
-        request.apiKey = {
-            id: apiKey.id,
-            name: apiKey.name,
-            key: apiKey.key,
-            type: apiKey.type,
-        };
-
-        return true;
+        return apiKey;
     }
 }

@@ -807,7 +807,7 @@ export class UserService {
                 photo: null,
                 avatar: this.helperAvatarService.generateUserAvatar(user.id),
                 gender: null,
-                // Not a bcrypt hash, so no password ever matches it; the
+                // Not a password hash, so no password ever matches it; the
                 // columns are not nullable.
                 password: `!deleted:${randomBytes(32).toString('hex')}`,
                 salt: randomBytes(16).toString('hex'),

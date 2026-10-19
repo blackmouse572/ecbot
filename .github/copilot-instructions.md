@@ -738,7 +738,7 @@ pnpm format                       # Format code with Prettier
 4. **Enable CORS properly** - Configure allowed origins
 5. **Use helmet** - Already configured in middleware
 6. **Rate limiting** - Use @nestjs/throttler (already configured)
-7. **Hash passwords** - Use bcryptjs (never store plain text)
+7. **Hash passwords** - Use `HelperHashService.passwordHash` (argon2id, never store plain text)
 8. **Validate JWT tokens** - Always use `@AuthJwtAccessProtected()`
 9. **Check permissions** - Use CASL abilities and RBAC
 10. **Sanitize outputs** - Use serialization DTOs

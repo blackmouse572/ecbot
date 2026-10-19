@@ -1,4 +1,8 @@
-import { USER_GUARD_EMAIL_VERIFIED_META_KEY } from '@app/modules/user/constants/user.constant';
+import {
+    USER_GUARD_CACHE_MAX_ENTRIES,
+    USER_GUARD_CACHE_TTL_MS,
+    USER_GUARD_EMAIL_VERIFIED_META_KEY,
+} from '@app/modules/user/constants/user.constant';
 import {
     CanActivate,
     ExecutionContext,
@@ -7,14 +11,22 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IRequestApp } from 'src/common/request/interfaces/request.interface';
+import { TtlCache } from 'src/common/utils/ttl-cache.util';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { ENUM_ROLE_STATUS_CODE_ERROR } from 'src/modules/role/enums/role.status-code.enum';
 import { ENUM_USER_STATUS } from 'src/modules/user/enums/user.enum';
 import { ENUM_USER_STATUS_CODE_ERROR } from 'src/modules/user/enums/user.status-code.enum';
+import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { UserService } from 'src/modules/user/services/user.service';
 
 @Injectable()
 export class UserGuard implements CanActivate {
+    // Read-only snapshot for the guards that follow; never persisted.
+    private readonly cache = new TtlCache<UserEntity>(
+        USER_GUARD_CACHE_TTL_MS,
+        USER_GUARD_CACHE_MAX_ENTRIES
+    );
+
     constructor(
         private readonly reflector: Reflector,
         private readonly userService: UserService,
@@ -31,8 +43,10 @@ export class UserGuard implements CanActivate {
         const request = context.switchToHttp().getRequest<IRequestApp>();
         const { user } = request.user;
 
+        const cached = this.cache.get(user);
         const userWithRole =
-            await this.userService.findOneWithRoleAndCountryById(user);
+            cached ??
+            (await this.userService.findOneWithRoleAndCountryById(user));
 
         if (!userWithRole) {
             throw new ForbiddenException({
@@ -68,6 +82,9 @@ export class UserGuard implements CanActivate {
             });
         }
 
+        // Only a fresh read starts the clock, so a busy user is still
+        // reloaded at least every USER_GUARD_CACHE_TTL_MS.
+        if (!cached) this.cache.set(user, userWithRole);
         request.__user = userWithRole;
 
         return true;

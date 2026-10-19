@@ -56,3 +56,11 @@ export const WORKSPACE_DEFAULT_MEMBER_ROLES: RoleCreateRequestDto[] = [
         type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
     },
 ];
+
+/**
+ * The member guard remembers a confirmed membership per instance for this
+ * long. Removing a member takes up to this long to lock them out everywhere;
+ * policy checks for non-owners still read the member's role fresh.
+ */
+export const WORKSPACE_MEMBER_CACHE_TTL_MS = 30_000;
+export const WORKSPACE_MEMBER_CACHE_MAX_ENTRIES = 5_000;

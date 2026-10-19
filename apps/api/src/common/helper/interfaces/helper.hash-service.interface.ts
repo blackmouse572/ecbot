@@ -1,11 +1,11 @@
 export interface IHelperHashService {
     randomSalt(length: number): string;
-    bcrypt(passwordString: string, salt: string): Promise<string>;
-    bcryptCompare(
+    passwordHash(passwordString: string): Promise<string>;
+    passwordVerify(
         passwordString: string,
         passwordHashed: string
     ): Promise<boolean>;
-    bcryptGetCost(passwordHashed: string): number;
+    passwordNeedsRehash(passwordHashed: string): boolean;
     sha256(string: string): string;
     sha256Compare(hashOne: string, hashTwo: string): boolean;
 }
