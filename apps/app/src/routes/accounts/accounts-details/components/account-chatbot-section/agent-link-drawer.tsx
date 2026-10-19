@@ -1,8 +1,15 @@
-import { useChatbots, useLinkChatbotAccount } from "@/hooks/api/chatbot";
-import { Avatar, Button, Drawer, Text, toast } from "@medusajs/ui";
+import {
+  useInfiniteChatbotList,
+  useLinkChatbotAccount,
+} from "@/hooks/api/chatbot";
+import { CHATBOT_TYPE_CONFIG } from "@/routes/chatbot/constants";
+import { ChatbotNameCell } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-name-cell";
+import { ChatbotTypeBadge } from "@/routes/chatbot/chatbot-list/components/chatbot-list-table/chatbot-type-badge";
+import { MagnifyingGlass } from "@medusajs/icons";
+import { Button, Drawer, Input, Text, toast } from "@medusajs/ui";
 import type { ChatbotLinkAccountResponseDto } from "@repo/client";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getAvatarFallback } from "@/components/utils/avatar-fallback";
 
 type Props = {
   isOpen: boolean;
@@ -11,7 +18,7 @@ type Props = {
 };
 
 type RowProps = {
-  chatbot: { id: string; name: string; avatar?: string };
+  chatbot: { id: string; name: string; avatar?: string; type?: string };
   accountId: string;
   onLinked: () => void;
 };
@@ -20,6 +27,8 @@ type RowProps = {
 const AgentRow = ({ chatbot, accountId, onLinked }: RowProps) => {
   const { t } = useTranslation();
   const link = useLinkChatbotAccount(chatbot.id);
+  const config =
+    CHATBOT_TYPE_CONFIG[chatbot.type as keyof typeof CHATBOT_TYPE_CONFIG];
 
   const handleAdd = async () => {
     try {
@@ -41,15 +50,13 @@ const AgentRow = ({ chatbot, accountId, onLinked }: RowProps) => {
 
   return (
     <div className="flex items-center justify-between rounded-lg border bg-ui-bg-field border-ui-border-base p-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <Avatar
+      <div className="flex min-w-0 flex-col gap-y-1">
+        <ChatbotNameCell
           size="small"
-          src={chatbot.avatar}
-          fallback={getAvatarFallback(chatbot.name)}
+          name={chatbot.name}
+          avatar={chatbot.avatar}
         />
-        <Text size="small" weight="plus" className="truncate">
-          {chatbot.name}
-        </Text>
+        {config && <ChatbotTypeBadge config={config} size="xsmall" clamp />}
       </div>
       <Button
         size="small"
@@ -63,11 +70,36 @@ const AgentRow = ({ chatbot, accountId, onLinked }: RowProps) => {
   );
 };
 
+const SEARCH_DEBOUNCE_MS = 250;
+
 /** Pick one of the workspace's agents to answer on this channel. */
 export const AgentLinkDrawer = ({ isOpen, onClose, accountId }: Props) => {
   const { t } = useTranslation();
-  const { chatbots } = useChatbots({ perPage: 100, page: 1 });
-  const available = (chatbots ?? []).filter((c) => c.status !== "archived");
+  const [input, setInput] = useState("");
+  const [search, setSearch] = useState("");
+  const { chatbots, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteChatbotList(search);
+  const available = chatbots.filter((c) => c.status !== "archived");
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    const id = setTimeout(() => setSearch(input.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [input]);
+
+  // The sentinel sits under the last row; reaching it loads the next page.
+  // A callback ref, because the drawer content mounts only once it is open.
+  const sentinel = useCallback(
+    (node: HTMLDivElement | null) => {
+      observer.current?.disconnect();
+      if (!node || !hasNextPage || isFetchingNextPage) return;
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0]?.isIntersecting) fetchNextPage();
+      });
+      observer.current.observe(node);
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
+  );
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -77,20 +109,32 @@ export const AgentLinkDrawer = ({ isOpen, onClose, accountId }: Props) => {
             {t("accounts.details.noChatbot.drawerTitle")}
           </Drawer.Title>
         </Drawer.Header>
-        <Drawer.Body className="flex flex-col gap-2">
-          {available.length === 0 ? (
+        <Drawer.Body className="flex flex-col gap-4 overflow-y-auto">
+          <div className="relative">
+            <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-ui-fg-muted" />
+            <Input
+              className="pl-9"
+              placeholder={t("app.search.label")}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+            />
+          </div>
+          {available.length === 0 && !hasNextPage ? (
             <Text size="small" className="text-ui-fg-muted text-center py-6">
               {t("accounts.details.noChatbot.noneAvailable")}
             </Text>
           ) : (
-            available.map((chatbot) => (
-              <AgentRow
-                key={chatbot.id}
-                chatbot={chatbot}
-                accountId={accountId}
-                onLinked={onClose}
-              />
-            ))
+            <div className="flex flex-col gap-2">
+              {available.map((chatbot) => (
+                <AgentRow
+                  key={chatbot.id}
+                  chatbot={chatbot}
+                  accountId={accountId}
+                  onLinked={onClose}
+                />
+              ))}
+              <div ref={sentinel} className="h-px" />
+            </div>
           )}
         </Drawer.Body>
         <Drawer.Footer>
