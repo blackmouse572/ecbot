@@ -10,15 +10,28 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 WORKDIR /app
 
+# uv.lock carries PyPI's CUDA build of torch: about 4GB of nvidia and triton
+# packages that Cloud Run (CPU only) never uses, and that slow every cold
+# start's image pull. Skip them and install the same torch version from
+# PyTorch's CPU index. tests/test_dockerfile_cpu_torch.py keeps both ARGs in
+# sync with uv.lock.
+ARG TORCH_VERSION=2.14.0
+ARG SKIP_CUDA="cuda-bindings cuda-pathfinder cuda-toolkit nvidia-cublas nvidia-cuda-cupti nvidia-cuda-nvrtc nvidia-cuda-runtime nvidia-cudnn-cu13 nvidia-cufft nvidia-cufile nvidia-curand nvidia-cusolver nvidia-cusparse nvidia-cusparselt-cu13 nvidia-nccl-cu13 nvidia-nvjitlink nvidia-nvshmem-cu13 nvidia-nvtx torch triton"
+
 # 1) Install deps only (cached layer) — project source not needed yet.
 COPY pyproject.toml uv.lock README.md ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
+    uv sync --frozen --no-dev --no-install-project \
+        $(printf -- '--no-install-package %s ' $SKIP_CUDA) \
+    && uv pip install --python /app/.venv/bin/python --no-deps --index-url https://download.pytorch.org/whl/cpu \
+        "torch==${TORCH_VERSION}"
 
 # 2) Copy source and install the eccho_ai package (fast; deps already cached).
+# --inexact keeps the CPU torch installed above.
 COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --inexact \
+        $(printf -- '--no-install-package %s ' $SKIP_CUDA)
 
 # Stage 2: runtime — slim image with just the venv + source
 FROM python:3.12-slim AS runtime
