@@ -1,7 +1,7 @@
 import { createProfile } from "@repo/agent-blueprint";
 import { describe, expect, it } from "vitest";
 import {
-  activationAnchor, builderReducer, currentStep, initialBuilderState, isComplete, isDraftReady, steps, type BuilderState,
+  activationAnchor, asksActivation, builderReducer, currentStep, initialBuilderState, isComplete, isDraftReady, steps, type BuilderState,
 } from "./builder-state";
 
 // Generic reducer-flow tests use "describe" so businessType starts
@@ -235,5 +235,20 @@ describe("activationAnchor", () => {
 
   it("is the last basic question for a personal assistant too", () => {
     expect(activationAnchor(createProfile("personal_scheduling", "en"))).toBe("facts.priorities");
+  });
+});
+
+describe("asksActivation", () => {
+  // The description can answer the key facts before the owner reaches them.
+  it("waits for every basic question, not only the last one", () => {
+    const s = builderReducer(initialBuilderState, {
+      type: "start", profile: createProfile("restaurant", "vi"), suggestion: null, source: "describe",
+      answered: ["businessType", "businessName", "facts.opening_hours", "facts.address"],
+    });
+    const drafted = builderReducer(s, { type: "draftCreated", chatbotId: "bot-1" });
+    expect(asksActivation(drafted)).toBe(false);
+    const basics = steps(drafted.profile!).filter((x) => ["agentName", "channels", "goals"].includes(x.question.id));
+    const done = basics.reduce((acc, x) => builderReducer(acc, { type: "skip", question: x.question }), drafted);
+    expect(asksActivation(done)).toBe(true);
   });
 });

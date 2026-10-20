@@ -97,7 +97,9 @@ export function activationAnchor(profile: AgentProfile): string {
 export function asksActivation(state: BuilderState): boolean {
   if (!state.profile || !state.chatbotId || state.source === "hydrate") return false;
   const anchor = activationAnchor(state.profile);
-  return state.answered.includes(anchor) && state.editing !== anchor;
+  // Every basic answered, since a description can answer the last one first (#256).
+  const basics = steps(state.profile).filter((s) => BASIC_GROUPS.includes(s.group.id));
+  return basics.every((s) => state.answered.includes(s.question.id)) && state.editing !== anchor;
 }
 
 /** The ask is shown and not answered yet: the next question waits. */
