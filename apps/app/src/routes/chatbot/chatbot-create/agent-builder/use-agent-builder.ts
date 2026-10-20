@@ -1,5 +1,5 @@
 import {
-  applySuggestion, createProfile, migrateProfile, type AgentProfile, type BusinessTypeId,
+  createProfile, describeStart, migrateProfile, type AgentProfile, type BusinessTypeId,
 } from "@repo/agent-blueprint";
 import type { ChatbotCreateRequestDto, ChatbotGetDetailResponseDto, ChatbotLinkAccountResponseDto } from "@repo/client";
 import { useCreateChatbot, useLinkChatbotAccount, useToggleChatbotActivate, useUpdateChatbot } from "@/hooks/api";
@@ -97,11 +97,14 @@ export function useAgentBuilder({
       ensurePrefillChannel?.() ?? Promise.resolve(undefined),
     ]);
     setStarting(false);
-    const profile = suggestion ? applySuggestion(suggestion, language) : null;
+    // What the description already answered is shown, not asked (#256).
+    const { profile, answered, understood } = describeStart(suggestion, description, language);
     dispatch({
       type: "start",
-      profile: profile ?? createProfile("ecommerce", language),
-      suggestion: profile ? suggestion : null,
+      profile,
+      suggestion: understood ? suggestion : null,
+      understood,
+      answered,
       source: "describe",
       description,
       prefillBusinessName: channel?.name ?? businessName,

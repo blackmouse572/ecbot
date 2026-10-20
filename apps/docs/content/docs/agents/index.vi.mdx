@@ -20,14 +20,20 @@ Trình tạo agent dựng một agent từ vài câu mô tả về shop của b�
 
 ## Trình tạo agent hỏi gì
 
-- **Về doanh nghiệp**: loại hình kinh doanh, tên shop, tên agent, lời chào và điểm khác biệt của shop.
-- **Giọng điệu**: những từ mô tả thương hiệu và mức độ trang trọng khi nói chuyện.
-- **Thông tin shop**: phí và thời gian giao hàng, cách giao, cách thanh toán, đổi trả và bảo hành. Thông tin ngắn để ở đây, còn tài liệu dài thì đưa vào [cơ sở kiến thức](/docs/agents/knowledge-base).
+Trình tạo agent hỏi phần cơ bản trước:
+
+- **Về doanh nghiệp**: loại hình kinh doanh, tên shop, tên agent, kênh và những việc agent cần làm.
+- **Thông tin shop**: hai thông tin khách hay hỏi nhất với loại hình của bạn, ví dụ giờ mở cửa và địa chỉ.
+
+Trả lời xong phần cơ bản, trình tạo agent hỏi bạn có muốn **Kích hoạt** agent ngay không. Các câu còn lại đều không bắt buộc và đã có sẵn mặc định theo ngành, bạn có thể trả lời tiếp hoặc quay lại sau:
+
+- **Giọng điệu**: lời chào, điểm khác biệt của shop, những từ mô tả thương hiệu và mức độ trang trọng khi nói chuyện.
+- **Thêm thông tin**: giờ mở cửa theo tuần và các thông tin khác như phí giao hàng, cách thanh toán, đổi trả và bảo hành. Thông tin ngắn để ở đây, còn tài liệu dài thì đưa vào [cơ sở kiến thức](/docs/agents/knowledge-base).
 - **Cách làm việc**: những thông tin agent cần hỏi khi khách muốn mua, và khi nào agent chuyển cuộc trò chuyện cho bạn. Xem trang [Khách hàng và chuyển cho nhân viên](/docs/customers).
 - **Quy tắc**: những việc agent không bao giờ được làm, và cách xử lý khi không chắc chắn.
 - **Phong cách trò chuyện**: độ dài câu trả lời, emoji, câu hỏi gợi mở và cách xử lý ngoài giờ mở cửa.
 
-Khi trả lời xong, hãy thử vài câu hỏi trong khung chat thử rồi bấm **Kích hoạt agent**.
+Khi bạn mô tả shop bằng vài câu, trình tạo agent tự điền những gì đọc được (loại hình, tên shop, giờ mở cửa, địa chỉ, giá) và bỏ qua các câu đó. Bấm vào câu trả lời nào để sửa.
 
 ## Sau khi tạo agent
 

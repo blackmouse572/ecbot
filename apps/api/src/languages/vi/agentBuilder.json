@@ -1,5 +1,8 @@
 {
     "suggest": {
         "success": "Đã có gợi ý"
+    },
+    "warm": {
+        "success": "Dịch vụ AI đã sẵn sàng"
     }
 }

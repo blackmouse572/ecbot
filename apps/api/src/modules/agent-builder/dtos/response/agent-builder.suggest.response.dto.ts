@@ -23,4 +23,11 @@ export class AgentBuilderSuggestResponseDto {
 
     @ApiProperty({ type: 'object', additionalProperties: { type: 'number' } })
     rules: Record<string, number>;
+
+    @ApiProperty({
+        description: 'Details read from the description, by id: business_name, opening_hours, address, offerings, delivery, payment_methods',
+        type: 'object',
+        additionalProperties: { type: 'string' },
+    })
+    texts: Record<string, string>;
 }

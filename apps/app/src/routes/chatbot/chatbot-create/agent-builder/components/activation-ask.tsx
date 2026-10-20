@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { AgentBuilderController } from "../use-agent-builder";
 
 /**
- * Asked once the channel step is answered or skipped: turn the agent on now,
+ * Asked once every basic question is answered (#256): turn the agent on now,
  * or keep answering and activate at the end. The answer stays in the thread.
  */
 export function ActivationAsk({

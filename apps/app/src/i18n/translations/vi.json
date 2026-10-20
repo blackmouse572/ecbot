@@ -1443,7 +1443,7 @@
       "startPlaceholder": "Ví dụ: Mình có tiệm nail ở Đà Nẵng. Khách hay hỏi giá và muốn đặt lịch.",
       "suggesting": "Đang thiết lập agent...",
       "suggestFailed": "Mình chưa tự nhận diện được. Mình cùng trả lời vài câu hỏi nhé.",
-      "suggested": "Mình đã điền sẵn những gì có thể. Bạn kiểm tra giúp các mục cần xem lại nhé.",
+      "suggested": "Mình đã điền sẵn những gì bạn mô tả. Bấm vào câu trả lời nào để sửa nhé.",
       "auto": "Tự động điền",
       "check": "Vui lòng kiểm tra",
       "required": "Vui lòng trả lời câu hỏi này.",
@@ -1507,12 +1507,13 @@
       "customAddressMissing": "Bạn điền đủ cả hai cách xưng hô nhé.",
       "activateNow": "Kích hoạt ngay",
       "activateLater": "Để sau",
-      "activateAsk": "Kích hoạt agent ngay để agent bắt đầu trả lời khách? Dù chọn gì, bạn vẫn trả lời tiếp các câu còn lại được."
+      "activateAsk": "Agent đã đủ thông tin cơ bản để trả lời khách. Kích hoạt ngay nhé? Các câu còn lại không bắt buộc và đã có sẵn mặc định theo ngành, bạn tinh chỉnh lúc nào cũng được."
     },
     "groups": {
       "identity": "Về doanh nghiệp",
       "essence": "Tính cách",
       "facts": "Thông tin kinh doanh",
+      "moreFacts": "Thêm thông tin",
       "process": "Quy trình",
       "rules": "Quy tắc",
       "interaction": "Cách trò chuyện"

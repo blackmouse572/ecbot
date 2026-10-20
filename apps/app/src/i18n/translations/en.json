@@ -1404,7 +1404,7 @@
       "startPlaceholder": "e.g. I run a nail spa in Da Nang. Customers ask prices and want to book.",
       "suggesting": "Setting up your agent...",
       "suggestFailed": "I could not work that out on my own. Let's go through the questions.",
-      "suggested": "I filled in what I could. Check the answers marked for review.",
+      "suggested": "I filled in what you described. Tap an answer to change it.",
       "auto": "Auto-filled",
       "check": "Please check",
       "required": "Please answer this question.",
@@ -1468,12 +1468,13 @@
       "customAddressMissing": "Fill in both words.",
       "activateNow": "Activate now",
       "activateLater": "Later",
-      "activateAsk": "Turn your agent on now so it starts replying to customers? You can keep answering the remaining questions either way."
+      "activateAsk": "Your agent has the basics it needs to reply to customers. Activate it now? The remaining questions are optional and already have defaults for your business type, so you can fine-tune them any time."
     },
     "groups": {
       "identity": "About your business",
       "essence": "Personality",
       "facts": "Business facts",
+      "moreFacts": "More details",
       "process": "How it works",
       "rules": "Rules",
       "interaction": "Conversation style"

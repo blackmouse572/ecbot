@@ -25,8 +25,13 @@ export type Question = {
   multiline?: boolean;
   choices?: { value: string; labelKey: string }[];
 };
-export type GroupId = "identity" | "essence" | "facts" | "process" | "rules" | "interaction";
+export type GroupId = "identity" | "essence" | "facts" | "moreFacts" | "process" | "rules" | "interaction";
 export type QuestionGroup = { id: GroupId; titleKey: string; questions: Question[] };
+
+/** The groups a working agent needs (#256). Every later question has a preset default. */
+export const BASIC_GROUPS: readonly GroupId[] = ["identity", "facts"];
+// The first preset facts are the ones customers ask about most.
+const KEY_FACT_COUNT = 2;
 
 export const TEMPLATE_TYPES: BusinessTypeId[] = ["restaurant", "beauty", "ecommerce", "healthcare", "education", "personal_scheduling"];
 
@@ -88,24 +93,20 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
     q("agentName", "text", { required: true, placeholderKey: "agentBuilder.questions.agentName.placeholder" }),
     ...(personal ? [] : [q("channels", "multi", { choices: choicesOf("channels") })]),
     q("goals", "multi", { required: true, descriptionKey: "agentBuilder.questions.goals.description", choices: choicesOf("goals", goalIds) }),
+  ];
+
+  const essence: Question[] = [
     // The app fills {{agentName}} / {{businessName}} with the answers so far.
     q("greeting", "text", {
       multiline: true,
       placeholderKey: personal ? "agentBuilder.questions.greeting.placeholderPersonal" : "agentBuilder.questions.greeting.placeholder",
     }),
-  ];
-
-  const essence: Question[] = [
     q("difference", "text", { multiline: true, placeholderKey: `agentBuilder.examples.${type.id}.difference` }),
     q("personality", "multi", { max: 2, descriptionKey: "agentBuilder.questions.personality.description", choices: choicesOf("personality") }),
     q("formality", "single", { required: true, choices: choicesOf("formality") }),
   ];
 
-  // Weekly hours (#289) come first; a preset's free-text hours question then
-  // reads as notes on top of them.
-  const facts: Question[] = [
-    ...(personal ? [] : [q("openingHours", "hours")]),
-    ...PRESETS[profile.businessType].facts.map((fact): Question => ({
+  const factQuestions = PRESETS[profile.businessType].facts.map((fact): Question => ({
     id: `facts.${fact}`,
     path: { field: "facts", fact },
     kind: "text",
@@ -117,7 +118,13 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
     placeholderKey: `agentBuilder.facts.${fact}.placeholder`,
     required: false,
     multiline: true,
-  })),
+  }));
+  const facts = factQuestions.slice(0, KEY_FACT_COUNT);
+  // Weekly hours (#289) stay out of the basics: the key facts already ask
+  // for the hours in the owner's own words.
+  const moreFacts: Question[] = [
+    ...(personal ? [] : [q("openingHours", "hours")]),
+    ...factQuestions.slice(KEY_FACT_COUNT),
   ];
 
   const process: Question[] = personal ? [] : [
@@ -147,8 +154,9 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
 
   const groups: QuestionGroup[] = [
     { id: "identity", titleKey: "agentBuilder.groups.identity", questions: identity },
-    { id: "essence", titleKey: "agentBuilder.groups.essence", questions: essence },
     { id: "facts", titleKey: "agentBuilder.groups.facts", questions: facts },
+    { id: "essence", titleKey: "agentBuilder.groups.essence", questions: essence },
+    { id: "moreFacts", titleKey: "agentBuilder.groups.moreFacts", questions: moreFacts },
     { id: "process", titleKey: "agentBuilder.groups.process", questions: process },
     { id: "rules", titleKey: "agentBuilder.groups.rules", questions: rules },
     { id: "interaction", titleKey: "agentBuilder.groups.interaction", questions: interaction },
@@ -214,6 +222,6 @@ export function allTranslationKeys(): string[] {
     if (!t.personal) keys.push(`agentBuilder.examples.${t.id}.businessName`);
   }
   for (const f of FACTS) keys.push(`agentBuilder.facts.${f.id}.title`, `agentBuilder.facts.${f.id}.placeholder`);
-  for (const g of ["identity", "essence", "facts", "process", "rules", "interaction"]) keys.push(`agentBuilder.groups.${g}`);
+  for (const g of ["identity", "essence", "facts", "moreFacts", "process", "rules", "interaction"]) keys.push(`agentBuilder.groups.${g}`);
   return keys;
 }

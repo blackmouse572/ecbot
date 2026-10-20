@@ -1,5 +1,8 @@
 {
     "suggest": {
         "success": "Suggestions are ready"
+    },
+    "warm": {
+        "success": "The AI service is awake"
     }
 }

@@ -6,7 +6,7 @@ from eccho_ai.llm.usage import TokenUsage
 
 
 class DecisionQuestion(BaseModel):
-    type: Literal["choice", "noul"]
+    type: Literal["choice", "noul", "text"]
     instructions: str = Field(min_length=1, max_length=2000)
     criteria: dict[str, str] | None = None
 
