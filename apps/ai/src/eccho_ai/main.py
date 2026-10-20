@@ -57,9 +57,11 @@ async def lifespan(app: FastAPI):
 
     # In-process background jobs (folded from the standalone jobs worker) —
     # runs the DB-polling heartbeat as a background task so no separate worker
-    # service is needed. Disable with ENABLE_INPROCESS_JOBS=false.
+    # service is needed. Off by default: apps/api already drives knowledge item
+    # ingest over Cloud Tasks, so a second consumer risks duplicate chunks.
+    # Enable with ENABLE_INPROCESS_JOBS=true.
     jobs_task = None
-    if os.getenv("ENABLE_INPROCESS_JOBS", "true").lower() == "true":
+    if os.getenv("ENABLE_INPROCESS_JOBS", "false").lower() == "true":
         from eccho_ai.jobs.constants import DEFAULT_HEARTBEAT_INTERVAL
         from eccho_ai.jobs.logic.chunking import ChunkingJob
         from eccho_ai.jobs.main import heartbeat
@@ -84,7 +86,7 @@ async def lifespan(app: FastAPI):
 
 
 logger = get_logger(__name__)
-app = FastAPI(**SWAGGER_CONFIG)
+app = FastAPI(**SWAGGER_CONFIG, lifespan=lifespan)
 
 app.add_middleware(RequestLogicMiddleware)
 

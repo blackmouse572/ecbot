@@ -68,10 +68,27 @@ def client():
     """Provides a global TestClient for all tests."""
     if not _APP_AVAILABLE:
         pytest.skip("FastAPI app unavailable — check env vars / DB config")
-    with TestClient(
-        _fastapi_app, headers={"X-Internal-Token": TEST_INTERNAL_TOKEN}
-    ) as c:
-        yield c
+
+    # Entering the client runs the app lifespan, which connects to Postgres.
+    # Fake that boundary so the unit lane needs no database.
+    class _FakeDb:
+        async def connect(self) -> None: ...
+        async def close(self) -> None: ...
+
+    async def _no_pool() -> None:
+        return None
+
+    mp = pytest.MonkeyPatch()
+    mp.setattr("eccho_ai.main.PostgresRepo.get_instance", lambda: _FakeDb())
+    mp.setattr("eccho_ai.llm.retrievers.vector_store.get_pool", _no_pool)
+    mp.setenv("ENABLE_INPROCESS_JOBS", "false")
+    try:
+        with TestClient(
+            _fastapi_app, headers={"X-Internal-Token": TEST_INTERNAL_TOKEN}
+        ) as c:
+            yield c
+    finally:
+        mp.undo()
 
 
 @pytest.fixture(scope="session")
