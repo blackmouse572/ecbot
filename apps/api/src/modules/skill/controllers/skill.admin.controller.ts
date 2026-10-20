@@ -99,7 +99,10 @@ export class SkillAdminController {
         const find: Record<string, any> = {
             ..._search,
             ...(workspace ?? {}),
-            ...(chatbot ?? {}),
+            // Enabled and disabled attachments alike: the agent has the skill.
+            ...(chatbot && {
+                chatbotLinks: { ...chatbot.chatbotLinks, deleted: false },
+            }),
         };
         // 'all' = every skill in the system; default = builtin templates.
         // A workspace or agent filter only matches workspace skills, so it

@@ -31,14 +31,16 @@ describe('SkillAdminController list', () => {
 
         await controller.list(paging, undefined, workspace, chatbot);
 
-        expect(skillService.findAllSystem).toHaveBeenCalledWith(
-            { ...workspace, ...chatbot },
-            { limit: 20, offset: 0, order: {} }
-        );
-        expect(skillService.getTotalSystem).toHaveBeenCalledWith({
+        const find = {
             ...workspace,
-            ...chatbot,
+            chatbotLinks: { chatbot: 'c1', deleted: false },
+        };
+        expect(skillService.findAllSystem).toHaveBeenCalledWith(find, {
+            limit: 20,
+            offset: 0,
+            order: {},
         });
+        expect(skillService.getTotalSystem).toHaveBeenCalledWith(find);
         expect(skillService.findAllBuiltin).not.toHaveBeenCalled();
     });
 });

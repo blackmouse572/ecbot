@@ -42,7 +42,8 @@ export class KnowledgeItemAdminService {
     }
 
     // `size` is the list's name for the file size, an embedded column, and
-    // items with no file (text, links) have none. They sort last either way.
+    // items with no file (text, links) have none. They sort last either way,
+    // and newest first among equal sizes so offset paging stays stable.
     private sizeOrder(
         options?: IDatabaseFindAllOptions
     ): IDatabaseFindAllOptions | undefined {
@@ -58,10 +59,11 @@ export class KnowledgeItemAdminService {
         // embedded path.
         return {
             ...rest,
-            orderBy: { attachment: { size } } as unknown as Record<
-                string,
-                `${QueryOrder}`
-            >,
+            orderBy: {
+                attachment: { size },
+                createdAt: QueryOrder.DESC,
+                id: QueryOrder.ASC,
+            } as unknown as Record<string, `${QueryOrder}`>,
         };
     }
 

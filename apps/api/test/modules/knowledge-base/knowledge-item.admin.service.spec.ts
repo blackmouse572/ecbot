@@ -64,7 +64,11 @@ describe('KnowledgeItemAdminService', () => {
                 {
                     limit: 20,
                     offset: 0,
-                    orderBy: { attachment: { size: expected } },
+                    orderBy: {
+                        attachment: { size: expected },
+                        createdAt: 'DESC',
+                        id: 'ASC',
+                    },
                     populate: ['knowledgeBase.workspace'],
                 }
             );
