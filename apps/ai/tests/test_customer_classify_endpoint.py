@@ -242,3 +242,20 @@ async def test_missing_required_field_returns_422(async_client, patch_llm):
     )
 
     assert resp.status_code == 422
+
+
+# ---------- staff style in the profile summary ----------
+
+
+def test_prompt_carries_the_current_summary_and_asks_for_staff_style():
+    from eccho_ai.modules.customer.models import ClassifyRequest
+    from eccho_ai.modules.customer.routers import SYSTEM_PROMPT, _build_user_prompt
+
+    req = ClassifyRequest.model_validate(
+        {**VALID_BODY, "current_summary": "Staff call her cô and keep replies short."}
+    )
+    prompt = _build_user_prompt(req)
+    assert "Current profile summary: Staff call her cô and keep replies short." in prompt
+    rules = " ".join(SYSTEM_PROMPT.split())
+    assert "how staff talk to this customer" in rules
+    assert "keep the staff note from the current summary" in rules

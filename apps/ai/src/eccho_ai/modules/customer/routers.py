@@ -42,6 +42,7 @@ the conversation has ended (resolved or gone quiet).
 You will be given:
 - The available analytical tags for this workspace (catalog) with descriptions.
 - The tags currently assigned to this Customer.
+- The customer's current profile summary, from earlier conversations.
 - The most recent messages from the conversation, oldest first.
 
 Your tasks:
@@ -51,9 +52,15 @@ Your tasks:
 3. From the currently-assigned list, choose which tags should be REMOVED
    because they no longer fit. Never remove a tag that is not in
    `current_tags`.
-4. Write a ONE-PARAGRAPH profile summary (~50 tokens) describing who this
+4. Write a ONE-PARAGRAPH profile summary (~70 tokens) describing who this
    customer is: their interests, tone, intent, anything an operator would want
    at a glance. Plain prose. No bullet points. No tags.
+5. If staff replied in this conversation ([operator] lines), end the summary
+   with one sentence, starting with "Staff", on how staff talk to this
+   customer: the words they use for the customer and for themselves (e.g.
+   "cô", "anh", "em", "bạn"), their tone, reply length and emoji habit. The assistant uses it to talk the same
+   way next time. If staff did not reply here, keep the staff note from the
+   current summary as it is.
 
 Rules:
 - Do NOT include any tag whose name is not in the catalog.
@@ -90,6 +97,7 @@ def _build_user_prompt(req: ClassifyRequest) -> str:
         f"Customer id: {req.customer_id}\n\n"
         f"Available tag catalog (use exact names):\n{_format_catalog(req.available_tags)}\n\n"
         f"Currently assigned tags: {', '.join(req.current_tags) if req.current_tags else '(none)'}\n\n"
+        f"Current profile summary: {req.current_summary.strip() or '(none)'}\n\n"
         f"Conversation (oldest first):\n{_format_messages(req.recent_messages)}"
     )
 
