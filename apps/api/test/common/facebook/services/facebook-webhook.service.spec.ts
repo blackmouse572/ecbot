@@ -86,13 +86,44 @@ describe('FacebookWebhookService.subscribePageWebhook', () => {
 
         expect(ok).toBe(true);
         expect(mockHttp.axiosRef.post).toHaveBeenCalledTimes(25);
-        expect(peak).toBeGreaterThan(1);
-        expect(peak).toBeLessThanOrEqual(10);
+        expect(peak).toBe(10);
     });
 
-    it('returns false when any Page fails to subscribe', async () => {
+    it('returns false when a Page in the first batch fails', async () => {
         mockHttp.axiosRef.post.mockImplementation(async (url: string) => {
             if (url.includes('/p3/')) throw new Error('stale token');
+            return { data: { success: true } };
+        });
+
+        const ok = await buildService().subscribePageWebhook(pages as any, [
+            'messages',
+        ]);
+
+        expect(ok).toBe(false);
+    });
+
+    it('stops before later batches once a Page in a middle batch fails', async () => {
+        mockHttp.axiosRef.post.mockImplementation(async (url: string) => {
+            if (url.includes('/p13/')) throw new Error('stale token');
+            return { data: { success: true } };
+        });
+
+        const ok = await buildService().subscribePageWebhook(pages as any, [
+            'messages',
+        ]);
+
+        expect(ok).toBe(false);
+        expect(mockHttp.axiosRef.post).toHaveBeenCalledTimes(20);
+        expect(mockHttp.axiosRef.post).not.toHaveBeenCalledWith(
+            expect.stringContaining('/p20/'),
+            expect.anything(),
+            expect.anything()
+        );
+    });
+
+    it('returns false when a Page in the last partial batch fails', async () => {
+        mockHttp.axiosRef.post.mockImplementation(async (url: string) => {
+            if (url.includes('/p24/')) throw new Error('stale token');
             return { data: { success: true } };
         });
 
