@@ -11,7 +11,10 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
-import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
+import {
+    PaginationQuery,
+    PaginationQueryFilterEqual,
+} from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
 import {
@@ -85,13 +88,28 @@ export class SkillAdminController {
             defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
         })
         { _search, _limit, _offset, _order }: PaginationListDto,
-        @Query('source') source?: string
+        @Query('source') source?: string,
+        @PaginationQueryFilterEqual('workspace')
+        workspace?: Record<string, any>,
+        @PaginationQueryFilterEqual('chatbotLinks.chatbot', {
+            queryField: 'chatbot',
+        })
+        chatbot?: Record<string, any>
     ): Promise<IResponsePaging<SkillListResponseDto>> {
-        const find: Record<string, any> = { ..._search };
+        const find: Record<string, any> = {
+            ..._search,
+            ...(workspace ?? {}),
+            // Enabled and disabled attachments alike: the agent has the skill.
+            ...(chatbot && {
+                chatbotLinks: { ...chatbot.chatbotLinks, deleted: false },
+            }),
+        };
         // 'all' = every skill in the system; default = builtin templates.
+        // A workspace or agent filter only matches workspace skills, so it
+        // always searches every skill.
         const options = { limit: _limit, offset: _offset, order: _order };
         const [skills, total] =
-            source === 'all'
+            source === 'all' || workspace || chatbot
                 ? await Promise.all([
                       this.skillService.findAllSystem(find, options),
                       this.skillService.getTotalSystem(find),

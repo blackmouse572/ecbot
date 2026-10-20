@@ -1,9 +1,11 @@
 import {
+    Collection,
     Embedded,
     Entity,
     Enum,
     Index,
     ManyToOne,
+    OneToMany,
     Property,
     Unique,
 } from '@mikro-orm/postgresql';
@@ -11,6 +13,7 @@ import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
 import { AwsS3Entity } from 'src/modules/aws/repository/entities/aws.s3.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import type { SkillStep } from '@repo/agent-blueprint';
+import type { ChatbotSkillEntity } from './chatbot-skill.entity';
 import { ENUM_SKILL_FORMAT } from '../../enums/skill-format.enum';
 import { ENUM_SKILL_STATUS } from '../../enums/skill-status.enum';
 
@@ -23,6 +26,11 @@ export class SkillEntity extends DatabaseEntityBase {
     // null workspace = builtin skill authored by Ecbot
     @ManyToOne(() => WorkspaceEntity, { nullable: true })
     workspace?: WorkspaceEntity;
+
+    // Inverse side only (no column), for the admin "skills of this agent"
+    // filter. By name: a class import would cycle with chatbot-skill.entity.
+    @OneToMany('ChatbotSkillEntity', 'skill')
+    chatbotLinks = new Collection<ChatbotSkillEntity>(this);
 
     @Property({ type: 'varchar' })
     name: string;

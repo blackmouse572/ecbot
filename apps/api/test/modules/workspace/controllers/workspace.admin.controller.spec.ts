@@ -49,6 +49,28 @@ describe('WorkspaceAdminController', () => {
         });
     });
 
+    it('narrows the list by status and owner', async () => {
+        workspaceAdminService.findAll.mockResolvedValue([]);
+        workspaceAdminService.getTotal.mockResolvedValue(0);
+        const search = { $or: [{ name: { $ilike: '%shop%' } }] };
+        const status = { status: { $in: [ENUM_WORKSPACE_STATUS.SUSPENDED] } };
+        const owner = { owner: { $or: [{ name: /lan/i }, { email: /lan/i }] } };
+
+        await controller.list(
+            { _search: search, _limit: 20, _offset: 0, _order: {} } as any,
+            status,
+            owner
+        );
+
+        const find = { ...search, ...status, ...owner };
+        expect(workspaceAdminService.findAll).toHaveBeenCalledWith(find, {
+            limit: 20,
+            offset: 0,
+            order: {},
+        });
+        expect(workspaceAdminService.getTotal).toHaveBeenCalledWith(find);
+    });
+
     it('returns one workspace', async () => {
         workspaceAdminService.findOneById.mockResolvedValue({ id: 'w1' });
 
