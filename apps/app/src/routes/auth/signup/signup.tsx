@@ -2,13 +2,17 @@ import { LegalText, LinkButton } from "@/components/common";
 import { useAllCountriesShare } from "@/hooks/api";
 import { useSignUpWithEmailPass } from "@/hooks/api/auth";
 import { readApiError } from "@/libs/api-error";
+import {
+  invitedEmailFromRedirect,
+  withRedirect,
+} from "@/modules/auth/login-redirect";
 import { ROUTES } from "@/routes/constants";
 import { Button, toast } from "@medusajs/ui";
 import { RegisterForm } from "@repo/auth/components";
 import { CircularLoading } from "@repo/ui/common-components";
 import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { SocialLogin } from "../components/social-login";
 import { signupDefaultCountryId } from "../utils";
 
@@ -24,6 +28,9 @@ function SignUpPage() {
   });
   const locale = i18n.language;
   const navigate = useNavigate();
+  // Set when an invite link sent the user here: kept through verification so
+  // they land back on the invite, and its email fills the form.
+  const redirect = useSearchParams()[0].get("redirect");
   const { countries, isError, error, isFetching } = useAllCountriesShare();
   const { signUp, isLoading } = useSignUpWithEmailPass();
   // Covers the turnstile wait too — isLoading alone only turns on once the
@@ -66,7 +73,11 @@ function SignUpPage() {
     toast.success(t("success.message"));
     navigate({
       pathname: `/${ROUTES.VerifyEmail}`,
-      search: `?email=${email}&userId=${userId}`,
+      search: `?${new URLSearchParams({
+        email,
+        userId,
+        ...(redirect ? { redirect } : {}),
+      })}`,
     });
   };
 
@@ -95,6 +106,7 @@ function SignUpPage() {
         locale={locale === "vi" ? "vi" : "en"}
         onSubmittingChange={setIsSubmitting}
         countries={countryList}
+        defaultEmail={invitedEmailFromRedirect(redirect)}
         defaultCountry={signupDefaultCountryId(countries ?? [], locale)}
         messages={{
           emailPlaceholder: t("fields.email"),
@@ -143,9 +155,7 @@ function SignUpPage() {
           i18nKey={`${I18N_PREFIX}.actions.loginRedirect`}
           components={[
             <LinkButton
-              to={{
-                pathname: `/${ROUTES.Login}`,
-              }}
+              to={withRedirect(`/${ROUTES.Login}`, redirect)}
             ></LinkButton>,
           ]}
         />

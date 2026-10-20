@@ -160,6 +160,33 @@ describe("LoginPage", () => {
     expect(toastError).not.toHaveBeenCalled();
   });
 
+  it("keeps the invite link when sending an unverified user to the code page", async () => {
+    setNextError({
+      statusCode: 5167,
+      message: "user.error.emailNotVerified",
+      data: { id: "user-9" },
+    });
+    const VerifyPage = () => <div>verify:{useLocation().search}</div>;
+    rtlRender(
+      <MemoryRouter
+        initialEntries={["/login?redirect=%2Fjoin%3Ftokens%3Da.b.c"]}
+      >
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-email" element={<VerifyPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByText("submit-login"));
+
+    expect(
+      await screen.findByText(
+        "verify:?email=user%40x.com&userId=user-9&redirect=%2Fjoin%3Ftokens%3Da.b.c",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("switches to the code step when the API answers with an MFA challenge", async () => {
     setNextData({ mfaRequired: true, mfaToken: "challenge-1", expiresIn: 300 });
     render(<LoginPage />);

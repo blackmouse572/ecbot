@@ -32,13 +32,14 @@ const apiError = (statusCode: number, message: string) =>
     response: { status: 400, data: { statusCode, message } },
   });
 
-const renderPage = () =>
+const renderPage = (search = "?email=a@b.com&userId=u1") =>
   render(
-    <MemoryRouter initialEntries={["/verify-email?email=a@b.com&userId=u1"]}>
+    <MemoryRouter initialEntries={[`/verify-email${search}`]}>
       <Routes>
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/" element={<p>home page</p>} />
         <Route path="/login" element={<p>login page</p>} />
+        <Route path="/join" element={<p>join page</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -62,6 +63,16 @@ describe("VerifyEmailPage", () => {
 
     expect(await screen.findByText("home page")).toBeInTheDocument();
     expect(setAuth).toHaveBeenCalledWith("at");
+  });
+
+  it("lands on the invite it came from once the code is verified", async () => {
+    verifyEmail.mockResolvedValue({ accessToken: "at", refreshToken: "rt" });
+    renderPage(
+      `?${new URLSearchParams({ email: "a@b.com", userId: "u1", redirect: "/join?tokens=a.b.c" })}`,
+    );
+    typeCode();
+
+    expect(await screen.findByText("join page")).toBeInTheDocument();
   });
 
   it("falls back to the login page when the API signs nobody in", async () => {

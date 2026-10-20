@@ -1,6 +1,10 @@
 import { useResendEmailOtp, useVerifyEmailOtp } from "@/hooks/api";
 import { readApiError } from "@/libs/api-error";
 import { useAuth } from "@/modules/auth";
+import {
+  loginRedirectTarget,
+  withRedirect,
+} from "@/modules/auth/login-redirect";
 import { ROUTES } from "@/routes/constants";
 import { TOO_MANY_REQUESTS_STATUS } from "../constants";
 import { Button, toast } from "@medusajs/ui";
@@ -20,6 +24,7 @@ const VerifyEmailPage = () => {
   const [, setAuth] = useAuth();
   const email = searchParams.get("email") ?? "";
   const userId = searchParams.get("userId") ?? "";
+  const redirect = searchParams.get("redirect");
   const { t } = useTranslation(undefined, {
     keyPrefix: I18N_PREFIX,
   });
@@ -44,10 +49,10 @@ const VerifyEmailPage = () => {
       // Signed in by the verify call: straight to the app, no second login.
       if (login?.accessToken) {
         setAuth(login.accessToken);
-        navigate("/", { replace: true });
+        navigate(loginRedirectTarget(redirect), { replace: true });
         return;
       }
-      navigate(`/${ROUTES.Login}`, {
+      navigate(withRedirect(`/${ROUTES.Login}`, redirect), {
         replace: true,
       });
     } catch (error) {

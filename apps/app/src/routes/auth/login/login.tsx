@@ -6,7 +6,10 @@ import {
 } from "@/hooks/api/auth";
 import { isMfaChallenge } from "@/hooks/api/mfa";
 import { useAuth } from "@/modules/auth";
-import { loginRedirectTarget } from "@/modules/auth/login-redirect";
+import {
+  loginRedirectTarget,
+  withRedirect,
+} from "@/modules/auth/login-redirect";
 import { ROUTES } from "@/routes";
 import { Button, Checkbox, Label, toast, usePrompt } from "@medusajs/ui";
 import { LoginForm } from "@repo/auth/components";
@@ -81,13 +84,18 @@ function LoginPage() {
           // Right password, email not verified yet (e.g. an account an
           // admin created): go enter the emailed code instead of a dead end.
           const userId = error?.data?.id;
+          const redirect = search.get("redirect");
           if (
             error?.statusCode === USER_EMAIL_NOT_VERIFIED_STATUS_CODE &&
             userId
           ) {
             navigate({
               pathname: `/${ROUTES.VerifyEmail}`,
-              search: `?${new URLSearchParams({ email, userId })}`,
+              search: `?${new URLSearchParams({
+                email,
+                userId,
+                ...(redirect ? { redirect } : {}),
+              })}`,
             });
             return;
           }
@@ -193,7 +201,10 @@ function LoginPage() {
           <Trans
             i18nKey={`${I18N_PREFIX}.actions.signUpRedirect`}
             components={[
-              <LinkButton to={`/${ROUTES.SignUp}`} disabled={isBusy} />,
+              <LinkButton
+                to={withRedirect(`/${ROUTES.SignUp}`, search.get("redirect"))}
+                disabled={isBusy}
+              />,
             ]}
           />
         </p>
