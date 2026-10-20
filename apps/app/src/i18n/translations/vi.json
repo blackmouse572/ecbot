@@ -2366,7 +2366,22 @@
       "handoffEmailsHint": "Gửi khi agent chuyển một cuộc hội thoại cho đội của bạn. Bạn vẫn thấy thông báo trong ứng dụng.",
       "saveFailed": "Không lưu được lựa chọn của bạn. Vui lòng thử lại.",
       "sound": "Phát âm thanh trong ứng dụng",
-      "soundHint": "Âm thanh ngắn khi có thông báo hoặc tin nhắn mới, khi gửi tin nhắn, kết nối tài khoản, bật agent và khi kiến thức xử lý xong hoặc bị lỗi. Chỉ áp dụng trên trình duyệt này."
+      "soundHint": "Âm thanh ngắn khi có thông báo hoặc tin nhắn mới, khi gửi tin nhắn, kết nối tài khoản, bật agent và khi kiến thức xử lý xong hoặc bị lỗi. Chỉ áp dụng trên trình duyệt này.",
+      "push": "Thông báo trên thiết bị này",
+      "pushHint": "Hiện thông báo trên máy tính hoặc điện thoại này, kể cả khi đã đóng Ecbot. Bật riêng trên từng thiết bị bạn dùng.",
+      "pushNeedsInstall": "Trên iPhone và iPad, hãy thêm Ecbot vào Màn hình chính trước (bấm Chia sẻ, rồi Thêm vào MH chính), sau đó mở Ecbot từ đó và bật mục này.",
+      "pushDenied": "Trình duyệt đang chặn thông báo của Ecbot. Hãy cho phép trong phần cài đặt trang web của trình duyệt, rồi tải lại trang này.",
+      "pushUnsupported": "Trình duyệt này không hiện được thông báo. Hãy dùng Chrome, Edge, Firefox hoặc Safari.",
+      "pushFailed": "Không đổi được cài đặt thông báo trên thiết bị này. Vui lòng thử lại."
+    },
+    "app": {
+      "domain": "Ứng dụng Ecbot",
+      "description": "Cài Ecbot lên thiết bị này để mở từ màn hình máy tính hoặc Màn hình chính, như một ứng dụng.",
+      "install": "Cài ứng dụng",
+      "installHint": "Mở trong cửa sổ riêng và vẫn giữ đăng nhập.",
+      "installed": "Ecbot đã được cài trên thiết bị này.",
+      "iosSteps": "Trong Safari, bấm Chia sẻ, rồi Thêm vào MH chính. Trên iPhone và iPad, bước này cũng cần để nhận thông báo.",
+      "browserMenu": "Dùng menu của trình duyệt để cài Ecbot (tìm mục Cài đặt ứng dụng hoặc Thêm vào Màn hình chính)."
     }
   },
   "workspace": {

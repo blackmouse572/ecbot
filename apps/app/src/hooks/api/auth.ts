@@ -1,6 +1,7 @@
 import { logoutGuard, useAuth } from "@/modules/auth";
 import { useEndImpersonation, useImpersonation } from "@/modules/impersonation";
 import { useSetLastWorkspaceSlug } from "@/modules/workspace";
+import { removeThisDeviceFromPush } from "@/modules/pwa";
 import {
   authPublicControllerLoginWithCredentialV1,
   authPublicControllerSignUpV1,
@@ -226,6 +227,9 @@ export const useLogout = () => {
 
     logoutGuard.current = true;
     try {
+      // While still signed in: a shared computer must stop getting this
+      // person's notifications.
+      await removeThisDeviceFromPush().catch(() => undefined);
       await authSharedControllerLogoutV1({
         withCredentials: true,
         throwOnError: false,

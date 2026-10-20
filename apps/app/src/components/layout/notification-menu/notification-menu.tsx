@@ -12,6 +12,7 @@ import {
   type NotificationItem,
 } from "@/hooks/api/notifications";
 import { useIsLeaderTab } from "@/hooks/use-leader-tab";
+import { usePushBridge } from "@/modules/pwa";
 import { useNotificationSound } from "@/modules/sound";
 
 import { NOTIFICATION_PAGE_SIZE } from "./constants";
@@ -43,6 +44,7 @@ export const NotificationMenu: FC = () => {
   const [newIds, setNewIds] = useState<Set<string>>(() => new Set());
   const isOpen = useRef(false);
 
+  usePushBridge();
   useNotificationSound(isFetched && isLeader ? count : undefined);
   const { flashKey } = useNewNotificationToast({
     notifications,
