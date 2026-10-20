@@ -1,6 +1,7 @@
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
-import { FilterQuery } from '@mikro-orm/postgresql';
+import { FilterQuery, QueryOrder } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { plainToInstance } from 'class-transformer';
 import { KnowledgeItemAdminGetResponseDto } from '../dtos/response/knowledge-item.admin-get.response.dto';
 import { KnowledgeItemAdminListResponseDto } from '../dtos/response/knowledge-item.admin-list.response.dto';
@@ -23,7 +24,10 @@ export class KnowledgeItemAdminService {
     ): Promise<KnowledgeItemAdminListResponseDto[]> {
         const items = await this.knowledgeItemRepository.find(
             this.where(find),
-            { ...options, populate: ['knowledgeBase.workspace'] }
+            {
+                ...this.sizeOrder(options),
+                populate: ['knowledgeBase.workspace'],
+            }
         );
         const chunkCounts = await this.knowledgeItemRepository.countChunks(
             items.map(item => item.id)
@@ -35,6 +39,32 @@ export class KnowledgeItemAdminService {
                 { excludeExtraneousValues: true }
             )
         );
+    }
+
+    // `size` is the list's name for the file size, an embedded column, and
+    // items with no file (text, links) have none. They sort last either way,
+    // and newest first among equal sizes so offset paging stays stable.
+    private sizeOrder(
+        options?: IDatabaseFindAllOptions
+    ): IDatabaseFindAllOptions | undefined {
+        const direction = options?.order?.size;
+        if (!direction) return options;
+
+        const { order: _order, ...rest } = options;
+        const size =
+            direction === ENUM_PAGINATION_ORDER_DIRECTION_TYPE.ASC
+                ? QueryOrder.ASC_NULLS_LAST
+                : QueryOrder.DESC_NULLS_LAST;
+        // The interface types orderBy as flat; MikroORM takes the nested
+        // embedded path.
+        return {
+            ...rest,
+            orderBy: {
+                attachment: { size },
+                createdAt: QueryOrder.DESC,
+                id: QueryOrder.ASC,
+            } as unknown as Record<string, `${QueryOrder}`>,
+        };
     }
 
     getTotal(find: Record<string, any>): Promise<number> {

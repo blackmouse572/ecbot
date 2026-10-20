@@ -24,6 +24,8 @@ interface IRegisterFormProps extends Omit<
    */
   onSubmit: (data: TRegisterForm) => Promise<TRegisterFieldErrors | void>;
   countries?: { label: string; value: string }[];
+  /** Email prefilled in the form (the address an invite was sent to). */
+  defaultEmail?: string;
   /** Country id preselected in the country picker. */
   defaultCountry?: string;
   /** Omit to render no widget — the form behaves exactly as before. */
@@ -83,6 +85,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
     onSubmit,
     messages,
     countries,
+    defaultEmail,
     defaultCountry,
     turnstile: turnstileConfig,
     onSubmittingChange,
@@ -92,7 +95,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
   const form = useForm<TRegisterSchema>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
-      email: "",
+      email: defaultEmail ?? "",
       password: "",
       country: defaultCountry,
       acceptTerms: false,

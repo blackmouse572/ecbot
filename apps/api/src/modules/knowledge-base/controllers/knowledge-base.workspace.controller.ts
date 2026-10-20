@@ -88,6 +88,7 @@ export class KnowledgeBaseWorkspaceController {
         const find: Record<string, any> = {
             ..._search,
             workspace: workspace.id,
+            deletedAt: null,
         };
 
         const [data, total] = await Promise.all([
@@ -96,11 +97,7 @@ export class KnowledgeBaseWorkspaceController {
                 offset: _offset,
                 order: _order,
             }),
-            this.knowledgeBaseService.getTotal({
-                ...find,
-                workspace: workspace.id,
-                deletedAt: null,
-            }),
+            this.knowledgeBaseService.getTotal(find),
         ]);
         const totalPage: number = this.paginationService.totalPage(
             total,

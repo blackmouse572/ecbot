@@ -2,6 +2,16 @@
 
 **CRITICAL INSTRUCTION FOR AI AGENTS:** Read this entire document before implementing features, fixing bugs, or investigating issues. It contains the essential context, structure, and conventions for this repository.
 
+## Quick start
+
+Run from the repo root unless a step says otherwise.
+
+1. **Env.** `pnpm setup:local` creates `apps/ai/.env` from `.env.example` and fills the generated values. You only add `OPENROUTER_API_KEY` yourself. `POSTGRES_URL` already points at the Postgres from step 2. The `RAG_*` variables have working defaults, and `RAG_POSTGRES_URL` falls back to `POSTGRES_URL` when empty. `FIRECRAWL_API_KEY` is only needed to ingest a URL.
+2. **Database.** `docker compose up -d` starts Postgres with pgvector. A hosted database needs `CREATE EXTENSION vector` first. Then apply the schema with `pnpm --filter api migration:up`.
+3. **Run.** `pnpm --filter ai dev`, then `curl localhost:8000/health`. For step 5 also start the API and the app in a second terminal with `pnpm dev:app` (API on :8080, app on :5173). The root README quick start covers the shared setup.
+4. **Test.** From `apps/ai/`, `uv run pytest -m "not integration"`. Integration tests need a live Postgres with the `vector` extension.
+5. **Check RAG end to end.** In the app, upload a document to the knowledge base, link it to an agent, then ask a question in Test chat. The answer should use the document's content and carry no `[KB-n]` labels, source ids or file names. Sources come back in the message metadata.
+
 ## 1. Step-by-Step Implementation Workflow
 
 Whenever you are given a task, execute it using the following sequence:
@@ -151,7 +161,7 @@ Configured with the `/api/rag` prefix.
   - Debug endpoint for retrieving knowledge-base context before the chat agent answers.
   - Response includes formatted context, chunks, rerank scores, and `sources`.
 
-Chat requests automatically run RAG retrieval for completed documents attached to the chatbot through `rag_documents.metadata.chatbot_id`. Retrieval uses PostgreSQL full-text search and pgvector cosine similarity, then reranks candidates with a cross-encoder model before injecting context into the user prompt. When an answer uses RAG context, the assistant is instructed to cite inline source IDs such as `[KB-1]`; the backend also appends a final `Nguồn:` section if the model omits it.
+Chat requests automatically run RAG retrieval for completed documents attached to the chatbot through `rag_documents.metadata.chatbot_id`. Retrieval uses PostgreSQL full-text search and pgvector cosine similarity, then reranks candidates with a cross-encoder model before injecting context into the user prompt. When an answer uses RAG context, the assistant answers from the retrieved context and never writes `[KB-n]` labels, source ids, document names or file names. Those are stripped server-side, and sources only travel in message metadata.
 
 ### RAG Environment Variables
 
@@ -188,3 +198,9 @@ CHATBOT_CACHE_TTL_SECONDS=60
 Prompt caching is handled at the gateway: `build_chat_model` sets OpenRouter's top-level `cache_control` for `anthropic/*` models (other providers cache implicitly), and `ChatbotConfigMiddleware` pins each conversation to one provider endpoint with `session_id` so the cache can actually be hit.
 
 `POSTGRES_URL` can continue to point to the app/chatbot database. RAG ingest and retrieval use `RAG_POSTGRES_URL` first, then fall back to `POSTGRES_URL` only when `RAG_POSTGRES_URL` is not set.
+
+### Startup
+
+The FastAPI lifespan (`main.py`) runs at boot: it configures logging, fails fast on a bad `AGENT_PROMPT_PATH`, connects to Postgres (5 retries with backoff) and opens the asyncpg pool. A revision that cannot reach Postgres never goes live. Boot logs `system_prompt_loaded`, `db_connected` and `boot_completed`.
+
+`ENABLE_INPROCESS_JOBS` (default `false`) starts the chunking heartbeat inside the API process. Leave it off when `apps/api` drives knowledge item ingest over Cloud Tasks, because a second consumer would race it on the item status and pay for embeddings twice.

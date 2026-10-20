@@ -16457,6 +16457,14 @@ export type SkillAdminControllerListV1Data = {
     query?: {
         source?: 'builtin' | 'all';
         /**
+         * Workspace id: skills that workspace owns. Implies source=all
+         */
+        workspace?: string;
+        /**
+         * Chatbot id: skills attached to that agent. Implies source=all
+         */
+        chatbot?: string;
+        /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
         search?: string;
@@ -17663,6 +17671,14 @@ export type WorkspaceAdminControllerListV1Data = {
     };
     path?: never;
     query?: {
+        /**
+         * The status of the workspace, value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * Part of the owner's name or email, case-insensitive
+         */
+        owner?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
