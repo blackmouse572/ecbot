@@ -3043,8 +3043,6 @@
           }
         },
         "savedFields": {
-          "title": "Agent đã ghi lại",
-          "hint": "Thông tin agent ghi lại từ cuộc trò chuyện, như địa chỉ giao hàng.",
           "address": "Địa chỉ giao hàng"
         }
       }

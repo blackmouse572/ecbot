@@ -281,6 +281,7 @@ export function CustomerSidePanel({
                   </Form.Item>
                 )}
               />
+              <SavedFieldsSection fields={customer?.metadata} />
               <Form.Field
                 control={form.control}
                 name="notes"
@@ -318,8 +319,6 @@ export function CustomerSidePanel({
               </div>
             </form>
           </Form>
-
-          <SavedFieldsSection fields={customer?.metadata} />
 
           <div className="border-ui-border-base border-t px-4 py-4">
             <Heading level="h3" className="mb-2">

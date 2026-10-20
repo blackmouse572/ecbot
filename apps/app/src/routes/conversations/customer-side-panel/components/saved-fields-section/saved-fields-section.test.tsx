@@ -21,6 +21,16 @@ describe("SavedFieldsSection", () => {
     expect(screen.getByText("4")).toBeInTheDocument();
   });
 
+  it("shows the details like the other customer fields, with no section heading", () => {
+    render(<SavedFieldsSection fields={{ address: "12 Lê Lợi" }} />);
+    expect(
+      screen.queryByText("conversations.customer.panel.savedFields.title"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("conversations.customer.panel.savedFields.hint"),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders nothing when the agent saved nothing", () => {
     const { container } = render(<SavedFieldsSection fields={{}} />);
     expect(container).toBeEmptyDOMElement();
