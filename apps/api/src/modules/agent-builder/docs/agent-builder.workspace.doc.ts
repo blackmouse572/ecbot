@@ -24,3 +24,13 @@ export function AgentBuilderWorkspaceSuggestDoc(): MethodDecorator {
         DocResponse('agentBuilder.suggest.success', { dto: AgentBuilderSuggestResponseDto })
     );
 }
+
+export function AgentBuilderWorkspaceWarmDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'wake the AI service before a suggestion is asked for' }),
+        DocRequest({ params: WorkspaceDocParamsId }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ policy: true }),
+        DocResponse('agentBuilder.warm.success')
+    );
+}

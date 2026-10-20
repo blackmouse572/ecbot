@@ -28,8 +28,14 @@ You answer typed questions about a piece of state, like a calibrated classifier.
 For a "choice" question, pick exactly one option id from its options and give
 your confidence from 0 to 1 that it is the right option.
 For a "noul" question, give the probability from 0 to 1 that the answer is yes.
+For a "text" question, copy the answer from the state in its own words and
+language, or give an empty string when the state does not say.
 Judge only from the state. Do not explain.
 """
+
+
+# Matches the profile's longest text field (PROFILE_LIMITS.longText).
+TEXT_ANSWER_MAX = 1000
 
 
 def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
@@ -48,6 +54,8 @@ def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
                 confidence=(float, Field(ge=0, le=1)),
             )
             fields[field_name] = (answer, ...)
+        elif q.type == "text":
+            fields[field_name] = (str, Field(max_length=TEXT_ANSWER_MAX))
         else:
             fields[field_name] = (float, Field(ge=0, le=1))
     return create_model("DecisionAnswers", **fields)
@@ -60,6 +68,8 @@ def _format_questions(questions: dict[str, DecisionQuestion]) -> str:
         if q.type == "choice":
             options = "\n".join(f"    - {key}: {text}" for key, text in (q.criteria or {}).items())
             lines.append(f"- {field_name} ({qid}, choice): {q.instructions}\n  options:\n{options}")
+        elif q.type == "text":
+            lines.append(f"- {field_name} ({qid}, text, empty if not stated): {q.instructions}")
         else:
             lines.append(f"- {field_name} ({qid}, noul, probability of yes): {q.instructions}")
     return "\n".join(lines)
@@ -100,6 +110,8 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
                 if q.type == "choice":
                     v = _as_dict(value)
                     answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
+                elif q.type == "text":
+                    answers[qid] = {"type": "text", "text": value}
                 else:
                     answers[qid] = {"type": "noul", "noul": value}
         except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions

@@ -178,3 +178,20 @@ async def test_malformed_choice_value_falls_back_to_empty_answers_without_500(as
     resp = await async_client.post("/api/decision/system-one", json=BODY)
     assert resp.status_code == 200
     assert resp.json()["data"]["answers"] == {}
+
+
+# #256: a "text" question copies a detail out of the state (empty when absent).
+TEXT_BODY = {
+    "state": "Quán cà phê Mây ở Đà Nẵng, mở cửa 7h đến 22h.",
+    "questions": {"opening_hours": {"type": "text", "instructions": "What opening hours does it give?"}},
+}
+
+
+async def test_text_question_answers_with_the_copied_text(async_client, patch_llm):
+    seen = patch_llm(_FakeStructured(returns={"q0": "7h đến 22h"}))
+    resp = await async_client.post("/api/decision/system-one", json=TEXT_BODY)
+    assert resp.json()["data"]["answers"] == {"opening_hours": {"type": "text", "text": "7h đến 22h"}}
+    schema = seen["llm"].schema
+    assert schema.model_validate({"q0": ""}) is not None
+    with pytest.raises(Exception):
+        schema.model_validate({"q0": "x" * 1001})

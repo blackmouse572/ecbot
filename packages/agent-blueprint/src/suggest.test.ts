@@ -17,6 +17,14 @@ describe("buildSuggestQuestions", () => {
     expect(JSON.stringify(q)).not.toContain("—");
   });
 
+  // #256: details the owner already wrote are read in the same call.
+  it("asks text questions for the details a description usually gives", () => {
+    const q = buildSuggestQuestions();
+    expect(q.text__business_name?.type).toBe("text");
+    expect(q.text__opening_hours?.type).toBe("text");
+    expect(q.text__offerings?.type).toBe("text");
+  });
+
   it("uses the withArticle helper for business_type criteria", () => {
     const q = buildSuggestQuestions();
     const businessTypeCriteria = (q.business_type as { criteria: Record<string, string> }).criteria;
@@ -90,7 +98,38 @@ describe("readSuggestAnswers", () => {
   });
 });
 
+describe("readSuggestAnswers: texts", () => {
+  it("keeps stated texts, trimmed, and drops empty or malformed ones", () => {
+    const s = readSuggestAnswers({
+      text__business_name: { type: "text", text: "  Mây  " },
+      text__address: { type: "text", text: "" },
+      text__offerings: { type: "noul", noul: 1 } as never,
+      text__nope: { type: "text", text: "x" },
+    });
+    expect(s.texts).toEqual({ business_name: "Mây" });
+  });
+
+  it("cuts a text to the profile's limits", () => {
+    const s = readSuggestAnswers({
+      text__business_name: { type: "text", text: "x".repeat(500) },
+      text__offerings: { type: "text", text: "y".repeat(5000) },
+    });
+    expect(s.texts.business_name).toHaveLength(120);
+    expect(s.texts.offerings).toHaveLength(1000);
+  });
+});
+
 describe("applySuggestion", () => {
+  it("fills the name and the facts the business type asks for", () => {
+    const p = applySuggestion({
+      ...EMPTY_SUGGESTION,
+      businessType: { value: "beauty", confidence: 0.95 },
+      texts: { business_name: "Lan Spa", offerings: "Gội đầu 80k", address: "12 Lê Lợi", delivery: "Ship toàn quốc" },
+    }, "vi")!;
+    expect(p.businessName).toBe("Lan Spa");
+    expect(p.facts).toEqual({ services_prices: "Gội đầu 80k", address: "12 Lê Lợi" });
+  });
+
   it("returns null when the business type is not confident enough", () => {
     expect(applySuggestion(EMPTY_SUGGESTION, "vi")).toBeNull();
     expect(applySuggestion({ ...EMPTY_SUGGESTION, businessType: { value: "beauty", confidence: 0.4 } }, "vi")).toBeNull();

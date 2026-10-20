@@ -11,7 +11,7 @@ import {
     WorkspacePolicyAbilityProtected,
 } from 'src/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
-import { AgentBuilderWorkspaceSuggestDoc } from '../docs/agent-builder.workspace.doc';
+import { AgentBuilderWorkspaceSuggestDoc, AgentBuilderWorkspaceWarmDoc } from '../docs/agent-builder.workspace.doc';
 import { AgentBuilderSuggestRequestDto } from '../dtos/request/agent-builder.suggest.request.dto';
 import { AgentBuilderSuggestResponseDto } from '../dtos/response/agent-builder.suggest.response.dto';
 import { AgentBuilderService } from '../services/agent-builder.service';
@@ -42,5 +42,20 @@ export class AgentBuilderWorkspaceController {
                 description
             ),
         };
+    }
+
+    @AgentBuilderWorkspaceWarmDoc()
+    @Response('agentBuilder.warm.success')
+    @WorkspacePolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.CREATE],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @HttpCode(HttpStatus.OK)
+    @Post('/warm')
+    async warm(): Promise<void> {
+        await this.agentBuilderService.warm();
     }
 }

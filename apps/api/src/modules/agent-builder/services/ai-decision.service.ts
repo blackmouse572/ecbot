@@ -34,6 +34,17 @@ export class AiDecisionService {
         return (await this.decide(state, questions, timeoutMs)).answers;
     }
 
+    /** Wakes apps/ai (it scales to zero) so the next decision skips its cold start. */
+    async warm(): Promise<void> {
+        const authHeaders = await getInternalAuthHeader(this.baseUrl);
+        await firstValueFrom(
+            this.http.get(`${this.baseUrl}/health`, {
+                timeout: this.config.get<number>('agentBuilder.warmTimeoutMs'),
+                headers: { ...authHeaders, ...getInternalTokenHeader(this.config) },
+            })
+        );
+    }
+
     /** `systemOne`, plus what the call spent, for callers that meter it. */
     async decide(
         state: string,

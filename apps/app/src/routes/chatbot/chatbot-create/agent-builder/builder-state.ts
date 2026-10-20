@@ -11,6 +11,8 @@ export type LinkedAccountRef = Pick<AccountGetDetailResponseDto, "id" | "type" |
 export type BuilderState = {
   profile: AgentProfile | null;
   suggestion: AgentSuggestion | null;
+  /** The description named the business type (by suggestion or keywords). */
+  understood: boolean;
   source: "describe" | "template" | "hydrate" | null;
   // The raw text typed into the step-0 describe box, kept only to redisplay
   // it as the step-0 answer bubble (it isn't part of AgentProfile).
@@ -34,6 +36,9 @@ export type BuilderAction =
       profile: AgentProfile;
       suggestion: AgentSuggestion | null;
       source: "describe" | "template";
+      /** Question ids the description already answered (#256). */
+      answered?: string[];
+      understood?: boolean;
       description?: string;
       prefillBusinessName?: string;
     }
@@ -51,7 +56,7 @@ export type BuilderAction =
 export type Step = { group: QuestionGroup; question: Question };
 
 export const initialBuilderState: BuilderState = {
-  profile: null, suggestion: null, source: null, describeText: null, answered: [], editing: null, chatbotId: null, finished: false, activateLater: false,
+  profile: null, suggestion: null, understood: false, source: null, describeText: null, answered: [], editing: null, chatbotId: null, finished: false, activateLater: false,
   linkedAccounts: [],
 };
 
@@ -133,10 +138,11 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         linkedAccounts: state.linkedAccounts,
         profile: seeded,
         suggestion: action.suggestion,
+        understood: action.understood ?? false,
         source: action.source,
         describeText: action.source === "describe" ? (action.description ?? null) : null,
         // The template already chose the business type.
-        answered: action.source === "template" ? ["businessType"] : [],
+        answered: action.source === "template" ? ["businessType"] : (action.answered ?? []),
       };
     }
     case "hydrate":

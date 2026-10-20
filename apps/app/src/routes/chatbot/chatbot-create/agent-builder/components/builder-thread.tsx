@@ -116,7 +116,7 @@ export function BuilderThread(builder: AgentBuilderController) {
 
           {state.source === "describe" && (
             <Message from="assistant">
-              <MessageContent>{t(state.suggestion ? "agentBuilder.ui.suggested" : "agentBuilder.ui.suggestFailed")}</MessageContent>
+              <MessageContent>{t(state.understood ? "agentBuilder.ui.suggested" : "agentBuilder.ui.suggestFailed")}</MessageContent>
             </Message>
           )}
 

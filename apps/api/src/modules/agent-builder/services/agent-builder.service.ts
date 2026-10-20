@@ -32,7 +32,16 @@ export class AgentBuilderService {
     static cacheKey(description: string): string {
         const normalised = description.trim().toLowerCase().replace(/\s+/g, ' ');
         const hash = createHash('sha256').update(normalised).digest('hex');
-        return `agent-builder:suggest:v1:${hash}`;
+        return `agent-builder:suggest:v2:${hash}`;
+    }
+
+    // Never throws: waking apps/ai only saves the owner a wait (#256).
+    async warm(): Promise<void> {
+        try {
+            await this.aiDecision.warm();
+        } catch (error) {
+            this.logger.warn(`agent builder warm-up failed: ${(error as Error).message}`);
+        }
     }
 
     // Never throws: the builder works without suggestions, so a workspace out

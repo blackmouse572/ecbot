@@ -47,6 +47,7 @@ const testPanelMounts = vi.fn();
 const create = vi.fn();
 const update = vi.fn();
 const suggest = vi.fn();
+const warm = vi.fn();
 const chatbot = vi.fn();
 const activate = vi.fn();
 const toastError = vi.fn();
@@ -104,6 +105,7 @@ vi.mock("@medusajs/ui", async () => {
 });
 vi.mock("@/hooks/api/agent-builder", () => ({
   useAgentBuilderSuggest: () => ({ mutateAsync: suggest, isPending: false }),
+  useAgentBuilderWarm: () => ({ mutate: warm }),
 }));
 vi.mock("./components/test-panel", () => ({
   TestPanel: ({ chatbotId }: { chatbotId: string | null }) => {
@@ -145,6 +147,7 @@ describe("AgentBuilder", () => {
     create.mockReset().mockResolvedValue({ data: { data: { id: "bot-1" } } });
     update.mockReset().mockResolvedValue({});
     suggest.mockReset();
+    warm.mockReset();
     chatbot.mockReset().mockReturnValue({ chatbot: undefined });
     prefillAccount.mockReset().mockReturnValue({ account: undefined, isError: false });
     activate.mockReset().mockResolvedValue({});
@@ -192,9 +195,7 @@ describe("AgentBuilder", () => {
       suggest.mockResolvedValue({ businessType: { value: "beauty", confidence: 0.95 }, personality: null, formality: null, goals: {}, rules: {} });
       renderBuilder("/ws/chatbot/create?businessName=Lotus%20Spa");
       await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "Nail spa in Da Nang{enter}");
-      await screen.findByText("agentBuilder.ui.auto");
-      await answerCurrent(); // businessType, already suggested
-
+      // The type was suggested with confidence, so it is answered, not asked.
       expect(await screen.findByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toHaveValue("Lotus Spa");
     });
 
@@ -242,12 +243,41 @@ describe("AgentBuilder", () => {
     });
   });
 
-  it("shows the suggestion badge after describing the business", async () => {
-    suggest.mockResolvedValue({ businessType: { value: "beauty", confidence: 0.95 }, personality: null, formality: null, goals: {}, rules: {} });
+  it("asks a likely business type with the suggestion badge", async () => {
+    suggest.mockResolvedValue({ businessType: { value: "beauty", confidence: 0.7 }, personality: null, formality: null, goals: {}, rules: {}, texts: {} });
     renderBuilder();
     await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "Nail spa in Da Nang{enter}");
-    await screen.findByText("agentBuilder.ui.auto");
+    await screen.findByText("agentBuilder.ui.check");
     expect(screen.getByText("agentBuilder.ui.suggested")).toBeInTheDocument();
+  });
+
+  it("wakes the AI service when the builder opens", () => {
+    renderBuilder();
+    expect(warm).toHaveBeenCalledTimes(1);
+  });
+
+  // #256: a clear description was asked all 24 questions again from the type.
+  describe("starting from a description", () => {
+    it("does not ask again what a sure suggestion read from it", async () => {
+      suggest.mockResolvedValue({
+        businessType: { value: "restaurant", confidence: 0.98 }, personality: null, formality: null, goals: {}, rules: {},
+        texts: { business_name: "Mây", opening_hours: "7h đến 22h" },
+      });
+      renderBuilder();
+      await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "Quán cà phê Mây, mở cửa 7h đến 22h{enter}");
+      expect(await screen.findByRole("textbox", { name: "agentBuilder.questions.agentName.title" })).toBeInTheDocument();
+      expect(screen.getByText("agentBuilder.ui.suggested")).toBeInTheDocument();
+      expect(screen.getByText(/agentBuilder.questions.businessName.lead/)).toHaveTextContent("Mây");
+      expect(screen.queryByRole("group", { name: "agentBuilder.questions.businessType.title" })).not.toBeInTheDocument();
+    });
+
+    it("still picks the business type from plain words when the suggestion fails", async () => {
+      suggest.mockRejectedValue(new Error("timeout"));
+      renderBuilder();
+      await userEvent.type(screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder"), "Quán cà phê ở Đà Nẵng{enter}");
+      expect(await screen.findByRole("textbox", { name: "agentBuilder.questions.businessName.title" })).toBeInTheDocument();
+      expect(screen.getByText("agentBuilder.ui.suggested")).toBeInTheDocument();
+    });
   });
 
   it("keeps going with plain questions when the suggestion fails", async () => {
