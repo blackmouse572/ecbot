@@ -50,15 +50,33 @@ export class FacebookPageService
             const { userId } = data;
             const url = `${this.baseGraphApiUrl}/${userId ?? 'me'}/accounts`;
 
-            const response = await this.httpService.axiosRef.get<{
+            type PagesResponse = {
                 data: FacebookPageResponseDto[];
-            }>(url, {
-                params: {
-                    access_token: data.accessToken,
-                    fields: 'id,name,category,picture{url,width,height},tasks,access_token,fan_count,link',
-                },
-            });
-            return response.data.data;
+                paging?: { next?: string };
+            };
+
+            const pages: FacebookPageResponseDto[] = [];
+            let nextUrl: string | undefined = url;
+            let params: Record<string, string> | undefined = {
+                access_token: data.accessToken,
+                fields: 'id,name,category,picture{url,width,height},tasks,access_token,fan_count,link',
+                limit: '100',
+            };
+            // Graph API caps each response, so follow paging.next (a full URL
+            // that already carries the token and fields) until it runs out.
+            while (nextUrl) {
+                const response =
+                    await this.httpService.axiosRef.get<PagesResponse>(
+                        nextUrl,
+                        {
+                            params,
+                        }
+                    );
+                pages.push(...response.data.data);
+                nextUrl = response.data.paging?.next;
+                params = undefined;
+            }
+            return pages;
         } catch (error) {
             if (error instanceof AxiosError) {
                 console.error(
