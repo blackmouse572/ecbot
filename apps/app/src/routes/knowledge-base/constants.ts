@@ -135,6 +135,9 @@ export const KB_MEDIA_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const KB_MEDIA_PDF_MAX_BYTES = 20 * 1024 * 1024;
 /** Files picked in one go; each becomes its own item. */
 export const KB_MEDIA_MAX_FILES = 50;
+
+/** Most pages one website item may read; matches the API's limit. */
+export const KB_URL_MAX_PAGES = 50;
 /** Uploads running at once, so a big batch does not flood the API. */
 export const KB_MEDIA_UPLOAD_CONCURRENCY = 3;
 

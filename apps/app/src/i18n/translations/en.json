@@ -2766,6 +2766,12 @@
     "learned_chunks_other": "The agent learned this file as {{count}} sections.",
     "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
     "learn_failed": "Could not learn this file. Try Process again.",
+    "max_pages": "Pages to read",
+    "max_pages_hint": "1 reads only this page. A higher number also reads linked pages on the same website, up to {{max}}. Each page read counts toward your plan.",
+    "url_learned_one": "The agent read {{count}} page and learned it as {{sections}} sections.",
+    "url_learned_other": "The agent read {{count}} pages and learned them as {{sections}} sections.",
+    "url_not_learned_yet": "Not read yet. The agent can use this website once processing completes.",
+    "url_learn_failed": "Could not read this website. Try Process again.",
     "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
     "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section.",
     "media": {

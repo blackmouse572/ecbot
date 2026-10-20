@@ -2809,6 +2809,11 @@
     "learned_chunks_other": "Agent đã học tệp này thành {{count}} phần.",
     "not_learned_yet": "Chưa học. Agent có thể dùng tệp này khi xử lý xong.",
     "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại.",
+    "max_pages": "Số trang cần đọc",
+    "max_pages_hint": "1 chỉ đọc trang này. Số lớn hơn sẽ đọc thêm các trang được liên kết trên cùng website, tối đa {{max}} trang. Mỗi trang đọc được tính vào gói của bạn.",
+    "url_learned_other": "Agent đã đọc {{count}} trang và học thành {{sections}} phần.",
+    "url_not_learned_yet": "Chưa đọc. Agent có thể dùng website này khi xử lý xong.",
+    "url_learn_failed": "Không đọc được website này. Hãy thử Xử lý lại.",
     "link_after_create_error_one": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của agent.",
     "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent.",
     "media": {

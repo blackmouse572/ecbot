@@ -207,16 +207,25 @@ function registerCreateTools(server: McpServer, api: ApiOptions) {
           .describe(
             "FILE or MEDIA: a public http(s) link to the file itself, which Ecbot downloads.",
           ),
+        maxPages: z
+          .number()
+          .int()
+          .min(1)
+          .max(50)
+          .optional()
+          .describe(
+            "URL: how many pages of the site to read. 1 (the default) reads only this page; more also reads linked pages on the same site. Each page read counts toward the workspace's plan.",
+          ),
         tags: z.array(z.string()).optional(),
       }),
       annotations: ADDS,
     },
-    ({ knowledgeBaseId, ...body }) =>
+    ({ knowledgeBaseId, maxPages, ...body }) =>
       respond(
         knowledgeItemClientControllerCreateV1({
           ...api,
           path: { knowledgeBaseId },
-          body,
+          body: maxPages ? { ...body, metadata: { maxPages } } : body,
         }),
         (d) => d.data,
       ),

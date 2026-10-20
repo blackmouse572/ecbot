@@ -21,6 +21,11 @@ class RAGIngestResponse(BaseModel):
     status: str = "COMPLETED"
     # Embedding tokens, for apps/api to meter (#250); None when not reported.
     usage: TokenUsage | None = None
+    # Website items only: pages read (apps/api charges them to the plan), the
+    # start page's title and the start of the text, shown to the owner.
+    pages_crawled: int = 0
+    page_title: str | None = None
+    preview: str | None = None
 
 
 class RAGDocumentResponse(BaseModel):
@@ -57,6 +62,8 @@ class RAGUrlIngestRequest(BaseModel):
     only_main_content: bool = True
     max_age: int | None = 172800000
     parsers: list[str] = Field(default_factory=lambda: ["pdf"])
+    # 1 reads only this page; more follows same-site links up to that many.
+    max_pages: int = Field(default=1, ge=1, le=50)
 
 
 class RAGTextIngestRequest(BaseModel):

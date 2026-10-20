@@ -11,6 +11,7 @@ import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
 import {
     AI_USAGE_METER,
     AiUsageMeter,
+    AiUsageRecord,
     ENUM_AI_USAGE_SOURCE,
 } from '@app/app/ai-usage-meter.interface';
 import { parseWireTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
@@ -24,6 +25,9 @@ import {
     RAG_INGEST_MAX_ATTEMPTS,
     RAG_INGEST_NO_TOKENS_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
+    RAG_INGEST_URL_HTTP_TIMEOUT_MS,
+    KNOWLEDGE_CRAWL_TOKENS_PER_PAGE,
+    KNOWLEDGE_URL_MAX_PAGES,
 } from '../constants/knowledge-ingest.constant';
 import { KnowledgeIngestTaskDto } from '../dtos/knowledge-ingest.task.dto';
 import { PermanentIngestError } from '../errors/permanent-ingest.error';
@@ -59,6 +63,13 @@ export function extractIngestErrorMessage(err: any): string {
         return msg;
     }
     return (err as Error)?.message ?? String(err);
+}
+
+/** The owner's page limit for a website item, kept within 1..max. */
+function urlMaxPages(raw: unknown): number {
+    const pages = Math.floor(Number(raw));
+    if (!Number.isFinite(pages) || pages < 1) return 1;
+    return Math.min(pages, KNOWLEDGE_URL_MAX_PAGES);
 }
 
 @Injectable()
@@ -252,18 +263,22 @@ export class KnowledgeIngestTaskService {
         }
         const usage = parseWireTokenUsage(data?.usage);
         if (workspaceId && usage) {
-            await this.meter
-                ?.record({
-                    workspaceId,
-                    usage,
-                    source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
-                    model: data?.embedding_model,
-                })
-                .catch((err: unknown) =>
-                    this.logger.warn(
-                        `Ingest usage not recorded for item ${knowledgeItemId}: ${err}`
-                    )
-                );
+            await this.recordUsage(workspaceId, knowledgeItemId, {
+                usage,
+                model: data?.embedding_model,
+            });
+        }
+        const pagesCrawled = Number(data?.pages_crawled ?? 0);
+        if (workspaceId && pagesCrawled > 0) {
+            const tokens = pagesCrawled * KNOWLEDGE_CRAWL_TOKENS_PER_PAGE;
+            await this.recordUsage(workspaceId, knowledgeItemId, {
+                usage: {
+                    inputTokens: tokens,
+                    outputTokens: 0,
+                    totalTokens: tokens,
+                },
+                model: 'web-crawl',
+            });
         }
         await this.knowledgeItemService.updateStatus(knowledgeItemId, {
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
@@ -277,11 +292,36 @@ export class KnowledgeIngestTaskService {
             metadata: {
                 ...(item.metadata ?? {}),
                 chunkCount: data?.chunk_count ?? 0,
+                // What a website item read, so the owner can check it.
+                ...(item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL && {
+                    pagesCrawled,
+                    pageTitle: data?.page_title,
+                    preview: data?.preview,
+                }),
             },
         });
         this.logger.log(
             `ingest done item=${knowledgeItemId} chunks=${data?.chunk_count ?? 0}`
         );
+    }
+
+    private async recordUsage(
+        workspaceId: string,
+        knowledgeItemId: string,
+        { usage, model }: Pick<AiUsageRecord, 'usage' | 'model'>
+    ): Promise<void> {
+        await this.meter
+            ?.record({
+                workspaceId,
+                usage,
+                source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
+                model,
+            })
+            .catch((err: unknown) =>
+                this.logger.warn(
+                    `Ingest usage not recorded for item ${knowledgeItemId}: ${err}`
+                )
+            );
     }
 
     private async ingestFile(item: any, chatbotIds: string[]): Promise<any> {
@@ -371,9 +411,10 @@ export class KnowledgeIngestTaskService {
                     chatbot_ids: chatbotIds,
                     knowledge_base_id: item.knowledgeBase?.id,
                     title: item.title,
+                    max_pages: urlMaxPages(item.metadata?.maxPages),
                 },
                 {
-                    timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
+                    timeout: RAG_INGEST_URL_HTTP_TIMEOUT_MS,
                     headers: await this.authHeaders({
                         'Content-Type': 'application/json',
                     }),
