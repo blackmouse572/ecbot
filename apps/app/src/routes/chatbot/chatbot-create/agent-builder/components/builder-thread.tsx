@@ -59,6 +59,10 @@ export function BuilderThread(builder: AgentBuilderController) {
   const complete = isComplete(state);
   const asking = asksActivation(state);
   const waiting = awaitsActivation(state);
+  // Answers the description gave further down (#256) show when the thread
+  // reaches them, not piled up below the open question. Editing shows all.
+  const currentIndex = current && !state.editing ? all.findIndex((s) => s.question.id === current.question.id) : -1;
+  const answeredAhead = (id: string) => currentIndex >= 0 && all.findIndex((s) => s.question.id === id) > currentIndex;
   const anchor = activationAnchor(profile);
 
   // Section E (kept by the wireframe delta): step 0's answer, once a
@@ -122,7 +126,8 @@ export function BuilderThread(builder: AgentBuilderController) {
 
           {buildQuestionGroups(profile).map((group) => {
             const visible = group.questions.filter(
-              (q) => state.answered.includes(q.id) || (!waiting && q.id === current?.question.id),
+              (q) =>
+                (state.answered.includes(q.id) && !answeredAhead(q.id)) || (!waiting && q.id === current?.question.id),
             );
             if (!visible.length) return null;
             return (
@@ -139,7 +144,13 @@ export function BuilderThread(builder: AgentBuilderController) {
                           question={question}
                           profile={profile}
                           suggestion={state.suggestion}
-                          position={{ current: all.findIndex((s) => s.question.id === question.id) + 1, total: all.length }}
+                          position={{
+                            // Answers the description gave count as done (#256).
+                            current: state.editing
+                              ? all.findIndex((s) => s.question.id === question.id) + 1
+                              : all.filter((s) => state.answered.includes(s.question.id)).length + 1,
+                            total: all.length,
+                          }}
                           onAnswer={(value) => answer(question, value)}
                           onSkip={() => dispatch({ type: "skip", question })}
                           chatbotId={state.chatbotId}

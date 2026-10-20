@@ -1443,7 +1443,7 @@
       "startPlaceholder": "Ví dụ: Mình có tiệm nail ở Đà Nẵng. Khách hay hỏi giá và muốn đặt lịch.",
       "suggesting": "Đang thiết lập agent...",
       "suggestFailed": "Mình chưa tự nhận diện được. Mình cùng trả lời vài câu hỏi nhé.",
-      "suggested": "Mình đã điền sẵn những gì có thể. Bạn kiểm tra giúp các mục cần xem lại nhé.",
+      "suggested": "Mình đã điền sẵn những gì bạn mô tả. Bấm vào câu trả lời nào để sửa nhé.",
       "auto": "Tự động điền",
       "check": "Vui lòng kiểm tra",
       "required": "Vui lòng trả lời câu hỏi này.",

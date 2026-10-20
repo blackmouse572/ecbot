@@ -1404,7 +1404,7 @@
       "startPlaceholder": "e.g. I run a nail spa in Da Nang. Customers ask prices and want to book.",
       "suggesting": "Setting up your agent...",
       "suggestFailed": "I could not work that out on my own. Let's go through the questions.",
-      "suggested": "I filled in what I could. Check the answers marked for review.",
+      "suggested": "I filled in what you described. Tap an answer to change it.",
       "auto": "Auto-filled",
       "check": "Please check",
       "required": "Please answer this question.",

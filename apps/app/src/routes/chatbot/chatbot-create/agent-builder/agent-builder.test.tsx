@@ -269,6 +269,8 @@ describe("AgentBuilder", () => {
       expect(screen.getByText("agentBuilder.ui.suggested")).toBeInTheDocument();
       expect(screen.getByText(/agentBuilder.questions.businessName.lead/)).toHaveTextContent("Mây");
       expect(screen.queryByRole("group", { name: "agentBuilder.questions.businessType.title" })).not.toBeInTheDocument();
+      // Answers further down wait for their turn instead of piling up below the open question.
+      expect(screen.queryByText("agentBuilder.facts.opening_hours.title")).not.toBeInTheDocument();
     });
 
     it("still picks the business type from plain words when the suggestion fails", async () => {
