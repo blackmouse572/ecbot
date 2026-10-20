@@ -7,10 +7,14 @@ import {
     Param,
     ParseUUIDPipe,
     Patch,
+    Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
-import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
+import {
+    PaginationQuery,
+    PaginationQueryFilterInEnum,
+} from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
 import {
@@ -47,7 +51,9 @@ import {
 } from '../docs/workspace.admin.doc';
 import { WorkspaceUpdateStatusRequestDto } from '../dtos/request/workspace.update-status.request.dto';
 import { WorkspaceAdminResponseDto } from '../dtos/response/workspace.admin.response.dto';
+import { ENUM_WORKSPACE_STATUS } from '../enums/workspace.enum';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
+import { WorkspaceOwnerFilterPipe } from '../pipes/workspace.owner-filter.pipe';
 import { WorkspaceAdminService } from '../services/workspace.admin.service';
 
 @ApiTags('modules.admin.workspace')
@@ -80,9 +86,17 @@ export class WorkspaceAdminController {
             defaultOrderBy: 'createdAt',
             defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
         })
-        { _search, _limit, _offset, _order }: PaginationListDto
+        { _search, _limit, _offset, _order }: PaginationListDto,
+        @PaginationQueryFilterInEnum('status', null, ENUM_WORKSPACE_STATUS)
+        status?: Record<string, any>,
+        @Query('owner', WorkspaceOwnerFilterPipe)
+        owner?: Record<string, any>
     ): Promise<IResponsePaging<WorkspaceAdminResponseDto>> {
-        const find: Record<string, any> = { ..._search };
+        const find: Record<string, any> = {
+            ..._search,
+            ...(status ?? {}),
+            ...(owner ?? {}),
+        };
         const [data, total] = await Promise.all([
             this.workspaceAdminService.findAll(find, {
                 limit: _limit,

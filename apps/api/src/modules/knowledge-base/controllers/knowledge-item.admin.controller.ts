@@ -91,7 +91,13 @@ export class KnowledgeItemAdminController {
     async list(
         @PaginationQuery({
             availableSearch: KNOWLEDGE_ITEM_ADMIN_AVAILABLE_SEARCH,
-            availableOrderBy: ['createdAt', 'updatedAt', 'status', 'type'],
+            availableOrderBy: [
+                'createdAt',
+                'updatedAt',
+                'status',
+                'type',
+                'size',
+            ],
             defaultOrderBy: 'createdAt',
             defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
         })

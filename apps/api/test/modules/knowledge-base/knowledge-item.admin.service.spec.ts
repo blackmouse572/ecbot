@@ -45,6 +45,32 @@ describe('KnowledgeItemAdminService', () => {
 
     beforeEach(() => jest.clearAllMocks());
 
+    it.each([
+        ['ASC', 'ASC NULLS LAST'],
+        ['DESC', 'DESC NULLS LAST'],
+    ])(
+        'sorts by file size %s with sizeless items last',
+        async (direction, expected) => {
+            repository.find.mockResolvedValue([]);
+            repository.countChunks.mockResolvedValue(new Map());
+
+            await service.findAll(
+                {},
+                { limit: 20, offset: 0, order: { size: direction } as any }
+            );
+
+            expect(repository.find).toHaveBeenCalledWith(
+                { deletedAt: null },
+                {
+                    limit: 20,
+                    offset: 0,
+                    orderBy: { attachment: { size: expected } },
+                    populate: ['knowledgeBase.workspace'],
+                }
+            );
+        }
+    );
+
     it('lists items with workspace, size and batched chunk counts, without content or storage fields', async () => {
         repository.find.mockResolvedValue([item('i1'), item('i2')]);
         repository.countChunks.mockResolvedValue(new Map([['i1', 12]]));

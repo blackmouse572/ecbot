@@ -28,6 +28,20 @@ export function SkillAdminListDoc(): MethodDecorator {
                     required: false,
                     enum: ['builtin', 'all'],
                 },
+                {
+                    name: 'workspace',
+                    required: false,
+                    type: 'string',
+                    description:
+                        'Workspace id: skills that workspace owns. Implies source=all',
+                },
+                {
+                    name: 'chatbot',
+                    required: false,
+                    type: 'string',
+                    description:
+                        'Chatbot id: skills attached to that agent. Implies source=all',
+                },
             ],
         }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
