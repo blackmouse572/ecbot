@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
     # In-process background jobs (folded from the standalone jobs worker) —
     # runs the DB-polling heartbeat as a background task so no separate worker
     # service is needed. Off by default: apps/api already drives knowledge item
-    # ingest over Cloud Tasks, so a second consumer risks duplicate chunks.
+    # ingest over Cloud Tasks, so a second consumer would race it on the item status and pay for embeddings twice.
     # Enable with ENABLE_INPROCESS_JOBS=true.
     jobs_task = None
     if os.getenv("ENABLE_INPROCESS_JOBS", "false").lower() == "true":

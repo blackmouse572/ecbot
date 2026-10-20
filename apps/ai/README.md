@@ -193,4 +193,4 @@ Prompt caching is handled at the gateway: `build_chat_model` sets OpenRouter's t
 
 The FastAPI lifespan (`main.py`) runs at boot: it configures logging, fails fast on a bad `AGENT_PROMPT_PATH`, connects to Postgres (5 retries with backoff) and opens the asyncpg pool. A revision that cannot reach Postgres never goes live. Boot logs `system_prompt_loaded`, `db_connected` and `boot_completed`.
 
-`ENABLE_INPROCESS_JOBS` (default `false`) starts the chunking heartbeat inside the API process. Leave it off when `apps/api` drives knowledge item ingest over Cloud Tasks, because a second consumer risks duplicate chunks.
+`ENABLE_INPROCESS_JOBS` (default `false`) starts the chunking heartbeat inside the API process. Leave it off when `apps/api` drives knowledge item ingest over Cloud Tasks, because a second consumer would race it on the item status and pay for embeddings twice.
