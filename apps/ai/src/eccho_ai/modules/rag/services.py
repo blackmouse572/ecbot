@@ -145,6 +145,7 @@ class RAGIngestService:
                 limit=max_pages,
                 only_main_content=only_main_content,
                 max_age=max_age,
+                parsers=parsers or ["pdf"],
             )
         else:
             firecrawl_documents = [
@@ -165,11 +166,21 @@ class RAGIngestService:
             if not page_text:
                 continue
             page_metadata = self._firecrawl_metadata(firecrawl_document)
+            page_url = page_metadata.get("source_url") or page_metadata.get("url") or normalized_url
+            # The seed was checked above; a crawled link gets the same check,
+            # so a public page linking to a private address adds nothing.
+            if page_url != normalized_url:
+                try:
+                    await assert_public_url(page_url)
+                except EgressBlockedError:
+                    continue
+                except HostUnresolvableError:
+                    pass  # the scraper reached it, so it is not private
             pages.append(
                 Document(
                     page_content=page_text,
                     metadata={
-                        "source": page_metadata.get("source_url") or page_metadata.get("url") or normalized_url,
+                        "source": page_url,
                         "mime_type": "text/markdown",
                         "extension": ".md",
                         "source_type": "url",
@@ -179,6 +190,9 @@ class RAGIngestService:
             )
         if not pages:
             raise ValueError("No extractable text found in scraped URL")
+        # The page the owner entered leads the preview and gives the title;
+        # the crawl may return it anywhere, or not at all (no text on it).
+        pages.sort(key=lambda page: page.metadata["source"].rstrip("/") != normalized_url.rstrip("/"))
 
         text = "\n\n".join(page.page_content for page in pages)
         document_id = uuid4()
@@ -390,8 +404,9 @@ class RAGIngestService:
             formats=["markdown"],
         )
 
+    # No retry here: a crawl takes minutes, and apps/api's Cloud Tasks
+    # delivery already retries the whole ingest.
     @staticmethod
-    @retry(**_RETRY)
     def _crawl_site(
         *,
         api_key: str,
@@ -399,6 +414,7 @@ class RAGIngestService:
         limit: int,
         only_main_content: bool,
         max_age: int | None,
+        parsers: list[str],
     ) -> list[Any]:
         from firecrawl import Firecrawl
 
@@ -408,6 +424,7 @@ class RAGIngestService:
             limit=limit,
             only_main_content=only_main_content,
             max_age=max_age,
+            parsers=parsers,
             formats=["markdown"],
             timeout=URL_CRAWL_TIMEOUT_SECONDS,
         )

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from eccho_ai.llm.retrievers.safe_fetch import EgressBlockedError
 from eccho_ai.modules.rag.services import RAGIngestService
 
 
@@ -40,8 +41,9 @@ def service(monkeypatch, tmp_path):
     async def embed(texts):
         return [[0.0] * svc.embedding_dimension for _ in texts], None
 
-    async def public(_url):
-        return None
+    async def public(url):
+        if "169.254" in url:
+            raise EgressBlockedError("private")
 
     monkeypatch.setattr(svc, "_embed_documents", embed)
     monkeypatch.setattr(svc, "_validate_embeddings", lambda *_a, **_k: None)
@@ -103,3 +105,49 @@ async def test_images_keep_their_alt_text_and_address(monkeypatch, service):
     result = await service.ingest_url(url="https://shop.vn/", knowledge_item_id="item-1")
 
     assert "![Áo Phao Nữ Siêu Nhẹ](https://cdn.shop.vn/ao-phao.jpg)" in result.preview
+
+
+async def test_the_entered_page_gives_the_title_and_leads_the_preview(monkeypatch, service):
+    monkeypatch.setattr(
+        service,
+        "_crawl_site",
+        lambda **_: [
+            _page("https://shop.vn/doi-tra", "Đổi trả", "Đổi trả trong 7 ngày"),
+            _page("https://shop.vn/", "Shop", "# Shop"),
+        ],
+    )
+
+    result = await service.ingest_url(url="https://shop.vn/", knowledge_item_id="item-1", max_pages=5)
+
+    assert result.page_title == "Shop"
+    assert result.preview.startswith("# Shop")
+
+
+async def test_crawl_reads_pdfs_like_a_single_page(monkeypatch, service):
+    calls = {}
+
+    def crawl(**kwargs):
+        calls.update(kwargs)
+        return [_page("https://shop.vn/", "Shop", "# Shop")]
+
+    monkeypatch.setattr(service, "_crawl_site", crawl)
+
+    await service.ingest_url(url="https://shop.vn/", knowledge_item_id="item-1", max_pages=5)
+
+    assert calls["parsers"] == ["pdf"]
+
+
+async def test_crawled_links_to_private_addresses_are_dropped(monkeypatch, service):
+    monkeypatch.setattr(
+        service,
+        "_crawl_site",
+        lambda **_: [
+            _page("https://shop.vn/", "Shop", "# Shop"),
+            _page("http://169.254.169.254/latest/meta-data/", "meta", "secret-token"),
+        ],
+    )
+
+    result = await service.ingest_url(url="https://shop.vn/", knowledge_item_id="item-1", max_pages=5)
+
+    assert result.pages_crawled == 1
+    assert "secret-token" not in result.preview
