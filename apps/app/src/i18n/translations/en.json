@@ -1468,12 +1468,13 @@
       "customAddressMissing": "Fill in both words.",
       "activateNow": "Activate now",
       "activateLater": "Later",
-      "activateAsk": "Turn your agent on now so it starts replying to customers? You can keep answering the remaining questions either way."
+      "activateAsk": "Your agent has the basics it needs to reply to customers. Activate it now? The remaining questions are optional and already have defaults for your business type, so you can fine-tune them any time."
     },
     "groups": {
       "identity": "About your business",
       "essence": "Personality",
       "facts": "Business facts",
+      "moreFacts": "More details",
       "process": "How it works",
       "rules": "Rules",
       "interaction": "Conversation style"

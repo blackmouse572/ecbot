@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUSINESS_TYPES } from "./business-types";
 import { createProfile } from "./profile";
-import { allTranslationKeys, buildQuestionGroups, readAnswer, writeAnswer } from "./questions";
+import { BASIC_GROUPS, allTranslationKeys, buildQuestionGroups, readAnswer, writeAnswer } from "./questions";
 
 const ids = (p: ReturnType<typeof createProfile>) =>
   buildQuestionGroups(p).flatMap((g) => g.questions.map((q) => q.id));
@@ -49,23 +49,31 @@ describe("buildQuestionGroups", () => {
     expect(process?.questions.map((q) => q.id)).toEqual(["collect", "handoffWhen", "placedOrders"]);
   });
 
-  it("builds six groups in order for an SMB type", () => {
+  // #256: the basics come first; everything after them has a preset default.
+  it("asks the basics first, then the groups that refine them", () => {
     expect(buildQuestionGroups(createProfile("beauty", "vi")).map((g) => g.id))
-      .toEqual(["identity", "essence", "facts", "process", "rules", "interaction"]);
+      .toEqual(["identity", "facts", "essence", "moreFacts", "process", "rules", "interaction"]);
+    expect(BASIC_GROUPS).toEqual(["identity", "facts"]);
   });
 
-  it("asks the weekly hours, then one fact question per preset fact", () => {
-    const facts = buildQuestionGroups(createProfile("restaurant", "vi")).find((g) => g.id === "facts")!;
-    expect(facts.questions.map((q) => q.id)).toEqual([
-      "openingHours", "facts.opening_hours", "facts.address", "facts.menu_highlights",
-      "facts.reservation_policy", "facts.delivery", "facts.payment_methods",
+  it("keeps identity to the type, the names, the channels and the goals", () => {
+    const identity = buildQuestionGroups(createProfile("restaurant", "vi")).find((g) => g.id === "identity")!;
+    expect(identity.questions.map((q) => q.id)).toEqual(["businessType", "businessName", "agentName", "channels", "goals"]);
+  });
+
+  it("asks the type's two key facts with the basics, and the rest later", () => {
+    const groups = buildQuestionGroups(createProfile("restaurant", "vi"));
+    expect(groups.find((g) => g.id === "facts")!.questions.map((q) => q.id)).toEqual(["facts.opening_hours", "facts.address"]);
+    expect(groups.find((g) => g.id === "moreFacts")!.questions.map((q) => q.id)).toEqual([
+      "openingHours", "facts.menu_highlights", "facts.reservation_policy", "facts.delivery", "facts.payment_methods",
     ]);
+    expect(groups.find((g) => g.id === "essence")!.questions[0]!.id).toBe("greeting");
   });
 
   // #289: every business type gets the weekly hours, also those without an hours fact.
   it("asks the weekly hours of business types without an hours fact", () => {
-    const facts = buildQuestionGroups(createProfile("hotel", "en")).find((g) => g.id === "facts")!;
-    expect(facts.questions[0]).toMatchObject({ id: "openingHours", kind: "hours", path: { field: "openingHours" } });
+    const more = buildQuestionGroups(createProfile("hotel", "en")).find((g) => g.id === "moreFacts")!;
+    expect(more.questions[0]).toMatchObject({ id: "openingHours", kind: "hours", path: { field: "openingHours" } });
   });
 
   it("hides the address style question unless the language is Vietnamese", () => {

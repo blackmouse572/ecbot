@@ -1,5 +1,5 @@
 import {
-  buildQuestionGroups, createProfile, prefillFromText, readAnswer, writeAnswer,
+  BASIC_GROUPS, buildQuestionGroups, createProfile, prefillFromText, readAnswer, writeAnswer,
   type AgentProfile, type AgentSuggestion, type Question, type QuestionGroup,
 } from "@repo/agent-blueprint";
 import type { AccountGetDetailResponseDto } from "@repo/client";
@@ -86,10 +86,10 @@ export function isDraftReady(state: BuilderState): boolean {
   return !!state.profile && state.answered.includes("agentName");
 }
 
-/** The question after which the builder asks whether to activate: the
- * channel step, or the agent name for personal types, which have none. */
+/** The question after which the builder asks whether to activate: the last
+ * basic one (#256). Every question after it has a preset default. */
 export function activationAnchor(profile: AgentProfile): string {
-  return steps(profile).some((s) => s.question.id === "channels") ? "channels" : "agentName";
+  return steps(profile).filter((s) => BASIC_GROUPS.includes(s.group.id)).at(-1)!.question.id;
 }
 
 /** Whether the ask to activate shows in the thread. Not for a reopened

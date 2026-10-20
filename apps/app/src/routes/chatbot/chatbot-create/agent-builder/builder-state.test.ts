@@ -1,7 +1,7 @@
 import { createProfile } from "@repo/agent-blueprint";
 import { describe, expect, it } from "vitest";
 import {
-  builderReducer, currentStep, initialBuilderState, isComplete, isDraftReady, steps, type BuilderState,
+  activationAnchor, builderReducer, currentStep, initialBuilderState, isComplete, isDraftReady, steps, type BuilderState,
 } from "./builder-state";
 
 // Generic reducer-flow tests use "describe" so businessType starts
@@ -224,5 +224,16 @@ describe("prefill from free text", () => {
     });
 
     expect(s.profile!.facts.return_policy).toBe("7-day returns");
+  });
+});
+
+// #256: the agent can go live once the basics are answered.
+describe("activationAnchor", () => {
+  it("is the last basic question: the type's second key fact", () => {
+    expect(activationAnchor(createProfile("restaurant", "vi"))).toBe("facts.address");
+  });
+
+  it("is the last basic question for a personal assistant too", () => {
+    expect(activationAnchor(createProfile("personal_scheduling", "en"))).toBe("facts.priorities");
   });
 });

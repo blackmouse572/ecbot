@@ -206,13 +206,16 @@ describe("AgentBuilder", () => {
   });
 
   describe("turning the agent on early", () => {
-    it("asks whether to activate once the channel step is answered or skipped", async () => {
+    // #256: the basics are identity plus the type's two key facts.
+    it("asks whether to activate once the basics are answered", async () => {
       renderBuilder();
       await pickBeautyTemplate();
       await answerToAgentName();
-      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
-
       await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" }));
+      await answerCurrent(); // goals
+      await answerCurrent(); // facts.services_prices
+      expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
+      await answerCurrent(); // facts.opening_hours
 
       expect(await screen.findByText("agentBuilder.ui.activateAsk")).toBeInTheDocument();
       // The next question waits for the answer.
@@ -234,6 +237,7 @@ describe("AgentBuilder", () => {
       await pickBeautyTemplate();
       await answerToAgentName();
       await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" }));
+      for (let i = 0; i < 3; i++) await answerCurrent(); // goals and the two key facts
 
       await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.activateLater" }));
 
