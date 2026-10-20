@@ -49,6 +49,18 @@ describe("describeStart", () => {
     expect(describeStart(EMPTY_SUGGESTION, CAFE, "vi").profile.businessType).toBe("restaurant");
   });
 
+  // Review on #397: the model can read details without settling the type.
+  it("keeps the details the model read when only the keywords give the type", () => {
+    const { profile, answered } = describeStart(
+      { ...EMPTY_SUGGESTION, texts: { business_name: "Kunmart", opening_hours: "7h đến 22h" } },
+      "Quán cà phê Kunmart, mở 7h đến 22h", "vi",
+    );
+    expect(profile.businessType).toBe("restaurant");
+    expect(profile.businessName).toBe("Kunmart");
+    expect(profile.facts.opening_hours).toBe("7h đến 22h");
+    expect(answered).toEqual(expect.arrayContaining(["businessType", "businessName", "facts.opening_hours"]));
+  });
+
   it("keeps the name the owner wrote in the description", () => {
     const { profile, answered } = describeStart(null, "Shop bán đồ ăn vặt, tên là Kunmart, giao toàn quốc", "vi");
     expect(profile.businessName).toBe("Kunmart");

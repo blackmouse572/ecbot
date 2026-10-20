@@ -114,15 +114,18 @@ export function readSuggestAnswers(answers: Record<string, SystemOneAnswer | und
   };
 }
 
-function factsFrom(texts: AgentSuggestion["texts"], typeId: BusinessTypeId): AgentProfile["facts"] {
-  const asked = PRESETS[typeId].facts as readonly FactId[];
-  const facts: AgentProfile["facts"] = {};
+/** Fills the name and the facts the business type asks for from texts read
+ * out of a description, leaving answers the profile already has. */
+export function applyTexts(profile: AgentProfile, texts: AgentSuggestion["texts"]): AgentProfile {
+  const asked = PRESETS[profile.businessType].facts as readonly FactId[];
+  const facts = { ...profile.facts };
   for (const t of TEXTS) {
     const text = texts[t.id];
     const fact = (t.facts as readonly FactId[]).find((f) => asked.includes(f));
-    if (text && fact) facts[fact] = text;
+    if (text && fact && !facts[fact]?.trim()) facts[fact] = text;
   }
-  return facts;
+  const businessName = profile.businessName.trim() || texts.business_name || "";
+  return { ...profile, businessName, facts };
 }
 
 export function confidenceLevel(c: number): "auto" | "check" | "none" {
@@ -141,9 +144,7 @@ export function applySuggestion(s: AgentSuggestion, primaryLanguage: string): Ag
   const likely = <T extends string>(scores: Record<string, number>, validator?: Set<string>) =>
     Object.entries(scores).filter(([id, p]) => p >= 0.5 && (!validator || validator.has(id))).map(([id]) => id as T);
   return {
-    ...base,
-    businessName: s.texts?.business_name ?? base.businessName,
-    facts: factsFrom(s.texts ?? {}, typeId),
+    ...applyTexts(base, s.texts ?? {}),
     goals: Array.from(new Set([...base.goals, ...likely<GoalId>(s.goals).filter((g) => allowedGoals.has(g))])),
     rules: Array.from(new Set([...base.rules, ...likely<RuleId>(s.rules, validRuleIds)])),
     personality: s.personality && confidenceLevel(s.personality.confidence) !== "none" ? [s.personality.value as AgentProfile["personality"][number]] : base.personality,

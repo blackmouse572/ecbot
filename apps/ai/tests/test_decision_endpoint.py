@@ -195,3 +195,11 @@ async def test_text_question_answers_with_the_copied_text(async_client, patch_ll
     assert schema.model_validate({"q0": ""}) is not None
     with pytest.raises(Exception):
         schema.model_validate({"q0": "x" * 1001})
+
+
+async def test_text_question_left_out_by_the_model_is_not_required(async_client, patch_llm):
+    # A provider may omit a detail the state never mentions; that must not
+    # invalidate the other answers in the same call.
+    seen = patch_llm(_FakeStructured(returns={}))
+    await async_client.post("/api/decision/system-one", json=TEXT_BODY)
+    assert seen["llm"].schema.model_validate({}).model_dump() == {"q0": ""}

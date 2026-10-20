@@ -55,7 +55,9 @@ def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
             )
             fields[field_name] = (answer, ...)
         elif q.type == "text":
-            fields[field_name] = (str, Field(max_length=TEXT_ANSWER_MAX))
+            # Optional: a provider may leave out a detail the state never
+            # gives, and that must not void the other answers.
+            fields[field_name] = (str, Field(default="", max_length=TEXT_ANSWER_MAX))
         else:
             fields[field_name] = (float, Field(ge=0, le=1))
     return create_model("DecisionAnswers", **fields)

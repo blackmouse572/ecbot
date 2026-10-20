@@ -1,7 +1,7 @@
 import { guessBusinessType } from "./guess-business-type";
 import { prefillFromText } from "./prefill";
 import { createProfile, type AgentProfile } from "./profile";
-import { applySuggestion, confidenceLevel, type AgentSuggestion } from "./suggest";
+import { applySuggestion, applyTexts, confidenceLevel, type AgentSuggestion } from "./suggest";
 
 export type DescribeStart = {
   profile: AgentProfile;
@@ -17,7 +17,9 @@ const sure = (s: { confidence: number } | null) => !!s && confidenceLevel(s.conf
 export function describeStart(suggestion: AgentSuggestion | null, description: string, language: string): DescribeStart {
   const suggested = suggestion ? applySuggestion(suggestion, language) : null;
   const guess = suggested ? null : guessBusinessType(description);
-  const profile = prefillFromText(suggested ?? createProfile(guess ?? "ecommerce", language), description);
+  // The model can read details without settling the type: keep them either way.
+  const start = suggested ?? applyTexts(createProfile(guess ?? "ecommerce", language), suggestion?.texts ?? {});
+  const profile = prefillFromText(start, description);
 
   const answered: string[] = [];
   if (suggested && suggestion && sure(suggestion.businessType)) {
