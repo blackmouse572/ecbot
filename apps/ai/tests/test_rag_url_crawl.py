@@ -94,3 +94,12 @@ async def test_preview_is_cut_short(monkeypatch, service):
     result = await service.ingest_url(url="https://shop.vn/", knowledge_item_id="item-1")
 
     assert len(result.preview) <= 2001
+
+
+async def test_images_keep_their_alt_text_and_address(monkeypatch, service):
+    markdown = "# Shop\n\n![Áo Phao Nữ Siêu Nhẹ](https://cdn.shop.vn/ao-phao.jpg)\n\n399.200đ"
+    monkeypatch.setattr(service, "_scrape_url", lambda **_: _page("https://shop.vn/", "Shop", markdown))
+
+    result = await service.ingest_url(url="https://shop.vn/", knowledge_item_id="item-1")
+
+    assert "![Áo Phao Nữ Siêu Nhẹ](https://cdn.shop.vn/ao-phao.jpg)" in result.preview
