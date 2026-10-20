@@ -3,6 +3,7 @@ a customer clearly writing in another language gets a per-turn note."""
 
 from __future__ import annotations
 
+import unicodedata
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -50,6 +51,9 @@ def test_notes_a_message_clearly_not_in_vietnamese(message):
         "[Image description: A white shirt on a hanger]",
         "[The user sent an image that could not be viewed.]",
         "Áo này còn size M không?\n[Image description: A white shirt on a hanger]",
+        # Some keyboards send the accents as separate combining marks (NFD).
+        unicodedata.normalize("NFD", "123 thôn cảnh lá, xã cảnh cây"),
+        unicodedata.normalize("NFD", "Shop ơi tối nay còn bàn không?"),
     ],
 )
 def test_leaves_vietnamese_short_or_unclear_messages_alone(message):
