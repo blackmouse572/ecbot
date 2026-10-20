@@ -20,17 +20,17 @@ export const SavedFieldsSection: FC<Props> = ({ fields }) => {
       : key.replace(/[_-]+/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
   return (
-    <dl className="flex flex-col gap-y-4">
+    <div className="flex flex-col gap-y-4">
       {entries.map(([key, value]) => (
         <div key={key} className="flex flex-col gap-y-2">
-          <Text as="dt" size="small" weight="plus" className="break-words">
+          <Text size="small" weight="plus" className="break-words">
             {label(key)}
           </Text>
-          <Text as="dd" size="small" className="text-ui-fg-subtle break-words">
+          <Text size="small" className="text-ui-fg-subtle break-words">
             {value}
           </Text>
         </div>
       ))}
-    </dl>
+    </div>
   );
 };

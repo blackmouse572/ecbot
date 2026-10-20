@@ -31,7 +31,7 @@ const mockCustomerService = {
     findOneById: jest.fn(),
     findOneByIdInWorkspace: jest.fn(),
     update: jest.fn(),
-    mapGet: jest.fn(),
+    mapWorkspaceGet: jest.fn(),
 };
 
 const mockMergeSuggestionService = {
@@ -88,7 +88,7 @@ describe('CustomerWorkspaceController', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         controller = buildController();
-        mockCustomerService.mapGet.mockReturnValue(mappedDto);
+        mockCustomerService.mapWorkspaceGet.mockReturnValue(mappedDto);
     });
 
     describe('GET /:workspace/customers', () => {
@@ -184,7 +184,7 @@ describe('CustomerWorkspaceController', () => {
             expect(
                 mockCustomerService.findOneByIdInWorkspace
             ).toHaveBeenCalledWith('cust-1', 'ws-1');
-            expect(mockCustomerService.mapGet).toHaveBeenCalledWith(
+            expect(mockCustomerService.mapWorkspaceGet).toHaveBeenCalledWith(
                 customerEntity
             );
             expect(result).toEqual({ data: mappedDto });
@@ -198,7 +198,7 @@ describe('CustomerWorkspaceController', () => {
             ).rejects.toBeInstanceOf(NotFoundException);
             // The mapper must NOT be called when the workspace-scoped lookup
             // returns nothing — that's how cross-workspace access is silenced.
-            expect(mockCustomerService.mapGet).not.toHaveBeenCalled();
+            expect(mockCustomerService.mapWorkspaceGet).not.toHaveBeenCalled();
         });
     });
 
@@ -213,7 +213,7 @@ describe('CustomerWorkspaceController', () => {
             };
             const updated = { ...customerEntity, ...dto };
             mockCustomerService.update.mockResolvedValue(updated);
-            mockCustomerService.mapGet.mockReturnValue({
+            mockCustomerService.mapWorkspaceGet.mockReturnValue({
                 ...mappedDto,
                 ...dto,
             });

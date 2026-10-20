@@ -12,6 +12,7 @@ import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.reques
 import { ContactPointGetResponseDto } from '../dtos/response/contact-point.get.response.dto';
 import { CustomerEraseResponseDto } from '../dtos/response/customer.erase.response.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
+import { CustomerWorkspaceGetResponseDto } from '../dtos/response/customer.workspace-get.response.dto';
 
 export function CustomerWorkspaceListDoc(): MethodDecorator {
     return applyDecorators(
@@ -29,8 +30,8 @@ export function CustomerWorkspaceGetDoc(): MethodDecorator {
         Doc({ summary: 'Get a customer' }),
         DocRequest({ params: [...WorkspaceDocParamsId] }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
-        DocResponse<CustomerGetResponseDto>('customer.workspace.get', {
-            dto: CustomerGetResponseDto,
+        DocResponse<CustomerWorkspaceGetResponseDto>('customer.workspace.get', {
+            dto: CustomerWorkspaceGetResponseDto,
         })
     );
 }
@@ -44,9 +45,12 @@ export function CustomerWorkspaceUpdateDoc(): MethodDecorator {
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
         }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
-        DocResponse<CustomerGetResponseDto>('customer.workspace.update', {
-            dto: CustomerGetResponseDto,
-        })
+        DocResponse<CustomerWorkspaceGetResponseDto>(
+            'customer.workspace.update',
+            {
+                dto: CustomerWorkspaceGetResponseDto,
+            }
+        )
     );
 }
 

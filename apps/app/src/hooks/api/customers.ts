@@ -22,6 +22,8 @@ export type CustomerGetResponseDto = {
   notes?: string | null;
   profileSummary?: string | null;
   mergedIntoCustomerId?: string | null;
+  // Details the agent saved (set_customer_field), by key.
+  metadata?: Record<string, string> | null;
   createdAt: string;
   updatedAt?: string;
 };
