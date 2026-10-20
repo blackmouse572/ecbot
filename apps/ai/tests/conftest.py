@@ -70,16 +70,17 @@ def client():
         pytest.skip("FastAPI app unavailable — check env vars / DB config")
 
     # Entering the client runs the app lifespan, which connects to Postgres.
-    # Fake that boundary so the unit lane needs no database.
-    class _FakeDb:
-        async def connect(self) -> None: ...
-        async def close(self) -> None: ...
+    # Neutralise that boundary so the unit lane needs no database. Only connect
+    # and close are replaced: request middleware still uses the real repo.
+    async def _noop(self) -> None:
+        return None
 
     async def _no_pool() -> None:
         return None
 
     mp = pytest.MonkeyPatch()
-    mp.setattr("eccho_ai.main.PostgresRepo.get_instance", lambda: _FakeDb())
+    mp.setattr("eccho_ai.main.PostgresRepo.connect", _noop)
+    mp.setattr("eccho_ai.main.PostgresRepo.close", _noop)
     mp.setattr("eccho_ai.llm.retrievers.vector_store.get_pool", _no_pool)
     mp.setenv("ENABLE_INPROCESS_JOBS", "false")
     try:
