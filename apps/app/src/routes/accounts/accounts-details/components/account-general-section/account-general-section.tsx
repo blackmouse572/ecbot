@@ -18,7 +18,10 @@ export const AccountGeneralSection = ({ item }: AccountGeneralSectionProps) => {
           </Text>
         </div>
         <div className="flex items-center gap-x-4">
-          <AccountStatusCell status={item.status} />
+          <AccountStatusCell
+            status={item.status}
+            failing={!!item.sendFailingSince}
+          />
           <AccountActions item={item} />
         </div>
       </div>

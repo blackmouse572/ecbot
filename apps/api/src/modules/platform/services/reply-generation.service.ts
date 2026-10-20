@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nestjs';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { addTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
@@ -281,6 +282,16 @@ export class ReplyGenerationService {
                 this.logger.error(
                     `AI stream failed for conversation ${conversationId}: ${(err as Error).message}`
                 );
+                // The AI service failing is ours, not the shop's channel:
+                // the platform team hears it through Sentry, not the bell.
+                if (!ac.signal.aborted) {
+                    Sentry.captureException(err, {
+                        tags: {
+                            reply_failure: 'ai_stream',
+                            workspace_id: chatbot.workspace.id,
+                        },
+                    });
+                }
             }
 
             // Booked before any early return below: the tokens were spent the

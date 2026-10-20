@@ -87,6 +87,21 @@
         "title": "Khách hàng được gắn thẻ \"{tag}\"",
         "message": "Trợ lý vẫn tiếp tục trả lời. Mở cuộc hội thoại để theo dõi."
     },
+    "channelAuthFailed": {
+        "title": "Một kênh đã mất kết nối",
+        "message": "\"{accountName}\" không nhận tin nhắn từ hệ thống nữa vì quyền truy cập đã bị thu hồi hoặc hết hạn. Hãy kết nối lại để trợ lý trả lời tiếp.",
+        "actionText": "Kết nối lại kênh"
+    },
+    "channelSendFailing": {
+        "title": "Một kênh đang không gửi được tin",
+        "message": "Tin trả lời trên \"{accountName}\" liên tục gửi thất bại, khách trên kênh này đang không nhận được câu trả lời. Hãy kiểm tra kênh.",
+        "actionText": "Kiểm tra kênh"
+    },
+    "channelRecovered": {
+        "title": "Kênh đã hoạt động lại",
+        "message": "Tin trả lời trên \"{accountName}\" đã gửi được bình thường.",
+        "actionText": "Xem các kênh"
+    },
     "pushPublicKey": "Đã tải cài đặt thông báo đẩy.",
     "pushSubscribe": "Đã bật thông báo trên thiết bị này.",
     "pushUnsubscribe": "Đã tắt thông báo trên thiết bị này."

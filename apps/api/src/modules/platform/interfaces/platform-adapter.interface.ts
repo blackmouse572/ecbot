@@ -121,3 +121,15 @@ export interface PlatformOAuthCapability {
 }
 
 export const PLATFORM_ADAPTER = Symbol('PLATFORM_ADAPTER');
+
+/** Runs one platform send: resends what is safe to resend, tracks channel health. */
+export interface ISendGuard {
+    /** `recordSuccess: false` when the adapter confirms delivery later through `report`. */
+    run<T>(
+        account: AccountEntity,
+        send: () => Promise<T>,
+        recordSuccess?: boolean
+    ): Promise<T>;
+    /** A delivery outcome learned after the send returned; no `error` means delivered. */
+    report(account: AccountEntity, error?: unknown): Promise<void>;
+}

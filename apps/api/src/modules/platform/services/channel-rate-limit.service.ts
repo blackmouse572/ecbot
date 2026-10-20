@@ -1,11 +1,6 @@
 import { REDIS_AVAILABLE } from '@app/common/redis/redis-availability.provider';
 import { RedisConnectionProvider } from '@app/common/redis/redis-connection.provider';
-import {
-    Inject,
-    Injectable,
-    Logger,
-    OnModuleDestroy,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 
 const KEY_PREFIX = 'channel-rate';
 
@@ -94,6 +89,23 @@ export class ChannelRateLimitService implements OnModuleDestroy {
                 `Rate limit check failed for ${identity}, allowing: ${error}`
             );
             return true;
+        }
+    }
+
+    /** Drop `identity`'s window, so the next claim starts a fresh count. */
+    async reset(identity: string): Promise<void> {
+        const key = `${KEY_PREFIX}:${identity}`;
+        if (!this.redisAvailable) {
+            this.inMemoryWindows.delete(key);
+            return;
+        }
+        try {
+            await this.redis.client.del(key);
+        } catch (error) {
+            // A window left behind only expires on its own; never fail the caller.
+            this.logger.error(
+                `Rate limit reset failed for ${identity}: ${error}`
+            );
         }
     }
 

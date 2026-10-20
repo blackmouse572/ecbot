@@ -858,6 +858,11 @@
           "label": "Bị chặn",
           "title": "Bị chặn",
           "description": "Nền tảng đã chặn kênh này. Bạn có thể xóa kênh, hoặc đánh dấu đã xử lý nếu bạn nghĩ đây là nhầm lẫn."
+        },
+        "failing": {
+          "label": "Gửi lỗi",
+          "title": "Đang gửi lỗi",
+          "description": "Tin trả lời trên kênh này liên tục gửi thất bại, khách đang không nhận được câu trả lời. Nếu kênh vừa đổi mật khẩu hoặc bị gỡ quyền, hãy kết nối lại. Trạng thái tự hết khi một tin gửi thành công."
         }
       },
       "types": {

@@ -51,9 +51,7 @@ describe('ChannelRateLimitService.claim', () => {
 
         await service.claim('api:cred-1', 5, 60);
 
-        expect(client.incr).toHaveBeenCalledWith(
-            'channel-rate:api:cred-1'
-        );
+        expect(client.incr).toHaveBeenCalledWith('channel-rate:api:cred-1');
     });
 
     it('fails open when Redis is unreachable rather than blocking traffic', async () => {
@@ -63,12 +61,22 @@ describe('ChannelRateLimitService.claim', () => {
             }),
             expire: jest.fn(),
         };
-        const service = new ChannelRateLimitService(
-            { client } as any,
-            true
-        );
+        const service = new ChannelRateLimitService({ client } as any, true);
 
         expect(await service.claim('api:cred-1', 1, 60)).toBe(true);
+    });
+});
+
+describe('ChannelRateLimitService.reset', () => {
+    it('never throws when Redis is unreachable', async () => {
+        const client = {
+            del: jest.fn(async () => {
+                throw new Error('redis down');
+            }),
+        };
+        const service = new ChannelRateLimitService({ client } as any, true);
+
+        await expect(service.reset('alert:acc-1')).resolves.toBeUndefined();
     });
 });
 
@@ -77,10 +85,7 @@ describe('ChannelRateLimitService.claim — no Redis at boot', () => {
 
     function makeInMemoryService() {
         const client = { incr: jest.fn(), expire: jest.fn() };
-        const service = new ChannelRateLimitService(
-            { client } as any,
-            false
-        );
+        const service = new ChannelRateLimitService({ client } as any, false);
         services.push(service);
         return service;
     }

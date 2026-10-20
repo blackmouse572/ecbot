@@ -1,5 +1,5 @@
 import i18n from "@/i18n";
-import { CheckCircleSolid, XCircle } from "@medusajs/icons";
+import { CheckCircleSolid, ExclamationCircle, XCircle } from "@medusajs/icons";
 import { StatusAlertCard } from "@/components/common";
 import type { AccountGetDetailResponseDto } from "@repo/client";
 
@@ -8,7 +8,10 @@ type AccountAlertSectionProps = {
 };
 
 export const AccountAlertSection = ({ item }: AccountAlertSectionProps) => {
-  const statusTerms = AccountStatusTerms[item.status];
+  const statusTerms =
+    item.sendFailingSince && item.status === "ACTIVE"
+      ? FailingTerms
+      : AccountStatusTerms[item.status];
   return (
     <StatusAlertCard
       icon={statusTerms.icon}
@@ -41,4 +44,10 @@ const AccountStatusTerms: Record<
     description: i18n.t("accounts.details.statuses.blocked.description"),
     icon: <CheckCircleSolid className="text-ui-tag-red-icon" />,
   },
+};
+
+const FailingTerms = {
+  title: i18n.t("accounts.details.statuses.failing.title"),
+  description: i18n.t("accounts.details.statuses.failing.description"),
+  icon: <ExclamationCircle className="text-ui-tag-orange-icon" />,
 };

@@ -22,8 +22,7 @@ function makeAccount(overrides: Record<string, any> = {}) {
 
 function makeAdapter() {
     const accountService = {
-        decryptToken: (v: string) =>
-            v === 'ENCRYPTED' ? SIGNING_SECRET : v,
+        decryptToken: (v: string) => (v === 'ENCRYPTED' ? SIGNING_SECRET : v),
         findOne: jest.fn().mockResolvedValue(null),
     };
     const callbackService = {
@@ -127,9 +126,8 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
         expect(result.externalId).toEqual(expect.any(String));
         expect(callbackService.deliver).toHaveBeenCalledTimes(1);
 
-        const [calledAccount, payload] = (
-            callbackService.deliver as jest.Mock
-        ).mock.calls[0];
+        const [calledAccount, payload] = (callbackService.deliver as jest.Mock)
+            .mock.calls[0];
         expect(calledAccount).toBe(account);
         expect(payload).toMatchObject({
             senderId: 'user-9',
@@ -149,6 +147,68 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
         ).resolves.toMatchObject({ externalId: expect.any(String) });
     });
 
+    describe('delivery outcome for channel health', () => {
+        const withGuard = () => {
+            const deps = makeAdapter();
+            const guard = {
+                run: jest.fn((_a: unknown, send: () => Promise<unknown>) =>
+                    send()
+                ),
+                report: jest.fn(async () => undefined),
+            };
+            deps.adapter.useSendGuard(guard as any);
+            return { ...deps, guard };
+        };
+
+        beforeEach(() => jest.useFakeTimers());
+        afterEach(() => jest.useRealTimers());
+
+        it('asks the guard not to count the send itself, then reports the delivery', async () => {
+            const { adapter, guard } = withGuard();
+            const account = makeAccount();
+
+            await adapter.sendMessage(account, 'user-9', textMsg('hi'));
+
+            expect(guard.run).toHaveBeenCalledWith(
+                account,
+                expect.any(Function),
+                false
+            );
+            expect(guard.report).toHaveBeenCalledWith(account, undefined);
+        });
+
+        it('reports a failure only once every retry is spent', async () => {
+            const errorSpy = jest
+                .spyOn(Logger.prototype, 'error')
+                .mockImplementation(() => undefined);
+            const { adapter, guard, callbackService, accountService } =
+                withGuard();
+            const account = makeAccount();
+            const down = new Error('receiver down');
+            accountService.findOne.mockResolvedValue(account);
+            (callbackService.deliver as jest.Mock).mockRejectedValue(down);
+
+            await adapter.sendMessage(account, 'user-9', textMsg('hi'));
+            await jest.advanceTimersByTimeAsync(40_000);
+            expect(guard.report).not.toHaveBeenCalled();
+
+            await jest.advanceTimersByTimeAsync(35_000);
+            expect(guard.report).toHaveBeenCalledWith(account, down);
+            errorSpy.mockRestore();
+        });
+
+        it('reports a callback URL the egress guard blocks as a failure', async () => {
+            const { adapter, guard, callbackService } = withGuard();
+            const account = makeAccount();
+            const blocked = new EgressBlockedError('Egress blocked');
+            (callbackService.deliver as jest.Mock).mockRejectedValue(blocked);
+
+            await adapter.sendMessage(account, 'user-9', textMsg('hi'));
+
+            expect(guard.report).toHaveBeenCalledWith(account, blocked);
+        });
+    });
+
     describe('in-process retry', () => {
         beforeEach(() => {
             jest.useFakeTimers();
@@ -159,8 +219,7 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
         });
 
         it('re-reads the account and retries with backoff until delivery succeeds', async () => {
-            const { adapter, callbackService, accountService } =
-                makeAdapter();
+            const { adapter, callbackService, accountService } = makeAdapter();
             const account = makeAccount();
             accountService.findOne.mockResolvedValue(account);
             (callbackService.deliver as jest.Mock)
@@ -179,8 +238,7 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
         });
 
         it('drops the retry when the account no longer exists', async () => {
-            const { adapter, callbackService, accountService } =
-                makeAdapter();
+            const { adapter, callbackService, accountService } = makeAdapter();
             const account = makeAccount();
             accountService.findOne.mockResolvedValue(null);
             (callbackService.deliver as jest.Mock).mockRejectedValue(
@@ -197,8 +255,7 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
             const errorSpy = jest
                 .spyOn(Logger.prototype, 'error')
                 .mockImplementation(() => undefined);
-            const { adapter, callbackService, accountService } =
-                makeAdapter();
+            const { adapter, callbackService, accountService } = makeAdapter();
             const account = makeAccount();
             accountService.findOne.mockResolvedValue(account);
             (callbackService.deliver as jest.Mock).mockRejectedValue(
@@ -264,8 +321,7 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
         });
 
         it('does not schedule a retry when the first attempt is blocked by the egress guard', async () => {
-            const { adapter, callbackService, accountService } =
-                makeAdapter();
+            const { adapter, callbackService, accountService } = makeAdapter();
             const account = makeAccount();
             (callbackService.deliver as jest.Mock).mockRejectedValue(
                 new EgressBlockedError('Egress blocked: host is not allowed')
@@ -282,8 +338,7 @@ describe('ApiChannelPlatformAdapter.doSend', () => {
             const errorSpy = jest
                 .spyOn(Logger.prototype, 'error')
                 .mockImplementation(() => undefined);
-            const { adapter, callbackService, accountService } =
-                makeAdapter();
+            const { adapter, callbackService, accountService } = makeAdapter();
             const account = makeAccount();
             accountService.findOne.mockResolvedValue(account);
             (callbackService.deliver as jest.Mock)

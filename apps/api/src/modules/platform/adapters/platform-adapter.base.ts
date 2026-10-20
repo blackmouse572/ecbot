@@ -18,6 +18,7 @@ import {
     PlatformConversation,
     PlatformMessage,
     PlatformOAuthCapability,
+    ISendGuard,
     PlatformUserProfile,
     PlatformWebhookEvent,
 } from '../interfaces/platform-adapter.interface';
@@ -81,13 +82,32 @@ export abstract class PlatformAdapter {
         };
     }
 
+    // Set at boot by ChannelDeliveryService; unset in unit tests.
+    private sendGuard?: ISendGuard;
+
+    useSendGuard(guard: ISendGuard): void {
+        this.sendGuard = guard;
+    }
+
+    // True when doSend returns before delivery is known (the API channel's
+    // callback), so the adapter reports the outcome with reportDelivery.
+    protected readonly confirmsDeliveryLater: boolean = false;
+
+    protected reportDelivery(account: AccountEntity, error?: unknown): void {
+        void this.sendGuard?.report(account, error);
+    }
+
     // ---- outbound (concrete: degrade + guard → protected hook) ----
     async sendMessage(
         account: AccountEntity,
         senderId: string,
         msg: OutboundMessage
     ): Promise<{ externalId: string }> {
-        return this.doSend(account, senderId, this.degrade(msg));
+        const degraded = this.degrade(msg);
+        const send = () => this.doSend(account, senderId, degraded);
+        return this.sendGuard
+            ? this.sendGuard.run(account, send, !this.confirmsDeliveryLater)
+            : send();
     }
 
     async editMessage(
@@ -262,6 +282,7 @@ export abstract class PlatformAdapter {
                 {
                     statusCode: HttpStatus.BAD_GATEWAY,
                     message: `${context} failed (HTTP ${status}): ${detail}`,
+                    upstreamStatus: status,
                     platformError: data,
                 },
                 HttpStatus.BAD_GATEWAY

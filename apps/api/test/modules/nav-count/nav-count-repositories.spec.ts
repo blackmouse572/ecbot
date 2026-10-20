@@ -21,7 +21,7 @@ describe('nav-count repository counters', () => {
         });
     });
 
-    it('counts only BLOCKED accounts for the workspace', async () => {
+    it('counts BLOCKED or send-failing accounts for the workspace', async () => {
         const getTotal = jest.fn().mockResolvedValue(2);
         const repo = Object.create(AccountRepository.prototype) as any;
         repo.getTotal = getTotal;
@@ -31,7 +31,10 @@ describe('nav-count repository counters', () => {
         ).resolves.toBe(2);
         expect(getTotal).toHaveBeenCalledWith({
             workspace: 'ws-1',
-            status: ENUM_ACCOUNT_STATUS.BLOCKED,
+            $or: [
+                { status: ENUM_ACCOUNT_STATUS.BLOCKED },
+                { sendFailingSince: { $ne: null } },
+            ],
             deletedAt: null,
         });
     });
