@@ -8,9 +8,9 @@ Run from the repo root unless a step says otherwise.
 
 1. **Env.** `pnpm setup:local` creates `apps/ai/.env` from `.env.example` and fills the generated values. You only add `OPENROUTER_API_KEY` yourself. `POSTGRES_URL` already points at the Postgres from step 2. The `RAG_*` variables have working defaults, and `RAG_POSTGRES_URL` falls back to `POSTGRES_URL` when empty. `FIRECRAWL_API_KEY` is only needed to ingest a URL.
 2. **Database.** `docker compose up -d` starts Postgres with pgvector. A hosted database needs `CREATE EXTENSION vector` first. Then apply the schema with `pnpm --filter api migration:up`.
-3. **Run.** `pnpm --filter ai dev`, then `curl localhost:8000/health`.
+3. **Run.** `pnpm --filter ai dev`, then `curl localhost:8000/health`. For step 5 also start the API and the app in a second terminal with `pnpm dev:app` (API on :8080, app on :5173). The root README quick start covers the shared setup.
 4. **Test.** From `apps/ai/`, `uv run pytest -m "not integration"`. Integration tests need a live Postgres with the `vector` extension.
-5. **Check RAG end to end.** In the app, upload a document to the knowledge base, link it to an agent, then ask a question in Test chat. The answer should cite the source inline, for example `[KB-1]`.
+5. **Check RAG end to end.** In the app, upload a document to the knowledge base, link it to an agent, then ask a question in Test chat. The answer should use the document's content and carry no `[KB-n]` labels, source ids or file names. Sources come back in the message metadata.
 
 ## 1. Step-by-Step Implementation Workflow
 
@@ -161,7 +161,7 @@ Configured with the `/api/rag` prefix.
   - Debug endpoint for retrieving knowledge-base context before the chat agent answers.
   - Response includes formatted context, chunks, rerank scores, and `sources`.
 
-Chat requests automatically run RAG retrieval for completed documents attached to the chatbot through `rag_documents.metadata.chatbot_id`. Retrieval uses PostgreSQL full-text search and pgvector cosine similarity, then reranks candidates with a cross-encoder model before injecting context into the user prompt. When an answer uses RAG context, the assistant is instructed to cite inline source IDs such as `[KB-1]`.
+Chat requests automatically run RAG retrieval for completed documents attached to the chatbot through `rag_documents.metadata.chatbot_id`. Retrieval uses PostgreSQL full-text search and pgvector cosine similarity, then reranks candidates with a cross-encoder model before injecting context into the user prompt. When an answer uses RAG context, the assistant answers from the retrieved context and never writes `[KB-n]` labels, source ids, document names or file names. Those are stripped server-side, and sources only travel in message metadata.
 
 ### RAG Environment Variables
 
