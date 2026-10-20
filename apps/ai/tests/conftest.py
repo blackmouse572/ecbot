@@ -41,6 +41,10 @@ load_dotenv(env_path)
 # a real database are marked `integration` and supply a real URL.
 os.environ.setdefault("POSTGRES_URL", "postgresql://user:pass@localhost:5432/eccho_test")
 
+# A SENTRY_DSN in a dev .env would start Sentry when `eccho_ai.main` is
+# imported below and send this suite's errors to the real project.
+os.environ["SENTRY_DSN"] = ""
+
 # Every chat/customer/rag route requires a matching X-Internal-Token header
 # (see `core/security.py`). Give the shared clients below a default token +
 # header so existing tests don't each need to know about auth.

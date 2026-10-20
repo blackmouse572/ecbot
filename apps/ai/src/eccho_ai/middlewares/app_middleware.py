@@ -1,14 +1,13 @@
 import time
 import uuid
+
 import sentry_sdk
 import structlog
-
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.postgres import PostgresRepo
-
 
 logger = get_logger(__name__)
 
@@ -22,7 +21,11 @@ class RequestLogicMiddleware(BaseHTTPMiddleware):
         structlog.contextvars.clear_contextvars()
         db = PostgresRepo.get_instance()
         request_id = request.headers.get("X-Request-ID", None)
-        if not request_id:
+        if request_id:
+            # apps/api sends the conversation id, and tags its own Sentry
+            # events with it under this name (#87).
+            sentry_sdk.set_tag("conversation_id", request_id)
+        else:
             request_id = str(uuid.uuid4())
 
         # Define a unique request ID for correlation, either from header or generated
@@ -30,8 +33,6 @@ class RequestLogicMiddleware(BaseHTTPMiddleware):
             request_id=request_id,
         )
         request.state.request_id = request_id
-        # apps/api sends the conversation id here, so its Sentry events and
-        # ours can be joined on it (#87).
         sentry_sdk.set_tag("request_id", request_id)
 
         # Log the request details. Bodies (full prompt + history) can be tens of

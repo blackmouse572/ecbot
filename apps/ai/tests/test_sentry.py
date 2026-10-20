@@ -1,6 +1,8 @@
 """Sentry error tracking, gated on SENTRY_DSN (#87)."""
 from __future__ import annotations
 
+import logging
+
 import pytest
 import sentry_sdk
 from fastapi import FastAPI
@@ -38,9 +40,10 @@ def sentry_events(monkeypatch):
 
 def test_does_nothing_without_a_dsn(monkeypatch):
     monkeypatch.setattr(AppVars, "SENTRY_DSN", "")
+    sentry_sdk.init(dsn="")  # disabled, whatever SENTRY_DSN the shell has
 
     assert init_sentry() is False
-    assert not sentry_sdk.get_client().is_active()
+    assert not sentry_sdk.get_client().dsn
 
 
 def test_tags_events_with_the_service_and_environment(sentry_events):
@@ -62,6 +65,17 @@ def test_tags_events_with_the_request_id_from_apps_api(sentry_events):
     TestClient(app).get("/report", headers={"X-Request-ID": "conv-1"})
 
     assert sentry_events[0]["tags"]["request_id"] == "conv-1"
+    assert sentry_events[0]["tags"]["conversation_id"] == "conv-1"
+
+
+def test_keeps_logged_chat_text_out_of_events(sentry_events):
+    # The request logger writes a preview of the chat body at INFO.
+    request_logger = logging.getLogger("eccho_ai.middlewares.app_middleware")
+    request_logger.setLevel(logging.INFO)
+    request_logger.info("request body: my card is 4111 1111 1111 1111")
+    sentry_sdk.capture_message("boom")
+
+    assert "4111" not in str(sentry_events[0])
 
 
 @pytest.mark.asyncio
