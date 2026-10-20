@@ -1,5 +1,5 @@
 import { DatabaseDto } from '@app/common/database/dtos/database.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
 export class CustomerGetResponseDto extends DatabaseDto {
@@ -30,6 +30,15 @@ export class CustomerGetResponseDto extends DatabaseDto {
     @Expose()
     @ApiProperty({ required: false, nullable: true })
     mergedIntoCustomerId?: string;
+
+    @Expose()
+    @ApiPropertyOptional({
+        type: 'object',
+        additionalProperties: { type: 'string' },
+        description:
+            'Details the agent saved about the customer (set_customer_field), by key.',
+    })
+    metadata?: Record<string, string>;
 
     @Expose()
     @ApiProperty({

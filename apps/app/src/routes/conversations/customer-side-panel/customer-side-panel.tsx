@@ -24,6 +24,7 @@ import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { ConversationsSection } from "./components/conversations-section";
 import { FollowupsSection } from "./components/followups-section";
+import { SavedFieldsSection } from "./components/saved-fields-section";
 import { TimezoneSection } from "./components/timezone-section";
 import { CUSTOMER_DATA_SUBJECT } from "../constants";
 import { Can } from "@repo/auth";
@@ -317,6 +318,8 @@ export function CustomerSidePanel({
               </div>
             </form>
           </Form>
+
+          <SavedFieldsSection fields={customer?.metadata} />
 
           <div className="border-ui-border-base border-t px-4 py-4">
             <Heading level="h3" className="mb-2">

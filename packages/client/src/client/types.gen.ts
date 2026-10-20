@@ -5994,6 +5994,12 @@ export type CustomerGetResponseDto = {
     profileSummary?: string | null;
     mergedIntoCustomerId?: string | null;
     /**
+     * Details the agent saved about the customer (set_customer_field), by key.
+     */
+    metadata?: {
+        [key: string]: string;
+    };
+    /**
      * Number of conversations this customer has. Present on list responses only.
      */
     conversationCount?: number;

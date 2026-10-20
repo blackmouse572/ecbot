@@ -2998,6 +2998,11 @@
             "updated": "Timezone updated.",
             "updateFailed": "Couldn't update the timezone."
           }
+        },
+        "savedFields": {
+          "title": "Saved by the agent",
+          "hint": "Details the agent noted from the chat, such as the delivery address.",
+          "address": "Delivery address"
         }
       }
     },

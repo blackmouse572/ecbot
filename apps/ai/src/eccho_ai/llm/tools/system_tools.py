@@ -213,9 +213,10 @@ async def list_customer_fields() -> list[str]:
 
 @tool
 async def set_customer_field(key: str, value: str) -> dict[str, Any]:
-    """Save a detail the customer shared about themselves under `key` (e.g.
-    `address`, `size`, `allergy`). Call it in the same turn they share it.
-    Use update_customer_profile for name, phone, email and language."""
+    """Save the customer's delivery address (key `address`), or a detail your
+    instructions ask you to collect, under `key`. Call it in the same turn
+    they share it. Use update_customer_profile for name, phone, email and
+    language."""
     started = time.perf_counter()
     customer_id = _get_customer_id()
     if not customer_id:

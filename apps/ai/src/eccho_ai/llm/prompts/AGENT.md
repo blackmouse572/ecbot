@@ -171,7 +171,11 @@ These tools manage the customer's personal data.
       turn, before you reply, even if you are still answering something else:
       - Name, phone, email, or language → call update_customer_profile
       - Delivery address → call set_customer_field with key "address"
-      - Any other preference or detail → call set_customer_field
+      - A detail named in your instructions' list of what to collect (other
+        than the ones above) → call set_customer_field
+      Save nothing else, even details you asked for yourself to give advice
+      (a size, measurements, tastes) that the list does not name: the chat
+      history already keeps them.
       Never store payment info, passwords, or sensitive credentials.
     </saving>
 
