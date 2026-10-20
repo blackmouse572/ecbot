@@ -22,6 +22,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
+import sentry_sdk
 from minio import Minio
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -228,6 +229,7 @@ class ChunkingJob(BaseJob[KnowledgeItems]):
             f"ChunkingJob: item {record.id} failed — {error}",
             exc_info=True,
         )
+        sentry_sdk.capture_exception(error)
         item = await repo.with_session_get_by_id(session, KnowledgeItems, str(record.id))
         if item is None:
             return

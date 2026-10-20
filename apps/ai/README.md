@@ -72,6 +72,7 @@ apps/ai/
 |   +-- core/                 # cross-cutting infra
 |   |   +-- variables.py      # App variables (pydantic-settings)
 |   |   +-- app_logger.py     # Structlog definition
+|   |   +-- sentry.py         # init_sentry(): Sentry, only when SENTRY_DSN is set
 |   |   +-- app_configs.py    # Swagger config
 |   |   +-- postgres.py       # PostgresRepo (generic DB access)
 |   |   +-- api_client.py     # apps/api HTTP client

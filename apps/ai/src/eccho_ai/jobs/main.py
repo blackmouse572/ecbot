@@ -4,6 +4,7 @@ Jobs entry point to run background tasks.
 import asyncio
 import logging
 
+import sentry_sdk
 from eccho_ai.jobs.constants import DEFAULT_HEARTBEAT_INTERVAL
 from eccho_ai.jobs.base import BaseJob
 from eccho_ai.jobs.logic.chunking import ChunkingJob
@@ -39,6 +40,7 @@ async def heartbeat(
             name = job.__class__.__name__
             if isinstance(result, BaseException):
                 logger.error(f"[{name}] tick failed: {result}")
+                sentry_sdk.capture_exception(result)
             elif result > 0:
                 logger.info(f"[{name}] processed {result} record(s)")
 

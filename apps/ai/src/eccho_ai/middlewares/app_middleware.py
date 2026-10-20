@@ -1,5 +1,6 @@
 import time
 import uuid
+import sentry_sdk
 import structlog
 
 from fastapi import Request
@@ -29,6 +30,9 @@ class RequestLogicMiddleware(BaseHTTPMiddleware):
             request_id=request_id,
         )
         request.state.request_id = request_id
+        # apps/api sends the conversation id here, so its Sentry events and
+        # ours can be joined on it (#87).
+        sentry_sdk.set_tag("request_id", request_id)
 
         # Log the request details. Bodies (full prompt + history) can be tens of
         # KB, so log a bounded preview + the true size rather than the whole thing.

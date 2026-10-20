@@ -91,6 +91,10 @@ export class ChatbotAIService {
         signal?: AbortSignal
     ): Promise<IncomingMessage> {
         const headers = await this.buildHeaders();
+        // apps/ai binds X-Request-ID to its logs and Sentry scope (#87).
+        if (params.conversation_id) {
+            headers['X-Request-ID'] = params.conversation_id;
+        }
         const { zones, ...body } = params;
         const resolved = this.timezoneService.resolve(
             zones.chatbot,

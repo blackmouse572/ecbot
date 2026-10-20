@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import sentry_sdk
 from fastapi import Request
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
@@ -71,6 +72,7 @@ async def get_rag_retrieval(chat_request: ChatRequest) -> RAGRetrievalResult | N
             stage=getattr(exc, "code", None),
             chatbot_id=chat_request.chatbot_id,
         )
+        sentry_sdk.capture_exception(exc)
         # Reported on `message-metadata` (#205); the prompt still gets the
         # message as is, as when retrieval does not run.
         return RAGRetrievalResult(

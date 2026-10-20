@@ -9,6 +9,8 @@ import json
 from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from typing import Any
 
+import sentry_sdk
+
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.modules.chat import ui_message_stream as ui
 from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
@@ -276,6 +278,7 @@ async def events_to_ui_parts(
         if step_open:
             yield ui.finish_step()
         logger.error("chat_stream_error", error=str(e), error_type=type(e).__name__, request_id=request_id)
+        sentry_sdk.capture_exception(e)
         yield ui.error(GENERIC_STREAM_ERROR)
     finally:
         yield ui.finish()
