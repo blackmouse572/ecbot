@@ -57,7 +57,7 @@ How a conversation moves between them:
 - **Needs you** or **You're handling** becomes **Resolved** when a staff member chooses **Resolve**, or **Bot active** when they switch the bot back on.
 - **Resolved** becomes **Bot active** again when the customer sends a new message, or when a staff member chooses **Restore to auto** from the conversation menu.
 - A new request that needs staff, such as an order change, hands over again even after **Resolved**.
-- Resolving or switching the bot back on also removes the customer's handoff tags (such as Needs staff or New order). Other tags stay.
+- Resolving or switching the bot back on also removes the customer's handoff tags (Needs staff, New order, New booking, Complaint, Angry, and any of your own tags set to trigger a handoff), unless another of their conversations is still waiting for staff. The tag history keeps them. Other tags stay.
 
 The agent hands a conversation to your staff when:
 
