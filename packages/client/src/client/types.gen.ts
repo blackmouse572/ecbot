@@ -6009,6 +6009,62 @@ export type CustomerGetResponseDto = {
     channels?: Array<string>;
 };
 
+export type CustomerWorkspaceGetResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    language?: string | null;
+    notes?: string | null;
+    profileSummary?: string | null;
+    mergedIntoCustomerId?: string | null;
+    /**
+     * Number of conversations this customer has. Present on list responses only.
+     */
+    conversationCount?: number;
+    /**
+     * Distinct channel (account) types the customer talked on. Present on list responses only.
+     */
+    channels?: Array<string>;
+    /**
+     * Details the agent saved about the customer (set_customer_field), by key.
+     */
+    metadata?: {
+        [key: string]: string;
+    };
+};
+
 export type CustomerUpdateRequestDto = {
     name?: string | null;
     phone?: string | null;
@@ -30316,7 +30372,7 @@ export type CustomerWorkspaceControllerGetV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: CustomerGetResponseDto;
+        data?: CustomerWorkspaceGetResponseDto;
     };
 };
 
@@ -30396,7 +30452,7 @@ export type CustomerWorkspaceControllerUpdateV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
-        data?: CustomerGetResponseDto;
+        data?: CustomerWorkspaceGetResponseDto;
     };
 };
 

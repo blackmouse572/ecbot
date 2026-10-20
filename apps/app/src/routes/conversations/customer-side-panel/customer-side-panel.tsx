@@ -24,6 +24,7 @@ import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { ConversationsSection } from "./components/conversations-section";
 import { FollowupsSection } from "./components/followups-section";
+import { SavedFieldsSection } from "./components/saved-fields-section";
 import { TimezoneSection } from "./components/timezone-section";
 import { CUSTOMER_DATA_SUBJECT } from "../constants";
 import { Can } from "@repo/auth";
@@ -280,6 +281,7 @@ export function CustomerSidePanel({
                   </Form.Item>
                 )}
               />
+              <SavedFieldsSection fields={customer?.metadata} />
               <Form.Field
                 control={form.control}
                 name="notes"

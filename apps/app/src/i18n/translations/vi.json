@@ -3047,6 +3047,9 @@
             "updated": "Đã cập nhật múi giờ.",
             "updateFailed": "Không cập nhật được múi giờ."
           }
+        },
+        "savedFields": {
+          "address": "Địa chỉ giao hàng"
         }
       }
     },

@@ -55,6 +55,7 @@ import {
 import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.request.dto';
 import { CustomerEraseResponseDto } from '../dtos/response/customer.erase.response.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
+import { CustomerWorkspaceGetResponseDto } from '../dtos/response/customer.workspace-get.response.dto';
 import { CustomerErasureService } from '../services/customer-erasure.service';
 import { CustomerMergeSuggestionService } from '../services/customer-merge-suggestion.service';
 import { CustomerService } from '../services/customer.service';
@@ -137,7 +138,7 @@ export class CustomerWorkspaceController {
     async get(
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('id') id: string
-    ): Promise<IResponse<CustomerGetResponseDto>> {
+    ): Promise<IResponse<CustomerWorkspaceGetResponseDto>> {
         // BOLA guard — never return a customer from a different workspace,
         // collapse missing + cross-workspace into the same 404.
         const customer = await this.customerService.findOneByIdInWorkspace(
@@ -150,7 +151,7 @@ export class CustomerWorkspaceController {
                 statusCode: 404,
             });
         }
-        return { data: this.customerService.mapGet(customer) };
+        return { data: this.customerService.mapWorkspaceGet(customer) };
     }
 
     @CustomerWorkspaceUpdateDoc()
@@ -168,7 +169,7 @@ export class CustomerWorkspaceController {
         @Param('id') id: string,
         @Body() dto: CustomerUpdateRequestDto,
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
-    ): Promise<IResponse<CustomerGetResponseDto>> {
+    ): Promise<IResponse<CustomerWorkspaceGetResponseDto>> {
         // BOLA guard — update() throws 404 when the id resolves outside the
         // workspace, so this also handles cross-workspace patching attempts.
         const updated = await this.customerService.update(
@@ -182,7 +183,7 @@ export class CustomerWorkspaceController {
             // The audit log is append-only, so it keeps ids, not names.
             metadata: { id: updated.id },
         });
-        return { data: this.customerService.mapGet(updated) };
+        return { data: this.customerService.mapWorkspaceGet(updated) };
     }
 
     @Response('customer.workspace.unmerge')

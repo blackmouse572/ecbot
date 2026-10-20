@@ -6,6 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
+import { CustomerWorkspaceGetResponseDto } from '../dtos/response/customer.workspace-get.response.dto';
 import {
     ICustomerConversationSummary,
     ICustomerService,
@@ -318,6 +319,12 @@ export class CustomerService implements ICustomerService {
 
     mapGet(customer: CustomerEntity): CustomerGetResponseDto {
         return plainToInstance(CustomerGetResponseDto, customer, {
+            excludeExtraneousValues: true,
+        });
+    }
+
+    mapWorkspaceGet(customer: CustomerEntity): CustomerWorkspaceGetResponseDto {
+        return plainToInstance(CustomerWorkspaceGetResponseDto, customer, {
             excludeExtraneousValues: true,
         });
     }

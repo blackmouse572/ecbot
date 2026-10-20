@@ -3005,6 +3005,9 @@
             "updated": "Timezone updated.",
             "updateFailed": "Couldn't update the timezone."
           }
+        },
+        "savedFields": {
+          "address": "Delivery address"
         }
       }
     },
