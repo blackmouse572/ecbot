@@ -16,6 +16,8 @@ def _saving_block() -> str:
 def test_saves_only_the_address_and_details_the_owner_asks_for():
     block = _saving_block()
     assert 'Delivery address → call set_customer_field with key "address"' in block
-    assert "A detail named in your instructions' list of what to collect" in block
+    assert "When the customer shares one of these details, save it" in block
+    assert "A detail your instructions ask you to collect" in block
+    assert "Whenever the customer shares their own details" not in block
     assert "Any other preference or detail" not in block
     assert "Save nothing else, even details you asked for yourself" in block
