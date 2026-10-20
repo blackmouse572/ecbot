@@ -362,7 +362,7 @@ export class KnowledgeItemWorkspaceController {
             const item = await this.knowledgeItemService.create(
                 {
                     ...dto,
-                    metadata: stored?.metadata ?? {},
+                    metadata: stored?.metadata ?? dto.metadata ?? {},
                     attachment: stored?.attachment,
                     folder,
                     knowledgeBase: knowledgeBaseId,

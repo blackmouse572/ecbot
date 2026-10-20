@@ -34,3 +34,18 @@ export enum ENUM_KNOWLEDGE_FAILURE_KIND {
  */
 export const RAG_INGEST_NO_TOKENS_ERROR =
     'Your workspace has no AI tokens left. Top up or renew your plan, then process this item again.';
+
+/**
+ * Pages one website item may read: the owner picks up to this many, and
+ * apps/ai follows same-site links until it has them.
+ */
+export const KNOWLEDGE_URL_MAX_PAGES = 50;
+
+/**
+ * Reading a website page costs us a scraper call, so each page read is
+ * charged to the workspace's plan as this many tokens (Ecbot Cloud only).
+ */
+export const KNOWLEDGE_CRAWL_TOKENS_PER_PAGE = 1000;
+
+/** Crawling up to `KNOWLEDGE_URL_MAX_PAGES` pages takes minutes, not seconds. */
+export const RAG_INGEST_URL_HTTP_TIMEOUT_MS = 300 * 1000;

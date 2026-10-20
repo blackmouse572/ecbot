@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createUrlSchema } from "./schema";
+import { KB_URL_MAX_PAGES } from "../../constants";
 
 describe("createUrlSchema", () => {
   const base = { title: "Example" };
@@ -39,6 +40,22 @@ describe("createUrlSchema", () => {
     const result = createUrlSchema().safeParse({
       ...base,
       metadata: { content: 42 },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it.each([1, 10, KB_URL_MAX_PAGES])("accepts a page limit of %i", (n) => {
+    const result = createUrlSchema().safeParse({
+      ...base,
+      metadata: { maxPages: n },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it.each([0, KB_URL_MAX_PAGES + 1, 2.5])("rejects a page limit of %d", (n) => {
+    const result = createUrlSchema().safeParse({
+      ...base,
+      metadata: { maxPages: n },
     });
     expect(result.success).toBe(false);
   });
