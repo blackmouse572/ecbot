@@ -8,6 +8,8 @@ export interface IInvitationEmailCopy {
     action: string;
     expiry: (expiresAt: string) => string;
     ignore: string;
+    /** For an invitee with no account: sign up first, with the invited email. */
+    noAccount: string;
     support: string;
     signOff: string;
 }
@@ -26,6 +28,8 @@ const COPY: Record<
         action: 'Accept invitation',
         expiry: expiresAt => `The invitation is valid until ${expiresAt}.`,
         ignore: "If you weren't expecting this invitation, you can ignore this email.",
+        noAccount:
+            'No account yet? Tap the button above, then choose Sign up with this same email.',
         support: 'Questions? Write to',
         signOff: `The ${homeName} team`,
     }),
@@ -39,6 +43,8 @@ const COPY: Record<
         action: 'Chấp nhận lời mời',
         expiry: expiresAt => `Lời mời có hiệu lực đến ${expiresAt}.`,
         ignore: 'Nếu bạn không mong đợi lời mời này, bạn có thể bỏ qua email này.',
+        noAccount:
+            'Chưa có tài khoản? Bấm nút ở trên, rồi chọn Đăng ký bằng chính email này.',
         support: 'Cần hỗ trợ? Hãy gửi email tới',
         signOff: `Đội ngũ ${homeName}`,
     }),

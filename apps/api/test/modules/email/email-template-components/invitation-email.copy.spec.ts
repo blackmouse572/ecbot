@@ -12,6 +12,15 @@ describe('invitation email copy', () => {
         ).toBe('Chi Nguyen đã mời bạn tham gia Kunmart trên Ecbot.');
     });
 
+    it('tells an invitee without an account to sign up with this email', () => {
+        expect(invitationEmailCopy('vi', 'Ecbot').noAccount).toBe(
+            'Chưa có tài khoản? Bấm nút ở trên, rồi chọn Đăng ký bằng chính email này.'
+        );
+        expect(invitationEmailCopy('en', 'Ecbot').noAccount).toBe(
+            'No account yet? Tap the button above, then choose Sign up with this same email.'
+        );
+    });
+
     it('falls back to English and never uses an em dash', () => {
         for (const language of ['en', 'vi', 'fr']) {
             const copy = invitationEmailCopy(language, 'Ecbot');
@@ -22,6 +31,7 @@ describe('invitation email copy', () => {
                 copy.action,
                 copy.expiry('10/10/2026'),
                 copy.ignore,
+                copy.noAccount,
                 copy.signOff,
             ].join(' ');
             expect(text).not.toContain('—');

@@ -23,3 +23,32 @@ export function loginRedirectTarget(redirect: string | null): string {
   }
   return redirect;
 }
+
+/**
+ * `path` with the `redirect` query carried over, so moving between login,
+ * sign-up and email verification keeps where the user was headed (an invite
+ * link for someone who has no account yet).
+ */
+export function withRedirect(path: string, redirect: string | null): string {
+  return redirect ? `${path}?redirect=${encodeURIComponent(redirect)}` : path;
+}
+
+/**
+ * The email an invite link was sent to, read from its token, to prefill the
+ * sign-up form. Only a hint: the API still checks the token when joining.
+ */
+export function invitedEmailFromRedirect(
+  redirect: string | null,
+): string | undefined {
+  if (!redirect?.startsWith("/join?")) return undefined;
+  const token = new URLSearchParams(redirect.split("?")[1]).get("tokens");
+  const payload = token?.split(".")[1];
+  if (!payload) return undefined;
+  try {
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const { invitedEmail } = JSON.parse(json) as { invitedEmail?: unknown };
+    return typeof invitedEmail === "string" ? invitedEmail : undefined;
+  } catch {
+    return undefined;
+  }
+}

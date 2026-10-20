@@ -6,7 +6,10 @@ import {
 } from "@/hooks/api/auth";
 import { isMfaChallenge } from "@/hooks/api/mfa";
 import { useAuth } from "@/modules/auth";
-import { loginRedirectTarget } from "@/modules/auth/login-redirect";
+import {
+  loginRedirectTarget,
+  withRedirect,
+} from "@/modules/auth/login-redirect";
 import { ROUTES } from "@/routes";
 import { Button, Checkbox, Label, toast, usePrompt } from "@medusajs/ui";
 import { LoginForm } from "@repo/auth/components";
@@ -193,7 +196,10 @@ function LoginPage() {
           <Trans
             i18nKey={`${I18N_PREFIX}.actions.signUpRedirect`}
             components={[
-              <LinkButton to={`/${ROUTES.SignUp}`} disabled={isBusy} />,
+              <LinkButton
+                to={withRedirect(`/${ROUTES.SignUp}`, search.get("redirect"))}
+                disabled={isBusy}
+              />,
             ]}
           />
         </p>
