@@ -47,6 +47,7 @@ const InvitationToWorkSpaceEmail: React.FC<InvitationToWorkSpaceEmailProps> = ({
             <div style={{ margin: '24px 0' }}>
                 <EmailButton href={invitationLink}>{copy.action}</EmailButton>
             </div>
+            <Text style={EMAIL_MUTED}>{copy.newHere}</Text>
             {expiresAt && (
                 <Text style={EMAIL_MUTED}>{copy.expiry(expiresAt)}</Text>
             )}

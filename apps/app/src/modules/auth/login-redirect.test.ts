@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { loginRedirectPath, loginRedirectTarget } from "./login-redirect";
+import {
+  invitedEmailFromRedirect,
+  loginRedirectPath,
+  loginRedirectTarget,
+  withRedirect,
+} from "./login-redirect";
 
 describe("loginRedirectPath", () => {
   it("keeps the query string, so an invite link survives the login detour", () => {
@@ -36,5 +41,47 @@ describe("loginRedirectTarget", () => {
     "/\\evil.example",
   ])("falls back to home for %j", (redirect) => {
     expect(loginRedirectTarget(redirect)).toBe("/");
+  });
+});
+
+describe("withRedirect", () => {
+  it("carries the redirect onto another auth page", () => {
+    expect(withRedirect("/signup", "/join?tokens=a.b.c")).toBe(
+      "/signup?redirect=%2Fjoin%3Ftokens%3Da.b.c",
+    );
+  });
+
+  it("returns the bare path when there is no redirect", () => {
+    expect(withRedirect("/signup", null)).toBe("/signup");
+  });
+});
+
+describe("invitedEmailFromRedirect", () => {
+  // JWT segments are base64url: `-` and `_` instead of `+` and `/`.
+  const invite = (payload: object, path = "/join") =>
+    `${path}?tokens=h.${btoa(JSON.stringify(payload))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "")}.s`;
+
+  it("reads the invited email from an invite link", () => {
+    expect(
+      invitedEmailFromRedirect(invite({ invitedEmail: "an@shop.vn" })),
+    ).toBe("an@shop.vn");
+  });
+
+  it("decodes base64url payloads and tolerates a trailing slash", () => {
+    // "?>?>" encodes to "Pz4/Pj4", so its base64url form carries a `_`.
+    const payload = { invitedEmail: "lan@kunmart.vn", note: "?>?>" };
+    expect(invite(payload)).toContain("_");
+    expect(invitedEmailFromRedirect(invite(payload, "/join/"))).toBe(
+      "lan@kunmart.vn",
+    );
+  });
+
+  it("returns undefined for other redirects or a broken token", () => {
+    expect(invitedEmailFromRedirect(null)).toBeUndefined();
+    expect(invitedEmailFromRedirect("/kunmart/dashboard")).toBeUndefined();
+    expect(invitedEmailFromRedirect("/join?tokens=not-a-jwt")).toBeUndefined();
   });
 });
