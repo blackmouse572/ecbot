@@ -55,4 +55,18 @@ describe('FacebookPageService.getPages', () => {
         expect(pages).toHaveLength(1);
         expect(get).toHaveBeenCalledTimes(1);
     });
+
+    it('stops when paging.next repeats instead of looping forever', async () => {
+        const get = jest.fn().mockResolvedValue({
+            data: {
+                data: [page('1')],
+                paging: { next: 'https://graph.facebook.com/same' },
+            },
+        });
+        const pages = await build(get).getPages({
+            accessToken: 't',
+        } as never);
+        expect(get).toHaveBeenCalledTimes(2);
+        expect(pages).toHaveLength(2);
+    });
 });

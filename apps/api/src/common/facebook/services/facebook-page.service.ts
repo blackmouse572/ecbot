@@ -6,9 +6,14 @@ import {
     GetFacebookPageRequestDto,
     GetFacebookPagesRequestDto,
 } from '../dtos/facebook-page.request.dto';
-import { FacebookPageResponseDto } from '../dtos/facebook-page.response.dto';
+import {
+    FacebookPageResponseDto,
+    FacebookPagesEnvelope,
+} from '../dtos/facebook-page.response.dto';
 import { FacebookPageInterface } from '../interfaces/facebook-page.interface';
 import { FacebookBaseService } from './facebook-base.service';
+
+const MAX_PAGES = 50;
 
 @Injectable()
 export class FacebookPageService
@@ -50,11 +55,6 @@ export class FacebookPageService
             const { userId } = data;
             const url = `${this.baseGraphApiUrl}/${userId ?? 'me'}/accounts`;
 
-            type PagesResponse = {
-                data: FacebookPageResponseDto[];
-                paging?: { next?: string };
-            };
-
             const pages: FacebookPageResponseDto[] = [];
             let nextUrl: string | undefined = url;
             let params: Record<string, string> | undefined = {
@@ -63,10 +63,13 @@ export class FacebookPageService
                 limit: '100',
             };
             // Graph API caps each response, so follow paging.next (a full URL
-            // that already carries the token and fields) until it runs out.
-            while (nextUrl) {
+            // that already carries the token and fields) until it runs out. A repeated
+            // URL or MAX_PAGES requests stops a cursor that never advances.
+            const seen = new Set<string>();
+            while (nextUrl && !seen.has(nextUrl) && seen.size < MAX_PAGES) {
+                seen.add(nextUrl);
                 const response =
-                    await this.httpService.axiosRef.get<PagesResponse>(
+                    await this.httpService.axiosRef.get<FacebookPagesEnvelope>(
                         nextUrl,
                         {
                             params,
