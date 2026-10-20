@@ -60,3 +60,13 @@ def test_what_staff_handled_is_not_handed_over_again():
     assert 'A "[Handled by staff]" note in the chat history means staff took care' in block
     assert "do not hand that over again" in block
     assert "A new request after the note" in block
+
+
+def test_unsure_handoff_is_made_in_the_same_reply():
+    # Water44 (2026-10-20): with "when unsure, hand over" the agent told a
+    # customer asking for the menu that the team would check, without the
+    # handoff call, and kept taking the order.
+    block = " ".join(_escalation_block().split())
+    assert "cannot give what the customer asks for (a menu, a price, a time)" in block
+    assert "make that call in the same reply, even while you are taking an order" in block
+    assert "Never say you will check with, pass something to, or have the team confirm" in block
