@@ -326,26 +326,46 @@ export class ConversationService implements IConversationService {
 
     /** The handoff tags (Needs staff, New order, ...) mark an open handoff:
      *  left on the customer, they told the bot every new request was already
-     *  with staff, so it stopped handing over. Other tags stay. */
+     *  with staff, so it stopped handing over. Other tags stay. Tags belong
+     *  to the customer, so they stay while another of their conversations
+     *  still waits for staff. */
     private async clearHandoffTags(conversationId: string): Promise<void> {
         const conversation = await this.conversationRepository.findOneById(
             conversationId,
-            { populate: ['contactPoint'] } as any
+            { populate: ['contactPoint', 'contactPoint.customer'] } as any
         );
-        const customer: any = conversation?.contactPoint?.customer;
-        const customerId: string | undefined = customer?.id ?? customer;
+        const customerId = conversation?.contactPoint?.customer?.id;
         if (!customerId) return;
+
+        const othersWaiting = await this.conversationRepository.getTotal({
+            id: { $ne: conversationId },
+            contactPoint: { customer: customerId },
+            handoffAt: { $ne: null },
+            deletedAt: null,
+        });
+        if (othersWaiting > 0) return;
 
         const tags = this.moduleRef.get(CustomerTagAssignmentService, {
             strict: false,
         });
         const assignments = await tags.listByCustomer(customerId);
-        for (const { tag } of assignments) {
-            if (!tag?.triggersHandoff) continue;
-            await tags.remove(customerId, tag.id, undefined, {
-                actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.OPERATOR,
-                conversationId,
-            });
+        // One failed removal must not keep the other handoff tags.
+        const results = await Promise.allSettled(
+            assignments
+                .filter(({ tag }) => tag?.triggersHandoff)
+                .map(({ tag }) =>
+                    tags.remove(customerId, tag.id, undefined, {
+                        actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.OPERATOR,
+                        conversationId,
+                    })
+                )
+        );
+        for (const r of results) {
+            if (r.status === 'rejected') {
+                this.logger.warn(
+                    `Handoff tag for ${conversationId} not cleared: ${(r.reason as Error).message}`
+                );
+            }
         }
     }
 

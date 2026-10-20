@@ -352,6 +352,7 @@ describe('ConversationService', () => {
             mockConversationRepository.updateEntity.mockImplementation(
                 async (_find, patch) => patch
             );
+            mockConversationRepository.getTotal.mockResolvedValue(0);
         });
 
         const handedOff = (extra: object = {}) => ({
@@ -419,6 +420,50 @@ describe('ConversationService', () => {
                     ENUM_CONVERSATION_STATUS.RESOLVED
                 )
             ).resolves.toBeDefined();
+        });
+
+        it('removes the other handoff tags when one removal fails', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff()
+            );
+            mockTagAssignments.listByCustomer.mockResolvedValue([
+                assignment('needs-staff', true),
+                assignment('new-order', true),
+            ]);
+            mockTagAssignments.remove.mockRejectedValueOnce(new Error('db'));
+
+            await service.updateStatus(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.RESOLVED
+            );
+
+            expect(mockTagAssignments.remove).toHaveBeenCalledWith(
+                'cust-1',
+                'new-order',
+                undefined,
+                expect.anything()
+            );
+        });
+
+        it('keeps the tags while another conversation of the customer waits for staff', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff()
+            );
+            mockConversationRepository.getTotal.mockResolvedValue(1);
+
+            await service.updateStatus(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.RESOLVED
+            );
+
+            expect(mockTagAssignments.remove).not.toHaveBeenCalled();
+            expect(mockConversationRepository.getTotal).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    id: { $ne: 'conv-1' },
+                    contactPoint: { customer: 'cust-1' },
+                    handoffAt: { $ne: null },
+                })
+            );
         });
 
         it('still hands back when the conversation has no customer', async () => {
