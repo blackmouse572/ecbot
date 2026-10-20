@@ -7,6 +7,8 @@ import {
     IDatabaseFindOneOptions,
 } from '@app/common/database/interfaces/database.interface';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
+import { ENUM_CUSTOMER_TAG_EVENT_ACTOR } from '@app/modules/customer/enums/customer-tag.enum';
+import { CustomerTagAssignmentService } from '@app/modules/customer/services/customer-tag-assignment.service';
 import { CustomerTagClassifierService } from '@app/modules/customer/services/customer-tag-classifier.service';
 import { NotificationService } from '@app/modules/notification/services/notification.service';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
@@ -230,7 +232,7 @@ export class ConversationService implements IConversationService {
         // End-of-conversation analytical tag + summary refresh (#170). Fire
         // immediately on resolve so operators see updated tags right away.
         if (status === ENUM_CONVERSATION_STATUS.RESOLVED) {
-            await this.leaveStaffHandledNote(conversationId);
+            await this.handBack(conversationId);
             this.customerTagClassifierService
                 .scheduleOnResolved(conversationId)
                 .catch(err =>
@@ -304,14 +306,70 @@ export class ConversationService implements IConversationService {
         }
 
         if (handsBack) {
-            await this.leaveStaffHandledNote(conversationId);
+            await this.handBack(conversationId);
         }
 
         return updated;
     }
 
     /** Staff hand the conversation back to the bot (resolve, or switch the
-     *  bot on): mark the point in its history so it does not hand over again
+     *  bot on). */
+    private async handBack(conversationId: string): Promise<void> {
+        await this.leaveStaffHandledNote(conversationId);
+        // A tag write failing must not fail the resolve or bot switch.
+        await this.clearHandoffTags(conversationId).catch((err: unknown) =>
+            this.logger.warn(
+                `Handoff tags for ${conversationId} not cleared: ${(err as Error).message}`
+            )
+        );
+    }
+
+    /** The handoff tags (Needs staff, New order, ...) mark an open handoff:
+     *  left on the customer, they told the bot every new request was already
+     *  with staff, so it stopped handing over. Other tags stay. Tags belong
+     *  to the customer, so they stay while another of their conversations
+     *  still waits for staff. */
+    private async clearHandoffTags(conversationId: string): Promise<void> {
+        const conversation = await this.conversationRepository.findOneById(
+            conversationId,
+            { populate: ['contactPoint', 'contactPoint.customer'] } as any
+        );
+        const customerId = conversation?.contactPoint?.customer?.id;
+        if (!customerId) return;
+
+        const othersWaiting = await this.conversationRepository.getTotal({
+            id: { $ne: conversationId },
+            contactPoint: { customer: customerId },
+            handoffAt: { $ne: null },
+            deletedAt: null,
+        });
+        if (othersWaiting > 0) return;
+
+        const tags = this.moduleRef.get(CustomerTagAssignmentService, {
+            strict: false,
+        });
+        const assignments = await tags.listByCustomer(customerId);
+        // One failed removal must not keep the other handoff tags.
+        const results = await Promise.allSettled(
+            assignments
+                .filter(({ tag }) => tag?.triggersHandoff)
+                .map(({ tag }) =>
+                    tags.remove(customerId, tag.id, undefined, {
+                        actor: ENUM_CUSTOMER_TAG_EVENT_ACTOR.OPERATOR,
+                        conversationId,
+                    })
+                )
+        );
+        for (const r of results) {
+            if (r.status === 'rejected') {
+                this.logger.warn(
+                    `Handoff tag for ${conversationId} not cleared: ${(r.reason as Error).message}`
+                );
+            }
+        }
+    }
+
+    /** Mark the point in the bot's history so it does not hand over again
      *  what staff already took care of. */
     private async leaveStaffHandledNote(conversationId: string): Promise<void> {
         // Switching the bot on and then resolving is one hand-back: one note.
