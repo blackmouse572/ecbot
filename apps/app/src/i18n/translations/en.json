@@ -1404,7 +1404,7 @@
       "startPlaceholder": "e.g. I run a nail spa in Da Nang. Customers ask prices and want to book.",
       "suggesting": "Setting up your agent...",
       "suggestFailed": "I could not work that out on my own. Let's go through the questions.",
-      "suggested": "I filled in what I could. Check the answers marked for review.",
+      "suggested": "I filled in what you described. Tap an answer to change it.",
       "auto": "Auto-filled",
       "check": "Please check",
       "required": "Please answer this question.",
@@ -1468,12 +1468,13 @@
       "customAddressMissing": "Fill in both words.",
       "activateNow": "Activate now",
       "activateLater": "Later",
-      "activateAsk": "Turn your agent on now so it starts replying to customers? You can keep answering the remaining questions either way."
+      "activateAsk": "Your agent has the basics it needs to reply to customers. Activate it now? The remaining questions are optional and already have defaults for your business type, so you can fine-tune them any time."
     },
     "groups": {
       "identity": "About your business",
       "essence": "Personality",
       "facts": "Business facts",
+      "moreFacts": "More details",
       "process": "How it works",
       "rules": "Rules",
       "interaction": "Conversation style"
@@ -2765,6 +2766,12 @@
     "learned_chunks_other": "The agent learned this file as {{count}} sections.",
     "not_learned_yet": "Not learned yet. The agent can use this file once processing completes.",
     "learn_failed": "Could not learn this file. Try Process again.",
+    "max_pages": "Pages to read",
+    "max_pages_hint": "1 reads only this page. A higher number also reads linked pages on the same website, up to {{max}}. Each page read counts toward your plan.",
+    "url_learned_one": "The agent read {{count}} page and learned it as {{sections}} sections.",
+    "url_learned_other": "The agent read {{count}} pages and learned them as {{sections}} sections.",
+    "url_not_learned_yet": "Not read yet. The agent can use this website once processing completes.",
+    "url_learn_failed": "Could not read this website. Try Process again.",
     "link_after_create_error_one": "Item created, but {{count}} agent could not be linked. Link it from the agent's Knowledge Base section.",
     "link_after_create_error_other": "Item created, but {{count}} agents could not be linked. Link them from each agent's Knowledge Base section.",
     "media": {

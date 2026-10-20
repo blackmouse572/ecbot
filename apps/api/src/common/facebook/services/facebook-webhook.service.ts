@@ -6,6 +6,8 @@ import { FacebookSubscriptionDto } from '../dtos/facebook-subscription.dto';
 import { FacebookWebhookInterface } from '../interfaces/facebook-webhook.interface';
 import { FacebookBaseService } from './facebook-base.service';
 
+const SUBSCRIBE_CONCURRENCY = 10;
+
 /**
  * Facebook webhook *subscription* management for the account-connect flow:
  * register the app callback and subscribe a page's webhook fields. Inbound
@@ -59,7 +61,10 @@ export class FacebookWebhookService
         const url = (pageId: string) =>
             `${this.baseGraphApiUrl}/${pageId}/subscribed_apps`;
 
-        for (const { id, access_token } of pages) {
+        const subscribe = async ({
+            id,
+            access_token,
+        }: FacebookPageResponseDto): Promise<boolean> => {
             try {
                 const response = await this.httpService.axiosRef.post(
                     url(id),
@@ -71,8 +76,7 @@ export class FacebookWebhookService
                         },
                     }
                 );
-                const success = response?.data?.success ?? true;
-                if (!success) return false;
+                return response?.data?.success ?? true;
             } catch (error) {
                 this.loggerService.error(
                     `Failed to subscribe to page ${id}:`,
@@ -80,6 +84,15 @@ export class FacebookWebhookService
                 );
                 return false;
             }
+        };
+
+        // Bounded batches keep a many-Page account from taking one Graph
+        // round trip per Page in series, without flooding the API.
+        for (let i = 0; i < pages.length; i += SUBSCRIBE_CONCURRENCY) {
+            const results = await Promise.all(
+                pages.slice(i, i + SUBSCRIBE_CONCURRENCY).map(subscribe)
+            );
+            if (results.includes(false)) return false;
         }
 
         return true;

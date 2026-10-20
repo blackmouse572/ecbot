@@ -27,6 +27,8 @@ class _AppVars(BaseSettings):
     # Generals
     ENV: Literal["development", "staging", "production"] = "development"
     LOG_LEVEL: str = "INFO"
+    # Sentry error tracking (#87); empty disables it.
+    SENTRY_DSN: str = ""
     MAX_CONCURRENT_REQUESTS: int = 100
 
     # Set only by the enterprise image; unset uses the bundled AGENT.md.

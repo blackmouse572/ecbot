@@ -289,6 +289,7 @@ export class ReplyGenerationService {
                         tags: {
                             reply_failure: 'ai_stream',
                             workspace_id: chatbot.workspace.id,
+                            conversation_id: conversationId,
                         },
                     });
                 }

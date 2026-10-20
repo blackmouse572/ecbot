@@ -182,6 +182,26 @@ describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
         expect(awsS3Service.putItem).toHaveBeenCalled();
     });
 
+    it('keeps the page limit and notes the owner set on a URL item', async () => {
+        await controller.create(
+            user,
+            workspace,
+            'kb-1',
+            {
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+                title: 'YODY',
+                content: 'https://yody.vn/',
+                metadata: { maxPages: 10, content: 'Shop' },
+            } as any,
+            undefined
+        );
+
+        expect(knowledgeItemService.create.mock.calls[0][0].metadata).toEqual({
+            maxPages: 10,
+            content: 'Shop',
+        });
+    });
+
     it('ignores a file sent with a TEXT or URL item', async () => {
         await create(ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT, file('image/png'));
 

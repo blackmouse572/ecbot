@@ -8,6 +8,9 @@ import {
     RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS,
     RAG_INGEST_NO_TOKENS_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
+    RAG_INGEST_URL_HTTP_TIMEOUT_MS,
+    KNOWLEDGE_URL_MAX_PAGES,
+    KNOWLEDGE_CRAWL_TOKENS_PER_PAGE,
     ENUM_KNOWLEDGE_FAILURE_KIND,
 } from '@app/modules/knowledge-base/constants/knowledge-ingest.constant';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '@app/modules/knowledge-base/enums/knowledge-base-item-type.enum';
@@ -212,11 +215,90 @@ describe('KnowledgeIngestTaskService', () => {
                 title: 'URL',
             }),
             expect.objectContaining({
-                timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
+                timeout: RAG_INGEST_URL_HTTP_TIMEOUT_MS,
                 headers: {
                     Authorization: 'Bearer gcp-id-token',
                     'X-Internal-Token': 'internal-token',
                     'Content-Type': 'application/json',
+                },
+            })
+        );
+    });
+
+    it.each([
+        [undefined, 1],
+        [10, 10],
+        ['5', 5],
+        [0, 1],
+        [500, KNOWLEDGE_URL_MAX_PAGES],
+    ])(
+        'sends the page limit the owner picked (%p -> %p) with the crawl timeout',
+        async (maxPages, expected) => {
+            findOneById.mockResolvedValue({
+                id: 'item-1',
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+                content: 'https://example.test',
+                title: 'Shop',
+                metadata: { maxPages },
+            });
+
+            await service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                0
+            );
+
+            expect(httpPost).toHaveBeenCalledWith(
+                'http://ai.example.test/api/rag/ingest/url',
+                expect.objectContaining({ max_pages: expected }),
+                expect.objectContaining({
+                    timeout: RAG_INGEST_URL_HTTP_TIMEOUT_MS,
+                })
+            );
+        }
+    );
+
+    it('keeps what was read from a website on the item', async () => {
+        findOneById.mockResolvedValue({
+            id: 'item-1',
+            type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+            content: 'https://example.test',
+            title: 'Shop',
+            metadata: { maxPages: 3 },
+        });
+        httpPost.mockReturnValue(
+            of({
+                data: {
+                    data: {
+                        chunk_count: 7,
+                        pages_crawled: 3,
+                        page_title: 'Shop - Home',
+                        preview: '# Shop\nWe sell shirts',
+                    },
+                },
+            })
+        );
+
+        await service.handle(
+            {
+                jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                knowledgeItemId: 'item-1',
+            } as any,
+            0
+        );
+
+        expect(updateStatus).toHaveBeenLastCalledWith(
+            'item-1',
+            expect.objectContaining({
+                status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
+                metadata: {
+                    maxPages: 3,
+                    chunkCount: 7,
+                    pagesCrawled: 3,
+                    pageTitle: 'Shop - Home',
+                    preview: '# Shop\nWe sell shirts',
                 },
             })
         );
@@ -759,6 +841,34 @@ describe('KnowledgeIngestTaskService', () => {
                 usage: { inputTokens: 900, outputTokens: 0, totalTokens: 900 },
                 source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
                 model: 'google/gemini-embedding-001',
+            });
+        });
+
+        it('charges every website page read to the plan', async () => {
+            meter.check.mockResolvedValue({ allowed: true });
+            findOneById.mockResolvedValue({
+                id: 'item-1',
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+                content: 'https://example.test',
+                title: 'Shop',
+                knowledgeBase: { id: 'kb-1', workspace: { id: 'ws-1' } },
+            });
+            httpPost.mockReturnValue(
+                of({ data: { data: { chunk_count: 4, pages_crawled: 3 } } })
+            );
+
+            await service.handle(ingestDto, 0);
+
+            const tokens = 3 * KNOWLEDGE_CRAWL_TOKENS_PER_PAGE;
+            expect(meter.record).toHaveBeenCalledWith({
+                workspaceId: 'ws-1',
+                usage: {
+                    inputTokens: tokens,
+                    outputTokens: 0,
+                    totalTokens: tokens,
+                },
+                source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
+                model: 'web-crawl',
             });
         });
 

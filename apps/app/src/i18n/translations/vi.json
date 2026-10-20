@@ -1443,7 +1443,7 @@
       "startPlaceholder": "Ví dụ: Mình có tiệm nail ở Đà Nẵng. Khách hay hỏi giá và muốn đặt lịch.",
       "suggesting": "Đang thiết lập agent...",
       "suggestFailed": "Mình chưa tự nhận diện được. Mình cùng trả lời vài câu hỏi nhé.",
-      "suggested": "Mình đã điền sẵn những gì có thể. Bạn kiểm tra giúp các mục cần xem lại nhé.",
+      "suggested": "Mình đã điền sẵn những gì bạn mô tả. Bấm vào câu trả lời nào để sửa nhé.",
       "auto": "Tự động điền",
       "check": "Vui lòng kiểm tra",
       "required": "Vui lòng trả lời câu hỏi này.",
@@ -1507,12 +1507,13 @@
       "customAddressMissing": "Bạn điền đủ cả hai cách xưng hô nhé.",
       "activateNow": "Kích hoạt ngay",
       "activateLater": "Để sau",
-      "activateAsk": "Kích hoạt agent ngay để agent bắt đầu trả lời khách? Dù chọn gì, bạn vẫn trả lời tiếp các câu còn lại được."
+      "activateAsk": "Agent đã đủ thông tin cơ bản để trả lời khách. Kích hoạt ngay nhé? Các câu còn lại không bắt buộc và đã có sẵn mặc định theo ngành, bạn tinh chỉnh lúc nào cũng được."
     },
     "groups": {
       "identity": "Về doanh nghiệp",
       "essence": "Tính cách",
       "facts": "Thông tin kinh doanh",
+      "moreFacts": "Thêm thông tin",
       "process": "Quy trình",
       "rules": "Quy tắc",
       "interaction": "Cách trò chuyện"
@@ -2808,6 +2809,11 @@
     "learned_chunks_other": "Agent đã học tệp này thành {{count}} phần.",
     "not_learned_yet": "Chưa học. Agent có thể dùng tệp này khi xử lý xong.",
     "learn_failed": "Không học được tệp này. Hãy thử Xử lý lại.",
+    "max_pages": "Số trang cần đọc",
+    "max_pages_hint": "1 chỉ đọc trang này. Số lớn hơn sẽ đọc thêm các trang được liên kết trên cùng website, tối đa {{max}} trang. Mỗi trang đọc được tính vào gói của bạn.",
+    "url_learned_other": "Agent đã đọc {{count}} trang và học thành {{sections}} phần.",
+    "url_not_learned_yet": "Chưa đọc. Agent có thể dùng website này khi xử lý xong.",
+    "url_learn_failed": "Không đọc được website này. Hãy thử Xử lý lại.",
     "link_after_create_error_one": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của agent.",
     "link_after_create_error_other": "Đã tạo mục, nhưng không liên kết được {{count}} agent. Hãy liên kết trong phần Nền tảng kiến thức của từng agent.",
     "media": {

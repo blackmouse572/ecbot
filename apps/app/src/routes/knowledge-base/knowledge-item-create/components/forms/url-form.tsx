@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Form } from "@repo/ui/common-components";
 import type { UseFormReturn } from "react-hook-form";
 import type { KnowledgeItemCreateFormValues } from "../schema";
+import { KB_URL_MAX_PAGES } from "../../../constants";
 import { Textarea, Input } from "@medusajs/ui";
 
 interface UrlFormProps {
@@ -26,6 +27,40 @@ export const UrlForm: FC<UrlFormProps> = ({ form }) => {
               <Input {...field} type="url" placeholder="https://example.com" />
             </Form.Control>
             <Form.Hint>{t("knowledge_item.url_hint")}</Form.Hint>
+            <Form.ErrorMessage />
+          </Form.Item>
+        )}
+      />
+
+      {/* How many pages of the site to read */}
+      <Form.Field
+        control={form.control}
+        name="metadata.maxPages"
+        shouldUnregister
+        defaultValue={1}
+        render={({ field }) => (
+          <Form.Item>
+            <Form.Label>{t("knowledge_item.max_pages")}</Form.Label>
+            <Form.Control>
+              <Input
+                {...field}
+                value={field.value ?? ""}
+                onChange={(event) =>
+                  field.onChange(
+                    event.target.value === ""
+                      ? undefined
+                      : event.target.valueAsNumber,
+                  )
+                }
+                type="number"
+                min={1}
+                max={KB_URL_MAX_PAGES}
+                step={1}
+              />
+            </Form.Control>
+            <Form.Hint>
+              {t("knowledge_item.max_pages_hint", { max: KB_URL_MAX_PAGES })}
+            </Form.Hint>
             <Form.ErrorMessage />
           </Form.Item>
         )}

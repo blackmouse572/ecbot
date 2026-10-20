@@ -63,6 +63,7 @@ async def ingest_url(request: RAGUrlIngestRequest):
             max_age=request.max_age,
             parsers=request.parsers,
             title=request.title,
+            max_pages=request.max_pages,
             metadata={"knowledge_base_id": request.knowledge_base_id} if request.knowledge_base_id else {},
         )
         return AppResponse(data=result)

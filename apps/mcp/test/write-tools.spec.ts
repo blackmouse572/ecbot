@@ -92,6 +92,29 @@ const cases: [
     ADDS,
   ],
   [
+    "create_knowledge_item",
+    {
+      knowledgeBaseId: "kb-1",
+      type: "URL",
+      title: "Shop",
+      content: "https://shop.vn/",
+      maxPages: 10,
+    },
+    "knowledgeItemClientControllerCreateV1",
+    {
+      path: { knowledgeBaseId: "kb-1" },
+      body: {
+        type: "URL",
+        title: "Shop",
+        content: "https://shop.vn/",
+        metadata: { maxPages: 10 },
+      },
+    },
+    { data: { id: "item-3", status: "DRAFT" } },
+    { id: "item-3", status: "DRAFT" },
+    ADDS,
+  ],
+  [
     "get_knowledge_upload_url",
     {
       knowledgeBaseId: "kb-1",

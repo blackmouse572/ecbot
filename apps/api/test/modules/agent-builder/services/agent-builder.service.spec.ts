@@ -8,6 +8,9 @@ const USAGE = { inputTokens: 100, outputTokens: 20, totalTokens: 120 };
 
 function setup(overrides: { cached?: unknown; answers?: unknown; fail?: boolean; meter?: unknown } = {}) {
     const aiDecision = {
+        warm: jest.fn(async () => {
+            if (overrides.fail) throw new Error('down');
+        }),
         decide: jest.fn(async () => {
             if (overrides.fail) throw new Error('down');
             return {
@@ -111,6 +114,31 @@ describe('AgentBuilderService.suggest', () => {
 
     it('normalises case and spacing in the cache key', () => {
         expect(AgentBuilderService.cacheKey(' Nail  Spa ')).toBe(AgentBuilderService.cacheKey('nail spa'));
-        expect(AgentBuilderService.cacheKey('x')).toMatch(/^agent-builder:suggest:v1:[a-f0-9]{64}$/);
+        expect(AgentBuilderService.cacheKey('x')).toMatch(/^agent-builder:suggest:v2:[a-f0-9]{64}$/);
+    });
+
+    // #256: the suggestion also reads details the owner wrote.
+    it('returns the texts read from the description', async () => {
+        const { service } = setup({
+            answers: {
+                business_type: { type: 'choice', choice: 'restaurant', confidence: 0.98 },
+                text__business_name: { type: 'text', text: 'Mây' },
+            },
+        });
+        const out = await service.suggest('ws-1', 'Quán cà phê Mây');
+        expect(out.texts).toEqual({ business_name: 'Mây' });
+    });
+});
+
+describe('AgentBuilderService.warm', () => {
+    it('wakes apps/ai', async () => {
+        const { service, aiDecision } = setup();
+        await service.warm();
+        expect(aiDecision.warm).toHaveBeenCalled();
+    });
+
+    it('never throws when apps/ai cannot be reached', async () => {
+        const { service } = setup({ fail: true });
+        await expect(service.warm()).resolves.toBeUndefined();
     });
 });

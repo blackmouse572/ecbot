@@ -4648,6 +4648,12 @@ export type AgentBuilderSuggestResponseDto = {
     rules: {
         [key: string]: number;
     };
+    /**
+     * Details read from the description, by id: business_name, opening_hours, address, offerings, delivery, payment_methods
+     */
+    texts: {
+        [key: string]: string;
+    };
 };
 
 export type AgentBuilderSuggestRequestDto = {
@@ -23590,6 +23596,84 @@ export type AgentBuilderWorkspaceControllerSuggestV1Responses = {
 };
 
 export type AgentBuilderWorkspaceControllerSuggestV1Response = AgentBuilderWorkspaceControllerSuggestV1Responses[keyof AgentBuilderWorkspaceControllerSuggestV1Responses];
+
+export type AgentBuilderWorkspaceControllerWarmV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/agent-builder/warm';
+};
+
+export type AgentBuilderWorkspaceControllerWarmV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AgentBuilderWorkspaceControllerWarmV1Error = AgentBuilderWorkspaceControllerWarmV1Errors[keyof AgentBuilderWorkspaceControllerWarmV1Errors];
+
+export type AgentBuilderWorkspaceControllerWarmV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AgentBuilderWorkspaceControllerWarmV1Response = AgentBuilderWorkspaceControllerWarmV1Responses[keyof AgentBuilderWorkspaceControllerWarmV1Responses];
 
 export type InvitationWorkspaceControllerGetInvitationsV1Data = {
     body?: never;

@@ -29,6 +29,12 @@ from eccho_ai.llm.retrievers.vector_store import PgVectorStore
 from eccho_ai.llm.usage import TokenUsage
 
 
+# What apps/api keeps of a website item's text, to show the owner.
+URL_PREVIEW_CHARS = 2000
+# Under apps/api's 300s ingest call, which also waits for the embedding.
+URL_CRAWL_TIMEOUT_SECONDS = 240
+
+
 class RAGIngestService:
     def __init__(self, store=None, embedder=None):
         self.embedding_dimension = AppVars.RAG_EMBEDDING_DIMENSION
@@ -110,6 +116,7 @@ class RAGIngestService:
         max_age: int | None = 172800000,
         parsers: list[str] | None = None,
         title: str | None = None,
+        max_pages: int = 1,
     ) -> RAGIngestResponse:
         normalized_url = self._normalize_url(url)
         # Checked here, before the scraper: it failed on a private URL with a
@@ -130,18 +137,64 @@ class RAGIngestService:
         chunk_overlap = chunk_overlap if chunk_overlap is not None else AppVars.RAG_CHUNK_OVERLAP
         self._validate_chunking(chunk_size, chunk_overlap)
 
-        firecrawl_document = await asyncio.to_thread(
-            self._scrape_url,
-            api_key=api_key,
-            url=normalized_url,
-            only_main_content=only_main_content,
-            max_age=max_age,
-            parsers=parsers or ["pdf"],
-        )
-        text = normalize_text(self._extract_firecrawl_text(firecrawl_document))
-        if not text:
-            raise ValueError("No extractable text found in scraped URL")
+        if max_pages > 1:
+            firecrawl_documents = await asyncio.to_thread(
+                self._crawl_site,
+                api_key=api_key,
+                url=normalized_url,
+                limit=max_pages,
+                only_main_content=only_main_content,
+                max_age=max_age,
+                parsers=parsers or ["pdf"],
+            )
+        else:
+            firecrawl_documents = [
+                await asyncio.to_thread(
+                    self._scrape_url,
+                    api_key=api_key,
+                    url=normalized_url,
+                    only_main_content=only_main_content,
+                    max_age=max_age,
+                    parsers=parsers or ["pdf"],
+                )
+            ]
 
+        # One Document per page, so each chunk names the page it came from.
+        pages: list[Document] = []
+        for firecrawl_document in firecrawl_documents:
+            page_text = normalize_text(self._extract_firecrawl_text(firecrawl_document))
+            if not page_text:
+                continue
+            page_metadata = self._firecrawl_metadata(firecrawl_document)
+            page_url = page_metadata.get("source_url") or page_metadata.get("url") or normalized_url
+            # The seed was checked above; a crawled link gets the same check,
+            # so a public page linking to a private address adds nothing.
+            if page_url != normalized_url:
+                try:
+                    await assert_public_url(page_url)
+                except EgressBlockedError:
+                    continue
+                except HostUnresolvableError:
+                    pass  # the scraper reached it, so it is not private
+            pages.append(
+                Document(
+                    page_content=page_text,
+                    metadata={
+                        "source": page_url,
+                        "mime_type": "text/markdown",
+                        "extension": ".md",
+                        "source_type": "url",
+                        "title": page_metadata.get("title"),
+                    },
+                )
+            )
+        if not pages:
+            raise ValueError("No extractable text found in scraped URL")
+        # The page the owner entered leads the preview and gives the title;
+        # the crawl may return it anywhere, or not at all (no text on it).
+        pages.sort(key=lambda page: page.metadata["source"].rstrip("/") != normalized_url.rstrip("/"))
+
+        text = "\n\n".join(page.page_content for page in pages)
         document_id = uuid4()
         source_filename = self._url_source_filename(normalized_url)
         stored_path = self._save_text_document(
@@ -149,32 +202,23 @@ class RAGIngestService:
             document_id=document_id,
             filename=source_filename,
         )
-        scrape_metadata = self._firecrawl_metadata(firecrawl_document)
+        for page in pages:
+            page.metadata["local_path"] = str(stored_path)
+        page_title = pages[0].metadata.get("title")
         merged_metadata = {
             **(metadata or {}),
             "knowledge_item_id": knowledge_item_id,
             "chatbot_ids": chatbot_ids or [],
             "source_type": "url",
             "source_url": normalized_url,
-            "firecrawl": scrape_metadata,
-            "title": title or scrape_metadata.get("title"),
+            "pages": [page.metadata["source"] for page in pages],
+            "title": title or page_title,
         }
-        document = Document(
-            page_content=text,
-            metadata={
-                "source": normalized_url,
-                "local_path": str(stored_path),
-                "mime_type": "text/markdown",
-                "extension": ".md",
-                "source_type": "url",
-                "title": scrape_metadata.get("title"),
-            },
-        )
 
         await self.store.delete_by_knowledge_item(knowledge_item_id)  # idempotent upsert
         chunk_count, usage = await self._ingest_document(
             document_id=document_id,
-            document=document,
+            document=pages,
             source_filename=source_filename,
             stored_path=str(stored_path),
             mime_type="text/markdown",
@@ -195,6 +239,9 @@ class RAGIngestService:
             embedding_model=self.embedding_model,
             embedding_dimension=self.embedding_dimension,
             usage=usage,
+            pages_crawled=len(pages),
+            page_title=page_title,
+            preview=text[:URL_PREVIEW_CHARS],
         )
 
     async def ingest_text(
@@ -258,7 +305,7 @@ class RAGIngestService:
         self,
         *,
         document_id: UUID,
-        document: Document,
+        document: Document | list[Document],
         source_filename: str,
         stored_path: str,
         mime_type: str | None,
@@ -266,14 +313,16 @@ class RAGIngestService:
         chunk_overlap: int,
         metadata: dict[str, Any],
     ) -> tuple[int, TokenUsage | None]:
-        content_hash = hashlib.sha256(document.page_content.encode("utf-8")).hexdigest()
+        documents = document if isinstance(document, list) else [document]
+        content = "\n\n".join(doc.page_content for doc in documents)
+        content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
         await self.store.create_document(
             document_id=document_id,
             source_filename=source_filename,
             local_path=stored_path,
             mime_type=mime_type,
             content_hash=content_hash,
-            content_chars=len(document.page_content),
+            content_chars=len(content),
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             embedding_model=self.embedding_model,
@@ -288,7 +337,7 @@ class RAGIngestService:
                 chunk_overlap=chunk_overlap,
                 separators=["\n\n", "\n", ". ", " ", ""],
             )
-            chunks = splitter.split_documents([document])
+            chunks = splitter.split_documents(documents)
             chunk_texts = [chunk.page_content for chunk in chunks if chunk.page_content.strip()]
             chunk_metadatas = [
                 {**chunk.metadata, "chunk_index": index}
@@ -354,6 +403,34 @@ class RAGIngestService:
             parsers=parsers,
             formats=["markdown"],
         )
+
+    # No retry here: a crawl takes minutes, and apps/api's Cloud Tasks
+    # delivery already retries the whole ingest.
+    @staticmethod
+    def _crawl_site(
+        *,
+        api_key: str,
+        url: str,
+        limit: int,
+        only_main_content: bool,
+        max_age: int | None,
+        parsers: list[str],
+    ) -> list[Any]:
+        from firecrawl import Firecrawl
+
+        app = Firecrawl(api_key=api_key)
+        job = app.crawl(
+            url,
+            limit=limit,
+            only_main_content=only_main_content,
+            max_age=max_age,
+            parsers=parsers,
+            formats=["markdown"],
+            timeout=URL_CRAWL_TIMEOUT_SECONDS,
+        )
+        if job.status == "failed":
+            raise RuntimeError(f"Firecrawl crawl failed for {url}")
+        return list(job.data)
 
     @staticmethod
     def _extract_firecrawl_text(document: Any) -> str:

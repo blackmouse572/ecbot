@@ -12,6 +12,7 @@ from eccho_ai.core.app_configs import SWAGGER_CONFIG
 from eccho_ai.core.app_logger import configure_logging, get_logger
 from eccho_ai.core.postgres import PostgresRepo
 from eccho_ai.core.security import log_if_internal_token_missing
+from eccho_ai.core.sentry import init_sentry
 from eccho_ai.core.variables import (
     AppVars,  # noqa: F401. Import to load environment variables
 )
@@ -86,6 +87,8 @@ async def lifespan(app: FastAPI):
 
 
 logger = get_logger(__name__)
+# Before the app is built, so Sentry's FastAPI integration wraps it.
+init_sentry()
 app = FastAPI(**SWAGGER_CONFIG, lifespan=lifespan)
 
 app.add_middleware(RequestLogicMiddleware)

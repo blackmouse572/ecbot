@@ -69,7 +69,9 @@ _MIN_WORDS = 3
 
 
 def reply_language_note(message: str) -> str:
-    text = _IMAGE_NOTE.split(message, maxsplit=1)[0]
+    # Some keyboards send accents as separate combining marks ("a" + hook);
+    # compose them so the Vietnamese letters below match.
+    text = unicodedata.normalize("NFC", _IMAGE_NOTE.split(message, maxsplit=1)[0])
     if _VIETNAMESE_LETTERS.search(text):
         return ""
     if _NON_LATIN_LETTERS.search(text):

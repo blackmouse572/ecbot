@@ -52,6 +52,21 @@ describe('ChatbotAIService', () => {
         );
     });
 
+    // #87: apps/ai binds X-Request-ID to its logs and Sentry scope, so one
+    // conversation can be followed across both services.
+    it('sends the conversation id as X-Request-ID on streamChat', async () => {
+        post.mockResolvedValue({ data: {} });
+
+        await service.streamChat({
+            conversation_id: 'conv-1',
+            zones: { chatbot: {} },
+        } as any);
+
+        expect(post.mock.calls[0][2].headers).toMatchObject({
+            'X-Request-ID': 'conv-1',
+        });
+    });
+
     // The module-wide 60s axios timeout is a socket idle timer that stays
     // armed while the reply streams, so a slow tool roundtrip aborted it.
     it('gives the reply stream its own idle timeout, longer than the 60s default', async () => {

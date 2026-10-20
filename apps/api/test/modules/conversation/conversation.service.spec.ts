@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
 import { ConversationService } from '../../../src/modules/conversation/services/conversation.service';
+import { CustomerTagAssignmentService } from '../../../src/modules/customer/services/customer-tag-assignment.service';
 
 describe('ConversationService', () => {
     let service: ConversationService;
@@ -324,6 +325,158 @@ describe('ConversationService', () => {
             await new Promise(resolve => setImmediate(resolve));
 
             expect(mockChatbotAIService.deleteSession).not.toHaveBeenCalled();
+        });
+    });
+
+    // A handoff tag left on the customer read to the bot as "already with
+    // staff", so after a hand-back it stopped handing over new requests.
+    describe('handoff tags on hand-back', () => {
+        const mockTagAssignments = {
+            listByCustomer: jest.fn(),
+            remove: jest.fn().mockResolvedValue(null),
+        };
+        const assignment = (tagId: string, triggersHandoff: boolean) => ({
+            tag: { id: tagId, triggersHandoff },
+        });
+
+        beforeEach(() => {
+            mockModuleRef.get.mockImplementation(token =>
+                token === CustomerTagAssignmentService
+                    ? mockTagAssignments
+                    : undefined
+            );
+            mockTagAssignments.listByCustomer.mockResolvedValue([
+                assignment('needs-staff', true),
+                assignment('vip', false),
+            ]);
+            mockConversationRepository.updateEntity.mockImplementation(
+                async (_find, patch) => patch
+            );
+            mockConversationRepository.getTotal.mockResolvedValue(0);
+        });
+
+        const handedOff = (extra: object = {}) => ({
+            id: 'conv-1',
+            botEnabled: false,
+            status: ENUM_CONVERSATION_STATUS.OPEN,
+            contactPoint: { customer: { id: 'cust-1' } },
+            ...extra,
+        });
+
+        it('removes only the handoff tags when staff resolve', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff()
+            );
+
+            await service.updateStatus(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.RESOLVED
+            );
+
+            expect(mockTagAssignments.remove).toHaveBeenCalledTimes(1);
+            expect(mockTagAssignments.remove).toHaveBeenCalledWith(
+                'cust-1',
+                'needs-staff',
+                undefined,
+                expect.objectContaining({ conversationId: 'conv-1' })
+            );
+        });
+
+        it('removes the handoff tags when staff switch the bot back on', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff()
+            );
+
+            await service.setBotEnabled('conv-1', true);
+
+            expect(mockTagAssignments.remove).toHaveBeenCalledWith(
+                'cust-1',
+                'needs-staff',
+                undefined,
+                expect.anything()
+            );
+        });
+
+        it('keeps the tags when the bot is switched off or was already on', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff({ botEnabled: true })
+            );
+
+            await service.setBotEnabled('conv-1', true);
+            await service.setBotEnabled('conv-1', false);
+
+            expect(mockTagAssignments.remove).not.toHaveBeenCalled();
+        });
+
+        it('still resolves when removing a tag fails', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff()
+            );
+            mockTagAssignments.remove.mockRejectedValueOnce(new Error('db'));
+
+            await expect(
+                service.updateStatus(
+                    'conv-1',
+                    ENUM_CONVERSATION_STATUS.RESOLVED
+                )
+            ).resolves.toBeDefined();
+        });
+
+        it('removes the other handoff tags when one removal fails', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff()
+            );
+            mockTagAssignments.listByCustomer.mockResolvedValue([
+                assignment('needs-staff', true),
+                assignment('new-order', true),
+            ]);
+            mockTagAssignments.remove.mockRejectedValueOnce(new Error('db'));
+
+            await service.updateStatus(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.RESOLVED
+            );
+
+            expect(mockTagAssignments.remove).toHaveBeenCalledWith(
+                'cust-1',
+                'new-order',
+                undefined,
+                expect.anything()
+            );
+        });
+
+        it('keeps the tags while another conversation of the customer waits for staff', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff()
+            );
+            mockConversationRepository.getTotal.mockResolvedValue(1);
+
+            await service.updateStatus(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.RESOLVED
+            );
+
+            expect(mockTagAssignments.remove).not.toHaveBeenCalled();
+            expect(mockConversationRepository.getTotal).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    id: { $ne: 'conv-1' },
+                    contactPoint: { customer: 'cust-1' },
+                    handoffAt: { $ne: null },
+                })
+            );
+        });
+
+        it('still hands back when the conversation has no customer', async () => {
+            mockConversationRepository.findOneById.mockResolvedValue(
+                handedOff({ contactPoint: null })
+            );
+
+            await service.setBotEnabled('conv-1', true);
+
+            expect(mockTagAssignments.remove).not.toHaveBeenCalled();
+            expect(mockMessageRepository.create).toHaveBeenCalledWith(
+                handledNote()
+            );
         });
     });
 

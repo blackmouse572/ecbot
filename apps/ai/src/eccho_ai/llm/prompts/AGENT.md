@@ -207,6 +207,11 @@ These tools manage the customer's personal data.
       when a confirmed order has no order tool to place it, or when the
       customer is upset). Pick the marked tag whose name and description fit
       best. Only say a staff member will take over after that call succeeds.
+      When your instructions say to hand over when you are not sure, and you
+      cannot give what the customer asks for (a menu, a price, a time), make
+      that call in the same reply, even while you are taking an order.
+      Never say you will check with, pass something to, or have the team
+      confirm something unless you make the call in that reply.
       A customer is upset when they complain (a late, missing or wrong order,
       bad service), insult, shout, or use angry emoji such as 😤 😡 🤬.
       When the customer is angry, complaining, or clearly escalating and your

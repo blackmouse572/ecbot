@@ -89,6 +89,8 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
     except HTTPException:
         raise
     except Exception as e:
+        # No explicit capture: Sentry reports this 5xx HTTPException itself,
+        # with `e` chained as its cause.
         logger.error("chat_invoke_error", error=str(e), chatbot_id=chat_request.chatbot_id)
         raise HTTPException(status_code=500, detail="Chat processing failed") from e
 

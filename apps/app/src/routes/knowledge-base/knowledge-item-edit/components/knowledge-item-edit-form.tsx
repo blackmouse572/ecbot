@@ -15,6 +15,7 @@ import z from "zod";
 import { RouteDrawer, useRouteModal } from "../../../../components/modals";
 import { KeyboundForm } from "../../../../components/utils/keybound-form";
 import { ROUTES } from "../../../constants";
+import { KB_URL_MAX_PAGES } from "../../constants";
 import { KnowledgeItemEditTag } from "./knowledge-item-edit-tags";
 
 type KnowledgeItemEditFormProps = {
@@ -26,6 +27,7 @@ const KnowledgeItemEditSchema = z.object({
   title: z.string().min(1),
   tags: z.array(z.string().min(1)).optional(),
   content: z.string().optional(),
+  maxPages: z.number().int().min(1).max(KB_URL_MAX_PAGES).optional(),
 });
 
 export type KnowledgeItemEditFormValues = z.infer<
@@ -47,6 +49,7 @@ export function KnowledgeItemEditForm({
       tags: item.tags,
       title: item.title,
       content: item.content ?? "",
+      maxPages: Number(item.metadata?.maxPages ?? 1),
     },
   });
   const { remove, append } = useFieldArray({
@@ -63,6 +66,7 @@ export function KnowledgeItemEditForm({
   );
 
   const isMedia = item.type === "MEDIA";
+  const isUrl = item.type === "URL";
   const { mutateAsync: processItem } = useProcessKnowledgeItem();
 
   const onClose = useCallback(() => {
@@ -73,13 +77,19 @@ export function KnowledgeItemEditForm({
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
-      const { content, ...rest } = data;
-      await updateMutation.mutateAsync(isMedia ? data : rest);
-      // A media item is searched by its title and description: index the
-      // new words again.
+      const { content, maxPages, ...rest } = data;
+      const pagesChanged =
+        isUrl && maxPages !== Number(item.metadata?.maxPages ?? 1);
+      await updateMutation.mutateAsync({
+        ...(isMedia ? { ...rest, content } : rest),
+        ...(pagesChanged && { metadata: { ...item.metadata, maxPages } }),
+      });
+      // A media item is searched by its title and description, and a
+      // website item reads a new number of pages: index it again.
       if (
-        isMedia &&
-        (content !== (item.content ?? "") || data.title !== item.title)
+        pagesChanged ||
+        (isMedia &&
+          (content !== (item.content ?? "") || data.title !== item.title))
       ) {
         await processItem({ knowledgeBaseId, id: item.id });
       }
@@ -129,6 +139,41 @@ export function KnowledgeItemEditForm({
                     <Form.Hint>
                       {t("knowledge_item.media.description_hint")}
                     </Form.Hint>
+                  </Form.Item>
+                )}
+              />
+            )}
+
+            {isUrl && (
+              <Form.Field
+                control={form.control}
+                name="maxPages"
+                render={({ field }) => (
+                  <Form.Item>
+                    <Form.Label>{t("knowledge_item.max_pages")}</Form.Label>
+                    <Form.Control>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(event) =>
+                          field.onChange(
+                            event.target.value === ""
+                              ? undefined
+                              : event.target.valueAsNumber,
+                          )
+                        }
+                        type="number"
+                        min={1}
+                        max={KB_URL_MAX_PAGES}
+                        step={1}
+                      />
+                    </Form.Control>
+                    <Form.Hint>
+                      {t("knowledge_item.max_pages_hint", {
+                        max: KB_URL_MAX_PAGES,
+                      })}
+                    </Form.Hint>
+                    <Form.ErrorMessage />
                   </Form.Item>
                 )}
               />

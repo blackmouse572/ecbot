@@ -1,5 +1,6 @@
 import { RouteFocusModal, useRouteModal } from "@/components/modals";
 import { useChatbot } from "@/hooks/api";
+import { useAgentBuilderWarm } from "@/hooks/api/agent-builder";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SidebarRight, XMark } from "@medusajs/icons";
 import { Button, IconButton, Text, clx } from "@medusajs/ui";
@@ -29,6 +30,13 @@ export function AgentBuilder() {
     ensurePrefillChannel: prefill.ensure,
     businessName: params.get("businessName")?.trim() || undefined,
   });
+
+  // Wake the AI service while the owner types, so the suggestion does not
+  // wait for its cold start (#256). Not needed to reopen an agent.
+  const { mutate: warm } = useAgentBuilderWarm();
+  useEffect(() => {
+    if (!hydrateId) warm();
+  }, [hydrateId, warm]);
 
   // The welcome screen sends a new owner here with their business type and
   // name: start that template right away instead of showing the hero.

@@ -6,6 +6,7 @@ import {
   KB_MEDIA_MAX_FILES,
   KB_MEDIA_PDF_MAX_BYTES,
   KB_MEDIA_PDF_MIME,
+  KB_URL_MAX_PAGES,
 } from "../../constants";
 
 // Form schemas for each type
@@ -47,6 +48,8 @@ const createUrlSchema = () =>
     metadata: z
       .object({
         content: z.string().optional(),
+        // 1 reads only this page; more follows links on the same site.
+        maxPages: z.number().int().min(1).max(KB_URL_MAX_PAGES).optional(),
       })
       .optional(),
   });

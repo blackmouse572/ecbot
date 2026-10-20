@@ -1,4 +1,7 @@
+import * as Sentry from '@sentry/nestjs';
 import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
+
+jest.mock('@sentry/nestjs', () => ({ captureException: jest.fn() }));
 
 describe('ReplyGenerationService.run', () => {
     it('no-ops when texts is empty', async () => {
@@ -140,6 +143,23 @@ describe('ReplyGenerationService.run', () => {
             status: 'failed',
             reason: 'stream_failed',
         });
+    });
+
+    // #87: the conversation id joins this Sentry event to apps/ai's logs.
+    it('tags a failed stream in Sentry with the conversation id', async () => {
+        const { run } = serviceWith({ history: [], message: 'x' });
+
+        await run();
+
+        expect(Sentry.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            {
+                tags: expect.objectContaining({
+                    reply_failure: 'ai_stream',
+                    conversation_id: 'c',
+                }),
+            }
+        );
     });
 
     // Agents made in the builder have no fallback line: out of tokens, the
