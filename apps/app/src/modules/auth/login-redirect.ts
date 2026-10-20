@@ -1,3 +1,4 @@
+import { ROUTES } from "@/routes/constants";
 import type { Location } from "react-router-dom";
 
 /**
@@ -40,8 +41,12 @@ export function withRedirect(path: string, redirect: string | null): string {
 export function invitedEmailFromRedirect(
   redirect: string | null,
 ): string | undefined {
-  if (!redirect?.startsWith("/join?")) return undefined;
-  const token = new URLSearchParams(redirect.split("?")[1]).get("tokens");
+  if (!redirect) return undefined;
+  const url = new URL(redirect, window.location.origin);
+  if (url.pathname.replace(/\/+$/, "") !== `/${ROUTES.OnboardJoin}`) {
+    return undefined;
+  }
+  const token = url.searchParams.get("tokens");
   const payload = token?.split(".")[1];
   if (!payload) return undefined;
   try {

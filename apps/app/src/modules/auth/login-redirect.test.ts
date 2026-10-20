@@ -57,13 +57,26 @@ describe("withRedirect", () => {
 });
 
 describe("invitedEmailFromRedirect", () => {
-  const invite = (payload: object) =>
-    `/join?tokens=h.${btoa(JSON.stringify(payload)).replace(/=+$/, "")}.s`;
+  // JWT segments are base64url: `-` and `_` instead of `+` and `/`.
+  const invite = (payload: object, path = "/join") =>
+    `${path}?tokens=h.${btoa(JSON.stringify(payload))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "")}.s`;
 
   it("reads the invited email from an invite link", () => {
     expect(
       invitedEmailFromRedirect(invite({ invitedEmail: "an@shop.vn" })),
     ).toBe("an@shop.vn");
+  });
+
+  it("decodes base64url payloads and tolerates a trailing slash", () => {
+    // "?>?>" encodes to "Pz4/Pj4", so its base64url form carries a `_`.
+    const payload = { invitedEmail: "lan@kunmart.vn", note: "?>?>" };
+    expect(invite(payload)).toContain("_");
+    expect(invitedEmailFromRedirect(invite(payload, "/join/"))).toBe(
+      "lan@kunmart.vn",
+    );
   });
 
   it("returns undefined for other redirects or a broken token", () => {

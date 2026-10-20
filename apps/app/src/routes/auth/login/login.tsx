@@ -84,13 +84,18 @@ function LoginPage() {
           // Right password, email not verified yet (e.g. an account an
           // admin created): go enter the emailed code instead of a dead end.
           const userId = error?.data?.id;
+          const redirect = search.get("redirect");
           if (
             error?.statusCode === USER_EMAIL_NOT_VERIFIED_STATUS_CODE &&
             userId
           ) {
             navigate({
               pathname: `/${ROUTES.VerifyEmail}`,
-              search: `?${new URLSearchParams({ email, userId })}`,
+              search: `?${new URLSearchParams({
+                email,
+                userId,
+                ...(redirect ? { redirect } : {}),
+              })}`,
             });
             return;
           }

@@ -12,12 +12,12 @@ describe('invitation email copy', () => {
         ).toBe('Chi Nguyen đã mời bạn tham gia Kunmart trên Ecbot.');
     });
 
-    it('tells an invitee without an account to sign up with this email', () => {
-        expect(invitationEmailCopy('vi', 'Ecbot').noAccount).toBe(
-            'Chưa có tài khoản? Bấm nút ở trên, rồi chọn Đăng ký bằng chính email này.'
+    it('tells a new invitee to sign up with this email, in words true for existing users too', () => {
+        expect(invitationEmailCopy('vi', 'Ecbot').newHere).toBe(
+            'Lần đầu dùng Ecbot? Bấm nút ở trên, rồi chọn Đăng ký bằng chính email này.'
         );
-        expect(invitationEmailCopy('en', 'Ecbot').noAccount).toBe(
-            'No account yet? Tap the button above, then choose Sign up with this same email.'
+        expect(invitationEmailCopy('en', 'Ecbot').newHere).toBe(
+            'New to Ecbot? Tap the button above, then choose Sign up with this same email.'
         );
     });
 
@@ -31,7 +31,7 @@ describe('invitation email copy', () => {
                 copy.action,
                 copy.expiry('10/10/2026'),
                 copy.ignore,
-                copy.noAccount,
+                copy.newHere,
                 copy.signOff,
             ].join(' ');
             expect(text).not.toContain('—');
