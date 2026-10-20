@@ -85,4 +85,39 @@ describe('KnowledgeBaseWorkspaceController, one knowledge base per workspace', (
             deletedAt: null,
         });
     });
+
+    // The app opens the first listed knowledge base (newest first). A deleted
+    // one left by the merge migration came first, and its items and tags 404,
+    // so the Knowledge Base page showed "Page Not Found".
+    it('does not list a deleted knowledge base', async () => {
+        const knowledgeBaseService = {
+            find: jest.fn().mockResolvedValue([]),
+            getTotal: jest.fn().mockResolvedValue(0),
+            mapList: jest.fn().mockReturnValue([]),
+        };
+        const controller = new KnowledgeBaseWorkspaceController(
+            {} as any,
+            knowledgeBaseService as any,
+            { totalPage: jest.fn().mockReturnValue(0) } as any,
+            {} as any
+        );
+
+        await controller.list(
+            { id: 'workspace-1' } as any,
+            {
+                _search: {},
+                _limit: 10,
+                _offset: 0,
+                _order: {},
+            } as any
+        );
+
+        expect(knowledgeBaseService.find).toHaveBeenCalledWith(
+            expect.objectContaining({
+                workspace: 'workspace-1',
+                deletedAt: null,
+            }),
+            expect.anything()
+        );
+    });
 });
