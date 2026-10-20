@@ -74,3 +74,9 @@ export class FacebookPagePictureResponseDto {
     })
     width: number;
 }
+
+/** Graph API list envelope: one page of results plus the cursor to the next. */
+export interface FacebookPagesEnvelope {
+    data: FacebookPageResponseDto[];
+    paging?: { next?: string };
+}
