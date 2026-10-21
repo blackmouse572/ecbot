@@ -187,6 +187,15 @@ async def test_block_includes_profile_summary_when_set(sqlite_repo):
     assert "Long-time buyer who prefers Vietnamese." in block
 
 
+async def test_staff_note_at_the_end_of_a_long_summary_reaches_the_agent(sqlite_repo):
+    summary = "x" * 600 + " Staff call her cô and keep replies short."
+    customer = await _make_customer(sqlite_repo, name="Alice", profile_summary=summary)
+
+    block = await build_customer_context_block(customer.id)
+
+    assert "Staff call her cô and keep replies short." in block
+
+
 async def test_merged_customer_is_invisible_to_agent(sqlite_repo):
     # A is the canonical record; B has been merged into A.
     customer_a = await _make_customer(sqlite_repo, name="Canonical")

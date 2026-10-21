@@ -26,6 +26,8 @@ logger = logging.getLogger("uvicorn.info")
 
 MAX_CATALOG_TAGS = 20
 MAX_FIELD_LEN = 500
+# The summary ends with the "Staff ..." note, so it gets more room than other fields.
+MAX_SUMMARY_LEN = 800
 
 
 def _safe(value: Any, *, limit: int = MAX_FIELD_LEN) -> str:
@@ -134,7 +136,7 @@ async def build_customer_context_block(customer_id: str | None) -> str:
         "Applied tags: "
         + (", ".join(_safe(n, limit=80) for n in applied_names) if applied_names else "none")
     )
-    lines.append(f"Profile summary: {_safe(customer.profile_summary) or '—'}")
+    lines.append(f"Profile summary: {_safe(customer.profile_summary, limit=MAX_SUMMARY_LEN) or '—'}")
     lines.append("")
     lines.append(
         "# Tag catalog (apply with the apply_customer_tag tool when warranted;"

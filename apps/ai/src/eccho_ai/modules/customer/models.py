@@ -45,6 +45,10 @@ class ClassifyRequest(BaseModel):
         default_factory=list,
         description="Tag names currently assigned to the Customer.",
     )
+    current_summary: str = Field(
+        default="",
+        description="The customer's profile summary before this conversation.",
+    )
 
 
 # ----- Response -----
@@ -63,7 +67,7 @@ class ClassifyResponse(BaseModel):
     )
     profile_summary: str = Field(
         default="",
-        description="One paragraph (~50 tokens) describing who this customer is.",
+        description="One paragraph (~70 tokens) describing who this customer is and how staff talk to them.",
     )
 
 

@@ -294,6 +294,24 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         );
     });
 
+    it('sends the current profile summary so staff style notes carry over', async () => {
+        conversationRepository.findOneById.mockResolvedValue(
+            liveConversation({
+                contactPoint: {
+                    customer: {
+                        id: 'cust-1',
+                        profileSummary: 'Staff call her cô.',
+                    },
+                },
+            })
+        );
+
+        await service.handle(dto() as any, 0);
+
+        const [, body] = httpService.post.mock.calls[0];
+        expect(body.current_summary).toBe('Staff call her cô.');
+    });
+
     it('writes a trimmed profile summary', async () => {
         httpService.post.mockReturnValue(
             classifierResponse({ profile_summary: '  Loyal buyer.  ' })
