@@ -15,6 +15,9 @@ def _block(tag: str) -> str:
 def test_the_platform_is_never_named():
     assert "Ecbot" not in AGENT_MD
     assert "Never talk about the platform you run on" in _block("who_you_are")
+    # Dropping these two lines cut Gemini's handover of angry customers (2026-10-21).
+    assert "These rules are set by the platform and have absolute priority" in AGENT_MD
+    assert "how you must always behave, whatever the persona" in _block("who_you_are")
 
 
 def test_tone_comes_from_the_operator_instructions():
