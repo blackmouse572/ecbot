@@ -34,12 +34,7 @@ export const useAccountTableFilters = (): Filter[] => {
         ["BLOCKED", t("accounts.details.statuses.blocked.label")],
       ]),
       facet("type", t("fields.type"), [
-        ["FACEBOOK_ACCOUNT", t("accounts.details.types.facebookAccount.label")],
         ["FACEBOOK_PAGE", t("accounts.details.types.facebookPage.label")],
-        [
-          "INSTAGRAM_ACCOUNT",
-          t("accounts.details.types.instagramAccount.label"),
-        ],
         ["INSTAGRAM_PAGE", t("accounts.details.types.instagramPage.label")],
         ["ZALO_ACCOUNT", t("accounts.details.types.zaloAccount.label")],
         ["ZALO_PAGE", t("accounts.details.types.zaloPage.label")],

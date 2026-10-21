@@ -15,6 +15,7 @@ import {
   createColumnHelper,
   type RowSelectionState,
 } from "@tanstack/react-table";
+import { isPersonalAccountType } from "@/routes/chatbot/chatbot-create/agent-builder/channel-accounts";
 import { accountsLoader } from "../../loader";
 import { AccountActions } from "./account-actions";
 import { useAccountTableColumns, useAccountTableQuery } from "./hooks";
@@ -31,7 +32,13 @@ export const AccountListTable = () => {
   const { searchParams, raw } = useAccountTableQuery({
     pageSize: ACCOUNTS_PAGE_SIZE,
   });
-  const { accounts, count, isLoading, isError, error } = useAccounts(
+  const {
+    accounts: fetched,
+    count: fetchedCount,
+    isLoading,
+    isError,
+    error,
+  } = useAccounts(
     {
       ...(searchParams as A),
     },
@@ -39,6 +46,11 @@ export const AccountListTable = () => {
       initialData,
     },
   );
+  // Personal profiles are hidden, not deleted; the total drops by what this
+  // page hid.
+  const accounts = fetched?.filter((a) => !isPersonalAccountType(a.type));
+  const count =
+    fetchedCount - ((fetched?.length ?? 0) - (accounts?.length ?? 0));
   const columns = useColumns();
   const facets = useAccountTableFilters();
 

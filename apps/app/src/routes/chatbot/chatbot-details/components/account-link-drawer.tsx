@@ -4,6 +4,7 @@ import { useLinkChatbotAccount } from "@/hooks/api/chatbot";
 import { MagnifyingGlass } from "@medusajs/icons";
 import { Avatar, Button, Drawer, Input, Text, toast } from "@medusajs/ui";
 import type { ChatbotLinkAccountResponseDto } from "@repo/client";
+import { isPersonalAccountType } from "@/routes/chatbot/chatbot-create/agent-builder/channel-accounts";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PlatformIcon } from "../../../../components/platform-icon/platform-icon";
@@ -23,10 +24,10 @@ export function AccountLinkDrawer({ isOpen, onClose, chatbotId }: Props) {
   const available = useMemo(
     () =>
       (accounts ?? [])
-        // User-level Facebook accounts aren't a messaging channel
+        // Personal Facebook / Instagram profiles aren't a messaging channel
         // themselves (only their pages are), consistent with the agent
         // builder's channels turn.
-        .filter((a) => a.type !== "FACEBOOK_ACCOUNT")
+        .filter((a) => !isPersonalAccountType(a.type))
         .filter((a) => !search || a.name?.toLowerCase().includes(search.toLowerCase())),
     [accounts, search],
   );
