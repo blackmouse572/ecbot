@@ -533,7 +533,7 @@
     "recentActivities": "Hoạt động gần đây",
     "gettingStarted": {
       "title": "Đưa agent vào hoạt động",
-      "description": "Bốn bước để bắt đầu trả lời khách hàng.",
+      "description": "Năm bước để bắt đầu trả lời khách hàng.",
       "steps": {
         "chatbot": {
           "title": "Tạo agent đầu tiên",
@@ -542,6 +542,10 @@
         "account": {
           "title": "Kết nối kênh",
           "description": "Gắn agent vào website, Telegram, Messenger hoặc Zalo."
+        },
+        "link": {
+          "title": "Gắn agent vào kênh",
+          "description": "Chọn agent trả lời trên kênh đó. Chưa gắn thì kênh sẽ im lặng."
         },
         "activate": {
           "title": "Kích hoạt agent",

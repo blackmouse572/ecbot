@@ -53,6 +53,9 @@ describe("GettingStarted", () => {
 
     expect(screen.getByText("Create your first agent")).toBeInTheDocument();
     expect(screen.getByText("Connect a channel")).toBeInTheDocument();
+    expect(
+      screen.getByText("Connect your agent to the channel"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Activate your agent")).toBeInTheDocument();
     expect(screen.getByText("Get your first conversation")).toBeInTheDocument();
     expect(

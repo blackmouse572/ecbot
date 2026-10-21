@@ -53,13 +53,16 @@ describe("GettingStartedNav", () => {
     data.chatbots = 1;
     renderNav();
 
-    expect(screen.getByText("1 of 4")).toBeInTheDocument();
+    expect(screen.getByText("1 of 5")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /Create your first agent/ }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Connect a channel/ }),
     ).toHaveAttribute("href", "/kunmart/accounts/create");
+    expect(
+      screen.getByRole("link", { name: /Connect your agent to the channel/ }),
+    ).toHaveAttribute("href", "/kunmart/accounts");
     expect(
       screen.getByRole("link", { name: /Activate your agent/ }),
     ).toHaveAttribute("href", "/kunmart/chatbot");
@@ -79,14 +82,17 @@ describe("GettingStartedNav", () => {
     );
   });
 
-  it("counts a channel only once an agent answers on it", () => {
+  it("checks the channel once connected, and the link step once an agent answers on it", () => {
     data.chatbots = 1;
     data.accounts = [{ chatbot: null }];
     renderNav();
 
-    // Connected but not linked: still to do, and sent to the channel list.
+    // Connected but not linked: only linking is still to do.
     expect(
-      screen.getByRole("link", { name: /Connect a channel/ }),
+      screen.queryByRole("link", { name: /Connect a channel/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Connect your agent to the channel/ }),
     ).toHaveAttribute("href", "/kunmart/accounts");
   });
 
@@ -95,7 +101,7 @@ describe("GettingStartedNav", () => {
     data.accounts = [{ chatbot: { id: "bot-1" } }];
     renderNav();
 
-    expect(screen.getByText("2 of 4")).toBeInTheDocument();
+    expect(screen.getByText("3 of 5")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Activate your agent/ }),
     ).toBeInTheDocument();

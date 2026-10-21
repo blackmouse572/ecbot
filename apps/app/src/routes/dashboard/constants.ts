@@ -3,6 +3,7 @@ import type { RequestPaginationDto } from "@/libs/query-types";
 import {
   Bolt,
   ChatBubbleLeftRight,
+  Link,
   SquaresPlus,
   Sparkles,
 } from "@medusajs/icons";
@@ -27,6 +28,7 @@ export const LINKED_ACCOUNT_QUERY = { perPage: 50 };
 export const GETTING_STARTED_STEPS = [
   { key: "chatbot", path: `${ROUTES.Chatbot}/create`, icon: Sparkles },
   { key: "account", path: `${ROUTES.Accounts}/create`, icon: SquaresPlus },
+  { key: "link", path: ROUTES.Accounts, icon: Link },
   { key: "activate", path: ROUTES.Chatbot, icon: Bolt },
   {
     key: "conversation",
