@@ -2,6 +2,7 @@ import { useAccounts } from "@/hooks/api/accounts";
 import { useChatbots } from "@/hooks/api/chatbot";
 import { useConversations } from "@/hooks/api/conversations";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { isConnectableAccountType } from "@/routes/chatbot/chatbot-create/agent-builder/channel-accounts";
 import {
   ACTIVE_CHATBOT_COUNT_QUERY,
   STATS_COUNT_QUERY,
@@ -32,10 +33,17 @@ export function useGettingStartedSteps(): GettingStartedStep[] {
     return [];
   }
 
+  // Only types an agent can be linked to are channels; a user-level Facebook
+  // account with no pages has nothing to link.
+  const channels =
+    accounts.accounts?.filter((account) =>
+      isConnectableAccountType(account.type),
+    ) ?? [];
+
   const done: Record<GettingStartedStepKey, boolean> = {
     chatbot: chatbots.count > 0,
-    account: accounts.count > 0,
-    link: !!accounts.accounts?.some((account) => account.chatbot),
+    account: channels.length > 0,
+    link: channels.some((account) => account.chatbot),
     activate: active.count > 0,
     conversation: conversations.count > 0,
   };

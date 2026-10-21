@@ -20,6 +20,7 @@ vi.mock("@/hooks/api/accounts", () => ({
   useAccounts: () => ({
     ...query(counts.accounts),
     accounts: Array.from({ length: counts.accounts }, () => ({
+      type: "FACEBOOK_PAGE",
       chatbot: { id: "bot-1" },
     })),
   }),

@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const data = vi.hoisted(() => ({
   chatbots: 0,
   active: 0,
-  accounts: [] as { chatbot: { id: string } | null }[],
+  accounts: [] as { type?: string; chatbot: { id: string } | null }[],
   conversations: 0,
 }));
 const query = (count: number) => ({ count, isLoading: false, isError: false });
@@ -94,6 +94,16 @@ describe("GettingStartedNav", () => {
     expect(
       screen.getByRole("link", { name: /Connect your agent to the channel/ }),
     ).toHaveAttribute("href", "/kunmart/accounts");
+  });
+
+  it("ignores a Facebook login with no pages, which is not a channel", () => {
+    data.chatbots = 1;
+    data.accounts = [{ type: "FACEBOOK_ACCOUNT", chatbot: null }];
+    renderNav();
+
+    expect(
+      screen.getByRole("link", { name: /Connect a channel/ }),
+    ).toHaveAttribute("href", "/kunmart/accounts/create");
   });
 
   it("counts an agent as live only once it is active", () => {
