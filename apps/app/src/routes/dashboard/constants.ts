@@ -19,8 +19,9 @@ export const ACTIVE_CHATBOT_COUNT_QUERY = {
   status: ["active"],
 } as Partial<RequestPaginationDto>;
 
-/** Enough channels to tell whether any one answers through an agent; a
- * workspace still on the checklist has only a few. */
+/** The channels both channel steps read: whether any is connected and whether
+ * any answers through an agent. A workspace still on the checklist has only a
+ * few, so one page is enough. */
 export const LINKED_ACCOUNT_QUERY = { perPage: 50 };
 
 /** Getting-started checklist, in order. Paths are relative to the workspace;
