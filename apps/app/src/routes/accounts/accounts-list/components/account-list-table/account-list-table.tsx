@@ -46,11 +46,10 @@ export const AccountListTable = () => {
       initialData,
     },
   );
-  // Personal profiles are hidden, not deleted; the total drops by what this
-  // page hid.
+  // Personal profiles are hidden, not deleted. The server total stays as is,
+  // since it drives pagination; it is an upper bound while any are hidden.
   const accounts = fetched?.filter((a) => !isPersonalAccountType(a.type));
-  const count =
-    fetchedCount - ((fetched?.length ?? 0) - (accounts?.length ?? 0));
+  const count = fetchedCount;
   const columns = useColumns();
   const facets = useAccountTableFilters();
 

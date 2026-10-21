@@ -45,8 +45,9 @@ export function channelOfAccountType(type: AccountType): ChannelId | null {
   return ACCOUNT_TYPE_TO_CHANNEL[type] ?? null;
 }
 
-/** Personal profiles that only parent a channel's Pages or business
- * accounts. They stay stored but never show in channel lists. */
+/** Personal Facebook profiles (which only parent their Pages) and legacy
+ * Instagram login rows (new Instagram logins are stored as INSTAGRAM_PAGE).
+ * They stay stored but never show in channel lists. */
 const PERSONAL_ACCOUNT_TYPES = new Set<AccountType>([
   "FACEBOOK_ACCOUNT",
   "INSTAGRAM_ACCOUNT",
