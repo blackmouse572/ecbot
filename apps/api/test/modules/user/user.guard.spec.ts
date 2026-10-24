@@ -19,8 +19,10 @@ const activeUser = {
     verification: { email: true },
 };
 
-function contextFor(userId: string) {
-    const request: Record<string, any> = { user: { user: userId } };
+function contextFor(userId: string, impersonatedBy?: string) {
+    const request: Record<string, any> = {
+        user: { user: userId, impersonatedBy },
+    };
     return {
         request,
         context: {
@@ -30,12 +32,17 @@ function contextFor(userId: string) {
     };
 }
 
-function setup(user: Record<string, any> = activeUser) {
+function setup(
+    user: Record<string, any> = activeUser,
+    passwordExpired = false
+) {
     const findOneWithRoleAndCountryById = jest.fn().mockResolvedValue(user);
     const guard = new UserGuard(
         { get: () => undefined } as unknown as Reflector,
         { findOneWithRoleAndCountryById } as unknown as UserService,
-        { checkPasswordExpired: () => false } as unknown as AuthService
+        {
+            checkPasswordExpired: () => passwordExpired,
+        } as unknown as AuthService
     );
     return { guard, findOneWithRoleAndCountryById };
 }
@@ -79,5 +86,21 @@ describe('UserGuard', () => {
         }
 
         expect(findOneWithRoleAndCountryById).toHaveBeenCalledTimes(2);
+    });
+
+    it('rejects a user whose password has expired', async () => {
+        const { guard } = setup(activeUser, true);
+
+        await expect(
+            guard.canActivate(contextFor('user-1').context)
+        ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('lets an admin impersonate a user whose password has expired', async () => {
+        const { guard } = setup(activeUser, true);
+
+        await expect(
+            guard.canActivate(contextFor('user-1', 'admin-1').context)
+        ).resolves.toBe(true);
     });
 });
