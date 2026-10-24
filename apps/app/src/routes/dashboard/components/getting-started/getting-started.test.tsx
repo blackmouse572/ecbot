@@ -20,6 +20,7 @@ vi.mock("@/hooks/api/accounts", () => ({
   useAccounts: () => ({
     ...query(counts.accounts),
     accounts: Array.from({ length: counts.accounts }, () => ({
+      type: "FACEBOOK_PAGE",
       chatbot: { id: "bot-1" },
     })),
   }),
@@ -53,6 +54,9 @@ describe("GettingStarted", () => {
 
     expect(screen.getByText("Create your first agent")).toBeInTheDocument();
     expect(screen.getByText("Connect a channel")).toBeInTheDocument();
+    expect(
+      screen.getByText("Connect your agent to the channel"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Activate your agent")).toBeInTheDocument();
     expect(screen.getByText("Get your first conversation")).toBeInTheDocument();
     expect(
