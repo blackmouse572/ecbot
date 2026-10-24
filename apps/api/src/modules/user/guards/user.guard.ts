@@ -41,7 +41,7 @@ export class UserGuard implements CanActivate {
             ) || [];
 
         const request = context.switchToHttp().getRequest<IRequestApp>();
-        const { user } = request.user;
+        const { user, impersonatedBy } = request.user;
 
         const cached = this.cache.get(user);
         const userWithRole =
@@ -65,7 +65,10 @@ export class UserGuard implements CanActivate {
             });
         }
 
+        // An impersonating admin never uses the user's password or inbox, so
+        // their expiry and verification must not lock support out.
         const checkPasswordExpired: boolean =
+            !impersonatedBy &&
             this.authService.checkPasswordExpired(userWithRole.passwordExpired);
         if (checkPasswordExpired) {
             throw new ForbiddenException({
@@ -73,6 +76,7 @@ export class UserGuard implements CanActivate {
                 message: 'auth.error.passwordExpired',
             });
         } else if (
+            !impersonatedBy &&
             emailVerified.includes(true) &&
             userWithRole.verification.email !== true
         ) {
