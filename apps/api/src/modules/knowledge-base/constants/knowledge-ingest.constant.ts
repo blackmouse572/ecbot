@@ -36,6 +36,13 @@ export const RAG_INGEST_NO_TOKENS_ERROR =
     'Your workspace has no AI tokens left. Top up or renew your plan, then process this item again.';
 
 /**
+ * Stored on a website item whose read text went over the plan's knowledge
+ * storage; what was read is removed. apps/app matches this exact string.
+ */
+export const RAG_INGEST_STORAGE_FULL_ERROR =
+    "This website has more text than your plan's knowledge storage has room for. Delete some knowledge or upgrade your plan, then process it again.";
+
+/**
  * Pages one website item may read: the owner picks up to this many, and
  * apps/ai follows same-site links until it has them.
  */

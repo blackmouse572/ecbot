@@ -1,5 +1,5 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
-import { EntityManager, raw } from '@mikro-orm/postgresql';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '../../enums/knowledge-base-item-status.enum';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '../../enums/knowledge-base-item-type.enum';
@@ -74,17 +74,38 @@ export class KnowledgeItemRepository extends DatabaseRepository<KnowledgeItemEnt
         }, 0);
     }
 
-    /** Bytes of uploaded files across every live knowledge base in the workspace. */
+    /**
+     * Knowledge storage the workspace uses across its live knowledge bases:
+     * a file or media item counts its file's bytes, a text item its text, and
+     * a website item the text read from its pages. Text counts one byte per
+     * character, so an owner can predict it from what they typed.
+     */
     async getStorageUsageByWorkspace(workspaceId: string): Promise<number> {
-        const row = await this.em
-            .createQueryBuilder(KnowledgeItemEntity, 'i')
-            .select(raw('coalesce(sum(i.attachment_size), 0) as total'))
-            .join('i.knowledgeBase', 'kb')
-            .where({
-                deletedAt: null,
-                knowledgeBase: { workspace: workspaceId, deletedAt: null },
-            })
-            .execute<{ total: string | number }>('get');
+        const [row] = await this.em
+            .getConnection()
+            .execute<{ total: string | number }[]>(
+                `select coalesce(sum(case
+                    when i.attachment_size is not null then i.attachment_size
+                    when i.type = ? then coalesce(page.chars, 0)
+                    else coalesce(char_length(i.content), 0)
+                end), 0) as total
+            from knowledge_base_items i
+            join knowledge_bases kb on kb.id = i.knowledge_base_id
+            left join lateral (
+                select sum(d.content_chars) as chars
+                from rag.rag_documents d
+                where i.type = ?
+                    and d.metadata->>'knowledge_item_id' = i.id::text
+            ) page on true
+            where kb.workspace_id = ?
+                and kb.deleted_at is null
+                and i.deleted_at is null`,
+                [
+                    ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+                    ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+                    workspaceId,
+                ]
+            );
         return Number(row?.total ?? 0);
     }
 
