@@ -34,11 +34,12 @@ function contextFor(userId: string, impersonatedBy?: string) {
 
 function setup(
     user: Record<string, any> = activeUser,
-    passwordExpired = false
+    passwordExpired = false,
+    emailVerified?: boolean[]
 ) {
     const findOneWithRoleAndCountryById = jest.fn().mockResolvedValue(user);
     const guard = new UserGuard(
-        { get: () => undefined } as unknown as Reflector,
+        { get: () => emailVerified } as unknown as Reflector,
         { findOneWithRoleAndCountryById } as unknown as UserService,
         {
             checkPasswordExpired: () => passwordExpired,
@@ -101,6 +102,21 @@ describe('UserGuard', () => {
 
         await expect(
             guard.canActivate(contextFor('user-1', 'admin-1').context)
+        ).resolves.toBe(true);
+    });
+
+    it('lets an admin impersonate a user whose email is not verified', async () => {
+        const unverified = { ...activeUser, verification: { email: false } };
+
+        await expect(
+            setup(unverified, false, [true]).guard.canActivate(
+                contextFor('user-1').context
+            )
+        ).rejects.toThrow(ForbiddenException);
+        await expect(
+            setup(unverified, false, [true]).guard.canActivate(
+                contextFor('user-1', 'admin-1').context
+            )
         ).resolves.toBe(true);
     });
 });

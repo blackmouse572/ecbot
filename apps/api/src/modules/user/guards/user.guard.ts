@@ -65,8 +65,8 @@ export class UserGuard implements CanActivate {
             });
         }
 
-        // An impersonating admin never uses the user's password, so its
-        // expiry must not lock support out of the account.
+        // An impersonating admin never uses the user's password or inbox, so
+        // their expiry and verification must not lock support out.
         const checkPasswordExpired: boolean =
             !impersonatedBy &&
             this.authService.checkPasswordExpired(userWithRole.passwordExpired);
@@ -76,6 +76,7 @@ export class UserGuard implements CanActivate {
                 message: 'auth.error.passwordExpired',
             });
         } else if (
+            !impersonatedBy &&
             emailVerified.includes(true) &&
             userWithRole.verification.email !== true
         ) {
