@@ -45,14 +45,19 @@ export function channelOfAccountType(type: AccountType): ChannelId | null {
   return ACCOUNT_TYPE_TO_CHANNEL[type] ?? null;
 }
 
-/** Channel kinds the builder never connects: user-level Facebook accounts
- * (only their pages are channels) and API channels (server integrations,
- * attached from the chatbot side). */
-const UNCONNECTED_ACCOUNT_TYPES = new Set<AccountType>([
+/** Personal Facebook profiles (which only parent their Pages) and legacy
+ * Instagram login rows (new Instagram logins are stored as INSTAGRAM_PAGE).
+ * They stay stored but never show in channel lists. */
+const PERSONAL_ACCOUNT_TYPES = new Set<AccountType>([
   "FACEBOOK_ACCOUNT",
-  "API_CHANNEL",
+  "INSTAGRAM_ACCOUNT",
 ]);
 
-/** Whether the builder can connect this channel type to an agent. */
+export const isPersonalAccountType = (type: AccountType) =>
+  PERSONAL_ACCOUNT_TYPES.has(type);
+
+/** Whether the builder can connect this channel type to an agent: not a
+ * personal profile, and not an API channel (a server integration, attached
+ * from the chatbot side). */
 export const isConnectableAccountType = (type: AccountType) =>
-  !UNCONNECTED_ACCOUNT_TYPES.has(type);
+  !isPersonalAccountType(type) && type !== "API_CHANNEL";

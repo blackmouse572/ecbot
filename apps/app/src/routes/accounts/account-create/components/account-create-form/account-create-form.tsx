@@ -28,6 +28,7 @@ import {
 } from "@medusajs/ui";
 import type { AccountGetDetailResponseDto } from "@repo/client";
 import { Form } from "@repo/ui/common-components";
+import { isPersonalAccountType } from "@/routes/chatbot/chatbot-create/agent-builder/channel-accounts";
 import { useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -482,6 +483,9 @@ function SuccessStep({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
+  // A personal profile only parents its pages, so its card shows only when
+  // there is nothing else to show.
+  const showProfile = !isPersonalAccountType(data.type) || !data.pages?.length;
   return (
     <div className="flex w-full max-w-[720px] flex-col gap-y-8">
       <div className="flex items-center justify-between">
@@ -497,27 +501,29 @@ function SuccessStep({
       </div>
 
       <div className="space-y-4">
-        <Container className="flex gap-4 items-center">
-          <Avatar
-            src={data.avatar}
-            size="large"
-            fallback={getAvatarFallback(data.name)}
-          />
-          <div className="flex flex-col justify-center flex-1">
-            <Text size="base">{data.name}</Text>
-            <div className="[&>*]:px-4 divide-x flex [&>*]:first:pl-0">
-              <Text size="small" className="text-ui-fg-subtle">
-                {data.slug}
-              </Text>
-              <Text size="small" className="text-ui-fg-subtle">
-                {data.type}
-              </Text>
+        {showProfile && (
+          <Container className="flex gap-4 items-center">
+            <Avatar
+              src={data.avatar}
+              size="large"
+              fallback={getAvatarFallback(data.name)}
+            />
+            <div className="flex flex-col justify-center flex-1">
+              <Text size="base">{data.name}</Text>
+              <div className="[&>*]:px-4 divide-x flex [&>*]:first:pl-0">
+                <Text size="small" className="text-ui-fg-subtle">
+                  {data.slug}
+                </Text>
+                <Text size="small" className="text-ui-fg-subtle">
+                  {data.type}
+                </Text>
+              </div>
             </div>
-          </div>
-          <StatusBadge color="green" className="h-fit">
-            {t("accounts.details.statuses.active.title")}
-          </StatusBadge>
-        </Container>
+            <StatusBadge color="green" className="h-fit">
+              {t("accounts.details.statuses.active.title")}
+            </StatusBadge>
+          </Container>
+        )}
 
         {data.pages?.length > 0 && (
           <>
