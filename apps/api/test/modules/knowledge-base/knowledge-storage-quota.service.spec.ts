@@ -148,3 +148,43 @@ describe('KnowledgeStorageQuotaService.assertCanSaveContent', () => {
         ).resolves.toBeUndefined();
     });
 });
+
+describe('KnowledgeStorageQuotaService.isOverLimit', () => {
+    const repository = { getStorageUsageByWorkspace: jest.fn() };
+    const limit = { getLimitBytes: jest.fn() };
+    const service = new KnowledgeStorageQuotaService(repository as any, limit);
+
+    it('is false at the limit and true past it', async () => {
+        limit.getLimitBytes.mockResolvedValue(100);
+        repository.getStorageUsageByWorkspace.mockResolvedValueOnce(100);
+        await expect(service.isOverLimit('ws-1')).resolves.toBe(false);
+        repository.getStorageUsageByWorkspace.mockResolvedValueOnce(101);
+        await expect(service.isOverLimit('ws-1')).resolves.toBe(true);
+    });
+
+    it('is never over without a limit', async () => {
+        limit.getLimitBytes.mockResolvedValue(null);
+        await expect(service.isOverLimit('ws-1')).resolves.toBe(false);
+    });
+});
+
+describe('KnowledgeStorageQuotaService text size', () => {
+    it('counts an emoji as one character, like Postgres char_length', async () => {
+        const repository = {
+            getStorageUsageByWorkspace: jest.fn().mockResolvedValue(98),
+        };
+        const limit = { getLimitBytes: jest.fn().mockResolvedValue(100) };
+        const service = new KnowledgeStorageQuotaService(
+            repository as any,
+            limit
+        );
+
+        await expect(
+            service.assertCanSaveContent(
+                'ws-1',
+                ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
+                '😀😀'
+            )
+        ).resolves.toBeUndefined();
+    });
+});

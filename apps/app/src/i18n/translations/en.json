@@ -2709,7 +2709,8 @@
     "ingestErrors": {
       "urlNotPublic": "This page is not public. Use a link anyone can open on the internet, not localhost or a private network address.",
       "urlFetchFailed": "Could not read this page. Check that the link opens in a browser without signing in, then process it again.",
-      "noTokens": "Your workspace has no AI tokens left. Top up or renew your plan, then process this item again."
+      "noTokens": "Your workspace has no AI tokens left. Top up or renew your plan, then process this item again.",
+      "storageFull": "This website has more text than your plan's knowledge storage has room for. Delete some knowledge or upgrade your plan, then process it again."
     },
     "create_title": "Create Knowledge Item",
     "create_description": "Add a new knowledge item to your knowledge base. Choose from text, URL, or file sources.",

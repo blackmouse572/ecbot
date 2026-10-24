@@ -7,6 +7,7 @@ import {
     RAG_INGEST_MAX_ATTEMPTS,
     RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS,
     RAG_INGEST_NO_TOKENS_ERROR,
+    RAG_INGEST_STORAGE_FULL_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
     RAG_INGEST_URL_HTTP_TIMEOUT_MS,
     KNOWLEDGE_URL_MAX_PAGES,
@@ -34,6 +35,7 @@ describe('KnowledgeIngestTaskService', () => {
     const httpDelete = jest.fn();
     const getItemBuffer = jest.fn();
     const notifyFailed = jest.fn().mockResolvedValue(undefined);
+    const isOverLimit = jest.fn().mockResolvedValue(false);
     const configService = {
         get: jest.fn((key: string) =>
             key === 'ai.internalToken'
@@ -62,6 +64,7 @@ describe('KnowledgeIngestTaskService', () => {
         httpPost.mockReturnValue(of({ data: { data: { chunk_count: 2 } } }));
         httpPatch.mockReturnValue(of({ data: {} }));
         httpDelete.mockReturnValue(of({ data: {} }));
+        isOverLimit.mockResolvedValue(false);
 
         service = new KnowledgeIngestTaskService(
             { findOneById, updateStatus } as any,
@@ -69,7 +72,8 @@ describe('KnowledgeIngestTaskService', () => {
             { getItemBuffer } as any,
             { post: httpPost, patch: httpPatch, delete: httpDelete } as any,
             configService as any,
-            { notifyFailed } as any
+            { notifyFailed } as any,
+            { isOverLimit } as any
         );
     });
 
@@ -187,6 +191,60 @@ describe('KnowledgeIngestTaskService', () => {
                 metadata: { source: 'test', chunkCount: 2 },
             })
         );
+    });
+
+    // A website's size is known only once read, so the plan's storage is
+    // checked again after the crawl.
+    describe('website over the storage limit', () => {
+        beforeEach(() => {
+            findOneById.mockResolvedValue({
+                id: 'item-1',
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+                content: 'https://example.test',
+                title: 'Shop',
+                knowledgeBase: { id: 'kb-1', workspace: { id: 'ws-1' } },
+            });
+        });
+
+        it('removes what was read and fails the item when the crawl went over', async () => {
+            isOverLimit.mockResolvedValue(true);
+
+            await service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                0
+            );
+
+            expect(isOverLimit).toHaveBeenCalledWith('ws-1');
+            expect(httpDelete).toHaveBeenCalledWith(
+                'http://ai.example.test/api/rag/documents/by-item/item-1',
+                expect.anything()
+            );
+            expect(updateStatus).toHaveBeenLastCalledWith('item-1', {
+                status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.FAILED,
+                errorMessage: RAG_INGEST_STORAGE_FULL_ERROR,
+            });
+        });
+
+        it('completes the item while it fits', async () => {
+            await service.handle(
+                {
+                    jobName: ENUM_RAG_INGEST_PROCESS.INGEST,
+                    knowledgeItemId: 'item-1',
+                } as any,
+                0
+            );
+
+            expect(httpDelete).not.toHaveBeenCalled();
+            expect(updateStatus).toHaveBeenLastCalledWith(
+                'item-1',
+                expect.objectContaining({
+                    status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
+                })
+            );
+        });
     });
 
     it('ingests URLs with the expected AI payload and HTTP options', async () => {
@@ -808,6 +866,7 @@ describe('KnowledgeIngestTaskService', () => {
                 { post: httpPost, patch: httpPatch, delete: httpDelete } as any,
                 configService as any,
                 { notifyFailed } as any,
+                { isOverLimit } as any,
                 meter as any
             );
         });

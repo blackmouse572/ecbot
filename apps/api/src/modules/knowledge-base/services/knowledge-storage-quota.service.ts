@@ -50,6 +50,17 @@ export class KnowledgeStorageQuotaService {
         }
     }
 
+    /** True once the workspace stores more than its plan allows. */
+    async isOverLimit(workspaceId: string): Promise<boolean> {
+        const limitBytes = await this.limit?.getLimitBytes(workspaceId);
+        if (limitBytes === undefined || limitBytes === null) return false;
+        const usedBytes =
+            await this.knowledgeItemRepository.getStorageUsageByWorkspace(
+                workspaceId
+            );
+        return usedBytes > limitBytes;
+    }
+
     /**
      * Checks a text or website item before it is saved. Text counts one byte
      * per character (as in the usage total); an edit counts only its growth.
@@ -65,7 +76,9 @@ export class KnowledgeStorageQuotaService {
         }
         if (type !== ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT) return;
 
-        const growth = (content?.length ?? 0) - (previousContent?.length ?? 0);
+        // Code points, as Postgres char_length counts them (an emoji is one).
+        const growth =
+            [...(content ?? '')].length - [...(previousContent ?? '')].length;
         if (growth > 0) await this.assertCanStore(workspaceId, growth);
     }
 }

@@ -24,6 +24,7 @@ import {
     RAG_INGEST_MEDIA_HTTP_TIMEOUT_MS,
     RAG_INGEST_MAX_ATTEMPTS,
     RAG_INGEST_NO_TOKENS_ERROR,
+    RAG_INGEST_STORAGE_FULL_ERROR,
     RAG_INGEST_SENTRY_QUEUE,
     RAG_INGEST_URL_HTTP_TIMEOUT_MS,
     KNOWLEDGE_CRAWL_TOKENS_PER_PAGE,
@@ -34,6 +35,7 @@ import { PermanentIngestError } from '../errors/permanent-ingest.error';
 import { KnowledgeItemService } from './knowledge-item.service';
 import { ChatbotKnowledgeItemService } from './chatbot-knowledge-item.service';
 import { KnowledgeFailureNotifierService } from './knowledge-failure-notifier.service';
+import { KnowledgeStorageQuotaService } from './knowledge-storage-quota.service';
 
 export function classifyIngestError(err: any): 'permanent' | 'transient' {
     if (err instanceof PermanentIngestError) return 'permanent';
@@ -84,6 +86,7 @@ export class KnowledgeIngestTaskService {
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
         private readonly failureNotifier: KnowledgeFailureNotifierService,
+        private readonly storageQuota: KnowledgeStorageQuotaService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -162,17 +165,7 @@ export class KnowledgeIngestTaskService {
             }
         } else if (dto.jobName === ENUM_RAG_INGEST_PROCESS.DELETE) {
             try {
-                await firstValueFrom(
-                    this.httpService.delete(
-                        `${this.aiBackendUrl}/api/rag/documents/by-item/${knowledgeItemId}`,
-                        {
-                            timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
-                            headers: await this.authHeaders({
-                                'Content-Type': 'application/json',
-                            }),
-                        }
-                    )
-                );
+                await this.deleteIndexed(knowledgeItemId);
             } catch (err) {
                 const kind = classifyIngestError(err);
                 const message = (err as Error).message ?? String(err);
@@ -184,6 +177,21 @@ export class KnowledgeIngestTaskService {
                 throw err;
             }
         }
+    }
+
+    /** Removes what apps/ai indexed for the item. */
+    private async deleteIndexed(knowledgeItemId: string): Promise<void> {
+        await firstValueFrom(
+            this.httpService.delete(
+                `${this.aiBackendUrl}/api/rag/documents/by-item/${knowledgeItemId}`,
+                {
+                    timeout: RAG_INGEST_HTTP_TIMEOUT_MS,
+                    headers: await this.authHeaders({
+                        'Content-Type': 'application/json',
+                    }),
+                }
+            )
+        );
     }
 
     private async markFailed(id: string, errorMessage: string): Promise<void> {
@@ -279,6 +287,20 @@ export class KnowledgeIngestTaskService {
                 },
                 model: 'web-crawl',
             });
+        }
+        // A website's size is known only once read: if its text took the
+        // workspace past its plan's storage, drop it rather than keep it.
+        if (
+            item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL &&
+            workspaceId &&
+            (await this.storageQuota.isOverLimit(workspaceId))
+        ) {
+            await this.deleteIndexed(knowledgeItemId);
+            await this.markFailed(
+                knowledgeItemId,
+                RAG_INGEST_STORAGE_FULL_ERROR
+            );
+            return;
         }
         await this.knowledgeItemService.updateStatus(knowledgeItemId, {
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,

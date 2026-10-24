@@ -22,6 +22,16 @@ describe("localizeIngestError", () => {
     ).toContain("hết token");
   });
 
+  it("translates the storage-full error apps/api stores", async () => {
+    await i18n.changeLanguage("vi");
+    expect(
+      localizeIngestError(
+        "This website has more text than your plan's knowledge storage has room for. Delete some knowledge or upgrade your plan, then process it again.",
+        i18n.t,
+      ),
+    ).toContain("dung lượng kiến thức");
+  });
+
   it("keeps an unknown error as stored", () => {
     expect(localizeIngestError("Something else", i18n.t)).toBe(
       "Something else",

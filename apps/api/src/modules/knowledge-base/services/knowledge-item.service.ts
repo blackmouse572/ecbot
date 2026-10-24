@@ -166,18 +166,17 @@ export class KnowledgeItemService {
             tags?: string[];
             metadata?: Record<string, any>;
             attachment?: AwsS3Entity;
-            workspace?: string;
+            /** The workspace owning `knowledgeBase`; its plan's storage is checked. */
+            workspace: string;
         },
         options?: IDatabaseCreateOptions
     ): Promise<KnowledgeItemEntity> {
         const em = options?.em ?? this.em;
-        if (payload.workspace) {
-            await this.storageQuota.assertCanSaveContent(
-                payload.workspace,
-                payload.type,
-                payload.content
-            );
-        }
+        await this.storageQuota.assertCanSaveContent(
+            payload.workspace,
+            payload.type,
+            payload.content
+        );
 
         return em.transactional(async transactionalEm => {
             const item = new KnowledgeItemEntity();
