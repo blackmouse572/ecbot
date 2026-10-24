@@ -35,6 +35,7 @@ import { KnowledgeItemShortResponseDto } from '../dtos/response/knowledge-item-s
 import { KnowledgeIngestService } from './knowledge-ingest.service';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { RagSyncService } from './rag-sync.service';
+import { KnowledgeStorageQuotaService } from './knowledge-storage-quota.service';
 import {
     KNOWLEDGE_ITEM_BATCH_FILTER_MAX,
     KnowledgeItemFilterRequestDto,
@@ -52,7 +53,8 @@ export class KnowledgeItemService {
         private readonly knowledgeItemFolderRepository: KnowledgeItemFolderRepository,
         private readonly knowledgeItemTagService: KnowledgeItemTagService,
         private readonly knowledgeIngestService: KnowledgeIngestService,
-        private readonly ragSyncService: RagSyncService
+        private readonly ragSyncService: RagSyncService,
+        private readonly storageQuota: KnowledgeStorageQuotaService
     ) {}
 
     async find(
@@ -169,6 +171,13 @@ export class KnowledgeItemService {
         options?: IDatabaseCreateOptions
     ): Promise<KnowledgeItemEntity> {
         const em = options?.em ?? this.em;
+        if (payload.workspace) {
+            await this.storageQuota.assertCanSaveContent(
+                payload.workspace,
+                payload.type,
+                payload.content
+            );
+        }
 
         return em.transactional(async transactionalEm => {
             const item = new KnowledgeItemEntity();
@@ -227,9 +236,21 @@ export class KnowledgeItemService {
         const item = await em.transactional(async transactionalEm => {
             const item = await transactionalEm.findOneOrFail(
                 KnowledgeItemEntity,
-                id
+                id,
+                { populate: ['knowledgeBase'] }
             );
 
+            if (
+                payload.content !== undefined &&
+                payload.content !== item.content
+            ) {
+                await this.storageQuota.assertCanSaveContent(
+                    item.knowledgeBase.workspace.id,
+                    item.type,
+                    payload.content,
+                    item.content
+                );
+            }
             if (payload.title !== undefined) {
                 item.title = payload.title;
             }

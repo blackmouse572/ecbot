@@ -489,9 +489,8 @@ export class KnowledgeItemWorkspaceController {
         } catch (err: unknown) {
             await session.rollback();
 
-            if (err instanceof NotFoundException) {
-                throw err;
-            }
+            // Not found, or a text edit over the plan's storage.
+            if (err instanceof HttpException) throw err;
 
             throw new InternalServerErrorException({
                 statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
