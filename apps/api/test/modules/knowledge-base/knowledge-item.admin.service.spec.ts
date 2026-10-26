@@ -214,6 +214,37 @@ describe('KnowledgeItemAdminService', () => {
 
         expect(awsS3Service.presignGetItem).not.toHaveBeenCalled();
         expect(data.previewUrl).toBe('https://cdn.example.com/menu.pdf');
+        // A media item's text is the description the agent searches by.
+        expect(data.content).toBe('extracted text');
+    });
+
+    it('gives the title and start of the text the agent read from a web page', async () => {
+        repository.findOne.mockResolvedValue(
+            item('i1', {
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+                content: 'https://shop.vn/faq',
+                metadata: {
+                    url: 'https://shop.vn/faq',
+                    pageTitle: 'FAQ | Shop',
+                    preview: 'Giao hàng trong 2 ngày',
+                    pagesCrawled: 4,
+                },
+                attachment: undefined,
+            })
+        );
+        repository.countChunks.mockResolvedValue(new Map());
+        chatbotKnowledgeItemRepository.findByKnowledgeItem.mockResolvedValue(
+            []
+        );
+
+        const data = await service.findOneById('i1');
+
+        expect(data).toMatchObject({
+            pageTitle: 'FAQ | Shop',
+            preview: 'Giao hàng trong 2 ngày',
+            pagesCrawled: 4,
+        });
+        expect(data.content).toBeUndefined();
     });
 
     it('returns the written text and tags of a text item', async () => {

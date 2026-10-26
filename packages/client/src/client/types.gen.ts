@@ -3643,9 +3643,21 @@ export type KnowledgeItemAdminGetResponseDto = {
     errorMessage?: string;
     processedAt?: string;
     /**
-     * Body of a TEXT item
+     * Body of a TEXT item, or the description of a MEDIA item
      */
     content?: string;
+    /**
+     * Title of the start page of a URL item
+     */
+    pageTitle?: string;
+    /**
+     * Start of the text read from a URL item
+     */
+    preview?: string;
+    /**
+     * Pages read for a URL item
+     */
+    pagesCrawled?: number;
     /**
      * Short-lived link to view or download a FILE, or the public link of a MEDIA item
      */

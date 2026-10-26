@@ -86,7 +86,10 @@ export class KnowledgeItemAdminService {
             this.previewUrl(item),
         ]);
         const isUrl = item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL;
-        const isText = item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT;
+        // Text the owner wrote: a TEXT body, or a media item's description.
+        const hasOwnText =
+            item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT ||
+            item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA;
 
         return plainToInstance(
             KnowledgeItemAdminGetResponseDto,
@@ -99,7 +102,10 @@ export class KnowledgeItemAdminService {
                 mimeType: item.attachment?.mime ?? item.metadata?.mimeType,
                 errorMessage: item.errorMessage ?? undefined,
                 processedAt: item.processedAt,
-                content: isText ? item.content : undefined,
+                content: hasOwnText ? item.content : undefined,
+                pageTitle: item.metadata?.pageTitle,
+                preview: item.metadata?.preview,
+                pagesCrawled: item.metadata?.pagesCrawled,
                 previewUrl,
                 tags: item.tagArray,
                 chatbots: links
