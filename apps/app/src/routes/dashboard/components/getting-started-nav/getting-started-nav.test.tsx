@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const data = vi.hoisted(() => ({
   chatbots: 0,
   active: 0,
-  accounts: [] as { chatbot: { id: string } | null }[],
+  accounts: [] as { type?: string; chatbot: { id: string } | null }[],
   conversations: 0,
 }));
 const query = (count: number) => ({ count, isLoading: false, isError: false });
@@ -53,13 +53,16 @@ describe("GettingStartedNav", () => {
     data.chatbots = 1;
     renderNav();
 
-    expect(screen.getByText("1 of 4")).toBeInTheDocument();
+    expect(screen.getByText("1 of 5")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /Create your first agent/ }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Connect a channel/ }),
     ).toHaveAttribute("href", "/kunmart/accounts/create");
+    expect(
+      screen.getByRole("link", { name: /Connect your agent to the channel/ }),
+    ).toHaveAttribute("href", "/kunmart/accounts");
     expect(
       screen.getByRole("link", { name: /Activate your agent/ }),
     ).toHaveAttribute("href", "/kunmart/chatbot");
@@ -79,15 +82,28 @@ describe("GettingStartedNav", () => {
     );
   });
 
-  it("counts a channel only once an agent answers on it", () => {
+  it("checks the channel once connected, and the link step once an agent answers on it", () => {
     data.chatbots = 1;
     data.accounts = [{ chatbot: null }];
     renderNav();
 
-    // Connected but not linked: still to do, and sent to the channel list.
+    // Connected but not linked: only linking is still to do.
+    expect(
+      screen.queryByRole("link", { name: /Connect a channel/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Connect your agent to the channel/ }),
+    ).toHaveAttribute("href", "/kunmart/accounts");
+  });
+
+  it("ignores a Facebook login with no pages, which is not a channel", () => {
+    data.chatbots = 1;
+    data.accounts = [{ type: "FACEBOOK_ACCOUNT", chatbot: null }];
+    renderNav();
+
     expect(
       screen.getByRole("link", { name: /Connect a channel/ }),
-    ).toHaveAttribute("href", "/kunmart/accounts");
+    ).toHaveAttribute("href", "/kunmart/accounts/create");
   });
 
   it("counts an agent as live only once it is active", () => {
@@ -95,7 +111,7 @@ describe("GettingStartedNav", () => {
     data.accounts = [{ chatbot: { id: "bot-1" } }];
     renderNav();
 
-    expect(screen.getByText("2 of 4")).toBeInTheDocument();
+    expect(screen.getByText("3 of 5")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Activate your agent/ }),
     ).toBeInTheDocument();
