@@ -1,8 +1,10 @@
-import en from "@/i18n/translations/en.json";
-import vi from "@/i18n/translations/vi.json";
+import { resources } from "@/i18n";
 import { allTranslationKeys } from "@repo/agent-blueprint";
 import { describe, expect, it } from "vitest";
 import { BUILDER_UI_KEYS } from "./ui-keys";
+
+const en = resources.en.translation;
+const vi = resources.vi.translation;
 
 const lookup = (dict: unknown, key: string) =>
   key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], dict);

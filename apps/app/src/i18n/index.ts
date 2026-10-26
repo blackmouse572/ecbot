@@ -1,15 +1,19 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { languages } from "./languages";
+import agentBuilderEn from "@repo/agent-blueprint/locales/en.json";
+import agentBuilderVi from "@repo/agent-blueprint/locales/vi.json";
 import enUS from "./translations/en.json";
 import viVn from "./translations/vi.json";
 
+// The builder's copy lives with the builder questions, so the admin site can
+// show an agent's answers with the same words.
 export const resources = {
   en: {
-    translation: enUS,
+    translation: { ...enUS, agentBuilder: agentBuilderEn },
   },
   vi: {
-    translation: viVn,
+    translation: { ...viVn, agentBuilder: agentBuilderVi },
   },
 } as const;
 

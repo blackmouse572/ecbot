@@ -38,9 +38,11 @@ describe('KnowledgeItemAdminService', () => {
         countChunks: jest.fn(),
     };
     const chatbotKnowledgeItemRepository = { findByKnowledgeItem: jest.fn() };
+    const awsS3Service = { presignGetItem: jest.fn() };
     const service = new KnowledgeItemAdminService(
         repository as any,
-        chatbotKnowledgeItemRepository as any
+        chatbotKnowledgeItemRepository as any,
+        awsS3Service as any
     );
 
     beforeEach(() => jest.clearAllMocks());
@@ -157,7 +159,7 @@ describe('KnowledgeItemAdminService', () => {
 
         expect(repository.findOne).toHaveBeenCalledWith(
             { id: 'i1', deletedAt: null },
-            { populate: ['knowledgeBase.workspace.owner'] }
+            { populate: ['knowledgeBase.workspace.owner', 'tags'] }
         );
         expect(data).toMatchObject({
             id: 'i1',
@@ -170,11 +172,71 @@ describe('KnowledgeItemAdminService', () => {
             chatbots: [{ id: 'c1', name: 'Sales' }],
         });
         expect(data.chatbots[0]).not.toHaveProperty('systemPrompt');
-        expect(data).not.toHaveProperty('content');
         expect(data).not.toHaveProperty('attachment');
         expect(data.workspace).not.toHaveProperty('invitationCode');
         expect(data.workspace).not.toHaveProperty('owner');
-        expect(JSON.stringify(data)).not.toMatch(/X-Amz-Signature|bucket/);
+        expect(JSON.stringify(data)).not.toMatch(/bucket/);
+    });
+
+    it('previews an uploaded file through a short-lived private link, like the owner sees it', async () => {
+        repository.findOne.mockResolvedValue(item('i1'));
+        repository.countChunks.mockResolvedValue(new Map());
+        chatbotKnowledgeItemRepository.findByKnowledgeItem.mockResolvedValue(
+            []
+        );
+        awsS3Service.presignGetItem.mockResolvedValue({
+            presignUrl: 'https://s3.example.com/menu.pdf?X-Amz-Signature=y',
+        });
+
+        const data = await service.findOneById('i1');
+
+        expect(awsS3Service.presignGetItem).toHaveBeenCalledWith(
+            'knowledge-items/w1/kb1/menu.pdf',
+            { access: 'PRIVATE' }
+        );
+        expect(data.previewUrl).toBe(
+            'https://s3.example.com/menu.pdf?X-Amz-Signature=y'
+        );
+        // A file's extracted text is ingest output, not what the owner wrote.
+        expect(data.content).toBeUndefined();
+    });
+
+    it('shows a media item by its public address without signing', async () => {
+        repository.findOne.mockResolvedValue(
+            item('i1', { type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA })
+        );
+        repository.countChunks.mockResolvedValue(new Map());
+        chatbotKnowledgeItemRepository.findByKnowledgeItem.mockResolvedValue(
+            []
+        );
+
+        const data = await service.findOneById('i1');
+
+        expect(awsS3Service.presignGetItem).not.toHaveBeenCalled();
+        expect(data.previewUrl).toBe('https://cdn.example.com/menu.pdf');
+    });
+
+    it('returns the written text and tags of a text item', async () => {
+        repository.findOne.mockResolvedValue(
+            item('i1', {
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
+                content: 'Mở cửa 7h đến 22h',
+                attachment: undefined,
+                tagArray: ['giờ mở cửa', 'faq'],
+            })
+        );
+        repository.countChunks.mockResolvedValue(new Map());
+        chatbotKnowledgeItemRepository.findByKnowledgeItem.mockResolvedValue(
+            []
+        );
+
+        const data = await service.findOneById('i1');
+
+        expect(data).toMatchObject({
+            content: 'Mở cửa 7h đến 22h',
+            tags: ['giờ mở cửa', 'faq'],
+        });
+        expect(data.previewUrl).toBeUndefined();
     });
 
     it('gives the page address as the source of a URL item', async () => {

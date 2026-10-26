@@ -3240,6 +3240,15 @@ export type ToolAdminResponseDto = {
     invocationStats: ToolInvocationStatsResponseDto;
 };
 
+export type ChatbotToolListResponseDto = {
+    id: string;
+    kind: 'HTTP' | 'MCP';
+    name: string;
+    description?: string;
+    status: 'ACTIVE' | 'NEEDS_REAUTH' | 'EXPIRED' | 'REVOKED';
+    enabledActions: Array<string> | null;
+};
+
 export type ToolkitAdminCategoryResponseDto = {
     id: string;
     name: string;
@@ -3633,6 +3642,15 @@ export type KnowledgeItemAdminGetResponseDto = {
     mimeType?: string;
     errorMessage?: string;
     processedAt?: string;
+    /**
+     * Body of a TEXT item
+     */
+    content?: string;
+    /**
+     * Short-lived link to view or download a FILE, or the public link of a MEDIA item
+     */
+    previewUrl?: string;
+    tags: Array<string>;
     chatbots: Array<KnowledgeItemAdminChatbotResponseDto>;
 };
 
@@ -5736,15 +5754,6 @@ export type TestSavedToolRequestDto = {
     args: {
         [key: string]: unknown;
     };
-};
-
-export type ChatbotToolListResponseDto = {
-    id: string;
-    kind: 'HTTP' | 'MCP';
-    name: string;
-    description?: string;
-    status: 'ACTIVE' | 'NEEDS_REAUTH' | 'EXPIRED' | 'REVOKED';
-    enabledActions: Array<string> | null;
 };
 
 export type ToolInvocationResponseDto = {
@@ -17114,6 +17123,82 @@ export type ToolAdminControllerGetV1Responses = {
 };
 
 export type ToolAdminControllerGetV1Response = ToolAdminControllerGetV1Responses[keyof ToolAdminControllerGetV1Responses];
+
+export type ToolAdminControllerListForChatbotV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        chatbotId: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/tool/chatbot/{chatbotId}';
+};
+
+export type ToolAdminControllerListForChatbotV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolAdminControllerListForChatbotV1Error = ToolAdminControllerListForChatbotV1Errors[keyof ToolAdminControllerListForChatbotV1Errors];
+
+export type ToolAdminControllerListForChatbotV1Responses = {
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ChatbotToolListResponseDto>;
+    };
+};
+
+export type ToolAdminControllerListForChatbotV1Response = ToolAdminControllerListForChatbotV1Responses[keyof ToolAdminControllerListForChatbotV1Responses];
 
 export type ToolAdminControllerActivateV1Data = {
     body?: never;

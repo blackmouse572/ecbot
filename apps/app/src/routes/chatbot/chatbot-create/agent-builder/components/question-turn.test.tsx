@@ -3,10 +3,10 @@ import {
   buildQuestionGroups,
   createProfile,
   type AgentProfile,
+  summarizeAnswer,
 } from "@repo/agent-blueprint";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { summarize } from "./answer-message";
 import { QuestionTurn } from "./question-turn";
 
 const renderQuestion = (profile: AgentProfile, id: string) => {
@@ -292,6 +292,6 @@ describe("QuestionTurn address style step", () => {
     const question = buildQuestionGroups(createProfile("ecommerce", "vi"))
       .flatMap((g) => g.questions)
       .find((q) => q.id === "addressStyle")!;
-    expect(summarize(question, { self: "Shop", customer: "ba mẹ" }, i18n.t)).toBe("Shop / ba mẹ");
+    expect(summarizeAnswer(question, { self: "Shop", customer: "ba mẹ" }, i18n.t)).toBe("Shop / ba mẹ");
   });
 });

@@ -1,4 +1,10 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
+import {
+    ApiExtraModels,
+    ApiProduces,
+    ApiResponse,
+    getSchemaPath,
+} from '@nestjs/swagger';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import {
     Doc,
@@ -8,6 +14,8 @@ import {
     DocResponse,
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
+import { ResponseDto } from 'src/common/response/dtos/response.dto';
+import { ChatbotToolListResponseDto } from 'src/modules/tool/dtos/response/chatbot-tool-list.response.dto';
 import {
     ToolAdminDocQueryList,
     ToolDocParamsId,
@@ -73,6 +81,33 @@ export function ToolAdminDeleteDoc(): MethodDecorator {
         DocGuard({ role: true, policy: true }),
         DocResponse<DatabaseIdResponseDto>('tool.delete.success', {
             dto: DatabaseIdResponseDto,
+        })
+    );
+}
+
+export function ToolAdminChatbotListDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: "list a chatbot's enabled tools, any workspace" }),
+        DocRequest({ params: [{ name: 'chatbotId' }] }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ role: true, policy: true }),
+        ApiExtraModels(ResponseDto, ChatbotToolListResponseDto),
+        ApiProduces('application/json'),
+        ApiResponse({
+            status: HttpStatus.OK,
+            schema: {
+                allOf: [{ $ref: getSchemaPath(ResponseDto) }],
+                properties: {
+                    message: { example: 'tool.chatbot.list.success' },
+                    statusCode: { type: 'number', example: HttpStatus.OK },
+                    data: {
+                        type: 'array',
+                        items: {
+                            $ref: getSchemaPath(ChatbotToolListResponseDto),
+                        },
+                    },
+                },
+            },
         })
     );
 }

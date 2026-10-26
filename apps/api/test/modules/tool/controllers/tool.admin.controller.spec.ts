@@ -11,10 +11,12 @@ describe('ToolAdminController', () => {
     };
     const toolService: any = { inactivate: jest.fn() };
     const activityService: any = { createByUser: jest.fn() };
+    const chatbotToolService: any = { listByChatbotAnyWorkspace: jest.fn() };
     const controller = new ToolAdminController(
         toolService,
         {} as any,
-        activityService
+        activityService,
+        chatbotToolService
     );
 
     beforeEach(() => jest.clearAllMocks());
@@ -32,6 +34,28 @@ describe('ToolAdminController', () => {
         const res = await controller.inactivate({} as any, 't-1');
         expect(res).toEqual({ data: { id: 't-1' } });
         expect(activityService.createByUser).not.toHaveBeenCalled();
+    });
+
+    it("lists an agent's enabled tools, from any workspace", async () => {
+        const rows = [{ id: 't-1', name: 'Orders' }];
+        chatbotToolService.listByChatbotAnyWorkspace.mockResolvedValue(rows);
+        const res = await controller.listForChatbot('cb-1');
+        expect(
+            chatbotToolService.listByChatbotAnyWorkspace
+        ).toHaveBeenCalledWith('cb-1');
+        expect(res).toEqual({ data: rows });
+    });
+
+    it('takes only a UUID as the chatbot id', () => {
+        const args = Reflect.getMetadata(
+            ROUTE_ARGS_METADATA,
+            ToolAdminController,
+            'listForChatbot'
+        );
+        const param: any = Object.values(args).find(
+            (arg: any) => arg.data === 'chatbotId'
+        );
+        expect(param.pipes).toContain(ParseUUIDPipe);
     });
 
     // A malformed id would otherwise reach Postgres and come back as a 500.

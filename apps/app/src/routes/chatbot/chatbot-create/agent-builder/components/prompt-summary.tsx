@@ -1,9 +1,8 @@
-import { buildQuestionGroups, readAnswer, type AgentProfile } from "@repo/agent-blueprint";
+import { buildQuestionGroups, readAnswer, type AgentProfile, summarizeAnswer } from "@repo/agent-blueprint";
 import { Button, Heading, Text } from "@medusajs/ui";
 import { MessageResponse } from "@repo/ui/common-components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { summarize } from "./answer-message";
 
 type Props = {
   profile: AgentProfile;
@@ -28,7 +27,7 @@ export function PromptSummary({ profile, extraInstructions, prompt }: Props) {
       </Text>
       {buildQuestionGroups(profile).map((group) => {
         const rows = group.questions
-          .map((question) => ({ question, answer: summarize(question, readAnswer(profile, question.path), t).trim() }))
+          .map((question) => ({ question, answer: summarizeAnswer(question, readAnswer(profile, question.path), t).trim() }))
           .filter((row) => row.answer.length > 0);
         if (rows.length === 0) return null;
         return (

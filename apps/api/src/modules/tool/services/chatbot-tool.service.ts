@@ -91,16 +91,29 @@ export class ChatbotToolService {
             chatbotId,
             workspaceId
         );
-        return rows.map(row => {
-            const dto = new ChatbotToolListResponseDto();
-            dto.id = row.tool.id;
-            dto.kind = row.tool.kind;
-            dto.name = row.tool.displayName ?? '';
-            dto.description = row.tool.description;
-            dto.status = row.tool.status;
-            dto.enabledActions = row.enabledActions ?? null;
-            return dto;
-        });
+        return rows.map(row => this.toListDto(row));
+    }
+
+    /** For the admin agent page, which reaches chatbots of every workspace. */
+    async listByChatbotAnyWorkspace(
+        chatbotId: string
+    ): Promise<ChatbotToolListResponseDto[]> {
+        const rows =
+            await this.chatbotToolRepo.findEnabledByChatbotIdAnyWorkspace(
+                chatbotId
+            );
+        return rows.map(row => this.toListDto(row));
+    }
+
+    private toListDto(row: ChatbotToolEntity): ChatbotToolListResponseDto {
+        const dto = new ChatbotToolListResponseDto();
+        dto.id = row.tool.id;
+        dto.kind = row.tool.kind;
+        dto.name = row.tool.displayName ?? '';
+        dto.description = row.tool.description;
+        dto.status = row.tool.status;
+        dto.enabledActions = row.enabledActions ?? null;
+        return dto;
     }
 
     async updateActions(

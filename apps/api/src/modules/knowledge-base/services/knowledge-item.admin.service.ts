@@ -3,6 +3,8 @@ import { FilterQuery, QueryOrder } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { plainToInstance } from 'class-transformer';
+import { ENUM_AWS_S3_ACCESSIBILITY } from 'src/modules/aws/enums/aws.enum';
+import { AwsS3Service } from 'src/modules/aws/services/aws.s3.service';
 import { KnowledgeItemAdminGetResponseDto } from '../dtos/response/knowledge-item.admin-get.response.dto';
 import { KnowledgeItemAdminListResponseDto } from '../dtos/response/knowledge-item.admin-list.response.dto';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '../enums/knowledge-base-item-type.enum';
@@ -15,7 +17,8 @@ import { KnowledgeItemRepository } from '../repository/repositories/knowledge-it
 export class KnowledgeItemAdminService {
     constructor(
         private readonly knowledgeItemRepository: KnowledgeItemRepository,
-        private readonly chatbotKnowledgeItemRepository: ChatbotKnowledgeItemRepository
+        private readonly chatbotKnowledgeItemRepository: ChatbotKnowledgeItemRepository,
+        private readonly awsS3Service: AwsS3Service
     ) {}
 
     async findAll(
@@ -77,11 +80,13 @@ export class KnowledgeItemAdminService {
         const item = await this.findEntityById(id);
         if (!item) return null;
 
-        const [chunkCounts, links] = await Promise.all([
+        const [chunkCounts, links, previewUrl] = await Promise.all([
             this.knowledgeItemRepository.countChunks([item.id]),
             this.chatbotKnowledgeItemRepository.findByKnowledgeItem(item.id),
+            this.previewUrl(item),
         ]);
         const isUrl = item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL;
+        const isText = item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT;
 
         return plainToInstance(
             KnowledgeItemAdminGetResponseDto,
@@ -94,6 +99,9 @@ export class KnowledgeItemAdminService {
                 mimeType: item.attachment?.mime ?? item.metadata?.mimeType,
                 errorMessage: item.errorMessage ?? undefined,
                 processedAt: item.processedAt,
+                content: isText ? item.content : undefined,
+                previewUrl,
+                tags: item.tagArray,
                 chatbots: links
                     .map(link => link.chatbot)
                     .filter(chatbot => !chatbot.deletedAt),
@@ -106,8 +114,24 @@ export class KnowledgeItemAdminService {
     findEntityById(id: string): Promise<KnowledgeItemEntity | null> {
         return this.knowledgeItemRepository.findOne(
             { id, deletedAt: null },
-            { populate: ['knowledgeBase.workspace.owner'] }
+            { populate: ['knowledgeBase.workspace.owner', 'tags'] }
         );
+    }
+
+    // The same link the owner's page previews: files sit in the private
+    // bucket, so they get a short-lived signed URL; media is already public.
+    private async previewUrl(
+        item: KnowledgeItemEntity
+    ): Promise<string | undefined> {
+        if (!item.attachment) return undefined;
+        if (item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA) {
+            return item.attachment.cdnUrl;
+        }
+        const signed = await this.awsS3Service.presignGetItem(
+            item.attachment.key,
+            { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
+        );
+        return signed?.presignUrl ?? item.attachment.cdnUrl;
     }
 
     // `chatbot` is not a column of the item: it matches live links instead.

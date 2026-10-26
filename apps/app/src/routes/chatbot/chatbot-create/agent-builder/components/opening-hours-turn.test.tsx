@@ -1,9 +1,8 @@
 import i18n from "@/i18n";
-import { buildQuestionGroups, createProfile, type AgentProfile } from "@repo/agent-blueprint";
+import { buildQuestionGroups, createProfile, type AgentProfile, summarizeAnswer } from "@repo/agent-blueprint";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { summarize } from "./answer-message";
 import { QuestionTurn } from "./question-turn";
 
 const hoursQuestion = (profile: AgentProfile) =>
@@ -55,7 +54,7 @@ describe("opening hours question", () => {
     const q = hoursQuestion(createProfile("restaurant", "en"));
     const lunch = [{ open: "08:00", close: "12:00" }, { open: "13:30", close: "17:30" }];
     const week = { mon: lunch, tue: lunch, wed: lunch, thu: lunch, fri: lunch, sat: [{ open: "08:00", close: "12:00" }] };
-    expect(summarize(q, week, i18n.t)).toBe("Mon-Fri 08:00-12:00, 13:30-17:30 · Sat 08:00-12:00 · Sun Closed");
-    expect(summarize(q, undefined, i18n.t)).toBe("");
+    expect(summarizeAnswer(q, week, i18n.t)).toBe("Mon-Fri 08:00-12:00, 13:30-17:30 · Sat 08:00-12:00 · Sun Closed");
+    expect(summarizeAnswer(q, undefined, i18n.t)).toBe("");
   });
 });

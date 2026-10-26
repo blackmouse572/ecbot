@@ -21,6 +21,7 @@ describe('ChatbotToolService', () => {
         getEntityManager: () => mockEm,
         create: jest.fn(data => Object.assign(new ChatbotToolEntity(), data)),
         findOneByChatbotAndTool: jest.fn(),
+        findEnabledByChatbotIdAnyWorkspace: jest.fn(),
     };
     const mockToolRepo: any = {
         findOneInWorkspace: jest.fn(),
@@ -43,6 +44,42 @@ describe('ChatbotToolService', () => {
             ],
         }).compile();
         svc = mod.get(ChatbotToolService);
+    });
+
+    describe('listByChatbotAnyWorkspace', () => {
+        it('maps the enabled tools of a chatbot for the admin page', async () => {
+            mockChatbotToolRepo.findEnabledByChatbotIdAnyWorkspace.mockResolvedValue(
+                [
+                    {
+                        enabledActions: null,
+                        tool: {
+                            id: 't-1',
+                            kind: 'HTTP',
+                            displayName: 'Orders',
+                            description: 'Look up an order',
+                            status: ENUM_TOOL_STATUS.ACTIVE,
+                            credentials: 'secret',
+                        },
+                    },
+                ]
+            );
+
+            const rows = await svc.listByChatbotAnyWorkspace('cb-1');
+
+            expect(
+                mockChatbotToolRepo.findEnabledByChatbotIdAnyWorkspace
+            ).toHaveBeenCalledWith('cb-1');
+            expect(rows).toEqual([
+                {
+                    id: 't-1',
+                    kind: 'HTTP',
+                    name: 'Orders',
+                    description: 'Look up an order',
+                    status: ENUM_TOOL_STATUS.ACTIVE,
+                    enabledActions: null,
+                },
+            ]);
+        });
     });
 
     describe('enable', () => {

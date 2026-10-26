@@ -12,3 +12,4 @@ export * from "./profile";
 export * from "./questions";
 export * from "./skill-steps";
 export * from "./suggest";
+export * from "./summarize-answer";
