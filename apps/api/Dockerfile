@@ -41,7 +41,11 @@ RUN pnpm build --filter=api
 FROM installer AS migrator
 WORKDIR /app/apps/api
 ENV APP_ENV=migration
-CMD ["pnpm", "run", "migrate:bootstrap"]
+# The CLIs are called directly: corepack prepared pnpm under /root, which the
+# unprivileged user cannot read.
+ENV PATH="/app/apps/api/node_modules/.bin:/app/node_modules/.bin:$PATH"
+USER node
+CMD ["sh", "-c", "mikro-orm migration:up && nestjs-command seed:country && nestjs-command seed:role && nestjs-command seed:apikey"]
 
 # Production dependencies only
 FROM installer AS pruned

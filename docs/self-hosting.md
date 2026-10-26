@@ -46,7 +46,7 @@ The `migrate` service creates the schema and adds the countries, roles and API k
 Create your first account, already verified and with the superadmin role:
 
 ```bash
-docker compose --profile full run --rm migrate pnpm user:create --email you@example.com
+docker compose --profile full run --rm migrate nestjs-command user:create --email you@example.com
 ```
 
 It prints a generated password (pass `--password` to choose one). Sign in at your `SITE_URL`. Leave `pnpm db:seed` out of a public install: it creates demo accounts with well-known passwords.

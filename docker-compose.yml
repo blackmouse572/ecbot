@@ -81,7 +81,7 @@ services:
           memory: 512M
 
   # Applies pending migrations and adds the countries, roles and API keys the
-  # API needs (migrate:bootstrap), then exits. `apis` waits for it, so a fresh
+  # API needs, then exits. `apis` waits for it, so a fresh
   # database is usable and an upgrade gets the new migrations before the new
   # API serves traffic.
   migrate:
