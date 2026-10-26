@@ -63,7 +63,8 @@ export const chatbotListQuery = () => ({
 });
 
 export const useChatbots = (
-  query?: Partial<RequestPaginationDto>,
+  // `status` is a comma-separated list of chatbot statuses.
+  query?: Partial<RequestPaginationDto> & { status?: string },
   options?: ChatbotQueryOptions,
 ) => {
   const { workspace } = useWorkspace();

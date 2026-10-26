@@ -39,19 +39,22 @@ export const AgentLinkRow: FC<Props> = ({
       const res = await link.mutateAsync({ accounts: accountIds });
       const result = (res.data as A)?.data as
         ChatbotLinkAccountResponseDto | undefined;
-      // The server can skip an account that another agent already owns, so
-      // only a confirmed link counts as success.
-      if (result?.linked?.some((id) => accountIds.includes(id))) {
-        toast.success(t("chatbot.details.accountLinked"));
+      // The server skips an account that another agent already owns, so
+      // only a confirmed link counts, and each skipped one is named.
+      const linked = result?.linked ?? [];
+      const skippedNames = (result?.skipped ?? [])
+        .map((x) => x.name)
+        .filter(Boolean)
+        .join(", ");
+      if (skippedNames) {
+        toast.error(t("agentBuilder.ui.channelInUse", { name: skippedNames }));
+      }
+      if (linked.some((id) => accountIds.includes(id))) {
+        if (!skippedNames) toast.success(t("chatbot.details.accountLinked"));
         onLinked(chatbot);
         return;
       }
-      const skipped = result?.skipped?.[0];
-      toast.error(
-        skipped?.name
-          ? t("agentBuilder.ui.channelInUse", { name: skipped.name })
-          : t("chatbot.details.accountLinkFailed"),
-      );
+      if (!skippedNames) toast.error(t("chatbot.details.accountLinkFailed"));
     } catch {
       toast.error(t("chatbot.details.accountLinkFailed"));
     }

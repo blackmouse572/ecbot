@@ -28,11 +28,14 @@ export const LinkAgentStep: FC<Props> = ({ accounts, onDone }) => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const accountIds = accounts.map((account) => account.id);
-  // A reconnected channel can already have its agent.
+  // A reconnected channel can already have its agent. Several new pages
+  // may each have a different one (or none), so only a single channel
+  // counts as already linked.
   const owner = useAccountChatbot(accountIds[0]);
-  const recent = useChatbots(LINK_AGENT_CHATBOT_QUERY as never);
+  const recent = useChatbots(LINK_AGENT_CHATBOT_QUERY);
   const [linkedName, setLinkedName] = useState<string>();
-  const connectedName = linkedName ?? owner.chatbot?.name;
+  const connectedName =
+    linkedName ?? (accountIds.length === 1 ? owner.chatbot?.name : undefined);
   const chatbots = recent.chatbots ?? [];
 
   // The builder pre-connects the channel it is opened with (`accountId`).

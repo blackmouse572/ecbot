@@ -60,6 +60,7 @@ describe("LinkAgentStep", () => {
     state.linkedFor = [];
     state.link.mockReset();
     toast.error.mockReset();
+    toast.success.mockReset();
   });
 
   it("asks for the five newest agents that can answer", () => {
@@ -117,6 +118,30 @@ describe("LinkAgentStep", () => {
         accounts: ["acc-1", "acc-2"],
       }),
     );
+    expect(await screen.findByText(/Connected to Mây/)).toBeInTheDocument();
+    expect(toast.success).toHaveBeenCalled();
+  });
+
+  it("names a page another agent kept when only some pages link", async () => {
+    state.chatbots = [{ id: "bot-1", name: "Mây" }];
+    state.link.mockResolvedValue({
+      data: {
+        data: { linked: ["acc-1"], skipped: [{ id: "acc-2", name: "Gió" }] },
+      },
+    });
+    renderStep([
+      page,
+      { id: "acc-2", type: "FACEBOOK_PAGE", name: "Gió" } as never,
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Connect" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringContaining("Gió is already used by another agent"),
+      ),
+    );
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   it("says so when the channel already has another agent", async () => {
@@ -141,6 +166,18 @@ describe("LinkAgentStep", () => {
     expect(
       screen.queryByRole("button", { name: "Connect" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("does not call several new pages linked because the first one is", () => {
+    state.owner = { id: "bot-9", name: "Linh" };
+    state.chatbots = [{ id: "bot-1", name: "Mây" }];
+    renderStep([
+      page,
+      { id: "acc-2", type: "FACEBOOK_PAGE", name: "Gió" } as never,
+    ]);
+
+    expect(screen.queryByText(/Connected to Linh/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Connect" })).toBeInTheDocument();
   });
 
   it("offers to build an agent for the channel when the workspace has none", () => {
