@@ -721,7 +721,8 @@
       "steps": {
         "platform": "Select Platform",
         "connect": "Connect",
-        "success": "Done"
+        "success": "Connected",
+        "agent": "Agent"
       },
       "platform": {
         "title": "Choose a platform",
@@ -745,7 +746,6 @@
         "nameLabel": "Name",
         "issuedTitle": "Channel created",
         "issuedDescription": "Keep these values somewhere safe before you close this window.",
-        "needsAgent": "This channel answers once an agent is attached. Open the agent you want, then add this channel to its linked accounts.",
         "apiChannel": {
           "namePlaceholder": "e.g. Partner CRM",
           "title": "Connect an API channel",
@@ -810,13 +810,11 @@
         }
       },
       "linkAgent": {
-        "title": "Choose the agent that answers here",
-        "description": "The channel replies to customers only once an active agent is linked to it.",
-        "pick": "Agent",
-        "link": "Link agent",
-        "linked": "{{name}} now answers on this channel.",
-        "taken": "This channel already has another agent. Unlink it from the channel page first.",
-        "create": "Create an agent for this channel"
+        "title": "Connect to an agent",
+        "description": "Choose one agent to connect to this account.",
+        "connect": "Connect",
+        "linked": "Connected to {{name}}. It now answers on this channel.",
+        "complete": "Complete"
       }
     },
     "edit": {

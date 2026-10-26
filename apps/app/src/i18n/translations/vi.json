@@ -744,7 +744,8 @@
       "steps": {
         "platform": "Chọn nền tảng",
         "connect": "Kết nối",
-        "success": "Hoàn tất"
+        "success": "Đã kết nối",
+        "agent": "Agent"
       },
       "platform": {
         "title": "Chọn nền tảng",
@@ -768,7 +769,6 @@
         "nameLabel": "Tên",
         "issuedTitle": "Đã tạo kênh",
         "issuedDescription": "Hãy lưu lại các giá trị này ở nơi an toàn trước khi đóng cửa sổ.",
-        "needsAgent": "Kênh này chỉ trả lời khi đã gắn agent. Hãy mở agent bạn muốn dùng, rồi thêm kênh này vào tài khoản liên kết của agent.",
         "apiChannel": {
           "namePlaceholder": "vd. Partner CRM",
           "title": "Kết nối API channel",
@@ -833,13 +833,11 @@
         }
       },
       "linkAgent": {
-        "title": "Chọn agent trả lời trên kênh này",
-        "description": "Kênh chỉ trả lời khách khi đã gắn với một agent đang hoạt động.",
-        "pick": "Agent",
-        "link": "Gắn agent",
-        "linked": "{{name}} đã trả lời trên kênh này.",
-        "taken": "Kênh này đã có agent khác. Hãy gỡ agent đó ở trang kênh trước.",
-        "create": "Tạo agent cho kênh này"
+        "title": "Kết nối với agent",
+        "description": "Chọn một agent để kết nối với tài khoản này.",
+        "connect": "Kết nối",
+        "linked": "Đã kết nối với {{name}}. Agent sẽ trả lời khách trên kênh này.",
+        "complete": "Hoàn tất"
       }
     },
     "edit": {

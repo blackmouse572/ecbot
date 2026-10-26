@@ -51,9 +51,20 @@ vi.mock("@/components/modals", async () => {
   };
   return {
     RouteFocusModal,
-    useRouteModal: () => ({ handleSuccess: vi.fn() }),
+    useRouteModal: () => ({ handleSuccess: routeModal.handleSuccess }),
   };
 });
+
+const routeModal = vi.hoisted(() => ({ handleSuccess: vi.fn() }));
+
+// The agent step fetches agents; these tests only check the dialog reaches it.
+vi.mock("./link-agent-step", () => ({
+  LinkAgentStep: ({ accounts }: A) => (
+    <div data-testid="link-agent-step">
+      {accounts.map((a: A) => a.id).join(",")}
+    </div>
+  ),
+}));
 
 // t interpolates the {{error}} slot so the toast message carries the real error.
 vi.mock("react-i18next", () => ({
@@ -274,5 +285,49 @@ describe("AccountCreateForm — WhatsApp manual credential", () => {
         platform: "WHATSAPP_BUSINESS",
       }),
     );
+  });
+});
+
+describe("AccountCreateForm — connect to an agent", () => {
+  const connectFacebook = async (data: A) => {
+    linkMutateAsync.mockResolvedValue({ data: { data } });
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+    await user.click(screen.getByText("Facebook"));
+    await oauthLogin.props.onSuccess({ code: "FBcode" });
+    await user.click(
+      await screen.findByRole("button", { name: "actions.continued" }),
+    );
+  };
+
+  it("moves on to the agent step with the new pages", async () => {
+    routeModal.handleSuccess.mockReset();
+    await connectFacebook({
+      id: "u-1",
+      type: "FACEBOOK_ACCOUNT",
+      name: "Lan",
+      pages: [
+        { id: "p-1", type: "FACEBOOK_PAGE", name: "Mây" },
+        { id: "p-2", type: "FACEBOOK_PAGE", name: "Gió" },
+      ],
+    });
+
+    expect(await screen.findByTestId("link-agent-step")).toHaveTextContent(
+      "p-1,p-2",
+    );
+    expect(routeModal.handleSuccess).not.toHaveBeenCalled();
+  });
+
+  it("closes when nothing connected can take an agent", async () => {
+    routeModal.handleSuccess.mockReset();
+    await connectFacebook({
+      id: "u-1",
+      type: "FACEBOOK_ACCOUNT",
+      name: "Lan",
+      pages: [],
+    });
+
+    expect(routeModal.handleSuccess).toHaveBeenCalled();
+    expect(screen.queryByTestId("link-agent-step")).not.toBeInTheDocument();
   });
 });

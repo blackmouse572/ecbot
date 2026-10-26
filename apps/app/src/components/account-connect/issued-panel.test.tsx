@@ -63,30 +63,16 @@ describe("IssuedPanel", () => {
     expect(screen.getByText("Đã tạo kênh")).toBeInTheDocument();
   });
 
-  // #255: a channel made from the Accounts page has no agent yet, so it
-  // cannot answer until the owner attaches one.
-  it("says an agent must be attached when the channel has none", () => {
+  it("labels the done button when the dialog has a next step", () => {
     render(
       <IssuedPanel
         issued={{ kind: "WEBSITE_WIDGET", widgetKey: "wk_1" } as never}
-        needsAgent
+        doneLabel="Continue"
         onDone={vi.fn()}
       />,
     );
     expect(
-      screen.getByText(/answers once an agent is attached/),
+      screen.getByRole("button", { name: "Continue" }),
     ).toBeInTheDocument();
-  });
-
-  it("does not ask for an agent the channel already has", () => {
-    render(
-      <IssuedPanel
-        issued={{ kind: "WEBSITE_WIDGET", widgetKey: "wk_1" } as never}
-        onDone={vi.fn()}
-      />,
-    );
-    expect(
-      screen.queryByText(/answers once an agent is attached/),
-    ).not.toBeInTheDocument();
   });
 });

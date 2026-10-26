@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import type { Issued } from "@/components/account-connect/issued";
 // Kept in a separate module so this file exports only components: a mixed
 // module breaks Fast Refresh.
+import type { LinkableAccount } from "./linkable-accounts";
 import type { ProvisionedPlatform } from "./provisioned-platforms";
 import { Form } from "@repo/ui/common-components";
 
@@ -38,7 +39,7 @@ export function ProvisionStep({
   platform: ProvisionedPlatform;
   onBack: () => void;
   /** Hands the minted credential to the wizard, which advances to the last step. */
-  onIssued: (issued: Issued) => void;
+  onIssued: (issued: Issued, account: LinkableAccount) => void;
 }) {
   const { t } = useTranslation();
 
@@ -62,17 +63,23 @@ export function ProvisionStep({
           name: values.name.trim(),
           callbackUrl: values.callbackUrl.trim(),
         });
-        onIssued({
-          kind: "API_CHANNEL",
-          accountKey: res.accountKey,
-          signingSecret: res.signingSecret,
-        });
+        onIssued(
+          {
+            kind: "API_CHANNEL",
+            accountKey: res.accountKey,
+            signingSecret: res.signingSecret,
+          },
+          { id: res.id, type: "API_CHANNEL", name: values.name.trim() },
+        );
       } else {
         const res = await provisionWidget.mutateAsync({
           name: values.name.trim(),
           allowedOrigins: splitOrigins(values.allowedOrigins),
         });
-        onIssued({ kind: "WEBSITE_WIDGET", widgetKey: res.widgetKey });
+        onIssued(
+          { kind: "WEBSITE_WIDGET", widgetKey: res.widgetKey },
+          { id: res.id, type: "WEBSITE_WIDGET", name: values.name.trim() },
+        );
       }
     } catch (error) {
       const message =

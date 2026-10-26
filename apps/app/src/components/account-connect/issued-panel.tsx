@@ -9,12 +9,12 @@ import type { Issued } from "./issued";
  */
 export function IssuedPanel({
   issued,
-  needsAgent,
+  doneLabel,
   onDone,
 }: {
   issued: Issued;
-  /** No agent is attached yet, so the channel cannot answer (#255). */
-  needsAgent?: boolean;
+  /** The button label; defaults to Close. */
+  doneLabel?: string;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -31,12 +31,6 @@ export function IssuedPanel({
             : t("accounts.create.provision.websiteWidget.issuedDescription")}
         </Text>
       </div>
-
-      {needsAgent && (
-        <Alert variant="info">
-          {t("accounts.create.provision.needsAgent")}
-        </Alert>
-      )}
 
       {issued.kind === "API_CHANNEL" ? (
         <>
@@ -71,7 +65,7 @@ export function IssuedPanel({
 
       <div>
         <Button type="button" onClick={onDone}>
-          {t("actions.close")}
+          {doneLabel ?? t("actions.close")}
         </Button>
       </div>
     </div>
