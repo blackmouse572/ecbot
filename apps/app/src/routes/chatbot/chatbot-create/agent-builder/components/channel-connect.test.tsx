@@ -238,6 +238,17 @@ describe("ChannelConnect", () => {
     expect(onAccountsLinked).toHaveBeenCalledWith([{ id: "acc-tg", name: "Lotus Bot", type: "TELEGRAM_BOT" }]);
   });
 
+  it("suggests a website name, not the API channel's CRM example, in the widget name field", async () => {
+    const user = userEvent.setup();
+    renderConnect();
+
+    await user.click(screen.getByText("agentBuilder.channels.website"));
+    expect(screen.getByLabelText("accounts.create.provision.nameLabel")).toHaveAttribute(
+      "placeholder",
+      "accounts.create.provision.websiteWidget.namePlaceholder",
+    );
+  });
+
   it("provisions a website widget, links it and shows the issued key panel once, then allows a second one", async () => {
     provisionWebsiteWidget.mockResolvedValue({ id: "acc-widget", widgetKey: "wk_123" });
     const user = userEvent.setup();

@@ -104,7 +104,7 @@ const useColumns = ({
 }: {
   onReview: (s: CustomerMergeSuggestionGetResponseDto) => void;
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return useMemo(
     () => [
@@ -145,7 +145,8 @@ const useColumns = ({
       columnHelper.display({
         id: "createdAt",
         header: () => t("customers.suggestions.table.createdAt"),
-        cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleString(i18n.language),
       }),
       columnHelper.display({
         id: "actions",
@@ -164,7 +165,7 @@ const useColumns = ({
         ),
       }),
     ],
-    [onReview, t],
+    [onReview, t, i18n.language],
   );
 };
 

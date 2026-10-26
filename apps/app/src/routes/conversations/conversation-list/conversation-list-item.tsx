@@ -18,7 +18,7 @@ interface Props {
   hasMergeSuggestion?: boolean;
 }
 
-const formatTimestamp = (iso?: string | null) => {
+const formatTimestamp = (locale: string, iso?: string | null) => {
   if (!iso) return "";
   const date = new Date(iso);
   const now = new Date();
@@ -27,11 +27,11 @@ const formatTimestamp = (iso?: string | null) => {
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate();
   return sameDay
-    ? date.toLocaleTimeString(undefined, {
+    ? date.toLocaleTimeString(locale, {
         hour: "2-digit",
         minute: "2-digit",
       })
-    : date.toLocaleDateString();
+    : date.toLocaleDateString(locale);
 };
 
 const fallbackInitials = (id: string) =>
@@ -48,7 +48,7 @@ export const ConversationListItem = ({
   showChatbot,
   hasMergeSuggestion,
 }: Props) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { workspaceSlug } = useWorkspaceParams();
   const senderName = senderLabel(conversation as A, t);
@@ -121,6 +121,7 @@ export const ConversationListItem = ({
           </Text>
           <Text size="xsmall" className="text-ui-fg-muted shrink-0">
             {formatTimestamp(
+              i18n.language,
               conversation.lastMessageAt ?? conversation.updatedAt,
             )}
           </Text>

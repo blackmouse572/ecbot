@@ -440,7 +440,7 @@
     },
     "analytics": {
       "empty": "Chưa có dữ liệu",
-      "emptyMessage": "Số liệu sẽ hiện ở đây khi có khách nhắn tin với chatbot trong khoảng thời gian này.",
+      "emptyMessage": "Số liệu sẽ hiện ở đây khi có khách nhắn tin với agent trong khoảng thời gian này.",
       "error": "Không tải được số liệu. Vui lòng thử lại sau.",
       "updatedAt": "Cập nhật lúc {{time}}",
       "refresh": "Làm mới",
@@ -762,11 +762,11 @@
         "copied": "Đã sao chép",
         "cta": "Tạo kênh",
         "nameLabel": "Tên",
-        "namePlaceholder": "vd. Partner CRM",
         "issuedTitle": "Đã tạo kênh",
         "issuedDescription": "Hãy lưu lại các giá trị này ở nơi an toàn trước khi đóng cửa sổ.",
         "needsAgent": "Kênh này chỉ trả lời khi đã gắn agent. Hãy mở agent bạn muốn dùng, rồi thêm kênh này vào tài khoản liên kết của agent.",
         "apiChannel": {
+          "namePlaceholder": "vd. Partner CRM",
           "title": "Kết nối API channel",
           "description": "Gửi và nhận tin nhắn qua REST từ hệ thống của bạn. Phản hồi sẽ được POST tới callback URL.",
           "callbackLabel": "Callback URL",
@@ -779,6 +779,7 @@
           "secretWarning": "Signing secret chỉ hiển thị một lần và không thể lấy lại. Hãy sao chép ngay. Nếu mất, hãy xoay để tạo secret mới."
         },
         "websiteWidget": {
+          "namePlaceholder": "vd. Website cửa hàng",
           "title": "Thêm website widget",
           "description": "Nhúng widget chat lên website của bạn. Khách truy cập chat ẩn danh và hội thoại sẽ xuất hiện trong hộp thư của bạn.",
           "originsLabel": "Website được phép",
@@ -2549,7 +2550,8 @@
     "preview": "Xem trước",
     "createNew": "Tạo mới",
     "unlink": "Bỏ liên kết",
-    "connectChannel": "Kết nối kênh"
+    "connectChannel": "Kết nối kênh",
+    "send": "Gửi"
   },
   "fields": {
     "name": "Tên",
@@ -2915,7 +2917,6 @@
       "placeholder": "Trả lời với tư cách nhân viên…",
       "windowClosed": "Meta chỉ cho phép trả lời trong vòng 24 giờ kể từ tin nhắn cuối của khách.",
       "windowClosedHint": "Bạn có thể trả lời lại khi khách nhắn tin tiếp.",
-      "send": "Gửi",
       "retry": "Gửi lại",
       "failed": "Gửi thất bại",
       "tooLong": "Tin nhắn không được dài quá 4096 ký tự"
@@ -3620,21 +3621,21 @@
     }
   },
   "usage": {
-    "domain": "Usage",
-    "title": "Token usage",
-    "subtitle": "Bạn đã dùng bao nhiêu phần token quota của kỳ này.",
+    "domain": "Mức sử dụng",
+    "title": "Token đã dùng",
+    "subtitle": "Bạn đã dùng bao nhiêu phần hạn mức token của kỳ này.",
     "quota": {
-      "title": "Quota đã dùng",
-      "plan": "Plan",
+      "title": "Hạn mức đã dùng",
+      "plan": "Gói",
       "renewsOn": "Làm mới vào",
       "hasCredit": "Còn credit bổ sung",
       "noCredit": "Không còn credit bổ sung",
-      "exhausted": "Đã hết quota, agent sẽ trả lời bằng fallback message."
+      "exhausted": "Đã hết hạn mức, agent sẽ trả lời bằng tin nhắn dự phòng."
     },
     "trend": {
-      "title": "Usage theo ngày",
-      "empty": "Không có usage trong khoảng này.",
-      "percentOfQuota": "% quota",
+      "title": "Mức dùng theo ngày",
+      "empty": "Không có lượt dùng nào trong khoảng này.",
+      "percentOfQuota": "% hạn mức",
       "messages": "Tin nhắn"
     },
     "byChatbot": {
@@ -3642,9 +3643,9 @@
       "column": "Agent"
     },
     "byPlatform": {
-      "title": "Theo platform",
-      "column": "Platform",
-      "preview": "Preview (chat thử)",
+      "title": "Theo kênh",
+      "column": "Kênh",
+      "preview": "Chat thử",
       "TAG_CLASSIFIER": "Gắn tag khách hàng",
       "CONVERSATION_MEMORY": "Ghi nhớ hội thoại",
       "AGENT_BUILDER": "Tạo agent",
@@ -3662,12 +3663,12 @@
       "all": "Toàn bộ"
     },
     "settings": {
-      "title": "Cảnh báo sắp hết quota",
-      "description": "Cảnh báo chủ workspace khi quota còn lại thấp hơn tỷ lệ này.",
+      "title": "Cảnh báo sắp hết hạn mức",
+      "description": "Cảnh báo chủ workspace khi hạn mức còn lại thấp hơn tỷ lệ này.",
       "threshold": "Ngưỡng (%)",
       "saved": "Đã cập nhật ngưỡng cảnh báo.",
       "edit": "Cấu hình cảnh báo",
-      "preview": "Cảnh báo chủ workspace khi còn dưới {{percent}}% quota của kỳ."
+      "preview": "Cảnh báo chủ workspace khi còn dưới {{percent}}% hạn mức của kỳ."
     },
     "debug": {
       "title": "Debug (chỉ có ở môi trường dev)",

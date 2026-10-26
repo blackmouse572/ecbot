@@ -739,11 +739,11 @@
         "copied": "Copied",
         "cta": "Create channel",
         "nameLabel": "Name",
-        "namePlaceholder": "e.g. Partner CRM",
         "issuedTitle": "Channel created",
         "issuedDescription": "Keep these values somewhere safe before you close this window.",
         "needsAgent": "This channel answers once an agent is attached. Open the agent you want, then add this channel to its linked accounts.",
         "apiChannel": {
+          "namePlaceholder": "e.g. Partner CRM",
           "title": "Connect an API channel",
           "description": "Send and receive messages over REST from your own system. Replies are POSTed to your callback URL.",
           "callbackLabel": "Callback URL",
@@ -756,6 +756,7 @@
           "secretWarning": "The signing secret is shown once and cannot be retrieved again. Copy it now. If you lose it, rotate for a new one."
         },
         "websiteWidget": {
+          "namePlaceholder": "e.g. Shop website",
           "title": "Add a website widget",
           "description": "Embed a chat widget on your site. Visitors chat anonymously and their conversations appear in your inbox.",
           "originsLabel": "Allowed sites",
@@ -2441,7 +2442,8 @@
     "preview": "Preview",
     "createNew": "Create new",
     "unlink": "Unlink",
-    "connectChannel": "Connect a channel"
+    "connectChannel": "Connect a channel",
+    "send": "Send"
   },
   "general": {
     "notSet": "Not set",
@@ -2873,7 +2875,6 @@
       "placeholder": "Reply as operator…",
       "windowClosed": "Meta only allows replies within 24 hours of the customer's last message.",
       "windowClosedHint": "You can reply again once the customer messages you.",
-      "send": "Send",
       "retry": "Retry",
       "failed": "Failed to send",
       "tooLong": "Message must be 4096 characters or fewer"

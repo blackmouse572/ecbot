@@ -51,6 +51,7 @@ export const MessageComposer = ({
               className="ml-auto bg-ui-bg-interactive text-ui-fg-on-color hover:bg-ui-bg-interactive/80"
               status={isSending ? "submitted" : "idle"}
               disabled={windowClosed}
+              aria-label={t("actions.send")}
             />
           </PromptInputFooter>
         </PromptInput>

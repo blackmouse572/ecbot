@@ -116,7 +116,11 @@ vi.mock("./components/test-panel", () => ({
   },
 }));
 vi.mock("@/components/modals", () => ({
-  RouteFocusModal: { Header: ({ children }: never) => <div>{children}</div>, Body: ({ children }: never) => <div>{children}</div> },
+  RouteFocusModal: {
+    Header: ({ children }: never) => <div>{children}</div>,
+    Body: ({ children }: never) => <div>{children}</div>,
+    Title: ({ children }: never) => <div data-testid="modal-title">{children}</div>,
+  },
   useRouteModal: () => ({ setCloseOnEscape }),
 }));
 
@@ -172,6 +176,12 @@ describe("AgentBuilder", () => {
       const input = screen.getByPlaceholderText("agentBuilder.ui.startPlaceholder");
       expect(input).toHaveAttribute("rows", "4");
       expect(screen.getByRole("button", { name: "agentBuilder.types.beauty" })).toBeInTheDocument();
+    });
+
+    it("titles the dialog for screen readers and labels the send button in the UI language", () => {
+      renderBuilder();
+      expect(screen.getByTestId("modal-title")).toHaveTextContent("agentBuilder.ui.title");
+      expect(screen.getByRole("button", { name: "actions.send" })).toBeInTheDocument();
     });
 
     it("starts that template when a card is clicked", async () => {

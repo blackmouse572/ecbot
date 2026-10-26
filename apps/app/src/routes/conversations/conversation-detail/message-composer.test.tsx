@@ -21,6 +21,16 @@ describe("MessageComposer", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("names the send button, not the message box, Send", () => {
+    render(<MessageComposer isSending={false} onSubmit={vi.fn()} />);
+    expect(
+      screen.getByRole("button", { name: "actions.send" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).not.toHaveAccessibleName(
+      "actions.send",
+    );
+  });
+
   it("disables the input under an explanation once the window has closed", () => {
     render(
       <MessageComposer isSending={false} onSubmit={vi.fn()} windowClosed />,

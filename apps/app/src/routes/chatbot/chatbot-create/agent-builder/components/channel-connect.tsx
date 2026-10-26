@@ -358,7 +358,7 @@ export function ChannelConnect({
             </Label>
             <Input
               id={widgetNameId}
-              placeholder={t("accounts.create.provision.namePlaceholder")}
+              placeholder={t("accounts.create.provision.websiteWidget.namePlaceholder")}
               value={widgetName}
               onChange={(e) => setWidgetName(e.target.value)}
               disabled={accountsLocked}

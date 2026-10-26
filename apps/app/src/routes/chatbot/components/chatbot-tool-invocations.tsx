@@ -86,7 +86,7 @@ type InvocationRowProps = {
 };
 
 function InvocationRow({ invocation, toolName }: InvocationRowProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const statusColor = useMemo(() => {
     switch (invocation.status) {
@@ -103,11 +103,11 @@ function InvocationRow({ invocation, toolName }: InvocationRowProps) {
 
   const timestamp = useMemo(() => {
     try {
-      return new Date(invocation.createdAt).toLocaleString();
+      return new Date(invocation.createdAt).toLocaleString(i18n.language);
     } catch {
       return String(invocation.createdAt);
     }
-  }, [invocation.createdAt]);
+  }, [invocation.createdAt, i18n.language]);
 
   const rowContent = (
     <div className="flex items-center gap-3 min-w-0 flex-1">

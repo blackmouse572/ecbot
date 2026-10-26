@@ -11,10 +11,6 @@ export const formatCurrency = (
   }).format(amount);
 };
 
-export const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString();
-};
-
 const RELATIVE_TIME_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["year", 31_536_000],
   ["month", 2_592_000],
