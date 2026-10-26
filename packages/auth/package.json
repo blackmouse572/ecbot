@@ -10,12 +10,12 @@
     "@casl/ability": "^6.8.1",
     "@casl/react": "^5.0.1",
     "@hookform/resolvers": "5.9.1",
-    "@marsidev/react-turnstile": "^1.6.1",
-    "@medusajs/ui": "^4.2.5",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-hook-form": "7.88.0",
-    "zod": "4.6.5"
+    "@marsidev/react-turnstile": "^1.6.3",
+    "@medusajs/ui": "^4.2.7",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-hook-form": "7.90.0",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@repo/client": "workspace:*",
