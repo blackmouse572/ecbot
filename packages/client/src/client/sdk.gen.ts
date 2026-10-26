@@ -1959,6 +1959,8 @@ export const toolAdminControllerGetV1 = <ThrowOnError extends boolean = false>(o
 
 /**
  * list a chatbot's enabled tools, any workspace
+ *
+ * An unknown chatbot gives an empty list, not a 404.
  */
 export const toolAdminControllerListForChatbotV1 = <ThrowOnError extends boolean = false>(options: Options<ToolAdminControllerListForChatbotV1Data, ThrowOnError>): RequestResult<ToolAdminControllerListForChatbotV1Responses, ToolAdminControllerListForChatbotV1Errors, ThrowOnError> => (options.client ?? client).get<ToolAdminControllerListForChatbotV1Responses, ToolAdminControllerListForChatbotV1Errors, ThrowOnError>({
     responseType: 'json',

@@ -133,11 +133,16 @@ export class KnowledgeItemAdminService {
         if (item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA) {
             return item.attachment.cdnUrl;
         }
-        const signed = await this.awsS3Service.presignGetItem(
-            item.attachment.key,
-            { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
-        );
-        return signed?.presignUrl ?? item.attachment.cdnUrl;
+        // A preview is extra: if signing fails, still show the item.
+        try {
+            const signed = await this.awsS3Service.presignGetItem(
+                item.attachment.key,
+                { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
+            );
+            return signed?.presignUrl;
+        } catch {
+            return undefined;
+        }
     }
 
     // `chatbot` is not a column of the item: it matches live links instead.

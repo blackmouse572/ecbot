@@ -201,6 +201,20 @@ describe('KnowledgeItemAdminService', () => {
         expect(data.content).toBeUndefined();
     });
 
+    it('still shows the item when signing the preview link fails', async () => {
+        repository.findOne.mockResolvedValue(item('i1'));
+        repository.countChunks.mockResolvedValue(new Map());
+        chatbotKnowledgeItemRepository.findByKnowledgeItem.mockResolvedValue(
+            []
+        );
+        awsS3Service.presignGetItem.mockRejectedValue(new Error('S3 down'));
+
+        const data = await service.findOneById('i1');
+
+        expect(data.id).toBe('i1');
+        expect(data.previewUrl).toBeUndefined();
+    });
+
     it('shows a media item by its public address without signing', async () => {
         repository.findOne.mockResolvedValue(
             item('i1', { type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA })

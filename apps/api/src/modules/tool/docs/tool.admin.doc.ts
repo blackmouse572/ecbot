@@ -87,7 +87,10 @@ export function ToolAdminDeleteDoc(): MethodDecorator {
 
 export function ToolAdminChatbotListDoc(): MethodDecorator {
     return applyDecorators(
-        Doc({ summary: "list a chatbot's enabled tools, any workspace" }),
+        Doc({
+            summary: "list a chatbot's enabled tools, any workspace",
+            description: 'An unknown chatbot gives an empty list, not a 404.',
+        }),
         DocRequest({ params: [{ name: 'chatbotId' }] }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
         DocGuard({ role: true, policy: true }),

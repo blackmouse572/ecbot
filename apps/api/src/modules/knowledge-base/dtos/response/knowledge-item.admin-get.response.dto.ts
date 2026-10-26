@@ -5,7 +5,7 @@ import { KnowledgeItemAdminListResponseDto } from './knowledge-item.admin-list.r
 
 // What the owner's item page shows, read-only: the written text of a TEXT
 // item, a media description, what was read from a web page and a preview link
-// for files and media. No bucket or storage key.
+// for files and media. No bucket or key fields.
 export class KnowledgeItemAdminGetResponseDto extends KnowledgeItemAdminListResponseDto {
     @ApiPropertyOptional({
         example: 'https://shop.vn/faq',

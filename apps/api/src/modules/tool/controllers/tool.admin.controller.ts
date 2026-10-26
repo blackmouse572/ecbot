@@ -155,7 +155,11 @@ export class ToolAdminController {
         return { data: this.toolService.mapAdminOne(tool, stats) };
     }
 
-    /** The Tools tab of the admin agent page: what the agent can call. */
+    /**
+     * The Tools tab of the admin agent page: what the agent can call. An
+     * unknown or deleted chatbot has no enabled tools, so it gets an empty
+     * list, not a 404; the page loads the chatbot itself first.
+     */
     @ToolAdminChatbotListDoc()
     @Response('tool.chatbot.list.success')
     @PolicyAbilityProtected({
