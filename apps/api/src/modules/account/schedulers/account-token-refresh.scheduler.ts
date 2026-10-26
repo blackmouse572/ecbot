@@ -13,12 +13,14 @@ import {
 } from 'src/common/helper/exceptions/token-encryption.exception';
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
 import { ENUM_ACCOUNT_STATUS, ENUM_ACCOUNT_TYPE } from '../enums/account.enum';
+import { AccountEntity } from '../repository/entities/account.entity';
 import { AccountRepository } from '../repository/repositories/account.repository';
 
 // Only these two reasons are operator/deploy misconfigurations (a missing or
 // wrong-length OAUTH_TOKEN_ENCRYPT_KEY) that apply to every row alike; the
 // rest — invalid_format, unsupported_version, auth_failed — are per-row data
-// faults, so they keep the BLOCKED + notify path.
+// faults, so they keep the BLOCKED + notify path, unless a whole run fails
+// with a key-change reason (KEY_CHANGE_REASONS, below).
 const REFRESH_AHEAD_MINUTES = 30;
 
 // Instagram refuses to refresh an expired token, and this job runs hourly, so
@@ -31,6 +33,15 @@ const EARLY_REFRESH = {
 const OPERATOR_FAULT_REASONS: ReadonlySet<TokenEncryptionErrorReason> = new Set(
     ['key_not_found', 'key_length']
 );
+
+// What a key changed in place (auth_failed) or an envelope-version rollback
+// (unsupported_version) looks like. When a whole run fails this way, the
+// circuit breaker below holds instead of blocking. invalid_format is never a
+// key change, so malformed rows keep blocking.
+const KEY_CHANGE_REASONS: ReadonlySet<TokenEncryptionErrorReason> = new Set([
+    'auth_failed',
+    'unsupported_version',
+]);
 
 @Injectable()
 export class AccountTokenRefreshScheduler {
@@ -126,12 +137,10 @@ export class AccountTokenRefreshScheduler {
         let configFaults = 0;
         // Acted on after the loop, so the circuit breaker below can see the
         // whole run before any account is blocked or any owner emailed.
-        const failed: {
-            account: (typeof expiringAccounts)[number];
-            error: any;
-        }[] = [];
+        const failed: { account: AccountEntity; error: Error }[] = [];
 
         for (const account of expiringAccounts) {
+            let deferred = false;
             try {
                 const decryptedAccessToken = this.decryptToken(
                     account.accessToken
@@ -189,6 +198,7 @@ export class AccountTokenRefreshScheduler {
                     continue;
                 }
 
+                deferred = true;
                 failed.push({ account, error });
             } finally {
                 // Release ONLY the just-processed account from the identity map.
@@ -197,53 +207,55 @@ export class AccountTokenRefreshScheduler {
                 // findExpiringSoon), so the next save() would persist a detached
                 // entity (INSERT → duplicate key / lost token update). A failed
                 // account is saved after the loop, so it is released there.
-                if (failed.at(-1)?.account !== account) {
+                if (!deferred) {
                     this.orm.em.getUnitOfWork().unsetIdentity(account);
                 }
             }
         }
 
-        // Circuit breaker (#13): when nothing refreshed and every failure is a
-        // decrypt failure, the key changed under us (e.g. the v1 key value
+        // Circuit breaker (#13): when nothing refreshed and every failure looks
+        // like a key change, the key changed under us (e.g. the v1 key value
         // replaced in place), not every connection died at once. Blocking
         // every account and emailing every owner would be the outage, so
         // write nothing and let the next run retry. One account alone still
         // blocks, so a single corrupt row is never masked.
-        const decryptFailures = failed.filter(
-            f => f.error instanceof TokenEncryptionError
+        const keyChangeReasons = failed.flatMap(({ error }) =>
+            error instanceof TokenEncryptionError &&
+            KEY_CHANGE_REASONS.has(error.reason)
+                ? [error.reason]
+                : []
         );
         if (
             refreshed === 0 &&
             failed.length >= 2 &&
-            decryptFailures.length === failed.length
+            keyChangeReasons.length === failed.length
         ) {
             const reasons = new Map<string, number>();
-            for (const { error } of decryptFailures) {
-                reasons.set(error.reason, (reasons.get(error.reason) ?? 0) + 1);
+            for (const reason of keyChangeReasons) {
+                reasons.set(reason, (reasons.get(reason) ?? 0) + 1);
             }
             const histogram = [...reasons]
                 .map(([reason, n]) => `${reason}: ${n}`)
                 .join(', ');
             this.logger.error(
-                `Token refresh aborted: ${decryptFailures.length}/${expiringAccounts.length} accounts failed to decrypt (${histogram}). Treating it as a key or config fault; no status written`
+                `Token refresh aborted: ${failed.length}/${expiringAccounts.length} accounts failed to decrypt (${histogram}). Treating it as a key or config fault; no status written`
             );
             for (const { account } of failed) {
                 this.orm.em.getUnitOfWork().unsetIdentity(account);
             }
-            return;
-        }
-
-        for (const { account, error } of failed) {
-            this.logger.error(
-                `Failed to refresh token for account ${account.id}: ${error.message}`
-            );
-            account.status = ENUM_ACCOUNT_STATUS.BLOCKED;
-            blocked++;
-            try {
-                await this.accountRepository.save(account);
-                await this.notifyOwnerOfBlockedAccount(account as any);
-            } finally {
-                this.orm.em.getUnitOfWork().unsetIdentity(account);
+        } else {
+            for (const { account, error } of failed) {
+                this.logger.error(
+                    `Failed to refresh token for account ${account.id}: ${error.message}`
+                );
+                account.status = ENUM_ACCOUNT_STATUS.BLOCKED;
+                blocked++;
+                try {
+                    await this.accountRepository.save(account);
+                    await this.notifyOwnerOfBlockedAccount(account as any);
+                } finally {
+                    this.orm.em.getUnitOfWork().unsetIdentity(account);
+                }
             }
         }
 
