@@ -91,9 +91,9 @@ const toTraceCall = (call: ChatToolCall): ChatToolCall =>
     ? { ...call, toolName: call.actionName, label: call.toolName }
     : call;
 
-const formatTime = (iso: string) => {
+const formatTime = (iso: string, locale: string) => {
   try {
-    return new Date(iso).toLocaleTimeString(undefined, {
+    return new Date(iso).toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -113,7 +113,7 @@ export const MessageBubble = ({
   reactionWindowClosed,
   onReact,
 }: Props) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isInbound = message.direction === "INBOUND";
   const isFailed = message.status === "FAILED";
   const isPending = message.status === "PENDING";
@@ -230,7 +230,7 @@ export const MessageBubble = ({
         <Text size="xsmall" weight="plus">
           {displayName}
         </Text>
-        <Text size="xsmall">{formatTime(message.dateSent)}</Text>
+        <Text size="xsmall">{formatTime(message.dateSent, i18n.language)}</Text>
         {hasFollowup && (
           <Tooltip content={t("conversations.customer.panel.followups.badge")}>
             <BellAlert className="text-ui-fg-interactive" />

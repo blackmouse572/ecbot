@@ -2874,7 +2874,6 @@
       "placeholder": "Reply as operator…",
       "windowClosed": "Meta only allows replies within 24 hours of the customer's last message.",
       "windowClosedHint": "You can reply again once the customer messages you.",
-      "send": "Send",
       "retry": "Retry",
       "failed": "Failed to send",
       "tooLong": "Message must be 4096 characters or fewer"

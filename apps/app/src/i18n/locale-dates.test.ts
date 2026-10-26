@@ -21,7 +21,9 @@ describe("dates follow the UI language", () => {
       readFileSync(file, "utf8")
         .split("\n")
         .map((line, i) => [line, i + 1] as const)
-        .filter(([line]) => /\.toLocale(Date)?String\(\)/.test(line))
+        .filter(([line]) =>
+          /\.toLocale(Date|Time)?String\(\s*(\)|undefined)/.test(line),
+        )
         .map(([, n]) => `${relative(SRC, file)}:${n}`),
     );
 
