@@ -462,6 +462,177 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
             ).toHaveBeenCalled();
         });
 
+        describe('run-level circuit breaker', () => {
+            const authFailed = () => {
+                throw new TokenEncryptionError(
+                    'auth_failed',
+                    'Envelope authentication failed'
+                );
+            };
+
+            afterEach(() => {
+                mockEncryption.envelopeDecrypt.mockImplementation(token =>
+                    token.replace('enveloped:', '')
+                );
+            });
+
+            it('writes and sends nothing when every account fails to decrypt, and logs one line with the reasons', async () => {
+                const errorSpy = jest
+                    .spyOn(Logger.prototype, 'error')
+                    .mockImplementation(() => undefined);
+                const accounts = [1, 2, 3].map(n =>
+                    makeMockAccount({ id: `account-${n}` })
+                );
+                mockAccountRepository.findExpiringSoon.mockResolvedValue(
+                    accounts
+                );
+                mockEncryption.envelopeDecrypt.mockImplementation(authFailed);
+
+                await scheduler.handleTokenRefresh();
+
+                for (const account of accounts) {
+                    expect(account.status).toBe(ENUM_ACCOUNT_STATUS.ACTIVE);
+                }
+                expect(mockAccountRepository.save).not.toHaveBeenCalled();
+                expect(
+                    mockNotificationService.createAccountBlocked
+                ).not.toHaveBeenCalled();
+                expect(mockCloudTasksClient.enqueue).not.toHaveBeenCalled();
+                expect(errorSpy).toHaveBeenCalledTimes(1);
+                expect(errorSpy.mock.calls[0][0]).toContain(
+                    'Token refresh aborted: 3/3 accounts failed to decrypt (auth_failed: 3)'
+                );
+                for (const account of accounts) {
+                    expect(mockUow.unsetIdentity).toHaveBeenCalledWith(account);
+                }
+            });
+
+            it('trips for a batch of two', async () => {
+                jest.spyOn(Logger.prototype, 'error').mockImplementation(
+                    () => undefined
+                );
+                const accounts = [1, 2].map(n =>
+                    makeMockAccount({ id: `account-${n}` })
+                );
+                mockAccountRepository.findExpiringSoon.mockResolvedValue(
+                    accounts
+                );
+                mockEncryption.envelopeDecrypt.mockImplementation(authFailed);
+
+                await scheduler.handleTokenRefresh();
+
+                expect(mockAccountRepository.save).not.toHaveBeenCalled();
+                expect(
+                    mockNotificationService.createAccountBlocked
+                ).not.toHaveBeenCalled();
+            });
+
+            it('still blocks the failures when another account refreshed', async () => {
+                jest.spyOn(Logger.prototype, 'error').mockImplementation(
+                    () => undefined
+                );
+                const healthy = makeMockAccount({ id: 'account-1' });
+                const dead = [2, 3].map(n =>
+                    makeMockAccount({
+                        id: `account-${n}`,
+                        accessToken: 'corrupt',
+                    })
+                );
+                mockAccountRepository.findExpiringSoon.mockResolvedValue([
+                    healthy,
+                    ...dead,
+                ]);
+                mockEncryption.envelopeDecrypt.mockImplementation(token => {
+                    if (token === 'corrupt') authFailed();
+                    return token.replace('enveloped:', '');
+                });
+
+                await scheduler.handleTokenRefresh();
+
+                for (const account of dead) {
+                    expect(account.status).toBe(ENUM_ACCOUNT_STATUS.BLOCKED);
+                }
+                expect(mockAccountRepository.save).toHaveBeenCalledTimes(3);
+            });
+
+            it('still blocks malformed rows (invalid_format), which a key change cannot cause', async () => {
+                jest.spyOn(Logger.prototype, 'error').mockImplementation(
+                    () => undefined
+                );
+                const accounts = [1, 2].map(n =>
+                    makeMockAccount({ id: `account-${n}` })
+                );
+                mockAccountRepository.findExpiringSoon.mockResolvedValue(
+                    accounts
+                );
+                mockEncryption.envelopeDecrypt.mockImplementation(() => {
+                    throw new TokenEncryptionError(
+                        'invalid_format',
+                        'Malformed envelope'
+                    );
+                });
+
+                await scheduler.handleTokenRefresh();
+
+                for (const account of accounts) {
+                    expect(account.status).toBe(ENUM_ACCOUNT_STATUS.BLOCKED);
+                }
+                expect(
+                    mockNotificationService.createAccountBlocked
+                ).toHaveBeenCalledTimes(2);
+            });
+
+            it('still logs the run summary when it trips', async () => {
+                const logSpy = jest
+                    .spyOn(Logger.prototype, 'log')
+                    .mockImplementation(() => undefined);
+                jest.spyOn(Logger.prototype, 'error').mockImplementation(
+                    () => undefined
+                );
+                mockAccountRepository.findExpiringSoon.mockResolvedValue(
+                    [1, 2].map(n => makeMockAccount({ id: `account-${n}` }))
+                );
+                mockEncryption.envelopeDecrypt.mockImplementation(authFailed);
+
+                await scheduler.handleTokenRefresh();
+
+                expect(logSpy).toHaveBeenCalledWith(
+                    'Token refresh run: refreshed 0, blocked 0, config faults 0'
+                );
+            });
+
+            it('still blocks and notifies both accounts in a mixed batch (one platform failure, one auth_failed)', async () => {
+                jest.spyOn(Logger.prototype, 'error').mockImplementation(
+                    () => undefined
+                );
+                const platformFailed = makeMockAccount({ id: 'account-1' });
+                const undecryptable = makeMockAccount({
+                    id: 'account-2',
+                    accessToken: 'corrupt',
+                });
+                mockAccountRepository.findExpiringSoon.mockResolvedValue([
+                    platformFailed,
+                    undecryptable,
+                ]);
+                mockEncryption.envelopeDecrypt.mockImplementation(token => {
+                    if (token === 'corrupt') authFailed();
+                    return token.replace('enveloped:', '');
+                });
+                mockPlatformService.refreshCredentials.mockRejectedValueOnce(
+                    new Error('Token expired')
+                );
+
+                await scheduler.handleTokenRefresh();
+
+                expect(platformFailed.status).toBe(ENUM_ACCOUNT_STATUS.BLOCKED);
+                expect(undecryptable.status).toBe(ENUM_ACCOUNT_STATUS.BLOCKED);
+                expect(mockAccountRepository.save).toHaveBeenCalledTimes(2);
+                expect(
+                    mockNotificationService.createAccountBlocked
+                ).toHaveBeenCalledTimes(2);
+            });
+        });
+
         it('logs one run summary counting refreshed, blocked and config faults', async () => {
             const logSpy = jest
                 .spyOn(Logger.prototype, 'log')
