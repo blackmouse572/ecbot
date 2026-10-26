@@ -2753,7 +2753,8 @@
     "ingestErrors": {
       "urlNotPublic": "Trang này không công khai. Hãy dùng đường link ai cũng mở được trên internet, không phải localhost hay địa chỉ mạng nội bộ.",
       "urlFetchFailed": "Không đọc được trang này. Hãy kiểm tra link mở được trên trình duyệt mà không cần đăng nhập, rồi xử lý lại.",
-      "noTokens": "Workspace đã hết token AI. Hãy nạp thêm hoặc gia hạn gói, rồi xử lý lại mục này."
+      "noTokens": "Workspace đã hết token AI. Hãy nạp thêm hoặc gia hạn gói, rồi xử lý lại mục này.",
+      "storageFull": "Trang web này có nhiều nội dung hơn dung lượng kiến thức còn trống của gói. Hãy xóa bớt kiến thức hoặc nâng cấp gói, rồi xử lý lại."
     },
     "create_title": "Tạo mục kiến thức",
     "create_description": "Thêm một mục kiến thức mới vào cơ sở kiến thức của bạn. Chọn từ các nguồn văn bản, URL hoặc tệp.",

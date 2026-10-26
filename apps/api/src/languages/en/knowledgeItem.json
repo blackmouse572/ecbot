@@ -16,7 +16,7 @@
         "notFound": "Knowledge item not found.",
         "processing": "This item is already being processed.",
         "fileRequired": "Attach a file to create a file item.",
-        "storageLimitExceeded": "This file would go over your plan's knowledge storage. Delete some files or upgrade your plan to add more.",
+        "storageLimitExceeded": "This would go over your plan's knowledge storage. Delete some knowledge or upgrade your plan to add more.",
         "fileTypeInvalid": "This file type cannot be read. Upload a PDF, DOCX, TXT, Markdown or HTML file.",
         "mediaTypeInvalid": "Media can be a JPG, PNG or WEBP image, or a PDF.",
         "fileTooLarge": "This file is too large. Images and documents can be up to 5MB, PDF media up to 20MB.",

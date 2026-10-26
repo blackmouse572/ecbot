@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import type { EntityManager } from '@mikro-orm/postgresql';
 import { ENUM_KNOWLEDGE_BASE_ITEM_STATUS } from '@app/modules/knowledge-base/enums/knowledge-base-item-status.enum';
+import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '@app/modules/knowledge-base/enums/knowledge-base-item-type.enum';
 import { KnowledgeItemService } from '@app/modules/knowledge-base/services/knowledge-item.service';
 
 describe('KnowledgeItemService.updateStatus', () => {
@@ -20,7 +21,8 @@ describe('KnowledgeItemService.updateStatus', () => {
         undefined as unknown as Ctor[3],
         undefined as unknown as Ctor[4],
         undefined as unknown as Ctor[5],
-        undefined as unknown as Ctor[6]
+        undefined as unknown as Ctor[6],
+        undefined as unknown as Ctor[7]
     );
     beforeEach(() => {
         jest.clearAllMocks();
@@ -88,7 +90,8 @@ describe('KnowledgeItemService.softDelete', () => {
         undefined as unknown as Ctor[3],
         undefined as unknown as Ctor[4],
         undefined as unknown as Ctor[5],
-        ragSyncService as unknown as Ctor[6]
+        ragSyncService as unknown as Ctor[6],
+        undefined as unknown as Ctor[7]
     );
 
     // The RAG cleanup is best-effort and not awaited. Left unhandled, its
@@ -129,7 +132,8 @@ describe('KnowledgeItemService.addTags', () => {
             undefined as unknown as Ctor[3],
             tagService as unknown as Ctor[4],
             undefined as unknown as Ctor[5],
-            undefined as unknown as Ctor[6]
+            undefined as unknown as Ctor[6],
+            undefined as unknown as Ctor[7]
         );
 
         await service.addTags('item-1', ['FAQ', 'menu'], {
@@ -157,7 +161,8 @@ describe('KnowledgeItemService.resolveBatchTarget', () => {
             undefined as unknown as Ctor[3],
             undefined as unknown as Ctor[4],
             undefined as unknown as Ctor[5],
-            undefined as unknown as Ctor[6]
+            undefined as unknown as Ctor[6],
+            undefined as unknown as Ctor[7]
         );
         return { service, repository };
     };
@@ -212,5 +217,89 @@ describe('KnowledgeItemService.resolveBatchTarget', () => {
         await expect(
             service.resolveBatchTarget('w', { filter: {} })
         ).rejects.toThrow();
+    });
+});
+
+// Text and website items count toward the plan's knowledge storage, like
+// files, so they are checked before they are saved.
+describe('KnowledgeItemService storage limit', () => {
+    const refusal = new Error('storage full');
+    const storageQuota = { assertCanSaveContent: jest.fn() };
+    const flush = jest.fn().mockResolvedValue(undefined);
+    const tx = {
+        getReference: jest.fn((_entity, id) => ({ id })),
+        persist: jest.fn(() => ({ flush })),
+        flush,
+        findOneOrFail: jest.fn(),
+    };
+    const em = {
+        transactional: jest.fn(callback => callback(tx)),
+    } as unknown as EntityManager;
+    type Ctor = ConstructorParameters<typeof KnowledgeItemService>;
+    const service = new KnowledgeItemService(
+        em,
+        undefined as unknown as Ctor[1],
+        undefined as unknown as Ctor[2],
+        undefined as unknown as Ctor[3],
+        undefined as unknown as Ctor[4],
+        undefined as unknown as Ctor[5],
+        undefined as unknown as Ctor[6],
+        storageQuota as unknown as Ctor[7]
+    );
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('refuses a text item that would pass the limit, saving nothing', async () => {
+        storageQuota.assertCanSaveContent.mockRejectedValue(refusal);
+
+        await expect(
+            service.create({
+                knowledgeBase: 'kb-1',
+                workspace: 'ws-1',
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
+                title: 'Giờ mở cửa',
+                content: '8h đến 22h',
+            })
+        ).rejects.toBe(refusal);
+        expect(storageQuota.assertCanSaveContent).toHaveBeenCalledWith(
+            'ws-1',
+            ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
+            '8h đến 22h'
+        );
+        expect(tx.persist).not.toHaveBeenCalled();
+    });
+
+    it('checks an edited text against the text it replaces', async () => {
+        storageQuota.assertCanSaveContent.mockRejectedValue(refusal);
+        tx.findOneOrFail.mockResolvedValue({
+            type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
+            content: 'old',
+            knowledgeBase: { workspace: { id: 'ws-1' } },
+        });
+
+        await expect(
+            service.update('item-1', { content: 'a much longer text' })
+        ).rejects.toBe(refusal);
+        expect(storageQuota.assertCanSaveContent).toHaveBeenCalledWith(
+            'ws-1',
+            ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
+            'a much longer text',
+            'old'
+        );
+        expect(tx.persist).not.toHaveBeenCalled();
+    });
+
+    it('does not check an edit that leaves the content alone', async () => {
+        tx.findOneOrFail.mockResolvedValue({
+            type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.TEXT,
+            content: 'old',
+            knowledgeBase: { workspace: { id: 'ws-1' } },
+        });
+
+        await service.update('item-1', { title: 'New title' });
+
+        expect(storageQuota.assertCanSaveContent).not.toHaveBeenCalled();
     });
 });

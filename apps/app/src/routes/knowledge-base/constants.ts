@@ -126,6 +126,8 @@ export const KB_INGEST_ERROR_KEYS: Record<string, string> = {
     "knowledge_item.ingestErrors.urlFetchFailed",
   "Your workspace has no AI tokens left. Top up or renew your plan, then process this item again.":
     "knowledge_item.ingestErrors.noTokens",
+  "This website has more text than your plan's knowledge storage has room for. Delete some knowledge or upgrade your plan, then process it again.":
+    "knowledge_item.ingestErrors.storageFull",
 };
 
 /** What a MEDIA item takes: images sent as photos, PDFs sent as files. */
