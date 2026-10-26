@@ -32,7 +32,23 @@ RUN pnpm install --frozen-lockfile
 COPY --from=builder /app/out/full/ .
 RUN pnpm build --filter=api
 
+# Migration runner, built with `--target migrator`. It keeps the dev
+# dependencies the MikroORM CLI needs (ts-node, @mikro-orm/cli), because the
+# migrations and mikro-orm.config.ts are TypeScript and the runtime image
+# prunes them. docker-compose.yml runs it once before `apis` starts: it applies
+# the migrations, then adds the countries, roles and API keys sign-up and the
+# services need. Each step skips what already exists; no demo data.
+FROM installer AS migrator
+WORKDIR /app/apps/api
+ENV APP_ENV=migration
+# The CLIs are called directly: corepack prepared pnpm under /root, which the
+# unprivileged user cannot read.
+ENV PATH="/app/apps/api/node_modules/.bin:/app/node_modules/.bin:$PATH"
+USER node
+CMD ["sh", "-c", "mikro-orm migration:up && nestjs-command seed:country && nestjs-command seed:role && nestjs-command seed:apikey"]
+
 # Production dependencies only
+FROM installer AS pruned
 RUN pnpm prune --prod
 
 # Final runtime stage
@@ -42,7 +58,7 @@ WORKDIR /app
 # Copy built application. Files stay root-owned so the app cannot rewrite its
 # own code; only logs/ (DEBUG_INTO_FILE) and swagger.json, which swaggerInit
 # writes into the working directory on boot outside production, are writable.
-COPY --from=installer /app .
+COPY --from=pruned /app .
 RUN mkdir -p logs && touch swagger.json && chown node:node logs swagger.json
 
 # Run as the image's unprivileged user, not root.

@@ -49,6 +49,8 @@ jobs:
           cp apps/ai/.env.example apps/ai/.env
           cp apps/api/.env.example apps/api/.env
           cp apps/app/.env.example apps/app/.env
+          # docker-compose.yml requires it; the E2E postgres has its own.
+          echo "POSTGRES_PASSWORD=unused" > .env
 
       - name: Generate JWT keys
         working-directory: apps/api
@@ -144,6 +146,8 @@ jobs:
           cp apps/ai/.env.example apps/ai/.env
           cp apps/api/.env.example apps/api/.env
           cp apps/app/.env.example apps/app/.env
+          # docker-compose.yml requires it; the E2E postgres has its own.
+          echo "POSTGRES_PASSWORD=unused" > .env
 
       - name: Generate JWT keys
         working-directory: apps/api

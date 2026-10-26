@@ -9,6 +9,7 @@ import {
   isEnvelopeKey,
   normalizeAiEnv,
   resolveInternalToken,
+  resolvePostgresPassword,
   missingManual,
   randomApiKeyPair,
   resolvePair,
@@ -315,5 +316,74 @@ describe("isEnvelopeKey", () => {
 
   it("rejects a value that is not hex", () => {
     assert.equal(isEnvelopeKey("z".repeat(64)), false);
+  });
+});
+
+describe("resolvePostgresPassword", () => {
+  const generate = () => "fresh123";
+  const local = (pw) => `postgresql://postgres:${pw}@localhost:5432/eccho`;
+
+  it("keeps a password already in the root .env", () => {
+    assert.deepEqual(
+      resolvePostgresPassword({
+        current: "kept",
+        databaseUrl: local("kept"),
+        apiEnvIsNew: false,
+        generate,
+      }),
+      { password: "kept", databaseUrl: local("kept") },
+    );
+  });
+
+  it("reuses an existing install's local password, so its volume keeps working", () => {
+    assert.deepEqual(
+      resolvePostgresPassword({
+        current: "",
+        databaseUrl: local("password"),
+        apiEnvIsNew: false,
+        generate,
+      }),
+      { password: "password", databaseUrl: local("password") },
+    );
+  });
+
+  it("generates one for a fresh install and writes it into DATABASE_URL", () => {
+    assert.deepEqual(
+      resolvePostgresPassword({
+        current: "",
+        databaseUrl: local("password"),
+        apiEnvIsNew: true,
+        generate,
+      }),
+      { password: "fresh123", databaseUrl: local("fresh123") },
+    );
+  });
+
+  it("refuses to reuse a password that would break the compose URL", () => {
+    for (const pw of ["p%2Fw", ""]) {
+      const url = pw ? local(pw) : "postgresql://postgres@localhost:5432/eccho";
+      assert.deepEqual(
+        resolvePostgresPassword({
+          current: "",
+          databaseUrl: url,
+          apiEnvIsNew: false,
+          generate,
+        }),
+        { password: "", databaseUrl: url },
+      );
+    }
+  });
+
+  it("leaves a hosted DATABASE_URL alone", () => {
+    const hosted = "postgresql://u:secret@ep-1.neon.tech/db?sslmode=require";
+    assert.deepEqual(
+      resolvePostgresPassword({
+        current: "",
+        databaseUrl: hosted,
+        apiEnvIsNew: true,
+        generate,
+      }),
+      { password: "fresh123", databaseUrl: hosted },
+    );
   });
 });

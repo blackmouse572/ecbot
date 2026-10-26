@@ -86,6 +86,24 @@ describe('CloudTasksQueueClient.enqueue', () => {
         });
     });
 
+    it('sends tasks to CLOUD_TASKS_TARGET_URL when set, not the public API_BACKEND_URL', async () => {
+        const defaultGet = config.get.getMockImplementation()!;
+        config.get.mockImplementation((key: string) =>
+            key === 'cloudTasks.targetUrl'
+                ? 'http://apis:8080'
+                : defaultGet(key)
+        );
+        try {
+            await client.enqueue('email', 'WELCOME', { send: {} });
+        } finally {
+            config.get.mockImplementation(defaultGet);
+        }
+
+        expect(createTask.mock.calls[0][0].task.httpRequest.url).toBe(
+            'http://apis:8080/api/v1/system/tasks/email'
+        );
+    });
+
     it('names the task from options.taskName for Cloud Tasks-native dedup', async () => {
         await client.enqueue(
             'email',

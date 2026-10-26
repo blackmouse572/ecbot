@@ -105,7 +105,9 @@ export class CloudTasksQueueClient {
         payload: Record<string, any>,
         options: CloudTasksEnqueueOptions = {}
     ): Promise<void> {
-        const backendUrl = this.configService.get<string>('app.backendUrl');
+        const targetUrl =
+            this.configService.get<string>('cloudTasks.targetUrl') ||
+            this.configService.get<string>('app.backendUrl');
         const systemApiKey = this.configService.get<string>(
             'cloudTasks.systemApiKey'
         );
@@ -128,7 +130,7 @@ export class CloudTasksQueueClient {
                     : undefined,
                 httpRequest: {
                     httpMethod: 'POST' as const,
-                    url: `${backendUrl}/api/v1/system/tasks/${queue}`,
+                    url: `${targetUrl}/api/v1/system/tasks/${queue}`,
                     headers: {
                         'content-type': 'application/json',
                         'x-api-key': systemApiKey,

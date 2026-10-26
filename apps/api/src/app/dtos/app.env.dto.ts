@@ -572,6 +572,11 @@ export class AppEnvDto {
     @IsString()
     CLOUD_TASKS_EMULATOR_HOST?: string;
 
+    // Origin tasks call back. Default: API_BACKEND_URL
+    @IsOptional()
+    @IsString()
+    CLOUD_TASKS_TARGET_URL?: string;
+
     // Cloudflare Turnstile (login/sign-up/waitlist captcha)
     @IsOptional()
     @IsString()
