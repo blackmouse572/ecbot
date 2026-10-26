@@ -62,14 +62,14 @@ describe("LinkAgentStep", () => {
     toast.error.mockReset();
   });
 
-  it("asks for the five most recently updated agents that can answer", () => {
+  it("asks for the five newest agents that can answer", () => {
     renderStep();
 
     expect(state.query).toMatchObject({
       perPage: 5,
-      orderBy: "updatedAt",
+      orderBy: "createdAt",
       orderDirection: "DESC",
-      status: ["active", "inactive"],
+      status: "active,inactive",
     });
     expect(screen.getByText("Connect to an agent")).toBeInTheDocument();
     expect(
