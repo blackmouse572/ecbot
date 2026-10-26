@@ -359,6 +359,21 @@ describe("resolvePostgresPassword", () => {
     );
   });
 
+  it("refuses to reuse a password that would break the compose URL", () => {
+    for (const pw of ["p%2Fw", ""]) {
+      const url = pw ? local(pw) : "postgresql://postgres@localhost:5432/eccho";
+      assert.deepEqual(
+        resolvePostgresPassword({
+          current: "",
+          databaseUrl: url,
+          apiEnvIsNew: false,
+          generate,
+        }),
+        { password: "", databaseUrl: url },
+      );
+    }
+  });
+
   it("leaves a hosted DATABASE_URL alone", () => {
     const hosted = "postgresql://u:secret@ep-1.neon.tech/db?sslmode=require";
     assert.deepEqual(

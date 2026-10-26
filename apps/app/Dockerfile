@@ -57,11 +57,17 @@ RUN rm -f apps/app/.env
 
 # Self-hosted web server, built with `--target web`: Caddy serves the
 # production bundle and proxies /api to the api service (docker/caddy/Caddyfile).
-# The browser calls the API on the page's own origin, so VITE_API_URL is the
-# public site URL. An empty build arg keeps the value from apps/app/.env.
+# docker-compose.yml derives these from SITE_URL, since the browser reaches the
+# API and the OAuth callbacks on the page's own origin. An empty build arg
+# keeps the value from apps/app/.env.
 FROM installer AS web-build
 ARG VITE_API_URL=""
-RUN if [ -z "$VITE_API_URL" ]; then unset VITE_API_URL; fi \
+ARG VITE_FACEBOOK_REDIRECT_URI=""
+ARG VITE_INSTAGRAM_REDIRECT_URI=""
+ARG VITE_ZALO_REDIRECT_URI=""
+RUN for v in VITE_API_URL VITE_FACEBOOK_REDIRECT_URI VITE_INSTAGRAM_REDIRECT_URI VITE_ZALO_REDIRECT_URI; do \
+        eval "[ -n \"\$$v\" ]" || unset "$v"; \
+    done \
     && pnpm --filter app exec vite build --mode production
 
 FROM caddy:2-alpine AS web

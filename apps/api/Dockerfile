@@ -35,11 +35,13 @@ RUN pnpm build --filter=api
 # Migration runner, built with `--target migrator`. It keeps the dev
 # dependencies the MikroORM CLI needs (ts-node, @mikro-orm/cli), because the
 # migrations and mikro-orm.config.ts are TypeScript and the runtime image
-# prunes them. docker-compose.yml runs it once before `apis` starts.
+# prunes them. docker-compose.yml runs it once before `apis` starts: it applies
+# the migrations, then adds the countries, roles and API keys sign-up and the
+# services need. Each step skips what already exists; no demo data.
 FROM installer AS migrator
 WORKDIR /app/apps/api
 ENV APP_ENV=migration
-CMD ["pnpm", "run", "migration:up"]
+CMD ["pnpm", "run", "migrate:bootstrap"]
 
 # Production dependencies only
 FROM installer AS pruned

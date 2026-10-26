@@ -225,7 +225,11 @@ if (env.compose) {
     apiEnvIsNew: Boolean(env.api.isNew),
     generate: () => hex(16),
   });
-  if (env.compose.get("POSTGRES_PASSWORD") !== password) {
+  if (!password) {
+    report.warnings.push(
+      "POSTGRES_PASSWORD in .env is empty: the password in apps/api/.env's DATABASE_URL is missing or has characters a URL can't carry unencoded. Change it to letters and digits (ALTER USER postgres PASSWORD '...'), update DATABASE_URL, and run this again.",
+    );
+  } else if (env.compose.get("POSTGRES_PASSWORD") !== password) {
     env.compose.set("POSTGRES_PASSWORD", password);
     report.filled.push("POSTGRES_PASSWORD in .env");
   }

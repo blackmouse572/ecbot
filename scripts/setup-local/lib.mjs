@@ -274,6 +274,7 @@ export function resolveInternalToken({ api, ai, generate }) {
  * apps/api DATABASE_URL. Postgres only reads the password when its volume is
  * created, so an existing install keeps the one in its local DATABASE_URL; a
  * fresh install gets a random one. A hosted DATABASE_URL is never touched.
+ * Returns an empty password when the existing one can't be reused.
  */
 export function resolvePostgresPassword({
   current,
@@ -293,7 +294,11 @@ export function resolvePostgresPassword({
     (url.port || "5432") === "5432";
   if (!isComposeDb) return { password: generate(), databaseUrl };
   if (!apiEnvIsNew) {
-    return { password: decodeURIComponent(url.password), databaseUrl };
+    // docker-compose.yml puts POSTGRES_PASSWORD into URLs unencoded, so only
+    // a URL-safe password can be shared. Otherwise return none; the caller
+    // tells the user to set one.
+    const safe = /^[A-Za-z0-9._~-]+$/.test(url.password);
+    return { password: safe ? url.password : "", databaseUrl };
   }
   url.password = generate();
   return { password: url.password, databaseUrl: url.toString() };

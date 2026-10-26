@@ -8,7 +8,7 @@ Run the whole platform on one server with Docker Compose: Postgres with pgvector
 - Node 20+ and pnpm 9 on the machine where you run `pnpm setup:local` (it can be the server).
 - A domain whose DNS points at the server, with ports 80 and 443 open. Caddy gets a Let's Encrypt certificate for it on first start.
 - An [OpenRouter](https://openrouter.ai/keys) key. Ecbot cannot reply without one.
-- A [Resend](https://resend.com) key and a verified sender. Sign-up sends an email code, and an account can't sign in until its email is verified.
+- A [Resend](https://resend.com) key and a verified sender, for invitations, password resets and sign-up codes. You can create your own first account without it (see below).
 
 ## Install
 
@@ -41,7 +41,15 @@ Start everything:
 docker compose --profile full up -d --build
 ```
 
-The `migrate` service creates the schema, then the API starts. Open your `SITE_URL` and sign up. Leave `pnpm db:seed` out of a public install: it creates demo accounts with well-known passwords.
+The `migrate` service creates the schema and adds the countries, roles and API keys the API needs, then the API starts. Its log prints a few generated API keys once; nothing needs them later, so you can ignore them.
+
+Create your first account, already verified and with the superadmin role:
+
+```bash
+docker compose --profile full run --rm migrate pnpm user:create --email you@example.com
+```
+
+It prints a generated password (pass `--password` to choose one). Sign in at your `SITE_URL`. Leave `pnpm db:seed` out of a public install: it creates demo accounts with well-known passwords.
 
 To try it on your own machine first, keep `SITE_URL=http://localhost`. Caddy then serves plain HTTP on port 80.
 
@@ -49,12 +57,13 @@ To try it on your own machine first, keep `SITE_URL=http://localhost`. Caddy the
 
 Only Caddy (the `app` service) listens on the network, on ports 80 and 443. It serves the app and proxies `/api` to the API, so the app, the API and platform webhooks share one origin. Postgres, Redis, the API, the AI service, the JWKS server and the Cloud Tasks emulator are bound to `127.0.0.1`, so only the server itself can reach them.
 
-| Variable             | Where           | Notes                                                                                                                        |
-| -------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `SITE_URL`           | root `.env`     | Public URL. Compose passes it to the API as `HOME_URL`, `API_BACKEND_URL` and CORS origin.                                   |
-| `POSTGRES_PASSWORD`  | root `.env`     | Postgres reads it only when the volume is first created. To change it later, run `ALTER USER postgres PASSWORD '...'` too.   |
-| `OPENROUTER_API_KEY` | `apps/ai/.env`  | Required.                                                                                                                    |
-| Channel credentials  | `apps/api/.env` | Facebook, Instagram and Zalo need your own approved app. Telegram, the website widget and the REST API channel need nothing. |
+| Variable             | Where           | Notes                                                                                                                                                                                     |
+| -------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SITE_URL`           | root `.env`     | Public URL. Compose passes it to the API as `HOME_URL`, `API_BACKEND_URL` and CORS origin.                                                                                                |
+| `POSTGRES_PASSWORD`  | root `.env`     | Postgres reads it only when the volume is first created. To change it later, run `ALTER USER postgres PASSWORD '...'` too, and use only letters and digits: it goes into a URL unencoded. |
+| `OPENROUTER_API_KEY` | `apps/ai/.env`  | Required.                                                                                                                                                                                 |
+| Channel credentials  | `apps/api/.env` | Facebook, Instagram and Zalo need your own approved app. Telegram, the website widget and the REST API channel need nothing.                                                              |
+| OAuth redirect URIs  | set by Compose  | `${SITE_URL}/auth/facebook/callback`, `/auth/instagram/callback` and `/auth/zalo/callback`. Add them to each platform app.                                                                |
 
 ## Channels and webhooks
 
