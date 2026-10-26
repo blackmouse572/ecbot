@@ -124,6 +124,12 @@ export class AccountTokenRefreshScheduler {
         let refreshed = 0;
         let blocked = 0;
         let configFaults = 0;
+        // Acted on after the loop, so the circuit breaker below can see the
+        // whole run before any account is blocked or any owner emailed.
+        const failed: {
+            account: (typeof expiringAccounts)[number];
+            error: any;
+        }[] = [];
 
         for (const account of expiringAccounts) {
             try {
@@ -183,19 +189,60 @@ export class AccountTokenRefreshScheduler {
                     continue;
                 }
 
-                this.logger.error(
-                    `Failed to refresh token for account ${account.id}: ${error.message}`
-                );
-                account.status = ENUM_ACCOUNT_STATUS.BLOCKED;
-                blocked++;
-                await this.accountRepository.save(account);
-                await this.notifyOwnerOfBlockedAccount(account as any);
+                failed.push({ account, error });
             } finally {
                 // Release ONLY the just-processed account from the identity map.
                 // `em.clear()` would detach the whole batch, but the not-yet-
                 // processed accounts are already managed (loaded up front by
                 // findExpiringSoon), so the next save() would persist a detached
-                // entity (INSERT → duplicate key / lost token update).
+                // entity (INSERT → duplicate key / lost token update). A failed
+                // account is saved after the loop, so it is released there.
+                if (failed.at(-1)?.account !== account) {
+                    this.orm.em.getUnitOfWork().unsetIdentity(account);
+                }
+            }
+        }
+
+        // Circuit breaker (#13): when nothing refreshed and every failure is a
+        // decrypt failure, the key changed under us (e.g. the v1 key value
+        // replaced in place), not every connection died at once. Blocking
+        // every account and emailing every owner would be the outage, so
+        // write nothing and let the next run retry. One account alone still
+        // blocks, so a single corrupt row is never masked.
+        const decryptFailures = failed.filter(
+            f => f.error instanceof TokenEncryptionError
+        );
+        if (
+            refreshed === 0 &&
+            failed.length >= 2 &&
+            decryptFailures.length === failed.length
+        ) {
+            const reasons = new Map<string, number>();
+            for (const { error } of decryptFailures) {
+                reasons.set(error.reason, (reasons.get(error.reason) ?? 0) + 1);
+            }
+            const histogram = [...reasons]
+                .map(([reason, n]) => `${reason}: ${n}`)
+                .join(', ');
+            this.logger.error(
+                `Token refresh aborted: ${decryptFailures.length}/${expiringAccounts.length} accounts failed to decrypt (${histogram}). Treating it as a key or config fault; no status written`
+            );
+            for (const { account } of failed) {
+                this.orm.em.getUnitOfWork().unsetIdentity(account);
+            }
+            return;
+        }
+
+        for (const { account, error } of failed) {
+            this.logger.error(
+                `Failed to refresh token for account ${account.id}: ${error.message}`
+            );
+            account.status = ENUM_ACCOUNT_STATUS.BLOCKED;
+            blocked++;
+            try {
+                await this.accountRepository.save(account);
+                await this.notifyOwnerOfBlockedAccount(account as any);
+            } finally {
                 this.orm.em.getUnitOfWork().unsetIdentity(account);
             }
         }
