@@ -32,12 +32,14 @@ import {
   randomApiKeyPair,
   resolvePair,
   resolveInternalToken,
+  resolvePostgresPassword,
   splitPair,
 } from "./setup-local/lib.mjs";
 
 const HELP = `Usage: pnpm setup:local [options]
 
-Prepares apps/api, apps/app and apps/ai .env files for local development.
+Prepares apps/api, apps/app and apps/ai .env files for local development, and
+the root .env that docker-compose.yml reads.
 
 Options
   --yes                 Never prompt; list missing values instead
@@ -99,6 +101,7 @@ const FILES = {
   api: path.join(root, "apps/api/.env"),
   app: path.join(root, "apps/app/.env"),
   ai: path.join(root, "apps/ai/.env"),
+  compose: path.join(root, ".env"),
 };
 
 function load(file) {
@@ -211,6 +214,41 @@ if (
 ) {
   env.api.set("WORK_SPACE_INVITATION_TOKEN_EXPIRED", "7d");
   report.filled.push("WORK_SPACE_INVITATION_TOKEN_EXPIRED = 7d");
+}
+
+// Compose Postgres password, shared with apps/api's DATABASE_URL.
+if (env.compose) {
+  const before = env.api.get("DATABASE_URL");
+  const { password, databaseUrl } = resolvePostgresPassword({
+    current: env.compose.get("POSTGRES_PASSWORD"),
+    databaseUrl: before,
+    apiEnvIsNew: Boolean(env.api.isNew),
+    generate: () => hex(16),
+  });
+  if (env.compose.get("POSTGRES_PASSWORD") !== password) {
+    env.compose.set("POSTGRES_PASSWORD", password);
+    report.filled.push("POSTGRES_PASSWORD in .env");
+  }
+  if (databaseUrl !== before) {
+    env.api.set("DATABASE_URL", databaseUrl);
+    report.filled.push("DATABASE_URL password in apps/api/.env (matches .env)");
+  }
+  // apps/ai reads the same database when run natively.
+  const aiUrl = env.ai?.isNew && env.ai.get("POSTGRES_URL");
+  if (aiUrl) {
+    const next = resolvePostgresPassword({
+      current: "",
+      databaseUrl: aiUrl,
+      apiEnvIsNew: true,
+      generate: () => password,
+    }).databaseUrl;
+    if (next !== aiUrl) {
+      env.ai.set("POSTGRES_URL", next);
+      report.filled.push(
+        "POSTGRES_URL password in apps/ai/.env (matches .env)",
+      );
+    }
+  }
 }
 
 // Default API key: the seed stores it, every frontend presents it.
@@ -518,7 +556,10 @@ Next:
   docker compose up -d            # Postgres (pgvector), Redis, JWKS, Cloud Tasks emulator
   pnpm db:migrate:up
   pnpm db:seed                    # demo users: admin@mail.com / aaAA@123
-  pnpm dev:app                    # api :${httpPort} + app :5173`);
+  pnpm dev:app                    # api :${httpPort} + app :5173
+
+Or run everything in containers (docs/self-hosting.md):
+  docker compose --profile full up -d --build`);
 }
 
 process.exit(

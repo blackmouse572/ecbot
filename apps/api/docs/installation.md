@@ -80,6 +80,9 @@ docker compose up -d
 
 Starts Postgres with pgvector (`:5432`), Redis (`:6379`), the JWKS server
 (`:3011`, serving `apps/api/keys/jwks.json`) and the Cloud Tasks emulator.
+The ports are bound to `127.0.0.1`. Postgres takes its password from
+`POSTGRES_PASSWORD` in the root `.env`, which step 2 writes to match
+`DATABASE_URL`.
 
 ## 4. Schema and seed
 

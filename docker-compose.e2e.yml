@@ -129,7 +129,21 @@ services:
       timeout: 3s
       retries: 10
 
+  # E2E runs its own migrations against `postgres`.
+  migrate:
+    profiles: !override [replaced-by-e2e-migrations]
+    depends_on: !reset null
+
+  # Same Caddy image, on the port and API origin the specs expect: the
+  # browser calls `api` on 8080 directly, not through the /api proxy.
   app:
+    build:
+      args:
+        VITE_API_URL: http://localhost:8080
+    environment:
+      SITE_ADDRESS: ":80"
+    ports: !override
+      - "5173:80"
     depends_on: !override
       api:
         condition: service_healthy

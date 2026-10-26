@@ -40,6 +40,9 @@ COPY --from=builder /app/apps/app/.env apps/app/.env
 # turbo's `-- <args>` passthrough would apply --mode to every task in the
 # run (breaking `tsc` in @repo/client), so app must be built on its own.
 RUN pnpm build --filter=app^...
+
+# vite preview image (the default target): local docker testing only.
+FROM installer AS preview
 # Vite bakes VITE_* vars into the bundle at build time by reading apps/app/.env
 # (copied in above). --mode development makes it
 # load .env instead of the default "production" mode's .env.production —
@@ -52,6 +55,19 @@ RUN pnpm --filter app exec vite build --mode development
 # values it needs into dist/).
 RUN rm -f apps/app/.env
 
+# Self-hosted web server, built with `--target web`: Caddy serves the
+# production bundle and proxies /api to the api service (docker/caddy/Caddyfile).
+# The browser calls the API on the page's own origin, so VITE_API_URL is the
+# public site URL. An empty build arg keeps the value from apps/app/.env.
+FROM installer AS web-build
+ARG VITE_API_URL=""
+RUN if [ -z "$VITE_API_URL" ]; then unset VITE_API_URL; fi \
+    && pnpm --filter app exec vite build --mode production
+
+FROM caddy:2-alpine AS web
+COPY docker/caddy/Caddyfile /etc/caddy/Caddyfile
+COPY --from=web-build /app/apps/app/dist /srv
+
 # Final runtime stage
 # NOTE: vite preview here is for local docker testing only — real deploys
 # go through Cloudflare Workers/wrangler (pnpm deploy), not this image.
@@ -60,7 +76,7 @@ WORKDIR /app
 
 # Copy built application (vite preview needs the full workspace + node_modules,
 # not a pruned "prod only" install — vite itself is a devDependency)
-COPY --from=installer --chown=node:node /app .
+COPY --from=preview --chown=node:node /app .
 
 # Run as the image's unprivileged user, not root. vite is called directly
 # because corepack's pnpm was prepared under /root, which node cannot read.

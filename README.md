@@ -54,9 +54,11 @@ Adapters are self-contained (`apps/api/src/modules/platform/adapters/`). Two slo
 
 Also included: input and output guardrails, rule-based follow-up messages, workspaces with roles and invitations, API keys, an activity log, and token streaming to the channel.
 
-Self-hosted Ecbot has every feature Ecbot Cloud has. You supply two things: an LLM key (Ecbot routes through [OpenRouter](https://openrouter.ai), so set `OPENROUTER_API_KEY` and pay the provider directly) and, for Facebook, Zalo or TikTok, your own platform app with messaging permissions approved. Telegram, the website widget and the REST API channel need no approval, so start with one of those.
+Self-hosted Ecbot has every feature Ecbot Cloud has. You supply two things: an LLM key (Ecbot routes through [OpenRouter](https://openrouter.ai), so set `OPENROUTER_API_KEY` and pay the provider directly) and, for Facebook, Instagram or Zalo, your own platform app with messaging permissions approved. Telegram, the website widget and the REST API channel need no approval, so start with one of those.
 
 ## Quick start
+
+This runs Ecbot for development. To run it on a server, see [Self-hosting](docs/self-hosting.md): `docker compose --profile full up -d --build` starts everything behind Caddy with HTTPS and creates the schema for you.
 
 Requires Node 20+, [pnpm](https://pnpm.io) 9, Docker, and [uv](https://docs.astral.sh/uv/) with Python 3.12+ (for `apps/ai`).
 
@@ -105,7 +107,7 @@ pnpm --filter ai dev                  # AI service, in a second shell
 | API docs (Swagger) | http://localhost:8080/docs |
 | AI service         | http://localhost:8000      |
 
-To run the apps in containers too, use the Compose profiles: `docker compose --profile app up` for api + app, `--profile full` to include the AI service.
+To run the apps in containers too, use the Compose profiles: `docker compose --profile app up` for api + app, `--profile full` to include the AI service. Both serve the app on http://localhost and run the migrations first.
 
 > The seed inserts demo accounts with well-known passwords and prints generated API keys once. It refuses to run with `NODE_ENV=production` or `APP_ENV=production`. Change the demo passwords before you expose an instance.
 

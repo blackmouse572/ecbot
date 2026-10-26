@@ -269,6 +269,36 @@ export function resolveInternalToken({ api, ai, generate }) {
   return { value, writeApi: api !== value, writeAi: ai !== value };
 }
 
+/**
+ * POSTGRES_PASSWORD for the compose `database` container, and the matching
+ * apps/api DATABASE_URL. Postgres only reads the password when its volume is
+ * created, so an existing install keeps the one in its local DATABASE_URL; a
+ * fresh install gets a random one. A hosted DATABASE_URL is never touched.
+ */
+export function resolvePostgresPassword({
+  current,
+  databaseUrl,
+  apiEnvIsNew,
+  generate,
+}) {
+  if (current) return { password: current, databaseUrl };
+  let url;
+  try {
+    url = new URL(databaseUrl);
+  } catch {
+    return { password: generate(), databaseUrl };
+  }
+  const isComposeDb =
+    ["localhost", "127.0.0.1", "db"].includes(url.hostname) &&
+    (url.port || "5432") === "5432";
+  if (!isComposeDb) return { password: generate(), databaseUrl };
+  if (!apiEnvIsNew) {
+    return { password: decodeURIComponent(url.password), databaseUrl };
+  }
+  url.password = generate();
+  return { password: url.password, databaseUrl: url.toString() };
+}
+
 const AI_ENVS = ["development", "staging", "production"];
 const AI_ENV_ALIASES = {
   dev: "development",

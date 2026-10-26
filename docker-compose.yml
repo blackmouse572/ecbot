@@ -1,8 +1,13 @@
 # Three usage modes:
 #   docker compose up                    infra only (redis/jwks/cloud-tasks) — dev runs api/app natively
 #   docker compose --profile app up      infra + apis + app — functional testing, no ai
-#   docker compose --profile full up     everything — full test / deploy parity
+#   docker compose --profile full up     everything — self-hosting, and full test / deploy parity
 # Services with no `profiles:` key are always on; profiles only add more.
+#
+# Run `pnpm setup:local` first. It writes the root .env this file reads
+# (POSTGRES_PASSWORD, SITE_URL) and the keys jwks-server serves.
+# Only `app` (the Caddy web server) listens on the network; every other port is
+# bound to 127.0.0.1, so it is reachable from this machine only.
 
 services:
   # Main API service
@@ -13,15 +18,13 @@ services:
       dockerfile: apps/api/Dockerfile
     hostname: apis
     ports:
-      - 8080:8080
+      - "127.0.0.1:8080:8080"
     volumes:
       # Whole-dir bind mount only — individual per-file mounts on top of an
       # already-mounted dir risk Docker creating a phantom empty directory
       # if a key file is briefly missing at container creation.
-      - ./apps/api/keys:/app/keys
-      - ./apps/api/src/:/app/src/
-      - ./apps/api/.env:/app/.env
-    restart: on-failure
+      - ./apps/api/keys:/app/keys:ro
+    restart: unless-stopped
     env_file:
       - ./apps/api/.env
     # .env's REDIS_HOST/AUTH_JWT_JWKS_URI/AI_BACKEND_URL point at
@@ -39,7 +42,17 @@ services:
       # localhost, which from inside this container is the container itself.
       # Only applies to the containerised api (`--profile app`); running the
       # api natively uses .env as-is, hosted Postgres included.
-      DATABASE_URL: postgresql://postgres:password@db:5432/eccho
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/eccho
+      # .env's localhost bind would be unreachable from the `app` proxy.
+      HTTP_HOST: 0.0.0.0
+      # The browser reaches the app and the API on one origin through `app`.
+      HOME_URL: ${SITE_URL:-http://localhost}
+      API_BACKEND_URL: ${SITE_URL:-http://localhost}
+      MIDDLEWARE_CORS_ORIGIN: ${SITE_URL:-http://localhost}
+      # Background jobs run through the emulator, which calls the API on this
+      # network rather than through the public SITE_URL.
+      CLOUD_TASKS_EMULATOR_HOST: cloud-tasks-emulator:8123
+      CLOUD_TASKS_TARGET_URL: http://apis:8080
     networks:
       - app-network
     # ai is intentionally NOT a hard dependency — apis must still boot under
@@ -52,6 +65,8 @@ services:
         condition: service_healthy
       database:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -61,17 +76,46 @@ services:
           cpus: "0.5"
           memory: 512M
 
-  # Frontend SPA (Vite + React) — local docker testing only;
-  # production deploys via Cloudflare Workers/wrangler, not this image
+  # Applies pending migrations, then exits. `apis` waits for it, so a fresh
+  # database gets its schema and an upgrade gets the new migrations before the
+  # new API serves traffic.
+  migrate:
+    profiles: [app, full]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrator
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/eccho
+    networks:
+      - app-network
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # Web server (Caddy): serves the app's production bundle and proxies /api to
+  # `apis`, on SITE_URL. A domain gets a Let's Encrypt certificate on first
+  # start, so its DNS must already point here and ports 80 and 443 be open.
+  # The hosted product deploys the app to Cloudflare instead.
   app:
     profiles: [app, full]
     build:
       context: .
       dockerfile: apps/app/Dockerfile
+      target: web
+      args:
+        VITE_API_URL: ${SITE_URL:-http://localhost}
     hostname: app
+    environment:
+      SITE_ADDRESS: ${SITE_URL:-http://localhost}
     ports:
-      - 5173:4173
-    restart: on-failure
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
     networks:
       - app-network
     depends_on:
@@ -93,16 +137,16 @@ services:
       dockerfile: Dockerfile
     hostname: ai
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     env_file:
       - ./apps/ai/.env
     # Container-local overrides for the same localhost pitfall as `apis`.
     environment:
-      POSTGRES_URL: postgresql+asyncpg://postgres:password@db:5432/eccho
+      POSTGRES_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@db:5432/eccho
       API_BASE_URL: http://apis:8080
     networks:
       - app-network
-    restart: on-failure
+    restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
@@ -135,17 +179,20 @@ services:
   # database (apps/ai queries the same instance), so the plain `postgres` image
   # is not enough — the vector extension must be available for
   # 20260424000000_create_knowledge_item_chunks to create it.
-  # Credentials match apps/api/.env.example so a fresh `cp .env.example .env`
-  # works unchanged. Point DATABASE_URL elsewhere to use a hosted Postgres.
+  # The password comes from the root .env; `pnpm setup:local` generates it and
+  # writes the same one into apps/api/.env's DATABASE_URL. Postgres only reads
+  # it when the volume is first created, so changing it later needs ALTER USER.
+  # Point DATABASE_URL elsewhere to use a hosted Postgres.
   database:
     image: pgvector/pgvector:pg17
     hostname: db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env (run pnpm setup:local)}
       POSTGRES_DB: eccho
+    restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./docker/initdb:/docker-entrypoint-initdb.d:ro
@@ -170,8 +217,20 @@ services:
   jwks-server:
     image: nginx:alpine
     hostname: jwks-server
+    # Fail with a clear message instead of serving 404s: without the keys from
+    # `pnpm setup:local`, Docker mounts an empty directory here.
+    command:
+      - sh
+      - -c
+      - |
+        test -f /usr/share/nginx/html/.well-known/jwks.json || {
+          echo "apps/api/keys/jwks.json is missing. Run pnpm setup:local, then start Compose again."
+          exit 1
+        }
+        exec nginx -g 'daemon off;'
+    restart: unless-stopped
     ports:
-      - "3011:80"
+      - "127.0.0.1:3011:80"
     volumes:
       # - ./apps/api/keys/jwks.json:/usr/share/nginx/html/.well-known/jwks.json
       # - ./apps/api/ci/jwks-server/jwks.conf:/etc/nginx/conf.d/default.conf
@@ -196,10 +255,11 @@ services:
 
   # Redis for caching and queues
   redis:
-    image: redis:latest
+    image: redis:7-alpine
     hostname: redis
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -237,8 +297,9 @@ services:
     # Linux does not without this mapping.
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: unless-stopped
     ports:
-      - "8123:8123"
+      - "127.0.0.1:8123:8123"
     networks:
       - app-network
     deploy:
@@ -250,6 +311,8 @@ services:
 volumes:
   redis_data:
   pgdata:
+  caddy_data:
+  caddy_config:
 
 networks:
   app-network:

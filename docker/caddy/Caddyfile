@@ -1,0 +1,34 @@
+# Serves the app and proxies the API on one origin, SITE_URL from the root
+# .env. A domain (https://chat.example.com) gets a Let's Encrypt certificate
+# automatically; http://localhost serves plain HTTP for a trial on your machine.
+{$SITE_ADDRESS}
+
+encode zstd gzip
+
+# Everything the API serves lives under /api: the operator API, platform
+# webhooks and Cloud Tasks callbacks. flush_interval -1 keeps the chatbot's
+# token stream (SSE) from being buffered.
+handle /api/* {
+	reverse_proxy apis:8080 {
+		flush_interval -1
+	}
+}
+
+handle {
+	root * /srv
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+	# The widget page is framed on customer sites; every other page is not.
+	@notWidget not path /widget/*
+	header @notWidget {
+		X-Frame-Options SAMEORIGIN
+		Content-Security-Policy "frame-ancestors 'self'"
+	}
+	@noCache path /sw.js /favicon/site.webmanifest
+	header @noCache Cache-Control no-cache
+	try_files {path} /index.html
+	file_server
+}

@@ -83,4 +83,4 @@ Knowledge processing, emails and follow-ups run as Cloud Tasks. To run them loca
 
 ## Run everything in Docker
 
-The compose file also has profiles that run the apps in containers: `docker compose --profile app up -d` adds the API and web app, and `--profile full` adds the AI service too.
+The compose file also has profiles that run the apps in containers: `docker compose --profile app up -d` adds the API and web app, and `--profile full` adds the AI service too. The web app is then on http://localhost, and the schema is created for you. To run Ecbot on your own server with HTTPS, follow the [self-hosting guide](https://github.com/blackmouse572/ecbot/blob/main/docs/self-hosting.md).
