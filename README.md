@@ -12,6 +12,14 @@
   <a href="https://github.com/blackmouse572/ecbot/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/blackmouse572/ecbot?style=flat"></a>
 </p>
 
+<p>
+  <a href="https://ecbot.dev">Website</a> ·
+  <a href="https://ecbot.dev/en/docs">Docs</a> ·
+  <a href="https://ecbot.dev/en/blog">Blog</a> ·
+  <a href="https://ecbot.dev/en/solutions">Use cases</a> ·
+  <a href="https://app.ecbot.dev">Ecbot Cloud</a>
+</p>
+
 **The open-source AI sales agent for shops that sell in chat.**
 
 Your customer asked about a dress on Facebook, ordered it on WhatsApp, and is now asking on Telegram where it is. To most chatbots, that's three strangers, and your staff scroll through three apps to piece the story together.
