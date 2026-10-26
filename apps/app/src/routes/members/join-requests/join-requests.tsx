@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { ListSkeleton } from "@repo/ui/common-components";
 
 export const JoinRequests = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { joinRequests, isLoading, isError, error } = useJoinRequests();
   const { mutateAsync: approve } = useApproveJoinRequest();
 
@@ -51,7 +51,9 @@ export const JoinRequests = () => {
               </div>
               <div className="flex items-center gap-x-3">
                 <Text size="small" className="text-ui-fg-muted">
-                  {new Date(request.createdAt).toLocaleDateString()}
+                  {new Date(request.createdAt).toLocaleDateString(
+                    i18n.language,
+                  )}
                 </Text>
                 <Button
                   size="small"

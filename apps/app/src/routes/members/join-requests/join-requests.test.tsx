@@ -10,7 +10,7 @@ vi.mock("@/hooks/api/join-requests", () => ({
 }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }),
 }));
 
 vi.mock("@medusajs/ui", async () => {

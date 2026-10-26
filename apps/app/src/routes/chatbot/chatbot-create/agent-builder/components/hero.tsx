@@ -50,7 +50,7 @@ export function Hero({ loading, onDescribe, onTemplate }: Props) {
               />
             </PromptInputBody>
             <PromptInputFooter>
-              <PromptInputSubmit className="ml-auto" status={loading ? "submitted" : "idle"} disabled={loading} />
+              <PromptInputSubmit className="ml-auto" aria-label={t("actions.send")} status={loading ? "submitted" : "idle"} disabled={loading} />
             </PromptInputFooter>
           </PromptInput>
           {loading && <BuildingLoader state={t("agentBuilder.ui.suggesting")} />}

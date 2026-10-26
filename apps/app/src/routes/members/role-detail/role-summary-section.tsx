@@ -8,7 +8,7 @@ type RoleSummarySectionProps = {
 };
 
 export const RoleSummarySection = ({ role }: RoleSummarySectionProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <Container className="divide-y p-0 w-full">
@@ -31,11 +31,11 @@ export const RoleSummarySection = ({ role }: RoleSummarySectionProps) => {
         />
         <SectionRow
           title={t("fields.createdAt")}
-          value={new Date(role.createdAt).toLocaleString()}
+          value={new Date(role.createdAt).toLocaleString(i18n.language)}
         />
         <SectionRow
           title={t("fields.updatedAt")}
-          value={new Date(role.updatedAt).toLocaleString()}
+          value={new Date(role.updatedAt).toLocaleString(i18n.language)}
         />
       </Section>
       {role.description && (

@@ -104,7 +104,7 @@ export const ClientCredentials = () => {
 
 const columnHelper = createColumnHelper<ClientCredentialGetResponseDto>();
 const useColumns = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return useMemo(
     () => [
@@ -136,7 +136,7 @@ const useColumns = () => {
         header: () => t("settings.clientCredentials.fields.createdAt"),
         cell: ({ getValue }) => (
           <span className="text-ui-fg-subtle">
-            {new Date(getValue()).toLocaleDateString()}
+            {new Date(getValue()).toLocaleDateString(i18n.language)}
           </span>
         ),
       }),
@@ -145,7 +145,7 @@ const useColumns = () => {
         cell: ({ row }) => <CredentialRowActions credential={row.original} />,
       }),
     ],
-    [t],
+    [t, i18n.language],
   );
 };
 

@@ -39,6 +39,7 @@ export function AIChatInput() {
         <PromptInputSubmit
           className="ml-auto bg-ui-bg-interactive text-ui-fg-on-color hover:bg-ui-bg-interactive/80"
           disabled={isSubmitDisabled}
+          aria-label={t("actions.send")}
         />
       </PromptInputFooter>
     </PromptInput>

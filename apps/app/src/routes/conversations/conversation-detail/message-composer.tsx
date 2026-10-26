@@ -38,6 +38,7 @@ export const MessageComposer = ({
               placeholder={t("conversations.composer.placeholder")}
               maxLength={4097}
               disabled={windowClosed}
+              aria-label={t("conversations.composer.send")}
             />
           </PromptInputBody>
           <PromptInputFooter>
@@ -51,6 +52,7 @@ export const MessageComposer = ({
               className="ml-auto bg-ui-bg-interactive text-ui-fg-on-color hover:bg-ui-bg-interactive/80"
               status={isSending ? "submitted" : "idle"}
               disabled={windowClosed}
+              aria-label={t("conversations.composer.send")}
             />
           </PromptInputFooter>
         </PromptInput>

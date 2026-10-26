@@ -8,7 +8,7 @@ import { RoleTypeCell } from "../role-type-cell";
 const columnHelper = createColumnHelper<RoleListResponseDto>();
 
 export const useRoleTableColumns = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const columns = useMemo(
     () => [
@@ -46,13 +46,13 @@ export const useRoleTableColumns = () => {
           const date = getValue();
           return (
             <span className="text-ui-fg-subtle">
-              {new Date(date).toLocaleDateString()}
+              {new Date(date).toLocaleDateString(i18n.language)}
             </span>
           );
         },
       }),
     ],
-    [t],
+    [t, i18n.language],
   );
 
   return columns;

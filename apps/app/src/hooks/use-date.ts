@@ -26,8 +26,8 @@ export function useDate() {
       // Format based on locale and options
       if (!locale) {
         return includeTime
-          ? actualDate.toLocaleString()
-          : actualDate.toLocaleDateString();
+          ? actualDate.toLocaleString(i18n.language)
+          : actualDate.toLocaleDateString(i18n.language);
       }
 
       return format(actualDate, includeTime ? "PPpp" : "PP", { locale });

@@ -116,7 +116,11 @@ export function ProvisionStep({
                 </Form.Label>
                 <Form.Control>
                   <Input
-                    placeholder={t("accounts.create.provision.namePlaceholder")}
+                    placeholder={t(
+                      isApiChannel
+                        ? "accounts.create.provision.apiChannel.namePlaceholder"
+                        : "accounts.create.provision.websiteWidget.namePlaceholder",
+                    )}
                     {...field}
                   />
                 </Form.Control>

@@ -111,7 +111,9 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
     <>
       <RouteFocusModal.Header>
         <div className="flex w-full items-center justify-between gap-2">
-          <Text size="small" className="text-ui-fg-subtle">{t("agentBuilder.ui.title")}</Text>
+          <RouteFocusModal.Title asChild>
+            <Text size="small" className="text-ui-fg-subtle">{t("agentBuilder.ui.title")}</Text>
+          </RouteFocusModal.Title>
           {unlocked && (
             <Button
               variant="transparent"

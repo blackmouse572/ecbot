@@ -9,7 +9,7 @@ type AccountSummarySectionProps = {
 };
 
 export const AccountSummarySection = ({ item }: AccountSummarySectionProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <Container className="p-0">
@@ -34,11 +34,11 @@ export const AccountSummarySection = ({ item }: AccountSummarySectionProps) => {
         />
         <SectionRow
           title={t("fields.createdAt")}
-          value={new Date(item.createdAt).toLocaleDateString()}
+          value={new Date(item.createdAt).toLocaleDateString(i18n.language)}
         />
         <SectionRow
           title={t("fields.updatedAt")}
-          value={new Date(item.updatedAt).toLocaleDateString()}
+          value={new Date(item.updatedAt).toLocaleDateString(i18n.language)}
         />
       </Section>
     </Container>

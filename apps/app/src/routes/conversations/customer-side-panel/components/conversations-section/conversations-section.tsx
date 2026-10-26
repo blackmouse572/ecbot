@@ -73,7 +73,7 @@ function ConversationItem({
   href: string;
   isCurrent: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const account = conversation.account as A;
   const chatbot = (conversation as A).chatbot as { name?: string } | undefined;
   const lastMessageAt = (conversation as A).lastMessageAt as string | undefined;
@@ -99,7 +99,7 @@ function ConversationItem({
       </div>
       {lastMessageAt && (
         <Text size="xsmall" className="text-ui-fg-muted">
-          {new Date(lastMessageAt).toLocaleString()}
+          {new Date(lastMessageAt).toLocaleString(i18n.language)}
         </Text>
       )}
     </>
