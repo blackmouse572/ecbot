@@ -12,8 +12,12 @@ class ResizeObserverMock {
 (globalThis as A).ResizeObserver =
   (globalThis as A).ResizeObserver ?? ResizeObserverMock;
 
-// Read when the form module loads, so Instagram is enabled for these tests.
-vi.hoisted(() => vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP"));
+// Read when the form module loads, so Instagram and Threads are enabled for
+// these tests.
+vi.hoisted(() => {
+  vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP");
+  vi.stubEnv("VITE_THREADS_APP_ID", "TH_APP");
+});
 
 const linkMutateAsync = vi.fn();
 

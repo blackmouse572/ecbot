@@ -104,7 +104,7 @@ export class ThreadsOAuthService implements IOAuthPlatformService {
             externalId: String(profile.id),
             name: profile.name || profile.username,
             avatar: profile.threads_profile_picture_url,
-            link: `https://www.threads.net/@${profile.username}`,
+            link: `https://www.threads.com/@${profile.username}`,
         };
     }
 

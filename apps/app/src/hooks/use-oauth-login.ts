@@ -86,7 +86,7 @@ function getThreadsConfig(state: string): PlatformConfig {
     state,
   });
   return {
-    url: `https://threads.net/oauth/authorize?${params}`,
+    url: `https://threads.com/oauth/authorize?${params}`,
     windowTitle: "Threads Login",
   };
 }

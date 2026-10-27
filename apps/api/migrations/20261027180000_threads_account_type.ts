@@ -3,7 +3,7 @@ import { Migration } from '@mikro-orm/migrations';
 const PREVIOUS_TYPES = `'FACEBOOK_ACCOUNT', 'INSTAGRAM_ACCOUNT', 'FACEBOOK_PAGE', 'INSTAGRAM_PAGE', 'ZALO_ACCOUNT', 'ZALO_PAGE', 'TIKTOK_SHOP', 'SHOPEE_SHOP', 'TELEGRAM_BOT', 'API_CHANNEL', 'WEBSITE_WIDGET', 'WHATSAPP_BUSINESS'`;
 const NEW_TYPES = `${PREVIOUS_TYPES}, 'THREADS_ACCOUNT'`;
 
-export class Migration20261007000000_threads_account_type extends Migration {
+export class Migration20261027180000_threads_account_type extends Migration {
     override async up(): Promise<void> {
         this.setTypes(NEW_TYPES);
     }

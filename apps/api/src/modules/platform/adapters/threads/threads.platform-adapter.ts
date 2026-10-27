@@ -107,7 +107,7 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
                     id: data.id,
                     name: data.name || data.username,
                     avatar: data.threads_profile_picture_url,
-                    link: `https://www.threads.net/@${data.username}`,
+                    link: `https://www.threads.com/@${data.username}`,
                 };
             } catch (error) {
                 this.rethrowPlatformError(error, 'Threads getOwnerProfile');

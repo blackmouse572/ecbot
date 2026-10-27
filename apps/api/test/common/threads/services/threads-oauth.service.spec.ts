@@ -76,7 +76,7 @@ describe('ThreadsOAuthService', () => {
             externalId: '1789',
             name: 'Eccho Shop',
             avatar: 'https://cdn/p.jpg',
-            link: 'https://www.threads.net/@eccho.shop',
+            link: 'https://www.threads.com/@eccho.shop',
         });
     });
 

@@ -295,7 +295,7 @@ describe("useOAuthLogin — Threads", () => {
 
     const openMock = window.open as ReturnType<typeof vi.fn>;
     const url = new URL(openMock.mock.calls[0][0]);
-    expect(url.origin + url.pathname).toBe("https://threads.net/oauth/authorize");
+    expect(url.origin + url.pathname).toBe("https://threads.com/oauth/authorize");
     expect(Object.fromEntries(url.searchParams)).toMatchObject({
       client_id: "TAPP",
       redirect_uri: "https://app.test/auth/threads/callback",
