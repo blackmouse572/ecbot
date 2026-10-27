@@ -37,7 +37,7 @@ const WIDGET_NO_AGENT_STATUS_CODE = 5513;
 export function Widget() {
   const { t } = useTranslation();
   const { key } = useParams();
-  const visitorId = useVisitorId(key);
+  const { visitorId, resetVisitorId } = useVisitorId(key);
   useWidgetTheme();
 
   // The parent page's URL. Only available cross-origin as an origin, which is
@@ -149,6 +149,9 @@ export function Widget() {
         // query key, which the widget transport disables anyway.
         chatbotId="website-widget"
         transport={transport}
+        // The conversation follows the visitor id, so a fresh one is what makes
+        // "restart" start empty instead of reloading the saved history.
+        onRestart={resetVisitorId}
         // A customer gets the reply only, never the agent's tool calls.
         audience="customer"
         renderInput={
