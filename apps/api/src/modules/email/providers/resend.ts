@@ -25,6 +25,7 @@ import {
     invitationEmailCopy,
 } from '../email-template-components/invitation-email.copy';
 import { mfaChangedEmailCopy } from '../email-template-components/mfa-changed-email.copy';
+import { lowTokenBalanceEmailCopy } from '../email-template-components/low-token-balance-email.copy';
 import { paymentFailedEmailCopy } from '../email-template-components/payment-failed-email.copy';
 import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
@@ -394,18 +395,29 @@ export class ResendProvider implements IEmailService {
             usedPercent,
             periodEnd,
             usageUrl,
+            language,
         }: EmailLowTokenBalanceDto
     ): Promise<boolean> {
-        return this.sendEmailTemplate(email, EmailSubject.LowTokenBalance, {
-            name,
-            workspaceName,
-            usedPercent,
-            periodEnd: this.helperDateService.formatToRFC2822(periodEnd),
-            usageUrl: `${this.homeUrl}${usageUrl}`,
-            supportEmail: this.supportEmail,
-            homeUrl: this.homeUrl,
-            homeName: this.homeName,
-        });
+        const copy = lowTokenBalanceEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.LowTokenBalance,
+            {
+                name,
+                workspaceName,
+                usedPercent,
+                periodEnd: this.helperDateService.formatToReadable(
+                    periodEnd,
+                    language === ENUM_MESSAGE_LANGUAGE.VI ? 'vi' : 'en'
+                ),
+                usageUrl: `${this.homeUrl}${usageUrl}`,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject(workspaceName, usedPercent)
+        );
     }
 
     async sendMfaChanged(

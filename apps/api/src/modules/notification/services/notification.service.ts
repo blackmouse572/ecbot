@@ -352,7 +352,11 @@ export class NotificationService {
     async createLowTokenBalance(
         recipientId: string,
         workspaceId: string,
-        data: { workspaceName: string; usedPercent: number }
+        data: {
+            workspaceName: string;
+            workspaceSlug: string;
+            usedPercent: number;
+        }
     ): Promise<NotificationEntity> {
         return this.create({
             title: this.messageService.setMessage(
@@ -360,14 +364,19 @@ export class NotificationService {
             ),
             message: this.messageService.setMessage(
                 'notification.lowTokenBalance.message',
-                { properties: { ...data } }
+                {
+                    properties: {
+                        workspaceName: data.workspaceName,
+                        usedPercent: data.usedPercent,
+                    },
+                }
             ),
             type: NotificationType.WARNING,
             priority: NotificationPriority.HIGH,
             recipient: recipientId,
             workspace: workspaceId,
             metadata: {
-                actionUrl: '/usage',
+                actionUrl: `/${data.workspaceSlug}/usage`,
                 actionText: this.messageService.setMessage(
                     'notification.lowTokenBalance.actionText'
                 ),
