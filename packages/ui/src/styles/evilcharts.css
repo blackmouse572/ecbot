@@ -21,3 +21,15 @@
   --color-border: var(--border-base);
   --color-primary: var(--fg-interactive);
 }
+
+/* Series palette shared by every chart (app and admin). Pick colours in
+   order; the last one, neutral, is for an "other" bucket. Each points at a
+   Medusa tag token, so light and dark mode follow. */
+:root {
+  --chart-1: var(--tag-blue-icon);
+  --chart-2: var(--tag-green-icon);
+  --chart-3: var(--tag-purple-icon);
+  --chart-4: var(--tag-orange-icon);
+  --chart-5: var(--tag-red-icon);
+  --chart-6: var(--tag-neutral-icon);
+}

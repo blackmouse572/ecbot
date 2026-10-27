@@ -8,9 +8,17 @@ import type { ComponentProps, HTMLAttributes } from "react";
 const FACE = {
   size: 24,
   className: "text-ui-fg-base rounded-md",
-  colorClasses: ["green", "blue", "purple"].map(
-    (tone) => `bg-ui-tag-${tone}-icon`,
-  ),
+  // Full class names so Tailwind picks them up. The face colour is
+  // hash % length, so keep this order and length equal to the admin
+  // AgentAvatar palette (eccho-ee) or every agent changes colour.
+  colorClasses: [
+    "bg-ui-tag-green-icon",
+    "bg-ui-tag-blue-icon",
+    "bg-ui-tag-purple-icon",
+    "bg-ui-tag-orange-icon",
+    "bg-ui-tag-red-icon",
+    "bg-ui-tag-neutral-icon",
+  ],
 };
 
 export type ChatbotNameCellProps = HTMLAttributes<HTMLDivElement> &
