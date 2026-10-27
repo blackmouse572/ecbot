@@ -23,6 +23,21 @@ export class ChatbotToolRepository extends EntityRepository<ChatbotToolEntity> {
         );
     }
 
+    /** The admin view of the same list: the chatbot's workspace is not checked. */
+    async findEnabledByChatbotIdAnyWorkspace(
+        chatbotId: string
+    ): Promise<ChatbotToolEntity[]> {
+        return this.find(
+            {
+                chatbot: { id: chatbotId },
+                enabled: true,
+                deleted: false,
+                tool: { deleted: false },
+            },
+            { populate: ['tool'] }
+        );
+    }
+
     /** Every tool link of these chatbots, enabled or not. */
     async findByChatbotIds(chatbotIds: string[]): Promise<ChatbotToolEntity[]> {
         if (!chatbotIds.length) return [];

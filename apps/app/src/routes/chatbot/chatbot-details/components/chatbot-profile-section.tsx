@@ -6,13 +6,13 @@ import {
   migrateProfile,
   readAnswer,
   type AgentProfile,
+  summarizeAnswer,
 } from "@repo/agent-blueprint";
 import type { ChatbotGetDetailResponseDto } from "@repo/client";
 import { SectionRow } from "@repo/ui/common-components";
 import { type FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CHATBOT_PROFILE_VISIBLE_GROUPS } from "../../constants";
-import { summarize } from "../../chatbot-create/agent-builder/components/answer-message";
 import { ChatbotSectionEditButton } from "./chatbot-section-edit-button";
 import { ChatbotSectionHeader } from "./chatbot-section-header";
 
@@ -41,7 +41,7 @@ export const ChatbotProfileSection: FC<ChatbotProfileSectionProps> = ({
       rows: group.questions
         .map((question) => ({
           question,
-          answer: summarize(
+          answer: summarizeAnswer(
             question,
             readAnswer(profile, question.path),
             t,

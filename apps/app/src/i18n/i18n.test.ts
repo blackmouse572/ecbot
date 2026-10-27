@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import i18n from "./index";
-import en from "./translations/en.json";
-import vi from "./translations/vi.json";
+import i18n, { resources } from "./index";
+
+const en = resources.en.translation;
+const vi = resources.vi.translation;
 
 describe("i18n", () => {
   it("does not HTML-escape interpolated values (React escapes them)", () => {

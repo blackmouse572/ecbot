@@ -47,6 +47,7 @@ import {
 } from 'src/modules/tool/constants/tool.list.constant';
 import {
     ToolAdminActivateDoc,
+    ToolAdminChatbotListDoc,
     ToolAdminDeleteDoc,
     ToolAdminGetDoc,
     ToolAdminInactivateDoc,
@@ -59,6 +60,8 @@ import {
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import { ChatbotToolListResponseDto } from 'src/modules/tool/dtos/response/chatbot-tool-list.response.dto';
+import { ChatbotToolService } from 'src/modules/tool/services/chatbot-tool.service';
 import { ToolService } from 'src/modules/tool/services/tool.service';
 import { UserProtected } from 'src/modules/user/decorators/user.decorator';
 import { UserParsePipe } from 'src/modules/user/pipes/user.parse.pipe';
@@ -73,7 +76,8 @@ export class ToolAdminController {
     constructor(
         private readonly toolService: ToolService,
         private readonly paginationService: PaginationService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly chatbotToolService: ChatbotToolService
     ) {}
 
     @ToolAdminListDoc()
@@ -149,6 +153,32 @@ export class ToolAdminController {
             this.toolService.getInvocationStats(toolId),
         ]);
         return { data: this.toolService.mapAdminOne(tool, stats) };
+    }
+
+    /**
+     * The Tools tab of the admin agent page: what the agent can call. An
+     * unknown or deleted chatbot has no enabled tools, so it gets an empty
+     * list, not a 404; the page loads the chatbot itself first.
+     */
+    @ToolAdminChatbotListDoc()
+    @Response('tool.chatbot.list.success')
+    @PolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.TOOL,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Get('/chatbot/:chatbotId')
+    async listForChatbot(
+        @Param('chatbotId', ParseUUIDPipe) chatbotId: string
+    ): Promise<IResponse<ChatbotToolListResponseDto[]>> {
+        return {
+            data: await this.chatbotToolService.listByChatbotAnyWorkspace(
+                chatbotId
+            ),
+        };
     }
 
     @ToolAdminActivateDoc()
