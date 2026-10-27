@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class EmailLowTokenBalanceDto {
     @ApiProperty({ required: true })
@@ -19,4 +19,13 @@ export class EmailLowTokenBalanceDto {
     @IsString()
     @IsNotEmpty()
     usageUrl: string;
+
+    @ApiProperty({
+        required: false,
+        example: 'vi',
+        description: 'Language to write the email in; English otherwise',
+    })
+    @IsOptional()
+    @IsString()
+    language?: string;
 }

@@ -758,8 +758,14 @@ export class AwsSESProvider implements IEmailService {
             usedPercent,
             periodEnd,
             usageUrl,
+            language,
         }: EmailLowTokenBalanceDto
     ): Promise<boolean> {
+        // The SES template has only these two branches, as the Resend copy.
+        const lang =
+            language === ENUM_MESSAGE_LANGUAGE.VI
+                ? ENUM_MESSAGE_LANGUAGE.VI
+                : ENUM_MESSAGE_LANGUAGE.EN;
         try {
             await this.awsSESService.send({
                 templateName: ENUM_SEND_EMAIL_PROCESS.LOW_TOKEN_BALANCE,
@@ -772,9 +778,12 @@ export class AwsSESProvider implements IEmailService {
                     homeUrl: this.homeUrl,
                     workspaceName,
                     usedPercent,
-                    periodEnd:
-                        this.helperDateService.formatToRFC2822(periodEnd),
+                    periodEnd: this.helperDateService.formatToReadable(
+                        periodEnd,
+                        lang
+                    ),
                     usageUrl: `${this.homeUrl}${usageUrl}`,
+                    language: lang,
                 },
             });
 
