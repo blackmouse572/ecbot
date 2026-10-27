@@ -2183,6 +2183,10 @@ export type AccountChatbotSummary = {
      * Chatbot name
      */
     name: string;
+    /**
+     * Business type of the chatbot
+     */
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
 };
 
 export type AddedBy = {
@@ -3610,6 +3614,10 @@ export type KnowledgeItemAdminListResponseDto = {
      * Bytes of the uploaded file, for FILE and MEDIA items
      */
     size?: number;
+    /**
+     * File type of an uploaded file or media item
+     */
+    mimeType?: string;
     chunkCount: number;
     workspace: ActivityAdminWorkspaceResponseDto;
     createdAt: string;
@@ -3619,6 +3627,10 @@ export type KnowledgeItemAdminListResponseDto = {
 export type KnowledgeItemAdminChatbotResponseDto = {
     id: string;
     name: string;
+    /**
+     * Business type of the chatbot
+     */
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
 };
 
 export type KnowledgeItemAdminGetResponseDto = {
@@ -3630,6 +3642,10 @@ export type KnowledgeItemAdminGetResponseDto = {
      * Bytes of the uploaded file, for FILE and MEDIA items
      */
     size?: number;
+    /**
+     * File type of an uploaded file or media item
+     */
+    mimeType?: string;
     chunkCount: number;
     workspace: ActivityAdminWorkspaceResponseDto;
     createdAt: string;
@@ -3639,7 +3655,6 @@ export type KnowledgeItemAdminGetResponseDto = {
      */
     sourceUrl?: string;
     fileName?: string;
-    mimeType?: string;
     errorMessage?: string;
     processedAt?: string;
     /**

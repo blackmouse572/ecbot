@@ -99,7 +99,6 @@ export class KnowledgeItemAdminService {
                     item.metadata?.url ??
                     (isUrl ? item.content : item.metadata?.sourceLink),
                 fileName: item.metadata?.fileName,
-                mimeType: item.attachment?.mime ?? item.metadata?.mimeType,
                 errorMessage: item.errorMessage ?? undefined,
                 processedAt: item.processedAt,
                 content: hasOwnText ? item.content : undefined,
@@ -167,6 +166,7 @@ export class KnowledgeItemAdminService {
             type: item.type,
             status: item.status,
             size: item.attachment?.size,
+            mimeType: item.attachment?.mime ?? item.metadata?.mimeType,
             chunkCount,
             workspace: item.knowledgeBase.workspace,
             createdAt: item.createdAt,

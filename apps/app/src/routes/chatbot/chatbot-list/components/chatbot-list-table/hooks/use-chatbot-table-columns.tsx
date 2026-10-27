@@ -46,7 +46,7 @@ export const useChatbotTableColumns = () => {
           const config = CHATBOT_TYPE_CONFIG[row.original.type as ChatbotType];
 
           return (
-            <div className="space-y-1 py-2">
+            <div className="max-w-80 space-y-1 py-2">
               <ChatbotNameCell
                 size="small"
                 name={row.original.name}

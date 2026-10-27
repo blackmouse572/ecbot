@@ -1,4 +1,5 @@
 import { AccountGetResponseDto } from '@app/modules/account/dtos/response/account.get.response.dto';
+import { ENUM_CHATBOT_TYPE } from '@app/modules/chatbot/enums/chatbot.enum';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 class AddedBy {
     @ApiProperty({
@@ -33,6 +34,13 @@ class AccountChatbotSummary {
 
     @ApiProperty({ description: 'Chatbot name' })
     name: string;
+
+    @ApiProperty({
+        description: 'Business type of the chatbot',
+        enum: ENUM_CHATBOT_TYPE,
+        type: String,
+    })
+    type: ENUM_CHATBOT_TYPE;
 }
 
 export class AccountListResponseDto extends OmitType(AccountGetResponseDto, [

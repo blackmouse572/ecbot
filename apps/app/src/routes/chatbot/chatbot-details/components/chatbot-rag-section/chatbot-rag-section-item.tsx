@@ -1,13 +1,9 @@
-import { clx, Container, StatusBadge, Text, IconButton } from "@medusajs/ui";
+import { KB_TYPE_CONFIG } from "@/routes/knowledge-base/constants";
+import { KnowledgeItemTypeIcon } from "@/routes/knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-type-icon";
+import { KnowledgeItemStatusCell } from "@/routes/knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-status-cell";
+import { clx, Container, Text, IconButton } from "@medusajs/ui";
 import type { ChatbotKnowledgeItemResponseDto } from "@repo/client";
-import {
-  IconEye,
-  IconFileTypePdf,
-  IconInvoice,
-  IconPhoto,
-  IconTrash,
-  type IconProps,
-} from "@tabler/icons-react";
+import { IconEye, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 type ChatbotKnowledgeItemProps = {
@@ -18,13 +14,7 @@ type ChatbotKnowledgeItemProps = {
   isUnlinking?: boolean;
 };
 
-export const KNOWLEDGE_ITEM_STATUS_BADGE_COLOR: Record<string, A> = {
-  draft: "grey",
-  processing: "blue",
-  processed: "green",
-  failed: "red",
-};
-
+/** A linked knowledge item, with the same icon and status badge as the Knowledge Base list. */
 export function ChatbotRAGSectionItem({
   item,
   className,
@@ -35,7 +25,7 @@ export function ChatbotRAGSectionItem({
   const { t } = useTranslation();
   const { knowledgeItem } = item;
   const name = knowledgeItem?.title || t("knowledgeItem.untitled", "Untitled");
-  const type = knowledgeItem?.type || "TEXT";
+  const typeConfig = KB_TYPE_CONFIG[knowledgeItem?.type] ?? KB_TYPE_CONFIG.TEXT;
 
   return (
     <Container
@@ -45,33 +35,26 @@ export function ChatbotRAGSectionItem({
       )}
     >
       <div className="w-full flex items-start gap-3">
-        <ChatbotRAGSectionItemIcon
-          className="text-ui-fg-subtle flex-shrink-0 mt-0.5"
-          type={type}
-          size={20}
-          strokeWidth={1.5}
-        />
+        <span className="mt-0.5 flex-shrink-0">
+          <KnowledgeItemTypeIcon
+            type={knowledgeItem?.type}
+            mime={knowledgeItem?.attachment?.mime}
+          />
+        </span>
         <div className="flex-1 min-w-0">
           <Text className="font-semibold text-sm line-clamp-2" weight="plus">
             {name}
           </Text>
-          <Text className="text-ui-fg-muted text-xs">
-            {t(`knowledgeItem.type.${type}`, type)}
-          </Text>
+          <Text className="text-ui-fg-muted text-xs">{typeConfig.label}</Text>
         </div>
       </div>
 
       <div className="w-full flex items-center justify-between">
-        <StatusBadge
-          className="uppercase"
-          color={
-            KNOWLEDGE_ITEM_STATUS_BADGE_COLOR[knowledgeItem?.status || "draft"]
-          }
-        >
-          {t(`knowledgeItem.status.${knowledgeItem?.status}`, {
-            defaultValue: knowledgeItem?.status,
-          })}
-        </StatusBadge>
+        <KnowledgeItemStatusCell
+          status={knowledgeItem?.status}
+          errorMessage={knowledgeItem?.errorMessage}
+          processedAt={knowledgeItem?.processedAt}
+        />
 
         <div className="flex items-center gap-x-1">
           <IconButton
@@ -96,20 +79,4 @@ export function ChatbotRAGSectionItem({
       </div>
     </Container>
   );
-}
-
-export function ChatbotRAGSectionItemIcon(props: { type: string } & IconProps) {
-  const typeUpper = props.type?.toUpperCase() || "TEXT";
-
-  switch (typeUpper) {
-    case "FILE":
-      return <IconFileTypePdf {...props} />;
-    case "MEDIA":
-      return <IconPhoto {...props} />;
-    case "URL":
-      return <IconInvoice {...props} />;
-    case "TEXT":
-    default:
-      return <IconInvoice {...props} />;
-  }
 }

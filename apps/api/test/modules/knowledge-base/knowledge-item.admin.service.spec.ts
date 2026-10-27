@@ -77,7 +77,7 @@ describe('KnowledgeItemAdminService', () => {
         }
     );
 
-    it('lists items with workspace, size and batched chunk counts, without content or storage fields', async () => {
+    it('lists items with workspace, size, file type and batched chunk counts, without content or storage fields', async () => {
         repository.find.mockResolvedValue([item('i1'), item('i2')]);
         repository.countChunks.mockResolvedValue(new Map([['i1', 12]]));
 
@@ -102,6 +102,7 @@ describe('KnowledgeItemAdminService', () => {
             type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.FILE,
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
             size: 2048,
+            mimeType: 'application/pdf',
             chunkCount: 12,
             workspace: {
                 id: 'w1',
@@ -151,7 +152,14 @@ describe('KnowledgeItemAdminService', () => {
         );
         repository.countChunks.mockResolvedValue(new Map([['i1', 3]]));
         chatbotKnowledgeItemRepository.findByKnowledgeItem.mockResolvedValue([
-            { chatbot: { id: 'c1', name: 'Sales', systemPrompt: 'secret' } },
+            {
+                chatbot: {
+                    id: 'c1',
+                    name: 'Sales',
+                    type: 'restaurant',
+                    systemPrompt: 'secret',
+                },
+            },
             { chatbot: { id: 'c2', name: 'Old', deletedAt: new Date() } },
         ]);
 
@@ -169,7 +177,7 @@ describe('KnowledgeItemAdminService', () => {
             mimeType: 'application/pdf',
             status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.FAILED,
             errorMessage: 'File format not supported',
-            chatbots: [{ id: 'c1', name: 'Sales' }],
+            chatbots: [{ id: 'c1', name: 'Sales', type: 'restaurant' }],
         });
         expect(data.chatbots[0]).not.toHaveProperty('systemPrompt');
         expect(data).not.toHaveProperty('attachment');

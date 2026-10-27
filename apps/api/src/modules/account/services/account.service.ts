@@ -278,10 +278,7 @@ export class AccountService implements IAccountService {
         // A soft-deleted chatbot's accounts count as unlinked too.
         const find: Record<string, any> = {
             deletedAt: null,
-            $or: [
-                { chatbot: null },
-                { chatbot: { deletedAt: { $ne: null } } },
-            ],
+            $or: [{ chatbot: null }, { chatbot: { deletedAt: { $ne: null } } }],
             ...(workspaceId && { workspace: workspaceId }),
         };
 
@@ -308,7 +305,12 @@ export class AccountService implements IAccountService {
             // findAccountsNotBelongingToAnyChatbot. Unpopulated callers get
             // the reference id, which is not a summary either.
             const chatbot = (obj as any).chatbot as
-                | { id: string; name: string; deletedAt?: Date | null }
+                | {
+                      id: string;
+                      name: string;
+                      type: string;
+                      deletedAt?: Date | null;
+                  }
                 | string
                 | null
                 | undefined;
@@ -319,10 +321,12 @@ export class AccountService implements IAccountService {
                 proxies: undefined,
                 accessToken: undefined,
                 chatbot:
-                    chatbot &&
-                    typeof chatbot === 'object' &&
-                    !chatbot.deletedAt
-                        ? { id: chatbot.id, name: chatbot.name }
+                    chatbot && typeof chatbot === 'object' && !chatbot.deletedAt
+                        ? {
+                              id: chatbot.id,
+                              name: chatbot.name,
+                              type: chatbot.type,
+                          }
                         : null,
             } as unknown as AccountListResponseDto;
         });

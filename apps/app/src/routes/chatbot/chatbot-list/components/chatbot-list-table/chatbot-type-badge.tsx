@@ -35,10 +35,16 @@ export const ChatbotTypeBadge = ({
   size,
   clamp,
 }: ChatbotTypeBadgeProps) => (
-  <Badge color={config.color} size={size} className="rounded-full">
-    <div className={clx("flex items-center gap-1", clamp && "line-clamp-1")}>
-      <ChatbotTypeIcon config={config} size={14} />
-      {config.label}
+  <Badge
+    color={config.color}
+    size={size}
+    className="max-w-full shrink-0 rounded-full"
+  >
+    <div className="flex min-w-0 items-center gap-1">
+      <ChatbotTypeIcon config={config} size={14} className="shrink-0" />
+      {/* Clamp the label, not the row: line-clamp swaps flex for a block box
+          and the icon would stack above the text. */}
+      <span className={clx(clamp && "min-w-0 truncate")}>{config.label}</span>
     </div>
   </Badge>
 );

@@ -37,6 +37,13 @@ export class KnowledgeItemAdminListResponseDto {
     @Expose()
     size?: number;
 
+    @ApiPropertyOptional({
+        example: 'application/pdf',
+        description: 'File type of an uploaded file or media item',
+    })
+    @Expose()
+    mimeType?: string;
+
     @ApiProperty({ example: 12 })
     @Expose()
     chunkCount: number;

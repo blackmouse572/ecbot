@@ -1,4 +1,5 @@
 import { useKnowledgeItem } from "@/hooks/api/knowledge-base";
+import { KB_TYPE_CONFIG } from "@/routes/knowledge-base/constants";
 import { formatFileSize } from "@/utils";
 import { FocusModal, Text } from "@medusajs/ui";
 import type { KnowledgeItemResponseDto } from "@repo/client";
@@ -38,14 +39,16 @@ export default function ChatbotRAGSectionPreviewDialog({
               </FocusModal.Title>
               {item && (
                 <Text size="small" className="text-ui-fg-muted">
-                  {t(`knowledgeItem.type.${item.type}`, item.type)}
+                  {KB_TYPE_CONFIG[item.type]?.label ?? item.type}
                 </Text>
               )}
             </div>
             {item && <KnowledgeItemContentActionType item={item} />}
           </div>
         </FocusModal.Header>
-        <FocusModal.Body className="flex flex-col overflow-hidden p-6">
+        {/* The body scrolls, so long text or a tall image never gets cut off.
+            min-h-0 keeps it from growing past the modal instead. */}
+        <FocusModal.Body className="flex min-h-0 flex-col overflow-y-auto p-6">
           {isLoading ? (
             <Skeleton className="h-full w-full" />
           ) : isError || !item ? (
@@ -94,7 +97,7 @@ function PreviewContent({ item }: { item: KnowledgeItemResponseDto }) {
   }
 
   return (
-    <pre className="flex-1 overflow-auto whitespace-pre-wrap break-words rounded-md bg-ui-bg-subtle p-4 font-sans text-sm text-ui-fg-base">
+    <pre className="whitespace-pre-wrap break-words rounded-md bg-ui-bg-subtle p-4 font-sans text-sm text-ui-fg-base">
       {item.content}
     </pre>
   );
