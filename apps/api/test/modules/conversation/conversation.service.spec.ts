@@ -506,6 +506,10 @@ describe('ConversationService', () => {
                 mockConversationRepository.updateEntity.mock.calls[0];
             expect(patch.botEnabled).toBe(false);
             expect(patch.handoffAt).toBeInstanceOf(Date);
+            // A handoff on a resolved conversation must not hide under the
+            // Resolved pill: it waits for staff, so it is open.
+            expect(patch.status).toBe(ENUM_CONVERSATION_STATUS.OPEN);
+            expect(patch.resolvedAt).toBeNull();
             expect(mockNotificationService.createHandoff).toHaveBeenCalledTimes(
                 1
             );
@@ -659,6 +663,40 @@ describe('ConversationService', () => {
 
         it('returns null for an empty message', () => {
             expect(service.detectHandoffKeywords('', [])).toBeNull();
+        });
+    });
+
+    describe('reopenIfResolved', () => {
+        it('reopens a resolved conversation for the bot', async () => {
+            const conversation: any = {
+                id: 'conv-1',
+                status: ENUM_CONVERSATION_STATUS.RESOLVED,
+                botEnabled: false,
+            };
+            const updateStatus = jest
+                .spyOn(service, 'updateStatus')
+                .mockResolvedValue(conversation);
+
+            await service.reopenIfResolved(conversation);
+
+            expect(updateStatus).toHaveBeenCalledWith(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.OPEN
+            );
+            expect(conversation.status).toBe(ENUM_CONVERSATION_STATUS.OPEN);
+            expect(conversation.botEnabled).toBe(true);
+        });
+
+        it('leaves an open conversation alone', async () => {
+            const updateStatus = jest.spyOn(service, 'updateStatus');
+
+            await service.reopenIfResolved({
+                id: 'conv-1',
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+                botEnabled: false,
+            } as any);
+
+            expect(updateStatus).not.toHaveBeenCalled();
         });
     });
 

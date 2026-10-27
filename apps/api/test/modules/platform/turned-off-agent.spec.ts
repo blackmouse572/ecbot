@@ -211,6 +211,7 @@ describe('WidgetChatService — agent turned off', () => {
                 botEnabled: true,
             })),
             touchLastMessage: jest.fn(async () => {}),
+            reopenIfResolved: jest.fn(async () => {}),
             detectHandoffKeywords: jest.fn(() => null),
             triggerHandoff: jest.fn(),
         };
@@ -289,6 +290,7 @@ describe('WidgetChatService — workspace suspended', () => {
                     botEnabled: true,
                 })),
                 touchLastMessage: jest.fn(async () => {}),
+                reopenIfResolved: jest.fn(async () => {}),
                 detectHandoffKeywords: jest.fn(() => null),
                 triggerHandoff: jest.fn(),
             } as any,

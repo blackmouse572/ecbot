@@ -120,6 +120,7 @@ export class WidgetChatService {
             account.id,
             visitorId
         );
+        await this.conversationService.reopenIfResolved(conversation);
 
         // Handoff: an operator has taken over, so the visitor's message is
         // recorded for the inbox but the bot stays quiet. Their poll picks up

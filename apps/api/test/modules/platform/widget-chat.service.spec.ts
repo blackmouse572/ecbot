@@ -39,6 +39,7 @@ function setup(overrides: Record<string, any> = {}) {
         touchLastMessage: jest.fn(async () => {}),
         detectHandoffKeywords: jest.fn(() => overrides.handoffMatch ?? null),
         triggerHandoff: jest.fn(async () => {}),
+        reopenIfResolved: jest.fn(async () => {}),
     };
     const handoffIntent = {
         wantsPerson: jest.fn(async () => overrides.wantsPerson ?? false),
@@ -248,6 +249,18 @@ describe('WidgetChatService.handleTurn', () => {
         expect(messageRepository.upsertByExternalId).toHaveBeenCalled();
         expect(chatbotAIService.streamChat).not.toHaveBeenCalled();
         expect(messageRepository.insertPendingOutbound).not.toHaveBeenCalled();
+    });
+
+    // Like platform channels: after staff resolve, the next visitor message
+    // reopens the conversation, so a later handoff shows as Needs staff.
+    it('reopens a resolved conversation before the bot answers', async () => {
+        const { service, conversationService, conversation } = setup();
+
+        await service.handleTurn(res, turn);
+
+        expect(conversationService.reopenIfResolved).toHaveBeenCalledWith(
+            conversation
+        );
     });
 
     it('rejects an account with no chatbot attached', async () => {
