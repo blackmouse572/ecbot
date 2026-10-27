@@ -46,6 +46,28 @@ def test_does_nothing_without_a_dsn(monkeypatch):
     assert not sentry_sdk.get_client().dsn
 
 
+@pytest.mark.parametrize("dsn", ["   ", "\n", "placeholder", "public@sentry.example.com/1"])
+def test_skips_a_blank_or_malformed_dsn_instead_of_crashing(monkeypatch, caplog, dsn):
+    # A bad secret value must not stop the service from booting.
+    monkeypatch.setattr(AppVars, "SENTRY_DSN", dsn)
+    sentry_sdk.init(dsn="")
+
+    assert init_sentry() is False
+    assert not sentry_sdk.get_client().dsn
+    if dsn.strip():
+        assert "SENTRY_DSN" in caplog.text
+
+
+def test_trims_whitespace_around_a_valid_dsn(monkeypatch):
+    monkeypatch.setattr(AppVars, "SENTRY_DSN", f"  {FAKE_DSN}\n")
+    sentry_sdk.init(dsn="")
+
+    assert init_sentry(transport=_CaptureTransport()) is True
+    assert sentry_sdk.get_client().dsn == FAKE_DSN
+    sentry_sdk.get_client().close()
+    sentry_sdk.init()
+
+
 def test_tags_events_with_the_service_and_environment(sentry_events):
     sentry_sdk.capture_message("boom")
 
