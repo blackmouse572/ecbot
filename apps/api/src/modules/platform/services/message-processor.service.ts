@@ -10,7 +10,6 @@ import {
 import { AccountService } from '@app/modules/account/services/account.service';
 import { isAgentSilenced } from '@app/modules/platform/utils/agent-silenced.util';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
-import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
 import {
     ENUM_MESSAGE_AUTHOR,
     ENUM_MESSAGE_DIRECTION,
@@ -243,7 +242,7 @@ export class MessageProcessorService implements OnModuleInit {
                 )
             );
 
-        await this.resumeBotIfResolved(conversation);
+        await this.conversationService.reopenIfResolved(conversation);
 
         // A turned-off agent (a builder draft not activated yet, or one the
         // owner deactivated) or one in a suspended workspace keeps its inbox,
@@ -680,33 +679,5 @@ export class MessageProcessorService implements OnModuleInit {
                 `Reaction target message not found: conversation=${conversation.id} externalId=${reaction.messageId}`
             );
         }
-    }
-
-    /**
-     * A resolved conversation receiving a new inbound message re-opens for the
-     * bot. Reseed-on-resume: clear the AI checkpointer thread so the next turn
-     * rebuilds full history from the DB — including any OPERATOR messages sent
-     * during handoff, which never entered the agent's memory.
-     */
-    private async resumeBotIfResolved(conversation: any): Promise<void> {
-        if (conversation.status !== ENUM_CONVERSATION_STATUS.RESOLVED) return;
-        await this.conversationService.updateStatus(
-            conversation.id,
-            ENUM_CONVERSATION_STATUS.OPEN
-        );
-        conversation.status = ENUM_CONVERSATION_STATUS.OPEN;
-        conversation.botEnabled = true;
-        // Best-effort: updateStatus above already committed status=OPEN, so a
-        // rejection here must not bubble into process() (no try/catch; the
-        // Cloud Tasks caller retries and the retry would short-circuit since the
-        // conversation is no longer RESOLVED — leaving the reactivation
-        // message unanswered). Fire-and-forget, matching the other sites.
-        this.chatbotAIService
-            .deleteSession(conversation.id)
-            .catch(err =>
-                this.logger.error(
-                    `Failed to delete AI session for conversation ${conversation.id}: ${err.message}`
-                )
-            );
     }
 }

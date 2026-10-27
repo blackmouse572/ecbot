@@ -15,6 +15,7 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         findOrCreate: jest.fn(),
         updateSenderProfile: jest.fn(),
         touchLastMessage: jest.fn(),
+        reopenIfResolved: jest.fn().mockResolvedValue(undefined),
         updateStatus: jest.fn(),
         detectHandoffKeywords: jest.fn(() => false),
         triggerHandoff: jest.fn(),
@@ -221,12 +222,10 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
             [
                 'the edge refuses the call (403)',
                 () =>
-                    jest
-                        .fn()
-                        .mockResolvedValue({
-                            ok: false,
-                            status: 403,
-                        } as Response),
+                    jest.fn().mockResolvedValue({
+                        ok: false,
+                        status: 403,
+                    } as Response),
             ],
             [
                 'the edge is unreachable',

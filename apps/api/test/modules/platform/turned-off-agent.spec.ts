@@ -32,6 +32,7 @@ describe('MessageProcessorService — agent turned off', () => {
         findOrCreate: jest.fn(),
         updateSenderProfile: jest.fn(),
         touchLastMessage: jest.fn(),
+        reopenIfResolved: jest.fn().mockResolvedValue(undefined),
         updateStatus: jest.fn(),
         detectHandoffKeywords: jest.fn(() => null),
     };

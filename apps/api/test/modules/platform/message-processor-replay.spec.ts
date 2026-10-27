@@ -21,6 +21,7 @@ describe('MessageProcessorService — replayed history', () => {
         findOrCreate: jest.fn(),
         updateSenderProfile: jest.fn(),
         touchLastMessage: jest.fn(),
+        reopenIfResolved: jest.fn().mockResolvedValue(undefined),
         updateStatus: jest.fn(),
         detectHandoffKeywords: jest.fn(() => null),
     };
@@ -172,8 +173,7 @@ describe('MessageProcessorService — replayed history', () => {
 
             await processor.process(replayed);
 
-            expect(conversationService.updateStatus).not.toHaveBeenCalled();
-            expect(chatbotAIService.deleteSession).not.toHaveBeenCalled();
+            expect(conversationService.reopenIfResolved).not.toHaveBeenCalled();
         });
 
         it('does not dispatch a replayed button press', async () => {
@@ -191,6 +191,14 @@ describe('MessageProcessorService — replayed history', () => {
             await processor.process(live);
 
             expect(messageDebounceService.schedule).toHaveBeenCalledTimes(1);
+        });
+
+        it('reopens the conversation if staff resolved it', async () => {
+            await processor.process(live);
+
+            expect(conversationService.reopenIfResolved).toHaveBeenCalledWith(
+                conversation
+            );
         });
 
         it('still gets a reply right after an import created the conversation', async () => {

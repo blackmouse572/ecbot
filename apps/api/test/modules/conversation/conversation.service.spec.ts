@@ -672,10 +672,20 @@ describe('ConversationService', () => {
                 id: 'conv-1',
                 status: ENUM_CONVERSATION_STATUS.RESOLVED,
                 botEnabled: false,
+                handoffAt: new Date(),
+                resolvedAt: new Date(),
             };
             const updateStatus = jest
                 .spyOn(service, 'updateStatus')
-                .mockResolvedValue(conversation);
+                .mockResolvedValue({
+                    id: 'conv-1',
+                    status: ENUM_CONVERSATION_STATUS.OPEN,
+                    botEnabled: true,
+                    handoffAt: null,
+                    handoffReason: null,
+                    fallbackCount: 0,
+                    resolvedAt: null,
+                } as any);
 
             await service.reopenIfResolved(conversation);
 
@@ -683,8 +693,12 @@ describe('ConversationService', () => {
                 'conv-1',
                 ENUM_CONVERSATION_STATUS.OPEN
             );
-            expect(conversation.status).toBe(ENUM_CONVERSATION_STATUS.OPEN);
-            expect(conversation.botEnabled).toBe(true);
+            expect(conversation).toMatchObject({
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+                botEnabled: true,
+                handoffAt: null,
+                resolvedAt: null,
+            });
         });
 
         it('leaves an open conversation alone', async () => {

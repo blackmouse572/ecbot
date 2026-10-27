@@ -17,6 +17,7 @@ describe('MessageProcessorService keyword handoff', () => {
         findOrCreate: jest.fn(),
         updateSenderProfile: jest.fn(),
         touchLastMessage: jest.fn(),
+        reopenIfResolved: jest.fn().mockResolvedValue(undefined),
         updateStatus: jest.fn(),
         detectHandoffKeywords: jest.fn(
             (): { keyword: string; source: string } | null => ({

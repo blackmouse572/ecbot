@@ -246,13 +246,23 @@ export class ConversationService implements IConversationService {
     }
 
     /** A new customer message reopens a resolved conversation for the bot,
-     *  on every channel. updateStatus also clears the AI thread, so the next
+     *  on platform channels and the widget. updateStatus also clears the AI thread, so the next
      *  turn rebuilds history from the DB, staff replies included. */
     async reopenIfResolved(conversation: ConversationEntity): Promise<void> {
         if (conversation.status !== ENUM_CONVERSATION_STATUS.RESOLVED) return;
-        await this.updateStatus(conversation.id, ENUM_CONVERSATION_STATUS.OPEN);
-        conversation.status = ENUM_CONVERSATION_STATUS.OPEN;
-        conversation.botEnabled = true;
+        const updated = await this.updateStatus(
+            conversation.id,
+            ENUM_CONVERSATION_STATUS.OPEN
+        );
+        // Callers keep using their copy, so mirror every lifecycle field.
+        Object.assign(conversation, {
+            status: updated.status,
+            botEnabled: updated.botEnabled,
+            handoffAt: updated.handoffAt,
+            handoffReason: updated.handoffReason,
+            fallbackCount: updated.fallbackCount,
+            resolvedAt: updated.resolvedAt,
+        });
     }
 
     async setBotEnabled(
