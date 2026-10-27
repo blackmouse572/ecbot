@@ -12,8 +12,12 @@ class ResizeObserverMock {
 (globalThis as A).ResizeObserver =
   (globalThis as A).ResizeObserver ?? ResizeObserverMock;
 
-// Read when the form module loads, so Instagram is enabled for these tests.
-vi.hoisted(() => vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP"));
+// Read when the form module loads, so Instagram and Threads are enabled for
+// these tests.
+vi.hoisted(() => {
+  vi.stubEnv("VITE_INSTAGRAM_APP_ID", "IG_APP");
+  vi.stubEnv("VITE_THREADS_APP_ID", "TH_APP");
+});
 
 const linkMutateAsync = vi.fn();
 
@@ -329,5 +333,34 @@ describe("AccountCreateForm — connect to an agent", () => {
 
     expect(routeModal.handleSuccess).toHaveBeenCalled();
     expect(screen.queryByTestId("link-agent-step")).not.toBeInTheDocument();
+  });
+});
+
+describe("AccountCreateForm: Threads", () => {
+  it("warns that Threads answers are public replies, then opens Threads Login", async () => {
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+
+    await user.click(screen.getByText("Threads"));
+    expect(
+      screen.getByText("accounts.create.connect.threads.notice"),
+    ).toBeTruthy();
+
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(
+      screen.getByRole("button", { name: "accounts.create.connect.cta" }),
+    );
+    expect(oauthLogin.platform).toBe("THREADS_ACCOUNT");
+    expect(oauthLogin.handleLinkClick).toHaveBeenCalled();
+  });
+
+  it("shows no Threads notice for other platforms", async () => {
+    const user = userEvent.setup();
+    render(<AccountCreateForm />);
+
+    await user.click(screen.getByText("WhatsApp"));
+    expect(
+      screen.queryByText("accounts.create.connect.threads.notice"),
+    ).toBeNull();
   });
 });

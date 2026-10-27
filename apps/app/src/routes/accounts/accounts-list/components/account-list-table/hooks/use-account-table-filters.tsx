@@ -47,6 +47,7 @@ export const useAccountTableFilters = (): Filter[] => {
           "WHATSAPP_BUSINESS",
           t("accounts.details.types.whatsappBusiness.label"),
         ],
+        ["THREADS_ACCOUNT", t("accounts.details.types.threadsAccount.label")],
       ]),
     ],
     [t],

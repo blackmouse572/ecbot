@@ -229,6 +229,16 @@ describe("webhook GET challenge (facebook)", () => {
     expect(res.status).toBe(403);
   });
 
+  it("verifies the Threads handshake with the same Meta verify token", async () => {
+    const res = await app.request(
+      "/webhooks/threads?hub.mode=subscribe&hub.verify_token=verify-me&hub.challenge=654",
+      { method: "GET" },
+      mkEnv(),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("654");
+  });
+
   it("404s for a platform with no GET handshake", async () => {
     const res = await app.request("/webhooks/zalo", { method: "GET" }, mkEnv());
     expect(res.status).toBe(404);

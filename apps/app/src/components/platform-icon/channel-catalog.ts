@@ -10,6 +10,7 @@ type ChannelKey =
   | "shopee"
   | "telegram"
   | "whatsapp"
+  | "threads"
   | "website"
   | "api";
 
@@ -25,6 +26,7 @@ export const PLATFORM_ICON_SRC = {
   apiChannel: "/icons/api-channel.svg",
   websiteWidget: "/icons/website-widget.svg",
   whatsapp: "/icons/whatsapp.svg",
+  threads: "/icons/threads.svg",
 } as const;
 
 /** Which channel each account type belongs to. A Record, so a new account type
@@ -40,6 +42,7 @@ const CHANNEL_OF_TYPE: Record<AccountType, ChannelKey> = {
   SHOPEE_SHOP: "shopee",
   TELEGRAM_BOT: "telegram",
   WHATSAPP_BUSINESS: "whatsapp",
+  THREADS_ACCOUNT: "threads",
   WEBSITE_WIDGET: "website",
   API_CHANNEL: "api",
 };
@@ -113,6 +116,15 @@ export const CHANNELS: Channel[] = [
     icon: PLATFORM_ICON_SRC.whatsapp,
     color: "#16a34a",
     connectAs: "WHATSAPP_BUSINESS",
+  },
+  {
+    key: "threads",
+    label: "Threads",
+    icon: PLATFORM_ICON_SRC.threads,
+    color: "#4f46e5",
+    connectAs: "THREADS_ACCOUNT",
+    // A build without the Threads app id can't open Threads Login.
+    comingSoon: !import.meta.env.VITE_THREADS_APP_ID,
   },
   {
     key: "website",

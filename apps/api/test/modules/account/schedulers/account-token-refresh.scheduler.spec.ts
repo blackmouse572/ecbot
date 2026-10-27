@@ -155,13 +155,16 @@ describe('AccountTokenRefreshScheduler - handleTokenRefresh', () => {
 
     // Instagram refuses to refresh an expired token, so its 60-day tokens
     // are refreshed days ahead instead of inside the last half hour.
-    it('refreshes Instagram tokens a week ahead', async () => {
+    it('refreshes Instagram and Threads tokens a week ahead', async () => {
         await scheduler.handleTokenRefresh();
 
         expect(mockAccountRepository.findExpiringSoon).toHaveBeenCalledWith(
             30,
             {
-                types: [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE],
+                types: [
+                    ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
+                    ENUM_ACCOUNT_TYPE.THREADS_ACCOUNT,
+                ],
                 minutes: 7 * 24 * 60,
             }
         );

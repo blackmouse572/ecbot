@@ -23,10 +23,13 @@ import { AccountRepository } from '../repository/repositories/account.repository
 // with a key-change reason (KEY_CHANGE_REASONS, below).
 const REFRESH_AHEAD_MINUTES = 30;
 
-// Instagram refuses to refresh an expired token, and this job runs hourly, so
-// its 60-day tokens are refreshed a week ahead.
+// Instagram and Threads refuse to refresh an expired token, and this job runs
+// hourly, so their 60-day tokens are refreshed a week ahead.
 const EARLY_REFRESH = {
-    types: [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE],
+    types: [
+        ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
+        ENUM_ACCOUNT_TYPE.THREADS_ACCOUNT,
+    ],
     minutes: 7 * 24 * 60,
 };
 
