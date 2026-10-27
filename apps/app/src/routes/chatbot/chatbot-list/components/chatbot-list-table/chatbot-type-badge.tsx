@@ -44,7 +44,7 @@ export const ChatbotTypeBadge = ({
       <ChatbotTypeIcon config={config} size={14} className="shrink-0" />
       {/* Clamp the label, not the row: line-clamp swaps flex for a block box
           and the icon would stack above the text. */}
-      <span className={clx(clamp && "truncate")}>{config.label}</span>
+      <span className={clx(clamp && "min-w-0 truncate")}>{config.label}</span>
     </div>
   </Badge>
 );
