@@ -315,6 +315,8 @@ export type AIChatCardProps = {
   chatbotId: string;
   transport: ChatTransportConfig;
   canSubmit?: boolean;
+  /** Runs when the user restarts the chat, after the transcript is cleared. */
+  onRestart?: () => void;
   renderInput?: ReactNode;
   /**
    * Actions for the card header. Passed in rather than built here because the
@@ -345,6 +347,7 @@ export function AIChatCard(props: AIChatCardProps) {
     chatbotId,
     transport,
     canSubmit,
+    onRestart,
     renderInput,
     renderHeaderActions,
     heading,
@@ -360,6 +363,7 @@ export function AIChatCard(props: AIChatCardProps) {
       chatbotId={chatbotId}
       transport={transport}
       canSubmit={canSubmit}
+      onRestart={onRestart}
     >
       <Container
         className={clx(

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 const STORAGE_KEY = "eccho.widget.visitorId";
 
@@ -12,20 +12,34 @@ const STORAGE_KEY = "eccho.widget.visitorId";
  * localStorage can throw (private mode, blocked third-party storage). Falling
  * back to a per-session id degrades continuity, not function — the visitor can
  * still chat, they just get a new conversation.
+ *
+ * `resetVisitorId` mints a fresh id: the server resolves the conversation from
+ * it, so this is how "start over" gets an empty conversation.
  */
-export function useVisitorId(widgetKey: string | undefined): string {
-  const [visitorId] = useState(() => {
-    const key = `${STORAGE_KEY}.${widgetKey ?? "default"}`;
+export function useVisitorId(widgetKey: string | undefined) {
+  const storageKey = `${STORAGE_KEY}.${widgetKey ?? "default"}`;
+
+  const [visitorId, setVisitorId] = useState(() => {
     try {
-      const existing = window.localStorage.getItem(key);
+      const existing = window.localStorage.getItem(storageKey);
       if (existing) return existing;
       const minted = crypto.randomUUID();
-      window.localStorage.setItem(key, minted);
+      window.localStorage.setItem(storageKey, minted);
       return minted;
     } catch {
       return crypto.randomUUID();
     }
   });
 
-  return visitorId;
+  const resetVisitorId = useCallback(() => {
+    const minted = crypto.randomUUID();
+    try {
+      window.localStorage.setItem(storageKey, minted);
+    } catch {
+      // Storage blocked: the new id still lasts for this page load.
+    }
+    setVisitorId(minted);
+  }, [storageKey]);
+
+  return { visitorId, resetVisitorId };
 }

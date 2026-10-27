@@ -89,9 +89,16 @@ export const AIChatProvider = (
     chatbotId: string;
     transport: ChatTransportConfig;
     canSubmit?: boolean;
+    onRestart?: () => void;
   }>,
 ) => {
-  const { chatbotId, transport, canSubmit = true, children } = props;
+  const {
+    chatbotId,
+    transport,
+    canSubmit = true,
+    onRestart: onRestartProp,
+    children,
+  } = props;
   // Bumping `generation` remounts `AIChatProviderInner`, which hands us a
   // fresh `useChat` instance (new session id, empty messages) — the
   // equivalent of the old hook's `restart()` regenerating its session ref.
@@ -101,7 +108,8 @@ export const AIChatProvider = (
   const onRestart = useCallback(() => {
     stopRef.current();
     setGeneration((g) => g + 1);
-  }, []);
+    onRestartProp?.();
+  }, [onRestartProp]);
 
   const registerStop = useCallback((stop: () => void) => {
     stopRef.current = stop;
