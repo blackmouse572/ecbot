@@ -32,6 +32,7 @@ export interface IConversationService {
         status: ENUM_CONVERSATION_STATUS,
         reason?: string
     ): Promise<ConversationEntity>;
+    reopenIfResolved(conversation: ConversationEntity): Promise<void>;
     setBotEnabled(
         conversationId: string,
         botEnabled: boolean,

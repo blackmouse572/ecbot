@@ -23,6 +23,7 @@ describe('MessageProcessorService — echo persistence', () => {
     const conversationService = {
         findOrCreate: jest.fn(),
         touchLastMessage: jest.fn(),
+        reopenIfResolved: jest.fn().mockResolvedValue(undefined),
         updateStatus: jest.fn(),
         detectHandoffKeywords: jest.fn(() => false),
     };

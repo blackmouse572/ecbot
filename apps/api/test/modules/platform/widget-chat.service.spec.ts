@@ -6,6 +6,7 @@ import {
     ENUM_MESSAGE_DIRECTION,
 } from '../../../src/modules/conversation/enums/message.enum';
 import { WidgetChatService } from '../../../src/modules/platform/services/widget-chat.service';
+import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
 
 const account = {
     id: 'acc-1',
@@ -39,6 +40,7 @@ function setup(overrides: Record<string, any> = {}) {
         touchLastMessage: jest.fn(async () => {}),
         detectHandoffKeywords: jest.fn(() => overrides.handoffMatch ?? null),
         triggerHandoff: jest.fn(async () => {}),
+        reopenIfResolved: jest.fn(async (_c: any) => {}),
     };
     const handoffIntent = {
         wantsPerson: jest.fn(async () => overrides.wantsPerson ?? false),
@@ -248,6 +250,32 @@ describe('WidgetChatService.handleTurn', () => {
         expect(messageRepository.upsertByExternalId).toHaveBeenCalled();
         expect(chatbotAIService.streamChat).not.toHaveBeenCalled();
         expect(messageRepository.insertPendingOutbound).not.toHaveBeenCalled();
+    });
+
+    // Like platform channels: after staff resolve, the next visitor message
+    // reopens the conversation, so a later handoff shows as Needs staff.
+    it('reopens a resolved conversation and answers', async () => {
+        const { service, conversationService, conversation, chatbotAIService } =
+            setup({
+                conversation: {
+                    status: ENUM_CONVERSATION_STATUS.RESOLVED,
+                    botEnabled: false,
+                },
+            });
+        // What the real service does to the caller's copy.
+        conversationService.reopenIfResolved.mockImplementation(
+            async (c: any) => {
+                c.status = ENUM_CONVERSATION_STATUS.OPEN;
+                c.botEnabled = true;
+            }
+        );
+
+        await service.handleTurn(res, turn);
+
+        expect(conversationService.reopenIfResolved).toHaveBeenCalledWith(
+            conversation
+        );
+        expect(chatbotAIService.streamChat).toHaveBeenCalled();
     });
 
     it('rejects an account with no chatbot attached', async () => {

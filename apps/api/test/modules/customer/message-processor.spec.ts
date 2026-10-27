@@ -16,6 +16,7 @@ describe('MessageProcessorService — Customer + ContactPoint wiring (#172)', ()
         findOrCreate: jest.fn(),
         updateSenderProfile: jest.fn(),
         touchLastMessage: jest.fn(),
+        reopenIfResolved: jest.fn().mockResolvedValue(undefined),
         updateStatus: jest.fn(),
         detectHandoffKeywords: jest.fn(() => false),
         triggerHandoff: jest.fn(),

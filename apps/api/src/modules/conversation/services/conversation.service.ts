@@ -245,6 +245,26 @@ export class ConversationService implements IConversationService {
         return updated;
     }
 
+    /** A new customer message reopens a resolved conversation for the bot,
+     *  on platform channels and the widget. updateStatus also clears the AI thread, so the next
+     *  turn rebuilds history from the DB, staff replies included. */
+    async reopenIfResolved(conversation: ConversationEntity): Promise<void> {
+        if (conversation.status !== ENUM_CONVERSATION_STATUS.RESOLVED) return;
+        const updated = await this.updateStatus(
+            conversation.id,
+            ENUM_CONVERSATION_STATUS.OPEN
+        );
+        // Callers keep using their copy, so mirror every lifecycle field.
+        Object.assign(conversation, {
+            status: updated.status,
+            botEnabled: updated.botEnabled,
+            handoffAt: updated.handoffAt,
+            handoffReason: updated.handoffReason,
+            fallbackCount: updated.fallbackCount,
+            resolvedAt: updated.resolvedAt,
+        });
+    }
+
     async setBotEnabled(
         conversationId: string,
         botEnabled: boolean,
@@ -578,9 +598,12 @@ export class ConversationService implements IConversationService {
     ): Promise<ConversationEntity> {
         // Auto-escalation: turn the bot off and raise the alarm (handoffAt + notification).
         // This is what distinguishes an escalation from a quiet manual takeover.
+        // It waits for staff, so it is open even if it was resolved before.
         const updated = await this.conversationRepository.updateEntity(
             { id: conversation.id },
             {
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+                resolvedAt: null,
                 botEnabled: false,
                 handoffAt: new Date(),
                 handoffReason: reason,
