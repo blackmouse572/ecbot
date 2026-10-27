@@ -103,6 +103,23 @@ describe('ThreadsOAuthService', () => {
         expect(result.name).toBe('eccho.shop');
     });
 
+    // A missing expiry would leave tokenExpiresAt empty, and the refresh
+    // scheduler never picks up such an account.
+    it('assumes the 60-day lifetime when Threads omits expires_in', async () => {
+        const get = jest
+            .fn()
+            .mockResolvedValueOnce({ data: { access_token: 'NEW' } })
+            .mockResolvedValueOnce({ data: PROFILE });
+
+        const result = await makeService(jest.fn(), get).refreshCredentials(
+            'OLD'
+        );
+
+        expect(result.tokenExpiresAt).toEqual(
+            new Date(60 * 24 * 60 * 60 * 1000)
+        );
+    });
+
     it('reports a rejected code as 422', async () => {
         const post = jest.fn().mockRejectedValue(axiosError(400));
         await expect(

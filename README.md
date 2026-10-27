@@ -42,7 +42,7 @@ It runs on your own server.
 | Zalo OA            | Shipped                                                                        |
 | Telegram           | Shipped                                                                        |
 | WhatsApp Business  | Shipped                                                                        |
-| Threads            | Shipped (replies and mentions)                                                 |
+| Threads            | Built, hidden until configured, goes live after Meta App Review                |
 | Website widget     | Shipped                                                                        |
 | REST API channel   | Shipped                                                                        |
 | Instagram          | Built, hidden until configured, goes live after Meta App Review                |

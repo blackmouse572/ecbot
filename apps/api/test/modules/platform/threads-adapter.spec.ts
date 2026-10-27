@@ -141,6 +141,21 @@ describe('ThreadsPlatformAdapter.parse', () => {
         ).toEqual([]);
     });
 
+    it('drops a reply whose root post is missing, since it may be our own', () => {
+        expect(
+            makeAdapter().parse(
+                envelope(
+                    reply({ username: 'eccho.shop', root_post: undefined })
+                )
+            )
+        ).toEqual([]);
+        expect(
+            makeAdapter().parse(
+                envelope(reply({ root_post: { id: 'P1', username: 'x' } }))
+            )
+        ).toEqual([]);
+    });
+
     it('keeps a reply under a post owned by someone else', () => {
         const events = makeAdapter().parse(
             envelope(
@@ -229,6 +244,34 @@ describe('ThreadsPlatformAdapter.sendMessage', () => {
             fallbackText: '',
         });
         expect([...post.mock.calls[0][1].get('text')]).toHaveLength(500);
+    });
+
+    // Threads counts an emoji as its UTF-8 bytes toward the 500 limit.
+    it('counts emoji by their UTF-8 bytes', async () => {
+        const post = jest.fn().mockResolvedValue({ data: { id: 'X' } });
+        const adapter = makeAdapter(
+            { axiosRef: { post } },
+            {
+                findLatestInboundBySender: jest
+                    .fn()
+                    .mockResolvedValue({ externalId: 'R9' }),
+            }
+        );
+        const send = (text: string) =>
+            adapter.sendMessage(ACCOUNT, 'lan.nguyen', {
+                content: { kind: 'text', text },
+                fallbackText: '',
+            });
+
+        await send('👍'.repeat(200));
+        expect(
+            Buffer.byteLength(post.mock.calls[0][1].get('text'), 'utf8')
+        ).toBeLessThanOrEqual(500);
+
+        // Vietnamese letters still count once each.
+        const vi = 'ạ'.repeat(500);
+        await send(vi);
+        expect(post.mock.calls[2][1].get('text')).toBe(vi);
     });
 
     it('fails without a post to reply to', async () => {

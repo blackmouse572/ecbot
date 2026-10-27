@@ -300,7 +300,7 @@ describe("useOAuthLogin — Threads", () => {
       client_id: "TAPP",
       redirect_uri: "https://app.test/auth/threads/callback",
       scope:
-        "threads_basic,threads_read_replies,threads_manage_replies,threads_manage_mentions",
+        "threads_basic,threads_content_publish,threads_read_replies,threads_manage_replies,threads_manage_mentions",
       response_type: "code",
     });
     expect(sessionStorage.getItem("oauth-state:THREADS_ACCOUNT")).toBe(

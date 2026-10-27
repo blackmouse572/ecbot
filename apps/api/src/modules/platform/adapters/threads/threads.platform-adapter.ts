@@ -29,8 +29,10 @@ import {
 } from './threads.types';
 
 const THREADS_GRAPH_URL = 'https://graph.threads.net/v1.0';
-// Threads caps a post's text at 500 characters.
+// Threads caps a post's text at 500 characters, counting each emoji as its
+// UTF-8 bytes.
 const MESSAGE_LIMIT = 500;
+const EMOJI = /\p{Extended_Pictographic}/u;
 const INBOUND_FIELDS = new Set(['replies', 'mentions']);
 
 /**
@@ -169,7 +171,8 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
     ): PlatformWebhookEvent | null {
         const value = change?.value;
         if (!INBOUND_FIELDS.has(change?.field) || !value?.id) return null;
-        if (!value.username || this.isOwnReply(accountKey, value)) return null;
+        if (!value.username || this.isOwnReply(accountKey, change.field, value))
+            return null;
 
         const timestamp = value.timestamp ? new Date(value.timestamp) : null;
         return {
@@ -195,12 +198,19 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
     /**
      * Our own replies land in the `replies` feed of our posts too. Only the
      * owner of the root post can be its own author there, so drop those
-     * instead of answering ourselves.
+     * instead of answering ourselves. A reply without its root post's owner
+     * can't be told apart from our own, so it is dropped as well: answering
+     * ourselves would loop.
      */
-    private isOwnReply(accountKey: string, value: ThreadsWebhookValue) {
+    private isOwnReply(
+        accountKey: string,
+        field: string,
+        value: ThreadsWebhookValue
+    ) {
+        if (field !== 'replies') return false;
         const root = value.root_post;
+        if (!root?.owner_id || !root.username) return true;
         return (
-            !!root &&
             String(root.owner_id) === accountKey &&
             root.username === value.username
         );
@@ -237,9 +247,8 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
 
         // Media never reaches here (`media: false`), nor cards (`cards: false`).
         const c = msg.content;
-        const text = this.truncateGraphemes(
-            c.kind === 'text' ? c.text : msg.fallbackText,
-            MESSAGE_LIMIT
+        const text = this.truncateToLimit(
+            c.kind === 'text' ? c.text : msg.fallbackText
         );
         if (!text.trim()) {
             throw new UnprocessableEntityException({
@@ -265,6 +274,27 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
             'Threads publishReply'
         );
         return { externalId: published.id };
+    }
+
+    /** Cuts on grapheme boundaries so the text fits Threads' 500 limit, where
+     *  an emoji weighs its UTF-8 bytes and anything else weighs one. */
+    private truncateToLimit(text: string): string {
+        const weight = (g: string) =>
+            EMOJI.test(g) ? Buffer.byteLength(g, 'utf8') : 1;
+        const seg = new Intl.Segmenter('und', { granularity: 'grapheme' });
+        const graphemes = [...seg.segment(text)].map(s => s.segment);
+        if (graphemes.reduce((n, g) => n + weight(g), 0) <= MESSAGE_LIMIT) {
+            return text;
+        }
+        const suffix = '...';
+        let used = suffix.length;
+        let keep = '';
+        for (const g of graphemes) {
+            used += weight(g);
+            if (used > MESSAGE_LIMIT) break;
+            keep += g;
+        }
+        return keep + suffix;
     }
 
     private async post<T>(

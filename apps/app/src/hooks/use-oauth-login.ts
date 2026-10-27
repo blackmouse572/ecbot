@@ -78,6 +78,9 @@ function getThreadsConfig(state: string): PlatformConfig {
     redirect_uri: import.meta.env.VITE_THREADS_REDIRECT_URI,
     scope: [
       "threads_basic",
+      // Replies go out through the publishing endpoints (/threads and
+      // /threads_publish), which need this scope for non-testers.
+      "threads_content_publish",
       "threads_read_replies",
       "threads_manage_replies",
       "threads_manage_mentions",

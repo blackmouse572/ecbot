@@ -14,6 +14,8 @@ import { isAxiosError } from 'axios';
 
 const THREADS_OAUTH_URL = 'https://graph.threads.net';
 const THREADS_GRAPH_URL = `${THREADS_OAUTH_URL}/v1.0`;
+// Long-lived Threads tokens last 60 days; assumed when expires_in is missing.
+const DEFAULT_EXPIRES_IN = 60 * 24 * 60 * 60;
 
 interface ThreadsTokenResponse {
     access_token: string;
@@ -98,9 +100,9 @@ export class ThreadsOAuthService implements IOAuthPlatformService {
         );
         return {
             accessToken: token.access_token,
-            tokenExpiresAt: token.expires_in
-                ? new Date(Date.now() + token.expires_in * 1000)
-                : undefined,
+            tokenExpiresAt: new Date(
+                Date.now() + (token.expires_in ?? DEFAULT_EXPIRES_IN) * 1000
+            ),
             externalId: String(profile.id),
             name: profile.name || profile.username,
             avatar: profile.threads_profile_picture_url,

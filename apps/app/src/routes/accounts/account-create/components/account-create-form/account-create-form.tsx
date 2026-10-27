@@ -421,7 +421,9 @@ function ConnectStep({
 
       <div className="flex w-full flex-col gap-y-4">
         {platform === "THREADS_ACCOUNT" && (
-          <Alert>{t("accounts.create.connect.threads.notice")}</Alert>
+          <Alert variant="warning">
+            {t("accounts.create.connect.threads.notice")}
+          </Alert>
         )}
         {isTelegram ? (
           <Form.Field
