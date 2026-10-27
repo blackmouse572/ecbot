@@ -22,6 +22,29 @@ describe('NotificationService subscription notifications', () => {
         messageService.setMessage.mockClear();
     });
 
+    describe('createLowTokenBalance', () => {
+        it('links to the workspace usage page, not a bare /usage', async () => {
+            await service.createLowTokenBalance('user-1', 'ws-1', {
+                workspaceName: 'Kunmart',
+                workspaceSlug: 'kunmart',
+                usedPercent: 36,
+            });
+
+            expect(create.mock.calls[0][0]).toMatchObject({
+                recipient: 'user-1',
+                workspace: 'ws-1',
+                metadata: {
+                    actionUrl: '/kunmart/usage',
+                    data: { usedPercent: 36 },
+                },
+            });
+            expect(messageService.setMessage).toHaveBeenCalledWith(
+                'notification.lowTokenBalance.message',
+                { properties: { workspaceName: 'Kunmart', usedPercent: 36 } }
+            );
+        });
+    });
+
     describe('createSubscriptionPlanChanged', () => {
         it('notifies the owner of the new plan and links to usage', async () => {
             await service.createSubscriptionPlanChanged('user-1', 'ws-1', {
