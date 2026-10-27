@@ -45,9 +45,12 @@ export const ChatbotMessagesSection: FC<ChatbotMessagesSectionProps> = ({
               <Text
                 size="small"
                 leading="compact"
+                // Long messages (or an unbroken link) are cut at 3 lines
+                // inside the card; hover shows the full text.
+                title={message || undefined}
                 className={
                   message
-                    ? "whitespace-pre-line text-ui-fg-base"
+                    ? "line-clamp-3 min-w-0 whitespace-pre-line text-ui-fg-base wrap-anywhere"
                     : "text-ui-fg-muted"
                 }
               >

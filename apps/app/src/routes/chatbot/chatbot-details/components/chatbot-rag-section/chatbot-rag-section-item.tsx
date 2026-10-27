@@ -1,7 +1,5 @@
-import {
-  KB_TYPE_CONFIG,
-  KB_TYPE_ICON_COMPONENTS,
-} from "@/routes/knowledge-base/constants";
+import { KB_TYPE_CONFIG } from "@/routes/knowledge-base/constants";
+import { KnowledgeItemTypeIcon } from "@/routes/knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-type-icon";
 import { KnowledgeItemStatusCell } from "@/routes/knowledge-base/knowledge-base-list/components/knowledge-base-list-table/knowledge-item-status-cell";
 import { clx, Container, Text, IconButton } from "@medusajs/ui";
 import type { ChatbotKnowledgeItemResponseDto } from "@repo/client";
@@ -16,7 +14,7 @@ type ChatbotKnowledgeItemProps = {
   isUnlinking?: boolean;
 };
 
-/** A linked knowledge item, with the same type icon and status badge as the Knowledge Base list. */
+/** A linked knowledge item, with the same icon and status badge as the Knowledge Base list. */
 export function ChatbotRAGSectionItem({
   item,
   className,
@@ -28,10 +26,6 @@ export function ChatbotRAGSectionItem({
   const { knowledgeItem } = item;
   const name = knowledgeItem?.title || t("knowledgeItem.untitled", "Untitled");
   const typeConfig = KB_TYPE_CONFIG[knowledgeItem?.type] ?? KB_TYPE_CONFIG.TEXT;
-  const TypeIcon =
-    KB_TYPE_ICON_COMPONENTS[
-      typeConfig.icon as keyof typeof KB_TYPE_ICON_COMPONENTS
-    ];
 
   return (
     <Container
@@ -41,11 +35,12 @@ export function ChatbotRAGSectionItem({
       )}
     >
       <div className="w-full flex items-start gap-3">
-        <TypeIcon
-          className="text-ui-fg-subtle flex-shrink-0 mt-0.5"
-          size={20}
-          strokeWidth={1.5}
-        />
+        <span className="mt-0.5 flex-shrink-0">
+          <KnowledgeItemTypeIcon
+            type={knowledgeItem?.type}
+            mime={knowledgeItem?.attachment?.mime}
+          />
+        </span>
         <div className="flex-1 min-w-0">
           <Text className="font-semibold text-sm line-clamp-2" weight="plus">
             {name}

@@ -19,10 +19,6 @@ export class KnowledgeItemAdminGetResponseDto extends KnowledgeItemAdminListResp
     @Expose()
     fileName?: string;
 
-    @ApiPropertyOptional({ example: 'application/pdf' })
-    @Expose()
-    mimeType?: string;
-
     @ApiPropertyOptional({ example: 'File format not supported' })
     @Expose()
     errorMessage?: string;

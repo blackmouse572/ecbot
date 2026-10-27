@@ -1,9 +1,4 @@
-import {
-  KB_TYPE_CONFIG,
-  KB_TYPE_ICON_COMPONENTS,
-} from "@/routes/knowledge-base/constants";
-import { Tooltip } from "@medusajs/ui";
-import { FileType, getFileType } from "@repo/ui/components/ui/file-type";
+import { KnowledgeItemTypeIcon } from "./knowledge-item-type-icon";
 
 export function KnowledgeItemTitleCell({
   title,
@@ -15,26 +10,9 @@ export function KnowledgeItemTitleCell({
   /** Mime of the uploaded file, for FILE and MEDIA items. */
   mime?: string;
 }) {
-  const typeConfig = KB_TYPE_CONFIG[type as keyof typeof KB_TYPE_CONFIG];
-  const IconComponent =
-    KB_TYPE_ICON_COMPONENTS[
-      typeConfig?.icon as keyof typeof KB_TYPE_ICON_COMPONENTS
-    ];
-
   return (
     <div className="flex items-center min-w-0 gap-2 ">
-      {mime ? (
-        <Tooltip content={typeConfig?.label}>
-          <FileType type={getFileType(mime)} size="mini" aria-hidden />
-        </Tooltip>
-      ) : (
-        IconComponent && (
-          <Tooltip content={typeConfig?.label}>
-            {/* 18px, the width of the mini file type icon, so titles align. */}
-            <IconComponent size={18} className="flex-shrink-0 text-grey-40" />
-          </Tooltip>
-        )
-      )}
+      <KnowledgeItemTypeIcon type={type} mime={mime} />
       <span className="truncate">{title}</span>
     </div>
   );

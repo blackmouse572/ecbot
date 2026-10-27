@@ -27,6 +27,16 @@ describe("ChatbotMessagesSection", () => {
     ).toBeInTheDocument();
   });
 
+  // Long messages are cut at a few lines, so the full text shows on hover.
+  it("keeps the full message on hover", () => {
+    render(<ChatbotMessagesSection item={item} />, { wrapper: MemoryRouter });
+
+    expect(screen.getByText("Hi, how can I help?")).toHaveAttribute(
+      "title",
+      "Hi, how can I help?",
+    );
+  });
+
   it("says a blank message is not set instead of a dash", () => {
     render(<ChatbotMessagesSection item={item} />, { wrapper: MemoryRouter });
 

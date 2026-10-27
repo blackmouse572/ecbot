@@ -50,7 +50,7 @@ export const ChatbotNameCell = ({
       <IconAvatar className="overflow-hidden">
         <Facehash name={label} {...FACE} />
       </IconAvatar>
-      <Text size={size ?? "xsmall"} className="truncate">
+      <Text size={size ?? "xsmall"} className="truncate" title={label}>
         {label}
       </Text>
     </div>

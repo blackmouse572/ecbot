@@ -9,7 +9,7 @@ import {
 } from "@/routes/knowledge-base/constants";
 import { ChatbotRAGSectionItem } from "./chatbot-rag-section-item";
 
-const renderItem = (status: string) =>
+const renderItem = (status: string, extra: Record<string, unknown> = {}) =>
   render(
     <TooltipProvider>
       <ChatbotRAGSectionItem
@@ -21,6 +21,7 @@ const renderItem = (status: string) =>
               type: "TEXT",
               title: "Return policy",
               status,
+              ...extra,
             },
           } as unknown as ChatbotKnowledgeItemResponseDto
         }
@@ -35,6 +36,18 @@ describe("ChatbotRAGSectionItem", () => {
     renderItem("COMPLETED");
 
     expect(screen.getByText(KB_TYPE_CONFIG.TEXT.label)).toBeInTheDocument();
+  });
+
+  it("shows a PDF media item with the PDF file icon, like the list", () => {
+    const { container } = renderItem("COMPLETED", {
+      type: "MEDIA",
+      attachment: { mime: "application/pdf" },
+    });
+
+    expect(container.querySelector('[data-slot="file-type"]')).toHaveAttribute(
+      "data-type",
+      "pdf",
+    );
   });
 
   it.each(["COMPLETED", "PROCESSING", "FAILED"])(
