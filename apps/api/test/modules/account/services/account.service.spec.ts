@@ -842,7 +842,7 @@ describe('AccountService - mapList', () => {
     const entity = (toObject: () => Record<string, unknown>) =>
         ({ toObject }) as any;
 
-    it('trims the linked chatbot to id and name', () => {
+    it('trims the linked chatbot to id, name and business type', () => {
         const [mapped] = buildService().mapList([
             entity(() => ({
                 id: 'account-1',
@@ -850,12 +850,17 @@ describe('AccountService - mapList', () => {
                 chatbot: {
                     id: 'bot-1',
                     name: 'Axios Bot',
+                    type: 'restaurant',
                     generalKnowledge: 'secret',
                 },
             })),
         ]);
 
-        expect(mapped.chatbot).toStrictEqual({ id: 'bot-1', name: 'Axios Bot' });
+        expect(mapped.chatbot).toStrictEqual({
+            id: 'bot-1',
+            name: 'Axios Bot',
+            type: 'restaurant',
+        });
     });
 
     it('returns null when the channel has no chatbot', () => {
@@ -871,7 +876,11 @@ describe('AccountService - mapList', () => {
             entity(() => ({
                 id: 'account-1',
                 name: 'Axios Page',
-                chatbot: { id: 'bot-9', name: 'Old Bot', deletedAt: new Date() },
+                chatbot: {
+                    id: 'bot-9',
+                    name: 'Old Bot',
+                    deletedAt: new Date(),
+                },
             })),
         ]);
 

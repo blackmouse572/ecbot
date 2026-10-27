@@ -2183,6 +2183,10 @@ export type AccountChatbotSummary = {
      * Chatbot name
      */
     name: string;
+    /**
+     * Business type of the chatbot
+     */
+    type: 'beauty' | 'fashion' | 'restaurant' | 'ecommerce' | 'healthcare' | 'finance' | 'education' | 'travel' | 'spa' | 'fitness' | 'automotive' | 'real_estate' | 'entertainment' | 'cosmetics' | 'hotel' | 'home_services' | 'studio_events' | 'health_foods' | 'personal_scheduling' | 'personal_email' | 'personal_tasks' | 'personal_research' | 'personal_crm' | 'other';
 };
 
 export type AddedBy = {
