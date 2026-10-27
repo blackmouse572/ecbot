@@ -1,7 +1,12 @@
+import logging
+
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.utils import BadDsn, Dsn
 
 from eccho_ai.core.variables import AppVars
+
+logger = logging.getLogger(__name__)
 
 
 def init_sentry(**options) -> bool:
@@ -12,12 +17,21 @@ def init_sentry(**options) -> bool:
     `sentry_sdk.capture_exception` calls and unhandled exceptions (including
     an `HTTPException` with a 5xx status), so a 4xx or an expected retry
     logged at error level opens no issue.
+
+    A blank or malformed DSN (e.g. a bad Secret Manager value) is skipped with
+    a warning: error tracking must never stop the service from booting.
     """
-    if not AppVars.SENTRY_DSN:
+    dsn = AppVars.SENTRY_DSN.strip()
+    if not dsn:
+        return False
+    try:
+        Dsn(dsn)
+    except BadDsn as exc:
+        logger.warning("SENTRY_DSN is not a valid Sentry DSN (%s); Sentry is off", exc)
         return False
 
     sentry_sdk.init(
-        dsn=AppVars.SENTRY_DSN,
+        dsn=dsn,
         environment=AppVars.ENV,
         # Chat requests carry customer messages: no request bodies, headers or
         # IPs (send_default_pii) and no log breadcrumbs (level=None below).
