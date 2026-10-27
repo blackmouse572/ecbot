@@ -34,7 +34,8 @@ import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ProvisionStep } from "./provision-step";
 import { isProvisionedPlatform } from "./provisioned-platforms";
-import { LinkAgentPanel } from "./link-agent-panel";
+import { LinkAgentStep } from "./link-agent-step";
+import { linkableAccounts, type LinkableAccount } from "./linkable-accounts";
 import { WhatsAppCredentialFields } from "./whatsapp-credential-fields";
 
 // ─── Step definitions ────────────────────────────────────────────────────────
@@ -43,6 +44,7 @@ const TAB = {
   PLATFORM: "PLATFORM",
   CONNECT: "CONNECT",
   SUCCESS: "SUCCESS",
+  AGENT: "AGENT",
 } as const;
 
 type TabKey = keyof typeof TAB;
@@ -52,6 +54,7 @@ const initialTabState: TabState = {
   PLATFORM: "in-progress",
   CONNECT: "not-started",
   SUCCESS: "not-started",
+  AGENT: "not-started",
 };
 
 // ─── Platform config ──────────────────────────────────────────────────────────
@@ -96,6 +99,8 @@ export const AccountCreateForm = () => {
   // The eccho-issued channels produce a credential rather than a linked
   // account, so they fill the last step with this instead of `linkedData`.
   const [issued, setIssued] = useState<Issued | null>(null);
+  // The new channels an agent can be linked to in the last step.
+  const [agentAccounts, setAgentAccounts] = useState<LinkableAccount[]>([]);
 
   const { mutateAsync, isPending } = useLinkAccount();
 
@@ -132,8 +137,9 @@ export const AccountCreateForm = () => {
     setTab("PLATFORM");
   };
 
-  const handleIssued = (result: Issued) => {
+  const handleIssued = (result: Issued, account: LinkableAccount) => {
     setIssued(result);
+    setAgentAccounts(linkableAccounts([account]));
     playSound("connect");
     goToTab("SUCCESS", "CONNECT");
   };
@@ -142,7 +148,13 @@ export const AccountCreateForm = () => {
     if (!selectedPlatform) return;
     try {
       const res = await mutateAsync({ code, platform: selectedPlatform as A });
-      setLinkedData((res.data as A)?.data ?? null);
+      const data = (res.data as A)?.data ?? null;
+      setLinkedData(data);
+      if (data) {
+        setAgentAccounts(
+          linkableAccounts(data.pages?.length ? data.pages : [data]),
+        );
+      }
       playSound("connect");
       goToTab("SUCCESS", "CONNECT");
     } catch (error) {
@@ -152,6 +164,10 @@ export const AccountCreateForm = () => {
       toast.error(t("accounts.link.error", { error: message }));
     }
   };
+
+  // With nothing an agent can answer on, connecting is the last step.
+  const handleConnectedDone = () =>
+    agentAccounts.length > 0 ? goToTab("AGENT", "SUCCESS") : handleSuccess?.();
 
   return (
     <RouteFocusModal.Form form={form}>
@@ -180,6 +196,9 @@ export const AccountCreateForm = () => {
                   status={tabState.SUCCESS}
                 >
                   {t("accounts.create.steps.success")}
+                </ProgressTabs.Trigger>
+                <ProgressTabs.Trigger value={TAB.AGENT} status={tabState.AGENT}>
+                  {t("accounts.create.steps.agent")}
                 </ProgressTabs.Trigger>
               </ProgressTabs.List>
             </div>
@@ -222,28 +241,27 @@ export const AccountCreateForm = () => {
               className="w-full flex justify-center"
             >
               {issued ? (
-                // Made here, the channel has no agent yet (#255).
                 <IssuedPanel
                   issued={issued}
-                  needsAgent
-                  onDone={() => handleSuccess?.()}
+                  doneLabel={t("actions.continued")}
+                  onDone={handleConnectedDone}
                 />
               ) : (
                 linkedData && (
-                  <div className="flex w-full max-w-[720px] flex-col gap-y-8">
-                    <SuccessStep
-                      data={linkedData}
-                      onDone={() => handleSuccess?.()}
-                    />
-                    <LinkAgentPanel
-                      accounts={
-                        linkedData.pages?.length
-                          ? linkedData.pages
-                          : [linkedData]
-                      }
-                    />
-                  </div>
+                  <SuccessStep data={linkedData} onDone={handleConnectedDone} />
                 )
+              )}
+            </ProgressTabs.Content>
+
+            <ProgressTabs.Content
+              value={TAB.AGENT}
+              className="w-full flex justify-center"
+            >
+              {agentAccounts.length > 0 && (
+                <LinkAgentStep
+                  accounts={agentAccounts}
+                  onDone={() => handleSuccess?.()}
+                />
               )}
             </ProgressTabs.Content>
           </RouteFocusModal.Body>
