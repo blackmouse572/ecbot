@@ -38,6 +38,7 @@ import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ProvisionStep } from "./provision-step";
 import { isProvisionedPlatform } from "./provisioned-platforms";
+import { AccountTypeCell } from "@/routes/accounts/accounts-list/components/account-list-table/account-type-cell";
 import { LinkAgentStep } from "./link-agent-step";
 import { SkippedPageCard } from "./skipped-page-card";
 import { linkableAccounts, type LinkableAccount } from "./linkable-accounts";
@@ -551,9 +552,7 @@ function SuccessStep({
                 <Text size="small" className="text-ui-fg-subtle">
                   {data.slug}
                 </Text>
-                <Text size="small" className="text-ui-fg-subtle">
-                  {data.type}
-                </Text>
+                <AccountTypeCell type={data.type} />
               </div>
             </div>
             <StatusBadge color="green" className="h-fit">
@@ -578,9 +577,7 @@ function SuccessStep({
                     <Text size="small" className="text-ui-fg-subtle">
                       {page.slug}
                     </Text>
-                    <Text size="small" className="text-ui-fg-subtle">
-                      {page.type}
-                    </Text>
+                    <AccountTypeCell type={page.type} />
                   </div>
                 </div>
                 <StatusBadge color="green" className="h-fit">

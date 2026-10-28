@@ -365,6 +365,9 @@ describe("AccountCreateForm: Pages another workspace has", () => {
 
     expect(await screen.findByText("Mây")).toBeInTheDocument();
     expect(screen.getByText("Biển")).toBeInTheDocument();
+    // The channel shows by logo and name, as in the accounts table.
+    expect(screen.queryByText("FACEBOOK_PAGE")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Facebook").length).toBeGreaterThan(1);
     const failed = screen.getByText("accounts.link.success.failed");
     await user.hover(failed);
     expect(

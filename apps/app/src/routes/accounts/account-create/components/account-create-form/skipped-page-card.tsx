@@ -1,3 +1,4 @@
+import { AccountTypeCell } from "@/routes/accounts/accounts-list/components/account-list-table/account-type-cell";
 import { getAvatarFallback } from "@/components/utils/avatar-fallback";
 import { Avatar, Container, StatusBadge, Text, Tooltip } from "@medusajs/ui";
 import type { AccountLinkSkippedPageResponseDto } from "@repo/client";
@@ -19,9 +20,7 @@ export function SkippedPageCard({
       />
       <div className="flex flex-col justify-center flex-1">
         <Text size="base">{page.name}</Text>
-        <Text size="small" className="text-ui-fg-subtle">
-          {page.type}
-        </Text>
+        <AccountTypeCell type={page.type} />
       </div>
       <Tooltip content={t("accounts.link.success.linkedElsewhere")}>
         <StatusBadge color="red" className="h-fit cursor-help">
