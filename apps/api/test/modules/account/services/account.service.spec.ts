@@ -341,7 +341,10 @@ describe('AccountService - syncAccount', () => {
     // the unique externalId. Connecting it elsewhere purges that leftover.
     it('purges a channel left soft-deleted in another workspace before linking it here', async () => {
         mockAccountRepository.findOne.mockImplementation(async where =>
-            where.externalId === 'ext-123' && where.deletedAt?.$ne === null
+            where.externalId === 'ext-123' &&
+            where.deletedAt?.$ne === null &&
+            // Only a channel whose workspace was deleted is purged.
+            where.workspace?.deletedAt?.$ne === null
                 ? {
                       id: 'stale-account',
                       externalId: 'ext-123',
@@ -655,9 +658,10 @@ describe('AccountService - deleteSyncAccount', () => {
         );
         mockAccountRepository.getTotal.mockResolvedValue(0);
 
-        await expect(service.deleteSyncAccount('page-1', 'ws-1')).resolves.toBe(
-            true
-        );
+        await expect(service.unlinkAccount('page-1', 'ws-1')).resolves.toEqual([
+            'page-1',
+            'fb-login-1',
+        ]);
 
         expect(mockAccountRepository.getTotal).toHaveBeenCalledWith({
             account: 'fb-login-1',

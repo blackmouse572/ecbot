@@ -508,15 +508,21 @@ export class AccountController {
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Body() { ids }: BatchIdsRequestDto
     ): Promise<IResponse<BatchResultResponseDto>> {
+        // Unlinking a login's last Page removes the login too; when the batch
+        // names that login as well, it is already gone, not missing.
+        const removed = new Set<string>();
         const data = await runBatch(ids, async accountId => {
-            // deleteSyncAccount returns false (rather than throwing) for an
+            if (removed.has(accountId)) return;
+
+            // unlinkAccount returns nothing (rather than throwing) for an
             // unknown account — turn that into a `failed` entry.
-            const deleted = await this.accountService.deleteSyncAccount(
+            const unlinked = await this.accountService.unlinkAccount(
                 accountId,
                 workspace.id
             );
+            unlinked.forEach(id => removed.add(id));
 
-            if (!deleted) {
+            if (!unlinked.length) {
                 throw new NotFoundException({
                     statusCode: ENUM_ACCOUNT_STATUS_CODE_ERROR.NOT_FOUND,
                     message: 'account.error.notFound',

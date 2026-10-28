@@ -496,6 +496,7 @@ export class AccountService implements IAccountService {
         const stale = await this.accountRepository.findOne({
             externalId,
             deletedAt: { $ne: null },
+            workspace: { deletedAt: { $ne: null } },
         });
         if (stale && stale.workspace?.id !== workspaceId) {
             await this.purgeAccount(stale.id);
@@ -573,13 +574,26 @@ export class AccountService implements IAccountService {
         accountId: string,
         workspaceId: string
     ): Promise<boolean> {
+        const removed = await this.unlinkAccount(accountId, workspaceId);
+        return removed.length > 0;
+    }
+
+    /**
+     * Unlinks the account and returns every id removed: the account, plus its
+     * hidden Facebook login when this was the login's last Page. Empty when
+     * the workspace has no such account.
+     */
+    async unlinkAccount(
+        accountId: string,
+        workspaceId: string
+    ): Promise<string[]> {
         const account = await this.accountRepository.findOne({
             id: accountId,
             workspace: workspaceId,
             deletedAt: null,
         });
 
-        if (!account) return false;
+        if (!account) return [];
 
         await this.runPlatformUnlinkCleanup(account);
 
@@ -587,9 +601,11 @@ export class AccountService implements IAccountService {
         // with their own lifecycle — unlinking this account must not touch
         // them or their conversations; only this account's own data.
         await this.purgeAccount(accountId);
-        await this.deleteEmptyFacebookLogin(account, workspaceId);
 
-        return true;
+        return [
+            accountId,
+            ...(await this.deleteEmptyFacebookLogin(account, workspaceId)),
+        ];
     }
 
     /**
@@ -600,20 +616,18 @@ export class AccountService implements IAccountService {
     private async deleteEmptyFacebookLogin(
         account: AccountEntity,
         workspaceId: string
-    ): Promise<void> {
+    ): Promise<string[]> {
         const loginId =
             account.type === ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE
                 ? account.account?.id
                 : undefined;
-        if (!loginId) return;
+        if (!loginId) return [];
 
         const pagesLeft = await this.accountRepository.getTotal({
             account: loginId,
             deletedAt: null,
         });
-        if (pagesLeft === 0) {
-            await this.deleteSyncAccount(loginId, workspaceId);
-        }
+        return pagesLeft === 0 ? this.unlinkAccount(loginId, workspaceId) : [];
     }
 
     /** Hard-deletes an account with its conversations, messages and follow-ups. */
