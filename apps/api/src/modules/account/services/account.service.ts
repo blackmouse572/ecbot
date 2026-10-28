@@ -374,8 +374,16 @@ export class AccountService implements IAccountService {
             actor
         );
 
+        // A Page already linked in another workspace stays there; the rest
+        // still connect.
+        const freePages: FacebookPageResponseDto[] = [];
+        for (const page of pages) {
+            if (!(await this.isLinkedElsewhere(page.id, workspaceId))) {
+                freePages.push(page);
+            }
+        }
         const linkedPages = await Promise.all(
-            pages.map(page =>
+            freePages.map(page =>
                 this.upsertLinkedPage(page, linked, workspaceId, actor)
             )
         );
@@ -393,12 +401,13 @@ export class AccountService implements IAccountService {
     }
 
     /** Keyed on `externalId`, so re-linking refreshes the existing row. */
-    private upsertLinkedAccount(
+    private async upsertLinkedAccount(
         profile: IOAuthTokenResult,
         platform: ENUM_ACCOUNT_TYPE,
         workspaceId: string,
         actor: string
     ): Promise<AccountEntity> {
+        await this.releaseDeletedElsewhere(profile.externalId, workspaceId);
         return this.accountRepository.upsert(
             {
                 workspace: this.workspaceRef(workspaceId),
@@ -433,11 +442,9 @@ export class AccountService implements IAccountService {
     ): Promise<AccountEntity[]> {
         const linked: AccountEntity[] = [];
         for (const sibling of siblings) {
-            const existing = await this.accountRepository.findOne({
-                externalId: sibling.externalId,
-                deletedAt: null,
-            });
-            if (existing && existing.workspace?.id !== workspaceId) continue;
+            if (await this.isLinkedElsewhere(sibling.externalId, workspaceId)) {
+                continue;
+            }
             linked.push(
                 await this.upsertLinkedAccount(
                     sibling,
@@ -450,13 +457,45 @@ export class AccountService implements IAccountService {
         return linked;
     }
 
+    private async isLinkedElsewhere(
+        externalId: string,
+        workspaceId: string
+    ): Promise<boolean> {
+        const existing = await this.accountRepository.findOne({
+            externalId,
+            deletedAt: null,
+        });
+        return !!existing && existing.workspace?.id !== workspaceId;
+    }
+
+    /**
+     * Deleting a workspace only soft-deletes its channels, and each row keeps
+     * its unique `externalId`. When another workspace connects the same
+     * channel, the leftover (and its already deleted history) is purged so
+     * the link can go through. A leftover in this workspace is kept: the
+     * upsert revives it.
+     */
+    private async releaseDeletedElsewhere(
+        externalId: string,
+        workspaceId: string
+    ): Promise<void> {
+        const stale = await this.accountRepository.findOne({
+            externalId,
+            deletedAt: { $ne: null },
+        });
+        if (stale && stale.workspace?.id !== workspaceId) {
+            await this.purgeAccount(stale.id);
+        }
+    }
+
     /** A page carries its own token and hangs off the account that owns it. */
-    private upsertLinkedPage(
+    private async upsertLinkedPage(
         page: FacebookPageResponseDto,
         parent: AccountEntity,
         workspaceId: string,
         actor: string
     ): Promise<AccountEntity> {
+        await this.releaseDeletedElsewhere(page.id, workspaceId);
         return this.accountRepository.upsert(
             {
                 workspace: this.workspaceRef(workspaceId),
@@ -533,6 +572,38 @@ export class AccountService implements IAccountService {
         // Sub-accounts (pages under a parent account) are a separate entity
         // with their own lifecycle — unlinking this account must not touch
         // them or their conversations; only this account's own data.
+        await this.purgeAccount(accountId);
+        await this.deleteEmptyFacebookLogin(account, workspaceId);
+
+        return true;
+    }
+
+    /**
+     * The app hides personal Facebook logins, so people only unlink Pages.
+     * Once the last Page is gone the login goes too; left behind, it would
+     * keep that Facebook account tied to this workspace.
+     */
+    private async deleteEmptyFacebookLogin(
+        account: AccountEntity,
+        workspaceId: string
+    ): Promise<void> {
+        const loginId =
+            account.type === ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE
+                ? account.account?.id
+                : undefined;
+        if (!loginId) return;
+
+        const pagesLeft = await this.accountRepository.getTotal({
+            account: loginId,
+            deletedAt: null,
+        });
+        if (pagesLeft === 0) {
+            await this.deleteSyncAccount(loginId, workspaceId);
+        }
+    }
+
+    /** Hard-deletes an account with its conversations, messages and follow-ups. */
+    private purgeAccount(accountId: string): Promise<void> {
         return this.em.transactional(async tem => {
             const conversations = await tem.find(ConversationEntity, {
                 account: accountId,
@@ -556,8 +627,6 @@ export class AccountService implements IAccountService {
             }
 
             await tem.nativeDelete(AccountEntity, { id: accountId });
-
-            return true;
         });
     }
 
