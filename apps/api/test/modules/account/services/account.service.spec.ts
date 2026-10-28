@@ -314,7 +314,7 @@ describe('AccountService - syncAccount', () => {
                 : null
         );
 
-        await service.syncAccount(
+        const result = await service.syncAccount(
             'auth-code',
             ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
             'ws-1',
@@ -326,6 +326,15 @@ describe('AccountService - syncAccount', () => {
         );
         expect(upserted).toContain('page-free');
         expect(upserted).not.toContain('page-taken');
+        // Returned so the connect dialog can show it as not connected.
+        expect(result.skippedPages).toEqual([
+            {
+                externalId: 'page-taken',
+                name: 'Taken Page',
+                avatar: undefined,
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+            },
+        ]);
     });
 
     // Deleting a workspace only soft-deletes its channels, and the row keeps

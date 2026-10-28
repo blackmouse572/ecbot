@@ -41,7 +41,10 @@ import { AccountUpdateRequestDto } from '../dtos/request/account.update.request.
 import { AccountGetDetailResponseDto } from '../dtos/response/account.detail.response.dto';
 import { AccountListResponseDto } from '../dtos/response/account.list.response.dto';
 import { ENUM_ACCOUNT_STATUS, ENUM_ACCOUNT_TYPE } from '../enums/account.enum';
-import { IAccountEntityWithPages } from '../interfaces/account.interface';
+import {
+    IAccountEntityWithPages,
+    IAccountSkippedPage,
+} from '../interfaces/account.interface';
 import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
 import { FollowupEntity } from '@app/modules/platform/repository/entities/followup.entity';
@@ -375,10 +378,18 @@ export class AccountService implements IAccountService {
         );
 
         // A Page already linked in another workspace stays there; the rest
-        // still connect.
+        // still connect, and the skipped ones are reported back.
         const freePages: FacebookPageResponseDto[] = [];
+        const skippedPages: IAccountSkippedPage[] = [];
         for (const page of pages) {
-            if (!(await this.isLinkedElsewhere(page.id, workspaceId))) {
+            if (await this.isLinkedElsewhere(page.id, workspaceId)) {
+                skippedPages.push({
+                    externalId: page.id,
+                    name: page.name,
+                    avatar: page.picture?.data?.url,
+                    type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                });
+            } else {
                 freePages.push(page);
             }
         }
@@ -394,10 +405,13 @@ export class AccountService implements IAccountService {
             actor
         );
 
-        return this.joinAccountsWithPages(linked, [
-            ...linkedPages,
-            ...linkedSiblings,
-        ]);
+        return {
+            ...this.joinAccountsWithPages(linked, [
+                ...linkedPages,
+                ...linkedSiblings,
+            ]),
+            skippedPages,
+        };
     }
 
     /** Keyed on `externalId`, so re-linking refreshes the existing row. */

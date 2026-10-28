@@ -731,7 +731,9 @@
       "success": {
         "title": "Liên kết tài khoản thành công! 🎊",
         "description": "Tài khoản của bạn đã được liên kết thành công.",
-        "emptyPages": "Không có trang nào được liên kết. Hãy thêm một vài trang để bắt đầu!"
+        "emptyPages": "Không có trang nào được liên kết. Hãy thêm một vài trang để bắt đầu!",
+        "failed": "Không kết nối được",
+        "linkedElsewhere": "Trang này đã được kết nối ở một không gian làm việc khác. Hãy hủy liên kết ở đó trước, rồi kết nối lại tại đây."
       }
     },
     "create": {

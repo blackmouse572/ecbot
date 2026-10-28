@@ -1,3 +1,4 @@
+import { AccountLinkResponseDto } from '../dtos/response/account.link.response.dto';
 import { BatchIdsRequestDto } from '@app/common/batch/dtos/batch.request.dto';
 import { BatchResultResponseDto } from '@app/common/batch/dtos/batch.response.dto';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from '@app/common/doc/enums/doc.enum';
@@ -101,7 +102,7 @@ export function AccountLinkDoc(): MethodDecorator {
         }),
         DocAuth(AccountDocAuth),
         DocGuard({ policy: true }),
-        DocResponse('account.link')
+        DocResponse('account.link', { dto: AccountLinkResponseDto })
     );
 }
 

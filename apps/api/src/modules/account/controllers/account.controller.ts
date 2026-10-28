@@ -484,6 +484,7 @@ export class AccountController {
             type: account.type,
             workspace: account.workspace.id,
             pages: account.pages,
+            skippedPages: account.skippedPages ?? [],
             totalCookies: account.cookies?.length || 0,
             totalProxies: account.proxies?.length || 0,
         };
