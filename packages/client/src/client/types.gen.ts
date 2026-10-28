@@ -3946,6 +3946,119 @@ export type AccountUpdateAllowedOriginsRequestDto = {
     privacyPolicyUrl?: string | null;
 };
 
+export type AccountLinkSkippedPageResponseDto = {
+    /**
+     * Platform id of the Page
+     */
+    externalId: string;
+    name: string;
+    avatar?: string;
+    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+};
+
+export type AccountLinkResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    /**
+     * Public profile URL of the channel on its platform
+     */
+    link: string;
+    /**
+     * Display name shown in the inbox
+     */
+    name: string;
+    /**
+     * URL-safe identifier; reads accept it in place of the id
+     */
+    slug: string;
+    /**
+     * Avatar URL of the channel
+     */
+    avatar: string;
+    /**
+     * BLOCKED means the platform token stopped working
+     */
+    status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+    /**
+     * Set while sends on this channel keep failing; null once one goes through
+     */
+    sendFailingSince?: string | null;
+    /**
+     * The platform error from the last failing send
+     */
+    lastSendError?: string | null;
+    /**
+     * Which platform this channel belongs to
+     */
+    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+    /**
+     * Workspace that owns the channel
+     */
+    workspace: string;
+    /**
+     * Platform-facing account key — identifies this channel in the `accountKey` field of an inbound message. Only present for eccho-issued channels (API_CHANNEL, WEBSITE_WIDGET).
+     */
+    accountKey?: string;
+    /**
+     * Where bot replies are POSTed. API_CHANNEL only.
+     */
+    callbackUrl?: string;
+    /**
+     * Origins allowed to embed the widget. WEBSITE_WIDGET only.
+     */
+    allowedOrigins?: Array<string>;
+    /**
+     * The business's own privacy policy, linked from the widget. WEBSITE_WIDGET only.
+     */
+    privacyPolicyUrl?: string;
+    /**
+     * Facebook pages associated with the account
+     */
+    pages: Array<AccountGetDetailResponseDto>;
+    /**
+     * Pages the login manages that another workspace has already connected, so they were not connected here
+     */
+    skippedPages?: Array<AccountLinkSkippedPageResponseDto>;
+    /**
+     * Total number of cookies associated with the account
+     */
+    totalCookies: number;
+    /**
+     * Total number of proxies associated with the account
+     */
+    totalProxies: number;
+};
+
 export type AccountLinkRequestDto = {
     code: string;
     platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'ZALO_ACCOUNT' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
@@ -21354,6 +21467,7 @@ export type AccountControllerLinkV1Responses = {
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
+        data?: AccountLinkResponseDto;
     };
 };
 

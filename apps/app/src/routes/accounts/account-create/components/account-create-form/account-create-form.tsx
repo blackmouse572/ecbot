@@ -27,7 +27,10 @@ import {
   Text,
   toast,
 } from "@medusajs/ui";
-import type { AccountGetDetailResponseDto } from "@repo/client";
+import type {
+  AccountGetDetailResponseDto,
+  AccountLinkSkippedPageResponseDto,
+} from "@repo/client";
 import { Form } from "@repo/ui/common-components";
 import { isPersonalAccountType } from "@/routes/chatbot/chatbot-create/agent-builder/channel-accounts";
 import { useState } from "react";
@@ -35,7 +38,9 @@ import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ProvisionStep } from "./provision-step";
 import { isProvisionedPlatform } from "./provisioned-platforms";
+import { AccountTypeCell } from "@/routes/accounts/accounts-list/components/account-list-table/account-type-cell";
 import { LinkAgentStep } from "./link-agent-step";
+import { SkippedPageCard } from "./skipped-page-card";
 import { linkableAccounts, type LinkableAccount } from "./linkable-accounts";
 import { WhatsAppCredentialFields } from "./whatsapp-credential-fields";
 
@@ -94,7 +99,10 @@ export const AccountCreateForm = () => {
   const [tab, setTab] = useState<TabKey>("PLATFORM");
   const [tabState, setTabState] = useState<TabState>(initialTabState);
   const [linkedData, setLinkedData] = useState<
-    | (AccountGetDetailResponseDto & { pages: AccountGetDetailResponseDto[] })
+    | (AccountGetDetailResponseDto & {
+        pages: AccountGetDetailResponseDto[];
+        skippedPages?: AccountLinkSkippedPageResponseDto[];
+      })
     | null
   >(null);
   // The eccho-issued channels produce a credential rather than a linked
@@ -503,13 +511,19 @@ function SuccessStep({
   data,
   onDone,
 }: {
-  data: AccountGetDetailResponseDto & { pages: AccountGetDetailResponseDto[] };
+  data: AccountGetDetailResponseDto & {
+    pages: AccountGetDetailResponseDto[];
+    skippedPages?: AccountLinkSkippedPageResponseDto[];
+  };
   onDone: () => void;
 }) {
   const { t } = useTranslation();
+  const skippedPages = data.skippedPages ?? [];
   // A personal profile only parents its pages, so its card shows only when
   // there is nothing else to show.
-  const showProfile = !isPersonalAccountType(data.type) || !data.pages?.length;
+  const showProfile =
+    !isPersonalAccountType(data.type) ||
+    (!data.pages?.length && !skippedPages.length);
   return (
     <div className="flex w-full max-w-[720px] flex-col gap-y-8">
       <div className="flex items-center justify-between">
@@ -538,9 +552,7 @@ function SuccessStep({
                 <Text size="small" className="text-ui-fg-subtle">
                   {data.slug}
                 </Text>
-                <Text size="small" className="text-ui-fg-subtle">
-                  {data.type}
-                </Text>
+                <AccountTypeCell type={data.type} />
               </div>
             </div>
             <StatusBadge color="green" className="h-fit">
@@ -565,15 +577,22 @@ function SuccessStep({
                     <Text size="small" className="text-ui-fg-subtle">
                       {page.slug}
                     </Text>
-                    <Text size="small" className="text-ui-fg-subtle">
-                      {page.type}
-                    </Text>
+                    <AccountTypeCell type={page.type} />
                   </div>
                 </div>
                 <StatusBadge color="green" className="h-fit">
                   {t("accounts.details.statuses.active.title")}
                 </StatusBadge>
               </Container>
+            ))}
+          </>
+        )}
+
+        {skippedPages.length > 0 && (
+          <>
+            <Divider variant="dashed" />
+            {skippedPages.map((page) => (
+              <SkippedPageCard key={page.externalId} page={page} />
             ))}
           </>
         )}

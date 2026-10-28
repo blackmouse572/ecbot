@@ -149,9 +149,10 @@ export class AccountRepository extends DatabaseRepository<AccountEntity> {
             });
         }
 
-        // Relinking an externalId revives the row: unlinking an account that
-        // still had conversation history only soft-deleted it, and the same
-        // externalId coming back means the channel is live again.
+        // Relinking an externalId revives a soft-deleted row of the same
+        // workspace: the same externalId coming back means the channel is
+        // live again. AccountService purges one left in another workspace
+        // before it gets here.
         Object.assign(existing, data);
         existing.deletedAt = null;
         this.stamp(existing, 'updatedBy', actionBy);

@@ -102,6 +102,7 @@ describe('AccountService - syncAccount', () => {
             mockOAuthResult
         );
         mockAccountRepository.upsert.mockResolvedValue(mockUpsertedAccount);
+        mockAccountRepository.findOne.mockResolvedValue(null);
         mockOAuthFactory.getService.mockReturnValue(mockPlatformService);
         service = buildService();
     });
@@ -283,10 +284,11 @@ describe('AccountService - syncAccount', () => {
                 { accessToken: 't', externalId: 'ext-456', name: 'Elsewhere' },
             ],
         });
-        mockAccountRepository.findOne.mockResolvedValueOnce({
-            externalId: 'ext-456',
-            workspace: { id: 'ws-other' },
-        });
+        mockAccountRepository.findOne.mockImplementation(async where =>
+            where.externalId === 'ext-456' && where.deletedAt === null
+                ? { externalId: 'ext-456', workspace: { id: 'ws-other' } }
+                : null
+        );
 
         const result = await service.syncAccount(
             'auth-code',
@@ -297,6 +299,102 @@ describe('AccountService - syncAccount', () => {
 
         expect(mockAccountRepository.upsert).toHaveBeenCalledTimes(1);
         expect(result.pages).toEqual([]);
+    });
+
+    // A Facebook login brings in every Page it manages. One Page already
+    // linked in another workspace stays there, and the rest still connect.
+    it('skips Facebook Pages already linked in another workspace instead of failing the link', async () => {
+        mockFacebookPageService.getPages.mockResolvedValueOnce([
+            { id: 'page-free', name: 'Free Page', access_token: 'pt-1' },
+            { id: 'page-taken', name: 'Taken Page', access_token: 'pt-2' },
+        ]);
+        mockAccountRepository.findOne.mockImplementation(async where =>
+            where.externalId === 'page-taken' && where.deletedAt === null
+                ? { externalId: 'page-taken', workspace: { id: 'ws-other' } }
+                : null
+        );
+
+        const result = await service.syncAccount(
+            'auth-code',
+            ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+            'ws-1',
+            'user-1'
+        );
+
+        const upserted = mockAccountRepository.upsert.mock.calls.map(
+            c => c[0].externalId
+        );
+        expect(upserted).toContain('page-free');
+        expect(upserted).not.toContain('page-taken');
+        // Returned so the connect dialog can show it as not connected.
+        expect(result.skippedPages).toEqual([
+            {
+                externalId: 'page-taken',
+                name: 'Taken Page',
+                avatar: undefined,
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+            },
+        ]);
+    });
+
+    // Deleting a workspace only soft-deletes its channels, and the row keeps
+    // the unique externalId. Connecting it elsewhere purges that leftover.
+    it('purges a channel left soft-deleted in another workspace before linking it here', async () => {
+        mockAccountRepository.findOne.mockImplementation(async where =>
+            where.externalId === 'ext-123' &&
+            where.deletedAt?.$ne === null &&
+            // Only a channel whose workspace was deleted is purged.
+            where.workspace?.deletedAt?.$ne === null
+                ? {
+                      id: 'stale-account',
+                      externalId: 'ext-123',
+                      workspace: { id: 'ws-deleted' },
+                  }
+                : null
+        );
+        mockTem.find.mockResolvedValueOnce([{ id: 'old-conv' }]);
+
+        await service.syncAccount(
+            'auth-code',
+            ENUM_ACCOUNT_TYPE.ZALO_ACCOUNT,
+            'ws-1',
+            'user-1'
+        );
+
+        expect(mockTem.nativeDelete).toHaveBeenCalledWith(ConversationEntity, {
+            id: { $in: ['old-conv'] },
+        });
+        expect(mockTem.nativeDelete).toHaveBeenCalledWith(AccountEntity, {
+            id: 'stale-account',
+        });
+        expect(
+            mockTem.nativeDelete.mock.invocationCallOrder.at(-1)
+        ).toBeLessThan(
+            mockAccountRepository.upsert.mock.invocationCallOrder[0]
+        );
+    });
+
+    // A soft-deleted row in this same workspace is revived by the upsert, as
+    // before, so its history comes back with it.
+    it('keeps a soft-deleted channel of this same workspace for the upsert to revive', async () => {
+        mockAccountRepository.findOne.mockImplementation(async where =>
+            where.deletedAt?.$ne === null
+                ? {
+                      id: 'own-account',
+                      externalId: 'ext-123',
+                      workspace: { id: 'ws-1' },
+                  }
+                : null
+        );
+
+        await service.syncAccount(
+            'auth-code',
+            ENUM_ACCOUNT_TYPE.ZALO_ACCOUNT,
+            'ws-1',
+            'user-1'
+        );
+
+        expect(mockTem.nativeDelete).not.toHaveBeenCalled();
     });
 
     it('excludes accessToken from the returned account', async () => {
@@ -537,6 +635,58 @@ describe('AccountService - deleteSyncAccount', () => {
             id: 'account-uuid-1',
             workspace: 'ws-1',
             deletedAt: null,
+        });
+    });
+
+    // The app hides personal Facebook logins (#406), so people only unlink
+    // Pages. Once the last Page goes, the hidden login goes with it, or it
+    // keeps the Facebook account tied to this workspace.
+    it('also deletes the hidden Facebook login when its last Page is unlinked', async () => {
+        mockAccountRepository.findOne.mockImplementation(async where =>
+            where.id === 'page-1'
+                ? {
+                      id: 'page-1',
+                      type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                      account: { id: 'fb-login-1' },
+                  }
+                : where.id === 'fb-login-1'
+                  ? {
+                        id: 'fb-login-1',
+                        type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+                    }
+                  : null
+        );
+        mockAccountRepository.getTotal.mockResolvedValue(0);
+
+        await expect(service.unlinkAccount('page-1', 'ws-1')).resolves.toEqual([
+            'page-1',
+            'fb-login-1',
+        ]);
+
+        expect(mockAccountRepository.getTotal).toHaveBeenCalledWith({
+            account: 'fb-login-1',
+            deletedAt: null,
+        });
+        expect(mockTem.nativeDelete).toHaveBeenCalledWith(AccountEntity, {
+            id: 'page-1',
+        });
+        expect(mockTem.nativeDelete).toHaveBeenCalledWith(AccountEntity, {
+            id: 'fb-login-1',
+        });
+    });
+
+    it('keeps the Facebook login while it still has other Pages', async () => {
+        mockAccountRepository.findOne.mockResolvedValue({
+            id: 'page-1',
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+            account: { id: 'fb-login-1' },
+        });
+        mockAccountRepository.getTotal.mockResolvedValue(1);
+
+        await service.deleteSyncAccount('page-1', 'ws-1');
+
+        expect(mockTem.nativeDelete).not.toHaveBeenCalledWith(AccountEntity, {
+            id: 'fb-login-1',
         });
     });
 

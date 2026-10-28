@@ -23,6 +23,7 @@ const accountService = stub(
     'mapDetail',
     'syncAccount',
     'deleteSyncAccount',
+    'unlinkAccount',
     'findAccountsNotBelongingToAnyChatbot'
 );
 const provisionService = stub(
@@ -46,6 +47,37 @@ const workspace = { id: WORKSPACE_ID } as any;
 
 describe('AccountController (workspace-scoped)', () => {
     beforeEach(() => jest.clearAllMocks());
+
+    describe('batchDeleteSync', () => {
+        // Unlinking the last Page also removes its hidden Facebook login, so
+        // a batch that names both must not report the login as not found.
+        it('counts a login already removed with its last Page as succeeded', async () => {
+            accountService.unlinkAccount.mockImplementation(async id =>
+                id === 'page-1' ? ['page-1', 'fb-login-1'] : []
+            );
+
+            const { data } = await controller.batchDeleteSync(workspace, {
+                ids: ['page-1', 'fb-login-1'],
+            });
+
+            expect(data).toEqual({
+                succeeded: ['page-1', 'fb-login-1'],
+                failed: [],
+            });
+            expect(accountService.unlinkAccount).toHaveBeenCalledTimes(1);
+        });
+
+        it('reports an unknown id as failed', async () => {
+            accountService.unlinkAccount.mockResolvedValue([]);
+
+            const { data } = await controller.batchDeleteSync(workspace, {
+                ids: ['missing'],
+            });
+
+            expect(data.succeeded).toEqual([]);
+            expect(data.failed.map(f => f.id)).toEqual(['missing']);
+        });
+    });
 
     describe('link - OAuth account connect', () => {
         const linkUser = { id: 'user-id-1', name: 'Test User' } as UserEntity;

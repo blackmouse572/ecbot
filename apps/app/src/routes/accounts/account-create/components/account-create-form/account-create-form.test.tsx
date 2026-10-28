@@ -88,7 +88,7 @@ vi.mock("@medusajs/ui", async () => {
   };
 });
 
-import { toast } from "@medusajs/ui";
+import { toast, TooltipProvider } from "@medusajs/ui";
 import { AccountCreateForm } from "./account-create-form";
 
 const VALID_TELEGRAM_TOKEN = `123456:${"A".repeat(40)}`;
@@ -333,6 +333,62 @@ describe("AccountCreateForm — connect to an agent", () => {
 
     expect(routeModal.handleSuccess).toHaveBeenCalled();
     expect(screen.queryByTestId("link-agent-step")).not.toBeInTheDocument();
+  });
+});
+
+// A Page already connected in another workspace is not connected here; the
+// result card still lists it, marked failed, so the user knows why.
+describe("AccountCreateForm: Pages another workspace has", () => {
+  const showResult = async (data: A) => {
+    linkMutateAsync.mockResolvedValue({ data: { data } });
+    const user = userEvent.setup();
+    render(
+      <TooltipProvider>
+        <AccountCreateForm />
+      </TooltipProvider>,
+    );
+    await user.click(screen.getByText("Facebook"));
+    await oauthLogin.props.onSuccess({ code: "FBcode" });
+    return user;
+  };
+
+  it("lists a skipped Page with a failed status and explains it on hover", async () => {
+    const user = await showResult({
+      id: "u-1",
+      type: "FACEBOOK_ACCOUNT",
+      name: "Lan",
+      pages: [{ id: "p-1", type: "FACEBOOK_PAGE", name: "Mây" }],
+      skippedPages: [
+        { externalId: "p-9", type: "FACEBOOK_PAGE", name: "Biển" },
+      ],
+    });
+
+    expect(await screen.findByText("Mây")).toBeInTheDocument();
+    expect(screen.getByText("Biển")).toBeInTheDocument();
+    // The channel shows by logo and name, as in the accounts table.
+    expect(screen.queryByText("FACEBOOK_PAGE")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Facebook").length).toBeGreaterThan(1);
+    const failed = screen.getByText("accounts.link.success.failed");
+    await user.hover(failed);
+    expect(
+      (await screen.findAllByText("accounts.link.success.linkedElsewhere"))
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("hides the personal profile when every Page was skipped", async () => {
+    await showResult({
+      id: "u-1",
+      type: "FACEBOOK_ACCOUNT",
+      name: "Lan",
+      pages: [],
+      skippedPages: [
+        { externalId: "p-9", type: "FACEBOOK_PAGE", name: "Biển" },
+      ],
+    });
+
+    expect(await screen.findByText("Biển")).toBeInTheDocument();
+    expect(screen.queryByText("Lan")).not.toBeInTheDocument();
   });
 });
 

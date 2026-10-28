@@ -708,7 +708,9 @@
       "success": {
         "title": "Account Linked",
         "description": "Your account has been successfully linked.",
-        "emptyPages": "No pages linked."
+        "emptyPages": "No pages linked.",
+        "failed": "Failed",
+        "linkedElsewhere": "Another workspace has already connected this Page. Unlink it there first, then connect it again here."
       }
     },
     "create": {
