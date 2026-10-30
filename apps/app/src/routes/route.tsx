@@ -14,6 +14,7 @@ import { ProtectedRoute } from "../components/auth/protected-routes";
 import { ErrorBoundary } from "../components/error";
 import { ROUTES } from "./constants";
 import { enterpriseRoutes } from "./enterprise.routes";
+import { enterpriseSettingsRoutes } from "./enterprise.settings";
 import { RootRedirect } from "./root/root-redirect";
 
 const membersBreadcrumb = () => t("app.nav.members.header");
@@ -547,6 +548,7 @@ function getRouteMaps(): RouteObject[] {
               ErrorBoundary: ErrorBoundary,
               lazy: () => import("./settings/client-credentials"),
             },
+            ...enterpriseSettingsRoutes(),
           ],
         },
       ],

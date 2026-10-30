@@ -11,6 +11,7 @@ import { Link, Navigate, useLocation } from "react-router-dom";
 import { useEnsureWorkspace } from "@/hooks/api/workspace";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes";
+import { enterpriseSettingsNavItems } from "@/routes/enterprise.settings";
 
 import { type INavItem, NavItem, Shell } from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
@@ -70,6 +71,7 @@ const useWorkspaceSettingsRoutes = (): INavItem[] => {
         label: t("app.nav.roles.header"),
         to: `${base}/${ROUTES.WorkspaceRoles}`,
       },
+      ...enterpriseSettingsNavItems({ t, baseUrl: base }),
     ],
     [t, base],
   );

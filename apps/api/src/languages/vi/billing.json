@@ -45,6 +45,7 @@
         "paymentOrderNotFound": "Không tìm thấy đơn thanh toán.",
         "providerRequestFailed": "Cổng thanh toán từ chối yêu cầu. Chưa có gì thay đổi.",
         "subscriptionNotSelfServe": "Thay đổi này không khả dụng với gói hiện tại của bạn. Hãy liên hệ với chúng tôi để được hỗ trợ.",
-        "subscriptionNotPastDue": "Subscription này không có khoản thanh toán nào cần xử lý."
+        "subscriptionNotPastDue": "Subscription này không có khoản thanh toán nào cần xử lý.",
+        "invoiceNotAvailable": "Khoản thanh toán này chưa có hoá đơn để tải về."
     }
 }

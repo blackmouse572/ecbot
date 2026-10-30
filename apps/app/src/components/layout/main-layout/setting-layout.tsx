@@ -47,27 +47,9 @@ const useMyAccountRoutes = (): INavItem[] => {
         to: "/settings/sessions",
       },
     ],
-    [t]
+    [t],
   );
 };
-const useSubscriptionRoutes = (): INavItem[] => {
-  const { t } = useTranslation();
-
-  return useMemo<INavItem[]>(
-    () => [
-      {
-        label: t("subscription.domain"),
-        to: "/settings/subscription",
-      },
-      {
-        label: t("billing.domain"),
-        to: "/settings/billing",
-      },
-    ],
-    [t]
-  );
-};
-
 /**
  * Ensure that the `from` prop is not another settings route, to avoid
  * the user getting stuck in a navigation loop.
@@ -82,7 +64,6 @@ const getSafeFromValue = (from: string) => {
 
 const SettingsSidebar = () => {
   const myAccountRoutes = useMyAccountRoutes();
-  const subscriptionRoutes = useSubscriptionRoutes();
 
   const { t } = useTranslation();
 
@@ -99,16 +80,6 @@ const SettingsSidebar = () => {
           <SidebarCollapsibleSection label={t("app.nav.settings.myAccount")}>
             <nav className="flex flex-col gap-y-0.5">
               {myAccountRoutes.map((setting) => (
-                <NavItem key={setting.to} type="setting" {...setting} />
-              ))}
-            </nav>
-          </SidebarCollapsibleSection>
-          <div className="flex items-center justify-center px-3">
-            <Divider variant="dashed" />
-          </div>
-          <SidebarCollapsibleSection label={t("app.nav.settings.subscription")}>
-            <nav className="flex flex-col gap-y-0.5">
-              {subscriptionRoutes.map((setting) => (
                 <NavItem key={setting.to} type="setting" {...setting} />
               ))}
             </nav>
@@ -142,7 +113,7 @@ const Header = () => {
         className={clx(
           "bg-ui-bg-subtle transition-fg flex items-center rounded-md outline-none",
           "hover:bg-ui-bg-subtle-hover",
-          "focus-visible:shadow-borders-focus"
+          "focus-visible:shadow-borders-focus",
         )}
       >
         <div className="flex items-center gap-x-2.5 px-2 py-1">
