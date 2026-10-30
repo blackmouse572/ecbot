@@ -19,7 +19,8 @@ export const httpRequestPreviewText = (input: {
   args: Record<string, unknown>;
 }): HttpRequestPreviewText => {
   const plan = planHttpToolRequest(input);
-  if (plan.problem) return { problem: plan.problem };
+  // A missing path value is shown on its own field; the line keeps {name}.
+  if (plan.problem?.kind === "dots") return { problem: plan.problem };
   const pairs = Object.entries(plan.query).map(([k, v]) => [
     k,
     typeof v === "object" ? JSON.stringify(v) : String(v),

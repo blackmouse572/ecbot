@@ -65,17 +65,23 @@ describe("HttpToolForm test endpoint", () => {
     ).toBeTruthy();
   });
 
-  it("previews a missing path argument before the test runs", async () => {
-    renderForm(vi.fn(), {
+  it("shows Required under an empty path variable and does not run the test", async () => {
+    const onTest = vi.fn();
+    renderForm(onTest, {
       httpUrl: "https://api.example.com/products/{id}",
     });
 
-    fireEvent.change(screen.getByPlaceholderText("{}"), {
-      target: { value: "{}" },
-    });
+    expect(screen.queryByText("Required")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Run Test" }));
 
+    expect(await screen.findByText("Required")).toBeTruthy();
+    expect(screen.getByLabelText("id").getAttribute("aria-invalid")).toBe(
+      "true",
+    );
+    expect(onTest).not.toHaveBeenCalled();
+    // The preview still shows where the value will go.
     expect(
-      await screen.findByText('Fill in "id": the URL needs it for {id}.'),
+      screen.getByText("GET https://api.example.com/products/{id}"),
     ).toBeTruthy();
   });
 

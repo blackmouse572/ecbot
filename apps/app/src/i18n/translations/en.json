@@ -2814,11 +2814,11 @@
       },
       "previewLabel": "Request preview",
       "preview": {
-        "missing": "Fill in \"{{name}}\": the URL needs it for {{placeholder}}.",
         "dots": "\"{{name}}\" cannot be \".\" or \"..\", because it is part of the URL path."
       },
       "variablesLabel": "Path variables",
-      "variablePlaceholder": "Value"
+      "variablePlaceholder": "Value",
+      "variableRequired": "Required"
     },
     "schemaEditor": {
       "title": "Properties",

@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { HeadersEditor, type HeadersEditorMode } from "./headers-editor";
 import { HttpRequestPreview } from "./http-request-preview";
 import { PathVariablesFields } from "./path-variables-fields";
-import { buildTestArgs } from "./test-args";
+import { buildTestArgs, missingPathVariables } from "./test-args";
 import { rowsToSchemaPayload } from "./http-tool-payload";
 import {
   JsonSchemaEditor,
@@ -100,6 +100,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   const [testVariables, setTestVariables] = useState<Record<string, string>>(
     {},
   );
+  const [testTried, setTestTried] = useState(false);
   const [testArgsError, setTestArgsError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<ToolTestResult | null>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -136,6 +137,8 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
       setTestArgsError(t("tools.test.invalidJson"));
       return;
     }
+    setTestTried(true);
+    if (missingPathVariables(httpUrl, parsedArgs).length > 0) return;
     // getValues() yields the raw input type, so the config has to be parsed
     // into the same coerced payload a submit would send. `httpToolTestSchema`
     // relaxes name/description — an unnamed draft is still testable.
@@ -455,6 +458,14 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
               url={httpUrl}
               values={testVariables}
               onChange={setTestVariables}
+              missing={
+                testTried
+                  ? missingPathVariables(
+                      httpUrl,
+                      buildTestArgs(testArgsText, testVariables) ?? {},
+                    )
+                  : []
+              }
             />
             <div className="flex flex-col gap-y-1">
               <label className="txt-compact-small text-ui-fg-subtle">
