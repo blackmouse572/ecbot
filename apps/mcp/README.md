@@ -55,6 +55,7 @@ replace data, **deletes** remove it.
 | Analytics     | `get_conversion_analytics`, `get_customer_analytics`                         | customer read           | reads      |
 |               | `get_bot_analytics`                                                          | chatbot read            | reads      |
 |               | `get_marketing_analytics`                                                    | customer + chatbot read | reads      |
+| Plan          | `get_plan_usage` (Ecbot Cloud only)                                          | token usage read        | reads      |
 
 The workspace's **Tools** (HTTP endpoints and MCP servers its chatbots call)
 are named `*_workspace_tool` and `*_chatbot_tool`, to keep them apart from
@@ -63,6 +64,10 @@ this server's own MCP tools.
 The analytics tools return the workspace dashboard tabs. They share one
 budget of 20 calls a minute per key, counted in Redis by the API (429 past
 it), since an uncached call runs several aggregate queries.
+
+`get_plan_usage` returns the plan card from the app's usage page. As in the
+app, production gives the quota used as a percent, never raw token counts. It
+exists only on a worker with `ECCHO_EDITION="enterprise"` (see [Config](#config)).
 
 Not exposed: file uploads, the marketplace installs (they need a browser
 for OAuth), and permanent customer erasure.
@@ -83,7 +88,9 @@ the tool in the matching `src/tools/*.ts`, inside the `register*Tools`
 group for that ability (so `tools/list` hides it from keys without it).
 Give it a `title` and the annotation set for its kind, spread `api` into the
 `@repo/client` call so it carries the caller's key, and return through
-`respond()`.
+`respond()`. A route that exists only in the enterprise overlay has no
+`@repo/client` function: call it by path with `client.get` through a small
+typed wrapper, as `getPlanUsage` in `src/tools/plan.ts` does.
 
 ## Auth
 
@@ -109,7 +116,9 @@ each call returns the API's message.
 
 `SERVER_URL` (the `apps/api` base URL) is read from `process.env` and
 validated at startup by `src/env.ts`, as in `apps/edge`. Locally it comes from
-`.env` (see `.env.example`).
+`.env` (see `.env.example`). `ECCHO_EDITION="enterprise"` is set only on the
+Ecbot Cloud worker; without it, tools for routes that exist only in the
+enterprise overlay (`get_plan_usage`) are not registered.
 
 `wrangler.json` is not committed (`apps/*/wrangler.json` is gitignored; the
 hosted config is copied in at build time). It needs `"main": "src/index.ts"`,
