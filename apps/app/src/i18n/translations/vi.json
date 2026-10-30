@@ -761,6 +761,7 @@
           "SHOPEE_SHOP": "Người bán Shopee",
           "TELEGRAM_BOT": "Bot Telegram",
           "WHATSAPP_BUSINESS": "WhatsApp Business (Cloud API)",
+          "THREADS_ACCOUNT": "Trả lời bình luận & lượt nhắc",
           "WEBSITE_WIDGET": "Khung chat nhúng vào website",
           "API_CHANNEL": "Tích hợp trực tiếp qua REST API"
         }
