@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@repo/client");
 
 import * as api from "@repo/client";
+import { env } from "../src/env";
 import { connect, textOf } from "./mcp-client";
 
 const KEY = "client-key:client-secret";
@@ -65,5 +66,25 @@ describe("get_plan_usage", () => {
     const { tools } = await client.listTools();
 
     expect(tools.map((t) => t.name)).not.toContain("get_plan_usage");
+  });
+
+  // Billing comes with the enterprise overlay, whose wrangler.json sets
+  // ECCHO_EDITION. A self-hosted worker never lists the tool.
+  it("is not listed on the open edition", async () => {
+    vi.mocked(api.clientCredentialClientControllerMeV1).mockResolvedValue({
+      data: {
+        data: { permissions: [{ subject: "TOKEN_USAGE", action: ["read"] }] },
+      },
+    } as never);
+    env.ECCHO_EDITION = undefined;
+    try {
+      const client = await connect({ "x-api-key": KEY });
+
+      const { tools } = await client.listTools();
+
+      expect(tools.map((t) => t.name)).not.toContain("get_plan_usage");
+    } finally {
+      env.ECCHO_EDITION = "enterprise";
+    }
   });
 });

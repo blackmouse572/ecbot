@@ -3,3 +3,4 @@
 // throws if a required var is missing. Workers expose vars on process.env
 // via nodejs_compat_populate_process_env; this mirrors that for vitest.
 process.env.SERVER_URL = "http://api.test";
+process.env.ECCHO_EDITION = "enterprise";

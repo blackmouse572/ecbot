@@ -6,6 +6,9 @@ import * as v from "valibot";
 // worker's vars.
 export const envSchema = v.object({
   SERVER_URL: v.pipe(v.string(), v.url()),
+  // "enterprise" on the Ecbot Cloud worker, set by the overlay's
+  // wrangler.json. Tools for overlay-only routes are left out without it.
+  ECCHO_EDITION: v.optional(v.picklist(["enterprise"])),
 });
 
 export const env = v.parse(envSchema, process.env);

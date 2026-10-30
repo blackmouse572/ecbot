@@ -1,12 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { client } from "@repo/client";
 import * as z from "zod";
+import { env } from "../env";
 import { type Allows, type ApiOptions, READS, respond } from "./shared";
 
 // The plan card is billing, which only Ecbot Cloud has: the route comes with
 // the enterprise overlay, so @repo/client has no function for it. Keep this
-// type in sync with eccho-ee's TokenUsageSummaryResponseDto. On an
-// open-edition API the call fails with the API's own "not found".
+// type in sync with eccho-ee's TokenUsageSummaryResponseDto. An open-edition
+// worker leaves the tool out, since its API has no such route.
 export interface PlanUsageSummary {
   planName: string;
   status: string;
@@ -34,7 +35,8 @@ export function registerPlanTools(
   api: ApiOptions,
   allows: Allows,
 ) {
-  if (!allows("TOKEN_USAGE", "read")) return;
+  if (env.ECCHO_EDITION !== "enterprise" || !allows("TOKEN_USAGE", "read"))
+    return;
 
   server.registerTool(
     "get_plan_usage",
