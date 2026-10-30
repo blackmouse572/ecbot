@@ -55,6 +55,7 @@ replace data, **deletes** remove it.
 | Analytics     | `get_conversion_analytics`, `get_customer_analytics`                         | customer read           | reads      |
 |               | `get_bot_analytics`                                                          | chatbot read            | reads      |
 |               | `get_marketing_analytics`                                                    | customer + chatbot read | reads      |
+| Plan          | `get_plan_usage` (Ecbot Cloud only)                                          | token usage read        | reads      |
 
 The workspace's **Tools** (HTTP endpoints and MCP servers its chatbots call)
 are named `*_workspace_tool` and `*_chatbot_tool`, to keep them apart from
@@ -63,6 +64,9 @@ this server's own MCP tools.
 The analytics tools return the workspace dashboard tabs. They share one
 budget of 20 calls a minute per key, counted in Redis by the API (429 past
 it), since an uncached call runs several aggregate queries.
+
+`get_plan_usage` returns the plan card from the app's usage page. As in the
+app, production gives the quota used as a percent, never raw token counts.
 
 Not exposed: file uploads, the marketplace installs (they need a browser
 for OAuth), and permanent customer erasure.

@@ -26,6 +26,7 @@ const READ_TOOLS = [
   "get_customer_tags",
   "get_knowledge_item",
   "get_marketing_analytics",
+  "get_plan_usage",
   "get_skill",
   "get_workspace_tool",
   "list_chatbot_knowledge",
@@ -121,6 +122,7 @@ describe("/mcp", () => {
       { subject: "CUSTOMER", action: ["read"] },
       { subject: "TOOL", action: ["read"] },
       { subject: "SKILL", action: ["read"] },
+      { subject: "TOKEN_USAGE", action: ["read"] },
     ]);
     const client = await connect({ "x-api-key": KEY });
 
@@ -183,7 +185,14 @@ describe("/mcp", () => {
 
   // A wrong key or an API outage: each call then reports the API's error.
   it("lists every tool when the API can't say what the key may do", async () => {
-    const subjects = ["CHATBOT", "KNOWLEDGE_BASE", "CUSTOMER", "TOOL", "SKILL"];
+    const subjects = [
+      "CHATBOT",
+      "KNOWLEDGE_BASE",
+      "CUSTOMER",
+      "TOOL",
+      "SKILL",
+      "TOKEN_USAGE",
+    ];
     const actions = ["manage", "read", "create", "update", "delete"];
     permits(subjects.map((subject) => ({ subject, action: actions })));
     const everything = await connect({ "x-api-key": KEY })

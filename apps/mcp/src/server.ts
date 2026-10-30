@@ -6,6 +6,7 @@ import { registerChatbotTools } from "./tools/chatbots";
 import { registerConversationTools } from "./tools/conversations";
 import { registerCustomerTools } from "./tools/customers";
 import { registerKnowledgeTools } from "./tools/knowledge";
+import { registerPlanTools } from "./tools/plan";
 import { registerSkillTools } from "./tools/skills";
 import { registerWorkspaceToolTools } from "./tools/workspace-tools";
 import type { Allows, ApiOptions } from "./tools/shared";
@@ -48,6 +49,7 @@ export async function createEcbotServer(
   registerWorkspaceToolTools(server, api, allows);
   registerSkillTools(server, api, allows);
   registerAnalyticsTools(server, api, allows);
+  registerPlanTools(server, api, allows);
 
   return server;
 }
