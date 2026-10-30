@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* src/ee is gitignored (the hosted edition copies it in), and Tailwind skips
+   gitignored files unless a source names them. */
+@source "./ee";
 @import "tw-animate-css";
 
 @import "./styles/utilities.css";
