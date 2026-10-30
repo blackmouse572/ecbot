@@ -115,6 +115,20 @@ def _meta(tool: Tools) -> dict[str, Any]:
     return {TOOL_META_KEY: meta}
 
 
+def _without_send_in(schema: dict[str, Any]) -> dict[str, Any]:
+    """Drops each property's x-in (where the API sends it: path/query/body), which is not for the model."""
+    props = schema.get("properties")
+    if not isinstance(props, dict):
+        return schema
+    return {
+        **schema,
+        "properties": {
+            k: {pk: pv for pk, pv in v.items() if pk != "x-in"} if isinstance(v, dict) else v
+            for k, v in props.items()
+        },
+    }
+
+
 def _build_http_tool(tool: Tools) -> StructuredTool:
     # An HTTP tool is one endpoint with no actions: the API runs it by tool id alone
     # and never fills discovered_actions, so the schema comes from the tool itself.
@@ -122,7 +136,7 @@ def _build_http_tool(tool: Tools) -> StructuredTool:
         coroutine=_make_executor(tool.id, None),
         name=sanitize_tool_name(tool.slug),
         description=_describe(tool.slug, tool.description or ""),
-        args_schema=tool.http_input_schema or {"type": "object", "properties": {}},
+        args_schema=_without_send_in(tool.http_input_schema or {"type": "object", "properties": {}}),
         metadata=_meta(tool),
     )
 

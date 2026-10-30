@@ -426,6 +426,46 @@ describe('HttpToolExecutorService', () => {
         }
     );
 
+    it("sends each argument where its parameter's Send in says", async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.POST,
+            httpUrl: 'https://api.example.com/shops/{shop}/orders',
+            httpInputSchema: {
+                type: 'object',
+                properties: {
+                    shop: { type: 'string', 'x-in': 'path' },
+                    dry_run: { type: 'boolean', 'x-in': 'query' },
+                    note: { type: 'string' },
+                },
+            },
+        });
+        await svc.execute(tool, { shop: 'moc', dry_run: true, note: 'hi' });
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(String(url)).toBe(
+            'https://api.example.com/shops/moc/orders?dry_run=true'
+        );
+        expect(init.body).toBe(JSON.stringify({ note: 'hi' }));
+    });
+
+    it('uses the Send in from the draft schema when testing a config', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        await svc.executeWithConfig(
+            {
+                httpMethod: 'DELETE',
+                httpUrl: 'https://api.example.com/orders/{id}',
+                inputSchema: {
+                    type: 'object',
+                    properties: { reason: { type: 'string', 'x-in': 'body' } },
+                },
+            },
+            { id: 9, reason: 'duplicate' }
+        );
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(String(url)).toBe('https://api.example.com/orders/9');
+        expect(init.body).toBe(JSON.stringify({ reason: 'duplicate' }));
+    });
+
     it('sends JSON-stringified args as body for POST requests', async () => {
         fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
         const tool = makeTool({ httpMethod: ENUM_HTTP_METHOD.POST });

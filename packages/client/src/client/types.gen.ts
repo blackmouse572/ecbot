@@ -5757,6 +5757,12 @@ export type TestInlineToolRequestDto = {
     auth?: HttpAuthDto;
     credential?: string;
     timeoutMs?: number;
+    /**
+     * The draft's parameter schema, so each argument is sent where its Send in (x-in) says
+     */
+    inputSchema?: {
+        [key: string]: unknown;
+    };
     args: {
         [key: string]: unknown;
     };

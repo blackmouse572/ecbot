@@ -6,6 +6,8 @@ import { useForm, type FieldPath } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { HeadersEditor, type HeadersEditorMode } from "./headers-editor";
+import { HttpRequestPreview } from "./http-request-preview";
+import { rowsToSchemaPayload } from "./http-tool-payload";
 import {
   JsonSchemaEditor,
   type JsonSchemaEditorMode,
@@ -159,6 +161,9 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   };
 
   const authType = form.watch("auth.type");
+  const httpMethod = form.watch("httpMethod") ?? "GET";
+  const httpUrl = form.watch("httpUrl") ?? "";
+  const schemaRows = (form.watch("inputSchemaRows") as SchemaProp[]) ?? [];
   const showApiKeyFields = authType === "api_key";
   const showCredential = authType && authType !== "none";
 
@@ -262,6 +267,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                 mode={schemaMode}
                 onModeChange={setSchemaMode}
                 showErrors={form.formState.isSubmitted || testAttempted}
+                http={{ method: httpMethod, url: httpUrl }}
               />
               <Form.ErrorMessage />
             </Form.Item>
@@ -458,6 +464,12 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                 </span>
               )}
             </div>
+            <HttpRequestPreview
+              method={httpMethod}
+              url={httpUrl}
+              inputSchema={rowsToSchemaPayload(schemaRows)}
+              argsText={testArgsText}
+            />
             <div>
               <Button
                 size="small"

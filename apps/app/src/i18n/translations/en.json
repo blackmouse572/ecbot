@@ -2811,7 +2811,8 @@
         "error": "Error",
         "timeout": "Timeout",
         "duration": "{{ms}}ms"
-      }
+      },
+      "previewLabel": "Request preview"
     },
     "schemaEditor": {
       "title": "Properties",
@@ -2840,7 +2841,16 @@
       "modeJson": "JSON",
       "invalidJson": "Invalid JSON: {{message}}",
       "complexSchemaWarning": "This schema uses features the structured editor can’t display (nested objects, oneOf, allOf, …). Switching back to structured mode will lose those parts. Continue?",
-      "emptyHint": "No properties yet. Click ‘Add property’ to describe the tool arguments."
+      "emptyHint": "No properties yet. Click ‘Add property’ to describe the tool arguments.",
+      "sendInLabel": "Send in",
+      "sendInAuto": "Auto ({{where}})",
+      "sendIn": {
+        "path": "Path",
+        "query": "Query",
+        "body": "Body"
+      },
+      "sendInBodyOnGet": "A GET request has no body, so this goes in the query.",
+      "sendInPathMissing": "Add {{placeholder}} to the URL so this value goes in the path."
     },
     "headersEditor": {
       "title": "Headers",

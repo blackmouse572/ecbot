@@ -3,12 +3,11 @@ import { HelperEgressService } from 'src/common/helper/services/helper.egress.se
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
 import { ENUM_TOOL_INVOCATION_STATUS } from 'src/modules/tool/enums/tool-invocation-status.enum';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
+import { planHttpToolRequest } from '@repo/agent-blueprint';
 import {
     appendQueryArgs,
-    HTTP_TOOL_QUERY_METHODS,
     setQueryParam,
 } from 'src/modules/tool/utils/http-tool-query.util';
-import { fillPathArgs } from 'src/modules/tool/utils/http-tool-path.util';
 
 export interface ExecutionResult {
     status: ENUM_TOOL_INVOCATION_STATUS;
@@ -35,16 +34,21 @@ export class HttpToolExecutorService {
             'Content-Type': 'application/json',
             ...(tool.httpHeaders ?? {}),
         };
-        const path = fillPathArgs(tool.httpUrl!, args);
-        if (path.error) {
+        const method = tool.httpMethod ?? 'POST';
+        const plan = planHttpToolRequest({
+            method,
+            url: tool.httpUrl!,
+            inputSchema: tool.httpInputSchema,
+            args,
+        });
+        if (plan.error) {
             return {
                 status: ENUM_TOOL_INVOCATION_STATUS.ERROR,
-                errorMessage: path.error,
+                errorMessage: plan.error,
                 durationMs: Date.now() - started,
             };
         }
-        let url = path.url;
-        args = path.rest;
+        let url = plan.url;
 
         if (
             tool.httpAuth &&
@@ -74,13 +78,11 @@ export class HttpToolExecutorService {
             }
         }
 
-        const method = tool.httpMethod ?? 'POST';
-        const inQuery = HTTP_TOOL_QUERY_METHODS.includes(method);
-        if (inQuery) url = this.withQueryArgs(url, args);
+        url = this.withQueryArgs(url, plan.query);
         const init: RequestInit = {
             method,
             headers,
-            body: inQuery ? undefined : JSON.stringify(args),
+            body: plan.body ? JSON.stringify(plan.body) : undefined,
         };
 
         const attempts = tool.maxRetries ?? 1;
@@ -147,6 +149,7 @@ export class HttpToolExecutorService {
             plaintextCredential?: string;
             timeoutMs?: number;
             maxRetries?: number;
+            inputSchema?: Record<string, unknown>;
         },
         args: Record<string, unknown>
     ): Promise<ExecutionResult> {
@@ -155,16 +158,21 @@ export class HttpToolExecutorService {
             'Content-Type': 'application/json',
             ...(config.httpHeaders ?? {}),
         };
-        const path = fillPathArgs(config.httpUrl, args);
-        if (path.error) {
+        const method = config.httpMethod ?? 'POST';
+        const plan = planHttpToolRequest({
+            method,
+            url: config.httpUrl,
+            inputSchema: config.inputSchema,
+            args,
+        });
+        if (plan.error) {
             return {
                 status: ENUM_TOOL_INVOCATION_STATUS.ERROR,
-                errorMessage: path.error,
+                errorMessage: plan.error,
                 durationMs: Date.now() - started,
             };
         }
-        let url = path.url;
-        args = path.rest;
+        let url = plan.url;
 
         if (
             config.httpAuth &&
@@ -195,13 +203,11 @@ export class HttpToolExecutorService {
             }
         }
 
-        const method = config.httpMethod ?? 'POST';
-        const inQuery = HTTP_TOOL_QUERY_METHODS.includes(method);
-        if (inQuery) url = this.withQueryArgs(url, args);
+        url = this.withQueryArgs(url, plan.query);
         const init: RequestInit = {
             method,
             headers,
-            body: inQuery ? undefined : JSON.stringify(args),
+            body: plan.body ? JSON.stringify(plan.body) : undefined,
         };
 
         const attempts = config.maxRetries ?? 1;

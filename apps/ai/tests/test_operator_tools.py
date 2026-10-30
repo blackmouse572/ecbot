@@ -74,6 +74,15 @@ def test_http_tool_is_offered_to_the_agent_with_its_input_schema():
     assert tools[0].args_schema == SEARCH_SCHEMA
 
 
+def test_http_tool_schema_reaches_the_model_without_send_in():
+    # x-in says where the API sends an argument (path/query/body); it is not JSON Schema.
+    schema = {"type": "object", "properties": {"id": {"type": "integer", "x-in": "path"}}, "required": ["id"]}
+    _, chatbot = _http_chatbot(http_input_schema=schema)
+    (tool,) = build_tools(chatbot)
+    assert tool.args_schema == {"type": "object", "properties": {"id": {"type": "integer"}}, "required": ["id"]}
+    assert schema["properties"]["id"]["x-in"] == "path"
+
+
 def test_http_tool_without_a_schema_takes_no_arguments():
     _, chatbot = _http_chatbot(http_input_schema=None)
     (tool,) = build_tools(chatbot)

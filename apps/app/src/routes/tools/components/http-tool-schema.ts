@@ -26,6 +26,7 @@ const schemaRowSchema = z.object({
     .min(1, i18n.t("tools.errors.schemaRowDescriptionRequired")),
   enum: z.array(z.string()).optional(),
   required: z.boolean().optional(),
+  in: z.enum(["path", "query", "body"]).optional(),
 });
 
 export const createHttpToolSchema = z.object({

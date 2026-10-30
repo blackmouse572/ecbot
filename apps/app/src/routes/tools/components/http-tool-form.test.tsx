@@ -3,7 +3,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HttpToolForm, type HttpToolFormProps } from "./http-tool-form";
 
-const renderForm = (onTest: HttpToolFormProps["onTest"]) =>
+const renderForm = (
+  onTest: HttpToolFormProps["onTest"],
+  defaults: HttpToolFormProps["defaultValues"] = {},
+) =>
   render(
     <HttpToolForm
       defaultValues={{
@@ -11,6 +14,7 @@ const renderForm = (onTest: HttpToolFormProps["onTest"]) =>
         description: "Search products",
         httpMethod: "GET",
         httpUrl: "https://api.example.com/search",
+        ...defaults,
       }}
       onSubmit={vi.fn()}
       onTest={onTest}
@@ -45,5 +49,31 @@ describe("HttpToolForm test endpoint", () => {
 
     const result = await screen.findByText(/"items"/);
     expect(result.className).toContain("max-h-[60vh]");
+  });
+
+  it("previews where each test argument will be sent", async () => {
+    renderForm(vi.fn(), {
+      httpUrl: "https://api.example.com/products/{id}",
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("{}"), {
+      target: { value: '{"id": 1, "lang": "vi"}' },
+    });
+
+    expect(
+      await screen.findByText("GET https://api.example.com/products/1?lang=vi"),
+    ).toBeTruthy();
+  });
+
+  it("previews a missing path argument before the test runs", async () => {
+    renderForm(vi.fn(), {
+      httpUrl: "https://api.example.com/products/{id}",
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("{}"), {
+      target: { value: "{}" },
+    });
+
+    expect(await screen.findByText(/Missing argument "id"/)).toBeTruthy();
   });
 });

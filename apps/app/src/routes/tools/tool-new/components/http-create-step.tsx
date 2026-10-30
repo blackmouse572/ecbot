@@ -64,6 +64,7 @@ export const HttpCreateStep = ({
       auth: payload.auth,
       credential: payload.credential,
       timeoutMs: payload.timeoutMs,
+      inputSchema: payload.inputSchema,
       args,
     } as Record<string, unknown>);
     return (res?.data as A)?.data as ToolTestResult;

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useTestSavedTool, type ToolTestResult } from "@/hooks/api/tools";
+import { HttpRequestPreview } from "../../components/http-request-preview";
 
 type ToolEndpointSectionProps = {
   item: ToolResponseDto;
@@ -104,6 +105,12 @@ export const ToolEndpointSection = ({ item }: ToolEndpointSectionProps) => {
               </span>
             )}
           </div>
+          <HttpRequestPreview
+            method={item.httpMethod ?? "POST"}
+            url={item.httpUrl ?? ""}
+            inputSchema={item.httpInputSchema}
+            argsText={argsText}
+          />
           <div>
             <Button
               size="small"

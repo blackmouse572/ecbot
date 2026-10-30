@@ -2852,7 +2852,8 @@
         "error": "Lỗi",
         "timeout": "Hết thời gian",
         "duration": "{{ms}}ms"
-      }
+      },
+      "previewLabel": "Xem trước request"
     },
     "schemaEditor": {
       "title": "Thuộc tính",
@@ -2881,7 +2882,16 @@
       "modeJson": "JSON",
       "invalidJson": "JSON không hợp lệ: {{message}}",
       "complexSchemaWarning": "Schema này có cấu trúc mà trình biên tập trực quan không hỗ trợ (đối tượng lồng nhau, oneOf, allOf, …). Chuyển về chế độ trực quan sẽ làm mất các phần đó. Tiếp tục?",
-      "emptyHint": "Chưa có thuộc tính nào. Nhấn ‘Thêm thuộc tính’ để mô tả tham số đầu vào."
+      "emptyHint": "Chưa có thuộc tính nào. Nhấn ‘Thêm thuộc tính’ để mô tả tham số đầu vào.",
+      "sendInLabel": "Gửi trong",
+      "sendInAuto": "Tự động ({{where}})",
+      "sendIn": {
+        "path": "Path",
+        "query": "Query",
+        "body": "Body"
+      },
+      "sendInBodyOnGet": "Request GET không có body, nên giá trị này sẽ gửi trong query.",
+      "sendInPathMissing": "Thêm {{placeholder}} vào URL để giá trị này gửi trong path."
     },
     "headersEditor": {
       "title": "Headers",
