@@ -4,8 +4,31 @@ import * as z from "zod";
 import { type Allows, type ApiOptions, READS, respond } from "./shared";
 
 // The plan card is billing, which only Ecbot Cloud has: the route comes with
-// the enterprise overlay, so @repo/client has no function for it. On an
+// the enterprise overlay, so @repo/client has no function for it. Keep this
+// type in sync with eccho-ee's TokenUsageSummaryResponseDto. On an
 // open-edition API the call fails with the API's own "not found".
+export interface PlanUsageSummary {
+  planName: string;
+  status: string;
+  usedPercent: number;
+  periodEnd: string;
+  hasCredit: boolean;
+  lowBalanceThreshold?: number;
+  estimate?: {
+    referenceReplies: number;
+    models: { model: string; replies: number }[];
+  };
+}
+
+export function getPlanUsage(api: ApiOptions) {
+  return client.get<{ 200: { data: PlanUsageSummary } }>({
+    ...api,
+    responseType: "json",
+    security: [{ name: "x-api-key", type: "apiKey" }],
+    url: "/api/v1/client/token-usage/summary",
+  });
+}
+
 export function registerPlanTools(
   server: McpServer,
   api: ApiOptions,
@@ -22,14 +45,6 @@ export function registerPlanTools(
       inputSchema: z.object({}),
       annotations: READS,
     },
-    () =>
-      respond(
-        client.get<{ 200: { data: unknown } }>({
-          ...api,
-          security: [{ name: "x-api-key", type: "apiKey" }],
-          url: "/api/v1/client/token-usage/summary",
-        }),
-        (d) => d.data,
-      ),
+    () => respond(getPlanUsage(api), (d) => d.data),
   );
 }

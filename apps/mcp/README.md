@@ -87,7 +87,9 @@ the tool in the matching `src/tools/*.ts`, inside the `register*Tools`
 group for that ability (so `tools/list` hides it from keys without it).
 Give it a `title` and the annotation set for its kind, spread `api` into the
 `@repo/client` call so it carries the caller's key, and return through
-`respond()`.
+`respond()`. A route that exists only in the enterprise overlay has no
+`@repo/client` function: call it by path with `client.get` through a small
+typed wrapper, as `getPlanUsage` in `src/tools/plan.ts` does.
 
 ## Auth
 
