@@ -368,6 +368,36 @@ describe('HttpToolExecutorService', () => {
         expect(init.body).toBe(JSON.stringify({ note: 'hi' }));
     });
 
+    it('fills a placeholder used twice in the path', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        await svc.executeWithConfig(
+            {
+                httpMethod: 'GET',
+                httpUrl: 'https://api.example.com/tenants/{id}/items/{id}',
+            },
+            { id: 5 }
+        );
+        expect(String(fetchSpy.mock.calls[0][0])).toBe(
+            'https://api.example.com/tenants/5/items/5'
+        );
+    });
+
+    it('never fills a placeholder in the host, so an argument cannot change where the credential goes', async () => {
+        fetchSpy.mockResolvedValue(jsonResponse(200, {}));
+        await svc.execute(
+            makeTool({
+                httpMethod: ENUM_HTTP_METHOD.GET,
+                httpUrl: 'https://{host}/v1/search',
+                httpAuth: { type: 'bearer' },
+                httpCredential: 'cipher',
+            }),
+            { host: 'evil.com' }
+        );
+        for (const [url] of fetchSpy.mock.calls) {
+            expect(new URL(String(url)).hostname).not.toBe('evil.com');
+        }
+    });
+
     it('returns an error, without calling the URL, when a path argument is missing', async () => {
         const result = await svc.execute(
             makeTool({
