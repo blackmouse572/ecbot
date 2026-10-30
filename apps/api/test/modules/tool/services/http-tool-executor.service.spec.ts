@@ -340,6 +340,62 @@ describe('HttpToolExecutorService', () => {
         expect(String(url)).toBe('https://api.example.com/stock?item=dress');
     });
 
+    it('fills a {name} path placeholder from the arguments, not the query', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.GET,
+            httpUrl: 'https://api.example.com/products/{id}',
+        });
+        await svc.execute(tool, { id: 1, lang: 'vi' });
+        expect(String(fetchSpy.mock.calls[0][0])).toBe(
+            'https://api.example.com/products/1?lang=vi'
+        );
+    });
+
+    it('fills path placeholders when testing a config, encoding the value', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        await svc.executeWithConfig(
+            {
+                httpMethod: 'POST',
+                httpUrl: 'https://api.example.com/shops/{shop}/orders/{id}',
+            },
+            { shop: 'a/b c', id: 7, note: 'hi' }
+        );
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(String(url)).toBe(
+            'https://api.example.com/shops/a%2Fb%20c/orders/7'
+        );
+        expect(init.body).toBe(JSON.stringify({ note: 'hi' }));
+    });
+
+    it('returns an error, without calling the URL, when a path argument is missing', async () => {
+        const result = await svc.execute(
+            makeTool({
+                httpMethod: ENUM_HTTP_METHOD.GET,
+                httpUrl: 'https://api.example.com/products/{id}',
+            }),
+            {}
+        );
+        expect(result.status).toBe(ENUM_TOOL_INVOCATION_STATUS.ERROR);
+        expect(result.errorMessage).toContain('id');
+        expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it.each(['.', '..'])(
+        'refuses %s as a path argument so it cannot climb the path',
+        async value => {
+            const result = await svc.execute(
+                makeTool({
+                    httpMethod: ENUM_HTTP_METHOD.GET,
+                    httpUrl: 'https://api.example.com/products/{id}',
+                }),
+                { id: value }
+            );
+            expect(result.status).toBe(ENUM_TOOL_INVOCATION_STATUS.ERROR);
+            expect(fetchSpy).not.toHaveBeenCalled();
+        }
+    );
+
     it('sends JSON-stringified args as body for POST requests', async () => {
         fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
         const tool = makeTool({ httpMethod: ENUM_HTTP_METHOD.POST });

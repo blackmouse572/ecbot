@@ -8,6 +8,7 @@ import {
     HTTP_TOOL_QUERY_METHODS,
     setQueryParam,
 } from 'src/modules/tool/utils/http-tool-query.util';
+import { fillPathArgs } from 'src/modules/tool/utils/http-tool-path.util';
 
 export interface ExecutionResult {
     status: ENUM_TOOL_INVOCATION_STATUS;
@@ -34,7 +35,16 @@ export class HttpToolExecutorService {
             'Content-Type': 'application/json',
             ...(tool.httpHeaders ?? {}),
         };
-        let url = tool.httpUrl!;
+        const path = fillPathArgs(tool.httpUrl!, args);
+        if (path.error) {
+            return {
+                status: ENUM_TOOL_INVOCATION_STATUS.ERROR,
+                errorMessage: path.error,
+                durationMs: Date.now() - started,
+            };
+        }
+        let url = path.url;
+        args = path.rest;
 
         if (
             tool.httpAuth &&
@@ -145,7 +155,16 @@ export class HttpToolExecutorService {
             'Content-Type': 'application/json',
             ...(config.httpHeaders ?? {}),
         };
-        let url = config.httpUrl;
+        const path = fillPathArgs(config.httpUrl, args);
+        if (path.error) {
+            return {
+                status: ENUM_TOOL_INVOCATION_STATUS.ERROR,
+                errorMessage: path.error,
+                durationMs: Date.now() - started,
+            };
+        }
+        let url = path.url;
+        args = path.rest;
 
         if (
             config.httpAuth &&
