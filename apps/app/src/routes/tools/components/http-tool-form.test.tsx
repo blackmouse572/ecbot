@@ -3,7 +3,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HttpToolForm, type HttpToolFormProps } from "./http-tool-form";
 
-const renderForm = (onTest: HttpToolFormProps["onTest"]) =>
+const renderForm = (
+  onTest: HttpToolFormProps["onTest"],
+  defaults: HttpToolFormProps["defaultValues"] = {},
+) =>
   render(
     <HttpToolForm
       defaultValues={{
@@ -11,6 +14,7 @@ const renderForm = (onTest: HttpToolFormProps["onTest"]) =>
         description: "Search products",
         httpMethod: "GET",
         httpUrl: "https://api.example.com/search",
+        ...defaults,
       }}
       onSubmit={vi.fn()}
       onTest={onTest}
@@ -45,5 +49,69 @@ describe("HttpToolForm test endpoint", () => {
 
     const result = await screen.findByText(/"items"/);
     expect(result.className).toContain("max-h-[60vh]");
+  });
+
+  it("previews where each test argument will be sent", async () => {
+    renderForm(vi.fn(), {
+      httpUrl: "https://api.example.com/products/{id}",
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("{}"), {
+      target: { value: '{"id": 1, "lang": "vi"}' },
+    });
+
+    expect(
+      await screen.findByText("GET https://api.example.com/products/1?lang=vi"),
+    ).toBeTruthy();
+  });
+
+  it("shows Required under an empty path variable and does not run the test", async () => {
+    const onTest = vi.fn();
+    renderForm(onTest, {
+      httpUrl: "https://api.example.com/products/{id}",
+    });
+
+    expect(screen.queryByText("Required")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Run Test" }));
+
+    expect(await screen.findByText("Required")).toBeTruthy();
+    expect(screen.getByLabelText("id").getAttribute("aria-invalid")).toBe(
+      "true",
+    );
+    expect(onTest).not.toHaveBeenCalled();
+    // The preview still shows where the value will go.
+    expect(
+      screen.getByText("GET https://api.example.com/products/{id}"),
+    ).toBeTruthy();
+  });
+
+  it("has a field for each {name} in the URL, sent with the test args", async () => {
+    const onTest = vi
+      .fn()
+      .mockResolvedValue({ status: "SUCCESS", durationMs: 1 });
+    renderForm(onTest, {
+      httpUrl: "https://api.example.com/shops/{shop}/products/{id}",
+    });
+
+    fireEvent.change(screen.getByLabelText("shop"), {
+      target: { value: "moc" },
+    });
+    fireEvent.change(screen.getByLabelText("id"), { target: { value: "1" } });
+    fireEvent.change(screen.getByPlaceholderText("{}"), {
+      target: { value: '{"lang": "vi"}' },
+    });
+
+    expect(
+      await screen.findByText(
+        "GET https://api.example.com/shops/moc/products/1?lang=vi",
+      ),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Run Test" }));
+    await vi.waitFor(() => expect(onTest).toHaveBeenCalled());
+    expect(onTest.mock.calls[0][1]).toEqual({
+      lang: "vi",
+      shop: "moc",
+      id: "1",
+    });
   });
 });

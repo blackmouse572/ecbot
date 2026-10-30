@@ -3,6 +3,7 @@ export * from "./compile-prompt";
 export * from "./describe-start";
 export * from "./followup-rules";
 export * from "./guess-business-type";
+export * from "./http-tool-request";
 export * from "./libraries";
 export * from "./migrate-profile";
 export * from "./opening-hours";

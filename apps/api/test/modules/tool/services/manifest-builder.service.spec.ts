@@ -59,6 +59,27 @@ describe('ManifestBuilderService', () => {
         });
     });
 
+    it("never shows the model a parameter's Send in (x-in)", async () => {
+        const tool = {
+            id: 't-3',
+            kind: ENUM_TOOL_KIND.HTTP,
+            slug: 'get_product',
+            description: 'Product by id',
+            deleted: false,
+            httpInputSchema: {
+                type: 'object',
+                properties: { id: { type: 'integer', 'x-in': 'path' } },
+            },
+        };
+        mockRepo.findEnabledByChatbotId.mockResolvedValue([{ tool }]);
+
+        const specs = await svc.build('cb-1', 'ws-1');
+        expect(specs[0].inputSchema).toEqual({
+            type: 'object',
+            properties: { id: { type: 'integer' } },
+        });
+    });
+
     it('falls back to empty object schema when httpInputSchema is undefined', async () => {
         const tool = {
             id: 't-2',

@@ -340,6 +340,132 @@ describe('HttpToolExecutorService', () => {
         expect(String(url)).toBe('https://api.example.com/stock?item=dress');
     });
 
+    it('fills a {name} path placeholder from the arguments, not the query', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.GET,
+            httpUrl: 'https://api.example.com/products/{id}',
+        });
+        await svc.execute(tool, { id: 1, lang: 'vi' });
+        expect(String(fetchSpy.mock.calls[0][0])).toBe(
+            'https://api.example.com/products/1?lang=vi'
+        );
+    });
+
+    it('fills path placeholders when testing a config, encoding the value', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        await svc.executeWithConfig(
+            {
+                httpMethod: 'POST',
+                httpUrl: 'https://api.example.com/shops/{shop}/orders/{id}',
+            },
+            { shop: 'a/b c', id: 7, note: 'hi' }
+        );
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(String(url)).toBe(
+            'https://api.example.com/shops/a%2Fb%20c/orders/7'
+        );
+        expect(init.body).toBe(JSON.stringify({ note: 'hi' }));
+    });
+
+    it('fills a placeholder used twice in the path', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        await svc.executeWithConfig(
+            {
+                httpMethod: 'GET',
+                httpUrl: 'https://api.example.com/tenants/{id}/items/{id}',
+            },
+            { id: 5 }
+        );
+        expect(String(fetchSpy.mock.calls[0][0])).toBe(
+            'https://api.example.com/tenants/5/items/5'
+        );
+    });
+
+    it('never fills a placeholder in the host, so an argument cannot change where the credential goes', async () => {
+        fetchSpy.mockResolvedValue(jsonResponse(200, {}));
+        await svc.execute(
+            makeTool({
+                httpMethod: ENUM_HTTP_METHOD.GET,
+                httpUrl: 'https://{host}/v1/search',
+                httpAuth: { type: 'bearer' },
+                httpCredential: 'cipher',
+            }),
+            { host: 'evil.com' }
+        );
+        for (const [url] of fetchSpy.mock.calls) {
+            expect(new URL(String(url)).hostname).not.toBe('evil.com');
+        }
+    });
+
+    it('returns an error, without calling the URL, when a path argument is missing', async () => {
+        const result = await svc.execute(
+            makeTool({
+                httpMethod: ENUM_HTTP_METHOD.GET,
+                httpUrl: 'https://api.example.com/products/{id}',
+            }),
+            {}
+        );
+        expect(result.status).toBe(ENUM_TOOL_INVOCATION_STATUS.ERROR);
+        expect(result.errorMessage).toContain('id');
+        expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it.each(['.', '..'])(
+        'refuses %s as a path argument so it cannot climb the path',
+        async value => {
+            const result = await svc.execute(
+                makeTool({
+                    httpMethod: ENUM_HTTP_METHOD.GET,
+                    httpUrl: 'https://api.example.com/products/{id}',
+                }),
+                { id: value }
+            );
+            expect(result.status).toBe(ENUM_TOOL_INVOCATION_STATUS.ERROR);
+            expect(fetchSpy).not.toHaveBeenCalled();
+        }
+    );
+
+    it("sends each argument where its parameter's Send in says", async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        const tool = makeTool({
+            httpMethod: ENUM_HTTP_METHOD.POST,
+            httpUrl: 'https://api.example.com/shops/{shop}/orders',
+            httpInputSchema: {
+                type: 'object',
+                properties: {
+                    shop: { type: 'string', 'x-in': 'path' },
+                    dry_run: { type: 'boolean', 'x-in': 'query' },
+                    note: { type: 'string' },
+                },
+            },
+        });
+        await svc.execute(tool, { shop: 'moc', dry_run: true, note: 'hi' });
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(String(url)).toBe(
+            'https://api.example.com/shops/moc/orders?dry_run=true'
+        );
+        expect(init.body).toBe(JSON.stringify({ note: 'hi' }));
+    });
+
+    it('uses the Send in from the draft schema when testing a config', async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+        await svc.executeWithConfig(
+            {
+                httpMethod: 'DELETE',
+                httpUrl: 'https://api.example.com/orders/{id}',
+                inputSchema: {
+                    type: 'object',
+                    properties: { reason: { type: 'string', 'x-in': 'body' } },
+                },
+            },
+            { id: 9, reason: 'duplicate' }
+        );
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(String(url)).toBe('https://api.example.com/orders/9');
+        expect(init.body).toBe(JSON.stringify({ reason: 'duplicate' }));
+    });
+
     it('sends JSON-stringified args as body for POST requests', async () => {
         fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
         const tool = makeTool({ httpMethod: ENUM_HTTP_METHOD.POST });

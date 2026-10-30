@@ -1,3 +1,4 @@
+import { PARAM_IN_KEY } from "@repo/agent-blueprint";
 import type {
   CreateHttpToolRequestDto,
   UpdateToolRequestDto,
@@ -22,6 +23,7 @@ export const rowsToSchemaPayload = (
     if (row.type !== "boolean" && row.enum && row.enum.length > 0) {
       prop.enum = row.enum;
     }
+    if (row.in) prop[PARAM_IN_KEY] = row.in;
     properties[row.key] = prop;
     if (row.required) required.push(row.key);
   }

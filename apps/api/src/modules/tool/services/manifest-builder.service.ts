@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { stripParamIn } from '@repo/agent-blueprint';
 import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
@@ -36,7 +37,12 @@ export class ManifestBuilderService {
                     name: t.slug,
                     description: t.description,
                     inputSchema: this.normalizeSchema(
-                        t.httpInputSchema ?? { type: 'object', properties: {} }
+                        stripParamIn(
+                            t.httpInputSchema ?? {
+                                type: 'object',
+                                properties: {},
+                            }
+                        )
                     ),
                 });
             } else if (t.kind === ENUM_TOOL_KIND.MCP) {

@@ -423,6 +423,7 @@ export class ToolService {
                 httpAuth: dto.auth,
                 plaintextCredential: dto.credential,
                 timeoutMs: dto.timeoutMs,
+                inputSchema: dto.inputSchema,
             },
             dto.args
         );

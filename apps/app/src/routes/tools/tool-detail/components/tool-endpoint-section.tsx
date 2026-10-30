@@ -5,6 +5,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useTestSavedTool, type ToolTestResult } from "@/hooks/api/tools";
+import { HttpRequestPreview } from "../../components/http-request-preview";
+import { PathVariablesFields } from "../../components/path-variables-fields";
+import {
+  buildTestArgs,
+  missingPathVariables,
+} from "../../components/test-args";
 
 type ToolEndpointSectionProps = {
   item: ToolResponseDto;
@@ -16,16 +22,20 @@ export const ToolEndpointSection = ({ item }: ToolEndpointSectionProps) => {
   const { testTool, isPending } = useTestSavedTool(workspaceSlug, item.id);
 
   const [argsText, setArgsText] = useState("{}");
+  const [variables, setVariables] = useState<Record<string, string>>({});
+  const [tried, setTried] = useState(false);
   const [argsError, setArgsError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<ToolTestResult | null>(null);
 
   const handleRun = async () => {
     setArgsError(null);
-    let parsedArgs: Record<string, unknown>;
-    try {
-      parsedArgs = JSON.parse(argsText) as Record<string, unknown>;
-    } catch {
+    const parsedArgs = buildTestArgs(argsText, variables, item.httpInputSchema);
+    if (!parsedArgs) {
       setArgsError(t("tools.test.invalidJson"));
+      return;
+    }
+    setTried(true);
+    if (missingPathVariables(item.httpUrl ?? "", parsedArgs).length > 0) {
       return;
     }
     try {
@@ -87,6 +97,19 @@ export const ToolEndpointSection = ({ item }: ToolEndpointSectionProps) => {
           {t("tools.test.title")}
         </Heading>
         <div className="flex flex-col gap-y-3">
+          <PathVariablesFields
+            url={item.httpUrl ?? ""}
+            values={variables}
+            onChange={setVariables}
+            missing={
+              tried
+                ? missingPathVariables(
+                    item.httpUrl ?? "",
+                    buildTestArgs(argsText, variables) ?? {},
+                  )
+                : []
+            }
+          />
           <div className="flex flex-col gap-y-1">
             <label className="txt-compact-small font-medium text-ui-fg-subtle">
               {t("tools.test.argsLabel")}
@@ -104,6 +127,12 @@ export const ToolEndpointSection = ({ item }: ToolEndpointSectionProps) => {
               </span>
             )}
           </div>
+          <HttpRequestPreview
+            method={item.httpMethod ?? "POST"}
+            url={item.httpUrl ?? ""}
+            inputSchema={item.httpInputSchema}
+            args={buildTestArgs(argsText, variables, item.httpInputSchema)}
+          />
           <div>
             <Button
               size="small"

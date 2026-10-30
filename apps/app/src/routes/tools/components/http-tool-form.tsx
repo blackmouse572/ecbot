@@ -6,6 +6,10 @@ import { useForm, type FieldPath } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { HeadersEditor, type HeadersEditorMode } from "./headers-editor";
+import { HttpRequestPreview } from "./http-request-preview";
+import { PathVariablesFields } from "./path-variables-fields";
+import { buildTestArgs, missingPathVariables } from "./test-args";
+import { rowsToSchemaPayload } from "./http-tool-payload";
 import {
   JsonSchemaEditor,
   type JsonSchemaEditorMode,
@@ -93,6 +97,10 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   // signal to start showing per-row errors after a test attempt.
   const [testAttempted, setTestAttempted] = useState(false);
   const [testArgsText, setTestArgsText] = useState("{}");
+  const [testVariables, setTestVariables] = useState<Record<string, string>>(
+    {},
+  );
+  const [testTried, setTestTried] = useState(false);
   const [testArgsError, setTestArgsError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<ToolTestResult | null>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -120,13 +128,17 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   const handleTest = async () => {
     if (!onTest) return;
     setTestArgsError(null);
-    let parsedArgs: Record<string, unknown>;
-    try {
-      parsedArgs = JSON.parse(testArgsText) as Record<string, unknown>;
-    } catch {
+    const parsedArgs = buildTestArgs(
+      testArgsText,
+      testVariables,
+      rowsToSchemaPayload(schemaRows),
+    );
+    if (!parsedArgs) {
       setTestArgsError(t("tools.test.invalidJson"));
       return;
     }
+    setTestTried(true);
+    if (missingPathVariables(httpUrl, parsedArgs).length > 0) return;
     // getValues() yields the raw input type, so the config has to be parsed
     // into the same coerced payload a submit would send. `httpToolTestSchema`
     // relaxes name/description — an unnamed draft is still testable.
@@ -159,6 +171,9 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   };
 
   const authType = form.watch("auth.type");
+  const httpMethod = form.watch("httpMethod") ?? "GET";
+  const httpUrl = form.watch("httpUrl") ?? "";
+  const schemaRows = (form.watch("inputSchemaRows") as SchemaProp[]) ?? [];
   const showApiKeyFields = authType === "api_key";
   const showCredential = authType && authType !== "none";
 
@@ -262,6 +277,7 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                 mode={schemaMode}
                 onModeChange={setSchemaMode}
                 showErrors={form.formState.isSubmitted || testAttempted}
+                http={{ method: httpMethod, url: httpUrl }}
               />
               <Form.ErrorMessage />
             </Form.Item>
@@ -438,6 +454,19 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
             <p className="txt-compact-small font-medium text-ui-fg-base">
               {t("tools.test.title")}
             </p>
+            <PathVariablesFields
+              url={httpUrl}
+              values={testVariables}
+              onChange={setTestVariables}
+              missing={
+                testTried
+                  ? missingPathVariables(
+                      httpUrl,
+                      buildTestArgs(testArgsText, testVariables) ?? {},
+                    )
+                  : []
+              }
+            />
             <div className="flex flex-col gap-y-1">
               <label className="txt-compact-small text-ui-fg-subtle">
                 {t("tools.test.argsLabel")}
@@ -458,6 +487,16 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
                 </span>
               )}
             </div>
+            <HttpRequestPreview
+              method={httpMethod}
+              url={httpUrl}
+              inputSchema={rowsToSchemaPayload(schemaRows)}
+              args={buildTestArgs(
+                testArgsText,
+                testVariables,
+                rowsToSchemaPayload(schemaRows),
+              )}
+            />
             <div>
               <Button
                 size="small"

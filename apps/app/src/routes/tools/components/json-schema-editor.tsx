@@ -11,16 +11,20 @@ import {
   Text,
   Textarea,
   Tooltip,
+  clx,
 } from "@medusajs/ui";
+import {
+  HTTP_PARAM_IN,
+  PARAM_IN_KEY,
+  paramInDefault,
+  pathParamNames,
+  type HttpParamIn,
+} from "@repo/agent-blueprint";
 import { useEffect, useRef, useState, type FC } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 export type SchemaPropType =
-  | "string"
-  | "number"
-  | "integer"
-  | "boolean"
-  | "array";
+  "string" | "number" | "integer" | "boolean" | "array";
 
 export type SchemaProp = {
   key: string;
@@ -28,6 +32,8 @@ export type SchemaProp = {
   description: string;
   enum?: string[];
   required?: boolean;
+  /** Where the HTTP request sends it; unset means the method's default. */
+  in?: HttpParamIn;
 };
 
 export type JsonSchemaEditorMode = "structured" | "json";
@@ -38,7 +44,11 @@ export type JsonSchemaEditorProps = {
   mode: JsonSchemaEditorMode;
   onModeChange: (mode: JsonSchemaEditorMode) => void;
   showErrors?: boolean;
+  /** For an HTTP tool: shows where each parameter is sent (Send in). */
+  http?: { method: string; url: string };
 };
+
+const SEND_IN_AUTO = "auto";
 
 const TYPE_OPTIONS: SchemaPropType[] = [
   "string",
@@ -122,12 +132,15 @@ export const schemaToRows = (
       enumValues = (raw.enum as unknown[]).map((v) => String(v));
     }
 
+    const paramIn = HTTP_PARAM_IN.find((v) => v === raw[PARAM_IN_KEY]);
+
     rows.push({
       key,
       type: t as SchemaPropType,
       description,
       enum: enumValues,
       required: required.includes(key),
+      ...(paramIn ? { in: paramIn } : {}),
     });
   }
 
@@ -145,6 +158,7 @@ export const rowsToSchema = (rows: SchemaProp[]): Record<string, unknown> => {
     if (row.type !== "boolean" && row.enum && row.enum.length > 0) {
       prop.enum = row.enum;
     }
+    if (row.in) prop[PARAM_IN_KEY] = row.in;
     properties[row.key] = prop;
     if (row.required) required.push(row.key);
   }
@@ -255,12 +269,35 @@ const EnumInput: FC<EnumInputProps> = ({ value, onCommit }) => {
   );
 };
 
+/** Why a parameter will not go where its Send in says, if it will not. */
+const SendInHint: FC<{
+  http: { method: string; url: string };
+  row: SchemaProp;
+}> = ({ http, row }) => {
+  const { t } = useTranslation();
+  let message: string | null = null;
+  if (row.in === "body" && http.method === "GET") {
+    message = t("tools.schemaEditor.sendInBodyOnGet");
+  } else if (row.in === "path" && !pathParamNames(http.url).includes(row.key)) {
+    message = t("tools.schemaEditor.sendInPathMissing", {
+      placeholder: `{${row.key}}`,
+    });
+  }
+  if (!message) return null;
+  return (
+    <Text size="small" className="text-ui-fg-muted">
+      {message}
+    </Text>
+  );
+};
+
 export const JsonSchemaEditor: FC<JsonSchemaEditorProps> = ({
   rows,
   onRowsChange,
   mode,
   onModeChange,
   showErrors = false,
+  http,
 }) => {
   const { t } = useTranslation();
 
@@ -415,7 +452,7 @@ export const JsonSchemaEditor: FC<JsonSchemaEditorProps> = ({
               className="bg-ui-bg-field-component p-3 flex flex-col gap-y-2"
             >
               <div className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-4">
+                <div className={http ? "col-span-3" : "col-span-4"}>
                   <div className="flex items-center gap-x-1 mb-1">
                     <Label size="xsmall" className="text-ui-fg-subtle">
                       {t("tools.schemaEditor.keyLabel")}
@@ -510,7 +547,53 @@ export const JsonSchemaEditor: FC<JsonSchemaEditorProps> = ({
                     </Select.Content>
                   </Select>
                 </div>
-                <div className="col-span-4 flex items-center gap-x-2 pb-1">
+                {http && (
+                  <div className="col-span-3">
+                    <Label
+                      size="xsmall"
+                      className="text-ui-fg-subtle mb-1 block"
+                    >
+                      {t("tools.schemaEditor.sendInLabel")}
+                    </Label>
+                    <Select
+                      value={row.in ?? SEND_IN_AUTO}
+                      onValueChange={(v) =>
+                        handleUpdateRow(index, {
+                          in:
+                            v === SEND_IN_AUTO ? undefined : (v as HttpParamIn),
+                        })
+                      }
+                    >
+                      <Select.Trigger>
+                        <Select.Value />
+                      </Select.Trigger>
+                      <Select.Content>
+                        <Select.Item value={SEND_IN_AUTO}>
+                          {t("tools.schemaEditor.sendInAuto", {
+                            where: t(
+                              `tools.schemaEditor.sendIn.${paramInDefault(
+                                http.method,
+                                http.url,
+                                row.key,
+                              )}`,
+                            ),
+                          })}
+                        </Select.Item>
+                        {HTTP_PARAM_IN.map((where) => (
+                          <Select.Item key={where} value={where}>
+                            {t(`tools.schemaEditor.sendIn.${where}`)}
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select>
+                  </div>
+                )}
+                <div
+                  className={clx(
+                    "flex items-center gap-x-2 pb-1",
+                    http ? "col-span-2" : "col-span-4",
+                  )}
+                >
                   <Checkbox
                     id={`required-${index}`}
                     checked={row.required ?? false}
@@ -533,6 +616,7 @@ export const JsonSchemaEditor: FC<JsonSchemaEditorProps> = ({
                   </IconButton>
                 </div>
               </div>
+              {http && row.key && <SendInHint http={http} row={row} />}
               <div>
                 <Label size="xsmall" className="text-ui-fg-subtle mb-1 block">
                   {t("tools.schemaEditor.descriptionLabel")}

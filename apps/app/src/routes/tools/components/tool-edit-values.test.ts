@@ -31,6 +31,35 @@ describe("tool edit values", () => {
     });
   });
 
+  it("keeps each parameter's Send in through load and save", () => {
+    const values = httpToolEditValues({
+      name: "Product",
+      description: "d",
+      httpMethod: "GET",
+      httpUrl: "https://api.example.com/products/{id}",
+      httpInputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "integer", description: "Product id", "x-in": "path" },
+          lang: { type: "string", description: "Language" },
+        },
+      },
+    } as never);
+    expect(values.inputSchemaRows?.map((r) => [r.key, r.in])).toEqual([
+      ["id", "path"],
+      ["lang", undefined],
+    ]);
+
+    const payload = toUpdateHttpPayload(values as never);
+    expect(payload.inputSchema).toEqual({
+      type: "object",
+      properties: {
+        id: { type: "integer", description: "Product id", "x-in": "path" },
+        lang: { type: "string", description: "Language" },
+      },
+    });
+  });
+
   it("sends the new HTTP method and URL on save", () => {
     const payload = toUpdateHttpPayload({
       name: "Orders",

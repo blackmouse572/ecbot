@@ -1,6 +1,3 @@
-/** HTTP methods whose tool arguments travel in the query string, not a body. */
-export const HTTP_TOOL_QUERY_METHODS = ['GET', 'DELETE'];
-
 /**
  * How servers tend to read a key: case-insensitively, and with `a[]` or
  * `a[0]` merged into `a` (qs, PHP, Rails). Two keys with the same form

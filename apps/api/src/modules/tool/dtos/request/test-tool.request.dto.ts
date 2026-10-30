@@ -57,6 +57,16 @@ export class TestInlineToolRequestDto {
     @IsPositive()
     timeoutMs?: number;
 
+    @ApiPropertyOptional({
+        type: 'object',
+        additionalProperties: true,
+        description:
+            "The draft's parameter schema, so each argument is sent where its Send in (x-in) says",
+    } as ApiPropertyOptions)
+    @IsOptional()
+    @IsObject()
+    inputSchema?: Record<string, unknown>;
+
     @ApiProperty({
         type: 'object',
         additionalProperties: true,
