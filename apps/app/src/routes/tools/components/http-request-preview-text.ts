@@ -1,7 +1,11 @@
-import { planHttpToolRequest } from "@repo/agent-blueprint";
+import {
+  planHttpToolRequest,
+  type HttpToolRequestPlan,
+} from "@repo/agent-blueprint";
 
 export type HttpRequestPreviewText =
-  { error: string } | { line: string; body?: string };
+  | { problem: NonNullable<HttpToolRequestPlan["problem"]> }
+  | { line: string; body?: string };
 
 /**
  * The request a test call will make, from the same plan the API runs. The

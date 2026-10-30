@@ -75,9 +75,37 @@ describe("HttpToolForm test endpoint", () => {
     });
 
     expect(
+      await screen.findByText('Fill in "id": the URL needs it for {id}.'),
+    ).toBeTruthy();
+  });
+
+  it("has a field for each {name} in the URL, sent with the test args", async () => {
+    const onTest = vi
+      .fn()
+      .mockResolvedValue({ status: "SUCCESS", durationMs: 1 });
+    renderForm(onTest, {
+      httpUrl: "https://api.example.com/shops/{shop}/products/{id}",
+    });
+
+    fireEvent.change(screen.getByLabelText("shop"), {
+      target: { value: "moc" },
+    });
+    fireEvent.change(screen.getByLabelText("id"), { target: { value: "1" } });
+    fireEvent.change(screen.getByPlaceholderText("{}"), {
+      target: { value: '{"lang": "vi"}' },
+    });
+
+    expect(
       await screen.findByText(
-        'Add "id" to the args: the URL needs it for {id}.',
+        "GET https://api.example.com/shops/moc/products/1?lang=vi",
       ),
     ).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Run Test" }));
+    await vi.waitFor(() => expect(onTest).toHaveBeenCalled());
+    expect(onTest.mock.calls[0][1]).toEqual({
+      lang: "vi",
+      shop: "moc",
+      id: "1",
+    });
   });
 });

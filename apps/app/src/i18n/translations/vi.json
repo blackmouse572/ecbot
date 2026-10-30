@@ -2855,9 +2855,11 @@
       },
       "previewLabel": "Xem trước request",
       "preview": {
-        "missing": "Thêm \"{{name}}\" vào tham số: URL cần giá trị này cho {{placeholder}}.",
+        "missing": "Điền \"{{name}}\": URL cần giá trị này cho {{placeholder}}.",
         "dots": "\"{{name}}\" không được là \".\" hoặc \"..\", vì nó nằm trong đường dẫn URL."
-      }
+      },
+      "variablesLabel": "Biến trong path",
+      "variablePlaceholder": "Giá trị"
     },
     "schemaEditor": {
       "title": "Thuộc tính",

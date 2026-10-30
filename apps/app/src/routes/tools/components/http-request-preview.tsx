@@ -6,7 +6,8 @@ type HttpRequestPreviewProps = {
   method: string;
   url: string;
   inputSchema?: unknown;
-  argsText: string;
+  /** Null while the args JSON does not parse. */
+  args: Record<string, unknown> | null;
 };
 
 /** Where each test argument goes (path, query or body) before Run Test. */
@@ -14,23 +15,16 @@ export const HttpRequestPreview: FC<HttpRequestPreviewProps> = ({
   method,
   url,
   inputSchema,
-  argsText,
+  args,
 }) => {
   const { t } = useTranslation();
-  let args: unknown;
-  try {
-    args = JSON.parse(argsText || "{}");
-  } catch {
-    return null;
-  }
-  if (!url || typeof args !== "object" || args === null || Array.isArray(args))
-    return null;
+  if (!url || !args) return null;
 
   const preview = httpRequestPreviewText({
     method,
     url,
     inputSchema,
-    args: args as Record<string, unknown>,
+    args,
   });
 
   return (

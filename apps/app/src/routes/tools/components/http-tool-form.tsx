@@ -7,6 +7,8 @@ import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { HeadersEditor, type HeadersEditorMode } from "./headers-editor";
 import { HttpRequestPreview } from "./http-request-preview";
+import { PathVariablesFields } from "./path-variables-fields";
+import { buildTestArgs } from "./test-args";
 import { rowsToSchemaPayload } from "./http-tool-payload";
 import {
   JsonSchemaEditor,
@@ -95,6 +97,9 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   // signal to start showing per-row errors after a test attempt.
   const [testAttempted, setTestAttempted] = useState(false);
   const [testArgsText, setTestArgsText] = useState("{}");
+  const [testVariables, setTestVariables] = useState<Record<string, string>>(
+    {},
+  );
   const [testArgsError, setTestArgsError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<ToolTestResult | null>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -122,10 +127,12 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
   const handleTest = async () => {
     if (!onTest) return;
     setTestArgsError(null);
-    let parsedArgs: Record<string, unknown>;
-    try {
-      parsedArgs = JSON.parse(testArgsText) as Record<string, unknown>;
-    } catch {
+    const parsedArgs = buildTestArgs(
+      testArgsText,
+      testVariables,
+      rowsToSchemaPayload(schemaRows),
+    );
+    if (!parsedArgs) {
       setTestArgsError(t("tools.test.invalidJson"));
       return;
     }
@@ -444,6 +451,11 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
             <p className="txt-compact-small font-medium text-ui-fg-base">
               {t("tools.test.title")}
             </p>
+            <PathVariablesFields
+              url={httpUrl}
+              values={testVariables}
+              onChange={setTestVariables}
+            />
             <div className="flex flex-col gap-y-1">
               <label className="txt-compact-small text-ui-fg-subtle">
                 {t("tools.test.argsLabel")}
@@ -468,7 +480,11 @@ export const HttpToolForm: FC<HttpToolFormProps> = ({
               method={httpMethod}
               url={httpUrl}
               inputSchema={rowsToSchemaPayload(schemaRows)}
-              argsText={testArgsText}
+              args={buildTestArgs(
+                testArgsText,
+                testVariables,
+                rowsToSchemaPayload(schemaRows),
+              )}
             />
             <div>
               <Button
