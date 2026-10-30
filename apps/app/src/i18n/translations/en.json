@@ -738,6 +738,7 @@
           "SHOPEE_SHOP": "Shopee seller",
           "TELEGRAM_BOT": "Telegram bot",
           "WHATSAPP_BUSINESS": "WhatsApp Business (Cloud API)",
+          "THREADS_ACCOUNT": "Replies & mentions",
           "WEBSITE_WIDGET": "Embeddable chat widget",
           "API_CHANNEL": "Direct REST integration"
         }
