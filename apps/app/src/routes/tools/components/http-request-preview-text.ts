@@ -15,7 +15,7 @@ export const httpRequestPreviewText = (input: {
   args: Record<string, unknown>;
 }): HttpRequestPreviewText => {
   const plan = planHttpToolRequest(input);
-  if (plan.error) return { error: plan.error };
+  if (plan.problem) return { problem: plan.problem };
   const pairs = Object.entries(plan.query).map(([k, v]) => [
     k,
     typeof v === "object" ? JSON.stringify(v) : String(v),

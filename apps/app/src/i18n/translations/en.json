@@ -2812,7 +2812,11 @@
         "timeout": "Timeout",
         "duration": "{{ms}}ms"
       },
-      "previewLabel": "Request preview"
+      "previewLabel": "Request preview",
+      "preview": {
+        "missing": "Add \"{{name}}\" to the args: the URL needs it for {{placeholder}}.",
+        "dots": "\"{{name}}\" cannot be \".\" or \"..\", because it is part of the URL path."
+      }
     },
     "schemaEditor": {
       "title": "Properties",

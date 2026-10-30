@@ -39,9 +39,12 @@ export const HttpRequestPreview: FC<HttpRequestPreviewProps> = ({
         {t("tools.test.previewLabel")}
       </span>
       <div className="rounded-md border border-ui-border-base bg-ui-bg-field p-2 flex flex-col gap-y-1">
-        {"error" in preview ? (
-          <span className="font-mono text-xs text-ui-fg-error break-all">
-            {preview.error}
+        {"problem" in preview ? (
+          <span className="txt-compact-small text-ui-fg-error break-all">
+            {t(`tools.test.preview.${preview.problem.kind}`, {
+              placeholder: `{${preview.problem.name}}`,
+              name: preview.problem.name,
+            })}
           </span>
         ) : (
           <>

@@ -2853,7 +2853,11 @@
         "timeout": "Hết thời gian",
         "duration": "{{ms}}ms"
       },
-      "previewLabel": "Xem trước request"
+      "previewLabel": "Xem trước request",
+      "preview": {
+        "missing": "Thêm \"{{name}}\" vào tham số: URL cần giá trị này cho {{placeholder}}.",
+        "dots": "\"{{name}}\" không được là \".\" hoặc \"..\", vì nó nằm trong đường dẫn URL."
+      }
     },
     "schemaEditor": {
       "title": "Thuộc tính",

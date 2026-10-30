@@ -74,6 +74,10 @@ describe("HttpToolForm test endpoint", () => {
       target: { value: "{}" },
     });
 
-    expect(await screen.findByText(/Missing argument "id"/)).toBeTruthy();
+    expect(
+      await screen.findByText(
+        'Add "id" to the args: the URL needs it for {id}.',
+      ),
+    ).toBeTruthy();
   });
 });

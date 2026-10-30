@@ -20,7 +20,8 @@ const PLACEHOLDER = /\{([A-Za-z_][\w-]*)\}/g;
 /** Origin, path, and the ?query#fragment that follows. */
 const URL_PARTS = /^([a-z][a-z\d+.-]*:\/\/[^/?#]*)([^?#]*)(.*)$/is;
 
-const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
 
 /** The `{name}`s in the URL's path (never its origin). */
 export function pathParamNames(url: string): string[] {
@@ -29,15 +30,27 @@ export function pathParamNames(url: string): string[] {
 }
 
 /** Where an argument goes when its parameter has no Send in. */
-export function paramInDefault(method: string, url: string, key: string): HttpParamIn {
+export function paramInDefault(
+  method: string,
+  url: string,
+  key: string,
+): HttpParamIn {
   if (pathParamNames(url).includes(key)) return "path";
   return QUERY_METHODS.includes(method.toUpperCase()) ? "query" : "body";
 }
 
-function declaredIn(inputSchema: unknown, key: string): HttpParamIn | undefined {
+function declaredIn(
+  inputSchema: unknown,
+  key: string,
+): HttpParamIn | undefined {
   const props = isObject(inputSchema) ? inputSchema.properties : undefined;
-  const value = isObject(props) && isObject(props[key]) ? props[key][PARAM_IN_KEY] : undefined;
-  return HTTP_PARAM_IN.includes(value as HttpParamIn) ? (value as HttpParamIn) : undefined;
+  const value =
+    isObject(props) && isObject(props[key])
+      ? props[key][PARAM_IN_KEY]
+      : undefined;
+  return HTTP_PARAM_IN.includes(value as HttpParamIn)
+    ? (value as HttpParamIn)
+    : undefined;
 }
 
 export type HttpToolRequestPlan = {
@@ -48,6 +61,8 @@ export type HttpToolRequestPlan = {
   body?: Record<string, unknown>;
   /** Set when the call cannot be made (a path argument is missing). */
   error?: string;
+  /** The same problem, for a translated message. */
+  problem?: { kind: "missing" | "dots"; name: string };
 };
 
 /**
@@ -66,7 +81,7 @@ export function planHttpToolRequest(input: {
   const args = input.args ?? {};
   const parts = URL_PARTS.exec(input.url);
   const used = new Set<string>();
-  let error: string | undefined;
+  let problem: HttpToolRequestPlan["problem"];
   let url = input.url;
   if (parts) {
     const [, origin, path, tail] = parts;
@@ -74,12 +89,13 @@ export function planHttpToolRequest(input: {
       used.add(name);
       const value = args[name];
       if (value === undefined || value === null || value === "") {
-        error ??= `Missing argument "${name}" for the URL path`;
+        problem ??= { kind: "missing", name };
         return match;
       }
-      const text = typeof value === "object" ? JSON.stringify(value) : String(value);
+      const text =
+        typeof value === "object" ? JSON.stringify(value) : String(value);
       if (text === "." || text === "..") {
-        error ??= `Argument "${name}" cannot be "${text}"`;
+        problem ??= { kind: "dots", name };
         return match;
       }
       return encodeURIComponent(text);
@@ -92,17 +108,34 @@ export function planHttpToolRequest(input: {
   for (const [key, value] of Object.entries(args)) {
     if (used.has(key) || value === undefined || value === null) continue;
     const declared = declaredIn(input.inputSchema, key);
-    let where = declared === "query" || declared === "body" ? declared : paramInDefault(method, input.url, key);
+    let where =
+      declared === "query" || declared === "body"
+        ? declared
+        : paramInDefault(method, input.url, key);
     if (where === "body" && method === "GET") where = "query";
     (where === "query" ? query : body)[key] = value;
   }
-  const sendBody = method !== "GET" && (!QUERY_METHODS.includes(method) || Object.keys(body).length > 0);
-  return { url, query, ...(sendBody ? { body } : {}), ...(error ? { error } : {}) };
+  const sendBody =
+    method !== "GET" &&
+    (!QUERY_METHODS.includes(method) || Object.keys(body).length > 0);
+  const error =
+    problem?.kind === "missing"
+      ? `Missing argument "${problem.name}" for the URL path`
+      : problem
+        ? `Argument "${problem.name}" cannot be "." or ".."`
+        : undefined;
+  return {
+    url,
+    query,
+    ...(sendBody ? { body } : {}),
+    ...(problem ? { error, problem } : {}),
+  };
 }
 
 /** The schema without Send in, which is ours and not for the model. */
 export function stripParamIn<T>(inputSchema: T): T {
-  if (!isObject(inputSchema) || !isObject(inputSchema.properties)) return inputSchema;
+  if (!isObject(inputSchema) || !isObject(inputSchema.properties))
+    return inputSchema;
   const properties = Object.fromEntries(
     Object.entries(inputSchema.properties).map(([key, prop]) => {
       if (!isObject(prop) || !(PARAM_IN_KEY in prop)) return [key, prop];
