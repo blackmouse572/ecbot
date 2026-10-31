@@ -4,7 +4,11 @@ import { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import { HoneypotField, useHoneypot } from "./honeypot";
-import { ITurnstileConfig, TurnstileField, useTurnstile } from "./turnstile";
+import {
+  type ITurnstileConfig,
+  TurnstileField,
+  useTurnstile,
+} from "./turnstile";
 import { ZodFormWrapper } from "./zod-form-wrapper";
 interface ILoginForm {
   email: string;

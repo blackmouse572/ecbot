@@ -2421,10 +2421,6 @@ export type AccountUpdateRequestDto = {
      */
     name: string;
     /**
-     * Platform token. Stored encrypted — an already enveloped value is kept as-is.
-     */
-    accessToken: string;
-    /**
      * Which platform this channel belongs to
      */
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
@@ -2444,6 +2440,10 @@ export type AccountUpdateRequestDto = {
      * Workspace that owns the channel
      */
     workspace: string;
+    /**
+     * New platform token. Leave out to keep the stored one. Stored encrypted; an already enveloped value is kept as-is.
+     */
+    accessToken?: string;
 };
 
 export type AccountUpdateStatusRequestDto = {
@@ -3599,9 +3599,7 @@ export type FollowupChatbotResponseDto = {
     /**
      * Chatbot avatar URL
      */
-    avatar: {
-        [key: string]: unknown;
-    } | null;
+    avatar: string | null;
 };
 
 export type FollowupAdminListResponseDto = {
@@ -3617,15 +3615,11 @@ export type FollowupAdminListResponseDto = {
     /**
      * Sender name on the conversation
      */
-    senderName: {
-        [key: string]: unknown;
-    } | null;
+    senderName: string | null;
     /**
      * Message that triggered scheduling this follow-up
      */
-    triggerMessageId: {
-        [key: string]: unknown;
-    } | null;
+    triggerMessageId: string | null;
     /**
      * Reason the follow-up was scheduled
      */
@@ -6663,15 +6657,11 @@ export type FollowupListResponseDto = {
     /**
      * Sender name on the conversation
      */
-    senderName: {
-        [key: string]: unknown;
-    } | null;
+    senderName: string | null;
     /**
      * Message that triggered scheduling this follow-up
      */
-    triggerMessageId: {
-        [key: string]: unknown;
-    } | null;
+    triggerMessageId: string | null;
     /**
      * Reason the follow-up was scheduled
      */
