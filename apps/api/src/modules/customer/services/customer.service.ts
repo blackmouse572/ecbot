@@ -2,7 +2,13 @@ import {
     IDatabaseFindAllOptions,
     IDatabaseFindOneOptions,
 } from '@app/common/database/interfaces/database.interface';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+    Inject,
+    Injectable,
+    Logger,
+    NotFoundException,
+    Optional,
+} from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
@@ -14,20 +20,31 @@ import {
     IResolveContactPoint,
     IResolveContactPointResult,
 } from '../interfaces/customer.service.interface';
+import {
+    CUSTOMER_LIMIT,
+    CustomerLimit,
+} from '../interfaces/customer-limit.interface';
 import { CustomerEntity } from '../repository/entities/customer.entity';
 import { ContactPointRepository } from '../repository/repositories/contact-point.repository';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { CustomerMergeSuggestionService } from './customer-merge-suggestion.service';
 
+const CUSTOMER_LIMIT_FULL_TTL_MS = 60_000;
+
 @Injectable()
 export class CustomerService implements ICustomerService {
     private readonly logger = new Logger(CustomerService.name);
+    /** Workspace id → until when its customer limit is known to be full. */
+    private readonly customerLimitFullUntil = new Map<string, number>();
 
     constructor(
         private readonly customerRepository: CustomerRepository,
         private readonly contactPointRepository: ContactPointRepository,
-        private readonly moduleRef: ModuleRef
+        private readonly moduleRef: ModuleRef,
+        @Optional()
+        @Inject(CUSTOMER_LIMIT)
+        private readonly customerLimit?: CustomerLimit
     ) {}
 
     async findOneById(
@@ -159,6 +176,13 @@ export class CustomerService implements ICustomerService {
             };
         }
 
+        if (await this.isAtCustomerLimit(workspaceId)) {
+            this.logger.debug(
+                `Customer limit reached for workspace ${workspaceId}: not recording ${platform}/${externalSenderId}`
+            );
+            return { contactPoint: null, customerId: null, created: false };
+        }
+
         // No contact point yet for this (workspace, platform, sender) — create a
         // Customer and a ContactPoint together. The customer name will be
         // populated by the staleness-driven profile fetch later.
@@ -178,6 +202,27 @@ export class CustomerService implements ICustomerService {
         );
 
         return { contactPoint, customerId: customer.id, created: true };
+    }
+
+    /** True once the workspace keeps as many customers as its plan allows. */
+    async isAtCustomerLimit(workspaceId: string): Promise<boolean> {
+        if (!this.customerLimit) return false;
+        // Once full, every message from an unrecorded sender lands here, so a
+        // "full" answer is reused for a minute instead of re-reading the plan
+        // and counting customers per message.
+        const fullUntil = this.customerLimitFullUntil.get(workspaceId);
+        if (fullUntil !== undefined && fullUntil > Date.now()) return true;
+
+        const limit = await this.customerLimit.getCustomerLimit(workspaceId);
+        if (limit === undefined || limit === null) return false;
+        const count =
+            await this.customerRepository.countByWorkspace(workspaceId);
+        if (count < limit) return false;
+        this.customerLimitFullUntil.set(
+            workspaceId,
+            Date.now() + CUSTOMER_LIMIT_FULL_TTL_MS
+        );
+        return true;
     }
 
     async updateContactPointProfile(

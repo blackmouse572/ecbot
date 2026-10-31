@@ -16,6 +16,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { WorkspaceMemberService } from '@app/modules/workspace/services/workspace.member.service';
+import { WorkspaceSeatQuotaService } from '@app/modules/workspace/services/workspace-seat-quota.service';
 import { WorkspaceOwnerService } from '@app/modules/workspace/services/workspace.owner.service';
 import { WorkspaceMemberRepository } from '@app/modules/workspace/repository/repositories/workspace-member.repository';
 import { WorkSpaceRepository } from '@app/modules/workspace/repository/repositories/workspace.repository';
@@ -49,6 +50,8 @@ describe('Invitation token contract (owner ↔ member ↔ invitation)', () => {
                     useValue: { createWorkspaceNoPlan: jest.fn() },
                 },
                 WorkspaceMemberService,
+                // No seat-limit seam: the public build never caps seats.
+                WorkspaceSeatQuotaService,
                 InvitationService,
                 RoleService,
                 {

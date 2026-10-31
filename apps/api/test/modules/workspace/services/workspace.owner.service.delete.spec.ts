@@ -35,6 +35,7 @@ describe('WorkspaceOwnerService.delete', () => {
             none,
             none,
             undefined,
+            none,
             none
         );
     });

@@ -1,3 +1,5 @@
+import { MikroORM } from '@mikro-orm/core';
+import type { EntityManager } from '@mikro-orm/postgresql';
 import { http } from './utils/http';
 import { bootstrapE2E, E2EContext } from './utils/app.setup';
 import { login, SEED_USERS } from './utils/auth.helper';
@@ -85,6 +87,27 @@ describe('E2E — workspace members', () => {
             .set(...auth(ownerToken));
 
         expect(res.status).toBeLessThan(300);
+    });
+
+    it('counts a member holding two roles as one seat', async () => {
+        // Loaded after the app boots: importing entities first breaks their
+        // circular import order.
+        const { WorkspaceMemberRepository } =
+            await import('@app/modules/workspace/repository/repositories/workspace-member.repository');
+        const em = ctx.app.get(MikroORM).em.fork() as EntityManager;
+        // Give the owner a second role in the workspace: two rows, one person.
+        await em.getConnection().execute(
+            `insert into workspace_members (workspace_id, user_id, role_id)
+             select workspace_id, user_id, ? from workspace_members
+             where workspace_id = ? limit 1`,
+            [roleId, workspaceId]
+        );
+
+        const seats = await new WorkspaceMemberRepository(
+            em
+        ).countSeatsByWorkspace(workspaceId);
+
+        expect(seats).toBe(1);
     });
 
     it('returns 404 for a non-existent member', async () => {

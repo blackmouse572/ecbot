@@ -19,9 +19,13 @@ export interface IResolveContactPoint {
     externalSenderId: string;
 }
 
+/**
+ * Both null when the workspace is at its customer limit: the sender is still
+ * answered, but no Customer or ContactPoint is recorded for them.
+ */
 export interface IResolveContactPointResult {
-    contactPoint: ContactPointEntity;
-    customerId: string;
+    contactPoint: ContactPointEntity | null;
+    customerId: string | null;
     created: boolean;
 }
 

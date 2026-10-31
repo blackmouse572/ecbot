@@ -106,7 +106,8 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
             invitationService,
             knowledgeBaseService,
             createdHook as never,
-            customerTagService
+            customerTagService,
+            {} as never
         );
     });
 
@@ -333,7 +334,8 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
             invitationService,
             knowledgeBaseService,
             undefined,
-            customerTagService
+            customerTagService,
+            {} as never
         );
 
         await expect(service.create(owner, dto)).resolves.toEqual(

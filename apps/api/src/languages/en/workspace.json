@@ -18,7 +18,8 @@
         "missingWorkspaceId": "User or workspaceId is missing in the request param",
         "invalidInvitationCode": "Invalid invitation code.",
         "invalidSlug": "Use only lowercase letters, numbers and hyphens in the workspace URL.",
-        "suspended": "This workspace has been suspended. Contact support to restore access."
+        "suspended": "This workspace has been suspended. Contact support to restore access.",
+        "seatLimitExceeded": "Your plan has no free member seats. Remove a member, cancel a pending invitation or upgrade your plan to add more."
     },
     "owner": {
         "inviteMember": {

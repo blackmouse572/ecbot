@@ -24,6 +24,7 @@ import { CustomerModule } from '../customer/customer.module';
 import { UserRepositoryModule } from '../user/repository/user.repository.module';
 import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
 import { MemberJoinedEmailService } from './services/member-joined-email.service';
+import { WorkspaceSeatQuotaService } from './services/workspace-seat-quota.service';
 
 @Module({
     imports: [
@@ -52,6 +53,7 @@ import { MemberJoinedEmailService } from './services/member-joined-email.service
         AwsS3Service,
         WorkspacePolicyGuard,
         MemberJoinedEmailService,
+        WorkspaceSeatQuotaService,
     ],
     controllers: [WorkspaceController, WorkspaceMemberController],
     exports: [
@@ -59,6 +61,7 @@ import { MemberJoinedEmailService } from './services/member-joined-email.service
         WorkspaceAdminService,
         WorkspaceMemberService,
         WorkspaceRequestService,
+        WorkspaceSeatQuotaService,
     ],
 })
 export class WorkSpaceModule {}

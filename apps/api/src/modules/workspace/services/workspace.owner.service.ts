@@ -51,6 +51,7 @@ import { WorkspaceEntity } from '../repository/entities/workspace.entity';
 import { WorkspaceMemberRepository } from '../repository/repositories/workspace-member.repository';
 import { WorkSpaceRepository } from '../repository/repositories/workspace.repository';
 import { WorkspaceMemberService } from './workspace.member.service';
+import { WorkspaceSeatQuotaService } from './workspace-seat-quota.service';
 import { KnowledgeBaseService } from '@app/modules/knowledge-base/services/knowledge-base.service';
 import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 import { CUSTOMER_TAG_DEFAULTS } from '@app/modules/customer/constants/customer-tag.seed.constant';
@@ -96,7 +97,8 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         @Optional()
         @Inject(WORKSPACE_CREATED_HOOK)
         private readonly createdHook: WorkspaceCreatedHook | undefined,
-        private readonly customerTagService: CustomerTagService
+        private readonly customerTagService: CustomerTagService,
+        private readonly seatQuota: WorkspaceSeatQuotaService
     ) {
         this.invitationTokenSecret = this.configService.get<string>(
             'workspace.invitationKey'
@@ -237,6 +239,9 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                 invitationId: existingInvitation.id,
             };
         }
+
+        // A new invitation reserves a seat on the workspace's plan.
+        await this.seatQuota.assertCanInvite(workspace.id);
 
         // If roleId is provided, validate that it belongs to this workspace
         let role: RoleEntity;
@@ -619,6 +624,9 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         if (isAlreadyMember) {
             return workspace;
         }
+
+        // An approved join request takes a seat like an accepted invitation.
+        await this.seatQuota.assertCanAddMember(workspace.id);
 
         const memberRole = await this.roleService.findOne({
             workspace: workspace.id,
