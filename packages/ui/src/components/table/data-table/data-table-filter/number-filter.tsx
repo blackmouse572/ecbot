@@ -80,7 +80,12 @@ export const NumberFilter = ({
           return;
         }
 
-        selectedParams.add(JSON.stringify({ ...curr, [operator]: value }));
+        selectedParams.add(
+          JSON.stringify({
+            ...(curr as Record<string, unknown>),
+            [operator]: value,
+          }),
+        );
       };
 
       switch (operator) {

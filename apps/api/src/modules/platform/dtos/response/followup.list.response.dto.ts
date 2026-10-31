@@ -46,6 +46,7 @@ export class FollowupListResponseDto {
 
     @ApiProperty({
         description: 'Sender name on the conversation',
+        type: String,
         nullable: true,
     })
     @Expose()
