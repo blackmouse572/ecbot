@@ -51,12 +51,6 @@ export class EcchoCatalogService {
         return ECCHO_TOOLKITS.find(t => t.slug === slug);
     }
 
-    /** Merged definition for a workspace; undefined when unknown or disabled. */
-    async findActiveBySlug(slug: string): Promise<EcchoToolkitDef | undefined> {
-        const toolkit = await this.findMergedBySlug(slug);
-        return toolkit?.disabled ? undefined : toolkit;
-    }
-
     /** Merged definition for admins, disabled or not. */
     async findMergedBySlug(
         slug: string

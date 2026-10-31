@@ -170,7 +170,7 @@ export class MarketplaceWorkspaceController {
         @Param('slug') slug: string
     ): Promise<IResponse<ComposioToolkitDetail | null>> {
         // Check Ecbot catalog first, fall back to Composio
-        const ecchoDef = await this.ecchoCatalog.findActiveBySlug(slug);
+        const ecchoDef = await this.visibleEcchoToolkit(slug);
         if (ecchoDef) {
             const detail = {
                 slug: ecchoDef.slug,
@@ -202,7 +202,7 @@ export class MarketplaceWorkspaceController {
         @Param('slug') slug: string
     ): Promise<IResponse<IComposioToolkitAccess>> {
         // Ecbot-managed tools sign in to nothing outside Ecbot.
-        if (await this.ecchoCatalog.findActiveBySlug(slug)) {
+        if (await this.visibleEcchoToolkit(slug)) {
             return {
                 data: {
                     provider: 'eccho',
@@ -231,9 +231,7 @@ export class MarketplaceWorkspaceController {
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
     ): Promise<IResponse<ToolInstallResponseDto>> {
         // Route to Ecbot installer if the slug belongs to an Ecbot-managed tool
-        const ecchoDef = await this.ecchoCatalog.findActiveBySlug(
-            dto.toolkitSlug
-        );
+        const ecchoDef = await this.visibleEcchoToolkit(dto.toolkitSlug);
         if (ecchoDef) {
             const installer = this.registry.get(ENUM_MCP_PROVIDER.ECCHO);
             const result = await installer.begin({
@@ -407,5 +405,19 @@ export class MarketplaceWorkspaceController {
         });
 
         return { data: { id: tool.id, status: tool.status } };
+    }
+
+    /**
+     * The Ecbot toolkit for a slug, undefined when the slug is not one of ours.
+     * A hidden one is refused here, so it never falls through to Composio.
+     */
+    private async visibleEcchoToolkit(slug: string) {
+        const toolkit = await this.ecchoCatalog.findMergedBySlug(slug);
+        if (toolkit?.disabled) {
+            throw new NotFoundException(
+                'tool.marketplace.toolkit.error.notFound'
+            );
+        }
+        return toolkit;
     }
 }

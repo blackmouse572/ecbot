@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
     ArrayMaxSize,
@@ -9,15 +9,18 @@ import {
     IsString,
     IsUrl,
     MaxLength,
+    ValidateIf,
     ValidateNested,
 } from 'class-validator';
 
 export class UpdateToolkitCategoryRequestDto {
+    @ApiProperty({ example: 'ecommerce' })
     @IsString()
     @IsNotEmpty()
     @MaxLength(60)
     id: string;
 
+    @ApiProperty({ example: 'E-commerce' })
     @IsString()
     @IsNotEmpty()
     @MaxLength(80)
@@ -68,7 +71,8 @@ export class UpdateToolkitRequestDto {
     @ApiPropertyOptional({
         description: 'Hide from the workspace marketplace',
     })
-    @IsOptional()
+    // Not IsOptional: null skips validation, and the column is not null.
+    @ValidateIf(o => o.disabled !== undefined)
     @IsBoolean()
     disabled?: boolean;
 }

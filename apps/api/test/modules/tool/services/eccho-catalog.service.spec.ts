@@ -50,7 +50,6 @@ describe('EcchoCatalogService', () => {
             (await service.getToolkits({ limit: 10, offset: 0 })).total
         ).toBe(0);
         expect(await service.getCategories()).toEqual([]);
-        expect(await service.findActiveBySlug('kiotviet')).toBeUndefined();
         expect(await service.findMergedBySlug('kiotviet')).toMatchObject({
             disabled: true,
         });

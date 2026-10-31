@@ -3341,7 +3341,8 @@ export type ToolkitAdminEcchoDetailResponseDto = {
 };
 
 export type UpdateToolkitCategoryRequestDto = {
-    [key: string]: unknown;
+    id: string;
+    name: string;
 };
 
 export type UpdateToolkitRequestDto = {
