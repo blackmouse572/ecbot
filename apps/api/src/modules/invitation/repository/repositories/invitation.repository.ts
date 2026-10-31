@@ -18,6 +18,15 @@ export class InvitationRepository extends DatabaseRepository<InvitationEntity> {
         );
     }
 
+    /** Pending, unexpired invitations: each reserves a member seat. */
+    async countPendingByWorkspace(workspaceId: string): Promise<number> {
+        return this.getTotal({
+            workspace: workspaceId,
+            status: ENUM_INVITATION_STATUS.PENDING,
+            expiresAt: { $gt: new Date() },
+        });
+    }
+
     // Method to find pending invitations by email
     async findPendingByEmail(email: string) {
         return this.find(

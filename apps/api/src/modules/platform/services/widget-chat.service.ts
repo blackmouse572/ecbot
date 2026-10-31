@@ -101,7 +101,7 @@ export class WidgetChatService {
             chatbotId: chatbot.id,
             accountId: account.id,
             senderId: visitorId,
-            contactPointId: contactPoint.id,
+            contactPointId: contactPoint?.id,
         });
 
         const inbound = await this.messageRepository.upsertByExternalId(
@@ -216,7 +216,7 @@ export class WidgetChatService {
                     message: text,
                     conversation_id: conversation.id,
                     customer_id: customerId,
-                    contact_point_id: contactPoint.id,
+                    contact_point_id: contactPoint?.id,
                     summary,
                     history,
                     zones: { chatbot, conversation },

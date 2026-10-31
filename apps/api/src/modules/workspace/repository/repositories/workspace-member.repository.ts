@@ -32,4 +32,12 @@ export class WorkspaceMemberRepository extends DatabaseRepository<WorkspaceMembe
             { populate: ['workspace', 'role'] }
         );
     }
+
+    /** Distinct active members: a user holding several roles takes one seat. */
+    async countSeatsByWorkspace(workspaceId: string): Promise<number> {
+        return this.em
+            .createQueryBuilder(WorkspaceMemberEntity, 'm')
+            .where({ workspace: workspaceId, isActive: true, deleted: false })
+            .getCount('user', true);
+    }
 }

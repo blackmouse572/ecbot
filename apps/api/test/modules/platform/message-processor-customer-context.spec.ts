@@ -178,6 +178,46 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         expect(contactPointId).toBe('cp-new');
     });
 
+    it('still replies when the workspace is at its customer limit, recording no customer', async () => {
+        customerService.resolveContactPoint.mockResolvedValue({
+            contactPoint: null,
+            customerId: null,
+            created: false,
+        });
+        conversationService.findOrCreate.mockResolvedValue({
+            id: 'conv-capped',
+            status: ENUM_CONVERSATION_STATUS.OPEN,
+            botEnabled: true,
+            senderId: 'sender-fb-1',
+            senderProfileFetchedAt: null, // stale: the profile fetch runs
+            contactPoint: null,
+            fallbackCount: 0,
+        });
+        registry.get.mockReturnValueOnce({
+            messaging: adapterMessaging,
+            fetchSenderProfile: adapterMessaging.fetchSenderProfile,
+        } as any);
+
+        await processor.process(baseEvent);
+
+        expect(conversationService.findOrCreate).toHaveBeenCalledWith(
+            expect.objectContaining({ contactPointId: undefined })
+        );
+        expect(conversationService.updateSenderProfile).toHaveBeenCalled();
+        expect(
+            customerService.updateContactPointProfile
+        ).not.toHaveBeenCalled();
+        expect(customerService.fillCustomerNameIfEmpty).not.toHaveBeenCalled();
+        expect(messageDebounceService.schedule).toHaveBeenCalledWith(
+            'conv-capped',
+            'sender-fb-1',
+            null,
+            undefined,
+            'Hello',
+            'm-in'
+        );
+    });
+
     describe('POC_EDGE_DEBOUNCE_URL flag ON — routes to the edge Worker instead of the in-process debounce', () => {
         const originalEnv = process.env.POC_EDGE_DEBOUNCE_URL;
         const originalSecret = process.env.POC_EDGE_INTERNAL_SECRET;

@@ -1,3 +1,4 @@
+import { UnprocessableEntityException } from '@nestjs/common';
 import { HelperHashService } from '@app/common/helper/services/helper.hash.service';
 import { NotificationService } from '@app/modules/notification/services/notification.service';
 import { HelperAvatarService } from '@app/common/helper/services/helper.avatar.service';
@@ -12,12 +13,17 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
+import { WorkspaceSeatQuotaService } from '../../../../src/modules/workspace/services/workspace-seat-quota.service';
 import { WorkspaceMemberService } from '../../../../src/modules/workspace/services/workspace.member.service';
 import { WorkspaceOwnerService } from '../../../../src/modules/workspace/services/workspace.owner.service';
 import { WorkspaceMemberRepository } from '../../../../src/modules/workspace/repository/repositories/workspace-member.repository';
 import { WorkSpaceRepository } from '../../../../src/modules/workspace/repository/repositories/workspace.repository';
 
 describe('WorkspaceOwnerService', () => {
+    const mockSeatQuota = {
+        assertCanInvite: jest.fn(),
+        assertCanAddMember: jest.fn(),
+    };
     let service: WorkspaceOwnerService;
 
     const ownerId = randomUUID();
@@ -73,6 +79,7 @@ describe('WorkspaceOwnerService', () => {
                 { provide: WorkspaceMemberService, useValue: {} },
                 { provide: RoleService, useValue: mockRoleService },
                 { provide: InvitationService, useValue: mockInvitationService },
+                { provide: WorkspaceSeatQuotaService, useValue: mockSeatQuota },
                 { provide: KnowledgeBaseService, useValue: {} },
                 { provide: CustomerTagService, useValue: {} },
             ],
@@ -133,6 +140,28 @@ describe('WorkspaceOwnerService', () => {
             );
         });
 
+        it('refuses a new invitation when the plan has no free seat, before anything is signed or saved', async () => {
+            mockInvitationService.checkExistingInvitation.mockResolvedValue(
+                null
+            );
+            const full = new UnprocessableEntityException('seats');
+            mockSeatQuota.assertCanInvite.mockRejectedValueOnce(full);
+
+            await expect(
+                service.generateInvitationLinkWithDetails(
+                    ownerId,
+                    { invitedEmail: 'invitee@mail.com' },
+                    url,
+                    workspace as any
+                )
+            ).rejects.toBe(full);
+            expect(mockSeatQuota.assertCanInvite).toHaveBeenCalledWith(
+                workspace.id
+            );
+            expect(mockJwtService.sign).not.toHaveBeenCalled();
+            expect(mockInvitationService.create).not.toHaveBeenCalled();
+        });
+
         it('should be idempotent — return an existing PENDING invitation without re-signing', async () => {
             mockInvitationService.checkExistingInvitation.mockResolvedValue({
                 id: 'invitation-existing',
@@ -150,6 +179,8 @@ describe('WorkspaceOwnerService', () => {
 
             expect(result.token).toBe('existing-token');
             expect(result.invitationId).toBe('invitation-existing');
+            // Re-sending an invitation takes no new seat.
+            expect(mockSeatQuota.assertCanInvite).not.toHaveBeenCalled();
             expect(mockJwtService.sign).not.toHaveBeenCalled();
             expect(mockInvitationService.create).not.toHaveBeenCalled();
         });

@@ -3,6 +3,8 @@ import { Test } from '@nestjs/testing';
 import { AI_USAGE_METER } from '@app/app/ai-usage-meter.interface';
 import { MeteringStatusLogger } from '@app/app/metering-status.logger';
 import { KB_STORAGE_LIMIT } from '@app/modules/knowledge-base/interfaces/kb-storage-limit.interface';
+import { CUSTOMER_LIMIT } from '@app/modules/customer/interfaces/customer-limit.interface';
+import { WORKSPACE_SEAT_LIMIT } from '@app/modules/workspace/interfaces/workspace-seat-limit.interface';
 import { WORKSPACE_CREATED_HOOK } from '@app/modules/workspace/interfaces/workspace-created-hook.interface';
 
 describe('MeteringStatusLogger', () => {
@@ -34,7 +36,7 @@ describe('MeteringStatusLogger', () => {
         moduleRef.get(MeteringStatusLogger).onApplicationBootstrap();
 
         const message = bootMessage();
-        expect((message.match(/disabled/g) ?? []).length).toBe(3);
+        expect((message.match(/disabled/g) ?? []).length).toBe(5);
     });
 
     it('logs enabled for every seam when every provider is registered', async () => {
@@ -44,12 +46,14 @@ describe('MeteringStatusLogger', () => {
                 { provide: AI_USAGE_METER, useValue: {} },
                 { provide: WORKSPACE_CREATED_HOOK, useValue: {} },
                 { provide: KB_STORAGE_LIMIT, useValue: {} },
+                { provide: WORKSPACE_SEAT_LIMIT, useValue: {} },
+                { provide: CUSTOMER_LIMIT, useValue: {} },
             ],
         }).compile();
 
         moduleRef.get(MeteringStatusLogger).onApplicationBootstrap();
 
         const message = bootMessage();
-        expect((message.match(/enabled/g) ?? []).length).toBe(3);
+        expect((message.match(/enabled/g) ?? []).length).toBe(5);
     });
 });

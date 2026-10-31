@@ -171,7 +171,7 @@ export class MessageProcessorService implements OnModuleInit {
             chatbotId: chatbot.id,
             accountId: account.id,
             senderId: event.senderId,
-            contactPointId: contactPoint.id,
+            contactPointId: contactPoint?.id,
         });
 
         // For action events (postback/quick_reply), use the action value as the
@@ -195,7 +195,7 @@ export class MessageProcessorService implements OnModuleInit {
             account,
             event,
             conversation,
-            contactPoint.id,
+            contactPoint?.id,
             customerId
         );
 
@@ -321,7 +321,7 @@ export class MessageProcessorService implements OnModuleInit {
             conversationId: conversation.id,
             senderId: event.senderId,
             customerId,
-            contactPointId: contactPoint.id,
+            contactPointId: contactPoint?.id,
             text: effectiveText,
             messageId: inbound?.id,
         };
@@ -454,18 +454,22 @@ export class MessageProcessorService implements OnModuleInit {
                     senderProfileFetchedAt: now,
                 }
             );
-            await this.customerService.updateContactPointProfile(
-                contactPointId,
-                {
-                    displaySenderName: senderName,
-                    senderAvatar: avatarBase64 ?? null,
-                    fetchedAt: now,
-                }
-            );
-            await this.customerService.fillCustomerNameIfEmpty(
-                customerId,
-                senderName
-            );
+            // No contact point when the workspace is at its customer limit:
+            // the conversation still gets the name, no customer is recorded.
+            if (contactPointId) {
+                await this.customerService.updateContactPointProfile(
+                    contactPointId,
+                    {
+                        displaySenderName: senderName,
+                        senderAvatar: avatarBase64 ?? null,
+                        fetchedAt: now,
+                    }
+                );
+                await this.customerService.fillCustomerNameIfEmpty(
+                    customerId,
+                    senderName
+                );
+            }
             conversation.senderName = senderName;
             conversation.senderAvatar = avatarBase64 ?? null;
             conversation.senderProfileFetchedAt = now;
@@ -589,7 +593,7 @@ export class MessageProcessorService implements OnModuleInit {
             chatbotId: account.chatbot.id,
             accountId: account.id,
             senderId: event.senderId,
-            contactPointId: contactPoint.id,
+            contactPointId: contactPoint?.id,
         });
 
         // A page-first import creates the conversation here, so this path
@@ -599,7 +603,7 @@ export class MessageProcessorService implements OnModuleInit {
             account,
             event,
             conversation,
-            contactPoint.id,
+            contactPoint?.id,
             customerId
         );
 
@@ -660,7 +664,7 @@ export class MessageProcessorService implements OnModuleInit {
             chatbotId: chatbot.id,
             accountId: account.id,
             senderId,
-            contactPointId: contactPoint.id,
+            contactPointId: contactPoint?.id,
         });
 
         const message = await this.messageRepository.applyReaction(

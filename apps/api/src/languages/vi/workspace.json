@@ -18,7 +18,8 @@
         "missingWorkspaceId": "Thiếu thông tin user hoặc workspaceId trong request.",
         "invalidInvitationCode": "Mã mời không hợp lệ. Có thể đã hết hạn hoặc sai rồi.",
         "invalidSlug": "Đường dẫn không gian làm việc chỉ được dùng chữ thường, số và dấu gạch ngang.",
-        "suspended": "Không gian làm việc này đã bị tạm khoá. Vui lòng liên hệ bộ phận hỗ trợ để mở lại."
+        "suspended": "Không gian làm việc này đã bị tạm khoá. Vui lòng liên hệ bộ phận hỗ trợ để mở lại.",
+        "seatLimitExceeded": "Gói hiện tại đã hết chỗ cho thành viên. Hãy xóa bớt thành viên, hủy lời mời đang chờ hoặc nâng cấp gói để thêm."
     },
     "owner": {
         "inviteMember": {

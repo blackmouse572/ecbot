@@ -11,12 +11,17 @@ import { randomUUID } from 'crypto';
 import { RoleService } from '../../../../src/modules/role/services/role.service';
 import { UserService } from '../../../../src/modules/user/services/user.service';
 import { InvitationService } from '../../../../src/modules/invitation/services/invitation.service';
+import { WorkspaceSeatQuotaService } from '../../../../src/modules/workspace/services/workspace-seat-quota.service';
 import { WorkspaceMemberService } from '../../../../src/modules/workspace/services/workspace.member.service';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../../../../src/modules/workspace/enums/workspace.status-code.enum';
 import { WorkspaceMemberRepository } from '../../../../src/modules/workspace/repository/repositories/workspace-member.repository';
 import { WorkSpaceRepository } from '../../../../src/modules/workspace/repository/repositories/workspace.repository';
 
 describe('WorkspaceMemberService', () => {
+    const mockSeatQuota = {
+        assertCanInvite: jest.fn(),
+        assertCanAddMember: jest.fn(),
+    };
     let service: WorkspaceMemberService;
 
     const mockEm = {
@@ -69,6 +74,7 @@ describe('WorkspaceMemberService', () => {
                 { provide: UserService, useValue: mockUserService },
                 { provide: RoleService, useValue: mockRoleService },
                 { provide: InvitationService, useValue: mockInvitationService },
+                { provide: WorkspaceSeatQuotaService, useValue: mockSeatQuota },
             ],
         }).compile();
 
@@ -128,6 +134,31 @@ describe('WorkspaceMemberService', () => {
             const [entity] = mockWorkspaceMemberRepository.create.mock.calls[0];
             expect(entity.isActive).toBe(true);
             expect(entity.role).toEqual({ id: roleId });
+            expect(mockSeatQuota.assertCanAddMember).toHaveBeenCalledWith(
+                workspaceId
+            );
+        });
+
+        it('adds no one when the plan has no free seat', async () => {
+            mockWorkspaceMemberRepository.find.mockResolvedValue([]);
+            const full = new Error('seats');
+            mockSeatQuota.assertCanAddMember.mockRejectedValueOnce(full);
+
+            await expect(
+                service.assignRoleToMember(workspaceId, userId, roleId)
+            ).rejects.toBe(full);
+            expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
+        });
+
+        it('takes no new seat when an existing member gets another role', async () => {
+            mockWorkspaceMemberRepository.find.mockResolvedValue([
+                { role: { id: randomUUID() } },
+            ]);
+
+            await service.assignRoleToMember(workspaceId, userId, roleId);
+
+            expect(mockSeatQuota.assertCanAddMember).not.toHaveBeenCalled();
+            expect(mockWorkspaceMemberRepository.create).toHaveBeenCalled();
         });
 
         it('should be a no-op when the user already holds the role', async () => {

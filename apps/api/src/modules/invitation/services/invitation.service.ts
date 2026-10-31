@@ -192,6 +192,11 @@ export class InvitationService implements IInvitationService {
         );
     }
 
+    /** Pending, unexpired invitations: each reserves a member seat. */
+    async countPendingByWorkspace(workspaceId: string): Promise<number> {
+        return this.invitationRepository.countPendingByWorkspace(workspaceId);
+    }
+
     async getTotalByWorkspace(workspaceId: string): Promise<number> {
         return this.invitationRepository.getTotal({ workspace: workspaceId });
     }

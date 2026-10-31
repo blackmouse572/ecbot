@@ -36,6 +36,7 @@ import { WorkspaceMemberEntity } from '../repository/entities/workspace-member.e
 import { WorkspaceEntity } from '../repository/entities/workspace.entity';
 import { WorkspaceMemberRepository } from '../repository/repositories/workspace-member.repository';
 import { WorkSpaceRepository } from '../repository/repositories/workspace.repository';
+import { WorkspaceSeatQuotaService } from './workspace-seat-quota.service';
 
 @Injectable()
 export class WorkspaceMemberService implements IWorkspaceMemberService {
@@ -50,7 +51,8 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         private readonly workspaceMemberRepository: WorkspaceMemberRepository,
         private readonly userService: UserService,
         private readonly roleService: RoleService,
-        private readonly invitationService: InvitationService
+        private readonly invitationService: InvitationService,
+        private readonly seatQuota: WorkspaceSeatQuotaService
     ) {
         this.invitationTokenSecret = this.configService.get<string>(
             'workspace.invitationKey'
@@ -177,6 +179,11 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         const alreadyHasRole = existingUserMemberships.some(
             membership => membership.role.id === roleId
         );
+
+        // A new person takes a seat; another role for a member does not.
+        if (existingUserMemberships.length === 0) {
+            await this.seatQuota.assertCanAddMember(workspaceId);
+        }
 
         // Nothing to do if they already hold it; otherwise create the membership.
         if (!alreadyHasRole) {
