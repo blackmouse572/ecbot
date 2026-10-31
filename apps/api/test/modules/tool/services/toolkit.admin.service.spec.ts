@@ -1,3 +1,4 @@
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ToolkitAdminService } from 'src/modules/tool/services/toolkit.admin.service';
 
 describe('ToolkitAdminService', () => {
@@ -191,12 +192,41 @@ describe('ToolkitAdminService', () => {
             ecchoCatalog.findBySlug.mockReturnValue(undefined);
             overrideRepository.findBySlug.mockResolvedValue({
                 slug: 'haravan',
+                name: 'Haravan',
+                serverUrl: 'https://hv.example.com',
             });
 
             await expect(service.createEccho(dto, user)).rejects.toThrow(
                 'tool.toolkit.error.slugTaken'
             );
             expect(overrideRepository.create).not.toHaveBeenCalled();
+        });
+
+        it('reuses an incomplete row no toolkit uses, instead of blocking its slug', async () => {
+            const row = { slug: 'haravan', name: 'Old', serverUrl: null };
+            overrideRepository.findBySlug.mockResolvedValue(row);
+            ecchoCatalog.findMergedBySlug.mockResolvedValue({
+                ...dto,
+                custom: true,
+            });
+
+            await service.createEccho(dto, user);
+
+            expect(overrideRepository.create).not.toHaveBeenCalled();
+            expect(overrideRepository.save).toHaveBeenCalledWith(
+                expect.objectContaining({ ...dto, disabled: false }),
+                { actionBy: 'u1' }
+            );
+        });
+
+        it('answers a concurrent duplicate insert with the same conflict', async () => {
+            overrideRepository.create.mockRejectedValue(
+                new UniqueConstraintViolationException(new Error('dup'))
+            );
+
+            await expect(service.createEccho(dto, user)).rejects.toThrow(
+                'tool.toolkit.error.slugTaken'
+            );
         });
 
         it('does not let an edit clear the name or server URL of a custom toolkit', async () => {

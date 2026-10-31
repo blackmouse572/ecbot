@@ -4,6 +4,7 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
@@ -115,14 +116,40 @@ export class ToolkitAdminService {
         dto: CreateToolkitRequestDto,
         user: UserEntity
     ): Promise<ToolkitAdminEcchoDetailResponseDto> {
+        const existing = await this.overrideRepository.findBySlug(dto.slug);
+        // A row the catalog rejects (no name or server URL) and no code toolkit
+        // owns is invisible and unusable, so its slug is free to reuse.
         const taken =
             !!this.ecchoCatalog.findBySlug(dto.slug) ||
-            !!(await this.overrideRepository.findBySlug(dto.slug));
+            !!(existing?.name && existing.serverUrl);
         if (taken) {
             throw new ConflictException('tool.toolkit.error.slugTaken');
         }
 
-        await this.overrideRepository.create(dto, { actionBy: user.id });
+        try {
+            if (existing) {
+                Object.assign(existing, {
+                    description: null,
+                    logo: null,
+                    categories: null,
+                    ...dto,
+                    disabled: false,
+                });
+                await this.overrideRepository.save(existing, {
+                    actionBy: user.id,
+                });
+            } else {
+                await this.overrideRepository.create(dto, {
+                    actionBy: user.id,
+                });
+            }
+        } catch (error) {
+            // Two submits passed the check above; the unique index decides.
+            if (error instanceof UniqueConstraintViolationException) {
+                throw new ConflictException('tool.toolkit.error.slugTaken');
+            }
+            throw error;
+        }
         return this.getEccho(dto.slug);
     }
 
