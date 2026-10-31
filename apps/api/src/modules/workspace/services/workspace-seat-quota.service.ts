@@ -40,15 +40,20 @@ export class WorkspaceSeatQuotaService {
         return { members, pendingInvitations, limit: limit ?? null };
     }
 
+    private async countTakenSeats(workspaceId: string): Promise<number> {
+        const [members, pendingInvitations] = await Promise.all([
+            this.workspaceMemberRepository.countSeatsByWorkspace(workspaceId),
+            this.invitationService.countPendingByWorkspace(workspaceId),
+        ]);
+        return members + pendingInvitations;
+    }
+
     /** A new invitation reserves a seat, so pending ones count as taken. */
     async assertCanInvite(workspaceId: string): Promise<void> {
         const limit = await this.seatLimit?.getSeatLimit(workspaceId);
         if (limit === undefined || limit === null) return;
-        const { members, pendingInvitations } =
-            await this.getUsage(workspaceId);
-        if (members + pendingInvitations >= limit) {
-            this.refuse(members + pendingInvitations, limit);
-        }
+        const taken = await this.countTakenSeats(workspaceId);
+        if (taken >= limit) this.refuse(taken, limit);
     }
 
     /**

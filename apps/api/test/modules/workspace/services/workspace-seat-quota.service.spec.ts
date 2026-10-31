@@ -39,6 +39,8 @@ describe('WorkspaceSeatQuotaService', () => {
         invitations.countPendingByWorkspace.mockResolvedValue(1);
 
         await expect(build().assertCanInvite('ws-1')).resolves.toBeUndefined();
+        // The plan is read once per invite.
+        expect(seatLimit.getSeatLimit).toHaveBeenCalledTimes(1);
     });
 
     it('refuses a join when members already fill the plan (an invite from before a downgrade)', async () => {

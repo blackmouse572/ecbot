@@ -30,9 +30,13 @@ import { CustomerRepository } from '../repository/repositories/customer.reposito
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { CustomerMergeSuggestionService } from './customer-merge-suggestion.service';
 
+const CUSTOMER_LIMIT_FULL_TTL_MS = 60_000;
+
 @Injectable()
 export class CustomerService implements ICustomerService {
     private readonly logger = new Logger(CustomerService.name);
+    /** Workspace id → until when its customer limit is known to be full. */
+    private readonly customerLimitFullUntil = new Map<string, number>();
 
     constructor(
         private readonly customerRepository: CustomerRepository,
@@ -173,7 +177,7 @@ export class CustomerService implements ICustomerService {
         }
 
         if (await this.isAtCustomerLimit(workspaceId)) {
-            this.logger.log(
+            this.logger.debug(
                 `Customer limit reached for workspace ${workspaceId}: not recording ${platform}/${externalSenderId}`
             );
             return { contactPoint: null, customerId: null, created: false };
@@ -202,11 +206,23 @@ export class CustomerService implements ICustomerService {
 
     /** True once the workspace keeps as many customers as its plan allows. */
     async isAtCustomerLimit(workspaceId: string): Promise<boolean> {
-        const limit = await this.customerLimit?.getCustomerLimit(workspaceId);
+        if (!this.customerLimit) return false;
+        // Once full, every message from an unrecorded sender lands here, so a
+        // "full" answer is reused for a minute instead of re-reading the plan
+        // and counting customers per message.
+        const fullUntil = this.customerLimitFullUntil.get(workspaceId);
+        if (fullUntil !== undefined && fullUntil > Date.now()) return true;
+
+        const limit = await this.customerLimit.getCustomerLimit(workspaceId);
         if (limit === undefined || limit === null) return false;
         const count =
             await this.customerRepository.countByWorkspace(workspaceId);
-        return count >= limit;
+        if (count < limit) return false;
+        this.customerLimitFullUntil.set(
+            workspaceId,
+            Date.now() + CUSTOMER_LIMIT_FULL_TTL_MS
+        );
+        return true;
     }
 
     async updateContactPointProfile(

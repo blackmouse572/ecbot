@@ -35,7 +35,10 @@ describe('WorkspaceOwnerService', () => {
         getTotal: jest.fn(),
         updateEntity: jest.fn(async (_where: unknown, data: unknown) => data),
     };
-    const mockWorkspaceMemberRepository = { create: jest.fn() };
+    const mockWorkspaceMemberRepository = {
+        create: jest.fn(),
+        findActiveByWorkspace: jest.fn(),
+    };
     const mockConfigService = {
         get: jest.fn((key: string) =>
             key === 'workspace.invitationKey' ? 'secret' : '7d'
@@ -59,7 +62,10 @@ describe('WorkspaceOwnerService', () => {
                     provide: NotificationService,
                     useValue: { createWorkspaceNoPlan: jest.fn() },
                 },
-                { provide: EntityManager, useValue: {} },
+                {
+                    provide: EntityManager,
+                    useValue: { getReference: jest.fn((_e, id) => ({ id })) },
+                },
                 {
                     provide: WorkSpaceRepository,
                     useValue: mockWorkspaceRepository,
@@ -287,6 +293,43 @@ describe('WorkspaceOwnerService', () => {
             // No owner-scoped (or any) workspace repository lookup happens
             // in this flow anymore.
             expect(mockWorkspaceRepository.findOne).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('addMemberToWorkspace (owner approves a join request)', () => {
+        beforeEach(() => {
+            mockWorkspaceMemberRepository.findActiveByWorkspace.mockResolvedValue(
+                [{ user: { id: ownerId } }]
+            );
+            mockRoleService.findOne.mockResolvedValue({ id: 'member-role' });
+        });
+
+        it('refuses a new member when the plan has no free seat', async () => {
+            const full = new UnprocessableEntityException('seats');
+            mockSeatQuota.assertCanAddMember.mockRejectedValueOnce(full);
+
+            await expect(
+                service.addMemberToWorkspace(workspace.id, randomUUID())
+            ).rejects.toBe(full);
+            expect(mockSeatQuota.assertCanAddMember).toHaveBeenCalledWith(
+                workspace.id
+            );
+            expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
+        });
+
+        it('adds the member while a seat is free', async () => {
+            await service.addMemberToWorkspace(workspace.id, randomUUID());
+
+            expect(mockWorkspaceMemberRepository.create).toHaveBeenCalledTimes(
+                1
+            );
+        });
+
+        it('takes no seat for someone who is already a member', async () => {
+            await service.addMemberToWorkspace(workspace.id, ownerId);
+
+            expect(mockSeatQuota.assertCanAddMember).not.toHaveBeenCalled();
+            expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
         });
     });
 

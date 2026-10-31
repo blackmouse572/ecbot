@@ -80,4 +80,29 @@ describe('CustomerService.resolveContactPoint customer limit', () => {
         ).resolves.toMatchObject({ created: true });
         expect(customerRepository.countByWorkspace).not.toHaveBeenCalled();
     });
+
+    it('reuses a full answer for a minute instead of counting per message', async () => {
+        jest.useFakeTimers({ now: new Date('2026-10-31T00:00:00Z') });
+        try {
+            limit.getCustomerLimit.mockResolvedValue(100);
+            customerRepository.countByWorkspace.mockResolvedValue(100);
+            const service = build();
+
+            await service.resolveContactPoint(params);
+            await service.resolveContactPoint(params);
+            expect(customerRepository.countByWorkspace).toHaveBeenCalledTimes(
+                1
+            );
+            expect(limit.getCustomerLimit).toHaveBeenCalledTimes(1);
+
+            // After the minute the plan is read again, e.g. after an upgrade.
+            jest.advanceTimersByTime(60_001);
+            limit.getCustomerLimit.mockResolvedValue(1000);
+            await expect(
+                service.resolveContactPoint(params)
+            ).resolves.toMatchObject({ created: true });
+        } finally {
+            jest.useRealTimers();
+        }
+    });
 });

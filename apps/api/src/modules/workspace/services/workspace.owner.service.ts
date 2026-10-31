@@ -625,6 +625,9 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
             return workspace;
         }
 
+        // An approved join request takes a seat like an accepted invitation.
+        await this.seatQuota.assertCanAddMember(workspace.id);
+
         const memberRole = await this.roleService.findOne({
             workspace: workspace.id,
             type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
