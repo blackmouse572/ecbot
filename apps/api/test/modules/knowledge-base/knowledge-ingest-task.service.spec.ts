@@ -11,7 +11,6 @@ import {
     RAG_INGEST_SENTRY_QUEUE,
     RAG_INGEST_URL_HTTP_TIMEOUT_MS,
     KNOWLEDGE_URL_MAX_PAGES,
-    KNOWLEDGE_CRAWL_TOKENS_PER_PAGE,
     ENUM_KNOWLEDGE_FAILURE_KIND,
 } from '@app/modules/knowledge-base/constants/knowledge-ingest.constant';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '@app/modules/knowledge-base/enums/knowledge-base-item-type.enum';
@@ -918,7 +917,8 @@ describe('KnowledgeIngestTaskService', () => {
 
             await service.handle(ingestDto, 0);
 
-            const tokens = 3 * KNOWLEDGE_CRAWL_TOKENS_PER_PAGE;
+            // 7,000 tokens a page: the price itself, so a re-price fails here.
+            const tokens = 3 * 7000;
             expect(meter.record).toHaveBeenCalledWith({
                 workspaceId: 'ws-1',
                 usage: {
@@ -957,6 +957,64 @@ describe('KnowledgeIngestTaskService', () => {
                     status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.COMPLETED,
                 })
             );
+        });
+
+        describe('website pages the budget can pay for', () => {
+            beforeEach(() => {
+                findOneById.mockResolvedValue({
+                    id: 'item-1',
+                    type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL,
+                    content: 'https://example.test',
+                    title: 'Shop',
+                    metadata: { maxPages: 50 },
+                    knowledgeBase: { id: 'kb-1', workspace: { id: 'ws-1' } },
+                });
+                httpPost.mockReturnValue(
+                    of({ data: { data: { chunk_count: 1, pages_crawled: 1 } } })
+                );
+            });
+
+            it('reads no more pages than the tokens left cover', async () => {
+                meter.check.mockResolvedValue({
+                    allowed: true,
+                    remaining: 20_000,
+                });
+
+                await service.handle(ingestDto, 0);
+
+                expect(httpPost).toHaveBeenCalledWith(
+                    expect.stringContaining('/api/rag/ingest/url'),
+                    expect.objectContaining({ max_pages: 2 }),
+                    expect.anything()
+                );
+            });
+
+            it("keeps the owner's page count when the meter does not say what is left", async () => {
+                meter.check.mockResolvedValue({ allowed: true });
+
+                await service.handle(ingestDto, 0);
+
+                expect(httpPost).toHaveBeenCalledWith(
+                    expect.stringContaining('/api/rag/ingest/url'),
+                    expect.objectContaining({ max_pages: 50 }),
+                    expect.anything()
+                );
+            });
+
+            it('fails the item when the tokens left cannot pay for one page', async () => {
+                meter.check.mockResolvedValue({
+                    allowed: true,
+                    remaining: 6_999,
+                });
+
+                await service.handle(ingestDto, 0);
+
+                expect(httpPost).not.toHaveBeenCalled();
+                expect(updateStatus).toHaveBeenCalledWith('item-1', {
+                    status: ENUM_KNOWLEDGE_BASE_ITEM_STATUS.FAILED,
+                    errorMessage: RAG_INGEST_NO_TOKENS_ERROR,
+                });
+            });
         });
 
         it('fails the item with a message the owner can act on when the workspace is out of tokens', async () => {

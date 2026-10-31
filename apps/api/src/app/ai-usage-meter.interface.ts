@@ -37,6 +37,9 @@ export interface AiUsageMeterChatbot {
 export interface AiUsageDecision {
     allowed: boolean;
     reason?: string;
+    /** Tokens the workspace can still spend (quota plus credit), when the
+     *  meter knows it. Lets work priced up front stay inside the budget. */
+    remaining?: number;
 }
 
 export interface AiUsageRecord {
