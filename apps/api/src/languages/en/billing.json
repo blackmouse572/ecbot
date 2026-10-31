@@ -45,6 +45,7 @@
         "paymentOrderNotFound": "Payment order not found.",
         "providerRequestFailed": "The payment provider refused the request. Nothing was changed.",
         "subscriptionNotSelfServe": "This change is not available on your current plan. Contact us and we will help.",
-        "subscriptionNotPastDue": "This subscription has no payment to fix."
+        "subscriptionNotPastDue": "This subscription has no payment to fix.",
+        "invoiceNotAvailable": "This payment has no invoice to download."
     }
 }
