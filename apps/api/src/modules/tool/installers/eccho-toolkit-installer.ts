@@ -1,13 +1,13 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { HelperEncryptionService } from 'src/common/helper/services/helper.encryption.service';
-import { ECCHO_TOOLKITS } from 'src/modules/tool/constants/eccho-toolkits.constant';
 import { ENUM_MCP_PROVIDER } from 'src/modules/tool/enums/mcp-provider.enum';
 import { ENUM_TOOL_KIND } from 'src/modules/tool/enums/tool-kind.enum';
 import { ENUM_TOOL_STATUS } from 'src/modules/tool/enums/tool-status.enum';
 import { ToolInstallSessionEntity } from 'src/modules/tool/repository/entities/tool-install-session.entity';
 import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
 import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.repository';
+import { EcchoCatalogService } from 'src/modules/tool/services/eccho-catalog.service';
 import { McpDiscoveryService } from 'src/modules/tool/services/mcp-discovery.service';
 import { SlugMinter } from 'src/modules/tool/services/slug-minter.service';
 import {
@@ -30,12 +30,13 @@ export class EcchoToolkitInstaller implements ToolkitInstaller {
         private readonly slugMinter: SlugMinter,
         private readonly discovery: McpDiscoveryService,
         private readonly enc: HelperEncryptionService,
-        private readonly em: EntityManager
+        private readonly em: EntityManager,
+        private readonly catalog: EcchoCatalogService
     ) {}
 
     async begin(ctx: InstallContext): Promise<BeginResult> {
         const service = (ctx.draftSource as any).service as string;
-        const def = ECCHO_TOOLKITS.find(t => t.slug === service);
+        const def = await this.catalog.findMergedBySlug(service);
         if (!def)
             throw new BadRequestException(`Unknown Ecbot service: ${service}`);
 
@@ -66,7 +67,7 @@ export class EcchoToolkitInstaller implements ToolkitInstaller {
 
         const src = session.draftSource as any;
         const service = src.service as string;
-        const def = ECCHO_TOOLKITS.find(t => t.slug === service);
+        const def = await this.catalog.findMergedBySlug(service);
         if (!def)
             throw new BadRequestException(`Unknown Ecbot service: ${service}`);
 
@@ -117,7 +118,7 @@ export class EcchoToolkitInstaller implements ToolkitInstaller {
     async reauth(ctx: ReauthContext): Promise<BeginResult> {
         const src = (ctx.tool as any).source as any;
         const service = src?.service as string;
-        const def = ECCHO_TOOLKITS.find(t => t.slug === service);
+        const def = await this.catalog.findMergedBySlug(service);
         if (!def)
             throw new BadRequestException(`Unknown Ecbot service: ${service}`);
 

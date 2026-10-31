@@ -78,3 +78,13 @@ export const ToolkitAdminDocQuerySearch = [
         description: 'Match on toolkit name or description',
     },
 ];
+
+export const ToolkitAdminDocParamsSlug = [
+    {
+        name: 'slug',
+        allowEmptyValue: false,
+        required: true,
+        type: 'string',
+        example: 'kiotviet',
+    },
+];

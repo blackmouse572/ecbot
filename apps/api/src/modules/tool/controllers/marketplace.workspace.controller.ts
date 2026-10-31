@@ -93,7 +93,7 @@ export class MarketplaceWorkspaceController {
     async getCategories(): Promise<IResponse<{ id: string; name: string }[]>> {
         const [composio, eccho] = await Promise.all([
             this.catalog.getCategories(),
-            Promise.resolve(this.ecchoCatalog.getCategories()),
+            this.ecchoCatalog.getCategories(),
         ]);
 
         // Merge, dedup by id — Ecbot categories first
@@ -125,7 +125,7 @@ export class MarketplaceWorkspaceController {
         @Query('search') search?: string
     ): Promise<IResponsePaging<ComposioToolkit>> {
         // Ecbot catalog is small — fetch all matching items, then offset into Composio
-        const eccho = this.ecchoCatalog.getToolkits({
+        const eccho = await this.ecchoCatalog.getToolkits({
             category,
             search,
             limit: 999,
@@ -170,7 +170,7 @@ export class MarketplaceWorkspaceController {
         @Param('slug') slug: string
     ): Promise<IResponse<ComposioToolkitDetail | null>> {
         // Check Ecbot catalog first, fall back to Composio
-        const ecchoDef = this.ecchoCatalog.findBySlug(slug);
+        const ecchoDef = await this.visibleEcchoToolkit(slug);
         if (ecchoDef) {
             const detail = {
                 slug: ecchoDef.slug,
@@ -202,7 +202,7 @@ export class MarketplaceWorkspaceController {
         @Param('slug') slug: string
     ): Promise<IResponse<IComposioToolkitAccess>> {
         // Ecbot-managed tools sign in to nothing outside Ecbot.
-        if (this.ecchoCatalog.findBySlug(slug)) {
+        if (await this.visibleEcchoToolkit(slug)) {
             return {
                 data: {
                     provider: 'eccho',
@@ -231,7 +231,7 @@ export class MarketplaceWorkspaceController {
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
     ): Promise<IResponse<ToolInstallResponseDto>> {
         // Route to Ecbot installer if the slug belongs to an Ecbot-managed tool
-        const ecchoDef = this.ecchoCatalog.findBySlug(dto.toolkitSlug);
+        const ecchoDef = await this.visibleEcchoToolkit(dto.toolkitSlug);
         if (ecchoDef) {
             const installer = this.registry.get(ENUM_MCP_PROVIDER.ECCHO);
             const result = await installer.begin({
@@ -405,5 +405,19 @@ export class MarketplaceWorkspaceController {
         });
 
         return { data: { id: tool.id, status: tool.status } };
+    }
+
+    /**
+     * The Ecbot toolkit for a slug, undefined when the slug is not one of ours.
+     * A hidden one is refused here, so it never falls through to Composio.
+     */
+    private async visibleEcchoToolkit(slug: string) {
+        const toolkit = await this.ecchoCatalog.findMergedBySlug(slug);
+        if (toolkit?.disabled) {
+            throw new NotFoundException(
+                'tool.marketplace.toolkit.error.notFound'
+            );
+        }
+        return toolkit;
     }
 }

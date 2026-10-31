@@ -1,19 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
-import { ECCHO_TOOLKITS } from '../constants/eccho-toolkits.constant';
+import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
+import { UpdateToolkitRequestDto } from '../dtos/request/update-toolkit.request.dto';
 import {
     ToolkitAdminComposioStatusResponseDto,
+    ToolkitAdminEcchoDetailResponseDto,
     ToolkitAdminEcchoResponseDto,
     ToolkitAdminResponseDto,
 } from '../dtos/response/toolkit.admin.response.dto';
 import { ENUM_MCP_PROVIDER } from '../enums/mcp-provider.enum';
 import { ComposioToolkit } from '../interfaces/composio.interface';
 import { IToolkitUsage } from '../interfaces/toolkit-usage.interface';
+import { ToolkitOverrideEntity } from '../repository/entities/toolkit-override.entity';
 import { ToolRepository } from '../repository/repositories/tool.repository';
+import { ToolkitOverrideRepository } from '../repository/repositories/toolkit-override.repository';
 import { ComposioCatalogService } from './composio-catalog.service';
 import { EcchoCatalogService } from './eccho-catalog.service';
 
+const TOOLS_SHOWN = 50;
 const NO_USAGE: IToolkitUsage = { workspaceCount: 0, toolCount: 0 };
 
 /** Read side of the admin toolkit pages: catalogs plus install counts. */
@@ -21,16 +26,14 @@ const NO_USAGE: IToolkitUsage = { workspaceCount: 0, toolCount: 0 };
 export class ToolkitAdminService {
     constructor(
         private readonly toolRepository: ToolRepository,
+        private readonly overrideRepository: ToolkitOverrideRepository,
         private readonly ecchoCatalog: EcchoCatalogService,
         private readonly composioCatalog: ComposioCatalogService,
         private readonly config: ConfigService
     ) {}
 
     async listEccho(): Promise<ToolkitAdminEcchoResponseDto[]> {
-        const { items } = this.ecchoCatalog.getToolkits({
-            limit: ECCHO_TOOLKITS.length,
-            offset: 0,
-        });
+        const items = await this.ecchoCatalog.listMerged();
         const usage = await this.toolRepository.countUsageByToolkit(
             ENUM_MCP_PROVIDER.ECCHO
         );
@@ -39,12 +42,101 @@ export class ToolkitAdminService {
                 ToolkitAdminEcchoResponseDto,
                 {
                     ...this.toRow(toolkit, usage),
-                    configured: !!this.ecchoCatalog.findBySlug(toolkit.slug)
-                        ?.baseUrl,
+                    configured: !!toolkit.baseUrl,
+                    disabled: toolkit.disabled,
                 },
                 { excludeExtraneousValues: true }
             )
         );
+    }
+
+    async getEccho(slug: string): Promise<ToolkitAdminEcchoDetailResponseDto> {
+        const [toolkit, override, usage, tools] = await Promise.all([
+            this.ecchoCatalog.findMergedBySlug(slug),
+            this.overrideRepository.findBySlug(slug),
+            this.toolRepository.countUsageByToolkit(ENUM_MCP_PROVIDER.ECCHO),
+            this.toolRepository.findByEcchoToolkit(slug, TOOLS_SHOWN),
+        ]);
+        const def = this.ecchoCatalog.findBySlug(slug);
+        if (!toolkit || !def) {
+            throw new NotFoundException(
+                'tool.marketplace.toolkit.error.notFound'
+            );
+        }
+
+        return plainToInstance(
+            ToolkitAdminEcchoDetailResponseDto,
+            {
+                ...this.toRow(toolkit, usage),
+                configured: !!toolkit.baseUrl,
+                disabled: toolkit.disabled,
+                serverUrl: toolkit.baseUrl,
+                defaults: {
+                    serverUrl: def.baseUrl,
+                    name: def.name,
+                    description: def.description,
+                    logo: def.logo,
+                    categories: def.categories,
+                },
+                overriddenFields: (
+                    [
+                        'name',
+                        'description',
+                        'logo',
+                        'serverUrl',
+                        'categories',
+                    ] as const
+                ).filter(field => override?.[field] != null),
+                tools: tools.map(tool => ({
+                    id: tool.id,
+                    displayName: tool.displayName,
+                    status: tool.status,
+                    createdAt: tool.createdAt,
+                    workspaceId: tool.workspace.id,
+                    workspaceName: tool.workspace.name,
+                })),
+            },
+            { excludeExtraneousValues: true }
+        );
+    }
+
+    async updateEccho(
+        slug: string,
+        dto: UpdateToolkitRequestDto,
+        user: UserEntity
+    ): Promise<ToolkitAdminEcchoDetailResponseDto> {
+        if (!this.ecchoCatalog.findBySlug(slug)) {
+            throw new NotFoundException(
+                'tool.marketplace.toolkit.error.notFound'
+            );
+        }
+
+        const patch: Partial<ToolkitOverrideEntity> = {};
+        for (const field of [
+            'name',
+            'description',
+            'logo',
+            'serverUrl',
+            'categories',
+            'disabled',
+        ] as const) {
+            if (dto[field] !== undefined) {
+                Object.assign(patch, { [field]: dto[field] });
+            }
+        }
+
+        const existing = await this.overrideRepository.findBySlug(slug);
+        if (existing) {
+            Object.assign(existing, patch);
+            await this.overrideRepository.save(existing, { actionBy: user.id });
+        } else {
+            await this.overrideRepository.create(
+                { slug, ...patch },
+                { actionBy: user.id }
+            );
+        }
+
+        return this.getEccho(slug);
     }
 
     async listComposio(params: {

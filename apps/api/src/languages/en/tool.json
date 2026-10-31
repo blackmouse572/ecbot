@@ -115,6 +115,8 @@
     "toolkit": {
         "eccho": "Ecbot toolkits retrieved",
         "composio": "Composio toolkits retrieved",
+        "ecchoGet": "Ecbot toolkit retrieved",
+        "ecchoUpdate": "Ecbot toolkit updated",
         "composioStatus": "Composio status retrieved"
     }
 }

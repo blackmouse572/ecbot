@@ -5,6 +5,8 @@ import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
 import { ChatbotToolEntity } from 'src/modules/tool/repository/entities/chatbot-tool.entity';
 import { ToolInvocationEntity } from 'src/modules/tool/repository/entities/tool-invocation.entity';
 import { ToolInstallSessionEntity } from 'src/modules/tool/repository/entities/tool-install-session.entity';
+import { ToolkitOverrideEntity } from 'src/modules/tool/repository/entities/toolkit-override.entity';
+import { ToolkitOverrideRepository } from 'src/modules/tool/repository/repositories/toolkit-override.repository';
 import { ToolRepository } from 'src/modules/tool/repository/repositories/tool.repository';
 import { ChatbotToolRepository } from 'src/modules/tool/repository/repositories/chatbot-tool.repository';
 import { ToolInvocationRepository } from 'src/modules/tool/repository/repositories/tool-invocation.repository';
@@ -34,6 +36,7 @@ import { ToolInstallSessionPruneScheduler } from 'src/modules/tool/schedulers/to
             ChatbotToolEntity,
             ToolInvocationEntity,
             ToolInstallSessionEntity,
+            ToolkitOverrideEntity,
         ]),
         AiCacheModule,
     ],
@@ -42,6 +45,7 @@ import { ToolInstallSessionPruneScheduler } from 'src/modules/tool/schedulers/to
         ChatbotToolRepository,
         ToolInvocationRepository,
         ToolInstallSessionRepository,
+        ToolkitOverrideRepository,
         ToolService,
         ChatbotToolService,
         HttpToolExecutorService,
