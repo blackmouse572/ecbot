@@ -1,7 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ConflictException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
+import { CreateToolkitRequestDto } from '../dtos/request/create-toolkit.request.dto';
 import { UpdateToolkitRequestDto } from '../dtos/request/update-toolkit.request.dto';
 import {
     ToolkitAdminComposioStatusResponseDto,
@@ -44,6 +50,7 @@ export class ToolkitAdminService {
                     ...this.toRow(toolkit, usage),
                     configured: !!toolkit.baseUrl,
                     disabled: toolkit.disabled,
+                    custom: toolkit.custom,
                 },
                 { excludeExtraneousValues: true }
             )
@@ -57,27 +64,31 @@ export class ToolkitAdminService {
             this.toolRepository.countUsageByToolkit(ENUM_MCP_PROVIDER.ECCHO),
             this.toolRepository.findByEcchoToolkit(slug, TOOLS_SHOWN),
         ]);
-        const def = this.ecchoCatalog.findBySlug(slug);
-        if (!toolkit || !def) {
+        if (!toolkit) {
             throw new NotFoundException(
                 'tool.marketplace.toolkit.error.notFound'
             );
         }
 
+        const def = this.ecchoCatalog.findBySlug(slug);
         return plainToInstance(
             ToolkitAdminEcchoDetailResponseDto,
             {
                 ...this.toRow(toolkit, usage),
                 configured: !!toolkit.baseUrl,
                 disabled: toolkit.disabled,
+                custom: toolkit.custom,
                 serverUrl: toolkit.baseUrl,
-                defaults: {
-                    serverUrl: def.baseUrl,
-                    name: def.name,
-                    description: def.description,
-                    logo: def.logo,
-                    categories: def.categories,
-                },
+                // A custom toolkit has no code defaults to go back to.
+                defaults: toolkit.custom
+                    ? { serverUrl: '', name: '', categories: [] }
+                    : {
+                          serverUrl: def?.baseUrl ?? '',
+                          name: def?.name,
+                          description: def?.description,
+                          logo: def?.logo,
+                          categories: def?.categories,
+                      },
                 overriddenFields: (
                     [
                         'name',
@@ -100,15 +111,34 @@ export class ToolkitAdminService {
         );
     }
 
+    async createEccho(
+        dto: CreateToolkitRequestDto,
+        user: UserEntity
+    ): Promise<ToolkitAdminEcchoDetailResponseDto> {
+        const taken =
+            !!this.ecchoCatalog.findBySlug(dto.slug) ||
+            !!(await this.overrideRepository.findBySlug(dto.slug));
+        if (taken) {
+            throw new ConflictException('tool.toolkit.error.slugTaken');
+        }
+
+        await this.overrideRepository.create(dto, { actionBy: user.id });
+        return this.getEccho(dto.slug);
+    }
+
     async updateEccho(
         slug: string,
         dto: UpdateToolkitRequestDto,
         user: UserEntity
     ): Promise<ToolkitAdminEcchoDetailResponseDto> {
-        if (!this.ecchoCatalog.findBySlug(slug)) {
+        const toolkit = await this.ecchoCatalog.findMergedBySlug(slug);
+        if (!toolkit) {
             throw new NotFoundException(
                 'tool.marketplace.toolkit.error.notFound'
             );
+        }
+        if (toolkit.custom && (dto.name === null || dto.serverUrl === null)) {
+            throw new BadRequestException('tool.toolkit.error.requiredField');
         }
 
         const patch: Partial<ToolkitOverrideEntity> = {};

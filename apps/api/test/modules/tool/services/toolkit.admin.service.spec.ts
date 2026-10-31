@@ -143,6 +143,77 @@ describe('ToolkitAdminService', () => {
         });
     });
 
+    describe('creating an Ecbot toolkit', () => {
+        const user = { id: 'u1' } as any;
+        const dto = {
+            slug: 'haravan',
+            name: 'Haravan',
+            serverUrl: 'https://hv.example.com',
+        };
+
+        beforeEach(() => {
+            ecchoCatalog.findBySlug.mockReturnValue(undefined);
+            ecchoCatalog.findMergedBySlug.mockResolvedValue(undefined);
+            overrideRepository.findBySlug.mockResolvedValue(null);
+            toolRepository.countUsageByToolkit.mockResolvedValue(new Map());
+            toolRepository.findByEcchoToolkit.mockResolvedValue([]);
+        });
+
+        it('stores it as an override row for a slug the code does not know', async () => {
+            ecchoCatalog.findMergedBySlug.mockResolvedValue({
+                ...dto,
+                description: '',
+                categories: [],
+                baseUrl: dto.serverUrl,
+                disabled: false,
+                custom: true,
+            });
+
+            const detail = await service.createEccho(dto, user);
+
+            expect(overrideRepository.create).toHaveBeenCalledWith(dto, {
+                actionBy: 'u1',
+            });
+            expect(detail).toMatchObject({
+                slug: 'haravan',
+                custom: true,
+                configured: true,
+            });
+        });
+
+        it('refuses a slug that is already taken', async () => {
+            ecchoCatalog.findBySlug.mockReturnValue({ slug: 'haravan' });
+
+            await expect(service.createEccho(dto, user)).rejects.toThrow(
+                'tool.toolkit.error.slugTaken'
+            );
+
+            ecchoCatalog.findBySlug.mockReturnValue(undefined);
+            overrideRepository.findBySlug.mockResolvedValue({
+                slug: 'haravan',
+            });
+
+            await expect(service.createEccho(dto, user)).rejects.toThrow(
+                'tool.toolkit.error.slugTaken'
+            );
+            expect(overrideRepository.create).not.toHaveBeenCalled();
+        });
+
+        it('does not let an edit clear the name or server URL of a custom toolkit', async () => {
+            ecchoCatalog.findMergedBySlug.mockResolvedValue({
+                ...dto,
+                custom: true,
+            });
+
+            await expect(
+                service.updateEccho('haravan', { name: null }, user)
+            ).rejects.toThrow('tool.toolkit.error.requiredField');
+            await expect(
+                service.updateEccho('haravan', { serverUrl: null }, user)
+            ).rejects.toThrow('tool.toolkit.error.requiredField');
+        });
+    });
+
     it('pages the Composio catalog with usage, zero when unused', async () => {
         composioCatalog.getToolkits.mockResolvedValue({
             items: [

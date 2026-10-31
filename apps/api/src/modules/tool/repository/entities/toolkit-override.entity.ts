@@ -4,7 +4,8 @@ import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
 export const ToolkitOverrideTableName = 'toolkit_overrides';
 
 /**
- * Admin edits to an Ecbot built-in toolkit. The toolkit itself lives in code
+ * Admin edits to an Ecbot built-in toolkit, or a whole toolkit an admin
+ * created (a slug with no code definition). A code toolkit lives in code
  * (`ECCHO_TOOLKITS`); a null field means "use the code default".
  */
 @Entity({ tableName: ToolkitOverrideTableName })

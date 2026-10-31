@@ -3283,6 +3283,10 @@ export type ToolkitAdminEcchoResponseDto = {
      * Hidden from the workspace marketplace
      */
     disabled: boolean;
+    /**
+     * Created in admin, not defined in code
+     */
+    custom: boolean;
 };
 
 export type ToolkitAdminDefaultsResponseDto = {
@@ -3334,6 +3338,10 @@ export type ToolkitAdminEcchoDetailResponseDto = {
      */
     disabled: boolean;
     /**
+     * Created in admin, not defined in code
+     */
+    custom: boolean;
+    /**
      * Server URL new installs use, may be empty
      */
     serverUrl: string;
@@ -3351,6 +3359,24 @@ export type ToolkitAdminEcchoDetailResponseDto = {
 export type UpdateToolkitCategoryRequestDto = {
     id: string;
     name: string;
+};
+
+export type CreateToolkitRequestDto = {
+    /**
+     * Lowercase kebab-case, cannot change later
+     */
+    slug: string;
+    name: string;
+    /**
+     * Base URL of the toolkit server; installs use it
+     */
+    serverUrl: string;
+    description?: string;
+    /**
+     * Logo URL
+     */
+    logo?: string;
+    categories?: Array<UpdateToolkitCategoryRequestDto>;
 };
 
 export type UpdateToolkitRequestDto = {
@@ -17935,6 +17961,90 @@ export type ToolkitAdminControllerEcchoUpdateV1Responses = {
 };
 
 export type ToolkitAdminControllerEcchoUpdateV1Response = ToolkitAdminControllerEcchoUpdateV1Responses[keyof ToolkitAdminControllerEcchoUpdateV1Responses];
+
+export type ToolkitAdminControllerEcchoCreateV1Data = {
+    body: CreateToolkitRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/toolkit/eccho';
+};
+
+export type ToolkitAdminControllerEcchoCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolkitAdminControllerEcchoCreateV1Error = ToolkitAdminControllerEcchoCreateV1Errors[keyof ToolkitAdminControllerEcchoCreateV1Errors];
+
+export type ToolkitAdminControllerEcchoCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ToolkitAdminEcchoDetailResponseDto;
+    };
+};
+
+export type ToolkitAdminControllerEcchoCreateV1Response = ToolkitAdminControllerEcchoCreateV1Responses[keyof ToolkitAdminControllerEcchoCreateV1Responses];
 
 export type ToolkitAdminControllerComposioV1Data = {
     body?: never;

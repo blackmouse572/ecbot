@@ -7,6 +7,7 @@ describe('ToolkitAdminController', () => {
         composioStatus: jest.fn(),
         getEccho: jest.fn(),
         updateEccho: jest.fn(),
+        createEccho: jest.fn(),
     };
     const activityService = { createByUser: jest.fn() };
     const paginationService = { totalPage: jest.fn().mockReturnValue(2) };
@@ -45,6 +46,29 @@ describe('ToolkitAdminController', () => {
             user,
             expect.objectContaining({
                 metadata: { toolkit: 'kiotviet', fields: ['disabled'] },
+            })
+        );
+    });
+
+    it('creates an Ecbot toolkit and logs it', async () => {
+        toolkitAdminService.createEccho.mockResolvedValue({ slug: 'haravan' });
+        const user = { id: 'u1' } as any;
+        const dto = {
+            slug: 'haravan',
+            name: 'Haravan',
+            serverUrl: 'https://hv.example.com',
+        };
+
+        await expect(controller.ecchoCreate(user, dto)).resolves.toEqual({
+            data: { slug: 'haravan' },
+        });
+
+        expect(toolkitAdminService.createEccho).toHaveBeenCalledWith(dto, user);
+        expect(activityService.createByUser).toHaveBeenCalledWith(
+            user,
+            expect.objectContaining({
+                action: 'create',
+                metadata: { toolkit: 'haravan' },
             })
         );
     });

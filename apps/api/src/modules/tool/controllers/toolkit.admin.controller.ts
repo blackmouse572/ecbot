@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    Patch,
+    Post,
+    Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
@@ -33,6 +41,7 @@ import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import {
     ToolkitAdminComposioListDoc,
     ToolkitAdminComposioStatusDoc,
+    ToolkitAdminEcchoCreateDoc,
     ToolkitAdminEcchoGetDoc,
     ToolkitAdminEcchoListDoc,
     ToolkitAdminEcchoUpdateDoc,
@@ -43,6 +52,7 @@ import {
     ToolkitAdminEcchoResponseDto,
     ToolkitAdminResponseDto,
 } from '../dtos/response/toolkit.admin.response.dto';
+import { CreateToolkitRequestDto } from '../dtos/request/create-toolkit.request.dto';
 import { UpdateToolkitRequestDto } from '../dtos/request/update-toolkit.request.dto';
 import { ToolkitAdminService } from '../services/toolkit.admin.service';
 
@@ -102,6 +112,30 @@ export class ToolkitAdminController {
         @Param('slug') slug: string
     ): Promise<IResponse<ToolkitAdminEcchoDetailResponseDto>> {
         return { data: await this.toolkitAdminService.getEccho(slug) };
+    }
+
+    @ToolkitAdminEcchoCreateDoc()
+    @Response('tool.toolkit.ecchoCreate')
+    @PolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.TOOL,
+        action: [ENUM_POLICY_ACTION.CREATE],
+    })
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Post('/eccho')
+    async ecchoCreate(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Body() dto: CreateToolkitRequestDto
+    ): Promise<IResponse<ToolkitAdminEcchoDetailResponseDto>> {
+        const data = await this.toolkitAdminService.createEccho(dto, user);
+        await this.activityService.createByUser(user, {
+            action: ENUM_ACTIVITY_ACTION.CREATE,
+            subject: ENUM_POLICY_SUBJECT.TOOL,
+            metadata: { toolkit: dto.slug },
+        });
+        return { data };
     }
 
     @ToolkitAdminEcchoUpdateDoc()

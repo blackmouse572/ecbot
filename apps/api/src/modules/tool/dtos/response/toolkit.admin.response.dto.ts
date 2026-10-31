@@ -53,6 +53,10 @@ export class ToolkitAdminEcchoResponseDto extends ToolkitAdminResponseDto {
     @ApiProperty({ description: 'Hidden from the workspace marketplace' })
     @Expose()
     disabled: boolean;
+
+    @ApiProperty({ description: 'Created in admin, not defined in code' })
+    @Expose()
+    custom: boolean;
 }
 
 export class ToolkitAdminDefaultsResponseDto {
