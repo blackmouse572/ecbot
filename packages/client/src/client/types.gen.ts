@@ -3286,6 +3286,10 @@ export type ToolkitAdminEcchoResponseDto = {
 };
 
 export type ToolkitAdminDefaultsResponseDto = {
+    /**
+     * Server URL from the environment, may be empty
+     */
+    serverUrl: string;
     name: string;
     description?: string;
     logo?: string;
@@ -3330,6 +3334,10 @@ export type ToolkitAdminEcchoDetailResponseDto = {
      */
     disabled: boolean;
     /**
+     * Server URL new installs use, may be empty
+     */
+    serverUrl: string;
+    /**
      * Code defaults, what a reset brings back
      */
     defaults: ToolkitAdminDefaultsResponseDto;
@@ -3352,6 +3360,10 @@ export type UpdateToolkitRequestDto = {
      * Logo URL
      */
     logo?: string | null;
+    /**
+     * Base URL of the toolkit server; new installs use it
+     */
+    serverUrl?: string | null;
     categories?: Array<UpdateToolkitCategoryRequestDto> | null;
     /**
      * Hide from the workspace marketplace
