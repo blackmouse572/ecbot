@@ -3599,9 +3599,7 @@ export type FollowupChatbotResponseDto = {
     /**
      * Chatbot avatar URL
      */
-    avatar: {
-        [key: string]: unknown;
-    } | null;
+    avatar: string | null;
 };
 
 export type FollowupAdminListResponseDto = {
@@ -3621,9 +3619,7 @@ export type FollowupAdminListResponseDto = {
     /**
      * Message that triggered scheduling this follow-up
      */
-    triggerMessageId: {
-        [key: string]: unknown;
-    } | null;
+    triggerMessageId: string | null;
     /**
      * Reason the follow-up was scheduled
      */
@@ -6665,9 +6661,7 @@ export type FollowupListResponseDto = {
     /**
      * Message that triggered scheduling this follow-up
      */
-    triggerMessageId: {
-        [key: string]: unknown;
-    } | null;
+    triggerMessageId: string | null;
     /**
      * Reason the follow-up was scheduled
      */

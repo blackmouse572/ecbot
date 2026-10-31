@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 import { AccountCreateRequestDto } from 'src/modules/account/dtos/request/account.create.request.dto';
 
 /**
@@ -17,8 +17,10 @@ export class AccountUpdateRequestDto extends OmitType(AccountCreateRequestDto, [
         description:
             'New platform token. Leave out to keep the stored one. Stored encrypted; an already enveloped value is kept as-is.',
     })
+    // Only an absent token means "keep"; @IsOptional would also let null
+    // through to the NOT NULL column.
+    @ValidateIf((_o, value) => value !== undefined)
     @IsString()
     @IsNotEmpty()
-    @IsOptional()
     accessToken?: string;
 }
