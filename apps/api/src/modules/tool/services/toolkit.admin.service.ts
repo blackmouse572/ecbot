@@ -68,16 +68,24 @@ export class ToolkitAdminService {
             ToolkitAdminEcchoDetailResponseDto,
             {
                 ...this.toRow(toolkit, usage),
-                configured: !!def.baseUrl,
+                configured: !!toolkit.baseUrl,
                 disabled: toolkit.disabled,
+                serverUrl: toolkit.baseUrl,
                 defaults: {
+                    serverUrl: def.baseUrl,
                     name: def.name,
                     description: def.description,
                     logo: def.logo,
                     categories: def.categories,
                 },
                 overriddenFields: (
-                    ['name', 'description', 'logo', 'categories'] as const
+                    [
+                        'name',
+                        'description',
+                        'logo',
+                        'serverUrl',
+                        'categories',
+                    ] as const
                 ).filter(field => override?.[field] != null),
                 tools: tools.map(tool => ({
                     id: tool.id,
@@ -108,6 +116,7 @@ export class ToolkitAdminService {
             'name',
             'description',
             'logo',
+            'serverUrl',
             'categories',
             'disabled',
         ] as const) {

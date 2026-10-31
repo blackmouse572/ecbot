@@ -16,6 +16,7 @@ create table "toolkit_overrides" (
   "name" varchar(120) null,
   "description" text null,
   "logo" varchar(500) null,
+  "server_url" varchar(500) null,
   "categories" jsonb null,
   "disabled" boolean not null default false,
   constraint "toolkit_overrides_pkey" primary key ("id")

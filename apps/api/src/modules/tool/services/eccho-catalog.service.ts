@@ -94,6 +94,7 @@ export class EcchoCatalogService {
             description: override?.description || def.description,
             logo: override?.logo || def.logo,
             categories: override?.categories ?? def.categories,
+            baseUrl: override?.serverUrl?.replace(/\/+$/, '') || def.baseUrl,
             disabled: override?.disabled ?? false,
         };
     }

@@ -22,6 +22,9 @@ export class ToolkitOverrideEntity extends DatabaseEntityBase {
     @Property({ type: 'varchar', length: 500, nullable: true })
     logo?: string | null;
 
+    @Property({ type: 'varchar', length: 500, nullable: true })
+    serverUrl?: string | null;
+
     @Property({ type: 'jsonb', nullable: true })
     categories?: Array<{ id: string; name: string }> | null;
 

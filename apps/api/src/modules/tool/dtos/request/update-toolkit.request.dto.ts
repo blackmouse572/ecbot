@@ -58,6 +58,20 @@ export class UpdateToolkitRequestDto {
     logo?: string | null;
 
     @ApiPropertyOptional({
+        type: String,
+        nullable: true,
+        description: 'Base URL of the toolkit server; new installs use it',
+    })
+    @IsOptional()
+    @IsUrl({
+        protocols: ['http', 'https'],
+        require_protocol: true,
+        require_tld: false,
+    })
+    @MaxLength(500)
+    serverUrl?: string | null;
+
+    @ApiPropertyOptional({
         nullable: true,
         type: [UpdateToolkitCategoryRequestDto],
     })

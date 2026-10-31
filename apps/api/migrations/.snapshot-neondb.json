@@ -17306,6 +17306,22 @@
           "enumItems": [],
           "mappedType": "string"
         },
+        "server_url": {
+          "name": "server_url",
+          "type": "varchar(500)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 500,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
         "categories": {
           "name": "categories",
           "type": "jsonb",

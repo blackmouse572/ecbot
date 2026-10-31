@@ -32,4 +32,12 @@ describe('UpdateToolkitRequestDto', () => {
     it('wants https for the logo', () => {
         expect(errorsFor({ logo: 'http://x.test/a.png' })).toEqual(['logo']);
     });
+
+    it('takes an http(s) server URL and null to reset it', () => {
+        expect(errorsFor({ serverUrl: 'https://kv.example.com' })).toEqual([]);
+        expect(errorsFor({ serverUrl: null })).toEqual([]);
+        expect(errorsFor({ serverUrl: 'ftp://kv.example.com' })).toEqual([
+            'serverUrl',
+        ]);
+    });
 });

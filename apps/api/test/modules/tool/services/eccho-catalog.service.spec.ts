@@ -54,4 +54,14 @@ describe('EcchoCatalogService', () => {
             disabled: true,
         });
     });
+
+    it('uses the edited server URL without a trailing slash', async () => {
+        overrides.findBySlug.mockResolvedValue({
+            serverUrl: 'https://kv.example.com/',
+        });
+
+        expect(await service.findMergedBySlug('kiotviet')).toMatchObject({
+            baseUrl: 'https://kv.example.com',
+        });
+    });
 });
