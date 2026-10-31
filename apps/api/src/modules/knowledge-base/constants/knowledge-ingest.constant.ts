@@ -51,8 +51,10 @@ export const KNOWLEDGE_URL_MAX_PAGES = 50;
 /**
  * Reading a website page costs us a scraper call, so each page read is
  * charged to the workspace's plan as this many tokens (Ecbot Cloud only).
+ * One page is one Firecrawl credit, about $0.001 on the Standard plan; at the
+ * plan unit of $0.15 per million tokens that is about 7,000 tokens.
  */
-export const KNOWLEDGE_CRAWL_TOKENS_PER_PAGE = 1000;
+export const KNOWLEDGE_CRAWL_TOKENS_PER_PAGE = 7000;
 
 /** Crawling up to `KNOWLEDGE_URL_MAX_PAGES` pages takes minutes, not seconds. */
 export const RAG_INGEST_URL_HTTP_TIMEOUT_MS = 300 * 1000;
