@@ -245,9 +245,16 @@ export class KnowledgeIngestTaskService {
         const budget = workspaceId
             ? await this.meter?.check(workspaceId)
             : undefined;
-        if (budget && !budget.allowed) {
+        // A crawl is charged per page after it runs, so read only the pages
+        // the tokens left can pay for.
+        const affordablePages =
+            item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL &&
+            budget?.remaining !== undefined
+                ? Math.floor(budget.remaining / KNOWLEDGE_CRAWL_TOKENS_PER_PAGE)
+                : undefined;
+        if ((budget && !budget.allowed) || affordablePages === 0) {
             this.logger.log(
-                `ingest: token budget blocked item=${knowledgeItemId}: ${budget.reason}`
+                `ingest: token budget blocked item=${knowledgeItemId}: ${budget?.reason ?? 'not enough tokens for one page'}`
             );
             await this.markFailed(knowledgeItemId, RAG_INGEST_NO_TOKENS_ERROR);
             return;
@@ -265,7 +272,7 @@ export class KnowledgeIngestTaskService {
         } else if (item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA) {
             data = await this.ingestMedia(item, chatbotIds);
         } else if (item.type === ENUM_KNOWLEDGE_BASE_ITEM_TYPE.URL) {
-            data = await this.ingestUrl(item, chatbotIds);
+            data = await this.ingestUrl(item, chatbotIds, affordablePages);
         } else {
             data = await this.ingestText(item, chatbotIds);
         }
@@ -423,7 +430,12 @@ export class KnowledgeIngestTaskService {
         return (resp.data as any)?.data;
     }
 
-    private async ingestUrl(item: any, chatbotIds: string[]): Promise<any> {
+    private async ingestUrl(
+        item: any,
+        chatbotIds: string[],
+        affordablePages?: number
+    ): Promise<any> {
+        const maxPages = urlMaxPages(item.metadata?.maxPages);
         const resp = await firstValueFrom(
             this.httpService.post(
                 `${this.aiBackendUrl}/api/rag/ingest/url`,
@@ -433,7 +445,7 @@ export class KnowledgeIngestTaskService {
                     chatbot_ids: chatbotIds,
                     knowledge_base_id: item.knowledgeBase?.id,
                     title: item.title,
-                    max_pages: urlMaxPages(item.metadata?.maxPages),
+                    max_pages: Math.min(maxPages, affordablePages ?? maxPages),
                 },
                 {
                     timeout: RAG_INGEST_URL_HTTP_TIMEOUT_MS,
