@@ -22,7 +22,11 @@ export class FollowupChatbotResponseDto {
     @Expose()
     name: string;
 
-    @ApiProperty({ description: 'Chatbot avatar URL', nullable: true })
+    @ApiProperty({
+        description: 'Chatbot avatar URL',
+        type: String,
+        nullable: true,
+    })
     @Expose()
     @Transform(({ obj }) => obj.avatar ?? null)
     avatar: string | null;
@@ -46,6 +50,7 @@ export class FollowupListResponseDto {
 
     @ApiProperty({
         description: 'Sender name on the conversation',
+        type: String,
         nullable: true,
     })
     @Expose()
@@ -54,6 +59,7 @@ export class FollowupListResponseDto {
 
     @ApiProperty({
         description: 'Message that triggered scheduling this follow-up',
+        type: String,
         nullable: true,
     })
     @Expose()

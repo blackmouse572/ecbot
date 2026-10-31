@@ -116,7 +116,12 @@
         "eccho": "Ecbot toolkits retrieved",
         "composio": "Composio toolkits retrieved",
         "ecchoGet": "Ecbot toolkit retrieved",
+        "ecchoCreate": "Ecbot toolkit created",
         "ecchoUpdate": "Ecbot toolkit updated",
-        "composioStatus": "Composio status retrieved"
+        "composioStatus": "Composio status retrieved",
+        "error": {
+            "slugTaken": "That toolkit id is already in use.",
+            "requiredField": "A custom toolkit needs a name and a server URL."
+        }
     }
 }

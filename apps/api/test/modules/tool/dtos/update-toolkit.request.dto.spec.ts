@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
+import { CreateToolkitRequestDto } from 'src/modules/tool/dtos/request/create-toolkit.request.dto';
 import { UpdateToolkitRequestDto } from 'src/modules/tool/dtos/request/update-toolkit.request.dto';
 
 function errorsFor(payload: Record<string, unknown>): string[] {
@@ -39,5 +40,40 @@ describe('UpdateToolkitRequestDto', () => {
         expect(errorsFor({ serverUrl: 'ftp://kv.example.com' })).toEqual([
             'serverUrl',
         ]);
+    });
+});
+
+describe('CreateToolkitRequestDto', () => {
+    const errors = (payload: Record<string, unknown>) =>
+        validateSync(plainToInstance(CreateToolkitRequestDto, payload), {
+            whitelist: true,
+            forbidNonWhitelisted: true,
+        }).map(e => e.property);
+
+    const valid = {
+        slug: 'haravan',
+        name: 'Haravan',
+        serverUrl: 'https://hv.example.com',
+    };
+
+    it('needs a slug, name and server URL', () => {
+        expect(errors(valid)).toEqual([]);
+        expect(errors({})).toEqual(['slug', 'name', 'serverUrl']);
+    });
+
+    it('only takes lowercase kebab-case slugs', () => {
+        expect(errors({ ...valid, slug: 'Hara van' })).toEqual(['slug']);
+        expect(errors({ ...valid, slug: 'hara-van-2' })).toEqual([]);
+    });
+
+    it('takes the optional fields', () => {
+        expect(
+            errors({
+                ...valid,
+                description: 'Shop platform',
+                logo: 'https://hv.example.com/logo.png',
+                categories: [{ id: 'ecommerce', name: 'E-commerce' }],
+            })
+        ).toEqual([]);
     });
 });

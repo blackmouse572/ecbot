@@ -116,7 +116,12 @@
         "eccho": "Lấy danh sách toolkit của Ecbot thành công",
         "composio": "Lấy danh sách toolkit Composio thành công",
         "ecchoGet": "Lấy toolkit của Ecbot thành công",
+        "ecchoCreate": "Đã tạo toolkit Ecbot",
         "ecchoUpdate": "Cập nhật toolkit của Ecbot thành công",
-        "composioStatus": "Lấy trạng thái Composio thành công"
+        "composioStatus": "Lấy trạng thái Composio thành công",
+        "error": {
+            "slugTaken": "Mã toolkit này đã được dùng.",
+            "requiredField": "Toolkit tùy chỉnh cần có tên và URL máy chủ."
+        }
     }
 }

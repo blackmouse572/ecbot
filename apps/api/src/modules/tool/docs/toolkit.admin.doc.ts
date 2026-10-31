@@ -8,6 +8,7 @@ import {
     DocResponse,
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
+import { CreateToolkitRequestDto } from 'src/modules/tool/dtos/request/create-toolkit.request.dto';
 import { UpdateToolkitRequestDto } from 'src/modules/tool/dtos/request/update-toolkit.request.dto';
 import {
     ToolkitAdminDocParamsSlug,
@@ -66,6 +67,22 @@ export function ToolkitAdminEcchoGetDoc(): MethodDecorator {
             {
                 dto: ToolkitAdminEcchoDetailResponseDto,
             }
+        )
+    );
+}
+
+export function ToolkitAdminEcchoCreateDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'add an Ecbot toolkit without a code change' }),
+        DocRequest({
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            dto: CreateToolkitRequestDto,
+        }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ role: true, policy: true }),
+        DocResponse<ToolkitAdminEcchoDetailResponseDto>(
+            'tool.toolkit.ecchoCreate',
+            { dto: ToolkitAdminEcchoDetailResponseDto }
         )
     );
 }

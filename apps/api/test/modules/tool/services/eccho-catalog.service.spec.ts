@@ -64,4 +64,65 @@ describe('EcchoCatalogService', () => {
             baseUrl: 'https://kv.example.com',
         });
     });
+    describe('custom toolkits created by an admin', () => {
+        const custom = {
+            slug: 'haravan',
+            name: 'Haravan',
+            description: null,
+            logo: null,
+            serverUrl: 'https://hv.example.com/',
+            categories: null,
+            disabled: false,
+        };
+
+        it('lists them next to the code toolkits with default paths', async () => {
+            overrides.findAllBySlug.mockResolvedValue(
+                new Map([['haravan', custom]])
+            );
+
+            const items = await service.listMerged();
+
+            expect(items.map(i => i.slug)).toEqual(['kiotviet', 'haravan']);
+            expect(items[1]).toMatchObject({
+                name: 'Haravan',
+                description: '',
+                categories: [],
+                baseUrl: 'https://hv.example.com',
+                mcpPath: '/mcp',
+                authorizePath: '/authorize',
+                custom: true,
+            });
+            expect(items[0].custom).toBe(false);
+        });
+
+        it('finds one by slug, and shows it to workspaces unless disabled', async () => {
+            overrides.findBySlug.mockResolvedValue(custom);
+            overrides.findAllBySlug.mockResolvedValue(
+                new Map([['haravan', custom]])
+            );
+
+            expect(await service.findMergedBySlug('haravan')).toMatchObject({
+                slug: 'haravan',
+                custom: true,
+            });
+            expect(
+                (await service.getToolkits({ limit: 10, offset: 0 })).items.map(
+                    i => i.slug
+                )
+            ).toContain('haravan');
+        });
+
+        it('ignores an override row that has no name or server URL', async () => {
+            const broken = { ...custom, name: null };
+            overrides.findBySlug.mockResolvedValue(broken);
+            overrides.findAllBySlug.mockResolvedValue(
+                new Map([['haravan', broken]])
+            );
+
+            expect(await service.findMergedBySlug('haravan')).toBeUndefined();
+            expect((await service.listMerged()).map(i => i.slug)).toEqual([
+                'kiotviet',
+            ]);
+        });
+    });
 });

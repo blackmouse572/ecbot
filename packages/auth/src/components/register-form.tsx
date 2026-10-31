@@ -10,7 +10,11 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import { HoneypotField, useHoneypot } from "./honeypot";
-import { ITurnstileConfig, TurnstileField, useTurnstile } from "./turnstile";
+import {
+  type ITurnstileConfig,
+  TurnstileField,
+  useTurnstile,
+} from "./turnstile";
 import { ZodFormWrapper } from "./zod-form-wrapper";
 import { Suspense, useEffect } from "react";
 
@@ -152,7 +156,9 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
           acceptTerms,
           turnstileToken,
         });
-        for (const [field, message] of Object.entries(fieldErrors ?? {})) {
+        for (const [field, message] of Object.entries(
+          (fieldErrors || {}) as TRegisterFieldErrors,
+        )) {
           if (message && field in RegisterSchema.shape) {
             form.setError(field as keyof TRegisterSchema, {
               type: "server",

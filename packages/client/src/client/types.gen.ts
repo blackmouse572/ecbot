@@ -2421,10 +2421,6 @@ export type AccountUpdateRequestDto = {
      */
     name: string;
     /**
-     * Platform token. Stored encrypted — an already enveloped value is kept as-is.
-     */
-    accessToken: string;
-    /**
      * Which platform this channel belongs to
      */
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
@@ -2444,6 +2440,10 @@ export type AccountUpdateRequestDto = {
      * Workspace that owns the channel
      */
     workspace: string;
+    /**
+     * New platform token. Leave out to keep the stored one. Stored encrypted; an already enveloped value is kept as-is.
+     */
+    accessToken?: string;
 };
 
 export type AccountUpdateStatusRequestDto = {
@@ -3283,6 +3283,10 @@ export type ToolkitAdminEcchoResponseDto = {
      * Hidden from the workspace marketplace
      */
     disabled: boolean;
+    /**
+     * Created in admin, not defined in code
+     */
+    custom: boolean;
 };
 
 export type ToolkitAdminDefaultsResponseDto = {
@@ -3334,6 +3338,10 @@ export type ToolkitAdminEcchoDetailResponseDto = {
      */
     disabled: boolean;
     /**
+     * Created in admin, not defined in code
+     */
+    custom: boolean;
+    /**
      * Server URL new installs use, may be empty
      */
     serverUrl: string;
@@ -3351,6 +3359,24 @@ export type ToolkitAdminEcchoDetailResponseDto = {
 export type UpdateToolkitCategoryRequestDto = {
     id: string;
     name: string;
+};
+
+export type CreateToolkitRequestDto = {
+    /**
+     * Lowercase kebab-case, cannot change later
+     */
+    slug: string;
+    name: string;
+    /**
+     * Base URL of the toolkit server; installs use it
+     */
+    serverUrl: string;
+    description?: string;
+    /**
+     * Logo URL
+     */
+    logo?: string;
+    categories?: Array<UpdateToolkitCategoryRequestDto>;
 };
 
 export type UpdateToolkitRequestDto = {
@@ -3599,9 +3625,7 @@ export type FollowupChatbotResponseDto = {
     /**
      * Chatbot avatar URL
      */
-    avatar: {
-        [key: string]: unknown;
-    } | null;
+    avatar: string | null;
 };
 
 export type FollowupAdminListResponseDto = {
@@ -3617,15 +3641,11 @@ export type FollowupAdminListResponseDto = {
     /**
      * Sender name on the conversation
      */
-    senderName: {
-        [key: string]: unknown;
-    } | null;
+    senderName: string | null;
     /**
      * Message that triggered scheduling this follow-up
      */
-    triggerMessageId: {
-        [key: string]: unknown;
-    } | null;
+    triggerMessageId: string | null;
     /**
      * Reason the follow-up was scheduled
      */
@@ -6663,15 +6683,11 @@ export type FollowupListResponseDto = {
     /**
      * Sender name on the conversation
      */
-    senderName: {
-        [key: string]: unknown;
-    } | null;
+    senderName: string | null;
     /**
      * Message that triggered scheduling this follow-up
      */
-    triggerMessageId: {
-        [key: string]: unknown;
-    } | null;
+    triggerMessageId: string | null;
     /**
      * Reason the follow-up was scheduled
      */
@@ -17935,6 +17951,90 @@ export type ToolkitAdminControllerEcchoUpdateV1Responses = {
 };
 
 export type ToolkitAdminControllerEcchoUpdateV1Response = ToolkitAdminControllerEcchoUpdateV1Responses[keyof ToolkitAdminControllerEcchoUpdateV1Responses];
+
+export type ToolkitAdminControllerEcchoCreateV1Data = {
+    body: CreateToolkitRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/toolkit/eccho';
+};
+
+export type ToolkitAdminControllerEcchoCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 403
+     */
+    403: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ToolkitAdminControllerEcchoCreateV1Error = ToolkitAdminControllerEcchoCreateV1Errors[keyof ToolkitAdminControllerEcchoCreateV1Errors];
+
+export type ToolkitAdminControllerEcchoCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ToolkitAdminEcchoDetailResponseDto;
+    };
+};
+
+export type ToolkitAdminControllerEcchoCreateV1Response = ToolkitAdminControllerEcchoCreateV1Responses[keyof ToolkitAdminControllerEcchoCreateV1Responses];
 
 export type ToolkitAdminControllerComposioV1Data = {
     body?: never;
