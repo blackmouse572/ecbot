@@ -11,7 +11,6 @@ import {
     RAG_INGEST_SENTRY_QUEUE,
     RAG_INGEST_URL_HTTP_TIMEOUT_MS,
     KNOWLEDGE_URL_MAX_PAGES,
-    KNOWLEDGE_CRAWL_TOKENS_PER_PAGE,
     ENUM_KNOWLEDGE_FAILURE_KIND,
 } from '@app/modules/knowledge-base/constants/knowledge-ingest.constant';
 import { ENUM_KNOWLEDGE_BASE_ITEM_TYPE } from '@app/modules/knowledge-base/enums/knowledge-base-item-type.enum';
@@ -918,7 +917,8 @@ describe('KnowledgeIngestTaskService', () => {
 
             await service.handle(ingestDto, 0);
 
-            const tokens = 3 * KNOWLEDGE_CRAWL_TOKENS_PER_PAGE;
+            // 7,000 tokens a page: the price itself, so a re-price fails here.
+            const tokens = 3 * 7000;
             expect(meter.record).toHaveBeenCalledWith({
                 workspaceId: 'ws-1',
                 usage: {
