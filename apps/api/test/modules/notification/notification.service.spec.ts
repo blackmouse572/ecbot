@@ -45,10 +45,25 @@ describe('NotificationService subscription notifications', () => {
         });
     });
 
+    describe('createTokenCredited', () => {
+        it('links to the workspace usage page', async () => {
+            await service.createTokenCredited('user-1', 'ws-1', {
+                workspaceName: 'Acme',
+                workspaceSlug: 'acme',
+                amount: 1000000,
+            });
+
+            expect(create.mock.calls[0][0]).toMatchObject({
+                metadata: { actionUrl: '/acme/usage' },
+            });
+        });
+    });
+
     describe('createSubscriptionPlanChanged', () => {
         it('notifies the owner of the new plan and links to usage', async () => {
             await service.createSubscriptionPlanChanged('user-1', 'ws-1', {
                 workspaceName: 'Acme',
+                workspaceSlug: 'acme',
                 fromPlan: 'free',
                 toPlan: 'pro',
                 note: 'Upgrade confirmed',
@@ -63,7 +78,7 @@ describe('NotificationService subscription notifications', () => {
                 recipient: 'user-1',
                 workspace: 'ws-1',
                 metadata: {
-                    actionUrl: '/usage',
+                    actionUrl: '/acme/usage',
                     actionText:
                         'notification.subscriptionPlanChanged.actionText',
                     data: {
@@ -98,6 +113,7 @@ describe('NotificationService subscription notifications', () => {
         it('keeps the plain message when there is no note', async () => {
             await service.createSubscriptionPlanChanged('user-1', 'ws-1', {
                 workspaceName: 'Acme',
+                workspaceSlug: 'acme',
                 fromPlan: 'free',
                 toPlan: 'pro',
             });
@@ -128,6 +144,7 @@ describe('NotificationService subscription notifications', () => {
         it('announces a scheduled change with the date instead of "now"', async () => {
             await service.createSubscriptionPlanChanged('user-1', 'ws-1', {
                 workspaceName: 'Acme',
+                workspaceSlug: 'acme',
                 fromPlan: 'free',
                 toPlan: 'pro',
                 scheduledOn: '2026-11-01',
@@ -170,6 +187,7 @@ describe('NotificationService subscription notifications', () => {
         it('tells the owner when the plan ends and links to usage', async () => {
             await service.createSubscriptionCanceled('user-1', 'ws-1', {
                 workspaceName: 'Acme',
+                workspaceSlug: 'acme',
                 planName: 'pro',
                 periodEnd: '2026-11-01',
                 reason: 'Payment failed',
@@ -184,7 +202,7 @@ describe('NotificationService subscription notifications', () => {
                 recipient: 'user-1',
                 workspace: 'ws-1',
                 metadata: {
-                    actionUrl: '/usage',
+                    actionUrl: '/acme/usage',
                     actionText: 'notification.subscriptionCanceled.actionText',
                     data: { planName: 'pro', reason: 'Payment failed' },
                 },
@@ -214,6 +232,7 @@ describe('NotificationService subscription notifications', () => {
         it('keeps the plain message when there is no reason', async () => {
             await service.createSubscriptionCanceled('user-1', 'ws-1', {
                 workspaceName: 'Acme',
+                workspaceSlug: 'acme',
                 planName: 'pro',
                 periodEnd: '2026-11-01',
             });
@@ -246,6 +265,7 @@ describe('NotificationService subscription notifications', () => {
         it('tells the owner the plan renews and links to usage', async () => {
             await service.createSubscriptionResumed('user-1', 'ws-1', {
                 workspaceName: 'Acme',
+                workspaceSlug: 'acme',
                 planName: 'pro',
             });
 
@@ -257,7 +277,7 @@ describe('NotificationService subscription notifications', () => {
                 recipient: 'user-1',
                 workspace: 'ws-1',
                 metadata: {
-                    actionUrl: '/usage',
+                    actionUrl: '/acme/usage',
                     actionText: 'notification.subscriptionResumed.actionText',
                     data: { planName: 'pro' },
                 },

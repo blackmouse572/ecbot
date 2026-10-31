@@ -317,7 +317,12 @@ export class NotificationService {
     async createTokenCredited(
         recipientId: string,
         workspaceId: string,
-        data: { workspaceName: string; amount: number; note?: string }
+        data: {
+            workspaceName: string;
+            workspaceSlug: string;
+            amount: number;
+            note?: string;
+        }
     ): Promise<NotificationEntity> {
         return this.create({
             title: this.messageService.setMessage(
@@ -340,7 +345,7 @@ export class NotificationService {
             recipient: recipientId,
             workspace: workspaceId,
             metadata: {
-                actionUrl: '/usage',
+                actionUrl: `/${data.workspaceSlug}/usage`,
                 actionText: this.messageService.setMessage(
                     'notification.tokenCredited.actionText'
                 ),
@@ -390,6 +395,7 @@ export class NotificationService {
         workspaceId: string,
         data: {
             workspaceName: string;
+            workspaceSlug: string;
             fromPlan: string;
             toPlan: string;
             note?: string;
@@ -435,7 +441,7 @@ export class NotificationService {
             recipient: recipientId,
             workspace: workspaceId,
             metadata: {
-                actionUrl: '/usage',
+                actionUrl: `/${data.workspaceSlug}/usage`,
                 actionText: this.messageService.setMessage(
                     'notification.subscriptionPlanChanged.actionText'
                 ),
@@ -453,6 +459,7 @@ export class NotificationService {
         workspaceId: string,
         data: {
             workspaceName: string;
+            workspaceSlug: string;
             planName: string;
             periodEnd: string;
             reason?: string;
@@ -488,7 +495,7 @@ export class NotificationService {
             recipient: recipientId,
             workspace: workspaceId,
             metadata: {
-                actionUrl: '/usage',
+                actionUrl: `/${data.workspaceSlug}/usage`,
                 actionText: this.messageService.setMessage(
                     'notification.subscriptionCanceled.actionText'
                 ),
@@ -503,7 +510,11 @@ export class NotificationService {
     async createSubscriptionResumed(
         recipientId: string,
         workspaceId: string,
-        data: { workspaceName: string; planName: string }
+        data: {
+            workspaceName: string;
+            workspaceSlug: string;
+            planName: string;
+        }
     ): Promise<NotificationEntity> {
         return this.create({
             title: this.messageService.setMessage(
@@ -523,7 +534,7 @@ export class NotificationService {
             recipient: recipientId,
             workspace: workspaceId,
             metadata: {
-                actionUrl: '/usage',
+                actionUrl: `/${data.workspaceSlug}/usage`,
                 actionText: this.messageService.setMessage(
                     'notification.subscriptionResumed.actionText'
                 ),
