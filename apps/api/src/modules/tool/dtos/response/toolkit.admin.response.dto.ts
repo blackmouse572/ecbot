@@ -49,6 +49,77 @@ export class ToolkitAdminEcchoResponseDto extends ToolkitAdminResponseDto {
     })
     @Expose()
     configured: boolean;
+
+    @ApiProperty({ description: 'Hidden from the workspace marketplace' })
+    @Expose()
+    disabled: boolean;
+}
+
+export class ToolkitAdminDefaultsResponseDto {
+    @ApiProperty()
+    @Expose()
+    name: string;
+
+    @ApiPropertyOptional()
+    @Expose()
+    description?: string;
+
+    @ApiPropertyOptional()
+    @Expose()
+    logo?: string;
+
+    @ApiProperty({ type: [ToolkitAdminCategoryResponseDto] })
+    @Expose()
+    @Type(() => ToolkitAdminCategoryResponseDto)
+    categories: ToolkitAdminCategoryResponseDto[];
+}
+
+export class ToolkitAdminToolResponseDto {
+    @ApiProperty()
+    @Expose()
+    id: string;
+
+    @ApiProperty()
+    @Expose()
+    displayName: string;
+
+    @ApiProperty()
+    @Expose()
+    status: string;
+
+    @ApiProperty()
+    @Expose()
+    createdAt: Date;
+
+    @ApiProperty({ description: 'Workspace that installed it' })
+    @Expose()
+    workspaceId: string;
+
+    @ApiProperty()
+    @Expose()
+    workspaceName: string;
+}
+
+export class ToolkitAdminEcchoDetailResponseDto extends ToolkitAdminEcchoResponseDto {
+    @ApiProperty({
+        description: 'Code defaults, what a reset brings back',
+        type: ToolkitAdminDefaultsResponseDto,
+    })
+    @Expose()
+    @Type(() => ToolkitAdminDefaultsResponseDto)
+    defaults: ToolkitAdminDefaultsResponseDto;
+
+    @ApiProperty({
+        description: 'Fields an admin has changed',
+        example: ['name'],
+    })
+    @Expose()
+    overriddenFields: string[];
+
+    @ApiProperty({ type: [ToolkitAdminToolResponseDto] })
+    @Expose()
+    @Type(() => ToolkitAdminToolResponseDto)
+    tools: ToolkitAdminToolResponseDto[];
 }
 
 export class ToolkitAdminComposioStatusResponseDto {

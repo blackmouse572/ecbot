@@ -122,4 +122,26 @@ export class ToolRepository extends DatabaseRepository<ToolEntity> {
             ])
         );
     }
+
+    /** Latest live tools installed from one Ecbot built-in toolkit. */
+    async findByEcchoToolkit(
+        slug: string,
+        limit: number
+    ): Promise<ToolEntity[]> {
+        const rows: { id: string }[] = await this.em.getConnection().execute(
+            `
+            SELECT id FROM tools
+            WHERE deleted = false AND mcp_provider = ?
+              AND source->>'service' = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+            `,
+            [ENUM_MCP_PROVIDER.ECCHO, slug, limit]
+        );
+        if (!rows.length) return [];
+        return this.find(
+            { id: { $in: rows.map(r => r.id) } },
+            { populate: ['workspace'] as any, orderBy: { createdAt: 'DESC' } }
+        );
+    }
 }

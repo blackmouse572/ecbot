@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
@@ -11,8 +11,13 @@ import {
     IResponse,
     IResponsePaging,
 } from 'src/common/response/interfaces/response.interface';
+import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
+import { ActivityService } from 'src/modules/activity/services/activity.service';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
-import { AuthJwtAccessProtected } from 'src/modules/auth/decorators/auth.jwt.decorator';
+import {
+    AuthJwtAccessProtected,
+    AuthJwtPayload,
+} from 'src/modules/auth/decorators/auth.jwt.decorator';
 import {
     PolicyAbilityProtected,
     PolicyRoleProtected,
@@ -23,19 +28,28 @@ import {
     ENUM_POLICY_SUBJECT,
 } from 'src/modules/policy/enums/policy.enum';
 import { UserProtected } from 'src/modules/user/decorators/user.decorator';
+import { UserParsePipe } from 'src/modules/user/pipes/user.parse.pipe';
+import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import {
     ToolkitAdminComposioListDoc,
     ToolkitAdminComposioStatusDoc,
+    ToolkitAdminEcchoGetDoc,
     ToolkitAdminEcchoListDoc,
+    ToolkitAdminEcchoUpdateDoc,
 } from '../docs/toolkit.admin.doc';
 import {
     ToolkitAdminComposioStatusResponseDto,
+    ToolkitAdminEcchoDetailResponseDto,
     ToolkitAdminEcchoResponseDto,
     ToolkitAdminResponseDto,
 } from '../dtos/response/toolkit.admin.response.dto';
+import { UpdateToolkitRequestDto } from '../dtos/request/update-toolkit.request.dto';
 import { ToolkitAdminService } from '../services/toolkit.admin.service';
 
-/** Read-only: the marketplace catalogs and how widely each toolkit is used. */
+/**
+ * The marketplace catalogs and how widely each toolkit is used. Only Ecbot's
+ * own toolkits can be edited; Composio's catalog is read-only.
+ */
 @ApiTags('modules.admin.toolkit')
 @Controller({
     version: '1',
@@ -44,7 +58,8 @@ import { ToolkitAdminService } from '../services/toolkit.admin.service';
 export class ToolkitAdminController {
     constructor(
         private readonly toolkitAdminService: ToolkitAdminService,
-        private readonly paginationService: PaginationService
+        private readonly paginationService: PaginationService,
+        private readonly activityService: ActivityService
     ) {}
 
     @ToolkitAdminEcchoListDoc()
@@ -70,6 +85,52 @@ export class ToolkitAdminController {
             },
             data,
         };
+    }
+
+    @ToolkitAdminEcchoGetDoc()
+    @Response('tool.toolkit.ecchoGet')
+    @PolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.TOOL,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Get('/eccho/:slug')
+    async ecchoGet(
+        @Param('slug') slug: string
+    ): Promise<IResponse<ToolkitAdminEcchoDetailResponseDto>> {
+        return { data: await this.toolkitAdminService.getEccho(slug) };
+    }
+
+    @ToolkitAdminEcchoUpdateDoc()
+    @Response('tool.toolkit.ecchoUpdate')
+    @PolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.TOOL,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @PolicyRoleProtected(ENUM_POLICY_ROLE_TYPE.ADMIN)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Patch('/eccho/:slug')
+    async ecchoUpdate(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Param('slug') slug: string,
+        @Body() dto: UpdateToolkitRequestDto
+    ): Promise<IResponse<ToolkitAdminEcchoDetailResponseDto>> {
+        const data = await this.toolkitAdminService.updateEccho(
+            slug,
+            dto,
+            user
+        );
+        await this.activityService.createByUser(user, {
+            action: ENUM_ACTIVITY_ACTION.UPDATE,
+            subject: ENUM_POLICY_SUBJECT.TOOL,
+            metadata: { toolkit: slug, fields: Object.keys(dto) },
+        });
+        return { data };
     }
 
     @ToolkitAdminComposioListDoc()

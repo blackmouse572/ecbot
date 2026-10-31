@@ -7,16 +7,23 @@ import {
     ComposioToolkit,
     ComposioToolkitPage,
 } from 'src/modules/tool/interfaces/composio.interface';
+import { ToolkitOverrideEntity } from 'src/modules/tool/repository/entities/toolkit-override.entity';
+import { ToolkitOverrideRepository } from 'src/modules/tool/repository/repositories/toolkit-override.repository';
 
 @Injectable()
 export class EcchoCatalogService {
-    getToolkits(params: {
+    constructor(private readonly overrides: ToolkitOverrideRepository) {}
+
+    /** What workspaces see: admin edits applied, disabled toolkits left out. */
+    async getToolkits(params: {
         category?: string;
         search?: string;
         limit: number;
         offset: number;
-    }): ComposioToolkitPage {
-        let items = ECCHO_TOOLKITS.map(EcchoCatalogService.toComposioToolkit);
+    }): Promise<ComposioToolkitPage> {
+        let items = (await this.listMerged())
+            .filter(t => !t.disabled)
+            .map(EcchoCatalogService.toComposioToolkit);
 
         if (params.category) {
             items = items.filter(t =>
@@ -39,14 +46,40 @@ export class EcchoCatalogService {
         };
     }
 
+    /** The code definition, ignoring admin edits (server URL, paths). */
     findBySlug(slug: string): EcchoToolkitDef | undefined {
         return ECCHO_TOOLKITS.find(t => t.slug === slug);
     }
 
-    getCategories(): { id: string; name: string }[] {
+    /** Merged definition for a workspace; undefined when unknown or disabled. */
+    async findActiveBySlug(slug: string): Promise<EcchoToolkitDef | undefined> {
+        const toolkit = await this.findMergedBySlug(slug);
+        return toolkit?.disabled ? undefined : toolkit;
+    }
+
+    /** Merged definition for admins, disabled or not. */
+    async findMergedBySlug(
+        slug: string
+    ): Promise<(EcchoToolkitDef & { disabled: boolean }) | undefined> {
+        const def = this.findBySlug(slug);
+        if (!def) return undefined;
+        const override = await this.overrides.findBySlug(slug);
+        return EcchoCatalogService.merge(def, override);
+    }
+
+    async listMerged(): Promise<
+        Array<EcchoToolkitDef & { disabled: boolean }>
+    > {
+        const overrides = await this.overrides.findAllBySlug();
+        return ECCHO_TOOLKITS.map(def =>
+            EcchoCatalogService.merge(def, overrides.get(def.slug))
+        );
+    }
+
+    async getCategories(): Promise<{ id: string; name: string }[]> {
         const seen = new Set<string>();
         const result: { id: string; name: string }[] = [];
-        for (const t of ECCHO_TOOLKITS) {
+        for (const t of (await this.listMerged()).filter(t => !t.disabled)) {
             for (const c of t.categories) {
                 if (!seen.has(c.id)) {
                     seen.add(c.id);
@@ -55,6 +88,20 @@ export class EcchoCatalogService {
             }
         }
         return result;
+    }
+
+    private static merge(
+        def: EcchoToolkitDef,
+        override?: ToolkitOverrideEntity | null
+    ): EcchoToolkitDef & { disabled: boolean } {
+        return {
+            ...def,
+            name: override?.name || def.name,
+            description: override?.description || def.description,
+            logo: override?.logo || def.logo,
+            categories: override?.categories ?? def.categories,
+            disabled: override?.disabled ?? false,
+        };
     }
 
     private static toComposioToolkit(def: EcchoToolkitDef): ComposioToolkit {

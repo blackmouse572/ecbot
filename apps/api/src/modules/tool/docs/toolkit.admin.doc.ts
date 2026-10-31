@@ -1,4 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
+import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
 import {
     Doc,
     DocAuth,
@@ -7,9 +8,14 @@ import {
     DocResponse,
     DocResponsePaging,
 } from 'src/common/doc/decorators/doc.decorator';
-import { ToolkitAdminDocQuerySearch } from 'src/modules/tool/constants/tool.doc.constant';
+import { UpdateToolkitRequestDto } from 'src/modules/tool/dtos/request/update-toolkit.request.dto';
+import {
+    ToolkitAdminDocParamsSlug,
+    ToolkitAdminDocQuerySearch,
+} from 'src/modules/tool/constants/tool.doc.constant';
 import {
     ToolkitAdminComposioStatusResponseDto,
+    ToolkitAdminEcchoDetailResponseDto,
     ToolkitAdminEcchoResponseDto,
     ToolkitAdminResponseDto,
 } from 'src/modules/tool/dtos/response/toolkit.admin.response.dto';
@@ -45,6 +51,38 @@ export function ToolkitAdminComposioStatusDoc(): MethodDecorator {
         DocResponse<ToolkitAdminComposioStatusResponseDto>(
             'tool.toolkit.composioStatus',
             { dto: ToolkitAdminComposioStatusResponseDto }
+        )
+    );
+}
+
+export function ToolkitAdminEcchoGetDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: "get one of Ecbot's own toolkits with its installs" }),
+        DocRequest({ params: ToolkitAdminDocParamsSlug }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ role: true, policy: true }),
+        DocResponse<ToolkitAdminEcchoDetailResponseDto>(
+            'tool.toolkit.ecchoGet',
+            {
+                dto: ToolkitAdminEcchoDetailResponseDto,
+            }
+        )
+    );
+}
+
+export function ToolkitAdminEcchoUpdateDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: "edit how one of Ecbot's own toolkits is shown" }),
+        DocRequest({
+            params: ToolkitAdminDocParamsSlug,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            dto: UpdateToolkitRequestDto,
+        }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ role: true, policy: true }),
+        DocResponse<ToolkitAdminEcchoDetailResponseDto>(
+            'tool.toolkit.ecchoUpdate',
+            { dto: ToolkitAdminEcchoDetailResponseDto }
         )
     );
 }
