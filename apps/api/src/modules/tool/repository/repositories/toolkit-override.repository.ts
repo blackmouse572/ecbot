@@ -14,7 +14,11 @@ export class ToolkitOverrideRepository extends DatabaseRepository<ToolkitOverrid
     }
 
     async findAllBySlug(): Promise<Map<string, ToolkitOverrideEntity>> {
-        const rows = await this.find({ deleted: false });
+        // Ordered so custom toolkits keep their place across catalog pages.
+        const rows = await this.find(
+            { deleted: false },
+            { orderBy: { slug: 'asc' } }
+        );
         return new Map(rows.map(row => [row.slug, row]));
     }
 }

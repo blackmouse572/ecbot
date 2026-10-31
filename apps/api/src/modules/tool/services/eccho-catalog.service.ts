@@ -10,6 +10,12 @@ import {
 import { ToolkitOverrideEntity } from 'src/modules/tool/repository/entities/toolkit-override.entity';
 import { ToolkitOverrideRepository } from 'src/modules/tool/repository/repositories/toolkit-override.repository';
 
+export type MergedEcchoToolkit = EcchoToolkitDef & {
+    disabled: boolean;
+    /** Created by an admin, not defined in code. */
+    custom: boolean;
+};
+
 @Injectable()
 export class EcchoCatalogService {
     constructor(private readonly overrides: ToolkitOverrideRepository) {}
@@ -54,18 +60,20 @@ export class EcchoCatalogService {
     /** Merged definition for admins, disabled or not. */
     async findMergedBySlug(
         slug: string
-    ): Promise<(EcchoToolkitDef & { disabled: boolean }) | undefined> {
-        const def = this.findBySlug(slug);
-        if (!def) return undefined;
+    ): Promise<MergedEcchoToolkit | undefined> {
         const override = await this.overrides.findBySlug(slug);
+        const def =
+            this.findBySlug(slug) ?? EcchoCatalogService.custom(override);
+        if (!def) return undefined;
         return EcchoCatalogService.merge(def, override);
     }
 
-    async listMerged(): Promise<
-        Array<EcchoToolkitDef & { disabled: boolean }>
-    > {
+    async listMerged(): Promise<MergedEcchoToolkit[]> {
         const overrides = await this.overrides.findAllBySlug();
-        return ECCHO_TOOLKITS.map(def =>
+        const customs = [...overrides.values()]
+            .filter(row => !this.findBySlug(row.slug))
+            .map(row => EcchoCatalogService.custom(row));
+        return [...ECCHO_TOOLKITS, ...customs.filter(def => !!def)].map(def =>
             EcchoCatalogService.merge(def, overrides.get(def.slug))
         );
     }
@@ -84,12 +92,29 @@ export class EcchoCatalogService {
         return result;
     }
 
+    /** An override row with no code toolkit behind it, if it is complete. */
+    private static custom(
+        row?: ToolkitOverrideEntity | null
+    ): EcchoToolkitDef | undefined {
+        if (!row?.name || !row.serverUrl) return undefined;
+        return {
+            slug: row.slug,
+            name: row.name,
+            description: '',
+            categories: [],
+            baseUrl: '',
+            mcpPath: '/mcp',
+            authorizePath: '/authorize',
+        };
+    }
+
     private static merge(
         def: EcchoToolkitDef,
         override?: ToolkitOverrideEntity | null
-    ): EcchoToolkitDef & { disabled: boolean } {
+    ): MergedEcchoToolkit {
         return {
             ...def,
+            custom: !ECCHO_TOOLKITS.some(t => t.slug === def.slug),
             name: override?.name || def.name,
             description: override?.description || def.description,
             logo: override?.logo || def.logo,
