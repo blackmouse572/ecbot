@@ -111,6 +111,7 @@ export class ToolkitAdminEcchoDetailResponseDto extends ToolkitAdminEcchoRespons
 
     @ApiProperty({
         description: 'Fields an admin has changed',
+        type: [String],
         example: ['name'],
     })
     @Expose()

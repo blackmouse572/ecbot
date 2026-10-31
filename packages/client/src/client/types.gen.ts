@@ -3345,18 +3345,12 @@ export type UpdateToolkitCategoryRequestDto = {
 };
 
 export type UpdateToolkitRequestDto = {
-    name?: {
-        [key: string]: unknown;
-    } | null;
-    description?: {
-        [key: string]: unknown;
-    } | null;
+    name?: string | null;
+    description?: string | null;
     /**
      * Logo URL
      */
-    logo?: {
-        [key: string]: unknown;
-    } | null;
+    logo?: string | null;
     categories?: Array<UpdateToolkitCategoryRequestDto> | null;
     /**
      * Hide from the workspace marketplace

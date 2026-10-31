@@ -26,21 +26,29 @@ export class UpdateToolkitCategoryRequestDto {
 
 /** A field sent as null goes back to the code default. */
 export class UpdateToolkitRequestDto {
-    @ApiPropertyOptional({ nullable: true, example: 'KiotViet' })
+    @ApiPropertyOptional({
+        type: String,
+        nullable: true,
+        example: 'KiotViet',
+    })
     @IsOptional()
     @IsString()
     @IsNotEmpty()
     @MaxLength(120)
     name?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     @IsOptional()
     @IsString()
     @IsNotEmpty()
     @MaxLength(2000)
     description?: string | null;
 
-    @ApiPropertyOptional({ nullable: true, description: 'Logo URL' })
+    @ApiPropertyOptional({
+        type: String,
+        nullable: true,
+        description: 'Logo URL',
+    })
     @IsOptional()
     @IsUrl({ protocols: ['https'], require_protocol: true })
     @MaxLength(500)
