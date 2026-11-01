@@ -69,8 +69,12 @@ def _format_tag_line(
     return " ".join(parts)
 
 
-def _saved_field_lines(metadata: dict[str, Any] | None) -> list[str]:
-    fields = sorted((metadata or {}).items())
+def _saved_field_lines(metadata: Any) -> list[str]:
+    # A row that is not an object (legacy, hand-written) shows no fields
+    # rather than failing the turn.
+    if not isinstance(metadata, dict):
+        return []
+    fields = sorted(metadata.items(), key=lambda kv: str(kv[0]))
     if not fields:
         return []
     lines = ["Saved fields:"]

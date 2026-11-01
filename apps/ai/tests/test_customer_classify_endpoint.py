@@ -304,3 +304,14 @@ def test_prompt_leaves_out_an_empty_conversation_summary():
 
     prompt = _build_user_prompt(ClassifyRequest.model_validate(VALID_BODY))
     assert "Earlier in this conversation" not in prompt
+
+
+def test_a_whole_200_word_conversation_summary_fits():
+    from eccho_ai.modules.customer.models import ClassifyRequest
+    from eccho_ai.modules.customer.routers import SYSTEM_PROMPT, _build_user_prompt
+
+    summary = "y" * 1500 + " newest fact"
+    req = ClassifyRequest.model_validate({**VALID_BODY, "conversation_summary": summary})
+    # The newest facts sit at the end of the summary: they must survive the cap.
+    assert "newest fact" in _build_user_prompt(req)
+    assert "An earlier summary of this conversation" in SYSTEM_PROMPT

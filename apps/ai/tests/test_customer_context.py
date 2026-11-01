@@ -252,6 +252,16 @@ async def test_saved_fields_are_capped_and_point_to_the_tool(sqlite_repo):
     assert "list_customer_fields" in block
 
 
+async def test_fields_that_are_not_an_object_are_left_out(sqlite_repo):
+    # A legacy or hand-written row: the turn goes on without saved fields.
+    customer = await _make_customer(sqlite_repo, name="Alice", metadata=["address"])
+
+    block = await build_customer_context_block(customer.id)
+
+    assert "Name: Alice" in block
+    assert "Saved fields:" not in block
+
+
 async def test_no_notes_or_fields_adds_nothing(sqlite_repo):
     customer = await _make_customer(sqlite_repo, name="Alice")
 
