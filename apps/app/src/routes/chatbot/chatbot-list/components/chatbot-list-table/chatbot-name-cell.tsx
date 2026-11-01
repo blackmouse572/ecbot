@@ -45,7 +45,7 @@ export const ChatbotNameCell = ({
   return (
     <div
       {...divProps}
-      className={clx("flex items-center gap-2 min-w-0", className)}
+      className={clx("flex max-w-full min-w-0 items-center gap-2", className)}
     >
       <IconAvatar className="overflow-hidden">
         <Facehash name={label} {...FACE} />

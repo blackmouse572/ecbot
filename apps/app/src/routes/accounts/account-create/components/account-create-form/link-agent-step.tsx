@@ -109,7 +109,7 @@ export const LinkAgentStep: FC<Props> = ({ accounts, onDone }) => {
 
   return (
     <div className="flex w-full max-w-[720px] flex-col gap-y-8">
-      <div className="flex items-center justify-between gap-x-4">
+      <div className="flex items-start justify-between gap-x-4">
         <div>
           <Heading>{t("accounts.create.linkAgent.title")}</Heading>
           <Text size="small" className="text-ui-fg-subtle">
@@ -119,6 +119,7 @@ export const LinkAgentStep: FC<Props> = ({ accounts, onDone }) => {
         <Button
           type="button"
           variant={connectedName ? "primary" : "secondary"}
+          className="shrink-0"
           onClick={onDone}
         >
           {t("accounts.create.linkAgent.complete")}

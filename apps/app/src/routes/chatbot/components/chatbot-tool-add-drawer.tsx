@@ -270,7 +270,11 @@ function ToolDetailPanel({
                       }
                     />
                     <div className="min-w-0">
-                      <Text size="small" weight="plus">
+                      <Text
+                        size="small"
+                        weight="plus"
+                        className="wrap-anywhere"
+                      >
                         {action.name}
                         {action.destructive && (
                           <Badge size="2xsmall" color="red" className="ml-1.5">

@@ -41,6 +41,7 @@ import { isProvisionedPlatform } from "./provisioned-platforms";
 import { AccountTypeCell } from "@/routes/accounts/accounts-list/components/account-list-table/account-type-cell";
 import { LinkAgentStep } from "./link-agent-step";
 import { SkippedPageCard } from "./skipped-page-card";
+import { StepTrigger } from "./step-trigger";
 import { linkableAccounts, type LinkableAccount } from "./linkable-accounts";
 import { WhatsAppCredentialFields } from "./whatsapp-credential-fields";
 
@@ -186,34 +187,25 @@ export const AccountCreateForm = () => {
           className="flex h-full flex-col overflow-hidden"
         >
           <RouteFocusModal.Header>
-            <div className="-my-2 w-full border-l">
+            <div className="-my-2 w-full min-w-0 border-l">
               <ProgressTabs.List>
-                <ProgressTabs.Trigger
-                  value={TAB.PLATFORM}
-                  status={tabState.PLATFORM}
-                >
+                <StepTrigger value={TAB.PLATFORM} status={tabState.PLATFORM}>
                   {t("accounts.create.steps.platform")}
-                </ProgressTabs.Trigger>
-                <ProgressTabs.Trigger
-                  value={TAB.CONNECT}
-                  status={tabState.CONNECT}
-                >
+                </StepTrigger>
+                <StepTrigger value={TAB.CONNECT} status={tabState.CONNECT}>
                   {t("accounts.create.steps.connect")}
-                </ProgressTabs.Trigger>
-                <ProgressTabs.Trigger
-                  value={TAB.SUCCESS}
-                  status={tabState.SUCCESS}
-                >
+                </StepTrigger>
+                <StepTrigger value={TAB.SUCCESS} status={tabState.SUCCESS}>
                   {t("accounts.create.steps.success")}
-                </ProgressTabs.Trigger>
-                <ProgressTabs.Trigger value={TAB.AGENT} status={tabState.AGENT}>
+                </StepTrigger>
+                <StepTrigger value={TAB.AGENT} status={tabState.AGENT}>
                   {t("accounts.create.steps.agent")}
-                </ProgressTabs.Trigger>
+                </StepTrigger>
               </ProgressTabs.List>
             </div>
           </RouteFocusModal.Header>
 
-          <RouteFocusModal.Body className="flex flex-col items-center p-16">
+          <RouteFocusModal.Body className="flex flex-col items-center px-4 py-8 sm:p-16">
             <ProgressTabs.Content
               value={TAB.PLATFORM}
               className="w-full flex justify-center"
@@ -290,7 +282,7 @@ function PlatformStep({ onSelect }: { onSelect: (value: string) => void }) {
           {t("accounts.create.platform.description")}
         </Text>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {PLATFORMS.map((p) => (
           <button
             key={p.value}
@@ -306,8 +298,8 @@ function PlatformStep({ onSelect }: { onSelect: (value: string) => void }) {
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-ui-border-base bg-ui-bg-subtle">
               {p.icon}
             </div>
-            <div>
-              <div className="flex items-center gap-x-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <Text size="small" weight="plus">
                   {p.label}
                 </Text>
@@ -526,14 +518,14 @@ function SuccessStep({
     (!data.pages?.length && !skippedPages.length);
   return (
     <div className="flex w-full max-w-[720px] flex-col gap-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-x-4">
         <div>
           <Heading>{t("accounts.link.success.title")}</Heading>
           <Text size="small" className="text-ui-fg-subtle">
             {t("accounts.link.success.description")}
           </Text>
         </div>
-        <Button variant="secondary" onClick={onDone}>
+        <Button variant="secondary" className="shrink-0" onClick={onDone}>
           {t("actions.continued")}
         </Button>
       </div>
@@ -546,16 +538,18 @@ function SuccessStep({
               size="large"
               fallback={getAvatarFallback(data.name)}
             />
-            <div className="flex flex-col justify-center flex-1">
-              <Text size="base">{data.name}</Text>
-              <div className="[&>*]:px-4 divide-x flex [&>*]:first:pl-0">
+            <div className="flex min-w-0 flex-1 flex-col justify-center">
+              <Text size="base" className="truncate">
+                {data.name}
+              </Text>
+              <div className="flex flex-wrap divide-x [&>*]:px-4 [&>*]:first:pl-0">
                 <Text size="small" className="text-ui-fg-subtle">
                   {data.slug}
                 </Text>
                 <AccountTypeCell type={data.type} />
               </div>
             </div>
-            <StatusBadge color="green" className="h-fit">
+            <StatusBadge color="green" className="h-fit shrink-0">
               {t("accounts.details.statuses.active.title")}
             </StatusBadge>
           </Container>
@@ -571,16 +565,18 @@ function SuccessStep({
                   size="large"
                   fallback={getAvatarFallback(page.name)}
                 />
-                <div className="flex flex-col justify-center flex-1">
-                  <Text size="base">{page.name}</Text>
-                  <div className="[&>*]:px-4 divide-x flex [&>*]:first:pl-0">
+                <div className="flex min-w-0 flex-1 flex-col justify-center">
+                  <Text size="base" className="truncate">
+                    {page.name}
+                  </Text>
+                  <div className="flex flex-wrap divide-x [&>*]:px-4 [&>*]:first:pl-0">
                     <Text size="small" className="text-ui-fg-subtle">
                       {page.slug}
                     </Text>
                     <AccountTypeCell type={page.type} />
                   </div>
                 </div>
-                <StatusBadge color="green" className="h-fit">
+                <StatusBadge color="green" className="h-fit shrink-0">
                   {t("accounts.details.statuses.active.title")}
                 </StatusBadge>
               </Container>

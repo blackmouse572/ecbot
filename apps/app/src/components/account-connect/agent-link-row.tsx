@@ -61,8 +61,8 @@ export const AgentLinkRow: FC<Props> = ({
   };
 
   return (
-    <div className="flex items-center justify-between rounded-lg border bg-ui-bg-field border-ui-border-base p-3">
-      <div className="flex min-w-0 flex-col items-start gap-y-1">
+    <div className="flex items-center justify-between gap-x-3 rounded-lg border bg-ui-bg-field border-ui-border-base p-3">
+      <div className="flex min-w-0 flex-1 flex-col items-start gap-y-1">
         <ChatbotNameCell
           size="small"
           name={chatbot.name}
@@ -73,6 +73,7 @@ export const AgentLinkRow: FC<Props> = ({
       <Button
         size="small"
         variant="secondary"
+        className="shrink-0"
         isLoading={link.isPending}
         onClick={handleLink}
       >
