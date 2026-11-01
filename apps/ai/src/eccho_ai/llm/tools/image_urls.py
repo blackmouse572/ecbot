@@ -1,12 +1,14 @@
 """Which image URLs the agent may send: only ones in its own knowledge.
 
 A URL counts as known when it appears in the operator instructions, in a
-knowledge-base chunk linked to the chatbot, or in what one of the operator's
-own tools (HTTP, MCP, skill) returned this turn. Anything else, a hallucinated
-or injected link, is never sent to the customer.
+knowledge-base chunk linked to the chatbot, or in a successful result one of
+the operator's own tools (HTTP, MCP, skill) returned this turn. Operator tool
+output is trusted as the operator's data; built-in tools and failed results are
+not. Any other link, such as one the model invents, is never sent.
 """
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from eccho_ai.core.app_logger import get_logger
@@ -55,3 +57,18 @@ def from_operator_tool(tool_name: str | None) -> bool:
 
 def in_tool_results(url: str, results: list[str]) -> bool:
     return url.startswith(("https://", "http://")) and any(url in r for r in results)
+
+
+def successful_result(message: Any) -> str | None:
+    """A tool result's text, or None when the tool failed: its error text can
+    echo the model's arguments or the customer's words."""
+    if getattr(message, "status", None) == "error":
+        return None
+    text = str(getattr(message, "content", message))
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return text
+    if isinstance(data, dict) and data.get("status") in ("error", "timeout"):
+        return None
+    return text

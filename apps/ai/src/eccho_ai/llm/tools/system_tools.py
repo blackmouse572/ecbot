@@ -38,6 +38,7 @@ from eccho_ai.llm.retrievers.vector_store import PgVectorStore
 from eccho_ai.llm.tools.image_urls import (
     from_operator_tool,
     in_tool_results,
+    successful_result,
     is_known_image_url,
 )
 
@@ -480,7 +481,9 @@ def _turn_tool_results(runtime: Any) -> list[str]:
         if isinstance(message, HumanMessage):
             results = []
         elif isinstance(message, ToolMessage) and from_operator_tool(message.name):
-            results.append(str(message.content))
+            text = successful_result(message)
+            if text is not None:
+                results.append(text)
     return results
 
 
@@ -495,7 +498,7 @@ async def send_image(url: str, runtime: ToolRuntime) -> dict[str, Any]:
         or await is_known_image_url(_get_chatbot(), url)
     ):
         _log_call("send_image", _truncate(url), "rejected", 0)
-        return {"ok": False, "reason": "Unknown image URL. Use one from your knowledge base."}
+        return {"ok": False, "reason": "Unknown image URL. Use one from your instructions, knowledge base or a tool result from this turn."}
     _log_call("send_image", _truncate(url), "ok", 0)
     return {"ok": True, "url": url}
 

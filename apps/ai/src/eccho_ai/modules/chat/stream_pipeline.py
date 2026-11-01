@@ -12,7 +12,11 @@ from typing import Any
 import sentry_sdk
 
 from eccho_ai.core.app_logger import get_logger
-from eccho_ai.llm.tools.image_urls import from_operator_tool, in_tool_results
+from eccho_ai.llm.tools.image_urls import (
+    from_operator_tool,
+    in_tool_results,
+    successful_result,
+)
 from eccho_ai.modules.chat import ui_message_stream as ui
 from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
 from eccho_ai.modules.chat.constants import (
@@ -204,7 +208,9 @@ async def events_to_ui_parts(
                 msg = data.get("output")
                 output = getattr(msg, "content", msg)
                 if from_operator_tool(tool_names.get(tool_call_id)):
-                    tool_results.append(str(output))
+                    text = successful_result(msg)
+                    if text is not None:
+                        tool_results.append(text)
                 if isinstance(output, str):
                     try:
                         output = json.loads(output)

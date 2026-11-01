@@ -72,6 +72,19 @@ async def test_send_image_ignores_urls_from_system_tools_and_earlier_turns(monke
     assert (await _send(IG, runtime))["ok"] is False
 
 
+async def test_send_image_ignores_failed_tool_results(monkeypatch):
+    monkeypatch.setattr(st, "_get_chatbot", lambda: BOT)
+    monkeypatch.setattr(st, "is_known_image_url", AsyncMock(return_value=False))
+    runtime = _runtime(
+        HumanMessage("now"),
+        # An error can echo the model's arguments or the customer's words.
+        ToolMessage(f'{{"status": "error", "errorMessage": "bad url {IG}"}}',
+                    tool_call_id="t1", name="lookup"),
+        ToolMessage(f"Error: {IG}", tool_call_id="t2", name="mcp_search", status="error"),
+    )
+    assert (await _send(IG, runtime))["ok"] is False
+
+
 async def test_send_image_rejects_an_unknown_url(monkeypatch):
     monkeypatch.setattr(st, "_get_chatbot", lambda: BOT)
     monkeypatch.setattr(st, "is_known_image_url", AsyncMock(return_value=False))
