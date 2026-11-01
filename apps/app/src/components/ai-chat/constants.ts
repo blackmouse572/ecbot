@@ -63,3 +63,20 @@ export const TOOL_STEP_ICONS: Record<ToolKind | "knowledge", Icon> = {
 
 // Tabler icon size and stroke for the tool trace rows.
 export const TRACE_ICON = { size: 16, stroke: 1.75 } as const;
+
+/** Files a chat message may carry; the API checks the same list
+ *  (apps/api message-media.constant.ts): images up to 5 MB, documents up
+ *  to 10 MB. */
+export const CHAT_ATTACH_ACCEPT = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain",
+  "text/csv",
+].join(",");
+export const CHAT_ATTACH_MAX_FILES = 3;
+export const CHAT_ATTACH_MAX_BYTES = 10 * 1024 * 1024;

@@ -337,6 +337,33 @@ describe("chat transport configs", () => {
     });
   });
 
+  it("sends the uploaded files of the last message", () => {
+    const request = buildChatStreamRequest({
+      transport: workspaceChatTransport("acme", "cb1"),
+      clientConfig,
+      token: "abc",
+      id: "session-1",
+      messages: [
+        {
+          id: "m1",
+          role: "user",
+          parts: [{ type: "text", text: "" }],
+          metadata: {
+            attachments: [
+              { type: "image", key: "preview-media/cb1/a.jpg", name: "a.jpg" },
+            ],
+          },
+        },
+      ] as never,
+    });
+
+    expect(request.body).toEqual({
+      message: "",
+      chat_session_id: "session-1",
+      attachments: [{ key: "preview-media/cb1/a.jpg", name: "a.jpg" }],
+    });
+  });
+
   it("attaches the given token as a Bearer header on the workspace transport", () => {
     const request = buildChatStreamRequest({
       transport: workspaceChatTransport("acme", "cb1"),

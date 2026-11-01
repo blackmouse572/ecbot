@@ -1,4 +1,4 @@
-import type { ChatStatus, UIMessage } from "ai";
+import type { ChatStatus, FileUIPart, UIMessage } from "ai";
 import React, {
   createContext,
   useCallback,
@@ -15,7 +15,13 @@ export type AIChatProviderState = {
   messages: UIMessage[];
   status: ChatStatus;
   error?: Error;
-  onSubmit: (text: string) => void;
+  /** Uploads the files first, then sends; rejects when an upload fails, so
+   * the input keeps what was typed and attached. */
+  onSubmit: (text: string, files?: FileUIPart[]) => Promise<void>;
+  /** Whether this surface takes files (its transport can upload). */
+  canAttach: boolean;
+  /** Files of the message being sent are still uploading. */
+  uploading: boolean;
   onRestart: () => void;
   /**
    * Write into the transcript directly. Needed by surfaces whose messages do
@@ -26,6 +32,12 @@ export type AIChatProviderState = {
     messages: UIMessage[] | ((current: UIMessage[]) => UIMessage[]),
   ) => void;
 };
+
+/** A data URL file part back into the File an upload endpoint takes. */
+async function toFile(part: FileUIPart): Promise<File> {
+  const blob = await (await fetch(part.url)).blob();
+  return new File([blob], part.filename ?? "file", { type: part.mediaType });
+}
 
 const AIChatContext = createContext<AIChatProviderState | null>(null);
 
@@ -45,25 +57,44 @@ const AIChatProviderInner = ({
   registerStop,
   children,
 }: AIChatProviderInnerProps) => {
-  const { messages, status, error, sendMessage, stop, setMessages } =
-    useAiChat({
+  const { messages, status, error, sendMessage, stop, setMessages } = useAiChat(
+    {
       chatbotId,
       transport,
-    });
+    },
+  );
 
   registerStop(() => {
     void stop();
   });
 
+  const [uploading, setUploading] = useState(false);
+  const upload = transport.upload;
+
   const onSubmit = useCallback(
-    (text: string) => {
+    async (text: string, files: FileUIPart[] = []) => {
       // `canSubmit` gates on the caller's readiness — on the authed page that
       // is the auth token landing, which also keeps a submit from racing ahead
       // of ClientProvider configuring the shared client.
-      if (!text.trim() || !canSubmit) return;
-      void sendMessage({ text });
+      const sent = upload ? files : [];
+      if ((!text.trim() && !sent.length) || !canSubmit) return;
+      if (!sent.length || !upload) {
+        void sendMessage({ text });
+        return;
+      }
+      setUploading(true);
+      try {
+        // The input hands files over as data URLs; the transcript keeps
+        // those for the thumbnails, the API gets the stored keys.
+        const attachments = await Promise.all(
+          sent.map(async (part) => upload(await toFile(part))),
+        );
+        void sendMessage({ text, files: sent, metadata: { attachments } });
+      } finally {
+        setUploading(false);
+      }
     },
-    [sendMessage, canSubmit],
+    [sendMessage, canSubmit, upload],
   );
 
   const value = useMemo<AIChatProviderState>(
@@ -73,10 +104,22 @@ const AIChatProviderInner = ({
       status,
       error,
       onSubmit,
+      canAttach: !!upload,
+      uploading,
       onRestart,
       setMessages,
     }),
-    [chatbotId, messages, status, error, onSubmit, onRestart, setMessages],
+    [
+      chatbotId,
+      messages,
+      status,
+      error,
+      onSubmit,
+      upload,
+      uploading,
+      onRestart,
+      setMessages,
+    ],
   );
 
   return (

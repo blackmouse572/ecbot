@@ -26,6 +26,9 @@ import { ChatbotGetDetailResponseDto } from '../dtos/response/chatbot.detail.res
 import { ChatbotLinkAccountResponseDto } from '../dtos/response/chatbot.link-account.response.dto';
 import { ChatbotListResponseDto } from '../dtos/response/chatbot.list.response.dto';
 import { ChatbotModelResponseDto } from '../dtos/response/chatbot.model.response.dto';
+import { ChatAttachmentUploadRequestDto } from '@app/modules/conversation/dtos/request/chat-attachment.request.dto';
+import { ChatAttachmentResponseDto } from '@app/modules/conversation/dtos/response/chat-attachment.response.dto';
+import { ChatbotPreviewAttachmentRequestDto } from '../dtos/request/chatbot.preview-attachment.request.dto';
 import { ChatbotShareLinkRequestDto } from '../dtos/request/chatbot.share-link.request.dto';
 import { ChatbotShareLinkResponseDto } from '../dtos/response/chatbot.share-link.response.dto';
 import { ChatbotStreamRequestDto } from '../dtos/request/chatbot.stream.request.dto';
@@ -380,6 +383,43 @@ export function ChatbotPreviewStreamDoc(): MethodDecorator {
         DocRequest({
             dto: ChatbotPreviewStreamRequestDto,
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        })
+    );
+}
+
+export function ChatbotPreviewAttachmentDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'upload a file for a preview chat message',
+            description:
+                'Stores one image or document privately and returns its key. Send the key back in the next stream request `attachments`; images are described by the vision model, other files reach the agent as a file it cannot open.',
+        }),
+        DocRequest({
+            dto: ChatAttachmentUploadRequestDto,
+            params: ChatbotDocParamsId,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.FORM_DATA,
+        }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocGuard({ policy: true }),
+        DocResponse('chatbot.previewAttachment', {
+            dto: ChatAttachmentResponseDto,
+        })
+    );
+}
+
+export function ChatbotSharePreviewAttachmentDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'upload a file for a share-link preview message',
+            description:
+                'Same contract as the authed preview upload. The share token travels in the form body.',
+        }),
+        DocRequest({
+            dto: ChatbotPreviewAttachmentRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.FORM_DATA,
+        }),
+        DocResponse('chatbot.previewAttachment', {
+            dto: ChatAttachmentResponseDto,
         })
     );
 }

@@ -40,3 +40,18 @@ export interface ITurnImages {
     /** Images with no url, e.g. a Telegram photo whose download failed. */
     unviewable: number;
 }
+
+/** A file a person attached in a chat we host, as multer hands it over. */
+export interface IChatUpload {
+    buffer: Buffer;
+    mimetype: string;
+    size: number;
+    originalname: string;
+}
+
+/** A chat upload as stored: an attachment that always has its key and name. */
+export interface IStoredChatUpload extends IMessageAttachment {
+    type: 'image' | 'file';
+    key: string;
+    name: string;
+}

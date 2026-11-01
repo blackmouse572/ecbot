@@ -15,6 +15,9 @@ import { ChatbotPreviewService } from './services/chatbot-preview.service';
 import { ChatbotPreviewSessionService } from './services/chatbot-preview-session.service';
 import { ChatbotShareTokenService } from './services/chatbot-share-token.service';
 import { ChatbotTimezoneService } from './services/chatbot-timezone.service';
+import { ChatbotPreviewMediaService } from './services/chatbot-preview-media.service';
+import { AwsModule } from '@app/modules/aws/aws.module';
+import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
 
 @Module({
     imports: [
@@ -26,6 +29,7 @@ import { ChatbotTimezoneService } from './services/chatbot-timezone.service';
         HttpModule.register({ timeout: 1000 * 60 }),
         ConfigModule,
         JwtModule,
+        AwsModule,
     ],
     exports: [
         ChatbotService,
@@ -36,6 +40,7 @@ import { ChatbotTimezoneService } from './services/chatbot-timezone.service';
         ChatbotPreviewSessionService,
         ChatbotShareTokenService,
         ChatbotTimezoneService,
+        ChatbotPreviewMediaService,
     ],
     providers: [
         ChatbotService,
@@ -46,6 +51,10 @@ import { ChatbotTimezoneService } from './services/chatbot-timezone.service';
         ChatbotPreviewSessionService,
         ChatbotShareTokenService,
         ChatbotTimezoneService,
+        ChatbotPreviewMediaService,
+        // Stateless over S3; provided here too because ConversationModule
+        // imports this module.
+        MessageMediaService,
     ],
     controllers: [],
 })

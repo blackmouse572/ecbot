@@ -3,12 +3,17 @@ import { AwsS3Service } from '@app/modules/aws/services/aws.s3.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import {
+    CHAT_UPLOAD_FILE_EXTENSIONS,
+    CHAT_UPLOAD_FILE_MAX_BYTES,
     MESSAGE_MEDIA_EXTENSIONS,
     MESSAGE_MEDIA_KEY_PREFIX,
+    MESSAGE_MEDIA_MAX_BYTES,
 } from '../constants/message-media.constant';
 import {
+    IChatUpload,
     IMessageAttachment,
     IMessageMedia,
+    IStoredChatUpload,
 } from '../interfaces/message-media.interface';
 
 const PRIVATE = { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE };
@@ -42,6 +47,38 @@ export class MessageMediaService {
         return { type: 'image', key };
     }
 
+    /** A file a person attached in a chat we host, stored privately under
+     *  `folder`. Undefined when its type is not one we take or it is too
+     *  big: images up to the size the AI can describe, documents up to
+     *  CHAT_UPLOAD_FILE_MAX_BYTES. */
+    async saveUpload(
+        folder: string,
+        upload: IChatUpload
+    ): Promise<IStoredChatUpload | undefined> {
+        const imageExt = MESSAGE_MEDIA_EXTENSIONS[upload.mimetype];
+        const ext = imageExt ?? CHAT_UPLOAD_FILE_EXTENSIONS[upload.mimetype];
+        const max = imageExt
+            ? MESSAGE_MEDIA_MAX_BYTES
+            : CHAT_UPLOAD_FILE_MAX_BYTES;
+        if (!ext || upload.size > max) return undefined;
+
+        const key = `${folder}/${randomUUID()}.${ext}`;
+        await this.s3.putItem(
+            {
+                key,
+                file: upload.buffer,
+                size: upload.size,
+                mime: upload.mimetype,
+            },
+            PRIVATE
+        );
+        return {
+            type: imageExt ? 'image' : 'file',
+            key,
+            name: upload.originalname.slice(0, 255),
+        };
+    }
+
     /** Stored attachments → `{ type, url }` for the inbox and the AI. Only
      *  keys under this conversation's folder are signed: the private bucket
      *  holds other files too. */
@@ -49,7 +86,18 @@ export class MessageMediaService {
         attachments: IMessageAttachment[] | undefined,
         conversationId: string
     ): Promise<IMessageAttachment[]> {
-        const folder = `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}/`;
+        return this.resolveIn(
+            attachments,
+            `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}/`
+        );
+    }
+
+    /** `resolve` for any folder (ends with `/`); keys outside it stay
+     *  unsigned. */
+    async resolveIn(
+        attachments: IMessageAttachment[] | undefined,
+        folder: string
+    ): Promise<IMessageAttachment[]> {
         return Promise.all(
             (attachments ?? []).map(a => this.resolveOne(a, folder))
         );

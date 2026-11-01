@@ -69,46 +69,52 @@ function MessageAttachments({ files }: { files: RenderModelFile[] }) {
   if (files.length === 0) {
     return null;
   }
+  const images = files.filter((file) => file.mediaType.startsWith("image/"));
+  const others = files.filter((file) => !file.mediaType.startsWith("image/"));
   return (
-    <AttachmentGroup className="mt-2">
-      {files.map((file, index) => {
-        const isImage = file.mediaType.startsWith("image/");
-        return (
-          <Attachment
-            key={`${file.url}-${index}`}
-            size="sm"
-            className="w-[200px] shrink-0"
-          >
-            <AttachmentMedia variant={isImage ? "image" : "icon"}>
-              {isImage ? (
-                <img
-                  src={file.url}
-                  alt={file.filename ?? file.mediaType}
-                  className="size-full object-cover"
-                />
-              ) : (
+    <>
+      {/* Photos show as a picture, the way a chat app shows them. */}
+      {images.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2" data-testid="chat-images">
+          {images.map((file, index) => (
+            <img
+              key={`${file.url}-${index}`}
+              src={file.url}
+              alt={file.filename ?? file.mediaType}
+              className="max-h-48 max-w-[200px] rounded-lg border border-ui-border-base object-cover"
+            />
+          ))}
+        </div>
+      )}
+      {others.length > 0 && (
+        <AttachmentGroup className="mt-2">
+          {others.map((file, index) => (
+            <Attachment
+              key={`${file.url}-${index}`}
+              size="sm"
+              className="w-[200px] shrink-0"
+            >
+              <AttachmentMedia variant="icon">
                 <DocumentText />
-              )}
-            </AttachmentMedia>
-            <AttachmentContent>
-              <AttachmentTitle>
-                {file.filename ?? file.mediaType}
-              </AttachmentTitle>
-              <AttachmentDescription>{file.mediaType}</AttachmentDescription>
-            </AttachmentContent>
-            {/* A file (a menu PDF the bot sent) opens in a new tab. */}
-            {!isImage && (
+              </AttachmentMedia>
+              <AttachmentContent>
+                <AttachmentTitle>
+                  {file.filename ?? file.mediaType}
+                </AttachmentTitle>
+                <AttachmentDescription>{file.mediaType}</AttachmentDescription>
+              </AttachmentContent>
+              {/* A file (a menu PDF the bot sent) opens in a new tab. */}
               <AttachmentTrigger
                 href={file.url}
                 target="_blank"
                 rel="noreferrer"
                 aria-label={file.filename ?? file.mediaType}
               />
-            )}
-          </Attachment>
-        );
-      })}
-    </AttachmentGroup>
+            </Attachment>
+          ))}
+        </AttachmentGroup>
+      )}
+    </>
   );
 }
 

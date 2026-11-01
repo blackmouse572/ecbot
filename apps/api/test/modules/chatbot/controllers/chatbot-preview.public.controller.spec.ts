@@ -51,12 +51,21 @@ function setup(overrides: Record<string, any> = {}) {
         ...(overrides.turnstileService ?? {}),
     };
 
+    const previewMedia = {
+        save: jest.fn().mockResolvedValue({
+            type: 'image',
+            key: 'preview-media/cb1/a.jpg',
+            name: 'a.jpg',
+        }),
+    };
+
     const controller = new ChatbotPreviewPublicController(
         chatbotService as never,
         shareTokenService as never,
         previewService as never,
         previewSessionService as never,
-        turnstileService as never
+        turnstileService as never,
+        previewMedia as never
     );
 
     return {
@@ -66,6 +75,7 @@ function setup(overrides: Record<string, any> = {}) {
         previewService,
         previewSessionService,
         turnstileService,
+        previewMedia,
     };
 }
 
@@ -326,5 +336,53 @@ describe('ChatbotPreviewPublicController', () => {
             ).rejects.toThrow('expired');
             expect(turnstileService.verify).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe('ChatbotPreviewPublicController.uploadAttachment', () => {
+    const file = {
+        buffer: Buffer.from('x'),
+        mimetype: 'image/jpeg',
+        size: 1,
+        originalname: 'a.jpg',
+    } as Express.Multer.File;
+
+    it('stores the file for the token chatbot', async () => {
+        const { controller, previewMedia } = setup();
+        const out = await controller.uploadAttachment(
+            { token: 'tok' } as never,
+            file
+        );
+        expect(previewMedia.save).toHaveBeenCalledWith('cb1', file);
+        expect(out.data).toEqual({
+            type: 'image',
+            key: 'preview-media/cb1/a.jpg',
+            name: 'a.jpg',
+        });
+    });
+
+    it('stores nothing behind a bad token', async () => {
+        const { controller, previewMedia } = setup({
+            shareTokenService: {
+                verify: jest.fn(() => {
+                    throw new Error('expired');
+                }),
+            },
+        });
+        await expect(
+            controller.uploadAttachment({ token: 'x' } as never, file)
+        ).rejects.toThrow('expired');
+        expect(previewMedia.save).not.toHaveBeenCalled();
+    });
+
+    it('passes the attachments on to the stream', async () => {
+        const { controller, previewService } = setup();
+        const dto = streamDto();
+        dto.attachments = [{ key: 'preview-media/cb1/a.jpg' }];
+        await controller.stream({} as never, dto);
+        expect(previewService.streamTo).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ attachments: dto.attachments })
+        );
     });
 });

@@ -49,8 +49,14 @@ import {
     Post,
     Put,
     Res,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
+import { CHAT_UPLOAD_FILE_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
+import { ChatAttachmentResponseDto } from '@app/modules/conversation/dtos/response/chat-attachment.response.dto';
+import * as multer from 'multer';
 import {
     Response,
     ResponsePaging,
@@ -76,6 +82,7 @@ import {
     ChatbotCloneDoc,
     ChatbotCreateShareLinkDoc,
     ChatbotStreamDoc,
+    ChatbotPreviewAttachmentDoc,
     ChatbotUnlinkAccountDoc,
     ChatbotUpdateDoc,
 } from '../docs/chatbot.doc';
@@ -106,6 +113,7 @@ import { ChatbotPreviewService } from '../services/chatbot-preview.service';
 import { ChatbotPreviewSessionService } from '../services/chatbot-preview-session.service';
 import { ManifestBuilderService } from '@app/modules/tool/services/manifest-builder.service';
 import { ChatbotAIService } from '../services/chatbot-ai.service';
+import { ChatbotPreviewMediaService } from '../services/chatbot-preview-media.service';
 
 @ApiTags('modules.user.chatbot')
 @Controller('/:workspace/chatbots')
@@ -122,7 +130,8 @@ export class ChatbotController {
         private readonly previewSessionService: ChatbotPreviewSessionService,
         private readonly shareTokenService: ChatbotShareTokenService,
         private readonly configService: ConfigService,
-        private readonly modelCatalogService: ChatbotModelCatalogService
+        private readonly modelCatalogService: ChatbotModelCatalogService,
+        private readonly previewMedia: ChatbotPreviewMediaService
     ) {}
 
     @ChatbotListDoc()
@@ -509,7 +518,46 @@ export class ChatbotController {
             message: dto.message,
             userId: payload.user,
             chatSessionId: dto.chat_session_id,
+            attachments: dto.attachments,
         });
+    }
+
+    @ChatbotPreviewAttachmentDoc()
+    @Response('chatbot.previewAttachment')
+    @WorkspacePolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.READ],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Post('/:id/preview/attachments')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: multer.memoryStorage(),
+            limits: { fileSize: CHAT_UPLOAD_FILE_MAX_BYTES, files: 1 },
+        })
+    )
+    async uploadPreviewAttachment(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('id') id: string,
+        @UploadedFile() file?: Express.Multer.File
+    ): Promise<IResponse<ChatAttachmentResponseDto>> {
+        const chatbot = await this.chatbotService.findOne({
+            id,
+            workspace: workspace.id,
+            deletedAt: null,
+        });
+        if (!chatbot) {
+            throw new NotFoundException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'chatbot.error.notFound',
+            });
+        }
+        const saved = await this.previewMedia.save(chatbot.id, file);
+        return {
+            data: { type: saved.type, key: saved.key, name: saved.name },
+        };
     }
 
     @ChatbotCreateShareLinkDoc()

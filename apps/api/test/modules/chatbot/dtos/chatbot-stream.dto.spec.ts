@@ -87,3 +87,35 @@ describe('ChatbotPreviewStreamRequestDto', () => {
         ).toEqual(['token']);
     });
 });
+
+describe('stream request attachments', () => {
+    const key = 'preview-media/cb1/5f1c.jpg';
+
+    it('accepts an empty message that carries attachments', () => {
+        expect(
+            errorsFor(ChatbotStreamRequestDto, {
+                message: '',
+                attachments: [{ key, name: 'a.jpg' }],
+            })
+        ).toEqual([]);
+    });
+
+    it('rejects more than three attachments', () => {
+        expect(
+            errorsFor(ChatbotStreamRequestDto, {
+                message: 'hi',
+                attachments: [{ key }, { key }, { key }, { key }],
+            })
+        ).toEqual(['attachments']);
+    });
+
+    it('rejects a key with characters a stored key never has', () => {
+        expect(
+            errorsFor(ChatbotPreviewStreamRequestDto, {
+                token: 't',
+                message: 'hi',
+                attachments: [{ key: '../secret?x=1' }],
+            })
+        ).toEqual(['attachments']);
+    });
+});

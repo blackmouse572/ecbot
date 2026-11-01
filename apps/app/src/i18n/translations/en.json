@@ -1166,6 +1166,11 @@
       "clear": "Clear",
       "restart": "Restart Chat",
       "inputPlaceholder": "Type your message...",
+      "attach": "Attach photos or files",
+      "removeAttachment": "Remove {{name}}",
+      "attachFailed": "Could not upload the file. Please try again.",
+      "attachTooMany": "You can attach up to {{count}} files per message.",
+      "attachNotSupported": "Attach an image up to 5 MB, or a PDF, Word, Excel, text or CSV file up to 10 MB.",
       "thinking": "Generating response...",
       "trace": {
         "working": "Working on it",

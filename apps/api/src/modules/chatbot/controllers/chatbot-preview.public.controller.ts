@@ -8,7 +8,15 @@ import {
     Param,
     Post,
     Res,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CHAT_UPLOAD_FILE_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
+import { ChatAttachmentResponseDto } from '@app/modules/conversation/dtos/response/chat-attachment.response.dto';
+import * as multer from 'multer';
+import { ChatbotPreviewAttachmentRequestDto } from '../dtos/request/chatbot.preview-attachment.request.dto';
+import { ChatbotPreviewMediaService } from '../services/chatbot-preview-media.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Response as ExpressResponse } from 'express';
@@ -18,6 +26,7 @@ import { IResponse } from 'src/common/response/interfaces/response.interface';
 import {
     ChatbotPreviewMetaDoc,
     ChatbotPreviewStreamDoc,
+    ChatbotSharePreviewAttachmentDoc,
 } from '../docs/chatbot.doc';
 import { ChatbotPreviewStreamRequestDto } from '../dtos/request/chatbot.preview-stream.request.dto';
 import { ChatbotPreviewMetaResponseDto } from '../dtos/response/chatbot.preview-meta.response.dto';
@@ -49,7 +58,8 @@ export class ChatbotPreviewPublicController {
         private readonly shareTokenService: ChatbotShareTokenService,
         private readonly previewService: ChatbotPreviewService,
         private readonly previewSessionService: ChatbotPreviewSessionService,
-        private readonly turnstileService: TurnstileService
+        private readonly turnstileService: TurnstileService,
+        private readonly previewMedia: ChatbotPreviewMediaService
     ) {}
 
     @ChatbotPreviewMetaDoc()
@@ -127,7 +137,31 @@ export class ChatbotPreviewPublicController {
             // No user behind a share link; the id is only echoed to apps/ai.
             userId: `share:${jti}`,
             chatSessionId: dto.chat_session_id,
+            attachments: dto.attachments,
         });
+    }
+
+    // Storing a file spends no LLM budget: describing it happens on the
+    // stream turn, behind Turnstile and the session budget.
+    @Throttle({ default: { ttl: 60000, limit: 20 } })
+    @ChatbotSharePreviewAttachmentDoc()
+    @Response('chatbot.previewAttachment')
+    @Post('/attachments')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: multer.memoryStorage(),
+            limits: { fileSize: CHAT_UPLOAD_FILE_MAX_BYTES, files: 1 },
+        })
+    )
+    async uploadAttachment(
+        @Body() dto: ChatbotPreviewAttachmentRequestDto,
+        @UploadedFile() file?: Express.Multer.File
+    ): Promise<IResponse<ChatAttachmentResponseDto>> {
+        const { chatbot } = await this.resolve(dto.token);
+        const saved = await this.previewMedia.save(chatbot.id, file);
+        return {
+            data: { type: saved.type, key: saved.key, name: saved.name },
+        };
     }
 
     private async resolve(

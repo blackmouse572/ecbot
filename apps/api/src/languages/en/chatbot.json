@@ -23,6 +23,8 @@
         "shareLinkNotConfigured": "Preview sharing is not configured on this server.",
         "previewNotAvailable": "This chatbot is not available for preview.",
         "previewSessionLimit": "You've reached the message limit for this preview. Please try again later.",
+        "emptyMessage": "Write a message or attach a file.",
+        "attachmentNotSupported": "This file type or size is not supported. Attach an image up to 5 MB, or a PDF, Word, Excel, text or CSV file up to 10 MB.",
         "invalidAgentProfile": "The agent builder answers are not valid.",
         "accountsNotFound": "One or more accounts don't belong to this workspace.",
         "accountsTaken": "One or more channels are already connected to another chatbot. Disconnect them there first."
@@ -34,6 +36,7 @@
     "linkAccount": "Account linked to chatbot successfully.",
     "unlinkAccount": "Account unlinked from chatbot successfully.",
     "shareLink": "Preview share link created successfully.",
+    "previewAttachment": "File uploaded.",
     "preview": "Chatbot preview loaded successfully.",
     "batchDelete": "Chatbots deleted",
     "batchStatus": "Chatbot status updated"

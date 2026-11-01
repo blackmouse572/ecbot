@@ -1136,6 +1136,11 @@
       "clear": "Xóa",
       "restart": "Bắt đầu lại",
       "inputPlaceholder": "Nhập tin nhắn của bạn...",
+      "attach": "Đính kèm ảnh hoặc tệp",
+      "removeAttachment": "Bỏ {{name}}",
+      "attachFailed": "Không tải được tệp lên. Vui lòng thử lại.",
+      "attachTooMany": "Mỗi tin nhắn đính kèm tối đa {{count}} tệp.",
+      "attachNotSupported": "Hãy đính kèm ảnh tối đa 5 MB, hoặc tệp PDF, Word, Excel, văn bản hay CSV tối đa 10 MB.",
       "thinking": "Đang tạo phản hồi...",
       "trace": {
         "working": "Đang xử lý",
