@@ -24,10 +24,12 @@ import {
     CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES,
 } from '../constants/conversation-memory.constant';
 import { ConversationMemoryTaskDto } from '../dtos/conversation-memory.task.dto';
+import { ConversationMemoryService } from './conversation-memory.service';
 
 /**
- * Folds the messages that left a conversation's history window into its
- * summary (queued by ConversationMemoryService). The cursor the job was
+ * Folds the messages past `CONVERSATION_MEMORY_WINDOW_MAX` into the
+ * conversation's summary, after which they leave the history window (queued
+ * by ConversationMemoryService). The cursor the job was
  * queued at must still be the conversation's, so a late or repeated job
  * never folds the same messages in twice.
  */
@@ -39,6 +41,7 @@ export class ConversationMemoryTaskService {
         private readonly conversationRepository: ConversationRepository,
         private readonly messageRepository: MessageRepository,
         private readonly chatbotAIService: ChatbotAIService,
+        private readonly memory: ConversationMemoryService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -120,7 +123,7 @@ export class ConversationMemoryTaskService {
         }
         // Oldest first: a range over the cap is folded from its start and
         // the cursor stops at the last folded row, so nothing is skipped;
-        // the next Turn queues the rest from the new cursor.
+        // the rest is queued from the new cursor once this lands.
         const rows = await this.messageRepository.findOldest(
             filter,
             CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES
@@ -176,6 +179,9 @@ export class ConversationMemoryTaskService {
                 memorySummaryUntilId: untilId,
             }
         );
+        if (untilId !== dto.untilMessageId) {
+            await this.memory.catchUp(dto.conversationId);
+        }
     }
 
     private toSummaryMessage(

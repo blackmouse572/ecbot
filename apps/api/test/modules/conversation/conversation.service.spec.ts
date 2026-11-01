@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
 import { ConversationService } from '../../../src/modules/conversation/services/conversation.service';
+import { ConversationMemoryService } from '../../../src/modules/platform/services/conversation-memory.service';
 import { CustomerTagAssignmentService } from '../../../src/modules/customer/services/customer-tag-assignment.service';
 
 describe('ConversationService', () => {
@@ -187,6 +188,47 @@ describe('ConversationService', () => {
                 [{ id: 'conv-1' }, { timezone: 'America/New_York' }],
                 [{ id: 'conv-1' }, { timezone: null }],
             ]);
+        });
+    });
+
+    describe('conversation memory on hand-back', () => {
+        const memory = { catchUp: jest.fn().mockResolvedValue(undefined) };
+
+        beforeEach(() => {
+            mockModuleRef.get.mockImplementation((token: unknown) =>
+                token === ConversationMemoryService ? memory : undefined
+            );
+            mockConversationRepository.findOneById.mockResolvedValue({
+                id: 'conv-1',
+                botEnabled: false,
+            });
+            mockConversationRepository.updateEntity.mockResolvedValue({
+                id: 'conv-1',
+            });
+        });
+
+        afterEach(() => mockModuleRef.get.mockReset());
+
+        // What staff said while the bot was off is summarized before the
+        // bot's next reply, not left out of its view.
+        it('queues the summary when staff switch the bot back on', async () => {
+            await service.setBotEnabled('conv-1', true);
+            expect(memory.catchUp).toHaveBeenCalledWith('conv-1');
+        });
+
+        it('queues the summary when staff resolve', async () => {
+            await service.updateStatus(
+                'conv-1',
+                ENUM_CONVERSATION_STATUS.RESOLVED
+            );
+            expect(memory.catchUp).toHaveBeenCalledWith('conv-1');
+        });
+
+        it('still hands back when the summary cannot be queued', async () => {
+            memory.catchUp.mockRejectedValueOnce(new Error('no queue'));
+            await expect(
+                service.setBotEnabled('conv-1', true)
+            ).resolves.toBeDefined();
         });
     });
 

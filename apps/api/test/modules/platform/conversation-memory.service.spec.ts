@@ -52,26 +52,24 @@ describe('ConversationMemoryService.window', () => {
     });
 
     it('loads the burst on top of the window, so it never eats into the history', async () => {
-        // 503 rows, the newest 3 the burst: 500 history rows keep 20.
+        // 503 rows, the newest 3 the burst: 500 history rows, the summary far
+        // behind, so the history is capped and keeps 60.
         const { service } = memoryOver(503);
         const window = await service.window('c', 3);
         expect(window.rows.map(r => r.id)).toEqual(
             rows(503)
-                .slice(480)
+                .slice(440)
                 .map(r => r.id)
         );
     });
 
-    it('drops a whole step past the max and asks for it to be summarized', async () => {
+    it('keeps messages in view until the summary covers them, and queues it', async () => {
         const { service, cloudTasks } = memoryOver(45);
 
         const window = await service.window('c');
 
-        expect(window.rows.map(r => r.id)).toEqual(
-            rows(45)
-                .slice(20)
-                .map(r => r.id)
-        );
+        // The summary does not cover the oldest 20 yet: they stay.
+        expect(window.rows).toHaveLength(45);
         expect(cloudTasks.enqueue).toHaveBeenCalledWith(
             CONVERSATION_MEMORY_QUEUE,
             ENUM_CONVERSATION_MEMORY_PROCESS.SUMMARIZE,
@@ -81,6 +79,29 @@ describe('ConversationMemoryService.window', () => {
                 untilMessageId: 'm-19',
             },
             { taskName: 'summarize-c-cur-m-19' }
+        );
+    });
+
+    it('caps a window whose summary lags far behind, in steps', async () => {
+        // A long staff-only stretch: 253 messages and no summary of them.
+        const { service, cloudTasks } = memoryOver(253);
+
+        const window = await service.window('c');
+
+        expect(window.rows.map(r => r.id)).toEqual(
+            rows(253)
+                .slice(180)
+                .map(r => r.id)
+        );
+        expect(cloudTasks.enqueue).toHaveBeenCalledWith(
+            CONVERSATION_MEMORY_QUEUE,
+            ENUM_CONVERSATION_MEMORY_PROCESS.SUMMARIZE,
+            {
+                conversationId: 'c',
+                fromMessageId: 'cur',
+                untilMessageId: 'm-219',
+            },
+            { taskName: 'summarize-c-cur-m-219' }
         );
     });
 
@@ -104,5 +125,32 @@ describe('ConversationMemoryService.window', () => {
         );
         expect(window.summary).toBeUndefined();
         expect(window.rows).toHaveLength(3);
+    });
+});
+
+describe('ConversationMemoryService.catchUp', () => {
+    it('queues the summary of what the next window would leave out', async () => {
+        const { service, cloudTasks } = memoryOver(253);
+
+        await service.catchUp('c');
+
+        expect(cloudTasks.enqueue).toHaveBeenCalledWith(
+            CONVERSATION_MEMORY_QUEUE,
+            ENUM_CONVERSATION_MEMORY_PROCESS.SUMMARIZE,
+            {
+                conversationId: 'c',
+                fromMessageId: 'cur',
+                untilMessageId: 'm-219',
+            },
+            { taskName: 'summarize-c-cur-m-219' }
+        );
+    });
+
+    it('queues nothing while the window holds every message', async () => {
+        const { service, cloudTasks } = memoryOver(40);
+
+        await service.catchUp('c');
+
+        expect(cloudTasks.enqueue).not.toHaveBeenCalled();
     });
 });

@@ -19,4 +19,10 @@ describe('memoryWindowDrop', () => {
         );
         expect(starts.size).toBe(1);
     });
+
+    it('caps a lagging window at a larger max, in the same steps', () => {
+        expect(memoryWindowDrop(80, 80)).toBe(0);
+        expect(memoryWindowDrop(81, 80)).toBe(20);
+        expect(memoryWindowDrop(253, 80)).toBe(180);
+    });
 });

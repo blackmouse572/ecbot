@@ -13,6 +13,7 @@ import { CustomerTagClassifierService } from '@app/modules/customer/services/cus
 import { NotificationService } from '@app/modules/notification/services/notification.service';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform-adapter.registry';
+import { ConversationMemoryService } from '@app/modules/platform/services/conversation-memory.service';
 import { WorkspaceMemberEntity } from '@app/modules/workspace/repository/entities/workspace-member.entity';
 import { WorkspaceMemberRepository } from '@app/modules/workspace/repository/repositories/workspace-member.repository';
 import { wrap } from '@mikro-orm/core';
@@ -76,6 +77,13 @@ export class ConversationService implements IConversationService {
 
     private get handoffEmail(): HandoffEmailService | undefined {
         return this.moduleRef.get(HandoffEmailService, { strict: false });
+    }
+
+    /** Lives in the platform module, which imports this one. */
+    private get memory(): ConversationMemoryService | undefined {
+        return this.moduleRef.get(ConversationMemoryService, {
+            strict: false,
+        });
     }
 
     private get platformRegistry(): PlatformAdapterRegistry {
@@ -336,6 +344,15 @@ export class ConversationService implements IConversationService {
      *  bot on). */
     private async handBack(conversationId: string): Promise<void> {
         await this.leaveStaffHandledNote(conversationId);
+        // Fold in what staff said with the bot off before its next reply, so
+        // that reply sees it instead of a window capped short of it.
+        this.memory
+            ?.catchUp(conversationId)
+            .catch((err: unknown) =>
+                this.logger.warn(
+                    `Conversation summary not queued on hand-back for ${conversationId}: ${(err as Error).message}`
+                )
+            );
         // A tag write failing must not fail the resolve or bot switch.
         await this.clearHandoffTags(conversationId).catch((err: unknown) =>
             this.logger.warn(
