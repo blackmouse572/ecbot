@@ -31,6 +31,8 @@ import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
 import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
+import { EmailPlanRenewalReminderDto } from '../dtos/email.plan-renewal-reminder.dto';
+import { planRenewalReminderEmailCopy } from '../email-template-components/plan-renewal-reminder-email.copy';
 import { EmailAccountBlockedDto } from '../dtos/email.account-blocked.dto';
 import { EmailInvitationToWorkspaceDto } from '../dtos/email.invite-to-workspace.dto';
 import { EmailLowTokenBalanceDto } from '../dtos/email.low-token-balance.dto';
@@ -470,6 +472,39 @@ export class ResendProvider implements IEmailService {
                 language,
             },
             copy.subject(workspaceName, stopsAt, reminder)
+        );
+    }
+
+    async sendPlanRenewalReminder(
+        { name, email }: EmailSendDto,
+        {
+            workspaceName,
+            planName,
+            periodEnd,
+            billingUrl,
+            language,
+        }: EmailPlanRenewalReminderDto
+    ): Promise<boolean> {
+        const copy = planRenewalReminderEmailCopy(language, this.homeName);
+        const endsAt = this.helperDateService.formatToReadable(
+            periodEnd,
+            language === ENUM_MESSAGE_LANGUAGE.VI ? 'vi' : 'en'
+        );
+        return this.sendEmailTemplate(
+            email,
+            EmailSubject.PlanRenewalReminder,
+            {
+                name,
+                workspaceName,
+                planName,
+                periodEnd: endsAt,
+                billingUrl: `${this.homeUrl}${billingUrl}`,
+                supportEmail: this.supportEmail,
+                homeUrl: this.homeUrl,
+                homeName: this.homeName,
+                language,
+            },
+            copy.subject(planName, workspaceName, endsAt)
         );
     }
 }

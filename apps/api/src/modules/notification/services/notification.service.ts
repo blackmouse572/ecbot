@@ -544,6 +544,85 @@ export class NotificationService {
     }
 
     /**
+     * A plan paid one period at a time (bank transfer) ends soon unless the
+     * owner pays for the next period. The email says the same.
+     */
+    async createPlanRenewalReminder(
+        recipientId: string,
+        workspaceId: string,
+        data: {
+            workspaceName: string;
+            workspaceSlug: string;
+            planName: string;
+            periodEnd: string;
+        }
+    ): Promise<NotificationEntity> {
+        return this.create({
+            title: this.messageService.setMessage(
+                'notification.planRenewalReminder.title'
+            ),
+            message: this.messageService.setMessage(
+                'notification.planRenewalReminder.message',
+                {
+                    properties: {
+                        workspaceName: data.workspaceName,
+                        planName: data.planName,
+                        periodEnd: data.periodEnd,
+                    },
+                }
+            ),
+            type: NotificationType.WARNING,
+            priority: NotificationPriority.HIGH,
+            recipient: recipientId,
+            workspace: workspaceId,
+            metadata: {
+                actionUrl: `/${data.workspaceSlug}/settings/billing`,
+                actionText: this.messageService.setMessage(
+                    'notification.planRenewalReminder.actionText'
+                ),
+                data: { planName: data.planName, periodEnd: data.periodEnd },
+            },
+        });
+    }
+
+    /** That plan's period ended unpaid: the workspace is on the free plan now. */
+    async createPlanExpired(
+        recipientId: string,
+        workspaceId: string,
+        data: {
+            workspaceName: string;
+            workspaceSlug: string;
+            planName: string;
+        }
+    ): Promise<NotificationEntity> {
+        return this.create({
+            title: this.messageService.setMessage(
+                'notification.planExpired.title'
+            ),
+            message: this.messageService.setMessage(
+                'notification.planExpired.message',
+                {
+                    properties: {
+                        workspaceName: data.workspaceName,
+                        planName: data.planName,
+                    },
+                }
+            ),
+            type: NotificationType.WARNING,
+            priority: NotificationPriority.HIGH,
+            recipient: recipientId,
+            workspace: workspaceId,
+            metadata: {
+                actionUrl: `/${data.workspaceSlug}/settings/billing`,
+                actionText: this.messageService.setMessage(
+                    'notification.planExpired.actionText'
+                ),
+                data: { planName: data.planName },
+            },
+        });
+    }
+
+    /**
      * Billing was never seeded, so workspace creation could not attach a plan
      * and `TokenGuardService` will refuse every turn. The operator log names
      * the fix, but only staff see it — this is the owner's side of that.

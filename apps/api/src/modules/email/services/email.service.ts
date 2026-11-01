@@ -14,6 +14,7 @@ import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
 import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
+import { EmailPlanRenewalReminderDto } from '../dtos/email.plan-renewal-reminder.dto';
 
 @Injectable()
 export class EmailService implements IEmailService {
@@ -130,4 +131,9 @@ export class EmailService implements IEmailService {
         this.delegate('sendMfaChanged', dto, data);
     sendPaymentFailed = (dto: EmailSendDto, data: EmailPaymentFailedDto) =>
         this.delegate('sendPaymentFailed', dto, data);
+
+    sendPlanRenewalReminder = (
+        dto: EmailSendDto,
+        data: EmailPlanRenewalReminderDto
+    ) => this.delegate('sendPlanRenewalReminder', dto, data);
 }

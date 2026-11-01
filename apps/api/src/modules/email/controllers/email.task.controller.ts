@@ -94,6 +94,12 @@ export class EmailTaskController {
                     dto.data as any
                 );
                 break;
+            case ENUM_SEND_EMAIL_PROCESS.PLAN_RENEWAL_REMINDER:
+                await this.emailService.sendPlanRenewalReminder(
+                    dto.send,
+                    dto.data as any
+                );
+                break;
         }
 
         return {};

@@ -15,4 +15,5 @@ export enum EmailSubject {
     MemberJoined = 'New workspace member',
     MfaChanged = 'Two-step verification changed',
     PaymentFailed = 'Payment failed',
+    PlanRenewalReminder = 'Plan renewal reminder',
 }

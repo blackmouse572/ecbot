@@ -12,6 +12,7 @@ import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
 import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
+import { EmailPlanRenewalReminderDto } from '../dtos/email.plan-renewal-reminder.dto';
 
 export interface IEmailService {
     importChangePassword(): Promise<boolean>;
@@ -89,5 +90,9 @@ export interface IEmailService {
     sendPaymentFailed(
         dto: EmailSendDto,
         data: EmailPaymentFailedDto
+    ): Promise<boolean>;
+    sendPlanRenewalReminder(
+        dto: EmailSendDto,
+        data: EmailPlanRenewalReminderDto
     ): Promise<boolean>;
 }

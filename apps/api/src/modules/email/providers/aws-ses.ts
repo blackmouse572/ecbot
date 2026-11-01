@@ -22,6 +22,7 @@ import { EmailHandoffDto } from '../dtos/email.handoff.dto';
 import { EmailMemberJoinedDto } from '../dtos/email.member-joined.dto';
 import { EmailMfaChangedDto } from '../dtos/email.mfa-changed.dto';
 import { EmailPaymentFailedDto } from '../dtos/email.payment-failed.dto';
+import { EmailPlanRenewalReminderDto } from '../dtos/email.plan-renewal-reminder.dto';
 import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 
 @Injectable()
@@ -850,6 +851,47 @@ export class AwsSESProvider implements IEmailService {
                     ),
                     billingUrl: `${this.homeUrl}${billingUrl}`,
                     reminder,
+                    language: lang,
+                },
+            });
+            return true;
+        } catch (err: unknown) {
+            this.logger.error(err);
+            return false;
+        }
+    }
+
+    async sendPlanRenewalReminder(
+        { name, email }: EmailSendDto,
+        {
+            workspaceName,
+            planName,
+            periodEnd,
+            billingUrl,
+            language,
+        }: EmailPlanRenewalReminderDto
+    ): Promise<boolean> {
+        const lang =
+            language === ENUM_MESSAGE_LANGUAGE.VI
+                ? ENUM_MESSAGE_LANGUAGE.VI
+                : ENUM_MESSAGE_LANGUAGE.EN;
+        try {
+            await this.awsSESService.send({
+                templateName: ENUM_SEND_EMAIL_PROCESS.PLAN_RENEWAL_REMINDER,
+                recipients: [email],
+                sender: this.fromEmail,
+                templateData: {
+                    homeName: this.homeName,
+                    name: title(name),
+                    supportEmail: this.supportEmail ?? '',
+                    homeUrl: this.homeUrl,
+                    workspaceName,
+                    planName,
+                    periodEnd: this.helperDateService.formatToReadable(
+                        periodEnd,
+                        lang
+                    ),
+                    billingUrl: `${this.homeUrl}${billingUrl}`,
                     language: lang,
                 },
             });

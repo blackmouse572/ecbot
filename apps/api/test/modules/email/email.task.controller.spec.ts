@@ -9,11 +9,13 @@ describe('EmailTaskController.handle', () => {
     const sendWelcome = jest.fn();
     const sendVerification = jest.fn();
     const sendPaymentFailed = jest.fn();
+    const sendPlanRenewalReminder = jest.fn();
 
     beforeEach(async () => {
         sendWelcome.mockReset();
         sendVerification.mockReset();
         sendPaymentFailed.mockReset();
+        sendPlanRenewalReminder.mockReset();
         const module: TestingModule = await Test.createTestingModule({
             controllers: [EmailTaskController],
             providers: [
@@ -23,6 +25,7 @@ describe('EmailTaskController.handle', () => {
                         sendWelcome,
                         sendVerification,
                         sendPaymentFailed,
+                        sendPlanRenewalReminder,
                     },
                 },
                 // ApiKeyCloudTasksProtected's guard reads the Cloud Tasks key.
@@ -70,6 +73,24 @@ describe('EmailTaskController.handle', () => {
             data,
         } as any);
         expect(sendPaymentFailed).toHaveBeenCalledWith(
+            { email: 'a@b.com', name: 'A' },
+            data
+        );
+    });
+
+    it('dispatches PLAN_RENEWAL_REMINDER to EmailService.sendPlanRenewalReminder', async () => {
+        const data = {
+            workspaceName: 'Kunmart',
+            planName: 'Growth',
+            periodEnd: '2026-12-15T03:00:00.000Z',
+            billingUrl: '/kunmart/settings/billing',
+        };
+        await controller.handle({
+            jobName: ENUM_SEND_EMAIL_PROCESS.PLAN_RENEWAL_REMINDER,
+            send: { email: 'a@b.com', name: 'A' },
+            data,
+        } as any);
+        expect(sendPlanRenewalReminder).toHaveBeenCalledWith(
             { email: 'a@b.com', name: 'A' },
             data
         );

@@ -14,4 +14,5 @@ export { default as HandoffEmail } from './HandoffEmail';
 export { default as MemberJoinedEmail } from './MemberJoinedEmail';
 export { default as MfaChangedEmail } from './MfaChangedEmail';
 export { default as PaymentFailedEmail } from './PaymentFailedEmail';
+export { default as PlanRenewalReminderEmail } from './PlanRenewalReminderEmail';
 export * from './render-teamplates';
