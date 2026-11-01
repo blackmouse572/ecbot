@@ -947,7 +947,7 @@ export class UserService {
 
 // Pagination order to MikroORM. Users who never signed in have no lastSeenAt:
 // they sort last in both directions instead of on top as Postgres puts nulls
-// on DESC, and created date breaks ties so offset paging stays stable.
+// on DESC, then created date and id break ties so offset paging stays stable.
 function userListOrder(
     order: Record<string, ENUM_PAGINATION_ORDER_DIRECTION_TYPE>
 ): Record<string, QueryOrder> {
@@ -959,6 +959,7 @@ function userListOrder(
                 ? QueryOrder.ASC_NULLS_LAST
                 : QueryOrder.DESC_NULLS_LAST,
             createdAt: asc('lastSeenAt') ? QueryOrder.ASC : QueryOrder.DESC,
+            id: QueryOrder.ASC,
         };
     }
     return Object.fromEntries(

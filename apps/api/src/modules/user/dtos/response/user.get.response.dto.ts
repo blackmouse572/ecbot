@@ -88,14 +88,9 @@ export class UserGetResponseDto extends DatabaseDto {
     })
     termsAcceptedAt?: Date | null;
 
-    @ApiProperty({
-        required: false,
-        nullable: true,
-        type: Date,
-        description:
-            'Last authenticated request by the user; null if they never signed in',
-        example: new Date('2026-11-01T04:47:47.000Z'),
-    })
+    // Presence data: only the admin users list exposes it (UserListResponseDto).
+    @ApiHideProperty()
+    @Exclude()
     lastSeenAt?: Date | null;
 
     @ApiProperty({

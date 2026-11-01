@@ -25,6 +25,7 @@ export class UserListResponseDto extends OmitType(UserGetResponseDto, [
     'country',
     'mobileNumber',
     'verification',
+    'lastSeenAt',
 ] as const) {
     @ApiProperty({
         required: true,
@@ -41,6 +42,16 @@ export class UserListResponseDto extends OmitType(UserGetResponseDto, [
     })
     @Type(() => CountryShortResponseDto)
     country: CountryShortResponseDto;
+
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        type: Date,
+        description:
+            'Last authenticated request by the user; null if they never signed in',
+        example: new Date('2026-11-01T04:47:47.000Z'),
+    })
+    lastSeenAt?: Date | null;
 
     @ApiHideProperty()
     @Exclude()

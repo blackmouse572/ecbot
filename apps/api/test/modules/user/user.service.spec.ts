@@ -417,6 +417,7 @@ describe('UserService.findAllWithRoleAndCountry ordering', () => {
         expect(find.mock.calls[0][2].orderBy).toEqual({
             lastSeenAt: QueryOrder.DESC_NULLS_LAST,
             createdAt: QueryOrder.DESC,
+            id: QueryOrder.ASC,
         });
     });
 
@@ -429,6 +430,7 @@ describe('UserService.findAllWithRoleAndCountry ordering', () => {
         expect(find.mock.calls[0][2].orderBy).toEqual({
             lastSeenAt: QueryOrder.ASC_NULLS_LAST,
             createdAt: QueryOrder.ASC,
+            id: QueryOrder.ASC,
         });
     });
 
@@ -441,5 +443,55 @@ describe('UserService.findAllWithRoleAndCountry ordering', () => {
         expect(find.mock.calls[0][2].orderBy).toEqual({
             createdAt: QueryOrder.DESC,
         });
+    });
+});
+
+describe('UserService lastSeenAt exposure', () => {
+    const service = new UserService(
+        {} as any,
+        {} as any,
+        {} as any,
+        { get: jest.fn() } as any,
+        {} as any,
+        {} as any
+    );
+    const user = {
+        id: 'u1',
+        name: 'Ann',
+        email: 'ann@b.co',
+        lastSeenAt: new Date('2026-11-01T04:47:47.000Z'),
+    } as unknown as UserEntity;
+
+    it('is on the admin list', () => {
+        expect(service.mapList([user])[0].lastSeenAt).toEqual(user.lastSeenAt);
+    });
+
+    it('is not handed to other users through the short or profile shapes', () => {
+        expect(service.mapShort(user).lastSeenAt).toBeUndefined();
+        expect(service.mapShorts([user])[0].lastSeenAt).toBeUndefined();
+        expect(service.mapProfile(user).lastSeenAt).toBeUndefined();
+    });
+});
+
+describe('UserService.findAllWithRoleAndCountry tie-break', () => {
+    const find = jest.fn().mockResolvedValue([]);
+    const service = new UserService(
+        {} as any,
+        { find } as any,
+        {} as any,
+        { get: jest.fn() } as any,
+        {} as any,
+        {} as any
+    );
+
+    it('ends the last seen order on id so offset paging is stable', async () => {
+        await service.findAllWithRoleAndCountry(
+            {},
+            { order: { lastSeenAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC } }
+        );
+        expect(Object.entries(find.mock.calls[0][2].orderBy).pop()).toEqual([
+            'id',
+            QueryOrder.ASC,
+        ]);
     });
 });
