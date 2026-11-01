@@ -99,6 +99,24 @@ describe('ChatbotAIService', () => {
         });
     });
 
+    it('returns the vision model that described the images', async () => {
+        post.mockResolvedValue({
+            data: {
+                data: {
+                    images: [{ id: '0', description: 'a red shirt' }],
+                    model: 'google/gemini-2.5-flash',
+                },
+            },
+        });
+
+        const out = await service.describeImages({
+            chatbot_id: 'cb1',
+            images: [{ id: '0', url: 'https://s3/a.jpg' }],
+        });
+
+        expect(out.model).toBe('google/gemini-2.5-flash');
+    });
+
     it('sends both the GCP ID token and the internal token header on deleteSession', async () => {
         del.mockResolvedValue({});
 

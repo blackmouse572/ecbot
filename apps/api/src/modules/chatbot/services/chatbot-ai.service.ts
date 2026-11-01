@@ -124,10 +124,18 @@ export class ChatbotAIService {
     ): Promise<AIDescribedImages> {
         const headers = await getInternalAuthHeader(this.aiBackendUrl);
         const response = await this.httpService.axiosRef.post<{
-            data: { images: AIDescribedImages['images']; usage?: unknown };
+            data: {
+                images: AIDescribedImages['images'];
+                usage?: unknown;
+                model?: string;
+            };
         }>(`${this.aiBackendUrl}/api/chat/describe`, params, { headers });
-        const { images, usage } = response.data.data;
-        return { images, usage: parseWireTokenUsage(usage) ?? undefined };
+        const { images, usage, model } = response.data.data;
+        return {
+            images,
+            usage: parseWireTokenUsage(usage) ?? undefined,
+            model,
+        };
     }
 
     async summarizeConversation(params: AISummarizeParams): Promise<AISummary> {
