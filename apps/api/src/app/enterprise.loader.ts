@@ -18,9 +18,8 @@ export function loadEnterpriseModules(): DynamicModule[] {
         }
         return [];
     }
-    // This repo's eslint sets noInlineConfig, so no-require-imports can't
-    // be disabled inline; createRequire(__filename) is the sanctioned
-    // equivalent of a bare require.
+    // oxlint's typescript/no-require-imports forbids a bare require;
+    // createRequire(__filename) is the sanctioned equivalent.
     const requireFromHere = createRequire(__filename);
     const { EnterpriseModule } = requireFromHere(
         join(EE_DIR, 'enterprise.module')

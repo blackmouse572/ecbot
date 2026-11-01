@@ -151,7 +151,7 @@ The project is built using the following technologies and versions:
 - Sentry.io for Monitoring Tools.
 - Support Docker installation.
 - Husky GitHook for run linter before commit 🐶.
-- Linter with EsLint for Typescript.
+- Linter with oxlint for Typescript.
 
 ## Installation
 

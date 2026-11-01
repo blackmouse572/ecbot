@@ -181,7 +181,9 @@ export class LoggerOptionService {
 
                                 // delete body.data for privacy reason
                                 delete body.data;
-                            } catch (_) {}
+                            } catch {
+                                // not JSON: log an empty body
+                            }
                         }
 
                         return {

@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": [
+    "../../packages/oxlint-config/next.json",
+    "../../packages/oxlint-config/turbo-env.json"
+  ],
+  "ignorePatterns": [".source/**"],
+  "overrides": [
+    {
+      "files": ["scripts/**", "*.mjs"],
+      "env": { "node": true, "browser": true },
+      "rules": { "turbo/no-undeclared-env-vars": "off" }
+    }
+  ]
+}

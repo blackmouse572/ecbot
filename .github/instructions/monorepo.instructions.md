@@ -24,7 +24,7 @@ eccho/
 │   ├── auth/         # Auth utilities
 │   ├── client/       # Generated API client
 │   ├── typescript-config/  # Shared TS configs
-│   └── eslint-config/      # Shared ESLint configs
+│   └── oxlint-config/      # Shared oxlint configs
 └── scripts/          # Build and deployment scripts
 ```
 
@@ -282,7 +282,7 @@ Add to workspace `package.json`:
 1. **Use workspace protocol** - `workspace:*` for internal deps
 2. **Run from root** - Use `pnpm --filter` for workspace-specific commands
 3. **Leverage caching** - Configure turbo.json for optimal caching
-4. **Shared configs** - Use shared packages for TypeScript, ESLint configs
+4. **Shared configs** - Use shared packages for TypeScript and oxlint configs
 5. **Version consistency** - Keep dependency versions aligned across workspaces
 6. **Atomic commits** - Commit related changes across workspaces together
 7. **Build order** - Let Turborepo handle build dependencies

@@ -1,6 +1,6 @@
 {
     "recommendations": [
-        "dbaeumer.vscode-eslint", // ESLint for linting
+        "oxc.oxc-vscode", // oxlint for linting
         "esbenp.prettier-vscode", // Prettier for code formatting
         "firsttris.vscode-jest-runner", // Jest test runner
         "ms-vscode.vscode-typescript-next", // TypeScript support

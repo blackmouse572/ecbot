@@ -186,7 +186,7 @@ export class WorkspaceRequestService {
             .persistAndFlush(request);
 
         switch (request.type) {
-            case REQUEST_TYPE.JOIN_WORKSPACE:
+            case REQUEST_TYPE.JOIN_WORKSPACE: {
                 await this.workspaceOwnerService.addMemberToWorkspace(
                     workspace.id,
                     request.requestFrom.id
@@ -237,6 +237,7 @@ export class WorkspaceRequestService {
                     workspace.id,
                     request.requestFrom.id
                 );
+            }
         }
     }
 }

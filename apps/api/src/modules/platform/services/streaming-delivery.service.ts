@@ -67,7 +67,7 @@ export function guardrailDeliveryPolicy(cb?: GuardrailConfig): {
 const OUTPUT_SECRET_PATTERNS: RegExp[] = [
     /sk-[a-zA-Z0-9\-_]{20,}/, // OpenAI-style keys
     /AKIA[0-9A-Z]{16}/, // AWS access key id
-    /eyJ[a-zA-Z0-9_\-]+\.eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+/, // JWT
+    /eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/, // JWT
     /Bearer\s+[a-zA-Z0-9\-_.]{40,}/i, // bearer token
     /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/, // 16-digit card
     /\b\d{13,15}\b/, // Amex/other card lengths

@@ -206,7 +206,7 @@ export const useSendOperatorReply = (id: string | undefined) => {
         path: { workspace: slug!, id: id! },
         body: { text: variables.text },
       });
-      return ((res.data as A)?.data as MessageGetResponseDto)!;
+      return (res.data as A)?.data as MessageGetResponseDto;
     },
     onMutate: async (variables) => {
       if (!id) return { clientNonce: "" };
@@ -358,7 +358,7 @@ export const useReactToMessage = (
         path: { workspace: slug!, id: id!, messageId: variables.messageId },
         body: { emoji: variables.emoji, action: variables.action },
       });
-      return ((res.data as A)?.data as MessageGetResponseDto)!;
+      return (res.data as A)?.data as MessageGetResponseDto;
     },
     onMutate: async (variables) => {
       if (!id) return {};
