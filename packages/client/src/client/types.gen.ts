@@ -244,9 +244,7 @@ export type WorkspaceGetProfileResponseDto = {
     /**
      * Last authenticated request by the user; null if they never signed in
      */
-    lastSeenAt?: {
-        [key: string]: unknown;
-    } | null;
+    lastSeenAt?: string | null;
     /**
      * Version of the Terms and Privacy Policy accepted
      */
@@ -358,9 +356,7 @@ export type UserShortResponseDto = {
     /**
      * Last authenticated request by the user; null if they never signed in
      */
-    lastSeenAt?: {
-        [key: string]: unknown;
-    } | null;
+    lastSeenAt?: string | null;
     /**
      * Version of the Terms and Privacy Policy accepted
      */
@@ -1129,9 +1125,7 @@ export type UserCensorResponseDto = {
     /**
      * Last authenticated request by the user; null if they never signed in
      */
-    lastSeenAt?: {
-        [key: string]: unknown;
-    } | null;
+    lastSeenAt?: string | null;
     /**
      * Version of the Terms and Privacy Policy accepted
      */
@@ -1761,9 +1755,7 @@ export type UserListResponseDto = {
     /**
      * Last authenticated request by the user; null if they never signed in
      */
-    lastSeenAt?: {
-        [key: string]: unknown;
-    } | null;
+    lastSeenAt?: string | null;
     /**
      * Version of the Terms and Privacy Policy accepted
      */
@@ -1830,9 +1822,7 @@ export type UserProfileResponseDto = {
     /**
      * Last authenticated request by the user; null if they never signed in
      */
-    lastSeenAt?: {
-        [key: string]: unknown;
-    } | null;
+    lastSeenAt?: string | null;
     /**
      * Version of the Terms and Privacy Policy accepted
      */
