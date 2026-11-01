@@ -74,6 +74,21 @@ describe('ChatbotPreviewMediaService', () => {
         });
     });
 
+    it('keeps one file and up to ten photos', async () => {
+        const images = Array.from({ length: 11 }, (_, i) => ({
+            key: `preview-media/cb1/${i}.jpg`,
+        }));
+        const out = await service.notes('cb1', [
+            { key: 'preview-media/cb1/a.pdf' },
+            { key: 'preview-media/cb1/b.pdf' },
+            ...images,
+        ]);
+        expect(out.notes).toHaveLength(11);
+        expect(
+            out.notes.filter(n => n === '[File, which you cannot open]')
+        ).toHaveLength(1);
+    });
+
     it('ignores keys outside the chatbot folder', async () => {
         const out = await service.notes('cb1', [
             { key: 'preview-media/cb2/a.jpg' },

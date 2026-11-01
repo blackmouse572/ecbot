@@ -1,4 +1,5 @@
-import { DocumentText, XMarkMini } from "@medusajs/icons";
+import { XMarkMini } from "@medusajs/icons";
+import { toast } from "@medusajs/ui";
 import {
   Attachment,
   AttachmentAction,
@@ -9,13 +10,36 @@ import {
   PromptInputHeader,
   usePromptInputAttachments,
 } from "@repo/ui/common-components";
-import type { FC } from "react";
+import { FileType } from "@repo/ui/components/ui/file-type";
+import { type FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { chatFileType } from "./chat-message-media";
+import { CHAT_ATTACH_MAX_DOCUMENTS, CHAT_ATTACH_MAX_IMAGES } from "./constants";
 
-/** The files waiting to go with the next message, each with a remove button. */
+/** The files waiting to go with the next message, each with a remove button.
+ *  Keeps the input to 10 photos and one other file: extras are dropped with
+ *  a toast as they are added. */
 export const AIChatInputAttachments: FC = () => {
   const { files, remove } = usePromptInputAttachments();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const images = files.filter((f) => f.mediaType.startsWith("image/"));
+    const documents = files.filter((f) => !f.mediaType.startsWith("image/"));
+    const extra = [
+      ...images.slice(CHAT_ATTACH_MAX_IMAGES),
+      ...documents.slice(CHAT_ATTACH_MAX_DOCUMENTS),
+    ];
+    if (!extra.length) return;
+    for (const file of extra) remove(file.id);
+    toast.error(
+      t("chatbot.chat.attachTooMany", {
+        images: CHAT_ATTACH_MAX_IMAGES,
+        files: CHAT_ATTACH_MAX_DOCUMENTS,
+      }),
+    );
+  }, [files, remove, t]);
+
   if (files.length === 0) return null;
 
   return (
@@ -25,7 +49,10 @@ export const AIChatInputAttachments: FC = () => {
         const name = file.filename ?? file.mediaType;
         return (
           <Attachment key={file.id} size="xs" className="max-w-[180px]">
-            <AttachmentMedia variant={isImage ? "image" : "icon"}>
+            <AttachmentMedia
+              variant={isImage ? "image" : "icon"}
+              className={isImage ? undefined : "bg-transparent"}
+            >
               {isImage ? (
                 <img
                   src={file.url}
@@ -33,7 +60,7 @@ export const AIChatInputAttachments: FC = () => {
                   className="size-full object-cover"
                 />
               ) : (
-                <DocumentText />
+                <FileType type={chatFileType(file)} size="mini" />
               )}
             </AttachmentMedia>
             <AttachmentContent>

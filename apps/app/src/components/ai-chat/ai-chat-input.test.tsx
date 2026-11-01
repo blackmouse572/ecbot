@@ -115,4 +115,17 @@ describe("AIChatInput attachments", () => {
     expect(sendMessage).not.toHaveBeenCalled();
     expect(screen.getByText("shirt.png")).toBeInTheDocument();
   });
+
+  it("keeps one file and drops a second", async () => {
+    const upload = vi.fn();
+    const { container } = renderChat({ ...textOnly, upload });
+    const a = new File(["x"], "a.pdf", { type: "application/pdf" });
+    const b = new File(["x"], "b.pdf", { type: "application/pdf" });
+    fireEvent.change(fileInput(container), { target: { files: [a, b] } });
+
+    expect(await screen.findByText("a.pdf")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText("b.pdf")).not.toBeInTheDocument(),
+    );
+  });
 });

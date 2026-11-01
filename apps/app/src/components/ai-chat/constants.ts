@@ -78,5 +78,9 @@ export const CHAT_ATTACH_ACCEPT = [
   "text/plain",
   "text/csv",
 ].join(",");
-export const CHAT_ATTACH_MAX_FILES = 3;
+/** Up to 10 photos and one other file per message, like Messenger. */
+export const CHAT_ATTACH_MAX_IMAGES = 10;
+export const CHAT_ATTACH_MAX_DOCUMENTS = 1;
+export const CHAT_ATTACH_MAX_FILES =
+  CHAT_ATTACH_MAX_IMAGES + CHAT_ATTACH_MAX_DOCUMENTS;
 export const CHAT_ATTACH_MAX_BYTES = 10 * 1024 * 1024;

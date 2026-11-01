@@ -18,7 +18,9 @@ import { useAIChat } from "./ai-chat-provider";
 import {
   CHAT_ATTACH_ACCEPT,
   CHAT_ATTACH_MAX_BYTES,
+  CHAT_ATTACH_MAX_DOCUMENTS,
   CHAT_ATTACH_MAX_FILES,
+  CHAT_ATTACH_MAX_IMAGES,
 } from "./constants";
 
 const AttachButton: FC = () => {
@@ -71,12 +73,12 @@ export function AIChatInput() {
       onError={(error) =>
         canAttach &&
         toast.error(
-          t(
-            error.code === "max_files"
-              ? "chatbot.chat.attachTooMany"
-              : "chatbot.chat.attachNotSupported",
-            { count: CHAT_ATTACH_MAX_FILES },
-          ),
+          error.code === "max_files"
+            ? t("chatbot.chat.attachTooMany", {
+                images: CHAT_ATTACH_MAX_IMAGES,
+                files: CHAT_ATTACH_MAX_DOCUMENTS,
+              })
+            : t("chatbot.chat.attachNotSupported"),
         )
       }
     >

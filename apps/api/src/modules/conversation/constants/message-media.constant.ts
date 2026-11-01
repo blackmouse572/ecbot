@@ -14,8 +14,15 @@ export const MESSAGE_MEDIA_EXTENSIONS: Record<string, string> = {
     'image/gif': 'gif',
 };
 
-/** Most files one chat message may carry (preview, widget, inbox reply). */
-export const CHAT_UPLOAD_MAX_FILES = 3;
+/** Most photos one chat message may carry (preview, widget, inbox reply). */
+export const CHAT_UPLOAD_MAX_IMAGES = 10;
+
+/** Most non-image files one chat message may carry. */
+export const CHAT_UPLOAD_MAX_DOCUMENTS = 1;
+
+/** Most attachments of any kind on one chat message. */
+export const CHAT_UPLOAD_MAX_FILES =
+    CHAT_UPLOAD_MAX_IMAGES + CHAT_UPLOAD_MAX_DOCUMENTS;
 
 /** Largest non-image file a person may attach in a chat we host. */
 export const CHAT_UPLOAD_FILE_MAX_BYTES = 10 * 1024 * 1024;

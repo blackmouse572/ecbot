@@ -1169,7 +1169,7 @@
       "attach": "Attach photos or files",
       "removeAttachment": "Remove {{name}}",
       "attachFailed": "Could not upload the file. Please try again.",
-      "attachTooMany": "You can attach up to {{count}} files per message.",
+      "attachTooMany": "You can send up to {{images}} photos and {{files}} file per message.",
       "attachNotSupported": "Attach an image up to 5 MB, or a PDF, Word, Excel, text or CSV file up to 10 MB.",
       "thinking": "Generating response...",
       "trace": {

@@ -1,19 +1,8 @@
 import "@/styles/streamdown.css";
 import "@/styles/chat-bubble.css";
-import {
-  ArrowPathMini,
-  DocumentText,
-  ExclamationCircle,
-} from "@medusajs/icons";
+import { ArrowPathMini, ExclamationCircle } from "@medusajs/icons";
 import { Button, clx, Container, Heading, Text } from "@medusajs/ui";
 import {
-  Attachment,
-  AttachmentContent,
-  AttachmentDescription,
-  AttachmentGroup,
-  AttachmentMedia,
-  AttachmentTitle,
-  AttachmentTrigger,
   Marker,
   MarkerContent,
   MarkerIcon,
@@ -37,11 +26,11 @@ import type { RagSource } from "@/types/chat-message";
 import { BuildingLoader } from "./ai-loader";
 import { chatErrorMessage } from "./chat-error-message";
 import { ToolTrace } from "./tool-trace";
+import { ChatMessageMedia } from "./chat-message-media";
 import {
   type ChatTransportConfig,
   isEmptyRenderModel,
   partsToRenderModel,
-  type RenderModelFile,
   toolCallToChat,
 } from "./use-ai-chat-stream";
 
@@ -64,59 +53,6 @@ const REPLY_ENTER =
   "transition-[opacity,filter] duration-270 ease-[ease] starting:opacity-0 starting:blur-[2px] motion-reduce:starting:blur-none";
 const BUBBLE_ENTER =
   "transition-[opacity,translate,scale] duration-330 ease-out starting:translate-y-2 starting:scale-96 starting:opacity-0 motion-reduce:starting:translate-y-0 motion-reduce:starting:scale-100";
-
-function MessageAttachments({ files }: { files: RenderModelFile[] }) {
-  if (files.length === 0) {
-    return null;
-  }
-  const images = files.filter((file) => file.mediaType.startsWith("image/"));
-  const others = files.filter((file) => !file.mediaType.startsWith("image/"));
-  return (
-    <>
-      {/* Photos show as a picture, the way a chat app shows them. */}
-      {images.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2" data-testid="chat-images">
-          {images.map((file, index) => (
-            <img
-              key={`${file.url}-${index}`}
-              src={file.url}
-              alt={file.filename ?? file.mediaType}
-              className="max-h-48 max-w-[200px] rounded-lg border border-ui-border-base object-cover"
-            />
-          ))}
-        </div>
-      )}
-      {others.length > 0 && (
-        <AttachmentGroup className="mt-2">
-          {others.map((file, index) => (
-            <Attachment
-              key={`${file.url}-${index}`}
-              size="sm"
-              className="w-[200px] shrink-0"
-            >
-              <AttachmentMedia variant="icon">
-                <DocumentText />
-              </AttachmentMedia>
-              <AttachmentContent>
-                <AttachmentTitle>
-                  {file.filename ?? file.mediaType}
-                </AttachmentTitle>
-                <AttachmentDescription>{file.mediaType}</AttachmentDescription>
-              </AttachmentContent>
-              {/* A file (a menu PDF the bot sent) opens in a new tab. */}
-              <AttachmentTrigger
-                href={file.url}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={file.filename ?? file.mediaType}
-              />
-            </Attachment>
-          ))}
-        </AttachmentGroup>
-      )}
-    </>
-  );
-}
 
 /**
  * Who the card is for. The business (dashboard Test Chat, preview link) sees
@@ -184,7 +120,7 @@ function AIChatMessages({
           !model.text &&
           !model.guardrail;
         // Text either side of a tool call reads as separate messages, as it
-        // does on the channels (#91); the last one keeps the attachments.
+        // does on the channels (#91).
         const earlierSegments = model.segments.slice(0, -1);
         const lastSegment = model.segments.at(-1) ?? "";
         const toolCalls = model.toolCalls.map(toolCallToChat);
@@ -196,8 +132,15 @@ function AIChatMessages({
           showSpinner ||
           !!model.text ||
           (internals && !!model.reasoning) ||
-          !!model.guardrail ||
-          model.files.length > 0;
+          !!model.guardrail;
+        // Photos and files sit outside the text bubble, as on Messenger: a
+        // customer's before their text, the agent's after its reply.
+        const media = !showSpinner && (
+          <ChatMessageMedia
+            files={model.files}
+            align={isAssistant ? "start" : "end"}
+          />
+        );
 
         // A stream that fails before producing output leaves an empty
         // assistant message in `messages`; the `stream-error` marker below is
@@ -229,6 +172,7 @@ function AIChatMessages({
                   running={isLoading && isLastMessage}
                 />
               )}
+              {!isAssistant && media}
               {!showSpinner &&
                 !model.guardrail &&
                 earlierSegments.map((segment, segmentIndex) => (
@@ -273,12 +217,12 @@ function AIChatMessages({
                       <MessageResponse>{lastSegment}</MessageResponse>
                     </div>
                   )}
-                  <MessageAttachments files={model.files} />
                   {message.role === "assistant" && sources.length > 0 ? (
                     <AIChatSources sources={sources} />
                   ) : null}
                 </MessageContent>
               )}
+              {isAssistant && media}
             </Message>
           </MessageScrollerItem>
         );

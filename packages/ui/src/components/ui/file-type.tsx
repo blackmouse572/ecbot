@@ -8,6 +8,8 @@ const COLORS: Record<string, string> = {
   pdf: "text-orange-600",
   html: "text-orange-600",
   docx: "text-blue-600",
+  xlsx: "text-green-600",
+  csv: "text-green-600",
   jpg: "text-violet-600",
   jpeg: "text-violet-600",
   webp: "text-violet-600",
@@ -18,6 +20,7 @@ const COLORS: Record<string, string> = {
 const MIME_EXTENSIONS: Record<string, string> = {
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
     "docx",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
   "text/plain": "txt",
   "text/markdown": "md",
   "image/jpeg": "jpg",

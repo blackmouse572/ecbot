@@ -1139,7 +1139,7 @@
       "attach": "Đính kèm ảnh hoặc tệp",
       "removeAttachment": "Bỏ {{name}}",
       "attachFailed": "Không tải được tệp lên. Vui lòng thử lại.",
-      "attachTooMany": "Mỗi tin nhắn đính kèm tối đa {{count}} tệp.",
+      "attachTooMany": "Mỗi tin nhắn gửi được tối đa {{images}} ảnh và {{files}} tệp.",
       "attachNotSupported": "Hãy đính kèm ảnh tối đa 5 MB, hoặc tệp PDF, Word, Excel, văn bản hay CSV tối đa 10 MB.",
       "thinking": "Đang tạo phản hồi...",
       "trace": {
