@@ -18,7 +18,7 @@ packages/
   auth/             shared auth utilities
   agent-blueprint/  @repo/agent-blueprint: chatbot business types, presets and prompt compiler (api + app)
   favicons/         per-environment favicon sets copied into apps at build
-  eslint-config/    typescript-config/   shared configs
+  oxlint-config/    typescript-config/   shared configs
 e2e/                Playwright end-to-end tests
 ```
 

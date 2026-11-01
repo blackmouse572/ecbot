@@ -131,13 +131,13 @@ A [Turborepo](https://turbo.build/repo) + pnpm workspace.
 - **`ai`**: the agent runtime (Python 3.12, FastAPI, LangChain). It handles generation, RAG and guardrails, and `api` streams from it over HTTP.
 - **`edge`**: an optional Cloudflare Worker that receives platform webhooks and forwards them. Self-hosting works without it, so point webhooks straight at `api`.
 
-**Packages**: `@repo/ui` (shared components), `@repo/client` (API client generated from the OpenAPI schema), `@repo/auth`, plus shared ESLint and TypeScript configs.
+**Packages**: `@repo/ui` (shared components), `@repo/client` (API client generated from the OpenAPI schema), `@repo/auth`, plus shared oxlint and TypeScript configs.
 
 ## Development
 
 ```bash
 pnpm dev                 # everything
-pnpm lint                # eslint
+pnpm lint                # oxlint
 pnpm check-types         # tsc --noEmit
 pnpm test:api            # api unit tests
 pnpm generate:client     # regenerate @repo/client after changing API DTOs or routes

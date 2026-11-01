@@ -252,6 +252,8 @@ export class KnowledgeItemUploadService {
  */
 function readableName(name: string): string {
     let fixed = name;
+    // Latin-1 range check on purpose: control characters are part of it.
+    // oxlint-disable-next-line no-control-regex
     if (/^[\u0000-\u00ff]*$/.test(name)) {
         const utf8 = Buffer.from(name, 'latin1').toString('utf8');
         if (!utf8.includes('\ufffd')) fixed = utf8;
