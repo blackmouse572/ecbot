@@ -335,6 +335,34 @@
       }
     }
   },
+  "commandPalette": {
+    "title": "Search",
+    "description": "Search pages, agents, customers, knowledge, skills and tools.",
+    "placeholder": "Search pages, agents, customers...",
+    "searching": "Searching...",
+    "empty": "No results for \"{{query}}\"",
+    "emptyHint": "Try another word, or check the spelling.",
+    "footer": {
+      "navigate": "Navigate",
+      "open": "Open"
+    },
+    "unnamedCustomer": "Unnamed customer",
+    "groups": {
+      "pages": "Go to",
+      "recentAgents": "Recent agents",
+      "actions": "Quick actions",
+      "agents": "Agents",
+      "customers": "Customers",
+      "knowledge": "Knowledge",
+      "skills": "Skills",
+      "tools": "Tools"
+    },
+    "actions": {
+      "createAgent": "Create agent",
+      "addKnowledge": "Add knowledge",
+      "createSkill": "Create skill"
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "recentActivities": "Recent Activity",

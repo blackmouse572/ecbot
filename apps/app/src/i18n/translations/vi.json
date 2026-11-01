@@ -335,6 +335,34 @@
       }
     }
   },
+  "commandPalette": {
+    "title": "Tìm kiếm",
+    "description": "Tìm trang, agent, khách hàng, kiến thức, skill và công cụ.",
+    "placeholder": "Tìm trang, agent, khách hàng...",
+    "searching": "Đang tìm...",
+    "empty": "Không tìm thấy kết quả cho \"{{query}}\"",
+    "emptyHint": "Thử từ khác, hoặc kiểm tra lại chính tả.",
+    "footer": {
+      "navigate": "Di chuyển",
+      "open": "Mở"
+    },
+    "unnamedCustomer": "Khách hàng chưa có tên",
+    "groups": {
+      "pages": "Đi tới",
+      "recentAgents": "Agent gần đây",
+      "actions": "Thao tác nhanh",
+      "agents": "Agent",
+      "customers": "Khách hàng",
+      "knowledge": "Kiến thức",
+      "skills": "Skill",
+      "tools": "Công cụ"
+    },
+    "actions": {
+      "createAgent": "Tạo agent",
+      "addKnowledge": "Thêm mục kiến thức",
+      "createSkill": "Tạo skill"
+    }
+  },
   "dashboard": {
     "title": "Bảng điều khiển",
     "subtitle": "Xin chào! Bạn đã sẵn sàng để chinh phục hôm nay chưa? 🚀",

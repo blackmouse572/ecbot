@@ -1,29 +1,16 @@
-import { useWorkspace } from "@/hooks/api/workspace";
 import {
-  AcademicCap,
-  BellAlert,
-  ChatBubbleLeftRight,
   CogSixTooth,
   CursorArrowRays,
   EllipsisHorizontal,
-  SquaresPlus,
-  FolderOpen,
   House,
   MagnifyingGlass,
   OpenRectArrowOut,
   PlusMini,
-  Puzzle,
-  Sparkles,
-  Users,
 } from "@medusajs/icons";
-import { GuideMoments, LazyFeatureHint } from "@/components/guide";
+import { GuideMoments } from "@/components/guide";
 import { GettingStartedNav } from "@/routes/dashboard/components/getting-started-nav/getting-started-nav";
-import { BlockedAccountsBadge } from "./blocked-accounts-badge";
 import { RecentAgentsSection } from "./recent-agents-section";
 import { ScrollEdgeBlur } from "./scroll-edge-blur";
-import { PausedConversationsBadge } from "./paused-conversations-badge";
-import { PendingSuggestionsBadge } from "./pending-suggestions-badge";
-import { ToolsAttentionBadge } from "./tools-attention-badge";
 import { Avatar, Divider, DropdownMenu, Text, clx } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
@@ -31,6 +18,13 @@ import { LogoBoxSpinner, Skeleton } from "@repo/ui/common-components";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { NavHintPopover, NavItem, Shell, type INavItem } from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
+import {
+  CommandPalette,
+  commandPaletteOpenAtom,
+  commandPaletteShortcutLabel,
+} from "../command-palette";
+import { useCoreRoutes } from "./use-core-routes";
+import { useSetAtom } from "jotai";
 import { NotificationMenu } from "../notification-menu/notification-menu";
 
 import { useLogout } from "@/hooks/api";
@@ -39,7 +33,6 @@ import { useScrollEdges } from "@/hooks/use-scroll-edges";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useWorkspaceAbilities } from "@/modules/auth";
 import { ROUTES } from "@/routes";
-import { enterpriseNavItems } from "@/routes/enterprise.nav";
 import { WorkspaceSuspended } from "./workspace-suspended";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
 
@@ -85,6 +78,7 @@ export const MainLayout = () => {
       </Shell>
       {/* Outside the shell, whose children render in both sidebars. */}
       {workspace && <GuideMoments />}
+      {workspace && <CommandPalette />}
     </>
   );
 };
@@ -300,126 +294,15 @@ const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
   );
 };
 
-const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
-  const { t } = useTranslation();
-  const { workspace } = useWorkspace();
-  const baseUrl = `/${workspace?.slug}`;
-
-  return [
-    {
-      label: t("channels.title"),
-      to: `${baseUrl}/${ROUTES.Accounts}`,
-      icon: <SquaresPlus />,
-      ability: {
-        action: "manage",
-        subject: "ACCOUNT",
-      },
-      hint: <LazyFeatureHint feature="accounts" icon={<SquaresPlus />} />,
-      badge: <BlockedAccountsBadge />,
-    },
-    {
-      label: t("customers.title"),
-      to: `${baseUrl}/${ROUTES.Customers}`,
-      icon: <Users />,
-      ability: {
-        action: "manage",
-        subject: "CUSTOMER",
-      },
-      items: [
-        {
-          label: t("settings.customerTags.title"),
-          to: `${baseUrl}/${ROUTES.CustomerTags}`,
-        },
-        {
-          label: t("customers.suggestions.nav.label"),
-          to: `${baseUrl}/${ROUTES.CustomerSuggestions}`,
-          ability: {
-            action: "manage",
-            subject: "CUSTOMER",
-          },
-          badge: <PendingSuggestionsBadge />,
-        },
-      ],
-    },
-    {
-      label: t("conversations.title"),
-      to: `${baseUrl}/${ROUTES.Conversations}`,
-      icon: <ChatBubbleLeftRight />,
-      ability: {
-        action: "manage",
-        subject: "CHATBOT",
-      },
-      hint: (
-        <LazyFeatureHint
-          feature="conversations"
-          icon={<ChatBubbleLeftRight />}
-        />
-      ),
-      badge: <PausedConversationsBadge />,
-    },
-    {
-      label: t("agents.title"),
-      to: `${baseUrl}/${ROUTES.Chatbot}`,
-      icon: <Sparkles />,
-      ability: {
-        action: "manage",
-        subject: "CHATBOT",
-      },
-      hint: <LazyFeatureHint feature="chatbot" icon={<Sparkles />} />,
-      items: [
-        {
-          label: t("knowledgeBase.title"),
-          to: `${baseUrl}/${ROUTES.KnowledgeBase}`,
-          icon: <FolderOpen />,
-          ability: {
-            action: "manage",
-            subject: "KNOWLEDGE_BASE",
-          },
-          hint: <LazyFeatureHint feature="knowledge" icon={<FolderOpen />} />,
-        },
-        {
-          label: t("tools.title"),
-          to: `${baseUrl}/${ROUTES.Tools}`,
-          icon: <Puzzle />,
-          ability: {
-            action: "manage",
-            subject: "TOOL",
-          },
-          hint: <LazyFeatureHint feature="tools" icon={<Puzzle />} />,
-          badge: <ToolsAttentionBadge />,
-        },
-        {
-          label: t("skills.title"),
-          to: `${baseUrl}/${ROUTES.Skills}`,
-          icon: <AcademicCap />,
-          ability: {
-            action: "read",
-            subject: "SKILL",
-          },
-          hint: <LazyFeatureHint feature="skills" icon={<AcademicCap />} />,
-        },
-        {
-          label: t("followups.title"),
-          to: `${baseUrl}/${ROUTES.Followups}`,
-          icon: <BellAlert />,
-          ability: {
-            action: "read",
-            subject: "CHATBOT",
-          },
-        },
-        ...enterpriseNavItems({ t, baseUrl }),
-      ],
-    },
-  ];
-};
-
 const Searchbar = () => {
   const { t } = useTranslation();
+  const setPaletteOpen = useSetAtom(commandPaletteOpenAtom);
 
   return (
     <div className="px-3">
       <button
         type="button"
+        onClick={() => setPaletteOpen(true)}
         className={clx(
           "bg-ui-bg-subtle text-ui-fg-subtle flex w-full items-center gap-x-2.5 rounded-md px-2 py-1 outline-none",
           "hover:bg-ui-bg-subtle-hover",
@@ -433,7 +316,7 @@ const Searchbar = () => {
           </Text>
         </div>
         <Text size="small" leading="compact" className="text-ui-fg-muted">
-          ⌘K
+          {commandPaletteShortcutLabel()}
         </Text>
       </button>
     </div>

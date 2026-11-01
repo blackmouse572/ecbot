@@ -49,13 +49,16 @@ export const customerQueryKeys = {
   ),
 };
 
-export const useCustomers = (query: CustomerListQuery = {}) => {
+export const useCustomers = (
+  query: CustomerListQuery = {},
+  options?: { enabled?: boolean },
+) => {
   const { workspace } = useWorkspace();
   const slug = workspace?.slug;
 
   const { data, ...rest } = useQuery({
     queryKey: customerQueryKeys.list(query),
-    enabled: !!slug,
+    enabled: !!slug && options?.enabled !== false,
     queryFn: () =>
       customerWorkspaceControllerListV1({
         path: { workspace: slug! },
