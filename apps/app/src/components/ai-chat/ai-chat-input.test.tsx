@@ -13,6 +13,7 @@ vi.mock("./use-ai-chat-stream", async () => ({
     "./use-ai-chat-stream",
   )),
   useAiChat: () => ({
+    id: "chat-1",
     messages: [],
     status: "ready",
     error: undefined,
@@ -85,7 +86,7 @@ describe("AIChatInput attachments", () => {
     fireEvent.submit(screen.getByTestId("chat-input").closest("form")!);
 
     await waitFor(() => expect(sendMessage).toHaveBeenCalled());
-    expect(upload).toHaveBeenCalledWith(expect.any(File));
+    expect(upload).toHaveBeenCalledWith(expect.any(File), "chat-1");
     expect(sendMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         text: "",

@@ -61,18 +61,20 @@ export class ChatbotPreviewService {
         private readonly meter?: AiUsageMeter
     ) {}
 
+    private refuseEmpty(): never {
+        throw new BadRequestException({
+            statusCode: ENUM_CHATBOT_STATUS_CODE_ERROR.EMPTY_MESSAGE,
+            message: 'chatbot.error.emptyMessage',
+        });
+    }
+
     async streamTo(
         res: ExpressResponse,
         params: IPreviewStreamParams
     ): Promise<void> {
         const { chatbot, sessionKey, userId, chatSessionId } = params;
         const attachments = params.attachments ?? [];
-        if (!params.message.trim() && !attachments.length) {
-            throw new BadRequestException({
-                statusCode: ENUM_CHATBOT_STATUS_CODE_ERROR.EMPTY_MESSAGE,
-                message: 'chatbot.error.emptyMessage',
-            });
-        }
+        if (!params.message.trim() && !attachments.length) this.refuseEmpty();
         const history = await this.sessionService.read(sessionKey);
 
         // Unlike the customer-facing paths, an operator gets the real reason:
@@ -99,6 +101,9 @@ export class ChatbotPreviewService {
         const message = [params.message, ...(described?.notes ?? [])]
             .filter(part => part.trim())
             .join('\n');
+        // Attachments outside this chatbot's folder are dropped above, so a
+        // message of only those is as empty as one with nothing at all.
+        if (!message) this.refuseEmpty();
         // Spent whether or not the reply succeeds, so booked on its own and
         // priced at the vision model.
         if (described?.usage) {

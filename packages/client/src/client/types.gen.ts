@@ -926,6 +926,14 @@ export type ChatbotPreviewAttachmentRequestDto = {
      * The signed share token from the public preview link
      */
     token: string;
+    /**
+     * The chat session the file will be sent in
+     */
+    chat_session_id?: string;
+    /**
+     * Cloudflare Turnstile token; needed until the session is verified
+     */
+    turnstileToken?: string;
 };
 
 export type HealthAwsResponseDto = {

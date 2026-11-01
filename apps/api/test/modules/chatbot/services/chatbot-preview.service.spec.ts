@@ -394,4 +394,17 @@ describe('ChatbotPreviewService attachments', () => {
         ).rejects.toThrow();
         expect(aiService.streamChat).not.toHaveBeenCalled();
     });
+
+    it('refuses a message whose attachments were all dropped', async () => {
+        const { service, aiService, media } = setup(frames());
+        media.notes.mockResolvedValueOnce({ notes: [] } as never);
+        await expect(
+            service.streamTo(fakeRes() as never, {
+                ...baseParams,
+                message: '',
+                attachments: [{ key: 'preview-media/cb2/a.jpg' }],
+            })
+        ).rejects.toThrow();
+        expect(aiService.streamChat).not.toHaveBeenCalled();
+    });
 });

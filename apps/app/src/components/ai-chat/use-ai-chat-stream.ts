@@ -271,7 +271,10 @@ export type ChatTransportConfig = {
    * Stores one file for the next message and returns what to send back with
    * it. A surface without it takes text only.
    */
-  upload?: (file: File) => Promise<ChatAttachmentResponseDto>;
+  upload?: (
+    file: File,
+    sessionId: string,
+  ) => Promise<ChatAttachmentResponseDto>;
 };
 
 /** The stored file an upload endpoint answered with, or a thrown error. */
@@ -312,9 +315,15 @@ export function shareChatTransport(
     extraBody: () => ({ token, turnstileToken: getTurnstileToken?.() }),
     includeCredentials: false,
     invalidateToolInvocations: false,
-    upload: async (file) => {
+    // Uploads pass the same once-per-session Turnstile gate as a turn.
+    upload: async (file, sessionId) => {
       const { data } = await chatbotPreviewPublicControllerUploadAttachmentV1({
-        body: { file, token },
+        body: {
+          file,
+          token,
+          chat_session_id: sessionId,
+          turnstileToken: getTurnstileToken?.(),
+        },
         throwOnError: true,
       });
       return uploaded(data);

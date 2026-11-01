@@ -188,6 +188,18 @@ describe('ChatbotPreviewSessionService', () => {
             await expect(service.claimTokenTurn('jti1')).resolves.toBe(false);
             await expect(service.claimTokenTurn('jti2')).resolves.toBe(true);
         });
+
+        it("counts a share token's uploads apart from its turns", async () => {
+            const { service } = setup();
+            for (let i = 0; i < SESSION_CONFIG.maxTurnsPerTokenHourly; i++) {
+                await expect(service.claimTokenUpload('jti1')).resolves.toBe(
+                    true
+                );
+            }
+
+            await expect(service.claimTokenUpload('jti1')).resolves.toBe(false);
+            await expect(service.claimTokenTurn('jti1')).resolves.toBe(true);
+        });
     });
 
     // Turnstile tokens are single-use and short-lived, so a public preview

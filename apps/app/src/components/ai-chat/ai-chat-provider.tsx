@@ -57,12 +57,11 @@ const AIChatProviderInner = ({
   registerStop,
   children,
 }: AIChatProviderInnerProps) => {
-  const { messages, status, error, sendMessage, stop, setMessages } = useAiChat(
-    {
+  const { id, messages, status, error, sendMessage, stop, setMessages } =
+    useAiChat({
       chatbotId,
       transport,
-    },
-  );
+    });
 
   registerStop(() => {
     void stop();
@@ -87,14 +86,14 @@ const AIChatProviderInner = ({
         // The input hands files over as data URLs; the transcript keeps
         // those for the thumbnails, the API gets the stored keys.
         const attachments = await Promise.all(
-          sent.map(async (part) => upload(await toFile(part))),
+          sent.map(async (part) => upload(await toFile(part), id)),
         );
         void sendMessage({ text, files: sent, metadata: { attachments } });
       } finally {
         setUploading(false);
       }
     },
-    [sendMessage, canSubmit, upload],
+    [sendMessage, canSubmit, upload, id],
   );
 
   const value = useMemo<AIChatProviderState>(
