@@ -38,7 +38,7 @@ const PlanRenewalReminderEmail: React.FC<PlanRenewalReminderEmailProps> = ({
     return (
         <EmailLayout
             language={language}
-            preview={copy.intro(planName, workspaceName, periodEnd)}
+            preview={copy.intro(planName, workspaceName, periodEnd).join('')}
             heading={copy.heading}
             homeUrl={homeUrl}
             homeName={homeName}
@@ -48,7 +48,11 @@ const PlanRenewalReminderEmail: React.FC<PlanRenewalReminderEmailProps> = ({
         >
             <Text style={EMAIL_BODY}>{copy.greeting(name)}</Text>
             <Text style={EMAIL_BODY}>
-                {copy.intro(planName, workspaceName, periodEnd)}
+                {copy.intro(
+                    <strong key="plan">{planName}</strong>,
+                    <strong key="workspace">{workspaceName}</strong>,
+                    <strong key="end">{periodEnd}</strong>
+                )}
             </Text>
             <Text style={EMAIL_BODY}>{copy.impact}</Text>
             <div style={{ margin: '24px 0' }}>
