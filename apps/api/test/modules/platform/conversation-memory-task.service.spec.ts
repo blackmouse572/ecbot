@@ -62,13 +62,22 @@ function taskOver(
         check: jest.fn(async () => ({ allowed: true })),
         record: jest.fn(async () => undefined),
     };
+    const memory = { catchUp: jest.fn(async () => undefined) };
     const service = new ConversationMemoryTaskService(
         conversationRepository as any,
         messageRepository as any,
         ai as any,
+        memory as any,
         meter as any
     );
-    return { service, conversationRepository, messageRepository, ai, meter };
+    return {
+        service,
+        conversationRepository,
+        messageRepository,
+        ai,
+        memory,
+        meter,
+    };
 }
 
 const CONVERSATION = {
@@ -86,6 +95,7 @@ describe('ConversationMemoryTaskService', () => {
             conversationRepository,
             messageRepository,
             meter,
+            memory,
         } = taskOver(CONVERSATION);
 
         await service.handle(DTO, 0);
@@ -126,10 +136,12 @@ describe('ConversationMemoryTaskService', () => {
                 memorySummaryUntilId: 'm-19',
             }
         );
+        // The whole range fit: nothing left to queue.
+        expect(memory.catchUp).not.toHaveBeenCalled();
     });
 
-    it('folds an oversized range from its oldest end and stops the cursor there', async () => {
-        const { service, messageRepository, conversationRepository } =
+    it('folds an oversized range from its oldest end and queues the rest', async () => {
+        const { service, messageRepository, conversationRepository, memory } =
             taskOver(CONVERSATION);
         const rows = Array.from(
             { length: CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES },
@@ -145,13 +157,14 @@ describe('ConversationMemoryTaskService', () => {
 
         await service.handle({ ...DTO, untilMessageId: 'm-250' }, 0);
 
-        // The rest stays after the cursor; the next Turn queues it.
+        const stop = `m-${CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES - 1}`;
         expect(conversationRepository.updateEntity).toHaveBeenCalledWith(
             { id: 'c', memorySummaryUntilId: 'cur' },
-            expect.objectContaining({
-                memorySummaryUntilId: `m-${CONVERSATION_MEMORY_SUMMARIZE_MAX_MESSAGES - 1}`,
-            })
+            expect.objectContaining({ memorySummaryUntilId: stop })
         );
+        // The rest goes in the next job, from the new cursor, without
+        // waiting for another bot reply.
+        expect(memory.catchUp).toHaveBeenCalledWith('c');
     });
 
     it('folds a staff handled note in as staff, so the summary keeps it', async () => {

@@ -4,6 +4,7 @@ import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { Injectable, Logger } from '@nestjs/common';
 import {
     CONVERSATION_MEMORY_QUEUE,
+    CONVERSATION_MEMORY_WINDOW_CAP,
     ENUM_CONVERSATION_MEMORY_PROCESS,
 } from '../constants/conversation-memory.constant';
 import { IMemoryWindow } from '../interfaces/turn-context.interface';
@@ -11,10 +12,9 @@ import { memoryWindowDrop } from '../utils/memory-window.util';
 
 /**
  * The part of a conversation the bot sees each Turn: a summary of the older
- * messages and every newer one, in a window that moves in steps (see
- * `conversation-memory.constant.ts`). When a step drops messages the summary
- * does not cover yet, they are queued to be summarized; until that lands the
- * Turn simply goes without them.
+ * messages and every newer one (see `conversation-memory.constant.ts`). Once
+ * the newer ones pass the window, the oldest steps are queued to be
+ * summarized; they stay in view until that lands, up to a cap.
  */
 @Injectable()
 export class ConversationMemoryService {
@@ -33,6 +33,42 @@ export class ConversationMemoryService {
         conversationId: string,
         burstSize = 0
     ): Promise<IMemoryWindow> {
+        const { conversation, cursorId, filter, total } =
+            await this.unsummarized(conversationId);
+        const history = Math.max(0, total - burstSize);
+        const fold = memoryWindowDrop(history);
+        const drop = memoryWindowDrop(history, CONVERSATION_MEMORY_WINDOW_CAP);
+        const rows = await this.messageRepository.findNewest(
+            filter,
+            total - drop
+        );
+        if (fold) {
+            // The cap is past the max, so the last row to fold is in view.
+            this.queueSummary(
+                conversationId,
+                cursorId,
+                rows[fold - drop - 1].id
+            );
+        }
+        return { summary: conversation?.memorySummary ?? undefined, rows };
+    }
+
+    /** Queue the summary a Turn would queue now, without waiting for one:
+     *  when staff hand back, what they said with the bot off is folded in
+     *  before the bot's next reply. */
+    async catchUp(conversationId: string): Promise<void> {
+        const { cursorId, filter, total } =
+            await this.unsummarized(conversationId);
+        const fold = memoryWindowDrop(total);
+        if (!fold) return;
+        const [lastFolded] = await this.messageRepository.findNewest(
+            filter,
+            total - fold + 1
+        );
+        this.queueSummary(conversationId, cursorId, lastFolded.id);
+    }
+
+    private async unsummarized(conversationId: string) {
         const conversation =
             await this.conversationRepository.findOneById(conversationId);
         const cursorId = conversation?.memorySummaryUntilId ?? undefined;
@@ -41,23 +77,12 @@ export class ConversationMemoryService {
             cursorId
         );
         const total = await this.messageRepository.getTotal(filter);
-        const drop = memoryWindowDrop(Math.max(0, total - burstSize));
-        // One more row than the window when it drops: the newest dropped one,
-        // which the summary must cover up to.
-        const rows = await this.messageRepository.findNewest(
-            filter,
-            total - drop + (drop ? 1 : 0)
-        );
-        if (drop) {
-            const lastDropped = rows.shift()!;
-            this.queueSummary(conversationId, cursorId, lastDropped.id);
-        }
-        return { summary: conversation?.memorySummary ?? undefined, rows };
+        return { conversation, cursorId, filter, total };
     }
 
-    /** Named by the cursor and the last dropped message, so every Turn of
+    /** Named by the cursor and the last message to fold, so every Turn of
      *  one step queues the same task and Cloud Tasks keeps one, while a job
-     *  that folded only part of its range lets the next Turn queue the rest. */
+     *  that folded only part of its range queues the rest itself. */
     private queueSummary(
         conversationId: string,
         fromMessageId: string | undefined,
