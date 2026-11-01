@@ -54,7 +54,7 @@ describe('ResendProvider.sendPlanRenewalReminder', () => {
                 language: 'vi',
             })
         );
-        expect(props().periodEnd).toContain('15');
+        expect(props().periodEnd).toMatch(/15 thg 12, 2026/);
         expect(subject()).toBe(
             `Gói Growth của Kunmart hết hạn vào ${props().periodEnd}`
         );
