@@ -12,10 +12,12 @@ const END_THRESHOLD = 80;
 /**
  * Tracks whether a scroll box has more content above or below, for edge
  * shadows, and calls `onReachEnd` when the reader gets near the bottom.
- * Measures when the box mounts and again when `contentKey` changes.
+ * Measures when the box mounts, when `contentKey` changes, and when the box
+ * or its content resizes.
  */
 export function useScrollEdges(contentKey: unknown, onReachEnd?: () => void) {
   const element = useRef<HTMLElement | null>(null);
+  const observer = useRef<ResizeObserver | null>(null);
   const [edges, setEdges] = useState({ top: false, bottom: false });
 
   const measure = useCallback((target: HTMLElement) => {
@@ -30,7 +32,15 @@ export function useScrollEdges(contentKey: unknown, onReachEnd?: () => void) {
   const ref = useCallback(
     (node: HTMLElement | null) => {
       element.current = node;
-      if (node) measure(node);
+      observer.current?.disconnect();
+      observer.current = null;
+      if (!node) return;
+      measure(node);
+      // The window, or rows loading above the fold, can change the overflow
+      // without a scroll event.
+      observer.current = new ResizeObserver(() => measure(node));
+      observer.current.observe(node);
+      for (const child of node.children) observer.current.observe(child);
     },
     [measure],
   );

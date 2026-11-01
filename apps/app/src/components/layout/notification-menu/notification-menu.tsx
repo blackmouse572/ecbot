@@ -22,7 +22,7 @@ import { NotificationEmptyState } from "./notification-empty-state";
 import { NotificationRow } from "./notification-row";
 import { NotificationRowSkeleton } from "./notification-row-skeleton";
 import { useNewNotificationToast } from "./use-new-notification-toast";
-import { useScrollEdges } from "./use-scroll-edges";
+import { useScrollEdges } from "@/hooks/use-scroll-edges";
 
 export const NotificationMenu: FC = () => {
   const { t } = useTranslation();
