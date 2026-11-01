@@ -1,7 +1,7 @@
-import "@/i18n";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithProviders as render } from "../../../test/i18n";
 import { describe, expect, it } from "vitest";
-import { SkillStepsView } from "@repo/ui/skill-steps";
+import { SkillStepsView } from ".";
 
 describe("SkillStepsView", () => {
   it("names built-in actions, with their tag", () => {

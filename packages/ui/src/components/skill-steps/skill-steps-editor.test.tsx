@@ -1,26 +1,37 @@
-import "@/i18n";
 import type { SkillStep } from "@repo/agent-blueprint";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
+import { renderWithProviders as render } from "../../../test/i18n";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
-import { SkillStepsEditor } from "@repo/ui/skill-steps";
+import {
+  SkillStepsDataProvider,
+  SkillStepsEditor,
+  type SkillStepsData,
+} from ".";
 
 let latest: SkillStep[] = [];
 const Harness = ({
   initial,
   showIssues = false,
+  data,
 }: {
   initial: SkillStep[];
   showIssues?: boolean;
+  data?: SkillStepsData;
 }) => {
   const [steps, setSteps] = useState(initial);
   latest = steps;
-  return (
+  const editor = (
     <SkillStepsEditor
       steps={steps}
       onChange={setSteps}
       showIssues={showIssues}
     />
+  );
+  return data ? (
+    <SkillStepsDataProvider value={data}>{editor}</SkillStepsDataProvider>
+  ) : (
+    editor
   );
 };
 
@@ -88,5 +99,33 @@ describe("SkillStepsEditor", () => {
     expect(
       screen.getByText("Pick the tag or write the field name."),
     ).toBeTruthy();
+  });
+
+  it("takes a typed tag name when there is no tag list (a builtin template)", () => {
+    render(
+      <Harness
+        initial={[{ id: "t", type: "tool", toolId: "system:add_tag" }]}
+      />,
+    );
+    fireEvent.change(screen.getByPlaceholderText("Tag name, e.g. VIP"), {
+      target: { value: "VIP" },
+    });
+    expect(latest[0]).toMatchObject({ action: "VIP" });
+  });
+
+  it("picks the tag from the workspace's tags when they are given", () => {
+    render(
+      <Harness
+        initial={[{ id: "t", type: "tool", toolId: "system:add_tag" }]}
+        data={{
+          useToolList: () => ({ tools: [] }),
+          useTool: () => undefined,
+          tagNames: ["VIP", "Wholesale"],
+        }}
+      />,
+    );
+    expect(screen.queryByPlaceholderText("Tag name, e.g. VIP")).toBeNull();
+    fireEvent.focus(screen.getAllByRole("combobox").at(-1)!);
+    expect(screen.getByText("Wholesale")).toBeTruthy();
   });
 });

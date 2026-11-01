@@ -17,7 +17,7 @@ type Props = { step: ToolStep; api: StepEditorApi };
 // action, tag or field it needs, and an optional "how" note.
 export const SkillToolStepFields: FC<Props> = ({ step, api }) => {
   const { t } = useTranslation();
-  const { useTool, useTagNames } = useSkillStepsData();
+  const { useTool, tagNames } = useSkillStepsData();
   const tool = useTool(
     step.toolId && !isSystemToolId(step.toolId) ? step.toolId : "",
   );
@@ -27,7 +27,6 @@ export const SkillToolStepFields: FC<Props> = ({ step, api }) => {
     .filter((name): name is string => !!name);
   const tagAction =
     step.toolId === "system:add_tag" || step.toolId === "system:remove_tag";
-  const tagNames = useTagNames?.();
   const names = isMcp ? actions : (tagNames ?? []);
   // Without a tag list (a builtin template has no workspace), type the name.
   const typeName =

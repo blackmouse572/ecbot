@@ -19,7 +19,6 @@ export const resources = {
       skills: {
         ...enUS.skills,
         ...skillsEn,
-        form: { ...enUS.skills.form, ...skillsEn.form },
       },
     },
   },
@@ -30,7 +29,6 @@ export const resources = {
       skills: {
         ...viVn.skills,
         ...skillsVi,
-        form: { ...viVn.skills.form, ...skillsVi.form },
       },
     },
   },

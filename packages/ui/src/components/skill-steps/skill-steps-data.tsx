@@ -18,15 +18,19 @@ export type SkillToolList = {
 };
 
 // Where the steps editor gets tools and tags. The client app reads the
-// workspace's; the admin has no workspace for a builtin template, so it
-// offers only the built-in actions and free-text tag names.
+// workspace's; the admin has no workspace for a builtin template, so it uses
+// the default: only the built-in actions, and tag names typed in.
+//
+// `useToolList` and `useTool` are hooks: the picker calls them on every
+// render with its own search text or the step's tool id, so they can run a
+// query per argument. Pass the same functions on every render.
 export type SkillStepsData = {
-  /** Workspace tools matching `search`, loaded page by page. */
+  /** Hook: workspace tools matching `search`, loaded page by page. */
   useToolList: (search: string) => SkillToolList;
-  /** One workspace tool, for a step that already points at it. */
+  /** Hook: one workspace tool ("" when the step has none). */
   useTool: (toolId: string) => SkillStepTool | undefined;
   /** Customer tag names; leave out to type the tag name instead. */
-  useTagNames?: () => string[];
+  tagNames?: string[];
   /** Names Tool steps when steps are turned into text (Write as text instead). */
   toolNamer?: (toolIds: string[]) => Promise<SkillToolNamer>;
 };

@@ -62,7 +62,6 @@
       "empty": "Attach a skill so this agent knows the steps to follow for a task.",
       "emptyTitle": "No skills attached yet"
     },
-    "form": {},
     "create": {
       "title": "Create skill",
       "subtitle": "Write a procedure: the steps the agent follows when this skill applies.",

@@ -1,11 +1,11 @@
-import "@/i18n";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
+import { renderWithProviders as render } from "../../../test/i18n";
 import { describe, expect, it, vi } from "vitest";
 import {
   SkillStepsDataProvider,
   SkillToolPicker,
   type SkillStepsData,
-} from "@repo/ui/skill-steps";
+} from ".";
 import type { ReactElement } from "react";
 
 const list = vi.hoisted(() => ({ searches: [] as string[] }));

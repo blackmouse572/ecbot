@@ -19,11 +19,12 @@ export const SkillStepsDataProvider: FC<{ children: ReactNode }> = ({
 }) => {
   const { workspaceSlug } = useWorkspaceParams();
   const queryClient = useQueryClient();
+  const { tags } = useCustomerTagList();
   const data: SkillStepsData = {
     useToolList: (search) => useInfiniteToolList(workspaceSlug, search),
     useTool: (toolId) =>
       useGetTool(workspaceSlug, toolId, { enabled: !!toolId }).tool,
-    useTagNames: () => useCustomerTagList().tags.map((tag) => tag.name),
+    tagNames: tags.map((tag) => tag.name),
     toolNamer: async (ids) => {
       const tools = await Promise.all(
         ids.map((id) =>

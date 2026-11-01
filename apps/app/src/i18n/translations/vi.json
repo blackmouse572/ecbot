@@ -62,7 +62,6 @@
       "empty": "Gắn skill để agent này biết các bước cần làm cho từng việc.",
       "emptyTitle": "Chưa gắn skill nào"
     },
-    "form": {},
     "create": {
       "title": "Tạo skill",
       "subtitle": "Viết một quy trình: các bước agent làm theo khi skill này phù hợp.",
