@@ -22,6 +22,7 @@ overrides:
   '@nestjs/terminus>@nestjs/mongoose': '-'
   gaxios>uuid: ^11.1.1
   ajv@>=8.0.0 <8.18.0: ^8.18.0
+  oxlint: 1.90.0
 
 importers:
 
@@ -401,7 +402,7 @@ importers:
         specifier: ^14.0.17
         version: 14.0.17
       oxlint:
-        specifier: ^1.90.0
+        specifier: 1.90.0
         version: 1.90.0
       prettier:
         specifier: ^3.9.9
@@ -627,7 +628,7 @@ importers:
         specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@1.8.0)
       oxlint:
-        specifier: ^1.90.0
+        specifier: 1.90.0
         version: 1.90.0
       typescript:
         specifier: ^5.9.3
@@ -709,7 +710,7 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       oxlint:
-        specifier: ^1.90.0
+        specifier: 1.90.0
         version: 1.90.0
       postcss:
         specifier: ^8.5.18
@@ -874,12 +875,18 @@ importers:
       '@oxlint/plugins':
         specifier: 1.90.0
         version: 1.90.0
+      '@types/node':
+        specifier: ^22.20.4
+        version: 22.20.4
       eslint-plugin-turbo:
         specifier: ^2.11.3
         version: 2.11.3(eslint@9.39.5(jiti@2.7.0))(turbo@2.11.3)
       oxlint:
-        specifier: ^1.90.0
+        specifier: 1.90.0
         version: 1.90.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/typescript-config: {}
 
@@ -1010,7 +1017,7 @@ importers:
         specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@1.8.0)
       oxlint:
-        specifier: ^1.90.0
+        specifier: 1.90.0
         version: 1.90.0
       typescript:
         specifier: ^5.9.3
@@ -12606,7 +12613,7 @@ packages:
       eslint: '>=9.39.4'
       meow: ^13.2.0 || ^14.0.0
       optionator: ^0.9.4
-      oxlint: '>=1'
+      oxlint: 1.90.0
       stylelint: '>=16.26.1'
       typescript: '*'
       vite: '>=5.4.21'
