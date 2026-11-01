@@ -12,6 +12,9 @@ export interface ITurnContext {
     message: string;
     /** Tokens spent describing the burst's images, billed with the Turn. */
     usage?: TokenUsageDelta;
+    /** The vision model that spent `usage`; priced at its rate, not the
+     *  chatbot's. */
+    usageModel?: string;
 }
 
 /** The customer messages one Turn answers. */

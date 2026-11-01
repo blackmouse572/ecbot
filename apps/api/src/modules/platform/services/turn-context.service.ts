@@ -1,4 +1,3 @@
-import { TokenUsageDelta } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import {
     AIDescribedImages,
     ChatbotAIService,
@@ -123,7 +122,7 @@ export class TurnContextService {
 
         const rows = [...burstRows];
         const images = await this.burstImages(rows, conversationId);
-        const usage = await this.describe(images, chatbotId);
+        const described = await this.describe(images, chatbotId);
         const notes = images.map(burstImageNote);
         const others = rows.flatMap(m =>
             (m.attachments ?? [])
@@ -138,7 +137,8 @@ export class TurnContextService {
             message: [...quotes, texts.join('\n'), ...notes, ...others]
                 .filter(Boolean)
                 .join('\n'),
-            usage,
+            usage: described?.usage,
+            usageModel: described?.model,
         };
     }
 
@@ -191,7 +191,7 @@ export class TurnContextService {
     private async describe(
         images: IBurstImage[],
         chatbotId: string
-    ): Promise<TokenUsageDelta | undefined> {
+    ): Promise<Pick<AIDescribedImages, 'usage' | 'model'> | undefined> {
         const pending = images.filter(i => i.url && !i.description);
         if (!pending.length) return undefined;
         const id = (i: IBurstImage) => `${i.message.id}:${i.index}`;
@@ -237,6 +237,6 @@ export class TurnContextService {
                 )
             )
         );
-        return described.usage;
+        return described;
     }
 }

@@ -278,14 +278,23 @@ describe('ReplyGenerationService.run', () => {
             record: jest.fn().mockResolvedValue(undefined),
         };
         const { run } = serviceWith(
-            { history: [], message: 'x', usage },
+            {
+                history: [],
+                message: 'x',
+                usage,
+                usageModel: 'google/gemini-2.5-flash',
+            },
             meter
         );
 
         await run();
 
+        // Priced at the vision model, apart from the reply's own tokens.
         expect(meter.record).toHaveBeenCalledWith(
-            expect.objectContaining({ usage })
+            expect.objectContaining({
+                usage,
+                model: 'google/gemini-2.5-flash',
+            })
         );
     });
     // #286: the operator view shows what the agent did for a channel reply.

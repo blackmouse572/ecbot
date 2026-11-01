@@ -192,6 +192,8 @@ async def describe_images_endpoint(describe_request: DescribeImagesRequest):
                 for image, description in zip(describe_request.images, described)
             ],
             "usage": usage,
+            # apps/api prices these tokens at the model that read the images.
+            "model": AppVars.VISION_MODEL,
         }
     )
 

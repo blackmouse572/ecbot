@@ -180,6 +180,7 @@ export class WidgetChatService {
             summary,
             history,
             usage: describeUsage,
+            usageModel: describeModel,
         } = await this.turnContext.build(
             conversation.id,
             { texts: [text], messageIds: [inbound.id] },
@@ -195,7 +196,7 @@ export class WidgetChatService {
                     chatbotId: chatbot.id,
                     accountId: account.id,
                     platform: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
-                    model: chatbot.modelTextName,
+                    model: describeModel ?? chatbot.modelTextName,
                     conversationId: conversation.id,
                 })
                 .catch((err: unknown) =>

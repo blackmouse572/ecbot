@@ -24,6 +24,7 @@ function contextOver(rows: object[], describeImages?: jest.Mock) {
                         description: `seen ${i.url}`,
                     })),
                     usage: USAGE,
+                    model: 'google/gemini-2.5-flash',
                 })
             ),
     };
@@ -147,6 +148,8 @@ describe('TurnContextService', () => {
                 '[Image description: seen https://s3/b.jpg]'
         );
         expect(context.usage).toEqual(USAGE);
+        // Priced at the vision model that read them, not the chatbot's.
+        expect(context.usageModel).toBe('google/gemini-2.5-flash');
     });
 
     it('asks what a sticker means and says it as the sticker meaning', async () => {
