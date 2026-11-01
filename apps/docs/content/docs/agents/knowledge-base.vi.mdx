@@ -3,7 +3,7 @@ title: Cơ sở kiến thức
 description: Thêm tệp, trang web và ghi chú vào cơ sở kiến thức để agent trả lời đúng theo giá, chính sách và thông tin sản phẩm của shop.
 faq:
   - q: Tôi tải lên được những loại tệp nào?
-    a: PDF, Word (DOCX), văn bản thường (TXT), HTML và Markdown. Với trang web, bạn thêm đường dẫn công khai của trang. Với thông tin ngắn, bạn thêm một mục dạng văn bản.
+    a: Mục Tệp nhận PDF, Word (DOCX), văn bản thường (TXT), HTML và Markdown, tối đa 5 MB. Mục Media nhận ảnh JPG, PNG, WEBP tối đa 5 MB và PDF tối đa 20 MB, tối đa 50 tệp mỗi lần. Với trang web, bạn thêm đường dẫn công khai của trang. Với thông tin ngắn, bạn thêm một mục dạng văn bản.
   - q: Vì sao mục của tôi vẫn ở trạng thái Bản nháp?
     a: Một mục chỉ được dùng sau khi đã xử lý. Mở menu của mục đó, chọn Xử lý, rồi chờ đến khi trạng thái chuyển sang Hoàn thành.
   - q: Khách có thấy tên tệp của tôi không?
@@ -24,12 +24,21 @@ Mở **Cơ sở kiến thức** trong nhóm **Trợ lý AI** ở thanh bên.
 
 Chọn loại mục cần thêm:
 
-<Screenshot name="knowledge-base-create" alt="Biểu mẫu tạo mục với các lựa chọn Tệp, URL và Văn bản">
-  <Mark id="type">**Tệp** để tải tài liệu lên, **URL** để đọc một trang web, **Văn bản** để tự gõ ghi chú.</Mark>
-  <Mark id="formats">Tệp có thể là PDF, DOCX, TXT, HTML hoặc MD.</Mark>
+<Screenshot name="knowledge-base-create" alt="Biểu mẫu tạo mục với loại Tệp đang được chọn">
+  <Mark id="type">Chọn loại mục. Ở đây **Tệp** đang được chọn.</Mark>
+  <Mark id="formats">**Tệp** nhận PDF, DOCX, TXT, HTML hoặc MD.</Mark>
 </Screenshot>
 
-Tệp tối đa 5 MB. Đường dẫn URL phải truy cập công khai được; agent không đọc được trang cần đăng nhập hoặc trang nằm trên máy tính của bạn. Dùng **Thư mục** và **Thẻ** để sắp xếp khi cơ sở kiến thức lớn dần.
+| Loại | Dùng để | Giới hạn |
+| --- | --- | --- |
+| **Tệp** | Tài liệu agent đọc để trả lời và không gửi cho khách: bảng giá, chính sách, thông tin sản phẩm. | PDF, DOCX, TXT, HTML hoặc MD, tối đa 5 MB. |
+| **URL** | Một trang web công khai agent đọc, cùng các trang liên kết trên cùng website. | Tối đa 50 trang mỗi mục. Trang phải mở được mà không cần đăng nhập. |
+| **Văn bản** | Ghi chú ngắn bạn tự gõ. | Chỉ văn bản. |
+| **Media** | Ảnh và PDF agent gửi cho khách: ảnh sản phẩm, banner, menu PDF. | Ảnh JPG, PNG hoặc WEBP tối đa 5 MB, PDF tối đa 20 MB, tối đa 50 tệp mỗi lần. |
+
+Mục Media dùng để gửi: mỗi tệp tải lên thành một mục riêng, lấy tên theo tên tệp, và agent gửi nó thành một tin nhắn riêng khi khách muốn xem (ảnh gửi dưới dạng ảnh, PDF gửi dưới dạng tệp). Xử lý mục Media dùng AI vision: khoảng 2.000 token mỗi ảnh và khoảng 500 token mỗi trang ảnh trong PDF (trang nhiều chữ được đọc mà không cần AI vision). Phần này tính vào quota AI của gói, xem trang [Usage](/docs/agents/usage).
+
+Đường dẫn URL phải truy cập công khai được; agent không đọc được trang cần đăng nhập hoặc trang nằm trên máy tính của bạn. Dùng **Thư mục** và **Thẻ** để sắp xếp khi cơ sở kiến thức lớn dần.
 
 | Trạng thái | Ý nghĩa |
 | --- | --- |

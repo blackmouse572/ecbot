@@ -5,7 +5,7 @@ faq:
   - q: What happens when the quota is used up?
     a: Agents stop generating replies and send their fallback message instead, until the quota renews or extra credit is added.
   - q: What counts as usage?
-    a: AI tokens used for replies on channels, follow-ups, the website widget and the test chat all count toward the quota.
+    a: AI tokens used for replies on channels, follow-ups, the website widget and the test chat all count toward the quota, as do the vision tokens used to process Media knowledge items.
   - q: Is the Usage page in the self-hosted version?
     a: No. Usage metering and plans are part of the hosted Ecbot at ecbot.dev. A self-hosted install does not limit or record AI usage.
 ---
@@ -20,6 +20,10 @@ The **Usage** page shows how much AI your agents used in the current plan period
 </Screenshot>
 
 Use **Export CSV** to download the numbers for the selected range.
+
+## Knowledge processing
+
+Some knowledge items are processed with AI before your agents can use them, and that processing is charged to the same quota as replies. A Media item (an image or PDF your agent sends to customers) is read by vision AI: about 2,000 tokens per image, and about 500 per picture page in a PDF. See [Knowledge base](/docs/agents/knowledge-base).
 
 ## When the quota runs out
 
