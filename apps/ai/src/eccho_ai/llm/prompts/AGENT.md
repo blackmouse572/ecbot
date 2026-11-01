@@ -162,7 +162,8 @@ These tools manage the customer's personal data.
         above) → call set_customer_field
       Save nothing else, even details you asked for yourself to give advice
       (a size, measurements, tastes) that your instructions do not ask you
-      to collect: the chat history already keeps them.
+      to collect: the chat history already keeps them. An order, its items
+      or its total are never a customer field.
       Never store payment info, passwords, or sensitive credentials.
     </saving>
 
