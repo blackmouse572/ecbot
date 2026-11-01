@@ -67,6 +67,16 @@
         "message": "Workspace \"{workspaceName}\" will keep the {planName} plan and renew as usual.",
         "actionText": "View plan"
     },
+    "planRenewalReminder": {
+        "title": "Your plan ends soon",
+        "message": "The {planName} plan of workspace \"{workspaceName}\" is paid until {periodEnd}. Renew it to keep the plan's token quota.",
+        "actionText": "Renew plan"
+    },
+    "planExpired": {
+        "title": "Your plan has ended",
+        "message": "The {planName} plan of workspace \"{workspaceName}\" was not renewed, so the workspace is on the free plan now.",
+        "actionText": "Renew plan"
+    },
     "workspaceNoPlan": {
         "title": "Workspace needs attention",
         "message": "Workspace \"{workspaceName}\" was created without a billing plan, so its chatbots will not reply yet. Contact support to finish setup.",

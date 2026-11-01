@@ -285,6 +285,51 @@ describe('NotificationService subscription notifications', () => {
         });
     });
 
+    describe('createPlanRenewalReminder', () => {
+        it('says when the paid period ends and links to billing', async () => {
+            await service.createPlanRenewalReminder('user-1', 'ws-1', {
+                workspaceName: 'Acme',
+                workspaceSlug: 'acme',
+                planName: 'Growth',
+                periodEnd: '15/12/2026',
+            });
+
+            expect(create.mock.calls[0][0]).toMatchObject({
+                title: 'notification.planRenewalReminder.title',
+                message: 'notification.planRenewalReminder.message',
+                type: NotificationType.WARNING,
+                recipient: 'user-1',
+                workspace: 'ws-1',
+                metadata: {
+                    actionUrl: '/acme/settings/billing',
+                    actionText: 'notification.planRenewalReminder.actionText',
+                    data: { planName: 'Growth', periodEnd: '15/12/2026' },
+                },
+            });
+        });
+    });
+
+    describe('createPlanExpired', () => {
+        it('says the paid plan ended and links to billing', async () => {
+            await service.createPlanExpired('user-1', 'ws-1', {
+                workspaceName: 'Acme',
+                workspaceSlug: 'acme',
+                planName: 'Growth',
+            });
+
+            expect(create.mock.calls[0][0]).toMatchObject({
+                title: 'notification.planExpired.title',
+                message: 'notification.planExpired.message',
+                type: NotificationType.WARNING,
+                metadata: {
+                    actionUrl: '/acme/settings/billing',
+                    actionText: 'notification.planExpired.actionText',
+                    data: { planName: 'Growth' },
+                },
+            });
+        });
+    });
+
     it.each([
         ['en', en],
         ['vi', vi],
@@ -293,12 +338,16 @@ describe('NotificationService subscription notifications', () => {
             subscriptionPlanChanged,
             subscriptionCanceled,
             subscriptionResumed,
+            planRenewalReminder,
+            planExpired,
         } = messages as any;
 
         for (const block of [
             subscriptionPlanChanged,
             subscriptionCanceled,
             subscriptionResumed,
+            planRenewalReminder,
+            planExpired,
         ]) {
             expect(block.title).toBeTruthy();
             expect(block.message).toContain('{workspaceName}');
