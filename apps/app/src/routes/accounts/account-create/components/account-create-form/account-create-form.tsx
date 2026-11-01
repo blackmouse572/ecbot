@@ -205,7 +205,7 @@ export const AccountCreateForm = () => {
             </div>
           </RouteFocusModal.Header>
 
-          <RouteFocusModal.Body className="flex flex-col items-center px-4 py-8 sm:p-16">
+          <RouteFocusModal.Body className="flex min-h-0 flex-col items-center overflow-y-auto px-4 py-8 sm:p-16">
             <ProgressTabs.Content
               value={TAB.PLATFORM}
               className="w-full flex justify-center"
