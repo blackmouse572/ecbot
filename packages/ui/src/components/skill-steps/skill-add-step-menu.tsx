@@ -15,6 +15,7 @@ type Props = {
 
 export const SkillAddStepMenu: FC<Props> = ({ canIf, onAdd }) => {
   const { t } = useTranslation();
+  const types = canIf ? TYPES : TYPES.filter((type) => type !== "if");
   return (
     <DropdownMenu>
       <DropdownMenu.Trigger asChild>
@@ -29,7 +30,7 @@ export const SkillAddStepMenu: FC<Props> = ({ canIf, onAdd }) => {
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content align="start">
-        {TYPES.filter((type) => canIf || type !== "if").map((type) => (
+        {types.map((type) => (
           <DropdownMenu.Item
             key={type}
             className="gap-x-2"

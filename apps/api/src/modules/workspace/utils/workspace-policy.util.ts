@@ -56,9 +56,7 @@ export async function assertWorkspaceMemberPolicy(
     // Check ability-based requirements
     if (required.abilities && required.abilities.length > 0) {
         // Collect all permissions from user's workspace roles
-        const allPermissions = validRoles.reduce((permissions, role) => {
-            return permissions.concat(role.permissions);
-        }, []);
+        const allPermissions = validRoles.flatMap(role => role.permissions);
 
         // Use PolicyAbilityFactory to check permissions
         const userAbilities =

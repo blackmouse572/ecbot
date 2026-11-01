@@ -105,9 +105,9 @@ export function historyNote(
         : described
           ? `[image: ${described}]`
           : '[image]';
-    const others = attachments
-        .filter(a => !isImage(a))
-        .map(a => attachmentNote(a, replyTo?.kind === 'story'));
+    const others = attachments.flatMap(a =>
+        isImage(a) ? [] : [attachmentNote(a, replyTo?.kind === 'story')]
+    );
     return [imageNote, ...others].filter(Boolean).join(' ');
 }
 

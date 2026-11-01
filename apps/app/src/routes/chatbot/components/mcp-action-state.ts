@@ -14,4 +14,4 @@ export const isActionEnabled = (
 
 /** The list `null` stands for, to edit before the first toggle. */
 export const defaultEnabledActions = (actions: ActionLike[]): string[] =>
-  actions.filter((a) => !a.destructive).map((a) => a.name);
+  actions.flatMap((a) => (a.destructive ? [] : [a.name]));

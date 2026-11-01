@@ -40,7 +40,7 @@ export function channelAlertRecipients(
 ): IChannelAlertRecipient[] {
     const candidates = [
         ...(owner ? [owner] : []),
-        ...members.filter(managesChannels).map(m => m.user),
+        ...members.flatMap(m => (managesChannels(m) ? [m.user] : [])),
     ];
     const seen = new Set<string>();
     return candidates.filter(u => {
