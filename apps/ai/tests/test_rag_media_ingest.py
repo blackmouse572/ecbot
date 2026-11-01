@@ -42,8 +42,11 @@ async def test_an_image_is_described_then_embedded_with_its_title(monkeypatch):
     assert row["url"] == "https://cdn/x.png"
     assert row["description"] == "A red banner: Lunch combo 89k."
     assert result.description == "A red banner: Lunch combo 89k."
-    # Vision and embedding tokens are both metered.
-    assert result.usage.total_tokens == 327
+    # Vision tokens come back apart from embedding tokens, with the vision
+    # model's name, so each is priced at its own model's rate.
+    assert result.usage.total_tokens == 7
+    assert result.vision_usage.total_tokens == 320
+    assert result.vision_model == media.AppVars.VISION_MODEL
 
 
 async def test_a_given_description_skips_the_vision_call(monkeypatch):
@@ -58,6 +61,7 @@ async def test_a_given_description_skips_the_vision_call(monkeypatch):
 
     describe.assert_not_awaited()
     assert result.description == "Áo thun trắng cổ tròn"
+    assert result.vision_usage is None
 
 
 def _pdf_service(monkeypatch, pages, read=None):
@@ -102,7 +106,8 @@ async def test_pdf_pages_that_are_pictures_are_read_by_the_vision_model(monkeypa
     assert "Canh ga chien mam - 69.000" in result.description
     # Page order is kept.
     assert result.description.index("Welcome") < result.description.index("Canh ga")
-    assert result.usage.total_tokens == 947
+    assert result.usage.total_tokens == 7
+    assert result.vision_usage.total_tokens == 940
 
 
 async def test_the_whole_pdf_text_goes_to_the_knowledge_chunks(monkeypatch):

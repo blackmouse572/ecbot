@@ -902,6 +902,63 @@ describe('KnowledgeIngestTaskService', () => {
             });
         });
 
+        it("records a media item's vision tokens at the vision model, apart from embedding", async () => {
+            meter.check.mockResolvedValue({ allowed: true });
+            findOneById.mockResolvedValue({
+                id: 'item-1',
+                type: ENUM_KNOWLEDGE_BASE_ITEM_TYPE.MEDIA,
+                title: 'Banner',
+                attachment: {
+                    key: 'knowledge-media/ws/kb/b.png',
+                    mime: 'image/png',
+                    cdnUrl: 'https://cdn/b.png',
+                },
+                knowledgeBase: { id: 'kb-1', workspace: { id: 'ws-1' } },
+            });
+            getItemBuffer.mockResolvedValue(Buffer.from('png'));
+            httpPost.mockReturnValue(
+                of({
+                    data: {
+                        data: {
+                            description: 'A red banner.',
+                            embedding_model: 'google/gemini-embedding-001',
+                            usage: {
+                                input_tokens: 7,
+                                output_tokens: 0,
+                                total_tokens: 7,
+                            },
+                            vision_model: 'google/gemini-2.5-flash',
+                            vision_usage: {
+                                input_tokens: 1000,
+                                output_tokens: 250,
+                                total_tokens: 1250,
+                            },
+                        },
+                    },
+                })
+            );
+
+            await service.handle(ingestDto, 0);
+
+            expect(meter.record).toHaveBeenCalledTimes(2);
+            expect(meter.record).toHaveBeenCalledWith({
+                workspaceId: 'ws-1',
+                usage: { inputTokens: 7, outputTokens: 0, totalTokens: 7 },
+                source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
+                model: 'google/gemini-embedding-001',
+            });
+            expect(meter.record).toHaveBeenCalledWith({
+                workspaceId: 'ws-1',
+                usage: {
+                    inputTokens: 1000,
+                    outputTokens: 250,
+                    totalTokens: 1250,
+                },
+                source: ENUM_AI_USAGE_SOURCE.KNOWLEDGE_INGEST,
+                model: 'google/gemini-2.5-flash',
+            });
+        });
+
         it('charges every website page read to the plan', async () => {
             meter.check.mockResolvedValue({ allowed: true });
             findOneById.mockResolvedValue({

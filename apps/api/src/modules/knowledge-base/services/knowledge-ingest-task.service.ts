@@ -283,6 +283,14 @@ export class KnowledgeIngestTaskService {
                 model: data?.embedding_model,
             });
         }
+        // A media item's vision tokens, priced at the vision model's rate.
+        const visionUsage = parseWireTokenUsage(data?.vision_usage);
+        if (workspaceId && visionUsage) {
+            await this.recordUsage(workspaceId, knowledgeItemId, {
+                usage: visionUsage,
+                model: data?.vision_model,
+            });
+        }
         const pagesCrawled = Number(data?.pages_crawled ?? 0);
         if (workspaceId && pagesCrawled > 0) {
             const tokens = pagesCrawled * KNOWLEDGE_CRAWL_TOKENS_PER_PAGE;
