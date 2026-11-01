@@ -2,7 +2,8 @@
 (after the history, so its changes never break the prompt cache of the turns
 before it; see `services.get_agent_input`).
 
-Keeps the block at ~250 tokens by capping the tag catalog at 12 entries.
+Keeps the block bounded: the tag catalog is capped at 20 entries, staff notes
+at MAX_NOTES_LEN characters and saved fields at MAX_FIELDS keys.
 Only confirmed-unified Customers (merged_into_customer_id IS NULL) are visible
 to the agent — pending merge suggestions stay invisible, even though the
 match-detection slice (#169) hasn't shipped.
@@ -28,6 +29,11 @@ MAX_CATALOG_TAGS = 20
 MAX_FIELD_LEN = 500
 # The summary ends with the "Staff ..." note, so it gets more room than other fields.
 MAX_SUMMARY_LEN = 800
+MAX_NOTES_LEN = 1000
+# Saved fields (`metadata`, written by set_customer_field): shown so the bot
+# does not ask again for what it already saved; the rest stay one tool away.
+MAX_FIELDS = 15
+MAX_FIELD_VALUE_LEN = 200
 
 
 def _safe(value: Any, *, limit: int = MAX_FIELD_LEN) -> str:
@@ -61,6 +67,20 @@ def _format_tag_line(
     elif notifies_team:
         parts.append("(notifies the team)")
     return " ".join(parts)
+
+
+def _saved_field_lines(metadata: dict[str, Any] | None) -> list[str]:
+    fields = sorted((metadata or {}).items())
+    if not fields:
+        return []
+    lines = ["Saved fields:"]
+    for key, value in fields[:MAX_FIELDS]:
+        lines.append(
+            f"- {_safe(key, limit=80)}: {_safe(value, limit=MAX_FIELD_VALUE_LEN)}"
+        )
+    if len(fields) > MAX_FIELDS:
+        lines.append("- … (more: use list_customer_fields)")
+    return lines
 
 
 async def build_customer_context_block(customer_id: str | None) -> str:
@@ -137,6 +157,9 @@ async def build_customer_context_block(customer_id: str | None) -> str:
         + (", ".join(_safe(n, limit=80) for n in applied_names) if applied_names else "none")
     )
     lines.append(f"Profile summary: {_safe(customer.profile_summary, limit=MAX_SUMMARY_LEN) or '—'}")
+    if customer.notes and customer.notes.strip():
+        lines.append(f"Staff notes: {_safe(customer.notes, limit=MAX_NOTES_LEN)}")
+    lines.extend(_saved_field_lines(customer.metadata_))
     lines.append("")
     lines.append(
         "# Tag catalog (apply with the apply_customer_tag tool when warranted;"
