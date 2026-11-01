@@ -54,10 +54,9 @@ describe('ChatbotPreviewMediaService', () => {
         await expect(service.save('cb1', undefined)).rejects.toThrow();
     });
 
-    it('describes images in one call and notes files like a channel does', async () => {
+    it('describes photos in one call like a channel does', async () => {
         const out = await service.notes('cb1', [
             { key: 'preview-media/cb1/a.jpg' },
-            { key: 'preview-media/cb1/b.pdf', name: 'menu.pdf' },
         ]);
 
         expect(ai.describeImages).toHaveBeenCalledWith({
@@ -65,28 +64,37 @@ describe('ChatbotPreviewMediaService', () => {
             images: [{ id: '0', url: 'https://s3/preview-media/cb1/a.jpg' }],
         });
         expect(out).toEqual({
-            notes: [
-                '[Image description: photo 0]',
-                '[File, which you cannot open]',
-            ],
+            notes: ['[Image description: photo 0]'],
             usage: { inputTokens: 300 },
             model: 'google/gemini-2.5-flash',
         });
     });
 
-    it('keeps one file and up to ten photos', async () => {
+    it('notes a file like a channel does', async () => {
+        const out = await service.notes('cb1', [
+            { key: 'preview-media/cb1/b.pdf', name: 'menu.pdf' },
+        ]);
+
+        expect(ai.describeImages).not.toHaveBeenCalled();
+        expect(out.notes).toEqual(['[File, which you cannot open]']);
+    });
+
+    it('keeps either the first file or up to ten photos', async () => {
         const images = Array.from({ length: 11 }, (_, i) => ({
             key: `preview-media/cb1/${i}.jpg`,
         }));
-        const out = await service.notes('cb1', [
+        const photos = await service.notes('cb1', [
+            ...images,
             { key: 'preview-media/cb1/a.pdf' },
-            { key: 'preview-media/cb1/b.pdf' },
+        ]);
+        expect(photos.notes).toHaveLength(10);
+        expect(photos.notes).not.toContain('[File, which you cannot open]');
+
+        const file = await service.notes('cb1', [
+            { key: 'preview-media/cb1/a.pdf' },
             ...images,
         ]);
-        expect(out.notes).toHaveLength(11);
-        expect(
-            out.notes.filter(n => n === '[File, which you cannot open]')
-        ).toHaveLength(1);
+        expect(file.notes).toEqual(['[File, which you cannot open]']);
     });
 
     it('ignores keys outside the chatbot folder', async () => {

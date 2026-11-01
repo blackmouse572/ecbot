@@ -1,4 +1,4 @@
-import { PaperClip } from "@medusajs/icons";
+import { PaperClip, Photo } from "@medusajs/icons";
 import { toast } from "@medusajs/ui";
 import {
   PromptInput,
@@ -10,32 +10,68 @@ import {
   PromptInputTextarea,
   usePromptInputAttachments,
 } from "@repo/ui/common-components";
-import type { FC } from "react";
+import { type ChangeEvent, type FC, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { readApiError } from "@/libs/api-error";
 import { AIChatInputAttachments } from "./ai-chat-input-attachments";
 import { useAIChat } from "./ai-chat-provider";
 import {
   CHAT_ATTACH_ACCEPT,
+  CHAT_ATTACH_FILE_ACCEPT,
+  CHAT_ATTACH_IMAGE_ACCEPT,
   CHAT_ATTACH_MAX_BYTES,
-  CHAT_ATTACH_MAX_DOCUMENTS,
-  CHAT_ATTACH_MAX_FILES,
   CHAT_ATTACH_MAX_IMAGES,
 } from "./constants";
 
-const AttachButton: FC = () => {
-  const { openFileDialog } = usePromptInputAttachments();
+/** A photo button and a file button, each opening a picker for its kind. */
+const AttachButtons: FC = () => {
+  const { add } = usePromptInputAttachments();
   const { t } = useTranslation();
+  const photos = useRef<HTMLInputElement>(null);
+  const file = useRef<HTMLInputElement>(null);
+  const onPick = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files?.length) add(event.target.files);
+    event.target.value = "";
+  };
+
   return (
-    <PromptInputButton
-      variant="transparent"
-      tooltip={t("chatbot.chat.attach")}
-      aria-label={t("chatbot.chat.attach")}
-      data-testid="chat-attach"
-      onClick={openFileDialog}
-    >
-      <PaperClip />
-    </PromptInputButton>
+    <>
+      <PromptInputButton
+        variant="transparent"
+        tooltip={t("chatbot.chat.attachPhotos")}
+        aria-label={t("chatbot.chat.attachPhotos")}
+        data-testid="chat-attach-photos"
+        onClick={() => photos.current?.click()}
+      >
+        <Photo />
+      </PromptInputButton>
+      <PromptInputButton
+        variant="transparent"
+        tooltip={t("chatbot.chat.attachFile")}
+        aria-label={t("chatbot.chat.attachFile")}
+        data-testid="chat-attach-file"
+        onClick={() => file.current?.click()}
+      >
+        <PaperClip />
+      </PromptInputButton>
+      <input
+        ref={photos}
+        type="file"
+        accept={CHAT_ATTACH_IMAGE_ACCEPT}
+        multiple
+        hidden
+        data-testid="chat-photos-input"
+        onChange={onPick}
+      />
+      <input
+        ref={file}
+        type="file"
+        accept={CHAT_ATTACH_FILE_ACCEPT}
+        hidden
+        data-testid="chat-file-input"
+        onChange={onPick}
+      />
+    </>
   );
 };
 
@@ -67,17 +103,14 @@ export function AIChatInput() {
       className="[&>div]:rounded-none"
       accept={canAttach ? CHAT_ATTACH_ACCEPT : undefined}
       multiple={canAttach}
-      maxFiles={canAttach ? CHAT_ATTACH_MAX_FILES : 0}
+      maxFiles={canAttach ? CHAT_ATTACH_MAX_IMAGES + 1 : 0}
       maxFileSize={CHAT_ATTACH_MAX_BYTES}
       // A text-only surface drops pasted files without a word.
       onError={(error) =>
         canAttach &&
         toast.error(
           error.code === "max_files"
-            ? t("chatbot.chat.attachTooMany", {
-                images: CHAT_ATTACH_MAX_IMAGES,
-                files: CHAT_ATTACH_MAX_DOCUMENTS,
-              })
+            ? t("chatbot.chat.attachLimit", { count: CHAT_ATTACH_MAX_IMAGES })
             : t("chatbot.chat.attachNotSupported"),
         )
       }
@@ -91,7 +124,7 @@ export function AIChatInput() {
       </PromptInputBody>
       <PromptInputFooter>
         <div className="flex items-center gap-1">
-          {canAttach && <AttachButton />}
+          {canAttach && <AttachButtons />}
           <PromptInputEmojiButton
             tooltip={t("general.emojiTooltip")}
             searchPlaceholder={t("general.emojiSearch")}

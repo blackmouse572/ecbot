@@ -14,29 +14,31 @@ import { FileType } from "@repo/ui/components/ui/file-type";
 import { type FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { chatFileType } from "./chat-message-media";
-import { CHAT_ATTACH_MAX_DOCUMENTS, CHAT_ATTACH_MAX_IMAGES } from "./constants";
+import { CHAT_ATTACH_MAX_IMAGES } from "./constants";
+
+const isImage = (file: { mediaType: string }) =>
+  file.mediaType.startsWith("image/");
 
 /** The files waiting to go with the next message, each with a remove button.
- *  Keeps the input to 10 photos and one other file: extras are dropped with
- *  a toast as they are added. */
+ *  A message carries either one file or up to 10 photos: what was added
+ *  last decides which, and the rest is dropped with a toast. */
 export const AIChatInputAttachments: FC = () => {
   const { files, remove } = usePromptInputAttachments();
   const { t } = useTranslation();
 
   useEffect(() => {
-    const images = files.filter((f) => f.mediaType.startsWith("image/"));
-    const documents = files.filter((f) => !f.mediaType.startsWith("image/"));
-    const extra = [
-      ...images.slice(CHAT_ATTACH_MAX_IMAGES),
-      ...documents.slice(CHAT_ATTACH_MAX_DOCUMENTS),
-    ];
+    const last = files.at(-1);
+    if (!last) return;
+    const extra = isImage(last)
+      ? [
+          ...files.filter((f) => !isImage(f)),
+          ...files.filter(isImage).slice(CHAT_ATTACH_MAX_IMAGES),
+        ]
+      : files.filter((f) => f.id !== last.id);
     if (!extra.length) return;
     for (const file of extra) remove(file.id);
-    toast.error(
-      t("chatbot.chat.attachTooMany", {
-        images: CHAT_ATTACH_MAX_IMAGES,
-        files: CHAT_ATTACH_MAX_DOCUMENTS,
-      }),
+    toast.info(
+      t("chatbot.chat.attachLimit", { count: CHAT_ATTACH_MAX_IMAGES }),
     );
   }, [files, remove, t]);
 
@@ -45,15 +47,15 @@ export const AIChatInputAttachments: FC = () => {
   return (
     <PromptInputHeader className="px-3 pt-3" data-testid="chat-attachments">
       {files.map((file) => {
-        const isImage = file.mediaType.startsWith("image/");
+        const image = isImage(file);
         const name = file.filename ?? file.mediaType;
         return (
           <Attachment key={file.id} size="xs" className="max-w-[180px]">
             <AttachmentMedia
-              variant={isImage ? "image" : "icon"}
-              className={isImage ? undefined : "bg-transparent"}
+              variant={image ? "image" : "icon"}
+              className={image ? undefined : "bg-transparent"}
             >
-              {isImage ? (
+              {image ? (
                 <img
                   src={file.url}
                   alt={name}

@@ -4,6 +4,11 @@ import {
     ITurnImages,
 } from '../interfaces/message-media.interface';
 
+import {
+    CHAT_UPLOAD_MAX_IMAGES,
+    MESSAGE_MEDIA_EXTENSIONS,
+} from '../constants/message-media.constant';
+
 const FIELDS = ['url', 'key', 'description', 'emoji', 'name'] as const;
 /** Kinds stored like customer photos and read by the image step. */
 const VISUAL_TYPES = new Set(['image', 'sticker', 'story']);
@@ -156,4 +161,24 @@ export function forTurn(resolved: IMessageAttachment[]): ITurnImages {
         urls: images.flatMap(a => (a.url ? [a.url] : [])),
         unviewable: images.filter(a => !a.url).length,
     };
+}
+
+const IMAGE_EXTENSIONS = new Set(Object.values(MESSAGE_MEDIA_EXTENSIONS));
+
+/** A stored chat upload's kind, from its key's extension. */
+export function uploadType(key: string): 'image' | 'file' {
+    return IMAGE_EXTENSIONS.has(key.split('.').pop() ?? '') ? 'image' : 'file';
+}
+
+/** A chat message's uploads as the chat input allows them: either one file
+ *  or up to 10 photos. The first upload decides which; the rest is dropped. */
+export function withinChatUploadLimits<T extends { type: string }>(
+    uploads: T[]
+): T[] {
+    const first = uploads[0];
+    if (!first) return [];
+    if (first.type !== 'image') return [first];
+    return uploads
+        .filter(upload => upload.type === 'image')
+        .slice(0, CHAT_UPLOAD_MAX_IMAGES);
 }

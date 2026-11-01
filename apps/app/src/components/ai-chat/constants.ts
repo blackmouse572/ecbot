@@ -64,23 +64,22 @@ export const TOOL_STEP_ICONS: Record<ToolKind | "knowledge", Icon> = {
 // Tabler icon size and stroke for the tool trace rows.
 export const TRACE_ICON = { size: 16, stroke: 1.75 } as const;
 
-/** Files a chat message may carry; the API checks the same list
- *  (apps/api message-media.constant.ts): images up to 5 MB, documents up
- *  to 10 MB. */
-export const CHAT_ATTACH_ACCEPT = [
+/** What a chat message may carry: either one file or up to 10 photos, like
+ *  Messenger. The API checks the same lists (apps/api
+ *  message-media.constant.ts): photos up to 5 MB, files up to 10 MB. */
+export const CHAT_ATTACH_IMAGE_ACCEPT = [
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
+].join(",");
+export const CHAT_ATTACH_FILE_ACCEPT = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "text/plain",
   "text/csv",
 ].join(",");
-/** Up to 10 photos and one other file per message, like Messenger. */
+export const CHAT_ATTACH_ACCEPT = `${CHAT_ATTACH_IMAGE_ACCEPT},${CHAT_ATTACH_FILE_ACCEPT}`;
 export const CHAT_ATTACH_MAX_IMAGES = 10;
-export const CHAT_ATTACH_MAX_DOCUMENTS = 1;
-export const CHAT_ATTACH_MAX_FILES =
-  CHAT_ATTACH_MAX_IMAGES + CHAT_ATTACH_MAX_DOCUMENTS;
 export const CHAT_ATTACH_MAX_BYTES = 10 * 1024 * 1024;

@@ -1,16 +1,15 @@
-import {
-    CHAT_UPLOAD_MAX_DOCUMENTS,
-    CHAT_UPLOAD_MAX_IMAGES,
-    MESSAGE_MEDIA_EXTENSIONS,
-    PREVIEW_MEDIA_KEY_PREFIX,
-} from '@app/modules/conversation/constants/message-media.constant';
+import { PREVIEW_MEDIA_KEY_PREFIX } from '@app/modules/conversation/constants/message-media.constant';
 import {
     IChatUpload,
     IMessageAttachment,
     IStoredChatUpload,
 } from '@app/modules/conversation/interfaces/message-media.interface';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
-import { attachmentNote } from '@app/modules/conversation/utils/message-attachment';
+import {
+    attachmentNote,
+    uploadType,
+    withinChatUploadLimits,
+} from '@app/modules/conversation/utils/message-attachment';
 import {
     imageDescriptionNote,
     UNVIEWABLE_IMAGE_NOTE,
@@ -26,8 +25,6 @@ import {
     IChatbotPreviewNotes,
 } from '../interfaces/chatbot-preview-media.interface';
 import { AIDescribedImages, ChatbotAIService } from './chatbot-ai.service';
-
-const IMAGE_EXTENSIONS = new Set(Object.values(MESSAGE_MEDIA_EXTENSIONS));
 
 /**
  * Files attached in a preview chat. They are stored like a customer's
@@ -70,21 +67,11 @@ export class ChatbotPreviewMediaService {
         attachments: IChatbotPreviewAttachment[]
     ): Promise<IChatbotPreviewNotes> {
         const folder = `${this.folder(chatbotId)}/`;
-        // Up to 10 photos and one other file, as the chat input allows;
-        // anything past that is dropped.
-        const own: IMessageAttachment[] = [];
-        for (const { key } of attachments) {
-            if (!key.startsWith(folder)) continue;
-            const type = IMAGE_EXTENSIONS.has(key.split('.').pop() ?? '')
-                ? 'image'
-                : 'file';
-            const limit =
-                type === 'image'
-                    ? CHAT_UPLOAD_MAX_IMAGES
-                    : CHAT_UPLOAD_MAX_DOCUMENTS;
-            if (own.filter(a => a.type === type).length < limit)
-                own.push({ type, key });
-        }
+        const own = withinChatUploadLimits(
+            attachments.flatMap(({ key }): IMessageAttachment[] =>
+                key.startsWith(folder) ? [{ type: uploadType(key), key }] : []
+            )
+        );
         const resolved = await this.media.resolveIn(own, folder);
         const images = resolved.flatMap((a, index) =>
             a.type === 'image' && a.url

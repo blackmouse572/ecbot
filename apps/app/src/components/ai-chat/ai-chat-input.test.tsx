@@ -40,11 +40,13 @@ function renderChat(transport: ChatTransportConfig) {
   );
 }
 
-function fileInput(container: HTMLElement): HTMLInputElement {
-  const input = container.querySelector<HTMLInputElement>('input[type="file"]');
-  if (!input) throw new Error("no file input");
-  return input;
-}
+const photosInput = () => screen.getByTestId("chat-photos-input");
+const fileInput = () => screen.getByTestId("chat-file-input");
+const pick = (input: HTMLElement, ...files: File[]) =>
+  fireEvent.change(input, { target: { files } });
+const pdf = (name: string) =>
+  new File(["x"], name, { type: "application/pdf" });
+const png = (name: string) => new File(["x"], name, { type: "image/png" });
 
 describe("AIChatInput attachments", () => {
   beforeEach(() => {
@@ -61,9 +63,10 @@ describe("AIChatInput attachments", () => {
     );
   });
 
-  it("offers no attach button where the chat takes text only", () => {
+  it("offers no attach buttons where the chat takes text only", () => {
     renderChat(textOnly);
-    expect(screen.queryByTestId("chat-attach")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("chat-attach-photos")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("chat-attach-file")).not.toBeInTheDocument();
   });
 
   it("uploads an attached photo, then sends it with its stored key", async () => {
@@ -72,11 +75,11 @@ describe("AIChatInput attachments", () => {
       key: `preview-media/bot-1/${file.name}`,
       name: file.name,
     }));
-    const { container } = renderChat({ ...textOnly, upload });
-    expect(screen.getByTestId("chat-attach")).toBeInTheDocument();
+    renderChat({ ...textOnly, upload });
+    expect(screen.getByTestId("chat-attach-photos")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-attach-file")).toBeInTheDocument();
 
-    const photo = new File(["x"], "shirt.png", { type: "image/png" });
-    fireEvent.change(fileInput(container), { target: { files: [photo] } });
+    pick(photosInput(), png("shirt.png"));
     expect(await screen.findByText("shirt.png")).toBeInTheDocument();
 
     fireEvent.submit(screen.getByTestId("chat-input").closest("form")!);
@@ -104,9 +107,8 @@ describe("AIChatInput attachments", () => {
     const upload = vi.fn(async () => {
       throw new Error("down");
     });
-    const { container } = renderChat({ ...textOnly, upload });
-    const photo = new File(["x"], "shirt.png", { type: "image/png" });
-    fireEvent.change(fileInput(container), { target: { files: [photo] } });
+    renderChat({ ...textOnly, upload });
+    pick(photosInput(), png("shirt.png"));
     await screen.findByText("shirt.png");
 
     fireEvent.submit(screen.getByTestId("chat-input").closest("form")!);
@@ -116,16 +118,38 @@ describe("AIChatInput attachments", () => {
     expect(screen.getByText("shirt.png")).toBeInTheDocument();
   });
 
-  it("keeps one file and drops a second", async () => {
-    const upload = vi.fn();
-    const { container } = renderChat({ ...textOnly, upload });
-    const a = new File(["x"], "a.pdf", { type: "application/pdf" });
-    const b = new File(["x"], "b.pdf", { type: "application/pdf" });
-    fireEvent.change(fileInput(container), { target: { files: [a, b] } });
+  it("keeps several photos together", async () => {
+    renderChat({ ...textOnly, upload: vi.fn() });
+    pick(photosInput(), png("a.png"), png("b.png"));
 
-    expect(await screen.findByText("a.pdf")).toBeInTheDocument();
+    expect(await screen.findByText("a.png")).toBeInTheDocument();
+    expect(screen.getByText("b.png")).toBeInTheDocument();
+  });
+
+  it("lets a file replace the photos", async () => {
+    renderChat({ ...textOnly, upload: vi.fn() });
+    pick(photosInput(), png("a.png"), png("b.png"));
+    await screen.findByText("a.png");
+
+    pick(fileInput(), pdf("menu.pdf"));
+
+    expect(await screen.findByText("menu.pdf")).toBeInTheDocument();
     await waitFor(() =>
-      expect(screen.queryByText("b.pdf")).not.toBeInTheDocument(),
+      expect(screen.queryByText("a.png")).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByText("b.png")).not.toBeInTheDocument();
+  });
+
+  it("lets photos replace a file", async () => {
+    renderChat({ ...textOnly, upload: vi.fn() });
+    pick(fileInput(), pdf("menu.pdf"));
+    await screen.findByText("menu.pdf");
+
+    pick(photosInput(), png("a.png"));
+
+    expect(await screen.findByText("a.png")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText("menu.pdf")).not.toBeInTheDocument(),
     );
   });
 });

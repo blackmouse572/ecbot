@@ -100,11 +100,11 @@ describe('stream request attachments', () => {
         ).toEqual([]);
     });
 
-    it('rejects more than ten photos and a file', () => {
+    it('rejects more than ten attachments', () => {
         expect(
             errorsFor(ChatbotStreamRequestDto, {
                 message: 'hi',
-                attachments: Array.from({ length: 12 }, () => ({ key })),
+                attachments: Array.from({ length: 11 }, () => ({ key })),
             })
         ).toEqual(['attachments']);
     });
