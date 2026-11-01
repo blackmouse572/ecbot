@@ -36,6 +36,9 @@ SYSTEM_TOOL_KINDS = {
     "send_image": "image",
     "send_media": "image",
 }
+# Every built-in tool. Their results carry the customer's or the model's own
+# words, so an image URL in them is never trusted (llm/tools/image_urls.py).
+SYSTEM_TOOL_NAMES = frozenset(SYSTEM_TOOL_KINDS) | {"end_without_reply"}
 
 # Shown to clients on any stream-side failure (including a LangGraph
 # GraphRecursionError when the agent loop hits recursion_limit). Never the raw
