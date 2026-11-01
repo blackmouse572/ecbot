@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nestjs';
 import { AccountService } from '@app/modules/account/services/account.service';
-import { addTokenUsage } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
+import { TokenUsageDelta } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
 import { ChatbotAIService } from '@app/modules/chatbot/services/chatbot-ai.service';
 import { ENUM_CONVERSATION_ACTIVITY_KIND } from '@app/modules/conversation/enums/conversation-activity.enum';
 import { ENUM_CONVERSATION_STATUS } from '@app/modules/conversation/enums/conversation.enum';
@@ -197,6 +197,7 @@ export class ReplyGenerationService {
                 history,
                 message,
                 usage: describeUsage,
+                usageModel: describeModel,
             } = await this.turnContext.build(
                 conversationId,
                 { texts, messageIds: input.messageIds },
@@ -297,21 +298,23 @@ export class ReplyGenerationService {
 
             // Booked before any early return below: the tokens were spent the
             // moment apps/ai generated, whatever we decide to do with the text.
-            // Describing the burst's images is billed with the reply, even
-            // when the reply itself was blocked or failed.
-            const usage = addTokenUsage(describeUsage, deliveryResult?.usage);
-            if (usage) {
-                await this.meter?.record({
+            // Describing the burst's images is billed even when the reply
+            // itself was blocked or failed, at the vision model's rate.
+            const record = (usage: TokenUsageDelta, model?: string) =>
+                this.meter?.record({
                     workspaceId: chatbot.workspace.id,
                     usage,
                     source: ENUM_AI_USAGE_SOURCE.PLATFORM_REPLY,
                     chatbotId: chatbot.id,
                     accountId: account.id,
                     platform: account.type,
-                    model: chatbot.modelTextName,
+                    model: model ?? chatbot.modelTextName,
                     conversationId,
                 });
-            }
+
+            if (describeUsage) await record(describeUsage, describeModel);
+
+            if (deliveryResult?.usage) await record(deliveryResult.usage);
 
             if (!deliveryResult) return failed('stream_failed');
 

@@ -268,3 +268,30 @@ async def test_fetch_gives_up_on_an_oversized_body_while_streaming():
     with _serve(handler):
         assert await images.fetch_image_data_url("https://s3/endless.jpg") is None
     assert sent <= images.AppVars.VISION_MAX_IMAGE_BYTES + 2 * len(chunk)
+
+
+async def test_the_describe_endpoint_names_the_vision_model_for_pricing(monkeypatch):
+    # apps/api prices these tokens at the model that read the images, not the
+    # chatbot's reply model.
+    from httpx import ASGITransport, AsyncClient
+
+    from eccho_ai.core.variables import AppVars
+    from eccho_ai.main import app
+    from eccho_ai.modules.chat import routers
+
+    monkeypatch.setattr(routers, "get_agent", AsyncMock(return_value=SimpleNamespace(chatbot=BOT)))
+    monkeypatch.setattr(routers, "describe_images", AsyncMock(return_value=(["a red dress"], USAGE)))
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test",
+        headers={"X-Internal-Token": "test-internal-token"},
+    ) as ac:
+        resp = await ac.post(
+            "/api/chat/describe",
+            json={"chatbot_id": "bot-1", "images": [{"id": "m0", "url": "https://cdn/a.jpg"}]},
+        )
+
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["usage"] == USAGE
+    assert data["model"] == AppVars.VISION_MODEL

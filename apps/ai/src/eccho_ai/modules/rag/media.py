@@ -66,7 +66,11 @@ class MediaIngestResponse(BaseModel):
     description: str
     embedding_model: str
     chunk_count: int = 0
+    # Embedding tokens, priced at the embedding model.
     usage: TokenUsage | None = None
+    # Vision tokens apart, so apps/api prices them at the vision model's rate.
+    vision_usage: TokenUsage | None = None
+    vision_model: str | None = None
 
 
 def _add(a: TokenUsage | None, b: TokenUsage | None) -> TokenUsage | None:
@@ -192,15 +196,15 @@ class MediaIngestService:
         if mime_type not in MEDIA_IMAGE_TYPES and mime_type != MEDIA_PDF_TYPE:
             raise ValueError(f"Unsupported media type: {mime_type}")
 
-        usage: TokenUsage | None = None
+        vision_usage: TokenUsage | None = None
         pdf_text = ""
         if mime_type == MEDIA_PDF_TYPE:
-            pdf_text, usage = await read_pdf(content)
+            pdf_text, vision_usage = await read_pdf(content)
         if not (description and description.strip()):
             if mime_type == MEDIA_PDF_TYPE:
                 description = pdf_text
             else:
-                description, usage = await describe_media_image(content, mime_type, title)
+                description, vision_usage = await describe_media_image(content, mime_type, title)
         description = (description or "").strip()[:MEDIA_DESCRIPTION_MAX_CHARS]
 
         text = f"{title}\n{description}" if description else title
@@ -208,7 +212,7 @@ class MediaIngestService:
         if len(embeddings) != 1 or len(embeddings[0]) != self.embedding_dimension:
             raise ValueError("Embedding dimension mismatch for media item")
 
-        usage = _add(usage, embed_usage)
+        usage = embed_usage
         # Chunk first: if it fails, the item is marked failed and must leave
         # no media row behind for retrieval to find.
         chunk_count = 0
@@ -232,4 +236,6 @@ class MediaIngestService:
             embedding_model=self.embedding_model,
             chunk_count=chunk_count,
             usage=usage,
+            vision_usage=vision_usage,
+            vision_model=AppVars.VISION_MODEL if vision_usage else None,
         )

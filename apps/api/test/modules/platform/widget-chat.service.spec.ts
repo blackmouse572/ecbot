@@ -413,6 +413,7 @@ describe('WidgetChatService token budget', () => {
         jest.spyOn(turnContext, 'build').mockResolvedValue({
             history: [],
             usage: describeUsage,
+            usageModel: 'google/gemini-2.5-flash',
         } as any);
 
         await service.handleTurn(res, turn);
@@ -422,6 +423,7 @@ describe('WidgetChatService token budget', () => {
                 workspaceId: 'ws-1',
                 source: 'WIDGET',
                 usage: describeUsage,
+                model: 'google/gemini-2.5-flash',
             })
         );
     });

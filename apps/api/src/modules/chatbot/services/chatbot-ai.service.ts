@@ -54,6 +54,8 @@ export interface AIDescribeImagesParams {
 export interface AIDescribedImages {
     images: { id: string; description: string | null }[];
     usage?: TokenUsageDelta;
+    /** The vision model that spent `usage`, so it is priced at its rate. */
+    model?: string;
 }
 
 /** Messages that left a conversation's history window, to fold into its
