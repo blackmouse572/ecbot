@@ -13,3 +13,4 @@ apps/api/migrations/.snapshot-*.json
 .agents/skills/review-animations/
 .agents/skills/vercel-composition-patterns/
 .agents/skills/web-design-guidelines/
+packages/oxlint-config/anti-slop/
