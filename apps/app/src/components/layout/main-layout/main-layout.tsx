@@ -20,6 +20,7 @@ import { GuideMoments, LazyFeatureHint } from "@/components/guide";
 import { GettingStartedNav } from "@/routes/dashboard/components/getting-started-nav/getting-started-nav";
 import { BlockedAccountsBadge } from "./blocked-accounts-badge";
 import { RecentAgentsSection } from "./recent-agents-section";
+import { ScrollEdgeBlur } from "./scroll-edge-blur";
 import { PausedConversationsBadge } from "./paused-conversations-badge";
 import { PendingSuggestionsBadge } from "./pending-suggestions-badge";
 import { ToolsAttentionBadge } from "./tools-attention-badge";
@@ -34,6 +35,7 @@ import { NotificationMenu } from "../notification-menu/notification-menu";
 
 import { useLogout } from "@/hooks/api";
 import { useEnsureWorkspace, useWorkspaceList } from "@/hooks/api/workspace";
+import { useScrollEdges } from "@/hooks/use-scroll-edges";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useWorkspaceAbilities } from "@/modules/auth";
 import { ROUTES } from "@/routes";
@@ -93,14 +95,21 @@ interface MainSidebarProps {
 }
 
 const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
+  const edges = useScrollEdges(currentWorkspace.id);
   return (
-    <aside className="flex flex-1 flex-col justify-between overflow-y-auto">
+    <aside
+      ref={edges.ref}
+      onScroll={edges.onScroll}
+      // Rounded here, not by the mobile drawer: see MobileSidebarContainer.
+      className="flex flex-1 flex-col justify-between overflow-y-auto max-lg:rounded-b-lg"
+    >
       <div className="flex flex-1 flex-col">
-        <div className="bg-ui-bg-subtle sticky top-0">
+        <div className="bg-ui-bg-subtle sticky top-0 z-10">
           <Header workspace={currentWorkspace} workspaces={workspaces} />
           <div className="px-3">
             <Divider variant="dashed" />
           </div>
+          <ScrollEdgeBlur side="top" visible={edges.top} />
         </div>
         <div className="flex flex-1 flex-col justify-between">
           <div className="flex flex-1 flex-col">
@@ -110,7 +119,8 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
         </div>
         {/* Pinned with the user menu so the checklist stays in view while
             the nav scrolls on short screens. */}
-        <div className="bg-ui-bg-subtle sticky bottom-0">
+        <div className="bg-ui-bg-subtle sticky bottom-0 z-10">
+          <ScrollEdgeBlur side="bottom" visible={edges.bottom} />
           <GettingStartedNav />
           <UserSection />
         </div>
