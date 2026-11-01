@@ -2,10 +2,12 @@
   "name": "@repo/oxlint-config",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "files": [
     "*.json"
   ],
   "devDependencies": {
+    "@oxlint/plugins": "1.90.0",
     "eslint-plugin-turbo": "^2.11.3",
     "oxlint": "^1.90.0"
   }
