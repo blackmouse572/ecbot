@@ -27,8 +27,9 @@ import { ConversationMemoryTaskDto } from '../dtos/conversation-memory.task.dto'
 import { ConversationMemoryService } from './conversation-memory.service';
 
 /**
- * Folds the messages that left a conversation's history window into its
- * summary (queued by ConversationMemoryService). The cursor the job was
+ * Folds the messages past `CONVERSATION_MEMORY_WINDOW_MAX` into the
+ * conversation's summary, after which they leave the history window (queued
+ * by ConversationMemoryService). The cursor the job was
  * queued at must still be the conversation's, so a late or repeated job
  * never folds the same messages in twice.
  */
