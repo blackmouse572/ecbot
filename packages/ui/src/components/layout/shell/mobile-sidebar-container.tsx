@@ -31,8 +31,11 @@ export const MobileSidebarContainer = ({
             )
               event.preventDefault();
           }}
+          // No overflow-hidden: a rounded clip around the scrolling nav stops
+          // Chromium from applying the mask on its scroll-edge blur, so the
+          // blur shows as a hard band. The nav rounds its own bottom corners.
           className={clx(
-            "bg-ui-bg-subtle shadow-elevation-modal fixed inset-y-2 left-2 flex w-full max-w-[304px] flex-col overflow-hidden rounded-lg border-r",
+            "bg-ui-bg-subtle shadow-elevation-modal fixed inset-y-2 left-2 flex w-full max-w-[304px] flex-col rounded-lg border-r",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-left-1/2 data-[state=open]:slide-in-from-left-1/2 duration-200",
           )}
         >

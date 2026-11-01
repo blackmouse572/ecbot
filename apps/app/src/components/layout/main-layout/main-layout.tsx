@@ -100,7 +100,8 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
     <aside
       ref={edges.ref}
       onScroll={edges.onScroll}
-      className="flex flex-1 flex-col justify-between overflow-y-auto"
+      // Rounded here, not by the mobile drawer: see MobileSidebarContainer.
+      className="flex flex-1 flex-col justify-between overflow-y-auto max-lg:rounded-b-lg"
     >
       <div className="flex flex-1 flex-col">
         <div className="bg-ui-bg-subtle sticky top-0 z-10">
