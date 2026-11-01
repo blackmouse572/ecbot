@@ -20,6 +20,7 @@ import { GuideMoments, LazyFeatureHint } from "@/components/guide";
 import { GettingStartedNav } from "@/routes/dashboard/components/getting-started-nav/getting-started-nav";
 import { BlockedAccountsBadge } from "./blocked-accounts-badge";
 import { RecentAgentsSection } from "./recent-agents-section";
+import { ScrollEdgeBlur } from "./scroll-edge-blur";
 import { PausedConversationsBadge } from "./paused-conversations-badge";
 import { PendingSuggestionsBadge } from "./pending-suggestions-badge";
 import { ToolsAttentionBadge } from "./tools-attention-badge";
@@ -93,9 +94,6 @@ interface MainSidebarProps {
   currentWorkspace: WorkSpaceGetResponseDto;
 }
 
-const scrollShadow =
-  "from-ui-bg-subtle pointer-events-none absolute inset-x-0 h-6 to-transparent transition-opacity";
-
 const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
   const edges = useScrollEdges(currentWorkspace.id);
   return (
@@ -110,15 +108,7 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
           <div className="px-3">
             <Divider variant="dashed" />
           </div>
-          <div
-            aria-hidden
-            data-testid="sidebar-shadow-top"
-            className={clx(
-              scrollShadow,
-              "top-full bg-gradient-to-b",
-              edges.top ? "opacity-100" : "opacity-0",
-            )}
-          />
+          <ScrollEdgeBlur side="top" visible={edges.top} />
         </div>
         <div className="flex flex-1 flex-col justify-between">
           <div className="flex flex-1 flex-col">
@@ -129,15 +119,7 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
         {/* Pinned with the user menu so the checklist stays in view while
             the nav scrolls on short screens. */}
         <div className="bg-ui-bg-subtle sticky bottom-0 z-10">
-          <div
-            aria-hidden
-            data-testid="sidebar-shadow-bottom"
-            className={clx(
-              scrollShadow,
-              "bottom-full bg-gradient-to-t",
-              edges.bottom ? "opacity-100" : "opacity-0",
-            )}
-          />
+          <ScrollEdgeBlur side="bottom" visible={edges.bottom} />
           <GettingStartedNav />
           <UserSection />
         </div>
