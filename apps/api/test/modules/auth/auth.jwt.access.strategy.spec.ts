@@ -37,7 +37,10 @@ describe('AuthJwtAccessStrategy', () => {
     it('rejects with the access-token unauthorized 401 when the login session was revoked', async () => {
         findLoginSession.mockResolvedValue(undefined);
 
-        const strategy = new AuthJwtAccessStrategy(configService, sessionService);
+        const strategy = new AuthJwtAccessStrategy(
+            configService,
+            sessionService
+        );
 
         await expect(strategy.validate(payload)).rejects.toMatchObject({
             response: {
@@ -54,11 +57,26 @@ describe('AuthJwtAccessStrategy', () => {
     it('returns the payload and touches last-active when the login session is active', async () => {
         findLoginSession.mockResolvedValue({ user: 'user-1' });
 
-        const strategy = new AuthJwtAccessStrategy(configService, sessionService);
+        const strategy = new AuthJwtAccessStrategy(
+            configService,
+            sessionService
+        );
 
         await expect(strategy.validate(payload)).resolves.toEqual(payload);
         expect(findLoginSession).toHaveBeenCalledWith('session-1');
-        expect(touchLastActive).toHaveBeenCalledWith('session-1');
+        expect(touchLastActive).toHaveBeenCalledWith('session-1', 'user-1');
+    });
+
+    it("does not count an admin's impersonation as the user being seen", async () => {
+        findLoginSession.mockResolvedValue({ user: 'user-1' });
+
+        const strategy = new AuthJwtAccessStrategy(
+            configService,
+            sessionService
+        );
+
+        await strategy.validate({ ...payload, impersonatedBy: 'admin-1' });
+        expect(touchLastActive).toHaveBeenCalledWith('session-1', undefined);
     });
 
     it('rejects a payload without a session claim instead of skipping the check', async () => {
@@ -72,7 +90,10 @@ describe('AuthJwtAccessStrategy', () => {
             session: undefined,
         } as unknown as IAuthJwtAccessTokenPayload;
 
-        const strategy = new AuthJwtAccessStrategy(configService, sessionService);
+        const strategy = new AuthJwtAccessStrategy(
+            configService,
+            sessionService
+        );
 
         await expect(
             strategy.validate(payloadWithoutSession)

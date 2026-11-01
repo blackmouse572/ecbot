@@ -1,3 +1,4 @@
+import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { ENUM_SESSION_STATUS } from '../../../src/modules/session/enums/session.enum';
 import { SessionService } from '../../../src/modules/session/services/session.service';
 
@@ -289,6 +290,18 @@ describe('SessionService (geo + activity additions)', () => {
             const [, filter, data] = nativeUpdate.mock.calls[0];
             expect(filter).toEqual({ id: 's1' });
             expect(data.lastActiveAt).toBe(fixedNow);
+        });
+
+        it("also stamps the user's lastSeenAt when the user is given", async () => {
+            const service = build();
+
+            await service.touchLastActive('s1', 'u1');
+
+            expect(nativeUpdate).toHaveBeenCalledTimes(2);
+            const [entity, filter, data] = nativeUpdate.mock.calls[1];
+            expect(entity).toBe(UserEntity);
+            expect(filter).toEqual({ id: 'u1' });
+            expect(data).toEqual({ lastSeenAt: fixedNow });
         });
 
         it('short-circuits (no DB write) within the throttle window', async () => {

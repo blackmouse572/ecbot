@@ -19198,6 +19198,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "boolean"
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         }
       },
       "name": "users",
@@ -19251,6 +19267,16 @@
           "constraint": true,
           "keyName": "users_email_unique",
           "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "last_seen_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "users_last_seen_at_index",
+          "unique": false,
           "primary": false
         },
         {

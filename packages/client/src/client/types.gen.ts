@@ -1755,6 +1755,10 @@ export type UserListResponseDto = {
     mfaEnabled: boolean;
     role: RoleListResponseDto;
     country: CountryShortResponseDto;
+    /**
+     * Last authenticated request by the user; null if they never signed in
+     */
+    lastSeenAt?: string | null;
 };
 
 export type UserProfileResponseDto = {

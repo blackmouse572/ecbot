@@ -214,8 +214,9 @@ export class SessionService implements ISessionService {
     // Bump lastActiveAt on the current session. Runs on every authenticated
     // request, so it is gated by a short-lived cache key: within the throttle
     // window a cheap cache hit short-circuits before any DB round-trip.
-    // Fire-and-forget safe (never throws).
-    async touchLastActive(id: string): Promise<void> {
+    // Fire-and-forget safe (never throws). Given a user, it also stamps their
+    // lastSeenAt, which the admin Users list shows and sorts by.
+    async touchLastActive(id: string, userId?: string): Promise<void> {
         try {
             const cacheKey = `${this.appName}:${this.sessionKeyPrefix}:active:${id}`;
             if (await this.cacheManager.get(cacheKey)) return;
@@ -224,13 +225,16 @@ export class SessionService implements ISessionService {
                 1,
                 SESSION_ACTIVE_THROTTLE_SECONDS * 1000
             );
-            await this.sessionRepository
-                .getEntityManager()
-                .nativeUpdate(
-                    SessionEntity,
-                    { id },
-                    { lastActiveAt: this.helperDateService.create() }
+            const now = this.helperDateService.create();
+            const em = this.sessionRepository.getEntityManager();
+            await em.nativeUpdate(SessionEntity, { id }, { lastActiveAt: now });
+            if (userId) {
+                await em.nativeUpdate(
+                    UserEntity,
+                    { id: userId },
+                    { lastSeenAt: now }
                 );
+            }
         } catch (error) {
             this.logger.warn(`touchLastActive failed for ${id}: ${error}`);
         }

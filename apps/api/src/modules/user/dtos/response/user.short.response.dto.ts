@@ -11,7 +11,13 @@ export class UserShortResponseDto extends OmitType(UserListResponseDto, [
     'photo',
     'createdAt',
     'updatedAt',
+    'lastSeenAt',
 ]) {
+    // Presence data stays on the admin list; short shapes reach other users.
+    @ApiHideProperty()
+    @Exclude()
+    lastSeenAt?: Date | null;
+
     @ApiHideProperty()
     @Exclude()
     role: RoleListResponseDto;

@@ -88,6 +88,11 @@ export class UserGetResponseDto extends DatabaseDto {
     })
     termsAcceptedAt?: Date | null;
 
+    // Presence data: only the admin users list exposes it (UserListResponseDto).
+    @ApiHideProperty()
+    @Exclude()
+    lastSeenAt?: Date | null;
+
     @ApiProperty({
         required: false,
         nullable: true,
