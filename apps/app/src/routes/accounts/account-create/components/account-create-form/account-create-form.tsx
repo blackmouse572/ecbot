@@ -542,7 +542,7 @@ function SuccessStep({
               <Text size="base" className="truncate">
                 {data.name}
               </Text>
-              <div className="flex flex-wrap divide-x [&>*]:px-4 [&>*]:first:pl-0">
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:divide-x sm:[&>*]:px-4 sm:[&>*]:first:pl-0">
                 <Text size="small" className="text-ui-fg-subtle">
                   {data.slug}
                 </Text>
@@ -569,7 +569,7 @@ function SuccessStep({
                   <Text size="base" className="truncate">
                     {page.name}
                   </Text>
-                  <div className="flex flex-wrap divide-x [&>*]:px-4 [&>*]:first:pl-0">
+                  <div className="flex flex-col gap-0.5 sm:flex-row sm:divide-x sm:[&>*]:px-4 sm:[&>*]:first:pl-0">
                     <Text size="small" className="text-ui-fg-subtle">
                       {page.slug}
                     </Text>
