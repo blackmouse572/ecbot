@@ -110,6 +110,28 @@ export const useConversations = (query: ConversationListQuery = {}) => {
   };
 };
 
+/** Id of the customer's most recent conversation, or null when they have none. */
+export const latestCustomerConversationQueryOptions = (
+  slug: string,
+  customerId: string,
+) => ({
+  queryKey: [CONVERSATION_QUERY_KEY, "latest-for-customer", customerId],
+  queryFn: () =>
+    conversationWorkspaceControllerListV1({
+      path: { workspace: slug },
+      query: {
+        perPage: 1,
+        orderBy: "lastMessageAt",
+        orderDirection: "DESC",
+        customer: customerId,
+      } as A,
+    }).then(
+      (res) =>
+        ((res.data as A)?.data?.[0] as ConversationGetResponseDto | undefined)
+          ?.id ?? null,
+    ),
+});
+
 export const useConversation = (id: string | undefined) => {
   const { workspace } = useWorkspace();
   const slug = workspace?.slug;

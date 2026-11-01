@@ -71,6 +71,7 @@ export const useChatbots = (
 
   const { data, isError, error, ...rest } = useQuery({
     queryKey: chatbotQueryKeys.list(query),
+    enabled: options?.enabled as boolean | undefined,
     placeholderData: options?.placeholderData as A,
     initialData: options?.initialData as A,
     queryFn: () =>
