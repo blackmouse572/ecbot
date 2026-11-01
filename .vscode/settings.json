@@ -1,9 +1,4 @@
 {
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ],
   "[plaintext]": {
     "editor.defaultFormatter": "vscode.typescript-language-features",
     "editor.unicodeHighlight.ambiguousCharacters": false,
@@ -14,7 +9,7 @@
   },
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit",
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.oxc": "explicit"
   },
   "i18n-ally.sourceLanguage": "en",
   "i18n-ally.localesPaths": ["apps/app/src/providers/i18n/translations"],

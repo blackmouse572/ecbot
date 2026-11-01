@@ -112,7 +112,11 @@
       ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/oxlint-config/*.json"
+      ]
     },
     "check-types": {
       "dependsOn": ["^check-types"]

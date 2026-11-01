@@ -81,7 +81,7 @@
     "no-unused-expressions": "error",
     "typescript/ban-ts-comment": "error",
     "typescript/no-duplicate-enum-values": "error",
-    "typescript/no-empty-object-type": "warn",
+    "typescript/no-empty-object-type": "error",
     "typescript/no-explicit-any": "error",
     "typescript/no-extra-non-null-assertion": "error",
     "typescript/no-misused-new": "error",

@@ -30,14 +30,14 @@
             "type": "shell",
             "command": "yarn lint",
             "group": "test",
-            "problemMatcher": ["$eslint-stylish"]
+            "problemMatcher": []
         },
         {
             "label": "Lint and Fix",
             "type": "shell",
             "command": "yarn lint:fix",
             "group": "none",
-            "problemMatcher": ["$eslint-stylish"]
+            "problemMatcher": []
         },
         {
             "label": "Run Tests",

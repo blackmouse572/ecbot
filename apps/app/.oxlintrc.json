@@ -3,6 +3,13 @@
   "extends": ["../../packages/oxlint-config/react-hooks.json"],
   "ignorePatterns": ["**/*.{js,mjs,cjs}"],
   "rules": {
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ],
+    "no-unexpected-multiline": "error",
+    "typescript/no-empty-object-type": "warn"
   }
 }

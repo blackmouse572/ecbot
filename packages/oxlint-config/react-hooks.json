@@ -9,5 +9,10 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "warn"
+  },
+  "settings": {
+    "react": {
+      "version": "19.3.0"
+    }
   }
 }
