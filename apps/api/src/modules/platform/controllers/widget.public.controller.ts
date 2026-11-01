@@ -29,11 +29,19 @@ import {
     Query,
     Res,
     UnprocessableEntityException,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
+import { CHAT_UPLOAD_FILE_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
+import { ChatAttachmentResponseDto } from '@app/modules/conversation/dtos/response/chat-attachment.response.dto';
+import { WidgetAttachmentRequestDto } from '../dtos/request/widget.attachment.request.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Response as ExpressResponse } from 'express';
 import {
+    WidgetAttachmentDoc,
     WidgetMessagesDoc,
     WidgetMetaDoc,
     WidgetSendMessageDoc,
@@ -52,6 +60,8 @@ import { widgetWelcomeText } from '../utils/widget-welcome.util';
 /** Per-visitor ceiling. Turnstile stops bots at the door; this stops a human farming inference. */
 const TURNS_PER_HOUR = 60;
 const TURN_WINDOW_SECONDS = 60 * 60;
+/** Per-visitor upload ceiling, in the same window. */
+const UPLOADS_PER_HOUR = 30;
 const POLL_PAGE_SIZE = 50;
 
 /**
@@ -123,59 +133,54 @@ export class WidgetPublicController {
         @Res() res: ExpressResponse,
         @Body() dto: WidgetSendMessageRequestDto
     ): Promise<void> {
-        const account = await this.resolveAccount(key);
-
-        if (
-            !this.sessionService.isOriginAllowed(
-                account.config.allowedOrigins,
-                dto.parentOrigin
-            )
-        ) {
-            throw new ForbiddenException({
-                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.ORIGIN_NOT_ALLOWED,
-                message: 'widget.error.originNotAllowed',
-            });
-        }
-
-        const sessionKey = this.sessionService.sessionKey(
-            account.id,
-            dto.visitorId
-        );
-
-        // Verified once per session, not per turn: a Turnstile token is
-        // single-use and short-lived, so re-challenging would put a widget in
-        // front of every message.
-        if (!(await this.sessionService.isVerified(sessionKey))) {
-            await this.turnstileService.verify(
-                dto.turnstileToken,
-                ENUM_TURNSTILE_ACTION.WEBSITE_WIDGET
-            );
-            await this.sessionService.markVerified(sessionKey);
-        }
-
-        // Keyed on the visitor, not the IP: behind the load balancer every
-        // anonymous visitor shares one address, so IP throttling barely bites.
-        const within = await this.rateLimit.claim(
-            `widget:${sessionKey}`,
-            TURNS_PER_HOUR,
-            TURN_WINDOW_SECONDS
-        );
-        if (!within) {
-            throw new HttpException(
-                {
-                    statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.RATE_LIMITED,
-                    message: 'widget.error.rateLimited',
-                },
-                HttpStatus.TOO_MANY_REQUESTS
-            );
-        }
+        const account = await this.admit(key, dto, 'widget', TURNS_PER_HOUR);
 
         await this.widgetChatService.handleTurn(res, {
             account,
             visitorId: dto.visitorId,
             text: dto.text,
             messageId: dto.messageId,
+            attachments: dto.attachments,
         });
+    }
+
+    @WidgetAttachmentDoc()
+    @Response('widget.attachment')
+    @Throttle({ default: { ttl: 60000, limit: 20 } })
+    @Post('/:key/attachments')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: multer.memoryStorage(),
+            limits: { fileSize: CHAT_UPLOAD_FILE_MAX_BYTES, files: 1 },
+        })
+    )
+    async uploadAttachment(
+        @Param('key') key: string,
+        @Body() dto: WidgetAttachmentRequestDto,
+        @UploadedFile() file?: Express.Multer.File
+    ): Promise<IResponse<ChatAttachmentResponseDto>> {
+        const account = await this.admit(
+            key,
+            dto,
+            'widget-upload',
+            UPLOADS_PER_HOUR
+        );
+        const saved =
+            file &&
+            (await this.messageMedia.saveUpload(
+                this.sessionService.mediaFolder(account.id, dto.visitorId),
+                file
+            ));
+        if (!saved) {
+            throw new UnprocessableEntityException({
+                statusCode:
+                    ENUM_WIDGET_STATUS_CODE_ERROR.ATTACHMENT_NOT_SUPPORTED,
+                message: 'widget.error.attachmentNotSupported',
+            });
+        }
+        return {
+            data: { type: saved.type, key: saved.key, name: saved.name },
+        };
     }
 
     @WidgetMessagesDoc()
@@ -228,6 +233,70 @@ export class WidgetPublicController {
                 }))
             ),
         };
+    }
+
+    /**
+     * The gate every visitor write passes: the widget key, the embedding page
+     * on the allowlist, Turnstile once per session, then a per-visitor budget
+     * (`bucket` keeps uploads and messages apart).
+     */
+    private async admit(
+        key: string,
+        dto: {
+            visitorId: string;
+            parentOrigin?: string;
+            turnstileToken?: string;
+        },
+        bucket: string,
+        perHour: number
+    ): Promise<AccountEntity & { config: WebsiteWidgetConfig }> {
+        const account = await this.resolveAccount(key);
+
+        if (
+            !this.sessionService.isOriginAllowed(
+                account.config.allowedOrigins,
+                dto.parentOrigin
+            )
+        ) {
+            throw new ForbiddenException({
+                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.ORIGIN_NOT_ALLOWED,
+                message: 'widget.error.originNotAllowed',
+            });
+        }
+
+        const sessionKey = this.sessionService.sessionKey(
+            account.id,
+            dto.visitorId
+        );
+
+        // Verified once per session, not per turn: a Turnstile token is
+        // single-use and short-lived, so re-challenging would put a widget in
+        // front of every message.
+        if (!(await this.sessionService.isVerified(sessionKey))) {
+            await this.turnstileService.verify(
+                dto.turnstileToken,
+                ENUM_TURNSTILE_ACTION.WEBSITE_WIDGET
+            );
+            await this.sessionService.markVerified(sessionKey);
+        }
+
+        // Keyed on the visitor, not the IP: behind the load balancer every
+        // anonymous visitor shares one address, so IP throttling barely bites.
+        const within = await this.rateLimit.claim(
+            `${bucket}:${sessionKey}`,
+            perHour,
+            TURN_WINDOW_SECONDS
+        );
+        if (!within) {
+            throw new HttpException(
+                {
+                    statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.RATE_LIMITED,
+                    message: 'widget.error.rateLimited',
+                },
+                HttpStatus.TOO_MANY_REQUESTS
+            );
+        }
+        return account;
     }
 
     /**

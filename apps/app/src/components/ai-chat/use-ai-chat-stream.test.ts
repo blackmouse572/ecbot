@@ -376,6 +376,33 @@ describe("chat transport configs", () => {
     });
   });
 
+  it("sends the widget's uploaded files with the visitor message", () => {
+    const request = buildChatStreamRequest({
+      transport: widgetChatTransport("wk", "v1", undefined),
+      clientConfig,
+      token: null,
+      id: "session-1",
+      messages: [
+        {
+          id: "m1",
+          role: "user",
+          parts: [{ type: "text", text: "" }],
+          metadata: {
+            attachments: [
+              { type: "file", key: "widget-media/a/b/c.pdf", name: "menu.pdf" },
+            ],
+          },
+        },
+      ] as never,
+    });
+
+    expect(request.body).toMatchObject({
+      text: "",
+      visitorId: "v1",
+      attachments: [{ key: "widget-media/a/b/c.pdf", name: "menu.pdf" }],
+    });
+  });
+
   it("attaches the given token as a Bearer header on the workspace transport", () => {
     const request = buildChatStreamRequest({
       transport: workspaceChatTransport("acme", "cb1"),

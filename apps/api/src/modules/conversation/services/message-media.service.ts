@@ -3,6 +3,10 @@ import { AwsS3Service } from '@app/modules/aws/services/aws.s3.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import {
+    uploadType,
+    withinChatUploadLimits,
+} from '../utils/message-attachment';
+import {
     CHAT_UPLOAD_FILE_EXTENSIONS,
     CHAT_UPLOAD_FILE_MAX_BYTES,
     MESSAGE_MEDIA_EXTENSIONS,
@@ -77,6 +81,32 @@ export class MessageMediaService {
             key,
             name: upload.originalname.slice(0, 255),
         };
+    }
+
+    /** Uploads staged in `folder` before their conversation existed (the
+     *  website widget), copied into the conversation's folder so every
+     *  reader signs them like any customer photo. Keys outside `folder`
+     *  are dropped. */
+    async adopt(
+        folder: string,
+        conversationId: string,
+        uploads: { key: string; name?: string }[]
+    ): Promise<IMessageAttachment[]> {
+        const own = withinChatUploadLimits(
+            uploads.flatMap(({ key, name }) =>
+                key.startsWith(`${folder}/`)
+                    ? [{ type: uploadType(key), key, name }]
+                    : []
+            )
+        );
+        return Promise.all(
+            own.map(async ({ type, key, name }) => {
+                const ext = key.split('.').pop() ?? '';
+                const target = `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}/${randomUUID()}.${ext}`;
+                await this.s3.copyItem(key, target, PRIVATE);
+                return { type, key: target, ...(name && { name }) };
+            })
+        );
     }
 
     /** Stored attachments → `{ type, url }` for the inbox and the AI. Only

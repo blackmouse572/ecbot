@@ -773,6 +773,14 @@ export type WidgetMetaResponseDto = {
     privacyPolicyUrl?: string;
 };
 
+export type ChatAttachmentRequestDto = {
+    /**
+     * The key the upload endpoint returned
+     */
+    key: string;
+    name?: string;
+};
+
 export type WidgetSendMessageRequestDto = {
     /**
      * Anonymous visitor id the widget persists in localStorage. Becomes the conversation sender.
@@ -787,8 +795,34 @@ export type WidgetSendMessageRequestDto = {
      */
     text: string;
     /**
+     * Files uploaded for this message with the attachments endpoint
+     */
+    attachments?: Array<ChatAttachmentRequestDto>;
+    /**
      * The page embedding the widget, read from document.referrer. Advisory — checked against the allowlist but not verifiable server-side.
      */
+    parentOrigin?: string;
+    /**
+     * Turnstile token. Required once per visitor session.
+     */
+    turnstileToken?: string;
+};
+
+export type ChatAttachmentResponseDto = {
+    type: 'image' | 'file';
+    /**
+     * Send this back in the message attachments
+     */
+    key: string;
+    name: string;
+};
+
+export type WidgetAttachmentRequestDto = {
+    /**
+     * An image (JPEG, PNG, WebP, GIF, up to 5 MB) or a PDF, Word, Excel, text or CSV file (up to 10 MB)
+     */
+    file: Blob | File;
+    visitorId: string;
     parentOrigin?: string;
     /**
      * Turnstile token. Required once per visitor session.
@@ -883,14 +917,6 @@ export type ChatbotPreviewMetaResponseDto = {
     expiresAt: string;
 };
 
-export type ChatAttachmentRequestDto = {
-    /**
-     * The key the upload endpoint returned
-     */
-    key: string;
-    name?: string;
-};
-
 export type ChatbotPreviewStreamRequestDto = {
     /**
      * The signed share token from the public preview link
@@ -906,15 +932,6 @@ export type ChatbotPreviewStreamRequestDto = {
      * Cloudflare Turnstile token. Required on the first turn of a session; later turns reuse the verification stored against the session.
      */
     turnstileToken?: string;
-};
-
-export type ChatAttachmentResponseDto = {
-    type: 'image' | 'file';
-    /**
-     * Send this back in the message attachments
-     */
-    key: string;
-    name: string;
 };
 
 export type ChatbotPreviewAttachmentRequestDto = {
@@ -9334,6 +9351,60 @@ export type WidgetPublicControllerSendMessageV1Responses = {
 };
 
 export type WidgetPublicControllerSendMessageV1Response = WidgetPublicControllerSendMessageV1Responses[keyof WidgetPublicControllerSendMessageV1Responses];
+
+export type WidgetPublicControllerUploadAttachmentV1Data = {
+    body: WidgetAttachmentRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        key: string;
+    };
+    query?: never;
+    url: '/api/v1/public/widget/{key}/attachments';
+};
+
+export type WidgetPublicControllerUploadAttachmentV1Errors = {
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WidgetPublicControllerUploadAttachmentV1Error = WidgetPublicControllerUploadAttachmentV1Errors[keyof WidgetPublicControllerUploadAttachmentV1Errors];
+
+export type WidgetPublicControllerUploadAttachmentV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatAttachmentResponseDto;
+    };
+};
+
+export type WidgetPublicControllerUploadAttachmentV1Response = WidgetPublicControllerUploadAttachmentV1Responses[keyof WidgetPublicControllerUploadAttachmentV1Responses];
 
 export type HealthPublicControllerLiveData = {
     body?: never;

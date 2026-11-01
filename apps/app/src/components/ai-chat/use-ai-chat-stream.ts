@@ -17,6 +17,7 @@ import {
   chatbotControllerUploadPreviewAttachmentV1,
   chatbotPreviewPublicControllerUploadAttachmentV1,
   client,
+  widgetPublicControllerUploadAttachmentV1,
 } from "@repo/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { DefaultChatTransport, type UIMessage } from "ai";
@@ -352,6 +353,20 @@ export function widgetChatTransport(
     messageBody: (text) => ({ text }),
     includeCredentials: false,
     invalidateToolInvocations: false,
+    // Passes the same gate as a message: allowed page, Turnstile, visitor.
+    upload: async (file) => {
+      const { data } = await widgetPublicControllerUploadAttachmentV1({
+        path: { key: widgetKey },
+        body: {
+          file,
+          visitorId,
+          parentOrigin,
+          turnstileToken: getTurnstileToken?.(),
+        },
+        throwOnError: true,
+      });
+      return uploaded(data);
+    },
   };
 }
 

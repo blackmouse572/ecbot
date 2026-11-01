@@ -6,6 +6,8 @@ import {
 import { ENUM_DOC_REQUEST_BODY_TYPE } from '@app/common/doc/enums/doc.enum';
 import { applyDecorators } from '@nestjs/common';
 import { WidgetSendMessageRequestDto } from '../dtos/request/widget.send-message.request.dto';
+import { WidgetAttachmentRequestDto } from '../dtos/request/widget.attachment.request.dto';
+import { ChatAttachmentResponseDto } from '@app/modules/conversation/dtos/response/chat-attachment.response.dto';
 import {
     WidgetMessageResponseDto,
     WidgetMetaResponseDto,
@@ -47,5 +49,20 @@ export function WidgetMessagesDoc(): MethodDecorator {
         DocResponse('widget.messages', {
             dto: WidgetMessageResponseDto,
         })
+    );
+}
+
+export function WidgetAttachmentDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'upload a file for a visitor message',
+            description:
+                'Stores one image or document for the next message and returns its key; send the key in that message `attachments`. Same origin, Turnstile and per-visitor checks as sending a message.',
+        }),
+        DocRequest({
+            dto: WidgetAttachmentRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.FORM_DATA,
+        }),
+        DocResponse('widget.attachment', { dto: ChatAttachmentResponseDto })
     );
 }

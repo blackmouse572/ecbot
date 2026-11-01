@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     S3Client,
+    CopyObjectCommand,
     GetObjectCommand,
     ListObjectsV2Command,
     PutObjectCommand,
@@ -448,6 +449,24 @@ export class AwsS3Service implements OnModuleInit, IAwsS3Service {
             size: file?.size,
             mime,
         };
+    }
+
+    /** Copies an object to a new key in the same bucket. */
+    async copyItem(
+        sourceKey: string,
+        destinationKey: string,
+        options?: IAwsS3Options
+    ): Promise<void> {
+        const config = this.getConfig(options);
+        const isPrivate = options?.access === ENUM_AWS_S3_ACCESSIBILITY.PRIVATE;
+        await config.client.send(
+            new CopyObjectCommand({
+                Bucket: config.bucket,
+                CopySource: `${config.bucket}/${encodeURI(sourceKey)}`,
+                Key: destinationKey,
+                ...(isPrivate && { ServerSideEncryption: 'AES256' }),
+            })
+        );
     }
 
     async putItemWithAcl(
