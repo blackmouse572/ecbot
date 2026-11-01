@@ -189,6 +189,7 @@ export class ComposioApi {
 
         return raw.flatMap(item => {
             const c = item as { id?: unknown; name?: string } | null;
+
             return typeof c?.id === 'string'
                 ? [{ id: c.id, name: c.name ?? c.id }]
                 : [];
