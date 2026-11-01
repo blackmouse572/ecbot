@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { CommandPaletteLoading } from "./command-palette-loading";
 import { ScrollEdgeBlur } from "../main-layout/scroll-edge-blur";
 import type { CommandPaletteGroup, CommandPaletteItem } from "./types";
 import { useCommandPalettePages } from "./use-command-palette-pages";
@@ -109,6 +110,7 @@ export const CommandPaletteContent: FC<CommandPaletteContentProps> = ({
         onScroll={edges.onScroll}
         className="max-h-[min(420px,60svh)]"
       >
+        {isSearching && visibleGroups.length === 0 && <CommandPaletteLoading />}
         {!isSearching && visibleGroups.length === 0 && (
           <NoRecords
             size="small"
