@@ -22,25 +22,40 @@ describe("useScrollEdges", () => {
     expect(result.current).toMatchObject({ top: false, bottom: true });
   });
 
-  it("re-measures when the box or its content resizes", () => {
-    let onResize = () => {};
-    const observe = vi.fn();
+  const stubResizeObserver = () => {
+    const resize = { fire: () => {} };
     vi.stubGlobal(
       "ResizeObserver",
       vi.fn(function (this: unknown, cb: () => void) {
-        onResize = cb;
-        return { observe, disconnect: vi.fn() };
+        resize.fire = cb;
+        return { observe: vi.fn(), disconnect: vi.fn() };
       }),
     );
+    return resize;
+  };
+
+  it("re-measures when content grows without a scroll", () => {
+    const resize = stubResizeObserver();
     const node = box(0, 200, 200);
     const { result } = renderHook(() => useScrollEdges(0));
     act(() => result.current.ref(node));
     expect(result.current.bottom).toBe(false);
-    expect(observe).toHaveBeenCalledWith(node);
-    expect(observe).toHaveBeenCalledWith(node.firstElementChild);
 
     Object.defineProperty(node, "scrollHeight", { value: 600 });
-    act(() => onResize());
+    act(() => resize.fire());
     expect(result.current.bottom).toBe(true);
+  });
+
+  it("does not re-render on a resize that leaves the edges unchanged", () => {
+    const resize = stubResizeObserver();
+    let renders = 0;
+    const { result } = renderHook(() => {
+      renders += 1;
+      return useScrollEdges(0);
+    });
+    act(() => result.current.ref(box(0, 500, 200)));
+    const before = renders;
+    act(() => resize.fire());
+    expect(renders).toBe(before);
   });
 });

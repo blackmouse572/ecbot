@@ -13,22 +13,31 @@ const END_THRESHOLD = 80;
  * Tracks whether a scroll box has more content above or below, for edge
  * shadows, and calls `onReachEnd` when the reader gets near the bottom.
  * Measures when the box mounts, when `contentKey` changes, and when the box
- * or its content resizes.
+ * or one of its direct children (as of mount) resizes.
  */
 export function useScrollEdges(contentKey: unknown, onReachEnd?: () => void) {
   const element = useRef<HTMLElement | null>(null);
   const observer = useRef<ResizeObserver | null>(null);
   const [edges, setEdges] = useState({ top: false, bottom: false });
+  const last = useRef(edges);
 
   const measure = useCallback((target: HTMLElement) => {
     const { scrollTop, scrollHeight, clientHeight } = target;
     const remaining = scrollHeight - clientHeight - scrollTop;
-    setEdges({ top: scrollTop > 0, bottom: remaining > 1 });
+    const top = scrollTop > 0;
+    const bottom = remaining > 1;
+    // Resizes fire every frame while the window is dragged; skip the
+    // re-render when neither edge changed.
+    if (last.current.top !== top || last.current.bottom !== bottom) {
+      last.current = { top, bottom };
+      setEdges(last.current);
+    }
     return remaining;
   }, []);
 
-  // A callback ref: the box mounts when the menu opens, after the rows have
-  // already loaded, so measuring only on content changes would miss it.
+  // A callback ref: the box can mount after its content has loaded (the
+  // notification menu opens on cached rows), so measuring only on content
+  // changes would miss it.
   const ref = useCallback(
     (node: HTMLElement | null) => {
       element.current = node;
