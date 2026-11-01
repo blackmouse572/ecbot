@@ -1,19 +1,17 @@
-import { useInfiniteToolList } from "@/hooks/api/tools";
-import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { Badge } from "@medusajs/ui";
 import {
   SKILL_SYSTEM_ACTIONS,
   type SkillSystemAction,
 } from "@repo/agent-blueprint";
-import type { ToolListResponseDto } from "@repo/client";
-import { Combobox } from "@repo/ui/common-components";
+import { Combobox } from "../common/combobox";
 import { type FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SkillBuiltinActionIcon } from "./skill-builtin-action-icon";
+import { useSkillStepsData, type SkillStepTool } from "./skill-steps-data";
 
 const BUILTIN = Object.keys(SKILL_SYSTEM_ACTIONS) as SkillSystemAction[];
 
-type PickerTool = Pick<ToolListResponseDto, "id" | "kind" | "displayName">;
+type PickerTool = Pick<SkillStepTool, "id" | "kind" | "displayName">;
 
 type Props = {
   value: string;
@@ -26,10 +24,10 @@ type Props = {
 // tools, searched on the server and loaded page by page on scroll.
 export const SkillToolPicker: FC<Props> = ({ value, onChange, selected }) => {
   const { t } = useTranslation();
-  const { workspaceSlug } = useWorkspaceParams();
+  const { useToolList } = useSkillStepsData();
   const [search, setSearch] = useState("");
   const { tools, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteToolList(workspaceSlug, search);
+    useToolList(search);
 
   const query = search.trim().toLowerCase();
   const builtins = BUILTIN.map((id) => ({

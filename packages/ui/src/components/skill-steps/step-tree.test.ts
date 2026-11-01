@@ -34,7 +34,7 @@ describe("step tree", () => {
       SkillStep,
       { type: "if" }
     >;
-    expect(inBranch.branches[0].steps.map((x) => x.id)).toEqual(["c", "n"]);
+    expect(inBranch.branches[0]!.steps.map((x) => x.id)).toEqual(["c", "n"]);
     const inElse = addStep(tree, elseKey("i"), s)[1] as Extract<
       SkillStep,
       { type: "if" }
@@ -47,7 +47,7 @@ describe("step tree", () => {
       SkillStep,
       { type: "if" }
     >;
-    expect(removed.branches[0].steps).toEqual([]);
+    expect(removed.branches[0]!.steps).toEqual([]);
     expect(
       updateStep(tree, "d", (s) => ({ ...s, text: "D2" }) as SkillStep)[1],
     ).toMatchObject({
@@ -70,7 +70,7 @@ describe("step tree", () => {
       new Set([
         a.id,
         b.id,
-        (b as Extract<SkillStep, { type: "if" }>).branches[0].id,
+        (b as Extract<SkillStep, { type: "if" }>).branches[0]!.id,
       ]).size,
     ).toBe(3);
   });

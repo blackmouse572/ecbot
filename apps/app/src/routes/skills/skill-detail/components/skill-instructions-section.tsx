@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "react-router-dom";
-import { SkillStepsView } from "../../components/skill-steps-view";
+import { SkillStepsView } from "@repo/ui/skill-steps";
 
 type Props = {
   skill: SkillGetResponseDto;

@@ -2,19 +2,8 @@ import "@/i18n";
 import type { SkillStep } from "@repo/agent-blueprint";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
-import { SkillStepsEditor } from "./skill-steps-editor";
-
-vi.mock("@/hooks/use-workspace-params", () => ({
-  useWorkspaceParams: () => ({ workspaceSlug: "ws" }),
-}));
-vi.mock("@/hooks/api/tools", () => ({
-  useGetTool: () => ({ tool: undefined }),
-  useInfiniteToolList: () => ({ tools: [] }),
-}));
-vi.mock("@/hooks/api/customer-tags", () => ({
-  useCustomerTagList: () => ({ tags: [] }),
-}));
+import { describe, expect, it } from "vitest";
+import { SkillStepsEditor } from "@repo/ui/skill-steps";
 
 let latest: SkillStep[] = [];
 const Harness = ({

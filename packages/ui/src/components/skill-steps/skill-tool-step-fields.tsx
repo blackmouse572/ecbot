@@ -1,16 +1,14 @@
-import { useCustomerTagList } from "@/hooks/api/customer-tags";
-import { useGetTool } from "@/hooks/api/tools";
-import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { Input } from "@medusajs/ui";
 import {
   isSystemToolId,
   type SkillStep,
   type ToolStep,
 } from "@repo/agent-blueprint";
-import { Combobox } from "@repo/ui/common-components";
+import { Combobox } from "../common/combobox";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import type { StepEditorApi } from "../types";
+import { useSkillStepsData } from "./skill-steps-data";
+import type { StepEditorApi } from "./types";
 import { SkillToolPicker } from "./skill-tool-picker";
 
 type Props = { step: ToolStep; api: StepEditorApi };
@@ -19,18 +17,21 @@ type Props = { step: ToolStep; api: StepEditorApi };
 // action, tag or field it needs, and an optional "how" note.
 export const SkillToolStepFields: FC<Props> = ({ step, api }) => {
   const { t } = useTranslation();
-  const { workspaceSlug } = useWorkspaceParams();
-  const { tool } = useGetTool(workspaceSlug, step.toolId, {
-    enabled: !!step.toolId && !isSystemToolId(step.toolId),
-  });
+  const { useTool, useTagNames } = useSkillStepsData();
+  const tool = useTool(
+    step.toolId && !isSystemToolId(step.toolId) ? step.toolId : "",
+  );
   const isMcp = tool?.kind === "MCP";
   const actions = ((tool?.discoveredActions ?? []) as { name?: string }[])
     .map((a) => a.name)
     .filter((name): name is string => !!name);
   const tagAction =
     step.toolId === "system:add_tag" || step.toolId === "system:remove_tag";
-  const { tags } = useCustomerTagList();
-  const names = isMcp ? actions : tags.map((tag) => tag.name);
+  const tagNames = useTagNames?.();
+  const names = isMcp ? actions : (tagNames ?? []);
+  // Without a tag list (a builtin template has no workspace), type the name.
+  const typeName =
+    step.toolId === "system:save_customer_field" || (tagAction && !tagNames);
 
   const patch = (fields: Partial<ToolStep>) =>
     api.update(step.id, (s) => ({ ...s, ...fields }) as SkillStep);
@@ -51,7 +52,7 @@ export const SkillToolStepFields: FC<Props> = ({ step, api }) => {
             selected={tool}
           />
         </div>
-        {(isMcp || tagAction) && (
+        {(isMcp || (tagAction && tagNames)) && (
           <div className="min-w-48 flex-1">
             <Combobox
               value={step.action ?? ""}
@@ -65,12 +66,16 @@ export const SkillToolStepFields: FC<Props> = ({ step, api }) => {
             />
           </div>
         )}
-        {step.toolId === "system:save_customer_field" && (
+        {typeName && (
           <Input
             size="small"
             className="min-w-48 flex-1"
             value={step.action ?? ""}
-            placeholder={t("skills.steps.placeholder.field")}
+            placeholder={t(
+              tagAction
+                ? "skills.steps.placeholder.tagName"
+                : "skills.steps.placeholder.field",
+            )}
             onChange={(e) => patch({ action: e.target.value })}
           />
         )}

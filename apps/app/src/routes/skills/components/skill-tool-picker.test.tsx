@@ -1,15 +1,17 @@
 import "@/i18n";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { SkillToolPicker } from "./skill-tool-picker";
+import {
+  SkillStepsDataProvider,
+  SkillToolPicker,
+  type SkillStepsData,
+} from "@repo/ui/skill-steps";
+import type { ReactElement } from "react";
 
 const list = vi.hoisted(() => ({ searches: [] as string[] }));
 
-vi.mock("@/hooks/use-workspace-params", () => ({
-  useWorkspaceParams: () => ({ workspaceSlug: "ws" }),
-}));
-vi.mock("@/hooks/api/tools", () => ({
-  useInfiniteToolList: (_ws: string, search: string) => {
+const data: SkillStepsData = {
+  useToolList: (search: string) => {
     list.searches.push(search);
     return {
       tools: [
@@ -21,12 +23,16 @@ vi.mock("@/hooks/api/tools", () => ({
       isFetchingNextPage: false,
     };
   },
-}));
+  useTool: () => undefined,
+};
+
+const renderPicker = (ui: ReactElement) =>
+  render(<SkillStepsDataProvider value={data}>{ui}</SkillStepsDataProvider>);
 
 describe("SkillToolPicker", () => {
   it("lists built-in actions and workspace tools, and searches tools on the server", () => {
     const onChange = vi.fn();
-    render(<SkillToolPicker value="" onChange={onChange} />);
+    renderPicker(<SkillToolPicker value="" onChange={onChange} />);
     const input = screen.getByRole("combobox");
     fireEvent.focus(input);
     expect(screen.getByText("Hand off to staff")).toBeTruthy();
@@ -38,7 +44,7 @@ describe("SkillToolPicker", () => {
   });
 
   it("shows the selected tool's name even when it is not in the loaded page", () => {
-    render(
+    renderPicker(
       <SkillToolPicker
         value="t9"
         selected={{ id: "t9", kind: "HTTP", displayName: "Old tool" }}

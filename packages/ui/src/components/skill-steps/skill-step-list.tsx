@@ -1,7 +1,7 @@
 import { SKILL_STEP_MAX_DEPTH, type SkillStep } from "@repo/agent-blueprint";
 import type { FC } from "react";
-import type { StepListKey } from "../step-tree";
-import type { StepEditorApi } from "../types";
+import type { StepListKey } from "./step-tree";
+import type { StepEditorApi } from "./types";
 import { SkillAddStepMenu } from "./skill-add-step-menu";
 import { SkillStepItem } from "./skill-step-item";
 
