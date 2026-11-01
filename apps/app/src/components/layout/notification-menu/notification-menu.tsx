@@ -58,13 +58,11 @@ export const NotificationMenu: FC = () => {
   // person stays unread until its row is clicked.
   const markSeen = (rows: NotificationItem[]) => {
     if (!isOpen.current) return;
-    const seenIds = rows
-      .filter(
-        (notification) =>
-          notification.status === "unread" &&
-          !isHandoffNotification(notification),
-      )
-      .map((notification) => notification.id);
+    const seenIds = rows.flatMap((notification) =>
+      notification.status === "unread" && !isHandoffNotification(notification)
+        ? [notification.id]
+        : [],
+    );
     if (seenIds.length === 0) return;
     setNewIds((previous) => new Set([...previous, ...seenIds]));
     markManyAsRead.mutate(seenIds);

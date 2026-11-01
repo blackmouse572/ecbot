@@ -330,9 +330,9 @@ export class ConversationMessagingService {
             a => a.kind !== ENUM_CONVERSATION_ACTIVITY_KIND.NO_REPLY
         );
 
-        const botIndices = messages
-            .map((m, i) => (m.authorType === ENUM_MESSAGE_AUTHOR.BOT ? i : -1))
-            .filter(i => i !== -1);
+        const botIndices = messages.flatMap((m, i) =>
+            m.authorType === ENUM_MESSAGE_AUTHOR.BOT ? [i] : []
+        );
 
         if (!botIndices.length) return dtos;
 
@@ -465,10 +465,12 @@ export class ConversationMessagingService {
         // OPERATOR carrying a numeric platform id — never an eccho user.
         const operatorIds = [
             ...new Set(
-                messages
-                    .filter(m => m.authorType === ENUM_MESSAGE_AUTHOR.OPERATOR)
-                    .map(m => m.authorId)
-                    .filter(id => UUID_PATTERN.test(id ?? ''))
+                messages.flatMap(m =>
+                    m.authorType === ENUM_MESSAGE_AUTHOR.OPERATOR &&
+                    UUID_PATTERN.test(m.authorId ?? '')
+                        ? [m.authorId]
+                        : []
+                )
             ),
         ];
 

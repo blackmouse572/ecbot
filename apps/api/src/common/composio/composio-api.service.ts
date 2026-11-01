@@ -187,12 +187,13 @@ export class ComposioApi {
             ? body
             : (((body as Record<string, unknown>)?.items as unknown[]) ?? []);
 
-        return raw
-            .filter(
-                (c): c is { id: string; name?: string } =>
-                    typeof (c as Record<string, unknown>)?.id === 'string'
-            )
-            .map(c => ({ id: c.id, name: c.name ?? c.id }));
+        return raw.flatMap(item => {
+            const c = item as { id?: unknown; name?: string } | null;
+
+            return typeof c?.id === 'string'
+                ? [{ id: c.id, name: c.name ?? c.id }]
+                : [];
+        });
     }
 
     // -----------------------------------------------------------------------

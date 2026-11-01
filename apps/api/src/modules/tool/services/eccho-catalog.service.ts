@@ -70,9 +70,9 @@ export class EcchoCatalogService {
 
     async listMerged(): Promise<MergedEcchoToolkit[]> {
         const overrides = await this.overrides.findAllBySlug();
-        const customs = [...overrides.values()]
-            .filter(row => !this.findBySlug(row.slug))
-            .map(row => EcchoCatalogService.custom(row));
+        const customs = [...overrides.values()].flatMap(row =>
+            this.findBySlug(row.slug) ? [] : [EcchoCatalogService.custom(row)]
+        );
         return [...ECCHO_TOOLKITS, ...customs.filter(def => !!def)].map(def =>
             EcchoCatalogService.merge(def, overrides.get(def.slug))
         );

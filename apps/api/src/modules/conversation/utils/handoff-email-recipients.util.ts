@@ -43,7 +43,7 @@ export function handoffEmailRecipients(
 ): IRecipientUser[] {
     const candidates = [
         ...(owner ? [owner] : []),
-        ...members.filter(canSeeConversations).map(m => m.user),
+        ...members.flatMap(m => (canSeeConversations(m) ? [m.user] : [])),
     ];
     const seen = new Set<string>();
     return candidates.filter(u => {

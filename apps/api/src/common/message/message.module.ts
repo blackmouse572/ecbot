@@ -22,9 +22,11 @@ export class MessageModule {
                         fallbackLanguage: configService
                             .get<string[]>('message.availableLanguage')
                             .join(','),
-                        fallbacks: Object.values(ENUM_MESSAGE_LANGUAGE).reduce(
-                            (a, v) => ({ ...a, [`${v}-*`]: v }),
-                            {}
+                        fallbacks: Object.fromEntries(
+                            Object.values(ENUM_MESSAGE_LANGUAGE).map(v => [
+                                `${v}-*`,
+                                v,
+                            ])
                         ),
                         loaderOptions: {
                             path: path.join(__dirname, '../../languages'),

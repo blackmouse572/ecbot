@@ -50,12 +50,11 @@ const transportMocks = (
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 function makeTool(overrides: Partial<ToolEntity> = {}): ToolEntity {
-    const base: any = {
+    return {
         kind: ENUM_TOOL_KIND.MCP,
         mcpServerUrl: 'https://mcp.example.com/sse',
         ...overrides,
-    };
-    return base as ToolEntity;
+    } as ToolEntity;
 }
 
 describe('McpDiscoveryService', () => {

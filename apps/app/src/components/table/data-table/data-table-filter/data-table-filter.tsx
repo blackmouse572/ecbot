@@ -60,9 +60,11 @@ const readActiveFiltersFromUrl = (
 ): ActiveFilter[] => {
   const urlParams = new URLSearchParams(searchParams);
 
-  return filters
-    .filter((filter) => urlParams.get(paramKeyFor(filter, prefix)))
-    .map((filter) => asActiveFilter(filter, false));
+  return filters.flatMap((filter) =>
+    urlParams.get(paramKeyFor(filter, prefix))
+      ? [asActiveFilter(filter, false)]
+      : [],
+  );
 };
 
 export const DataTableFilter = ({

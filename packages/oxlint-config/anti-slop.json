@@ -6,14 +6,14 @@
     "anti-slop/no-reflect-get": "error",
     "anti-slop/no-unknown-type-aliases": "error",
 
-    "oxc/no-accumulating-spread": "warn",
-    "anti-slop/no-array-filter-map": "warn",
-    "anti-slop/no-reduce-accumulator-copy": "warn",
+    "oxc/no-accumulating-spread": "error",
+    "anti-slop/no-array-filter-map": "error",
+    "anti-slop/no-reduce-accumulator-copy": "error",
     "anti-slop/no-conditional-empty-object-spread": "warn",
     "anti-slop/no-object-parameters": "warn",
     "anti-slop/no-shape-in-symbol-names": "warn",
     "anti-slop/no-unknown-returns": "warn",
-    "anti-slop/no-widen-then-assert": "warn",
+    "anti-slop/no-widen-then-assert": "error",
 
     "anti-slop/no-chained-type-assertions": "warn",
     "anti-slop/no-known-value-widening": "warn",
