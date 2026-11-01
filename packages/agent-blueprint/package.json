@@ -11,7 +11,9 @@
       "require": "./dist/index.js"
     },
     "./locales/en.json": "./locales/en.json",
-    "./locales/vi.json": "./locales/vi.json"
+    "./locales/vi.json": "./locales/vi.json",
+    "./locales/skills.en.json": "./locales/skills.en.json",
+    "./locales/skills.vi.json": "./locales/skills.vi.json"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

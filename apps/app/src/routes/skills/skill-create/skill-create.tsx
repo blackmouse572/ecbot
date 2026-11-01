@@ -15,12 +15,13 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
-import { skillFormSchema, type SkillFormData } from "../schemas";
 import {
   EMPTY_SKILL_FORM,
   formValuesToBody,
+  skillFormSchema,
   skillToFormValues,
-} from "../utils";
+  type SkillFormData,
+} from "@repo/ui/skill-steps";
 
 const SkillCreateForm = () => {
   const { t } = useTranslation();

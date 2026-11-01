@@ -12,6 +12,22 @@ if (!("ResizeObserver" in globalThis)) {
   };
 }
 
+// jsdom lacks IntersectionObserver too, which the Combobox uses to load the
+// next page when its list is scrolled to the end.
+if (!("IntersectionObserver" in globalThis)) {
+  globalThis.IntersectionObserver = class {
+    readonly root = null;
+    readonly rootMargin = "";
+    readonly thresholds = [];
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  } as unknown as typeof IntersectionObserver;
+}
+
 // jsdom doesn't implement Element.scroll/scrollTo, which the data-table's
 // scrollable viewport calls on mount, nor scrollIntoView, which cmdk calls to
 // keep the selected Command.Item visible. Provide no-op stubs so full renders

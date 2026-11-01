@@ -4,6 +4,7 @@ import {
   type RenderOptions,
   type RenderResult,
 } from "@testing-library/react";
+import skills from "@repo/agent-blueprint/locales/skills.en.json";
 import i18next, { type i18n as I18n } from "i18next";
 import type { ReactElement, ReactNode } from "react";
 import { I18nextProvider, initReactI18next } from "react-i18next";
@@ -20,7 +21,12 @@ import { MemoryRouter } from "react-router-dom";
 export const uiTestI18nResources = {
   actions: {
     clearAll: "Clear all",
+    cancel: "Cancel",
+    delete: "Delete",
   },
+  // The skill form and steps editor (skill-steps), shipped to the apps by
+  // @repo/agent-blueprint.
+  skills,
   general: {
     search: "Search",
     is: "is",

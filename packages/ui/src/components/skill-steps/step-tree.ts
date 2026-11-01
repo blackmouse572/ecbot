@@ -51,7 +51,7 @@ export const moveStep = (steps: SkillStep[], id: string, by: -1 | 1) =>
     const j = i + by;
     if (i === -1 || j < 0 || j >= l.length) return l;
     const next = [...l];
-    [next[i], next[j]] = [next[j], next[i]];
+    [next[i], next[j]] = [next[j]!, next[i]!];
     return next;
   });
 

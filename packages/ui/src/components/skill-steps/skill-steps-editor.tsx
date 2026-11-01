@@ -10,8 +10,8 @@ import {
   newStep,
   removeStep,
   updateStep,
-} from "../step-tree";
-import type { StepEditorApi } from "../types";
+} from "./step-tree";
+import type { StepEditorApi } from "./types";
 import { SkillStepList } from "./skill-step-list";
 
 type Props = {

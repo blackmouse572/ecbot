@@ -6,7 +6,7 @@ import { HelmetProvider } from "react-helmet-async";
 import type { UseFormReturn } from "react-hook-form";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { SkillFormData } from "../schemas";
+import type { SkillFormData } from "@repo/ui/skill-steps";
 
 const api = vi.hoisted(() => ({
   created: [] as unknown[],

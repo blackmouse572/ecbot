@@ -11,8 +11,12 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { SkillFormFields } from "../components/skill-form";
-import { skillFormSchema, type SkillFormData } from "../schemas";
-import { formValuesToBody, skillToFormValues } from "../utils";
+import {
+  formValuesToBody,
+  skillFormSchema,
+  skillToFormValues,
+  type SkillFormData,
+} from "@repo/ui/skill-steps";
 
 const SkillEditForm = ({ skill }: { skill: SkillGetResponseDto }) => {
   const { t } = useTranslation();

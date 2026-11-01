@@ -3,17 +3,34 @@ import { initReactI18next } from "react-i18next";
 import { languages } from "./languages";
 import agentBuilderEn from "@repo/agent-blueprint/locales/en.json";
 import agentBuilderVi from "@repo/agent-blueprint/locales/vi.json";
+import skillsEn from "@repo/agent-blueprint/locales/skills.en.json";
+import skillsVi from "@repo/agent-blueprint/locales/skills.vi.json";
 import enUS from "./translations/en.json";
 import viVn from "./translations/vi.json";
 
 // The builder's copy lives with the builder questions, so the admin site can
-// show an agent's answers with the same words.
+// show an agent's answers with the same words. The skill form and steps
+// editor copy is shared the same way (@repo/ui/skill-steps).
 export const resources = {
   en: {
-    translation: { ...enUS, agentBuilder: agentBuilderEn },
+    translation: {
+      ...enUS,
+      agentBuilder: agentBuilderEn,
+      skills: {
+        ...enUS.skills,
+        ...skillsEn,
+      },
+    },
   },
   vi: {
-    translation: { ...viVn, agentBuilder: agentBuilderVi },
+    translation: {
+      ...viVn,
+      agentBuilder: agentBuilderVi,
+      skills: {
+        ...viVn.skills,
+        ...skillsVi,
+      },
+    },
   },
 } as const;
 

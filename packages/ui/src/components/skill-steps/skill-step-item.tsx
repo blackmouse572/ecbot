@@ -2,7 +2,7 @@ import { Input, Text, Textarea } from "@medusajs/ui";
 import type { SkillStep } from "@repo/agent-blueprint";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import type { StepEditorApi } from "../types";
+import type { StepEditorApi } from "./types";
 import { SkillIfStep } from "./skill-if-step";
 import { SkillStepActions } from "./skill-step-actions";
 import { SkillStepIssue } from "./skill-step-issue";
