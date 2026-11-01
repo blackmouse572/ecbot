@@ -2,7 +2,13 @@ import { randomBytes } from 'crypto';
 import { UserUpdateNotificationsRequestDto } from 'src/modules/user/dtos/request/user.update-notifications.request.dto';
 import { CountryEntity } from '@app/modules/country/repository/entities/country.entity';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
-import { EntityManager, FilterQuery, InferEntity } from '@mikro-orm/postgresql';
+import {
+    EntityManager,
+    FilterQuery,
+    InferEntity,
+    QueryOrder,
+} from '@mikro-orm/postgresql';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
@@ -247,6 +253,8 @@ export class UserService {
         if (options?.limit) findOptions.limit = options.limit;
         if (options?.offset) findOptions.offset = options.offset;
         if (options?.orderBy) findOptions.orderBy = options.orderBy;
+        else if (options?.order)
+            findOptions.orderBy = userListOrder(options.order);
         // role/country aren't eager relations — populate them (and
         // role.permissions, read via RoleListResponseDto's transform) by
         // default so callers actually get what this method's name promises.
@@ -935,4 +943,28 @@ export class UserService {
         });
         return count > 0;
     }
+}
+
+// Pagination order to MikroORM. Users who never signed in have no lastSeenAt:
+// they sort last in both directions instead of on top as Postgres puts nulls
+// on DESC, and created date breaks ties so offset paging stays stable.
+function userListOrder(
+    order: Record<string, ENUM_PAGINATION_ORDER_DIRECTION_TYPE>
+): Record<string, QueryOrder> {
+    const asc = (key: string) =>
+        order[key] === ENUM_PAGINATION_ORDER_DIRECTION_TYPE.ASC;
+    if (order.lastSeenAt) {
+        return {
+            lastSeenAt: asc('lastSeenAt')
+                ? QueryOrder.ASC_NULLS_LAST
+                : QueryOrder.DESC_NULLS_LAST,
+            createdAt: asc('lastSeenAt') ? QueryOrder.ASC : QueryOrder.DESC,
+        };
+    }
+    return Object.fromEntries(
+        Object.keys(order).map(key => [
+            key,
+            asc(key) ? QueryOrder.ASC : QueryOrder.DESC,
+        ])
+    );
 }

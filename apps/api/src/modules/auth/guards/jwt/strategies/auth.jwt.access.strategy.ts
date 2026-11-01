@@ -54,10 +54,14 @@ export class AuthJwtAccessStrategy extends PassportStrategy(
         }
 
         // Record session activity without blocking the request (throttled write).
+        // An admin impersonating the user does not count as the user being seen.
         // Self-defending catch so this hot path never rejects even if the callee
         // is later refactored to throw.
         void this.sessionService
-            .touchLastActive(data.session)
+            .touchLastActive(
+                data.session,
+                data.impersonatedBy ? undefined : data.user
+            )
             .catch(() => undefined);
 
         return data;

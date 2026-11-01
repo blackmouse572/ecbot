@@ -91,6 +91,15 @@ export class UserGetResponseDto extends DatabaseDto {
     @ApiProperty({
         required: false,
         nullable: true,
+        description:
+            'Last authenticated request by the user; null if they never signed in',
+        example: new Date('2026-11-01T04:47:47.000Z'),
+    })
+    lastSeenAt?: Date | null;
+
+    @ApiProperty({
+        required: false,
+        nullable: true,
         description: 'Version of the Terms and Privacy Policy accepted',
         example: '2026-10-08',
     })

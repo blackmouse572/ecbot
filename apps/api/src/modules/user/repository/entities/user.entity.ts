@@ -73,6 +73,11 @@ export class UserEntity extends DatabaseEntityBase {
     @Property({ type: 'timestamptz', nullable: true })
     termsAcceptedAt?: Date;
 
+    // Last authenticated request, stamped with the session's throttled
+    // lastActiveAt. Null for users who never signed in.
+    @Property({ type: 'timestamptz', nullable: true, index: true })
+    lastSeenAt?: Date;
+
     @Property({ type: 'varchar', length: 20, nullable: true })
     termsVersion?: string;
 

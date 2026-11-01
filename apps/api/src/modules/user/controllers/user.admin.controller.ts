@@ -1,3 +1,4 @@
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import { randomUUID } from 'crypto';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
@@ -72,6 +73,7 @@ import {
     USER_DEFAULT_AVAILABLE_SEARCH,
     USER_DEFAULT_POLICY_ROLE_TYPE,
     USER_DEFAULT_STATUS,
+    USER_ADMIN_AVAILABLE_ORDER_BY,
 } from 'src/modules/user/constants/user.list.constant';
 import {
     UserParam,
@@ -145,6 +147,9 @@ export class UserAdminController {
     async list(
         @PaginationQuery({
             availableSearch: USER_DEFAULT_AVAILABLE_SEARCH,
+            defaultOrderBy: 'lastSeenAt',
+            defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+            availableOrderBy: USER_ADMIN_AVAILABLE_ORDER_BY,
         })
         { _search, _limit, _offset, _order }: PaginationListDto,
         @PaginationQueryFilterInEnum(

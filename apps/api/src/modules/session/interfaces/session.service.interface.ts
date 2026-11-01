@@ -15,11 +15,7 @@ import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 
 // Why an impersonation session ended, recorded on the IMPERSONATE_END activity.
 export type ImpersonationEndReason =
-    | 'manual'
-    | 'expired'
-    | 'expired_swept'
-    | 'revoked'
-    | 'ineligible';
+    'manual' | 'expired' | 'expired_swept' | 'revoked' | 'ineligible';
 
 export interface ISessionService {
     findAll(
@@ -73,7 +69,7 @@ export interface ISessionService {
         sessions: SessionEntity[],
         currentSessionId?: string
     ): SessionAdminListResponseDto[];
-    touchLastActive(id: string): Promise<void>;
+    touchLastActive(id: string, userId?: string): Promise<void>;
     findLoginSession(_id: string): Promise<string>;
     setLoginSession(
         user: UserEntity,

@@ -242,6 +242,12 @@ export type WorkspaceGetProfileResponseDto = {
         [key: string]: unknown;
     } | null;
     /**
+     * Last authenticated request by the user; null if they never signed in
+     */
+    lastSeenAt?: {
+        [key: string]: unknown;
+    } | null;
+    /**
      * Version of the Terms and Privacy Policy accepted
      */
     termsVersion?: {
@@ -347,6 +353,12 @@ export type UserShortResponseDto = {
      * When the user accepted the Terms of Service and Privacy Policy; null for accounts created before this was recorded
      */
     termsAcceptedAt?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Last authenticated request by the user; null if they never signed in
+     */
+    lastSeenAt?: {
         [key: string]: unknown;
     } | null;
     /**
@@ -1115,6 +1127,12 @@ export type UserCensorResponseDto = {
         [key: string]: unknown;
     } | null;
     /**
+     * Last authenticated request by the user; null if they never signed in
+     */
+    lastSeenAt?: {
+        [key: string]: unknown;
+    } | null;
+    /**
      * Version of the Terms and Privacy Policy accepted
      */
     termsVersion?: {
@@ -1741,6 +1759,12 @@ export type UserListResponseDto = {
         [key: string]: unknown;
     } | null;
     /**
+     * Last authenticated request by the user; null if they never signed in
+     */
+    lastSeenAt?: {
+        [key: string]: unknown;
+    } | null;
+    /**
      * Version of the Terms and Privacy Policy accepted
      */
     termsVersion?: {
@@ -1801,6 +1825,12 @@ export type UserProfileResponseDto = {
      * When the user accepted the Terms of Service and Privacy Policy; null for accounts created before this was recorded
      */
     termsAcceptedAt?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Last authenticated request by the user; null if they never signed in
+     */
+    lastSeenAt?: {
         [key: string]: unknown;
     } | null;
     /**

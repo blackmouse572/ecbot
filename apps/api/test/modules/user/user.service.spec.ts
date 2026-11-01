@@ -1,3 +1,5 @@
+import { QueryOrder } from '@mikro-orm/core';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { ENUM_FILE_MIME_IMAGE } from '@app/common/file/enums/file.enum';
 import {
@@ -391,4 +393,53 @@ describe('UserService.mapProfile termsAcceptanceRequired', () => {
             expect(mapped.termsAcceptanceRequired).toBe(expected);
         }
     );
+});
+
+describe('UserService.findAllWithRoleAndCountry ordering', () => {
+    const find = jest.fn().mockResolvedValue([]);
+    const service = new UserService(
+        {} as any,
+        { find } as any,
+        {} as any,
+        { get: jest.fn() } as any,
+        {} as any,
+        {} as any
+    );
+
+    beforeEach(() => find.mockClear());
+
+    it('sorts by last seen with never-seen users last, newest created breaking ties', async () => {
+        await service.findAllWithRoleAndCountry(
+            {},
+            { order: { lastSeenAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC } }
+        );
+
+        expect(find.mock.calls[0][2].orderBy).toEqual({
+            lastSeenAt: QueryOrder.DESC_NULLS_LAST,
+            createdAt: QueryOrder.DESC,
+        });
+    });
+
+    it('keeps never-seen users last when sorting oldest seen first', async () => {
+        await service.findAllWithRoleAndCountry(
+            {},
+            { order: { lastSeenAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.ASC } }
+        );
+
+        expect(find.mock.calls[0][2].orderBy).toEqual({
+            lastSeenAt: QueryOrder.ASC_NULLS_LAST,
+            createdAt: QueryOrder.ASC,
+        });
+    });
+
+    it('applies any other pagination order as given', async () => {
+        await service.findAllWithRoleAndCountry(
+            {},
+            { order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC } }
+        );
+
+        expect(find.mock.calls[0][2].orderBy).toEqual({
+            createdAt: QueryOrder.DESC,
+        });
+    });
 });
