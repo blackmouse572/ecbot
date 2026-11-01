@@ -62,6 +62,9 @@ const TURNS_PER_HOUR = 60;
 const TURN_WINDOW_SECONDS = 60 * 60;
 /** Per-visitor upload ceiling, in the same window. */
 const UPLOADS_PER_HOUR = 30;
+// A visitor id comes from the browser and resets with it, so uploads are
+// also capped per widget: the bucket cannot fill faster than this.
+const ACCOUNT_UPLOADS_PER_HOUR = 500;
 const POLL_PAGE_SIZE = 50;
 
 /**
@@ -164,6 +167,10 @@ export class WidgetPublicController {
             dto,
             'widget-upload',
             UPLOADS_PER_HOUR
+        );
+        await this.claimOrRefuse(
+            `widget-upload-account:${account.id}`,
+            ACCOUNT_UPLOADS_PER_HOUR
         );
         const saved =
             file &&
@@ -282,8 +289,16 @@ export class WidgetPublicController {
 
         // Keyed on the visitor, not the IP: behind the load balancer every
         // anonymous visitor shares one address, so IP throttling barely bites.
+        await this.claimOrRefuse(`${bucket}:${sessionKey}`, perHour);
+        return account;
+    }
+
+    private async claimOrRefuse(
+        bucket: string,
+        perHour: number
+    ): Promise<void> {
         const within = await this.rateLimit.claim(
-            `${bucket}:${sessionKey}`,
+            bucket,
             perHour,
             TURN_WINDOW_SECONDS
         );
@@ -296,7 +311,6 @@ export class WidgetPublicController {
                 HttpStatus.TOO_MANY_REQUESTS
             );
         }
-        return account;
     }
 
     /**

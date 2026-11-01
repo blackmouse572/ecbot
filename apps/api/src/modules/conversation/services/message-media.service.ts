@@ -99,14 +99,22 @@ export class MessageMediaService {
                     : []
             )
         );
-        return Promise.all(
+        // A key that cannot be copied (never uploaded, or expired) is
+        // dropped, so the visitor's message still goes through.
+        const copied = await Promise.all(
             own.map(async ({ type, key, name }) => {
                 const ext = key.split('.').pop() ?? '';
                 const target = `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}/${randomUUID()}.${ext}`;
-                await this.s3.copyItem(key, target, PRIVATE);
-                return { type, key: target, ...(name && { name }) };
+                try {
+                    await this.s3.copyItem(key, target, PRIVATE);
+                } catch (error) {
+                    this.logger.warn(`Could not adopt ${key}: ${error}`);
+                    return [];
+                }
+                return [{ type, key: target, ...(name && { name }) }];
             })
         );
+        return copied.flat();
     }
 
     /** Stored attachments → `{ type, url }` for the inbox and the AI. Only

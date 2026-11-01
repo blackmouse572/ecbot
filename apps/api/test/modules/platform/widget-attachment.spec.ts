@@ -20,7 +20,9 @@ function setup(
         mediaFolder: jest.fn(() => 'widget-media/acc-1/abc'),
     };
     const turnstileService = { verify: jest.fn() };
-    const rateLimit = { claim: jest.fn(async () => overrides.within ?? true) };
+    const rateLimit = {
+        claim: jest.fn(async (_bucket: string) => overrides.within ?? true),
+    };
     const messageMedia = {
         saveUpload: jest.fn(async () =>
             'saved' in overrides
@@ -92,6 +94,24 @@ describe('WidgetPublicController.uploadAttachment', () => {
         await expect(
             controller.uploadAttachment('key', dto, file)
         ).rejects.toThrow();
+        expect(messageMedia.saveUpload).not.toHaveBeenCalled();
+    });
+
+    it('caps uploads per widget too, since a visitor id can be reset', async () => {
+        const { controller, messageMedia, rateLimit } = setup();
+        rateLimit.claim.mockImplementation(
+            async (bucket: string) =>
+                !bucket.startsWith('widget-upload-account:')
+        );
+
+        await expect(
+            controller.uploadAttachment('key', dto, file)
+        ).rejects.toMatchObject({ status: 429 });
+        expect(rateLimit.claim).toHaveBeenCalledWith(
+            'widget-upload-account:acc-1',
+            500,
+            3600
+        );
         expect(messageMedia.saveUpload).not.toHaveBeenCalled();
     });
 

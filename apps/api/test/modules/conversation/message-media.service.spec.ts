@@ -206,5 +206,25 @@ describe('MessageMediaService', () => {
             ]);
             expect(s3WithCopy.copyItem).toHaveBeenCalledTimes(1);
         });
+
+        it('drops an upload that cannot be copied and keeps the rest', async () => {
+            const s3WithCopy = {
+                ...s3,
+                copyItem: jest.fn(async (source: string) => {
+                    if (source.endsWith('gone.jpg'))
+                        throw new Error('NoSuchKey');
+                }),
+            };
+            const media = new MessageMediaService(s3WithCopy as any);
+
+            const out = await media.adopt('widget-media/acc/v1', 'conv-1', [
+                { key: 'widget-media/acc/v1/gone.jpg' },
+                { key: 'widget-media/acc/v1/a.jpg', name: 'shirt.jpg' },
+            ]);
+
+            expect(out).toEqual([
+                expect.objectContaining({ type: 'image', name: 'shirt.jpg' }),
+            ]);
+        });
     });
 });

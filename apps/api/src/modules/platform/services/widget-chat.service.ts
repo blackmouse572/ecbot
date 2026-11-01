@@ -117,14 +117,29 @@ export class WidgetChatService {
         });
 
         // Stored like a channel photo, so the inbox shows it and the Turn
-        // below describes it like any other customer image.
-        const attachments = turn.attachments?.length
-            ? await this.messageMedia.adopt(
-                  this.sessionService.mediaFolder(account.id, visitorId),
-                  conversation.id,
-                  turn.attachments
-              )
-            : [];
+        // below describes it like any other customer image. A repeated send
+        // of the same message already has its copies.
+        const repeated =
+            !!turn.attachments?.length &&
+            !!(await this.messageRepository.findOne({
+                conversation: conversation.id,
+                externalId: messageId,
+            } as never));
+        const attachments =
+            turn.attachments?.length && !repeated
+                ? await this.messageMedia.adopt(
+                      this.sessionService.mediaFolder(account.id, visitorId),
+                      conversation.id,
+                      turn.attachments
+                  )
+                : [];
+        // Every upload failed to copy: nothing is left to answer.
+        if (!text.trim() && !attachments.length && !repeated) {
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.EMPTY_MESSAGE,
+                message: 'widget.error.emptyMessage',
+            });
+        }
         const inbound = await this.messageRepository.upsertByExternalId(
             conversation.id,
             messageId,
@@ -201,6 +216,7 @@ export class WidgetChatService {
         const {
             summary,
             history,
+            message,
             usage: describeUsage,
             usageModel: describeModel,
         } = await this.turnContext.build(
@@ -236,7 +252,9 @@ export class WidgetChatService {
                     chatbot_id: chatbot.id,
                     user_id: visitorId,
                     provider_id: chatbot.modelProvider,
-                    message: text,
+                    // The typed text plus the photo descriptions and file
+                    // notes, as on platform channels.
+                    message,
                     conversation_id: conversation.id,
                     customer_id: customerId,
                     contact_point_id: contactPoint?.id,

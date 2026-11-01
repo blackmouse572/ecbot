@@ -47,6 +47,7 @@ function setup(overrides: Record<string, any> = {}) {
     };
     const messageRepository = {
         upsertByExternalId: jest.fn(async () => ({ id: 'msg-in' })),
+        findOne: jest.fn(async () => null),
         findNewest: jest.fn(async () => []),
         insertPendingOutbound: jest.fn(async () => ({ id: 'msg-out' })),
         markOutboundSent: jest.fn(async () => {}),
@@ -557,7 +558,9 @@ describe('WidgetChatService token budget', () => {
 describe('WidgetChatService attachments', () => {
     it('stores staged uploads on the visitor message', async () => {
         const { service, messageMedia, messageRepository } = setup();
-        const attachments = [{ key: 'widget-media/acc-1/abc/a.jpg', name: 'a.jpg' }];
+        const attachments = [
+            { key: 'widget-media/acc-1/abc/a.jpg', name: 'a.jpg' },
+        ];
 
         await service.handleTurn(res, { ...turn, text: '', attachments });
 
@@ -592,6 +595,47 @@ describe('WidgetChatService attachments', () => {
         const { service, messageRepository } = setup();
         await expect(
             service.handleTurn(res, { ...turn, text: '  ' })
+        ).rejects.toThrow();
+        expect(messageRepository.upsertByExternalId).not.toHaveBeenCalled();
+    });
+
+    it('sends the agent the photo notes, not just the typed text', async () => {
+        const { service, turnContext, chatbotAIService } = setup();
+        jest.spyOn(turnContext, 'build').mockResolvedValue({
+            history: [],
+            message: '[Image description: a red shirt]',
+        } as any);
+        const attachments = [{ key: 'widget-media/acc-1/abc/a.jpg' }];
+
+        await service.handleTurn(res, { ...turn, text: '', attachments });
+
+        const [params] = chatbotAIService.streamChat.mock.calls[0] as any;
+        expect(params.message).toBe('[Image description: a red shirt]');
+    });
+
+    it('copies nothing again when the same message is sent twice', async () => {
+        const { service, messageMedia } = setup({
+            messageRepository: {
+                findOne: jest.fn(async () => ({ id: 'msg-in' })),
+            },
+        });
+        const attachments = [{ key: 'widget-media/acc-1/abc/a.jpg' }];
+
+        await service.handleTurn(res, { ...turn, attachments });
+
+        expect(messageMedia.adopt).not.toHaveBeenCalled();
+    });
+
+    it('refuses a photo-only message whose photos could not be copied', async () => {
+        const { service, messageMedia, messageRepository } = setup();
+        messageMedia.adopt.mockResolvedValueOnce([]);
+
+        await expect(
+            service.handleTurn(res, {
+                ...turn,
+                text: '',
+                attachments: [{ key: 'widget-media/acc-1/abc/gone.jpg' }],
+            })
         ).rejects.toThrow();
         expect(messageRepository.upsertByExternalId).not.toHaveBeenCalled();
     });
