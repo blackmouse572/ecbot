@@ -14,6 +14,8 @@ import time
 from typing import Annotated, Any
 from uuid import UUID
 
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import tool
 from sqlalchemy import select
 from sqlmodel import col
@@ -33,7 +35,12 @@ from eccho_ai.llm.tools.constants import (
 )
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
-from eccho_ai.llm.tools.image_urls import is_known_image_url
+from eccho_ai.llm.tools.image_urls import (
+    from_operator_tool,
+    in_tool_results,
+    successful_result,
+    is_known_image_url,
+)
 
 logger = logging.getLogger("uvicorn.info")
 
@@ -465,14 +472,33 @@ async def cancel_followup(followup_id: str) -> dict[str, Any]:
         return {"error": str(exc)}
 
 
+def _turn_tool_results(runtime: Any) -> list[str]:
+    """Text of what the operator's tools returned since the customer's last
+    message: earlier turns are history, not a source."""
+    messages = (getattr(runtime, "state", None) or {}).get("messages") or []
+    results: list[str] = []
+    for message in messages:
+        if isinstance(message, HumanMessage):
+            results = []
+        elif isinstance(message, ToolMessage) and from_operator_tool(message.name):
+            text = successful_result(message)
+            if text is not None:
+                results.append(text)
+    return results
+
+
 @tool
-async def send_image(url: str) -> dict[str, Any]:
+async def send_image(url: str, runtime: ToolRuntime) -> dict[str, Any]:
     """Send an image to the user as its own message, after any text you
     wrote before this call. `url` must be an image URL that appears in your
-    instructions or knowledge base; other URLs are rejected."""
-    if not await is_known_image_url(_get_chatbot(), url):
+    instructions, knowledge base or a tool result from this turn; other URLs
+    are rejected."""
+    if not (
+        in_tool_results(url, _turn_tool_results(runtime))
+        or await is_known_image_url(_get_chatbot(), url)
+    ):
         _log_call("send_image", _truncate(url), "rejected", 0)
-        return {"ok": False, "reason": "Unknown image URL. Use one from your knowledge base."}
+        return {"ok": False, "reason": "Unknown image URL. Use one from your instructions, knowledge base or a tool result from this turn."}
     _log_call("send_image", _truncate(url), "ok", 0)
     return {"ok": True, "url": url}
 

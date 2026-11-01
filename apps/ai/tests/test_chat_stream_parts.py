@@ -243,6 +243,30 @@ async def test_markdown_images_are_screened():
 
 
 @pytest.mark.asyncio
+async def test_markdown_image_from_an_operator_tool_result_is_allowed():
+    async def allowed(url: str) -> bool:
+        return False
+
+    ig = "https://instagram.fsgn2-6.fna.fbcdn.net/v/1.jpg?stp=a&oe=6A"
+
+    async def fake_events():
+        yield {"event": "on_tool_start", "run_id": "r1", "name": "instagram_posts",
+               "data": {"input": {}}}
+        yield {"event": "on_tool_end", "run_id": "r1",
+               "data": {"output": _tool_msg(json.dumps({"media_url": ig}))}}
+        yield {"event": "on_tool_start", "run_id": "r2", "name": "get_customer_field",
+               "data": {"input": {"key": "avatar"}}}
+        yield {"event": "on_tool_end", "run_id": "r2",
+               "data": {"output": _tool_msg("https://evil/x.jpg")}}
+        yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk(
+            f"![a]({ig}) ![b](https://evil/x.jpg)")}}
+
+    parts = _parts([f async for f in events_to_ui_parts(
+        fake_events(), request_id="m1", image_url_allowed=allowed)])
+    assert [p["url"] for p in parts if p["type"] == "file"] == [ig]
+
+
+@pytest.mark.asyncio
 async def test_a_reply_that_is_only_a_split_markdown_image_is_not_lost():
     async def allowed(url: str) -> bool:
         return True

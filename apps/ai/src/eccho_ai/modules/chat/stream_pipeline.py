@@ -12,6 +12,11 @@ from typing import Any
 import sentry_sdk
 
 from eccho_ai.core.app_logger import get_logger
+from eccho_ai.llm.tools.image_urls import (
+    from_operator_tool,
+    in_tool_results,
+    successful_result,
+)
 from eccho_ai.modules.chat import ui_message_stream as ui
 from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
 from eccho_ai.modules.chat.constants import (
@@ -60,7 +65,8 @@ async def events_to_ui_parts(
     operators and evals (#205); apps/api reads only `usage` from it.
 
     `image_url_allowed` screens markdown images in the text (allowed ones
-    leave it as `file` parts, like `send_image`).
+    leave it as `file` parts, like `send_image`). A URL an operator tool
+    returned this turn is allowed too, as `send_image` allows it.
     """
     yield ui.start(request_id)
     # Open-run trackers live outside the try so the `except` handler can close
@@ -82,7 +88,12 @@ async def events_to_ui_parts(
         reasoning_run = 0
         output_text = ""
         usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
-        images = ImageMarkdownFilter(image_url_allowed) if image_url_allowed else None
+        tool_results: list[str] = []
+
+        async def image_allowed(url: str) -> bool:
+            return in_tool_results(url, tool_results) or await image_url_allowed(url)
+
+        images = ImageMarkdownFilter(image_allowed) if image_url_allowed else None
         leak = PromptLeakFilter()
         citations = CitationMarkerFilter()
         leaked = False
@@ -196,6 +207,10 @@ async def events_to_ui_parts(
                 tool_call_id: str = event.get("run_id") or "unknown"
                 msg = data.get("output")
                 output = getattr(msg, "content", msg)
+                if from_operator_tool(tool_names.get(tool_call_id)):
+                    text = successful_result(msg)
+                    if text is not None:
+                        tool_results.append(text)
                 if isinstance(output, str):
                     try:
                         output = json.loads(output)
