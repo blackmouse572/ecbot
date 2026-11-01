@@ -1,19 +1,21 @@
 import { latestCustomerConversationQueryOptions } from "@/hooks/api/conversations";
+import { useScrollEdges } from "@/hooks/use-scroll-edges";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes";
-import { MagnifyingGlass } from "@medusajs/icons";
-import { Text } from "@medusajs/ui";
+import { MagnifyingGlass, Spinner } from "@medusajs/icons";
+import { NoRecords } from "@repo/ui/common-components";
 import {
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  CommandShortcut,
 } from "@repo/ui/components";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { ScrollEdgeBlur } from "../main-layout/scroll-edge-blur";
 import type { CommandPaletteGroup, CommandPaletteItem } from "./types";
 import { useCommandPalettePages } from "./use-command-palette-pages";
 import { useCommandPaletteSearch } from "./use-command-palette-search";
@@ -49,6 +51,8 @@ export const CommandPaletteContent: FC<CommandPaletteContentProps> = ({
   const visibleGroups = (
     needle ? [pageGroup, ...groups] : [...groups, pageGroup]
   ).filter((group) => group.items.length > 0);
+  const rowCount = visibleGroups.reduce((n, g) => n + g.items.length, 0);
+  const edges = useScrollEdges(`${query}:${rowCount}`);
 
   // A customer has no page of their own: open their latest conversation,
   // or the customer list filtered to them when they have none.
@@ -76,21 +80,43 @@ export const CommandPaletteContent: FC<CommandPaletteContentProps> = ({
 
   return (
     <>
-      <CommandInput
-        icon={<MagnifyingGlass />}
-        value={query}
-        onValueChange={setQuery}
-        placeholder={t("commandPalette.placeholder")}
-      />
-      <CommandList className="max-h-[min(420px,60svh)]">
-        {isSearching && visibleGroups.length === 0 ? (
-          <Text size="small" className="text-ui-fg-muted px-5 py-6 text-center">
-            {t("commandPalette.searching")}
-          </Text>
-        ) : (
-          <CommandEmpty>
-            {t("commandPalette.empty", { query: query.trim() })}
-          </CommandEmpty>
+      <div className="bg-ui-bg-base relative z-10">
+        <CommandInput
+          icon={<MagnifyingGlass />}
+          value={query}
+          onValueChange={setQuery}
+          placeholder={t("commandPalette.placeholder")}
+          suffix={
+            isSearching ? (
+              <Spinner
+                className="text-ui-fg-muted shrink-0 animate-spin"
+                aria-label={t("commandPalette.searching")}
+              />
+            ) : (
+              <CommandShortcut aria-hidden>Esc</CommandShortcut>
+            )
+          }
+        />
+        <ScrollEdgeBlur
+          side="top"
+          visible={edges.top}
+          fadeFrom="from-ui-bg-base"
+          className="h-12"
+        />
+      </div>
+      <CommandList
+        ref={edges.ref}
+        onScroll={edges.onScroll}
+        className="max-h-[min(420px,60svh)]"
+      >
+        {!isSearching && visibleGroups.length === 0 && (
+          <NoRecords
+            size="small"
+            className="py-8"
+            icon={<MagnifyingGlass />}
+            title={t("commandPalette.empty", { query: query.trim() })}
+            message={t("commandPalette.emptyHint")}
+          />
         )}
         {visibleGroups.map((group) => (
           <CommandGroup key={group.key} heading={group.heading}>
@@ -113,6 +139,23 @@ export const CommandPaletteContent: FC<CommandPaletteContentProps> = ({
           </CommandGroup>
         ))}
       </CommandList>
+      <footer className="border-ui-border-base text-ui-fg-muted txt-compact-xsmall bg-ui-bg-base relative z-10 flex items-center gap-x-4 border-t px-5 py-2.5">
+        <ScrollEdgeBlur
+          side="bottom"
+          visible={edges.bottom}
+          fadeFrom="from-ui-bg-base"
+          className="h-12"
+        />
+        <span className="flex items-center gap-x-1.5">
+          <CommandShortcut>↑</CommandShortcut>
+          <CommandShortcut>↓</CommandShortcut>
+          {t("commandPalette.footer.navigate")}
+        </span>
+        <span className="flex items-center gap-x-1.5">
+          <CommandShortcut>↵</CommandShortcut>
+          {t("commandPalette.footer.open")}
+        </span>
+      </footer>
     </>
   );
 };

@@ -68,9 +68,12 @@ function CommandPrompt({
 function CommandInput({
   className,
   icon,
+  suffix,
   ...inputProps
 }: {
   icon?: React.ReactNode;
+  /** Rendered at the input's right edge, e.g. an Esc hint or a loader. */
+  suffix?: React.ReactNode;
 } & React.ComponentProps<typeof CommandPrimitive.Input>) {
   const wrapperClasses =
     "border-input flex items-center gap-x-2 border-b px-5 [&>svg]:text-ui-fg-muted/70";
@@ -91,6 +94,7 @@ function CommandInput({
         className={classes}
         {...inputProps}
       />
+      {suffix}
     </div>
   );
 }

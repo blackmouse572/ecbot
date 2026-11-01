@@ -341,6 +341,11 @@
     "placeholder": "Tìm trang, agent, khách hàng...",
     "searching": "Đang tìm...",
     "empty": "Không tìm thấy kết quả cho \"{{query}}\"",
+    "emptyHint": "Thử từ khác, hoặc kiểm tra lại chính tả.",
+    "footer": {
+      "navigate": "Di chuyển",
+      "open": "Mở"
+    },
     "unnamedCustomer": "Khách hàng chưa có tên",
     "groups": {
       "pages": "Đi tới",

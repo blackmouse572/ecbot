@@ -341,6 +341,11 @@
     "placeholder": "Search pages, agents, customers...",
     "searching": "Searching...",
     "empty": "No results for \"{{query}}\"",
+    "emptyHint": "Try another word, or check the spelling.",
+    "footer": {
+      "navigate": "Navigate",
+      "open": "Open"
+    },
     "unnamedCustomer": "Unnamed customer",
     "groups": {
       "pages": "Go to",
