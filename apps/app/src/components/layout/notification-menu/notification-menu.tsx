@@ -1,5 +1,5 @@
 import { BellAlert } from "@medusajs/icons";
-import { DropdownMenu, IconButton, Text, clx } from "@medusajs/ui";
+import { DropdownMenu, IconButton, Text } from "@medusajs/ui";
 import { useRef, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -169,7 +169,7 @@ export const NotificationMenu: FC = () => {
             side="bottom"
             visible={edges.bottom}
             fadeFrom="from-ui-bg-component"
-            className="bottom-0 h-12"
+            className="bottom-0 h-12 [&>*]:rounded-b-lg"
             testId="notification-shadow-bottom"
           />
         </div>
