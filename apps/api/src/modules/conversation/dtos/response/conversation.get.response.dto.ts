@@ -125,4 +125,17 @@ export class ConversationGetResponseDto {
         default: false,
     })
     canReact: boolean = false;
+
+    @Expose()
+    @ApiProperty({
+        description:
+            "What the inbox reply box may attach for this customer's channel, per kind (`image`, `file`): the largest size in bytes and the MIME types. Absent when the channel takes text only from the inbox.",
+        required: false,
+        example: {
+            image: { maxBytes: 5242880, types: ['image/jpeg', 'image/png'] },
+        },
+    })
+    uploads?: Partial<
+        Record<'image' | 'file', { maxBytes: number; types: string[] }>
+    >;
 }

@@ -1,0 +1,7 @@
+{
+    "error": {
+        "attachmentNotSupported": "This channel cannot take this file. Check the file type and size, then try again.",
+        "emptyMessage": "Write a message or attach a file."
+    },
+    "attachment": "File uploaded."
+}

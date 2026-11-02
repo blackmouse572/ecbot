@@ -7,11 +7,24 @@ import { ENUM_TOOL_INVOCATION_STATUS } from '@app/modules/tool/enums/tool-invoca
 import { ENUM_TOOL_KIND } from '@app/modules/tool/enums/tool-kind.enum';
 import { UserRepository } from '@app/modules/user/repository/repositories/user.repository';
 import {
+    BadRequestException,
     Injectable,
     Logger,
     NotFoundException,
     UnprocessableEntityException,
 } from '@nestjs/common';
+import {
+    MESSAGE_MEDIA_EXTENSIONS,
+    MESSAGE_MEDIA_KEY_PREFIX,
+} from '../constants/message-media.constant';
+import {
+    IChatUpload,
+    IStoredChatUpload,
+} from '../interfaces/message-media.interface';
+import {
+    uploadType,
+    withinChatUploadLimits,
+} from '../utils/message-attachment';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { randomUUID as uuidV4 } from 'node:crypto';
@@ -67,23 +80,90 @@ export class ConversationMessagingService {
         return this.moduleRef.get(PlatformAdapterRegistry, { strict: false });
     }
 
-    async sendOperatorReply(
+    /**
+     * Stores a photo or file the operator attaches in the inbox, in the
+     * conversation's folder. Refused unless the customer's channel takes that
+     * kind, type and size, so the send that follows cannot fail on a limit.
+     */
+    async saveAttachment(
         conversationId: string,
         workspaceId: string,
-        operatorId: string,
-        text: string
-    ): Promise<MessageEntity> {
+        upload: IChatUpload
+    ): Promise<IStoredChatUpload> {
+        const conversation = await this.findWithAccount(
+            conversationId,
+            workspaceId
+        );
+        const account = conversation.account as AccountEntity;
+        const uploads = this.platformRegistry.get(account.type).capabilities
+            .uploads;
+        const kind = MESSAGE_MEDIA_EXTENSIONS[upload.mimetype]
+            ? 'image'
+            : 'file';
+        const limit = uploads?.[kind];
+        const saved =
+            limit &&
+            limit.types.includes(upload.mimetype) &&
+            upload.size <= limit.maxBytes
+                ? await this.messageMedia.saveUpload(
+                      `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}`,
+                      upload
+                  )
+                : undefined;
+        if (!saved) {
+            throw new UnprocessableEntityException({
+                message: 'conversation.error.attachmentNotSupported',
+                statusCode: 422,
+            });
+        }
+        return saved;
+    }
+
+    private async findWithAccount(
+        conversationId: string,
+        workspaceId: string
+    ): Promise<ConversationEntity> {
         const conversation =
             await this.conversationRepository.findOneByIdInWorkspace(
                 conversationId,
                 workspaceId,
                 { populate: ['account'] }
             );
-
         if (!conversation) {
             throw new NotFoundException({
                 message: 'conversation.error.notFound',
                 statusCode: 404,
+            });
+        }
+        return conversation;
+    }
+
+    async sendOperatorReply(
+        conversationId: string,
+        workspaceId: string,
+        operatorId: string,
+        text: string,
+        uploads: { key: string; name?: string }[] = []
+    ): Promise<MessageEntity> {
+        const conversation = await this.findWithAccount(
+            conversationId,
+            workspaceId
+        );
+
+        // Only files stored for this conversation, and either one file or up
+        // to 10 photos, as the reply box allows.
+        const folder = `${MESSAGE_MEDIA_KEY_PREFIX}/${conversationId}/`;
+        const attachments = withinChatUploadLimits(
+            uploads.flatMap(({ key, name }) =>
+                key.startsWith(folder)
+                    ? [{ type: uploadType(key), key, ...(name && { name }) }]
+                    : []
+            )
+        );
+        if (!text.trim() && !attachments.length) {
+            throw new BadRequestException({
+                message: 'conversation.error.emptyMessage',
+                statusCode: 400,
             });
         }
 
@@ -97,17 +177,30 @@ export class ConversationMessagingService {
                 authorType: ENUM_MESSAGE_AUTHOR.OPERATOR,
                 authorId: operatorId,
                 text,
+                ...(attachments.length && { attachments }),
                 dateSent: new Date(),
             }
         );
 
         try {
             const adapter = this.platformRegistry.get(account.type);
-            const { externalId } = await adapter.sendMessage(
-                account,
-                conversation.senderId,
-                toText(text)
-            );
+            // Each photo or file goes out as its own platform message, then
+            // the text; the row keeps the last platform id.
+            let externalId = '';
+            for (const attachment of attachments) {
+                ({ externalId } = await adapter.sendMessage(
+                    account,
+                    conversation.senderId,
+                    await this.messageMedia.toOutbound(attachment)
+                ));
+            }
+            if (text.trim()) {
+                ({ externalId } = await adapter.sendMessage(
+                    account,
+                    conversation.senderId,
+                    toText(text)
+                ));
+            }
             await this.messageRepository.markOutboundSent(
                 clientNonce,
                 externalId

@@ -107,6 +107,20 @@ export class ConversationService implements IConversationService {
         }
     }
 
+    /** What the inbox may attach for this conversation's channel; none when
+     *  the account or its adapter cannot be resolved. */
+    private resolveUploads(
+        conversation: ConversationEntity
+    ): ConversationGetResponseDto['uploads'] {
+        const account = conversation.account as AccountEntity | undefined;
+        if (!account || !wrap(account).isInitialized()) return undefined;
+        try {
+            return this.platformRegistry.get(account.type).capabilities.uploads;
+        } catch {
+            return undefined;
+        }
+    }
+
     async findOrCreate(
         params: IConversationFindOrCreate
     ): Promise<ConversationEntity> {
@@ -538,6 +552,7 @@ export class ConversationService implements IConversationService {
         const customer = this.loadedCustomer(conversation);
         if (customer) dto.customerId = customer.id;
         dto.canReact = this.resolveCanReact(conversation);
+        dto.uploads = this.resolveUploads(conversation);
         return dto;
     }
 

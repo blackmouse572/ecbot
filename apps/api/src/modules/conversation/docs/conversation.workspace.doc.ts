@@ -1,3 +1,5 @@
+import { ChatAttachmentUploadRequestDto } from '../dtos/request/chat-attachment.request.dto';
+import { ChatAttachmentResponseDto } from '../dtos/response/chat-attachment.response.dto';
 import {
     Doc,
     DocAuth,
@@ -206,5 +208,24 @@ export function ConversationWorkspaceUpdateTimezoneDoc(): MethodDecorator {
                 dto: ConversationGetResponseDto,
             }
         )
+    );
+}
+
+export function ConversationWorkspaceAttachmentDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'upload a photo or file for an operator reply',
+            description:
+                "Stores one photo or file for the conversation and returns its key; send the key back in the next message `attachments`. Refused (422) unless the customer's channel takes that kind, type and size, as listed in the conversation `uploads`.",
+        }),
+        DocRequest({
+            params: [...WorkspaceDocParamsId],
+            dto: ChatAttachmentUploadRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.FORM_DATA,
+        }),
+        DocAuth({ xApiKey: true, jwtAccessToken: true }),
+        DocResponse('conversation.attachment', {
+            dto: ChatAttachmentResponseDto,
+        })
     );
 }

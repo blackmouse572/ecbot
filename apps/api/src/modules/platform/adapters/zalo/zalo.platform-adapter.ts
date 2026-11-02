@@ -50,6 +50,14 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
     readonly type = ENUM_ACCOUNT_TYPE.ZALO_PAGE;
     // Text, images and PDFs outbound. Cards, buttons and stickers are a
     // tracked follow-up, so degrade() collapses them to plain text.
+    // Photos up to 1 MB (JPG, PNG) and PDFs up to 5 MB, as for the agent.
+    private static readonly MEDIA_LIMITS = {
+        image: {
+            maxBytes: IMAGE_MAX_BYTES,
+            types: ['image/jpeg', 'image/png'],
+        },
+        file: { maxBytes: FILE_MAX_BYTES, types: ['application/pdf'] },
+    };
     readonly capabilities: AdapterCapabilities = {
         cards: false,
         buttons: false,
@@ -60,13 +68,8 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         reactions: { inbound: true, outbound: true },
         typing: false,
         markRead: false,
-        mediaLimits: {
-            image: {
-                maxBytes: IMAGE_MAX_BYTES,
-                types: ['image/jpeg', 'image/png'],
-            },
-            file: { maxBytes: FILE_MAX_BYTES, types: ['application/pdf'] },
-        },
+        mediaLimits: ZaloPlatformAdapter.MEDIA_LIMITS,
+        uploads: ZaloPlatformAdapter.MEDIA_LIMITS,
     };
 
     private readonly logger = new Logger(ZaloPlatformAdapter.name);

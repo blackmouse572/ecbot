@@ -1,3 +1,4 @@
+import { uploadLimits } from '../../constants/upload-limits.constant';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { Injectable } from '@nestjs/common';
@@ -43,6 +44,11 @@ export class WebsitePlatformAdapter extends PlatformAdapter {
         reactions: { inbound: false, outbound: false },
         typing: false,
         markRead: false,
+        // The widget shows whatever the preview chat takes.
+        uploads: uploadLimits(
+            ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+            true
+        ),
     };
 
     // Nothing to authorize against — the operator configures the widget in

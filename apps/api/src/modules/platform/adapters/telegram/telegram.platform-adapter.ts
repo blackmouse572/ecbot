@@ -1,3 +1,4 @@
+import { uploadLimits } from '../../constants/upload-limits.constant';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
@@ -131,6 +132,8 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
         // Telegram shows a chat action for 5 seconds at most (#181).
         typingRefreshMs: 4000,
         markRead: false,
+        // Telegram fetches photos by link up to 5 MB and other files up to 20 MB.
+        uploads: uploadLimits(['image/jpeg', 'image/png', 'image/webp'], true),
     };
 
     private readonly logger = new Logger(TelegramPlatformAdapter.name);

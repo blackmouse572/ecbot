@@ -35,7 +35,14 @@ import {
     Patch,
     Post,
     Query,
+    UnprocessableEntityException,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
+import { CHAT_UPLOAD_FILE_MAX_BYTES } from '../constants/message-media.constant';
+import { ChatAttachmentResponseDto } from '../dtos/response/chat-attachment.response.dto';
 import { ApiTags } from '@nestjs/swagger';
 import {
     PaginationQuery,
@@ -66,6 +73,7 @@ import {
     ConversationWorkspaceListMessagesDoc,
     ConversationWorkspaceMarkReadDoc,
     ConversationWorkspaceReactToMessageDoc,
+    ConversationWorkspaceAttachmentDoc,
     ConversationWorkspaceSendMessageDoc,
     ConversationWorkspaceUpdateBotDoc,
     ConversationWorkspaceUpdateTimezoneDoc,
@@ -450,6 +458,43 @@ export class ConversationWorkspaceController {
         };
     }
 
+    @ConversationWorkspaceAttachmentDoc()
+    @Response('conversation.attachment')
+    @WorkspaceScopedProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Post('/:id/attachments')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: multer.memoryStorage(),
+            limits: { fileSize: CHAT_UPLOAD_FILE_MAX_BYTES, files: 1 },
+        })
+    )
+    async uploadAttachment(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param('id') id: string,
+        @UploadedFile() file?: Express.Multer.File
+    ): Promise<IResponse<ChatAttachmentResponseDto>> {
+        if (!file) {
+            throw new UnprocessableEntityException({
+                message: 'conversation.error.attachmentNotSupported',
+                statusCode: 422,
+            });
+        }
+        const saved = await this.conversationMessagingService.saveAttachment(
+            id,
+            workspace.id,
+            file
+        );
+        return {
+            data: { type: saved.type, key: saved.key, name: saved.name },
+        };
+    }
+
     @ConversationWorkspaceSendMessageDoc()
     @Response('conversation.workspace.sendMessage')
     @WorkspaceScopedProtected({
@@ -471,7 +516,8 @@ export class ConversationWorkspaceController {
                 id,
                 workspace.id,
                 user.id,
-                dto.text
+                dto.text,
+                dto.attachments
             );
 
         const conversation =

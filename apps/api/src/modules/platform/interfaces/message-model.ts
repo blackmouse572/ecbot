@@ -57,6 +57,12 @@ export interface AdapterCapabilities {
      * type it does not know) as its link, so a send never fails on a limit.
      */
     mediaLimits?: MediaLimits;
+    /**
+     * What an operator may attach from the inbox reply box, per kind. The
+     * app and the upload endpoint check it before anything is stored, so a
+     * send never fails on a limit. Left out, the inbox sends text only.
+     */
+    uploads?: MediaLimits;
 }
 
 export type MediaLimits = Partial<

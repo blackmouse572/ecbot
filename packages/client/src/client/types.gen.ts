@@ -5671,6 +5671,12 @@ export type ConversationGetResponseDto = {
      * Whether the account's platform adapter supports sending reactions to messages. False if the platform can't be resolved.
      */
     canReact: boolean;
+    /**
+     * What the inbox reply box may attach for this customer's channel, per kind (`image`, `file`): the largest size in bytes and the MIME types. Absent when the channel takes text only from the inbox.
+     */
+    uploads?: {
+        [key: string]: unknown;
+    };
 };
 
 export type ConversationUpdateStatusRequestDto = {
@@ -5839,9 +5845,13 @@ export type MessageGetResponseDto = {
 
 export type ConversationSendMessageRequestDto = {
     /**
-     * Message text to send to the customer
+     * Message text to send to the customer. May be empty when the message has attachments.
      */
     text: string;
+    /**
+     * Photos or a file stored with the attachments endpoint: either one file or up to 10 photos. Each goes out as its own message before the text.
+     */
+    attachments?: Array<ChatAttachmentRequestDto>;
 };
 
 export type ConversationReactToMessageRequestDto = {
@@ -28010,6 +28020,86 @@ export type ConversationWorkspaceControllerSendMessageV1Responses = {
 };
 
 export type ConversationWorkspaceControllerSendMessageV1Response = ConversationWorkspaceControllerSendMessageV1Responses[keyof ConversationWorkspaceControllerSendMessageV1Responses];
+
+export type ConversationWorkspaceControllerUploadAttachmentV1Data = {
+    body: ChatAttachmentUploadRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/conversations/{id}/attachments';
+};
+
+export type ConversationWorkspaceControllerUploadAttachmentV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ConversationWorkspaceControllerUploadAttachmentV1Error = ConversationWorkspaceControllerUploadAttachmentV1Errors[keyof ConversationWorkspaceControllerUploadAttachmentV1Errors];
+
+export type ConversationWorkspaceControllerUploadAttachmentV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatAttachmentResponseDto;
+    };
+};
+
+export type ConversationWorkspaceControllerUploadAttachmentV1Response = ConversationWorkspaceControllerUploadAttachmentV1Responses[keyof ConversationWorkspaceControllerUploadAttachmentV1Responses];
 
 export type ConversationWorkspaceControllerReactToMessageV1Data = {
     body: ConversationReactToMessageRequestDto;
