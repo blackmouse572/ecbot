@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { ENUM_CONVERSATION_STATUS } from '../../enums/conversation.enum';
 import { ChatbotGetDetailShortResponseDto } from '@app/modules/chatbot/dtos/response/chatbot.detail.response.dto';
+import { ConversationUploadsResponseDto } from './conversation-uploads.response.dto';
 
 export class ConversationGetResponseDto {
     @Expose()
@@ -127,15 +128,12 @@ export class ConversationGetResponseDto {
     canReact: boolean = false;
 
     @Expose()
+    @Type(() => ConversationUploadsResponseDto)
     @ApiProperty({
+        type: () => ConversationUploadsResponseDto,
         description:
-            "What the inbox reply box may attach for this customer's channel, per kind (`image`, `file`): the largest size in bytes and the MIME types. Absent when the channel takes text only from the inbox.",
+            "What the inbox reply box may attach for this customer's channel, per kind. Absent when the channel takes text only from the inbox.",
         required: false,
-        example: {
-            image: { maxBytes: 5242880, types: ['image/jpeg', 'image/png'] },
-        },
     })
-    uploads?: Partial<
-        Record<'image' | 'file', { maxBytes: number; types: string[] }>
-    >;
+    uploads?: ConversationUploadsResponseDto;
 }

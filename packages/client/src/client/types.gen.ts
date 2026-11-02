@@ -5603,6 +5603,28 @@ export type AccountGetResponseDto = {
     workspace: string;
 };
 
+export type ConversationUploadLimitResponseDto = {
+    /**
+     * Largest size in bytes
+     */
+    maxBytes: number;
+    /**
+     * MIME types the channel takes
+     */
+    types: Array<string>;
+};
+
+export type ConversationUploadsResponseDto = {
+    /**
+     * Photos the channel takes
+     */
+    image?: ConversationUploadLimitResponseDto;
+    /**
+     * Files the channel takes
+     */
+    file?: ConversationUploadLimitResponseDto;
+};
+
 export type ConversationGetResponseDto = {
     /**
      * Conversation ID
@@ -5672,11 +5694,9 @@ export type ConversationGetResponseDto = {
      */
     canReact: boolean;
     /**
-     * What the inbox reply box may attach for this customer's channel, per kind (`image`, `file`): the largest size in bytes and the MIME types. Absent when the channel takes text only from the inbox.
+     * What the inbox reply box may attach for this customer's channel, per kind. Absent when the channel takes text only from the inbox.
      */
-    uploads?: {
-        [key: string]: unknown;
-    };
+    uploads?: ConversationUploadsResponseDto;
 };
 
 export type ConversationUpdateStatusRequestDto = {
@@ -5843,7 +5863,7 @@ export type MessageGetResponseDto = {
     reactions?: Array<MessageReactionResponseDto>;
 };
 
-export type ConversationSendMessageRequestDto = {
+export type ConversationWorkspaceSendMessageRequestDto = {
     /**
      * Message text to send to the customer. May be empty when the message has attachments.
      */
@@ -7067,6 +7087,13 @@ export type KnowledgeItemClientCreateRequestDto = {
      * For FILE or MEDIA: a public http(s) link the API downloads the file from.
      */
     fileUrl?: string;
+};
+
+export type ConversationSendMessageRequestDto = {
+    /**
+     * Message text to send to the customer
+     */
+    text: string;
 };
 
 export type RequestUserResponseDto = {
@@ -27942,7 +27969,7 @@ export type ConversationWorkspaceControllerListMessagesV1Responses = {
 export type ConversationWorkspaceControllerListMessagesV1Response = ConversationWorkspaceControllerListMessagesV1Responses[keyof ConversationWorkspaceControllerListMessagesV1Responses];
 
 export type ConversationWorkspaceControllerSendMessageV1Data = {
-    body: ConversationSendMessageRequestDto;
+    body: ConversationWorkspaceSendMessageRequestDto;
     headers?: {
         /**
          * Custom language header

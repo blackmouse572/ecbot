@@ -58,7 +58,7 @@ import {
     ResponsePaging,
 } from 'src/common/response/decorators/response.decorator';
 import { ConversationReactToMessageRequestDto } from '../dtos/request/conversation.react-to-message.request.dto';
-import { ConversationSendMessageRequestDto } from '../dtos/request/conversation.send-message.request.dto';
+import { ConversationWorkspaceSendMessageRequestDto } from '../dtos/request/conversation.workspace.send-message.request.dto';
 import { ConversationUpdateBotRequestDto } from '../dtos/request/conversation.update-bot.request.dto';
 import { ConversationUpdateTimezoneRequestDto } from '../dtos/request/conversation.update-timezone.request.dto';
 import { ConversationUpdateStatusRequestDto } from '../dtos/request/conversation.update-status.request.dto';
@@ -508,7 +508,7 @@ export class ConversationWorkspaceController {
     async sendMessage(
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('id') id: string,
-        @Body() dto: ConversationSendMessageRequestDto,
+        @Body() dto: ConversationWorkspaceSendMessageRequestDto,
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
     ): Promise<IResponse<MessageGetResponseDto>> {
         const message =

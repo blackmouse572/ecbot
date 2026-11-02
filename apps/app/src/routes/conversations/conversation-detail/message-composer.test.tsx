@@ -130,5 +130,65 @@ describe("MessageComposer", () => {
         ]),
       );
     });
+    it("sends once while the files are still uploading", async () => {
+      let finish!: () => void;
+      const onSubmit = vi.fn(
+        () => new Promise<void>((resolve) => (finish = resolve)),
+      );
+      render(
+        <MessageComposer
+          isSending={false}
+          onSubmit={onSubmit}
+          uploads={messenger}
+        />,
+      );
+      fireEvent.change(screen.getByTestId("chat-photos-input"), {
+        target: { files: [png("shirt.png")] },
+      });
+      await screen.findByText("shirt.png");
+      const form = screen.getByRole("textbox").closest("form")!;
+
+      fireEvent.submit(form);
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(
+        screen.getByRole("button", { name: "actions.send" }),
+      ).toBeDisabled();
+      fireEvent.submit(form);
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("shirt.png")).toBeInTheDocument();
+      finish();
+      await waitFor(() => expect(screen.queryByText("shirt.png")).toBeNull());
+    });
+
+    it("keeps the text and the files when the upload is refused", async () => {
+      const onSubmit = vi.fn(() => Promise.reject(new Error("refused")));
+      render(
+        <MessageComposer
+          isSending={false}
+          onSubmit={onSubmit}
+          uploads={messenger}
+        />,
+      );
+      fireEvent.change(screen.getByTestId("chat-photos-input"), {
+        target: { files: [png("shirt.png")] },
+      });
+      await screen.findByText("shirt.png");
+      fireEvent.change(screen.getByRole("textbox"), {
+        target: { value: "Here it is" },
+      });
+
+      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "actions.send" }),
+        ).toBeEnabled(),
+      );
+      expect(screen.getByRole("textbox")).toHaveValue("Here it is");
+      expect(screen.getByText("shirt.png")).toBeInTheDocument();
+    });
   });
 });
