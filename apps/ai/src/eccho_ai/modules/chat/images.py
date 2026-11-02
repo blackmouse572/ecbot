@@ -24,6 +24,7 @@ from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.guardrails.content import run_input_guardrail
 from eccho_ai.llm.providers.chat_model import build_chat_model
 from eccho_ai.llm.retrievers.safe_fetch import EgressBlockedError, assert_public_url
+from eccho_ai.llm.usage import usage_from_metadata
 from eccho_ai.modules.chat.models.chat_models import ImageToDescribe
 
 logger = get_logger(__name__)
@@ -114,8 +115,7 @@ async def _catalog_parts(instructions: str | None) -> list[dict]:
 
 
 def _usage(reply: Any) -> dict[str, int]:
-    usage = getattr(reply, "usage_metadata", None) or {}
-    return {key: usage.get(key, 0) for key in ("input_tokens", "output_tokens", "total_tokens")}
+    return usage_from_metadata(getattr(reply, "usage_metadata", None)).model_dump()
 
 
 def _parse(content: Any, count: int) -> list[str | None]:

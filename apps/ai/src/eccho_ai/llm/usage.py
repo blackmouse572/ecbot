@@ -27,6 +27,24 @@ def cache_counts(usage_metadata: Mapping[str, Any]) -> tuple[int, int]:
     return int(details.get("cache_read") or 0), int(details.get("cache_creation") or 0)
 
 
+def usage_from_metadata(usage_metadata: Mapping[str, Any] | None) -> TokenUsage:
+    """One call's `usage_metadata` as a TokenUsage, cache counts included."""
+    meta = usage_metadata or {}
+    read, write = cache_counts(meta)
+    return TokenUsage(
+        input_tokens=int(meta.get("input_tokens") or 0),
+        output_tokens=int(meta.get("output_tokens") or 0),
+        total_tokens=int(meta.get("total_tokens") or 0),
+        cache_read_tokens=read,
+        cache_write_tokens=write,
+    )
+
+
+def add_usage(a: TokenUsage, b: TokenUsage) -> TokenUsage:
+    """Two usages added field by field."""
+    return TokenUsage(**{key: getattr(a, key) + getattr(b, key) for key in TokenUsage.model_fields})
+
+
 def sum_usage(by_model: Mapping[str, Mapping[str, Any]]) -> TokenUsage | None:
     """Add up `UsageMetadataCallbackHandler.usage_metadata`; None when nothing ran."""
     if not by_model:

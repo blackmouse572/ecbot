@@ -23,7 +23,7 @@ from eccho_ai.llm.retrievers.embeddings import (
     get_embeddings_client,
 )
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
-from eccho_ai.llm.usage import TokenUsage
+from eccho_ai.llm.usage import TokenUsage, add_usage, usage_from_metadata
 from eccho_ai.modules.rag.models import RAGIngestResponse
 from eccho_ai.modules.rag.services import RAGIngestService
 
@@ -76,11 +76,7 @@ class MediaIngestResponse(BaseModel):
 def _add(a: TokenUsage | None, b: TokenUsage | None) -> TokenUsage | None:
     if a is None or b is None:
         return a or b
-    return TokenUsage(
-        input_tokens=a.input_tokens + b.input_tokens,
-        output_tokens=a.output_tokens + b.output_tokens,
-        total_tokens=a.total_tokens + b.total_tokens,
-    )
+    return add_usage(a, b)
 
 
 async def describe_media_image(
@@ -102,12 +98,7 @@ async def describe_media_image(
 
 
 def _vision_usage(reply) -> TokenUsage:
-    usage = getattr(reply, "usage_metadata", None) or {}
-    return TokenUsage(
-        input_tokens=usage.get("input_tokens", 0),
-        output_tokens=usage.get("output_tokens", 0),
-        total_tokens=usage.get("total_tokens", 0),
-    )
+    return usage_from_metadata(getattr(reply, "usage_metadata", None))
 
 
 def _pdf_pages(content: bytes) -> list[tuple[str, bytes | None]]:

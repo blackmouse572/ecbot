@@ -1,4 +1,7 @@
-import { parseWireTokenUsage } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
+import {
+    addTokenUsage,
+    parseWireTokenUsage,
+} from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
 
 describe('parseWireTokenUsage', () => {
     // Prompt-cache reads bill at a fraction of the input price, so the meter
@@ -44,5 +47,42 @@ describe('parseWireTokenUsage', () => {
                 cache_write_tokens: -3,
             })
         ).toEqual({ inputTokens: 10, outputTokens: 4, totalTokens: 14 });
+    });
+});
+
+describe('addTokenUsage', () => {
+    // A Turn adds the reply frame and the image-description frame.
+    it('adds the prompt cache counts of both sides', () => {
+        expect(
+            addTokenUsage(
+                {
+                    inputTokens: 100,
+                    outputTokens: 5,
+                    totalTokens: 105,
+                    cacheWriteTokens: 90,
+                },
+                {
+                    inputTokens: 120,
+                    outputTokens: 7,
+                    totalTokens: 127,
+                    cacheReadTokens: 90,
+                }
+            )
+        ).toEqual({
+            inputTokens: 220,
+            outputTokens: 12,
+            totalTokens: 232,
+            cacheReadTokens: 90,
+            cacheWriteTokens: 90,
+        });
+    });
+
+    it('adds no cache keys when neither side used the cache', () => {
+        expect(
+            addTokenUsage(
+                { inputTokens: 10, outputTokens: 4, totalTokens: 14 },
+                { inputTokens: 1, outputTokens: 2, totalTokens: 3 }
+            )
+        ).toEqual({ inputTokens: 11, outputTokens: 6, totalTokens: 17 });
     });
 });

@@ -243,3 +243,17 @@ def test_pdf_pages_keep_text_and_render_pages_without_it():
 
     assert pages[0][0].startswith("Menu do uong") and pages[0][1] is None
     assert pages[1][1][:2] == b"\xff\xd8"  # rendered as a JPEG
+
+
+def test_vision_usage_keeps_cache_counts_across_page_batches():
+    def reply(read: int):
+        return SimpleNamespace(usage_metadata={
+            "input_tokens": 100, "output_tokens": 10, "total_tokens": 110,
+            "input_token_details": {"cache_read": read},
+        })
+
+    total = media._add(media._vision_usage(reply(60)), media._vision_usage(reply(40)))
+
+    assert total == TokenUsage(
+        input_tokens=200, output_tokens=20, total_tokens=220, cache_read_tokens=100
+    )
