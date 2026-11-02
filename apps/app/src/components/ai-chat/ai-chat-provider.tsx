@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { toFile } from "./file-part";
 import type { ChatTransportConfig } from "./use-ai-chat-stream";
 import { useAiChat } from "./use-ai-chat-stream";
 
@@ -32,12 +33,6 @@ export type AIChatProviderState = {
     messages: UIMessage[] | ((current: UIMessage[]) => UIMessage[]),
   ) => void;
 };
-
-/** A data URL file part back into the File an upload endpoint takes. */
-async function toFile(part: FileUIPart): Promise<File> {
-  const blob = await (await fetch(part.url)).blob();
-  return new File([blob], part.filename ?? "file", { type: part.mediaType });
-}
 
 const AIChatContext = createContext<AIChatProviderState | null>(null);
 

@@ -1,7 +1,12 @@
 import { TooltipProvider } from "@medusajs/ui";
-import { render as rtlRender, screen } from "@testing-library/react";
+import {
+  fireEvent,
+  render as rtlRender,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { ReactElement } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -42,5 +47,88 @@ describe("MessageComposer", () => {
     expect(
       screen.getByRole("link", { name: "conversations.reactions.policyLink" }),
     ).toHaveAttribute("href", expect.stringContaining("facebook.com"));
+  });
+
+  describe("attachments", () => {
+    const MB = 1024 * 1024;
+    const messenger = {
+      image: { maxBytes: 5 * MB, types: ["image/jpeg", "image/png"] },
+      file: { maxBytes: 10 * MB, types: ["application/pdf"] },
+    };
+    const png = (name: string, size = 10) => {
+      const f = new File(["x"], name, { type: "image/png" });
+      Object.defineProperty(f, "size", { value: size });
+      return f;
+    };
+
+    beforeEach(() => {
+      // jsdom has no object URLs; the input previews files with them.
+      URL.createObjectURL = vi.fn(() => "blob:preview");
+      URL.revokeObjectURL = vi.fn();
+    });
+
+    it("offers no attach buttons on a text-only channel", () => {
+      render(<MessageComposer isSending={false} onSubmit={vi.fn()} />);
+      expect(screen.queryByTestId("chat-attach-photos")).toBeNull();
+      expect(screen.queryByTestId("chat-attach-file")).toBeNull();
+    });
+
+    it("offers only what the channel takes", () => {
+      render(
+        <MessageComposer
+          isSending={false}
+          onSubmit={vi.fn()}
+          uploads={{ image: messenger.image }}
+        />,
+      );
+      expect(screen.getByTestId("chat-attach-photos")).toBeInTheDocument();
+      expect(screen.queryByTestId("chat-attach-file")).toBeNull();
+      expect(screen.getByTestId("chat-photos-input")).toHaveAttribute(
+        "accept",
+        "image/jpeg,image/png",
+      );
+    });
+
+    it("refuses a photo over the channel's size before it is attached", async () => {
+      render(
+        <MessageComposer
+          isSending={false}
+          onSubmit={vi.fn()}
+          uploads={{ image: { maxBytes: 1_000_000, types: ["image/png"] } }}
+        />,
+      );
+      fireEvent.change(screen.getByTestId("chat-photos-input"), {
+        target: { files: [png("big.png", 2 * MB), png("small.png")] },
+      });
+
+      expect(await screen.findByText("small.png")).toBeInTheDocument();
+      expect(screen.queryByText("big.png")).toBeNull();
+    });
+
+    it("sends the photos with the text", async () => {
+      const onSubmit = vi.fn();
+      render(
+        <MessageComposer
+          isSending={false}
+          onSubmit={onSubmit}
+          uploads={messenger}
+        />,
+      );
+      fireEvent.change(screen.getByTestId("chat-photos-input"), {
+        target: { files: [png("shirt.png")] },
+      });
+      await screen.findByText("shirt.png");
+
+      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+
+      await waitFor(() =>
+        expect(onSubmit).toHaveBeenCalledWith("", [
+          expect.objectContaining({
+            mediaType: "image/png",
+            filename: "shirt.png",
+          }),
+        ]),
+      );
+    });
   });
 });

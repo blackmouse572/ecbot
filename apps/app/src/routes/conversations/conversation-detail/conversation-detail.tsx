@@ -8,7 +8,11 @@ import {
   useMarkConversationRead,
   useReactToMessage,
   useSendOperatorReply,
+  useUploadReplyAttachments,
 } from "@/hooks/api/conversations";
+import { readApiError } from "@/libs/api-error";
+import type { ChatAttachmentResponseDto } from "@repo/client";
+import type { FileUIPart } from "ai";
 import { useMe } from "@/hooks/api/users";
 import { useNowAt } from "@/hooks/use-now-at";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
@@ -58,6 +62,7 @@ export function ConversationDetail() {
     fetchNextPage,
   } = useConversationMessages(id);
   const send = useSendOperatorReply(id);
+  const uploadAttachments = useUploadReplyAttachments(id);
   const markRead = useMarkConversationRead(id);
   const react = useReactToMessage(id, currentOperatorId);
   const playSound = useUISound();
@@ -139,9 +144,22 @@ export function ConversationDetail() {
     );
   }
 
-  const onSend = (text: string) => {
+  const onSend = async (text: string, files: FileUIPart[] = []) => {
+    // Uploaded first: a refused file keeps the message and its files in
+    // the reply box, so the operator can change them and send again.
+    let attachments: ChatAttachmentResponseDto[] | undefined;
+    if (files.length) {
+      try {
+        attachments = await uploadAttachments(files);
+      } catch (error) {
+        toast.error(
+          readApiError(error).message ?? t("chatbot.chat.attachFailed"),
+        );
+        throw error;
+      }
+    }
     send.mutate(
-      { text },
+      { text, attachments, previews: files },
       {
         onSuccess: () => playSound("send"),
         onError: () => {
@@ -222,6 +240,7 @@ export function ConversationDetail() {
         isSending={send.isPending}
         onSubmit={onSend}
         windowClosed={replyWindowClosed}
+        uploads={conversation.uploads}
       />
     </>
   );
