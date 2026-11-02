@@ -99,7 +99,12 @@ export function AIChatInput() {
 
   return (
     <PromptInput
-      onSubmit={(message) => submit(message.text, message.files)}
+      onSubmit={(message) =>
+        submit(
+          message.text,
+          message.files.flatMap((f) => (f.url ? [{ ...f, url: f.url }] : [])),
+        )
+      }
       className="[&>div]:rounded-none"
       accept={canAttach ? CHAT_ATTACH_ACCEPT : undefined}
       multiple={canAttach}
