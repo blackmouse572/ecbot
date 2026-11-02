@@ -19,6 +19,8 @@ from eccho_ai.modules.customer.models import ClassifyResponse
 from eccho_ai.modules.decision import routers as decision_router_module
 
 USAGE = {"input_tokens": 120, "output_tokens": 30, "total_tokens": 150}
+# What apps/ai reports for USAGE: no prompt cache was hit or written.
+REPORTED = {**USAGE, "cache_read_tokens": 0, "cache_write_tokens": 0}
 
 
 class _FakeLLM:
@@ -53,7 +55,7 @@ async def test_system_one_reports_usage_and_model(async_client, monkeypatch):
 
     data = resp.json()["data"]
     assert data["answers"] == {"a": {"type": "noul", "noul": 0.8}}
-    assert data["usage"] == USAGE
+    assert data["usage"] == REPORTED
     assert data["model"] == AppVars.DECISION_MODEL
 
 
@@ -69,7 +71,7 @@ async def test_system_one_reports_usage_when_the_answer_is_unreadable(async_clie
 
     data = resp.json()["data"]
     assert data["answers"] == {}
-    assert data["usage"] == USAGE
+    assert data["usage"] == REPORTED
 
 
 async def test_classify_reports_usage_and_model(async_client, monkeypatch):
@@ -92,7 +94,7 @@ async def test_classify_reports_usage_and_model(async_client, monkeypatch):
 
     data = resp.json()["data"]
     assert data["tags_to_add"] == ["VIP"]
-    assert data["usage"] == USAGE
+    assert data["usage"] == REPORTED
     assert data["model"] == AppVars.CLASSIFIER_MODEL
 
 
@@ -102,7 +104,10 @@ def test_sum_usage_is_none_when_no_model_ran():
 
 def test_sum_usage_adds_every_model():
     total = sum_usage({"a": USAGE, "b": {"input_tokens": 1, "output_tokens": 2, "total_tokens": 3}})
-    assert total.model_dump() == {"input_tokens": 121, "output_tokens": 32, "total_tokens": 153}
+    assert total.model_dump() == {
+        "input_tokens": 121, "output_tokens": 32, "total_tokens": 153,
+        "cache_read_tokens": 0, "cache_write_tokens": 0,
+    }
 
 
 async def test_embedding_usage_is_summed_over_batches():
@@ -123,7 +128,10 @@ async def test_embedding_usage_is_summed_over_batches():
 
     assert calls == [["a", "b"], ["c"]]
     assert vectors == [[0.1], [0.1], [0.1]]
-    assert usage.model_dump() == {"input_tokens": 30, "output_tokens": 0, "total_tokens": 30}
+    assert usage.model_dump() == {
+        "input_tokens": 30, "output_tokens": 0, "total_tokens": 30,
+        "cache_read_tokens": 0, "cache_write_tokens": 0,
+    }
 
 
 async def test_embedding_usage_is_none_when_the_provider_reports_none():
@@ -137,3 +145,20 @@ async def test_embedding_usage_is_none_when_the_provider_reports_none():
     _, usage = await aembed_documents_with_usage(client, ["a"])
 
     assert usage is None
+
+
+def test_sum_usage_keeps_prompt_cache_reads_and_writes():
+    # Cached input is billed at a fraction of the input price; apps/api needs
+    # the split to charge what the call cost.
+    usage = sum_usage({
+        "m": {
+            **USAGE,
+            "input_token_details": {"cache_read": 100, "cache_creation": 15},
+        },
+        "n": {**USAGE, "input_token_details": {"cache_read": 20}},
+    })
+
+    assert usage is not None
+    assert usage.input_tokens == 240
+    assert usage.cache_read_tokens == 120
+    assert usage.cache_write_tokens == 15
