@@ -1,10 +1,10 @@
-import { clx } from "@medusajs/ui";
+import { ScrollEdgeBlur } from "@/components/layout/main-layout/scroll-edge-blur";
 import { ScrollArea } from "@repo/ui/components";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FC, ReactNode } from "react";
 
-/** A row that scrolls sideways on narrow screens, with a soft shadow on the
- * side that still has content hidden. */
+/** A row that scrolls sideways on narrow screens, with a soft blur on the
+ * side that still has content hidden, like the sidebar. */
 export const ScrollShadowRow: FC<{ children: ReactNode }> = ({ children }) => {
   const root = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
@@ -28,28 +28,22 @@ export const ScrollShadowRow: FC<{ children: ReactNode }> = ({ children }) => {
     return () => observer.disconnect();
   }, [measure]);
 
-  const shadow =
-    "pointer-events-none absolute inset-y-0 z-10 w-8 transition-opacity duration-150";
   return (
     <div className="relative min-w-0">
       <ScrollArea ref={root} onScrollCapture={measure}>
         {children}
       </ScrollArea>
-      <div
-        aria-hidden
-        className={clx(
-          shadow,
-          "from-ui-bg-subtle left-0 bg-gradient-to-r to-transparent",
-          edges.start ? "opacity-100" : "opacity-0",
-        )}
+      <ScrollEdgeBlur
+        side="left"
+        visible={edges.start}
+        className="z-10"
+        testId="row-shadow-left"
       />
-      <div
-        aria-hidden
-        className={clx(
-          shadow,
-          "from-ui-bg-subtle right-0 bg-gradient-to-l to-transparent",
-          edges.end ? "opacity-100" : "opacity-0",
-        )}
+      <ScrollEdgeBlur
+        side="right"
+        visible={edges.end}
+        className="z-10"
+        testId="row-shadow-right"
       />
     </div>
   );
