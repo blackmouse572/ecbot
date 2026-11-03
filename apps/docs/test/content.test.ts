@@ -25,7 +25,8 @@ const pages = (fs.readdirSync(DIR, { recursive: true }) as string[])
 
 const urlPaths = new Set(pages.map((p) => p.urlPath));
 
-// Solution pages live on the marketing site (eccho-ee apps/web), not in docs.
+// Solution pages live on the marketing site, not in docs. Keep in sync with
+// the solution page folders in eccho-ee apps/web/app/[locale]/solutions/.
 const SOLUTION_PAGES = new Set(["sales-agent", "customer-support", "ecommerce-retail", "spa-wellness"]);
 
 describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
@@ -70,12 +71,16 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
     }
   });
 
-  it("links to marketing pages in its own language only", () => {
-    for (const [, linkLang, rest] of content.matchAll(/\]\(\/(en|vi)\/([^)#\s]*)/g)) {
-      expect(linkLang, `/${linkLang}/${rest} from a ${lang} page`).toBe(lang);
+  it("links outside /docs in its own language, to solution pages that exist", () => {
+    for (const [, href] of content.matchAll(/\]\((\/[^)#\s]*)/g)) {
+      if (href!.startsWith("/docs")) continue;
 
-      if (rest!.startsWith("solutions/")) {
-        expect(SOLUTION_PAGES.has(rest!.slice("solutions/".length)), `/${linkLang}/${rest}`).toBe(true);
+      expect(href!.startsWith(`/${lang}/`), `${href} from a ${lang} page`).toBe(true);
+
+      const solution = `/${lang}/solutions/`;
+
+      if (href!.startsWith(solution)) {
+        expect(SOLUTION_PAGES.has(href!.slice(solution.length)), href).toBe(true);
       }
     }
   });

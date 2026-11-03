@@ -19,6 +19,7 @@ Pages live in `content/docs/`, one file per language: `<slug>.<lang>.mdx`. A fol
 - the first block is a plain paragraph of at most 70 words that answers the page's question;
 - `faq` has at least 3 entries (rendered after the body and published as FAQPage JSON-LD);
 - no em dash, and links to other pages use `/docs/<path>`, for example `/docs/agents/skills` (the reader's language is added for you).
+- links outside the docs, such as solution pages, carry the page's own language, for example `/vi/solutions/sales-agent` on a `.vi.mdx` page. They render as a plain `<a>`, so the browser loads the marketing site. A test checks the language and the solution page slug.
 
 `noindex: true` in the frontmatter keeps a page reachable by URL but out of search engines, the sitemap and `llms-full.txt`; leave its folder out of the parent `meta` to hide it from the sidebar too (the `legal/` drafts do both until counsel signs them off).
 
