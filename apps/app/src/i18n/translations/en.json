@@ -2577,6 +2577,10 @@
   },
   "tools": {
     "destructiveAction": "Can delete data",
+    "actionCost": {
+      "normal": "Adds about {{count}} tokens to every message.",
+      "heavy": "Adds about {{count}} tokens to every message, so replies cost more. Turn off the actions this agent does not need."
+    },
     "batch": {
       "delete": {
         "label": "Delete",

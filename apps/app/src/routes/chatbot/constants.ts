@@ -301,3 +301,6 @@ export const CHATBOT_EDIT_SECTIONS = {
 
 /** Profile groups shown before "Show more": who the agent is and how it sounds. */
 export const CHATBOT_PROFILE_VISIBLE_GROUPS = 2;
+
+/** Above this many prompt tokens from one tool's actions, warn the owner. */
+export const MCP_HEAVY_PROMPT_TOKENS = 10_000;

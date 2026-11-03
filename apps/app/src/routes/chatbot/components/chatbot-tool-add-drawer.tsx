@@ -21,7 +21,12 @@ import { ROUTES } from "@/routes/constants";
 import { withOriginAgent } from "@/utils/origin-agent";
 import { PlusMini } from "@medusajs/icons";
 import { Link } from "react-router-dom";
-import { defaultEnabledActions, isActionEnabled } from "./mcp-action-state";
+import { McpActionCost } from "./mcp-action-cost";
+import {
+  defaultEnabledActions,
+  enabledActionsPromptTokens,
+  isActionEnabled,
+} from "./mcp-action-state";
 
 type ChatbotToolAddDrawerProps = {
   isOpen: boolean;
@@ -105,6 +110,7 @@ export function ChatbotToolAddDrawer({
       toolDetail.discoveredActions as Array<{
         name: string;
         description?: string;
+        inputSchema?: unknown;
         destructive?: boolean;
       }>
     ).filter((a) => typeof a?.name === "string" && a.name.length > 0);
@@ -212,6 +218,7 @@ type ToolDetailPanelProps = {
   discoveredActions: Array<{
     name: string;
     description?: string;
+    inputSchema?: unknown;
     destructive?: boolean;
   }>;
   selectedActions: string[] | null;
@@ -258,40 +265,52 @@ function ToolDetailPanel({
               {t("tools.chatbotTab.actionsEmpty")}
             </Text>
           ) : (
-            <ul className="space-y-2">
-              {discoveredActions.map((action) => {
-                const checked = isActionEnabled(action, selectedActions);
-                return (
-                  <li key={action.name} className="flex items-start gap-2">
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={(v) =>
-                        onToggleAction(action.name, v === true)
-                      }
-                    />
-                    <div className="min-w-0">
-                      <Text
-                        size="small"
-                        weight="plus"
-                        className="wrap-anywhere"
-                      >
-                        {action.name}
-                        {action.destructive && (
-                          <Badge size="2xsmall" color="red" className="ml-1.5">
-                            {t("tools.destructiveAction")}
-                          </Badge>
-                        )}
-                      </Text>
-                      {action.description && (
-                        <Text size="small" className="text-ui-fg-subtle">
-                          {action.description}
+            <>
+              <McpActionCost
+                tokens={enabledActionsPromptTokens(
+                  discoveredActions,
+                  selectedActions,
+                )}
+              />
+              <ul className="space-y-2">
+                {discoveredActions.map((action) => {
+                  const checked = isActionEnabled(action, selectedActions);
+                  return (
+                    <li key={action.name} className="flex items-start gap-2">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) =>
+                          onToggleAction(action.name, v === true)
+                        }
+                      />
+                      <div className="min-w-0">
+                        <Text
+                          size="small"
+                          weight="plus"
+                          className="wrap-anywhere"
+                        >
+                          {action.name}
+                          {action.destructive && (
+                            <Badge
+                              size="2xsmall"
+                              color="red"
+                              className="ml-1.5"
+                            >
+                              {t("tools.destructiveAction")}
+                            </Badge>
+                          )}
                         </Text>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                        {action.description && (
+                          <Text size="small" className="text-ui-fg-subtle">
+                            {action.description}
+                          </Text>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </div>
       )}
