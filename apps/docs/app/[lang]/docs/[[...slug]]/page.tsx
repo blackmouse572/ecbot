@@ -98,12 +98,17 @@ export default async function DocPage(props: Props) {
         <MDX
           components={getMDXComponents({
             // Content links to "/docs/x"; keep the reader in their language.
-            a: ({ href = "", ...rest }) => (
-              <Link
-                href={href.startsWith("/docs") ? `/${lang}${href}` : href}
-                {...rest}
-              />
-            ),
+            // Other site paths ("/vi/solutions/x") belong to the marketing
+            // app, so they need a full page load, not a client navigation.
+            a: ({ href = "", ...rest }) =>
+              href.startsWith("/") && !href.startsWith("/docs") ? (
+                <a href={href} {...rest} />
+              ) : (
+                <Link
+                  href={href.startsWith("/docs") ? `/${lang}${href}` : href}
+                  {...rest}
+                />
+              ),
             Screenshot: (
               props: Omit<ComponentProps<typeof Screenshot>, "lang">,
             ) => <Screenshot lang={lang} {...props} />,
