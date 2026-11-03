@@ -1,5 +1,5 @@
 import { BellAlert } from "@medusajs/icons";
-import { DropdownMenu, IconButton, Text, clx } from "@medusajs/ui";
+import { DropdownMenu, IconButton, Text } from "@medusajs/ui";
 import { useRef, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -23,6 +23,7 @@ import { NotificationRow } from "./notification-row";
 import { NotificationRowSkeleton } from "./notification-row-skeleton";
 import { useNewNotificationToast } from "./use-new-notification-toast";
 import { useScrollEdges } from "@/hooks/use-scroll-edges";
+import { ScrollEdgeBlur } from "../main-layout/scroll-edge-blur";
 
 export const NotificationMenu: FC = () => {
   const { t } = useTranslation();
@@ -109,7 +110,9 @@ export const NotificationMenu: FC = () => {
           )}
         </IconButton>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content className="w-[360px] p-0">
+      {/* overflow-visible: Chromium drops the edge blur's mask under a rounded
+          clipping ancestor, so the list rounds itself instead. */}
+      <DropdownMenu.Content className="w-[360px] overflow-visible p-0">
         <div className="flex items-center justify-between px-3 py-2">
           <Text size="small" weight="plus">
             {t("app.menus.notifications.title")}
@@ -124,12 +127,12 @@ export const NotificationMenu: FC = () => {
             </button>
           )}
         </div>
-        <DropdownMenu.Separator className="my-0" />
+        <DropdownMenu.Separator className="mx-0 my-0" />
         <div className="relative">
           <div
             ref={edges.ref}
             data-testid="notification-list"
-            className="max-h-[420px] overflow-y-auto p-1"
+            className="max-h-[420px] overflow-y-auto rounded-b-lg p-1"
             onScroll={edges.onScroll}
           >
             {isLoading ? (
@@ -155,21 +158,19 @@ export const NotificationMenu: FC = () => {
             )}
             {isFetchingNextPage && <NotificationRowSkeleton />}
           </div>
-          <div
-            aria-hidden
-            data-testid="notification-shadow-top"
-            className={clx(
-              "from-ui-bg-component pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b to-transparent transition-opacity",
-              edges.top ? "opacity-100" : "opacity-0",
-            )}
+          <ScrollEdgeBlur
+            side="top"
+            visible={edges.top}
+            fadeFrom="from-ui-bg-component"
+            className="top-0 h-12"
+            testId="notification-shadow-top"
           />
-          <div
-            aria-hidden
-            data-testid="notification-shadow-bottom"
-            className={clx(
-              "from-ui-bg-component pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t to-transparent transition-opacity",
-              edges.bottom ? "opacity-100" : "opacity-0",
-            )}
+          <ScrollEdgeBlur
+            side="bottom"
+            visible={edges.bottom}
+            fadeFrom="from-ui-bg-component"
+            className="bottom-0 h-12 [&>*]:rounded-b-lg"
+            testId="notification-shadow-bottom"
           />
         </div>
       </DropdownMenu.Content>
