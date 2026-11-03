@@ -184,4 +184,88 @@ describe("ConversationDebounceDO", () => {
     );
     timeout.mockRestore();
   });
+
+  describe("while a reply runs", () => {
+    const send = (
+      sut: ConversationDebounceDO,
+      text: string,
+      messageId: string,
+    ) =>
+      sut.fetch(
+        new Request("http://do/schedule", {
+          method: "POST",
+          body: JSON.stringify({
+            conversationId: "c",
+            senderId: "s",
+            customerId: "cu",
+            contactPointId: "cp",
+            text,
+            messageId,
+          }),
+        }),
+      );
+
+    /** A /poc/reply that stays open until `finish(body)` is called. */
+    function openReply() {
+      let finish!: (body: object) => void;
+      const fetchMock = vi.fn(
+        () =>
+          new Promise<Response>(
+            (resolve) =>
+              (finish = (body) =>
+                resolve(Response.json({ ok: true, ...body }))),
+          ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      return { fetchMock, finish: (body: object) => finish(body) };
+    }
+
+    it("holds a newer message until the reply ends, then answers it", async () => {
+      const { fetchMock, finish } = openReply();
+      const state = mkState();
+      const sut = new ConversationDebounceDO(state as any);
+      await send(sut, "áo trắng M còn không", "m-1");
+      const replying = sut.alarm();
+
+      await send(sut, "có màu đen không", "m-2");
+      expect(state.storage.setAlarm).toHaveBeenCalledTimes(1);
+
+      finish({ status: "delivered" });
+      await replying;
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(state.storage.setAlarm).toHaveBeenCalledTimes(2);
+      expect(await state.storage.get("texts")).toEqual(["có màu đen không"]);
+      expect(await state.storage.get("messageIds")).toEqual(["m-2"]);
+    });
+
+    it("answers only what the reply did not steer in", async () => {
+      const { finish } = openReply();
+      const state = mkState();
+      const sut = new ConversationDebounceDO(state as any);
+      await send(sut, "áo trắng M còn không", "m-1");
+      const replying = sut.alarm();
+      await send(sut, "có màu đen không", "m-2");
+      await send(sut, "", "m-3");
+
+      finish({ status: "delivered", steeredMessageIds: ["m-2"] });
+      await replying;
+      expect(await state.storage.get("texts")).toEqual([""]);
+      expect(await state.storage.get("messageIds")).toEqual(["m-3"]);
+      expect(state.storage.setAlarm).toHaveBeenCalledTimes(2);
+    });
+
+    it("starts no follow-up when the reply steered in everything", async () => {
+      const { finish } = openReply();
+      const state = mkState();
+      const sut = new ConversationDebounceDO(state as any);
+      await send(sut, "áo trắng M còn không", "m-1");
+      const replying = sut.alarm();
+      await send(sut, "có màu đen không", "m-2");
+
+      finish({ status: "delivered", steeredMessageIds: ["m-2"] });
+      await replying;
+      expect(state.storage.setAlarm).toHaveBeenCalledTimes(1);
+      expect(await state.storage.get("texts")).toBeUndefined();
+    });
+  });
 });

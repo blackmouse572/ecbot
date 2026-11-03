@@ -78,7 +78,7 @@ apps/ai/
 |   |   +-- api_client.py     # apps/api HTTP client
 |   +-- llm/                  # shared LangChain layer
 |   |   +-- providers/        # chat_model (build_chat_model) + google (images)
-|   |   +-- agents/           # shared agent + ChatbotConfigMiddleware (per-request config)
+|   |   +-- agents/           # shared agent + ChatbotConfigMiddleware (per-request config), SteeringMiddleware (newer customer messages join a running turn)
 |   |   +-- tools/            # operator_tools, system_tools, skills (load_skill)
 |   |   +-- prompts/          # AGENT.md (package data) + loader (render_system_prompt) + current_time (per-turn clock) + opening_hours (per-turn open/closed)
 |   |   +-- retrievers/       # rag retrieval, pgvector store, text processing, pdf/web readers

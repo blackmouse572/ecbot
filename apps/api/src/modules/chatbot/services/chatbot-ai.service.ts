@@ -35,6 +35,9 @@ interface AIChatStreamParams {
     summary?: string;
     history?: AIChatHistoryMessage[];
     trigger_message_id?: string;
+    /** The burst's last saved message: newer customer text messages are
+     *  steered into the running turn (apps/ai llm/agents/steering.py). */
+    steer_after_message_id?: string;
     /** Where the timezones come from; sent to apps/ai resolved (#292). */
     zones: {
         chatbot: { timezone?: string | null };

@@ -100,10 +100,20 @@ export class ReplyGenerationService {
      */
     async run(input: ReplyInput): Promise<ReplyOutcome> {
         if (input.texts.length === 0) return skipped('no_texts');
-        return RequestContext.create(this.orm.em, () => this.execute(input));
+        const steered: string[] = [];
+        const outcome = await RequestContext.create(this.orm.em, () =>
+            this.execute(input, steered)
+        );
+        return steered.length
+            ? { ...outcome, steeredMessageIds: steered }
+            : outcome;
     }
 
-    private async execute(input: ReplyInput): Promise<ReplyOutcome> {
+    /** `steered` collects the newer messages apps/ai took into this turn. */
+    private async execute(
+        input: ReplyInput,
+        steered: string[]
+    ): Promise<ReplyOutcome> {
         const { conversationId, senderId, customerId, contactPointId, texts } =
             input;
 
@@ -225,6 +235,7 @@ export class ReplyGenerationService {
                         summary,
                         history,
                         trigger_message_id: triggerMessage?.id,
+                        steer_after_message_id: input.messageIds?.at(-1),
                         zones: { chatbot, conversation },
                     },
                     ac.signal
@@ -317,6 +328,11 @@ export class ReplyGenerationService {
             if (deliveryResult?.usage) await record(deliveryResult.usage);
 
             if (!deliveryResult) return failed('stream_failed');
+            // Steered messages count as answered only when this turn really
+            // answered: a superseded, blocked or silent-by-failure turn leaves
+            // them to the follow-up turn.
+            if (deliveryResult.anySent || deliveryResult.endedWithoutReply)
+                steered.push(...(deliveryResult.steeredMessageIds ?? []));
 
             // What the agent did, for the operator's trace (#286). Only for a
             // reply that reached the customer, so it splices under that reply.

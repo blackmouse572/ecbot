@@ -55,7 +55,7 @@ export interface IWidgetTurn {
  * primitives the async pipeline uses, then stream the reply back on the same
  * request.
  *
- * This deliberately does not go through the Inbound Inbox, the 3s debounce or
+ * This deliberately does not go through the Inbound Inbox, the 1.5s debounce or
  * the generation lease. Those exist to make platform-pushed webhooks durable, to
  * coalesce bursts arriving on separate requests, and to let a newer message
  * supersede an in-flight generation. A widget turn is one HTTP request the

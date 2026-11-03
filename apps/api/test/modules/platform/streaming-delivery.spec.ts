@@ -144,40 +144,107 @@ describe('StreamingDelivery.deliver (UI Message Stream)', () => {
         expect(res).toMatchObject({ anySent: true, endedWithoutReply: true });
     });
 
-    it('stops sending when superseded (keeps already-sent)', async () => {
-        let sent = 0;
-        const adapter = {
-            sendMessage: jest.fn().mockImplementation(async () => {
-                sent++;
-                return { externalId: 'ext' };
-            }),
-        } as any;
-        const sd = new StreamingDelivery();
-        const res = await sd.deliver({
-            adapter,
-            account: {} as any,
-            senderId: 'S',
-            conversationId: 'C',
-            stream: sse([
-                line({ type: 'text-delta', id: 't1', delta: 'one' }),
-                line({
-                    type: 'tool-input-start',
-                    toolCallId: 'inv1',
-                    toolName: 'get_order',
-                }),
-                line({ type: 'text-delta', id: 't2', delta: 'two' }),
-            ]),
-            abort: new AbortController(),
-            // current until the first message has been sent; false thereafter
-            isCurrent: async () => sent < 1,
-            onSegmentPersist: async () => 'nonce',
-            onSent: async () => {},
-            onFailed: async () => {},
-        });
-        expect(adapter.sendMessage).toHaveBeenCalledTimes(1);
-        expect(res.anySent).toBe(true);
-        expect(res.superseded).toBe(true);
-    });
+    // A newer message no longer cuts a reply that has started: once a tool
+    // ran or a part reached the customer, the turn finishes and the newer
+    // message is steered in or answered by a follow-up turn.
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        'finishes a reply a newer message arrived during, once a tool ran (%s)',
+        async (_path, chatbot) => {
+            const adapter = makeAdapter();
+            const res = await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({
+                        type: 'tool-input-start',
+                        toolCallId: 'inv1',
+                        toolName: 'get_order',
+                    }),
+                    line({ type: 'text-delta', id: 't1', delta: 'one' }),
+                    line({
+                        type: 'tool-input-start',
+                        toolCallId: 'inv2',
+                        toolName: 'get_order',
+                    }),
+                    line({ type: 'text-delta', id: 't2', delta: 'two' }),
+                ]),
+                abort: new AbortController(),
+                // The newer message is already there when the tool runs.
+                isCurrent: async () => false,
+                onSegmentPersist: async () => 'nonce',
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(adapter.sendMessage).toHaveBeenCalledTimes(2);
+            expect(res).toMatchObject({ anySent: true, superseded: false });
+        }
+    );
+
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        'still discards a reply superseded before any tool or send (%s)',
+        async (_path, chatbot) => {
+            const adapter = makeAdapter();
+            const res = await new StreamingDelivery().deliver({
+                adapter,
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({ type: 'text-delta', id: 't1', delta: 'one' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => false,
+                onSegmentPersist: async () => 'nonce',
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(adapter.sendMessage).not.toHaveBeenCalled();
+            expect(res).toMatchObject({ anySent: false, superseded: true });
+        }
+    );
+
+    it.each([
+        ['buffered', undefined],
+        ['incremental', GUARD_OFF],
+    ])(
+        'reports the newer messages the agent steered into the turn (%s)',
+        async (_path, chatbot) => {
+            const res = await new StreamingDelivery().deliver({
+                adapter: makeAdapter(),
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot,
+                stream: sse([
+                    line({
+                        type: 'data-steered',
+                        data: { messageIds: ['m2', 'm3'] },
+                    }),
+                    line({ type: 'text-delta', id: 't1', delta: 'one' }),
+                    line({ type: 'finish' }),
+                    DONE,
+                ]),
+                abort: new AbortController(),
+                isCurrent: async () => true,
+                onSegmentPersist: async () => 'nonce',
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(res.steeredMessageIds).toEqual(['m2', 'm3']);
+        }
+    );
 
     it('silently ignores a data:null primitive line and delivers valid segments', async () => {
         const adapter = makeAdapter();
