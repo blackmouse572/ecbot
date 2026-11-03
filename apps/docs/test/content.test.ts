@@ -72,12 +72,19 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
   });
 
   // Solution pages live on the marketing site (eccho-ee apps/web).
-  it("links to marketing solution pages in its own language", () => {
-    for (const [, linkLang, target] of content.matchAll(/\]\(\/(en|vi)\/solutions\/([^)\s#?]+)/g)) {
-      const solution = target!.replace(/\/$/, "");
-      expect(linkLang, `/${linkLang}/solutions/${solution} in a ${lang} page`).toBe(lang);
-      expect(MARKETING_SOLUTIONS).toContain(solution);
+  it("links outside /docs in its own language, to solution pages that exist", () => {
+    for (const [, href] of content.matchAll(/\]\((\/[^)#\s]*)/g)) {
+      if (href!.startsWith("/docs")) continue;
+
+      expect(href!.startsWith(`/${lang}/`), `${href} from a ${lang} page`).toBe(true);
+
+      const solution = `/${lang}/solutions/`;
+
+      if (href!.startsWith(solution)) {
+        expect(MARKETING_SOLUTIONS).toContain(href!.slice(solution.length).replace(/\/$/, ""));
+      }
     }
+
     if (slug === "index") {
       for (const solution of MARKETING_SOLUTIONS)
         expect(content, `index links /${lang}/solutions/${solution}`).toContain(`](/${lang}/solutions/${solution})`);
