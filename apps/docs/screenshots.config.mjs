@@ -19,6 +19,15 @@
 /** @typedef {{ id: string, target: string, up?: number, pad?: number, nth?: number, to?: string }} Mark */
 /** @typedef {{ name: string, path: string, marks: Mark[], setup?: (page: import('playwright').Page) => Promise<void> }} Shot */
 
+// Moves to a sub-page in the app without reloading, so the routes a setup
+// mocked and the capture styles stay in place.
+async function navigate(page, suffix) {
+  await page.evaluate((url) => {
+    history.pushState({}, "", url);
+    dispatchEvent(new PopStateEvent("popstate"));
+  }, new URL(page.url()).pathname + suffix);
+}
+
 /** @type {Shot[]} */
 export const shots = [
   {
@@ -83,11 +92,54 @@ export const shots = [
     path: "/:ws/knowledge-base",
     setup: async (page) => {
       await page.getByText(/^(Create|Tạo mới)$/).first().click();
-      await page.waitForTimeout(1500);
+      await page.getByRole("dialog").getByText(/^Media$/).click();
+      await page.waitForTimeout(1000);
     },
     marks: [
       { id: "type", target: "[role=dialog] >> text=/^(File|Tệp)$/", up: 3, pad: 4 },
-      { id: "formats", target: "text=/PDF, DOCX/", pad: 4 },
+      { id: "formats", target: "text=/JPG, PNG, WEBP/", pad: 4 },
+    ],
+  },
+  {
+    name: "agent-knowledge-add",
+    path: "/:ws/chatbot/:agent",
+    setup: async (page) => {
+      // The Knowledge tab of the Capabilities section is open by default.
+      const intro = page.getByText(/^(Documents and pages the agent reads to answer\.|Tài liệu và trang agent đọc để trả lời\.)$/);
+      await intro.evaluate((el) => el.scrollIntoView({ block: "start" }));
+      await intro.locator("xpath=..").getByRole("button", { name: /^(Add|Thêm)$/ }).click();
+      await page.getByRole("dialog").getByRole("row").nth(1).waitFor();
+      // Tick a processed item so the selection and the save button show.
+      await page.getByRole("dialog").getByRole("row").filter({ hasText: /menu-dich-vu/ }).getByRole("checkbox").click();
+    },
+    marks: [
+      { id: "items", target: "[role=dialog] >> role=table", pad: 2 },
+      { id: "save", target: "[role=dialog] >> role=button[name=/^(Add|Thêm)/] >> nth=-1", pad: 4 },
+    ],
+  },
+  {
+    name: "agent-followup-rules",
+    path: "/:ws/chatbot/:agent",
+    setup: async (page) => {
+      // A local API lists no models without OpenRouter: show the agent's one.
+      const models = [{ id: "deepseek-v4-flash", name: "DeepSeek V4 Flash", provider: "deepseek", contextLength: null }];
+      await page.route(/\/chatbots\/models/, (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ statusCode: 200, data: models }) }),
+      );
+      await navigate(page, "/edit/settings");
+      const rules = page.locator("textarea[name=followupRules]");
+      await rules.waitFor();
+      const cookies = await page.context().cookies();
+      if (!cookies.some((c) => c.name === "medusa_admin_language" && c.value === "vi")) {
+        await rules.fill(
+          "- If the customer asks for a reminder, set it for that time.\n" +
+            "- If a booking has no deposit yet, remind after 24 hours.\n" +
+            "- Never remind twice about the same thing.",
+        );
+      }
+    },
+    marks: [
+      { id: "rules", target: "[role=dialog] >> text=/^(Follow-up rules|Quy tắc nhắc hẹn)/", up: 1, to: "textarea[name=followupRules]", pad: 6 },
     ],
   },
   {
@@ -106,6 +158,73 @@ export const shots = [
       { id: "http", target: "text=/^(HTTP Tool|Công cụ HTTP)$/", up: 2, pad: 2 },
       { id: "mcp", target: "text=/^(Custom MCP|MCP tự cấu hình)$/", up: 2, pad: 2 },
       { id: "marketplace", target: "text=/^(Marketplace|Kho công cụ)$/", nth: 0, up: 2, pad: 2 },
+    ],
+  },
+  {
+    name: "tool-http-form",
+    path: "/:ws/tools/new",
+    setup: async (page) => {
+      await page.getByText(/^(HTTP Tool|Công cụ HTTP)$/).click();
+      await page.getByText(/^(Auth type|Loại xác thực)$/).waitFor();
+    },
+    marks: [
+      { id: "about", target: "text=/^(Name|Tên)$/", up: 1, to: "textarea >> nth=0", pad: 6 },
+      { id: "request", target: "text=/^(Method|Phương thức)$/", up: 1, to: "input[placeholder*='api.example.com']", pad: 6 },
+      { id: "schema", target: "text=/^(Input schema \\(JSON\\)|Lược đồ đầu vào \\(JSON\\))$/", up: 1, pad: 4 },
+      { id: "headers", target: "text=/^Headers \\(JSON\\)/", up: 1, pad: 4 },
+      { id: "auth", target: "text=/^(Auth type|Loại xác thực)$/", up: 1, pad: 4 },
+    ],
+  },
+  {
+    name: "tool-mcp-form",
+    path: "/:ws/tools/new",
+    setup: async (page) => {
+      await page.getByText(/^(Custom MCP|MCP tự cấu hình)$/).click();
+      // Bearer token shows the credential field.
+      await page.getByRole("combobox").last().click();
+      await page.getByRole("option", { name: "Bearer token" }).click();
+      await page.waitForTimeout(500);
+    },
+    marks: [
+      { id: "url", target: "text=/^(MCP server URL|URL máy chủ MCP)$/", up: 1, pad: 4 },
+      { id: "auth", target: "text=/^(Auth type|Loại xác thực)$/", up: 1, to: "input[type=password]", pad: 6 },
+    ],
+  },
+  {
+    name: "tool-marketplace-install",
+    path: "/:ws/tools",
+    setup: async (page) => {
+      // Demo data: a Composio app, since a local API has no Composio key.
+      const toolkit = {
+        slug: "googlesheets",
+        name: "Google Sheets",
+        meta: {
+          description: "Google Sheets is a cloud spreadsheet tool for creating, editing and sharing spreadsheets.",
+          logo: "",
+          categories: [{ id: "productivity", name: "Productivity" }],
+        },
+      };
+      const access = {
+        provider: "composio",
+        requiresSignIn: true,
+        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        actions: [
+          { name: "GOOGLESHEETS_BATCH_GET", label: "Batch get spreadsheet", description: "Read values from one or more ranges of a spreadsheet.", destructive: false },
+          { name: "GOOGLESHEETS_LOOKUP_SPREADSHEET_ROW", label: "Look up spreadsheet row", description: "Find the first row where a column matches a value.", destructive: false },
+          { name: "GOOGLESHEETS_SPREADSHEETS_VALUES_APPEND", label: "Append values", description: "Add rows of values after the last row of a sheet.", destructive: false },
+          { name: "GOOGLESHEETS_CLEAR_VALUES", label: "Clear values", description: "Clear the values of a range, keeping its formatting.", destructive: true },
+        ],
+      };
+      const ok = (data) => ({ status: 200, contentType: "application/json", body: JSON.stringify({ statusCode: 200, data }) });
+      await page.route(/\/marketplace\/toolkits\/googlesheets\/access/, (route) => route.fulfill(ok(access)));
+      await page.route(/\/marketplace\/toolkits\/googlesheets(\?|$)/, (route) => route.fulfill(ok(toolkit)));
+      await navigate(page, "/marketplace/googlesheets");
+      await page.getByText(/Batch get spreadsheet/).first().waitFor();
+    },
+    marks: [
+      { id: "scopes", target: "text=/^(Access it asks for|Quyền truy cập được yêu cầu)$/", up: 1, pad: 2 },
+      { id: "actions", target: "text=/^(What it can do|Công cụ này làm được gì)/", up: 1, pad: 2 },
+      { id: "install", target: "role=button[name=/^(Install|Cài đặt)$/]", pad: 4 },
     ],
   },
   {
@@ -150,8 +269,68 @@ export const shots = [
     marks: [
       { id: "step", target: "text=/^(Ask|Hỏi)$/", up: 2, pad: 4 },
       { id: "if", target: "text=/^(If|Nếu)$/", up: 2, pad: 4 },
-      { id: "tool", target: "text=/^(Tool|Công cụ)$/", up: 2, pad: 4 },
+      // Scoped to the modal: the sidebar also has a "Công cụ" link.
+      { id: "tool", target: "[role=dialog] >> text=/^(Tool|Công cụ)$/", up: 2, pad: 4 },
       { id: "add", target: "role=button[name=/^(Add step|Thêm bước)$/]", pad: 4 },
+    ],
+  },
+  {
+    // The cookbook tutorial's spa booking skill, filled in through the
+    // "Book an appointment" template.
+    name: "skill-tutorial",
+    path: "/:ws/skills/create",
+    setup: async (page) => {
+      const cookies = await page.context().cookies();
+      const vi = cookies.some((c) => c.name === "medusa_admin_language" && c.value === "vi");
+      const t = vi
+        ? {
+            name: "Đặt lịch spa",
+            description: "Dùng khi khách muốn đặt một dịch vụ hoặc hỏi giờ còn trống.",
+            rule: "Không bao giờ hứa giảm giá hay một mức giá chưa kiểm tra.",
+            steps: ["Dịch vụ khách muốn làm.", "Ngày và giờ.", "Giờ hẹn ngoài 9:00 đến 18:00.", "Giờ mở cửa.", "Giờ khác.", "Tên và số điện thoại.", "Tóm tắt lịch hẹn để khách xác nhận.", "Dịch vụ là gói trên 1.000.000đ.", "Bạn vui lòng chuyển khoản cọc 100.000đ vào tài khoản 0123456789, Spa Hoa Xinh. Lịch của bạn được giữ khi spa nhận được cọc.", "Lịch mới"],
+          }
+        : {
+            name: "Spa booking",
+            description: "Use when the customer wants to book a service or asks for a free time.",
+            rule: "Never promise a discount or a price you have not checked.",
+            steps: ["The service they want.", "The day and time.", "The time is outside 9:00 to 18:00.", "The opening hours.", "Another time.", "Their name and phone number.", "A summary of the booking to confirm.", "The service is a package over 1,000,000đ.", "Please transfer a 100,000đ deposit to account 0123456789, Spa Hoa Xinh. Your booking is held once we receive it.", "New booking"],
+          };
+      const s = t.steps;
+      const skill = {
+        name: t.name,
+        description: t.description,
+        guardrails: [t.rule],
+        format: "STEPS",
+        steps: [
+          { id: "service", type: "ask", text: s[0] },
+          { id: "time", type: "ask", text: s[1] },
+          { id: "hours", type: "if", branches: [{ id: "hours-out", condition: s[2], steps: [
+            { id: "hours-tell", type: "tell", text: s[3] },
+            { id: "hours-ask", type: "ask", text: s[4] },
+          ] }] },
+          { id: "name", type: "ask", text: s[5] },
+          { id: "confirm", type: "tell", text: s[6] },
+          { id: "deposit", type: "if", branches: [{ id: "deposit-yes", condition: s[7], steps: [
+            { id: "deposit-say", type: "say", text: s[8] },
+          ] }] },
+          { id: "tag", type: "tool", toolId: "system:add_tag", action: s[9] },
+        ],
+      };
+      await page.route(/\/skill\/[0-9a-f-]{36}(\?|$)/, async (route) => {
+        const response = await route.fetch();
+        const json = await response.json();
+        json.data = { ...json.data, ...skill };
+        await route.fulfill({ response, json });
+      });
+      await page.getByRole("button", { name: /^(Book an appointment|Đặt lịch hẹn)$/ }).click();
+      await page.getByText(s[8]).waitFor();
+      // Start at the instructions, so all seven steps fit.
+      await page.getByText(/^(Instructions|Hướng dẫn)$/).evaluate((el) => el.scrollIntoView());
+    },
+    marks: [
+      { id: "if", target: "[role=dialog] >> text=/^(If|Nếu)$/", up: 2, pad: 4 },
+      { id: "say", target: "[role=dialog] >> text=/^(Say|Nói)$/", up: 2, pad: 4 },
+      { id: "tool", target: "[role=dialog] >> text=/^(Tool|Công cụ)$/", up: 2, pad: 4 },
     ],
   },
   {

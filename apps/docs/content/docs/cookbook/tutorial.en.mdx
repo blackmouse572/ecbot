@@ -80,6 +80,14 @@ Order the steps the way a good staff member would handle the chat:
    1. **Say**: "Please transfer a 100,000đ deposit to account 0123456789, Spa Hoa Xinh. Your booking is held once we receive it."
 7. **Tool**: Add tag, tag "New booking".
 
+Here is the skill in the form, with **When to use** and the rule filled in above the steps:
+
+<Screenshot name="skill-tutorial" alt="The spa booking skill written as steps in the skill form">
+  <Mark id="if">An **If** step. Its steps are indented under it and only run when the condition is true.</Mark>
+  <Mark id="say">The **Say** step keeps the bank details word for word.</Mark>
+  <Mark id="tool">The **Tool** step adds the "New booking" tag.</Mark>
+</Screenshot>
+
 The cancelling skill is short: **Ask** for the booking, then **If** it is less than 24 hours away, **Tool** Hand off to staff, **Else** **Tell** that it is cancelled.
 
 ## 8. Test and adjust

@@ -22,9 +22,57 @@ Open **Tools** under **Agents** in the sidebar and choose **Create**:
   <Mark id="marketplace">**Marketplace** installs a ready-made app, such as Google Sheets, with one sign-in.</Mark>
 </Screenshot>
 
+### HTTP Tool
+
+<Screenshot name="tool-http-form" alt="The HTTP Tool form with name, description, method, URL, input schema, headers and auth type">
+  <Mark id="about">**Name** and **Description**. The agent reads the description to decide when to call the tool.</Mark>
+  <Mark id="request">**Method** and **URL** of your endpoint.</Mark>
+  <Mark id="schema">**Input schema (JSON)**: the values the agent fills in for each call, such as a product name or SKU.</Mark>
+  <Mark id="headers">**Headers (JSON)** (optional): fixed headers sent with every call.</Mark>
+  <Mark id="auth">**Auth type**: how Ecbot signs each call to your server.</Mark>
+</Screenshot>
+
+| Field | What to enter |
+| --- | --- |
+| **Name** | A short id, for example `product-search`. |
+| **Description** | What the tool returns and when to use it. |
+| **Method** and **URL** | The HTTP method and the full address of your endpoint. |
+| **Input schema (JSON)** | The inputs the agent sends. Add them with **Add property**, or switch to JSON. |
+| **Headers (JSON)** | Optional fixed headers, such as a shop id. |
+| **Auth type** | **None**, **Bearer token** or **API key**. API key also asks for **Auth placement** (header or query) and **Parameter name**. |
+| **Credential** | The token or key. It is stored encrypted, and left empty when you edit, the saved value is kept. |
+| **Timeout (ms)** and **Max retries** | Optional. How long to wait for your server and how many times to retry. |
+
+Below the form, **Test Endpoint** runs one call with sample inputs so you can check the response before you create the tool.
+
+### Custom MCP
+
+<Screenshot name="tool-mcp-form" alt="The Custom MCP form with the server URL, auth type and credential">
+  <Mark id="url">**MCP server URL**: the Streamable HTTP or SSE endpoint of your MCP server.</Mark>
+  <Mark id="auth">**Auth type** and **Credential**, the same choices as the HTTP Tool.</Mark>
+</Screenshot>
+
+Add a **Name** and **Description** too. After you create it, Ecbot lists the actions the server offers, and you turn on the ones the agent may use.
+
+### Marketplace
+
+Pick an app, check what it asks for, then choose **Install**:
+
+<Screenshot name="tool-marketplace-install" alt="The Google Sheets install page with the access it asks for and the actions it can do">
+  <Mark id="scopes">**Access it asks for**: the permissions the app's sign-in page will ask you to allow.</Mark>
+  <Mark id="actions">**What it can do**: every action the app offers. Actions marked **Can delete data** stay off until you turn them on for an agent.</Mark>
+  <Mark id="install">**Install** opens the app's sign-in page, then brings you back here.</Mark>
+</Screenshot>
+
+There is nothing else to fill in: the sign-in connects your account.
+
+### Built-in actions
+
+Some actions are always there and need no setup: **Hand off to staff**, **Notify the team**, **Add tag** and **Remove tag**, **Schedule a follow-up**, and **Save customer info**. The agent uses them on its own, and you can call them from a **Tool** step in a [skill](/docs/agents/skills).
+
 ## Add a tool to an agent
 
-Open the agent's page, go to the **Tools** section and choose **Add**. For MCP and marketplace tools you can switch each action on or off for this agent. The **Recent invocations** list on the same page shows each call the agent made, with its input and result.
+Open the agent's page, open the **Tools** tab of the **Capabilities** section and choose **Add**. For MCP and marketplace tools you can switch each action on or off for this agent. The **Recent invocations** list on the same page shows each call the agent made, with its input and result.
 
 ## Write good tool descriptions
 
