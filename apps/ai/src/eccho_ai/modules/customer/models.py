@@ -49,6 +49,13 @@ class ClassifyRequest(BaseModel):
         default="",
         description="The customer's profile summary before this conversation.",
     )
+    conversation_summary: str = Field(
+        default="",
+        description=(
+            "The rolling summary of this conversation's messages older than "
+            "`recent_messages`."
+        ),
+    )
 
 
 # ----- Response -----

@@ -216,6 +216,9 @@ export class CustomerTagClassifierTaskService {
             // Keeps the note on how staff talk to the customer when this
             // conversation had no staff replies.
             current_summary: contactPoint?.customer?.profileSummary ?? '',
+            // The recent messages stop at the newest 50; the conversation
+            // summary carries what came before them.
+            conversation_summary: conversation.memorySummary ?? '',
         });
         const usage = parseWireTokenUsage(result.usage);
         if (usage) {
@@ -328,6 +331,7 @@ export class CustomerTagClassifierTaskService {
         available_tags: IClassifierTagDef[];
         current_tags: string[];
         current_summary: string;
+        conversation_summary: string;
     }): Promise<IClassifierResponse> {
         const resp = await firstValueFrom(
             this.httpService.post(

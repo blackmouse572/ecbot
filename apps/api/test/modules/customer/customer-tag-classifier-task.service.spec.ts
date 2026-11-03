@@ -312,6 +312,26 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         expect(body.current_summary).toBe('Staff call her cô.');
     });
 
+    // The recent messages are only the newest 50: the summary of the older
+    // ones keeps a long conversation's early facts in the profile.
+    it('sends the conversation summary so early facts reach the profile', async () => {
+        conversationRepository.findOneById.mockResolvedValue(
+            liveConversation({ memorySummary: 'Ordered 2 red shirts.' })
+        );
+
+        await service.handle(dto() as any, 0);
+
+        const [, body] = httpService.post.mock.calls[0];
+        expect(body.conversation_summary).toBe('Ordered 2 red shirts.');
+    });
+
+    it('sends an empty conversation summary when there is none', async () => {
+        await service.handle(dto() as any, 0);
+
+        const [, body] = httpService.post.mock.calls[0];
+        expect(body.conversation_summary).toBe('');
+    });
+
     it('writes a trimmed profile summary', async () => {
         httpService.post.mockReturnValue(
             classifierResponse({ profile_summary: '  Loyal buyer.  ' })
