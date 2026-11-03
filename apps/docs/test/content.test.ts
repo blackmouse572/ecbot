@@ -25,6 +25,9 @@ const pages = (fs.readdirSync(DIR, { recursive: true }) as string[])
 
 const urlPaths = new Set(pages.map((p) => p.urlPath));
 
+// Solution pages live on the marketing site (eccho-ee apps/web), not in docs.
+const SOLUTION_PAGES = new Set(["sales-agent", "customer-support", "ecommerce-retail", "spa-wellness"]);
+
 describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
   it("is named <slug>.<lang>.mdx", () => {
     expect(LANGS).toContain(lang);
@@ -64,6 +67,16 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
   it("links only to docs pages that exist", () => {
     for (const [, target] of content.matchAll(/\]\(\/docs\/?([^)#\s]*)/g)) {
       expect(urlPaths.has(target!.replace(/\/$/, "")), `broken link /docs/${target}`).toBe(true);
+    }
+  });
+
+  it("links to marketing pages in its own language only", () => {
+    for (const [, linkLang, rest] of content.matchAll(/\]\(\/(en|vi)\/([^)#\s]*)/g)) {
+      expect(linkLang, `/${linkLang}/${rest} from a ${lang} page`).toBe(lang);
+
+      if (rest!.startsWith("solutions/")) {
+        expect(SOLUTION_PAGES.has(rest!.slice("solutions/".length)), `/${linkLang}/${rest}`).toBe(true);
+      }
     }
   });
 
