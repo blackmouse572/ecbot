@@ -1,9 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CHAT_UPLOAD_MAX_FILES } from '@app/modules/conversation/constants/message-media.constant';
+import { ChatAttachmentRequestDto } from '@app/modules/conversation/dtos/request/chat-attachment.request.dto';
+import { Type } from 'class-transformer';
 import {
+    ArrayMaxSize,
+    IsArray,
+    IsDefined,
     IsNotEmpty,
     IsOptional,
     IsString,
     MaxLength,
+    ValidateNested,
 } from 'class-validator';
 
 export class WidgetSendMessageRequestDto {
@@ -33,10 +40,24 @@ export class WidgetSendMessageRequestDto {
         example: 'Do you ship to Da Nang?',
         required: true,
     })
-    @IsNotEmpty()
+    @IsDefined()
     @IsString()
     @MaxLength(4000)
+    // May be empty when the message carries attachments; the service
+    // refuses a message with neither.
     text: string;
+
+    @ApiPropertyOptional({
+        type: () => ChatAttachmentRequestDto,
+        isArray: true,
+        description: 'Files uploaded for this message with the attachments endpoint',
+    })
+    @IsOptional()
+    @IsArray()
+    @ArrayMaxSize(CHAT_UPLOAD_MAX_FILES)
+    @ValidateNested({ each: true })
+    @Type(() => ChatAttachmentRequestDto)
+    attachments?: ChatAttachmentRequestDto[];
 
     @ApiPropertyOptional({
         description:

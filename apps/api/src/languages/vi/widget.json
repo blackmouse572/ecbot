@@ -6,6 +6,9 @@
         "notFound": "Khung chat không khả dụng. Widget key có thể sai hoặc đã bị thu hồi.",
         "originNotAllowed": "Khung chat chưa được bật cho website này.",
         "rateLimited": "Bạn đã gửi khá nhiều tin nhắn. Vui lòng đợi một chút rồi thử lại.",
-        "noChatbotAttached": "Widget này chưa được gắn chatbot nào."
-    }
+        "noChatbotAttached": "Widget này chưa được gắn chatbot nào.",
+        "attachmentNotSupported": "Không hỗ trợ loại hoặc kích thước tệp này. Hãy đính kèm ảnh tối đa 5 MB, hoặc tệp PDF, Word, Excel, văn bản hay CSV tối đa 10 MB.",
+        "emptyMessage": "Hãy nhập tin nhắn hoặc đính kèm tệp."
+    },
+    "attachment": "Đã tải tệp lên."
 }

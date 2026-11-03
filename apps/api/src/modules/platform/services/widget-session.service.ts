@@ -4,6 +4,7 @@ import { Cache } from 'cache-manager';
 import { createHash } from 'crypto';
 
 const KEY_PREFIX = 'widget-session';
+const WIDGET_MEDIA_KEY_PREFIX = 'widget-media';
 /** Long enough that a visitor browsing a shop is not re-challenged. */
 const VERIFIED_TTL_MS = 12 * 60 * 60 * 1000;
 
@@ -26,11 +27,20 @@ export class WidgetSessionService {
      * with the account makes the key unguessable and scoped to one widget.
      */
     sessionKey(accountId: string, visitorId: string): string {
-        const digest = createHash('sha256')
+        return `${KEY_PREFIX}:${accountId}:${this.digest(accountId, visitorId)}`;
+    }
+
+    /** Where a visitor's uploads wait until their message is sent and they
+     *  are copied into the conversation (MessageMediaService.adopt). */
+    mediaFolder(accountId: string, visitorId: string): string {
+        return `${WIDGET_MEDIA_KEY_PREFIX}/${accountId}/${this.digest(accountId, visitorId)}`;
+    }
+
+    private digest(accountId: string, visitorId: string): string {
+        return createHash('sha256')
             .update(`${accountId}:${visitorId}`)
             .digest('hex')
             .slice(0, 32);
-        return `${KEY_PREFIX}:${accountId}:${digest}`;
     }
 
     async isVerified(sessionKey: string): Promise<boolean> {

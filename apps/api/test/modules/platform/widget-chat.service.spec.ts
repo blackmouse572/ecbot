@@ -47,6 +47,7 @@ function setup(overrides: Record<string, any> = {}) {
     };
     const messageRepository = {
         upsertByExternalId: jest.fn(async () => ({ id: 'msg-in' })),
+        findOne: jest.fn(async () => null),
         findNewest: jest.fn(async () => []),
         insertPendingOutbound: jest.fn(async () => ({ id: 'msg-out' })),
         markOutboundSent: jest.fn(async () => {}),
@@ -61,6 +62,14 @@ function setup(overrides: Record<string, any> = {}) {
         }),
     };
 
+    const messageMedia = {
+        adopt: jest.fn(async () => [
+            { type: 'image', key: 'conversations/conv-1/a.jpg', name: 'a.jpg' },
+        ]),
+    };
+    const sessionService = {
+        mediaFolder: jest.fn(() => 'widget-media/acc-1/abc'),
+    };
     const meter = {
         check: jest.fn().mockResolvedValue({ allowed: true }),
         record: jest.fn().mockResolvedValue(undefined),
@@ -82,6 +91,8 @@ function setup(overrides: Record<string, any> = {}) {
         sseStream as any,
         turnContext,
         handoffIntent as any,
+        messageMedia as any,
+        sessionService as any,
         meter as any
     );
 
@@ -93,7 +104,9 @@ function setup(overrides: Record<string, any> = {}) {
         chatbotAIService as any,
         sseStream as any,
         turnContext,
-        handoffIntent as any
+        handoffIntent as any,
+        messageMedia as any,
+        sessionService as any
     );
 
     return {
@@ -108,6 +121,7 @@ function setup(overrides: Record<string, any> = {}) {
         conversation,
         handoffIntent,
         turnContext,
+        messageMedia,
     };
 }
 
@@ -538,5 +552,91 @@ describe('WidgetChatService token budget', () => {
             expect(conversationService.triggerHandoff).not.toHaveBeenCalled();
             expect(chatbotAIService.streamChat).toHaveBeenCalled();
         });
+    });
+});
+
+describe('WidgetChatService attachments', () => {
+    it('stores staged uploads on the visitor message', async () => {
+        const { service, messageMedia, messageRepository } = setup();
+        const attachments = [
+            { key: 'widget-media/acc-1/abc/a.jpg', name: 'a.jpg' },
+        ];
+
+        await service.handleTurn(res, { ...turn, text: '', attachments });
+
+        expect(messageMedia.adopt).toHaveBeenCalledWith(
+            'widget-media/acc-1/abc',
+            'conv-1',
+            attachments
+        );
+        expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
+            'conv-1',
+            'wm-1',
+            expect.objectContaining({
+                text: '',
+                attachments: [
+                    {
+                        type: 'image',
+                        key: 'conversations/conv-1/a.jpg',
+                        name: 'a.jpg',
+                    },
+                ],
+            })
+        );
+    });
+
+    it('copies nothing for a text message', async () => {
+        const { service, messageMedia } = setup();
+        await service.handleTurn(res, turn);
+        expect(messageMedia.adopt).not.toHaveBeenCalled();
+    });
+
+    it('refuses a message with no text and no attachments', async () => {
+        const { service, messageRepository } = setup();
+        await expect(
+            service.handleTurn(res, { ...turn, text: '  ' })
+        ).rejects.toThrow();
+        expect(messageRepository.upsertByExternalId).not.toHaveBeenCalled();
+    });
+
+    it('sends the agent the photo notes, not just the typed text', async () => {
+        const { service, turnContext, chatbotAIService } = setup();
+        jest.spyOn(turnContext, 'build').mockResolvedValue({
+            history: [],
+            message: '[Image description: a red shirt]',
+        } as any);
+        const attachments = [{ key: 'widget-media/acc-1/abc/a.jpg' }];
+
+        await service.handleTurn(res, { ...turn, text: '', attachments });
+
+        const [params] = chatbotAIService.streamChat.mock.calls[0] as any;
+        expect(params.message).toBe('[Image description: a red shirt]');
+    });
+
+    it('copies nothing again when the same message is sent twice', async () => {
+        const { service, messageMedia } = setup({
+            messageRepository: {
+                findOne: jest.fn(async () => ({ id: 'msg-in' })),
+            },
+        });
+        const attachments = [{ key: 'widget-media/acc-1/abc/a.jpg' }];
+
+        await service.handleTurn(res, { ...turn, attachments });
+
+        expect(messageMedia.adopt).not.toHaveBeenCalled();
+    });
+
+    it('refuses a photo-only message whose photos could not be copied', async () => {
+        const { service, messageMedia, messageRepository } = setup();
+        messageMedia.adopt.mockResolvedValueOnce([]);
+
+        await expect(
+            service.handleTurn(res, {
+                ...turn,
+                text: '',
+                attachments: [{ key: 'widget-media/acc-1/abc/gone.jpg' }],
+            })
+        ).rejects.toThrow();
+        expect(messageRepository.upsertByExternalId).not.toHaveBeenCalled();
     });
 });

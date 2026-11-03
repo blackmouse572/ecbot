@@ -6,6 +6,9 @@
         "notFound": "This chat widget is unavailable. The key may be wrong or revoked.",
         "originNotAllowed": "This chat widget is not enabled for this site.",
         "rateLimited": "You've sent a lot of messages. Please wait a moment before trying again.",
-        "noChatbotAttached": "This widget has no chatbot connected yet."
-    }
+        "noChatbotAttached": "This widget has no chatbot connected yet.",
+        "attachmentNotSupported": "This file type or size is not supported. Attach an image up to 5 MB, or a PDF, Word, Excel, text or CSV file up to 10 MB.",
+        "emptyMessage": "Write a message or attach a file."
+    },
+    "attachment": "File uploaded."
 }

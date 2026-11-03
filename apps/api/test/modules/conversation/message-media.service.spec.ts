@@ -156,4 +156,75 @@ describe('MessageMediaService', () => {
             { type: 'file', name: 'b.pdf' },
         ]);
     });
+
+    describe('adopt', () => {
+        it('copies staged uploads into the conversation folder', async () => {
+            const s3WithCopy = { ...s3, copyItem: jest.fn(async () => {}) };
+            const media = new MessageMediaService(s3WithCopy as any);
+
+            const out = await media.adopt('widget-media/acc/v1', 'conv-1', [
+                { key: 'widget-media/acc/v1/a.jpg', name: 'shirt.jpg' },
+                { key: 'widget-media/acc/other/c.jpg' },
+                { key: 'widget-media/acc/v1/b.jpg', name: 'pants.jpg' },
+            ]);
+
+            expect(out).toEqual([
+                {
+                    type: 'image',
+                    key: expect.stringMatching(
+                        /^conversations\/conv-1\/.+\.jpg$/
+                    ),
+                    name: 'shirt.jpg',
+                },
+                {
+                    type: 'image',
+                    key: expect.stringMatching(
+                        /^conversations\/conv-1\/.+\.jpg$/
+                    ),
+                    name: 'pants.jpg',
+                },
+            ]);
+            expect(s3WithCopy.copyItem).toHaveBeenCalledTimes(2);
+            expect(s3WithCopy.copyItem).toHaveBeenCalledWith(
+                'widget-media/acc/v1/a.jpg',
+                out[0].key,
+                { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
+            );
+        });
+
+        it('keeps one file and drops photos sent with it', async () => {
+            const s3WithCopy = { ...s3, copyItem: jest.fn(async () => {}) };
+            const media = new MessageMediaService(s3WithCopy as any);
+
+            const out = await media.adopt('widget-media/acc/v1', 'conv-1', [
+                { key: 'widget-media/acc/v1/b.pdf', name: 'menu.pdf' },
+                { key: 'widget-media/acc/v1/a.jpg' },
+            ]);
+
+            expect(out).toEqual([
+                expect.objectContaining({ type: 'file', name: 'menu.pdf' }),
+            ]);
+            expect(s3WithCopy.copyItem).toHaveBeenCalledTimes(1);
+        });
+
+        it('drops an upload that cannot be copied and keeps the rest', async () => {
+            const s3WithCopy = {
+                ...s3,
+                copyItem: jest.fn(async (source: string) => {
+                    if (source.endsWith('gone.jpg'))
+                        throw new Error('NoSuchKey');
+                }),
+            };
+            const media = new MessageMediaService(s3WithCopy as any);
+
+            const out = await media.adopt('widget-media/acc/v1', 'conv-1', [
+                { key: 'widget-media/acc/v1/gone.jpg' },
+                { key: 'widget-media/acc/v1/a.jpg', name: 'shirt.jpg' },
+            ]);
+
+            expect(out).toEqual([
+                expect.objectContaining({ type: 'image', name: 'shirt.jpg' }),
+            ]);
+        });
+    });
 });

@@ -30,6 +30,8 @@ import {
     ENUM_AI_USAGE_SOURCE,
 } from '@app/app/ai-usage-meter.interface';
 import { TurnContextService } from './turn-context.service';
+import { WidgetSessionService } from './widget-session.service';
+import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
 import { HandoffIntentService } from './handoff-intent.service';
 import { handoffReplyText } from '../utils/handoff-reply.util';
 import { fallbackReplyText } from '../utils/fallback-reply.util';
@@ -44,6 +46,8 @@ export interface IWidgetTurn {
     text: string;
     /** Caller-supplied id — resending it must not create a second message. */
     messageId: string;
+    /** Uploads staged for this message (WidgetSessionService.mediaFolder). */
+    attachments?: { key: string; name?: string }[];
 }
 
 /**
@@ -75,6 +79,8 @@ export class WidgetChatService {
         private readonly sseStream: ChatbotAiSseStreamService,
         private readonly turnContext: TurnContextService,
         private readonly handoffIntent: HandoffIntentService,
+        private readonly messageMedia: MessageMediaService,
+        private readonly sessionService: WidgetSessionService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -87,6 +93,12 @@ export class WidgetChatService {
             throw new UnprocessableEntityException({
                 statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.NO_CHATBOT_ATTACHED,
                 message: 'widget.error.noChatbotAttached',
+            });
+        }
+        if (!text.trim() && !turn.attachments?.length) {
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.EMPTY_MESSAGE,
+                message: 'widget.error.emptyMessage',
             });
         }
 
@@ -104,6 +116,30 @@ export class WidgetChatService {
             contactPointId: contactPoint?.id,
         });
 
+        // Stored like a channel photo, so the inbox shows it and the Turn
+        // below describes it like any other customer image. A repeated send
+        // of the same message already has its copies.
+        const repeated =
+            !!turn.attachments?.length &&
+            !!(await this.messageRepository.findOne({
+                conversation: conversation.id,
+                externalId: messageId,
+            } as never));
+        const attachments =
+            turn.attachments?.length && !repeated
+                ? await this.messageMedia.adopt(
+                      this.sessionService.mediaFolder(account.id, visitorId),
+                      conversation.id,
+                      turn.attachments
+                  )
+                : [];
+        // Every upload failed to copy: nothing is left to answer.
+        if (!text.trim() && !attachments.length && !repeated) {
+            throw new UnprocessableEntityException({
+                statusCode: ENUM_WIDGET_STATUS_CODE_ERROR.EMPTY_MESSAGE,
+                message: 'widget.error.emptyMessage',
+            });
+        }
         const inbound = await this.messageRepository.upsertByExternalId(
             conversation.id,
             messageId,
@@ -112,6 +148,7 @@ export class WidgetChatService {
                 authorType: ENUM_MESSAGE_AUTHOR.USER,
                 authorId: visitorId,
                 text,
+                ...(attachments.length ? { attachments } : {}),
                 dateSent: new Date(),
             }
         );
@@ -179,6 +216,7 @@ export class WidgetChatService {
         const {
             summary,
             history,
+            message,
             usage: describeUsage,
             usageModel: describeModel,
         } = await this.turnContext.build(
@@ -214,7 +252,9 @@ export class WidgetChatService {
                     chatbot_id: chatbot.id,
                     user_id: visitorId,
                     provider_id: chatbot.modelProvider,
-                    message: text,
+                    // The typed text plus the photo descriptions and file
+                    // notes, as on platform channels.
+                    message,
                     conversation_id: conversation.id,
                     customer_id: customerId,
                     contact_point_id: contactPoint?.id,
