@@ -365,3 +365,13 @@ async def test_metadata_usage_carries_prompt_cache_counts():
         "input_tokens": 220, "output_tokens": 12, "total_tokens": 232,
         "cache_read_tokens": 90, "cache_write_tokens": 90,
     }
+
+
+@pytest.mark.asyncio
+async def test_steered_messages_are_reported_as_a_data_part():
+    async def fake_events():
+        yield {"event": "on_custom_event", "name": "steered", "data": {"message_ids": ["m2", "m3"]}}
+        yield {"event": "on_chat_model_stream", "data": {"chunk": _text_chunk("Dạ có ạ")}}
+
+    parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
+    assert {"type": "data-steered", "data": {"messageIds": ["m2", "m3"]}} in parts
