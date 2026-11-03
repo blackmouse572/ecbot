@@ -8,7 +8,15 @@ import {
     Param,
     Post,
     Res,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CHAT_UPLOAD_FILE_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
+import { ChatAttachmentResponseDto } from '@app/modules/conversation/dtos/response/chat-attachment.response.dto';
+import * as multer from 'multer';
+import { ChatbotPreviewAttachmentRequestDto } from '../dtos/request/chatbot.preview-attachment.request.dto';
+import { ChatbotPreviewMediaService } from '../services/chatbot-preview-media.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Response as ExpressResponse } from 'express';
@@ -18,6 +26,7 @@ import { IResponse } from 'src/common/response/interfaces/response.interface';
 import {
     ChatbotPreviewMetaDoc,
     ChatbotPreviewStreamDoc,
+    ChatbotSharePreviewAttachmentDoc,
 } from '../docs/chatbot.doc';
 import { ChatbotPreviewStreamRequestDto } from '../dtos/request/chatbot.preview-stream.request.dto';
 import { ChatbotPreviewMetaResponseDto } from '../dtos/response/chatbot.preview-meta.response.dto';
@@ -49,7 +58,8 @@ export class ChatbotPreviewPublicController {
         private readonly shareTokenService: ChatbotShareTokenService,
         private readonly previewService: ChatbotPreviewService,
         private readonly previewSessionService: ChatbotPreviewSessionService,
-        private readonly turnstileService: TurnstileService
+        private readonly turnstileService: TurnstileService,
+        private readonly previewMedia: ChatbotPreviewMediaService
     ) {}
 
     @ChatbotPreviewMetaDoc()
@@ -82,25 +92,12 @@ export class ChatbotPreviewPublicController {
     ): Promise<void> {
         const { chatbot, jti } = await this.resolve(dto.token);
 
-        const sessionKey = this.previewSessionService.publicKey({
-            token: dto.token,
-            sessionId: dto.chat_session_id ?? chatbot.id,
-        });
-
-        // Turnstile gates entry to the session, before any budget is spent —
-        // otherwise a bot burns a session's quota with tokens it never solved.
-        // Verified once per session, not per turn: a Turnstile token is
-        // single-use and short-lived, so re-challenging would put a widget in
-        // front of every message.
-        if (!(await this.previewSessionService.isVerified(sessionKey))) {
-            await this.turnstileService.verify(
-                dto.turnstileToken,
-                // Scoped so a token solved on the login form cannot open a
-                // preview session.
-                ENUM_TURNSTILE_ACTION.CHATBOT_PREVIEW
-            );
-            await this.previewSessionService.markVerified(sessionKey);
-        }
+        const sessionKey = await this.admit(
+            dto.token,
+            chatbot.id,
+            dto.chat_session_id,
+            dto.turnstileToken
+        );
 
         // Turnstile stops bots at the door; the budget is what stops a real
         // person from farming free inference. IP throttling barely bites here:
@@ -127,7 +124,76 @@ export class ChatbotPreviewPublicController {
             // No user behind a share link; the id is only echoed to apps/ai.
             userId: `share:${jti}`,
             chatSessionId: dto.chat_session_id,
+            attachments: dto.attachments,
         });
+    }
+
+    // Storing a file spends no LLM budget, but it does fill the bucket, so it
+    // passes the same Turnstile gate as a turn and has its own hourly budget.
+    @Throttle({ default: { ttl: 60000, limit: 20 } })
+    @ChatbotSharePreviewAttachmentDoc()
+    @Response('chatbot.previewAttachment')
+    @Post('/attachments')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: multer.memoryStorage(),
+            limits: { fileSize: CHAT_UPLOAD_FILE_MAX_BYTES, files: 1 },
+        })
+    )
+    async uploadAttachment(
+        @Body() dto: ChatbotPreviewAttachmentRequestDto,
+        @UploadedFile() file?: Express.Multer.File
+    ): Promise<IResponse<ChatAttachmentResponseDto>> {
+        const { chatbot, jti } = await this.resolve(dto.token);
+        await this.admit(
+            dto.token,
+            chatbot.id,
+            dto.chat_session_id,
+            dto.turnstileToken
+        );
+        if (!(await this.previewSessionService.claimTokenUpload(jti))) {
+            throw new HttpException(
+                {
+                    statusCode:
+                        ENUM_CHATBOT_STATUS_CODE_ERROR.PREVIEW_SESSION_LIMIT,
+                    message: 'chatbot.error.previewSessionLimit',
+                },
+                HttpStatus.TOO_MANY_REQUESTS
+            );
+        }
+        const saved = await this.previewMedia.save(chatbot.id, file);
+        return {
+            data: { type: saved.type, key: saved.key, name: saved.name },
+        };
+    }
+
+    /**
+     * Turnstile gates entry to the session, before any budget is spent;
+     * otherwise a bot burns a session's quota with tokens it never solved.
+     * Verified once per session, not per turn: a Turnstile token is
+     * single-use and short-lived, so re-challenging would put a widget in
+     * front of every message. Returns the session's key.
+     */
+    private async admit(
+        token: string,
+        chatbotId: string,
+        sessionId: string | undefined,
+        turnstileToken: string | undefined
+    ): Promise<string> {
+        const sessionKey = this.previewSessionService.publicKey({
+            token,
+            sessionId: sessionId ?? chatbotId,
+        });
+        if (!(await this.previewSessionService.isVerified(sessionKey))) {
+            await this.turnstileService.verify(
+                turnstileToken,
+                // Scoped so a token solved on the login form cannot open a
+                // preview session.
+                ENUM_TURNSTILE_ACTION.CHATBOT_PREVIEW
+            );
+            await this.previewSessionService.markVerified(sessionKey);
+        }
+        return sessionKey;
     }
 
     private async resolve(

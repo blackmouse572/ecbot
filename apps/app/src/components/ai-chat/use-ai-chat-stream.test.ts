@@ -1,5 +1,17 @@
 import { getDefaultStore } from "jotai";
-import { afterEach, describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
+
+const uploadShared = vi.hoisted(() =>
+  vi.fn(async () => ({
+    data: {
+      data: { type: "image", key: "preview-media/cb/a.png", name: "a.png" },
+    },
+  })),
+);
+vi.mock("@repo/client", async () => ({
+  ...(await vi.importActual<typeof import("@repo/client")>("@repo/client")),
+  chatbotPreviewPublicControllerUploadAttachmentV1: uploadShared,
+}));
 import { tokenAtom } from "@/modules/auth";
 import { impersonationAtom } from "@/modules/impersonation";
 import {
@@ -337,6 +349,33 @@ describe("chat transport configs", () => {
     });
   });
 
+  it("sends the uploaded files of the last message", () => {
+    const request = buildChatStreamRequest({
+      transport: workspaceChatTransport("acme", "cb1"),
+      clientConfig,
+      token: "abc",
+      id: "session-1",
+      messages: [
+        {
+          id: "m1",
+          role: "user",
+          parts: [{ type: "text", text: "" }],
+          metadata: {
+            attachments: [
+              { type: "image", key: "preview-media/cb1/a.jpg", name: "a.jpg" },
+            ],
+          },
+        },
+      ] as never,
+    });
+
+    expect(request.body).toEqual({
+      message: "",
+      chat_session_id: "session-1",
+      attachments: [{ key: "preview-media/cb1/a.jpg", name: "a.jpg" }],
+    });
+  });
+
   it("attaches the given token as a Bearer header on the workspace transport", () => {
     const request = buildChatStreamRequest({
       transport: workspaceChatTransport("acme", "cb1"),
@@ -594,5 +633,27 @@ describe("readStreamAuthToken", () => {
       user: { id: "u1", name: "A", email: "a@x.com" },
     });
     expect(readStreamAuthToken()).toBe("own");
+  });
+});
+
+describe("shareChatTransport upload", () => {
+  it("sends the session and Turnstile token with the file", async () => {
+    const file = new File(["x"], "a.png", { type: "image/png" });
+    const out = await shareChatTransport("tok-123", () => "cf").upload!(
+      file,
+      "chat-1",
+    );
+
+    expect(uploadShared).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: {
+          file,
+          token: "tok-123",
+          chat_session_id: "chat-1",
+          turnstileToken: "cf",
+        },
+      }),
+    );
+    expect(out.key).toBe("preview-media/cb/a.png");
   });
 });

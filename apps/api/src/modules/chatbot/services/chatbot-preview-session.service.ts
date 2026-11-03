@@ -90,14 +90,15 @@ export class ChatbotPreviewSessionService {
         if (!raw) return { messages: [] };
         try {
             const parsed = JSON.parse(raw) as
-                | IPreviewSessionRecord
-                | AIChatHistoryMessage[];
+                IPreviewSessionRecord | AIChatHistoryMessage[];
             // Tolerate the pre-Turnstile shape (a bare message array) so a
             // rolling deploy doesn't drop live sessions.
             if (Array.isArray(parsed)) return { messages: parsed };
             return {
                 verified: parsed?.verified === true,
-                messages: Array.isArray(parsed?.messages) ? parsed.messages : [],
+                messages: Array.isArray(parsed?.messages)
+                    ? parsed.messages
+                    : [],
             };
         } catch {
             // A corrupt entry must degrade to an amnesiac turn, never a 500.
@@ -189,6 +190,19 @@ export class ChatbotPreviewSessionService {
     async claimTokenTurn(jti: string): Promise<boolean> {
         return this.claim(
             `${KEY_PREFIX}:${BUDGET_SUFFIX}:token:${jti}`,
+            this.config.maxTurnsPerTokenHourly,
+            TOKEN_BUDGET_TTL_MS
+        );
+    }
+
+    /**
+     * Consume one upload from a share token's hourly budget, kept apart from
+     * its turns: an upload costs storage, not inference, and one turn may
+     * carry several photos.
+     */
+    async claimTokenUpload(jti: string): Promise<boolean> {
+        return this.claim(
+            `${KEY_PREFIX}:${BUDGET_SUFFIX}:upload:${jti}`,
             this.config.maxTurnsPerTokenHourly,
             TOKEN_BUDGET_TTL_MS
         );

@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Inject,
     Injectable,
     InternalServerErrorException,
@@ -10,10 +11,13 @@ import { Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
 import { ENUM_AI_USAGE_STATUS_CODE_ERROR } from 'src/app/enums/ai-usage.status-code.enum';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
+import { ENUM_CHATBOT_STATUS_CODE_ERROR } from '../enums/chatbot.status-code.enum';
 import { ChatbotEntity } from '../repository/entities/chatbot.entity';
 import { ChatbotAIService } from './chatbot-ai.service';
 import { ChatbotAiSseStreamService } from './chatbot-ai-sse-stream.service';
 import { ChatbotPreviewSessionService } from './chatbot-preview-session.service';
+import { ChatbotPreviewMediaService } from './chatbot-preview-media.service';
+import { IChatbotPreviewAttachment } from '../interfaces/chatbot-preview-media.interface';
 import {
     AI_USAGE_METER,
     AiUsageMeter,
@@ -27,6 +31,8 @@ export interface IPreviewStreamParams {
     message: string;
     userId: string;
     chatSessionId?: string;
+    /** Files uploaded for this message (ChatbotPreviewMediaService). */
+    attachments?: IChatbotPreviewAttachment[];
 }
 
 /**
@@ -49,16 +55,26 @@ export class ChatbotPreviewService {
         private readonly chatbotAIService: ChatbotAIService,
         private readonly sessionService: ChatbotPreviewSessionService,
         private readonly sseStream: ChatbotAiSseStreamService,
+        private readonly media: ChatbotPreviewMediaService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
     ) {}
 
+    private refuseEmpty(): never {
+        throw new BadRequestException({
+            statusCode: ENUM_CHATBOT_STATUS_CODE_ERROR.EMPTY_MESSAGE,
+            message: 'chatbot.error.emptyMessage',
+        });
+    }
+
     async streamTo(
         res: ExpressResponse,
         params: IPreviewStreamParams
     ): Promise<void> {
-        const { chatbot, sessionKey, message, userId, chatSessionId } = params;
+        const { chatbot, sessionKey, userId, chatSessionId } = params;
+        const attachments = params.attachments ?? [];
+        if (!params.message.trim() && !attachments.length) this.refuseEmpty();
         const history = await this.sessionService.read(sessionKey);
 
         // Unlike the customer-facing paths, an operator gets the real reason:
@@ -74,6 +90,29 @@ export class ChatbotPreviewService {
                 statusCode: ENUM_AI_USAGE_STATUS_CODE_ERROR.QUOTA_EXHAUSTED,
                 message: 'tokenUsage.error.quotaExhausted',
                 errors: { reason: budget.reason },
+            });
+        }
+
+        // Attachments read as a channel's do: the notes follow the text, and
+        // the transcript keeps them so later turns remember the photo.
+        const described = attachments.length
+            ? await this.media.notes(chatbot.id, attachments)
+            : undefined;
+        const message = [params.message, ...(described?.notes ?? [])]
+            .filter(part => part.trim())
+            .join('\n');
+        // Attachments outside this chatbot's folder are dropped above, so a
+        // message of only those is as empty as one with nothing at all.
+        if (!message) this.refuseEmpty();
+        // Spent whether or not the reply succeeds, so booked on its own and
+        // priced at the vision model.
+        if (described?.usage) {
+            await this.meter?.record({
+                workspaceId: chatbot.workspace.id,
+                usage: described.usage,
+                source: ENUM_AI_USAGE_SOURCE.PREVIEW,
+                chatbotId: chatbot.id,
+                model: described.model ?? chatbot.modelTextName,
             });
         }
 

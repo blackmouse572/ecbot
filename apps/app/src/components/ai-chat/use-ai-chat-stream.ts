@@ -12,7 +12,12 @@ import type {
   ToolKind,
 } from "@/types/chat-message";
 import { useChat } from "@ai-sdk/react";
-import { client } from "@repo/client";
+import {
+  type ChatAttachmentResponseDto,
+  chatbotControllerUploadPreviewAttachmentV1,
+  chatbotPreviewPublicControllerUploadAttachmentV1,
+  client,
+} from "@repo/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { getDefaultStore } from "jotai";
@@ -262,7 +267,23 @@ export type ChatTransportConfig = {
   includeCredentials: boolean;
   /** Tool-invocation invalidation is an authed query; skip it when anonymous. */
   invalidateToolInvocations: boolean;
+  /**
+   * Stores one file for the next message and returns what to send back with
+   * it. A surface without it takes text only.
+   */
+  upload?: (
+    file: File,
+    sessionId: string,
+  ) => Promise<ChatAttachmentResponseDto>;
 };
+
+/** The stored file an upload endpoint answered with, or a thrown error. */
+function uploaded(
+  data: { data?: ChatAttachmentResponseDto } | undefined,
+): ChatAttachmentResponseDto {
+  if (!data?.data) throw new Error("Upload returned no file");
+  return data.data;
+}
 
 export function workspaceChatTransport(
   workspaceSlug: string,
@@ -272,6 +293,14 @@ export function workspaceChatTransport(
     path: `/api/v1/shared/${encodeURIComponent(workspaceSlug)}/chatbots/${encodeURIComponent(chatbotId)}/stream`,
     includeCredentials: true,
     invalidateToolInvocations: true,
+    upload: async (file) => {
+      const { data } = await chatbotControllerUploadPreviewAttachmentV1({
+        path: { workspace: workspaceSlug, id: chatbotId },
+        body: { file },
+        throwOnError: true,
+      });
+      return uploaded(data);
+    },
   };
 }
 
@@ -286,6 +315,19 @@ export function shareChatTransport(
     extraBody: () => ({ token, turnstileToken: getTurnstileToken?.() }),
     includeCredentials: false,
     invalidateToolInvocations: false,
+    // Uploads pass the same once-per-session Turnstile gate as a turn.
+    upload: async (file, sessionId) => {
+      const { data } = await chatbotPreviewPublicControllerUploadAttachmentV1({
+        body: {
+          file,
+          token,
+          chat_session_id: sessionId,
+          turnstileToken: getTurnstileToken?.(),
+        },
+        throwOnError: true,
+      });
+      return uploaded(data);
+    },
   };
 }
 
@@ -338,12 +380,16 @@ export function buildChatStreamRequest({
   id: string;
   messages: readonly UIMessage[];
 }): { api: string; headers: HeadersInit; body: Record<string, unknown> } {
+  const last = messages.at(-1);
   const message =
-    messages
-      .at(-1)
-      ?.parts?.filter((part) => part.type === "text")
+    last?.parts
+      ?.filter((part) => part.type === "text")
       .map((part) => (part as { text: string }).text)
       .join("") ?? "";
+  // Files the provider uploaded before sending ride on the message metadata.
+  const attachments = (
+    last?.metadata as { attachments?: ChatAttachmentResponseDto[] } | undefined
+  )?.attachments?.map(({ key, name }) => ({ key, name }));
 
   const headers = {
     ...((clientConfig.headers ?? {}) as Record<string, unknown>),
@@ -372,6 +418,7 @@ export function buildChatStreamRequest({
         message,
         chat_session_id: id,
       }),
+      ...(attachments?.length ? { attachments } : {}),
     },
   };
 }

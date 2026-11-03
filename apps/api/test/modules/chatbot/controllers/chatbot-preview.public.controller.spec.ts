@@ -42,6 +42,7 @@ function setup(overrides: Record<string, any> = {}) {
         publicKey: jest.fn().mockReturnValue('pub-key'),
         claimTurn: jest.fn().mockResolvedValue(true),
         claimTokenTurn: jest.fn().mockResolvedValue(true),
+        claimTokenUpload: jest.fn().mockResolvedValue(true),
         isVerified: jest.fn().mockResolvedValue(false),
         markVerified: jest.fn().mockResolvedValue(undefined),
         ...(overrides.previewSessionService ?? {}),
@@ -51,12 +52,21 @@ function setup(overrides: Record<string, any> = {}) {
         ...(overrides.turnstileService ?? {}),
     };
 
+    const previewMedia = {
+        save: jest.fn().mockResolvedValue({
+            type: 'image',
+            key: 'preview-media/cb1/a.jpg',
+            name: 'a.jpg',
+        }),
+    };
+
     const controller = new ChatbotPreviewPublicController(
         chatbotService as never,
         shareTokenService as never,
         previewService as never,
         previewSessionService as never,
-        turnstileService as never
+        turnstileService as never,
+        previewMedia as never
     );
 
     return {
@@ -66,6 +76,7 @@ function setup(overrides: Record<string, any> = {}) {
         previewService,
         previewSessionService,
         turnstileService,
+        previewMedia,
     };
 }
 
@@ -326,5 +337,99 @@ describe('ChatbotPreviewPublicController', () => {
             ).rejects.toThrow('expired');
             expect(turnstileService.verify).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe('ChatbotPreviewPublicController.uploadAttachment', () => {
+    const file = {
+        buffer: Buffer.from('x'),
+        mimetype: 'image/jpeg',
+        size: 1,
+        originalname: 'a.jpg',
+    } as Express.Multer.File;
+
+    const uploadDto = {
+        token: 'tok',
+        chat_session_id: 's1',
+        turnstileToken: 'cf-token',
+    } as never;
+
+    it('stores the file for the token chatbot', async () => {
+        const { controller, previewMedia } = setup();
+        const out = await controller.uploadAttachment(uploadDto, file);
+        expect(previewMedia.save).toHaveBeenCalledWith('cb1', file);
+        expect(out.data).toEqual({
+            type: 'image',
+            key: 'preview-media/cb1/a.jpg',
+            name: 'a.jpg',
+        });
+    });
+
+    it('passes the same Turnstile gate as the stream, once per session', async () => {
+        const { controller, turnstileService, previewSessionService } = setup();
+        await controller.uploadAttachment(uploadDto, file);
+        expect(previewSessionService.publicKey).toHaveBeenCalledWith({
+            token: 'tok',
+            sessionId: 's1',
+        });
+        expect(turnstileService.verify).toHaveBeenCalledWith(
+            'cf-token',
+            ENUM_TURNSTILE_ACTION.CHATBOT_PREVIEW
+        );
+        expect(previewSessionService.markVerified).toHaveBeenCalledWith(
+            'pub-key'
+        );
+    });
+
+    it('stores nothing when Turnstile fails', async () => {
+        const { controller, previewMedia } = setup({
+            turnstileService: {
+                verify: jest.fn().mockRejectedValue(new Error('bot')),
+            },
+        });
+        await expect(
+            controller.uploadAttachment(uploadDto, file)
+        ).rejects.toThrow('bot');
+        expect(previewMedia.save).not.toHaveBeenCalled();
+    });
+
+    it("stores nothing past the share link's hourly upload budget", async () => {
+        const { controller, previewMedia, previewSessionService } = setup({
+            previewSessionService: {
+                claimTokenUpload: jest.fn().mockResolvedValue(false),
+            },
+        });
+        await expect(
+            controller.uploadAttachment(uploadDto, file)
+        ).rejects.toMatchObject({ status: 429 });
+        expect(previewSessionService.claimTokenUpload).toHaveBeenCalledWith(
+            'jti1'
+        );
+        expect(previewMedia.save).not.toHaveBeenCalled();
+    });
+
+    it('stores nothing behind a bad token', async () => {
+        const { controller, previewMedia } = setup({
+            shareTokenService: {
+                verify: jest.fn(() => {
+                    throw new Error('expired');
+                }),
+            },
+        });
+        await expect(
+            controller.uploadAttachment({ token: 'x' } as never, file)
+        ).rejects.toThrow('expired');
+        expect(previewMedia.save).not.toHaveBeenCalled();
+    });
+
+    it('passes the attachments on to the stream', async () => {
+        const { controller, previewService } = setup();
+        const dto = streamDto();
+        dto.attachments = [{ key: 'preview-media/cb1/a.jpg' }];
+        await controller.stream({} as never, dto);
+        expect(previewService.streamTo).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ attachments: dto.attachments })
+        );
     });
 });

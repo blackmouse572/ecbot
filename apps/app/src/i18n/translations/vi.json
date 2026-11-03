@@ -1136,6 +1136,12 @@
       "clear": "Xóa",
       "restart": "Bắt đầu lại",
       "inputPlaceholder": "Nhập tin nhắn của bạn...",
+      "attachPhotos": "Gửi ảnh",
+      "attachFile": "Gửi tệp",
+      "removeAttachment": "Bỏ {{name}}",
+      "attachFailed": "Không tải được tệp lên. Vui lòng thử lại.",
+      "attachLimit": "Mỗi tin nhắn gửi được một tệp hoặc tối đa {{count}} ảnh.",
+      "attachNotSupported": "Hãy đính kèm ảnh tối đa 5 MB, hoặc tệp PDF, Word, Excel, văn bản hay CSV tối đa 10 MB.",
       "thinking": "Đang tạo phản hồi...",
       "trace": {
         "working": "Đang xử lý",

@@ -78,4 +78,82 @@ describe('MessageMediaService', () => {
         ]);
         expect(s3.signGetUrl).not.toHaveBeenCalled();
     });
+
+    describe('saveUpload', () => {
+        const upload = (
+            mimetype: string,
+            size: number,
+            originalname = 'a'
+        ) => ({
+            buffer: Buffer.alloc(size),
+            mimetype,
+            size,
+            originalname,
+        });
+
+        it('stores an image privately under the folder', async () => {
+            const saved = await service.saveUpload(
+                'preview-media/cb1',
+                upload('image/png', 10, 'shirt.png')
+            );
+
+            expect(saved).toEqual({
+                type: 'image',
+                key: expect.stringMatching(/^preview-media\/cb1\/.+\.png$/),
+                name: 'shirt.png',
+            });
+            expect(s3.putItem).toHaveBeenCalledWith(
+                expect.objectContaining({ key: saved?.key, mime: 'image/png' }),
+                { access: ENUM_AWS_S3_ACCESSIBILITY.PRIVATE }
+            );
+        });
+
+        it('stores a document as a file with its extension', async () => {
+            const saved = await service.saveUpload(
+                'conversations/c',
+                upload('application/pdf', 10, 'menu.pdf')
+            );
+
+            expect(saved).toEqual({
+                type: 'file',
+                key: expect.stringMatching(/^conversations\/c\/.+\.pdf$/),
+                name: 'menu.pdf',
+            });
+        });
+
+        it('refuses a type it does not take, or an oversized file', async () => {
+            await expect(
+                service.saveUpload('f', upload('application/x-msdownload', 10))
+            ).resolves.toBeUndefined();
+            await expect(
+                service.saveUpload('f', upload('image/png', 6 * 1024 * 1024))
+            ).resolves.toBeUndefined();
+            await expect(
+                service.saveUpload(
+                    'f',
+                    upload('application/pdf', 11 * 1024 * 1024)
+                )
+            ).resolves.toBeUndefined();
+            expect(s3.putItem).not.toHaveBeenCalled();
+        });
+    });
+
+    it('resolves keys only inside the given folder', async () => {
+        await expect(
+            service.resolveIn(
+                [
+                    { type: 'image', key: 'preview-media/cb1/a.jpg' },
+                    {
+                        type: 'file',
+                        key: 'preview-media/cb2/b.pdf',
+                        name: 'b.pdf',
+                    },
+                ],
+                'preview-media/cb1/'
+            )
+        ).resolves.toEqual([
+            { type: 'image', url: 'https://s3/preview-media/cb1/a.jpg?sig' },
+            { type: 'file', name: 'b.pdf' },
+        ]);
+    });
 });

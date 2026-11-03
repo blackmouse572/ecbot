@@ -1,11 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ChatAttachmentRequestDto } from '@app/modules/conversation/dtos/request/chat-attachment.request.dto';
+import { CHAT_UPLOAD_MAX_FILES } from '@app/modules/conversation/constants/message-media.constant';
+import { Type } from 'class-transformer';
 import {
+    ArrayMaxSize,
+    IsArray,
     IsDefined,
-    IsNotEmpty,
     IsOptional,
     IsString,
     Matches,
     MaxLength,
+    ValidateNested,
 } from 'class-validator';
 
 export class ChatbotStreamRequestDto {
@@ -14,12 +19,26 @@ export class ChatbotStreamRequestDto {
         example: 'What are my pending orders?',
     })
     @IsDefined()
-    @IsNotEmpty()
     @IsString()
     // Bounds the per-turn prompt cost. Rejected, never truncated, so an
     // oversized message fails loudly instead of silently losing context.
     @MaxLength(2000)
+    // May be empty when the message carries attachments; the service
+    // refuses a message with neither.
     message: string;
+
+    @ApiPropertyOptional({
+        type: () => ChatAttachmentRequestDto,
+        isArray: true,
+        description:
+            'Files uploaded for this message with the preview attachments endpoint',
+    })
+    @IsOptional()
+    @IsArray()
+    @ArrayMaxSize(CHAT_UPLOAD_MAX_FILES)
+    @ValidateNested({ each: true })
+    @Type(() => ChatAttachmentRequestDto)
+    attachments?: ChatAttachmentRequestDto[];
 
     @ApiPropertyOptional({
         description:

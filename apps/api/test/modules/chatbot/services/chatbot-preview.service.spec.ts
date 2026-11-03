@@ -57,10 +57,19 @@ function setup(
         record: jest.fn(),
     };
 
+    const media = {
+        notes: jest.fn(async () => ({
+            notes: ['[Image description: a red shirt]'],
+            usage: { inputTokens: 300, outputTokens: 40, totalTokens: 340 },
+            model: 'google/gemini-2.5-flash',
+        })),
+    };
+
     const service = new ChatbotPreviewService(
         aiService as never,
         sessionService as never,
         new ChatbotAiSseStreamService(),
+        media as never,
         meter as never
     );
 
@@ -68,7 +77,8 @@ function setup(
     const unmetered = new ChatbotPreviewService(
         aiService as never,
         sessionService as never,
-        new ChatbotAiSseStreamService()
+        new ChatbotAiSseStreamService(),
+        media as never
     );
 
     return {
@@ -79,6 +89,7 @@ function setup(
         upstream,
         captured,
         meter,
+        media,
     };
 }
 
@@ -312,5 +323,88 @@ describe('ChatbotPreviewService model label', () => {
         expect(meter.record).toHaveBeenCalledWith(
             expect.objectContaining({ model: 'openai/gpt-4o-mini' })
         );
+    });
+});
+
+describe('ChatbotPreviewService attachments', () => {
+    const attachments = [{ key: 'preview-media/cb1/a.jpg' }];
+
+    it('sends the attachment notes after the text and remembers them', async () => {
+        const { service, upstream, captured, sessionService, media } =
+            setup(frames());
+        const res = fakeRes();
+        const done = service.streamTo(res as never, {
+            ...baseParams,
+            message: 'how much is this?',
+            attachments,
+        });
+        upstream.end(frames('{"type":"text-delta","id":"t1","delta":"99k"}'));
+        await done;
+
+        expect(media.notes).toHaveBeenCalledWith('cb1', attachments);
+        const message = 'how much is this?\n[Image description: a red shirt]';
+        expect(captured.params).toMatchObject({ message });
+        expect(sessionService.writeTurn).toHaveBeenCalledWith(
+            'k',
+            message,
+            '99k'
+        );
+    });
+
+    it('takes a message that is only attachments', async () => {
+        const { service, upstream, captured } = setup(frames());
+        const done = service.streamTo(fakeRes() as never, {
+            ...baseParams,
+            message: '',
+            attachments,
+        });
+        upstream.end(frames());
+        await done;
+
+        expect(captured.params).toMatchObject({
+            message: '[Image description: a red shirt]',
+        });
+    });
+
+    it('records the description at the vision model', async () => {
+        const { service, upstream, meter } = setup(frames());
+        const done = service.streamTo(fakeRes() as never, {
+            ...baseParams,
+            attachments,
+        });
+        upstream.end(frames());
+        await done;
+
+        expect(meter.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                source: 'PREVIEW',
+                model: 'google/gemini-2.5-flash',
+                usage: expect.objectContaining({ inputTokens: 300 }),
+            })
+        );
+    });
+
+    it('refuses a message with no text and no attachments', async () => {
+        const { service, aiService } = setup(frames());
+        await expect(
+            service.streamTo(fakeRes() as never, {
+                ...baseParams,
+                message: '  ',
+            })
+        ).rejects.toThrow();
+        expect(aiService.streamChat).not.toHaveBeenCalled();
+    });
+
+    it('refuses a message whose attachments were all dropped', async () => {
+        const { service, aiService, media } = setup(frames());
+        media.notes.mockResolvedValueOnce({ notes: [] } as never);
+        await expect(
+            service.streamTo(fakeRes() as never, {
+                ...baseParams,
+                message: '',
+                attachments: [{ key: 'preview-media/cb2/a.jpg' }],
+            })
+        ).rejects.toThrow();
+        expect(aiService.streamChat).not.toHaveBeenCalled();
     });
 });

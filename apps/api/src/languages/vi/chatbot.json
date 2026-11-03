@@ -23,6 +23,8 @@
         "shareLinkNotConfigured": "Máy chủ chưa được cấu hình để chia sẻ preview.",
         "previewNotAvailable": "Chatbot này hiện không khả dụng để xem thử.",
         "previewSessionLimit": "Bạn đã đạt giới hạn tin nhắn cho phiên preview này. Vui lòng thử lại sau.",
+        "emptyMessage": "Hãy nhập tin nhắn hoặc đính kèm tệp.",
+        "attachmentNotSupported": "Không hỗ trợ loại hoặc kích thước tệp này. Hãy đính kèm ảnh tối đa 5 MB, hoặc tệp PDF, Word, Excel, văn bản hay CSV tối đa 10 MB.",
         "invalidAgentProfile": "Câu trả lời của trình tạo agent không hợp lệ.",
         "accountsNotFound": "Một hoặc nhiều tài khoản không thuộc về không gian làm việc này.",
         "accountsTaken": "Một hoặc nhiều kênh đang được kết nối với chatbot khác. Hãy ngắt kết nối ở chatbot đó trước."
@@ -34,6 +36,7 @@
     "linkAccount": "Tài khoản đã được liên kết với chatbot thành công.",
     "unlinkAccount": "Tài khoản đã được hủy liên kết với chatbot thành công.",
     "shareLink": "Link chia sẻ preview đã được tạo thành công.",
+    "previewAttachment": "Đã tải tệp lên.",
     "preview": "Đã tải preview chatbot thành công.",
     "batchDelete": "Đã xóa các chatbot",
     "batchStatus": "Đã cập nhật trạng thái chatbot"

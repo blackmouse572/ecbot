@@ -109,6 +109,10 @@ const mockModelCatalogService = {
     list: jest.fn(),
 };
 
+const mockPreviewMedia = {
+    save: jest.fn(),
+};
+
 const mockWorkspace = {
     id: 'workspace-id-1',
     name: 'Test Workspace',
@@ -130,7 +134,8 @@ function buildController(): ChatbotController {
         mockPreviewSessionService as any,
         mockShareTokenService as any,
         mockConfigService as any,
-        mockModelCatalogService as any
+        mockModelCatalogService as any,
+        mockPreviewMedia as any
     );
 }
 
@@ -626,5 +631,42 @@ describe('ChatbotController', () => {
                 controller.delete(mockWorkspace, mockUser, 'nonexistent-id')
             ).rejects.toThrow(NotFoundException);
         });
+    });
+});
+
+describe('ChatbotController.uploadPreviewAttachment', () => {
+    const file = { originalname: 'a.jpg' } as Express.Multer.File;
+
+    beforeEach(() => jest.clearAllMocks());
+
+    it('stores the file under the workspace chatbot', async () => {
+        mockChatbotService.findOne.mockResolvedValueOnce({ id: 'cb1' });
+        mockPreviewMedia.save.mockResolvedValueOnce({
+            type: 'image',
+            key: 'preview-media/cb1/a.jpg',
+            name: 'a.jpg',
+        });
+
+        const out = await buildController().uploadPreviewAttachment(
+            mockWorkspace,
+            'cb1',
+            file
+        );
+
+        expect(mockChatbotService.findOne).toHaveBeenCalledWith({
+            id: 'cb1',
+            workspace: mockWorkspace.id,
+            deletedAt: null,
+        });
+        expect(mockPreviewMedia.save).toHaveBeenCalledWith('cb1', file);
+        expect(out.data?.key).toBe('preview-media/cb1/a.jpg');
+    });
+
+    it('stores nothing for a chatbot outside the workspace', async () => {
+        mockChatbotService.findOne.mockResolvedValueOnce(null);
+        await expect(
+            buildController().uploadPreviewAttachment(mockWorkspace, 'x', file)
+        ).rejects.toThrow();
+        expect(mockPreviewMedia.save).not.toHaveBeenCalled();
     });
 });
