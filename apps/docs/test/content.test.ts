@@ -23,6 +23,9 @@ const pages = (fs.readdirSync(DIR, { recursive: true }) as string[])
     return { file, slug: base!, urlPath, lang: lang!, data, content };
   });
 
+/** Live pages under ecbot.dev/{lang}/solutions (eccho-ee lib/solutions-menu.ts). */
+const MARKETING_SOLUTIONS = ["sales-agent", "customer-support", "ecommerce-retail", "spa-wellness"];
+
 const urlPaths = new Set(pages.map((p) => p.urlPath));
 
 describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
@@ -64,6 +67,14 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
   it("links only to docs pages that exist", () => {
     for (const [, target] of content.matchAll(/\]\(\/docs\/?([^)#\s]*)/g)) {
       expect(urlPaths.has(target!.replace(/\/$/, "")), `broken link /docs/${target}`).toBe(true);
+    }
+  });
+
+  // Solution pages live on the marketing site (eccho-ee apps/web).
+  it("links to marketing solution pages in its own language", () => {
+    for (const [, linkLang, slug] of content.matchAll(/\]\(\/(en|vi)\/solutions\/([a-z-]+)\)/g)) {
+      expect(linkLang, `/${linkLang}/solutions/${slug} in a ${lang} page`).toBe(lang);
+      expect(MARKETING_SOLUTIONS).toContain(slug);
     }
   });
 
