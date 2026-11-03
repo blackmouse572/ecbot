@@ -23,11 +23,11 @@ const pages = (fs.readdirSync(DIR, { recursive: true }) as string[])
     return { file, slug: base!, urlPath, lang: lang!, data, content };
   });
 
-const urlPaths = new Set(pages.map((p) => p.urlPath));
+/** Snapshot of the marketing menu (eccho-ee lib/solutions-menu.ts) the docs hub
+ * links to. Update it when a solution page is added or removed there. */
+const MARKETING_SOLUTIONS = ["sales-agent", "customer-support", "ecommerce-retail", "spa-wellness"];
 
-// Solution pages live on the marketing site, not in docs. Keep in sync with
-// the solution page folders in eccho-ee apps/web/app/[locale]/solutions/.
-const SOLUTION_PAGES = new Set(["sales-agent", "customer-support", "ecommerce-retail", "spa-wellness"]);
+const urlPaths = new Set(pages.map((p) => p.urlPath));
 
 describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
   it("is named <slug>.<lang>.mdx", () => {
@@ -71,6 +71,7 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
     }
   });
 
+  // Solution pages live on the marketing site (eccho-ee apps/web).
   it("links outside /docs in its own language, to solution pages that exist", () => {
     for (const [, href] of content.matchAll(/\]\((\/[^)#\s]*)/g)) {
       if (href!.startsWith("/docs")) continue;
@@ -80,8 +81,13 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
       const solution = `/${lang}/solutions/`;
 
       if (href!.startsWith(solution)) {
-        expect(SOLUTION_PAGES.has(href!.slice(solution.length)), href).toBe(true);
+        expect(MARKETING_SOLUTIONS).toContain(href!.slice(solution.length).replace(/\/$/, ""));
       }
+    }
+
+    if (slug === "index") {
+      for (const solution of MARKETING_SOLUTIONS)
+        expect(content, `index links /${lang}/solutions/${solution}`).toContain(`](/${lang}/solutions/${solution})`);
     }
   });
 
