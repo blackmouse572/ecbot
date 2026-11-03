@@ -1172,6 +1172,7 @@
       "attachFailed": "Could not upload the file. Please try again.",
       "attachLimit": "Send either one file or up to {{count}} photos per message.",
       "attachNotSupported": "Attach an image up to 5 MB, or a PDF, Word, Excel, text or CSV file up to 10 MB.",
+      "attachTooBig": "This file is too big for this chat.",
       "thinking": "Generating response...",
       "trace": {
         "working": "Working on it",
@@ -2241,6 +2242,7 @@
       "noMessagesHint": "New messages from this customer will show up here."
     },
     "composer": {
+      "attachNotSupported": "This channel cannot take this file. Check its type and size.",
       "placeholder": "Reply as operator…",
       "windowClosed": "Meta only allows replies within 24 hours of the customer's last message.",
       "windowClosedHint": "You can reply again once the customer messages you.",

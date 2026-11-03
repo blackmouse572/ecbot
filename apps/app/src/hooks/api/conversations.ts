@@ -7,9 +7,11 @@ import {
   conversationWorkspaceControllerMarkReadV1,
   conversationWorkspaceControllerReactToMessageV1,
   conversationWorkspaceControllerSendMessageV1,
+  conversationWorkspaceControllerUploadAttachmentV1,
   conversationWorkspaceControllerUpdateBotV1,
   conversationWorkspaceControllerUpdateTimezoneV1,
   conversationWorkspaceControllerUpdateStatusV1,
+  type ChatAttachmentResponseDto,
   type ConversationGetResponseDto,
   type ConversationSendMessageRequestDto,
   type ConversationUpdateStatusRequestDto,
@@ -23,7 +25,9 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import type { FileUIPart } from "ai";
 import { useTranslation } from "react-i18next";
+import { toFile } from "@/components/ai-chat/file-part";
 import { useWorkspace } from "./workspace";
 
 export type ConversationStatus = "OPEN" | "RESOLVED";
@@ -205,6 +209,26 @@ export const useConversationMessages = (id: string | undefined) => {
   return { ...query, messages };
 };
 
+/** Stores each photo or file of an inbox reply, in order; rejects on the
+ *  first the customer's channel refuses. */
+export const useUploadReplyAttachments = (id: string | undefined) => {
+  const { workspace } = useWorkspace();
+  const slug = workspace?.slug;
+  return async (files: FileUIPart[]): Promise<ChatAttachmentResponseDto[]> =>
+    Promise.all(
+      files.map(async (part) => {
+        const res = await conversationWorkspaceControllerUploadAttachmentV1({
+          path: { workspace: slug!, id: id! },
+          body: { file: await toFile(part) },
+          throwOnError: true,
+        });
+        const saved = (res.data as { data?: ChatAttachmentResponseDto })?.data;
+        if (!saved) throw new Error("Upload returned no file");
+        return saved;
+      }),
+    );
+};
+
 export const useSendOperatorReply = (id: string | undefined) => {
   const { workspace } = useWorkspace();
   const slug = workspace?.slug;
@@ -220,13 +244,25 @@ export const useSendOperatorReply = (id: string | undefined) => {
     {
       text: string;
       retryOfClientNonce?: string;
+      /** Photos or a file already stored with the attachments endpoint. */
+      attachments?: ChatAttachmentResponseDto[];
+      /** Their data URL parts, shown in the message until the server's. */
+      previews?: FileUIPart[];
     },
     { clientNonce: string; prev?: InfiniteData<MessagePage> }
   >({
     mutationFn: async (variables) => {
       const res = await conversationWorkspaceControllerSendMessageV1({
         path: { workspace: slug!, id: id! },
-        body: { text: variables.text },
+        body: {
+          text: variables.text,
+          ...(variables.attachments?.length && {
+            attachments: variables.attachments.map(({ key, name }) => ({
+              key,
+              name,
+            })),
+          }),
+        },
       });
       return (res.data as A)?.data as MessageGetResponseDto;
     },
@@ -243,6 +279,13 @@ export const useSendOperatorReply = (id: string | undefined) => {
         authorType: "OPERATOR",
         authorId: "self",
         text: variables.text,
+        ...(variables.previews?.length && {
+          attachments: variables.previews.map((p) => ({
+            type: p.mediaType.startsWith("image/") ? "image" : "file",
+            url: p.url,
+            name: p.filename,
+          })),
+        }),
         status: "PENDING",
         dateSent: now,
         createdAt: now,

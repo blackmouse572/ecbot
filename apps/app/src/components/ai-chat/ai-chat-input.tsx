@@ -1,19 +1,16 @@
-import { PaperClip, Photo } from "@medusajs/icons";
 import { toast } from "@medusajs/ui";
 import {
   PromptInput,
   PromptInputBody,
-  PromptInputButton,
   PromptInputEmojiButton,
   PromptInputFooter,
   PromptInputSubmit,
   PromptInputTextarea,
-  usePromptInputAttachments,
 } from "@repo/ui/common-components";
-import { type ChangeEvent, type FC, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { readApiError } from "@/libs/api-error";
 import { AIChatInputAttachments } from "./ai-chat-input-attachments";
+import { ChatAttachButtons } from "./chat-attach-buttons";
 import { useAIChat } from "./ai-chat-provider";
 import {
   CHAT_ATTACH_ACCEPT,
@@ -22,58 +19,6 @@ import {
   CHAT_ATTACH_MAX_BYTES,
   CHAT_ATTACH_MAX_IMAGES,
 } from "./constants";
-
-/** A photo button and a file button, each opening a picker for its kind. */
-const AttachButtons: FC = () => {
-  const { add } = usePromptInputAttachments();
-  const { t } = useTranslation();
-  const photos = useRef<HTMLInputElement>(null);
-  const file = useRef<HTMLInputElement>(null);
-  const onPick = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.length) add(event.target.files);
-    event.target.value = "";
-  };
-
-  return (
-    <>
-      <PromptInputButton
-        variant="transparent"
-        tooltip={t("chatbot.chat.attachPhotos")}
-        aria-label={t("chatbot.chat.attachPhotos")}
-        data-testid="chat-attach-photos"
-        onClick={() => photos.current?.click()}
-      >
-        <Photo />
-      </PromptInputButton>
-      <PromptInputButton
-        variant="transparent"
-        tooltip={t("chatbot.chat.attachFile")}
-        aria-label={t("chatbot.chat.attachFile")}
-        data-testid="chat-attach-file"
-        onClick={() => file.current?.click()}
-      >
-        <PaperClip />
-      </PromptInputButton>
-      <input
-        ref={photos}
-        type="file"
-        accept={CHAT_ATTACH_IMAGE_ACCEPT}
-        multiple
-        hidden
-        data-testid="chat-photos-input"
-        onChange={onPick}
-      />
-      <input
-        ref={file}
-        type="file"
-        accept={CHAT_ATTACH_FILE_ACCEPT}
-        hidden
-        data-testid="chat-file-input"
-        onChange={onPick}
-      />
-    </>
-  );
-};
 
 export function AIChatInput() {
   const { status, onSubmit, canAttach, uploading } = useAIChat();
@@ -129,7 +74,12 @@ export function AIChatInput() {
       </PromptInputBody>
       <PromptInputFooter>
         <div className="flex items-center gap-1">
-          {canAttach && <AttachButtons />}
+          {canAttach && (
+            <ChatAttachButtons
+              imageAccept={CHAT_ATTACH_IMAGE_ACCEPT}
+              fileAccept={CHAT_ATTACH_FILE_ACCEPT}
+            />
+          )}
           <PromptInputEmojiButton
             tooltip={t("general.emojiTooltip")}
             searchPlaceholder={t("general.emojiSearch")}

@@ -1,3 +1,4 @@
+import { uploadLimits } from '../../constants/upload-limits.constant';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
@@ -54,6 +55,8 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
         reactions: { inbound: true, outbound: true },
         typing: true,
         markRead: true,
+        // Messenger shows JPEG, PNG and GIF photos and takes any file up to 25 MB.
+        uploads: uploadLimits(['image/jpeg', 'image/png', 'image/gif'], true),
     };
 
     private readonly logger = new Logger(MessengerPlatformAdapter.name);

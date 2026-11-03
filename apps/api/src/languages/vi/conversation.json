@@ -1,0 +1,7 @@
+{
+    "error": {
+        "attachmentNotSupported": "Kênh này không nhận được tệp này. Hãy kiểm tra loại và kích thước tệp rồi thử lại.",
+        "emptyMessage": "Hãy nhập tin nhắn hoặc đính kèm tệp."
+    },
+    "attachment": "Đã tải tệp lên."
+}

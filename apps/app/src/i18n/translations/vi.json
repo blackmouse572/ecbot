@@ -1142,6 +1142,7 @@
       "attachFailed": "Không tải được tệp lên. Vui lòng thử lại.",
       "attachLimit": "Mỗi tin nhắn gửi được một tệp hoặc tối đa {{count}} ảnh.",
       "attachNotSupported": "Hãy đính kèm ảnh tối đa 5 MB, hoặc tệp PDF, Word, Excel, văn bản hay CSV tối đa 10 MB.",
+      "attachTooBig": "Tệp này quá lớn để gửi ở đây.",
       "thinking": "Đang tạo phản hồi...",
       "trace": {
         "working": "Đang xử lý",
@@ -2283,6 +2284,7 @@
       "noMessagesHint": "Tin nhắn mới từ khách hàng sẽ hiện ở đây."
     },
     "composer": {
+      "attachNotSupported": "Kênh này không nhận được tệp này. Hãy kiểm tra loại và kích thước tệp.",
       "placeholder": "Trả lời với tư cách nhân viên…",
       "windowClosed": "Meta chỉ cho phép trả lời trong vòng 24 giờ kể từ tin nhắn cuối của khách.",
       "windowClosedHint": "Bạn có thể trả lời lại khi khách nhắn tin tiếp.",

@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { ENUM_CONVERSATION_STATUS } from '../../enums/conversation.enum';
 import { ChatbotGetDetailShortResponseDto } from '@app/modules/chatbot/dtos/response/chatbot.detail.response.dto';
+import { ConversationUploadsResponseDto } from './conversation-uploads.response.dto';
 
 export class ConversationGetResponseDto {
     @Expose()
@@ -125,4 +126,14 @@ export class ConversationGetResponseDto {
         default: false,
     })
     canReact: boolean = false;
+
+    @Expose()
+    @Type(() => ConversationUploadsResponseDto)
+    @ApiProperty({
+        type: () => ConversationUploadsResponseDto,
+        description:
+            "What the inbox reply box may attach for this customer's channel, per kind. Absent when the channel takes text only from the inbox.",
+        required: false,
+    })
+    uploads?: ConversationUploadsResponseDto;
 }

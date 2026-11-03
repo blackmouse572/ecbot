@@ -1,3 +1,4 @@
+import { uploadLimits } from '../../constants/upload-limits.constant';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountService } from '@app/modules/account/services/account.service';
@@ -68,6 +69,8 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
         reactions: { inbound: true, outbound: true },
         typing: false,
         markRead: false,
+        // WhatsApp takes JPEG and PNG images up to 5 MB and documents up to 100 MB.
+        uploads: uploadLimits(['image/jpeg', 'image/png'], true),
     };
 
     private readonly apiVersion: string;

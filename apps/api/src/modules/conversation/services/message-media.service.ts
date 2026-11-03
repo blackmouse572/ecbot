@@ -1,3 +1,4 @@
+import { OutboundMessage } from '@app/modules/platform/interfaces/message-model';
 import { ENUM_AWS_S3_ACCESSIBILITY } from '@app/modules/aws/enums/aws.enum';
 import { AwsS3Service } from '@app/modules/aws/services/aws.s3.service';
 import { Injectable, Logger } from '@nestjs/common';
@@ -115,6 +116,30 @@ export class MessageMediaService {
             })
         );
         return copied.flat();
+    }
+
+    /** A stored upload as the media message a channel sends: a short-lived
+     *  link the platform fetches, with the size and type its limits need. */
+    async toOutbound({
+        type,
+        key,
+        name,
+    }: IStoredChatUpload): Promise<OutboundMessage> {
+        const [url, item] = await Promise.all([
+            this.s3.signGetUrl(key, PRIVATE),
+            this.s3.checkItem(key, PRIVATE),
+        ]);
+        return {
+            content: {
+                kind: 'media',
+                url,
+                mediaType: type,
+                ...(name && { name }),
+                size: item.size,
+                mimeType: item.mime,
+            },
+            fallbackText: name ?? url,
+        };
     }
 
     /** Stored attachments → `{ type, url }` for the inbox and the AI. Only

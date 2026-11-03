@@ -941,7 +941,13 @@ describe('ConversationWorkspaceController', () => {
 
             expect(
                 mockConversationMessagingService.sendOperatorReply
-            ).toHaveBeenCalledWith('conv-1', workspaceId, operatorId, dto.text);
+            ).toHaveBeenCalledWith(
+                'conv-1',
+                workspaceId,
+                operatorId,
+                dto.text,
+                undefined
+            );
             expect(
                 mockConversationService.findOneByIdInWorkspace
             ).toHaveBeenCalledWith('conv-1', workspaceId);
