@@ -1,4 +1,4 @@
-export const MESSAGE_DEBOUNCE_MS = 3000;
+export const MESSAGE_DEBOUNCE_MS = 1500;
 
 /**
  * Platform typing indicators (e.g. Messenger `typing_on`) auto-expire after

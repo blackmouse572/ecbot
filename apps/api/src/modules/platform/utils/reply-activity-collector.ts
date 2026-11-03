@@ -39,9 +39,17 @@ export class ReplyActivityCollector {
     private readonly toolCalls = new Map<string, IReplyActivity>();
     private readonly toolNames = new Set<string>();
     private knowledge?: IReplyActivity;
+    private readonly steered: string[] = [];
 
     observe(part: StreamPart): void {
-        if (part.type === 'tool-input-start') {
+        if (part.type === 'data-steered') {
+            const ids = (part.data as { messageIds?: unknown } | undefined)
+                ?.messageIds;
+            if (Array.isArray(ids))
+                this.steered.push(
+                    ...ids.filter((id): id is string => typeof id === 'string')
+                );
+        } else if (part.type === 'tool-input-start') {
             if (typeof part.toolName === 'string')
                 this.toolNames.add(part.toolName);
         } else if (part.type === 'tool-input-available') {
@@ -111,6 +119,16 @@ export class ReplyActivityCollector {
 
     get activities(): IReplyActivity[] {
         return this.list;
+    }
+
+    /** The customer's newer messages apps/ai took into this turn (steering). */
+    get steeredMessageIds(): string[] {
+        return this.steered;
+    }
+
+    /** The agent called a tool: its side effects already happened. */
+    get toolCalled(): boolean {
+        return this.toolNames.size > 0;
     }
 
     /** The agent chose to send nothing this turn (apps/ai end_without_reply). */

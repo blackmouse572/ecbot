@@ -123,13 +123,14 @@ describe('ReplyGenerationService.run', () => {
             turnContext as any,
             meter as any
         );
-        const run = () =>
+        const run = (messageIds?: string[]) =>
             svc.run({
                 conversationId: 'c',
                 senderId: 's',
                 customerId: 'cu',
                 contactPointId: 'cp',
                 texts: ['giá bao nhiêu?'],
+                messageIds,
             });
         return { run, streamChat, turnContext, sendMessage };
     }
@@ -269,6 +270,17 @@ describe('ReplyGenerationService.run', () => {
         );
     });
 
+    // Messages saved after the burst's last one can join the running turn.
+    it("asks apps/ai to steer in the customer's messages after the burst", async () => {
+        const { run, streamChat } = serviceWith({ history: [], message: 'x' });
+
+        await run(['m-1', 'm-2']);
+
+        expect(streamChat.mock.calls[0][0]).toEqual(
+            expect.objectContaining({ steer_after_message_id: 'm-2' })
+        );
+    });
+
     // The vision tokens were spent describing the burst, whatever happens
     // to the reply after.
     it('bills describing the images even when the reply fails', async () => {
@@ -306,7 +318,9 @@ describe('ReplyGenerationService.run', () => {
         function deliveringService(
             anySent: boolean,
             endedWithoutReply = false,
-            delivered: object[] = activities
+            delivered: object[] = activities,
+            steeredMessageIds: string[] = [],
+            current = true
         ) {
             const conversations = {
                 findOneById: jest.fn().mockResolvedValue({
@@ -336,7 +350,7 @@ describe('ReplyGenerationService.run', () => {
                 { get: () => ({ startTyping: jest.fn() }) } as any,
                 {
                     current: jest.fn().mockResolvedValue(1),
-                    isCurrent: jest.fn().mockResolvedValue(true),
+                    isCurrent: jest.fn().mockResolvedValue(current),
                 } as any,
                 {
                     deliver: jest.fn().mockResolvedValue({
@@ -347,6 +361,7 @@ describe('ReplyGenerationService.run', () => {
                         generationFailed: false,
                         activities: delivered,
                         endedWithoutReply,
+                        steeredMessageIds,
                     }),
                 } as any,
                 { get: jest.fn(() => conversations) } as any,
@@ -405,6 +420,45 @@ describe('ReplyGenerationService.run', () => {
             await expect(run()).resolves.toEqual({
                 status: 'skipped',
                 reason: 'ended_without_reply',
+            });
+            expect(conversations.recordFallback).not.toHaveBeenCalled();
+        });
+
+        // The edge drops these from its pending burst, so no follow-up turn
+        // answers them a second time.
+        it('reports the messages the agent steered into the turn', async () => {
+            const { run } = deliveringService(true, false, activities, ['m-9']);
+
+            await expect(run()).resolves.toEqual({
+                status: 'delivered',
+                steeredMessageIds: ['m-9'],
+            });
+        });
+
+        it('leaves steered messages to the follow-up when nothing was sent', async () => {
+            const { run } = deliveringService(false, false, activities, [
+                'm-9',
+            ]);
+
+            const outcome = await run();
+
+            expect(outcome).not.toHaveProperty('steeredMessageIds');
+        });
+
+        // A tool ran, so the newer message could not supersede the turn; its
+        // follow-up turn answers, with no fallback line before it.
+        it('sends no fallback when a newer message waits for its own turn', async () => {
+            const { run, conversations } = deliveringService(
+                false,
+                false,
+                activities,
+                [],
+                false
+            );
+
+            await expect(run()).resolves.toEqual({
+                status: 'skipped',
+                reason: 'superseded',
             });
             expect(conversations.recordFallback).not.toHaveBeenCalled();
         });

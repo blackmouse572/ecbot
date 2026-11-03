@@ -122,6 +122,9 @@ export interface DeliveryResult {
     /** The agent ended the turn on purpose with nothing to send, so no
      *  fallback goes out. */
     endedWithoutReply?: boolean;
+    /** The customer's newer messages apps/ai steered into this turn, so no
+     *  follow-up turn answers them again. */
+    steeredMessageIds?: string[];
 }
 
 @Injectable()
@@ -170,6 +173,12 @@ export class StreamingDelivery {
             let lastCheck = 0;
             let checking = false;
             let pendingCheck: Promise<void> | null = null;
+            // A newer message supersedes this turn only while it is still
+            // free to restart: once a tool ran or a part reached the customer,
+            // the turn finishes (the newer message is steered in or answered
+            // by a follow-up turn).
+            const stillMine = async () =>
+                anySent || activity.toolCalled || (await p.isCurrent());
 
             const enqueueSend = (seg: ReplySegment) => {
                 sendChain = sendChain.then(async () => {
@@ -184,7 +193,7 @@ export class StreamingDelivery {
                             return;
                         }
                     }
-                    if (!(await p.isCurrent())) {
+                    if (!(await stillMine())) {
                         superseded = true;
                         p.abort.abort();
                         return;
@@ -245,6 +254,7 @@ export class StreamingDelivery {
                         usage,
                         activities: activity.activities,
                         endedWithoutReply: activity.endedWithoutReply,
+                        steeredMessageIds: activity.steeredMessageIds,
                     })
                 );
             };
@@ -259,8 +269,7 @@ export class StreamingDelivery {
                 if (!checking && !settled && now - lastCheck > 500) {
                     checking = true;
                     lastCheck = now;
-                    pendingCheck = p
-                        .isCurrent()
+                    pendingCheck = stillMine()
                         .then(cur => {
                             if (!cur) {
                                 superseded = true;
@@ -308,6 +317,7 @@ export class StreamingDelivery {
                 generationFailed: false,
                 usage: result.usage,
                 activities: result.activities,
+                steeredMessageIds: result.steeredMessageIds,
             };
         }
         if (result.guardrailBlocked) {
@@ -319,6 +329,7 @@ export class StreamingDelivery {
                 generationFailed: false,
                 usage: result.usage,
                 activities: result.activities,
+                steeredMessageIds: result.steeredMessageIds,
             };
         }
         if (result.generationFailed) {
@@ -330,13 +341,16 @@ export class StreamingDelivery {
                 generationFailed: true,
                 usage: result.usage,
                 activities: result.activities,
+                steeredMessageIds: result.steeredMessageIds,
             };
         }
 
         let anySent = false;
         let supersededMidSend = false;
         for (const segment of result.segments) {
-            if (!(await p.isCurrent())) {
+            // Same rule as incremental: a reply whose tool already ran, or
+            // that has started reaching the customer, is finished.
+            if (!anySent && !result.toolCalled && !(await p.isCurrent())) {
                 supersededMidSend = true;
                 break;
             }
@@ -351,6 +365,7 @@ export class StreamingDelivery {
             usage: result.usage,
             activities: result.activities,
             endedWithoutReply: result.endedWithoutReply,
+            steeredMessageIds: result.steeredMessageIds,
         };
     }
 
@@ -411,6 +426,8 @@ export class StreamingDelivery {
         usage?: TokenUsageDelta;
         activities: IReplyActivity[];
         endedWithoutReply: boolean;
+        toolCalled: boolean;
+        steeredMessageIds: string[];
     }> {
         return new Promise(resolve => {
             const segments: ReplySegment[] = [];
@@ -507,6 +524,8 @@ export class StreamingDelivery {
                     usage,
                     activities: activity.activities,
                     endedWithoutReply: activity.endedWithoutReply,
+                    toolCalled: activity.toolCalled,
+                    steeredMessageIds: activity.steeredMessageIds,
                 });
             };
 
@@ -521,7 +540,11 @@ export class StreamingDelivery {
                 if (!checking && !settled && now - lastCheck > 500) {
                     checking = true;
                     lastCheck = now;
-                    pendingCheck = isCurrent()
+                    pendingCheck = (
+                        activity.toolCalled
+                            ? Promise.resolve(true)
+                            : isCurrent()
+                    )
                         .then(current => {
                             if (!current) {
                                 superseded = true;

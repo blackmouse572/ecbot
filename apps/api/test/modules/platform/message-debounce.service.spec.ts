@@ -125,6 +125,75 @@ describe('MessageDebounceService (in-process)', () => {
         ).resolves.toBeUndefined();
     });
 
+    describe('while a reply runs', () => {
+        /** A reply that stays open until `finish(outcome)` is called. */
+        function openReply() {
+            let finish!: (outcome: object) => void;
+            replyGeneration.run.mockImplementationOnce(
+                () => new Promise(resolve => (finish = resolve))
+            );
+            return (outcome: object) => finish(outcome);
+        }
+        const send = (text: string, id: string) =>
+            service.schedule('conv-1', 'sender-1', 'cust-1', 'cp-1', text, id);
+
+        it('holds a newer message until the reply ends, then answers it', async () => {
+            const finish = openReply();
+            await send('áo trắng M còn không', 'm-1');
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+
+            await send('có màu đen không', 'm-2');
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS * 3);
+            expect(replyGeneration.run).toHaveBeenCalledTimes(1);
+
+            finish({ status: 'delivered' });
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+            expect(replyGeneration.run).toHaveBeenCalledTimes(2);
+            expect(replyGeneration.run).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    texts: ['có màu đen không'],
+                    messageIds: ['m-2'],
+                })
+            );
+        });
+
+        it('answers only what the reply did not steer in', async () => {
+            const finish = openReply();
+            await send('áo trắng M còn không', 'm-1');
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+            await send('có màu đen không', 'm-2');
+            await send('', 'm-3');
+
+            finish({ status: 'delivered', steeredMessageIds: ['m-2'] });
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+            expect(replyGeneration.run).toHaveBeenLastCalledWith(
+                expect.objectContaining({ texts: [''], messageIds: ['m-3'] })
+            );
+        });
+
+        it('starts no follow-up when the reply steered in everything', async () => {
+            const finish = openReply();
+            await send('áo trắng M còn không', 'm-1');
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+            await send('có màu đen không', 'm-2');
+
+            finish({ status: 'delivered', steeredMessageIds: ['m-2'] });
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS * 3);
+            expect(replyGeneration.run).toHaveBeenCalledTimes(1);
+        });
+
+        it('still answers held messages when the reply fails', async () => {
+            replyGeneration.run.mockRejectedValueOnce(new Error('boom'));
+            await send('áo trắng M còn không', 'm-1');
+            await send('có màu đen không', 'm-2');
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+            await send('size L', 'm-3');
+
+            await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+            expect(replyGeneration.run).toHaveBeenCalledTimes(2);
+        });
+    });
+
     it('clears pending timers on module destroy — a fired reply never runs', async () => {
         await service.schedule('conv-1', 'sender-1', 'cust-1', 'cp-1', 'hi');
 

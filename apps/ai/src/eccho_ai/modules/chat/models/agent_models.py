@@ -32,6 +32,12 @@ class AgentRequestContext(BaseModel):
     customer_id: str | None = Field(default=None)
     contact_point_id: str | None = Field(default=None)
     trigger_message_id: str | None = Field(default=None)
+    # The last customer message this turn was built from. When set, newer
+    # text messages are steered into the running turn (llm/agents/steering.py).
+    steer_after_message_id: str | None = Field(default=None)
+    # The message steering stopped at (attachment or guardrail block), so
+    # later model calls of the turn do not fetch-and-screen it again.
+    steer_stopped_at: str | None = Field(default=None)
     # IANA zones apps/api resolved for this conversation (#292): the business's
     # (agent -> deployment default) and the customer's (conversation -> agent).
     agent_timezone: str | None = Field(default=None)

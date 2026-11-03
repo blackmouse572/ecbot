@@ -23,6 +23,7 @@ from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.postgres import PostgresRepo
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.agents.middleware import ChatbotConfigMiddleware
+from eccho_ai.llm.agents.steering import SteeringMiddleware
 from eccho_ai.llm.tools.system_tools import SYSTEM_TOOLS
 from eccho_ai.models.chat import Chatbots, ChatbotSkills, ChatbotTools
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
@@ -102,7 +103,7 @@ def get_shared_agent() -> Any:
     return create_agent(
         model=placeholder,
         tools=SYSTEM_TOOLS,
-        middleware=[ChatbotConfigMiddleware()],
+        middleware=[SteeringMiddleware(), ChatbotConfigMiddleware()],
         context_schema=AgentRequestContext,
     )
 

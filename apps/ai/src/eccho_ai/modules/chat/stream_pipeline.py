@@ -12,6 +12,7 @@ from typing import Any
 import sentry_sdk
 
 from eccho_ai.core.app_logger import get_logger
+from eccho_ai.llm.agents.steering import STEERED_EVENT
 from eccho_ai.llm.tools.image_urls import (
     from_operator_tool,
     in_tool_results,
@@ -212,6 +213,11 @@ async def events_to_ui_parts(
                 yield ui.data_part(
                     "tool-meta", _tool_meta(event, tool_name), id=tool_call_id
                 )
+
+            elif evt_type == "on_custom_event" and event.get("name") == STEERED_EVENT:
+                # The customer's newer messages the agent took into this turn,
+                # so apps/api does not answer them again (llm/agents/steering.py).
+                yield ui.data_part("steered", {"messageIds": data.get("message_ids", [])})
 
             elif evt_type == "on_tool_end":
                 tool_call_id: str = event.get("run_id") or "unknown"

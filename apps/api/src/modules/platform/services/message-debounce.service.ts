@@ -4,13 +4,13 @@ import { GenerationLeaseService } from './generation-lease.service';
 import { ReplyGenerationService } from './reply-generation.service';
 
 interface PendingBurst {
-    texts: string[];
-    /** Saved rows of `texts` (a message without an external id has none). */
-    messageIds: string[];
+    /** The burst's messages in order; `messageId` is the saved row (a message
+     *  without an external id has none). */
+    entries: { text: string; messageId?: string }[];
     senderId: string;
     customerId: string;
     contactPointId: string;
-    timer: NodeJS.Timeout;
+    timer?: NodeJS.Timeout;
 }
 
 /**
@@ -21,6 +21,10 @@ interface PendingBurst {
  * which is how multi-instance deployments (prod/staging today) get the same
  * per-conversation debounce without needing Redis/BullMQ here.
  *
+ * One reply runs per conversation at a time. A message that arrives while
+ * one runs is held: the running turn may steer it in (apps/ai), and whatever
+ * it did not take gets a follow-up reply right after.
+ *
  * A restart mid-window drops whatever is buffered — no persistence, unlike
  * the old BullMQ-backed version. Acceptable here (local dev only, matches the
  * same tradeoff already accepted for the API-channel callback retry).
@@ -29,6 +33,7 @@ interface PendingBurst {
 export class MessageDebounceService implements OnModuleDestroy {
     private readonly logger = new Logger(MessageDebounceService.name);
     private readonly pending = new Map<string, PendingBurst>();
+    private readonly replying = new Set<string>();
 
     constructor(
         private readonly lease: GenerationLeaseService,
@@ -48,30 +53,25 @@ export class MessageDebounceService implements OnModuleDestroy {
         text: string,
         messageId?: string
     ): Promise<void> {
-        // Advance the generation lease: any reply generation already in flight
-        // for this conversation is now superseded and will discard itself.
+        // Advance the generation lease: a reply in flight that has not run a
+        // tool or sent anything yet is now superseded and discards itself.
         await this.lease.bump(conversationId);
 
-        const existing = this.pending.get(conversationId);
-        if (existing) {
-            clearTimeout(existing.timer);
-            existing.texts.push(text);
-            if (messageId) existing.messageIds.push(messageId);
-            existing.senderId = senderId;
-            existing.customerId = customerId;
-            existing.contactPointId = contactPointId;
-            existing.timer = this.scheduleFire(conversationId);
-            return;
-        }
-
-        this.pending.set(conversationId, {
-            texts: [text],
-            messageIds: messageId ? [messageId] : [],
+        const burst = this.pending.get(conversationId) ?? {
+            entries: [],
             senderId,
             customerId,
             contactPointId,
-            timer: this.scheduleFire(conversationId),
-        });
+        };
+        burst.entries.push({ text, messageId });
+        burst.senderId = senderId;
+        burst.customerId = customerId;
+        burst.contactPointId = contactPointId;
+        clearTimeout(burst.timer);
+        burst.timer = this.replying.has(conversationId)
+            ? undefined
+            : this.scheduleFire(conversationId);
+        this.pending.set(conversationId, burst);
     }
 
     private scheduleFire(conversationId: string): NodeJS.Timeout {
@@ -89,13 +89,37 @@ export class MessageDebounceService implements OnModuleDestroy {
         if (!burst) return;
         this.pending.delete(conversationId);
 
-        await this.replyGeneration.run({
-            conversationId,
-            senderId: burst.senderId,
-            customerId: burst.customerId,
-            contactPointId: burst.contactPointId,
-            texts: burst.texts,
-            messageIds: burst.messageIds,
-        });
+        this.replying.add(conversationId);
+        let steered: string[] = [];
+        try {
+            const outcome = await this.replyGeneration.run({
+                conversationId,
+                senderId: burst.senderId,
+                customerId: burst.customerId,
+                contactPointId: burst.contactPointId,
+                texts: burst.entries.map(e => e.text),
+                messageIds: burst.entries.flatMap(e =>
+                    e.messageId ? [e.messageId] : []
+                ),
+            });
+            steered = outcome?.steeredMessageIds ?? [];
+        } finally {
+            this.replying.delete(conversationId);
+            this.followUp(conversationId, steered);
+        }
+    }
+
+    /** Answer what arrived during the reply and was not steered into it. */
+    private followUp(conversationId: string, steered: string[]): void {
+        const held = this.pending.get(conversationId);
+        if (!held) return;
+        held.entries = held.entries.filter(
+            e => !e.messageId || !steered.includes(e.messageId)
+        );
+        if (held.entries.length === 0) {
+            this.pending.delete(conversationId);
+            return;
+        }
+        held.timer = this.scheduleFire(conversationId);
     }
 }
