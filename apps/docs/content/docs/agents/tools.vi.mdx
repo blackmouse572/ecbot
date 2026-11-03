@@ -22,9 +22,57 @@ Mở **Công cụ** trong nhóm **Trợ lý AI** ở thanh bên và chọn **T�
   <Mark id="marketplace">**Kho công cụ** cài một ứng dụng có sẵn, như Google Sheets, chỉ bằng một lần đăng nhập.</Mark>
 </Screenshot>
 
+### Công cụ HTTP
+
+<Screenshot name="tool-http-form" alt="Biểu mẫu Công cụ HTTP với tên, mô tả, phương thức, URL, lược đồ đầu vào, headers và loại xác thực">
+  <Mark id="about">**Tên** và **Mô tả**. Agent đọc phần mô tả để biết khi nào gọi công cụ.</Mark>
+  <Mark id="request">**Phương thức** và **URL** của endpoint.</Mark>
+  <Mark id="schema">**Lược đồ đầu vào (JSON)**: những giá trị agent điền cho mỗi lần gọi, như tên sản phẩm hay mã SKU.</Mark>
+  <Mark id="headers">**Headers (JSON)** (không bắt buộc): các header cố định gửi kèm mọi lần gọi.</Mark>
+  <Mark id="auth">**Loại xác thực**: cách Ecbot xác thực mỗi lần gọi đến máy chủ của bạn.</Mark>
+</Screenshot>
+
+| Trường | Cần điền |
+| --- | --- |
+| **Tên** | Một mã ngắn, ví dụ `product-search`. |
+| **Mô tả** | Công cụ trả về gì và dùng khi nào. |
+| **Phương thức** và **URL** | Phương thức HTTP và địa chỉ đầy đủ của endpoint. |
+| **Lược đồ đầu vào (JSON)** | Các giá trị agent gửi đi. Thêm bằng **Thêm thuộc tính**, hoặc chuyển sang JSON. |
+| **Headers (JSON)** | Không bắt buộc. Các header cố định, như mã cửa hàng. |
+| **Loại xác thực** | **Không có**, **Bearer token** hoặc **API key**. API key hỏi thêm **Vị trí xác thực** (header hoặc query) và **Tên tham số**. |
+| **Thông tin xác thực** | Token hoặc key. Được lưu mã hóa, và khi sửa thì để trống sẽ giữ giá trị đã lưu. |
+| **Thời gian chờ (ms)** và **Số lần thử lại tối đa** | Không bắt buộc. Chờ máy chủ bao lâu và thử lại mấy lần. |
+
+Bên dưới biểu mẫu, **Kiểm tra endpoint** chạy thử một lần gọi với dữ liệu mẫu để bạn xem kết quả trước khi tạo công cụ.
+
+### MCP tự cấu hình
+
+<Screenshot name="tool-mcp-form" alt="Biểu mẫu MCP tự cấu hình với URL máy chủ, loại xác thực và thông tin xác thực">
+  <Mark id="url">**URL máy chủ MCP**: endpoint Streamable HTTP hoặc SSE của máy chủ MCP.</Mark>
+  <Mark id="auth">**Loại xác thực** và **Thông tin xác thực**, giống như Công cụ HTTP.</Mark>
+</Screenshot>
+
+Điền thêm **Tên** và **Mô tả**. Sau khi tạo, Ecbot liệt kê các thao tác máy chủ cung cấp, và bạn bật những thao tác agent được dùng.
+
+### Kho công cụ
+
+Chọn một ứng dụng, xem nó cần những gì, rồi chọn **Cài đặt**:
+
+<Screenshot name="tool-marketplace-install" alt="Trang cài đặt Google Sheets với quyền truy cập được yêu cầu và các thao tác">
+  <Mark id="scopes">**Quyền truy cập được yêu cầu**: những quyền trang đăng nhập của ứng dụng sẽ hỏi bạn.</Mark>
+  <Mark id="actions">**Công cụ này làm được gì**: mọi thao tác của ứng dụng. Thao tác có nhãn **Có thể xóa dữ liệu** sẽ tắt cho đến khi bạn bật cho từng agent.</Mark>
+  <Mark id="install">**Cài đặt** mở trang đăng nhập của ứng dụng, xong sẽ quay lại đây.</Mark>
+</Screenshot>
+
+Không cần điền gì thêm: lần đăng nhập đó kết nối tài khoản của bạn.
+
+### Thao tác có sẵn
+
+Một số thao tác luôn có sẵn và không cần cài: **Chuyển cho nhân viên**, **Báo cho đội ngũ**, **Gắn tag** và **Gỡ tag**, **Hẹn nhắn lại**, và **Lưu thông tin khách**. Agent tự dùng chúng, và bạn có thể gọi chúng trong bước **Công cụ** của một [kỹ năng](/docs/agents/skills).
+
 ## Thêm công cụ cho agent
 
-Mở trang của agent, đến phần **Công cụ** và chọn **Thêm**. Với công cụ MCP và công cụ từ kho, bạn có thể bật hoặc tắt từng thao tác cho riêng agent này. Danh sách các lần gọi gần đây trên cùng trang cho biết mỗi lần agent gọi công cụ, kèm dữ liệu gửi đi và kết quả.
+Mở trang của agent, mở thẻ **Công cụ** ở phần **Năng lực** và chọn **Thêm**. Với công cụ MCP và công cụ từ kho, bạn có thể bật hoặc tắt từng thao tác cho riêng agent này. Danh sách các lần gọi gần đây trên cùng trang cho biết mỗi lần agent gọi công cụ, kèm dữ liệu gửi đi và kết quả.
 
 ## Viết mô tả công cụ cho rõ
 

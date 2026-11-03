@@ -1,4 +1,72 @@
 {
+  "agent-followup-rules": {
+    "en": {
+      "src": "/_docs/screenshots/en/agent-followup-rules.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "rules": {
+          "x": 61.88,
+          "y": 36.27,
+          "w": 36.25,
+          "h": 15.91
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/agent-followup-rules.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "rules": {
+          "x": 61.88,
+          "y": 36.27,
+          "w": 36.25,
+          "h": 15.91
+        }
+      }
+    }
+  },
+  "agent-knowledge-add": {
+    "en": {
+      "src": "/_docs/screenshots/en/agent-knowledge-add.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "items": {
+          "x": 60.49,
+          "y": 18.33,
+          "w": 39.03,
+          "h": 21.78
+        },
+        "save": {
+          "x": 93.4,
+          "y": 93.22,
+          "w": 4.59,
+          "h": 4.44
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/agent-knowledge-add.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "items": {
+          "x": 60.49,
+          "y": 18.33,
+          "w": 39.03,
+          "h": 21.78
+        },
+        "save": {
+          "x": 92.68,
+          "y": 93.22,
+          "w": 5.3,
+          "h": 4.44
+        }
+      }
+    }
+  },
   "agent-page": {
     "en": {
       "src": "/_docs/screenshots/en/agent-page.png",
@@ -417,13 +485,13 @@
           "x": 24.72,
           "y": 16.22,
           "w": 50.56,
-          "h": 8.09
+          "h": 12.71
         },
         "formats": {
-          "x": 39.76,
-          "y": 59.47,
-          "w": 20.49,
-          "h": 3.11
+          "x": 31.47,
+          "y": 55.29,
+          "w": 37.06,
+          "h": 5.33
         }
       }
     },
@@ -436,13 +504,13 @@
           "x": 24.72,
           "y": 16.22,
           "w": 50.56,
-          "h": 10.4
+          "h": 12.71
         },
         "formats": {
-          "x": 40.16,
-          "y": 61.78,
-          "w": 19.67,
-          "h": 3.11
+          "x": 31.32,
+          "y": 55.29,
+          "w": 37.36,
+          "h": 5.33
         }
       }
     }
@@ -483,25 +551,25 @@
       "marks": {
         "step": {
           "x": 27.57,
-          "y": 49.35,
+          "y": 51.02,
           "w": 44.86,
           "h": 4
         },
         "if": {
           "x": 27.57,
-          "y": 58.24,
+          "y": 59.91,
           "w": 44.86,
           "h": 4
         },
         "tool": {
           "x": 31.25,
-          "y": 66.69,
+          "y": 68.35,
           "w": 41.18,
           "h": 8.44
         },
         "add": {
           "x": 31.25,
-          "y": 80.02,
+          "y": 81.69,
           "w": 6.99,
           "h": 4
         }
@@ -514,25 +582,25 @@
       "marks": {
         "step": {
           "x": 27.57,
-          "y": 49.35,
+          "y": 51.02,
           "w": 44.86,
           "h": 4
         },
         "if": {
           "x": 27.57,
-          "y": 58.24,
+          "y": 59.91,
           "w": 44.86,
           "h": 4
         },
         "tool": {
-          "x": 0.56,
-          "y": 38.78,
-          "w": 14.1,
-          "h": 4
+          "x": 31.25,
+          "y": 68.35,
+          "w": 41.18,
+          "h": 8.44
         },
         "add": {
           "x": 31.25,
-          "y": 80.02,
+          "y": 81.69,
           "w": 7.99,
           "h": 4
         }
@@ -579,6 +647,58 @@
       }
     }
   },
+  "skill-tutorial": {
+    "vi": {
+      "src": "/_docs/screenshots/vi/skill-tutorial.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "if": {
+          "x": 27.57,
+          "y": 23.13,
+          "w": 44.86,
+          "h": 4
+        },
+        "say": {
+          "x": 31.25,
+          "y": 57.8,
+          "w": 41.18,
+          "h": 8.22
+        },
+        "tool": {
+          "x": 27.57,
+          "y": 75.35,
+          "w": 44.86,
+          "h": 8.44
+        }
+      }
+    },
+    "en": {
+      "src": "/_docs/screenshots/en/skill-tutorial.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "if": {
+          "x": 27.57,
+          "y": 23.13,
+          "w": 44.86,
+          "h": 4
+        },
+        "say": {
+          "x": 31.25,
+          "y": 57.8,
+          "w": 41.18,
+          "h": 8.22
+        },
+        "tool": {
+          "x": 27.57,
+          "y": 75.35,
+          "w": 44.86,
+          "h": 8.44
+        }
+      }
+    }
+  },
   "skills": {
     "en": {
       "src": "/_docs/screenshots/en/skills.png",
@@ -615,6 +735,174 @@
           "y": 27.22,
           "w": 6.47,
           "h": 3.11
+        }
+      }
+    }
+  },
+  "tool-http-form": {
+    "en": {
+      "src": "/_docs/screenshots/en/tool-http-form.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "about": {
+          "x": 24.58,
+          "y": 12.89,
+          "w": 50.83,
+          "h": 22.04
+        },
+        "request": {
+          "x": 24.58,
+          "y": 36.27,
+          "w": 50.83,
+          "h": 8
+        },
+        "schema": {
+          "x": 24.72,
+          "y": 45.82,
+          "w": 50.56,
+          "h": 3.11
+        },
+        "headers": {
+          "x": 24.72,
+          "y": 67.42,
+          "w": 50.56,
+          "h": 3.11
+        },
+        "auth": {
+          "x": 24.72,
+          "y": 89.02,
+          "w": 25,
+          "h": 3.11
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/tool-http-form.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "about": {
+          "x": 24.58,
+          "y": 12.89,
+          "w": 50.83,
+          "h": 22.04
+        },
+        "request": {
+          "x": 24.58,
+          "y": 36.27,
+          "w": 50.83,
+          "h": 8
+        },
+        "schema": {
+          "x": 24.72,
+          "y": 45.82,
+          "w": 50.56,
+          "h": 3.11
+        },
+        "headers": {
+          "x": 24.72,
+          "y": 67.42,
+          "w": 50.56,
+          "h": 3.11
+        },
+        "auth": {
+          "x": 24.72,
+          "y": 89.02,
+          "w": 25,
+          "h": 3.11
+        }
+      }
+    }
+  },
+  "tool-marketplace-install": {
+    "en": {
+      "src": "/_docs/screenshots/en/tool-marketplace-install.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "scopes": {
+          "x": 15.97,
+          "y": 24.2,
+          "w": 83.33,
+          "h": 12.53
+        },
+        "actions": {
+          "x": 15.97,
+          "y": 42.15,
+          "w": 83.33,
+          "h": 24.53
+        },
+        "install": {
+          "x": 93,
+          "y": 67.91,
+          "w": 4.78,
+          "h": 4.44
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/tool-marketplace-install.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "scopes": {
+          "x": 15.97,
+          "y": 24.2,
+          "w": 83.33,
+          "h": 12.53
+        },
+        "actions": {
+          "x": 15.97,
+          "y": 42.15,
+          "w": 83.33,
+          "h": 24.53
+        },
+        "install": {
+          "x": 92.53,
+          "y": 67.91,
+          "w": 5.24,
+          "h": 4.44
+        }
+      }
+    }
+  },
+  "tool-mcp-form": {
+    "en": {
+      "src": "/_docs/screenshots/en/tool-mcp-form.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "url": {
+          "x": 24.72,
+          "y": 36.49,
+          "w": 50.56,
+          "h": 3.11
+        },
+        "auth": {
+          "x": 24.58,
+          "y": 48.8,
+          "w": 50.83,
+          "h": 20.53
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/tool-mcp-form.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "url": {
+          "x": 24.72,
+          "y": 36.49,
+          "w": 50.56,
+          "h": 3.11
+        },
+        "auth": {
+          "x": 24.58,
+          "y": 48.8,
+          "w": 50.83,
+          "h": 20.53
         }
       }
     }
