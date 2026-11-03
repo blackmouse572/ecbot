@@ -2618,6 +2618,10 @@
   },
   "tools": {
     "destructiveAction": "Có thể xóa dữ liệu",
+    "actionCost": {
+      "normal": "Thêm khoảng {{count}} token vào mỗi tin nhắn.",
+      "heavy": "Thêm khoảng {{count}} token vào mỗi tin nhắn, nên mỗi câu trả lời tốn hơn. Hãy tắt các action mà agent này không cần."
+    },
     "batch": {
       "delete": {
         "label": "Xóa",

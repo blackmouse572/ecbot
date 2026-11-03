@@ -59,6 +59,21 @@ def test_detects_actions_that_change_data():
         assert not is_mutating_action(name), name
 
 
+def test_link_with_no_list_leaves_destructive_actions_off():
+    # Same rule as the tools page and the API (#177): until someone picks
+    # actions, the agent gets everything but the destructive ones.
+    chatbot = _chatbot("get_rows", "delete_rows")
+    chatbot.chatbot_tools[0].tool.discovered_actions[1]["destructive"] = True
+    assert [t.name for t in build_tools(chatbot)] == ["get_rows"]
+
+
+def test_explicit_list_can_turn_a_destructive_action_on():
+    chatbot = _chatbot("get_rows", "delete_rows")
+    chatbot.chatbot_tools[0].tool.discovered_actions[1]["destructive"] = True
+    chatbot.chatbot_tools[0].enabled_actions = ["delete_rows"]
+    assert [t.name for t in build_tools(chatbot)] == ["delete_rows"]
+
+
 def test_mutating_tool_description_requires_a_clear_yes_first():
     tools = {t.name: t for t in build_tools(_chatbot("create_order", "get_menu"))}
     assert tools["create_order"].description.startswith("create_order description")

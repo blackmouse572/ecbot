@@ -16,7 +16,12 @@ import { ROUTES } from "@/routes/constants";
 import { withOriginAgent } from "@/utils/origin-agent";
 import { ChatbotToolAddDrawer } from "./chatbot-tool-add-drawer";
 import { ChevronDown, PlusMini } from "@medusajs/icons";
-import { defaultEnabledActions, isActionEnabled } from "./mcp-action-state";
+import { McpActionCost } from "./mcp-action-cost";
+import {
+  defaultEnabledActions,
+  enabledActionsPromptTokens,
+  isActionEnabled,
+} from "./mcp-action-state";
 import { ListSkeleton } from "@repo/ui/common-components";
 
 type ChatbotToolsTabProps = {
@@ -221,6 +226,7 @@ type McpActionsListProps = {
 type DiscoveredAction = {
   name: string;
   description?: string;
+  inputSchema?: unknown;
   destructive?: boolean;
 };
 
@@ -299,35 +305,44 @@ function McpActionsList({
           icon={<IconTool />}
         />
       ) : (
-        <ul className="mt-2 space-y-2">
-          {actions.map((action) => {
-            const checked = isActionEnabled(action, enabledActions);
-            return (
-              <li key={action.name} className="flex items-start gap-2">
-                <Checkbox
-                  checked={checked}
-                  disabled={isPending}
-                  onCheckedChange={(v) => toggleAction(action.name, v === true)}
-                />
-                <div className="min-w-0">
-                  <Text size="small" weight="plus" className="wrap-anywhere">
-                    {action.name}
-                    {action.destructive && (
-                      <Badge size="2xsmall" color="red" className="ml-1.5">
-                        {t("tools.destructiveAction")}
-                      </Badge>
-                    )}
-                  </Text>
-                  {action.description && (
-                    <Text size="small" className="text-ui-fg-subtle">
-                      {action.description}
+        <>
+          <div className="mt-2">
+            <McpActionCost
+              tokens={enabledActionsPromptTokens(actions, enabledActions)}
+            />
+          </div>
+          <ul className="mt-2 space-y-2">
+            {actions.map((action) => {
+              const checked = isActionEnabled(action, enabledActions);
+              return (
+                <li key={action.name} className="flex items-start gap-2">
+                  <Checkbox
+                    checked={checked}
+                    disabled={isPending}
+                    onCheckedChange={(v) =>
+                      toggleAction(action.name, v === true)
+                    }
+                  />
+                  <div className="min-w-0">
+                    <Text size="small" weight="plus" className="wrap-anywhere">
+                      {action.name}
+                      {action.destructive && (
+                        <Badge size="2xsmall" color="red" className="ml-1.5">
+                          {t("tools.destructiveAction")}
+                        </Badge>
+                      )}
                     </Text>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                    {action.description && (
+                      <Text size="small" className="text-ui-fg-subtle">
+                        {action.description}
+                      </Text>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
     </div>
   );
