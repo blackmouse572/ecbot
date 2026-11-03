@@ -13,6 +13,8 @@ from eccho_ai.modules.chat import images
 from eccho_ai.modules.chat.images import ImageToDescribe
 
 USAGE = {"input_tokens": 1200, "output_tokens": 40, "total_tokens": 1240}
+# What describe_images reports for USAGE: no prompt cache was hit or written.
+REPORTED = {**USAGE, "cache_read_tokens": 0, "cache_write_tokens": 0}
 BOT = SimpleNamespace(general_knowledge="", guardrail_enabled=False)
 
 
@@ -39,7 +41,7 @@ async def test_one_vision_call_describes_each_image_of_the_burst():
         described, usage = await images.describe_images(_images("https://s3/a.jpg", "https://s3/b.jpg"), BOT)
 
     assert described == ["A white linen shirt.", "A flyer: yoga, Sat 9am."]
-    assert usage == USAGE  # billed with the Turn
+    assert usage == REPORTED  # billed with the Turn
     assert model.ainvoke.await_count == 1
     parts = model.ainvoke.call_args.args[0][0].content
     assert [p["image_url"]["url"] for p in parts if p["type"] == "image_url"] == [
@@ -86,7 +88,7 @@ async def test_a_failed_or_unreadable_vision_reply_describes_nothing():
          patch.object(images, "build_chat_model", return_value=broken):
         described, usage = await images.describe_images(_images("https://s3/a.jpg"), BOT)
     assert described == [None]
-    assert usage == USAGE  # the call was still made
+    assert usage == REPORTED  # the call was still made
 
 
 async def test_images_past_the_burst_limit_are_not_described():
@@ -295,3 +297,17 @@ async def test_the_describe_endpoint_names_the_vision_model_for_pricing(monkeypa
     data = resp.json()["data"]
     assert data["usage"] == USAGE
     assert data["model"] == AppVars.VISION_MODEL
+
+
+async def test_describe_usage_carries_prompt_cache_counts():
+    # Gemini caches implicitly; cached input bills at its own rate.
+    model = MagicMock()
+    model.ainvoke = AsyncMock(return_value=AIMessage(
+        content='```json\n{"images": [{"image": 1, "description": "A shirt."}]}\n```',
+        usage_metadata={**USAGE, "input_token_details": {"cache_read": 800}},
+    ))
+    with patch.object(images, "fetch_image_data_url", AsyncMock(side_effect=_fetch_all)), \
+         patch.object(images, "build_chat_model", return_value=model):
+        _, usage = await images.describe_images(_images("https://s3/a.jpg"), BOT)
+
+    assert usage == {**USAGE, "cache_read_tokens": 800, "cache_write_tokens": 0}

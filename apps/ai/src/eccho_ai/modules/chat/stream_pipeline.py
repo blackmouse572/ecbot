@@ -17,6 +17,7 @@ from eccho_ai.llm.tools.image_urls import (
     in_tool_results,
     successful_result,
 )
+from eccho_ai.llm.usage import cache_counts
 from eccho_ai.modules.chat import ui_message_stream as ui
 from eccho_ai.modules.chat.citation_markers import CitationMarkerFilter
 from eccho_ai.modules.chat.constants import (
@@ -87,7 +88,13 @@ async def events_to_ui_parts(
         text_run = 0
         reasoning_run = 0
         output_text = ""
-        usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+        usage = {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "cache_read_tokens": 0,
+            "cache_write_tokens": 0,
+        }
         tool_results: list[str] = []
 
         async def image_allowed(url: str) -> bool:
@@ -176,6 +183,9 @@ async def events_to_ui_parts(
                     usage["input_tokens"] += usage_metadata.get("input_tokens", 0)
                     usage["output_tokens"] += usage_metadata.get("output_tokens", 0)
                     usage["total_tokens"] += usage_metadata.get("total_tokens", 0)
+                    read, write = cache_counts(usage_metadata)
+                    usage["cache_read_tokens"] += read
+                    usage["cache_write_tokens"] += write
 
                 if leaked:
                     break

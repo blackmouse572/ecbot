@@ -334,3 +334,34 @@ async def test_no_knowledge_part_without_sources():
 
     parts = _parts([f async for f in events_to_ui_parts(fake_events(), request_id="m1")])
     assert all(p["type"] != "data-knowledge" for p in parts)
+
+
+@pytest.mark.asyncio
+async def test_metadata_usage_carries_prompt_cache_counts():
+    # Two model calls in one Turn (tool call, then the answer): the second
+    # reads the cached prefix the first one wrote.
+    first = AIMessageChunk(content="")
+    first.usage_metadata = {
+        "input_tokens": 100, "output_tokens": 5, "total_tokens": 105,
+        "input_token_details": {"cache_creation": 90},
+    }
+    second = AIMessageChunk(content="hi")
+    second.usage_metadata = {
+        "input_tokens": 120, "output_tokens": 7, "total_tokens": 127,
+        "input_token_details": {"cache_read": 90},
+    }
+
+    async def fake_events():
+        yield {"event": "on_chat_model_stream", "data": {"chunk": first}}
+        yield {"event": "on_chat_model_stream", "data": {"chunk": second}}
+
+    frames = [f async for f in events_to_ui_parts(fake_events(), request_id="m1")]
+    metadata = next(
+        json.loads(f[len("data: "):])["messageMetadata"]
+        for f in frames
+        if f.startswith("data: {") and json.loads(f[len("data: "):])["type"] == "message-metadata"
+    )
+    assert metadata["usage"] == {
+        "input_tokens": 220, "output_tokens": 12, "total_tokens": 232,
+        "cache_read_tokens": 90, "cache_write_tokens": 90,
+    }
