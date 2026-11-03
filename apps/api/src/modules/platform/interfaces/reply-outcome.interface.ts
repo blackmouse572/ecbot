@@ -5,8 +5,7 @@
  * `steeredMessageIds` are the customer's newer messages the turn took in, so
  * the burst buffer drops them instead of answering them again.
  */
-export type ReplyOutcome = (
-    | { status: 'delivered' }
-    | { status: 'skipped'; reason: string }
-    | { status: 'failed'; reason: string }
-) & { steeredMessageIds?: string[] };
+export type ReplyOutcome =
+    | { status: 'delivered'; steeredMessageIds?: string[] }
+    | { status: 'skipped'; reason: string; steeredMessageIds?: string[] }
+    | { status: 'failed'; reason: string; steeredMessageIds?: string[] };

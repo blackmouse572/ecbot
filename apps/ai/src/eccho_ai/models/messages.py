@@ -21,5 +21,6 @@ class Messages(SQLModel, table=True):
     text: str | None = Field(default=None)
     attachments: list[dict[str, Any]] | None = Field(default=None, sa_column=Column(JSON, nullable=True))
     date_sent: datetime = Field(sa_type=DateTime(timezone=True))
+    created_at: datetime = Field(sa_type=DateTime(timezone=True))
     deleted: bool = Field(default=False)
     deleted_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))

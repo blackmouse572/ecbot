@@ -394,6 +394,15 @@ export class ReplyGenerationService {
                 return skipped('ended_without_reply');
             }
 
+            // A newer message arrived after a tool ran (too late to supersede
+            // this turn) and gets its own follow-up turn: let that answer,
+            // rather than sending the fallback line first.
+            if (
+                !anySent &&
+                !(await this.lease.isCurrent(conversationId, myEpoch))
+            )
+                return skipped('superseded');
+
             if (!anySent) {
                 const { triggered, conversation: updated } =
                     await this.conversationService.recordFallback(

@@ -319,7 +319,8 @@ describe('ReplyGenerationService.run', () => {
             anySent: boolean,
             endedWithoutReply = false,
             delivered: object[] = activities,
-            steeredMessageIds: string[] = []
+            steeredMessageIds: string[] = [],
+            current = true
         ) {
             const conversations = {
                 findOneById: jest.fn().mockResolvedValue({
@@ -349,7 +350,7 @@ describe('ReplyGenerationService.run', () => {
                 { get: () => ({ startTyping: jest.fn() }) } as any,
                 {
                     current: jest.fn().mockResolvedValue(1),
-                    isCurrent: jest.fn().mockResolvedValue(true),
+                    isCurrent: jest.fn().mockResolvedValue(current),
                 } as any,
                 {
                     deliver: jest.fn().mockResolvedValue({
@@ -442,6 +443,24 @@ describe('ReplyGenerationService.run', () => {
             const outcome = await run();
 
             expect(outcome).not.toHaveProperty('steeredMessageIds');
+        });
+
+        // A tool ran, so the newer message could not supersede the turn; its
+        // follow-up turn answers, with no fallback line before it.
+        it('sends no fallback when a newer message waits for its own turn', async () => {
+            const { run, conversations } = deliveringService(
+                false,
+                false,
+                activities,
+                [],
+                false
+            );
+
+            await expect(run()).resolves.toEqual({
+                status: 'skipped',
+                reason: 'superseded',
+            });
+            expect(conversations.recordFallback).not.toHaveBeenCalled();
         });
 
         it('records nothing when no reply was sent', async () => {

@@ -39,9 +39,14 @@ STEERED_IDS_KEY = "steered_message_ids"
 
 
 async def fetch_newer_inbound(conversation_id: str, after_message_id: str) -> list[Messages]:
-    """The conversation's inbound messages sent after `after_message_id`, oldest first."""
+    """The conversation's inbound messages saved after `after_message_id`, oldest first.
+
+    Ordered by when apps/api saved them, not by the platform's `date_sent`: a
+    platform can deliver out of order, and a redelivered message the turn
+    already answered must not come back in.
+    """
     db = PostgresRepo[Messages].get_instance()
-    after = select(Messages.date_sent).where(Messages.id == UUID(after_message_id)).scalar_subquery()
+    after = select(Messages.created_at).where(Messages.id == UUID(after_message_id)).scalar_subquery()
     stmt = (
         select(Messages)
         .where(
@@ -49,9 +54,9 @@ async def fetch_newer_inbound(conversation_id: str, after_message_id: str) -> li
             Messages.direction == "INBOUND",
             Messages.deleted == False,
             Messages.deleted_at.is_(None),  # type: ignore[union-attr]
-            Messages.date_sent > after,
+            Messages.created_at > after,
         )
-        .order_by(Messages.date_sent, Messages.id)  # type: ignore[arg-type]
+        .order_by(Messages.created_at, Messages.id)  # type: ignore[arg-type]
     )
     async with db.session_factory() as session:
         return list((await session.exec(stmt)).all())
@@ -103,8 +108,12 @@ class SteeringMiddleware(AgentMiddleware[AgentState[Any], AgentRequestContext]):
 
         taken: list[Messages] = []
         for row in rows:
+            # Stopped here on an earlier model call: do not screen it again.
+            if str(row.id) == context.steer_stopped_at:
+                break
             text = (row.text or "").strip()
             if row.attachments or not text or await screen_input(text, context.chatbot):
+                context.steer_stopped_at = str(row.id)
                 break
             taken.append(row)
         if not taken:
