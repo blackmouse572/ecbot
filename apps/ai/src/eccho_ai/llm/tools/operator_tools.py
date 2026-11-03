@@ -37,10 +37,14 @@ def _auth_headers() -> dict[str, str]:
 
 
 def _resolve_enabled_actions(chatbot_tool: ChatbotTools) -> list[str]:
-    """null enabled_actions = all discovered actions (matches the UI semantic)."""
+    """null enabled_actions = every discovered action except destructive ones (#177).
+
+    Same rule as the tools page and the API, which refuses to run a destructive
+    action that no list names, so sending its schema only costs tokens.
+    """
     tool_actions = chatbot_tool.tool.discovered_actions or []
     if chatbot_tool.enabled_actions is None:
-        return [a.get("name") for a in tool_actions if a.get("name")]
+        return [a.get("name") for a in tool_actions if a.get("name") and not a.get("destructive")]
     return chatbot_tool.enabled_actions
 
 

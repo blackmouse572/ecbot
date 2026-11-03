@@ -41,22 +41,18 @@ describe("prompt cost of enabled actions", () => {
       destructive: true,
     },
   ];
-  const oneAction = Math.ceil(
-    JSON.stringify({
-      name: "get_rows",
-      description: "Read rows.",
-      inputSchema: schema,
-    }).length / 4,
-  );
+  // About 4 characters a token: get_rows is 116 characters, delete_rows 121.
+  const getRowsTokens = 29;
+  const bothTokens = 29 + 31;
 
   it("counts only the actions that are on", () => {
-    expect(enabledActionsPromptTokens(big, null)).toBe(oneAction);
+    expect(enabledActionsPromptTokens(big, null)).toBe(getRowsTokens);
     expect(enabledActionsPromptTokens(big, [])).toBe(0);
   });
 
-  it("grows with every action turned on", () => {
-    expect(
-      enabledActionsPromptTokens(big, ["get_rows", "delete_rows"]),
-    ).toBeGreaterThan(oneAction);
+  it("adds up every action turned on", () => {
+    expect(enabledActionsPromptTokens(big, ["get_rows", "delete_rows"])).toBe(
+      bothTokens,
+    );
   });
 });
