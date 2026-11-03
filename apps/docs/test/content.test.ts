@@ -23,7 +23,8 @@ const pages = (fs.readdirSync(DIR, { recursive: true }) as string[])
     return { file, slug: base!, urlPath, lang: lang!, data, content };
   });
 
-/** Live pages under ecbot.dev/{lang}/solutions (eccho-ee lib/solutions-menu.ts). */
+/** Snapshot of the marketing menu (eccho-ee lib/solutions-menu.ts) the docs hub
+ * links to. Update it when a solution page is added or removed there. */
 const MARKETING_SOLUTIONS = ["sales-agent", "customer-support", "ecommerce-retail", "spa-wellness"];
 
 const urlPaths = new Set(pages.map((p) => p.urlPath));
@@ -72,9 +73,14 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
 
   // Solution pages live on the marketing site (eccho-ee apps/web).
   it("links to marketing solution pages in its own language", () => {
-    for (const [, linkLang, slug] of content.matchAll(/\]\(\/(en|vi)\/solutions\/([a-z-]+)\)/g)) {
-      expect(linkLang, `/${linkLang}/solutions/${slug} in a ${lang} page`).toBe(lang);
-      expect(MARKETING_SOLUTIONS).toContain(slug);
+    for (const [, linkLang, target] of content.matchAll(/\]\(\/(en|vi)\/solutions\/([^)\s#?]+)/g)) {
+      const solution = target!.replace(/\/$/, "");
+      expect(linkLang, `/${linkLang}/solutions/${solution} in a ${lang} page`).toBe(lang);
+      expect(MARKETING_SOLUTIONS).toContain(solution);
+    }
+    if (slug === "index") {
+      for (const solution of MARKETING_SOLUTIONS)
+        expect(content, `index links /${lang}/solutions/${solution}`).toContain(`](/${lang}/solutions/${solution})`);
     }
   });
 
