@@ -1054,6 +1054,8 @@
       "model": "AI Model",
       "modelHint": "Choose the AI model that powers your agent's responses.",
       "modelsLoading": "Loading models...",
+      "modelSearch": "Search models",
+      "modelsEmpty": "No model matches",
       "temperature": "Temperature",
       "temperatureHint": "Controls how creative or focused the agent's answers are. Higher values = more creative.",
       "maxTokens": "Max Tokens",

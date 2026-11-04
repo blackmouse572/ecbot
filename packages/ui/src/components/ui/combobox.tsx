@@ -1,18 +1,46 @@
 "use client";
 
 import { Combobox as ComboboxPrimitive } from "@base-ui/react";
-import { CheckMini, XMarkMini } from "@medusajs/icons";
+import { CheckMini, TrianglesMini, XMarkMini } from "@medusajs/icons";
 import { clx } from "@medusajs/ui";
 import * as React from "react";
 
 // Base UI combobox primitives, from shadcn's `combobox` (reui c-combobox-14),
-// restyled with the Medusa UI tokens the rest of this folder uses. Only the
-// multi-select (chips) family is ported.
+// restyled with the Medusa UI tokens the rest of this folder uses. Ports the
+// multi-select (chips) family plus a single-select input with groups.
 
 const Combobox = ComboboxPrimitive.Root;
 
 function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />;
+}
+
+/** Single-select search field styled like a Medusa Select trigger. */
+function ComboboxInput({ className, ...props }: ComboboxPrimitive.Input.Props) {
+  return (
+    <ComboboxPrimitive.InputGroup
+      data-slot="combobox-input-group"
+      className={clx(
+        "bg-ui-bg-field shadow-borders-base txt-compact-small relative flex h-8 w-full items-center rounded-md transition-fg",
+        "hover:bg-ui-bg-field-hover focus-within:shadow-borders-interactive-with-active",
+        "has-aria-invalid:shadow-borders-error has-disabled:opacity-50",
+        className,
+      )}
+    >
+      <ComboboxPrimitive.Input
+        data-slot="combobox-input"
+        className="placeholder:text-ui-fg-muted h-full min-w-0 flex-1 bg-transparent pr-8 pl-2 outline-none"
+        {...props}
+      />
+      <ComboboxPrimitive.Trigger
+        data-slot="combobox-trigger"
+        aria-label="Open"
+        className="text-ui-fg-muted absolute right-0 flex h-full w-8 items-center justify-center"
+      >
+        <TrianglesMini />
+      </ComboboxPrimitive.Trigger>
+    </ComboboxPrimitive.InputGroup>
+  );
 }
 
 function ComboboxContent({
@@ -91,6 +119,34 @@ function ComboboxItem({
     </ComboboxPrimitive.Item>
   );
 }
+
+function ComboboxGroup({ className, ...props }: ComboboxPrimitive.Group.Props) {
+  return (
+    <ComboboxPrimitive.Group
+      data-slot="combobox-group"
+      className={clx("not-first:mt-1", className)}
+      {...props}
+    />
+  );
+}
+
+function ComboboxGroupLabel({
+  className,
+  ...props
+}: ComboboxPrimitive.GroupLabel.Props) {
+  return (
+    <ComboboxPrimitive.GroupLabel
+      data-slot="combobox-group-label"
+      className={clx(
+        "txt-compact-xsmall-plus text-ui-fg-muted px-2 py-1.5 uppercase",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+const ComboboxCollection = ComboboxPrimitive.Collection;
 
 function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
   return (
@@ -181,8 +237,12 @@ export {
   ComboboxChip,
   ComboboxChips,
   ComboboxChipsInput,
+  ComboboxCollection,
   ComboboxContent,
   ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxGroupLabel,
+  ComboboxInput,
   ComboboxItem,
   ComboboxList,
   ComboboxValue,
