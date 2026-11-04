@@ -13,7 +13,7 @@
     "@modelcontextprotocol/server": "^2.3.1",
     "@repo/agent-blueprint": "workspace:*",
     "@repo/client": "workspace:*",
-    "hono": "^4.13.9",
+    "hono": "^4.13.11",
     "valibot": "^1.5.0",
     "zod": "4.6.5"
   },
