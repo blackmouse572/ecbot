@@ -7,6 +7,8 @@ pre-commit:
   jobs:
     - name: format
       glob: "*.{ts,tsx,js,mjs,cjs,json,md,mdx,yml,yaml,css}"
+      exclude:
+        - "pnpm-lock.yaml"
       run: pnpm exec prettier --write --ignore-unknown {staged_files}
       stage_fixed: true
 
