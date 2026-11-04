@@ -1,3 +1,4 @@
+import { ProviderLogo } from "@/components/provider-logo/provider-logo";
 import { useChatbotModels } from "@/hooks/api/chatbot";
 import {
   Combobox,
@@ -75,6 +76,7 @@ export function ChatbotModelCombobox({
         onBlur={onBlur}
         placeholder={t("chatbot.create.modelSearch")}
         aria-invalid={invalid || undefined}
+        startAddon={selected && <ProviderLogo provider={selected.provider} />}
       />
       <ComboboxContent>
         {isLoading ? (
@@ -87,7 +89,10 @@ export function ChatbotModelCombobox({
         <ComboboxList>
           {(group: { value: string; items: Model[] }) => (
             <ComboboxGroup key={group.value} items={group.items}>
-              <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
+              <ComboboxGroupLabel>
+                <ProviderLogo provider={group.value} />
+                {group.value}
+              </ComboboxGroupLabel>
               <ComboboxCollection>
                 {(m: Model) => (
                   <ComboboxItem key={m.id} value={m}>

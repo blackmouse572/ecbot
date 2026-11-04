@@ -93,6 +93,11 @@ describe("ChatbotSettingsFields", () => {
 
     const openai = within(await screen.findByRole("group", { name: "openai" }));
     const google = within(screen.getByRole("group", { name: "google" }));
+    expect(
+      screen
+        .getByRole("group", { name: "openai" })
+        .querySelector('img[src="/icons/providers/openai.svg"]'),
+    ).not.toBeNull();
     expect(openai.getByRole("option", { name: "GPT-5.4" })).toBeInTheDocument();
     expect(
       google.getByRole("option", { name: "Gemini 2.5 Flash" }),
@@ -139,6 +144,12 @@ describe("ChatbotSettingsFields", () => {
     );
 
     expect(input).toHaveValue("Gemini 2.5 Flash");
+    // The picked model's provider logo sits in the field.
+    expect(
+      input.parentElement!.querySelector(
+        'img[src="/icons/providers/google.svg"]',
+      ),
+    ).not.toBeNull();
   });
 
   it("shows a loading row while the model catalog is loading", async () => {

@@ -16,7 +16,14 @@ function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
 }
 
 /** Single-select search field styled like a Medusa Select trigger. */
-function ComboboxInput({ className, ...props }: ComboboxPrimitive.Input.Props) {
+function ComboboxInput({
+  className,
+  startAddon,
+  ...props
+}: ComboboxPrimitive.Input.Props & {
+  /** Shown before the text, such as the picked item's icon. */
+  startAddon?: React.ReactNode;
+}) {
   return (
     <ComboboxPrimitive.InputGroup
       data-slot="combobox-input-group"
@@ -27,6 +34,9 @@ function ComboboxInput({ className, ...props }: ComboboxPrimitive.Input.Props) {
         className,
       )}
     >
+      {startAddon && (
+        <span className="flex shrink-0 items-center pl-2">{startAddon}</span>
+      )}
       <ComboboxPrimitive.Input
         data-slot="combobox-input"
         className="placeholder:text-ui-fg-muted h-full min-w-0 flex-1 bg-transparent pr-8 pl-2 outline-none"
@@ -138,7 +148,7 @@ function ComboboxGroupLabel({
     <ComboboxPrimitive.GroupLabel
       data-slot="combobox-group-label"
       className={clx(
-        "txt-compact-xsmall-plus text-ui-fg-muted px-2 py-1.5 uppercase",
+        "txt-compact-xsmall-plus text-ui-fg-muted flex items-center gap-2 px-2 py-1.5 uppercase",
         className,
       )}
       {...props}
