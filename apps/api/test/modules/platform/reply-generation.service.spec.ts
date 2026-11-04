@@ -73,6 +73,7 @@ describe('ReplyGenerationService.run', () => {
             capabilities?: object;
             typingIndicator?: boolean;
             primaryLanguage?: string;
+            current?: boolean;
         } = {}
     ) {
         const streamChat = jest.fn().mockRejectedValue(new Error('stop'));
@@ -108,7 +109,10 @@ describe('ReplyGenerationService.run', () => {
                     sendMessage,
                 }),
             } as any,
-            { current: jest.fn().mockResolvedValue(1) } as any,
+            {
+                current: jest.fn().mockResolvedValue(1),
+                isCurrent: jest.fn().mockResolvedValue(options.current ?? true),
+            } as any,
             {} as any,
             {
                 get: jest.fn(() => ({
@@ -187,6 +191,27 @@ describe('ReplyGenerationService.run', () => {
                 fallbackText: expect.stringContaining('Xin lỗi'),
             })
         );
+    });
+
+    // The newer message's own turn is blocked too and says the same line.
+    it('sends the budget line once when a newer message is waiting', async () => {
+        const meter = {
+            check: jest
+                .fn()
+                .mockResolvedValue({ allowed: false, reason: 'quota' }),
+            record: jest.fn(),
+        };
+        const { run, sendMessage } = serviceWith(
+            { history: [], message: 'x' },
+            meter,
+            { current: false }
+        );
+
+        await expect(run()).resolves.toEqual({
+            status: 'skipped',
+            reason: 'superseded',
+        });
+        expect(sendMessage).not.toHaveBeenCalled();
     });
 
     // Telegram drops a chat action after 5s; the 9s default left the
@@ -320,7 +345,8 @@ describe('ReplyGenerationService.run', () => {
             endedWithoutReply = false,
             delivered: object[] = activities,
             steeredMessageIds: string[] = [],
-            current: boolean | boolean[] = true
+            current: boolean | boolean[] = true,
+            guardrailBlocked = false
         ) {
             const isCurrent = jest.fn();
             for (const c of [current].flat())
@@ -336,13 +362,21 @@ describe('ReplyGenerationService.run', () => {
                     triggered: false,
                 }),
                 recordActivities: jest.fn().mockResolvedValue(undefined),
+                triggerHandoff: jest.fn().mockResolvedValue(undefined),
             };
             const svc = new ReplyGenerationService(
                 {
                     findOne: jest.fn().mockResolvedValue({
                         id: 'acc-1',
                         type: 'FACEBOOK_PAGE',
-                        chatbot: { id: 'bot-1', workspace: { id: 'ws-1' } },
+                        chatbot: {
+                            id: 'bot-1',
+                            workspace: { id: 'ws-1' },
+                            ...(guardrailBlocked && {
+                                fallbackMessage: 'FB',
+                                guardrailEscalateOnBlock: true,
+                            }),
+                        },
                     }),
                 } as any,
                 { streamChat: jest.fn().mockResolvedValue({}) } as any,
@@ -360,8 +394,8 @@ describe('ReplyGenerationService.run', () => {
                     deliver: jest.fn().mockResolvedValue({
                         anySent,
                         superseded: false,
-                        guardrailBlocked: false,
-                        guardrailReason: '',
+                        guardrailBlocked,
+                        guardrailReason: guardrailBlocked ? 'unsafe' : '',
                         generationFailed: false,
                         activities: delivered,
                         endedWithoutReply,
@@ -483,6 +517,26 @@ describe('ReplyGenerationService.run', () => {
                 reason: 'superseded',
             });
             expect(conversations.recordFallback).toHaveBeenCalled();
+        });
+
+        // A tool ran before the guardrail blocked the reply, so the newer
+        // message could not supersede the turn: its own turn answers alone.
+        it('escalates but sends no guardrail fallback when a newer message waits for its own turn', async () => {
+            const { run, conversations } = deliveringService(
+                false,
+                false,
+                activities,
+                [],
+                false,
+                true
+            );
+
+            await expect(run()).resolves.toEqual({
+                status: 'skipped',
+                reason: 'superseded',
+            });
+            // Escalation still happens; only the line is skipped.
+            expect(conversations.triggerHandoff).toHaveBeenCalled();
         });
 
         it('records nothing when no reply was sent', async () => {

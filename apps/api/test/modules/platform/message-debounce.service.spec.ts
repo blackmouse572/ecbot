@@ -2,7 +2,6 @@ import { MessageDebounceService } from '../../../src/modules/platform/services/m
 import { MESSAGE_DEBOUNCE_MS } from '../../../src/modules/platform/constants/message-debounce.constant';
 
 describe('MessageDebounceService (in-process)', () => {
-    const lease = { bump: jest.fn().mockResolvedValue(1) };
     const replyGeneration = { run: jest.fn().mockResolvedValue(undefined) };
 
     let service: MessageDebounceService;
@@ -10,19 +9,11 @@ describe('MessageDebounceService (in-process)', () => {
     beforeEach(() => {
         jest.useFakeTimers();
         jest.clearAllMocks();
-        service = new MessageDebounceService(
-            lease as any,
-            replyGeneration as any
-        );
+        service = new MessageDebounceService(replyGeneration as any);
     });
 
     afterEach(() => {
         jest.useRealTimers();
-    });
-
-    it('bumps the lease immediately on schedule', async () => {
-        await service.schedule('conv-1', 'sender-1', 'cust-1', 'cp-1', 'hi');
-        expect(lease.bump).toHaveBeenCalledWith('conv-1');
     });
 
     it('fires the reply after the debounce window with the buffered text', async () => {

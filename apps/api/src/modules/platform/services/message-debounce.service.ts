@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { MESSAGE_DEBOUNCE_MS } from '../constants/message-debounce.constant';
-import { GenerationLeaseService } from './generation-lease.service';
 import { ReplyGenerationService } from './reply-generation.service';
 
 interface PendingBurst {
@@ -35,10 +34,7 @@ export class MessageDebounceService implements OnModuleDestroy {
     private readonly pending = new Map<string, PendingBurst>();
     private readonly replying = new Set<string>();
 
-    constructor(
-        private readonly lease: GenerationLeaseService,
-        private readonly replyGeneration: ReplyGenerationService
-    ) {}
+    constructor(private readonly replyGeneration: ReplyGenerationService) {}
 
     onModuleDestroy(): void {
         for (const burst of this.pending.values()) clearTimeout(burst.timer);
@@ -53,10 +49,6 @@ export class MessageDebounceService implements OnModuleDestroy {
         text: string,
         messageId?: string
     ): Promise<void> {
-        // Advance the generation lease: a reply in flight that has not run a
-        // tool or sent anything yet is now superseded and discards itself.
-        await this.lease.bump(conversationId);
-
         const burst = this.pending.get(conversationId) ?? {
             entries: [],
             senderId,

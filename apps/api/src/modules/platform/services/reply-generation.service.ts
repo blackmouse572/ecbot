@@ -118,7 +118,7 @@ export class ReplyGenerationService {
             input;
 
         // Capture the generation lease. A newer inbound message bumps the epoch
-        // (in debounce.schedule), so if it moves while we generate, this turn is
+        // (when the message is saved, in MessageProcessorService), so if it moves while we generate, this turn is
         // superseded and must discard rather than send stale context.
         const myEpoch = await this.lease.current(conversationId);
 
@@ -184,6 +184,9 @@ export class ReplyGenerationService {
                 this.logger.log(
                     `Token budget blocked conversation ${conversationId}: ${budget.reason}`
                 );
+                // A newer message's turn says the same line: send it once.
+                if (!(await this.lease.isCurrent(conversationId, myEpoch)))
+                    return skipped('superseded');
                 return delivered(
                     await this.sendBotText(
                         chatbot,
@@ -357,16 +360,21 @@ export class ReplyGenerationService {
                 this.logger.log(
                     `Guardrail block in conversation ${conversationId}: ${deliveryResult.guardrailReason}`
                 );
-                return fallbackOutcome(
-                    chatbot,
-                    await this.handleGuardrailBlock(
-                        deliveryResult.guardrailReason,
-                        chatbot,
-                        account,
-                        senderId,
-                        conversation
-                    )
+                const current = await this.lease.isCurrent(
+                    conversationId,
+                    myEpoch
                 );
+                const sent = await this.handleGuardrailBlock(
+                    deliveryResult.guardrailReason,
+                    chatbot,
+                    account,
+                    senderId,
+                    conversation,
+                    current
+                );
+                return current
+                    ? fallbackOutcome(chatbot, sent)
+                    : skipped('superseded');
             }
 
             let anySent = deliveryResult.anySent;
@@ -536,14 +544,19 @@ export class ReplyGenerationService {
         chatbot: any,
         account: any,
         senderId: string,
-        conversation: any
+        conversation: any,
+        current = true
     ): Promise<boolean> {
-        const sent = await this.sendFallback(
-            chatbot,
-            account,
-            senderId,
-            conversation.id
-        );
+        // A tool ran, so a newer message could not supersede the turn: skip
+        // the line and let that message's own turn answer. Escalation stays.
+        const sent =
+            current &&
+            (await this.sendFallback(
+                chatbot,
+                account,
+                senderId,
+                conversation.id
+            ));
 
         if (chatbot.guardrailEscalateOnBlock) {
             await this.conversationService.triggerHandoff(

@@ -190,6 +190,21 @@ export class MessageProcessorService implements OnModuleInit {
             if (handled) return;
         }
 
+        // Supersede the reply in flight before the slower steps below (profile
+        // fetch, save, handoff check): a turn that ends with nothing to send
+        // checks the lease right before its fallback line, and must see this
+        // message there or the customer gets the fallback and then the answer.
+        // A failed save is retried by Cloud Tasks, which bumps again.
+        if (!event.replayed) {
+            try {
+                await this.lease.bump(conversation.id);
+            } catch (err) {
+                this.logger.warn(
+                    `lease.bump failed for ${conversation.id}: ${(err as Error).message}`
+                );
+            }
+        }
+
         await this.refreshSenderProfile(
             adapter,
             account,
@@ -223,20 +238,6 @@ export class MessageProcessorService implements OnModuleInit {
                   }
               )
             : undefined;
-
-        // Supersede the reply in flight as soon as the message is saved, not
-        // after the slower steps below: a turn that ends with nothing to send
-        // checks the lease right before its fallback line, and must see this
-        // message there or the customer gets the fallback and then the answer.
-        if (!event.replayed) {
-            try {
-                await this.lease.bump(conversation.id);
-            } catch (err) {
-                this.logger.warn(
-                    `lease.bump failed for ${conversation.id}: ${(err as Error).message}`
-                );
-            }
-        }
 
         await this.conversationService.touchLastMessage(
             chatbot.id,
