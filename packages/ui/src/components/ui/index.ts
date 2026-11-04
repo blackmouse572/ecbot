@@ -1,5 +1,6 @@
 export * from "./accordion";
 export * from "./chart";
+export * from "./combobox";
 export {
   Command,
   CommandEmpty,

@@ -54,7 +54,7 @@ describe("ChatbotSettingsFields", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
-    // Radix Select relies on pointer capture APIs jsdom doesn't implement.
+    // Popover primitives rely on pointer capture APIs jsdom doesn't implement.
     window.HTMLElement.prototype.hasPointerCapture = vi
       .fn()
       .mockReturnValue(false);
@@ -62,7 +62,7 @@ describe("ChatbotSettingsFields", () => {
     window.HTMLElement.prototype.setPointerCapture = vi.fn();
   });
 
-  it("renders models grouped by provider from useChatbotModels and drops the provider select", async () => {
+  const twoModels = () =>
     mockedUseChatbotModels.mockReturnValue({
       models: [
         {
@@ -81,6 +81,8 @@ describe("ChatbotSettingsFields", () => {
       isLoading: false,
     } as A);
 
+  it("lists models in one group per provider", async () => {
+    twoModels();
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderForm();
 
@@ -89,14 +91,94 @@ describe("ChatbotSettingsFields", () => {
 
     await user.click(screen.getByRole("combobox"));
 
-    // Radix Select also renders a hidden native <select> mirror for form
-    // semantics, so scope assertions to the visible listbox to avoid
-    // duplicate-text matches.
-    const listbox = within(screen.getByRole("listbox"));
-    expect(listbox.getByText("openai")).toBeInTheDocument();
-    expect(listbox.getByText("google")).toBeInTheDocument();
-    expect(listbox.getByText("GPT-5.4")).toBeInTheDocument();
-    expect(listbox.getByText("Gemini 2.5 Flash")).toBeInTheDocument();
+    const openai = within(await screen.findByRole("group", { name: "openai" }));
+    const google = within(screen.getByRole("group", { name: "google" }));
+    expect(
+      screen
+        .getByRole("group", { name: "openai" })
+        .querySelector('img[src="/icons/providers/openai.svg"]'),
+    ).not.toBeNull();
+    expect(openai.getByRole("option", { name: "GPT-5.4" })).toBeInTheDocument();
+    expect(
+      google.getByRole("option", { name: "Gemini 2.5 Flash" }),
+    ).toBeInTheDocument();
+  });
+
+  it("filters by model name or provider name", async () => {
+    twoModels();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderForm();
+    const input = screen.getByRole("combobox");
+
+    await user.type(input, "gem");
+    expect(
+      await screen.findByRole("option", { name: "Gemini 2.5 Flash" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "GPT-5.4" }),
+    ).not.toBeInTheDocument();
+
+    await user.clear(input);
+    await user.type(input, "openai");
+    expect(
+      await screen.findByRole("option", { name: "GPT-5.4" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Gemini 2.5 Flash" }),
+    ).not.toBeInTheDocument();
+
+    await user.clear(input);
+    await user.type(input, "zzz");
+    expect(await screen.findByText("No model matches")).toBeInTheDocument();
+  });
+
+  it("picking a model shows its name in the field", async () => {
+    twoModels();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderForm();
+    const input = screen.getByRole("combobox");
+
+    await user.click(input);
+    await user.click(
+      await screen.findByRole("option", { name: "Gemini 2.5 Flash" }),
+    );
+
+    expect(input).toHaveValue("Gemini 2.5 Flash");
+    // The picked model's provider logo sits in the field.
+    expect(
+      input.parentElement!.querySelector(
+        'img[src="/icons/providers/google.svg"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("labels the field and its open button for screen readers", () => {
+    twoModels();
+    renderForm();
+
+    expect(screen.getByLabelText("AI Model")).toBe(
+      screen.getByRole("combobox"),
+    );
+    expect(
+      screen.getByRole("button", { name: "Show models" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the picked model when the text is cleared, since a model is required", async () => {
+    twoModels();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderForm();
+    const input = screen.getByRole("combobox");
+
+    await user.click(input);
+    await user.click(
+      await screen.findByRole("option", { name: "Gemini 2.5 Flash" }),
+    );
+    await user.clear(input);
+    await user.keyboard("{Escape}");
+    await user.tab();
+
+    expect(input).toHaveValue("Gemini 2.5 Flash");
   });
 
   it("shows a loading row while the model catalog is loading", async () => {
@@ -110,7 +192,7 @@ describe("ChatbotSettingsFields", () => {
 
     await user.click(screen.getByRole("combobox"));
 
-    expect(screen.getByText("Loading models...")).toBeInTheDocument();
+    expect(await screen.findByText("Loading models...")).toBeInTheDocument();
   });
 
   it("shows the model, handoff keywords and follow-up rules before Advanced", () => {

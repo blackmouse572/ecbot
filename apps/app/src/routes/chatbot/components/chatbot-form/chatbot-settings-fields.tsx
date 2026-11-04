@@ -1,10 +1,9 @@
-import { useChatbotModels } from "@/hooks/api/chatbot";
-import { Input, Select, Textarea } from "@medusajs/ui";
+import { Input, Textarea } from "@medusajs/ui";
 import { Form, SingleAccordion, SwitchBox } from "@repo/ui/common-components";
-import { useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { ChatbotFormInput } from "../../schemas";
+import { ChatbotModelCombobox } from "./chatbot-model-combobox";
 
 /**
  * The settings people change most (model, handoff keywords, follow-ups) up
@@ -17,13 +16,6 @@ export function ChatbotSettingsFields() {
   const guardrailOff = !watch("guardrailEnabled");
   const dimmedWhenOff = guardrailOff ? "opacity-50 pointer-events-none" : "";
 
-  const { models, isLoading: modelsLoading } = useChatbotModels();
-  const groupedModels = useMemo(() => {
-    const g: Record<string, typeof models> = {};
-    for (const m of models) (g[m.provider] ??= []).push(m);
-    return g;
-  }, [models]);
-
   return (
     <>
       <Form.Field
@@ -34,35 +26,12 @@ export function ChatbotSettingsFields() {
             <Form.Label>{t("chatbot.create.model")}</Form.Label>
             <Form.Hint>{t("chatbot.create.modelHint")}</Form.Hint>
             <Form.Control>
-              <Select
-                {...field}
-                value={field.value || ""}
-                onValueChange={field.onChange}
-              >
-                <Select.Trigger className="w-full">
-                  <Select.Value />
-                </Select.Trigger>
-                <Select.Content>
-                  {modelsLoading ? (
-                    <div className="text-ui-fg-muted px-2 py-1.5 text-sm">
-                      {t("chatbot.create.modelsLoading")}
-                    </div>
-                  ) : (
-                    Object.entries(groupedModels).map(([provider, items]) => (
-                      <div key={provider}>
-                        <div className="text-ui-fg-muted px-2 py-1 text-xs uppercase">
-                          {provider}
-                        </div>
-                        {items.map((m) => (
-                          <Select.Item key={m.id} value={m.id}>
-                            {m.name}
-                          </Select.Item>
-                        ))}
-                      </div>
-                    ))
-                  )}
-                </Select.Content>
-              </Select>
+              <ChatbotModelCombobox
+                name={field.name}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
             </Form.Control>
             <Form.ErrorMessage />
           </Form.Item>
