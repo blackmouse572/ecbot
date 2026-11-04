@@ -411,6 +411,11 @@ export class ReplyGenerationService {
                         senderId,
                         chatbot.handoffFallbackThreshold
                     );
+                // Check again right before sending: a message that landed
+                // while the fallback was recorded would otherwise get this
+                // line and then its own answer. Its turn resets the count.
+                if (!(await this.lease.isCurrent(conversationId, myEpoch)))
+                    return skipped('superseded');
                 if (triggered) {
                     await this.conversationService.triggerHandoff(
                         updated,

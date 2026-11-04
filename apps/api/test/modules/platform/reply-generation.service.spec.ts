@@ -320,8 +320,12 @@ describe('ReplyGenerationService.run', () => {
             endedWithoutReply = false,
             delivered: object[] = activities,
             steeredMessageIds: string[] = [],
-            current = true
+            current: boolean | boolean[] = true
         ) {
+            const isCurrent = jest.fn();
+            for (const c of [current].flat())
+                isCurrent.mockResolvedValueOnce(c);
+            isCurrent.mockResolvedValue([current].flat().at(-1));
             const conversations = {
                 findOneById: jest.fn().mockResolvedValue({
                     botEnabled: true,
@@ -350,7 +354,7 @@ describe('ReplyGenerationService.run', () => {
                 { get: () => ({ startTyping: jest.fn() }) } as any,
                 {
                     current: jest.fn().mockResolvedValue(1),
-                    isCurrent: jest.fn().mockResolvedValue(current),
+                    isCurrent,
                 } as any,
                 {
                     deliver: jest.fn().mockResolvedValue({
@@ -461,6 +465,24 @@ describe('ReplyGenerationService.run', () => {
                 reason: 'superseded',
             });
             expect(conversations.recordFallback).not.toHaveBeenCalled();
+        });
+
+        // The newer message lands while the fallback is being recorded, after
+        // the first lease check: its follow-up turn still answers alone.
+        it('sends no fallback when a newer message lands as the fallback is due', async () => {
+            const { run, conversations } = deliveringService(
+                false,
+                false,
+                activities,
+                [],
+                [true, false]
+            );
+
+            await expect(run()).resolves.toEqual({
+                status: 'skipped',
+                reason: 'superseded',
+            });
+            expect(conversations.recordFallback).toHaveBeenCalled();
         });
 
         it('records nothing when no reply was sent', async () => {

@@ -224,6 +224,20 @@ export class MessageProcessorService implements OnModuleInit {
               )
             : undefined;
 
+        // Supersede the reply in flight as soon as the message is saved, not
+        // after the slower steps below: a turn that ends with nothing to send
+        // checks the lease right before its fallback line, and must see this
+        // message there or the customer gets the fallback and then the answer.
+        if (!event.replayed) {
+            try {
+                await this.lease.bump(conversation.id);
+            } catch (err) {
+                this.logger.warn(
+                    `lease.bump failed for ${conversation.id}: ${(err as Error).message}`
+                );
+            }
+        }
+
         await this.conversationService.touchLastMessage(
             chatbot.id,
             account.id,
@@ -351,8 +365,8 @@ export class MessageProcessorService implements OnModuleInit {
     }
 
     /**
-     * Hand one message to the edge debounce. Bumps the Redis lease first (same
-     * supersede semantics as messageDebounceService.schedule). Resolves false
+     * Hand one message to the edge debounce (runTurn already bumped the
+     * lease when the message was saved). Resolves false
      * when the edge did not accept it (non-2xx or unreachable), so the caller
      * can fall back; never throws, so one failure cannot abort the rest of the
      * webhook batch.
@@ -365,13 +379,6 @@ export class MessageProcessorService implements OnModuleInit {
         text: string;
         messageId?: string;
     }): Promise<boolean> {
-        await this.lease
-            .bump(job.conversationId)
-            .catch(err =>
-                this.logger.warn(
-                    `lease.bump failed for ${job.conversationId}: ${err.message}`
-                )
-            );
         try {
             const res = await fetch(
                 `${process.env.POC_EDGE_DEBOUNCE_URL}/internal/debounce`,
