@@ -15,7 +15,7 @@
     "@repo/client": "workspace:*",
     "hono": "^4.13.9",
     "valibot": "^1.5.0",
-    "zod": "4.6.5"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260925.1",
