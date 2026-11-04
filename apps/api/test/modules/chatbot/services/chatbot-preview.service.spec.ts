@@ -408,3 +408,91 @@ describe('ChatbotPreviewService attachments', () => {
         expect(aiService.streamChat).not.toHaveBeenCalled();
     });
 });
+
+// The /client preview (MCP test_chatbot): same turn, but answered as one JSON
+// body instead of an SSE stream.
+describe('ChatbotPreviewService.reply', () => {
+    it('returns the whole reply with the tools it called', async () => {
+        const { service, upstream } = setup(frames());
+
+        const done = service.reply(baseParams);
+        upstream.end(
+            frames(
+                '{"type":"tool-input-available","toolCallId":"a","toolName":"search_knowledge","input":{"query":"COD"}}',
+                '{"type":"tool-output-available","toolCallId":"a","output":{}}',
+                '{"type":"text-delta","id":"t1","delta":"Có "}',
+                '{"type":"text-delta","id":"t1","delta":"ạ"}'
+            )
+        );
+
+        await expect(done).resolves.toEqual({
+            reply: 'Có ạ',
+            media: [],
+            toolCalls: [{ name: 'search_knowledge', input: { query: 'COD' } }],
+            blocked: false,
+        });
+    });
+
+    it('keeps the turn in the session like the streamed preview', async () => {
+        const { service, sessionService, upstream } = setup(frames());
+
+        const done = service.reply(baseParams);
+        upstream.end(frames('{"type":"text-delta","id":"t1","delta":"hi"}'));
+        await done;
+
+        expect(sessionService.writeTurn).toHaveBeenCalledWith(
+            'k',
+            'hello',
+            'hi'
+        );
+    });
+
+    it('records preview usage', async () => {
+        const { service, meter, upstream } = setup(frames());
+
+        const done = service.reply(baseParams);
+        upstream.end(
+            frames(
+                '{"type":"text-delta","id":"t1","delta":"hi"}',
+                '{"type":"message-metadata","messageMetadata":{"usage":{"input_tokens":10,"output_tokens":2,"total_tokens":12}}}'
+            )
+        );
+        await done;
+
+        expect(meter.record).toHaveBeenCalledWith(
+            expect.objectContaining({ workspaceId: 'ws1', chatbotId: 'cb1' })
+        );
+    });
+
+    it('says a guardrail blocked the reply and keeps nothing', async () => {
+        const { service, sessionService, upstream } = setup(frames());
+
+        const done = service.reply(baseParams);
+        upstream.end(
+            frames(
+                '{"type":"text-delta","id":"t1","delta":"bad"}',
+                '{"type":"data-guardrail","data":{"reason":"policy"}}'
+            )
+        );
+
+        await expect(done).resolves.toMatchObject({ blocked: true });
+        expect(sessionService.writeTurn).not.toHaveBeenCalled();
+    });
+
+    it('throws when the generation fails, without the raw error', async () => {
+        const { service, sessionService, upstream } = setup(frames());
+
+        const done = service.reply(baseParams);
+        upstream.end(
+            frames(
+                '{"type":"text-delta","id":"t1","delta":"part"}',
+                '{"type":"error","errorText":"[agent error: secret]"}'
+            )
+        );
+
+        await expect(done).rejects.toMatchObject({
+            response: { message: 'chatbot.error.aiBackendUnavailable' },
+        });
+        expect(sessionService.writeTurn).not.toHaveBeenCalled();
+    });
+});

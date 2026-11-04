@@ -42,6 +42,7 @@ const READ_TOOLS = [
   "list_knowledge_items",
   "list_skills",
   "list_workspace_tools",
+  "test_chatbot",
 ];
 
 // What GET /client/v1/me answers: the key's permissions in its workspace.
@@ -115,6 +116,8 @@ describe("/mcp", () => {
     expect(await res.text()).toContain('"name":"ecbot"');
   });
 
+  // test_chatbot needs only chatbot read, as the app's preview chat does, but
+  // it is not read-only: the chatbot's own Tools run and tokens are spent.
   it("lists every tool as read-only to a key that may read everything", async () => {
     permits([
       { subject: "CHATBOT", action: ["read"] },
@@ -130,7 +133,7 @@ describe("/mcp", () => {
 
     expect(tools.map((tool) => tool.name).sort()).toEqual(READ_TOOLS);
     for (const tool of tools) {
-      expect(tool.annotations?.readOnlyHint).toBe(true);
+      expect(tool.annotations?.readOnlyHint).toBe(tool.name !== "test_chatbot");
     }
   });
 

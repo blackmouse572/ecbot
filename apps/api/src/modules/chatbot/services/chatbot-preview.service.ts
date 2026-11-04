@@ -17,12 +17,22 @@ import { ChatbotAIService } from './chatbot-ai.service';
 import { ChatbotAiSseStreamService } from './chatbot-ai-sse-stream.service';
 import { ChatbotPreviewSessionService } from './chatbot-preview-session.service';
 import { ChatbotPreviewMediaService } from './chatbot-preview-media.service';
+import type { ReplyMedia } from '@app/modules/platform/interfaces/message-model';
+import { IAssistantToolCall } from '../utils/assistant-transcript.collector';
 import { IChatbotPreviewAttachment } from '../interfaces/chatbot-preview-media.interface';
 import {
     AI_USAGE_METER,
     AiUsageMeter,
     ENUM_AI_USAGE_SOURCE,
 } from 'src/app/ai-usage-meter.interface';
+
+export interface IPreviewReply {
+    reply: string;
+    media: ReplyMedia[];
+    toolCalls: IAssistantToolCall[];
+    /** A guardrail stopped the reply; `reply` is then empty. */
+    blocked: boolean;
+}
 
 export interface IPreviewStreamParams {
     chatbot: ChatbotEntity;
@@ -72,6 +82,33 @@ export class ChatbotPreviewService {
         res: ExpressResponse,
         params: IPreviewStreamParams
     ): Promise<void> {
+        const turn = await this.open(params);
+        await this.sseStream.pipe({ res, ...turn });
+    }
+
+    /**
+     * The same turn as `streamTo`, read to the end and returned whole, for the
+     * /client preview (the MCP test_chatbot tool). A failed generation throws
+     * instead of returning a partial reply.
+     */
+    async reply(params: IPreviewStreamParams): Promise<IPreviewReply> {
+        const collector = await this.sseStream.collect(await this.open(params));
+        if (collector.errored) {
+            throw new InternalServerErrorException({
+                statusCode: ENUM_APP_STATUS_CODE_ERROR.UNKNOWN,
+                message: 'chatbot.error.aiBackendUnavailable',
+            });
+        }
+        return {
+            reply: collector.blocked ? '' : collector.assistantText(),
+            media: collector.blocked ? [] : collector.media(),
+            toolCalls: collector.toolCalls(),
+            blocked: collector.blocked,
+        };
+    }
+
+    /** Checks the budget, reads the history and opens the apps/ai stream. */
+    private async open(params: IPreviewStreamParams) {
         const { chatbot, sessionKey, userId, chatSessionId } = params;
         const attachments = params.attachments ?? [];
         if (!params.message.trim() && !attachments.length) this.refuseEmpty();
@@ -139,8 +176,7 @@ export class ChatbotPreviewService {
             });
         }
 
-        await this.sseStream.pipe({
-            res,
+        return {
             upstream,
             abort,
             logContext: `chatbot ${chatbot.id}`,
@@ -159,6 +195,6 @@ export class ChatbotPreviewService {
                     model: chatbot.modelTextName,
                 });
             },
-        });
+        };
     }
 }

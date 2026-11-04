@@ -38,6 +38,7 @@
     "shareLink": "Preview share link created successfully.",
     "previewAttachment": "File uploaded.",
     "preview": "Chatbot preview loaded successfully.",
+    "previewReply": "The chatbot replied.",
     "batchDelete": "Chatbots deleted",
     "batchStatus": "Chatbot status updated"
 }
