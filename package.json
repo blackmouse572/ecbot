@@ -11,6 +11,7 @@
     "generate:client": "turbo run generate:client --filter api",
     "setup:local": "node scripts/setup-local.mjs",
     "setup:local:test": "node --test scripts/setup-local/lib.test.mjs",
+    "hooks:test": "node --test scripts/hooks/*.test.mjs",
     "generate:keys": "turbo run generate:keys",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
