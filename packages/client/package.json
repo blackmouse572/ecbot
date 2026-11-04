@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsc --watch",
-    "build": "tsc"
+    "dev": "node init && tsc --watch",
+    "build": "node init && tsc"
   },
   "exports": {
     ".": {
@@ -17,6 +17,6 @@
     "@repo/typescript-config": "workspace:*"
   },
   "dependencies": {
-    "axios": "^1.20.0"
+    "axios": "^1.21.0"
   }
 }
