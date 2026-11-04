@@ -12,7 +12,14 @@ pre-commit:
       run: pnpm exec prettier --write --ignore-unknown {staged_files}
       stage_fixed: true
 
+    # A committed .only silently skips the rest of a suite, in CI too.
+    - name: no focused tests
+      glob: "*.{spec,test,e2e-spec}.{ts,tsx}"
+      run: "! grep -nE '\\b(describe|it|test)\\.only\\(' {staged_files}"
+
     # One job per linted workspace, so each uses its own .oxlintrc.json.
+    # Keep in sync with the workspaces whose package.json has an oxlint `lint`
+    # script (grep -l '"lint": "oxlint' apps/*/package.json packages/*/package.json).
     - name: lint api
       root: apps/api/
       glob: "*.{ts,tsx}"
@@ -39,4 +46,8 @@ pre-push:
   jobs:
     # Typecheck only the workspaces changed since main, and their dependents.
     - name: check-types
-      run: pnpm exec turbo run check-types --filter="...[origin/main]" --output-logs=errors-only
+      # Falls back to the last commit when origin/main isn't fetched.
+      run: |
+        base=origin/main
+        git rev-parse --verify -q "$base" >/dev/null || base=HEAD~1
+        pnpm exec turbo run check-types --filter="...[$base]" --output-logs=errors-only
