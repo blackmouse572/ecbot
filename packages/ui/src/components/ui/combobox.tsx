@@ -19,10 +19,13 @@ function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
 function ComboboxInput({
   className,
   startAddon,
+  triggerLabel = "Open",
   ...props
 }: ComboboxPrimitive.Input.Props & {
   /** Shown before the text, such as the picked item's icon. */
   startAddon?: React.ReactNode;
+  /** Accessible name of the button that opens the list. */
+  triggerLabel?: string;
 }) {
   return (
     <ComboboxPrimitive.InputGroup
@@ -44,7 +47,7 @@ function ComboboxInput({
       />
       <ComboboxPrimitive.Trigger
         data-slot="combobox-trigger"
-        aria-label="Open"
+        aria-label={triggerLabel}
         className="text-ui-fg-muted absolute right-0 flex h-full w-8 items-center justify-center"
       >
         <TrianglesMini />

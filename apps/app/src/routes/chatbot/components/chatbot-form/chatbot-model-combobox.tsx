@@ -11,18 +11,17 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@repo/ui/components";
-import { useMemo } from "react";
+import { type ComponentProps, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 type Model = ReturnType<typeof useChatbotModels>["models"][number];
 
-type ChatbotModelComboboxProps = {
+type ChatbotModelComboboxProps = Omit<
+  ComponentProps<typeof ComboboxInput>,
+  "value" | "onChange"
+> & {
   value?: string;
   onChange: (modelId: string) => void;
-  onBlur?: () => void;
-  name?: string;
-  id?: string;
-  invalid?: boolean;
 };
 
 const matches = (model: Model, query: string) => {
@@ -39,10 +38,8 @@ const matches = (model: Model, query: string) => {
 export function ChatbotModelCombobox({
   value,
   onChange,
-  onBlur,
   name,
-  id,
-  invalid,
+  ...inputProps
 }: ChatbotModelComboboxProps) {
   const { t } = useTranslation();
   const { models, isLoading } = useChatbotModels();
@@ -50,7 +47,9 @@ export function ChatbotModelCombobox({
   const groups = useMemo(() => {
     const byProvider = new Map<string, Model[]>();
     for (const m of models) {
-      byProvider.set(m.provider, [...(byProvider.get(m.provider) ?? []), m]);
+      const bucket = byProvider.get(m.provider);
+      if (bucket) bucket.push(m);
+      else byProvider.set(m.provider, [m]);
     }
     return [...byProvider].map(([provider, items]) => ({
       value: provider,
@@ -59,12 +58,19 @@ export function ChatbotModelCombobox({
   }, [models]);
 
   const selected = models.find((m) => m.id === value) ?? null;
+  // What the person typed; null shows the picked model's name.
+  const [query, setQuery] = useState<string | null>(null);
 
   return (
     <Combobox<Model>
       items={groups}
       value={selected}
+      // A model is required, so clearing the text never clears the field:
+      // drop the null and show the picked model again on close or blur.
       onValueChange={(m) => m && onChange(m.id)}
+      inputValue={query ?? selected?.name ?? ""}
+      onInputValueChange={setQuery}
+      onOpenChange={(open) => !open && setQuery(null)}
       itemToStringLabel={(m) => m.name}
       isItemEqualToValue={(a, b) => a.id === b.id}
       filter={matches}
@@ -72,10 +78,13 @@ export function ChatbotModelCombobox({
       name={name}
     >
       <ComboboxInput
-        id={id}
-        onBlur={onBlur}
         placeholder={t("chatbot.create.modelSearch")}
-        aria-invalid={invalid || undefined}
+        triggerLabel={t("chatbot.create.modelOpen")}
+        {...inputProps}
+        onBlur={(e) => {
+          setQuery(null);
+          inputProps.onBlur?.(e);
+        }}
         startAddon={selected && <ProviderLogo provider={selected.provider} />}
       />
       <ComboboxContent>

@@ -27,7 +27,6 @@ export function ChatbotSettingsFields() {
             <Form.Hint>{t("chatbot.create.modelHint")}</Form.Hint>
             <Form.Control>
               <ChatbotModelCombobox
-                id={field.name}
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}

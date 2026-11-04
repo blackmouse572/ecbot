@@ -152,6 +152,35 @@ describe("ChatbotSettingsFields", () => {
     ).not.toBeNull();
   });
 
+  it("labels the field and its open button for screen readers", () => {
+    twoModels();
+    renderForm();
+
+    expect(screen.getByLabelText("AI Model")).toBe(
+      screen.getByRole("combobox"),
+    );
+    expect(
+      screen.getByRole("button", { name: "Show models" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the picked model when the text is cleared, since a model is required", async () => {
+    twoModels();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderForm();
+    const input = screen.getByRole("combobox");
+
+    await user.click(input);
+    await user.click(
+      await screen.findByRole("option", { name: "Gemini 2.5 Flash" }),
+    );
+    await user.clear(input);
+    await user.keyboard("{Escape}");
+    await user.tab();
+
+    expect(input).toHaveValue("Gemini 2.5 Flash");
+  });
+
   it("shows a loading row while the model catalog is loading", async () => {
     mockedUseChatbotModels.mockReturnValue({
       models: [],
