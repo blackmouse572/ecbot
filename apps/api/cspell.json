@@ -48,7 +48,6 @@
         "node_modules/**",
         "endpoints/**",
         "*coverage/**",
-        ".husky/**",
         ".github/**",
         "dist/**",
         "logs/**",

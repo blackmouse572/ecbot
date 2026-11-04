@@ -1,0 +1,64 @@
+# Git hooks, installed by `pnpm install` (lefthook's postinstall).
+# Skip once with `--no-verify`, or for a session with `LEFTHOOK=0`.
+# https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "*.{ts,tsx,js,mjs,cjs,json,md,mdx,yml,yaml,css}"
+      exclude:
+        - "pnpm-lock.yaml"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+
+    # Hidden code: base64 decoded and run, curl piped to sh, long base64 blobs.
+    - name: suspicious code
+      run: node scripts/hooks/check-suspicious.mjs
+
+    # A committed .only silently skips the rest of a suite, in CI too.
+    - name: no focused tests
+      glob: "*.{spec,test,e2e-spec}.{ts,tsx}"
+      run: "! grep -nE '\\b(describe|it|test)\\.only\\(' {staged_files}"
+
+    # One job per linted workspace, so each uses its own .oxlintrc.json.
+    # Keep in sync with the workspaces whose package.json has an oxlint `lint`
+    # script (grep -l '"lint": "oxlint' apps/*/package.json packages/*/package.json).
+    - name: lint api
+      root: apps/api/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --quiet --report-unused-disable-directives {staged_files}
+    - name: lint app
+      root: apps/app/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --quiet {staged_files}
+    - name: lint docs
+      root: apps/docs/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --quiet {staged_files}
+    - name: lint ui
+      root: packages/ui/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --quiet {staged_files}
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  piped: true
+  # A script, not a job: lefthook skips pre-push jobs when the push changes no
+  # files, which would let a force push to an empty commit or a delete through.
+  scripts:
+    "no-force-push-main.sh":
+      runner: sh
+      use_stdin: true
+  jobs:
+    # Typecheck only the workspaces changed since main, and their dependents.
+    - name: check-types
+      # Falls back to the last commit when origin/main isn't fetched.
+      run: |
+        base=origin/main
+        git rev-parse --verify -q "$base" >/dev/null || base=HEAD~1
+        pnpm exec turbo run check-types --filter="...[$base]" --output-logs=errors-only

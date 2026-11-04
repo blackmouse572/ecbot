@@ -1,0 +1,51 @@
+name: PR Checks
+
+# Local hooks can be skipped with --no-verify; these checks cannot.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  # PRs are squash-merged, so the title becomes the commit on main.
+  commitlint:
+    name: Conventional PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: commitlint.config.mjs
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Lint PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          printf '%s' "$TITLE" | npx --yes \
+            -p @commitlint/cli@21 -p @commitlint/config-conventional@21 \
+            commitlint
+
+  # Same check as the pre-commit hook: base64 decoded and run, curl piped to sh,
+  # long base64 blobs. Runs on the lines this PR adds.
+  suspicious-code:
+    name: No hidden code
+    if: github.event.action != 'edited'
+    runs-on: ubuntu-latest
+    steps:
+      # The merge commit and its first parent (the base branch tip).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Check added lines
+        run: node scripts/hooks/check-suspicious.mjs HEAD^1 HEAD

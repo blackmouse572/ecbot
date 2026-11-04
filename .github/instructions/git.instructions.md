@@ -251,36 +251,16 @@ Relates to #456
 
 ## Git Hooks
 
-### Pre-commit
+Hooks run through [lefthook](https://lefthook.dev) (`lefthook.yml`) and are installed by `pnpm install`.
 
-```bash
-# .husky/pre-commit
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+- **pre-commit**: Prettier and oxlint on staged files only. Prettier fixes are re-staged; oxlint errors block the commit (warnings don't).
+  It also blocks focused tests (`it.only`) and hidden code in added lines: base64 decoded and then run, `curl piped to sh`, and base64 blobs of 200+ characters. Add `allow-base64` to a line once a blob has been reviewed.
+- **commit-msg**: commitlint (`commitlint.config.mjs`) checks the message against the convention above. `Co-authored-by` trailers are rejected.
+- **pre-push**: refuses to rewrite or delete `main` (force pushes to other branches are fine), then `turbo run check-types` on workspaces changed since `origin/main`.
 
-pnpm lint-staged
-```
+CI (`pr-checks.yml`) checks the PR title with the same commitlint config, since the title becomes the squash commit on `main`, and runs the hidden-code check on the PR's added lines. Force pushes to `main` are blocked server side by the repository ruleset.
 
-### Commit-msg
-
-```bash
-# .husky/commit-msg
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-pnpm commitlint --edit $1
-```
-
-### Pre-push
-
-```bash
-# .husky/pre-push
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-pnpm check-types
-pnpm test
-```
+Skip once with `git commit --no-verify`, or for a shell session with `LEFTHOOK=0`. If hooks are missing, run `pnpm exec lefthook install`.
 
 ## .gitignore
 
