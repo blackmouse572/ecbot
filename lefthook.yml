@@ -1,0 +1,40 @@
+# Git hooks, installed by `pnpm install` (lefthook's postinstall).
+# Skip once with `--no-verify`, or for a session with `LEFTHOOK=0`.
+# https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "*.{ts,tsx,js,mjs,cjs,json,md,mdx,yml,yaml,css}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+
+    # One job per linted workspace, so each uses its own .oxlintrc.json.
+    - name: lint api
+      root: apps/api/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --quiet --report-unused-disable-directives {staged_files}
+    - name: lint app
+      root: apps/app/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --quiet {staged_files}
+    - name: lint docs
+      root: apps/docs/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --quiet {staged_files}
+    - name: lint ui
+      root: packages/ui/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --quiet {staged_files}
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  jobs:
+    # Typecheck only the workspaces changed since main, and their dependents.
+    - name: check-types
+      run: pnpm exec turbo run check-types --filter="...[origin/main]" --output-logs=errors-only

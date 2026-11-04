@@ -40,6 +40,9 @@
     "e2e:record:down": "docker-compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.e2e.record.yml down -v"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21",
+    "@commitlint/config-conventional": "^21",
+    "lefthook": "^2.2.2",
     "prettier": "^3.9.9",
     "turbo": "^2.11.3",
     "typescript": "5.8.2"

@@ -1,0 +1,32 @@
+name: PR Title
+
+# PRs are squash-merged, so the title becomes the commit on main. Local hooks
+# can be skipped with --no-verify; this check cannot.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    name: Conventional PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: commitlint.config.mjs
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Lint PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          printf '%s' "$TITLE" | npx --yes \
+            -p @commitlint/cli@21 -p @commitlint/config-conventional@21 \
+            commitlint
