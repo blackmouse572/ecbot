@@ -23,6 +23,7 @@
         "shareLinkNotConfigured": "Máy chủ chưa được cấu hình để chia sẻ preview.",
         "previewNotAvailable": "Chatbot này hiện không khả dụng để xem thử.",
         "previewSessionLimit": "Bạn đã đạt giới hạn tin nhắn cho phiên preview này. Vui lòng thử lại sau.",
+        "previewRateLimited": "Khóa này đã gửi quá nhiều tin nhắn thử. Vui lòng đợi một phút rồi thử lại.",
         "emptyMessage": "Hãy nhập tin nhắn hoặc đính kèm tệp.",
         "attachmentNotSupported": "Không hỗ trợ loại hoặc kích thước tệp này. Hãy đính kèm ảnh tối đa 5 MB, hoặc tệp PDF, Word, Excel, văn bản hay CSV tối đa 10 MB.",
         "invalidAgentProfile": "Câu trả lời của trình tạo agent không hợp lệ.",

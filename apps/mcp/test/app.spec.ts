@@ -118,7 +118,7 @@ describe("/mcp", () => {
 
   // test_chatbot needs only chatbot read, as the app's preview chat does, but
   // it is not read-only: the chatbot's own Tools run and tokens are spent.
-  it("lists every tool as read-only to a key that may read everything", async () => {
+  it("lists every read-scoped tool, read-only except test_chatbot", async () => {
     permits([
       { subject: "CHATBOT", action: ["read"] },
       { subject: "KNOWLEDGE_BASE", action: ["read"] },

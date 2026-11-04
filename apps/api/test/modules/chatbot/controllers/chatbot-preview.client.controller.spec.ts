@@ -1,4 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
+import { HttpStatus, NotFoundException } from '@nestjs/common';
+import { EventEmitter } from 'events';
 import { GUARDS_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { ChatbotPreviewClientController } from '../../../../src/modules/chatbot/controllers/chatbot-preview.client.controller';
 import { ClientCredentialGuard } from '../../../../src/modules/client-credential/guards/client-credential.guard';
@@ -25,6 +26,7 @@ describe('ChatbotPreviewClientController', () => {
 
     const chatbotService = { findOne: jest.fn() };
     const previewService = { reply: jest.fn() };
+    const rateLimit = { claim: jest.fn() };
     const previewSessionService = {
         workspaceKey: jest.fn(
             (p: Record<string, string>) =>
@@ -37,12 +39,19 @@ describe('ChatbotPreviewClientController', () => {
         jest.clearAllMocks();
         chatbotService.findOne.mockResolvedValue(chatbot);
         previewService.reply.mockResolvedValue(answer);
+        rateLimit.claim.mockResolvedValue(true);
         controller = new ChatbotPreviewClientController(
             chatbotService as never,
             previewService as never,
-            previewSessionService as never
+            previewSessionService as never,
+            rateLimit as never
         );
     });
+
+    /** The Express response, whose close tells us the caller went away. */
+    function fakeRes(writableFinished = false) {
+        return Object.assign(new EventEmitter(), { writableFinished }) as never;
+    }
 
     it('is mounted at /chatbots', () => {
         expect(
@@ -70,9 +79,15 @@ describe('ChatbotPreviewClientController', () => {
     });
 
     it('looks the chatbot up inside the credential workspace only', async () => {
-        await controller.preview(workspace, credential, 'cb1', {
-            message: 'hi',
-        });
+        await controller.preview(
+            workspace,
+            credential,
+            'cb1',
+            {
+                message: 'hi',
+            },
+            fakeRes()
+        );
 
         expect(chatbotService.findOne).toHaveBeenCalledWith({
             id: 'cb1',
@@ -85,16 +100,28 @@ describe('ChatbotPreviewClientController', () => {
         chatbotService.findOne.mockResolvedValue(null);
 
         await expect(
-            controller.preview(workspace, credential, 'cb9', { message: 'hi' })
+            controller.preview(
+                workspace,
+                credential,
+                'cb9',
+                { message: 'hi' },
+                fakeRes()
+            )
         ).rejects.toBeInstanceOf(NotFoundException);
         expect(previewService.reply).not.toHaveBeenCalled();
     });
 
     it('continues the session it is given, keyed to the credential', async () => {
-        const result = await controller.preview(workspace, credential, 'cb1', {
-            message: 'hi',
-            sessionId: 'test-1',
-        });
+        const result = await controller.preview(
+            workspace,
+            credential,
+            'cb1',
+            {
+                message: 'hi',
+                sessionId: 'test-1',
+            },
+            fakeRes()
+        );
 
         expect(previewService.reply).toHaveBeenCalledWith({
             chatbot,
@@ -102,19 +129,89 @@ describe('ChatbotPreviewClientController', () => {
             message: 'hi',
             userId: 'user1',
             chatSessionId: 'test-1',
+            signal: expect.any(AbortSignal),
         });
         expect(result.data).toEqual({ sessionId: 'test-1', ...answer });
     });
 
     it('starts a new session when none is given', async () => {
-        const first = await controller.preview(workspace, credential, 'cb1', {
-            message: 'hi',
-        });
-        const second = await controller.preview(workspace, credential, 'cb1', {
-            message: 'hi',
-        });
+        const first = await controller.preview(
+            workspace,
+            credential,
+            'cb1',
+            {
+                message: 'hi',
+            },
+            fakeRes()
+        );
+        const second = await controller.preview(
+            workspace,
+            credential,
+            'cb1',
+            {
+                message: 'hi',
+            },
+            fakeRes()
+        );
 
         expect(first.data.sessionId).toMatch(/^[A-Za-z0-9_-]{16,64}$/);
         expect(second.data.sessionId).not.toBe(first.data.sessionId);
+    });
+
+    it('stops the turn when the caller goes away before the reply', async () => {
+        const res = fakeRes();
+        await controller.preview(
+            workspace,
+            credential,
+            'cb1',
+            { message: 'hi' },
+            res
+        );
+        const { signal } = previewService.reply.mock.calls[0][0];
+
+        (res as EventEmitter).emit('close');
+
+        expect(signal.aborted).toBe(true);
+    });
+
+    it('leaves a turn alone once its reply was sent', async () => {
+        const res = fakeRes(true);
+        await controller.preview(
+            workspace,
+            credential,
+            'cb1',
+            { message: 'hi' },
+            res
+        );
+        const { signal } = previewService.reply.mock.calls[0][0];
+
+        (res as EventEmitter).emit('close');
+
+        expect(signal.aborted).toBe(false);
+    });
+
+    // A script holding a key could otherwise run turns (and the bot's Tools)
+    // as fast as apps/ai answers, with only the token quota as a ceiling.
+    it('limits each key to a budget of turns a minute', async () => {
+        rateLimit.claim.mockResolvedValue(false);
+
+        await expect(
+            controller.preview(
+                workspace,
+                credential,
+                'cb1',
+                { message: 'hi' },
+                fakeRes()
+            )
+        ).rejects.toMatchObject({
+            status: HttpStatus.TOO_MANY_REQUESTS,
+            response: { message: 'chatbot.error.previewRateLimited' },
+        });
+        expect(rateLimit.claim).toHaveBeenCalledWith(
+            'chatbot-preview:cred1',
+            20,
+            60
+        );
+        expect(previewService.reply).not.toHaveBeenCalled();
     });
 });

@@ -121,7 +121,12 @@ export class ChatbotAiSseStreamService {
                 new Writable({
                     write: (_chunk, _encoding, done) => done(),
                 }),
-                () => resolve()
+                error => {
+                    // A dropped apps/ai socket sends no error frame, and one
+                    // JSON body can't say "truncated": count it as failed.
+                    if (error) collector.errored = true;
+                    resolve();
+                }
             );
         });
 

@@ -43,6 +43,8 @@ export interface IPreviewStreamParams {
     chatSessionId?: string;
     /** Files uploaded for this message (ChatbotPreviewMediaService). */
     attachments?: IChatbotPreviewAttachment[];
+    /** Aborts when the caller goes away, so apps/ai stops generating. */
+    signal?: AbortSignal;
 }
 
 /**
@@ -154,6 +156,7 @@ export class ChatbotPreviewService {
         }
 
         const abort = new AbortController();
+        params.signal?.addEventListener('abort', () => abort.abort());
 
         let upstream: IncomingMessage;
         try {

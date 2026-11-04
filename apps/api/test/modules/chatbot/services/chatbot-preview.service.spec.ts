@@ -496,3 +496,36 @@ describe('ChatbotPreviewService.reply', () => {
         expect(sessionService.writeTurn).not.toHaveBeenCalled();
     });
 });
+
+describe('ChatbotPreviewService.reply transport', () => {
+    // A dropped apps/ai socket sends no error frame: without this the half
+    // reply would come back as a whole one and land in the session.
+    it('throws and keeps nothing when the upstream dies mid-reply', async () => {
+        const { service, sessionService, upstream } = setup(frames());
+
+        const done = service.reply(baseParams);
+        upstream.write(
+            'data: {"type":"text-delta","id":"t1","delta":"half"}\n\n'
+        );
+        await new Promise(r => setImmediate(r));
+        upstream.destroy(new Error('socket hang up'));
+
+        await expect(done).rejects.toMatchObject({
+            response: { message: 'chatbot.error.aiBackendUnavailable' },
+        });
+        expect(sessionService.writeTurn).not.toHaveBeenCalled();
+    });
+
+    it('stops apps/ai when the caller goes away', async () => {
+        const { service, captured, upstream } = setup(frames());
+        const caller = new AbortController();
+
+        const done = service.reply({ ...baseParams, signal: caller.signal });
+        await new Promise(r => setImmediate(r));
+        caller.abort();
+        upstream.destroy();
+        await done.catch(() => undefined);
+
+        expect(captured.signal?.aborted).toBe(true);
+    });
+});
