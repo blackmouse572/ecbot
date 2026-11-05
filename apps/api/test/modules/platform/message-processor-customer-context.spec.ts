@@ -218,6 +218,18 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
         );
     });
 
+    // A reply turn ending with nothing to send checks the lease before its
+    // fallback line: the message must count as newer from the moment it is
+    // received, not only once the slower steps after it are done.
+    it('bumps the generation lease before fetching the profile and saving the message', async () => {
+        await processor.process(baseEvent);
+
+        expect(lease.bump).toHaveBeenCalledTimes(1);
+        expect(lease.bump.mock.invocationCallOrder[0]).toBeLessThan(
+            messageRepository.upsertByExternalId.mock.invocationCallOrder[0]
+        );
+    });
+
     describe('POC_EDGE_DEBOUNCE_URL flag ON — routes to the edge Worker instead of the in-process debounce', () => {
         const originalEnv = process.env.POC_EDGE_DEBOUNCE_URL;
         const originalSecret = process.env.POC_EDGE_INTERNAL_SECRET;
