@@ -15,6 +15,8 @@ import {
 } from '../constants/chatbot.doc.constant';
 import { ChatbotClientPreviewRequestDto } from '../dtos/request/chatbot.client-preview.request.dto';
 import { ChatbotClientPreviewResponseDto } from '../dtos/response/chatbot.client-preview.response.dto';
+import { ChatbotLinkAccountRequestDto } from '../dtos/request/chatbot.link-account.request.dto';
+import { ChatbotLinkAccountResponseDto } from '../dtos/response/chatbot.link-account.response.dto';
 import { ChatbotCreateRequestDto } from '../dtos/request/chatbot.create.request.dto';
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
 import { ChatbotGetDetailResponseDto } from '../dtos/response/chatbot.detail.response.dto';
@@ -138,5 +140,37 @@ export function ChatbotClientPreviewDoc(): MethodDecorator {
         DocResponse('chatbot.previewReply', {
             dto: ChatbotClientPreviewResponseDto,
         })
+    );
+}
+
+export function ChatbotClientLinkAccountsDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'put a chatbot on connected accounts',
+            description:
+                'Accounts already on a different chatbot are refused and listed under skipped, never moved.',
+        }),
+        DocRequest({
+            params: ChatbotClientDocParamsId,
+            dto: ChatbotLinkAccountRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({ xApiKey: true }),
+        DocResponse('chatbot.linkAccount', {
+            dto: ChatbotLinkAccountResponseDto,
+        })
+    );
+}
+
+export function ChatbotClientUnlinkAccountsDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'take a chatbot off connected accounts' }),
+        DocRequest({
+            params: ChatbotClientDocParamsId,
+            dto: ChatbotLinkAccountRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({ xApiKey: true }),
+        DocResponse('chatbot.unlinkAccount', { dto: ChatbotListResponseDto })
     );
 }

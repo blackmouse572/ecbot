@@ -24,5 +24,7 @@
     "rotateApiChannelSecret": "A new signing secret has been issued. The previous one no longer works.",
     "provisionWebsiteWidget": "Website widget created. Paste the embed snippet on your site to go live.",
     "updateCallbackUrl": "Callback URL updated.",
-    "updateAllowedOrigins": "Allowed origins updated."
+    "updateAllowedOrigins": "Allowed origins updated.",
+    "connectTelegram": "Telegram bot connected.",
+    "connectLink": "Connect link ready. Open it to sign in on the platform."
 }

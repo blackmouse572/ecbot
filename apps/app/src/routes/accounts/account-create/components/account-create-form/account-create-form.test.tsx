@@ -420,3 +420,22 @@ describe("AccountCreateForm: Threads", () => {
     ).toBeNull();
   });
 });
+
+// The MCP channel tools hand out /accounts/create?platform=..., so the dialog
+// can open straight on the connect step for that platform.
+describe("AccountCreateForm: platform from the link", () => {
+  it("opens on the connect step for the platform it was given", () => {
+    render(<AccountCreateForm initialPlatform="FACEBOOK_ACCOUNT" />);
+
+    expect(oauthLogin.platform).toBe("FACEBOOK_ACCOUNT");
+    expect(screen.queryByText("accounts.create.platform.title")).toBeNull();
+  });
+
+  it("starts at the platform list for a platform it cannot connect", () => {
+    oauthLogin.platform = undefined;
+    render(<AccountCreateForm initialPlatform="TIKTOK_SHOP" />);
+
+    expect(oauthLogin.platform).toBeUndefined();
+    expect(screen.getByText("accounts.create.platform.title")).toBeTruthy();
+  });
+});

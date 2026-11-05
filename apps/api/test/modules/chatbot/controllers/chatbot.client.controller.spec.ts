@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { GUARDS_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { ChatbotClientController } from '../../../../src/modules/chatbot/controllers/chatbot.client.controller';
+import { ENUM_ACTIVITY_ACTION } from '../../../../src/modules/activity/enums/activity.enum';
 import { ClientCredentialGuard } from '../../../../src/modules/client-credential/guards/client-credential.guard';
 import { ClientCredentialPolicyGuard } from '../../../../src/modules/client-credential/guards/client-credential.policy.guard';
 import { CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY } from '../../../../src/modules/client-credential/constants/client-credential.constant';
@@ -28,6 +29,8 @@ const mockChatbotService = {
     active: jest.fn(),
     inactive: jest.fn(),
     softDelete: jest.fn(),
+    linkBatchAccounts: jest.fn(),
+    unlinkBatchAccounts: jest.fn(),
 };
 
 const mockModelCatalogService = {
@@ -340,6 +343,105 @@ describe('ChatbotClientController', () => {
                 ).rejects.toBeInstanceOf(NotFoundException);
                 expect(mockChatbotService.update).not.toHaveBeenCalled();
                 expect(mockChatbotService.softDelete).not.toHaveBeenCalled();
+            }
+        );
+    });
+
+    // Putting a chatbot on a connected channel, for the MCP channel tools.
+    describe('linkAccounts / unlinkAccounts', () => {
+        const credential = { createdBy: { id: 'creator-1' } } as any;
+        const chatbot = { id: 'bot-1', name: 'Shop bot' };
+
+        it.each(['linkAccounts', 'unlinkAccounts'] as const)(
+            '%s needs chatbot update, as in the app',
+            handler => {
+                expect(
+                    Reflect.getMetadata(
+                        GUARDS_METADATA,
+                        ChatbotClientController.prototype[handler]
+                    )
+                ).toEqual([ClientCredentialGuard, ClientCredentialPolicyGuard]);
+                expect(
+                    Reflect.getMetadata(
+                        CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
+                        ChatbotClientController.prototype[handler]
+                    )
+                ).toEqual([
+                    {
+                        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                        action: [ENUM_POLICY_ACTION.UPDATE],
+                    },
+                ]);
+            }
+        );
+
+        it('links the accounts as the key creator and logs it', async () => {
+            const result = { linked: ['acc-1'], skipped: [] };
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.linkBatchAccounts.mockResolvedValue(result);
+
+            const response = await controller.linkAccounts(
+                workspace,
+                credential,
+                'bot-1',
+                { accounts: ['acc-1'] }
+            );
+
+            expect(mockChatbotService.findOne).toHaveBeenCalledWith({
+                id: 'bot-1',
+                workspace: 'workspace-1',
+                deletedAt: null,
+            });
+            expect(mockChatbotService.linkBatchAccounts).toHaveBeenCalledWith(
+                chatbot,
+                ['acc-1'],
+                { actionBy: 'creator-1' }
+            );
+            expect(response.data).toBe(result);
+            expect(
+                mockActivityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(credential.createdBy, workspace, {
+                action: ENUM_ACTIVITY_ACTION.LINK_ACCOUNT_CHATBOT,
+                subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                metadata: { id: 'bot-1', name: 'Shop bot' },
+            });
+        });
+
+        it('unlinks the accounts as the key creator', async () => {
+            mockChatbotService.findOne.mockResolvedValue(chatbot);
+            mockChatbotService.unlinkBatchAccounts.mockResolvedValue(chatbot);
+            mockChatbotService.mapList.mockReturnValue([{ id: 'bot-1' }]);
+
+            const response = await controller.unlinkAccounts(
+                workspace,
+                credential,
+                'bot-1',
+                { accounts: ['acc-1'] }
+            );
+
+            expect(mockChatbotService.unlinkBatchAccounts).toHaveBeenCalledWith(
+                chatbot,
+                ['acc-1'],
+                {
+                    actionBy: 'creator-1',
+                }
+            );
+            expect(response.data).toEqual({ id: 'bot-1' });
+        });
+
+        it.each(['linkAccounts', 'unlinkAccounts'] as const)(
+            '%s 404s a chatbot outside the credential workspace',
+            async handler => {
+                mockChatbotService.findOne.mockResolvedValue(null);
+
+                await expect(
+                    controller[handler](workspace, credential, 'other', {
+                        accounts: ['acc-1'],
+                    })
+                ).rejects.toBeInstanceOf(NotFoundException);
+                expect(
+                    mockChatbotService.linkBatchAccounts
+                ).not.toHaveBeenCalled();
             }
         );
     });
