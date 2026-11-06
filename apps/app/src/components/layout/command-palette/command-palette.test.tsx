@@ -103,6 +103,16 @@ describe("CommandPalette", () => {
     expect(screen.getByText("Agents")).toBeTruthy();
   });
 
+  it("lists workspace settings, API keys and account settings for a member with no abilities", async () => {
+    renderPalette(() => false);
+    pressCtrlK();
+
+    await screen.findByRole("dialog");
+    expect(screen.getAllByText("Workspace settings").length).toBeGreaterThan(0);
+    expect(screen.getByText("API keys")).toBeTruthy();
+    expect(screen.getByText("Account settings")).toBeTruthy();
+  });
+
   it("searches agents on the server and opens the one picked", async () => {
     renderPalette();
     pressCtrlK();

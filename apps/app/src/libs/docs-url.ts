@@ -11,3 +11,8 @@ export function docsUrl(path: string, language: string | undefined): string {
   const lang = language?.startsWith("vi") ? "vi" : "en";
   return `${DOCS_BASE_URL}/${lang}/docs/${path}`;
 }
+
+/** The docs home in the reader's language, e.g. `https://ecbot.dev/en/docs`. */
+export function docsHomeUrl(language: string | undefined): string {
+  return docsUrl("", language).replace(/\/$/, "");
+}

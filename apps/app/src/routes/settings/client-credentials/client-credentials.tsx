@@ -1,5 +1,6 @@
 import { IconKey } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
+import { useWorkspace } from "@/hooks/api";
 import {
   useClientCredentialList,
   useCreateClientCredential,
@@ -9,25 +10,23 @@ import {
   type ClientCredentialGetResponseDto,
 } from "@/hooks/api/client-credentials";
 import { useDataTable } from "@/hooks/use-data-table";
+import { readApiError } from "@/libs/api-error";
+import { isWorkspaceSuspendedError } from "@/libs/workspace-suspended";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ArrowPath,
-  CheckCircleSolid,
-  SquareTwoStack,
-  Trash,
-} from "@medusajs/icons";
+import { ArrowPath, InformationCircleSolid, Trash } from "@medusajs/icons";
 import {
   Badge,
   Button,
   Container,
   Drawer,
   Heading,
-  IconButton,
   Input,
   Text,
   toast,
+  Tooltip,
   usePrompt,
 } from "@medusajs/ui";
+import { useAbility } from "@repo/auth";
 import { ActionMenu, Form } from "@repo/ui/common-components";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
@@ -35,20 +34,43 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import zod from "zod";
 
-const CredentialFormSchema = zod.object({
+import { ApiKeyQuickStart } from "./components/api-key-quick-start";
+import { ApiKeyReveal } from "./components/api-key-reveal";
+
+const ApiKeyFormSchema = zod.object({
   name: zod.string().min(1).max(100),
 });
 
-type CredentialFormValues = zod.infer<typeof CredentialFormSchema>;
+type ApiKeyFormValues = zod.infer<typeof ApiKeyFormSchema>;
 
 const PAGE_SIZE = 100;
 
+/** The same checks the API runs on each route (WorkspaceScopedProtected). */
+const useApiKeyAbilities = () => {
+  const ability = useAbility();
+  return {
+    canRead: ability.can("read", "CLIENT_CREDENTIAL"),
+    canCreate: ability.can("create", "CLIENT_CREDENTIAL"),
+    // POST /:id/rotate is guarded by UPDATE.
+    canRotate: ability.can("update", "CLIENT_CREDENTIAL"),
+    canDelete: ability.can("delete", "CLIENT_CREDENTIAL"),
+  };
+};
+
+/** A 403 from the list call, other than a suspended workspace. */
+const isForbidden = (error: unknown) =>
+  readApiError(error).status === 403 && !isWorkspaceSuspendedError(error);
+
 export const ClientCredentials = () => {
   const { t } = useTranslation();
-  const { credentials, isLoading, isError, error } = useClientCredentialList();
+  const { workspace } = useWorkspace();
+  const { canRead, canCreate, canRotate, canDelete } = useApiKeyAbilities();
+  const { credentials, isLoading, isError, error } = useClientCredentialList({
+    enabled: canRead,
+  });
   const [creating, setCreating] = useState(false);
 
-  const columns = useColumns();
+  const columns = useColumns({ canRotate, canDelete });
 
   const { table } = useDataTable({
     data: credentials,
@@ -58,52 +80,95 @@ export const ClientCredentials = () => {
     getRowId: (row) => row.id,
   });
 
-  if (isError) throw error;
+  const canView = canRead && !(isError && isForbidden(error));
+  if (isError && canView) throw error;
+
   return (
     <div className="flex flex-col gap-y-3">
       <Container className="divide-y p-0">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-4">
+          <div className="flex min-w-0 max-w-2xl flex-col gap-y-1">
             <Heading>{t("settings.clientCredentials.title")}</Heading>
+            <Text size="small" className="text-ui-fg-subtle">
+              {t("settings.clientCredentials.subtitle", {
+                workspace: workspace?.name ?? "",
+              })}
+            </Text>
           </div>
-          <Button
-            type="button"
-            variant="primary"
-            size="small"
-            disabled={isLoading}
-            onClick={() => setCreating(true)}
-          >
-            {t("actions.create")}
-          </Button>
+          {canView && canCreate && (
+            <Button
+              type="button"
+              variant="primary"
+              size="small"
+              disabled={isLoading}
+              onClick={() => setCreating(true)}
+            >
+              {t("settings.clientCredentials.actions.create")}
+            </Button>
+          )}
+          {canView && !canCreate && (
+            <Text
+              size="small"
+              className="text-ui-fg-subtle max-w-xs"
+              data-testid="api-keys-no-permission"
+            >
+              {t("settings.clientCredentials.noPermission")}
+            </Text>
+          )}
         </div>
-        <_DataTable
-          table={table}
-          columns={columns}
-          count={credentials.length}
-          pageSize={PAGE_SIZE}
-          isLoading={isLoading}
-          noRecords={{
-            title: t("settings.clientCredentials.emptyTitle"),
-            message: t("settings.clientCredentials.empty"),
-            action: {
-              onClick: () => setCreating(true),
-              label: t("settings.clientCredentials.actions.create"),
-            },
-            icon: <IconKey />,
-          }}
-        />
+        {canView ? (
+          <>
+            <ApiKeyQuickStart />
+            <_DataTable
+              table={table}
+              columns={columns}
+              count={credentials.length}
+              pageSize={PAGE_SIZE}
+              isLoading={isLoading}
+              noRecords={{
+                title: t("settings.clientCredentials.emptyTitle"),
+                message: t("settings.clientCredentials.empty"),
+                action: canCreate
+                  ? {
+                      onClick: () => setCreating(true),
+                      label: t("settings.clientCredentials.actions.create"),
+                    }
+                  : undefined,
+                icon: <IconKey />,
+              }}
+            />
+          </>
+        ) : (
+          <div
+            className="flex flex-col items-center gap-y-2 px-6 py-12 text-center"
+            data-testid="api-keys-no-access"
+          >
+            <IconKey className="text-ui-fg-muted" />
+            <Text size="small" className="text-ui-fg-subtle max-w-sm">
+              {t("settings.clientCredentials.noReadPermission")}
+            </Text>
+          </div>
+        )}
       </Container>
 
-      <CreateCredentialDrawer
-        open={creating}
-        onClose={() => setCreating(false)}
-      />
+      {canCreate && (
+        <CreateApiKeyDrawer
+          open={creating}
+          onClose={() => setCreating(false)}
+        />
+      )}
     </div>
   );
 };
 
 const columnHelper = createColumnHelper<ClientCredentialGetResponseDto>();
-const useColumns = () => {
+const useColumns = ({
+  canRotate,
+  canDelete,
+}: {
+  canRotate: boolean;
+  canDelete: boolean;
+}) => {
   const { t, i18n } = useTranslation();
 
   return useMemo(
@@ -113,9 +178,29 @@ const useColumns = () => {
         cell: ({ getValue }) => <span>{getValue()}</span>,
       }),
       columnHelper.accessor("key", {
-        header: () => t("settings.clientCredentials.fields.key"),
+        // Only the public half of the key: it can't authenticate on its own.
+        header: () => (
+          <span className="inline-flex items-center gap-x-1">
+            {t("settings.clientCredentials.fields.key")}
+            <Tooltip content={t("settings.clientCredentials.keyIdHint")}>
+              <InformationCircleSolid
+                className="text-ui-fg-muted"
+                aria-label={t("settings.clientCredentials.keyIdHint")}
+              />
+            </Tooltip>
+          </span>
+        ),
         cell: ({ getValue }) => (
-          <span className="font-mono text-ui-fg-subtle">{getValue()}</span>
+          <span className="text-ui-fg-muted font-mono">{getValue()}</span>
+        ),
+      }),
+      columnHelper.display({
+        id: "createdBy",
+        header: () => t("settings.clientCredentials.fields.createdBy"),
+        cell: ({ row }) => (
+          <span className="text-ui-fg-subtle">
+            {row.original.createdBy?.name || row.original.createdBy?.email}
+          </span>
         ),
       }),
       columnHelper.display({
@@ -140,25 +225,40 @@ const useColumns = () => {
           </span>
         ),
       }),
-      columnHelper.display({
-        id: "actions",
-        cell: ({ row }) => <CredentialRowActions credential={row.original} />,
-      }),
+      // No column at all when the member may neither rotate nor delete.
+      ...(canRotate || canDelete
+        ? [
+            columnHelper.display({
+              id: "actions",
+              cell: ({ row }) => (
+                <ApiKeyRowActions
+                  apiKey={row.original}
+                  canRotate={canRotate}
+                  canDelete={canDelete}
+                />
+              ),
+            }),
+          ]
+        : []),
     ],
-    [t, i18n.language],
+    [t, i18n.language, canRotate, canDelete],
   );
 };
 
-const CredentialRowActions = ({
-  credential,
+const ApiKeyRowActions = ({
+  apiKey,
+  canRotate,
+  canDelete,
 }: {
-  credential: ClientCredentialGetResponseDto;
+  apiKey: ClientCredentialGetResponseDto;
+  canRotate: boolean;
+  canDelete: boolean;
 }) => {
   const { t } = useTranslation();
   const prompt = usePrompt();
   const deleteMutation = useDeleteClientCredential();
   const rotateMutation = useRotateClientCredential();
-  // Held only until the drawer closes — like creation, the secret is never
+  // Held only until the drawer closes: like creation, the secret is never
   // recoverable, so there is nowhere else it could come from.
   const [rotated, setRotated] =
     useState<ClientCredentialCreateResponseDto | null>(null);
@@ -173,7 +273,7 @@ const CredentialRowActions = ({
     });
     if (!confirmed) return;
     try {
-      setRotated(await rotateMutation.mutateAsync(credential.id));
+      setRotated(await rotateMutation.mutateAsync(apiKey.id));
     } catch (e) {
       console.error(e);
       toast.error(t("settings.clientCredentials.toast.rotateFailed"));
@@ -190,7 +290,7 @@ const CredentialRowActions = ({
     });
     if (!confirmed) return;
     try {
-      await deleteMutation.mutateAsync(credential.id);
+      await deleteMutation.mutateAsync(apiKey.id);
       toast.success(t("settings.clientCredentials.toast.deleted"));
     } catch (e) {
       console.error(e);
@@ -204,45 +304,101 @@ const CredentialRowActions = ({
         groups={[
           {
             actions: [
-              {
-                icon: <ArrowPath />,
-                label: t("settings.clientCredentials.rotate.action"),
-                onClick: handleRotate,
-              },
-              {
-                icon: <Trash />,
-                label: t("actions.delete"),
-                onClick: handleDelete,
-              },
+              ...(canRotate
+                ? [
+                    {
+                      icon: <ArrowPath />,
+                      label: t("settings.clientCredentials.rotate.action"),
+                      onClick: handleRotate,
+                    },
+                  ]
+                : []),
+              ...(canDelete
+                ? [
+                    {
+                      icon: <Trash />,
+                      label: t("actions.delete"),
+                      onClick: handleDelete,
+                    },
+                  ]
+                : []),
             ],
           },
         ]}
       />
-      <Drawer open={!!rotated} onOpenChange={() => setRotated(null)}>
-        <Drawer.Content>
-          <Drawer.Header>
-            <Heading>{t("settings.clientCredentials.rotate.title")}</Heading>
-          </Drawer.Header>
-          <Drawer.Body>
-            {rotated && <RevealCredential credential={rotated} />}
-          </Drawer.Body>
-          <Drawer.Footer>
-            <Button
-              type="button"
-              variant="primary"
-              size="small"
-              onClick={() => setRotated(null)}
-            >
-              {t("actions.close")}
-            </Button>
-          </Drawer.Footer>
-        </Drawer.Content>
-      </Drawer>
+      <RevealDrawer
+        title={t("settings.clientCredentials.rotate.title")}
+        credential={rotated}
+        onClose={() => setRotated(null)}
+      />
     </>
   );
 };
 
-function CreateCredentialDrawer({
+/**
+ * Shows a freshly issued key. It ignores outside clicks and Escape, and its
+ * Done button stays disabled, until the key is copied or marked as saved.
+ */
+export function RevealDrawer({
+  title,
+  credential,
+  onClose,
+}: {
+  title: string;
+  credential: ClientCredentialCreateResponseDto | null;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(false);
+  }, [credential]);
+
+  const close = () => saved && onClose();
+
+  return (
+    <Drawer open={!!credential} onOpenChange={(next) => !next && close()}>
+      <Drawer.Content
+        onInteractOutside={(e) => !saved && e.preventDefault()}
+        onEscapeKeyDown={(e) => !saved && e.preventDefault()}
+      >
+        <Drawer.Header>
+          <Drawer.Title>{title}</Drawer.Title>
+        </Drawer.Header>
+        <Drawer.Body className="overflow-y-auto">
+          {credential && (
+            <ApiKeyReveal
+              credential={credential}
+              saved={saved}
+              onSavedChange={setSaved}
+            />
+          )}
+        </Drawer.Body>
+        <Drawer.Footer>
+          <div className="flex items-center justify-end gap-x-3">
+            {!saved && (
+              <Text size="small" className="text-ui-fg-subtle">
+                {t("settings.clientCredentials.reveal.savedRequired")}
+              </Text>
+            )}
+            <Button
+              type="button"
+              variant="primary"
+              size="small"
+              disabled={!saved}
+              onClick={close}
+            >
+              {t("settings.clientCredentials.reveal.done")}
+            </Button>
+          </div>
+        </Drawer.Footer>
+      </Drawer.Content>
+    </Drawer>
+  );
+}
+
+function CreateApiKeyDrawer({
   open,
   onClose,
 }: {
@@ -254,8 +410,8 @@ function CreateCredentialDrawer({
   const [created, setCreated] =
     useState<ClientCredentialCreateResponseDto | null>(null);
 
-  const form = useForm<CredentialFormValues>({
-    resolver: zodResolver(CredentialFormSchema),
+  const form = useForm<ApiKeyFormValues>({
+    resolver: zodResolver(ApiKeyFormSchema),
     defaultValues: { name: "" },
   });
 
@@ -279,124 +435,82 @@ function CreateCredentialDrawer({
     }
   });
 
+  // Once the key exists, the reveal drawer takes over until it is saved.
+  if (created) {
+    return (
+      <RevealDrawer
+        title={t("settings.clientCredentials.reveal.title")}
+        credential={created}
+        onClose={() => {
+          setCreated(null);
+          onClose();
+        }}
+      />
+    );
+  }
+
   return (
     <Drawer open={open} onOpenChange={(next) => !next && onClose()}>
       <Drawer.Content>
         <Drawer.Header>
           <Drawer.Title>
-            {created
-              ? t("settings.clientCredentials.reveal.title")
-              : t("settings.clientCredentials.actions.create")}
+            {t("settings.clientCredentials.actions.create")}
           </Drawer.Title>
         </Drawer.Header>
         <Drawer.Body className="overflow-y-auto">
-          {created ? (
-            <RevealCredential credential={created} />
-          ) : (
-            <Form {...form}>
-              <form
-                id="client-credential-form"
-                onSubmit={handleSubmit}
-                className="flex flex-col gap-y-4"
-              >
-                <Form.Field
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <Form.Item>
-                      <Form.Label>
-                        {t("settings.clientCredentials.fields.name")}
-                      </Form.Label>
-                      <Form.Control>
-                        <Input {...field} autoComplete="off" />
-                      </Form.Control>
-                      <Form.ErrorMessage />
-                    </Form.Item>
-                  )}
-                />
-              </form>
-            </Form>
-          )}
+          <Form {...form}>
+            <form
+              id="api-key-form"
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-y-4"
+            >
+              <Form.Field
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <Form.Item>
+                    <Form.Label>
+                      {t("settings.clientCredentials.fields.name")}
+                    </Form.Label>
+                    <Form.Control>
+                      <Input
+                        {...field}
+                        autoComplete="off"
+                        placeholder={t(
+                          "settings.clientCredentials.namePlaceholder",
+                        )}
+                      />
+                    </Form.Control>
+                    <Form.Hint>
+                      {t("settings.clientCredentials.nameHelp")}
+                    </Form.Hint>
+                    <Form.ErrorMessage />
+                  </Form.Item>
+                )}
+              />
+            </form>
+          </Form>
         </Drawer.Body>
         <Drawer.Footer>
           <div className="flex items-center justify-end gap-x-2">
-            {created ? (
-              <Button
-                type="button"
-                variant="primary"
-                size="small"
-                onClick={onClose}
-              >
-                {t("actions.close")}
+            <Drawer.Close asChild>
+              <Button type="button" variant="secondary" size="small">
+                {t("actions.cancel")}
               </Button>
-            ) : (
-              <>
-                <Drawer.Close asChild>
-                  <Button type="button" variant="secondary" size="small">
-                    {t("actions.cancel")}
-                  </Button>
-                </Drawer.Close>
-                <Button
-                  type="submit"
-                  form="client-credential-form"
-                  variant="primary"
-                  size="small"
-                  isLoading={createMutation.isPending}
-                  disabled={createMutation.isPending}
-                >
-                  {t("actions.create")}
-                </Button>
-              </>
-            )}
+            </Drawer.Close>
+            <Button
+              type="submit"
+              form="api-key-form"
+              variant="primary"
+              size="small"
+              isLoading={createMutation.isPending}
+              disabled={createMutation.isPending}
+            >
+              {t("actions.create")}
+            </Button>
           </div>
         </Drawer.Footer>
       </Drawer.Content>
     </Drawer>
-  );
-}
-
-function RevealCredential({
-  credential,
-}: {
-  credential: ClientCredentialCreateResponseDto;
-}) {
-  const { t } = useTranslation();
-  // The value a 3rd-party sends as the x-api-key header.
-  const token = `${credential.key}:${credential.secret}`;
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(token);
-      setCopied(true);
-      toast.success(t("settings.clientCredentials.reveal.copied"));
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-y-4">
-      <Badge size="small" color="orange">
-        {t("settings.clientCredentials.reveal.warning")}
-      </Badge>
-      <div className="flex flex-col gap-y-1">
-        <Text size="small" weight="plus">
-          {t("settings.clientCredentials.reveal.tokenLabel")}
-        </Text>
-        <div className="bg-ui-bg-subtle flex items-center gap-x-2 rounded-md border p-2">
-          <code className="flex-1 break-all font-mono text-xs">{token}</code>
-          <IconButton
-            type="button"
-            size="small"
-            variant="transparent"
-            onClick={handleCopy}
-            aria-label={t("settings.clientCredentials.reveal.copy")}
-          >
-            {copied ? <CheckCircleSolid /> : <SquareTwoStack />}
-          </IconButton>
-        </div>
-      </div>
-    </div>
   );
 }

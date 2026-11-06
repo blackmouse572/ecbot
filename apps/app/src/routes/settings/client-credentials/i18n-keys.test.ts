@@ -13,7 +13,14 @@ const lookup = (dict: unknown, key: string) =>
     );
 
 // Every literal t("…") key on the page, so a new action cannot ship raw keys.
-const source = readFileSync(join(__dirname, "client-credentials.tsx"), "utf8");
+const source = [
+  "client-credentials.tsx",
+  "components/api-key-quick-start.tsx",
+  "components/api-key-reveal.tsx",
+  "components/copy-field.tsx",
+]
+  .map((file) => readFileSync(join(__dirname, file), "utf8"))
+  .join("\n");
 const KEYS = [
   ...new Set([...source.matchAll(/\bt\("([\w.]+)"/g)].map((m) => m[1]!)),
 ];

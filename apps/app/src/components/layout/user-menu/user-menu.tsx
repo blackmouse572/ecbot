@@ -3,7 +3,6 @@ import {
   CircleHalfSolid,
   EllipsisHorizontal,
   OpenRectArrowOut,
-  TimelineVertical,
   User as UserIcon,
 } from "@medusajs/icons";
 import { Avatar, DropdownMenu, Text, clx } from "@medusajs/ui";
@@ -11,6 +10,7 @@ import { useTranslation } from "react-i18next";
 
 import { useLogout, useMe, useWorkspace } from "@/hooks/api";
 import { enterpriseUserSection } from "@/routes/enterprise.user-section";
+import { docsHomeUrl } from "@/libs/docs-url";
 import { Skeleton } from "@repo/ui/common-components";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -18,7 +18,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../../../providers/theme-provider";
 
 export const UserMenu = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   // Enterprise sections are workspace-scoped — the subscription badge reads the
   // current workspace — and the settings sidebar has no workspace in its URL, so
@@ -35,7 +35,7 @@ export const UserMenu = () => {
         ))}
       <DropdownMenu open={openMenu} onOpenChange={setOpenMenu}>
         <UserBadge />
-        <DropdownMenu.Content className="min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)]">
+        <DropdownMenu.Content className="z-50 min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)]">
           <UserItem />
           <DropdownMenu.Separator />
           <DropdownMenu.Item asChild>
@@ -46,16 +46,14 @@ export const UserMenu = () => {
           </DropdownMenu.Item>
           <DropdownMenu.Separator />
           <DropdownMenu.Item asChild>
-            <Link to="https://docs.medusajs.com" target="_blank">
+            <a
+              href={docsHomeUrl(i18n.language)}
+              target="_blank"
+              rel="noreferrer"
+            >
               <BookOpen className="text-ui-fg-subtle mr-2" />
               {t("app.menus.user.documentation")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link to="https://medusajs.com/changelog/" target="_blank">
-              <TimelineVertical className="text-ui-fg-subtle mr-2" />
-              {t("app.menus.user.changelog")}
-            </Link>
+            </a>
           </DropdownMenu.Item>
           <DropdownMenu.Separator />
           <ThemeToggle />
