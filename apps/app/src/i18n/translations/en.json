@@ -1503,12 +1503,18 @@
       "chatbot": "Agent",
       "rag": "RAG",
       "knowledgeBase": "Knowledge Base",
-      "customer": "Customer"
+      "customer": "Customer",
+      "skill": "Skills",
+      "tool": "Tools",
+      "customerData": "Customer data",
+      "member": "Team",
+      "clientCredential": "API keys"
     },
     "title": "Roles",
     "description": "Manage roles and permissions for members",
     "fields": {
-      "permissions": "Permissions"
+      "permissions": "Permissions",
+      "subject": "Area"
     },
     "types": {
       "admin": "Admin",
@@ -1553,6 +1559,11 @@
       "nameHint": "A role name cannot be changed after it is created.",
       "success": "Role updated",
       "error": "Could not update the role"
+    },
+    "access": {
+      "none": "No access",
+      "view": "View",
+      "full": "Full access"
     }
   },
   "profile": {

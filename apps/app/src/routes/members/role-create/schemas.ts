@@ -9,7 +9,17 @@ export const createRoleSchema = (t: TFunction<"translation", undefined>) =>
     description: z.string().optional(),
     permissions: z.array(
       z.object({
-        subject: z.enum(["CHATBOT", "RAG", "KNOWLEDGE_BASE", "CUSTOMER"]),
+        subject: z.enum([
+          "CHATBOT",
+          "KNOWLEDGE_BASE",
+          "RAG",
+          "SKILL",
+          "TOOL",
+          "CUSTOMER",
+          "CUSTOMER_DATA",
+          "MEMBER",
+          "CLIENT_CREDENTIAL",
+        ]),
         action: z.array(
           z.enum(["manage", "read", "create", "update", "delete"]),
         ),

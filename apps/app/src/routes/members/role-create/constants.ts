@@ -6,19 +6,23 @@ export const ROLE_FORM_DEFAULTS: RoleFormData = {
   permissions: [],
 };
 
-// Subjects a custom workspace role can hold — mirrors the API's
-// ALLOWED_MEMBER_WORKSPACE_POLICY_SUBJECT.
+// Areas a custom workspace role can be given. Each one is enforced by the
+// API (the subject sits in ALLOWED_WORKSPACE_POLICY_SUBJECT and guards routes).
 export const ROLE_SUBJECTS = [
   { value: "CHATBOT", labelKey: "roles.subjects.chatbot" },
-  { value: "RAG", labelKey: "roles.subjects.rag" },
   { value: "KNOWLEDGE_BASE", labelKey: "roles.subjects.knowledgeBase" },
+  { value: "RAG", labelKey: "roles.subjects.rag" },
+  { value: "SKILL", labelKey: "roles.subjects.skill" },
+  { value: "TOOL", labelKey: "roles.subjects.tool" },
   { value: "CUSTOMER", labelKey: "roles.subjects.customer" },
+  { value: "CUSTOMER_DATA", labelKey: "roles.subjects.customerData" },
+  { value: "MEMBER", labelKey: "roles.subjects.member" },
+  { value: "CLIENT_CREDENTIAL", labelKey: "roles.subjects.clientCredential" },
 ] as const;
 
-export const ROLE_ACTIONS = [
-  { value: "manage", label: "Manage" },
-  { value: "read", label: "Read" },
-  { value: "create", label: "Create" },
-  { value: "update", label: "Update" },
-  { value: "delete", label: "Delete" },
+// What each access level grants on an area.
+export const ROLE_ACCESS_LEVELS = [
+  { value: "none", labelKey: "roles.access.none", action: [] },
+  { value: "view", labelKey: "roles.access.view", action: ["read"] },
+  { value: "full", labelKey: "roles.access.full", action: ["manage"] },
 ] as const;
