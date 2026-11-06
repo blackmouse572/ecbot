@@ -30,7 +30,11 @@ export const CLIENT_CONNECT_FAILURE_REASONS = [
 export type ClientConnectFailureReason =
   (typeof CLIENT_CONNECT_FAILURE_REASONS)[number];
 
-export type AnalyticsEvents = {
+/**
+ * An interface, not a type, so an enterprise overlay can add its own events
+ * with declaration merging.
+ */
+export interface AnalyticsEvents {
   onboarding_step_viewed: { step: OnboardingStep };
   playground_message_sent: { turn_index: number };
   channel_connect_started: { channel: string };
@@ -40,7 +44,7 @@ export type AnalyticsEvents = {
     reason: ClientConnectFailureReason;
   };
   knowledge_failed_seen: { kind?: string };
-};
+}
 
 export type AnalyticsEventName = keyof AnalyticsEvents;
 export type AnalyticsProperties = Record<string, string | number | boolean>;
