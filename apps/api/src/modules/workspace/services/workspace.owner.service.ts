@@ -225,6 +225,45 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                 invitedEmail
             );
 
+        if (existingInvitation && existingInvitation.expiresAt <= new Date()) {
+            // Expired but still PENDING (nothing marks it EXPIRED): re-sign
+            // the same invitation so the invitee gets a link that works.
+            const token = this.jwtService.sign(
+                {
+                    ownerId,
+                    workspaceId: workspace.id,
+                    invitedEmail: existingInvitation.inviteeEmail,
+                    roleId: existingInvitation.role?.id,
+                } satisfies InvitationLinkPayload,
+                {
+                    privateKey: this.invitationTokenSecret,
+                    expiresIn: this.invitationTokenExpired,
+                    algorithm: 'HS256',
+                }
+            );
+
+            const expiresAt = new Date(
+                Date.now() + this.parseExpiration(this.invitationTokenExpired)
+            );
+
+            const invitationLink = buildInvitationLink(url, token);
+
+            await this.invitationService.regenerateToken(
+                existingInvitation.id,
+                token,
+                expiresAt,
+                invitationLink
+            );
+
+            return {
+                invitationLink,
+                token,
+                expiresAt,
+                workspaceId: workspace.id,
+                invitationId: existingInvitation.id,
+            };
+        }
+
         if (existingInvitation) {
             // Rebuild the link from the configured url + the stored token —
             // never trust the persisted invitationLink column. Pre-fix rows

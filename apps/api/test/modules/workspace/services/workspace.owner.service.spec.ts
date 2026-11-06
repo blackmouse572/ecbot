@@ -53,6 +53,7 @@ describe('WorkspaceOwnerService', () => {
     const mockInvitationService = {
         checkExistingInvitation: jest.fn(),
         create: jest.fn().mockResolvedValue({ id: 'invitation-new' }),
+        regenerateToken: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -174,7 +175,7 @@ describe('WorkspaceOwnerService', () => {
                 id: 'invitation-existing',
                 token: 'existing-token',
                 invitationLink: `${url}/join?tokens=existing-token`,
-                expiresAt: new Date('2026-08-30T00:00:00Z'),
+                expiresAt: new Date('2099-08-30T00:00:00Z'),
             });
 
             const result = await service.generateInvitationLinkWithDetails(
@@ -192,6 +193,43 @@ describe('WorkspaceOwnerService', () => {
             expect(mockInvitationService.create).not.toHaveBeenCalled();
         });
 
+        it('should send a fresh link when the existing PENDING invitation has expired', async () => {
+            mockInvitationService.checkExistingInvitation.mockResolvedValue({
+                id: 'invitation-expired',
+                token: 'expired-token',
+                role: { id: 'role-admin' },
+                expiresAt: new Date(Date.now() - 60_000),
+            });
+            mockJwtService.sign.mockReturnValue('fresh-token');
+
+            const result = await service.generateInvitationLinkWithDetails(
+                ownerId,
+                { invitedEmail: 'invitee@mail.com' },
+                url,
+                workspace as any
+            );
+
+            expect(result.token).toBe('fresh-token');
+            expect(result.invitationLink).toBe(
+                `${url}/join?tokens=fresh-token`
+            );
+            expect(result.invitationId).toBe('invitation-expired');
+            expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
+            expect(mockJwtService.sign).toHaveBeenCalledWith(
+                expect.objectContaining({ roleId: 'role-admin' }),
+                expect.anything()
+            );
+            expect(mockInvitationService.regenerateToken).toHaveBeenCalledWith(
+                'invitation-expired',
+                'fresh-token',
+                result.expiresAt,
+                result.invitationLink
+            );
+            // Still the same invitation: no new seat, no new row.
+            expect(mockSeatQuota.assertCanInvite).not.toHaveBeenCalled();
+            expect(mockInvitationService.create).not.toHaveBeenCalled();
+        });
+
         it('should rebuild the idempotent link from the configured url + stored token, never the stored invitationLink column', async () => {
             // A pre-fix row (or any row with a bad/foreign stored link) must
             // not be trusted and re-emailed as-is.
@@ -199,7 +237,7 @@ describe('WorkspaceOwnerService', () => {
                 token: 'existing-token',
                 invitationLink:
                     'https://attacker.example.com/join?tokens=existing-token',
-                expiresAt: new Date('2026-08-30T00:00:00Z'),
+                expiresAt: new Date('2099-08-30T00:00:00Z'),
             });
 
             const result = await service.generateInvitationLinkWithDetails(
