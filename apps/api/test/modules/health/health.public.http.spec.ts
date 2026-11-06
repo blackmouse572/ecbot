@@ -21,6 +21,10 @@ import { HealthRedisIndicator } from '@app/modules/health/indicators/health.redi
  * checker or load balancer sees is what we assert: the status line and the
  * Cache-Control header, not the controller's return value.
  */
+// test/modules/account/setup.ts stubs the response interceptor for every
+// spec; this one asserts the real envelope, so it puts it back.
+jest.unmock('@app/common/response/interceptors/response.interceptor');
+
 describe('Public health routes over HTTP', () => {
     const state = { database: true, redis: true };
     const build: Record<string, string | undefined> = {};
@@ -131,6 +135,10 @@ describe('Public health routes over HTTP', () => {
 
         expect(res.status).toBe(200);
         expect(res.headers['cache-control']).toContain('no-store');
+        expect(res.headers['x-custom-lang']).toBe('en');
+        expect(res.body.statusCode).toBe(200);
+        expect(res.body.message).toBe('health.ready');
+        expect(res.body._metadata.path).toBe('/api/public/health/ready');
         expect(res.body.data.status).toBe('ok');
     });
 
@@ -175,6 +183,7 @@ describe('Public health routes over HTTP', () => {
 
         expect(res.status).toBe(200);
         expect(res.headers['cache-control']).toBe('no-store');
+        expect(res.body.message).toBe('health.buildInfo');
         expect(res.body.data).toEqual({
             commit: 'abc1234def5678abc1234def5678abc1234def56',
             branch: 'main',

@@ -87,7 +87,8 @@ export function buildInfo(): Plugin {
       this.emitFile({
         type: "asset",
         fileName: "build-info.json",
-        source: `${JSON.stringify(readBuildInfo(), null, 2)}\n`,
+        // Resolve git from this file's folder, not wherever vite was run.
+        source: `${JSON.stringify(readBuildInfo({ cwd: import.meta.dirname }), null, 2)}\n`,
       });
     },
   };
