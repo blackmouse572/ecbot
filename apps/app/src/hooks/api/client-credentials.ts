@@ -19,6 +19,8 @@ export type ClientCredentialGetResponseDto = {
   endDate?: string | null;
   createdAt: string;
   updatedAt?: string;
+  // The list populates the creator (DatabaseRepository default populate).
+  createdBy?: { id: string; name: string; email: string } | null;
 };
 
 export type ClientCredentialCreateRequestDto = {
@@ -44,7 +46,8 @@ export const useClientCredentialList = () => {
   const { slug, isLoading: isLoadingWorkspace } = useResolvedWorkspaceSlug();
 
   const { data, isLoading, ...rest } = useQuery({
-    queryKey: clientCredentialQueryKeys.list(),
+    // Keyed by workspace: switching workspace on this page must refetch.
+    queryKey: clientCredentialQueryKeys.list({ workspace: slug }),
     enabled: !!slug,
     queryFn: () =>
       clientCredentialWorkspaceControllerListV1({

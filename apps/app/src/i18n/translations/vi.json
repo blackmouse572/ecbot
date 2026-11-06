@@ -125,7 +125,7 @@
         "label": "Tìm kiếm"
       },
       "main": {
-        "storeSettings": "Cài đặt",
+        "storeSettings": "Cài đặt workspace",
         "home": "Trang chủ"
       },
       "accounts": {
@@ -153,8 +153,7 @@
     },
     "menus": {
       "user": {
-        "profileSettings": "Cài đặt hồ sơ",
-        "workspaceSettings": "Cài đặt không gian làm việc",
+        "profileSettings": "Cài đặt tài khoản",
         "documentation": "Tài liệu",
         "changelog": "Nhật ký thay đổi",
         "theme": {
@@ -1805,6 +1804,14 @@
       "title": "Workspace này đã bị tạm khoá",
       "description": "Quản trị viên đã tạm khoá workspace này, nên agent ngừng trả lời và bạn chưa thể mở workspace. Dữ liệu vẫn được giữ nguyên. Liên hệ bộ phận hỗ trợ để mở lại.",
       "goTo": "Chuyển đến {{name}}"
+    },
+    "switcher": {
+      "current": "Workspace hiện tại",
+      "roles": {
+        "owner": "Chủ sở hữu",
+        "admin": "Admin",
+        "member": "Thành viên"
+      }
     }
   },
   "subscription": {
@@ -2572,38 +2579,45 @@
     },
     "clientCredentials": {
       "title": "API key",
-      "empty": "Tạo credential để hệ thống của bạn có thể gọi ecbot API.",
+      "empty": "Tạo key để kết nối Ecbot với hệ thống của bạn hoặc một AI client qua MCP.",
       "actions": {
-        "create": "Tạo credential"
+        "create": "Tạo API key"
       },
       "fields": {
         "name": "Tên",
         "key": "Key",
         "status": "Trạng thái",
-        "createdAt": "Ngày tạo"
+        "createdAt": "Ngày tạo",
+        "createdBy": "Người tạo"
       },
       "status": {
         "active": "Hoạt động",
         "inactive": "Ngừng"
       },
       "toast": {
-        "created": "Đã tạo credential.",
-        "createFailed": "Tạo credential thất bại.",
-        "deleted": "Đã xoá credential.",
-        "deleteFailed": "Xoá credential thất bại.",
+        "created": "Đã tạo API key.",
+        "createFailed": "Không tạo được API key.",
+        "deleted": "Đã xoá API key.",
+        "deleteFailed": "Không xoá được API key.",
         "rotateFailed": "Đổi secret thất bại."
       },
       "reveal": {
-        "title": "Đã tạo credential",
-        "warning": "Sao chép secret ngay, nó sẽ không hiển thị lại.",
+        "title": "Đã tạo API key",
+        "warning": "Hãy sao chép ngay. Bạn sẽ không xem lại được key này.",
         "tokenLabel": "x-api-key",
         "copy": "Sao chép",
-        "copied": "Đã sao chép."
+        "copied": "Đã sao chép.",
+        "keyLabel": "API key",
+        "config": "Cấu hình MCP",
+        "configHint": "Dán đoạn này vào cấu hình của MCP client, ví dụ tệp mcp.json của Cursor.",
+        "saved": "Tôi đã lưu key này",
+        "done": "Xong",
+        "savedRequired": "Sao chép key hoặc đánh dấu ô ở trên để đóng."
       },
       "delete": {
         "confirm": {
-          "title": "Xoá credential?",
-          "body": "Thao tác này sẽ thu hồi vĩnh viễn credential. Mọi client đang dùng key này sẽ không thể xác thực.",
+          "title": "Xoá API key này?",
+          "body": "Mọi nơi đang dùng key này sẽ ngừng hoạt động ngay. Không thể hoàn tác.",
           "confirm": "Xoá",
           "cancel": "Huỷ"
         }
@@ -2617,7 +2631,25 @@
           "confirm": "Đổi secret"
         }
       },
-      "emptyTitle": "Chưa có client credential nào"
+      "emptyTitle": "Chưa có API key nào",
+      "subtitle": "Kết nối {{workspace}} với hệ thống của bạn hoặc một AI client (MCP). Key chỉ dùng được trong workspace này và có quyền giống người đã tạo key.",
+      "namePlaceholder": "Ví dụ: Claude Desktop, Zapier",
+      "nameHelp": "Giúp bạn nhận ra key này đang được dùng ở đâu.",
+      "noPermission": "Bạn không thể tạo API key trong workspace này. Hãy nhờ chủ workspace hoặc admin.",
+      "quickStart": {
+        "title": "Bắt đầu nhanh",
+        "serverUrl": "Địa chỉ MCP server",
+        "header": "Header",
+        "headerValue": "x-api-key: <key của bạn>",
+        "guide": "Hướng dẫn cài đặt MCP"
+      }
+    },
+    "backTo": "Quay lại {{name}}",
+    "general": "Chung",
+    "developers": "Nhà phát triển",
+    "workspaceHint": {
+      "text": "Bạn tìm thành viên hoặc API key?",
+      "link": "Cài đặt workspace"
     }
   },
   "tools": {

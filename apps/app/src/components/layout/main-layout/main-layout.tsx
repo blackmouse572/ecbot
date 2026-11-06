@@ -1,21 +1,19 @@
 import {
-  ChevronUpDown,
   CogSixTooth,
   CursorArrowRays,
   House,
   MagnifyingGlass,
   OpenRectArrowOut,
-  PlusMini,
 } from "@medusajs/icons";
 import { GuideMoments } from "@/components/guide";
 import { GettingStartedNav } from "@/routes/dashboard/components/getting-started-nav/getting-started-nav";
 import { RecentAgentsSection } from "./recent-agents-section";
 import { ScrollEdgeBlur } from "./scroll-edge-blur";
-import { Avatar, Divider, DropdownMenu, Text, clx } from "@medusajs/ui";
+import { Divider, DropdownMenu, Text, clx } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
-import { LogoBoxSpinner, Skeleton } from "@repo/ui/common-components";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { LogoBoxSpinner } from "@repo/ui/common-components";
+import { Navigate, useLocation } from "react-router-dom";
 import { NavHintPopover, NavItem, Shell, type INavItem } from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
 import {
@@ -31,10 +29,9 @@ import { useLogout } from "@/hooks/api";
 import { useEnsureWorkspace, useWorkspaceList } from "@/hooks/api/workspace";
 import { useScrollEdges } from "@/hooks/use-scroll-edges";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { useWorkspaceAbilities } from "@/modules/auth";
 import { ROUTES } from "@/routes";
 import { WorkspaceSuspended } from "./workspace-suspended";
-import { workspaceSettingsPath } from "@/libs/workspace-settings-path";
+import { WorkspaceSwitcher } from "../workspace-switcher";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
 
 // The type of the nested nav entries used in the workspace nav group below
@@ -100,7 +97,10 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
     >
       <div className="flex flex-1 flex-col">
         <div className="bg-ui-bg-subtle sticky top-0 z-10">
-          <Header workspace={currentWorkspace} workspaces={workspaces} />
+          <WorkspaceSwitcher
+            workspace={currentWorkspace}
+            workspaces={workspaces}
+          />
           <div className="px-3">
             <Divider variant="dashed" />
           </div>
@@ -117,7 +117,6 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
         <div className="bg-ui-bg-subtle sticky bottom-0 z-10">
           <ScrollEdgeBlur side="bottom" visible={edges.bottom} />
           <GettingStartedNav />
-          <WorkspaceSettingsItem />
           <UserSection />
         </div>
       </div>
@@ -151,138 +150,6 @@ const Logout = () => {
         <span>{t("app.menus.actions.logout")}</span>
       </div>
     </DropdownMenu.Item>
-  );
-};
-
-interface HeaderProps {
-  workspace: WorkSpaceGetResponseDto;
-  workspaces: WorkSpaceGetResponseDto[];
-}
-
-export const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { isWorkspaceOwner } = useWorkspaceAbilities();
-
-  const handleWorkspaceSelect = (slug: string) => {
-    if (workspace.slug === slug) return;
-
-    // Use the current path and replace the workspace slug
-    const currentPath = location.pathname;
-    const basePath = currentPath.startsWith(`/${workspace.slug}`)
-      ? currentPath.substring(workspace.slug.length + 1) // +1 for the slash
-      : "";
-
-    // Navigate to the new workspace with the same relative path
-    navigate(`/${slug}${basePath ? `${basePath}` : ""}`);
-  };
-  const workspaces = _workspaces.filter((ws) => ws.id !== workspace.id);
-
-  return (
-    <div className="w-full p-3">
-      <DropdownMenu>
-        <DropdownMenu.Trigger
-          className={clx(
-            "bg-ui-bg-subtle transition-fg grid w-full grid-cols-[24px_1fr_15px] items-center gap-x-3 rounded-md p-0.5 pr-2 outline-none",
-            "hover:bg-ui-bg-subtle-hover",
-            "data-[state=open]:bg-ui-bg-subtle-hover",
-            "focus-visible:shadow-borders-focus",
-          )}
-        >
-          <Avatar
-            variant="squared"
-            size="xsmall"
-            fallback={workspace.name.substring(0, 2).toUpperCase()}
-            src={workspace.avatar}
-          />
-          <div className="block overflow-hidden text-left">
-            {workspace.name ? (
-              <Text
-                size="small"
-                weight="plus"
-                leading="compact"
-                className="truncate"
-              >
-                {workspace.name}
-              </Text>
-            ) : (
-              <Skeleton className="h-[9px] w-[120px]" />
-            )}
-          </div>
-          <ChevronUpDown className="text-ui-fg-muted" />
-        </DropdownMenu.Trigger>
-
-        <DropdownMenu.Content className="z-50 w-[var(--radix-dropdown-menu-trigger-width)] min-w-0">
-          {/* The current workspace, shown as a label: Settings below is its only link. */}
-          <div className="flex items-center gap-x-3 px-2 py-1">
-            <Avatar
-              variant="squared"
-              size="small"
-              fallback={workspace.name.substring(0, 2).toUpperCase()}
-              src={workspace.avatar}
-            />
-            <div className="flex flex-col overflow-hidden">
-              <Text
-                size="small"
-                weight="plus"
-                leading="compact"
-                className="truncate"
-              >
-                {workspace.name}
-              </Text>
-            </div>
-          </div>
-          {isWorkspaceOwner && (
-            <DropdownMenu.Item className="gap-x-2" asChild>
-              <Link
-                to={workspaceSettingsPath(workspace.slug)}
-                state={{ from: location.pathname }}
-              >
-                <CogSixTooth className="text-ui-fg-subtle" />
-                {t("app.nav.main.storeSettings")}
-              </Link>
-            </DropdownMenu.Item>
-          )}
-
-          {/* Workspaces List */}
-          {workspaces.length > 0 && (
-            <>
-              <DropdownMenu.Separator />
-              <div className="max-h-56 overflow-y-auto">
-                {workspaces.map((ws) => (
-                  <DropdownMenu.Item
-                    key={ws.id}
-                    className={clx(
-                      "gap-x-2",
-                      ws.id === workspace.id && "bg-ui-bg-base-hover",
-                    )}
-                    onClick={() => handleWorkspaceSelect(ws.slug)}
-                  >
-                    <Avatar
-                      variant="squared"
-                      size="xsmall"
-                      fallback={ws.name.substring(0, 2).toUpperCase()}
-                      src={ws.avatar}
-                    />
-                    {ws.name}
-                  </DropdownMenu.Item>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Create workspace */}
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item className="gap-x-2" asChild>
-            <Link to={`/${ROUTES.Onboard}/${ROUTES.OnboardCreate}`}>
-              <PlusMini className="text-ui-fg-subtle" />
-              {t("onboard.select.create.label")}
-            </Link>
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu>
-    </div>
   );
 };
 
@@ -346,7 +213,7 @@ const CoreRouteSection = () => {
   );
 };
 
-const UtilitySection = () => {
+export const UtilitySection = () => {
   const location = useLocation();
   const { workspaceSlug } = useWorkspaceParams();
   const { t } = useTranslation();
@@ -355,34 +222,19 @@ const UtilitySection = () => {
     <div className="flex flex-col gap-y-0.5 py-3">
       <NavItem
         label={t("app.nav.activity.header")}
-        to={`/${workspaceSlug}/${ROUTES.Activities}`} // Direct link to workspace settings"
+        to={`/${workspaceSlug}/${ROUTES.Activities}`}
         from={location.pathname}
         type="extension"
         icon={<CursorArrowRays />}
       />
-    </div>
-  );
-};
-
-/** Pinned above the user menu so it stays in view on every page. */
-export const WorkspaceSettingsItem = () => {
-  const location = useLocation();
-  const { workspaceSlug } = useWorkspaceParams();
-  const { isWorkspaceOwner } = useWorkspaceAbilities();
-  const { t } = useTranslation();
-
-  if (!isWorkspaceOwner) return null;
-
-  return (
-    <nav className="flex flex-col pb-2">
       <NavItem
         label={t("app.nav.main.storeSettings")}
-        to={workspaceSettingsPath(workspaceSlug)}
+        to={`/${workspaceSlug}/${ROUTES.Settings}`}
         from={location.pathname}
-        type="core"
+        type="extension"
         icon={<CogSixTooth />}
       />
-    </nav>
+    </div>
   );
 };
 

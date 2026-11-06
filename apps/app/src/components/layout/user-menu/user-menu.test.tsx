@@ -7,11 +7,6 @@ import { describe, expect, it, vi } from "vitest";
 
 const current = vi.hoisted(() => ({
   workspace: undefined as { slug: string } | undefined,
-  isWorkspaceOwner: true,
-}));
-
-vi.mock("@/modules/auth", () => ({
-  useWorkspaceAbilities: () => ({ isWorkspaceOwner: current.isWorkspaceOwner }),
 }));
 
 // Mirrors the enterprise sidebar sections (the subscription badge): they read
@@ -68,7 +63,7 @@ describe("UserMenu enterprise sections", () => {
   });
 });
 
-describe("UserMenu workspace settings link", () => {
+describe("UserMenu items", () => {
   const openMenu = async () => {
     const user = userEvent.setup();
     render(
@@ -81,34 +76,18 @@ describe("UserMenu workspace settings link", () => {
     await user.click(screen.getByRole("button", { name: /Ada/ }));
   };
 
-  it("links owners to the workspace settings", async () => {
+  it("links to account settings and the Ecbot docs, with no changelog", async () => {
     current.workspace = { slug: "kunmart" };
-    current.isWorkspaceOwner = true;
 
     await openMenu();
 
     expect(
-      screen.getByRole("menuitem", { name: "Workspace settings" }),
-    ).toHaveAttribute("href", "/kunmart/settings/workspace");
-  });
-
-  it("hides the link from members", async () => {
-    current.workspace = { slug: "kunmart" };
-    current.isWorkspaceOwner = false;
-
-    await openMenu();
-
+      screen.getByRole("menuitem", { name: "Account settings" }),
+    ).toHaveAttribute("href", "/settings/profile");
     expect(
-      screen.queryByRole("menuitem", { name: "Workspace settings" }),
-    ).toBeNull();
-  });
-
-  it("hides the link where the URL carries no workspace", async () => {
-    current.workspace = undefined;
-    current.isWorkspaceOwner = true;
-
-    await openMenu();
-
+      screen.getByRole("menuitem", { name: "Documentation" }),
+    ).toHaveAttribute("href", "https://ecbot.dev/en/docs");
+    expect(screen.queryByRole("menuitem", { name: "What's New" })).toBeNull();
     expect(
       screen.queryByRole("menuitem", { name: "Workspace settings" }),
     ).toBeNull();

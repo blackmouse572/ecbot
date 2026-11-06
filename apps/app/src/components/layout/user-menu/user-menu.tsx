@@ -1,19 +1,16 @@
 import {
   BookOpen,
   CircleHalfSolid,
-  CogSixTooth,
   EllipsisHorizontal,
   OpenRectArrowOut,
-  TimelineVertical,
   User as UserIcon,
 } from "@medusajs/icons";
 import { Avatar, DropdownMenu, Text, clx } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
 import { useLogout, useMe, useWorkspace } from "@/hooks/api";
-import { useWorkspaceAbilities } from "@/modules/auth";
 import { enterpriseUserSection } from "@/routes/enterprise.user-section";
-import { workspaceSettingsPath } from "@/libs/workspace-settings-path";
+import { docsHomeUrl } from "@/libs/docs-url";
 import { Skeleton } from "@repo/ui/common-components";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -21,13 +18,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../../../providers/theme-provider";
 
 export const UserMenu = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   // Enterprise sections are workspace-scoped — the subscription badge reads the
   // current workspace — and the settings sidebar has no workspace in its URL, so
   // mount them only once a workspace is resolved.
   const { workspace } = useWorkspace();
-  const { isWorkspaceOwner } = useWorkspaceAbilities();
 
   const [openMenu, setOpenMenu] = useState(false);
 
@@ -48,29 +44,16 @@ export const UserMenu = () => {
               {t("app.menus.user.profileSettings")}
             </Link>
           </DropdownMenu.Item>
-          {workspace && isWorkspaceOwner && (
-            <DropdownMenu.Item asChild>
-              <Link
-                to={workspaceSettingsPath(workspace.slug)}
-                state={{ from: location.pathname }}
-              >
-                <CogSixTooth className="text-ui-fg-subtle mr-2 shrink-0" />
-                {t("app.menus.user.workspaceSettings")}
-              </Link>
-            </DropdownMenu.Item>
-          )}
           <DropdownMenu.Separator />
           <DropdownMenu.Item asChild>
-            <Link to="https://docs.medusajs.com" target="_blank">
+            <a
+              href={docsHomeUrl(i18n.language)}
+              target="_blank"
+              rel="noreferrer"
+            >
               <BookOpen className="text-ui-fg-subtle mr-2" />
               {t("app.menus.user.documentation")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link to="https://medusajs.com/changelog/" target="_blank">
-              <TimelineVertical className="text-ui-fg-subtle mr-2" />
-              {t("app.menus.user.changelog")}
-            </Link>
+            </a>
           </DropdownMenu.Item>
           <DropdownMenu.Separator />
           <ThemeToggle />
