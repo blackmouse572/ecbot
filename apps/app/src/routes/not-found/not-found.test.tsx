@@ -27,7 +27,9 @@ describe("NotFound", () => {
       </I18nextProvider>,
     );
 
-    expect(screen.getByText("Page Not Found")).toBeTruthy();
+    screen.getByText("Page Not Found");
+    screen.getByText("The page you are looking for does not exist.");
     expect(screen.queryByText("Bad Request")).toBeNull();
+    expect(screen.queryByText(/malformed syntax/i)).toBeNull();
   });
 });
