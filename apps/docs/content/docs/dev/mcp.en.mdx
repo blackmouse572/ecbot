@@ -72,7 +72,7 @@ Keep a file that holds your key out of shared folders and code repositories.
 
 | Area | Read | Change |
 | --- | --- | --- |
-| Agents | List agents, read one, list the AI models | Create, edit, activate or deactivate, delete |
+| Agents | List agents, read one, list the AI models, chat with an agent to test it | Create, edit, activate or deactivate, delete |
 | Conversations | List chats, read one and its messages | Reply, turn the agent on or off in a chat, mark **Open** or **Resolved** |
 | Knowledge base | List knowledge bases and their items, read an item | Create a knowledge base, add text or web page items, edit, process or delete an item |
 | Customers | List customers and tags, read a customer and their tags | Edit a customer, create, edit or delete tags, tag or untag a customer |
@@ -85,6 +85,10 @@ Uploading files, installing marketplace apps and permanently erasing a customer'
 ## Ask about your numbers
 
 Ask your assistant things like "How did this week compare with last week?" or "Which agent hands over to staff the most?". It reads the same numbers as the dashboard, and only the tabs your role can see. Each key can ask for analytics 20 times a minute, so the assistant reuses what it already fetched.
+
+## Test an agent
+
+Ask your assistant to chat with an agent the way a customer would, for example "ask my shop agent about our return policy and check the answer". It works like the test chat on the agent's page: nothing reaches a channel or Conversations, but the agent's tools run for real, so a tool that creates an order creates one. The assistant can keep one chat going over several messages. Test messages use tokens like any other reply, and each key can send 20 of them a minute.
 
 ## Build skills with your assistant
 

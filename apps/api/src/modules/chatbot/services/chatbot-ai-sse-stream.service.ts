@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
-import { pipeline } from 'stream';
+import { pipeline, Writable } from 'stream';
 import { AssistantTranscriptCollector } from '../utils/assistant-transcript.collector';
 import { isAgentInternalFrame } from '../utils/customer-stream.filter';
 import { SafeErrorStream } from '../utils/safe-error-stream.transform';
@@ -49,8 +49,7 @@ export class ChatbotAiSseStreamService {
     private readonly logger = new Logger(ChatbotAiSseStreamService.name);
 
     async pipe(params: ISseStreamParams): Promise<void> {
-        const { res, upstream, abort, logContext, onFinalize, onUsage } =
-            params;
+        const { res, upstream, abort, logContext } = params;
         const audience = params.audience ?? 'owner';
 
         res.setHeader('Content-Type', 'text/event-stream');
@@ -74,27 +73,7 @@ export class ChatbotAiSseStreamService {
         const finalize = async (): Promise<void> => {
             if (finalized) return;
             finalized = true;
-
-            // Metering first and in its own try: a broken ledger must not cost
-            // us the reply, and a failed reply must not cost us the meter.
-            if (onUsage && collector.usage) {
-                try {
-                    await onUsage(collector.usage);
-                } catch (error) {
-                    this.logger.error(
-                        `Failed to record token usage for ${logContext}: ${error}`
-                    );
-                }
-            }
-
-            if (!collector.shouldPersist()) return;
-            try {
-                await onFinalize(collector.assistantText(), collector.media());
-            } catch (error) {
-                this.logger.error(
-                    `Failed to persist turn for ${logContext}: ${error}`
-                );
-            }
+            await this.finalize(collector, params);
         };
 
         // Aborting on client disconnect is what stops apps/ai generating into
@@ -116,5 +95,72 @@ export class ChatbotAiSseStreamService {
         // Runs on success and on failure alike. `_flush` is not a safe place
         // for this: it never runs when the client disconnects mid-stream.
         await finalize();
+    }
+
+    /**
+     * Reads an apps/ai reply stream to the end and returns it whole, for a
+     * caller that wants one JSON body instead of SSE (the /client preview).
+     * Finalizes exactly as `pipe` does.
+     */
+    async collect(
+        params: Omit<ISseStreamParams, 'res' | 'audience'>
+    ): Promise<AssistantTranscriptCollector> {
+        const collector = new AssistantTranscriptCollector();
+        const sanitizer = new SafeErrorStream({
+            logRawError: (rawErrorText: string) =>
+                this.logger.error(
+                    `Chat stream error for ${params.logContext}: ${rawErrorText}`
+                ),
+            onFrame: frame => collector.onFrame(frame),
+        });
+
+        await new Promise<void>(resolve => {
+            pipeline(
+                params.upstream,
+                sanitizer,
+                new Writable({
+                    write: (_chunk, _encoding, done) => done(),
+                }),
+                error => {
+                    // A dropped apps/ai socket sends no error frame, and one
+                    // JSON body can't say "truncated": count it as failed.
+                    if (error) collector.errored = true;
+                    resolve();
+                }
+            );
+        });
+
+        await this.finalize(collector, params);
+        return collector;
+    }
+
+    private async finalize(
+        collector: AssistantTranscriptCollector,
+        {
+            logContext,
+            onFinalize,
+            onUsage,
+        }: Pick<ISseStreamParams, 'logContext' | 'onFinalize' | 'onUsage'>
+    ): Promise<void> {
+        // Metering first and in its own try: a broken ledger must not cost
+        // us the reply, and a failed reply must not cost us the meter.
+        if (onUsage && collector.usage) {
+            try {
+                await onUsage(collector.usage);
+            } catch (error) {
+                this.logger.error(
+                    `Failed to record token usage for ${logContext}: ${error}`
+                );
+            }
+        }
+
+        if (!collector.shouldPersist()) return;
+        try {
+            await onFinalize(collector.assistantText(), collector.media());
+        } catch (error) {
+            this.logger.error(
+                `Failed to persist turn for ${logContext}: ${error}`
+            );
+        }
     }
 }

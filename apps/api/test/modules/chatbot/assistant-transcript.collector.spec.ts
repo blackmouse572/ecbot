@@ -108,6 +108,28 @@ describe('AssistantTranscriptCollector', () => {
 
         expect(c.assistantText()).toBe('real');
     });
+
+    it('lists the tools the reply called, in order, with their input', () => {
+        const c = new AssistantTranscriptCollector();
+        c.onFrame({
+            type: 'tool-input-available',
+            toolCallId: 'a',
+            toolName: 'search_knowledge',
+            input: { query: 'ship COD' },
+        });
+        c.onFrame({ type: 'tool-output-available', toolCallId: 'a' });
+        c.onFrame({
+            type: 'tool-input-available',
+            toolCallId: 'b',
+            toolName: 'create_order',
+            input: { sku: 'A1' },
+        });
+
+        expect(c.toolCalls()).toEqual([
+            { name: 'search_knowledge', input: { query: 'ship COD' } },
+            { name: 'create_order', input: { sku: 'A1' } },
+        ]);
+    });
 });
 
 describe('AssistantTranscriptCollector — token usage', () => {

@@ -887,21 +887,6 @@ export type HealthDatabaseResponseDto = {
     };
 };
 
-export type HealthBuildInfoResponseDto = {
-    /**
-     * Git commit the running image was built from
-     */
-    commit: string;
-    /**
-     * Git branch the build ran on
-     */
-    branch: string;
-    /**
-     * When the image was built (ISO 8601)
-     */
-    builtAt: string;
-};
-
 export type WaitlistJoinRequestDto = {
     /**
      * Email to add to the waitlist
@@ -6966,6 +6951,58 @@ export type ApiChannelSendMessageRequestDto = {
     timestamp?: string;
 };
 
+export type ChatbotPreviewMediaResponseDto = {
+    url: string;
+    kind: 'image' | 'file';
+    name?: string;
+    size?: number;
+    mimeType?: string;
+};
+
+export type ChatbotPreviewToolCallResponseDto = {
+    name: string;
+    /**
+     * The arguments the chatbot passed to the tool
+     */
+    input: {
+        [key: string]: unknown;
+    };
+};
+
+export type ChatbotClientPreviewResponseDto = {
+    /**
+     * Send it back with the next message to continue this chat
+     */
+    sessionId: string;
+    /**
+     * The chatbot's reply text
+     */
+    reply: string;
+    /**
+     * Images and files the reply sent
+     */
+    media: Array<ChatbotPreviewMediaResponseDto>;
+    /**
+     * Tools the chatbot called for this reply, in order
+     */
+    toolCalls: Array<ChatbotPreviewToolCallResponseDto>;
+    /**
+     * A guardrail stopped the reply; reply is then empty and the turn is not kept
+     */
+    blocked: boolean;
+};
+
+export type ChatbotClientPreviewRequestDto = {
+    /**
+     * What the test customer says to the chatbot
+     */
+    message: string;
+    /**
+     * The sessionId a previous preview call returned, to continue that chat. Leave it out to start a new one.
+     */
+    sessionId?: string;
+};
+
 export type KnowledgeItemUploadUrlResponseDto = {
     /**
      * PUT the file here, with a Content-Length of exactly `size` bytes.
@@ -9599,51 +9636,6 @@ export type HealthPublicControllerReadyResponses = {
 };
 
 export type HealthPublicControllerReadyResponse = HealthPublicControllerReadyResponses[keyof HealthPublicControllerReadyResponses];
-
-export type HealthBuildInfoPublicControllerBuildInfoData = {
-    body?: never;
-    headers?: {
-        /**
-         * Custom language header
-         */
-        'x-custom-lang'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/public/build-info';
-};
-
-export type HealthBuildInfoPublicControllerBuildInfoErrors = {
-    /**
-     * 408
-     */
-    408: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-    /**
-     * 500
-     */
-    500: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-    };
-};
-
-export type HealthBuildInfoPublicControllerBuildInfoError = HealthBuildInfoPublicControllerBuildInfoErrors[keyof HealthBuildInfoPublicControllerBuildInfoErrors];
-
-export type HealthBuildInfoPublicControllerBuildInfoResponses = {
-    /**
-     * 200
-     */
-    200: ResponseDto & {
-        message?: unknown;
-        statusCode?: number;
-        data?: HealthBuildInfoResponseDto;
-    };
-};
-
-export type HealthBuildInfoPublicControllerBuildInfoResponse = HealthBuildInfoPublicControllerBuildInfoResponses[keyof HealthBuildInfoPublicControllerBuildInfoResponses];
 
 export type WaitlistPublicControllerJoinV1Data = {
     body: WaitlistJoinRequestDto;
@@ -33932,6 +33924,79 @@ export type ChatbotClientControllerInactiveV1Responses = {
 };
 
 export type ChatbotClientControllerInactiveV1Response = ChatbotClientControllerInactiveV1Responses[keyof ChatbotClientControllerInactiveV1Responses];
+
+export type ChatbotPreviewClientControllerPreviewV1Data = {
+    body: ChatbotClientPreviewRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}/preview';
+};
+
+export type ChatbotPreviewClientControllerPreviewV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotPreviewClientControllerPreviewV1Error = ChatbotPreviewClientControllerPreviewV1Errors[keyof ChatbotPreviewClientControllerPreviewV1Errors];
+
+export type ChatbotPreviewClientControllerPreviewV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotClientPreviewResponseDto;
+    };
+};
+
+export type ChatbotPreviewClientControllerPreviewV1Response = ChatbotPreviewClientControllerPreviewV1Responses[keyof ChatbotPreviewClientControllerPreviewV1Responses];
 
 export type KnowledgeBaseClientControllerListV1Data = {
     body?: never;

@@ -34,6 +34,33 @@ const cases: [
   annotations: Record<string, boolean>,
 ][] = [
   [
+    "test_chatbot",
+    { chatbotId: "bot-1", message: "Shop có ship COD không?", sessionId: "s1" },
+    "chatbotPreviewClientControllerPreviewV1",
+    {
+      path: { id: "bot-1" },
+      body: { message: "Shop có ship COD không?", sessionId: "s1" },
+    },
+    {
+      data: {
+        sessionId: "s1",
+        reply: "Dạ có ạ",
+        media: [],
+        toolCalls: [],
+        blocked: false,
+      },
+    },
+    {
+      sessionId: "s1",
+      reply: "Dạ có ạ",
+      media: [],
+      toolCalls: [],
+      blocked: false,
+    },
+    // Adds nothing to the inbox, but the chatbot's own Tools run for real.
+    { ...ADDS, openWorldHint: true },
+  ],
+  [
     "reply_to_conversation",
     { conversationId: "conv-1", text: "Hi, how can I help?" },
     "conversationClientControllerSendMessageV1",
