@@ -17,6 +17,7 @@ import {
 } from '../constants/workspace.constant';
 import { WorkspaceMemberService } from '../services/workspace.member.service';
 import { assertWorkspaceMemberPolicy } from '../utils/workspace-policy.util';
+import { workspaceNotFoundException } from '../utils/workspace-not-found.util';
 
 @Injectable()
 export class WorkspacePolicyGuard implements CanActivate {
@@ -60,6 +61,18 @@ export class WorkspacePolicyGuard implements CanActivate {
         const isWorkspaceOwner = __workspace.owner.id === __user.id;
         if (isWorkspaceOwner) {
             return true;
+        }
+
+        // A stranger gets the same 404 as a missing workspace, before any
+        // role check could answer 403 and confirm the workspace exists.
+        const isMember =
+            await this.workspaceMemberService.isUserMemberOfWorkspace(
+                __workspace.id,
+                __user.id
+            );
+
+        if (!isMember) {
+            throw workspaceNotFoundException(workspaceIdOrSlug);
         }
 
         // Get required abilities and roles from metadata
