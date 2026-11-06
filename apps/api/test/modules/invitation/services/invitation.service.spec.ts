@@ -157,6 +157,33 @@ describe('InvitationService', () => {
         });
     });
 
+    describe('updateRole', () => {
+        it('writes the role relation, so the change is persisted', async () => {
+            const id = randomUUID();
+            mockInvitationRepository.updateEntity.mockResolvedValue({ id });
+
+            await service.updateRole(id, 'role-2');
+
+            expect(mockInvitationRepository.updateEntity).toHaveBeenCalledWith(
+                { id },
+                { role: { id: 'role-2' } },
+                undefined
+            );
+        });
+
+        it('clears the role when none is given', async () => {
+            const id = randomUUID();
+
+            await service.updateRole(id);
+
+            expect(mockInvitationRepository.updateEntity).toHaveBeenCalledWith(
+                { id },
+                { role: null },
+                undefined
+            );
+        });
+    });
+
     describe('revoke', () => {
         it('should set status REVOKED with revokedAt + revokedByUserId', async () => {
             const id = randomUUID();

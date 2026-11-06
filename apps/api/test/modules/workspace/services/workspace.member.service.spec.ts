@@ -258,6 +258,48 @@ describe('WorkspaceMemberService', () => {
             );
         });
 
+        it("grants the invitation row's role, not the token's stale roleId", async () => {
+            const editedRoleId = randomUUID();
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
+                role: { id: editedRoleId },
+            });
+            mockRoleService.findOne.mockResolvedValue({ id: editedRoleId });
+
+            const result = await service.joinWorkspaceViaInvitation(
+                'token',
+                userId
+            );
+
+            expect(result.roleId).toBe(editedRoleId);
+            expect(mockWorkspaceMemberRepository.create).toHaveBeenCalledWith(
+                expect.objectContaining({ role: { id: editedRoleId } }),
+                undefined
+            );
+        });
+
+        it('returns no role for a null-role invitation, so the caller grants Member', async () => {
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
+                role: null,
+            });
+
+            const result = await service.joinWorkspaceViaInvitation(
+                'token',
+                userId
+            );
+
+            expect(result.roleId).toBeUndefined();
+            expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
+            expect(mockInvitationService.accept).toHaveBeenCalled();
+        });
+
         it('should reject an already-used invitation', async () => {
             mockInvitationService.findOneByToken.mockResolvedValue({
                 id: invitationId,

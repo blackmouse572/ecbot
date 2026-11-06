@@ -30,6 +30,7 @@ import { plainToInstance } from 'class-transformer';
 import { toWorkspaceSlug } from '@app/modules/workspace/utils/workspace-slug.util';
 import { RoleService } from 'src/modules/role/services/role.service';
 import {
+    WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
     WORKSPACE_DEFAULT_MEMBER_ROLES,
     WORKSPACE_INVITATION_CODE_LENGTH,
     WORKSPACE_SLUG_PATTERN,
@@ -275,6 +276,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                 workspace: workspace.id,
                 isActive: true,
                 type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
             });
         }
 
@@ -631,6 +633,7 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         const memberRole = await this.roleService.findOne({
             workspace: workspace.id,
             type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+            name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
             isActive: true,
         });
         await this.createActiveMembership(

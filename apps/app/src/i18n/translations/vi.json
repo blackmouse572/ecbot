@@ -603,7 +603,9 @@
       },
       "hints": {
         "handler": "Không gian làm việc của bạn sẽ ở"
-      }
+      },
+      "title": "Tạo không gian làm việc",
+      "description": "Tạo một không gian làm việc mới"
     },
     "join": {
       "tabs": {
@@ -1507,14 +1509,17 @@
     },
     "inviteMember": {
       "action": "Mời",
-      "placeholder": "Tìm kiếm theo tên...",
-      "success": "Đã mời thành viên thành công.",
-      "loading": "Đang mời thành viên...",
+      "placeholder": "Nhập địa chỉ email",
+      "success": "Đã gửi lời mời tới {{email}}.",
+      "loading": "Đang gửi lời mời…",
       "searchResults": "Kết quả tìm kiếm",
       "inviteCode": {
-        "title": "Mã mời",
-        "copySuccess": "Mã mời đã được sao chép vào clipboard."
-      }
+        "title": "Mã tham gia",
+        "copySuccess": "Đã sao chép mã tham gia.",
+        "helper": "Ai có mã này đều có thể xin tham gia từ mục Tham gia không gian làm việc. Bạn duyệt từng yêu cầu trong Đội ngũ → Yêu cầu tham gia.",
+        "copy": "Sao chép mã tham gia"
+      },
+      "emailHint": "Nhập đầy đủ địa chỉ email của người bạn muốn mời."
     },
     "invitedMember": {
       "title": "Đã mời",
@@ -1525,6 +1530,10 @@
       "revoke": {
         "success": "Đã hủy lời mời thành công.",
         "loading": "Đang hủy lời mời..."
+      },
+      "updateRole": {
+        "loading": "Đang cập nhật vai trò…",
+        "success": "Đã cập nhật vai trò."
       }
     },
     "assignRole": {
@@ -1541,7 +1550,14 @@
     "invitations": {
       "title": "Lời mời",
       "empty": "Lời mời bạn gửi từ trang Thành viên sẽ nằm ở đây cho tới khi được chấp nhận.",
-      "emptyTitle": "Không có lời mời đang chờ"
+      "emptyTitle": "Không có lời mời đang chờ",
+      "defaultRole": "Member (mặc định)",
+      "status": {
+        "PENDING": "Đang chờ",
+        "ACCEPTED": "Đã chấp nhận",
+        "REVOKED": "Đã hủy",
+        "EXPIRED": "Hết hạn"
+      }
     },
     "joinRequests": {
       "title": "Yêu cầu tham gia",

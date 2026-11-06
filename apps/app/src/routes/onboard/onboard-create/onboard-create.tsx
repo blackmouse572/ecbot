@@ -8,10 +8,10 @@ export const OnboardCreate = () => {
   return (
     <RouteFocusModal>
       <RouteFocusModal.Title asChild>
-        <span className="sr-only">{t("accounts.create.title")}</span>
+        <span className="sr-only">{t("onboard.create.title")}</span>
       </RouteFocusModal.Title>
       <RouteFocusModal.Description asChild>
-        <span className="sr-only">{t("accounts.create.description")}</span>
+        <span className="sr-only">{t("onboard.create.description")}</span>
       </RouteFocusModal.Description>
       <OnboardCreateForm />
     </RouteFocusModal>

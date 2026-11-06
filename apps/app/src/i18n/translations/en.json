@@ -581,7 +581,9 @@
       },
       "hints": {
         "handler": "Your workspace will be at"
-      }
+      },
+      "title": "Create workspace",
+      "description": "Create a new workspace"
     },
     "join": {
       "tabs": {
@@ -1447,14 +1449,17 @@
     },
     "inviteMember": {
       "action": "Invite member",
-      "placeholder": "Search by name...",
-      "success": "Invitation sent!  They're going to love it here.",
-      "loading": "Sending invitation magic...",
+      "placeholder": "Enter an email address",
+      "success": "Invitation sent to {{email}}.",
+      "loading": "Sending invitation…",
       "searchResults": "People found",
       "inviteCode": {
-        "title": "Secret Invitation Code",
-        "copySuccess": "Code copied! Share the magic"
-      }
+        "title": "Join code",
+        "copySuccess": "Join code copied.",
+        "helper": "Anyone with this code can ask to join from Join a workspace. You approve each request under Team → Join requests.",
+        "copy": "Copy join code"
+      },
+      "emailHint": "Type the full email address of the person you want to invite."
     },
     "invitedMember": {
       "title": "Invited",
@@ -1465,6 +1470,10 @@
       "revoke": {
         "success": "Invitation revoked successfully.",
         "loading": "Revoking invitation..."
+      },
+      "updateRole": {
+        "loading": "Updating role…",
+        "success": "Role updated."
       }
     },
     "assignRole": {
@@ -1481,7 +1490,14 @@
     "invitations": {
       "title": "Invitations",
       "empty": "Invitations you send from the Members page wait here until they are accepted.",
-      "emptyTitle": "No pending invitations"
+      "emptyTitle": "No pending invitations",
+      "defaultRole": "Member (default)",
+      "status": {
+        "PENDING": "Pending",
+        "ACCEPTED": "Accepted",
+        "REVOKED": "Revoked",
+        "EXPIRED": "Expired"
+      }
     },
     "joinRequests": {
       "title": "Join requests",

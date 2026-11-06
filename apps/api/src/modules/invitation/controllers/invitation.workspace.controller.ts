@@ -62,6 +62,8 @@ import {
     ENUM_INVITATION_STATUS_CODE_ERROR,
 } from '../enums/invitation.enum';
 import { InvitationService } from '../services/invitation.service';
+import { ENUM_ROLE_STATUS_CODE_ERROR } from '@app/modules/role/enums/role.status-code.enum';
+import { RoleService } from '@app/modules/role/services/role.service';
 import { buildInvitationLink } from '../utils/invitation-link.util';
 
 @ApiTags('modules.workspace.invitation')
@@ -79,7 +81,8 @@ export class InvitationWorkspaceController {
         private readonly paginationService: PaginationService,
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly roleService: RoleService
     ) {
         this.invitationTokenSecret = this.configService.get<string>(
             'workspace.invitationKey'
@@ -222,6 +225,12 @@ export class InvitationWorkspaceController {
                     ENUM_INVITATION_STATUS_CODE_ERROR.CANNOT_INVITE_OWNER,
                 message: 'invitation.error.cannotUpdateNonPending',
             });
+        }
+
+        // Accept grants this role, so it must be one of this workspace's
+        // active roles and never its Owner role.
+        if (body.roleId) {
+            await this.assertInvitableRole(body.roleId, workspace.id);
         }
 
         const updatedInvitation = await this.invitationService.updateRole(
@@ -403,6 +412,27 @@ export class InvitationWorkspaceController {
                 return value * 60 * 1000;
             default:
                 return 24 * 60 * 60 * 1000;
+        }
+    }
+
+    private async assertInvitableRole(
+        roleId: string,
+        workspaceId: string
+    ): Promise<void> {
+        const role = await this.roleService.findOne({
+            id: roleId,
+            workspace: workspaceId,
+            isActive: true,
+        });
+        const isOwnerRole =
+            !!role &&
+            (await this.roleService.isWorkspaceOwnerRole(roleId, workspaceId));
+
+        if (!role || isOwnerRole) {
+            throw new NotFoundException({
+                statusCode: ENUM_ROLE_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'role.error.notFound',
+            });
         }
     }
 }

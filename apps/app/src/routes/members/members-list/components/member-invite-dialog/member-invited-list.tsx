@@ -35,8 +35,8 @@ export function MemberInvitedList({ enabled, search }: MemberInvitedListProps) {
 
   const changeRole = (invitation: { id: string }, role: string) => {
     toast.promise(updateRole({ id: invitation.id, role }), {
-      loading: t("members.inviteMember.loading"),
-      success: t("members.inviteMember.success"),
+      loading: t("members.invitedMember.updateRole.loading"),
+      success: t("members.invitedMember.updateRole.success"),
       error: t("errorBoundary.internalServerErrorMessage"),
     });
   };

@@ -18,11 +18,14 @@ const looksLikeEmail = (value?: string) =>
 type MemberInvitableListProps = {
   enabled?: boolean;
   search?: string;
+  /** Role every invite from this list carries. */
+  roleId?: string;
 };
 
 export function MemberInvitableList({
   enabled,
   search,
+  roleId,
 }: MemberInvitableListProps) {
   const { t } = useTranslation();
   const { users, isLoading, isFetching } = useInvitableUsers(
@@ -44,8 +47,11 @@ export function MemberInvitableList({
   const invite = async (invitedEmail: string) => {
     const id = toast.loading(t("members.inviteMember.loading"));
     try {
-      await inviteUser.mutateAsync({ invitedEmail });
-      toast.success(t("members.inviteMember.success"), { id });
+      await inviteUser.mutateAsync({ invitedEmail, roleId });
+      toast.success(
+        t("members.inviteMember.success", { email: invitedEmail }),
+        { id },
+      );
     } catch (error) {
       toast.error(
         readApiError(error).message ??
@@ -56,10 +62,24 @@ export function MemberInvitableList({
   };
 
   const isBusy = isLoading || isFetching;
-  const offerTypedEmail = users?.length === 0 && looksLikeEmail(search);
+  const isEmail = looksLikeEmail(search);
+  const offerTypedEmail = users?.length === 0 && isEmail;
+  // Until a full address is typed there is nothing to invite, so say what to
+  // type instead of "no results".
+  const showEmailHint = !isBusy && !users?.length && !isEmail;
 
   return (
-    <CommandGroup heading={t("members.inviteMember.searchResults")}>
+    <CommandGroup
+      heading={
+        showEmailHint ? undefined : t("members.inviteMember.searchResults")
+      }
+    >
+      {showEmailHint && (
+        <p className="px-3 py-2 text-sm text-ui-fg-muted">
+          {t("members.inviteMember.emailHint")}
+        </p>
+      )}
+
       {isBusy &&
         Array.from({ length: CANDIDATES_PER_PAGE }).map((_, index) => (
           <InviteItemSkeleton key={index} />

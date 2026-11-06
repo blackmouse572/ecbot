@@ -1,3 +1,4 @@
+import { ENUM_POLICY_ROLE_TYPE } from '@app/modules/policy/enums/policy.enum';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { HelperHashService } from '@app/common/helper/services/helper.hash.service';
 import { NotificationService } from '@app/modules/notification/services/notification.service';
@@ -247,7 +248,7 @@ describe('WorkspaceOwnerService', () => {
             ).rejects.toThrow(NotFoundException);
         });
 
-        it('should fall back to the default WORKSPACE_MEMBER role when no roleId is given', async () => {
+        it('should fall back to the built-in Member role (not Admin) when no roleId is given', async () => {
             mockInvitationService.checkExistingInvitation.mockResolvedValue(
                 null
             );
@@ -264,7 +265,8 @@ describe('WorkspaceOwnerService', () => {
                 expect.objectContaining({
                     workspace: workspace.id,
                     isActive: true,
-                    type: expect.anything(),
+                    type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                    name: 'Member',
                 })
             );
             expect(mockInvitationService.create).toHaveBeenCalledWith(
@@ -322,6 +324,18 @@ describe('WorkspaceOwnerService', () => {
 
             expect(mockWorkspaceMemberRepository.create).toHaveBeenCalledTimes(
                 1
+            );
+        });
+
+        it('gives an approved join request the built-in Member role, not Admin', async () => {
+            await service.addMemberToWorkspace(workspace.id, randomUUID());
+
+            expect(mockRoleService.findOne).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    workspace: workspace.id,
+                    type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                    name: 'Member',
+                })
             );
         });
 

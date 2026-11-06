@@ -3,22 +3,16 @@ import {
   useRevokeInvitation,
   useUpdateInvitationRole,
 } from "@/hooks/api/invitations";
-import { useWorkspaceRoles } from "@/hooks/api/workspace-roles";
 import { Trash } from "@medusajs/icons";
-import {
-  Badge,
-  Container,
-  IconButton,
-  Select,
-  Text,
-  toast,
-} from "@medusajs/ui";
+import { Container, IconButton, Text, toast } from "@medusajs/ui";
 import { ListSkeleton, NoRecords } from "@repo/ui/common-components";
 import { SingleColumnPage } from "@repo/ui/layout";
 import { IconMail } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { InvitationRoleSelect } from "../components/invitation-role-select";
 import { MemberInviteDialog } from "../members-list/components/member-invite-dialog";
+import { InvitationStatusBadge } from "./invitation-status-badge";
 
 export const Invitations = () => {
   const { t } = useTranslation();
@@ -29,14 +23,13 @@ export const Invitations = () => {
     page: 1,
     perPage: 100,
   });
-  const { roles } = useWorkspaceRoles({ perPage: 100 });
   const { mutateAsync: updateRole } = useUpdateInvitationRole();
   const { mutateAsync: revokeInvitation } = useRevokeInvitation();
 
   const handleUpdateRole = (id: string, role: string) =>
     toast.promise(updateRole({ id, role }), {
-      loading: t("members.inviteMember.loading"),
-      success: t("members.inviteMember.success"),
+      loading: t("members.invitedMember.updateRole.loading"),
+      success: t("members.invitedMember.updateRole.success"),
       error: t("errorBoundary.internalServerErrorMessage"),
     });
 
@@ -57,48 +50,48 @@ export const Invitations = () => {
         {isLoading ? (
           <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
         ) : invitations && invitations.length > 0 ? (
-          invitations.map((invitation) => (
-            <div
-              key={invitation.id}
-              className="flex items-center justify-between gap-x-4 px-6 py-3"
-            >
-              <div className="flex flex-col items-start gap-y-1">
-                <Text size="small" weight="plus">
-                  {invitation.inviteeEmail}
-                </Text>
-                <Badge size="2xsmall">{invitation.status}</Badge>
-              </div>
-              <div className="flex items-center gap-x-2">
-                <Select
-                  value={invitation.role}
-                  onValueChange={(role) =>
-                    handleUpdateRole(invitation.id, role)
-                  }
-                >
-                  <Select.Trigger className="w-[160px]">
-                    <Select.Value />
-                  </Select.Trigger>
-                  <Select.Content>
-                    {roles.map((role) => (
-                      <Select.Item
-                        key={role.id}
-                        value={role.id}
-                        textValue={role.name}
-                      >
-                        {role.name}
-                      </Select.Item>
-                    ))}
-                  </Select.Content>
-                </Select>
-                <IconButton
-                  variant="transparent"
-                  onClick={() => handleRevoke(invitation.id)}
-                >
-                  <Trash />
-                </IconButton>
-              </div>
+          <>
+            <div className="flex items-center justify-between gap-x-4 px-6 py-2">
+              <Text size="small" weight="plus" className="text-ui-fg-subtle">
+                {t("fields.email")}
+              </Text>
+              <Text
+                size="small"
+                weight="plus"
+                className="text-ui-fg-subtle w-[160px] mr-10"
+              >
+                {t("fields.role")}
+              </Text>
             </div>
-          ))
+            {invitations.map((invitation) => (
+              <div
+                key={invitation.id}
+                className="flex items-center justify-between gap-x-4 px-6 py-3"
+              >
+                <div className="flex flex-col items-start gap-y-1">
+                  <Text size="small" weight="plus">
+                    {invitation.inviteeEmail}
+                  </Text>
+                  <InvitationStatusBadge status={invitation.status} />
+                </div>
+                <div className="flex items-center gap-x-2">
+                  <InvitationRoleSelect
+                    className="w-[160px]"
+                    value={invitation.role}
+                    onValueChange={(role) =>
+                      handleUpdateRole(invitation.id, role)
+                    }
+                  />
+                  <IconButton
+                    variant="transparent"
+                    onClick={() => handleRevoke(invitation.id)}
+                  >
+                    <Trash />
+                  </IconButton>
+                </div>
+              </div>
+            ))}
+          </>
         ) : (
           <NoRecords
             title={t("members.invitations.emptyTitle")}
