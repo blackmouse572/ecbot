@@ -4,7 +4,8 @@ import {
     ENUM_POLICY_ROLE_TYPE,
     ENUM_POLICY_SUBJECT,
 } from '../../../../src/modules/policy/enums/policy.enum';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../../../../src/modules/workspace/enums/workspace.status-code.enum';
 import {
     WORKSPACE_DEFAULT_MEMBER_ROLES,
     WORKSPACE_POLICY_ABILITY_META_KEY,
@@ -26,6 +27,7 @@ describe('WorkspacePolicyGuard customer permissions', () => {
             ),
         };
         const workspaceMemberService = {
+            isUserMemberOfWorkspace: jest.fn().mockResolvedValue(true),
             getMemberWorkspaceRoles: jest
                 .fn()
                 .mockResolvedValue([{ id: 'role-member' }]),
@@ -72,6 +74,10 @@ describe('WorkspacePolicyGuard customer permissions', () => {
         expect(
             workspaceMemberService.getMemberWorkspaceRoles
         ).toHaveBeenCalledWith('workspace-1', 'user-1');
+        // The stranger check runs only when the role check fails.
+        expect(
+            workspaceMemberService.isUserMemberOfWorkspace
+        ).not.toHaveBeenCalled();
     });
 
     it('rejects a workspace member without CUSTOMER permission', async () => {
@@ -94,6 +100,7 @@ describe('WorkspacePolicyGuard customer permissions', () => {
             ),
         };
         const workspaceMemberService = {
+            isUserMemberOfWorkspace: jest.fn().mockResolvedValue(true),
             getMemberWorkspaceRoles: jest
                 .fn()
                 .mockResolvedValue([{ id: 'role-member' }]),
@@ -129,5 +136,45 @@ describe('WorkspacePolicyGuard customer permissions', () => {
         await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
             ForbiddenException
         );
+    });
+});
+
+// QA gate D11: a stranger must not learn that a workspace exists. Before the
+// role check could answer 403, they get the same 404 as a missing slug.
+describe('WorkspacePolicyGuard stranger', () => {
+    it('answers 404 5200 to a user who is not a member', async () => {
+        const workspaceMemberService = {
+            isUserMemberOfWorkspace: jest.fn().mockResolvedValue(false),
+            getMemberWorkspaceRoles: jest.fn().mockResolvedValue([]),
+        };
+        const guard = new WorkspacePolicyGuard(
+            { get: jest.fn() } as any,
+            workspaceMemberService as any,
+            { findOneById: jest.fn() } as any,
+            new PolicyAbilityFactory()
+        );
+        const context = {
+            getHandler: jest.fn(),
+            switchToHttp: () => ({
+                getRequest: () => ({
+                    __user: { id: 'stranger' },
+                    __workspace: {
+                        id: 'workspace-1',
+                        owner: { id: 'owner-1' },
+                    },
+                    params: { workspace: 'shop-a' },
+                    user: { type: ENUM_POLICY_ROLE_TYPE.USER },
+                }),
+            }),
+        } as any;
+
+        const result = guard.canActivate(context);
+
+        await expect(result).rejects.toBeInstanceOf(NotFoundException);
+        await expect(result).rejects.toMatchObject({
+            response: {
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
+            },
+        });
     });
 });

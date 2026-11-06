@@ -1,4 +1,9 @@
-import { BadRequestException, ExecutionContext } from '@nestjs/common';
+import {
+    BadRequestException,
+    ExecutionContext,
+    NotFoundException,
+} from '@nestjs/common';
+import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '@app/modules/workspace/enums/workspace.status-code.enum';
 import { Reflector } from '@nestjs/core';
 import { WorkspaceMemberGuard } from '@app/modules/workspace/guards/workspace.member.guard';
 import type { WorkspaceMemberService } from '@app/modules/workspace/services/workspace.member.service';
@@ -55,7 +60,7 @@ describe('WorkspaceMemberGuard', () => {
         for (let i = 0; i < 2; i++) {
             await expect(
                 guard.canActivate(contextFor('stranger'))
-            ).rejects.toThrow(BadRequestException);
+            ).rejects.toThrow(NotFoundException);
         }
         expect(isUserMemberOfWorkspace).toHaveBeenCalledTimes(2);
     });
@@ -67,4 +72,22 @@ describe('WorkspaceMemberGuard', () => {
             BadRequestException
         );
     });
+
+    // QA gate D11: a stranger gets the same 404 5200 as a slug that does not
+    // exist, so the answer never confirms a workspace exists.
+    it.each([false, true])(
+        'answers a stranger 404 5200 (member-only route: %s)',
+        async excludedOwner => {
+            const { guard } = setup(false, excludedOwner);
+
+            await expect(
+                guard.canActivate(contextFor('stranger'))
+            ).rejects.toMatchObject({
+                status: 404,
+                response: {
+                    statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
+                },
+            });
+        }
+    );
 });

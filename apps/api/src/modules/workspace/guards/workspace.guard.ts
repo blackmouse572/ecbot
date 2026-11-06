@@ -5,11 +5,11 @@ import {
     ExecutionContext,
     ForbiddenException,
     Injectable,
-    NotFoundException,
 } from '@nestjs/common';
 import { ENUM_WORKSPACE_STATUS } from '../enums/workspace.enum';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
 import { WorkspaceOwnerService } from '../services/workspace.owner.service';
+import { workspaceNotFoundException } from '../utils/workspace-not-found.util';
 
 @Injectable()
 export class WorkspaceGuard implements CanActivate {
@@ -34,11 +34,7 @@ export class WorkspaceGuard implements CanActivate {
         );
 
         if (!workspace) {
-            throw new NotFoundException({
-                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'workspace.error.memberNotFound',
-                _error: `User is not a member of workspace ${workspaceIdOrSlug}`,
-            });
+            throw workspaceNotFoundException(workspaceIdOrSlug);
         }
 
         if (workspace.status === ENUM_WORKSPACE_STATUS.SUSPENDED) {

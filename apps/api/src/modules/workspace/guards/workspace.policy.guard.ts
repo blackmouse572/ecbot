@@ -17,6 +17,7 @@ import {
 } from '../constants/workspace.constant';
 import { WorkspaceMemberService } from '../services/workspace.member.service';
 import { assertWorkspaceMemberPolicy } from '../utils/workspace-policy.util';
+import { workspaceNotFoundException } from '../utils/workspace-not-found.util';
 
 @Injectable()
 export class WorkspacePolicyGuard implements CanActivate {
@@ -73,16 +74,30 @@ export class WorkspacePolicyGuard implements CanActivate {
             context.getHandler()
         );
 
-        await assertWorkspaceMemberPolicy(
-            {
-                workspaceMemberService: this.workspaceMemberService,
-                roleService: this.roleService,
-                policyAbilityFactory: this.policyAbilityFactory,
-            },
-            __workspace.id,
-            __user.id,
-            { abilities: requiredAbilities, roles: requiredRoles }
-        );
+        try {
+            await assertWorkspaceMemberPolicy(
+                {
+                    workspaceMemberService: this.workspaceMemberService,
+                    roleService: this.roleService,
+                    policyAbilityFactory: this.policyAbilityFactory,
+                },
+                __workspace.id,
+                __user.id,
+                { abilities: requiredAbilities, roles: requiredRoles }
+            );
+        } catch (error) {
+            // Only on the failure path, so a member pays no extra query. A
+            // stranger gets the same 404 as a missing workspace instead of a
+            // 403 that confirms the workspace exists.
+            const isMember =
+                await this.workspaceMemberService.isUserMemberOfWorkspace(
+                    __workspace.id,
+                    __user.id
+                );
+
+            if (!isMember) throw workspaceNotFoundException(workspaceIdOrSlug);
+            throw error;
+        }
 
         return true;
     }

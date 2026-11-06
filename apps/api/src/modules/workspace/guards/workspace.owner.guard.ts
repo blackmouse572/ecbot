@@ -6,16 +6,17 @@ import {
     ExecutionContext,
     Injectable,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
+import { WorkspaceMemberService } from '../services/workspace.member.service';
+import { workspaceNotFoundException } from '../utils/workspace-not-found.util';
 
 @Injectable()
 export class WorkspaceOwnerGuard implements CanActivate {
-    constructor() {}
+    constructor(
+        private readonly workspaceMemberService: WorkspaceMemberService
+    ) {}
 
-    canActivate(
-        context: ExecutionContext
-    ): boolean | Promise<boolean> | Observable<boolean> {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
         const { __user, __workspace, params } = context
             .switchToHttp()
             .getRequest<IRequestApp>();
@@ -38,14 +39,25 @@ export class WorkspaceOwnerGuard implements CanActivate {
         }
 
         const isUserOwner = __workspace.owner.id === __user.id;
-        if (!isUserOwner) {
-            throw new BadRequestException({
-                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
-                message: 'workspace.error.memberNotFound',
-                _error: `User is not the owner of workspace ${workspaceId}`,
-            });
+
+        if (isUserOwner) return true;
+
+        // A stranger gets the same 404 as a missing workspace; only a member
+        // learns that the action needs the owner.
+        const isMember =
+            await this.workspaceMemberService.isUserMemberOfWorkspace(
+                __workspace.id,
+                __user.id
+            );
+
+        if (!isMember) {
+            throw workspaceNotFoundException(workspaceIdOrSlug);
         }
 
-        return true;
+        throw new BadRequestException({
+            statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
+            message: 'workspace.error.memberNotFound',
+            _error: `User is not the owner of workspace ${workspaceIdOrSlug}`,
+        });
     }
 }

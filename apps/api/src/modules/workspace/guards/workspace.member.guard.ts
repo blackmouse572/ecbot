@@ -14,6 +14,7 @@ import {
 } from '../constants/workspace.constant';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
 import { WorkspaceMemberService } from '../services/workspace.member.service';
+import { workspaceNotFoundException } from '../utils/workspace-not-found.util';
 
 @Injectable()
 export class WorkspaceMemberGuard implements CanActivate {
@@ -52,26 +53,20 @@ export class WorkspaceMemberGuard implements CanActivate {
         if (isUserOwner && !excludedOwner) return true;
 
         const isUserInMembers = await this.isMember(__workspace.id, __user.id);
-        if (excludedOwner) {
-            // If owner is excluded, user must be a member and not the owner
-            if (!isUserInMembers || isUserOwner) {
-                throw new BadRequestException({
-                    statusCode:
-                        ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
-                    message: 'workspace.error.memberNotFound',
-                    _error: `User is not eligible for this workspace operation`,
-                });
-            }
-        } else {
-            // Default: user can be either a member or the owner
-            if (!isUserInMembers && !isUserOwner) {
-                throw new BadRequestException({
-                    statusCode:
-                        ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
-                    message: 'workspace.error.memberNotFound',
-                    _error: `User is not a member of workspace ${workspaceIdOrSlug}`,
-                });
-            }
+
+        // A stranger gets the same 404 as a slug that does not exist, so the
+        // answer never confirms which workspaces exist.
+        if (!isUserInMembers && !isUserOwner) {
+            throw workspaceNotFoundException(workspaceIdOrSlug);
+        }
+        // Member-only routes keep the owner out. The owner knows the
+        // workspace exists, so this stays a 400.
+        if (excludedOwner && isUserOwner) {
+            throw new BadRequestException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_NOT_FOUND,
+                message: 'workspace.error.memberNotFound',
+                _error: `User is not eligible for this workspace operation`,
+            });
         }
 
         return true;
