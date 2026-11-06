@@ -1,0 +1,70 @@
+---
+title: Cài đặt workspace
+description: Workspace chứa agent, kiến thức, kênh và đội ngũ của một shop. Đổi tên, địa chỉ web và ảnh, chuyển giữa các workspace hoặc xóa workspace.
+faq:
+  - q: Tôi có thể có nhiều workspace không?
+    a: Có. Tạo một workspace cho mỗi shop hoặc khách hàng từ bộ chuyển workspace. Mỗi workspace có agent, kiến thức, kênh, khách hàng, đội ngũ và gói riêng.
+  - q: Ai được đổi tên hoặc địa chỉ web của workspace?
+    a: Chủ workspace, và thành viên có vai trò được cập nhật workspace, ví dụ vai trò Admin có sẵn. Chỉ chủ workspace mới xóa được workspace.
+  - q: Vì sao tôi thấy "Không tìm thấy workspace"?
+    a: Đường link dẫn tới một workspace không tồn tại hoặc bạn chưa là thành viên. Hãy nhờ chủ workspace gửi lời mời, hoặc chuyển tới workspace của bạn bằng các nút trên màn hình đó.
+---
+
+Workspace (không gian làm việc) là nơi dành cho một shop hoặc một khách hàng. Nó chứa agent, cơ sở kiến thức, kênh, khách hàng và đội ngũ của doanh nghiệp đó, và các workspace không dùng chung dữ liệu với nhau. Trong Cài đặt workspace, bạn đổi tên, địa chỉ web và ảnh đại diện, quản lý đội ngũ và API key, hoặc xóa workspace.
+
+## Mở Cài đặt workspace
+
+Có hai cách:
+
+- Chọn **Cài đặt workspace** ở thanh bên, bên dưới **Nhật ký hoạt động**.
+- Mở bộ chuyển workspace ở đầu thanh bên và chọn **Cài đặt workspace**, **Đội ngũ** hoặc **API key**.
+
+<Screenshot
+  name="workspace-settings"
+  alt="Trang Chung trong Cài đặt workspace với tên, địa chỉ web và Vùng nguy hiểm"
+>
+  <Mark id="nav">
+    Menu cài đặt: **Chung**, **Đội ngũ** (gồm **Lời mời** và **Yêu cầu tham
+    gia**), **Vai trò**, **Thanh toán** và **API key** trong nhóm **Nhà phát
+    triển**.
+  </Mark>
+  <Mark id="edit">**Chỉnh sửa** để đổi tên, địa chỉ web và ảnh đại diện.</Mark>
+  <Mark id="danger">
+    **Vùng nguy hiểm** để xóa workspace. Chỉ chủ workspace mới làm được.
+  </Mark>
+</Screenshot>
+
+Chọn **Quay lại** cùng tên workspace ở đầu menu cài đặt để trở về agent và hội thoại.
+
+## Đổi tên, địa chỉ web hoặc ảnh đại diện
+
+Ở trang **Chung**, chọn **Chỉnh sửa**. Bạn đổi được:
+
+- **Tên**, hiện trong bộ chuyển workspace và trong email gửi cho đội ngũ;
+- **Địa chỉ web**, tên dùng trong đường link của workspace, ví dụ `my-shop`, gồm chữ thường, chữ số và dấu gạch ngang. Các link và bookmark dùng địa chỉ cũ sẽ không mở được nữa;
+- **Ảnh đại diện**, hình hiện cạnh tên workspace.
+
+Chọn **Lưu** khi xong.
+
+## Chuyển hoặc tạo workspace
+
+Bộ chuyển workspace ở đầu thanh bên liệt kê mọi workspace bạn tham gia, kèm vai trò của bạn (**Chủ sở hữu**, **Admin** hoặc **Thành viên**) dưới mỗi tên và dấu tích ở workspace đang mở. Chọn workspace khác để chuyển: bạn sẽ ở đúng mục đang xem, ví dụ **Hội thoại**, trong workspace kia.
+
+Để thêm workspace, chọn **Tạo không gian làm việc** trong bộ chuyển, rồi đặt tên và địa chỉ web. Muốn tham gia workspace của người khác, xem [Đội ngũ và lời mời](/docs/workspace/team).
+
+## Xóa workspace
+
+Xóa workspace sẽ xóa vĩnh viễn mọi thứ bên trong: thành viên, khách hàng, hội thoại, agent, kiến thức và kênh. Không thể hoàn tác.
+
+1. Mở **Chung** trong Cài đặt workspace.
+2. Trong **Vùng nguy hiểm**, chọn **Xóa không gian làm việc**.
+3. Nhập địa chỉ web của workspace để xác nhận, rồi chọn **Xóa**.
+
+Chỉ chủ workspace mới làm được việc này. Nếu muốn giữ dữ liệu, hãy tải những gì cần trước, và huỷ gói trả phí (nếu có) trong [Thanh toán](/docs/workspace/billing).
+
+## Khi không mở được workspace
+
+| Màn hình                         | Ý nghĩa                                                                                                             | Bạn cần làm gì                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Không tìm thấy workspace**     | Workspace không tồn tại, hoặc bạn chưa là thành viên.                                                               | Nhờ chủ workspace gửi lời mời, hoặc chuyển tới workspace của bạn bằng các nút trên màn hình. |
+| **Workspace này đã bị tạm khoá** | Quản trị viên Ecbot đã tạm khoá workspace. Agent ngừng trả lời và không ai mở được workspace. Dữ liệu vẫn được giữ. | Liên hệ bộ phận hỗ trợ để mở lại.                                                            |

@@ -1,0 +1,70 @@
+---
+title: Profile and security
+description: Your Ecbot account settings. Turn on two-step verification, change your password, sign out other devices, download your data or delete your account.
+faq:
+  - q: I lost the phone with my authenticator app. How do I sign in?
+    a: On the two-step verification screen, choose "Use a recovery code instead" and enter one of the recovery codes you saved. Each code works once. Then set up two-step verification again on your new phone.
+  - q: Does changing my password sign me out elsewhere?
+    a: No. Other devices stay signed in. Open Sessions and revoke every session you do not recognise.
+  - q: What happens to my data when I delete my account?
+    a: Your name, email and other profile details are removed at once and you are signed out everywhere. An anonymised record stays in the audit trail. See Data deletion for the details.
+---
+
+Your account is you, across every workspace you belong to. Its settings are separate from Workspace settings: open your avatar at the bottom of the sidebar and choose **Account settings**. There you see your profile, protect your sign-in with two-step verification, change your password, sign out devices, download your data and delete the account.
+
+<Screenshot
+  name="account-profile"
+  alt="The Profile page in Account settings with two-step verification, Download my data and Delete account"
+>
+  <Mark id="nav">
+    **Profile**, **Preferences**, **Change Password** and **Sessions**.
+  </Mark>
+  <Mark id="mfa">
+    **Two-step verification** asks for a code from your phone each time you sign
+    in.
+  </Mark>
+  <Mark id="export">
+    **Download my data** saves a copy of your account as a file.
+  </Mark>
+  <Mark id="delete">**Delete account** removes your account for good.</Mark>
+</Screenshot>
+
+Looking for the team or API keys? Those belong to a workspace: choose **Workspace settings** in the note in the settings menu, or see [Workspace settings](/docs/workspace).
+
+## Your profile
+
+**Profile** shows your name, email, country, phone, account status and sign-up date.
+
+## Turn on two-step verification
+
+Two-step verification asks for a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator, Authy and others) after your password. Someone who learns your password still cannot sign in without your phone.
+
+1. On **Profile**, under **Two-step verification**, choose **Turn on**.
+2. Enter your password and choose **Continue**.
+3. Scan the QR code with the authenticator app. If you cannot scan it, add the account with the **Setup key** shown below it.
+4. Enter the 6-digit code the app shows and choose **Confirm**.
+5. Save the 10 recovery codes somewhere safe, for example with **Copy all codes**, then choose **I saved my codes**. They are shown only once.
+
+From then on, signing in asks for a code after your password. If you do not have your phone, choose **Use a recovery code instead**. Each recovery code works once.
+
+To get a fresh set of codes, choose **New recovery codes** and confirm with your password and an app code; the old codes stop working. To switch it off, choose **Turn off** and enter your password and a code.
+
+## Change your password
+
+Open **Change Password**, enter your current password, then the new one twice. The new password needs at least 8 characters with a number, a lowercase and an uppercase letter, and must be different from the current one.
+
+If you forgot your password, sign out and choose the forgot password link on the sign-in page to get a reset email.
+
+## Sign out other devices
+
+**Sessions** lists every device and browser signed in to your account, with its IP address, location, when it signed in and when it was last active. Choose **Revoke** on a session you do not recognise: that device is signed out at once. You cannot revoke the session you are using right now.
+
+## Download your data
+
+Under **Download my data**, choose **Download my data**. Ecbot prepares a JSON file with your profile, your workspaces, your sign-in sessions and your activity, and your browser downloads it.
+
+## Delete your account
+
+Under **Delete account**, choose **Delete my account**, type your email to confirm and confirm again. This cannot be undone: your profile details are removed and every session is signed out. Messages and changes you made in a workspace stay with that workspace, without your name.
+
+See [Data deletion](/docs/legal/data-deletion) for what happens to each kind of data.

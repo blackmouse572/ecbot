@@ -1,0 +1,52 @@
+---
+title: Roles and permissions
+description: Roles decide what each member can see and change in a workspace. See what Owner, Admin and Member allow, and create your own role for staff.
+faq:
+  - q: What role do new members get?
+    a: Member, unless the owner picked another role on the invitation. The owner can change it later from the Team page.
+  - q: Can an Admin do everything the owner can?
+    a: Almost. Only the owner can manage roles, change a member's role, remove members, approve join requests, change the plan and delete the workspace.
+  - q: Can I change what Admin or Member allows?
+    a: Not from the app. Create a role with the areas you want instead, and assign it to the people who need it.
+---
+
+A role decides what a member can see and change in a workspace. Every workspace starts with two roles, **Admin** and **Member**, and the person who created the workspace is its owner. The owner can create more roles, for example one for sales staff.
+
+## Built-in roles
+
+| Role       | Who has it                                     | What they can do                                                                                                                                                    |
+| ---------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Owner**  | The person who created the workspace.          | Everything, including roles, team changes, billing and deleting the workspace.                                                                                      |
+| **Admin**  | Members the owner trusts to run the workspace. | Manage agents, knowledge, tools, skills, customers and their data, usage, the dashboard and workspace details. Invite members and create [API keys](/docs/dev/mcp). |
+| **Member** | Everyone else, by default.                     | Manage agents, knowledge and customers. See tools and skills without changing them.                                                                                 |
+
+The workspace switcher shows your own role under each workspace name.
+
+## Create a role
+
+<Screenshot
+  name="role-create"
+  alt="The create role form with a name, a description and the areas the role can manage"
+>
+  <Mark id="name">
+    Give the role a name your team understands, such as "Sales staff".
+  </Mark>
+  <Mark id="permissions">Tick each area the role can manage.</Mark>
+</Screenshot>
+
+1. Open **Workspace settings**, then **Roles**, and choose **Create**.
+2. Enter a **Name** and, if you like, a **Description**.
+3. Tick the areas the role can manage:
+   - **Agent**: agents and their conversations, including replying to customers;
+   - **Knowledge Base**: add and edit knowledge items;
+   - **RAG**: upload and remove the files inside the knowledge base;
+   - **Customer**: customer profiles and tags.
+4. Choose **Create**.
+
+A ticked area gives full access to it: see, create, change and delete. To give the role to someone, open **Team**, choose **Assign Role to Member** in their row and pick the role (see [Team and invitations](/docs/workspace/team)).
+
+Choose a role in the list to see its details and a grid of what it allows in each area.
+
+## Who manages roles
+
+Only the owner can open **Roles**, create roles and assign them. API keys follow roles too: a key can do what its creator's role allows, so changing someone's role also changes what their keys can do.

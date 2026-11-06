@@ -1,0 +1,60 @@
+---
+title: Đội ngũ và lời mời
+description: Mời nhân viên vào workspace qua email hoặc bằng mã mời, duyệt yêu cầu tham gia, gán vai trò cho từng người và xóa người đã nghỉ.
+faq:
+  - q: Nhân viên của tôi có cần tài khoản Ecbot trước không?
+    a: Không. Bạn mời bằng địa chỉ email của họ. Họ tạo tài khoản với đúng email đó, rồi mở đường link trong email mời để tham gia.
+  - q: Đường link mời dùng được bao lâu?
+    a: Bảy ngày. Nếu hết hạn, hãy hủy lời mời trong mục Lời mời, rồi mời lại cùng email để gửi link mới.
+  - q: Ai được mời người khác?
+    a: Chủ workspace, và thành viên có vai trò được thêm thành viên, ví dụ vai trò Admin có sẵn. Chỉ chủ workspace mới duyệt yêu cầu tham gia, đổi vai trò và xóa thành viên.
+---
+
+Đội ngũ là tất cả những người đăng nhập được vào một workspace. Mỗi người dùng tài khoản Ecbot riêng, nên nhật ký hoạt động ghi rõ ai đã làm gì. Bạn mời nhân viên qua email, hoặc chia sẻ mã mời của workspace rồi duyệt những người xin tham gia. Mỗi thành viên có một vai trò quyết định họ được xem và thay đổi những gì.
+
+## Xem đội ngũ
+
+Mở **Cài đặt workspace** và chọn **Đội ngũ**. Danh sách hiện mọi thành viên cùng vai trò (**Chủ sở hữu**, **Quản trị viên**, **Thành viên** hoặc vai trò bạn tạo) và ngày tham gia. Chọn một thành viên để xem chi tiết.
+
+## Mời qua email
+
+<Screenshot
+  name="team-invite"
+  alt="Hộp thoại mời trên trang Đội ngũ, với ô tìm kiếm và mã mời của workspace"
+>
+  <Mark id="search">Nhập tên hoặc địa chỉ email đầy đủ.</Mark>
+  <Mark id="code">Mã mời của workspace. Sao chép để gửi cho nhân viên.</Mark>
+</Screenshot>
+
+1. Ở trang **Đội ngũ**, chọn **Mời**.
+2. Nhập địa chỉ email đầy đủ của người cần mời. Bạn cũng có thể nhập tên để tìm những người đã làm việc với bạn ở workspace khác.
+3. Chọn nút mời bên cạnh người đó hoặc email đó.
+
+Ecbot gửi cho họ email có đường link mời, dùng được trong bảy ngày. Nếu họ đã có tài khoản, họ cũng nhận thông báo trong ứng dụng. Họ đăng nhập bằng đúng email được mời và mở link để tham gia. Nếu họ đang đăng nhập bằng tài khoản khác, trang sẽ có nút **Đăng nhập bằng tài khoản khác**.
+
+Thành viên mới nhận vai trò **Thành viên**, trừ khi bạn chọn vai trò khác.
+
+Trên Ecbot bản dịch vụ, gói của bạn quy định số thành viên tối đa của workspace, tính cả chủ workspace. Mỗi lời mời đang chờ giữ một chỗ cho tới khi được chấp nhận hoặc bị hủy. Khi hết chỗ, hãy xóa bớt thành viên, hủy lời mời hoặc [đổi gói](/docs/workspace/billing).
+
+### Quản lý lời mời đang chờ
+
+Mở **Lời mời** trong nhóm **Đội ngũ** để xem các lời mời chưa được chấp nhận. Tại đây bạn đổi vai trò người đó sẽ nhận, hoặc hủy lời mời để link không dùng được nữa.
+
+## Tham gia bằng mã mời
+
+Mỗi workspace có một mã mời ngắn, hiện ở cuối hộp thoại mời. Cách này tiện khi bạn không muốn gom email của từng người.
+
+1. Sao chép mã và gửi cho nhân viên.
+2. Họ đăng ký hoặc đăng nhập, chọn **Tham gia bằng mã** (ở màn hình chào mừng, dưới dòng "Được mời vào một không gian làm việc?") và nhập mã.
+3. Chủ workspace nhận được yêu cầu tham gia. Mở **Yêu cầu tham gia** trong nhóm **Đội ngũ** và chọn **Phê duyệt**.
+
+Ai có mã cũng gửi được yêu cầu, nhưng chỉ vào được workspace khi chủ workspace phê duyệt.
+
+## Đổi vai trò hoặc xóa thành viên
+
+Mở menu ở cuối dòng của thành viên:
+
+- **Gán vai trò cho thành viên** mở danh sách vai trò. Chọn một vai trò rồi chọn **Gán vai trò**. Xem [Vai trò và quyền hạn](/docs/workspace/roles) để biết mỗi vai trò được làm gì.
+- **Xóa thành viên** đưa họ ra khỏi workspace ngay lập tức. Tin nhắn và hoạt động trước đó của họ vẫn được giữ.
+
+Chỉ chủ workspace mới đổi vai trò và xóa thành viên, và không ai tự xóa mình theo cách này. API key do thành viên đã bị xóa tạo ra sẽ ngừng hoạt động, vì key hoạt động thay cho người tạo ra nó (xem [Ecbot MCP Server](/docs/dev/mcp)).
