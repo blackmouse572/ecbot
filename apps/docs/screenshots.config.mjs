@@ -743,4 +743,162 @@ export const shots = [
       { id: "saved", target: "[role=dialog] >> role=checkbox", up: 1, pad: 4 },
     ],
   },
+  {
+    name: "workspace-settings",
+    path: "/:ws/settings/workspace",
+    marks: [
+      {
+        id: "nav",
+        target: "role=link[name=/^(General|Chung)$/]",
+        to: "role=link[name=/^API keys?$/]",
+        pad: 6,
+      },
+      { id: "edit", target: "main >> text=/^(Edit|Chỉnh sửa)$/", pad: 4 },
+      {
+        id: "danger",
+        target: "main >> text=/^(Danger zone|Vùng nguy hiểm)$/",
+        up: 2,
+      },
+    ],
+  },
+  {
+    name: "team-invite",
+    path: "/:ws/settings/members",
+    setup: async (page) => {
+      await page
+        .getByRole("main")
+        .getByRole("button", { name: /^(Invite member|Mời)$/ })
+        .click();
+      await page.locator("[role=alertdialog] input").waitFor();
+      await page.waitForTimeout(1500);
+    },
+    marks: [
+      { id: "search", target: "[role=alertdialog] >> input", up: 1, pad: 2 },
+      {
+        id: "code",
+        target:
+          "[role=alertdialog] >> text=/^(Secret Invitation Code|Mã mời):/",
+        up: 1,
+        pad: 4,
+      },
+    ],
+  },
+  {
+    name: "role-create",
+    path: "/:ws/settings/roles/create",
+    setup: async (page) => {
+      await page.locator("input[name=name]").fill("Sales staff");
+      await page.getByRole("checkbox", { name: /^Agent$/ }).click();
+      await page
+        .getByRole("checkbox", { name: /^(Customer|Khách hàng)$/ })
+        .click();
+    },
+    marks: [
+      { id: "name", target: "input[name=name]", pad: 4 },
+      {
+        id: "permissions",
+        target: "text=/^(Permissions|Quyền hạn)$/",
+        up: 2,
+        pad: 6,
+      },
+    ],
+  },
+  {
+    name: "billing",
+    path: "/:ws/settings/billing",
+    marks: [
+      {
+        id: "plan",
+        target: "main >> text=/^(Plan|Gói)$/",
+        up: 2,
+        pad: 2,
+      },
+      {
+        id: "change",
+        target: "main >> role=button[name=/^(Change plan|Đổi gói)$/]",
+        pad: 4,
+      },
+      {
+        id: "history",
+        target: "main >> text=/^(Payment history|Lịch sử thanh toán)$/",
+        up: 1,
+        pad: 2,
+      },
+    ],
+  },
+  {
+    name: "account-profile",
+    path: "/settings/profile",
+    marks: [
+      {
+        id: "nav",
+        target: "role=link[name=/^(Profile|Hồ sơ)$/]",
+        to: "role=link[name=/^(Sessions|Phiên đăng nhập)$/]",
+        pad: 6,
+      },
+      {
+        id: "mfa",
+        target: "main >> text=/^(Two-step verification|Xác minh hai bước)$/",
+        up: 3,
+        pad: 2,
+      },
+      {
+        id: "export",
+        target:
+          "main >> text=/^(Download my data|Tải dữ liệu của tôi)$/ >> nth=0",
+        up: 3,
+        pad: 2,
+      },
+      {
+        id: "delete",
+        target: "main >> text=/^(Delete account|Xóa tài khoản)$/",
+        up: 3,
+        pad: 2,
+      },
+    ],
+  },
+  {
+    name: "account-preferences",
+    path: "/settings/preferences",
+    setup: async (page) => {
+      // Headless Chromium reports notifications as blocked, which the page
+      // would show; capture what a new visitor sees instead.
+      await page.addInitScript(() =>
+        Object.defineProperty(Notification, "permission", {
+          get: () => "default",
+        }),
+      );
+      await page.reload({ waitUntil: "load" });
+      await page.waitForTimeout(3500);
+      await page.addStyleTag({
+        content:
+          "*{animation:none!important;transition:none!important}.tsqd-parent-container,[data-agentation-portal],agentation-toolbar{display:none!important}",
+      });
+      await page
+        .getByText(/^(Notifications|Thông báo)$/)
+        .evaluate((el) => el.scrollIntoView({ block: "start" }));
+      await page.waitForTimeout(500);
+    },
+    marks: [
+      {
+        id: "general",
+        target: "main >> text=/^(Language|Ngôn ngữ)$/",
+        up: 1,
+        to: "main >> text=/^(System|Hệ thống)$/",
+        pad: 4,
+      },
+      {
+        id: "notifications",
+        target: "main >> text=/^(Notifications|Thông báo)$/",
+        up: 2,
+        pad: 2,
+      },
+      {
+        id: "app",
+        target: "main >> text=/^(Ecbot app|Ứng dụng Ecbot)$/",
+        up: 2,
+        pad: 2,
+      },
+    ],
+  },
 ];

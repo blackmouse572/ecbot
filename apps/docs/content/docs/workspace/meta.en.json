@@ -1,0 +1,5 @@
+{
+  "title": "Workspace",
+  "pages": ["team", "roles", "billing"],
+  "defaultOpen": true
+}

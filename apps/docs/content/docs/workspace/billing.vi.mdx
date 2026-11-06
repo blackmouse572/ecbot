@@ -1,0 +1,60 @@
+---
+title: Thanh toán
+description: Trang Thanh toán trong Cài đặt workspace hiện gói và ngày gia hạn, cho chủ workspace đổi hoặc huỷ gói, và liệt kê các khoản thanh toán kèm hoá đơn.
+faq:
+  - q: Ai được đổi gói?
+    a: Chỉ chủ workspace. Các thành viên khác thấy gói hiện tại và một dòng ghi tên chủ workspace để hỏi.
+  - q: Chuyện gì xảy ra khi tôi huỷ gói?
+    a: Gói vẫn hoạt động tới hết kỳ bạn đã trả tiền. Sau đó workspace chuyển sang gói miễn phí, và agent nào vượt giới hạn của gói đó sẽ ngừng trả lời.
+  - q: Bản tự cài đặt có trang Thanh toán không?
+    a: Không. Gói và thanh toán thuộc về Ecbot bản dịch vụ tại ecbot.dev. Bản tự cài đặt không giới hạn theo gói.
+---
+
+Mỗi workspace có gói riêng. Trang **Thanh toán** trong Cài đặt workspace cho biết workspace đang dùng gói nào, khi nào gia hạn và đã dùng bao nhiêu quota. Chủ workspace đổi hoặc huỷ gói tại đây, thanh toán, và tải hoá đơn của từng khoản.
+
+## Mở trang Thanh toán
+
+Mở **Cài đặt workspace** và chọn **Thanh toán**.
+
+<Screenshot
+  name="billing"
+  alt="Trang Thanh toán với gói hiện tại và lịch sử thanh toán"
+>
+  <Mark id="plan">
+    Gói hiện tại, phần quota token và dung lượng kiến thức đã dùng, và ngày gia
+    hạn hoặc kết thúc.
+  </Mark>
+  <Mark id="change">**Đổi gói** mở danh sách các gói.</Mark>
+  <Mark id="history">
+    **Lịch sử thanh toán** liệt kê mọi khoản thanh toán và hoá đơn.
+  </Mark>
+</Screenshot>
+
+## Đổi gói
+
+Chọn **Đổi gói** và chọn một gói.
+
+- **Nâng cấp**: bạn chuyển sang gói mới ngay. Hôm nay bạn chỉ trả phần chênh lệch cho thời gian còn lại của kỳ này.
+- **Hạ gói**: bạn giữ gói hiện tại tới hết kỳ, rồi mới chuyển.
+
+Trước khi trả tiền, bạn thấy bảng tóm tắt với giá và số token gói có mỗi kỳ. Chọn cách thanh toán, rồi **Tiếp tục thanh toán**. Khi thanh toán xong, bạn quay lại trang Thanh toán và gói mới hiện trên trang.
+
+Nếu gói tự gia hạn bằng thẻ đã lưu, chọn **Đổi thẻ thanh toán** để cập nhật thẻ. Nếu bạn trả một lần cho kỳ này, chọn **Gia hạn** để trả cho kỳ tiếp theo trước khi kỳ này kết thúc.
+
+## Huỷ hoặc khôi phục gói
+
+Chọn **Huỷ gói đăng ký**, cho chúng tôi biết lý do, rồi chọn **Huỷ vào cuối kỳ**. Gói vẫn hoạt động tới ngày kết thúc, và trang hiện ngày gói bị huỷ. Đổi ý? Chọn **Khôi phục gói đăng ký** trước ngày đó.
+
+## Thanh toán và hoá đơn
+
+**Lịch sử thanh toán** liệt kê từng khoản với ngày, nội dung (đăng ký gói, gia hạn, đổi gói hoặc [nạp thêm token](/docs/agents/usage)), số tiền, mã tham chiếu để báo khi cần hỗ trợ, và trạng thái:
+
+| Trạng thái         | Ý nghĩa                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| **Chờ thanh toán** | Đã bắt đầu thanh toán nhưng chưa xong. Chọn **Thanh toán ngay** để hoàn tất.                    |
+| **Đã thanh toán**  | Thanh toán thành công. Chọn **Tải hoá đơn** để lấy bản sao khi cổng thanh toán đã xuất hoá đơn. |
+| **Thất bại**       | Thẻ bị từ chối hoặc phiên thanh toán bị lỗi. Chọn **Thử lại**.                                  |
+| **Hết hạn**        | Không hoàn tất thanh toán kịp thời gian. Bắt đầu lại từ **Đổi gói**.                            |
+| **Đã hoàn tiền**   | Tiền đã được trả lại.                                                                           |
+
+Chỉ chủ workspace mới xem được các khoản thanh toán. Để theo dõi agent dùng bao nhiêu token, mở trang [Usage](/docs/agents/usage).

@@ -1,0 +1,60 @@
+---
+title: Team and invitations
+description: Invite your staff to a workspace by email or with a join code, approve join requests, give each person a role and remove people who leave.
+faq:
+  - q: Does my staff member need an Ecbot account first?
+    a: No. Invite their email address. They create an account with that same email, then open the link in the invitation email to join.
+  - q: How long does an invitation link work?
+    a: Seven days. If it expires, revoke it under Invitations, then invite the same email again to send a new link.
+  - q: Who can invite people?
+    a: The workspace owner, and members whose role can add members, such as the built-in Admin role. Only the owner can approve join requests, change roles and remove members.
+---
+
+Your team is everyone who can sign in to a workspace. Each person uses their own Ecbot account, so the activity log shows who did what. Invite staff by email, or share the workspace join code and approve the people who ask to join. Each member gets a role that decides what they can see and change.
+
+## See your team
+
+Open **Workspace settings** and choose **Team**. The list shows every member with their role (**Workspace owner**, **Admin**, **Workspace member** or a role you created) and when they joined. Choose a member to see their details.
+
+## Invite by email
+
+<Screenshot
+  name="team-invite"
+  alt="The invite dialog on the Team page, with the search box and the workspace join code"
+>
+  <Mark id="search">Type a name or a full email address.</Mark>
+  <Mark id="code">The workspace's join code. Copy it to share with staff.</Mark>
+</Screenshot>
+
+1. On **Team**, choose **Invite member**.
+2. Type the person's full email address. You can also type a name to find people who already work with you in another workspace.
+3. Choose the invite button next to the person or the email.
+
+Ecbot emails them an invitation link that works for seven days. If they already have an account, they also get a notification in the app. They sign in with the invited email and open the link to join. If they are signed in with a different account, the page offers **Sign in with another account**.
+
+New members get the **Member** role unless you set another one.
+
+On the hosted Ecbot, your plan sets how many members a workspace can have, the owner included. A pending invitation holds a seat until it is accepted or revoked. When no seat is free, remove a member, revoke an invitation or [change your plan](/docs/workspace/billing).
+
+### Manage pending invitations
+
+Open **Invitations** under **Team** to see invitations that have not been accepted yet. There you can change the role the person will get, or revoke the invitation so the link stops working.
+
+## Join with a code
+
+Every workspace has a short join code, shown at the bottom of the invite dialog. It is handy when you do not want to collect everyone's email.
+
+1. Copy the code and send it to your staff.
+2. They sign up or sign in, choose **Join with a code** (on the welcome screen, under "Invited to a workspace?"), and enter the code.
+3. The owner gets a join request. Open **Join requests** under **Team** and choose **Approve**.
+
+Anyone with the code can ask to join, but nobody gets in until the owner approves.
+
+## Change a member's role or remove them
+
+Open the menu at the end of a member's row:
+
+- **Assign Role to Member** opens the list of roles. Pick one and choose **Assign Role**. See [Roles and permissions](/docs/workspace/roles) for what each role allows.
+- **Remove member** takes them out of the workspace right away. Their past messages and activity stay.
+
+Only the owner can change roles and remove members, and nobody can remove themselves this way. API keys created by a removed member stop working, because a key acts as its creator (see [Ecbot MCP Server](/docs/dev/mcp)).
