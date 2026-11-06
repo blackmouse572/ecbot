@@ -1,6 +1,7 @@
 import {
   BookOpen,
   CircleHalfSolid,
+  CogSixTooth,
   EllipsisHorizontal,
   OpenRectArrowOut,
   TimelineVertical,
@@ -10,7 +11,9 @@ import { Avatar, DropdownMenu, Text, clx } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
 import { useLogout, useMe, useWorkspace } from "@/hooks/api";
+import { useWorkspaceAbilities } from "@/modules/auth";
 import { enterpriseUserSection } from "@/routes/enterprise.user-section";
+import { workspaceSettingsPath } from "../main-layout/workspace-settings-path";
 import { Skeleton } from "@repo/ui/common-components";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -24,6 +27,7 @@ export const UserMenu = () => {
   // current workspace — and the settings sidebar has no workspace in its URL, so
   // mount them only once a workspace is resolved.
   const { workspace } = useWorkspace();
+  const { isWorkspaceOwner } = useWorkspaceAbilities();
 
   const [openMenu, setOpenMenu] = useState(false);
 
@@ -35,7 +39,7 @@ export const UserMenu = () => {
         ))}
       <DropdownMenu open={openMenu} onOpenChange={setOpenMenu}>
         <UserBadge />
-        <DropdownMenu.Content className="min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)]">
+        <DropdownMenu.Content className="z-50 min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)]">
           <UserItem />
           <DropdownMenu.Separator />
           <DropdownMenu.Item asChild>
@@ -44,6 +48,17 @@ export const UserMenu = () => {
               {t("app.menus.user.profileSettings")}
             </Link>
           </DropdownMenu.Item>
+          {workspace && isWorkspaceOwner && (
+            <DropdownMenu.Item asChild>
+              <Link
+                to={workspaceSettingsPath(workspace.slug)}
+                state={{ from: location.pathname }}
+              >
+                <CogSixTooth className="text-ui-fg-subtle mr-2 shrink-0" />
+                {t("app.menus.user.workspaceSettings")}
+              </Link>
+            </DropdownMenu.Item>
+          )}
           <DropdownMenu.Separator />
           <DropdownMenu.Item asChild>
             <Link to="https://docs.medusajs.com" target="_blank">

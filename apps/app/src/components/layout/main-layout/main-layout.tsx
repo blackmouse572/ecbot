@@ -1,7 +1,7 @@
 import {
+  ChevronUpDown,
   CogSixTooth,
   CursorArrowRays,
-  EllipsisHorizontal,
   House,
   MagnifyingGlass,
   OpenRectArrowOut,
@@ -34,6 +34,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useWorkspaceAbilities } from "@/modules/auth";
 import { ROUTES } from "@/routes";
 import { WorkspaceSuspended } from "./workspace-suspended";
+import { workspaceSettingsPath } from "./workspace-settings-path";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
 
 // The type of the nested nav entries used in the workspace nav group below
@@ -116,6 +117,7 @@ const MainSidebar = ({ workspaces, currentWorkspace }: MainSidebarProps) => {
         <div className="bg-ui-bg-subtle sticky bottom-0 z-10">
           <ScrollEdgeBlur side="bottom" visible={edges.bottom} />
           <GettingStartedNav />
+          <WorkspaceSettingsItem />
           <UserSection />
         </div>
       </div>
@@ -208,16 +210,16 @@ const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
               <Skeleton className="h-[9px] w-[120px]" />
             )}
           </div>
-          <EllipsisHorizontal className="text-ui-fg-muted" />
+          <ChevronUpDown className="text-ui-fg-muted" />
         </DropdownMenu.Trigger>
 
-        <DropdownMenu.Content className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-0">
+        <DropdownMenu.Content className="z-50 w-[var(--radix-dropdown-menu-trigger-width)] min-w-0">
           <DropdownMenu.Item
             className="flex items-center gap-x-3 px-2 py-1"
             onClick={() =>
-              navigate(
-                `/${workspace.slug}/${ROUTES.Settings}/${ROUTES.Workspace}`,
-              )
+              navigate(workspaceSettingsPath(workspace.slug), {
+                state: { from: location.pathname },
+              })
             }
           >
             <Avatar
@@ -237,6 +239,17 @@ const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
               </Text>
             </div>
           </DropdownMenu.Item>
+          {isWorkspaceOwner && (
+            <DropdownMenu.Item className="gap-x-2" asChild>
+              <Link
+                to={workspaceSettingsPath(workspace.slug)}
+                state={{ from: location.pathname }}
+              >
+                <CogSixTooth className="text-ui-fg-subtle" />
+                {t("app.nav.main.storeSettings")}
+              </Link>
+            </DropdownMenu.Item>
+          )}
 
           {/* Workspaces List */}
           {workspaces.length > 0 && (
@@ -273,21 +286,6 @@ const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
               {t("onboard.select.create.label")}
             </Link>
           </DropdownMenu.Item>
-
-          {/* Settings */}
-          {isWorkspaceOwner && (
-            <>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item className="gap-x-2" asChild>
-                <Link
-                  to={`/${workspace.slug}/${ROUTES.Settings}/${ROUTES.Workspace}/edit`}
-                >
-                  <CogSixTooth className="text-ui-fg-subtle" />
-                  {t("app.nav.main.storeSettings")}
-                </Link>
-              </DropdownMenu.Item>
-            </>
-          )}
         </DropdownMenu.Content>
       </DropdownMenu>
     </div>
@@ -369,6 +367,28 @@ const UtilitySection = () => {
         icon={<CursorArrowRays />}
       />
     </div>
+  );
+};
+
+/** Pinned above the user menu so it stays in view on every page. */
+const WorkspaceSettingsItem = () => {
+  const location = useLocation();
+  const { workspaceSlug } = useWorkspaceParams();
+  const { isWorkspaceOwner } = useWorkspaceAbilities();
+  const { t } = useTranslation();
+
+  if (!isWorkspaceOwner) return null;
+
+  return (
+    <nav className="flex flex-col pb-2">
+      <NavItem
+        label={t("app.nav.main.storeSettings")}
+        to={workspaceSettingsPath(workspaceSlug)}
+        from={location.pathname}
+        type="core"
+        icon={<CogSixTooth />}
+      />
+    </nav>
   );
 };
 

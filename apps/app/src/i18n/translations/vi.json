@@ -154,6 +154,7 @@
     "menus": {
       "user": {
         "profileSettings": "Cài đặt hồ sơ",
+        "workspaceSettings": "Cài đặt không gian làm việc",
         "documentation": "Tài liệu",
         "changelog": "Nhật ký thay đổi",
         "theme": {

@@ -154,6 +154,7 @@
     "menus": {
       "user": {
         "profileSettings": "Profile Settings",
+        "workspaceSettings": "Workspace settings",
         "documentation": "Documentation",
         "changelog": "What's New",
         "theme": {
