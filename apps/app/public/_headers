@@ -21,3 +21,8 @@
   Cache-Control: no-cache
 /favicon/site.webmanifest
   Cache-Control: no-cache
+
+# Which commit is live (written at build time by build-info.ts). It changes on
+# every deploy, so it must never be cached.
+/build-info.json
+  Cache-Control: no-store
