@@ -1595,12 +1595,25 @@
     },
     "delete": {
       "title": "Xóa vai trò",
-      "description": "Bạn có chắc muốn xóa vai trò này? Thao tác này không thể hoàn tác."
+      "description": "Bạn có chắc muốn xóa vai trò này? Thao tác này không thể hoàn tác.",
+      "success": "Đã xóa vai trò",
+      "error": "Không thể xóa vai trò"
     },
     "list": {
       "noRecordsTitle": "Chưa có vai trò nào",
       "noRecordsMessage": "Vai trò quyết định mỗi thành viên được xem và chỉnh sửa những gì trong workspace.",
       "createFirst": "Tạo vai trò"
+    },
+    "create": {
+      "namePlaceholder": "Ví dụ: Nhân viên bán hàng",
+      "descriptionPlaceholder": "Vai trò này dùng để làm gì"
+    },
+    "edit": {
+      "title": "Sửa vai trò",
+      "description": "Thay đổi những gì vai trò này được làm.",
+      "nameHint": "Không thể đổi tên vai trò sau khi đã tạo.",
+      "success": "Đã cập nhật vai trò",
+      "error": "Không thể cập nhật vai trò"
     }
   },
   "profile": {
@@ -1681,6 +1694,16 @@
       "loading": "Đang chuẩn bị dữ liệu của bạn...",
       "success": "Đã tải xong dữ liệu của bạn.",
       "error": "Chưa thể chuẩn bị dữ liệu. Bạn vui lòng thử lại."
+    },
+    "edit": {
+      "title": "Sửa hồ sơ",
+      "success": "Đã cập nhật hồ sơ",
+      "error": "Không thể cập nhật hồ sơ của bạn"
+    },
+    "status": {
+      "ACTIVE": "Đang hoạt động",
+      "INACTIVE": "Ngừng hoạt động",
+      "BLOCKED": "Bị khóa"
     }
   },
   "changePassword": {

@@ -3870,7 +3870,7 @@ export type KnowledgeItemAdminGetResponseDto = {
 export type UserUpdateProfileRequestDto = {
     name: string;
     country: string;
-    gender: 'MALE' | 'FEMALE';
+    gender?: 'MALE' | 'FEMALE';
     avatar?: string;
     /**
      * Image file to upload
