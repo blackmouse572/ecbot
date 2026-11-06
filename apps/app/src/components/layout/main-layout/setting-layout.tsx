@@ -58,7 +58,7 @@ const useMyAccountRoutes = (): INavItem[] => {
 /**
  * Ensure that the `from` prop is not another settings route, to avoid
  * the user getting stuck in a navigation loop: those fall back to the
- * workspace the back link names.
+ * last workspace.
  */
 const getSafeFromValue = (from: string) =>
   from.startsWith("/settings") ? undefined : from;
@@ -87,7 +87,6 @@ const SettingsSidebar = () => {
           </SidebarCollapsibleSection>
         </div>
         <div className="bg-ui-bg-subtle sticky bottom-0">
-          <WorkspaceSettingsHint />
           <UserSection />
         </div>
       </div>
@@ -95,30 +94,11 @@ const SettingsSidebar = () => {
   );
 };
 
-/** The workspace the user last worked in, for the back link and the hint. */
+/** The workspace the user last worked in, for the back link. */
 const useLastWorkspace = () => {
   const { workspaces } = useWorkspaceList();
   const { slug } = useResolvedWorkspaceSlug();
   return workspaces.find((ws) => ws.slug === slug);
-};
-
-/** Account settings hold no workspace pages: point to where they live. */
-export const WorkspaceSettingsHint = () => {
-  const { t } = useTranslation();
-  const workspace = useLastWorkspace();
-  if (!workspace) return null;
-
-  return (
-    <Text size="xsmall" className="text-ui-fg-subtle px-5 pb-3">
-      {t("settings.workspaceHint.text")}{" "}
-      <Link
-        to={`/${workspace.slug}/${ROUTES.Settings}/${ROUTES.Workspace}`}
-        className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-      >
-        {t("settings.workspaceHint.link")}
-      </Link>
-    </Text>
-  );
 };
 
 export const AccountSettingsHeader = () => {
@@ -154,9 +134,7 @@ export const AccountSettingsHeader = () => {
             size="small"
             className="truncate"
           >
-            {workspace
-              ? t("settings.backTo", { name: workspace.name })
-              : t("app.nav.settings.header")}
+            {workspace ? t("settings.back") : t("app.nav.settings.header")}
           </Text>
         </div>
       </Link>

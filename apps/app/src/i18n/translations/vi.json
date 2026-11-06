@@ -2657,13 +2657,9 @@
       "keyIdHint": "Đây chỉ là mã công khai. Key đầy đủ chỉ hiện một lần, lúc bạn tạo key.",
       "noReadPermission": "Bạn không thể xem API key trong workspace này. Hãy nhờ chủ workspace hoặc admin."
     },
-    "backTo": "Quay lại {{name}}",
     "general": "Chung",
     "developers": "Nhà phát triển",
-    "workspaceHint": {
-      "text": "Bạn tìm thành viên hoặc API key?",
-      "link": "Cài đặt workspace"
-    }
+    "back": "Quay lại"
   },
   "tools": {
     "destructiveAction": "Có thể xóa dữ liệu",
