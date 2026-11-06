@@ -116,6 +116,12 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
   const turnstile = useTurnstile(turnstileConfig, "sign-up");
   const [isInvalid, setIsInvalid] = useState(false);
 
+  // The banner reports the last submit; once the person edits, it is stale.
+  useEffect(() => {
+    const subscription = form.watch(() => setIsInvalid(false));
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   // Spans the whole submit lifecycle (honeypot/password check + turnstile
   // wait + onSubmit), not just the network call — that's the window a fast
   // double-click needs blocked.

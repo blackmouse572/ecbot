@@ -1,20 +1,31 @@
 import { RegisterForm } from "@repo/auth/components";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const reset = vi.fn();
 /** How the stubbed widget behaves once mounted. */
 let widget: "errors" | "silent" = "errors";
+/** Set on every render so a test can solve the widget late. */
+let lastOnSuccess: ((token: string) => void) | undefined;
 
 vi.mock("@marsidev/react-turnstile", () => ({
   Turnstile: ({
     onError,
+    onSuccess,
     ref,
   }: {
     onError?: () => void;
+    onSuccess?: (token: string) => void;
     ref?: { current: unknown };
   }) => {
     if (ref) ref.current = { reset };
+    lastOnSuccess = onSuccess;
     if (widget === "errors") queueMicrotask(() => onError?.());
     return <div data-testid="turnstile" />;
   },
@@ -85,6 +96,7 @@ describe("RegisterForm never swallows a submit", () => {
   beforeEach(() => {
     reset.mockClear();
     widget = "errors";
+    lastOnSuccess = undefined;
     // The widget script loaded, so a retry resets it instead of reloading.
     Object.assign(window, { turnstile: {} });
   });
@@ -143,5 +155,40 @@ describe("RegisterForm never swallows a submit", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(screen.queryByText(MESSAGES.invalid)).toBeNull();
+  });
+
+  it("clears the alert and submits once the widget solves late", async () => {
+    widget = "silent";
+    const { onSubmit, form } = renderAndFill();
+
+    fireEvent.submit(form);
+    await screen.findByText(
+      TURNSTILE.messages.unavailable,
+      {},
+      { timeout: 5000 },
+    );
+
+    act(() => lastOnSuccess?.("late-tok"));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+
+    fireEvent.submit(form);
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      turnstileToken: "late-tok",
+    });
+  }, 8000);
+
+  it("drops the invalid-form message once the person edits", async () => {
+    const { form } = renderAndFill({ countries: [], withTurnstile: false });
+
+    fireEvent.submit(form);
+    await screen.findByText(MESSAGES.invalid);
+
+    fireEvent.change(screen.getByPlaceholderText("Name"), {
+      target: { value: "Lan Anh" },
+    });
+    await waitFor(() =>
+      expect(screen.queryByText(MESSAGES.invalid)).toBeNull(),
+    );
   });
 });

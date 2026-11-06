@@ -83,11 +83,13 @@ const useTurnstile = (config?: ITurnstileConfig, action?: TTurnstileAction) => {
     setToken,
     setError,
     setIsInteractive,
+    setIsBlocked,
     /**
      * Resolves with the token for the top of a submit handler. If the user
      * submitted before the invisible widget finished solving, waits briefly
      * instead of failing outright — Turnstile normally resolves within a
-     * second. Only surfaces the `required` error if it never arrives.
+     * second. If it never arrives, returns `undefined` and marks the submit
+     * blocked, which shows the unavailable message and a retry.
      */
     waitForToken: async (): Promise<string | undefined> => {
       if (!config) return undefined;
@@ -182,11 +184,15 @@ const TurnstileField: React.FC<{ turnstile: TTurnstile }> = ({ turnstile }) => {
           turnstile.setToken(token);
           turnstile.setError(undefined);
           turnstile.setIsInteractive(false);
+          // A late solve after a blocked submit: the check works now.
+          turnstile.setIsBlocked(false);
         }}
         onExpire={() => turnstile.setToken(undefined)}
         onError={() => {
           turnstile.setToken(undefined);
           turnstile.setError(config.messages.failed);
+          // A challenge that failed is no longer waiting on a click.
+          turnstile.setIsInteractive(false);
         }}
         onBeforeInteractive={() => turnstile.setIsInteractive(true)}
         onAfterInteractive={() => turnstile.setIsInteractive(false)}
