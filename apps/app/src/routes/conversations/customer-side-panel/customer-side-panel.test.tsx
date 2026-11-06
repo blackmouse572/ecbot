@@ -34,6 +34,7 @@ vi.mock("@/hooks/api/customer-tag-assignments", () => ({
 }));
 vi.mock("@/hooks/api/customer-tags", () => ({
   useCustomerTagList: () => ({ tags: [], isLoading: false }),
+  useCreateCustomerTag: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock("@/hooks/api/customer-merge-suggestions", () => ({
   useUnmergeCustomer: () => ({ mutate: vi.fn(), isPending: false }),

@@ -2341,6 +2341,9 @@
           "title": "Tags",
           "empty": "No tags yet",
           "add": "Add tag",
+          "searchPlaceholder": "Search tags…",
+          "noResults": "No tags found",
+          "create": "Create tag \"{{query}}\"",
           "remove": "Remove",
           "emptyHint": "Pick a tag below to group this customer."
         },
