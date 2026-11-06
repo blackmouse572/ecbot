@@ -17,6 +17,7 @@ const findOne = vi.mocked(chatbotClientControllerFindOneV1);
 const me = vi.mocked(clientCredentialClientControllerMeV1);
 
 const READ_TOOLS = [
+  "get_account",
   "get_bot_analytics",
   "get_chatbot",
   "get_conversation",
@@ -29,6 +30,7 @@ const READ_TOOLS = [
   "get_plan_usage",
   "get_skill",
   "get_workspace_tool",
+  "list_accounts",
   "list_chatbot_knowledge",
   "list_chatbot_models",
   "list_chatbot_skills",
@@ -120,6 +122,7 @@ describe("/mcp", () => {
   // it is not read-only: the chatbot's own Tools run and tokens are spent.
   it("lists every read-scoped tool, read-only except test_chatbot", async () => {
     permits([
+      { subject: "ACCOUNT", action: ["read"] },
       { subject: "CHATBOT", action: ["read"] },
       { subject: "KNOWLEDGE_BASE", action: ["read"] },
       { subject: "CUSTOMER", action: ["read"] },
@@ -189,6 +192,7 @@ describe("/mcp", () => {
   // A wrong key or an API outage: each call then reports the API's error.
   it("lists every tool when the API can't say what the key may do", async () => {
     const subjects = [
+      "ACCOUNT",
       "CHATBOT",
       "KNOWLEDGE_BASE",
       "CUSTOMER",

@@ -5,6 +5,7 @@ import { ClientCredentialClientController } from '@app/modules/client-credential
 import { PlatformModule } from '@app/modules/platform/platform.module';
 import { ApiChannelClientController } from '@app/modules/platform/controllers/api-channel.client.controller';
 import { AccountModule } from '@app/modules/account/account.module';
+import { AccountClientController } from '@app/modules/account/controllers/account.client.controller';
 import { ChatbotClientController } from '@app/modules/chatbot/controllers/chatbot.client.controller';
 import { ChatbotPreviewClientController } from '@app/modules/chatbot/controllers/chatbot-preview.client.controller';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
@@ -50,6 +51,7 @@ import { Module } from '@nestjs/common';
         SkillClientController,
         ChatbotSkillClientController,
         AnalyticsClientController,
+        AccountClientController,
     ],
     providers: [],
     exports: [],

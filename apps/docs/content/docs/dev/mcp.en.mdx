@@ -78,9 +78,16 @@ Keep a file that holds your key out of shared folders and code repositories.
 | Customers | List customers and tags, read a customer and their tags | Edit a customer, create, edit or delete tags, tag or untag a customer |
 | Tools | List the workspace's tools and an agent's tools | Create an HTTP or MCP tool, edit or delete it, turn it on or off for an agent |
 | Skills | List your skills and the templates, read one | Create a skill, copy a template, edit or delete it, attach it to an agent or detach it |
+| Channels | List the connected channels and the agent on each, read one | Create an API channel or website widget, connect a Telegram bot, get a connect link for Facebook, Instagram, Zalo, WhatsApp or Threads, put an agent on a channel or take it off |
 | Analytics | The dashboard numbers for the last 7, 30 or 90 days: conversion, sentiment, agent performance, customers | |
 
 Uploading files, installing marketplace apps and permanently erasing a customer's data are only available in the app.
+
+## Connect channels
+
+Your assistant can connect the [channels](/docs/channels) that need no sign-in on another site: a REST API channel for your own app, a chat widget for your website, or a Telegram bot from the token BotFather gave you. The API channel's signing secret is shown only once, so store it when the assistant shows it.
+
+Facebook, Instagram, Zalo, WhatsApp and Threads need you to sign in on that platform in a browser, which the assistant can't do for you. Ask it to connect one and it gives you a link to the app's connect page, with the platform already picked. Sign in there, tell the assistant you're done, and it can put an agent on the new channel.
 
 ## Ask about your numbers
 
