@@ -9,8 +9,8 @@ import { ROUTES } from "../constants";
 export const NotFound = () => {
   const { t } = useTranslation();
   const { workspace } = useWorkspace();
-  const title = t("errorBoundary.badRequestTitle");
-  const message = t("errorBoundary.badRequestMessage");
+  const title = t("errorBoundary.notFoundTitle");
+  const message = t("errorBoundary.notFoundMessage");
 
   const { pathname } = useLocation();
   const startPathSegment = pathname.split("/")[1];
