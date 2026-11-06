@@ -7,7 +7,9 @@ export const DesktopSidebarContainer = ({ children }: PropsWithChildren) => {
 
   return (
     <div
-      className={clx("hidden h-screen w-[220px] border-r", {
+      // `isolate`: the sidebar's own layers (its pinned header and footer)
+      // stack inside it, never above a modal opened over the page.
+      className={clx("isolate hidden h-screen w-[220px] border-r", {
         "lg:flex": desktop,
       })}
     >

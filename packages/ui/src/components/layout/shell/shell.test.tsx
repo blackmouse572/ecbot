@@ -104,6 +104,15 @@ describe("Shell", () => {
     expect(rail.className).toContain("w-[220px]");
   });
 
+  // The sidebar pins its header and footer with z-index. Without its own
+  // stacking context those layers outrank a modal portaled to <body> (which
+  // has none), and paint over it while the nav between them is hidden.
+  it("keeps the desktop rail's layers below modals opened over the page", () => {
+    const { container } = renderShell();
+
+    expect(getDesktopRail(container)).toHaveClass("isolate");
+  });
+
   it("hides the desktop rail after toggling it closed", async () => {
     const user = userEvent.setup();
     const { container } = renderShell();
