@@ -48,4 +48,20 @@ describe("FunnelChart", () => {
     fireEvent.mouseLeave(stage);
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
+
+  it("shows a series' logo in place of its colour dot", () => {
+    const series = props.series.map((s) => ({ ...s, icon: `/${s.key}.svg` }));
+    const { container } = render(<FunnelChart {...props} series={series} />);
+    const legendLogos = () =>
+      [...container.querySelectorAll("ul img")].map((img) =>
+        img.getAttribute("src"),
+      );
+    expect(legendLogos()).toEqual(["/messenger.svg", "/zalo.svg"]);
+
+    fireEvent.mouseEnter(screen.getByRole("group", { name: "Engaged" }));
+    const tipLogos = screen
+      .getByRole("tooltip")
+      .querySelectorAll("img[src='/zalo.svg']");
+    expect(tipLogos).toHaveLength(1);
+  });
 });

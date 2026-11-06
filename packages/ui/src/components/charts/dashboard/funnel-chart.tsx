@@ -13,6 +13,8 @@ export type FunnelSeries = {
   key: string;
   label: string;
   color: string;
+  /** Logo URL, shown in place of the colour dot in the legend and tooltip. */
+  icon?: string;
   counts: number[];
 };
 
@@ -213,6 +215,7 @@ export const FunnelChart: FC<FunnelChartProps> = ({
                     key: s.key,
                     label: s.label,
                     color: s.color,
+                    icon: s.icon,
                     count: formatCount(s.counts[i] ?? 0),
                     share:
                       i > 0
@@ -241,11 +244,7 @@ export const FunnelChart: FC<FunnelChartProps> = ({
                   !on && "opacity-40",
                 )}
               >
-                <span
-                  aria-hidden
-                  className="size-2.5 rounded-full"
-                  style={{ background: s.color }}
-                />
+                <SeriesMark color={s.color} icon={s.icon} size="size-4" />
                 <Text size="xsmall" className="text-ui-fg-subtle">
                   {s.label}
                 </Text>
@@ -265,6 +264,7 @@ type StageTooltipProps = {
     key: string;
     label: string;
     color: string;
+    icon?: string;
     count: string;
     /** Share of this series' first stage; left out on the first stage. */
     share?: string;
@@ -298,11 +298,7 @@ const StageTooltip: FC<StageTooltipProps> = ({
     <ul className="flex flex-col gap-y-1">
       {rows.map((row) => (
         <li key={row.key} className="flex items-center gap-x-2">
-          <span
-            aria-hidden
-            className="size-2 shrink-0 rounded-full"
-            style={{ background: row.color }}
-          />
+          <SeriesMark color={row.color} icon={row.icon} size="size-3.5" />
           <Text size="xsmall" className="text-ui-fg-subtle flex-1 truncate">
             {row.label}
           </Text>
@@ -330,3 +326,19 @@ const StageTooltip: FC<StageTooltipProps> = ({
     )}
   </div>
 );
+
+/** A series' logo when it has one, else its colour as a dot. */
+const SeriesMark: FC<{ color: string; icon?: string; size: string }> = ({
+  color,
+  icon,
+  size,
+}) =>
+  icon ? (
+    <img src={icon} alt="" className={clx(size, "shrink-0 object-contain")} />
+  ) : (
+    <span
+      aria-hidden
+      className="size-2.5 shrink-0 rounded-full"
+      style={{ background: color }}
+    />
+  );
