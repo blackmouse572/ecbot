@@ -71,6 +71,14 @@ const renderDialog = () =>
     </I18nextProvider>,
   );
 
+// The search is debounced.
+const search = async (value: string) => {
+  fireEvent.change(screen.getByPlaceholderText("Enter an email address"), {
+    target: { value },
+  });
+  await act(() => new Promise((resolve) => setTimeout(resolve, 600)));
+};
+
 describe("MemberInviteDialog", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -84,21 +92,31 @@ describe("MemberInviteDialog", () => {
     expect(screen.queryByText("People found")).not.toBeInTheDocument();
   });
 
-  it("asks for an email address and shows people found directly", () => {
+  it("shows nobody until something is typed", () => {
     invitableUsers.current = [
       { id: "u-1", name: "Lan", email: "lan@example.com" },
     ];
     renderDialog();
 
-    expect(screen.getByText("lan@example.com")).toBeInTheDocument();
-
     expect(
       screen.getByPlaceholderText("Enter an email address"),
     ).toBeInTheDocument();
+    expect(screen.queryByText("lan@example.com")).not.toBeInTheDocument();
+    expect(screen.queryByText("People found")).not.toBeInTheDocument();
+  });
+
+  it("shows people found directly once something is typed", async () => {
+    invitableUsers.current = [
+      { id: "u-1", name: "Lan", email: "lan@example.com" },
+    ];
+    renderDialog();
+    await search("lan");
+
+    expect(screen.getByText("lan@example.com")).toBeInTheDocument();
+    expect(screen.getByText("People found")).toBeInTheDocument();
     expect(
       screen.queryByText(/Type the full email address/),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("People found")).toBeInTheDocument();
   });
 
   it("invites as Member and names the invitee", async () => {
@@ -107,6 +125,7 @@ describe("MemberInviteDialog", () => {
     ];
     inviteUser.mockResolvedValue({});
     renderDialog();
+    await search("lan");
 
     await act(async () => {
       fireEvent.click(

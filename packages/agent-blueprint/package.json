@@ -16,8 +16,8 @@
     "./locales/skills.vi.json": "./locales/skills.vi.json"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "build": "node init && tsc -p tsconfig.build.json",
+    "dev": "node init && tsc -p tsconfig.build.json --watch --preserveWatchOutput",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "clean": "git clean -xdf .turbo dist node_modules"

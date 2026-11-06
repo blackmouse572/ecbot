@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --env-file .env",
+    "dev": "node init && wrangler dev --env-file .env",
     "deploy": "wrangler deploy",
     "test": "vitest run",
     "cf-typegen": "wrangler types"

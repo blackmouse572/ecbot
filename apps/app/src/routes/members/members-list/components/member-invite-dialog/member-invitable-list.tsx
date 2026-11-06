@@ -31,7 +31,12 @@ export function MemberInvitableList({
   onInvited,
 }: MemberInvitableListProps) {
   const { t } = useTranslation();
-  const { users, isLoading, isFetching } = useInvitableUsers(
+  const hasSearch = !!search?.trim();
+  const {
+    users: results,
+    isLoading,
+    isFetching,
+  } = useInvitableUsers(
     {
       orderBy: "createdAt",
       orderDirection: "desc",
@@ -40,7 +45,8 @@ export function MemberInvitableList({
       search,
     },
     {
-      enabled,
+      // Nothing is suggested until the owner types.
+      enabled: enabled && hasSearch,
     },
   );
   const inviteUser = useInviteUser();
@@ -65,7 +71,8 @@ export function MemberInvitableList({
     }
   };
 
-  const isBusy = isLoading || isFetching;
+  const users = hasSearch ? results : [];
+  const isBusy = hasSearch && (isLoading || isFetching);
   const isEmail = looksLikeEmail(search);
   const offerTypedEmail = users?.length === 0 && isEmail;
   const hasRows = isBusy || !!users?.length || offerTypedEmail;
