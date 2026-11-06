@@ -68,22 +68,9 @@ export function MemberInvitableList({
   const isBusy = isLoading || isFetching;
   const isEmail = looksLikeEmail(search);
   const offerTypedEmail = users?.length === 0 && isEmail;
-  // Until a full address is typed there is nothing to invite, so say what to
-  // type instead of "no results".
-  const showEmailHint = !isBusy && !users?.length && !isEmail;
 
   return (
-    <CommandGroup
-      heading={
-        showEmailHint ? undefined : t("members.inviteMember.searchResults")
-      }
-    >
-      {showEmailHint && (
-        <p className="px-3 py-2 text-sm text-ui-fg-muted">
-          {t("members.inviteMember.emailHint")}
-        </p>
-      )}
-
+    <CommandGroup heading={t("members.inviteMember.searchResults")}>
       {isBusy &&
         Array.from({ length: CANDIDATES_PER_PAGE }).map((_, index) => (
           <InviteItemSkeleton key={index} />

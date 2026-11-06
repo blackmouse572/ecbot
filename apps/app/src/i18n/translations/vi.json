@@ -1518,7 +1518,10 @@
         "copySuccess": "Đã sao chép mã tham gia.",
         "copy": "Sao chép mã tham gia"
       },
-      "emailHint": "Nhập đầy đủ địa chỉ email của người bạn muốn mời."
+      "keyHints": {
+        "close": "Đóng",
+        "move": "Di chuyển"
+      }
     },
     "invitedMember": {
       "title": "Đã mời",

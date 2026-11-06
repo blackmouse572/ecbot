@@ -92,15 +92,17 @@ export const MemberInviteDialog = (
           </CommandList>
         </Command>
         <Prompt.Footer className="py-2 px-4 border-t bg-ui-bg-component flex-wrap items-center justify-between gap-2">
-          <Prompt.Cancel asChild>
-            <button
-              type="button"
-              aria-label={t("actions.close")}
-              className="rounded-md outline-none focus-visible:shadow-borders-focus"
-            >
+          <div className="flex items-center gap-x-3 text-ui-fg-muted text-xs">
+            <span className="flex items-center gap-x-1">
               <Kbd>esc</Kbd>
-            </button>
-          </Prompt.Cancel>
+              {t("members.inviteMember.keyHints.close")}
+            </span>
+            <span className="flex items-center gap-x-1">
+              <Kbd>↑</Kbd>
+              <Kbd>↓</Kbd>
+              {t("members.inviteMember.keyHints.move")}
+            </span>
+          </div>
           <div className="flex items-center gap-x-2">
             <p className="text-ui-fg-muted text-xs">
               {t("members.inviteMember.inviteCode.title")}:

@@ -78,17 +78,16 @@ describe("MemberInviteDialog", () => {
     await i18n.changeLanguage("en");
   });
 
-  it("asks for an email address, not a name", () => {
+  it("asks for an email address and shows people found directly", () => {
     renderDialog();
 
     expect(
       screen.getByPlaceholderText("Enter an email address"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Type the full email address of the person you want to invite.",
-      ),
-    ).toBeInTheDocument();
+      screen.queryByText(/Type the full email address/),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("People found")).toBeInTheDocument();
   });
 
   it("invites as Member and names the invitee", async () => {
@@ -152,7 +151,20 @@ describe("MemberInviteDialog", () => {
     expect(input).toHaveValue("");
   });
 
-  it("closes from the esc key hint", () => {
+  it("shows key hints for closing and moving, not a close button", () => {
+    renderDialog();
+
+    expect(
+      screen.queryByRole("button", { name: "Close" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("esc")).toBeInTheDocument();
+    expect(screen.getByText("Close")).toBeInTheDocument();
+    expect(screen.getByText("↑")).toBeInTheDocument();
+    expect(screen.getByText("↓")).toBeInTheDocument();
+    expect(screen.getByText("Move")).toBeInTheDocument();
+  });
+
+  it("closes on the Escape key", () => {
     const onOpenChange = vi.fn();
     render(
       <I18nextProvider i18n={i18n}>
@@ -160,10 +172,11 @@ describe("MemberInviteDialog", () => {
       </I18nextProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: "Escape",
+    });
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
-    expect(screen.getByText("esc")).toBeInTheDocument();
   });
 
   it("calls the code a join code", async () => {

@@ -1458,7 +1458,10 @@
         "copySuccess": "Join code copied.",
         "copy": "Copy join code"
       },
-      "emailHint": "Type the full email address of the person you want to invite."
+      "keyHints": {
+        "close": "Close",
+        "move": "Move"
+      }
     },
     "invitedMember": {
       "title": "Invited",
