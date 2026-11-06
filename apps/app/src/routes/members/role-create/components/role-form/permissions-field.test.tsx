@@ -62,4 +62,17 @@ describe("PermissionsField", () => {
       { subject: "TOOL", action: ["read"] },
     ]);
   });
+
+  it("keeps permissions the picker does not show", () => {
+    const onChange = renderField([
+      { subject: "TOKEN_USAGE", action: ["read"] },
+    ]);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Tools: View" }));
+
+    expect(onChange).toHaveBeenCalledWith([
+      { subject: "TOKEN_USAGE", action: ["read"] },
+      { subject: "TOOL", action: ["read"] },
+    ]);
+  });
 });

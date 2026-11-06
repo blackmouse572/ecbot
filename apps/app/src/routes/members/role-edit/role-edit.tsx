@@ -16,6 +16,13 @@ export const RoleEdit = () => {
     throw error;
   }
 
+  // Built-in roles hold permissions this form cannot show; saving one here
+  // would strip them. The row menu hides Edit for them, and a typed URL lands
+  // on not found.
+  if (role && role.type !== "USER") {
+    throw { status: 404 };
+  }
+
   return (
     <RouteDrawer prev={state?.prev}>
       <RouteDrawer.Header>

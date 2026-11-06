@@ -9,7 +9,7 @@ import { Form } from "@repo/ui/common-components";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { PermissionsField } from "../../role-create/components/role-form";
+import { PermissionsField } from "../../role-create/components";
 import { createRoleSchema, type RoleFormData } from "../../role-create/schemas";
 
 type RoleEditFormProps = { role: RoleGetResponseDto };
@@ -25,8 +25,8 @@ export const RoleEditForm: FC<RoleEditFormProps> = ({ role }) => {
     defaultValues: {
       name: role.name,
       description: role.description ?? "",
-      // SAFETY: only custom roles reach this form, and their subjects come
-      // from the same form, so they fit the form's narrower subject list.
+      // SAFETY: the API only stores subjects from ALLOWED_WORKSPACE_POLICY_SUBJECT,
+      // which the form schema mirrors, so every stored permission fits it.
       permissions: role.permissions as RoleFormData["permissions"],
     },
   });
