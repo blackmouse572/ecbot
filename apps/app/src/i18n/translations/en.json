@@ -125,7 +125,7 @@
         "label": "Search"
       },
       "main": {
-        "storeSettings": "Settings",
+        "storeSettings": "Workspace settings",
         "home": "Home"
       },
       "accounts": {
@@ -153,7 +153,7 @@
     },
     "menus": {
       "user": {
-        "profileSettings": "Profile Settings",
+        "profileSettings": "Account settings",
         "documentation": "Documentation",
         "changelog": "What's New",
         "theme": {
@@ -1740,6 +1740,14 @@
       "title": "This workspace is suspended",
       "description": "An admin has suspended this workspace, so its agents no longer reply and it can't be opened. Your data is kept. Contact support to restore access.",
       "goTo": "Go to {{name}}"
+    },
+    "switcher": {
+      "current": "Current workspace",
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "member": "Member"
+      }
     }
   },
   "subscription": {
@@ -2529,39 +2537,47 @@
       "empty": "Tags help you group customers, for example VIP or wholesale."
     },
     "clientCredentials": {
-      "title": "API key",
-      "empty": "Create a credential so your own systems can call the ecbot API.",
+      "title": "API keys",
+      "empty": "Create a key to connect Ecbot to your own systems or an AI client over MCP.",
       "actions": {
-        "create": "Create credential"
+        "create": "Create API key"
       },
       "fields": {
         "name": "Name",
-        "key": "Key",
+        "key": "Key ID",
         "status": "Status",
-        "createdAt": "Created"
+        "createdAt": "Created",
+        "createdBy": "Created by"
       },
       "status": {
         "active": "Active",
         "inactive": "Inactive"
       },
       "toast": {
-        "created": "Credential created.",
-        "createFailed": "Failed to create credential.",
-        "deleted": "Credential deleted.",
-        "deleteFailed": "Failed to delete credential.",
+        "created": "API key created.",
+        "createFailed": "Couldn't create the API key.",
+        "deleted": "API key deleted.",
+        "deleteFailed": "Couldn't delete the API key.",
         "rotateFailed": "Rotating the secret failed."
       },
       "reveal": {
-        "title": "Credential created",
-        "warning": "Copy the secret now. It won't be shown again.",
+        "title": "API key created",
+        "warning": "Copy it now. You won't see it again.",
         "tokenLabel": "x-api-key",
         "copy": "Copy",
-        "copied": "Copied to clipboard."
+        "copied": "Copied to clipboard.",
+        "keyLabel": "API key",
+        "config": "MCP config",
+        "configHint": "Paste this into your MCP client's config, for example Cursor's mcp.json.",
+        "saved": "I've saved this key",
+        "done": "Done",
+        "savedRequired": "Copy the key or tick the box above to close.",
+        "composition": "The full key is the Key ID plus the secret. Only this full value works."
       },
       "delete": {
         "confirm": {
-          "title": "Delete credential?",
-          "body": "This permanently revokes the credential. Any client using this key will be unable to authenticate.",
+          "title": "Delete this API key?",
+          "body": "Anything using this key stops working right away. This can't be undone.",
           "confirm": "Delete",
           "cancel": "Cancel"
         }
@@ -2575,7 +2591,27 @@
           "confirm": "Rotate"
         }
       },
-      "emptyTitle": "No client credentials yet"
+      "emptyTitle": "No API keys yet",
+      "subtitle": "Connect {{workspace}} to your own systems or an AI client (MCP). A key works only in this workspace and acts with the permissions of the person who created it.",
+      "namePlaceholder": "e.g. Claude Desktop, Zapier",
+      "nameHelp": "Helps you recognise where this key is used.",
+      "noPermission": "You can't create API keys in this workspace. Ask the owner or an admin.",
+      "quickStart": {
+        "title": "Quick start",
+        "serverUrl": "MCP server URL",
+        "header": "Header",
+        "headerValue": "x-api-key: <your key>",
+        "guide": "MCP setup guide"
+      },
+      "keyIdHint": "Public ID only. The full key is shown once, when you create it.",
+      "noReadPermission": "You can't view API keys in this workspace. Ask the owner or an admin."
+    },
+    "backTo": "Back to {{name}}",
+    "general": "General",
+    "developers": "Developers",
+    "workspaceHint": {
+      "text": "Looking for members or API keys?",
+      "link": "Workspace settings"
     }
   },
   "tools": {

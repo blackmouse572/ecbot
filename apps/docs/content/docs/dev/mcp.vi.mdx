@@ -3,9 +3,9 @@ title: Máy chủ MCP Ecbot
 description: Kết nối Claude Code, Codex hoặc Cursor với workspace bằng API key, để trợ lý AI quản lý agent, kiến thức, hội thoại và khách hàng giúp bạn.
 faq:
   - q: Trợ lý làm được gì với API key của tôi?
-    a: Những gì người tạo key đang được làm trong ứng dụng. Key do chủ workspace hoặc thành viên có vai trò Admin có sẵn tạo, và cả hai đều dùng được mọi công cụ trong trang này.
+    a: Những gì người tạo key đang được làm trong ứng dụng. Key do chủ workspace tạo, hoặc do thành viên có vai trò được cấp quyền API key (vai trò Admin có sẵn có quyền này theo mặc định).
   - q: Đưa API key cho trợ lý AI có an toàn không?
-    a: Key mở toàn bộ workspace, nên hãy giữ nó như mật khẩu. Mọi thay đổi đều được ghi lại dưới tên người tạo key, và bạn có thể đổi secret hoặc xóa key bất cứ lúc nào trong Cài đặt.
+    a: Key mở toàn bộ workspace, nên hãy giữ nó như mật khẩu. Mọi thay đổi đều được ghi lại dưới tên người tạo key, và bạn có thể đổi secret hoặc xóa key bất cứ lúc nào trong **Cài đặt workspace**.
   - q: Trợ lý không làm được những gì?
     a: Trợ lý không tải tệp lên, không cài ứng dụng từ kho công cụ và không xóa vĩnh viễn dữ liệu của khách. Hãy làm những việc đó trong ứng dụng.
   - q: Tin trả lời của trợ lý có đến tay khách không?
@@ -16,21 +16,52 @@ Máy chủ MCP Ecbot cho phép trợ lý AI như Claude Code, Codex hoặc Curso
 
 ## Tạo API key
 
-Chủ workspace và thành viên có vai trò **Admin** có sẵn tạo được API key, còn vai trò tự tạo thì không. Mở menu workspace ở đầu thanh bên, chọn **Cài đặt** (thành viên chọn tên workspace), rồi mở **API key**:
+Chủ workspace tạo được API key, và mọi thành viên có vai trò được cấp quyền API key cũng vậy. Vai trò **Admin** có sẵn có quyền này theo mặc định, vai trò **Thành viên** có sẵn thì không, và chủ workspace có thể thêm quyền này cho vai trò tự tạo trong **Vai trò**. Thành viên không có quyền vẫn mở được trang, kèm lời nhắn hãy nhờ chủ workspace hoặc admin.
 
-<Screenshot name="api-keys" alt="Trang API key trong Cài đặt, với các key của workspace và nút Tạo mới">
-  <Mark id="nav">**API key** trong thanh bên của Cài đặt liệt kê mọi key của workspace.</Mark>
-  <Mark id="create">**Tạo mới** tạo một key mới.</Mark>
+Mở **Cài đặt workspace** từ bộ chuyển workspace ở đầu thanh bên, hoặc từ mục **Cài đặt workspace** bên dưới **Nhật ký hoạt động** ở thanh bên. Sau đó chọn **API key** trong nhóm **Nhà phát triển**:
+
+<Screenshot
+  name="api-keys"
+  alt="Trang API key trong Cài đặt workspace, với thẻ Bắt đầu nhanh, các key của workspace và nút Tạo API key"
+>
+  <Mark id="nav">
+    **API key** trong nhóm **Nhà phát triển** liệt kê mọi key của workspace.
+  </Mark>
+  <Mark id="quickstart">
+    **Bắt đầu nhanh** có địa chỉ máy chủ và header để sao chép, kèm đường dẫn
+    tới trang hướng dẫn này.
+  </Mark>
+  <Mark id="create">**Tạo API key** tạo một key mới.</Mark>
 </Screenshot>
 
-Chọn **Tạo mới**, đặt tên cho key, ví dụ "Claude Code", rồi chọn **Tạo mới** lần nữa. Key mới chỉ hiện một lần:
+Cột **Mã khóa** chỉ hiện phần công khai của mỗi key. Riêng phần này không đăng nhập được: key đầy đủ chỉ hiện một lần, lúc bạn tạo key.
 
-<Screenshot name="api-key-created" alt="Key mới hiện một lần ở mục x-api-key, kèm nút sao chép">
-  <Mark id="warning">Secret chỉ hiện đúng một lần này. Nếu làm mất, hãy đổi secret hoặc tạo key mới.</Mark>
-  <Mark id="copy">Sao chép toàn bộ giá trị ở mục **x-api-key**. Đây là key mà trợ lý gửi đi.</Mark>
+Chọn **Tạo API key**, đặt tên cho key, ví dụ "Claude Code", rồi chọn **Tạo mới**. Key mới chỉ hiện một lần:
+
+<Screenshot
+  name="api-key-created"
+  alt="Key mới hiện một lần kèm nút sao chép, và cấu hình MCP đã điền sẵn key"
+>
+  <Mark id="warning">
+    Key đầy đủ chỉ hiện đúng một lần này. Nếu làm mất, hãy đổi secret hoặc tạo
+    key mới.
+  </Mark>
+  <Mark id="copy">
+    Sao chép toàn bộ giá trị ở mục **API key**. Đó là Mã khóa và secret nối với
+    nhau bằng dấu hai chấm (`key:secret`), và chỉ giá trị đầy đủ này mới dùng
+    được.
+  </Mark>
+  <Mark id="config">
+    **Cấu hình MCP** đã điền sẵn key này. Dán vào ứng dụng nhận tệp JSON, ví dụ
+    Cursor.
+  </Mark>
+  <Mark id="saved">
+    Bảng này chỉ đóng khi bạn đã sao chép key hoặc đánh dấu **Tôi đã lưu key
+    này**.
+  </Mark>
 </Screenshot>
 
-Nếu key bị lộ, mở menu của key (**...**) và chọn **Đổi secret**: secret cũ ngừng hoạt động ngay. **Xóa** sẽ thu hồi key vĩnh viễn.
+Nếu key bị lộ, mở menu của key (**...**) và chọn **Đổi secret**: secret cũ ngừng hoạt động ngay. **Xóa** sẽ thu hồi key vĩnh viễn. Bạn chỉ thấy các mục này nếu vai trò của bạn được phép.
 
 ## Kết nối trợ lý
 
@@ -70,16 +101,16 @@ Các trợ lý cấu hình bằng tệp JSON, như tệp `mcp.json` của Cursor
 
 ## Trợ lý làm được gì
 
-| Phần | Xem | Thay đổi |
-| --- | --- | --- |
-| Agent | Liệt kê agent, xem một agent, liệt kê các mô hình AI, chat thử với agent | Tạo, sửa, kích hoạt hoặc tắt, xóa |
-| Hội thoại | Liệt kê cuộc trò chuyện, xem một cuộc và các tin nhắn | Trả lời, bật hoặc tắt agent trong một cuộc, chuyển sang **Đang mở** hoặc **Đã đóng** |
-| Cơ sở kiến thức | Liệt kê cơ sở kiến thức và các mục, xem một mục | Tạo cơ sở kiến thức, thêm mục văn bản hoặc trang web, sửa, xử lý hoặc xóa một mục |
-| Khách hàng | Liệt kê khách hàng và thẻ, xem một khách và thẻ của họ | Sửa thông tin khách, tạo, sửa hoặc xóa thẻ, gắn hoặc gỡ thẻ cho khách |
-| Công cụ | Liệt kê công cụ của workspace và của một agent | Tạo công cụ HTTP hoặc MCP, sửa hoặc xóa, bật hoặc tắt cho một agent |
-| Kỹ năng | Liệt kê kỹ năng của bạn và các mẫu, xem một kỹ năng | Tạo kỹ năng, sao chép mẫu, sửa hoặc xóa, gắn vào agent hoặc gỡ ra |
-| Kênh | Liệt kê các kênh đã kết nối và agent trên từng kênh, xem một kênh | Tạo kênh API hoặc khung chat website, kết nối bot Telegram, lấy liên kết kết nối Facebook, Instagram, Zalo, WhatsApp hoặc Threads, gắn agent vào kênh hoặc gỡ ra |
-| Số liệu | Số liệu trên trang tổng quan trong 7, 30 hoặc 90 ngày qua: chuyển đổi, cảm xúc khách hàng, hiệu quả agent, khách hàng | |
+| Phần            | Xem                                                                                                                   | Thay đổi                                                                                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent           | Liệt kê agent, xem một agent, liệt kê các mô hình AI, chat thử với agent                                              | Tạo, sửa, kích hoạt hoặc tắt, xóa                                                                                                                                |
+| Hội thoại       | Liệt kê cuộc trò chuyện, xem một cuộc và các tin nhắn                                                                 | Trả lời, bật hoặc tắt agent trong một cuộc, chuyển sang **Đang mở** hoặc **Đã đóng**                                                                             |
+| Cơ sở kiến thức | Liệt kê cơ sở kiến thức và các mục, xem một mục                                                                       | Tạo cơ sở kiến thức, thêm mục văn bản hoặc trang web, sửa, xử lý hoặc xóa một mục                                                                                |
+| Khách hàng      | Liệt kê khách hàng và thẻ, xem một khách và thẻ của họ                                                                | Sửa thông tin khách, tạo, sửa hoặc xóa thẻ, gắn hoặc gỡ thẻ cho khách                                                                                            |
+| Công cụ         | Liệt kê công cụ của workspace và của một agent                                                                        | Tạo công cụ HTTP hoặc MCP, sửa hoặc xóa, bật hoặc tắt cho một agent                                                                                              |
+| Kỹ năng         | Liệt kê kỹ năng của bạn và các mẫu, xem một kỹ năng                                                                   | Tạo kỹ năng, sao chép mẫu, sửa hoặc xóa, gắn vào agent hoặc gỡ ra                                                                                                |
+| Kênh            | Liệt kê các kênh đã kết nối và agent trên từng kênh, xem một kênh                                                     | Tạo kênh API hoặc khung chat website, kết nối bot Telegram, lấy liên kết kết nối Facebook, Instagram, Zalo, WhatsApp hoặc Threads, gắn agent vào kênh hoặc gỡ ra |
+| Số liệu         | Số liệu trên trang tổng quan trong 7, 30 hoặc 90 ngày qua: chuyển đổi, cảm xúc khách hàng, hiệu quả agent, khách hàng |                                                                                                                                                                  |
 
 Tải tệp lên, cài ứng dụng từ kho công cụ và xóa vĩnh viễn dữ liệu của khách chỉ làm được trong ứng dụng.
 

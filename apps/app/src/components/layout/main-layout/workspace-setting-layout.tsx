@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Navigate, useLocation } from "react-router-dom";
 
-import { useEnsureWorkspace } from "@/hooks/api/workspace";
+import { useEnsureWorkspace, useWorkspaceList } from "@/hooks/api/workspace";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes";
 import { enterpriseSettingsNavItems } from "@/routes/enterprise.settings";
@@ -16,6 +16,7 @@ import { enterpriseSettingsNavItems } from "@/routes/enterprise.settings";
 import { type INavItem, NavItem, Shell } from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
 import { NotificationMenu } from "../notification-menu/notification-menu";
+import { WorkspaceSwitcher } from "../workspace-switcher";
 
 export const WorkspaceSettingsLayout = () => {
   const { t } = useTranslation();
@@ -50,7 +51,7 @@ const useWorkspaceSettingsRoutes = (): INavItem[] => {
   return useMemo(
     () => [
       {
-        label: t("workspace.title"),
+        label: t("settings.general"),
         to: `${base}/${ROUTES.Workspace}`,
       },
       {
@@ -101,13 +102,21 @@ const WorkspaceSettingsSidebar = () => {
   return (
     <aside className="relative flex flex-1 flex-col justify-between overflow-y-auto">
       <div className="bg-ui-bg-subtle sticky top-0">
-        <Header />
+        <WorkspaceSettingsHeader />
         <div className="flex items-center justify-center px-3">
           <Divider variant="dashed" />
         </div>
       </div>
       <div className="flex flex-1 flex-col">
         <div className="flex flex-1 flex-col overflow-y-auto">
+          <Text
+            size="xsmall"
+            weight="plus"
+            leading="compact"
+            className="text-ui-fg-muted px-5 pt-4"
+          >
+            {t("app.nav.main.storeSettings")}
+          </Text>
           <SidebarCollapsibleSection label={t("workspace.title")}>
             <nav className="flex flex-col gap-y-0.5">
               {workspaceRoutes.map((setting) => (
@@ -118,9 +127,7 @@ const WorkspaceSettingsSidebar = () => {
           <div className="flex items-center justify-center px-3">
             <Divider variant="dashed" />
           </div>
-          <SidebarCollapsibleSection
-            label={t("settings.clientCredentials.title")}
-          >
+          <SidebarCollapsibleSection label={t("settings.developers")}>
             <nav className="flex flex-col gap-y-0.5">
               {apiKeyRoutes.map((setting) => (
                 <NavItem key={setting.to} type="setting" {...setting} />
@@ -136,45 +143,61 @@ const WorkspaceSettingsSidebar = () => {
   );
 };
 
-const Header = () => {
+/** The workspace switcher, then a link back to where the user came from. */
+export const WorkspaceSettingsHeader = () => {
   const [from, setFrom] = useState<string | undefined>(undefined);
   const { t } = useTranslation();
   const location = useLocation();
   const { workspaceSlug } = useWorkspaceParams();
+  const { workspace } = useEnsureWorkspace();
+  const { workspaces } = useWorkspaceList();
 
   const dashboard = `/${workspaceSlug}/${ROUTES.Dashboard}`;
 
   useEffect(() => {
     const state = location.state?.from as string | undefined;
-    // A `from` pointing back into workspace settings would loop the back
-    // button inside this layout instead of exiting it.
+    // A `from` pointing back into workspace settings, or into another
+    // workspace, would loop the back button inside this layout instead of
+    // exiting it.
     setFrom(
-      state && !state.startsWith(`/${workspaceSlug}/${ROUTES.Settings}`)
+      state &&
+        state.startsWith(`/${workspaceSlug}/`) &&
+        !state.startsWith(`/${workspaceSlug}/${ROUTES.Settings}`)
         ? state
         : undefined,
     );
   }, [location, workspaceSlug]);
 
   return (
-    <div className="bg-ui-bg-subtle p-3">
-      <Link
-        to={from ?? dashboard}
-        replace
-        className={clx(
-          "bg-ui-bg-subtle transition-fg flex items-center rounded-md outline-none",
-          "hover:bg-ui-bg-subtle-hover",
-          "focus-visible:shadow-borders-focus",
-        )}
-      >
-        <div className="flex items-center gap-x-2.5 px-2 py-1">
-          <div className="flex items-center justify-center">
-            <ArrowUturnLeft className="text-ui-fg-subtle" />
+    <div className="bg-ui-bg-subtle">
+      {workspace && (
+        <WorkspaceSwitcher workspace={workspace} workspaces={workspaces} />
+      )}
+      <div className="px-3 pb-3">
+        <Link
+          to={from ?? dashboard}
+          replace
+          className={clx(
+            "bg-ui-bg-subtle transition-fg flex items-center rounded-md outline-none",
+            "hover:bg-ui-bg-subtle-hover",
+            "focus-visible:shadow-borders-focus",
+          )}
+        >
+          <div className="flex min-w-0 items-center gap-x-2.5 px-2 py-1">
+            <ArrowUturnLeft className="text-ui-fg-subtle shrink-0" />
+            <Text
+              leading="compact"
+              weight="plus"
+              size="small"
+              className="truncate"
+            >
+              {workspace
+                ? t("settings.backTo", { name: workspace.name })
+                : t("app.nav.settings.header")}
+            </Text>
           </div>
-          <Text leading="compact" weight="plus" size="small">
-            {t("app.nav.settings.header")}
-          </Text>
-        </div>
-      </Link>
+        </Link>
+      </div>
     </div>
   );
 };

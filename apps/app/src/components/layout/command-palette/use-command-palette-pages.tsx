@@ -45,7 +45,7 @@ export const useCommandPalettePages = (): CommandPaletteItem[] => {
 
     const settings = [
       {
-        label: t("workspace.title"),
+        label: t("app.nav.main.storeSettings"),
         to: `${settingsBase}/${ROUTES.Workspace}`,
         icon: <CogSixTooth />,
       },

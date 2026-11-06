@@ -7,6 +7,11 @@ import { SidebarCollapsibleSection } from "@repo/ui/common-components";
 
 import { type INavItem, NavItem, Shell } from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
+import {
+  useResolvedWorkspaceSlug,
+  useWorkspaceList,
+} from "@/hooks/api/workspace";
+import { ROUTES } from "@/routes/constants";
 import { NotificationMenu } from "../notification-menu/notification-menu";
 
 export const SettingsLayout = () => {
@@ -52,15 +57,11 @@ const useMyAccountRoutes = (): INavItem[] => {
 };
 /**
  * Ensure that the `from` prop is not another settings route, to avoid
- * the user getting stuck in a navigation loop.
+ * the user getting stuck in a navigation loop: those fall back to the
+ * workspace the back link names.
  */
-const getSafeFromValue = (from: string) => {
-  if (from.startsWith("/settings")) {
-    return "/settings/profile";
-  }
-
-  return from;
-};
+const getSafeFromValue = (from: string) =>
+  from.startsWith("/settings") ? undefined : from;
 
 const SettingsSidebar = () => {
   const myAccountRoutes = useMyAccountRoutes();
@@ -70,7 +71,7 @@ const SettingsSidebar = () => {
   return (
     <aside className="relative flex flex-1 flex-col justify-between overflow-y-auto">
       <div className="bg-ui-bg-subtle sticky top-0">
-        <Header />
+        <AccountSettingsHeader />
         <div className="flex items-center justify-center px-3">
           <Divider variant="dashed" />
         </div>
@@ -86,6 +87,7 @@ const SettingsSidebar = () => {
           </SidebarCollapsibleSection>
         </div>
         <div className="bg-ui-bg-subtle sticky bottom-0">
+          <WorkspaceSettingsHint />
           <UserSection />
         </div>
       </div>
@@ -93,11 +95,37 @@ const SettingsSidebar = () => {
   );
 };
 
-const Header = () => {
-  const [from, setFrom] = useState("/");
+/** The workspace the user last worked in, for the back link and the hint. */
+const useLastWorkspace = () => {
+  const { workspaces } = useWorkspaceList();
+  const { slug } = useResolvedWorkspaceSlug();
+  return workspaces.find((ws) => ws.slug === slug);
+};
 
+/** Account settings hold no workspace pages: point to where they live. */
+export const WorkspaceSettingsHint = () => {
+  const { t } = useTranslation();
+  const workspace = useLastWorkspace();
+  if (!workspace) return null;
+
+  return (
+    <Text size="xsmall" className="text-ui-fg-subtle px-5 pb-3">
+      {t("settings.workspaceHint.text")}{" "}
+      <Link
+        to={`/${workspace.slug}/${ROUTES.Settings}/${ROUTES.Workspace}`}
+        className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+      >
+        {t("settings.workspaceHint.link")}
+      </Link>
+    </Text>
+  );
+};
+
+export const AccountSettingsHeader = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const workspace = useLastWorkspace();
+  const [from, setFrom] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (location.state?.from) {
@@ -105,10 +133,12 @@ const Header = () => {
     }
   }, [location]);
 
+  const fallback = workspace ? `/${workspace.slug}/${ROUTES.Dashboard}` : "/";
+
   return (
     <div className="bg-ui-bg-subtle p-3">
       <Link
-        to={from}
+        to={from ?? fallback}
         replace
         className={clx(
           "bg-ui-bg-subtle transition-fg flex items-center rounded-md outline-none",
@@ -116,12 +146,17 @@ const Header = () => {
           "focus-visible:shadow-borders-focus",
         )}
       >
-        <div className="flex items-center gap-x-2.5 px-2 py-1">
-          <div className="flex items-center justify-center">
-            <ArrowUturnLeft className="text-ui-fg-subtle" />
-          </div>
-          <Text leading="compact" weight="plus" size="small">
-            {t("app.nav.settings.header")}
+        <div className="flex min-w-0 items-center gap-x-2.5 px-2 py-1">
+          <ArrowUturnLeft className="text-ui-fg-subtle shrink-0" />
+          <Text
+            leading="compact"
+            weight="plus"
+            size="small"
+            className="truncate"
+          >
+            {workspace
+              ? t("settings.backTo", { name: workspace.name })
+              : t("app.nav.settings.header")}
           </Text>
         </div>
       </Link>
