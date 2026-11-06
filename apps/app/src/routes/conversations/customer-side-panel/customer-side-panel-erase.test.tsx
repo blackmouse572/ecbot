@@ -50,6 +50,7 @@ vi.mock("@/hooks/api/contact-points", () => ({
 
 vi.mock("@/hooks/api/customer-tags", () => ({
   useCustomerTagList: vi.fn(),
+  useCreateCustomerTag: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock("@/hooks/api/customer-tag-assignments", () => ({

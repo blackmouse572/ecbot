@@ -23,6 +23,7 @@ import { downloadJson } from "@/utils";
 import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { ConversationsSection } from "./components/conversations-section";
+import { CustomerTagPicker } from "./components/customer-tag-picker";
 import { FollowupsSection } from "./components/followups-section";
 import { SavedFieldsSection } from "./components/saved-fields-section";
 import { TimezoneSection } from "./components/timezone-section";
@@ -382,11 +383,6 @@ function TagsSection({ customerId }: { customerId: string }) {
     [assignments],
   );
 
-  const available = useMemo(
-    () => catalog.filter((tag) => !appliedTagIds.has(tag.id)),
-    [catalog, appliedTagIds],
-  );
-
   const isBusy = apply.isPending || remove.isPending;
 
   return (
@@ -419,28 +415,13 @@ function TagsSection({ customerId }: { customerId: string }) {
       )}
 
       <div>
-        <DropdownMenu>
-          <DropdownMenu.Trigger asChild>
-            <Button
-              type="button"
-              variant="secondary"
-              size="small"
-              disabled={isBusy || available.length === 0}
-            >
-              {t("conversations.customer.panel.tags.add")}
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content>
-            {available.map((tag) => (
-              <DropdownMenu.Item
-                key={tag.id}
-                onClick={() => apply.mutate(tag.id)}
-              >
-                <TagLabel tag={tag} />
-              </DropdownMenu.Item>
-            ))}
-          </DropdownMenu.Content>
-        </DropdownMenu>
+        <CustomerTagPicker
+          tags={catalog}
+          appliedTagIds={appliedTagIds}
+          onApply={(tagId) => apply.mutate(tagId)}
+          onRemove={(tagId) => remove.mutate(tagId)}
+          disabled={isBusy}
+        />
       </div>
     </div>
   );

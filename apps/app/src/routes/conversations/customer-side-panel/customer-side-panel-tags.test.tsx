@@ -26,6 +26,10 @@ vi.mock("@/hooks/api/contact-points", () => ({
 
 vi.mock("@/hooks/api/customer-tags", () => ({
   useCustomerTagList: vi.fn(),
+  useCreateCustomerTag: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 vi.mock("@/hooks/api/customer-tag-assignments", () => ({
@@ -42,6 +46,9 @@ vi.mock("@/hooks/api/customer-tag-assignments", () => ({
 vi.mock("@/hooks/api/customer-merge-suggestions", () => ({
   useUnmergeCustomer: () => ({ mutate: vi.fn(), isPending: false }),
 }));
+
+// jsdom has no scrollIntoView; cmdk calls it on the highlighted row.
+Element.prototype.scrollIntoView = vi.fn();
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -213,7 +220,7 @@ describe("CustomerSidePanel — tags section", () => {
     expect(removeMutate).toHaveBeenCalledWith("tag-vip");
   });
 
-  it("Add-tag dropdown lists ONLY catalog tags that are not already applied", async () => {
+  it("Add-tag menu lists every catalog tag, with applied ones checked", async () => {
     useTagAssignmentsMock.mockReturnValue({
       assignments: [
         { id: "assn-1", tag: vipTag, createdAt: "2026-06-15T00:00:00Z" },
@@ -232,16 +239,22 @@ describe("CustomerSidePanel — tags section", () => {
     });
     await user.click(addButton);
 
-    // Only Hot lead and Angry should be selectable (VIP already applied).
-    // The dropdown items render in a portal — query by role within the document.
-    const menuItems = await screen.findAllByRole("menuitem");
-    const labels = menuItems.map((mi) => mi.textContent);
-    expect(labels.some((l) => l?.includes("Hot lead"))).toBe(true);
-    expect(labels.some((l) => l?.includes("Angry"))).toBe(true);
-    expect(labels.some((l) => l?.includes("VIP"))).toBe(false);
+    // The menu renders in a portal, so query by role across the document.
+    expect(await screen.findByRole("option", { name: /VIP/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(screen.getByRole("option", { name: /Hot lead/ })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    expect(screen.getByRole("option", { name: /Angry/ })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
   });
 
-  it("selecting a tag from the dropdown calls useApplyCustomerTag with that tagId", async () => {
+  it("selecting a tag from the menu calls useApplyCustomerTag with that tagId", async () => {
     useTagAssignmentsMock.mockReturnValue({
       assignments: [],
     } as unknown as UseTagAssignmentsReturn);
@@ -258,7 +271,7 @@ describe("CustomerSidePanel — tags section", () => {
     });
     await user.click(addButton);
 
-    const menuItem = await screen.findByRole("menuitem", {
+    const menuItem = await screen.findByRole("option", {
       name: /Hot lead/,
     });
     await user.click(menuItem);

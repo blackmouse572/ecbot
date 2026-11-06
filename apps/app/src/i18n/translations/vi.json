@@ -2383,6 +2383,9 @@
           "title": "Nhãn",
           "empty": "Chưa có nhãn",
           "add": "Thêm nhãn",
+          "searchPlaceholder": "Tìm nhãn…",
+          "noResults": "Không tìm thấy nhãn",
+          "create": "Tạo nhãn \"{{query}}\"",
           "remove": "Xoá",
           "emptyHint": "Chọn nhãn bên dưới để phân nhóm khách hàng này."
         },
