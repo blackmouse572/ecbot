@@ -91,14 +91,7 @@ describe("MemberInviteDialog", () => {
     ).toBeInTheDocument();
   });
 
-  it("has a labelled Role select that defaults to Member", () => {
-    renderDialog();
-
-    const role = screen.getByRole("combobox", { name: "Role" });
-    expect(role).toHaveTextContent("Member");
-  });
-
-  it("sends the picked role with every invite and names the invitee", async () => {
+  it("invites as Member and names the invitee", async () => {
     invitableUsers.current = [
       { id: "u-1", name: "Lan", email: "lan@example.com" },
     ];
@@ -123,43 +116,61 @@ describe("MemberInviteDialog", () => {
     ).toBeInTheDocument();
   });
 
-  it("starts at Member again each time it opens", async () => {
-    const { rerender } = renderDialog();
-    const pickAdmin = async () => {
-      fireEvent.keyDown(screen.getByRole("combobox", { name: "Role" }), {
-        key: "Enter",
-      });
-      fireEvent.click(await screen.findByRole("option", { name: "Admin" }));
-    };
-    await pickAdmin();
-    expect(screen.getByRole("combobox", { name: "Role" })).toHaveTextContent(
-      "Admin",
-    );
+  // The role is changed on the invited row, not picked before inviting.
+  it("has no role select above the search", () => {
+    renderDialog();
 
-    const at = (open: boolean) => (
-      <I18nextProvider i18n={i18n}>
-        <Toaster />
-        <MemberInviteDialog open={open} onOpenChange={vi.fn()} />
-      </I18nextProvider>
-    );
-    rerender(at(false));
-    rerender(at(true));
-
-    expect(screen.getByRole("combobox", { name: "Role" })).toHaveTextContent(
-      "Member",
-    );
+    expect(screen.queryByRole("combobox", { name: "Role" })).toBeNull();
   });
 
-  it("calls the code a join code and says where requests are approved", async () => {
+  it("clears the search after an invite so the new invitation shows", async () => {
+    inviteUser.mockResolvedValue({});
+    renderDialog();
+    const input = screen.getByPlaceholderText("Enter an email address");
+    fireEvent.change(input, { target: { value: "new@maybakery.vn" } });
+    // The search is debounced.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 600)));
+
+    await act(async () => {
+      fireEvent.click(
+        (
+          await screen.findByText(
+            "new@maybakery.vn",
+            { selector: "p" },
+            { timeout: 3000 },
+          )
+        )
+          .closest("[cmdk-item]")!
+          .querySelector("button")!,
+      );
+    });
+
+    expect(inviteUser).toHaveBeenCalledWith({
+      invitedEmail: "new@maybakery.vn",
+      roleId: "r-member",
+    });
+    expect(input).toHaveValue("");
+  });
+
+  it("closes from the esc key hint", () => {
+    const onOpenChange = vi.fn();
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemberInviteDialog open onOpenChange={onOpenChange} />
+      </I18nextProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(screen.getByText("esc")).toBeInTheDocument();
+  });
+
+  it("calls the code a join code", async () => {
     copy.mockResolvedValue(true);
     renderDialog();
 
     expect(screen.getByText(/Join code/)).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Anyone with this code can ask to join from Join a workspace. You approve each request under Team → Join requests.",
-      ),
-    ).toBeInTheDocument();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Copy join code" }));

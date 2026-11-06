@@ -1516,7 +1516,6 @@
       "inviteCode": {
         "title": "Mã tham gia",
         "copySuccess": "Đã sao chép mã tham gia.",
-        "helper": "Ai có mã này đều có thể xin tham gia từ mục Tham gia không gian làm việc. Bạn duyệt từng yêu cầu trong Đội ngũ → Yêu cầu tham gia.",
         "copy": "Sao chép mã tham gia"
       },
       "emailHint": "Nhập đầy đủ địa chỉ email của người bạn muốn mời."

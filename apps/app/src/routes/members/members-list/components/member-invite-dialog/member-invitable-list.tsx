@@ -20,12 +20,15 @@ type MemberInvitableListProps = {
   search?: string;
   /** Role every invite from this list carries. */
   roleId?: string;
+  /** Called after an invite goes out, so the dialog can clear its search. */
+  onInvited?: () => void;
 };
 
 export function MemberInvitableList({
   enabled,
   search,
   roleId,
+  onInvited,
 }: MemberInvitableListProps) {
   const { t } = useTranslation();
   const { users, isLoading, isFetching } = useInvitableUsers(
@@ -52,6 +55,7 @@ export function MemberInvitableList({
         t("members.inviteMember.success", { email: invitedEmail }),
         { id },
       );
+      onInvited?.();
     } catch (error) {
       toast.error(
         readApiError(error).message ??

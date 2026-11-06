@@ -1456,7 +1456,6 @@
       "inviteCode": {
         "title": "Join code",
         "copySuccess": "Join code copied.",
-        "helper": "Anyone with this code can ask to join from Join a workspace. You approve each request under Team → Join requests.",
         "copy": "Copy join code"
       },
       "emailHint": "Type the full email address of the person you want to invite."

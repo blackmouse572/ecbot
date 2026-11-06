@@ -1,5 +1,5 @@
 import { useWorkspace } from "@/hooks/api";
-import { Button, IconButton, Label, Prompt, Select, toast } from "@medusajs/ui";
+import { IconButton, Kbd, Prompt, toast } from "@medusajs/ui";
 import {
   Command,
   CommandEmpty,
@@ -9,7 +9,7 @@ import {
 import { IconClipboard, IconClipboardCheckFilled } from "@tabler/icons-react";
 import { t } from "i18next";
 import type React from "react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { useCopyToClipboard, useDebounceValue } from "usehooks-ts";
 import { useInvitableRoles } from "../../../hooks/use-invitable-roles";
 import { MemberInvitableList } from "./member-invitable-list";
@@ -26,23 +26,13 @@ export const MemberInviteDialog = (
   const [, copyToClipboard] = useCopyToClipboard();
   const [justCopied, setJustCopied] = useState(false);
   const { workspace } = useWorkspace();
-  const { roles, defaultRoleId } = useInvitableRoles();
-  const [pickedRoleId, setPickedRoleId] = useState<string>();
-  const roleId = pickedRoleId ?? defaultRoleId;
-  const roleLabelId = useId();
+  // New invites go out as Member; the role is changed on the invited row.
+  const { defaultRoleId } = useInvitableRoles();
 
   const isOpen = props.open === true;
   const invitationCode = workspace?.invitationCode;
 
   const { onOpenChange } = props;
-
-  // The parents keep this dialog mounted, so a role picked last time would
-  // otherwise carry into the next invite. Start each opening at Member.
-  useEffect(() => {
-    if (isOpen) {
-      setPickedRoleId(undefined);
-    }
-  }, [isOpen]);
 
   // Prompt is an alert dialog, which ignores outside taps, so close it ourselves.
   useEffect(() => {
@@ -82,27 +72,6 @@ export const MemberInviteDialog = (
   return (
     <Prompt {...props}>
       <Prompt.Content className="max-w-full sm:max-w-3/5">
-        <div className="flex items-center gap-x-3 px-4 pt-4">
-          <Label id={roleLabelId} size="small" weight="plus">
-            {t("fields.role")}
-          </Label>
-          <Select value={roleId} onValueChange={setPickedRoleId}>
-            <Select.Trigger aria-labelledby={roleLabelId} className="w-[200px]">
-              <Select.Value />
-            </Select.Trigger>
-            <Select.Content>
-              {roles.map((role) => (
-                <Select.Item
-                  key={role.id}
-                  value={role.id}
-                  textValue={role.name}
-                >
-                  {role.name}
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select>
-        </div>
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={t("members.inviteMember.placeholder")}
@@ -113,7 +82,8 @@ export const MemberInviteDialog = (
             <MemberInvitableList
               enabled={isOpen}
               search={debouncedQuery}
-              roleId={roleId}
+              roleId={defaultRoleId}
+              onInvited={() => setQuery("")}
             />
             <MemberInvitedList enabled={isOpen} search={debouncedQuery} />
             <CommandEmpty className="py-6 text-sm text-ui-fg-muted flex items-center justify-center w-full">
@@ -123,33 +93,32 @@ export const MemberInviteDialog = (
         </Command>
         <Prompt.Footer className="py-2 px-4 border-t bg-ui-bg-component flex-wrap items-center justify-between gap-2">
           <Prompt.Cancel asChild>
-            <Button size="small" variant="secondary">
-              {t("actions.close")}
-            </Button>
+            <button
+              type="button"
+              aria-label={t("actions.close")}
+              className="rounded-md outline-none focus-visible:shadow-borders-focus"
+            >
+              <Kbd>esc</Kbd>
+            </button>
           </Prompt.Cancel>
-          <div className="flex flex-col items-end gap-y-1">
-            <div className="flex items-center gap-x-2">
-              <p className="text-ui-fg-muted text-xs">
-                {t("members.inviteMember.inviteCode.title")}:
-                <span className="font-bold ml-2">{invitationCode}</span>
-              </p>
-              <IconButton
-                size="small"
-                variant="transparent"
-                aria-label={t("members.inviteMember.inviteCode.copy")}
-                onClick={copyInvitationCode}
-                className={justCopied ? "text-ui-tag-green-icon" : ""}
-              >
-                {justCopied ? (
-                  <IconClipboardCheckFilled size={14} />
-                ) : (
-                  <IconClipboard size={14} />
-                )}
-              </IconButton>
-            </div>
-            <p className="text-ui-fg-muted text-xs max-w-sm text-right">
-              {t("members.inviteMember.inviteCode.helper")}
+          <div className="flex items-center gap-x-2">
+            <p className="text-ui-fg-muted text-xs">
+              {t("members.inviteMember.inviteCode.title")}:
+              <span className="font-bold ml-2">{invitationCode}</span>
             </p>
+            <IconButton
+              size="small"
+              variant="transparent"
+              aria-label={t("members.inviteMember.inviteCode.copy")}
+              onClick={copyInvitationCode}
+              className={justCopied ? "text-ui-tag-green-icon" : ""}
+            >
+              {justCopied ? (
+                <IconClipboardCheckFilled size={14} />
+              ) : (
+                <IconClipboard size={14} />
+              )}
+            </IconButton>
           </div>
         </Prompt.Footer>
       </Prompt.Content>
