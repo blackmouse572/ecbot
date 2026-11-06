@@ -22,11 +22,16 @@ vi.mock("@repo/client", () => ({
         response: { status: 403, data: { statusCode: 5215, message: "x" } },
       };
     }
-    return {
-      data: {
-        data: [ALPHA, BETA, GAMMA].find((w) => w.slug === path.workspace),
-      },
-    };
+    const workspace = [ALPHA, BETA, GAMMA].find(
+      (w) => w.slug === path.workspace,
+    );
+    // Missing and foreign workspaces get the same 404 / 5200 (QA gate D11).
+    if (!workspace) {
+      throw {
+        response: { status: 404, data: { statusCode: 5200, message: "x" } },
+      };
+    }
+    return { data: { data: workspace } };
   }),
   workspaceControllerCreateWorkSpaceV1: vi.fn(),
   workspaceControllerUpdateWorkSpaceV1: vi.fn(),
@@ -78,15 +83,11 @@ describe("useEnsureWorkspace — remembering the workspace in the URL", () => {
     );
   });
 
-  it("remembers the fallback workspace after an inaccessible slug redirects", async () => {
-    renderAt("/not-a-workspace/dashboard");
+  it("never remembers a slug the user cannot open", async () => {
+    const { result } = renderAt("/not-a-workspace/dashboard");
 
-    // The bogus slug is never persisted; the workspace we land on is.
-    await waitFor(() =>
-      expect(localStorage.getItem(LAST_WORKSPACE_STORAGE_KEY)).toBe(
-        JSON.stringify("alpha"),
-      ),
-    );
+    await waitFor(() => expect(result.current.isNotFound).toBe(true));
+    expect(localStorage.getItem(LAST_WORKSPACE_STORAGE_KEY)).toBeNull();
   });
 });
 
@@ -107,14 +108,24 @@ describe("useEnsureWorkspace with a workspace missing from a stale list", () => 
     );
   });
 
-  it("still redirects a slug that is neither listed nor loadable", async () => {
-    renderAt("/not-a-workspace/dashboard");
+  // QA gate D10: a foreign or missing workspace used to bounce silently to
+  // the user's own workspace (settings) or crash (dashboard). It now stays
+  // on the URL and reports not found, so the layout can say so.
+  it("reports a slug that is neither listed nor loadable as not found, without redirecting", async () => {
+    const { result } = renderAt("/not-a-workspace/settings/client-credentials");
 
-    await waitFor(() =>
-      expect(document.querySelector('[data-testid="path"]')?.textContent).toBe(
-        "/alpha/dashboard",
-      ),
+    await waitFor(() => expect(result.current.isNotFound).toBe(true));
+    expect(result.current.workspace).toBeUndefined();
+    expect(document.querySelector('[data-testid="path"]')?.textContent).toBe(
+      "/not-a-workspace/settings/client-credentials",
     );
+  });
+
+  it("does not report a just-created workspace as not found", async () => {
+    const { result } = renderAt("/gamma/dashboard");
+
+    await waitFor(() => expect(result.current.workspace).toBeDefined());
+    expect(result.current.isNotFound).toBe(false);
   });
 });
 
@@ -128,6 +139,7 @@ describe("useEnsureWorkspace with a suspended workspace", () => {
 
     await waitFor(() => expect(result.current.isSuspended).toBe(true));
     expect(result.current.workspace).toBeUndefined();
+    expect(result.current.isNotFound).toBe(false);
     expect(document.querySelector('[data-testid="path"]')?.textContent).toBe(
       "/delta/dashboard",
     );

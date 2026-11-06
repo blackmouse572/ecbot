@@ -17,10 +17,12 @@ import { type INavItem, NavItem, Shell } from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
 import { NotificationMenu } from "../notification-menu/notification-menu";
 import { WorkspaceSwitcher } from "../workspace-switcher";
+import { WorkspaceNotFound } from "./workspace-not-found";
 
 export const WorkspaceSettingsLayout = () => {
   const { t } = useTranslation();
-  const { isLoading, hasWorkspaces } = useEnsureWorkspace();
+  const { isLoading, hasWorkspaces, isNotFound } = useEnsureWorkspace();
+  const { workspaces } = useWorkspaceList();
 
   if (isLoading) {
     return <LogoBoxSpinner />;
@@ -28,6 +30,10 @@ export const WorkspaceSettingsLayout = () => {
 
   if (!hasWorkspaces) {
     return <Navigate to={ROUTES.Onboard} replace />;
+  }
+
+  if (isNotFound) {
+    return <WorkspaceNotFound workspaces={workspaces} />;
   }
 
   return (

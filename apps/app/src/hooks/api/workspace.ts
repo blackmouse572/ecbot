@@ -130,7 +130,6 @@ export function useEnsureWorkspace() {
   const navigate = useNavigate();
   const { workspaceSlug } = useParams<{ workspaceSlug: string }>();
   const location = useLocation();
-  const lastSlug = useLastWorkspaceSlug();
   const setLastWorkspaceSlug = useSetLastWorkspaceSlug();
 
   // Remember the workspace in the URL — whether it came from the sidebar
@@ -153,38 +152,35 @@ export function useEnsureWorkspace() {
       navigate(`/${firstWorkspace.slug}${location.pathname}`);
       return;
     }
-
-    // If the workspaceSlug is invalid, redirect to the resolved workspace.
-    // A slug missing from the list is only invalid if the workspace itself
-    // did not load: a just-created workspace loads before the cached list
-    // catches up, and must not bounce the user to another workspace.
-    if (
-      workspaces.length > 0 &&
-      workspaceSlug &&
-      !workspace &&
-      !workspaces.some((w) => w.slug === workspaceSlug)
-    ) {
-      const fallbackSlug = resolveWorkspaceSlug(workspaces, lastSlug);
-      // Preserve path after invalid workspace slug (keeps its leading slash)
-      const path = location.pathname.substring(workspaceSlug.length + 1);
-      navigate(`/${fallbackSlug}${path}`, { replace: true });
-    }
   }, [
     workspaces,
-    workspace,
     isLoadingWorkspaces,
     isLoadingWorkspace,
     workspaceSlug,
-    lastSlug,
     navigate,
     location,
   ]);
 
+  const isLoading = isLoadingWorkspaces || isLoadingWorkspace;
+  // A slug the user cannot open: missing, or a workspace they are not a
+  // member of (the API answers both with the same 404). The layout shows a
+  // not-found page instead of bouncing to another workspace, which made
+  // settings look like they belonged to the workspace in the URL. A slug
+  // missing from the list still counts as found when the workspace itself
+  // loaded: a just-created workspace loads before the cached list catches up.
+  const isNotFound =
+    !isLoading &&
+    !!workspaceSlug &&
+    !workspace &&
+    !isSuspended &&
+    !workspaces.some((w) => w.slug === workspaceSlug);
+
   return {
     workspace,
-    isLoading: isLoadingWorkspaces || isLoadingWorkspace,
+    isLoading,
     hasWorkspaces: workspaces.length > 0,
     isSuspended,
+    isNotFound,
   };
 }
 

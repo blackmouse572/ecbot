@@ -1800,6 +1800,11 @@
       "custom": "Ảnh đại diện tùy chỉnh",
       "default": "Ảnh đại diện mặc định"
     },
+    "notFound": {
+      "title": "Không tìm thấy workspace",
+      "description": "Workspace này không tồn tại, hoặc bạn chưa là thành viên. Hãy nhờ chủ workspace gửi lời mời cho bạn.",
+      "goTo": "Chuyển đến {{name}}"
+    },
     "suspended": {
       "title": "Workspace này đã bị tạm khoá",
       "description": "Quản trị viên đã tạm khoá workspace này, nên agent ngừng trả lời và bạn chưa thể mở workspace. Dữ liệu vẫn được giữ nguyên. Liên hệ bộ phận hỗ trợ để mở lại.",
