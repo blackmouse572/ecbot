@@ -1,3 +1,4 @@
+import { useTrackOnce } from "@/analytics/use-track-once";
 import { KB_STATUS_CONFIG } from "@/routes/knowledge-base/constants";
 import { Badge, StatusBadge, Tooltip } from "@medusajs/ui";
 import type { KnowledgeItemResponseDto } from "@repo/client";
@@ -20,6 +21,12 @@ export function KnowledgeItemStatusCell({
 }) {
   const { getFullDate } = useDate();
   const { t } = useTranslation();
+  // Once per page load however many failed rows show.
+  useTrackOnce(
+    status === "FAILED" ? "knowledge_failed_seen" : null,
+    {},
+    "list",
+  );
   const statusConfig =
     KB_STATUS_CONFIG[status as keyof typeof KB_STATUS_CONFIG] ||
     KB_STATUS_CONFIG.DRAFT;

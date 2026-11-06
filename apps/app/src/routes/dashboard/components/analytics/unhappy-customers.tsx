@@ -25,7 +25,7 @@ export const UnhappyCustomers: FC<{
   });
 
   return (
-    <Container className="divide-y p-0">
+    <Container className="divide-y p-0" data-private>
       <div className="px-6 py-4">
         <Heading level="h2">{t("dashboard.analytics.unhappy.title")}</Heading>
         <Text size="small" className="text-ui-fg-subtle">

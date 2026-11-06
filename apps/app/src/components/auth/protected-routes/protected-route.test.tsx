@@ -4,6 +4,9 @@ import type { PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authToken = { current: null as string | null };
+vi.mock("@/analytics/analytics-identity", () => ({
+  AnalyticsIdentity: () => null,
+}));
 vi.mock("@/components/layout/impersonation-banner", () => ({
   ImpersonationBanner: () => <p>impersonation-banner</p>,
 }));

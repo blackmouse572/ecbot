@@ -10,7 +10,10 @@ const mobileNavLabels = {
   description: "Navigate through the application.",
 };
 
-const renderShell = (topbarActions?: React.ReactNode) => {
+const renderShell = (
+  topbarActions?: React.ReactNode,
+  initialEntry = "/channels/acme",
+) => {
   const router = createMemoryRouter(
     [
       {
@@ -27,6 +30,11 @@ const renderShell = (topbarActions?: React.ReactNode) => {
         ),
         children: [
           {
+            path: "inbox",
+            handle: { private: true },
+            element: <div>Customer inbox</div>,
+          },
+          {
             path: "channels",
             handle: { breadcrumb: () => "Channels" },
             children: [
@@ -40,7 +48,7 @@ const renderShell = (topbarActions?: React.ReactNode) => {
         ],
       },
     ],
-    { initialEntries: ["/channels/acme"] },
+    { initialEntries: [initialEntry] },
   );
 
   return render(<RouterProvider router={router} />);
@@ -233,5 +241,20 @@ describe("Shell", () => {
     await user.click(getMobileToggleButton());
 
     expect(screen.getAllByText("sidebar marker")).toHaveLength(2);
+  });
+});
+
+describe("Shell private pages", () => {
+  it("tags a route with handle.private as data-private, breadcrumbs included", () => {
+    renderShell(undefined, "/inbox");
+    const page = screen.getByText("Customer inbox").closest("[data-private]");
+    expect(page).not.toBeNull();
+  });
+
+  it("leaves other pages untagged", () => {
+    renderShell();
+    expect(
+      screen.getByText("Account detail").closest("[data-private]"),
+    ).toBeNull();
   });
 });

@@ -1,3 +1,4 @@
+import { AnalyticsIdentity } from "@/analytics/analytics-identity";
 import { TermsAcceptancePrompt } from "@/components/auth/terms-acceptance-prompt/terms-acceptance-prompt";
 import { ImpersonationBanner } from "@/components/layout/impersonation-banner";
 import { useWorkspaceList } from "@/hooks/api/workspace";
@@ -81,6 +82,7 @@ export const ProtectedRoute = () => {
               /join, which render outside MainLayout. */}
           <ImpersonationBanner />
           <TermsAcceptancePrompt />
+          <AnalyticsIdentity />
         </NavAccessProvider>
       </AbilityProvider>
     </SidebarProvider>

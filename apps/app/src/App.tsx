@@ -1,3 +1,4 @@
+import { analytics } from "@/analytics/analytics";
 import { registerAuthRequestInterceptor } from "@/modules/auth";
 import { client } from "@repo/client";
 import { Agentation } from "agentation";
@@ -16,6 +17,8 @@ client.setConfig({
 // interceptor must exist first for those requests to carry the right
 // Authorization header (or none) instead of racing it.
 registerAuthRequestInterceptor();
+// No-op in the open edition; refuses the widget, previews and impersonation.
+analytics.boot();
 const router = createBrowserRouter(getRouteMaps());
 
 function App() {
