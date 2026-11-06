@@ -1,4 +1,5 @@
 import { queryKeysFactory } from "@/libs/query-factory";
+import { isWorkspaceNotFoundError } from "@/libs/workspace-not-found";
 import { isWorkspaceSuspendedError } from "@/libs/workspace-suspended";
 import {
   useLastWorkspaceSlug,
@@ -66,8 +67,8 @@ export const workspaceDetailsQueryOptions = (id: string) =>
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    // An unknown slug must fail fast — useEnsureWorkspace waits for this query
-    // to settle before redirecting to a valid workspace.
+    // An unknown slug must fail fast: useEnsureWorkspace waits for this query
+    // to settle before showing the not-found page.
     retry: false,
   });
 
@@ -172,7 +173,7 @@ export function useEnsureWorkspace() {
     !isLoading &&
     !!workspaceSlug &&
     !workspace &&
-    !isSuspended &&
+    isWorkspaceNotFoundError(error) &&
     !workspaces.some((w) => w.slug === workspaceSlug);
 
   return {

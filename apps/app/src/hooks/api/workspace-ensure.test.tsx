@@ -22,6 +22,11 @@ vi.mock("@repo/client", () => ({
         response: { status: 403, data: { statusCode: 5215, message: "x" } },
       };
     }
+    if (path.workspace === "broken") {
+      throw {
+        response: { status: 500, data: { statusCode: 500, message: "x" } },
+      };
+    }
     const workspace = [ALPHA, BETA, GAMMA].find(
       (w) => w.slug === path.workspace,
     );
@@ -119,6 +124,13 @@ describe("useEnsureWorkspace with a workspace missing from a stale list", () => 
     expect(document.querySelector('[data-testid="path"]')?.textContent).toBe(
       "/not-a-workspace/settings/client-credentials",
     );
+  });
+
+  it("does not call a server error not found", async () => {
+    const { result } = renderAt("/broken/dashboard");
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isNotFound).toBe(false);
   });
 
   it("does not report a just-created workspace as not found", async () => {

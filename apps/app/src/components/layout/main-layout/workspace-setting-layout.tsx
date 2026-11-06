@@ -18,11 +18,14 @@ import { UserMenu } from "../user-menu";
 import { NotificationMenu } from "../notification-menu/notification-menu";
 import { WorkspaceSwitcher } from "../workspace-switcher";
 import { WorkspaceNotFound } from "./workspace-not-found";
+import { WorkspaceSuspended } from "./workspace-suspended";
 
 export const WorkspaceSettingsLayout = () => {
   const { t } = useTranslation();
-  const { isLoading, hasWorkspaces, isNotFound } = useEnsureWorkspace();
+  const { isLoading, hasWorkspaces, isNotFound, isSuspended } =
+    useEnsureWorkspace();
   const { workspaces } = useWorkspaceList();
+  const { workspaceSlug } = useWorkspaceParams();
 
   if (isLoading) {
     return <LogoBoxSpinner />;
@@ -30,6 +33,14 @@ export const WorkspaceSettingsLayout = () => {
 
   if (!hasWorkspaces) {
     return <Navigate to={ROUTES.Onboard} replace />;
+  }
+
+  // Same order as MainLayout: no settings page runs against a workspace
+  // that did not load.
+  if (isSuspended) {
+    return (
+      <WorkspaceSuspended workspaces={workspaces} currentSlug={workspaceSlug} />
+    );
   }
 
   if (isNotFound) {
