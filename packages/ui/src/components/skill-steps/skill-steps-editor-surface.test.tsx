@@ -82,4 +82,15 @@ describe("SkillStepsEditor surface", () => {
 
     expect(groups.size).toBe(4);
   });
+
+  it("keeps the step type chip icons small next to their label", () => {
+    render(
+      <SkillStepsEditor steps={steps} onChange={() => {}} showIssues={false} />,
+    );
+
+    for (const label of ["Ask", "Tell"])
+      expect(
+        screen.getByText(label, { selector: "span, div" }).querySelector("svg"),
+      ).toHaveClass("size-3");
+  });
 });

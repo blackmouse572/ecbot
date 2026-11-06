@@ -39,7 +39,7 @@ export const SkillStepKind: FC<Props> = ({ type, label }) => {
       color={COLOR[type].badge}
       className="shrink-0 gap-x-1"
     >
-      <Icon className={COLOR[type].icon} />
+      <Icon className={`size-3 ${COLOR[type].icon}`} />
       {label ?? t(`skills.steps.${type}`)}
     </Badge>
   );
