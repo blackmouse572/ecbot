@@ -145,6 +145,7 @@ export const shots = [
       const intro = page.getByText(
         /^(Documents and pages the agent reads to answer\.|Tài liệu và trang agent đọc để trả lời\.)$/,
       );
+
       await intro.evaluate((el) => el.scrollIntoView({ block: "start" }));
       await intro
         .locator("xpath=..")
@@ -181,6 +182,7 @@ export const shots = [
           contextLength: null,
         },
       ];
+
       await page.route(/\/chatbots\/models/, (route) =>
         route.fulfill({
           status: 200,
@@ -192,6 +194,7 @@ export const shots = [
       const rules = page.locator("textarea[name=followupRules]");
       await rules.waitFor();
       const cookies = await page.context().cookies();
+
       if (
         !cookies.some(
           (c) => c.name === "medusa_admin_language" && c.value === "vi",
@@ -326,6 +329,7 @@ export const shots = [
           categories: [{ id: "productivity", name: "Productivity" }],
         },
       };
+
       const access = {
         provider: "composio",
         requiresSignIn: true,
@@ -358,11 +362,13 @@ export const shots = [
           },
         ],
       };
+
       const ok = (data) => ({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({ statusCode: 200, data }),
       });
+
       await page.route(
         /\/marketplace\/toolkits\/googlesheets\/access/,
         (route) => route.fulfill(ok(access)),
@@ -477,9 +483,11 @@ export const shots = [
     path: "/:ws/skills/create",
     setup: async (page) => {
       const cookies = await page.context().cookies();
+
       const vi = cookies.some(
         (c) => c.name === "medusa_admin_language" && c.value === "vi",
       );
+
       const t = vi
         ? {
             name: "Đặt lịch spa",
@@ -517,7 +525,9 @@ export const shots = [
               "New booking",
             ],
           };
+
       const s = t.steps;
+
       const skill = {
         name: t.name,
         description: t.description,
@@ -556,6 +566,7 @@ export const shots = [
           { id: "tag", type: "tool", toolId: "system:add_tag", action: s[9] },
         ],
       };
+
       await page.route(/\/skill\/[0-9a-f-]{36}(\?|$)/, async (route) => {
         const response = await route.fetch();
         const json = await response.json();
@@ -600,15 +611,18 @@ export const shots = [
         displayName: "Google Calendar",
         status: "ACTIVE",
       };
+
       await page.route(/\/tool\?/, async (route) => {
         const response = await route.fetch();
         const json = await response.json();
         json.data = [...(json.data ?? []), mcp];
         await route.fulfill({ response, json });
       });
+
       const template = page.getByRole("button", {
         name: /^(Talk to a person|Gặp nhân viên)$/,
       });
+
       await template.waitFor();
       await template.click();
       await page
@@ -648,6 +662,7 @@ export const shots = [
           (el) =>
             el.childElementCount === 0 && /^Debug/.test(el.textContent ?? ""),
         );
+
         heading
           ?.closest("section, [class*=shadow], [class*=rounded]")
           ?.remove();
