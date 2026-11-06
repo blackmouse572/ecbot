@@ -1,7 +1,8 @@
 import { ChartActivity } from "@medusajs/icons";
 import { ChartPlaceholder } from "./chart-placeholder";
+import { TOOLTIP_CLASS } from "./tooltip-class";
 import { clx, Text } from "@medusajs/ui";
-import { useState, type FC } from "react";
+import { useId, useState, type FC } from "react";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
 import { ChartContainer, type ChartConfig } from "../evilcharts/recharts-chart";
 
@@ -36,7 +37,8 @@ const PLATEAU = [0.3, 0.7];
 
 /** A flowing funnel: stacked bands per series, centred, with each stage's share
  * of the first on top and the drop between stages below. The biggest drop is
- * marked red. The legend turns series on and off, and the shares follow. */
+ * marked red. The legend turns series on and off, and the shares follow.
+ * Hovering or focusing a stage column shows each series' count there. */
 export const FunnelChart: FC<FunnelChartProps> = ({
   stages,
   series,
@@ -48,6 +50,8 @@ export const FunnelChart: FC<FunnelChartProps> = ({
   isLoading,
 }) => {
   const [hidden, setHidden] = useState<string[]>([]);
+  const [active, setActive] = useState<number | null>(null);
+  const baseId = useId();
   const shown = series.filter((s) => !hidden.includes(s.key));
   const toggle = (key: string) =>
     setHidden((keys) =>
@@ -97,6 +101,9 @@ export const FunnelChart: FC<FunnelChartProps> = ({
     0,
   );
   const at = (i: number) => ({ left: `${(i / n) * 100}%` });
+  const tipId = `${baseId}-stage`;
+  const dropText = (d?: (typeof drops)[number]) =>
+    d && dropLabel(d.lost, formatShare(d.lost, d.prev));
 
   return (
     <div className="flex flex-col gap-y-3">
@@ -164,7 +171,6 @@ export const FunnelChart: FC<FunnelChartProps> = ({
                 key={i}
                 className="absolute top-1 flex -translate-x-1/2 flex-col items-center bg-ui-bg-base px-1"
                 style={at(i + 1)}
-                title={dropLabel(d.lost, share)}
               >
                 <Text
                   size="small"
@@ -180,6 +186,44 @@ export const FunnelChart: FC<FunnelChartProps> = ({
               </div>
             );
           })}
+        </div>
+        {/* Above the bands so the whole column, header to drop, is the target. */}
+        <div
+          className="absolute inset-0 grid"
+          style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
+        >
+          {stages.map((stage, i) => (
+            <div
+              key={stage.key}
+              tabIndex={0}
+              aria-label={stage.label}
+              aria-describedby={active === i ? tipId : undefined}
+              onMouseEnter={() => setActive(i)}
+              onMouseLeave={() => setActive(null)}
+              onFocus={() => setActive(i)}
+              onBlur={() => setActive(null)}
+              className="focus-visible:shadow-borders-focus relative rounded-md outline-none"
+            >
+              {active === i && (
+                <StageTooltip
+                  id={tipId}
+                  label={stage.label}
+                  rows={shown.map((s) => ({
+                    key: s.key,
+                    label: s.label,
+                    color: s.color,
+                    count: formatCount(s.counts[i] ?? 0),
+                    share:
+                      i > 0
+                        ? formatShare(s.counts[i] ?? 0, s.counts[0] ?? 0)
+                        : undefined,
+                  }))}
+                  drop={dropText(drops[i - 1])}
+                  align={i === 0 ? "start" : i === n - 1 ? "end" : "center"}
+                />
+              )}
+            </div>
+          ))}
         </div>
       </div>
       <ul className="flex flex-wrap justify-center gap-x-1 gap-y-1">
@@ -212,3 +256,76 @@ export const FunnelChart: FC<FunnelChartProps> = ({
     </div>
   );
 };
+
+type StageTooltipProps = {
+  id: string;
+  label: string;
+  rows: {
+    key: string;
+    label: string;
+    color: string;
+    count: string;
+    /** Share of this series' first stage; left out on the first stage. */
+    share?: string;
+  }[];
+  /** The drop from the previous stage, read out in full. */
+  drop?: string;
+  align: "start" | "center" | "end";
+};
+
+const StageTooltip: FC<StageTooltipProps> = ({
+  id,
+  label,
+  rows,
+  drop,
+  align,
+}) => (
+  <div
+    id={id}
+    role="tooltip"
+    className={clx(
+      TOOLTIP_CLASS,
+      "pointer-events-none absolute top-20 z-10 flex w-52 flex-col gap-y-1.5 rounded-lg px-3 py-2",
+      align === "start" && "left-1",
+      align === "end" && "right-1",
+      align === "center" && "left-1/2 -translate-x-1/2",
+    )}
+  >
+    <Text size="xsmall" weight="plus">
+      {label}
+    </Text>
+    <ul className="flex flex-col gap-y-1">
+      {rows.map((row) => (
+        <li key={row.key} className="flex items-center gap-x-2">
+          <span
+            aria-hidden
+            className="size-2 shrink-0 rounded-full"
+            style={{ background: row.color }}
+          />
+          <Text size="xsmall" className="text-ui-fg-subtle flex-1 truncate">
+            {row.label}
+          </Text>
+          <Text size="xsmall" weight="plus" className="tabular-nums">
+            {row.count}
+          </Text>
+          {row.share && (
+            <Text
+              size="xsmall"
+              className="text-ui-fg-muted w-9 text-right tabular-nums"
+            >
+              {row.share}
+            </Text>
+          )}
+        </li>
+      ))}
+    </ul>
+    {drop && (
+      <Text
+        size="xsmall"
+        className="text-ui-fg-subtle border-ui-border-base border-t pt-1.5"
+      >
+        {drop}
+      </Text>
+    )}
+  </div>
+);
