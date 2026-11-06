@@ -34,7 +34,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useWorkspaceAbilities } from "@/modules/auth";
 import { ROUTES } from "@/routes";
 import { WorkspaceSuspended } from "./workspace-suspended";
-import { workspaceSettingsPath } from "./workspace-settings-path";
+import { workspaceSettingsPath } from "@/libs/workspace-settings-path";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
 
 // The type of the nested nav entries used in the workspace nav group below
@@ -159,7 +159,7 @@ interface HeaderProps {
   workspaces: WorkSpaceGetResponseDto[];
 }
 
-const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
+export const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -214,14 +214,8 @@ const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
         </DropdownMenu.Trigger>
 
         <DropdownMenu.Content className="z-50 w-[var(--radix-dropdown-menu-trigger-width)] min-w-0">
-          <DropdownMenu.Item
-            className="flex items-center gap-x-3 px-2 py-1"
-            onClick={() =>
-              navigate(workspaceSettingsPath(workspace.slug), {
-                state: { from: location.pathname },
-              })
-            }
-          >
+          {/* The current workspace, shown as a label: Settings below is its only link. */}
+          <div className="flex items-center gap-x-3 px-2 py-1">
             <Avatar
               variant="squared"
               size="small"
@@ -238,7 +232,7 @@ const Header = ({ workspace, workspaces: _workspaces }: HeaderProps) => {
                 {workspace.name}
               </Text>
             </div>
-          </DropdownMenu.Item>
+          </div>
           {isWorkspaceOwner && (
             <DropdownMenu.Item className="gap-x-2" asChild>
               <Link
@@ -371,7 +365,7 @@ const UtilitySection = () => {
 };
 
 /** Pinned above the user menu so it stays in view on every page. */
-const WorkspaceSettingsItem = () => {
+export const WorkspaceSettingsItem = () => {
   const location = useLocation();
   const { workspaceSlug } = useWorkspaceParams();
   const { isWorkspaceOwner } = useWorkspaceAbilities();

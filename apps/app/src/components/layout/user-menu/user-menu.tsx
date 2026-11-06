@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useLogout, useMe, useWorkspace } from "@/hooks/api";
 import { useWorkspaceAbilities } from "@/modules/auth";
 import { enterpriseUserSection } from "@/routes/enterprise.user-section";
-import { workspaceSettingsPath } from "../main-layout/workspace-settings-path";
+import { workspaceSettingsPath } from "@/libs/workspace-settings-path";
 import { Skeleton } from "@repo/ui/common-components";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
