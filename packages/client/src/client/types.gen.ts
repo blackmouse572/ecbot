@@ -3870,12 +3870,12 @@ export type KnowledgeItemAdminGetResponseDto = {
 export type UserUpdateProfileRequestDto = {
     name: string;
     country: string;
-    gender?: 'MALE' | 'FEMALE';
     avatar?: string;
     /**
      * Image file to upload
      */
     image?: Blob | File;
+    gender?: 'MALE' | 'FEMALE';
 };
 
 export type UserUpdateNotificationsRequestDto = {
