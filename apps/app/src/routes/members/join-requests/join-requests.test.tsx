@@ -2,9 +2,9 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const owner = vi.hoisted(() => ({ isOwner: true }));
+const owner = vi.hoisted(() => ({ isOwner: true, isPending: false }));
 vi.mock("@/hooks/use-is-workspace-owner", () => ({
-  useIsWorkspaceOwner: () => owner.isOwner,
+  useIsWorkspaceOwner: () => owner,
 }));
 
 const approveMutateAsync = vi.fn();
@@ -45,6 +45,7 @@ const apiError = (status: number, statusCode: number) => ({
 describe("Join requests page", () => {
   beforeEach(() => {
     owner.isOwner = true;
+    owner.isPending = false;
   });
 
   it("renders the requester and the reason", () => {

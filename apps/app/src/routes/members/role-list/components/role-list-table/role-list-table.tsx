@@ -8,7 +8,7 @@ import { _DataTable } from "@/components/table/data-table";
 import { NoPermissionState } from "@/components/common/no-permission-state";
 import { useWorkspaceRoles } from "@/hooks/api/workspace-roles";
 import { useIsWorkspaceOwner } from "@/hooks/use-is-workspace-owner";
-import { isNoPermissionError } from "@/libs/permission-error";
+import { readListAccess } from "@/libs/permission-error";
 import { useDataTable } from "@/hooks/use-data-table";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
@@ -30,7 +30,7 @@ export const RoleListTable = () => {
   const { searchParams, raw } = useRoleTableQuery({ pageSize: PAGE_SIZE });
 
   // The list is owner-only in the API (WorkspaceOwnerProtected).
-  const isOwner = useIsWorkspaceOwner();
+  const { isOwner, isPending: isCheckingOwner } = useIsWorkspaceOwner();
   const { roles, totals, isLoading, isError, error } = useWorkspaceRoles(
     { ...searchParams },
     { enabled: isOwner },
@@ -48,8 +48,12 @@ export const RoleListTable = () => {
     getRowId: (row) => row.id,
   });
 
-  const canView = isOwner && !(isError && isNoPermissionError(error));
-  if (isError && canView) {
+  const { denied, shouldThrow } = readListAccess({
+    allowed: isOwner || isCheckingOwner,
+    isError,
+    error,
+  });
+  if (shouldThrow) {
     throw error;
   }
 
@@ -57,7 +61,7 @@ export const RoleListTable = () => {
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
         <Heading level="h2">{t("app.nav.roles.header")}</Heading>
-        {canView && (
+        {isOwner && !denied && (
           <Button
             variant="secondary"
             size="small"
@@ -69,7 +73,7 @@ export const RoleListTable = () => {
           </Button>
         )}
       </div>
-      {!canView ? (
+      {denied ? (
         <NoPermissionState
           icon={<IconShieldLock />}
           message={t("roles.list.noReadPermission")}
@@ -84,7 +88,7 @@ export const RoleListTable = () => {
           filters={roleFilters}
           search
           pagination
-          isLoading={isLoading}
+          isLoading={isCheckingOwner || isLoading}
           queryObject={raw}
           navigateTo={(row) => `${row.original.id}`}
           noRecords={{

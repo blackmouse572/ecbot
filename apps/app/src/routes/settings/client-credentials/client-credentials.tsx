@@ -11,7 +11,7 @@ import {
 } from "@/hooks/api/client-credentials";
 import { useDataTable } from "@/hooks/use-data-table";
 import { NoPermissionState } from "@/components/common/no-permission-state";
-import { isNoPermissionError } from "@/libs/permission-error";
+import { readListAccess } from "@/libs/permission-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowPath, InformationCircleSolid, Trash } from "@medusajs/icons";
 import {
@@ -76,8 +76,13 @@ export const ClientCredentials = () => {
     getRowId: (row) => row.id,
   });
 
-  const canView = canRead && !(isError && isNoPermissionError(error));
-  if (isError && canView) throw error;
+  const { denied, shouldThrow } = readListAccess({
+    allowed: canRead,
+    isError,
+    error,
+  });
+  const canView = !denied;
+  if (shouldThrow) throw error;
 
   return (
     <div className="flex flex-col gap-y-3">

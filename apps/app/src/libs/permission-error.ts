@@ -23,3 +23,22 @@ export function isNoPermissionError(error: unknown): boolean {
     response.data?.statusCode === WORKSPACE_OWNER_REQUIRED_STATUS_CODE
   );
 }
+
+/**
+ * Whether a list page shows the no-permission state, and whether its error
+ * belongs to the error boundary instead. `allowed` is the ability check run
+ * before the list was fetched.
+ */
+export function readListAccess({
+  allowed,
+  isError,
+  error,
+}: {
+  allowed: boolean;
+  isError: boolean;
+  error: unknown;
+}) {
+  const denied = !allowed || (isError && isNoPermissionError(error));
+
+  return { denied, shouldThrow: isError && !denied };
+}

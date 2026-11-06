@@ -6,7 +6,7 @@ import {
 import { useWorkspaceRoles } from "@/hooks/api/workspace-roles";
 import { useIsWorkspaceOwner } from "@/hooks/use-is-workspace-owner";
 import { NoPermissionState } from "@/components/common/no-permission-state";
-import { isNoPermissionError } from "@/libs/permission-error";
+import { readListAccess } from "@/libs/permission-error";
 import { Trash } from "@medusajs/icons";
 import {
   Badge,
@@ -27,7 +27,7 @@ export const Invitations = () => {
   const { t } = useTranslation();
   const [isInviteOpen, setInviteOpen] = useState(false);
   // Both lists are owner-only in the API (WorkspaceOwnerProtected).
-  const isOwner = useIsWorkspaceOwner();
+  const { isOwner, isPending: isCheckingOwner } = useIsWorkspaceOwner();
   const { invitations, isLoading, isError, error } = useInvitations(
     {
       orderBy: "createdAt",
@@ -55,21 +55,25 @@ export const Invitations = () => {
       error: t("errorBoundary.internalServerErrorMessage"),
     });
 
-  const canView = isOwner && !(isError && isNoPermissionError(error));
-  if (isError && canView) throw error;
+  const { denied, shouldThrow } = readListAccess({
+    allowed: isOwner || isCheckingOwner,
+    isError,
+    error,
+  });
+  if (shouldThrow) throw error;
   return (
     <SingleColumnPage>
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <Text weight="plus">{t("members.invitations.title")}</Text>
         </div>
-        {!canView ? (
+        {denied ? (
           <NoPermissionState
             icon={<IconMail />}
             message={t("members.invitations.noReadPermission")}
             data-testid="invitations-no-access"
           />
-        ) : isLoading ? (
+        ) : isCheckingOwner || isLoading ? (
           <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
         ) : invitations && invitations.length > 0 ? (
           invitations.map((invitation) => (

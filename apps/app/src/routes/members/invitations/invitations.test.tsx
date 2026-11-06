@@ -2,9 +2,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const owner = vi.hoisted(() => ({ isOwner: true }));
+const owner = vi.hoisted(() => ({ isOwner: true, isPending: false }));
 vi.mock("@/hooks/use-is-workspace-owner", () => ({
-  useIsWorkspaceOwner: () => owner.isOwner,
+  useIsWorkspaceOwner: () => owner,
 }));
 
 vi.mock("@/hooks/api/invitations", () => ({
@@ -37,6 +37,7 @@ const apiError = (status: number, statusCode: number) => ({
 describe("Invitations page", () => {
   beforeEach(() => {
     owner.isOwner = true;
+    owner.isPending = false;
   });
 
   it("renders invitee emails", () => {
@@ -147,5 +148,21 @@ describe("Invitations page", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     expect(() => render(<Invitations />, { wrapper: MemoryRouter })).toThrow();
+  });
+
+  it("shows loading, not the no-permission message, while the profile loads", () => {
+    owner.isOwner = false;
+    owner.isPending = true;
+    vi.mocked(useInvitations).mockReturnValue({
+      invitations: undefined,
+      isLoading: false,
+    } as A);
+
+    render(<Invitations />, { wrapper: MemoryRouter });
+
+    expect(screen.getByText("general.loading")).toBeInTheDocument();
+    expect(
+      screen.queryByText("members.invitations.noReadPermission"),
+    ).not.toBeInTheDocument();
   });
 });

@@ -2,9 +2,9 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const owner = vi.hoisted(() => ({ isOwner: true }));
+const owner = vi.hoisted(() => ({ isOwner: true, isPending: false }));
 vi.mock("@/hooks/use-is-workspace-owner", () => ({
-  useIsWorkspaceOwner: () => owner.isOwner,
+  useIsWorkspaceOwner: () => owner,
 }));
 
 vi.mock("@/hooks/api/workspace-roles", () => ({
@@ -45,6 +45,7 @@ const renderTable = () => render(<RoleListTable />, { wrapper: MemoryRouter });
 describe("RoleListTable", () => {
   beforeEach(() => {
     owner.isOwner = true;
+    owner.isPending = false;
   });
 
   it("shows the owner the roles table", () => {
