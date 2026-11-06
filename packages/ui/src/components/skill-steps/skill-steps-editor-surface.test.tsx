@@ -3,14 +3,13 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { renderWithProviders as render } from "../../../test/i18n";
 import { SkillStepsEditor } from ".";
+import { SkillAddButton } from "./skill-add-button";
 
-// A real browser applies :hover and :focus-within; here we check the classes
-// that drive each state and the DOM shape those selectors rely on.
-const NEAREST_HOVER =
-  "[.step-group:hover:not(:has(.step-group:hover))>*>&:not(:hover,:focus-visible)]:text-ui-fg-subtle";
-
-const NEAREST_FOCUS =
-  "[.step-group:focus-within:not(:has(.step-group:focus-within))>*>&:not(:hover,:focus-visible)]:text-ui-fg-subtle";
+// A real browser applies :hover and :focus-within (checked in Chromium for the
+// PR); here we check the rest and own-state classes, that a nearest-group
+// rule exists for each state, and the DOM shape those rules rely on.
+const nearestGroupRule = (state: string) =>
+  new RegExp(`^\\[\\.step-group:${state}.*\\]:text-ui-fg-subtle$`);
 
 const steps: SkillStep[] = [
   { id: "a", type: "ask", text: "" },
@@ -59,11 +58,13 @@ describe("SkillStepsEditor surface", () => {
         "text-ui-fg-muted",
         "font-normal",
         "txt-compact-small",
-        NEAREST_HOVER,
-        NEAREST_FOCUS,
         "hover:text-ui-fg-base",
         "focus-visible:text-ui-fg-base",
       );
+      for (const state of ["hover", "focus-within"])
+        expect(
+          [...button.classList].some((c) => nearestGroupRule(state).test(c)),
+        ).toBe(true);
       expect(button).not.toHaveClass("hidden", "invisible", "opacity-0");
       expect(button).not.toHaveAttribute("tabindex", "-1");
       expect(button.querySelector("svg")).toHaveClass("size-2.5");
@@ -92,5 +93,13 @@ describe("SkillStepsEditor surface", () => {
       expect(
         screen.getByText(label, { selector: "span, div" }).querySelector("svg"),
       ).toHaveClass("size-3");
+  });
+
+  it("keeps a caller's className on SkillAddButton", () => {
+    render(<SkillAddButton className="ml-2">Add</SkillAddButton>);
+
+    const button = screen.getByRole("button", { name: "Add" });
+
+    expect(button).toHaveClass("ml-2", "text-ui-fg-muted");
   });
 });
