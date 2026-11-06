@@ -16,6 +16,8 @@ export class InvitationListResponseDto {
         description: 'Workspace ID',
     })
     @Expose()
+    // A workspace reference, not an id: see ChatbotListResponseDto (QA D4).
+    @Transform(({ obj }) => obj.workspace?.id ?? obj.workspace)
     workspace: string;
 
     @ApiProperty({
