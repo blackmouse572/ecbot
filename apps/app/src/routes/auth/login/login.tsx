@@ -149,6 +149,8 @@ function LoginPage() {
                     required: t("errors.turnstileRequired"),
                     failed: t("errors.turnstileFailed"),
                     verifying: t("errors.turnstileVerifying"),
+                    unavailable: t("errors.turnstileUnavailable"),
+                    retry: t("errors.turnstileRetry"),
                   },
                 }
               : undefined

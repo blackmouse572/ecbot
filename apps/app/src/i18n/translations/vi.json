@@ -210,6 +210,8 @@
           "turnstileRequired": "Vui lòng hoàn tất xác minh.",
           "turnstileFailed": "Xác minh thất bại. Vui lòng thử lại.",
           "turnstileVerifying": "Đang xác minh, vui lòng đợi...",
+          "turnstileUnavailable": "Không tải được bước kiểm tra bảo mật. Hãy tắt trình chặn quảng cáo hoặc chặn script, hoặc thử lại.",
+          "turnstileRetry": "Thử lại",
           "invalidCredentials": "Email hoặc mật khẩu không hợp lệ.",
           "accountLocked": "Tài khoản của bạn đã bị khóa do nhiều lần đăng nhập không thành công.",
           "banned": {
@@ -258,6 +260,9 @@
           "turnstileRequired": "Vui lòng hoàn tất xác minh.",
           "turnstileFailed": "Xác minh thất bại. Vui lòng thử lại.",
           "turnstileVerifying": "Đang xác minh, vui lòng đợi...",
+          "turnstileUnavailable": "Không tải được bước kiểm tra bảo mật. Hãy tắt trình chặn quảng cáo hoặc chặn script, hoặc thử lại.",
+          "turnstileRetry": "Thử lại",
+          "invalidForm": "Còn thông tin bị thiếu hoặc chưa hợp lệ. Hãy kiểm tra lại biểu mẫu rồi thử lại.",
           "emailExists": "Đã có tài khoản với email này.",
           "passwordMismatch": "Mật khẩu không khớp.",
           "signUpFailed": "Đăng ký không thành công. Vui lòng thử lại.",

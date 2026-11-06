@@ -124,6 +124,7 @@ function SignUpPage() {
             label: <LegalText i18nKey={`${I18N_PREFIX}.fields.acceptTerms`} />,
             required: t("errors.acceptTermsRequired"),
           },
+          invalid: t("errors.invalidForm"),
         }}
         turnstile={
           TURNSTILE_SITE_KEY
@@ -133,6 +134,8 @@ function SignUpPage() {
                   required: t("errors.turnstileRequired"),
                   failed: t("errors.turnstileFailed"),
                   verifying: t("errors.turnstileVerifying"),
+                  unavailable: t("errors.turnstileUnavailable"),
+                  retry: t("errors.turnstileRetry"),
                 },
               }
             : undefined
