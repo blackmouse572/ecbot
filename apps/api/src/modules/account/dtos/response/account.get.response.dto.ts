@@ -13,7 +13,7 @@ import {
     ENUM_ACCOUNT_STATUS,
     ENUM_ACCOUNT_TYPE,
 } from '../../enums/account.enum';
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 
 /**
  * Shape every account read returns. Secrets (`accessToken`, `config`) are
@@ -112,5 +112,9 @@ export class AccountGetResponseDto extends DatabaseDto {
     @IsUUID()
     @IsNotEmpty()
     @Expose()
+    // The entity holds a workspace reference, not an id. Without this,
+    // class-transformer builds a fresh WorkspaceEntity whose defaults give a
+    // random id and createdAt = now (QA gate D4).
+    @Transform(({ obj }) => obj.workspace?.id ?? obj.workspace)
     workspace: string;
 }

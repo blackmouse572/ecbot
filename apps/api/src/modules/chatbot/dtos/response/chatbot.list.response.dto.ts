@@ -1,7 +1,7 @@
 import { DatabaseDto } from '@app/common/database/dtos/database.dto';
 import { AccountGetDetailResponseDto } from '@app/modules/account/dtos/response/account.detail.response.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsString } from 'class-validator';
 import {
     ENUM_CHATBOT_LANGUAGE,
@@ -239,6 +239,10 @@ export class ChatbotListResponseDto extends DatabaseDto {
     })
     @Expose()
     @IsString()
+    // The entity holds a workspace reference, not an id. Without this,
+    // class-transformer builds a fresh WorkspaceEntity whose defaults give a
+    // random id and createdAt = now (QA gate D4).
+    @Transform(({ obj }) => obj.workspace?.id ?? obj.workspace)
     workspace: string;
 
     @ApiProperty({
@@ -296,7 +300,8 @@ export class ChatbotListResponseDto extends DatabaseDto {
     followupRules?: string;
 
     @ApiProperty({
-        description: 'IANA timezone the agent uses for the current date and time',
+        description:
+            'IANA timezone the agent uses for the current date and time',
         example: 'Asia/Ho_Chi_Minh',
         type: String,
         required: false,
