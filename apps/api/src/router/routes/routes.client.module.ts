@@ -6,6 +6,7 @@ import { PlatformModule } from '@app/modules/platform/platform.module';
 import { ApiChannelClientController } from '@app/modules/platform/controllers/api-channel.client.controller';
 import { AccountModule } from '@app/modules/account/account.module';
 import { ChatbotClientController } from '@app/modules/chatbot/controllers/chatbot.client.controller';
+import { ChatbotPreviewClientController } from '@app/modules/chatbot/controllers/chatbot-preview.client.controller';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
 import { ActivityModule } from '@app/modules/activity/activity.module';
 import { AwsModule } from '@app/modules/aws/aws.module';
@@ -36,6 +37,7 @@ import { Module } from '@nestjs/common';
         ClientCredentialClientController,
         ApiChannelClientController,
         ChatbotClientController,
+        ChatbotPreviewClientController,
         KnowledgeBaseClientController,
         KnowledgeItemClientController,
         ChatbotKnowledgeItemClientController,

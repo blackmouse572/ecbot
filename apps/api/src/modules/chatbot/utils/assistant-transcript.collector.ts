@@ -9,6 +9,12 @@ import { mediaFromFilePart } from './ai-file-part';
 /** One parsed AI SDK v5 UI-message-stream `data:` frame. */
 export type UiStreamFrame = Record<string, unknown> & { type?: unknown };
 
+/** A tool the agent called while writing the reply. */
+export interface IAssistantToolCall {
+    name: string;
+    input: unknown;
+}
+
 /**
  * Accumulates the assistant's reply out of a UI message stream so it can be
  * persisted as preview history. Deliberately holds no stream state — it is fed
@@ -18,6 +24,7 @@ export type UiStreamFrame = Record<string, unknown> & { type?: unknown };
 export class AssistantTranscriptCollector {
     private text = '';
     private sentMedia: ReplyMedia[] = [];
+    private calls: IAssistantToolCall[] = [];
     /** A guardrail tripped. apps/ai emits `data-guardrail` *after* the text has
      * already streamed, so blocked content reaches the wire — it must never be
      * written to history, or the next turn feeds it back to the model. */
@@ -43,6 +50,12 @@ export class AssistantTranscriptCollector {
             this.sentMedia.push(media);
             return;
         }
+        if (type === 'tool-input-available') {
+            if (typeof frame.toolName === 'string') {
+                this.calls.push({ name: frame.toolName, input: frame.input });
+            }
+            return;
+        }
         if (type === 'message-metadata') {
             const metadata = frame.messageMetadata as
                 { usage?: unknown } | undefined;
@@ -61,6 +74,11 @@ export class AssistantTranscriptCollector {
     /** The images and files the reply sent, in order. */
     media(): ReplyMedia[] {
         return this.sentMedia;
+    }
+
+    /** The tools the reply called, in order. */
+    toolCalls(): IAssistantToolCall[] {
+        return this.calls;
     }
 
     /** Whether this turn is safe and meaningful to persist. */

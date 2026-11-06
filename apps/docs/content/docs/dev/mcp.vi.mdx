@@ -72,7 +72,7 @@ Các trợ lý cấu hình bằng tệp JSON, như tệp `mcp.json` của Cursor
 
 | Phần | Xem | Thay đổi |
 | --- | --- | --- |
-| Agent | Liệt kê agent, xem một agent, liệt kê các mô hình AI | Tạo, sửa, kích hoạt hoặc tắt, xóa |
+| Agent | Liệt kê agent, xem một agent, liệt kê các mô hình AI, chat thử với agent | Tạo, sửa, kích hoạt hoặc tắt, xóa |
 | Hội thoại | Liệt kê cuộc trò chuyện, xem một cuộc và các tin nhắn | Trả lời, bật hoặc tắt agent trong một cuộc, chuyển sang **Đang mở** hoặc **Đã đóng** |
 | Cơ sở kiến thức | Liệt kê cơ sở kiến thức và các mục, xem một mục | Tạo cơ sở kiến thức, thêm mục văn bản hoặc trang web, sửa, xử lý hoặc xóa một mục |
 | Khách hàng | Liệt kê khách hàng và thẻ, xem một khách và thẻ của họ | Sửa thông tin khách, tạo, sửa hoặc xóa thẻ, gắn hoặc gỡ thẻ cho khách |
@@ -85,6 +85,10 @@ Tải tệp lên, cài ứng dụng từ kho công cụ và xóa vĩnh viễn d�
 ## Hỏi về số liệu
 
 Bạn có thể hỏi trợ lý những câu như "Tuần này so với tuần trước thế nào?" hay "Agent nào chuyển cho nhân viên nhiều nhất?". Trợ lý đọc đúng số liệu trên trang tổng quan, và chỉ những tab mà vai trò của bạn được xem. Mỗi key được hỏi số liệu 20 lần mỗi phút, nên trợ lý sẽ dùng lại kết quả đã lấy.
+
+## Chat thử với agent
+
+Hãy nhờ trợ lý nhắn với agent như một khách hàng, ví dụ "hỏi agent của cửa hàng về chính sách đổi trả và kiểm tra câu trả lời". Việc này giống khung chat thử trên trang của agent: không tin nào đi ra kênh hay vào mục Hội thoại, nhưng công cụ của agent vẫn chạy thật, nên công cụ tạo đơn sẽ tạo đơn thật. Trợ lý có thể tiếp tục cùng một cuộc chat qua nhiều tin nhắn. Tin nhắn thử dùng token như mọi câu trả lời khác, và mỗi key gửi được 20 tin thử mỗi phút.
 
 ## Tạo kỹ năng cùng trợ lý
 
