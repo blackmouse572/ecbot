@@ -18,6 +18,7 @@ export const ROLE_SUBJECTS = [
   { value: "CUSTOMER_DATA", labelKey: "roles.subjects.customerData" },
   { value: "MEMBER", labelKey: "roles.subjects.member" },
   { value: "CLIENT_CREDENTIAL", labelKey: "roles.subjects.clientCredential" },
+  { value: "WORKSPACE", labelKey: "roles.subjects.workspace" },
 ] as const;
 
 // What each access level grants on an area.

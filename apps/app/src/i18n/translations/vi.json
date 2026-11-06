@@ -1568,7 +1568,8 @@
       "tool": "Công cụ",
       "customerData": "Dữ liệu khách hàng",
       "member": "Đội ngũ",
-      "clientCredential": "API key"
+      "clientCredential": "API key",
+      "workspace": "Cài đặt workspace"
     },
     "title": "Vai trò",
     "description": "Quản lý vai trò và quyền hạn cho các thành viên",

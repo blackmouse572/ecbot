@@ -22,6 +22,7 @@ describe("PermissionsField", () => {
       "Tools",
       "Team",
       "API keys",
+      "Workspace settings",
     ]) {
       expect(
         screen.getByRole("radiogroup", { name: area }),

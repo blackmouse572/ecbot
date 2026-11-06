@@ -1508,7 +1508,8 @@
       "tool": "Tools",
       "customerData": "Customer data",
       "member": "Team",
-      "clientCredential": "API keys"
+      "clientCredential": "API keys",
+      "workspace": "Workspace settings"
     },
     "title": "Roles",
     "description": "Manage roles and permissions for members",

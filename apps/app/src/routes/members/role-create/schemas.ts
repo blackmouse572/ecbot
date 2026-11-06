@@ -19,6 +19,7 @@ export const createRoleSchema = (t: TFunction<"translation", undefined>) =>
           "CUSTOMER_DATA",
           "MEMBER",
           "CLIENT_CREDENTIAL",
+          "WORKSPACE",
         ]),
         action: z.array(
           z.enum(["manage", "read", "create", "update", "delete"]),
