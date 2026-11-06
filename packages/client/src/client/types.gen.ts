@@ -887,6 +887,21 @@ export type HealthDatabaseResponseDto = {
     };
 };
 
+export type HealthBuildInfoResponseDto = {
+    /**
+     * Git commit the running image was built from
+     */
+    commit: string;
+    /**
+     * Git branch the build ran on
+     */
+    branch: string;
+    /**
+     * When the image was built (ISO 8601)
+     */
+    builtAt: string;
+};
+
 export type WaitlistJoinRequestDto = {
     /**
      * Email to add to the waitlist
@@ -9584,6 +9599,51 @@ export type HealthPublicControllerReadyResponses = {
 };
 
 export type HealthPublicControllerReadyResponse = HealthPublicControllerReadyResponses[keyof HealthPublicControllerReadyResponses];
+
+export type HealthBuildInfoPublicControllerBuildInfoData = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/public/build-info';
+};
+
+export type HealthBuildInfoPublicControllerBuildInfoErrors = {
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type HealthBuildInfoPublicControllerBuildInfoError = HealthBuildInfoPublicControllerBuildInfoErrors[keyof HealthBuildInfoPublicControllerBuildInfoErrors];
+
+export type HealthBuildInfoPublicControllerBuildInfoResponses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: HealthBuildInfoResponseDto;
+    };
+};
+
+export type HealthBuildInfoPublicControllerBuildInfoResponse = HealthBuildInfoPublicControllerBuildInfoResponses[keyof HealthBuildInfoPublicControllerBuildInfoResponses];
 
 export type WaitlistPublicControllerJoinV1Data = {
     body: WaitlistJoinRequestDto;
