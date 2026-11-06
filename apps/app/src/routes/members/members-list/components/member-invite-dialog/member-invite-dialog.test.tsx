@@ -30,9 +30,24 @@ vi.mock("@/hooks/api/invitations", () => ({
 vi.mock("@/hooks/api/workspace-roles", () => ({
   useWorkspaceRoles: () => ({
     roles: [
-      { id: "r-owner", name: "Owner - Shop", type: "WORKSPACE_OWNER" },
-      { id: "r-admin", name: "Admin", type: "WORKSPACE_MEMBER" },
-      { id: "r-member", name: "Member", type: "WORKSPACE_MEMBER" },
+      {
+        id: "r-owner",
+        name: "Owner - Shop",
+        type: "WORKSPACE_OWNER",
+        isActive: true,
+      },
+      {
+        id: "r-admin",
+        name: "Admin",
+        type: "WORKSPACE_MEMBER",
+        isActive: true,
+      },
+      {
+        id: "r-member",
+        name: "Member",
+        type: "WORKSPACE_MEMBER",
+        isActive: true,
+      },
     ],
   }),
 }));
@@ -106,6 +121,33 @@ describe("MemberInviteDialog", () => {
     expect(
       await screen.findByText("Invitation sent to lan@example.com."),
     ).toBeInTheDocument();
+  });
+
+  it("starts at Member again each time it opens", async () => {
+    const { rerender } = renderDialog();
+    const pickAdmin = async () => {
+      fireEvent.keyDown(screen.getByRole("combobox", { name: "Role" }), {
+        key: "Enter",
+      });
+      fireEvent.click(await screen.findByRole("option", { name: "Admin" }));
+    };
+    await pickAdmin();
+    expect(screen.getByRole("combobox", { name: "Role" })).toHaveTextContent(
+      "Admin",
+    );
+
+    const at = (open: boolean) => (
+      <I18nextProvider i18n={i18n}>
+        <Toaster />
+        <MemberInviteDialog open={open} onOpenChange={vi.fn()} />
+      </I18nextProvider>
+    );
+    rerender(at(false));
+    rerender(at(true));
+
+    expect(screen.getByRole("combobox", { name: "Role" })).toHaveTextContent(
+      "Member",
+    );
   });
 
   it("calls the code a join code and says where requests are approved", async () => {

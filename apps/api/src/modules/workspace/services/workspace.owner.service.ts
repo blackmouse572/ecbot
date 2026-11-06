@@ -53,6 +53,7 @@ import { WorkspaceMemberRepository } from '../repository/repositories/workspace-
 import { WorkSpaceRepository } from '../repository/repositories/workspace.repository';
 import { WorkspaceMemberService } from './workspace.member.service';
 import { WorkspaceSeatQuotaService } from './workspace-seat-quota.service';
+import { defaultMemberRoleMissingException } from '../utils/default-member-role-missing.util';
 import { KnowledgeBaseService } from '@app/modules/knowledge-base/services/knowledge-base.service';
 import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 import { CUSTOMER_TAG_DEFAULTS } from '@app/modules/customer/constants/customer-tag.seed.constant';
@@ -278,6 +279,9 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                 type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
                 name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
             });
+            if (!role) {
+                throw defaultMemberRoleMissingException();
+            }
         }
 
         const payload: InvitationLinkPayload = {
@@ -636,6 +640,9 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
             name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
             isActive: true,
         });
+        if (!memberRole) {
+            throw defaultMemberRoleMissingException();
+        }
         await this.createActiveMembership(
             workspace,
             userId,

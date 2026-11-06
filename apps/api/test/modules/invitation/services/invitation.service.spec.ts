@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { InvitationService } from '../../../../src/modules/invitation/services/invitation.service';
 import { InvitationRepository } from '../../../../src/modules/invitation/repository/repositories/invitation.repository';
 import { ENUM_INVITATION_STATUS } from '../../../../src/modules/invitation/enums/invitation.enum';
+import { RoleEntity } from '../../../../src/modules/role/repository/entities/role.entity';
 
 describe('InvitationService', () => {
     let service: InvitationService;
@@ -258,6 +259,27 @@ describe('InvitationService', () => {
             token: 'stored-jwt',
             invitationLink: 'https://app.example.com/join?token=stored-jwt',
         } as any;
+
+        // `role` is an unpopulated ManyToOne reference on the entity; the
+        // DTOs promise its id as a string (the app matches it to a select).
+        it('sends the role as its id, not the reference object', async () => {
+            const row = {
+                ...stale,
+                role: Object.assign(new RoleEntity(), { id: 'r-1' }),
+            };
+
+            const [listed] = await service.mapList([row]);
+            const detail = await service.mapDetail(row);
+
+            expect(listed.role).toBe('r-1');
+            expect(detail.roleId).toBe('r-1');
+        });
+
+        it('leaves the role empty when the invitation has none', async () => {
+            const [listed] = await service.mapList([{ ...stale, role: null }]);
+
+            expect(listed.role).toBeUndefined();
+        });
 
         it('rebuilds a stale link from the configured client URL', async () => {
             const result = await service.mapDetail(stale);

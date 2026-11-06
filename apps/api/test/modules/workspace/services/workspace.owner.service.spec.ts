@@ -274,6 +274,27 @@ describe('WorkspaceOwnerService', () => {
             );
         });
 
+        it('refuses with a clear error, not a 500, when the built-in Member role is off', async () => {
+            mockInvitationService.checkExistingInvitation.mockResolvedValue(
+                null
+            );
+            mockRoleService.findOne.mockResolvedValue(null);
+
+            await expect(
+                service.generateInvitationLinkWithDetails(
+                    ownerId,
+                    { invitedEmail: 'invitee@mail.com' },
+                    url,
+                    workspace as any
+                )
+            ).rejects.toMatchObject({
+                response: {
+                    message: 'workspace.error.defaultMemberRoleMissing',
+                },
+            });
+            expect(mockInvitationService.create).not.toHaveBeenCalled();
+        });
+
         it('never re-looks-up the workspace by owner — the passed-in workspace is always the target, even for a caller who does not own it', async () => {
             mockInvitationService.checkExistingInvitation.mockResolvedValue(
                 null
@@ -325,6 +346,19 @@ describe('WorkspaceOwnerService', () => {
             expect(mockWorkspaceMemberRepository.create).toHaveBeenCalledTimes(
                 1
             );
+        });
+
+        it('refuses with a clear error when the built-in Member role is off', async () => {
+            mockRoleService.findOne.mockResolvedValue(null);
+
+            await expect(
+                service.addMemberToWorkspace(workspace.id, randomUUID())
+            ).rejects.toMatchObject({
+                response: {
+                    message: 'workspace.error.defaultMemberRoleMissing',
+                },
+            });
+            expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
         });
 
         it('gives an approved join request the built-in Member role, not Admin', async () => {

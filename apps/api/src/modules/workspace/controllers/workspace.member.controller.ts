@@ -19,6 +19,7 @@ import {
 import { ENUM_ROLE_STATUS_CODE_ERROR } from '@app/modules/role/enums/role.status-code.enum';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { RoleService } from '@app/modules/role/services/role.service';
+import { defaultMemberRoleMissingException } from '@app/modules/workspace/utils/default-member-role-missing.util';
 import {
     WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
     WORKSPACE_MEMBER_AVAILABLE_SEARCH,
@@ -247,8 +248,7 @@ export class WorkspaceMemberController {
     }
 
     // No role on the invitation: fall back to the workspace's built-in
-    // Member role (never Admin, which shares its type). Silently a no-op if
-    // that role doesn't exist.
+    // Member role (never Admin, which shares its type).
     private async assignDefaultRole(
         workspaceId: string,
         workspace: WorkspaceEntity,
@@ -262,7 +262,7 @@ export class WorkspaceMemberController {
         });
 
         if (!memberRole) {
-            return;
+            throw defaultMemberRoleMissingException();
         }
 
         try {

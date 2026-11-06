@@ -301,6 +301,24 @@ describe('WorkspaceMemberController', () => {
             );
         });
 
+        it('rolls back instead of joining with no role when the Member role is off', async () => {
+            mockMemberService.joinWorkspaceViaInvitation.mockResolvedValue({
+                workspace: targetWorkspace,
+                roleId: undefined,
+            });
+            mockRoleService.findOne.mockResolvedValue(null);
+
+            await expect(
+                joinController.joinWorkspace(caller, 'token')
+            ).rejects.toMatchObject({
+                response: {
+                    message: 'workspace.error.defaultMemberRoleMissing',
+                },
+            });
+            expect(mockEm.rollback).toHaveBeenCalled();
+            expect(mockEm.commit).not.toHaveBeenCalled();
+        });
+
         it('rolls back and propagates a rejected invitation (e.g. caller mismatch)', async () => {
             const rejection = new ConflictException('nope');
             mockMemberService.joinWorkspaceViaInvitation.mockRejectedValue(

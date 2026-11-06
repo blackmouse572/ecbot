@@ -253,6 +253,8 @@ export class InvitationService implements IInvitationService {
             const dto = plainToInstance(InvitationListResponseDto, invitation, {
                 excludeExtraneousValues: true,
             });
+            // `role` is a ManyToOne reference; send its id, as the DTO says.
+            dto.role = invitation.role?.id;
             dto.invitationLink = this.freshLink(invitation);
 
             return dto;
@@ -265,6 +267,7 @@ export class InvitationService implements IInvitationService {
         const dto = plainToInstance(InvitationDetailResponseDto, invitation, {
             excludeExtraneousValues: true,
         });
+        dto.roleId = invitation.role?.id;
         dto.invitationLink = this.freshLink(invitation);
 
         return dto;

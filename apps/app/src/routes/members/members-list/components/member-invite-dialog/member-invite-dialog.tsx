@@ -36,6 +36,14 @@ export const MemberInviteDialog = (
 
   const { onOpenChange } = props;
 
+  // The parents keep this dialog mounted, so a role picked last time would
+  // otherwise carry into the next invite. Start each opening at Member.
+  useEffect(() => {
+    if (isOpen) {
+      setPickedRoleId(undefined);
+    }
+  }, [isOpen]);
+
   // Prompt is an alert dialog, which ignores outside taps, so close it ourselves.
   useEffect(() => {
     if (!isOpen) {
