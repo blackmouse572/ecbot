@@ -2267,8 +2267,8 @@
       "emptyMessage": "Hội thoại sẽ hiện ở đây khi khách hàng nhắn tin tới một kênh đã liên kết."
     },
     "status": {
-      "botActive": "Bot đang trả lời",
-      "needsYou": "Cần bạn xử lý",
+      "botActive": "Bot trả lời",
+      "needsYou": "Chờ bạn",
       "youHandling": "Bạn đang xử lý",
       "resolved": "Đã xử lý",
       "lifecycle": {

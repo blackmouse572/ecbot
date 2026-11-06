@@ -25,6 +25,8 @@ const hover = async (label: string, convo: never) => {
 };
 
 import { StatusPill } from "./status-pill";
+import en from "@/i18n/translations/en.json";
+import viDict from "@/i18n/translations/vi.json";
 
 describe("StatusPill", () => {
   it("explains the status on hover and links to the docs", async () => {
@@ -82,5 +84,31 @@ describe("StatusPill", () => {
     expect(
       screen.queryByText("conversations.status.resolveTip"),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps the label on one line next to other row content", () => {
+    render(
+      <TooltipProvider>
+        <StatusPill conversation={conversation(false)} />
+      </TooltipProvider>,
+    );
+    const pill = screen.getByText("conversations.status.needsYou");
+    expect(pill.closest(".whitespace-nowrap")).not.toBeNull();
+    expect(pill.closest(".shrink-0")).not.toBeNull();
+  });
+
+  it("uses short vi labels that fit one line, and leaves en as is", () => {
+    expect(viDict.conversations.status).toMatchObject({
+      needsYou: "Chờ bạn",
+      botActive: "Bot trả lời",
+      youHandling: "Bạn đang xử lý",
+      resolved: "Đã xử lý",
+    });
+    expect(en.conversations.status).toMatchObject({
+      needsYou: "Needs you",
+      botActive: "Bot active",
+      youHandling: "You're handling",
+      resolved: "Resolved",
+    });
   });
 });

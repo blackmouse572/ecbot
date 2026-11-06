@@ -17,10 +17,10 @@ const LABELS = {
   },
   vi: {
     title: "Trạng thái cuộc trò chuyện thay đổi thế nào",
-    botActive: "Bot đang trả lời",
+    botActive: "Bot trả lời",
     botActiveHint: "agent trả lời khách",
     staffTurn: "Nhân viên xử lý, bot tắt",
-    needsYou: "Cần bạn xử lý",
+    needsYou: "Chờ bạn",
     youHandling: "Bạn đang xử lý",
     resolved: "Đã xử lý",
     resolvedHint: "agent trả lời lại",

@@ -64,7 +64,11 @@ export const StatusPill = ({
           </span>
         }
       >
-        <StatusBadge color={COLOR_BY_STATE[state]}>
+        {/* One line always: rows put a reason and unread count beside it. */}
+        <StatusBadge
+          color={COLOR_BY_STATE[state]}
+          className="shrink-0 whitespace-nowrap"
+        >
           {t(`conversations.status.${state}`)}
         </StatusBadge>
       </Tooltip>
