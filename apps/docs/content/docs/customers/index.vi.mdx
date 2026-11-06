@@ -43,8 +43,8 @@ Mỗi cuộc trò chuyện có một trạng thái. Di chuột lên trạng thá
 
 | Trạng thái | Ý nghĩa |
 | --- | --- |
-| **Bot đang trả lời** | Agent đang trả lời khách. |
-| **Cần bạn xử lý** | Agent đã chuyển cuộc trò chuyện cho nhân viên và ngừng trả lời. Nhân viên cần trả lời khách. |
+| **Bot trả lời** | Agent đang trả lời khách. |
+| **Chờ bạn** | Agent đã chuyển cuộc trò chuyện cho nhân viên và ngừng trả lời. Nhân viên cần trả lời khách. |
 | **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. Agent im lặng cho tới khi được bật lại. |
 | **Đã xử lý** | Nhân viên đã xử lý xong việc được chuyển. Agent trả lời lại và không chuyển lại việc đó. Bạn vẫn gửi tin nhắn được. |
 
@@ -52,10 +52,10 @@ Mỗi cuộc trò chuyện có một trạng thái. Di chuột lên trạng thá
 
 Cách cuộc trò chuyện chuyển giữa các trạng thái:
 
-- **Bot đang trả lời** thành **Cần bạn xử lý** khi agent chuyển cho nhân viên (xem bên dưới).
-- **Bot đang trả lời** thành **Bạn đang xử lý** khi nhân viên chọn **Tạm dừng bot**.
-- **Cần bạn xử lý** hoặc **Bạn đang xử lý** thành **Đã xử lý** khi nhân viên chọn **Đã xử lý**, hoặc thành **Bot đang trả lời** khi nhân viên bật bot lại.
-- **Đã xử lý** trở lại **Bot đang trả lời** khi khách nhắn tin mới, hoặc khi nhân viên chọn **Khôi phục tự động** trong menu của cuộc trò chuyện.
+- **Bot trả lời** thành **Chờ bạn** khi agent chuyển cho nhân viên (xem bên dưới).
+- **Bot trả lời** thành **Bạn đang xử lý** khi nhân viên chọn **Tạm dừng bot**.
+- **Chờ bạn** hoặc **Bạn đang xử lý** thành **Đã xử lý** khi nhân viên chọn **Đã xử lý**, hoặc thành **Bot trả lời** khi nhân viên bật bot lại.
+- **Đã xử lý** trở lại **Bot trả lời** khi khách nhắn tin mới, hoặc khi nhân viên chọn **Khôi phục tự động** trong menu của cuộc trò chuyện.
 - Một yêu cầu mới cần nhân viên, ví dụ đổi đơn, vẫn được chuyển lại kể cả sau khi **Đã xử lý**.
 - Khi chọn **Đã xử lý** hoặc bật bot lại, các nhãn chuyển cho nhân viên của khách (Cần nhân viên, Đơn hàng mới, Lịch hẹn mới, Khiếu nại, Bực tức, và các nhãn bạn tự tạo có bật chuyển cho nhân viên) cũng được gỡ, trừ khi khách còn một cuộc trò chuyện khác đang chờ nhân viên. Lịch sử nhãn vẫn ghi lại. Các nhãn khác vẫn giữ nguyên.
 
