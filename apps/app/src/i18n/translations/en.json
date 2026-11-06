@@ -1482,7 +1482,7 @@
       "title": "Invitations",
       "empty": "Invitations you send from the Members page wait here until they are accepted.",
       "emptyTitle": "No pending invitations",
-      "noReadPermission": "You can't view invitations in this workspace. Ask the owner or an admin."
+      "noReadPermission": "You can't view invitations in this workspace. Ask the workspace owner."
     },
     "joinRequests": {
       "title": "Join requests",
@@ -1493,7 +1493,7 @@
         "success": "Request approved. Welcome aboard!"
       },
       "emptyTitle": "No pending join requests",
-      "noReadPermission": "You can't view join requests in this workspace. Ask the owner or an admin."
+      "noReadPermission": "You can't view join requests in this workspace. Ask the workspace owner."
     },
     "list": {
       "noRecordsTitle": "No members yet",
@@ -1542,7 +1542,7 @@
       "noRecordsTitle": "No roles yet",
       "noRecordsMessage": "Roles decide what each member can see and change in this workspace.",
       "createFirst": "Create role",
-      "noReadPermission": "You can't view roles in this workspace. Ask the owner or an admin."
+      "noReadPermission": "You can't view roles in this workspace. Ask the workspace owner."
     }
   },
   "profile": {
