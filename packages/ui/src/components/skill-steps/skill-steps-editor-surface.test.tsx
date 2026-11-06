@@ -66,7 +66,7 @@ describe("SkillStepsEditor surface", () => {
       );
       expect(button).not.toHaveClass("hidden", "invisible", "opacity-0");
       expect(button).not.toHaveAttribute("tabindex", "-1");
-      expect(button.querySelector("svg")).toHaveClass("size-3");
+      expect(button.querySelector("svg")).toHaveClass("size-2.5");
     }
   });
 

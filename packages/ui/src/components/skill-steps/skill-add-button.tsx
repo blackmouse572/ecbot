@@ -19,7 +19,7 @@ export const SkillAddButton: FC<ComponentPropsWithRef<"button">> = ({
   ...props
 }) => (
   <button type="button" {...props} className={CLASSES}>
-    <PlusMini className="size-3" />
+    <PlusMini className="size-2.5" />
     {children}
   </button>
 );
