@@ -192,13 +192,11 @@ export const SkillFormFields: FC<Props> = ({
             </Button>
           </div>
           <Form.Hint>{t("skills.form.stepsHint")}</Form.Hint>
-          <div className="rounded-lg border bg-ui-bg-subtle p-4">
-            <SkillStepsEditor
-              steps={steps}
-              showIssues={form.formState.isSubmitted}
-              onChange={(next) => form.setValue("steps", next, opts)}
-            />
-          </div>
+          <SkillStepsEditor
+            steps={steps}
+            showIssues={form.formState.isSubmitted}
+            onChange={(next) => form.setValue("steps", next, opts)}
+          />
           {listIssue && (
             <Text size="small" className="text-ui-fg-error">
               {t(`skills.steps.issues.${listIssue.code}`)}
