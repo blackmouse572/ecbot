@@ -1,5 +1,8 @@
 import { analytics } from "@/analytics/analytics";
-import type { ClientConnectFailureReason } from "@/analytics/analytics-events";
+import {
+  analyticsChannel,
+  type ClientConnectFailureReason,
+} from "@/analytics/analytics-events";
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -163,7 +166,7 @@ export const isOAuthPlatform = (platform: string) =>
 
 const connectFailed = (platform: string, reason: ClientConnectFailureReason) =>
   analytics.capture("channel_connect_failed", {
-    channel: platform.toLowerCase(),
+    channel: analyticsChannel(platform),
     step: "auth",
     reason,
   });
@@ -202,7 +205,7 @@ export function useOAuthLogin(
     }
 
     analytics.capture("channel_connect_started", {
-      channel: platform.toLowerCase(),
+      channel: analyticsChannel(platform),
     });
     const state = generateState();
     if (STATEFUL_PLATFORMS.has(platform)) {

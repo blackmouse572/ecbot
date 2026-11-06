@@ -43,7 +43,13 @@ export function createAnalytics(
   isImpersonating: () => boolean = impersonating,
 ) {
   let booted = false;
-  const active = () => booted && canBoot(location(), isImpersonating());
+  // Ids already captured by `captureOnce`, for this signed-in session.
+  const seen = new Set<string>();
+  const allowed = () => canBoot(location(), isImpersonating());
+  // A tab that opened on a refused path (a preview, say) and then navigated
+  // to an allowed one boots on its first call there.
+  const active = () => (booted ? allowed() : boot());
+
   const each = (call: (adapter: AnalyticsAdapter) => void) => {
     for (const adapter of adapters) {
       try {
@@ -54,29 +60,48 @@ export function createAnalytics(
     }
   };
 
+  function boot(): boolean {
+    if (booted) return true;
+    if (!adapters.length || !allowed()) return false;
+    booted = true;
+    each((a) => a.boot());
+    return true;
+  }
+
+  function capture<E extends AnalyticsEventName>(
+    event: E,
+    properties: AnalyticsEvents[E],
+  ): boolean {
+    if (!active()) return false;
+    each((a) => a.capture(event, properties));
+    return true;
+  }
+
   return {
-    boot(): boolean {
-      if (booted) return true;
-      if (!adapters.length || !canBoot(location(), isImpersonating()))
-        return false;
-      booted = true;
-      each((a) => a.boot());
-      return true;
-    },
+    boot,
     identify(userId: string | undefined) {
       if (userId && active()) each((a) => a.identify(userId));
     },
     group(workspaceId: string | undefined) {
       if (workspaceId && active()) each((a) => a.group(workspaceId));
     },
+    /** Logout: forget who this was, and let the next person's funnel start fresh. */
     reset() {
+      seen.clear();
       if (booted) each((a) => a.reset());
     },
-    capture<E extends AnalyticsEventName>(
+    capture,
+    /**
+     * Captures once per `id` until `reset`. An id is only used up when the
+     * event actually went out, so a refused path does not swallow it.
+     */
+    captureOnce<E extends AnalyticsEventName>(
+      id: string,
       event: E,
       properties: AnalyticsEvents[E],
     ) {
-      if (active()) each((a) => a.capture(event, properties));
+      if (seen.has(id) || !capture(event, properties)) return;
+      seen.add(id);
     },
   };
 }

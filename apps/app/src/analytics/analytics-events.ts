@@ -1,3 +1,5 @@
+import type { AccountGetDetailResponseDto } from "@repo/client";
+
 /**
  * The product events the dashboard itself reports. Vendor-neutral: core only
  * names the events, an enterprise adapter (if any) decides where they go.
@@ -30,6 +32,37 @@ export const CLIENT_CONNECT_FAILURE_REASONS = [
 export type ClientConnectFailureReason =
   (typeof CLIENT_CONNECT_FAILURE_REASONS)[number];
 
+type AccountType = AccountGetDetailResponseDto["type"];
+
+/**
+ * A channel as the server's product events name it: the account type,
+ * lowercased (`facebook_account`). Client and server use the same values, so
+ * `channel_connect_started` joins `channel_connect_succeeded` on `channel`.
+ * A Record, so a new account type fails the type check until it is added.
+ */
+const CHANNELS: Record<Lowercase<AccountType>, true> = {
+  facebook_account: true,
+  facebook_page: true,
+  instagram_account: true,
+  instagram_page: true,
+  zalo_account: true,
+  zalo_page: true,
+  tiktok_shop: true,
+  shopee_shop: true,
+  telegram_bot: true,
+  whatsapp_business: true,
+  threads_account: true,
+  website_widget: true,
+  api_channel: true,
+};
+export type AnalyticsChannel = keyof typeof CHANNELS | "unknown";
+
+/** The analytics channel of a platform / account type, e.g. `ZALO_ACCOUNT`. */
+export function analyticsChannel(platform: string): AnalyticsChannel {
+  const channel = platform.toLowerCase();
+  return channel in CHANNELS ? (channel as AnalyticsChannel) : "unknown";
+}
+
 /**
  * An interface, not a type, so an enterprise overlay can add its own events
  * with declaration merging.
@@ -37,9 +70,9 @@ export type ClientConnectFailureReason =
 export interface AnalyticsEvents {
   onboarding_step_viewed: { step: OnboardingStep };
   playground_message_sent: { turn_index: number };
-  channel_connect_started: { channel: string };
+  channel_connect_started: { channel: AnalyticsChannel };
   channel_connect_failed: {
-    channel: string;
+    channel: AnalyticsChannel;
     step: "auth";
     reason: ClientConnectFailureReason;
   };

@@ -195,6 +195,7 @@ function AgentBuilderPanels({ builder }: { builder: AgentBuilderController }) {
                 profile={builder.state.profile}
                 extraInstructions={builder.extraInstructions}
                 agentDisplayName={displayName}
+                open={panelOpen}
               />
             </div>
           </aside>

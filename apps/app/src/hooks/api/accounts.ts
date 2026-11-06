@@ -1,4 +1,5 @@
 import { analytics } from "@/analytics/analytics";
+import { analyticsChannel } from "@/analytics/analytics-events";
 import { isOAuthPlatform } from "@/hooks/use-oauth-login";
 import type { BatchResult } from "@/hooks/use-batch-result-toast";
 import { queryKeysFactory } from "@/libs/query-factory";
@@ -169,7 +170,7 @@ export const useLinkAccount = () => {
       // OAuth channels counted their start when the sign-in popup opened.
       if (!isOAuthPlatform(data.platform))
         analytics.capture("channel_connect_started", {
-          channel: data.platform.toLowerCase(),
+          channel: analyticsChannel(data.platform),
         });
     },
     mutationFn: (data: AccountLinkRequestDto) =>

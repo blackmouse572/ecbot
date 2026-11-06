@@ -18,6 +18,8 @@ type Props = {
   extraInstructions: string;
   /** "Talk with {{name}}"'s name, computed once by the caller (agent-builder.tsx). */
   agentDisplayName: string;
+  /** Whether the panel is showing (it stays mounted while closed). */
+  open?: boolean;
 };
 
 export function TestPanel({
@@ -25,6 +27,7 @@ export function TestPanel({
   profile,
   extraInstructions,
   agentDisplayName,
+  open = false,
 }: Props) {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
@@ -40,7 +43,11 @@ export function TestPanel({
   const tryAgentLabel = t("agentBuilder.ui.tryAgent", {
     name: agentDisplayName,
   });
-  useTrackOnce("onboarding_step_viewed", { step: "test_panel" }, "test_panel");
+  useTrackOnce(
+    open ? "onboarding_step_viewed" : null,
+    { step: "test_panel" },
+    "test_panel",
+  );
 
   return (
     <Tabs defaultValue="chat" className="flex h-full min-h-0 flex-col gap-3">

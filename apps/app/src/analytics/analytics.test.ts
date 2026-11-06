@@ -75,17 +75,42 @@ describe("analytics seam", () => {
     expect(a.capture).not.toHaveBeenCalled();
   });
 
-  it("does nothing before boot", () => {
+  it("boots on the first call once a tab leaves a refused path", () => {
+    let path = "/preview/tok";
     const a = adapter();
     const seam = createAnalytics(
       [a as unknown as AnalyticsAdapter],
-      () => "/shop/dashboard",
+      () => path,
       () => false,
     );
+    expect(seam.boot()).toBe(false);
+    path = "/signup";
     seam.identify("user-1");
-    seam.capture("knowledge_failed_seen", {});
-    expect(a.identify).not.toHaveBeenCalled();
+    expect(a.boot).toHaveBeenCalledTimes(1);
+    expect(a.identify).toHaveBeenCalledWith("user-1");
+  });
+
+  it("captures once per id until reset, and only counts what went out", () => {
+    let path = "/preview/tok";
+    const a = adapter();
+    const seam = createAnalytics(
+      [a as unknown as AnalyticsAdapter],
+      () => path,
+      () => false,
+    );
+    const once = () =>
+      seam.captureOnce("step:identity", "onboarding_step_viewed", {
+        step: "identity",
+      });
+    once();
     expect(a.capture).not.toHaveBeenCalled();
+    path = "/shop/agents/new";
+    once();
+    once();
+    expect(a.capture).toHaveBeenCalledTimes(1);
+    seam.reset();
+    once();
+    expect(a.capture).toHaveBeenCalledTimes(2);
   });
 
   it("keeps the page alive when an adapter throws", () => {
