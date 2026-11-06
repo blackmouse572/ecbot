@@ -46,6 +46,7 @@ export const ConversionSection: FC<ConversionSectionProps> = ({
         key: channel.key,
         label: channel.label,
         color: channel.color,
+        icon: channel.icon,
         counts: stageKeys.map((key) =>
           rows.reduce((sum, row) => sum + row[key], 0),
         ),
